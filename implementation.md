@@ -119,6 +119,7 @@ moto-diag/
 | `motodiag config show` | ✅ Working | 02 |
 | `motodiag config paths` | ✅ Working | 02 |
 | `motodiag config init` | ✅ Working | 02 |
+| `motodiag search <query>` | ✅ Working | 09 |
 | `motodiag diagnose` | Stub | 79+ |
 | `motodiag code <DTC>` | ✅ Working | 05 |
 | `motodiag garage` | Stub | 04 |
@@ -156,6 +157,7 @@ moto-diag/
 | 06 | Symptom taxonomy + data model | 2026-04-15 | Symptom repo, 40 symptoms across 12+ categories, loader, 10 tests |
 | 07 | Diagnostic session model | 2026-04-15 | Session lifecycle (9 functions), status transitions, 16 tests |
 | 08 | Knowledge base schema | 2026-04-15 | Known issues repo (6 functions), 10 Harley issues with forum tips, loader, 16 tests |
+| 09 | Search + query engine | 2026-04-15 | Unified search across 5 stores, search CLI, 7 tests |
 
 ## Completion Gates
 

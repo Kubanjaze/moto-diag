@@ -84,3 +84,8 @@ This is the **project-level** change log. Records updates to the project's archi
 - Year range queries for spanning model generations
 - Extended loader.py with load_known_issues_file()
 - knowledge package now has 3 repos: dtc_repo, symptom_repo, issues_repo
+
+### 2026-04-15 22:00 — Phase 09 complete
+- Unified search engine: search_all() queries vehicles, DTCs, symptoms, known issues, sessions
+- CLI: `motodiag search <query>` with --make filter, Rich grouped output
+- 5 stores searched from one entry point

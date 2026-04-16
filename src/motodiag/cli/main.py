@@ -231,6 +231,53 @@ def code(dtc_code: str | None, make: str | None) -> None:
 
 
 @cli.command()
+@click.argument("query")
+@click.option("--make", "-m", help="Filter by manufacturer")
+def search(query: str, make: str | None) -> None:
+    """Search across all knowledge stores (DTCs, symptoms, known issues)."""
+    from motodiag.core.database import init_db
+    from motodiag.core.search import search_all
+
+    init_db()
+    results = search_all(query, make=make)
+
+    if results["total"] == 0:
+        console.print(f"[yellow]No results for '{query}'.[/yellow]")
+        return
+
+    console.print(f"\n[bold]Search results for '{query}'[/bold] ({results['total']} total)\n")
+
+    if results["dtc_codes"]:
+        console.print(f"[bold cyan]DTC Codes ({len(results['dtc_codes'])})[/bold cyan]")
+        for dtc in results["dtc_codes"][:5]:
+            sev = dtc.get("severity", "")
+            console.print(f"  [green]{dtc['code']}[/green] — {dtc['description']} [{sev}]")
+        console.print()
+
+    if results["symptoms"]:
+        console.print(f"[bold cyan]Symptoms ({len(results['symptoms'])})[/bold cyan]")
+        for s in results["symptoms"][:5]:
+            console.print(f"  {s['name']} — {s['description']} [{s['category']}]")
+        console.print()
+
+    if results["known_issues"]:
+        console.print(f"[bold cyan]Known Issues ({len(results['known_issues'])})[/bold cyan]")
+        for issue in results["known_issues"][:5]:
+            make_str = issue.get("make") or "All"
+            yrs = ""
+            if issue.get("year_start"):
+                yrs = f" ({issue['year_start']}-{issue.get('year_end', 'present')})"
+            console.print(f"  [{issue.get('severity', 'medium')}] {issue['title']} — {make_str}{yrs}")
+        console.print()
+
+    if results["vehicles"]:
+        console.print(f"[bold cyan]Vehicles ({len(results['vehicles'])})[/bold cyan]")
+        for v in results["vehicles"][:5]:
+            console.print(f"  {v['year']} {v['make']} {v['model']}")
+        console.print()
+
+
+@cli.command()
 def garage() -> None:
     """Manage your vehicle garage. (Coming in Phase 04)"""
     console.print("[yellow]Vehicle garage coming in Phase 04.[/yellow]")

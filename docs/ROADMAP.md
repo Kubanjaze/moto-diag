@@ -24,7 +24,7 @@ Foundation: monorepo scaffold, config, database, base data models.
 | 06 | Symptom taxonomy + data model | ✅ | 40 symptoms, 12+ categories, related_systems linking |
 | 07 | Diagnostic session model | ✅ | 9 functions, full lifecycle, accumulation, 16 tests |
 | 08 | Knowledge base schema | ✅ | Issues repo, 10 Harley known issues with forum tips, loader |
-| 09 | Search + query engine | 🔲 | Find by symptom, code, vehicle, keyword |
+| 09 | Search + query engine | ✅ | Unified search across 5 stores, search CLI command |
 | 10 | Logging + audit trail | 🔲 | Structured logging, diagnostic history |
 | 11 | Test framework + fixtures | 🔲 | pytest, factory fixtures, test database |
 | 12 | Gate 1 — Core infrastructure integration test | 🔲 | End-to-end: create vehicle → add symptoms → store → retrieve |
