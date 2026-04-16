@@ -3,7 +3,7 @@
 **Version:** 0.1.3 | **Date:** 2026-04-15
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 150 phases across 8 tracks
+**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 165 phases across 9 tracks
 
 ---
 
@@ -93,8 +93,9 @@ moto-diag/
 | `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 29 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
 | `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
-| `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 73 |
-| `api` | G | Scaffold | REST API — empty, awaiting Phase 85 |
+| `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 123 |
+| `shop` | G | Scaffold | Shop management, work orders, triage, scheduling — awaiting Phase 135 |
+| `api` | H | Scaffold | REST API — empty, awaiting Phase 150 |
 
 ## Database Tables
 
