@@ -76,7 +76,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 39 | Yamaha cruisers: V-Star 250/650/950/1100/1300, Bolt | ✅ | 10 issues: V-Star carbs/petcock/stator/shaft drive/starter clutch/ISC + Bolt heat/belt + AIS |
 | 40 | Yamaha VMAX (1985–2020) | ✅ | 10 issues: Gen 1 V-Boost/carbs/charging/shaft drive/tank + Gen 2 FI/cooling/brakes/electronics/exhaust |
 | 41 | Yamaha dual-sport: WR250R/X, XT250, Ténéré 700 | ✅ | 10 issues: WR250R stator/suspension/cold start + XT250 carb/chain/valves + Tenere wind/crash/lean/shock |
-| 42 | Yamaha vintage: XS650, RD350/400, SR400/500 | 🔲 | 2-stroke (RD), thumpers, points/CDI ignition |
+| 42 | Yamaha vintage: XS650, RD350/400, SR400/500 | ✅ | 10 issues: XS650 points/charging/oil/cam chain + RD Autolube/chambers/reeds + SR kickstart/carb/valves |
 | 43 | Yamaha electrical systems + diagnostics | 🔲 | Self-diagnostic mode, FI codes, stator/flywheel |
 | 44 | Yamaha common cross-model issues | 🔲 | Stator failures, CCT, EXUP servo, throttle position |
 
