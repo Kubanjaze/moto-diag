@@ -86,7 +86,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 |-------|-------|--------|-------|
 | 45 | Kawasaki Ninja 250/300/400 (1988+) | ✅ | 10 issues: carbs/drops/charging/fuel pump/chain/valves/ABS/coolant/header crack/oil neglect |
 | 46 | Kawasaki ZX-6R (1995+) | ✅ | 10 issues: 636/599 confusion, stator, CCT, KLEEN, valves, fuel pump, cooling, KTRC, forks, QS |
-| 47 | Kawasaki ZX-7R / ZX-7RR (1996–2003) | 🔲 | Homologation special, carb-era supersport |
+| 47 | Kawasaki ZX-7R / ZX-7RR (1996–2003) | ✅ | 10 issues: carbs/fuel system/charging/FCR carbs/CCT/wiring/rubber/suspension/brakes/ignition |
 | 48 | Kawasaki ZX-9R (1998–2003) | 🔲 | Open-class sport, carb + early FI |
 | 49 | Kawasaki ZX-10R (2004+) | 🔲 | KTRC, KIBS, cornering management, IMU |
 | 50 | Kawasaki ZX-12R / ZX-14R (2000–2020) | 🔲 | Hyperbikes, ram air, complex FI systems |
