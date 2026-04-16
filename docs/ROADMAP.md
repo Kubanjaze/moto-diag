@@ -46,7 +46,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 19 | Harley V-Rod / VRSC (2002–2017) | ✅ | 10 issues: coolant, hydraulic clutch, fuel cell, alternator, frame, ECU, belt tensioner, starter |
 | 20 | Harley Revolution Max (2021+) | ✅ | 10 issues: TFT freeze, ride-by-wire, water pump, chain drive, battery drain, ABS/TC |
 | 21 | Harley electrical systems (all eras) | ✅ | 10 issues: regulator, stator, solenoid, grounds, CAN bus, ignition switch, TSSM, wiring, battery types, lighting |
-| 22 | Harley common cross-era issues | 🔲 | Compensator, stator, regulator, intake leaks, heat soak |
+| 22 | Harley common cross-era issues | ✅ | 10 issues: compensator, intake seals, heat soak, primary leak, clutch, shocks, tire wear, ethanol |
 
 ### Honda (Phases 23–34)
 

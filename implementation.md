@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.1.6 | **Date:** 2026-04-16
+**Version:** 0.1.7 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -171,6 +171,7 @@ moto-diag/
 | 19 | Harley V-Rod / VRSC (2002-2017) | 2026-04-16 | 10 issues: coolant system, hydraulic clutch, fuel cell delamination, alternator rotor nut, frame cracks, 6 tests |
 | 20 | Harley Revolution Max (2021+) | 2026-04-16 | 10 issues: TFT freeze, ride-by-wire, water pump, chain drive, battery drain, 6 tests |
 | 21 | Harley electrical systems (all eras) | 2026-04-16 | 10 issues: regulator, stator, solenoid, grounds, CAN bus, TSSM, wiring, battery types, 6 tests |
+| 22 | Harley common cross-era issues | 2026-04-16 | 10 issues: compensator, intake seals, heat soak, primary leak, clutch, shocks, wheel bearings, 6 tests |
 
 ## Completion Gates
 
