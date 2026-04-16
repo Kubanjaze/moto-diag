@@ -84,7 +84,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 45 | Kawasaki Ninja 250/300/400 (1988+) | 🔲 | Beginner bikes, parallel twin, carb + EFI eras |
+| 45 | Kawasaki Ninja 250/300/400 (1988+) | ✅ | 10 issues: carbs/drops/charging/fuel pump/chain/valves/ABS/coolant/header crack/oil neglect |
 | 46 | Kawasaki ZX-6R (1995+) | 🔲 | 636cc oddball, KLEEN system, FI dealer mode |
 | 47 | Kawasaki ZX-7R / ZX-7RR (1996–2003) | 🔲 | Homologation special, carb-era supersport |
 | 48 | Kawasaki ZX-9R (1998–2003) | 🔲 | Open-class sport, carb + early FI |
