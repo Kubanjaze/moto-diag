@@ -89,3 +89,21 @@ This is the **project-level** change log. Records updates to the project's archi
 - Unified search engine: search_all() queries vehicles, DTCs, symptoms, known issues, sessions
 - CLI: `motodiag search <query>` with --make filter, Rich grouped output
 - 5 stores searched from one entry point
+
+### 2026-04-16 00:00 — Phase 10 complete
+- Structured logging: setup_logging(), get_logger(), reset_logging()
+- Session lifecycle events logged (create, diagnose, close)
+- Console + optional file handler, configurable log level
+
+### 2026-04-16 00:15 — Phase 11 complete
+- Enhanced conftest.py: 7 shared fixtures (fresh_db, populated_db, sample vehicles)
+- Full regression suite: 136/136 tests passed in 4.92s
+- Zero regressions across all 10 phase test files
+
+### 2026-04-16 00:30 — Phase 12 complete — GATE 1 PASSED
+- End-to-end integration test: 10-step mechanic diagnostic workflow verified
+- Cross-store linkage: symptom → known issue → DTC connections confirmed
+- `motodiag db init` CLI: initializes DB + loads all starter data
+- Full regression: 140/140 tests passed
+- **Track A (Core Infrastructure) COMPLETE — all 12 phases done**
+- Gate 1 status: PASSED — ready for Track B (Vehicle Knowledge Base)

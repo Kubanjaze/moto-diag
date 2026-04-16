@@ -120,6 +120,7 @@ moto-diag/
 | `motodiag config paths` | ✅ Working | 02 |
 | `motodiag config init` | ✅ Working | 02 |
 | `motodiag search <query>` | ✅ Working | 09 |
+| `motodiag db init` | ✅ Working | 12 |
 | `motodiag diagnose` | Stub | 79+ |
 | `motodiag code <DTC>` | ✅ Working | 05 |
 | `motodiag garage` | Stub | 04 |
@@ -160,12 +161,13 @@ moto-diag/
 | 09 | Search + query engine | 2026-04-15 | Unified search across 5 stores, search CLI, 7 tests |
 | 10 | Logging + audit trail | 2026-04-16 | Structured logging, session audit trail, file handler, 9 tests |
 | 11 | Test framework + fixtures | 2026-04-16 | Shared conftest.py, populated_db fixture, 136/136 regression pass |
+| 12 | Gate 1 — Integration test | 2026-04-16 | Full mechanic workflow E2E, db init CLI, 140/140 pass, **Gate 1 PASSED** |
 
 ## Completion Gates
 
 | Gate | Target Phase | Status | Criteria |
 |------|-------------|--------|----------|
-| Gate 1 | ~12 | 🔲 | Create vehicle → add symptoms → store → retrieve |
+| Gate 1 | 12 | ✅ | Vehicle → symptoms → session → DTCs → search → diagnose → close |
 | Gate 2 | ~78 | 🔲 | Query any target bike → get DTCs, symptoms, known issues, fixes |
 | Gate 3 | ~95 | 🔲 | Full symptom-to-repair flow with confidence + cost |
 | Gate 4 | ~108 | 🔲 | Full mechanic workflow through CLI |

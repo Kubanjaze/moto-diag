@@ -277,10 +277,55 @@ def search(query: str, make: str | None) -> None:
         console.print()
 
 
+@cli.group()
+def db() -> None:
+    """Database management commands."""
+    pass
+
+
+@db.command("init")
+def db_init() -> None:
+    """Initialize database and load all starter data (DTCs, symptoms, known issues)."""
+    from motodiag.core.database import init_db
+    from motodiag.core.config import get_settings, DATA_DIR
+    from motodiag.knowledge.loader import (
+        load_dtc_directory, load_symptom_file, load_known_issues_file,
+    )
+
+    settings = get_settings()
+    console.print("[bold]Initializing MotoDiag database...[/bold]")
+
+    # Init DB
+    init_db()
+    console.print("  [green]✓[/green] Database created")
+
+    # Load DTCs
+    dtc_dir = DATA_DIR / "dtc_codes"
+    if dtc_dir.is_dir():
+        results = load_dtc_directory(dtc_dir)
+        total = sum(results.values())
+        console.print(f"  [green]✓[/green] Loaded {total} DTC codes from {len(results)} files")
+
+    # Load symptoms
+    symptoms_file = DATA_DIR / "knowledge" / "symptoms.json"
+    if symptoms_file.exists():
+        count = load_symptom_file(symptoms_file)
+        console.print(f"  [green]✓[/green] Loaded {count} symptoms")
+
+    # Load known issues
+    for issue_file in sorted((DATA_DIR / "knowledge").glob("known_issues_*.json")):
+        count = load_known_issues_file(issue_file)
+        name = issue_file.stem.replace("known_issues_", "").replace("_", " ").title()
+        console.print(f"  [green]✓[/green] Loaded {count} known issues ({name})")
+
+    console.print("\n[bold green]Database ready.[/bold green]")
+    console.print(f"  Path: {settings.db_path}")
+
+
 @cli.command()
 def garage() -> None:
-    """Manage your vehicle garage. (Coming in Phase 04)"""
-    console.print("[yellow]Vehicle garage coming in Phase 04.[/yellow]")
+    """Manage your vehicle garage. (Coming in Track D)"""
+    console.print("[yellow]Vehicle garage coming in Track D (Phase 110).[/yellow]")
 
 
 @cli.command()
