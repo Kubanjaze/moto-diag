@@ -71,3 +71,9 @@ This is the **project-level** change log. Records updates to the project's archi
 - Starter taxonomy: 40 symptoms across starting, idle, engine, cooling, exhaust, electrical, fuel, brakes, drivetrain, vibration, suspension, noise categories
 - Extended loader.py with load_symptom_file()
 - Each symptom links to related_systems for cross-system diagnostics
+
+### 2026-04-15 20:30 — Phase 07 complete
+- Diagnostic session lifecycle: 9 functions covering full OPEN → CLOSED workflow
+- Symptom/fault code accumulation with duplicate prevention
+- Diagnosis with confidence scoring, severity, repair steps
+- Cost tracking fields (ai_model_used, tokens_used) ready for Track C

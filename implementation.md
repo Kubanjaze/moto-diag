@@ -154,6 +154,7 @@ moto-diag/
 | 04 | Vehicle registry data model | 2026-04-15 | CRUD operations (add/get/list/update/delete/count), 14 tests |
 | 05 | DTC schema + loader | 2026-04-15 | DTC repo, JSON loader, 40 codes (generic + Harley), code CLI, 15 tests |
 | 06 | Symptom taxonomy + data model | 2026-04-15 | Symptom repo, 40 symptoms across 12+ categories, loader, 10 tests |
+| 07 | Diagnostic session model | 2026-04-15 | Session lifecycle (9 functions), status transitions, 16 tests |
 
 ## Completion Gates
 
