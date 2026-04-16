@@ -26,7 +26,7 @@ Foundation: monorepo scaffold, config, database, base data models.
 | 08 | Knowledge base schema | ✅ | Issues repo, 10 Harley known issues with forum tips, loader |
 | 09 | Search + query engine | ✅ | Unified search across 5 stores, search CLI command |
 | 10 | Logging + audit trail | ✅ | Structured logging, session audit trail, file handler |
-| 11 | Test framework + fixtures | 🔲 | pytest, factory fixtures, test database |
+| 11 | Test framework + fixtures | ✅ | Shared conftest.py, populated_db, 136/136 regression pass |
 | 12 | Gate 1 — Core infrastructure integration test | 🔲 | End-to-end: create vehicle → add symptoms → store → retrieve |
 
 ## Track B — Vehicle Knowledge Base (Phases 13–62)

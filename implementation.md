@@ -159,6 +159,7 @@ moto-diag/
 | 08 | Knowledge base schema | 2026-04-15 | Known issues repo (6 functions), 10 Harley issues with forum tips, loader, 16 tests |
 | 09 | Search + query engine | 2026-04-15 | Unified search across 5 stores, search CLI, 7 tests |
 | 10 | Logging + audit trail | 2026-04-16 | Structured logging, session audit trail, file handler, 9 tests |
+| 11 | Test framework + fixtures | 2026-04-16 | Shared conftest.py, populated_db fixture, 136/136 regression pass |
 
 ## Completion Gates
 
