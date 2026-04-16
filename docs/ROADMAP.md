@@ -38,7 +38,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 13 | Harley Evo Big Twin (1984–1999) | ✅ | 10 issues: base gasket, starter clutch, CV carb, ignition, wet sumping |
-| 14 | Harley Twin Cam 88/88B (1999–2006) | 🔲 | Cam chain tensioner, oil pump, compensator sprocket |
+| 14 | Harley Twin Cam 88/88B (1999–2006) | ✅ | 10 issues: tick of death, compensator, sumping, cam bearing |
 | 15 | Harley Twin Cam 96/103/110 (2007–2017) | 🔲 | CAN bus era, ECM codes, ABS diagnostics, SE tuner |
 | 16 | Harley Milwaukee-Eight (2017+) | 🔲 | M8 107/114/117, VVT on 117, modern OBD diagnostics |
 | 17 | Harley Sportster Evo (1986–2003) | 🔲 | 883/1200, carb + early EFI, common electrical issues |

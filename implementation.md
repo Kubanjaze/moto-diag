@@ -163,6 +163,7 @@ moto-diag/
 | 11 | Test framework + fixtures | 2026-04-16 | Shared conftest.py, populated_db fixture, 136/136 regression pass |
 | 12 | Gate 1 — Integration test | 2026-04-16 | Full mechanic workflow E2E, db init CLI, 140/140 pass, **Gate 1 PASSED** |
 | 13 | Harley Evo Big Twin (1984-1999) | 2026-04-16 | 10 known issues, forum tips, aftermarket recs, 7 tests |
+| 14 | Harley Twin Cam 88 (1999-2006) | 2026-04-16 | 10 issues: cam tensioner, compensator, sumping, 7 tests |
 
 ## Completion Gates
 
