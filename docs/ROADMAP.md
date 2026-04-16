@@ -91,7 +91,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 49 | Kawasaki ZX-10R (2004+) | ✅ | 10 issues: headshake/charging/IMU electronics/CCT/fuel pump/valves/KLEEN/crash/QS/cooling |
 | 50 | Kawasaki ZX-12R / ZX-14R (2000–2020) | ✅ | 10 issues: ram air/charging/consumables/FI tuning/ABS-KTRC/chain/CCT/cooling/suspension/valves |
 | 51 | Kawasaki Ninja H2 / H2R (2015+) | ✅ | 10 issues: supercharger/cooling/electronics/paint/chain/oil/fuel/H2 SX/brakes/valves |
-| 52 | Kawasaki Z naked: Z400/Z650/Z750/Z800/Z900/Z1000, Z H2 | 🔲 | Shared engines with Ninja line, quickshifter, ride modes |
+| 52 | Kawasaki Z naked: Z400/Z650/Z750/Z800/Z900/Z1000, Z H2 | ✅ | 10 issues: radiator/throttle/connectors/charging/Z H2 heat/chain/KTRC/CCT/beginner/headlights |
 | 53 | Kawasaki Vulcan cruisers: 500/750/800/900/1500/1600/1700/2000 | 🔲 | V-twin + inline, carb + EFI, shaft/belt drive |
 | 54 | Kawasaki dual-sport: KLR650, KLX250/300, Versys 650/1000 | 🔲 | KLR650 legendary reliability, doohickey fix |
 | 55 | Kawasaki vintage: KZ550/650/750/1000/1100, GPz series | 🔲 | Air-cooled inline-4, carb banks, charging issues |
