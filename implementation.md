@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.2.6 | **Date:** 2026-04-16
+**Version:** 0.3.0 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -90,6 +90,7 @@ moto-diag/
 | `core` | A | Active | Config (pydantic-settings + validators + profiles), database (SQLite + WAL + 6 tables), base models |
 | `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
 | `knowledge` | B | Active | DTC repo (40 codes), symptom repo (40 symptoms), issues repo (10 Harley known issues), JSON loaders |
+| `pricing` | G | Active | Labor rates (regional/national), repair plan builder (CRUD), cost estimation, prep labor catalog |
 | `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 79 |
 | `media` | C2 | Scaffold | Video/audio diagnostic analysis — awaiting Phase 96 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
@@ -107,6 +108,10 @@ moto-diag/
 | `symptoms` | Symptom taxonomy — name/description/category | 03 |
 | `known_issues` | Known problems — make/model/year_range/fix/parts | 03 |
 | `diagnostic_sessions` | Session lifecycle — vehicle/symptoms/diagnosis/confidence | 03 |
+| `labor_rates` | Regional/national labor rate data by shop type | pricing |
+| `prep_labor` | Prep labor catalog (fairing removal, drain/refill, etc.) | pricing |
+| `repair_plans` | Per-bike repair plans with status tracking | pricing |
+| `repair_plan_items` | Line items within plans (labor, parts, prep, diagnostic) | pricing |
 | `schema_version` | Migration tracking | 03 |
 
 ## CLI Commands
@@ -181,6 +186,7 @@ moto-diag/
 | 29 | Honda standards CB750/919, CB1000R, Hornet | 2026-04-16 | 10 issues: reg/rec, CCT, ride-by-wire, carbs, chain, vibes, tank rust, 6 tests |
 | 30 | Honda V4: VFR800, RC51, VFR1200F | 2026-04-16 | 10 issues: VTEC, reg/rec, RC51 TPS, gear cam noise, CBS, fuel pump relay, 6 tests |
 | 31 | Honda dual-sport: XR650L, CRF, Africa Twin | 2026-04-16 | 10 issues: XR650L jetting, AT DCT off-road, radiator, water damage, chain, 6 tests |
+| — | **Pricing/Repair Plan module** | 2026-04-16 | Labor rates (26 regions), prep labor catalog (18 items), repair plan CRUD, estimate engine, 24 tests |
 
 ## Completion Gates
 

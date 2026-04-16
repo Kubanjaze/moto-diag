@@ -87,3 +87,29 @@ class DTCCode(BaseModel):
     make: Optional[str] = Field(None, description="Manufacturer-specific (None = generic)")
     common_causes: list[str] = Field(default_factory=list)
     fix_summary: Optional[str] = None
+
+
+class RepairPlanStatus(str, Enum):
+    """Status of a repair plan."""
+    DRAFT = "draft"
+    QUOTED = "quoted"
+    APPROVED = "approved"
+    IN_PROGRESS = "in_progress"
+    COMPLETED = "completed"
+    CANCELLED = "cancelled"
+
+
+class PlanItemType(str, Enum):
+    """Type of line item in a repair plan."""
+    PREP_LABOR = "prep_labor"       # Access/disassembly time (e.g., remove fairings)
+    REPAIR_LABOR = "repair_labor"   # Actual repair wrench time
+    PARTS = "parts"                 # Physical parts and materials
+    DIAGNOSTIC = "diagnostic"       # Diagnostic time (scanning, testing, inspection)
+    MISC = "misc"                   # Miscellaneous charges
+
+
+class LaborRateType(str, Enum):
+    """Type of shop for labor rate context."""
+    INDEPENDENT = "independent"
+    DEALERSHIP = "dealership"
+    MOBILE = "mobile"

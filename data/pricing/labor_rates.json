@@ -1,0 +1,34 @@
+[
+  {"region": "national", "state": null, "rate_type": "independent", "hourly_rate": 95.00, "source": "Industry average 2024-2025", "effective_date": "2025-01-01"},
+  {"region": "national", "state": null, "rate_type": "dealership", "hourly_rate": 135.00, "source": "Industry average 2024-2025", "effective_date": "2025-01-01"},
+  {"region": "national", "state": null, "rate_type": "mobile", "hourly_rate": 110.00, "source": "Industry average 2024-2025", "effective_date": "2025-01-01"},
+
+  {"region": "northeast", "state": null, "rate_type": "independent", "hourly_rate": 110.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "northeast", "state": null, "rate_type": "dealership", "hourly_rate": 155.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "northeast", "state": "NY", "rate_type": "independent", "hourly_rate": 120.00, "source": "NYC metro area premium", "effective_date": "2025-01-01"},
+  {"region": "northeast", "state": "NY", "rate_type": "dealership", "hourly_rate": 165.00, "source": "NYC metro area premium", "effective_date": "2025-01-01"},
+
+  {"region": "southeast", "state": null, "rate_type": "independent", "hourly_rate": 85.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "southeast", "state": null, "rate_type": "dealership", "hourly_rate": 125.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "southeast", "state": "FL", "rate_type": "independent", "hourly_rate": 90.00, "source": "FL motorcycle market", "effective_date": "2025-01-01"},
+  {"region": "southeast", "state": "FL", "rate_type": "dealership", "hourly_rate": 130.00, "source": "FL motorcycle market", "effective_date": "2025-01-01"},
+
+  {"region": "midwest", "state": null, "rate_type": "independent", "hourly_rate": 85.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "midwest", "state": null, "rate_type": "dealership", "hourly_rate": 120.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "midwest", "state": "IL", "rate_type": "independent", "hourly_rate": 95.00, "source": "Chicago metro area", "effective_date": "2025-01-01"},
+
+  {"region": "southwest", "state": null, "rate_type": "independent", "hourly_rate": 95.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "southwest", "state": null, "rate_type": "dealership", "hourly_rate": 140.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "southwest", "state": "TX", "rate_type": "independent", "hourly_rate": 90.00, "source": "TX motorcycle market", "effective_date": "2025-01-01"},
+  {"region": "southwest", "state": "AZ", "rate_type": "independent", "hourly_rate": 95.00, "source": "AZ year-round riding market", "effective_date": "2025-01-01"},
+
+  {"region": "west", "state": null, "rate_type": "independent", "hourly_rate": 115.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "west", "state": null, "rate_type": "dealership", "hourly_rate": 160.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "west", "state": "CA", "rate_type": "independent", "hourly_rate": 130.00, "source": "CA premium market", "effective_date": "2025-01-01"},
+  {"region": "west", "state": "CA", "rate_type": "dealership", "hourly_rate": 175.00, "source": "CA premium market", "effective_date": "2025-01-01"},
+  {"region": "west", "state": "WA", "rate_type": "independent", "hourly_rate": 110.00, "source": "PNW motorcycle market", "effective_date": "2025-01-01"},
+
+  {"region": "mountain", "state": null, "rate_type": "independent", "hourly_rate": 90.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "mountain", "state": null, "rate_type": "dealership", "hourly_rate": 130.00, "source": "Regional survey 2024", "effective_date": "2025-01-01"},
+  {"region": "mountain", "state": "CO", "rate_type": "independent", "hourly_rate": 100.00, "source": "CO adventure bike market", "effective_date": "2025-01-01"}
+]
