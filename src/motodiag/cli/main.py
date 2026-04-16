@@ -48,6 +48,7 @@ def _show_welcome() -> None:
     table.add_row("code", "Look up a fault code (e.g., P0115)")
     table.add_row("garage", "Manage your vehicle garage")
     table.add_row("history", "Browse past diagnostic sessions")
+    table.add_row("config", "Show or inspect configuration")
     table.add_row("info", "Show system info and package status")
     console.print(table)
     console.print("\n[dim]Run 'motodiag <command> --help' for details[/dim]\n")
@@ -101,6 +102,73 @@ def info() -> None:
             dep_table.add_row(pkg, purpose, "— not installed")
 
     console.print(dep_table)
+
+
+@cli.group()
+def config() -> None:
+    """Show or inspect configuration settings."""
+    pass
+
+
+@config.command("show")
+def config_show() -> None:
+    """Display all current configuration values."""
+    from motodiag.core.config import get_settings
+
+    settings = get_settings()
+    table = Table(title="Configuration", show_header=True, header_style="bold")
+    table.add_column("Setting", style="cyan")
+    table.add_column("Value", style="green")
+
+    for key, value in settings.model_dump().items():
+        # Mask API key
+        display = "****" + str(value)[-4:] if "api_key" in key and value else str(value)
+        table.add_row(key, display)
+
+    console.print(table)
+
+
+@config.command("paths")
+def config_paths() -> None:
+    """Show data and output directory paths with existence status."""
+    from pathlib import Path
+    from motodiag.core.config import get_settings
+
+    settings = get_settings()
+    table = Table(title="Directory Paths", show_header=True, header_style="bold")
+    table.add_column("Directory", style="cyan")
+    table.add_column("Path")
+    table.add_column("Exists", style="green")
+
+    dirs = {
+        "Data": settings.data_dir,
+        "Data / DTC Codes": str(Path(settings.data_dir) / "dtc_codes"),
+        "Data / Vehicles": str(Path(settings.data_dir) / "vehicles"),
+        "Data / Knowledge": str(Path(settings.data_dir) / "knowledge"),
+        "Output": settings.output_dir,
+        "Database": settings.db_path,
+    }
+
+    for name, path in dirs.items():
+        exists = Path(path).exists()
+        status = "[green]yes[/green]" if exists else "[red]no[/red]"
+        table.add_row(name, path, status)
+
+    console.print(table)
+
+
+@config.command("init")
+def config_init() -> None:
+    """Create all required data directories."""
+    from motodiag.core.config import ensure_directories
+
+    results = ensure_directories()
+    for name, created in results.items():
+        if created:
+            console.print(f"  [green]Created[/green] {name}/")
+        else:
+            console.print(f"  [dim]Exists[/dim]  {name}/")
+    console.print("[green]All directories ready.[/green]")
 
 
 # Placeholder subcommands — will be implemented in later phases
