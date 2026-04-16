@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.5 | **Date:** 2026-04-16
+**Version:** 0.3.6 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -209,6 +209,19 @@ moto-diag/
 | 51 | Kawasaki Ninja H2 / H2R (2015+) | 2026-04-17 | 10 issues: supercharger, cooling, electronics, paint, chain, oil, fuel, H2 SX, brakes, valves, 6 tests |
 | 52 | Kawasaki Z naked series | 2026-04-17 | 10 issues: radiator, throttle, connectors, charging, Z H2 heat, chain, KTRC, CCT, beginner, headlights, 6 tests |
 | 53 | Kawasaki Vulcan cruisers | 2026-04-17 | 10 issues: carbs, ISC surge, shaft drive, starter, Vulcan 2000, belt, heat, 1700 EFI, Vulcan 500, exhaust mods, 6 tests |
+| 54 | Kawasaki dual-sport KLR650/KLX/Versys | 2026-04-16 | 10 issues: doohickey, overheating, FI lean surge, valves, suspension, TBW, subframe, jetting, chain, stator, 6 tests |
+| 55 | Kawasaki vintage KZ/GPz | 2026-04-16 | 10 issues: CCT, charging, carb rebuild, fuel system, points ignition, forks, oil leaks, brakes, wiring, chain, 6 tests |
+| 56 | Kawasaki electrical + FI dealer mode | 2026-04-16 | 10 issues: dealer mode, stator/reg-rec, KLEEN, KIPASS, LED, grounds, starter, parasitic draw, KTRC/KIBS, connectors, 6 tests |
+| 57 | Suzuki GSX-R600 (1997+) | 2026-04-16 | 10 issues: stator, CCT, PAIR, fuel pump, forks, valves, cooling, S-DMS/TC, brakes, clutch, 6 tests |
+| 58 | Suzuki GSX-R750 (1996+) | 2026-04-16 | 10 issues: 2nd gear, stator, CCT, fuel pump, SRAD coolant, linkage, TPS, chain, master cyl, headstock, 6 tests |
+| 59 | Suzuki GSX-R1000 (2001+) | 2026-04-16 | 10 issues: K5-K8 case cracking, stator, IMU/TCS, CCT, SET servo, fuel relay, valves, QS, cooling, wheel bearings, 6 tests |
+| 60 | Suzuki GSX-R1100 (1986-1998) | 2026-04-16 | 10 issues: air/oil overheating, carbs, charging, CCT, suspension, CDI ignition, petcock/tank, brakes, wiring, chain, 6 tests |
+| 61 | Suzuki SV650/1000 + Gladius | 2026-04-16 | 10 issues: reg/rec, carb tuning, CCT, clutch, fuel pump, suspension, SV1000 STPS, Gladius, forks, exhaust mods, 6 tests |
+| 62 | Suzuki V-Strom 650/1000/1050 | 2026-04-16 | 10 issues: lean surge, CCT, windscreen, suspension loading, 1050 electronics, charging, chain, valves, side stand, ABS, 6 tests |
+| 63 | Suzuki Bandit 600/1200/1250 | 2026-04-16 | 10 issues: overheating, carbs, FI, charging, CCT, suspension, petcock, brakes, chain, wiring, 6 tests |
+| 64 | Suzuki GSX-S/Katana (2015+) | 2026-04-16 | 10 issues: TBW, CCT, Katana heat, charging, fuel relay, chain, mirrors, valves, TC/ABS, forks, 6 tests |
+| 65 | Suzuki cruisers Intruder/Boulevard | 2026-04-16 | 10 issues: carbs, FI surge, shaft drive, M109R clutch, starter clutch, charging, heat, fuel pump, exhaust, brakes, 6 tests |
+| 66 | Suzuki dual-sport DR-Z400/DR650 | 2026-04-16 | 10 issues: jetting, valves, SM brakes, DR650 carb/oil, chain, electrical, suspension, kick start, DR650 starter, 6 tests |
 
 ## Completion Gates
 

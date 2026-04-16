@@ -93,24 +93,24 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 51 | Kawasaki Ninja H2 / H2R (2015+) | ✅ | 10 issues: supercharger/cooling/electronics/paint/chain/oil/fuel/H2 SX/brakes/valves |
 | 52 | Kawasaki Z naked: Z400/Z650/Z750/Z800/Z900/Z1000, Z H2 | ✅ | 10 issues: radiator/throttle/connectors/charging/Z H2 heat/chain/KTRC/CCT/beginner/headlights |
 | 53 | Kawasaki Vulcan cruisers: 500/750/800/900/1500/1600/1700/2000 | ✅ | 10 issues: carbs/ISC surge/shaft drive/starter/Vulcan 2000/belt/heat/1700 EFI/Vulcan 500/exhaust mods |
-| 54 | Kawasaki dual-sport: KLR650, KLX250/300, Versys 650/1000 | 🔲 | KLR650 legendary reliability, doohickey fix |
-| 55 | Kawasaki vintage: KZ550/650/750/1000/1100, GPz series | 🔲 | Air-cooled inline-4, carb banks, charging issues |
-| 56 | Kawasaki electrical systems + FI dealer mode | 🔲 | Self-diagnostic mode, DTC readout procedure, KLEEN |
+| 54 | Kawasaki dual-sport: KLR650, KLX250/300, Versys 650/1000 | ✅ | 10 issues: doohickey/overheating/FI lean surge/valves/suspension/TBW/subframe/jetting/chain/stator |
+| 55 | Kawasaki vintage: KZ550/650/750/1000/1100, GPz series | ✅ | 10 issues: CCT/charging/carb rebuild/fuel system/points ignition/forks/oil leaks/brakes/wiring/chain |
+| 56 | Kawasaki electrical systems + FI dealer mode | ✅ | 10 issues: dealer mode/stator/KLEEN/KIPASS/LED/grounds/starter/parasitic draw/KTRC-KIBS/connectors |
 
 ### Suzuki (Phases 57–67)
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 57 | Suzuki GSX-R600 (1997+) | 🔲 | Gixxer 600, FI dealer mode, PAIR system |
-| 58 | Suzuki GSX-R750 (1996+) | 🔲 | Class-defining, shared platform with 600 |
-| 59 | Suzuki GSX-R1000 (2001+) | 🔲 | S-DMS, TC, quickshifter on later models |
-| 60 | Suzuki GSX-R1100 (1986–1998) | 🔲 | Air/oil-cooled legend, carb-era, big bore |
-| 61 | Suzuki SV650/1000 + Gladius (1999+) | 🔲 | V-twin, beginner-friendly, carb + EFI |
-| 62 | Suzuki V-Strom 650/1000/1050 (2002+) | 🔲 | Adventure, shared V-twin platform, ABS diagnostics |
-| 63 | Suzuki Bandit 600/1200/1250 (1995–2012) | 🔲 | Standard/sport-touring, air/oil-cooled to liquid |
-| 64 | Suzuki GSX-S750/1000 + Katana (2015+) | 🔲 | Modern naked, GSX-R derived engines |
-| 65 | Suzuki cruisers: Intruder/Boulevard series | 🔲 | 800/1500/1800, C50/M50/C90/M109R, shaft drive |
-| 66 | Suzuki dual-sport: DR-Z400S/SM, DR650SE | 🔲 | Thumpers, kick/electric start, carb jetting |
+| 57 | Suzuki GSX-R600 (1997+) | ✅ | 10 issues: stator/CCT/PAIR/fuel pump/forks/valves/cooling/S-DMS-TC/brakes/clutch |
+| 58 | Suzuki GSX-R750 (1996+) | ✅ | 10 issues: 2nd gear/stator/CCT/fuel pump/SRAD coolant/linkage/TPS/chain/master cyl/headstock |
+| 59 | Suzuki GSX-R1000 (2001+) | ✅ | 10 issues: K5-K8 case cracking/stator/IMU-TCS/CCT/SET servo/fuel relay/valves/QS/cooling/bearings |
+| 60 | Suzuki GSX-R1100 (1986–1998) | ✅ | 10 issues: air-oil overheating/carbs/charging/CCT/suspension/CDI ignition/petcock/brakes/wiring/chain |
+| 61 | Suzuki SV650/1000 + Gladius (1999+) | ✅ | 10 issues: reg-rec/carb tuning/CCT/clutch/fuel pump/suspension/SV1000 STPS/Gladius/forks/exhaust |
+| 62 | Suzuki V-Strom 650/1000/1050 (2002+) | ✅ | 10 issues: lean surge/CCT/windscreen/suspension/1050 electronics/charging/chain/valves/side stand/ABS |
+| 63 | Suzuki Bandit 600/1200/1250 (1995–2012) | ✅ | 10 issues: overheating/carbs/FI/charging/CCT/suspension/petcock/brakes/chain/wiring |
+| 64 | Suzuki GSX-S750/1000 + Katana (2015+) | ✅ | 10 issues: TBW/CCT/Katana heat/charging/fuel relay/chain/mirrors/valves/TC-ABS/forks |
+| 65 | Suzuki cruisers: Intruder/Boulevard series | ✅ | 10 issues: carbs/FI surge/shaft drive/M109R clutch/starter clutch/charging/heat/fuel pump/exhaust/brakes |
+| 66 | Suzuki dual-sport: DR-Z400S/SM, DR650SE | ✅ | 10 issues: jetting/valves/SM brakes/DR650 carb-oil/chain/electrical/suspension/kick start/DR650 starter |
 | 67 | Suzuki vintage: GS550/750/850/1000/1100, Katana 1100 | 🔲 | Air-cooled inline-4, points + electronic ignition |
 
 ### Cross-Platform Systems (Phases 68–78)
