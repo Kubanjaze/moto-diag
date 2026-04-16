@@ -158,6 +158,7 @@ moto-diag/
 | 07 | Diagnostic session model | 2026-04-15 | Session lifecycle (9 functions), status transitions, 16 tests |
 | 08 | Knowledge base schema | 2026-04-15 | Known issues repo (6 functions), 10 Harley issues with forum tips, loader, 16 tests |
 | 09 | Search + query engine | 2026-04-15 | Unified search across 5 stores, search CLI, 7 tests |
+| 10 | Logging + audit trail | 2026-04-16 | Structured logging, session audit trail, file handler, 9 tests |
 
 ## Completion Gates
 

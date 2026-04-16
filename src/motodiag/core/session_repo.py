@@ -1,9 +1,12 @@
 """Diagnostic session repository — lifecycle management for troubleshooting sessions."""
 
 import json
+import logging
 from datetime import datetime
 
 from motodiag.core.database import get_connection
+
+log = logging.getLogger("motodiag.sessions")
 
 
 def create_session(
@@ -29,7 +32,9 @@ def create_session(
                 datetime.now().isoformat(),
             ),
         )
-        return cursor.lastrowid
+        sid = cursor.lastrowid
+        log.info("Session %d created: %s %s %d", sid, vehicle_make, vehicle_model, vehicle_year)
+        return sid
 
 
 def get_session(session_id: int, db_path: str | None = None) -> dict | None:
@@ -112,6 +117,7 @@ def set_diagnosis(
     db_path: str | None = None,
 ) -> bool:
     """Set the diagnosis for a session, transitioning status to 'diagnosed'."""
+    log.info("Session %d diagnosed: %s (confidence=%.2f)", session_id, diagnosis[:80], confidence or 0)
     now = datetime.now().isoformat()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
@@ -130,6 +136,7 @@ def set_diagnosis(
 
 def close_session(session_id: int, db_path: str | None = None) -> bool:
     """Close a session, setting status to 'closed' and closed_at timestamp."""
+    log.info("Session %d closed", session_id)
     now = datetime.now().isoformat()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
