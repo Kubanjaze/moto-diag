@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.6 | **Date:** 2026-04-16
+**Version:** 0.3.7 | **Date:** 2026-04-17
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -222,13 +222,25 @@ moto-diag/
 | 64 | Suzuki GSX-S/Katana (2015+) | 2026-04-16 | 10 issues: TBW, CCT, Katana heat, charging, fuel relay, chain, mirrors, valves, TC/ABS, forks, 6 tests |
 | 65 | Suzuki cruisers Intruder/Boulevard | 2026-04-16 | 10 issues: carbs, FI surge, shaft drive, M109R clutch, starter clutch, charging, heat, fuel pump, exhaust, brakes, 6 tests |
 | 66 | Suzuki dual-sport DR-Z400/DR650 | 2026-04-16 | 10 issues: jetting, valves, SM brakes, DR650 carb/oil, chain, electrical, suspension, kick start, DR650 starter, 6 tests |
+| 67 | Suzuki vintage GS/Katana 1100 | 2026-04-16 | 10 issues: CCT, charging, carbs, ignition, fuel system, suspension, brakes, oil leaks, wiring, chain, 6 tests |
+| 68 | Suzuki electrical + FI dealer mode | 2026-04-16 | 10 issues: C-mode, stator/reg-rec, PAIR, grounds, starter, parasitic draw, TC/ABS, LED, connectors, FI relay, 6 tests |
+| 69 | Suzuki common cross-model | 2026-04-16 | 10 issues: stator connector fire risk, CCT pattern, fuel relay, PAIR, coolant, valves, chain, brakes, forks, exhaust mods, 6 tests |
+| 70 | Carburetor troubleshooting (cross-platform) | 2026-04-16 | 10 issues: CV diaphragm, pilot jet, float height, sync, enrichment, vacuum leaks, pilot screw, overflow, rejetting, EFI conversion, 6 tests |
+| 71 | Fuel injection troubleshooting (cross-platform) | 2026-04-16 | 10 issues: fuel pump, TPS, MAP, O2, ECT, injectors, ISC, throttle body, fuel pressure, ECU reset, 6 tests |
+| 72 | Charging system diagnostics (cross-platform) | 2026-04-17 | 10 issues: stator, reg/rec, connector, rotor, batteries, parasitic draw, 3-step test, grounds, accessories, alternator belt, 6 tests |
+| 73 | Starting system diagnostics (cross-platform) | 2026-04-17 | 10 issues: relay, motor, sprag, clutch switch, kickstand switch, kill switch, cables, tip-over, neutral, compression, 6 tests |
+| 74 | Ignition system diagnostics (cross-platform) | 2026-04-17 | 10 issues: plugs, coils, CDI, pickup, wires, points, timing, kill switch, misfires, COP, 6 tests |
+| 75 | Cooling system diagnostics (cross-platform) | 2026-04-17 | 10 issues: thermostat, fan, coolant, water pump, radiator, air-cooled, hoses, head gasket, cap, track coolant, 6 tests |
+| 76 | Brake system diagnostics (cross-platform) | 2026-04-17 | 10 issues: fluid, calipers, pads, rotors, master cyl, stainless lines, ABS sensors, ABS bleeding, drum, bolt torque, 6 tests |
+| 77 | Drivetrain diagnostics (cross-platform) | 2026-04-17 | 10 issues: chain, sprockets, lube, belt, shaft, clutch drag, cable/hydraulic, transmission, countershaft seal, alignment, 6 tests |
+| 78 | Gate 2 — Knowledge base integration test | 2026-04-17 | 21 integration tests, 650+ issues, all 5 makes, cross-platform systems verified, **GATE 2 PASSED** |
 
 ## Completion Gates
 
 | Gate | Target Phase | Status | Criteria |
 |------|-------------|--------|----------|
 | Gate 1 | 12 | ✅ | Vehicle → symptoms → session → DTCs → search → diagnose → close |
-| Gate 2 | ~78 | 🔲 | Query any target bike → get DTCs, symptoms, known issues, fixes |
+| Gate 2 | 78 | ✅ | Query any target bike → get DTCs, symptoms, known issues, fixes |
 | Gate 3 | ~95 | 🔲 | Full symptom-to-repair flow with confidence + cost |
 | Gate 4 | ~108 | 🔲 | Full mechanic workflow through CLI |
 | Gate 5 | ~122 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |

@@ -111,23 +111,23 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 64 | Suzuki GSX-S750/1000 + Katana (2015+) | ✅ | 10 issues: TBW/CCT/Katana heat/charging/fuel relay/chain/mirrors/valves/TC-ABS/forks |
 | 65 | Suzuki cruisers: Intruder/Boulevard series | ✅ | 10 issues: carbs/FI surge/shaft drive/M109R clutch/starter clutch/charging/heat/fuel pump/exhaust/brakes |
 | 66 | Suzuki dual-sport: DR-Z400S/SM, DR650SE | ✅ | 10 issues: jetting/valves/SM brakes/DR650 carb-oil/chain/electrical/suspension/kick start/DR650 starter |
-| 67 | Suzuki vintage: GS550/750/850/1000/1100, Katana 1100 | 🔲 | Air-cooled inline-4, points + electronic ignition |
+| 67 | Suzuki vintage: GS550/750/850/1000/1100, Katana 1100 | ✅ | 10 issues: CCT/charging/carbs/ignition/fuel system/suspension/brakes/oil leaks/wiring/chain |
 
 ### Cross-Platform Systems (Phases 68–78)
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 68 | Suzuki electrical systems + FI dealer mode | 🔲 | C-mode diagnostics, DTC readout, FI light patterns |
-| 69 | Suzuki common cross-model issues | 🔲 | Stator/reg-rec, PAIR valve, cam chain tensioner |
-| 70 | Carburetor troubleshooting (cross-platform) | 🔲 | CV carbs, jetting, float issues, sync, rebuilds |
-| 71 | Fuel injection troubleshooting (cross-platform) | 🔲 | Injector, TPS, MAP/MAF, O2 sensor, fuel pump |
-| 72 | Charging system diagnostics (cross-platform) | 🔲 | Stator, reg/rec, rotor, battery — all makes |
-| 73 | Starting system diagnostics (cross-platform) | 🔲 | Starter motor, solenoid, clutch switch, kickstand switch |
-| 74 | Ignition system diagnostics (cross-platform) | 🔲 | CDI, coils, plugs, pickup coil, kill switch circuit |
-| 75 | Cooling system diagnostics (cross-platform) | 🔲 | Thermostat, radiator, fan switch, water pump, coolant |
-| 76 | Brake system diagnostics (cross-platform) | 🔲 | Hydraulic, pads, rotors, ABS sensors, master cylinder |
-| 77 | Drivetrain diagnostics (cross-platform) | 🔲 | Chain, sprockets, belt, shaft drive, clutch, transmission |
-| 78 | Gate 2 — Vehicle knowledge base integration test | 🔲 | Query any target bike → get DTCs, symptoms, known issues, fixes |
+| 68 | Suzuki electrical systems + FI dealer mode | ✅ | 10 issues: C-mode/stator/PAIR/grounds/starter/parasitic draw/TC-ABS/LED/connectors/FI relay |
+| 69 | Suzuki common cross-model issues | ✅ | 10 issues: stator connector fire risk/CCT/fuel relay/PAIR/coolant/valves/chain/brakes/forks/exhaust |
+| 70 | Carburetor troubleshooting (cross-platform) | ✅ | 10 issues: CV diaphragm/pilot jet/float height/sync/enrichment/vacuum leaks/pilot screw/overflow/rejetting |
+| 71 | Fuel injection troubleshooting (cross-platform) | ✅ | 10 issues: fuel pump/TPS/MAP/O2/ECT/injectors/ISC/throttle body/fuel pressure/ECU reset |
+| 72 | Charging system diagnostics (cross-platform) | ✅ | 10 issues: stator/reg-rec/connector/rotor/batteries/parasitic draw/3-step test/grounds/accessories |
+| 73 | Starting system diagnostics (cross-platform) | ✅ | 10 issues: relay/motor/sprag/clutch switch/kickstand/kill switch/cables/tip-over/neutral/compression |
+| 74 | Ignition system diagnostics (cross-platform) | ✅ | 10 issues: plugs/coils/CDI/pickup/wires/points/timing/kill switch/misfires/COP |
+| 75 | Cooling system diagnostics (cross-platform) | ✅ | 10 issues: thermostat/fan/coolant/water pump/radiator/air-cooled/hoses/head gasket/cap/track coolant |
+| 76 | Brake system diagnostics (cross-platform) | ✅ | 10 issues: fluid/calipers/pads/rotors/master cyl/stainless lines/ABS sensors/ABS bleeding/drum/bolt torque |
+| 77 | Drivetrain diagnostics (cross-platform) | ✅ | 10 issues: chain/sprockets/lube/belt/shaft/clutch/cable-hydraulic/transmission/countershaft seal/alignment |
+| 78 | Gate 2 — Vehicle knowledge base integration test | ✅ | 21 integration tests, 650+ issues, all 5 makes verified, **GATE 2 PASSED** |
 
 ## Track C — AI Diagnostic Engine (Phases 79–95)
 
