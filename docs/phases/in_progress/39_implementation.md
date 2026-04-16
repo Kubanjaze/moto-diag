@@ -1,36 +1,40 @@
 # MotoDiag Phase 39 — Yamaha Cruisers: V-Star / Bolt
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-17
 
 ## Goal
-Yamaha's cruiser lineup: V-Star 250 (2008-2021), V-Star 650 (1998-2019), V-Star 950 (2009-2017), V-Star 1100 (1999-2009), V-Star 1300 (2007-2017), and Bolt/R-Spec (2014+). Air-cooled V-twins spanning carbureted and EFI eras. The V-Star 650 is one of the best-selling cruisers of all time. The Bolt is Yamaha's modern answer to the Harley Sportster.
+Yamaha's cruiser lineup: V-Star 250 (2008-2021), V-Star 650 (1998-2019), V-Star 950 (2009-2017), V-Star 1100 (1999-2009), V-Star 1300 (2007-2017), and Bolt/R-Spec (2014+). Air-cooled V-twins spanning carbureted and EFI eras.
 
 CLI: `python -m pytest tests/test_phase39_yamaha_cruisers.py -v`
 
 Outputs: `data/knowledge/known_issues_yamaha_cruisers.json` (10 issues), 6 tests
 
-## Logic
-- Create 10 known issues covering V-Star and Bolt platforms
-- V-Star carbureted models: carb issues, petcock, charging
-- V-Star EFI models: fuel pump, TPS, idle control
-- Bolt: modern EFI cruiser with air-cooled V-twin quirks
-- Shaft drive models (V-Star 650/1100/1300): final drive service
-
 ## Key Concepts
-- V-Star 650 is Yamaha's cruiser workhorse — reliable but carb models need regular maintenance
-- V-Star 1100 shares engine architecture with the Virago — parts interchangeability
-- V-Star 1300 is shaft drive with EFI — most refined but heaviest
-- Bolt uses air-cooled 942cc V-twin — runs hot in traffic like any air-cooled cruiser
-- Shaft drive requires periodic fluid changes that many cruiser owners skip
+- V-Star 650 carb maintenance is the #1 issue — pilot jet clogging from ethanol and storage
+- Vacuum petcock failure puts fuel in oil — sneaky engine killer on V-Star 650/1100
+- V-Star 1100 stator/charging failure same pattern as all Yamaha V-twins — MOSFET upgrade mandatory
+- Shaft drive on V-Star 950/1300 requires gear oil changes that most owners skip entirely
+- V-Star 250 valve adjustment is the easiest on any motorcycle — 15-minute job with basic tools
+- Bolt runs hot in traffic like all air-cooled cruisers — full synthetic oil and oil cooler for commuters
+- V-Star 650 starter clutch is an expensive repair ($500-800) at 30K-40K miles
+- V-Star 1300 ISC valve carbon buildup causes idle surge — clean every 10K miles
+- Bolt belt drive is low maintenance but belt failure is catastrophic — inspect regularly
+- AIS removal is the universal V-Star mod — eliminates decel popping
 
 ## Verification Checklist
-- [ ] 10 issues load correctly
-- [ ] Year range queries return correct results
-- [ ] Critical severity issues present
-- [ ] Symptom searches work (loss of power, won't start)
-- [ ] Forum tips present in fix procedures
-- [ ] All tests pass
+- [x] 10 issues load correctly
+- [x] Year range queries return correct results (2015 query returns 5+ hits)
+- [x] Critical severity issues present (petcock fuel-in-oil)
+- [x] Symptom searches work (loss of power: 2+, won't start: 1+)
+- [x] Forum tips present in fix procedures
+- [x] All 6 tests pass (1.13s)
 
-## Risks
-- Large model range — need clear model identification in each issue title
-- V-Star name covers very different bikes (250cc single to 1300cc V-twin)
+## Results
+| Metric | Value |
+|--------|-------|
+| Known issues | 10 (V-Star carbs, petcock, stator, shaft drive, V-Star 250 valves, Bolt heat, starter clutch, ISC surge, Bolt belt, AIS popping) |
+| Tests | 6/6, 1.13s |
+| Severity breakdown | 1 critical, 3 high, 6 medium, 0 low |
+| Year coverage | 1998-2026 |
+
+The cruiser lineup reveals a different owner demographic than sport bikes — seasonal riders who store bikes for months (carb/petcock issues), commuters who skip maintenance (shaft drive), and beginners who need simple maintenance guidance (V-Star 250 valves).
