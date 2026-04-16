@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.0 | **Date:** 2026-04-16
+**Version:** 0.3.1 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -187,6 +187,7 @@ moto-diag/
 | 30 | Honda V4: VFR800, RC51, VFR1200F | 2026-04-16 | 10 issues: VTEC, reg/rec, RC51 TPS, gear cam noise, CBS, fuel pump relay, 6 tests |
 | 31 | Honda dual-sport: XR650L, CRF, Africa Twin | 2026-04-16 | 10 issues: XR650L jetting, AT DCT off-road, radiator, water damage, chain, 6 tests |
 | — | **Pricing/Repair Plan module** | 2026-04-16 | Labor rates (26 regions), prep labor catalog (18 items), repair plan CRUD, estimate engine, 24 tests |
+| 32 | Honda vintage air-cooled CB/Nighthawk | 2026-04-16 | 10 issues: points ignition, carb rebuild, charging, cam chain, petcock, brakes, wiring, 6 tests |
 
 ## Completion Gates
 
