@@ -65,3 +65,9 @@ This is the **project-level** change log. Records updates to the project's archi
 - Sample data: 20 generic OBD-II P-codes + 20 Harley-Davidson specific codes
 - CLI: `motodiag code <DTC>` now functional with Rich Panel output
 - knowledge package status: Scaffold → Active
+
+### 2026-04-15 20:00 — Phase 06 complete
+- Symptom repository: CRUD + search with category and keyword filtering
+- Starter taxonomy: 40 symptoms across starting, idle, engine, cooling, exhaust, electrical, fuel, brakes, drivetrain, vibration, suspension, noise categories
+- Extended loader.py with load_symptom_file()
+- Each symptom links to related_systems for cross-system diagnostics

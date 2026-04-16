@@ -5,6 +5,7 @@ from pathlib import Path
 
 from motodiag.core.models import DTCCode, SymptomCategory, Severity
 from motodiag.knowledge.dtc_repo import add_dtc
+from motodiag.knowledge.symptom_repo import add_symptom
 
 
 def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
@@ -55,3 +56,33 @@ def load_dtc_directory(dir_path: str | Path, db_path: str | None = None) -> dict
         results[json_file.name] = count
 
     return results
+
+
+def load_symptom_file(file_path: str | Path, db_path: str | None = None) -> int:
+    """Load symptoms from a JSON file into the database.
+
+    JSON format: array of objects with name, description, category, related_systems.
+    Returns number of symptoms loaded.
+    """
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Symptom file not found: {path}")
+
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, list):
+        raise ValueError(f"Expected JSON array, got {type(data).__name__}")
+
+    count = 0
+    for item in data:
+        add_symptom(
+            name=item["name"],
+            description=item["description"],
+            category=item.get("category", "other"),
+            related_systems=item.get("related_systems", []),
+            db_path=db_path,
+        )
+        count += 1
+
+    return count
