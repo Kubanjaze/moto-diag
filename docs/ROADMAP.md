@@ -56,7 +56,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 24 | Honda CBR600: F2/F3/F4/F4i (1991–2006) | ✅ | 10 issues: reg/rec, carbs, CCT, F4i injectors, clutch cable, radiator fan, chain |
 | 25 | Honda CBR600RR (2003–2024) | ✅ | 10 issues: HESD, reg/rec, C-ABS, CCT, fuel pump, valve clearance, stator, subframe |
 | 26 | Honda CBR1000RR / RR-R (2004+) | ✅ | 10 issues: reg/rec, HSTC, CCT, HESD, quickshifter, exhaust servo, brakes, winglets |
-| 27 | Honda cruisers: Shadow 600/750/1100, VTX 1300/1800 | 🔲 | V-twin, carb + EFI eras, shaft/chain drive issues |
+| 27 | Honda cruisers: Shadow 600/750/1100, VTX 1300/1800 | ✅ | 10 issues: reg/rec, shaft drive, carbs, VTX starter, fuel pump, clutch drag, exhaust |
 | 28 | Honda Rebel 250/300/500/1100 | 🔲 | Beginner to midsize, 1100 DCT transmission diagnostics |
 | 29 | Honda standards: CB750/919, CB1000R, Hornet | 🔲 | Naked/standard platforms, shared engines with sport bikes |
 | 30 | Honda V4: VFR800, RC51/RVT1000R, VFR1200F | 🔲 | VTEC system (VFR800), gear-driven cams, complex FI |

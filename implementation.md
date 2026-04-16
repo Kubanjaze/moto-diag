@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.2.1 | **Date:** 2026-04-16
+**Version:** 0.2.2 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -176,6 +176,7 @@ moto-diag/
 | 24 | Honda CBR600 F2/F3/F4/F4i (1991-2006) | 2026-04-16 | 10 issues: reg/rec, carbs, CCT, F4i injectors, clutch cable, radiator fan, 6 tests |
 | 25 | Honda CBR600RR (2003-2024) | 2026-04-16 | 10 issues: HESD, reg/rec, C-ABS, CCT, fuel pump, valve clearance, 6 tests |
 | 26 | Honda CBR1000RR / RR-R (2004+) | 2026-04-16 | 10 issues: reg/rec, HSTC, CCT, HESD, quickshifter, exhaust servo, brakes, 6 tests |
+| 27 | Honda cruisers Shadow/VTX | 2026-04-16 | 10 issues: reg/rec, shaft drive, carbs, VTX starter, fuel pump, clutch drag, 6 tests |
 
 ## Completion Gates
 
