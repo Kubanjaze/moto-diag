@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.4 | **Date:** 2026-04-16
+**Version:** 0.3.5 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -191,6 +191,24 @@ moto-diag/
 | 33 | Honda electrical systems + PGM-FI | 2026-04-16 | 10 issues: blink codes, HISS, reg/rec, stator, starter, FI sensors, grounds, fuses, 6 tests |
 | 34 | Honda common cross-model issues | 2026-04-16 | 10 issues: CCT, starter clutch, coolant, valves, chain, brake fluid, throttle, forks, tires, 6 tests |
 | 35 | Yamaha YZF-R1 (1998+) | 2026-04-16 | 10 issues: EXUP, stator, crossplane, YCC-T, YCC-I, fuel pump, CCT, suspension, 6 tests |
+| 36 | Yamaha YZF-R6 (1999-2020) | 2026-04-16 | 10 issues: CCT, stator, valve clearance, EXUP, underseat heat, fuel pump, throttle sync, coolant, immobilizer, electronics, 6 tests |
+| 37 | Yamaha YZF-R7 + YZF600R Thundercat | 2026-04-16 | 10 issues: Thundercat carbs/petcock/charging/chain/forks + R7 clutch/suspension/QS/heat/lean, 6 tests |
+| 38 | Yamaha FZ/MT naked series | 2026-04-16 | 10 issues: MT-09 throttle/valves/fuel, MT-07 charging/chain, FZ6 heat, MT-10 electronics, 6 tests |
+| 39 | Yamaha cruisers V-Star/Bolt | 2026-04-16 | 10 issues: V-Star carbs/petcock/stator/shaft drive, starter clutch, ISC surge, Bolt heat/belt, AIS, 6 tests |
+| 40 | Yamaha VMAX (1985-2020) | 2026-04-16 | 10 issues: Gen 1 V-Boost/carbs/charging/shaft drive/tank + Gen 2 FI/cooling/brakes/electronics, 6 tests |
+| 41 | Yamaha dual-sport WR250R/XT250/Tenere 700 | 2026-04-16 | 10 issues: WR250R stator/suspension/cold start + XT250 carb/chain + Tenere wind/crash/lean, 6 tests |
+| 42 | Yamaha vintage XS650/RD350/SR400 | 2026-04-16 | 10 issues: XS650 points/charging/oil + RD Autolube/chambers + SR kickstart/carb/valves, 6 tests |
+| 43 | Yamaha electrical systems + diagnostics | 2026-04-16 | 10 issues: self-diagnostic, stator connector, MOSFET, grounds, harness, fuses, immobilizer, LED, batteries, 6 tests |
+| 44 | Yamaha common cross-model issues | 2026-04-16 | 10 issues: CCT, ethanol, valves, EXUP, brakes, chain, coolant, tires, winterization, exhaust mods, 6 tests |
+| 45 | Kawasaki Ninja 250/300/400 | 2026-04-16 | 10 issues: carbs, drops, charging, fuel pump, chain, valves, ABS, coolant, header crack, oil neglect, 6 tests |
+| 46 | Kawasaki ZX-6R (1995+) | 2026-04-16 | 10 issues: 636/599, stator, CCT, KLEEN, valves, fuel pump, cooling, KTRC, forks, QS, 6 tests |
+| 47 | Kawasaki ZX-7R / ZX-7RR (1996-2003) | 2026-04-16 | 10 issues: carbs, fuel system, charging, FCR, CCT, wiring, rubber, suspension, brakes, ignition, 6 tests |
+| 48 | Kawasaki ZX-9R (1998-2003) | 2026-04-17 | 10 issues: carbs, early FI, charging, CCT, cooling, fuel pump, forks, brakes, valves, ignition switch, 6 tests |
+| 49 | Kawasaki ZX-10R (2004+) | 2026-04-17 | 10 issues: headshake, charging, IMU, CCT, fuel pump, valves, KLEEN, crash, QS, cooling, 6 tests |
+| 50 | Kawasaki ZX-12R / ZX-14R (2000-2020) | 2026-04-17 | 10 issues: ram air, charging, consumables, FI tuning, ABS/KTRC, chain, CCT, cooling, suspension, 6 tests |
+| 51 | Kawasaki Ninja H2 / H2R (2015+) | 2026-04-17 | 10 issues: supercharger, cooling, electronics, paint, chain, oil, fuel, H2 SX, brakes, valves, 6 tests |
+| 52 | Kawasaki Z naked series | 2026-04-17 | 10 issues: radiator, throttle, connectors, charging, Z H2 heat, chain, KTRC, CCT, beginner, headlights, 6 tests |
+| 53 | Kawasaki Vulcan cruisers | 2026-04-17 | 10 issues: carbs, ISC surge, shaft drive, starter, Vulcan 2000, belt, heat, 1700 EFI, Vulcan 500, exhaust mods, 6 tests |
 
 ## Completion Gates
 
