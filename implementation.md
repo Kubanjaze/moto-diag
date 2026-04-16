@@ -3,7 +3,7 @@
 **Version:** 0.1.3 | **Date:** 2026-04-15
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 185 phases across 10 tracks
+**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 198 phases across 11 tracks
 
 ---
 
@@ -90,7 +90,8 @@ moto-diag/
 | `core` | A | Active | Config (pydantic-settings + validators + profiles), database (SQLite + WAL + 6 tables), base models |
 | `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
 | `knowledge` | B | Active | DTC repo (CRUD + search + JSON loader), 40 codes loaded |
-| `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 29 |
+| `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 79 |
+| `media` | C2 | Scaffold | Video/audio diagnostic analysis — awaiting Phase 96 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
 | `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
 | `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 123 |
