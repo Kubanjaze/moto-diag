@@ -1,26 +1,26 @@
-# MotoDiag Phase 01 — Phase Log
+# MotoDiag — Project Phase Log
 
-**Status:** ✅ Complete
-**Started:** 2026-04-15
-**Completed:** 2026-04-15
+**Project:** moto-diag
 **Repo:** https://github.com/Kubanjaze/moto-diag
+
+This is the **project-level** change log. Records updates to the project's architecture, package structure, dependencies, and completion gate status. Per-phase logs live in `docs/phases/{NN}_phase_log.md`.
 
 ---
 
-### 2026-04-15 16:00 — Plan written, initial push
-- Created 100-phase roadmap (ROADMAP_MOTODIAG_100.md) with 8 tracks
-- Target fleet: Harley-Davidson (all years), Japanese sport bikes (late 90s–early 2000s)
-- Phase 01 scope: monorepo scaffold, package structure, CLI entry point
-- Architecture: src/motodiag/ with 8 subpackages
-- Git init + plan commit pushed to Kubanjaze/moto-diag
+### 2026-04-15 16:00 — Project created
+- Created 100-phase roadmap (8 tracks: A–H)
+- Initialized monorepo at `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
+- GitHub repo: `Kubanjaze/moto-diag`
 
-### 2026-04-15 16:30 — Build complete
-- Created full monorepo structure with pyproject.toml and 8 subpackages
-- Built core/config.py (pydantic-settings with .env support)
-- Built core/models.py (VehicleBase, DiagnosticSessionBase, DTCCode, 5 enums)
-- Built cli/main.py (Click CLI with 5 subcommands, rich welcome screen)
-- Built main.py fallback (argparse + Windows UTF-8 fix)
-- Fixed build backend: `setuptools.backends._legacy` → `setuptools.build_meta`
-- Created .venv with Python 3.13.5, installed editable with [dev] extras
-- 24 tests pass: imports (12), version (2), config (2), models (5), CLI (3)
-- All verification checklist items confirmed ✅
+### 2026-04-15 16:30 — Phase 01 complete
+- 8 subpackages created: core, vehicles, knowledge, engine, cli, hardware, advanced, api
+- Base models: VehicleBase, DiagnosticSessionBase, DTCCode, 5 enums (ProtocolType, Severity, etc.)
+- Config system: pydantic-settings with MOTODIAG_ env prefix
+- CLI: Click group with 5 subcommands (diagnose, code, garage, history, info)
+- 24 tests passing
+
+### 2026-04-15 17:00 — Documentation restructured
+- Created project-level `implementation.md` (project overview doc)
+- Created project-level `phase_log.md` (this file)
+- Moved Phase 01 docs to `docs/phases/01_implementation.md` and `01_phase_log.md`
+- Two-tier doc structure: project-level (root) + per-phase (docs/phases/)
