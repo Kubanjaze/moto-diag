@@ -78,7 +78,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 41 | Yamaha dual-sport: WR250R/X, XT250, Ténéré 700 | ✅ | 10 issues: WR250R stator/suspension/cold start + XT250 carb/chain/valves + Tenere wind/crash/lean/shock |
 | 42 | Yamaha vintage: XS650, RD350/400, SR400/500 | ✅ | 10 issues: XS650 points/charging/oil/cam chain + RD Autolube/chambers/reeds + SR kickstart/carb/valves |
 | 43 | Yamaha electrical systems + diagnostics | ✅ | 10 issues: self-diagnostic/stator connector/MOSFET/grounds/harness/fuses/immobilizer/LED/batteries/Woolich |
-| 44 | Yamaha common cross-model issues | 🔲 | Stator failures, CCT, EXUP servo, throttle position |
+| 44 | Yamaha common cross-model issues | ✅ | 10 issues: CCT/ethanol/valves/EXUP/brakes/chain/coolant/tires/winterization/exhaust mods |
 
 ### Kawasaki (Phases 45–56)
 
