@@ -181,12 +181,53 @@ def diagnose() -> None:
 
 @cli.command()
 @click.argument("dtc_code", required=False)
-def code(dtc_code: str | None) -> None:
-    """Look up a diagnostic trouble code. (Coming in Phase 05)"""
-    if dtc_code:
-        console.print(f"[yellow]DTC lookup for '{dtc_code}' coming in Phase 05.[/yellow]")
-    else:
+@click.option("--make", "-m", help="Filter by manufacturer (e.g., Harley-Davidson)")
+def code(dtc_code: str | None, make: str | None) -> None:
+    """Look up a diagnostic trouble code (e.g., P0115)."""
+    from motodiag.core.database import init_db
+    from motodiag.knowledge.dtc_repo import get_dtc, search_dtcs
+
+    init_db()
+
+    if not dtc_code:
         console.print("[yellow]Usage: motodiag code P0115[/yellow]")
+        console.print("[dim]  --make / -m  Filter by manufacturer[/dim]")
+        return
+
+    result = get_dtc(dtc_code, make=make)
+    if not result:
+        console.print(f"[red]DTC '{dtc_code}' not found.[/red]")
+        console.print("[dim]Try loading DTC data: motodiag code --load[/dim]")
+        return
+
+    # Display formatted DTC info
+    severity_colors = {
+        "critical": "red bold", "high": "red", "medium": "yellow",
+        "low": "green", "info": "dim",
+    }
+    sev = result.get("severity", "medium")
+    sev_style = severity_colors.get(sev, "white")
+
+    console.print()
+    console.print(Panel(
+        f"[bold]{result['code']}[/bold] — {result['description']}\n\n"
+        f"Category: [cyan]{result.get('category', 'unknown')}[/cyan]\n"
+        f"Severity: [{sev_style}]{sev.upper()}[/{sev_style}]\n"
+        f"Make: {result.get('make') or 'Generic (all makes)'}",
+        title=f"DTC {result['code']}",
+        border_style="yellow",
+    ))
+
+    causes = result.get("common_causes", [])
+    if causes:
+        console.print("\n[bold]Common Causes:[/bold]")
+        for i, cause in enumerate(causes, 1):
+            console.print(f"  {i}. {cause}")
+
+    fix = result.get("fix_summary")
+    if fix:
+        console.print(f"\n[bold]Fix:[/bold] {fix}")
+    console.print()
 
 
 @cli.command()

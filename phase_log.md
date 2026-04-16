@@ -58,3 +58,10 @@ This is the **project-level** change log. Records updates to the project's archi
 - Corrected: all completed phase docs now have full v1.1 with Results, Verification Checklist [x], and timestamped log entries
 - Updated project implementation.md with Phase History rows, DB table inventory, CLI commands, package statuses
 - Rule reinforced: no phase is complete until docs are fully fleshed out and pushed
+
+### 2026-04-15 19:30 — Phase 05 complete
+- DTC repository: CRUD + search with make-specific fallback chain
+- JSON loader: file and directory import for bulk DTC loading
+- Sample data: 20 generic OBD-II P-codes + 20 Harley-Davidson specific codes
+- CLI: `motodiag code <DTC>` now functional with Rich Panel output
+- knowledge package status: Scaffold → Active

@@ -89,7 +89,7 @@ moto-diag/
 |---------|-------|--------|-------------|
 | `core` | A | Active | Config (pydantic-settings + validators + profiles), database (SQLite + WAL + 6 tables), base models |
 | `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
-| `knowledge` | B | Scaffold | Knowledge base — empty, awaiting Phase 08 |
+| `knowledge` | B | Active | DTC repo (CRUD + search + JSON loader), 40 codes loaded |
 | `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 29 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
 | `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
@@ -119,7 +119,7 @@ moto-diag/
 | `motodiag config paths` | ✅ Working | 02 |
 | `motodiag config init` | ✅ Working | 02 |
 | `motodiag diagnose` | Stub | 79+ |
-| `motodiag code <DTC>` | Stub | 05 |
+| `motodiag code <DTC>` | ✅ Working | 05 |
 | `motodiag garage` | Stub | 04 |
 | `motodiag history` | Stub | 07 |
 
@@ -151,6 +151,7 @@ moto-diag/
 | 02 | Configuration system | 2026-04-15 | Environment profiles, field validators, ensure_directories, config CLI, 13 tests |
 | 03 | Database schema + SQLite setup | 2026-04-15 | 6 tables, WAL mode, connection manager, schema versioning, 12 tests |
 | 04 | Vehicle registry data model | 2026-04-15 | CRUD operations (add/get/list/update/delete/count), 14 tests |
+| 05 | DTC schema + loader | 2026-04-15 | DTC repo, JSON loader, 40 codes (generic + Harley), code CLI, 15 tests |
 
 ## Completion Gates
 
