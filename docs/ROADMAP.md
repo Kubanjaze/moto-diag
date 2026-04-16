@@ -54,7 +54,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 |-------|-------|--------|-------|
 | 23 | Honda CBR supersport: 900RR/929RR/954RR (1992–2003) | ✅ | 10 issues: reg/rec, CCT, HISS, carb sync, fork seals, starter clutch, PGM-FI |
 | 24 | Honda CBR600: F2/F3/F4/F4i (1991–2006) | ✅ | 10 issues: reg/rec, carbs, CCT, F4i injectors, clutch cable, radiator fan, chain |
-| 25 | Honda CBR600RR (2003–2024) | 🔲 | Full EFI, HESD steering damper, HISS, FI codes |
+| 25 | Honda CBR600RR (2003–2024) | ✅ | 10 issues: HESD, reg/rec, C-ABS, CCT, fuel pump, valve clearance, stator, subframe |
 | 26 | Honda CBR1000RR / RR-R (2004+) | 🔲 | i-DTSC, HSTC, ride modes, IMU-equipped later models |
 | 27 | Honda cruisers: Shadow 600/750/1100, VTX 1300/1800 | 🔲 | V-twin, carb + EFI eras, shaft/chain drive issues |
 | 28 | Honda Rebel 250/300/500/1100 | 🔲 | Beginner to midsize, 1100 DCT transmission diagnostics |
