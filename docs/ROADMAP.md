@@ -72,7 +72,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 35 | Yamaha YZF-R1 (1998+) | ✅ | 10 issues: EXUP, stator, crossplane sound, YCC-T, YCC-I, fuel pump, CCT, R1M electronics |
 | 36 | Yamaha YZF-R6 (1999–2020) | ✅ | 10 issues: CCT (critical), stator, valve clearance, EXUP, underseat heat, fuel pump, throttle sync, coolant, immobilizer, electronics |
 | 37 | Yamaha YZF-R7 + YZF600R Thundercat (1996–2007, 2021+) | ✅ | 10 issues: Thundercat carbs/petcock/charging/chain/forks + R7 clutch/suspension/QS/heat/lean spot |
-| 38 | Yamaha FZ/MT naked: FZ6/FZ8/FZ-09/FZ-10, MT-03/07/09/10 | 🔲 | Crossplane, CP2/CP3 engines, ride-by-wire |
+| 38 | Yamaha FZ/MT naked: FZ6/FZ8/FZ-09/FZ-10, MT-03/07/09/10 | ✅ | 10 issues: MT-09 throttle/valves/fuel, MT-07 charging/chain, FZ6 heat, MT-10 electronics, MT-03 drops, radiator |
 | 39 | Yamaha cruisers: V-Star 250/650/950/1100/1300, Bolt | 🔲 | Air-cooled V-twins, carb + EFI, shaft drive |
 | 40 | Yamaha VMAX (1985–2020) | 🔲 | V-Boost system, Gen 1 carb vs Gen 2 EFI |
 | 41 | Yamaha dual-sport: WR250R/X, XT250, Ténéré 700 | 🔲 | Off-road electrics, CP2 engine diagnostics |
