@@ -58,7 +58,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 26 | Honda CBR1000RR / RR-R (2004+) | ✅ | 10 issues: reg/rec, HSTC, CCT, HESD, quickshifter, exhaust servo, brakes, winglets |
 | 27 | Honda cruisers: Shadow 600/750/1100, VTX 1300/1800 | ✅ | 10 issues: reg/rec, shaft drive, carbs, VTX starter, fuel pump, clutch drag, exhaust |
 | 28 | Honda Rebel 250/300/500/1100 | ✅ | 10 issues: carb 250, reg/rec, DCT jerky, chain 300/500, battery drain, drum brake |
-| 29 | Honda standards: CB750/919, CB1000R, Hornet | 🔲 | Naked/standard platforms, shared engines with sport bikes |
+| 29 | Honda standards: CB750/919, CB1000R, Hornet | ✅ | 10 issues: reg/rec, CCT, ride-by-wire, carbs, chain, vibes, tank rust, rear shock |
 | 30 | Honda V4: VFR800, RC51/RVT1000R, VFR1200F | 🔲 | VTEC system (VFR800), gear-driven cams, complex FI |
 | 31 | Honda dual-sport: XR650L, CRF250L/300L, Africa Twin | 🔲 | Air-cooled vs liquid, DCT on Africa Twin, off-road electrics |
 | 32 | Honda vintage air-cooled: CB550/650/750, Nighthawk | 🔲 | Points/electronic ignition, carb banks, charging system |
