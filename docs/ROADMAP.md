@@ -69,7 +69,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 35 | Yamaha YZF-R1 (1998+) | 🔲 | Gen 1-5, crossplane crank, EXUP valve, YCC-T/YCC-I |
+| 35 | Yamaha YZF-R1 (1998+) | ✅ | 10 issues: EXUP, stator, crossplane sound, YCC-T, YCC-I, fuel pump, CCT, R1M electronics |
 | 36 | Yamaha YZF-R6 (1999–2020) | 🔲 | Stator issues, CCT, valve adjustments, FI codes |
 | 37 | Yamaha YZF-R7 + YZF600R Thundercat (1996–2007, 2021+) | 🔲 | Budget sport platforms, CP2 engine on R7 |
 | 38 | Yamaha FZ/MT naked: FZ6/FZ8/FZ-09/FZ-10, MT-03/07/09/10 | 🔲 | Crossplane, CP2/CP3 engines, ride-by-wire |
