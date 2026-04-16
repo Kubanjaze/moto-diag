@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=68.0", "wheel"]
+build-backend = "setuptools.backends._legacy:_Backend"
+
+[project]
+name = "motodiag"
+version = "0.1.0"
+description = "AI-powered motorcycle diagnostic tool — symptom analysis, fault code interpretation, guided troubleshooting"
+readme = "README.md"
+requires-python = ">=3.11"
+license = {text = "MIT"}
+authors = [
+    {name = "Kubanjaze"},
+]
+keywords = ["motorcycle", "diagnostics", "obd", "mechanic", "troubleshooting"]
+
+dependencies = [
+    "click>=8.1",
+    "rich>=13.0",
+    "pydantic>=2.0",
+    "pydantic-settings>=2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=8.0",
+    "pytest-cov>=5.0",
+    "ruff>=0.4",
+]
+ai = [
+    "anthropic>=0.40",
+]
+api = [
+    "fastapi>=0.110",
+    "uvicorn>=0.29",
+]
+hardware = [
+    "pyserial>=3.5",
+]
+all = [
+    "motodiag[dev,ai,api,hardware]",
+]
+
+[project.scripts]
+motodiag = "motodiag.cli.main:cli"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.ruff]
+line-length = 100
+target-version = "py311"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --tb=short"
