@@ -3,7 +3,7 @@
 **Version:** 0.1.3 | **Date:** 2026-04-15
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 198 phases across 11 tracks
+**Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
 
 ---
 
