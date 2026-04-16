@@ -23,7 +23,7 @@ Foundation: monorepo scaffold, config, database, base data models.
 | 05 | DTC (Diagnostic Trouble Code) schema + loader | ✅ | DTC repo, JSON loader, 40 codes, code CLI functional |
 | 06 | Symptom taxonomy + data model | ✅ | 40 symptoms, 12+ categories, related_systems linking |
 | 07 | Diagnostic session model | ✅ | 9 functions, full lifecycle, accumulation, 16 tests |
-| 08 | Knowledge base schema | 🔲 | Known issues, repair procedures, TSBs |
+| 08 | Knowledge base schema | ✅ | Issues repo, 10 Harley known issues with forum tips, loader |
 | 09 | Search + query engine | 🔲 | Find by symptom, code, vehicle, keyword |
 | 10 | Logging + audit trail | 🔲 | Structured logging, diagnostic history |
 | 11 | Test framework + fixtures | 🔲 | pytest, factory fixtures, test database |

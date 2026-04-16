@@ -89,7 +89,7 @@ moto-diag/
 |---------|-------|--------|-------------|
 | `core` | A | Active | Config (pydantic-settings + validators + profiles), database (SQLite + WAL + 6 tables), base models |
 | `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
-| `knowledge` | B | Active | DTC repo (CRUD + search + JSON loader), 40 codes loaded |
+| `knowledge` | B | Active | DTC repo (40 codes), symptom repo (40 symptoms), issues repo (10 Harley known issues), JSON loaders |
 | `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 79 |
 | `media` | C2 | Scaffold | Video/audio diagnostic analysis — awaiting Phase 96 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
@@ -155,6 +155,7 @@ moto-diag/
 | 05 | DTC schema + loader | 2026-04-15 | DTC repo, JSON loader, 40 codes (generic + Harley), code CLI, 15 tests |
 | 06 | Symptom taxonomy + data model | 2026-04-15 | Symptom repo, 40 symptoms across 12+ categories, loader, 10 tests |
 | 07 | Diagnostic session model | 2026-04-15 | Session lifecycle (9 functions), status transitions, 16 tests |
+| 08 | Knowledge base schema | 2026-04-15 | Known issues repo (6 functions), 10 Harley issues with forum tips, loader, 16 tests |
 
 ## Completion Gates
 

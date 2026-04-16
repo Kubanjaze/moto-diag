@@ -6,6 +6,7 @@ from pathlib import Path
 from motodiag.core.models import DTCCode, SymptomCategory, Severity
 from motodiag.knowledge.dtc_repo import add_dtc
 from motodiag.knowledge.symptom_repo import add_symptom
+from motodiag.knowledge.issues_repo import add_known_issue
 
 
 def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
@@ -81,6 +82,45 @@ def load_symptom_file(file_path: str | Path, db_path: str | None = None) -> int:
             description=item["description"],
             category=item.get("category", "other"),
             related_systems=item.get("related_systems", []),
+            db_path=db_path,
+        )
+        count += 1
+
+    return count
+
+
+def load_known_issues_file(file_path: str | Path, db_path: str | None = None) -> int:
+    """Load known issues from a JSON file into the database.
+
+    JSON format: array of objects matching add_known_issue() parameters.
+    Returns number of issues loaded.
+    """
+    path = Path(file_path)
+    if not path.exists():
+        raise FileNotFoundError(f"Known issues file not found: {path}")
+
+    with open(path, encoding="utf-8") as f:
+        data = json.load(f)
+
+    if not isinstance(data, list):
+        raise ValueError(f"Expected JSON array, got {type(data).__name__}")
+
+    count = 0
+    for item in data:
+        add_known_issue(
+            title=item["title"],
+            description=item["description"],
+            make=item.get("make"),
+            model=item.get("model"),
+            year_start=item.get("year_start"),
+            year_end=item.get("year_end"),
+            severity=item.get("severity", "medium"),
+            symptoms=item.get("symptoms", []),
+            dtc_codes=item.get("dtc_codes", []),
+            causes=item.get("causes", []),
+            fix_procedure=item.get("fix_procedure"),
+            parts_needed=item.get("parts_needed", []),
+            estimated_hours=item.get("estimated_hours"),
             db_path=db_path,
         )
         count += 1

@@ -77,3 +77,10 @@ This is the **project-level** change log. Records updates to the project's archi
 - Symptom/fault code accumulation with duplicate prevention
 - Diagnosis with confidence scoring, severity, repair steps
 - Cost tracking fields (ai_model_used, tokens_used) ready for Track C
+
+### 2026-04-15 21:30 — Phase 08 complete
+- Known issues repository: 6 functions (add, get, search, find_by_symptom, find_by_dtc, count)
+- 10 Harley-Davidson starter issues with forum-level fixes and part numbers
+- Year range queries for spanning model generations
+- Extended loader.py with load_known_issues_file()
+- knowledge package now has 3 repos: dtc_repo, symptom_repo, issues_repo
