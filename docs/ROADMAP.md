@@ -77,7 +77,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 40 | Yamaha VMAX (1985–2020) | ✅ | 10 issues: Gen 1 V-Boost/carbs/charging/shaft drive/tank + Gen 2 FI/cooling/brakes/electronics/exhaust |
 | 41 | Yamaha dual-sport: WR250R/X, XT250, Ténéré 700 | ✅ | 10 issues: WR250R stator/suspension/cold start + XT250 carb/chain/valves + Tenere wind/crash/lean/shock |
 | 42 | Yamaha vintage: XS650, RD350/400, SR400/500 | ✅ | 10 issues: XS650 points/charging/oil/cam chain + RD Autolube/chambers/reeds + SR kickstart/carb/valves |
-| 43 | Yamaha electrical systems + diagnostics | 🔲 | Self-diagnostic mode, FI codes, stator/flywheel |
+| 43 | Yamaha electrical systems + diagnostics | ✅ | 10 issues: self-diagnostic/stator connector/MOSFET/grounds/harness/fuses/immobilizer/LED/batteries/Woolich |
 | 44 | Yamaha common cross-model issues | 🔲 | Stator failures, CCT, EXUP servo, throttle position |
 
 ### Kawasaki (Phases 45–56)
