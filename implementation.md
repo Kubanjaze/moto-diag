@@ -3,7 +3,7 @@
 **Version:** 0.1.3 | **Date:** 2026-04-15
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 165 phases across 9 tracks
+**Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 185 phases across 10 tracks
 
 ---
 
@@ -164,3 +164,5 @@ moto-diag/
 | Gate 5 | ~122 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |
 | Gate 6 | ~134 | 🔲 | Fleet + history + prediction end-to-end |
 | Gate 7 | ~144 | 🔲 | Full API workflow: auth → vehicle → diagnose → report |
+| Gate 8 | ~159 | 🔲 | Full API + shop management workflow |
+| Gate 9 | ~179 | 🔲 | Full mobile flow: scan VIN → diagnose → share report |
