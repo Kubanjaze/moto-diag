@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.2 | **Date:** 2026-04-16
+**Version:** 0.3.3 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -189,6 +189,7 @@ moto-diag/
 | — | **Pricing/Repair Plan module** | 2026-04-16 | Labor rates (26 regions), prep labor catalog (18 items), repair plan CRUD, estimate engine, 24 tests |
 | 32 | Honda vintage air-cooled CB/Nighthawk | 2026-04-16 | 10 issues: points ignition, carb rebuild, charging, cam chain, petcock, brakes, wiring, 6 tests |
 | 33 | Honda electrical systems + PGM-FI | 2026-04-16 | 10 issues: blink codes, HISS, reg/rec, stator, starter, FI sensors, grounds, fuses, 6 tests |
+| 34 | Honda common cross-model issues | 2026-04-16 | 10 issues: CCT, starter clutch, coolant, valves, chain, brake fluid, throttle, forks, tires, 6 tests |
 
 ## Completion Gates
 

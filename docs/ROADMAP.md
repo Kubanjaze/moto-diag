@@ -63,7 +63,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 31 | Honda dual-sport: XR650L, CRF250L/300L, Africa Twin | ✅ | 10 issues: XR650L jetting/valves, CRF power, AT DCT off-road, radiator, water, chain |
 | 32 | Honda vintage air-cooled: CB550/650/750, Nighthawk | ✅ | 10 issues: points ignition, carb rebuild, charging, cam chain, petcock, brakes, wiring |
 | 33 | Honda electrical systems + PGM-FI | ✅ | 10 issues: blink codes, HISS, reg/rec, stator, starter relay, FI sensors, grounds, fuses |
-| 34 | Honda common cross-model issues | 🔲 | Reg/rec failures, CCT tensioner, cam chain, starter clutch |
+| 34 | Honda common cross-model issues | ✅ | 10 issues: CCT, starter clutch, coolant hoses, valves, chain, brake fluid, throttle, forks, tires |
 
 ### Yamaha (Phases 35–44)
 
