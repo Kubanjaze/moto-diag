@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.1.2 | **Date:** 2026-04-15
+**Version:** 0.1.3 | **Date:** 2026-04-15
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `phases/ROADMAP_MOTODIAG_100.md` (local) | 150 phases across 8 tracks
@@ -87,8 +87,8 @@ moto-diag/
 
 | Package | Track | Status | Description |
 |---------|-------|--------|-------------|
-| `core` | A | Scaffold | Config (pydantic-settings), base models (VehicleBase, DTCCode, DiagnosticSessionBase) |
-| `vehicles` | A/B | Scaffold | Vehicle registry — empty, awaiting Phase 04 |
+| `core` | A | Active | Config (pydantic-settings + validators + profiles), database (SQLite + WAL + 6 tables), base models |
+| `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
 | `knowledge` | B | Scaffold | Knowledge base — empty, awaiting Phase 08 |
 | `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 29 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
@@ -98,7 +98,14 @@ moto-diag/
 
 ## Database Tables
 
-_None yet — SQLite setup in Phase 03._
+| Table | Purpose | Phase |
+|-------|---------|-------|
+| `vehicles` | Garage — make/model/year/engine/vin/protocol | 03 |
+| `dtc_codes` | Fault codes — code/description/category/severity/make | 03 |
+| `symptoms` | Symptom taxonomy — name/description/category | 03 |
+| `known_issues` | Known problems — make/model/year_range/fix/parts | 03 |
+| `diagnostic_sessions` | Session lifecycle — vehicle/symptoms/diagnosis/confidence | 03 |
+| `schema_version` | Migration tracking | 03 |
 
 ## CLI Commands
 
@@ -107,7 +114,10 @@ _None yet — SQLite setup in Phase 03._
 | `motodiag --version` | ✅ Working | 01 |
 | `motodiag --help` | ✅ Working | 01 |
 | `motodiag info` | ✅ Working | 01 |
-| `motodiag diagnose` | Stub | 29+ |
+| `motodiag config show` | ✅ Working | 02 |
+| `motodiag config paths` | ✅ Working | 02 |
+| `motodiag config init` | ✅ Working | 02 |
+| `motodiag diagnose` | Stub | 79+ |
 | `motodiag code <DTC>` | Stub | 05 |
 | `motodiag garage` | Stub | 04 |
 | `motodiag history` | Stub | 07 |
@@ -137,6 +147,9 @@ _None yet — SQLite setup in Phase 03._
 | Phase | Title | Date | Key Changes |
 |-------|-------|------|-------------|
 | 01 | Project scaffold + monorepo setup | 2026-04-15 | Initial monorepo, 8 subpackages, CLI, base models, 24 tests |
+| 02 | Configuration system | 2026-04-15 | Environment profiles, field validators, ensure_directories, config CLI, 13 tests |
+| 03 | Database schema + SQLite setup | 2026-04-15 | 6 tables, WAL mode, connection manager, schema versioning, 12 tests |
+| 04 | Vehicle registry data model | 2026-04-15 | CRUD operations (add/get/list/update/delete/count), 14 tests |
 
 ## Completion Gates
 

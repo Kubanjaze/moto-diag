@@ -35,3 +35,26 @@ This is the **project-level** change log. Records updates to the project's archi
 - Roadmap extended from 100 to 150 phases total
 - All downstream tracks renumbered: C (79–95), D (96–108), E (109–122), F (123–134), G (135–144), H (145–150)
 - Completion gates updated to match new phase numbers, added Gate 7 for API
+
+### 2026-04-15 18:00 — Phase 02 complete
+- Config system: Environment enum (dev/test/prod), 7 new fields, 3 field validators
+- Added ensure_directories(), lru_cache singleton, reset_settings()
+- CLI: `motodiag config show/paths/init` subcommand group
+- core package status: Scaffold → Active
+
+### 2026-04-15 18:20 — Phase 03 complete
+- Database: 6 tables (vehicles, dtc_codes, symptoms, known_issues, diagnostic_sessions, schema_version)
+- Connection manager: WAL mode, foreign keys, auto-rollback, Row factory
+- Schema versioning (v1) for future migrations
+- 5 indexes for query performance
+
+### 2026-04-15 18:30 — Phase 04 complete
+- Vehicle registry: full CRUD (add, get, list, update, delete, count)
+- Filtered listing by make/model/year with LIKE queries
+- vehicles package status: Scaffold → Active
+
+### 2026-04-15 18:35 — Documentation remediation
+- Phases 02 and 03 had incomplete implementation.md (v1.0 never updated to v1.1) and stub phase_log.md files
+- Corrected: all completed phase docs now have full v1.1 with Results, Verification Checklist [x], and timestamped log entries
+- Updated project implementation.md with Phase History rows, DB table inventory, CLI commands, package statuses
+- Rule reinforced: no phase is complete until docs are fully fleshed out and pushed
