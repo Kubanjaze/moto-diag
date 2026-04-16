@@ -167,6 +167,7 @@ moto-diag/
 | 15 | Harley Twin Cam 96/103/110 (2007-2017) | 2026-04-16 | 10 issues: ABS, TBW, ECM tuning, fuel pump, 7 tests |
 | 16 | Harley Milwaukee-Eight (2017+) | 2026-04-16 | 10 issues: oil cooler, infotainment, intake carbon, 7 tests |
 | 17 | Harley Sportster Evo (1986-2003) | 2026-04-16 | 10 issues: shared oil, clutch cable, carb enrichener, 7 tests |
+| 18 | Harley Sportster RB (2004-2021) | 2026-04-16 | 10 issues: fuel pump, stator connector, fork seals, 6 tests |
 
 ## Completion Gates
 
