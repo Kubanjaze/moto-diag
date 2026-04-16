@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.3.7 | **Date:** 2026-04-17
+**Version:** 0.4.0 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -91,7 +91,7 @@ moto-diag/
 | `vehicles` | A/B | Active | Vehicle registry — CRUD operations (add, get, list, update, delete, count) |
 | `knowledge` | B | Active | DTC repo (40 codes), symptom repo (40 symptoms), issues repo (10 Harley known issues), JSON loaders |
 | `pricing` | G | Active | Labor rates (regional/national), repair plan builder (CRUD), cost estimation, prep labor catalog |
-| `engine` | C | Scaffold | AI diagnostic engine — empty, awaiting Phase 79 |
+| `engine` | C | Active | AI diagnostic engine — client, models, prompts, symptoms, fault codes, workflows, confidence, cost estimation, parts recommendation |
 | `media` | C2 | Scaffold | Video/audio diagnostic analysis — awaiting Phase 96 |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
 | `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
@@ -234,6 +234,9 @@ moto-diag/
 | 76 | Brake system diagnostics (cross-platform) | 2026-04-17 | 10 issues: fluid, calipers, pads, rotors, master cyl, stainless lines, ABS sensors, ABS bleeding, drum, bolt torque, 6 tests |
 | 77 | Drivetrain diagnostics (cross-platform) | 2026-04-17 | 10 issues: chain, sprockets, lube, belt, shaft, clutch drag, cable/hydraulic, transmission, countershaft seal, alignment, 6 tests |
 | 78 | Gate 2 — Knowledge base integration test | 2026-04-17 | 21 integration tests, 650+ issues, all 5 makes, cross-platform systems verified, **GATE 2 PASSED** |
+| 85 | Parts + tools recommendation | 2026-04-16 | PartSource enum, PartRecommendation (cross-refs, prices), ToolRecommendation (essential/alt), PartsRecommender, PARTS_PROMPT (13+ brands), 35 tests |
+| 86 | Cost estimation | 2026-04-16 | ShopType enum, CostLineItem, CostEstimate, PartCost models, CostEstimator (estimate/from_diagnosis/compare), format_estimate, LABOR_RATES, 25 tests |
+| 87 | Safety warnings + critical alerts | 2026-04-16 | AlertLevel enum, SafetyAlert model, SafetyChecker (check_diagnosis/symptoms/repair), 18 SAFETY_RULES, 12 REPAIR_SAFETY_KEYWORDS, format_alerts, 37 tests |
 
 ## Completion Gates
 

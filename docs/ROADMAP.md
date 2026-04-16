@@ -141,9 +141,9 @@ Claude API integration, prompt engineering, diagnostic reasoning.
 | 82 | Multi-step diagnostic workflows | 🔲 | Guided troubleshooting: test → result → next test |
 | 83 | Confidence scoring | 🔲 | Probability ranking for diagnoses, evidence weighting |
 | 84 | Repair procedure generator | 🔲 | Step-by-step fix instructions from diagnosis |
-| 85 | Parts + tools recommendation | 🔲 | What you need to fix it: part numbers, tools, consumables |
-| 86 | Cost estimation | 🔲 | Labor hours + parts cost estimate per diagnosis |
-| 87 | Safety warnings + critical alerts | 🔲 | Flag dangerous conditions (brake failure, fuel leak, fire risk) |
+| 85 | Parts + tools recommendation | ✅ | What you need to fix it: part numbers, tools, consumables |
+| 86 | Cost estimation | ✅ | Labor hours + parts cost estimate per diagnosis |
+| 87 | Safety warnings + critical alerts | ✅ | Flag dangerous conditions (brake failure, fuel leak, fire risk) |
 | 88 | Diagnostic history + learning | 🔲 | Past sessions inform future diagnoses (RAG-style) |
 | 89 | Similar case retrieval | 🔲 | Find past diagnostics on similar vehicles with similar symptoms |
 | 90 | Multi-symptom correlation | 🔲 | Connect seemingly unrelated symptoms to single root cause |

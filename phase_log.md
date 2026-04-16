@@ -124,3 +124,21 @@ This is the **project-level** change log. Records updates to the project's archi
 - **Track B (Vehicle Knowledge Base) COMPLETE — all 66 phases done (13-78)**
 - **Gate 2 PASSED** — query any target bike → get DTCs, symptoms, known issues, fixes
 - Ready for Track C (AI Diagnostic Engine)
+
+### 2026-04-16 05:35 — Phase 86 complete — Cost estimation
+- New module: `src/motodiag/engine/cost.py` — pure-calculation cost estimator
+- 4 Pydantic models (ShopType, CostLineItem, CostEstimate, PartCost), 1 class (CostEstimator), 1 standalone function (format_estimate)
+- CostEstimator.estimate(), estimate_from_diagnosis(), compare_shop_types() — bridges DiagnosisItem to customer-facing cost estimates
+- 25 tests in `tests/test_phase86_cost.py`
+- Engine `__init__.py` updated with cost module exports
+- implementation.md bumped to v0.3.9
+
+### 2026-04-16 05:40 — Phase 87 complete — Safety warnings + critical alerts
+- New module: `src/motodiag/engine/safety.py` — rule-based safety hazard detection
+- AlertLevel enum (4 levels), SafetyAlert Pydantic model, SafetyChecker class
+- 18 SAFETY_RULES (regex-based): brakes, fuel, stator fire, stuck throttle, head gasket, overheating, electrical short, steering, wheel bearings, chain, tires, oil, coolant, exhaust, valves, air filter, spark plugs, brake fluid
+- 12 REPAIR_SAFETY_KEYWORDS: fuel handling, lifting, brake work, battery, coolant, exhaust, chain, springs, wiring
+- check_diagnosis(), check_symptoms(), check_repair_procedure() + format_alerts()
+- 37 tests in `tests/test_phase87_safety.py`
+- Engine `__init__.py` updated with safety module exports
+- implementation.md bumped to v0.4.0
