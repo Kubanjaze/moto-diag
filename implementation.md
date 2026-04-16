@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.1.7 | **Date:** 2026-04-16
+**Version:** 0.1.8 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -172,6 +172,7 @@ moto-diag/
 | 20 | Harley Revolution Max (2021+) | 2026-04-16 | 10 issues: TFT freeze, ride-by-wire, water pump, chain drive, battery drain, 6 tests |
 | 21 | Harley electrical systems (all eras) | 2026-04-16 | 10 issues: regulator, stator, solenoid, grounds, CAN bus, TSSM, wiring, battery types, 6 tests |
 | 22 | Harley common cross-era issues | 2026-04-16 | 10 issues: compensator, intake seals, heat soak, primary leak, clutch, shocks, wheel bearings, 6 tests |
+| 23 | Honda CBR supersport 900RR/929RR/954RR | 2026-04-16 | 10 issues: reg/rec, CCT, HISS, carb sync, fork seals, starter clutch, 6 tests |
 
 ## Completion Gates
 

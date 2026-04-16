@@ -52,7 +52,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 23 | Honda CBR supersport: 900RR/929RR/954RR (1992–2003) | 🔲 | FireBlade family, HISS immobilizer, PGM-FI |
+| 23 | Honda CBR supersport: 900RR/929RR/954RR (1992–2003) | ✅ | 10 issues: reg/rec, CCT, HISS, carb sync, fork seals, starter clutch, PGM-FI |
 | 24 | Honda CBR600: F2/F3/F4/F4i (1991–2006) | 🔲 | Carb-to-EFI transition, regulator/rectifier failures |
 | 25 | Honda CBR600RR (2003–2024) | 🔲 | Full EFI, HESD steering damper, HISS, FI codes |
 | 26 | Honda CBR1000RR / RR-R (2004+) | 🔲 | i-DTSC, HSTC, ride modes, IMU-equipped later models |
