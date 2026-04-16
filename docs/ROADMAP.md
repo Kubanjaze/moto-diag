@@ -89,7 +89,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 47 | Kawasaki ZX-7R / ZX-7RR (1996–2003) | ✅ | 10 issues: carbs/fuel system/charging/FCR carbs/CCT/wiring/rubber/suspension/brakes/ignition |
 | 48 | Kawasaki ZX-9R (1998–2003) | ✅ | 10 issues: carbs/early FI/charging/CCT/cooling/fuel pump/forks/brakes/valves/ignition switch |
 | 49 | Kawasaki ZX-10R (2004+) | ✅ | 10 issues: headshake/charging/IMU electronics/CCT/fuel pump/valves/KLEEN/crash/QS/cooling |
-| 50 | Kawasaki ZX-12R / ZX-14R (2000–2020) | 🔲 | Hyperbikes, ram air, complex FI systems |
+| 50 | Kawasaki ZX-12R / ZX-14R (2000–2020) | ✅ | 10 issues: ram air/charging/consumables/FI tuning/ABS-KTRC/chain/CCT/cooling/suspension/valves |
 | 51 | Kawasaki Ninja H2 / H2R (2015+) | 🔲 | Supercharged, complex boost control, unique diagnostics |
 | 52 | Kawasaki Z naked: Z400/Z650/Z750/Z800/Z900/Z1000, Z H2 | 🔲 | Shared engines with Ninja line, quickshifter, ride modes |
 | 53 | Kawasaki Vulcan cruisers: 500/750/800/900/1500/1600/1700/2000 | 🔲 | V-twin + inline, carb + EFI, shaft/belt drive |
