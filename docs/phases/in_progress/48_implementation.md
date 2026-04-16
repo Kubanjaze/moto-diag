@@ -1,34 +1,39 @@
 # MotoDiag Phase 48 — Kawasaki ZX-9R (1998-2003)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-17
 
 ## Goal
-Kawasaki's open-class sport bike: ZX-9R (1998-2003). Bridged the gap between the 750cc ZX-7R and the literbike ZX-10R. The ZX-9R spans carbureted (1998-1999) and early fuel-injected (2000-2003) models. It's now a budget open-class sport bike with a loyal following.
+Kawasaki's open-class sport bike: ZX-9R spanning carbureted (1998-1999) and early FI (2000-2003).
 
 CLI: `python -m pytest tests/test_phase48_kawasaki_zx9r.py -v`
 
 Outputs: `data/knowledge/known_issues_kawasaki_zx9r.json` (10 issues), 6 tests
 
-## Logic
-- Create 10 known issues covering the ZX-9R
-- Carb models (1998-1999): carb sync, fuel system aging
-- EFI models (2000-2003): early Kawasaki FI, fuel pump, TPS
-- Both: charging, CCT, cooling, brakes, age-related rubber
-- Include forum-sourced fixes
-
 ## Key Concepts
-- ZX-9R was Kawasaki's attempt at a sport-touring literbike — more comfortable than ZX-7R
-- 1998-1999 are carbureted; 2000-2003 are early Kawasaki fuel injection
-- Early Kawasaki FI is simpler than later systems — basic TPS-based injection
-- The ZX-9R is now 20-25 years old — same age-related issues as the ZX-7R
+- Carbureted 1998-1999: same CV diaphragm/pilot jet/sync issues as ZX-7R
+- Early FI 2000-2003: simple open-loop TPS-based injection — no self-correction, must maintain manually
+- Charging system: identical weakness to all Kawasaki sport bikes — triple upgrade mandatory
+- CCT at 20+ years: convert to manual APE tensioner proactively
+- Cooling: thermostat and fan relay are $30 total that prevent $1000 in overheating damage
+- Fuel pump (FI models): weak pump causes high-RPM stumble that mimics ignition problems
+- Suspension and brakes: same age-related urgency as ZX-7R, but heavier bike makes it more critical
+- Valve clearance: 900cc engine tightens more slowly than 600, but still needs checking at 20+ years
+- Ignition switch and ground corrosion: the most common cause of intermittent electrical gremlins
 
 ## Verification Checklist
-- [ ] 10 issues load correctly
-- [ ] Year range queries return correct results
-- [ ] Critical severity issues present
-- [ ] Symptom searches work
-- [ ] Forum tips present
-- [ ] All tests pass
+- [x] 10 issues load correctly
+- [x] Year range queries return correct results (2001 query returns 7+ hits)
+- [x] Critical severity issues present (charging, brakes)
+- [x] Symptom searches work (loss of power: 2+, won't start: 1+)
+- [x] Forum tips present in fix procedures
+- [x] All 6 tests pass (1.79s)
 
-## Risks
-- Short production run (6 years) — smaller community but well-documented
+## Results
+| Metric | Value |
+|--------|-------|
+| Known issues | 10 (carbs, early FI, charging, CCT, cooling, fuel pump, forks, brakes, valves, ignition switch) |
+| Tests | 6/6, 1.79s |
+| Severity breakdown | 2 critical, 3 high, 5 medium, 0 low |
+| Year coverage | 1998-2003 |
+
+The ZX-9R shares most of its diagnostic DNA with the ZX-7R (same era, same age-related failures) but the early FI models introduce Kawasaki's first-gen fuel injection — a transitional system that's simpler than modern FI but more complex than carbs.
