@@ -74,7 +74,7 @@ Deep domain knowledge for target fleet. Each phase populates the knowledge base 
 | 37 | Yamaha YZF-R7 + YZF600R Thundercat (1996–2007, 2021+) | ✅ | 10 issues: Thundercat carbs/petcock/charging/chain/forks + R7 clutch/suspension/QS/heat/lean spot |
 | 38 | Yamaha FZ/MT naked: FZ6/FZ8/FZ-09/FZ-10, MT-03/07/09/10 | ✅ | 10 issues: MT-09 throttle/valves/fuel, MT-07 charging/chain, FZ6 heat, MT-10 electronics, MT-03 drops, radiator |
 | 39 | Yamaha cruisers: V-Star 250/650/950/1100/1300, Bolt | ✅ | 10 issues: V-Star carbs/petcock/stator/shaft drive/starter clutch/ISC + Bolt heat/belt + AIS |
-| 40 | Yamaha VMAX (1985–2020) | 🔲 | V-Boost system, Gen 1 carb vs Gen 2 EFI |
+| 40 | Yamaha VMAX (1985–2020) | ✅ | 10 issues: Gen 1 V-Boost/carbs/charging/shaft drive/tank + Gen 2 FI/cooling/brakes/electronics/exhaust |
 | 41 | Yamaha dual-sport: WR250R/X, XT250, Ténéré 700 | 🔲 | Off-road electrics, CP2 engine diagnostics |
 | 42 | Yamaha vintage: XS650, RD350/400, SR400/500 | 🔲 | 2-stroke (RD), thumpers, points/CDI ignition |
 | 43 | Yamaha electrical systems + diagnostics | 🔲 | Self-diagnostic mode, FI codes, stator/flywheel |
