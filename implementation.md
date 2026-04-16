@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.2.4 | **Date:** 2026-04-16
+**Version:** 0.2.5 | **Date:** 2026-04-16
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
@@ -179,6 +179,7 @@ moto-diag/
 | 27 | Honda cruisers Shadow/VTX | 2026-04-16 | 10 issues: reg/rec, shaft drive, carbs, VTX starter, fuel pump, clutch drag, 6 tests |
 | 28 | Honda Rebel 250/300/500/1100 | 2026-04-16 | 10 issues: carb 250, reg/rec, DCT jerky, chain 300/500, battery drain, drum brake, 6 tests |
 | 29 | Honda standards CB750/919, CB1000R, Hornet | 2026-04-16 | 10 issues: reg/rec, CCT, ride-by-wire, carbs, chain, vibes, tank rust, 6 tests |
+| 30 | Honda V4: VFR800, RC51, VFR1200F | 2026-04-16 | 10 issues: VTEC, reg/rec, RC51 TPS, gear cam noise, CBS, fuel pump relay, 6 tests |
 
 ## Completion Gates
 
