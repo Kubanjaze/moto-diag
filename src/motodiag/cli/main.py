@@ -13,6 +13,7 @@ from motodiag.cli.subscription import (
     format_tier_comparison,
     get_enforcement_mode,
 )
+from motodiag.cli.diagnose import register_diagnose
 
 console = Console()
 
@@ -666,8 +667,12 @@ def _print_guess(guess) -> None:
 
 @cli.command()
 def history() -> None:
-    """Browse past diagnostic sessions. (Coming in Phase 07)"""
-    console.print("[yellow]Session history coming in Phase 07.[/yellow]")
+    """Browse past diagnostic sessions. (Use 'diagnose list' for now.)"""
+    console.print("[yellow]Use 'motodiag diagnose list' to browse sessions.[/yellow]")
+
+
+# Phase 123: register the diagnose subgroup (start / quick / list / show)
+register_diagnose(cli)
 
 
 if __name__ == "__main__":

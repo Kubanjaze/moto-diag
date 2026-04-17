@@ -300,3 +300,17 @@ First post-retrofit user-facing phase. **Retrofit pays off immediately**: `subsc
 - Full regression: 2051/2051 passing (12:05 runtime). Zero regressions.
 - Implementation.md → v0.6.1 (Phase 122 row added + `intake` package row + `intake_usage_log` table row).
 - Next: Track D resumes at Phase 123 (interactive diagnostic session).
+
+### 2026-04-17 22:45 — Phase 123 complete — Interactive diagnostic session (CLI)
+Second post-retrofit user-facing phase. **No migration** — reuses Phase 03 `diagnostic_sessions` table. The substrate keeps paying off: every column Phase 123 needed (`diagnosis`, `confidence`, `severity`, `repair_steps`, `ai_model_used`, `tokens_used`) was already there. Phase 118's `subscriptions.tier` is now load-bearing a second time — Phase 122 used it for quota; Phase 123 uses it for model access.
+
+- New `src/motodiag/cli/diagnose.py` (~450 LoC): `CONFIDENCE_ACCEPT_THRESHOLD`, `MAX_CLARIFYING_ROUNDS`, `_resolve_model` (tier gating), `_load_vehicle`, `_load_known_issues`, `_parse_symptoms`, `_default_diagnose_fn` (production wrapper), `_run_quick`, `_run_interactive` (Q&A loop), `_persist_response` (with `_FakeUsage` shim for accumulated rounds), `_render_response`, `register_diagnose(cli_group)`.
+- 4 new CLI commands: `diagnose start` (interactive Q&A), `diagnose quick` (one-shot), `diagnose list` (rich table, status filter), `diagnose show <id>` (rendered panel).
+- Q&A loop termination: confidence ≥ 0.7 OR no additional_tests OR MAX_CLARIFYING_ROUNDS (3) OR empty input OR "skip"/"stop"/"done".
+- Tier gating: individual → Haiku only; shop/company → Sonnet available via `--model sonnet`. HARD paywall mode raises `ClickException` with upgrade hint; SOFT mode falls back to Haiku with yellow warning.
+- One session row per user-visible interaction; interactive rounds accumulate `tokens_used`. Keeps `diagnostic_sessions` readable as workflow history rather than API audit log (`intake_usage_log` is the audit log).
+- Build-phase fix: test helper `make_response` originally used a nested class; Python class bodies don't close over enclosing-function params. Switched to `types.SimpleNamespace`.
+- `_default_diagnose_fn` injected via `patch()` in tests — zero live API tokens burned.
+- 39 new tests. Full regression: 2090/2090 passing (11:43 runtime). Zero regressions.
+- Implementation.md → v0.6.2.
+- Next: Track D resumes at Phase 124 (Fault code lookup command).

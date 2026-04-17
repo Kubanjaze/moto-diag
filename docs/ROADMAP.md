@@ -181,7 +181,7 @@ The mechanic's daily driver interface. Phase 109 delivered the foundation; remai
 |-------|-------|--------|-------|
 | 109 | CLI foundation + command structure | ✅ | Click CLI, subcommands, 3-tier subscription system ($19/$99/$299), tier command, 41 tests |
 | 122 | Vehicle garage management + photo intake | ✅ | Migration 013 + src/motodiag/intake/ package. VehicleIdentifier with Claude Haiku 4.5 vision, Sonnet escalation < 0.5 confidence, sha256 image cache, 1024px Pillow resize, tier caps 20/200/unlimited enforced from subscriptions.tier, 80% budget alert on crossing. CLI: garage add/list/remove, garage add-from-photo, intake photo, intake quota. 49 tests, all vision calls mocked (0 tokens burned), 2051 total, zero regressions. Schema v12→v13. |
-| 123 | Interactive diagnostic session | 🔲 | Start session → describe problem → guided Q&A → diagnosis (was 111) |
+| 123 | Interactive diagnostic session | ✅ | New cli/diagnose.py orchestration + 4 CLI subcommands (start/quick/list/show). Q&A loop caps at 3 rounds, stops on confidence ≥ 0.7. Tier-gated model access (individual=Haiku; shop/company=Sonnet). No migration — reuses Phase 03 substrate. 39 tests, all mocked (0 tokens), 2090 total, zero regressions. |
 | 124 | Fault code lookup command | 🔲 | `motodiag code P0115` → plain-English explanation + fix (was 112) |
 | 125 | Quick diagnosis mode | 🔲 | One-shot: `motodiag diagnose "won't start when cold" --bike sportster-2001` (was 113) |
 | 126 | Diagnostic report output | 🔲 | Formatted terminal report + save to file (txt/json) (was 114) |
