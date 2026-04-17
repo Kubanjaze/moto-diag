@@ -70,6 +70,71 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE vehicles_rollback RENAME TO vehicles;
         """,
     ),
+    # Migration 004 — Phase 111: knowledge base schema expansion
+    Migration(
+        version=4,
+        name="dtc_category_expansion",
+        description=(
+            "Phase 111: Add dtc_category column to dtc_codes for expanded "
+            "taxonomy (HV battery, motor, regen, TPMS, emissions, etc.). "
+            "Create dtc_category_meta table for category descriptions + "
+            "applicable powertrains. Existing DTC rows default to 'unknown' "
+            "until explicitly classified."
+        ),
+        upgrade_sql="""
+            ALTER TABLE dtc_codes ADD COLUMN dtc_category TEXT DEFAULT 'unknown';
+
+            CREATE TABLE IF NOT EXISTS dtc_category_meta (
+                category TEXT PRIMARY KEY,
+                description TEXT NOT NULL,
+                applicable_powertrains TEXT NOT NULL,
+                severity_default TEXT NOT NULL DEFAULT 'medium'
+            );
+
+            INSERT OR IGNORE INTO dtc_category_meta (category, description, applicable_powertrains, severity_default) VALUES
+                ('engine', 'Engine management faults (misfire, timing, sensors)', '["ice","hybrid"]', 'high'),
+                ('fuel', 'Fuel delivery faults (pump, injectors, pressure)', '["ice","hybrid"]', 'high'),
+                ('ignition', 'Ignition system faults (coils, plugs, pickup)', '["ice","hybrid"]', 'high'),
+                ('emissions', 'Emissions system faults (O2, EVAP, PAIR, cat)', '["ice","hybrid"]', 'medium'),
+                ('transmission', 'Transmission/clutch faults', '["ice","hybrid","electric"]', 'high'),
+                ('cooling', 'Cooling system faults (thermostat, fan, coolant)', '["ice","hybrid","electric"]', 'high'),
+                ('exhaust', 'Exhaust system faults (O2, catalyst, SAI)', '["ice","hybrid"]', 'medium'),
+                ('abs', 'ABS and wheel speed sensor faults', '["ice","hybrid","electric"]', 'critical'),
+                ('airbag', 'Airbag system faults', '["ice","hybrid","electric"]', 'critical'),
+                ('immobilizer', 'Anti-theft/immobilizer (HISS, KIPASS)', '["ice","hybrid","electric"]', 'medium'),
+                ('body', 'Body electrical and accessories', '["ice","hybrid","electric"]', 'low'),
+                ('network', 'CAN/K-line communication faults', '["ice","hybrid","electric"]', 'high'),
+                ('tpms', 'Tire pressure monitoring', '["ice","hybrid","electric"]', 'medium'),
+                ('hv_battery', 'High-voltage battery pack and BMS faults', '["electric","hybrid"]', 'critical'),
+                ('motor', 'Electric motor controller faults (IGBT, phase)', '["electric","hybrid"]', 'critical'),
+                ('regen', 'Regenerative braking system faults', '["electric","hybrid"]', 'high'),
+                ('charging_port', 'DC/AC charging port faults', '["electric","hybrid"]', 'high'),
+                ('thermal', 'Battery/motor thermal management', '["electric","hybrid"]', 'high'),
+                ('inverter', 'DC-to-AC inverter faults', '["electric","hybrid"]', 'critical'),
+                ('unknown', 'Unclassified DTC', '["ice","hybrid","electric"]', 'medium');
+        """,
+        rollback_sql="""
+            CREATE TABLE dtc_codes_rollback AS
+                SELECT id, code, description, category, severity, make, common_causes, fix_summary
+                FROM dtc_codes;
+            DROP TABLE dtc_codes;
+            CREATE TABLE dtc_codes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT NOT NULL,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                make TEXT,
+                common_causes TEXT,
+                fix_summary TEXT,
+                UNIQUE(code, make)
+            );
+            INSERT INTO dtc_codes (id, code, description, category, severity, make, common_causes, fix_summary)
+                SELECT id, code, description, category, severity, make, common_causes, fix_summary FROM dtc_codes_rollback;
+            DROP TABLE dtc_codes_rollback;
+            DROP TABLE IF EXISTS dtc_category_meta;
+        """,
+    ),
 ]
 
 

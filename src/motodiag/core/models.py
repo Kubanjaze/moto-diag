@@ -151,11 +151,57 @@ class DiagnosticSessionBase(BaseModel):
     updated_at: Optional[datetime] = None
 
 
+class DTCCategory(str, Enum):
+    """DTC taxonomy categories.
+
+    Phase 111 (Retrofit): distinct from SymptomCategory so DTC-specific
+    classifications (HV battery, motor controller, regen, TPMS, emissions)
+    don't pollute the symptom taxonomy. ICE-era DTCs map to traditional
+    categories; electric/modern bikes use the new categories.
+    """
+    # Traditional ICE categories (overlap with SymptomCategory for clarity)
+    ENGINE = "engine"
+    FUEL = "fuel"
+    IGNITION = "ignition"
+    EMISSIONS = "emissions"              # Post-cat O2, EVAP, PAIR, cat efficiency
+    TRANSMISSION = "transmission"
+    COOLING = "cooling"
+    EXHAUST = "exhaust"
+
+    # Chassis/body/safety
+    ABS = "abs"                          # ABS, wheel speed, brake pressure
+    AIRBAG = "airbag"                    # On bikes with airbag (Goldwing, etc.)
+    IMMOBILIZER = "immobilizer"          # HISS, KIPASS, anti-theft
+    BODY = "body"                        # Body electrical, lighting, accessories
+    NETWORK = "network"                  # CAN bus, K-line comms, module-to-module
+    TPMS = "tpms"                        # Tire pressure monitoring (modern bikes)
+
+    # Electric motorcycle categories (Phase 111 additions)
+    HV_BATTERY = "hv_battery"            # High-voltage battery pack, BMS faults
+    MOTOR = "motor"                      # Electric motor controller, IGBT, phase faults
+    REGEN = "regen"                      # Regenerative braking system
+    CHARGING_PORT = "charging_port"      # J1772/CCS/CHAdeMO charging faults
+    THERMAL = "thermal"                  # Battery/motor thermal management
+    INVERTER = "inverter"                # DC-to-AC inverter faults
+
+    # Unclassified
+    UNKNOWN = "unknown"
+
+
 class DTCCode(BaseModel):
-    """Diagnostic Trouble Code."""
+    """Diagnostic Trouble Code.
+
+    Phase 111 (Retrofit): added `dtc_category` field for the new DTCCategory
+    taxonomy. The existing `category` field (SymptomCategory) remains for
+    backward compatibility; new code should use dtc_category.
+    """
     code: str = Field(..., description="DTC code (e.g., P0115, B1004)")
     description: str = Field(..., description="Plain-English description")
     category: SymptomCategory
+    dtc_category: DTCCategory = Field(
+        DTCCategory.UNKNOWN,
+        description="DTC-specific taxonomy (Phase 111) — distinct from symptom category",
+    )
     severity: Severity = Severity.MEDIUM
     make: Optional[str] = Field(None, description="Manufacturer-specific (None = generic)")
     common_causes: list[str] = Field(default_factory=list)

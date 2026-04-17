@@ -17,7 +17,11 @@ from motodiag.engine.models import TokenUsage
 # --- DTC code classification ---
 
 class CodeFormat:
-    """DTC code format identifiers."""
+    """DTC code format identifiers.
+
+    Phase 111 (Retrofit): added European OEM-specific formats + electric bike
+    format for expansion Track K and Track L.
+    """
     OBD2_GENERIC = "obd2_generic"       # P0xxx, P2xxx — standard OBD-II
     OBD2_MANUFACTURER = "obd2_mfr"      # P1xxx — manufacturer-specific OBD-II
     KAWASAKI_DEALER = "kawasaki_dealer"  # 2-digit: 11, 12, 13... (FI dealer mode)
@@ -25,6 +29,14 @@ class CodeFormat:
     HONDA_BLINK = "honda_blink"         # Blink count patterns: 1, 2, 7, etc.
     HARLEY_DTC = "harley_dtc"           # Harley-specific: B-codes, U-codes, P-codes
     YAMAHA_DIAG = "yamaha_diag"         # Yamaha self-diagnostic: 12, 14, 19...
+    # European OEM-specific formats (Phase 111 additions)
+    BMW_ISTA = "bmw_ista"               # BMW ISTA format (5-digit hex + namespace)
+    DUCATI_DDS = "ducati_dds"           # Ducati DDS diagnostic system (DTC-P, DTC-A prefixes)
+    KTM_KDS = "ktm_kds"                 # KTM dealer system (P/C prefixes, KTM-specific)
+    TRIUMPH_TUNEECU = "triumph_tuneecu"  # Triumph TuneECU blink/hex codes
+    APRILIA_DIAG = "aprilia_diag"       # Aprilia diagnostic (Marelli-based, DTC-xxxx format)
+    # Electric bike format (Phase 111 addition)
+    ELECTRIC_HV = "electric_hv"         # Zero/LiveWire/Energica HV battery/motor DTCs (HV_, MC_, BMS_ prefixes)
     UNKNOWN = "unknown"
 
 
@@ -138,6 +150,50 @@ def classify_code(code: str, make: Optional[str] = None) -> tuple[str, str]:
     # Honda blink codes: single digit 1-9
     if re.match(r'^[1-9]$', code):
         return CodeFormat.HONDA_BLINK, f"Honda blink code {code}"
+
+    # --- European OEM formats (Phase 111) ---
+
+    # BMW ISTA: 5-digit hex codes like A2B4C (namespace + 4 hex)
+    # Example: "A0B12" — BMW body domain fault
+    if re.match(r'^[0-9A-F]{5}$', code) and make and make.lower() == "bmw":
+        return CodeFormat.BMW_ISTA, f"BMW ISTA code {code}"
+
+    # Aprilia: DTC-xxxx with 4-digit numeric codes (Marelli). Checked before Ducati
+    # because Aprilia's DTC- prefix uses numeric digits, while Ducati uses letter+digits.
+    if make and make.lower() == "aprilia" and re.match(r'^DTC-?[0-9]{4}$', code):
+        return CodeFormat.APRILIA_DIAG, f"Aprilia diagnostic code {code}"
+
+    # Ducati DDS: DTC-P0xxx or DTC-A0xxx (Powertrain / Auxiliary namespaces)
+    # Requires explicit letter prefix after DTC- to distinguish from Aprilia's numeric format.
+    if re.match(r'^DTC-[PA][0-9]{4}$', code):
+        namespace = code.split("-")[1][0]
+        desc = "powertrain" if namespace == "P" else "auxiliary"
+        return CodeFormat.DUCATI_DDS, f"Ducati DDS {desc}"
+
+    # KTM KDS: KP-xxxx or KC-xxxx (Powertrain / Chassis)
+    if re.match(r'^K[PC]-[0-9]{4}$', code):
+        namespace = "powertrain" if code[1] == "P" else "chassis"
+        return CodeFormat.KTM_KDS, f"KTM KDS {namespace}"
+
+    # Triumph TuneECU: T-xxx (3-digit hex after T-)
+    if re.match(r'^T-[0-9A-F]{3}$', code) or (make and make.lower() == "triumph" and re.match(r'^[0-9A-F]{3}$', code)):
+        return CodeFormat.TRIUMPH_TUNEECU, f"Triumph TuneECU code {code}"
+
+    # --- Electric bike formats (Phase 111) ---
+
+    # Electric HV namespaces: HV_, MC_, BMS_, INV_, CHG_ prefixes
+    # Used by Zero, LiveWire, Energica for HV battery / motor controller / inverter faults
+    if re.match(r'^(HV|MC|BMS|INV|CHG|REG)_[0-9A-Z]{2,5}$', code):
+        prefix = code.split("_")[0]
+        subsystem = {
+            "HV": "high-voltage system",
+            "MC": "motor controller",
+            "BMS": "battery management system",
+            "INV": "inverter",
+            "CHG": "charging system",
+            "REG": "regenerative braking",
+        }.get(prefix, "electric powertrain")
+        return CodeFormat.ELECTRIC_HV, f"Electric {subsystem} fault"
 
     return CodeFormat.UNKNOWN, "unrecognized code format"
 

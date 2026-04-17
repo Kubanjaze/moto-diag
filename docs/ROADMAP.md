@@ -200,7 +200,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 110 | Vehicle registry + protocol taxonomy expansion | ✅ | Migration framework (reusable), PowertrainType/EngineType/BatteryChemistry enums, European CAN protocols, 35 tests, 1651 total |
-| 111 | Knowledge base schema expansion | 🔲 | DTC schema: HV, battery, motor, regen, TPMS, emissions. OEM-specific DTC classifiers for BMW/Ducati/KTM/Triumph/Aprilia/electric |
+| 111 | Knowledge base schema expansion | ✅ | Migration 004, DTCCategory enum (20), dtc_category_meta table, 6 OEM classifiers (BMW/Ducati/KTM/Triumph/Aprilia/Electric HV), 43 tests, 1694 total |
 | 112 | User/auth layer introduction | 🔲 | New `auth/` package: users, roles, permissions. Retrofit `user_id` FK onto diagnostic_sessions/repair_plans/known_issues |
 | 113 | Customer/CRM foundation | 🔲 | New `crm/` package: customers, customer_bikes join table. Retrofit `customer_id` FK onto vehicles |
 | 114 | Workflow template substrate | 🔲 | New workflow_templates, checklist_items tables. Engine handles non-diagnostic workflows (PPI, tire, winterization, break-in, emissions) |

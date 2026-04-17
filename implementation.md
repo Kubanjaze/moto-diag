@@ -284,6 +284,7 @@ moto-diag/
 | 109 | CLI foundation + 3-tier subscription | 2026-04-17 | Click CLI, SubscriptionTier enum, $19/$99/$299 pricing, requires_tier decorator (soft/hard modes), tier command, 41 tests, 1616 total |
 | — | **Roadmap expansion planning** | 2026-04-17 | Expanded roadmap from 198 to 352 phases. Inserted 12-phase Retrofit track (110-121). Renumbered Tracks D-J. Appended Tracks K-T. 18 new packages planned. 20 gates + Gate R. |
 | 110 | Retrofit: vehicle registry + protocol expansion | 2026-04-17 | Migration framework (reusable for phases 111-120), PowertrainType/EngineType/BatteryChemistry enums, European CAN protocols (BMW_K_CAN/DUCATI_CAN/KTM_CAN), 5 new VehicleBase fields, schema v2→v3, 35 tests, 1651 total passing, zero regressions |
+| 111 | Retrofit: knowledge base schema expansion | 2026-04-17 | Migration 004, DTCCategory enum (20 members: 7 ICE + 7 chassis/safety + 6 electric), dtc_category_meta table, 6 OEM DTC classifiers (BMW ISTA / Ducati DDS / KTM KDS / Triumph TuneECU / Aprilia / Electric HV), 3 new repo functions, schema v3→v4, 43 tests, 1694 total passing, zero regressions |
 
 ## Completion Gates
 

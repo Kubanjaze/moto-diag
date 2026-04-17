@@ -1,23 +1,32 @@
-"""DTC (Diagnostic Trouble Code) repository — CRUD and query operations."""
+"""DTC (Diagnostic Trouble Code) repository — CRUD and query operations.
+
+Phase 111 (Retrofit): extended with dtc_category field for HV/battery/motor/
+regen/TPMS/emissions taxonomy. Existing code using only `category` continues
+to work; new code should set `dtc_category` for proper classification.
+"""
 
 import json
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.core.models import DTCCode, SymptomCategory, Severity
+from motodiag.core.models import DTCCode, DTCCategory, SymptomCategory, Severity
 
 
 def add_dtc(dtc: DTCCode, db_path: str | None = None) -> None:
-    """Add or update a DTC code in the database."""
+    """Add or update a DTC code in the database.
+
+    Phase 111: persists dtc_category column alongside existing category.
+    """
     with get_connection(db_path) as conn:
         conn.execute(
             """INSERT OR REPLACE INTO dtc_codes
-               (code, description, category, severity, make, common_causes, fix_summary)
-               VALUES (?, ?, ?, ?, ?, ?, ?)""",
+               (code, description, category, dtc_category, severity, make, common_causes, fix_summary)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 dtc.code,
                 dtc.description,
                 dtc.category.value,
+                dtc.dtc_category.value,
                 dtc.severity.value,
                 dtc.make,
                 json.dumps(dtc.common_causes) if dtc.common_causes else None,
@@ -104,6 +113,73 @@ def count_dtcs(db_path: str | None = None) -> int:
     with get_connection(db_path) as conn:
         cursor = conn.execute("SELECT COUNT(*) FROM dtc_codes")
         return cursor.fetchone()[0]
+
+
+# --- Phase 111: DTC category operations ---
+
+def get_dtcs_by_category(
+    dtc_category: DTCCategory | str,
+    make: str | None = None,
+    db_path: str | None = None,
+) -> list[dict]:
+    """Query DTCs filtered by dtc_category (HV_BATTERY, MOTOR, REGEN, etc.).
+
+    Phase 111: enables electric motorcycle diagnostic queries like
+    "show all HV battery DTCs for this bike" without knowing specific codes.
+    """
+    cat_val = dtc_category.value if isinstance(dtc_category, DTCCategory) else dtc_category
+
+    query = "SELECT * FROM dtc_codes WHERE dtc_category = ?"
+    params: list = [cat_val]
+    if make:
+        query += " AND (make = ? OR make IS NULL)"
+        params.append(make)
+    query += " ORDER BY code"
+
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(query, params)
+        return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
+def get_category_meta(dtc_category: DTCCategory | str, db_path: str | None = None) -> dict | None:
+    """Get metadata for a DTC category (description, applicable powertrains, default severity).
+
+    Phase 111: metadata populated by migration 004 for all DTCCategory members.
+    """
+    cat_val = dtc_category.value if isinstance(dtc_category, DTCCategory) else dtc_category
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT category, description, applicable_powertrains, severity_default "
+            "FROM dtc_category_meta WHERE category = ?",
+            (cat_val,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            return None
+        result = dict(row)
+        try:
+            result["applicable_powertrains"] = json.loads(result["applicable_powertrains"])
+        except (json.JSONDecodeError, TypeError):
+            result["applicable_powertrains"] = []
+        return result
+
+
+def list_all_categories(db_path: str | None = None) -> list[dict]:
+    """List all DTC categories with their metadata."""
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT category, description, applicable_powertrains, severity_default "
+            "FROM dtc_category_meta ORDER BY category"
+        )
+        results = []
+        for row in cursor.fetchall():
+            d = dict(row)
+            try:
+                d["applicable_powertrains"] = json.loads(d["applicable_powertrains"])
+            except (json.JSONDecodeError, TypeError):
+                d["applicable_powertrains"] = []
+            results.append(d)
+        return results
 
 
 def _row_to_dict(row) -> dict:
