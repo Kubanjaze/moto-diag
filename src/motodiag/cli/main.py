@@ -15,6 +15,7 @@ from motodiag.cli.subscription import (
 )
 from motodiag.cli.code import register_code
 from motodiag.cli.diagnose import register_diagnose, register_quick
+from motodiag.cli.kb import register_kb
 
 console = Console()
 
@@ -629,6 +630,9 @@ register_diagnose(cli)
 
 # Phase 125: register the top-level `quick` shortcut (delegates to diagnose quick)
 register_quick(cli)
+
+# Phase 128: register the `kb` knowledge-base browser subgroup
+register_kb(cli)
 
 # Phase 124: register the `code` command (replaces the legacy inline version)
 register_code(cli)

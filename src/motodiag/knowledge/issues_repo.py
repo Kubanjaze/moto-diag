@@ -107,6 +107,53 @@ def find_issues_by_dtc(code: str, db_path: str | None = None) -> list[dict]:
         return [_row_to_dict(row) for row in cursor.fetchall()]
 
 
+def search_known_issues_text(
+    query: str,
+    limit: int | None = None,
+    db_path: str | None = None,
+) -> list[dict]:
+    """Free-text search across title, description, and symptoms (JSON text).
+
+    Case-insensitive LIKE substring match. Returns rows matching ANY of the
+    three columns. Unlike :func:`search_known_issues` (which is structured
+    by-field filtering with exact-match semantics on make/model/severity),
+    this is a broad browse-search tailored for the `motodiag kb search`
+    CLI — a mechanic investigating "stator" should see hits whether the
+    word lives in the title, the description, or a symptom string.
+
+    Empty / whitespace-only query returns [] immediately (avoids the "LIKE
+    '%%' matches everything" trap that would dump the whole KB).
+
+    Args:
+        query: Substring to search for. Whitespace is stripped; empty
+            query returns [].
+        limit: Optional max rows. None = no cap.
+        db_path: Override default DB path (used by tests).
+
+    Returns:
+        List of issue dicts (via :func:`_row_to_dict`), newest first by
+        created_at then id.
+    """
+    if not query or not query.strip():
+        return []
+    pattern = f"%{query.strip()}%"
+    sql = (
+        "SELECT * FROM known_issues "
+        "WHERE LOWER(title) LIKE LOWER(?) "
+        "   OR LOWER(description) LIKE LOWER(?) "
+        "   OR LOWER(symptoms) LIKE LOWER(?) "
+        "ORDER BY created_at DESC, id DESC"
+    )
+    params: list = [pattern, pattern, pattern]
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(int(limit))
+
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(sql, params)
+        return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
 def count_known_issues(make: str | None = None, db_path: str | None = None) -> int:
     """Count known issues, optionally filtered by make."""
     sql = "SELECT COUNT(*) FROM known_issues"

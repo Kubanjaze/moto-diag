@@ -365,3 +365,15 @@ Third agent-delegated phase. Migration 014 adds nullable `notes` column to `diag
 - 28 new tests. Full regression (running): expected 2207/2207 passing, zero regressions.
 - Implementation.md → v0.6.6.
 - Next: Phase 128 (Knowledge base browser).
+
+### 2026-04-18 01:35 — Phase 128 complete — Knowledge base browser (CLI)
+Fourth agent-delegated phase. No migration, no new package. Adds a `motodiag kb` command group with 5 subcommands covering the knowledge-base browse use cases: list (structured filters), show (full detail), search (free-text), by-symptom, by-code.
+- `knowledge/issues_repo.py` (+20 LoC): new `search_known_issues_text(query, limit, db_path)` with case-insensitive LIKE across `title`, `description`, and `symptoms` JSON column. Empty-query short-circuits to `[]` (doesn't return everything).
+- New `src/motodiag/cli/kb.py` (~320 LoC): `register_kb(cli_group)` attaches `@cli_group.group("kb")` with 5 subcommands. Rendering helpers: `_year_range_str`, `_truncate`, `_render_issue_table`, `_render_bullet_list`, `_render_issue_detail`.
+- `cli/main.py`: one-line wire-up (`register_kb(cli)` between `register_quick` and `register_code`).
+- Design choices: `--symptom` on `kb list` is a Python post-filter (existing `search_known_issues` signature stays clean); `kb by-code <dtc>` force-uppercases DTC input; `kb search ""` rejected with ClickException to prevent "return everything" surprises.
+- **Agent delegation**: Builder-A shipped clean code with zero iterative fixes. Sandbox blocked Python for the agent. Architect ran 26 phase tests as trust-but-verify and caught ONE word-wrap issue in a Rich Table assertion (`"Stator failure"` was split across lines in narrow terminal). Fixed by adding `monkeypatch.setenv("COLUMNS", "200")` to the `cli_db` fixture. All 26 passed on retry.
+- 26 new tests across 7 classes. Zero AI calls. Zero live tokens.
+- Full regression (running): expected 2233/2233 passing, zero regressions.
+- Implementation.md → v0.6.7.
+- Next: Phase 129 (Rich terminal UI / progress / colors enhancements).
