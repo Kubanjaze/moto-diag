@@ -412,10 +412,256 @@ def db_init() -> None:
     console.print(f"  Path: {settings.db_path}")
 
 
-@cli.command()
+@cli.group()
 def garage() -> None:
-    """Manage your vehicle garage. (Coming in Track D)"""
-    console.print("[yellow]Vehicle garage coming in Track D (Phase 110).[/yellow]")
+    """Manage your vehicle garage — add, list, remove bikes."""
+
+
+@garage.command("add")
+@click.option("--make", required=True, help="Manufacturer (e.g., Honda, Harley-Davidson).")
+@click.option("--model", "model_name", required=True, help="Model name.")
+@click.option("--year", required=True, type=int, help="Model year.")
+@click.option("--engine-cc", type=int, default=None, help="Engine displacement in cc.")
+@click.option("--vin", default=None, help="Vehicle identification number.")
+@click.option("--protocol", default="none",
+              type=click.Choice(["none", "j1850", "k_line", "can", "can_hd",
+                                "bmw_k_can", "ducati_can", "ktm_can", "j1939"]),
+              help="Diagnostic protocol.")
+@click.option("--powertrain", default="ice",
+              type=click.Choice(["ice", "electric", "hybrid"]),
+              help="Powertrain type.")
+@click.option("--notes", default=None, help="Free-text notes.")
+def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
+               vin: str | None, protocol: str, powertrain: str,
+               notes: str | None) -> None:
+    """Add a bike to the garage manually."""
+    from motodiag.core.database import init_db
+    from motodiag.core.models import (
+        VehicleBase, ProtocolType, PowertrainType, EngineType,
+    )
+    from motodiag.vehicles.registry import add_vehicle
+
+    init_db()
+    try:
+        vehicle = VehicleBase(
+            make=make,
+            model=model_name,
+            year=year,
+            engine_cc=engine_cc,
+            vin=vin,
+            protocol=ProtocolType(protocol),
+            powertrain=PowertrainType(powertrain),
+            engine_type=(
+                EngineType.ELECTRIC_MOTOR if powertrain == "electric"
+                else EngineType.FOUR_STROKE
+            ),
+            notes=notes,
+        )
+    except Exception as e:
+        console.print(f"[red]Invalid vehicle data: {e}[/red]")
+        raise click.Abort() from e
+
+    vid = add_vehicle(vehicle)
+    console.print(f"[green]Added vehicle #{vid}: {year} {make} {model_name}[/green]")
+
+
+@garage.command("list")
+def garage_list() -> None:
+    """List vehicles in the garage."""
+    from motodiag.core.database import init_db
+    from motodiag.vehicles.registry import list_vehicles
+
+    init_db()
+    vehicles = list_vehicles()
+    if not vehicles:
+        console.print("[yellow]Garage is empty. Add a bike with:  "
+                      "motodiag garage add --make ... --model ... --year ...[/yellow]")
+        return
+
+    table = Table(title="Your Garage")
+    table.add_column("ID", style="cyan", justify="right")
+    table.add_column("Year", style="magenta")
+    table.add_column("Make", style="green")
+    table.add_column("Model")
+    table.add_column("Engine")
+    table.add_column("Powertrain")
+    table.add_column("VIN", style="dim")
+
+    for v in vehicles:
+        engine = (
+            f"{v['engine_cc']}cc"
+            if v.get("engine_cc")
+            else f"{v.get('motor_kw', '?')}kW" if v.get("powertrain") == "electric"
+            else "-"
+        )
+        table.add_row(
+            str(v["id"]), str(v["year"]), v["make"], v["model"],
+            engine, v.get("powertrain", "ice") or "ice",
+            v.get("vin") or "-",
+        )
+    console.print(table)
+
+
+@garage.command("remove")
+@click.argument("vehicle_id", type=int)
+@click.option("--yes", is_flag=True, help="Skip confirmation prompt.")
+def garage_remove(vehicle_id: int, yes: bool) -> None:
+    """Remove a vehicle by ID."""
+    from motodiag.core.database import init_db
+    from motodiag.vehicles.registry import get_vehicle, delete_vehicle
+
+    init_db()
+    v = get_vehicle(vehicle_id)
+    if v is None:
+        console.print(f"[red]No vehicle with ID {vehicle_id}.[/red]")
+        raise click.Abort()
+
+    label = f"{v['year']} {v['make']} {v['model']}"
+    if not yes and not click.confirm(f"Remove vehicle #{vehicle_id} ({label})?"):
+        console.print("[yellow]Cancelled.[/yellow]")
+        return
+
+    if delete_vehicle(vehicle_id):
+        console.print(f"[green]Removed #{vehicle_id}: {label}[/green]")
+    else:
+        console.print(f"[red]Failed to remove #{vehicle_id}.[/red]")
+        raise click.Abort()
+
+
+@garage.command("add-from-photo")
+@click.argument("image_path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--hints", default=None, help="Optional text hints (e.g., 'sport bike, red').")
+@click.option("--yes", is_flag=True, help="Skip confirmation prompt.")
+def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None:
+    """Identify a bike from a photo and add it to the garage."""
+    from motodiag.core.database import init_db
+    from motodiag.core.models import (
+        VehicleBase, ProtocolType, PowertrainType, EngineType,
+    )
+    from motodiag.intake import VehicleIdentifier, QuotaExceededError, IntakeError
+    from motodiag.vehicles.registry import add_vehicle
+
+    init_db()
+    identifier = VehicleIdentifier()
+    try:
+        guess = identifier.identify(image_path, user_id=1, hints=hints)
+    except QuotaExceededError as e:
+        console.print(f"[red]{e}[/red]")
+        raise click.Abort() from e
+    except (IntakeError, ValueError, RuntimeError) as e:
+        console.print(f"[red]Identification failed: {e}[/red]")
+        raise click.Abort() from e
+
+    _print_guess(guess)
+    if guess.alert:
+        console.print(f"[yellow]⚠ {guess.alert}[/yellow]")
+
+    if not yes and not click.confirm("Save this vehicle to your garage?"):
+        console.print("[yellow]Not saved.[/yellow]")
+        return
+
+    # Use the midpoint of the year range; user can edit later
+    year_mid = (guess.year_range[0] + guess.year_range[1]) // 2
+    engine_cc = (
+        (guess.engine_cc_range[0] + guess.engine_cc_range[1]) // 2
+        if guess.engine_cc_range
+        else None
+    )
+    powertrain = PowertrainType(guess.powertrain_guess)
+    engine_type = (
+        EngineType.ELECTRIC_MOTOR if guess.powertrain_guess == "electric"
+        else EngineType.FOUR_STROKE
+    )
+    vehicle = VehicleBase(
+        make=guess.make,
+        model=guess.model,
+        year=year_mid,
+        engine_cc=engine_cc,
+        protocol=ProtocolType.NONE,
+        powertrain=powertrain,
+        engine_type=engine_type,
+        notes=f"Added from photo. Confidence: {guess.confidence:.2f}. {guess.reasoning}",
+    )
+    vid = add_vehicle(vehicle)
+    console.print(f"[green]Added vehicle #{vid}: {year_mid} {guess.make} {guess.model}[/green]")
+
+
+@cli.group()
+def intake() -> None:
+    """Photo-based bike identification (preview-only) and quota status."""
+
+
+@intake.command("photo")
+@click.argument("image_path", type=click.Path(exists=True, dir_okay=False))
+@click.option("--hints", default=None, help="Optional text hints.")
+def intake_photo(image_path: str, hints: str | None) -> None:
+    """Identify a bike from a photo without saving (preview only)."""
+    from motodiag.core.database import init_db
+    from motodiag.intake import VehicleIdentifier, QuotaExceededError, IntakeError
+
+    init_db()
+    identifier = VehicleIdentifier()
+    try:
+        guess = identifier.identify(image_path, user_id=1, hints=hints)
+    except QuotaExceededError as e:
+        console.print(f"[red]{e}[/red]")
+        raise click.Abort() from e
+    except (IntakeError, ValueError, RuntimeError) as e:
+        console.print(f"[red]Identification failed: {e}[/red]")
+        raise click.Abort() from e
+
+    _print_guess(guess)
+    if guess.alert:
+        console.print(f"[yellow]⚠ {guess.alert}[/yellow]")
+
+
+@intake.command("quota")
+def intake_quota() -> None:
+    """Show current photo-ID quota usage for the current user."""
+    from motodiag.core.database import init_db
+    from motodiag.intake import VehicleIdentifier, BUDGET_ALERT_THRESHOLD
+
+    init_db()
+    identifier = VehicleIdentifier()
+    quota = identifier.check_quota(user_id=1)
+
+    if quota.monthly_limit is None:
+        console.print(
+            f"[green]Tier: {quota.tier} — unlimited photo IDs. "
+            f"Used this month: {quota.used_this_month}[/green]"
+        )
+        return
+
+    pct_str = f"{int(quota.percent_used * 100)}%"
+    warning = quota.percent_used >= BUDGET_ALERT_THRESHOLD
+    style = "yellow" if warning else "green"
+    marker = "⚠ " if warning else ""
+    console.print(
+        f"[{style}]{marker}Tier: {quota.tier} — "
+        f"{quota.used_this_month}/{quota.monthly_limit} used ({pct_str}), "
+        f"{quota.remaining} remaining this month.[/{style}]"
+    )
+
+
+def _print_guess(guess) -> None:
+    """Pretty-print a VehicleGuess."""
+    y_low, y_high = guess.year_range
+    year_str = str(y_low) if y_low == y_high else f"{y_low}–{y_high}"
+    engine_str = "electric" if guess.powertrain_guess == "electric" else (
+        f"{guess.engine_cc_range[0]}–{guess.engine_cc_range[1]}cc"
+        if guess.engine_cc_range else "?cc"
+    )
+    cached_tag = " [dim](cached)[/dim]" if guess.cached else ""
+
+    panel_body = (
+        f"[bold]{guess.make} {guess.model}[/bold]{cached_tag}\n"
+        f"Year:       {year_str}\n"
+        f"Engine:     {engine_str}\n"
+        f"Powertrain: {guess.powertrain_guess}\n"
+        f"Confidence: {guess.confidence:.2f} (via {guess.model_used})\n"
+        f"\n[dim]{guess.reasoning}[/dim]"
+    )
+    console.print(Panel(panel_body, title="Vehicle Identification", border_style="cyan"))
 
 
 @cli.command()

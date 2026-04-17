@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 12  # Phase 119: bumped for photo annotation layer migration 012
+SCHEMA_VERSION = 13  # Phase 122: bumped for intake_usage_log (photo bike ID quota tracking) migration 013
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

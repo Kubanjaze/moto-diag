@@ -37,8 +37,11 @@ api = [
 hardware = [
     "pyserial>=3.5",
 ]
+vision = [
+    "pillow>=10.0",
+]
 all = [
-    "motodiag[dev,ai,api,hardware]",
+    "motodiag[dev,ai,api,hardware,vision]",
 ]
 
 [project.scripts]

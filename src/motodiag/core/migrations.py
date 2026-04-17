@@ -920,6 +920,40 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS photo_annotations;
         """,
     ),
+    # Migration 013 — Phase 122: intake usage log (photo bike ID quota tracking)
+    Migration(
+        version=13,
+        name="intake_usage_log",
+        description=(
+            "Phase 122: Create intake_usage_log table for tracking photo-based "
+            "vehicle identification usage per user per month. Supports quota "
+            "enforcement (individual 20/mo, shop 200/mo, company unlimited), "
+            "sha256 image cache lookup, and cost tracking. Image bytes never "
+            "persist — only the preprocessed-bytes sha256 hash."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS intake_usage_log (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                kind TEXT NOT NULL,
+                model_used TEXT,
+                confidence REAL,
+                image_hash TEXT,
+                tokens_input INTEGER NOT NULL DEFAULT 0,
+                tokens_output INTEGER NOT NULL DEFAULT 0,
+                cost_cents INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_intake_user ON intake_usage_log(user_id);
+            CREATE INDEX IF NOT EXISTS idx_intake_user_time ON intake_usage_log(user_id, created_at);
+            CREATE INDEX IF NOT EXISTS idx_intake_image_hash ON intake_usage_log(image_hash);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS intake_usage_log;
+        """,
+    ),
 ]
 
 

@@ -180,7 +180,7 @@ The mechanic's daily driver interface. Phase 109 delivered the foundation; remai
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 109 | CLI foundation + command structure | ✅ | Click CLI, subcommands, 3-tier subscription system ($19/$99/$299), tier command, 41 tests |
-| 122 | Vehicle garage management + photo intake | 🔲 | Add/edit/list/remove vehicles from personal garage, **PLUS photo-based intake**: snap/upload a bike photo → Claude Haiku 4.5 vision returns `VehicleGuess(make, model, year_range, engine_cc_range, confidence)` → auto-fill VehicleBase fields (low-confidence flagged), user confirms. Image sha256 cache, 1024px max dim, VIN fallback when confidence < 0.5. Per-tier caps: individual 20/mo, shop 200/mo, company unlimited. 80%-of-cap budget alert. New `src/motodiag/intake/` package reusing Phase 101 vision_analysis. (was 110) |
+| 122 | Vehicle garage management + photo intake | ✅ | Migration 013 + src/motodiag/intake/ package. VehicleIdentifier with Claude Haiku 4.5 vision, Sonnet escalation < 0.5 confidence, sha256 image cache, 1024px Pillow resize, tier caps 20/200/unlimited enforced from subscriptions.tier, 80% budget alert on crossing. CLI: garage add/list/remove, garage add-from-photo, intake photo, intake quota. 49 tests, all vision calls mocked (0 tokens burned), 2051 total, zero regressions. Schema v12→v13. |
 | 123 | Interactive diagnostic session | 🔲 | Start session → describe problem → guided Q&A → diagnosis (was 111) |
 | 124 | Fault code lookup command | 🔲 | `motodiag code P0115` → plain-English explanation + fix (was 112) |
 | 125 | Quick diagnosis mode | 🔲 | One-shot: `motodiag diagnose "won't start when cold" --bike sportster-2001` (was 113) |

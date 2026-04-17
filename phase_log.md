@@ -283,3 +283,20 @@ Phase 121 executed the Retrofit Integration Test. **All 10 Gate R tests pass, fu
 **Next**: Track D resumes at Phase 122 — vehicle garage management + photo-based bike intake with Claude Haiku 4.5 (scope locked: make/model/year/engine_cc, tiered caps individual 20/shop 200/company unlimited).
 
 Implementation.md → v0.6.0 (major version bump — Gate R closes the retrofit track, marks architectural completion).
+
+### 2026-04-17 22:10 — Phase 122 complete — Vehicle garage management + photo-based bike intake
+First post-retrofit user-facing phase. **Retrofit pays off immediately**: `subscriptions.tier` from Phase 118 is load-bearing for photo-ID quota enforcement; `users` from Phase 112 is the FK target of `intake_usage_log`. Integrated cleanly in one phase with zero schema surprises — validates the substrate-first approach of phases 110-121.
+
+- Migration 013: `intake_usage_log` table (user_id FK CASCADE, kind enum, model_used, confidence, image_hash, tokens + cost tracking, 3 indexes).
+- New package `src/motodiag/intake/`: IdentifyKind enum, VehicleGuess + IntakeUsageEntry + IntakeQuota models, IntakeError + QuotaExceededError exceptions, VehicleIdentifier orchestrator class.
+- Vision pipeline: quota check → preprocess (1024px resize via Pillow + JPEG q=85 + alpha-to-white flatten) → sha256 on preprocessed bytes → cache lookup → Haiku 4.5 call → parse JSON (markdown-fence tolerant, one retry on malformed) → Sonnet escalation if confidence < 0.5 → usage log → 80%-of-cap budget alert on threshold crossing (not continuous).
+- Privacy: image bytes never persist, only sha256 hash.
+- Cost controls: Haiku 4.5 by default (~$0.003-0.005/call), Sonnet escalation only when needed, cache returns zero-token cached guess on re-uploads.
+- Tier caps: individual 20/mo, shop 200/mo, company unlimited. Enforced via QuotaExceededError raised pre-call.
+- CLI: `garage` is now a `@click.group` with 4 subcommands (add/list/remove/add-from-photo) + new `intake` group with 2 subcommands (photo/quota). Pretty rich.Panel output for VehicleGuess preview.
+- Pillow added as optional dep: `motodiag[vision] = ["pillow>=10.0"]`. Graceful RuntimeError with install hint if missing.
+- Build-phase fix: `test_garage_remove` initially failed because `init_db()` reads `settings.db_path` from `@lru_cache`-cached Settings. Resolved by adding `cli_db` fixture that calls `reset_settings()` after monkeypatching `MOTODIAG_DB_PATH` env var.
+- 49 new tests, all vision calls mocked via `make_vision_mock` factory → **zero live API tokens burned during build or regression**.
+- Full regression: 2051/2051 passing (12:05 runtime). Zero regressions.
+- Implementation.md → v0.6.1 (Phase 122 row added + `intake` package row + `intake_usage_log` table row).
+- Next: Track D resumes at Phase 123 (interactive diagnostic session).
