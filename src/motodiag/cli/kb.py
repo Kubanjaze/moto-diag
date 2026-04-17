@@ -209,6 +209,132 @@ def _render_issue_detail(row: dict, console: Console) -> None:
         console.print("[bold]Estimated labor:[/bold] [dim](not recorded)[/dim]")
 
 
+# --- Phase 132: Issue formatters (pure dict → str) ------------------------
+#
+# Mirror of Phase 126's _format_session_md for the known-issues table so
+# `kb show` can reuse the shared HTML/PDF pipeline in cli/export.py.
+# Every section gracefully handles None / empty lists to keep sparse
+# knowledge-base entries (no parts, no DTC codes, no estimated hours)
+# rendering cleanly.
+
+
+def _format_issue_md(row: dict) -> str:
+    """Render a known_issue dict as GitHub-flavored markdown.
+
+    Structure:
+        # {title}
+        ## Overview
+        - Make: ...
+        - Model: ...
+        - Year range: ...
+        - Severity: ...
+        ## Description
+        {paragraph}
+        ## Symptoms
+        - ...
+        ## Fault Codes
+        - `...`
+        ## Causes
+        - ...
+        ## Fix Procedure
+        {paragraph}
+        ## Parts Needed
+        - ...
+        ## Labor Hours
+        {hours} hours
+    """
+    title = row.get("title") or "(untitled)"
+    lines: list[str] = []
+    lines.append(f"# {title}")
+    lines.append("")
+
+    # --- Overview
+    lines.append("## Overview")
+    lines.append("")
+    lines.append(f"- Make: {row.get('make') or 'all makes'}")
+    lines.append(f"- Model: {row.get('model') or 'all models'}")
+    lines.append(f"- Year range: {_year_range_str(row)}")
+    sev = row.get("severity") or "-"
+    lines.append(f"- Severity: {sev}")
+    if row.get("id") is not None:
+        lines.append(f"- Issue ID: {row.get('id')}")
+    lines.append("")
+
+    # --- Description (optional)
+    description = row.get("description")
+    if description:
+        lines.append("## Description")
+        lines.append("")
+        lines.append(str(description))
+        lines.append("")
+
+    # --- Symptoms
+    symptoms = row.get("symptoms") or []
+    if symptoms:
+        lines.append("## Symptoms")
+        lines.append("")
+        for s in symptoms:
+            lines.append(f"- {s}")
+        lines.append("")
+
+    # --- Fault Codes
+    dtc_codes = row.get("dtc_codes") or []
+    if dtc_codes:
+        lines.append("## Fault Codes")
+        lines.append("")
+        for c in dtc_codes:
+            lines.append(f"- `{c}`")
+        lines.append("")
+
+    # --- Causes
+    causes = row.get("causes") or []
+    if causes:
+        lines.append("## Causes")
+        lines.append("")
+        for c in causes:
+            lines.append(f"- {c}")
+        lines.append("")
+
+    # --- Fix Procedure
+    fix_procedure = row.get("fix_procedure")
+    if fix_procedure:
+        lines.append("## Fix Procedure")
+        lines.append("")
+        lines.append(str(fix_procedure))
+        lines.append("")
+
+    # --- Parts Needed
+    parts = row.get("parts_needed") or []
+    if parts:
+        lines.append("## Parts Needed")
+        lines.append("")
+        for p in parts:
+            lines.append(f"- {p}")
+        lines.append("")
+
+    # --- Labor Hours
+    hours = row.get("estimated_hours")
+    if hours is not None:
+        lines.append("## Labor Hours")
+        lines.append("")
+        lines.append(f"{hours} hours")
+        lines.append("")
+
+    return "\n".join(lines)
+
+
+def _format_issue_text(row: dict) -> str:
+    """Render a known_issue dict as plain text.
+
+    v1 implementation: reuses the markdown output. The markdown syntax
+    used (``# heading``, ``- bullet``, backtick code) is already
+    human-readable in a monospace terminal / email client, so stripping
+    the syntax isn't necessary to be useful. A future phase can swap in
+    a dedicated plain-text formatter if customer feedback calls for it.
+    """
+    return _format_issue_md(row)
+
+
 # --- Command registration ---
 
 
@@ -301,15 +427,112 @@ def register_kb(cli_group: click.Group) -> None:
 
     @kb.command("show")
     @click.argument("issue_id", type=int)
-    def kb_show(issue_id: int) -> None:
-        """Render the full detail of a single known issue by ID."""
+    @click.option(
+        "--format", "output_format",
+        type=click.Choice(
+            ["terminal", "txt", "md", "html", "pdf"],
+            case_sensitive=False,
+        ),
+        default="terminal",
+        show_default=True,
+        help=(
+            "Output format. 'terminal' preserves the Phase 128 Rich rendering; "
+            "'html' / 'pdf' (Phase 132) require the motodiag[export] extra."
+        ),
+    )
+    @click.option(
+        "--output", "output_path",
+        type=click.Path(dir_okay=False, writable=True, resolve_path=False),
+        default=None,
+        help=(
+            "Write to PATH instead of stdout. Ignored with --format terminal. "
+            "Required for --format pdf."
+        ),
+    )
+    @click.option(
+        "--yes", "-y", "assume_yes",
+        is_flag=True, default=False,
+        help="Skip overwrite confirmation when --output points to an existing file.",
+    )
+    def kb_show(
+        issue_id: int,
+        output_format: str,
+        output_path: Optional[str],
+        assume_yes: bool,
+    ) -> None:
+        """Render the full detail of a single known issue by ID.
+
+        Without flags, renders a Rich Panel to the terminal (Phase 128 behavior).
+        With --format txt|md, prints to stdout or writes to --output PATH.
+        With --format html|pdf (Phase 132), converts via the shared export
+        pipeline. PDF output requires --output (binary to stdout is useless).
+        """
         console = get_console()
         init_db()
 
         row = get_known_issue(issue_id)
         if row is None:
             raise click.ClickException(f"Known issue #{issue_id} not found.")
-        _render_issue_detail(row, console)
+
+        fmt = output_format.lower()
+
+        # Phase 128 terminal path — unchanged behavior.
+        if fmt == "terminal":
+            if output_path:
+                console.print(
+                    "[yellow]⚠ --output ignored with --format terminal. "
+                    "Use --format txt|md|html|pdf to write a file.[/yellow]"
+                )
+            _render_issue_detail(row, console)
+            return
+
+        # Lazy imports so core users never pay for the markdown/xhtml2pdf
+        # import cost when they only ever use the terminal path.
+        title = row.get("title") or f"Known Issue #{issue_id}"
+
+        if fmt == "txt":
+            content = _format_issue_text(row)
+        elif fmt == "md":
+            content = _format_issue_md(row)
+        elif fmt == "html":
+            from motodiag.cli.export import format_as_html
+            content = format_as_html(
+                title=title,
+                body_md=_format_issue_md(row),
+            )
+        elif fmt == "pdf":
+            if not output_path:
+                raise click.ClickException(
+                    "PDF format requires --output PATH. "
+                    "Example: --format pdf --output issue.pdf"
+                )
+            from pathlib import Path
+            from motodiag.cli.export import format_as_pdf, write_binary
+            pdf_bytes = format_as_pdf(
+                title=title,
+                body_md=_format_issue_md(row),
+            )
+            write_binary(
+                Path(output_path),
+                pdf_bytes,
+                overwrite_confirmed=assume_yes,
+            )
+            click.echo(f"Saved to {output_path}")
+            return
+        else:  # pragma: no cover — click.Choice guards this
+            raise click.ClickException(f"Unknown format: {output_format}")
+
+        if output_path:
+            # Reuse Phase 126's writer for consistent overwrite/parent-dir
+            # handling. The md/html/txt outputs are all text so the text
+            # writer is the right tool.
+            from motodiag.cli.diagnose import _write_report_to_file
+            _write_report_to_file(
+                output_path, content, overwrite_confirmed=assume_yes,
+            )
+            click.echo(f"Saved to {output_path}")
+        else:
+            click.echo(content, nl=False)
 
     @kb.command("search")
     @click.argument("query")

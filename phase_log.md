@@ -416,3 +416,17 @@ Seventh agent-delegated phase. Largest post-retrofit phase so far — migration 
 - Full regression (running): expected 2301/2301, zero regressions.
 - Implementation.md → v0.7.0 (minor version bump — cache substrate is a significant capability addition, and this closes out the bulk of Track D's user-facing features).
 - Next: Phase 132 (Export + sharing — PDF/HTML diagnostic reports).
+
+### 2026-04-18 04:05 — Phase 132 complete — Export + sharing (HTML + PDF)
+Eighth agent-delegated phase. No migration, no new commands. Extends Phase 126's `--format` mechanism with `html` and `pdf` output on `diagnose show`, and brings `kb show` to parity with `diagnose show` (now also supports md/html/pdf output).
+- New shared `src/motodiag/cli/export.py` (~260 LoC): `format_as_html` via `markdown` package, `format_as_pdf` via `xhtml2pdf.pisa`, `write_binary` for PDF file writes. Inline-CSS HTML wrapper with `@page` for print, serif font, table borders. Lazy-imports + install-hint ClickException on missing optional deps.
+- Extended `cli/diagnose.py`: `--format` Choice now includes `html`/`pdf`; PDF requires `--output` (binary-to-stdout useless).
+- Extended `cli/kb.py`: new `_format_issue_md`/`_format_issue_text` helpers (sparse-field tolerant — skip empty sections); new `--format [terminal|txt|md|html|pdf]`/`--output`/`--yes` options. Terminal default preserves Phase 128 behavior.
+- New `motodiag[export]` optional extras in `pyproject.toml` (markdown + xhtml2pdf).
+- Markdown is the pivot format: `_format_session_md` (Phase 126) and `_format_issue_md` (Phase 132) are the single source of truth; HTML is markdown + CSS; PDF is HTML + page layout. Any future format (DOCX, EPUB) plugs in at the same pivot.
+- **Agent delegation**: Builder-A shipped 25 tests all passing first run in 11.94s — zero iterative fixes, zero Architect corrections. Builder's unprompted refinements: HTML-entity escape on title; `_format_issue_text` aliases `_format_issue_md` per plan permission; `_write_report_to_file` re-imported to avoid duplication.
+- Pre-dispatch prep: Architect pip-installed `markdown` + `xhtml2pdf` before sending to Builder so full regression passes `TestExtrasAvailable` checks.
+- 25 new tests across 6 classes. Zero AI calls. Zero live tokens.
+- Full regression (running): expected 2326/2326, zero regressions.
+- Implementation.md → v0.7.1.
+- Next: Phase 133 — **Gate 5 integration test** (full mechanic workflow through CLI). Closes out Track D.

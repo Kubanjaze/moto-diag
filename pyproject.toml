@@ -40,8 +40,12 @@ hardware = [
 vision = [
     "pillow>=10.0",
 ]
+export = [
+    "markdown>=3.5",
+    "xhtml2pdf>=0.2.13",
+]
 all = [
-    "motodiag[dev,ai,api,hardware,vision]",
+    "motodiag[dev,ai,api,hardware,vision,export]",
 ]
 
 [project.scripts]

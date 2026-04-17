@@ -1216,10 +1216,16 @@ def register_diagnose(cli_group: click.Group) -> None:
     @click.argument("session_id", type=int, shell_complete=complete_session_id)
     @click.option(
         "--format", "output_format",
-        type=click.Choice(["terminal", "txt", "json", "md"], case_sensitive=False),
+        type=click.Choice(
+            ["terminal", "txt", "json", "md", "html", "pdf"],
+            case_sensitive=False,
+        ),
         default="terminal",
         show_default=True,
-        help="Output format. 'terminal' preserves the Phase 123 Rich rendering.",
+        help=(
+            "Output format. 'terminal' preserves Phase 123 Rich rendering; "
+            "'html' / 'pdf' (Phase 132) require the motodiag[export] extra."
+        ),
     )
     @click.option(
         "--output", "output_path",
@@ -1242,7 +1248,8 @@ def register_diagnose(cli_group: click.Group) -> None:
 
         Without flags, renders a Rich Panel to the terminal (Phase 123 behavior).
         With --format txt|json|md, prints the chosen format to stdout, or writes
-        to --output PATH if given.
+        to --output PATH if given. Phase 132 adds --format html|pdf; PDF output
+        requires --output (binary to stdout is useless).
         """
         console = get_console()
         init_db()
@@ -1299,6 +1306,37 @@ def register_diagnose(cli_group: click.Group) -> None:
             content = _format_session_json(s)
         elif fmt == "md":
             content = _format_session_md(s)
+        elif fmt == "html":
+            # Phase 132: HTML goes through the markdown pivot so any
+            # formatter tweak in _format_session_md automatically flows
+            # through to HTML/PDF without duplicated code.
+            from motodiag.cli.export import format_as_html
+            content = format_as_html(
+                title=f"Session #{s['id']}",
+                body_md=_format_session_md(s),
+            )
+        elif fmt == "pdf":
+            # Phase 132: PDF is binary — writing to stdout would corrupt
+            # the terminal and defeat the "share with customer" use case,
+            # so --output is mandatory.
+            if not output_path:
+                raise click.ClickException(
+                    "PDF format requires --output PATH. "
+                    "Example: --format pdf --output session.pdf"
+                )
+            from pathlib import Path
+            from motodiag.cli.export import format_as_pdf, write_binary
+            pdf_bytes = format_as_pdf(
+                title=f"Session #{s['id']}",
+                body_md=_format_session_md(s),
+            )
+            write_binary(
+                Path(output_path),
+                pdf_bytes,
+                overwrite_confirmed=assume_yes,
+            )
+            click.echo(f"Saved to {output_path}")
+            return
         else:  # pragma: no cover — click.Choice guards this
             raise click.ClickException(f"Unknown format: {output_format}")
 
