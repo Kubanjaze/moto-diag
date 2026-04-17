@@ -198,3 +198,10 @@ This is the **project-level** change log. Records updates to the project's archi
 - 18 new packages planned: auth, crm, billing, accounting, inventory, scheduling, workflows, i18n, reference, feedback, ai_advanced, launch, ops
 - Gates: Gate R (retrofit), Gates 5-20 (tracks D-T)
 - Next: execute Part 2 — auto-iterate through 12 retrofit phases (110-121) before any new tracks begin
+
+### 2026-04-17 17:20 — Retrofit Phase 115 complete — i18n substrate
+- Migration 008: `translations` table with composite PK `(locale, namespace, key)` + 2 indexes, 45 English strings seeded (11 cli + 12 ui + 11 diagnostics + 11 workflow). Rollback drops the table cleanly.
+- New package `src/motodiag/i18n/`: `Locale` enum (7 ISO 639-1 codes — en/es/fr/de/ja/it/pt), `Translation` model, `t()` translator with fallback chain locale → en → `[namespace.key]` + `{placeholder}` string interpolation, env-var-driven `current_locale/set_locale`, 8 repo functions (get/set/delete/list/import/list_locales/count/locale_completeness).
+- Substrate only — English-only content. Track Q phases 308-310 populate Spanish/French/German via `import_translations()` from JSON files.
+- Schema v7 → v8. 40 new tests. Full regression: 1841/1841 passing (7:21 runtime). Zero regressions. Forward-compat pattern maintained (all schema version assertions use `>= 8`).
+- Implementation.md → v0.5.1 (Phase 115 row added to Phase History, `translations` row added to Database Tables, `i18n` package status Planned → Complete).

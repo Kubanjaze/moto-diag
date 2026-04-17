@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.5.0 | **Date:** 2026-04-17
+**Version:** 0.5.1 | **Date:** 2026-04-17
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 352 phases across 21 tracks (A-T)
@@ -109,7 +109,7 @@ moto-diag/
 | `inventory` | Retrofit 118 / O | Planned | Parts inventory, reorder points, vendor integrations |
 | `scheduling` | Retrofit 118 / O | Planned | Appointments, iCal/Google calendar sync, mechanic calendars |
 | `workflows` | Retrofit 114 / N | Planned | PPI, tire service, winterization, break-in templates |
-| `i18n` | Retrofit 115 / Q | Planned | Translations table, locale handling, Spanish/French/German support |
+| `i18n` | Retrofit 115 / Q | Complete | Locale enum (7 codes), Translation model, t() translator with locale → en → `[namespace.key]` fallback, string interpolation, translations table, bulk import, locale_completeness reporter — 45 English strings seeded across 4 namespaces |
 | `reference` | Retrofit 117 / P | Planned | Manual citations, parts diagrams, failure photos, video tutorials |
 | `feedback` | Retrofit 116 / R | Planned | Diagnostic feedback, override tracking, learning hooks |
 | `ai_advanced` | R | Planned | Human-in-loop learning, tuning recs, knowledge graph (phases 318-327) |
@@ -129,6 +129,7 @@ moto-diag/
 | `prep_labor` | Prep labor catalog (fairing removal, drain/refill, etc.) | pricing |
 | `repair_plans` | Per-bike repair plans with status tracking | pricing |
 | `repair_plan_items` | Line items within plans (labor, parts, prep, diagnostic) | pricing |
+| `translations` | i18n strings — composite PK (locale, namespace, key) + value + optional context | Retrofit 115 |
 | `schema_version` | Migration tracking | 03 |
 
 ## CLI Commands
@@ -288,6 +289,7 @@ moto-diag/
 | 112 | Retrofit: user/auth layer introduction | 2026-04-17 | Migration 005, auth/ package (5 Pydantic models + users_repo + roles_repo), 5 new tables (users/roles/permissions/user_roles/role_permissions), seeded system user + 4 roles + 12 permissions + 31 role-permission mappings, retrofit user_id FKs onto diagnostic_sessions/repair_plans/known_issues, schema v4→v5, 40 tests, 1734 total passing, zero regressions |
 | 113 | Retrofit: customer/CRM foundation | 2026-04-17 | Migration 006, crm/ package (Customer + CustomerBike models + CustomerRelationship enum + 14 repo functions), 2 new tables (customers + customer_bikes), 4 indexes, unassigned placeholder customer (id=1) owns pre-retrofit vehicles, ownership transfer workflow (atomic demote + assign), backward compat preserved via DEFAULT 1, schema v5→v6, 35 tests, 1769 total passing, zero regressions (2 phase-112 tests relaxed for migration dependency ordering) |
 | 114 | Retrofit: workflow template substrate | 2026-04-17 | Migration 007, workflows/ package (WorkflowCategory enum 13 members + WorkflowTemplate + ChecklistItem models + 10 repo functions), workflow_templates + checklist_items tables with CASCADE delete, 2 seed templates (generic PPI + winterization) with 9 starter checklist items, foundation for Track N phases 259-272, schema v6→v7, 32 tests, 1801 total passing, zero regressions |
+| 115 | Retrofit: i18n substrate | 2026-04-17 | Migration 008, i18n/ package (Locale enum 7 codes en/es/fr/de/ja/it/pt + Translation model + t() translator with locale→en→`[namespace.key]` fallback + string interpolation + current_locale/set_locale env-var handling + 8 repo functions), translations table with composite PK `(locale, namespace, key)` + 2 indexes, 45 English strings seeded across 4 namespaces (11 cli + 12 ui + 11 diagnostics + 11 workflow), foundation for Track Q phases 308-310, schema v7→v8, 40 tests, 1841 total passing, zero regressions |
 
 ## Completion Gates
 

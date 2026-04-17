@@ -435,6 +435,93 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS workflow_templates;
         """,
     ),
+    # Migration 008 — Phase 115: i18n translations substrate
+    Migration(
+        version=8,
+        name="i18n_translations_substrate",
+        description=(
+            "Phase 115: Create translations table with composite PK "
+            "(locale, namespace, key) + value + optional context. Seeds ~40 "
+            "baseline English strings across 4 namespaces (cli, ui, "
+            "diagnostics, workflow). Track Q phases 308-310 populate Spanish, "
+            "French, German. Additional locales (ja/it/pt) reserved."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS translations (
+                locale TEXT NOT NULL,
+                namespace TEXT NOT NULL,
+                key TEXT NOT NULL,
+                value TEXT NOT NULL,
+                context TEXT,
+                PRIMARY KEY (locale, namespace, key)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_translations_locale ON translations(locale);
+            CREATE INDEX IF NOT EXISTS idx_translations_ns_key ON translations(namespace, key);
+
+            -- Seed baseline English (en) strings across 4 namespaces
+
+            -- cli namespace (11 strings): welcome, help/version, command prompts
+            INSERT OR IGNORE INTO translations (locale, namespace, key, value, context) VALUES
+                ('en', 'cli', 'welcome', 'Welcome to MotoDiag', 'shown on interactive shell start'),
+                ('en', 'cli', 'version_info', 'MotoDiag v{version}', 'shown for --version flag'),
+                ('en', 'cli', 'help_usage', 'Usage: motodiag [OPTIONS] COMMAND [ARGS]...', NULL),
+                ('en', 'cli', 'command_diagnose', 'Run AI-assisted diagnostic workflow', NULL),
+                ('en', 'cli', 'command_garage', 'Manage your vehicle garage', NULL),
+                ('en', 'cli', 'command_report', 'Export or share diagnostic reports', NULL),
+                ('en', 'cli', 'command_customer', 'Manage customer records', NULL),
+                ('en', 'cli', 'prompt_confirm', 'Are you sure? [y/N]', NULL),
+                ('en', 'cli', 'prompt_vehicle_id', 'Enter vehicle ID:', NULL),
+                ('en', 'cli', 'exit_goodbye', 'Goodbye!', NULL),
+                ('en', 'cli', 'unknown_command', 'Unknown command: {cmd}', NULL);
+
+            -- ui namespace (12 strings): buttons, status labels, common actions
+            INSERT OR IGNORE INTO translations (locale, namespace, key, value, context) VALUES
+                ('en', 'ui', 'button_save', 'Save', NULL),
+                ('en', 'ui', 'button_cancel', 'Cancel', NULL),
+                ('en', 'ui', 'button_delete', 'Delete', NULL),
+                ('en', 'ui', 'button_edit', 'Edit', NULL),
+                ('en', 'ui', 'button_next', 'Next', NULL),
+                ('en', 'ui', 'button_back', 'Back', NULL),
+                ('en', 'ui', 'loading', 'Loading...', 'progress indicator'),
+                ('en', 'ui', 'error_generic', 'Something went wrong. Please try again.', NULL),
+                ('en', 'ui', 'error_not_found', 'Not found', NULL),
+                ('en', 'ui', 'error_permission', 'You do not have permission for this action', NULL),
+                ('en', 'ui', 'success_saved', 'Saved successfully', NULL),
+                ('en', 'ui', 'success_deleted', 'Deleted successfully', NULL);
+
+            -- diagnostics namespace (11 strings): severity, confidence, session state
+            INSERT OR IGNORE INTO translations (locale, namespace, key, value, context) VALUES
+                ('en', 'diagnostics', 'severity_critical', 'Critical', 'severity label — immediate safety risk'),
+                ('en', 'diagnostics', 'severity_high', 'High', 'severity label — major drivability issue'),
+                ('en', 'diagnostics', 'severity_medium', 'Medium', NULL),
+                ('en', 'diagnostics', 'severity_low', 'Low', 'severity label — cosmetic or minor'),
+                ('en', 'diagnostics', 'confidence_high', 'High confidence', 'AI confidence tier'),
+                ('en', 'diagnostics', 'confidence_medium', 'Medium confidence', NULL),
+                ('en', 'diagnostics', 'confidence_low', 'Low confidence', NULL),
+                ('en', 'diagnostics', 'session_open', 'Open', 'session status'),
+                ('en', 'diagnostics', 'session_closed', 'Closed', 'session status'),
+                ('en', 'diagnostics', 'no_dtc_found', 'No fault codes detected', NULL),
+                ('en', 'diagnostics', 'analysis_in_progress', 'Analyzing symptoms...', NULL);
+
+            -- workflow namespace (11 strings): checklist states, template labels
+            INSERT OR IGNORE INTO translations (locale, namespace, key, value, context) VALUES
+                ('en', 'workflow', 'step_pass', 'Pass', 'checklist item result'),
+                ('en', 'workflow', 'step_fail', 'Fail', 'checklist item result'),
+                ('en', 'workflow', 'step_skip', 'Skip', 'checklist item result'),
+                ('en', 'workflow', 'step_unclear', 'Unclear', 'checklist item result — inconclusive'),
+                ('en', 'workflow', 'template_ppi', 'Pre-Purchase Inspection', NULL),
+                ('en', 'workflow', 'template_winterization', 'Winterization', NULL),
+                ('en', 'workflow', 'checklist_complete', 'Checklist complete', NULL),
+                ('en', 'workflow', 'checklist_progress', '{done} of {total} items complete', 'progress label'),
+                ('en', 'workflow', 'required_step', 'Required', 'marks a step as mandatory'),
+                ('en', 'workflow', 'optional_step', 'Optional', NULL),
+                ('en', 'workflow', 'estimated_minutes', 'Estimated: {minutes} min', NULL);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS translations;
+        """,
+    ),
 ]
 
 

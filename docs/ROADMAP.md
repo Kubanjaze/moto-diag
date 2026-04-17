@@ -204,7 +204,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 | 112 | User/auth layer introduction | ✅ | Migration 005, auth/ package (5 models, users_repo, roles_repo), 4 roles + 12 permissions + 31 mappings seeded, system user (id=1) owns pre-retrofit data, 40 tests, 1734 total |
 | 113 | Customer/CRM foundation | ✅ | Migration 006, crm/ package (Customer + CustomerBike models, 14 repo functions), customers + customer_bikes tables, ownership history with transfer_ownership(), unassigned placeholder (id=1) owns pre-retrofit vehicles, 35 tests, 1769 total |
 | 114 | Workflow template substrate | ✅ | Migration 007, workflows/ package (WorkflowCategory enum 13 members + 2 models + 10 repo functions), workflow_templates + checklist_items tables, 2 seed templates + 9 checklist items, 32 tests, 1801 total |
-| 115 | i18n substrate | 🔲 | String extraction → translations table or locale-suffixed JSON. English-only plumbing before Spanish lands |
+| 115 | i18n substrate | ✅ | Migration 008 + i18n/ package (Locale enum 7 codes, t() with locale→en→key fallback, string interpolation, bulk import, completeness reporter). 45 English strings across 4 namespaces. Schema v7→v8. 40 tests, 1841 total |
 | 116 | Feedback/learning hooks | 🔲 | New diagnostic_feedback table. Override tracking (mechanic's actual vs AI's suggestion). Engine feedback-reader hook interface |
 | 117 | Reference data tables | 🔲 | New empty tables: manual_references, parts_diagrams, failure_photos, video_tutorials. Schema only |
 | 118 | Billing/invoicing/inventory/scheduling substrate | 🔲 | New packages: billing, accounting, inventory, scheduling. Tables: appointments, payments, invoices, invoice_line_items, inventory_items, vendors, recalls, warranties |
