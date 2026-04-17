@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 8  # Phase 115: bumped for i18n translations substrate migration 008
+SCHEMA_VERSION = 9  # Phase 116: bumped for feedback/overrides substrate migration 009
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

@@ -522,6 +522,60 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS translations;
         """,
     ),
+    # Migration 009 — Phase 116: feedback/learning hooks substrate
+    Migration(
+        version=9,
+        name="feedback_learning_hooks",
+        description=(
+            "Phase 116: Create diagnostic_feedback and session_overrides "
+            "tables. Feedback records post-diagnosis truth (what the "
+            "mechanic actually found) vs AI output, with outcome enum "
+            "(correct/partially_correct/incorrect/inconclusive). Overrides "
+            "log field-level disagreements on diagnostic sessions. Track R "
+            "phases 318-327 consume this via FeedbackReader read-only hook."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS diagnostic_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                submitted_by_user_id INTEGER NOT NULL DEFAULT 1,
+                ai_suggested_diagnosis TEXT,
+                ai_confidence REAL,
+                actual_diagnosis TEXT,
+                actual_fix TEXT,
+                outcome TEXT NOT NULL,
+                mechanic_notes TEXT,
+                parts_used TEXT NOT NULL DEFAULT '[]',
+                actual_labor_hours REAL,
+                submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (submitted_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_feedback_session ON diagnostic_feedback(session_id);
+            CREATE INDEX IF NOT EXISTS idx_feedback_outcome ON diagnostic_feedback(outcome);
+
+            CREATE TABLE IF NOT EXISTS session_overrides (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                field_name TEXT NOT NULL,
+                ai_value TEXT,
+                override_value TEXT,
+                overridden_by_user_id INTEGER NOT NULL DEFAULT 1,
+                reason TEXT,
+                overridden_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (session_id) REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+                FOREIGN KEY (overridden_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_overrides_session ON session_overrides(session_id);
+            CREATE INDEX IF NOT EXISTS idx_overrides_field ON session_overrides(field_name);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS session_overrides;
+            DROP TABLE IF EXISTS diagnostic_feedback;
+        """,
+    ),
 ]
 
 

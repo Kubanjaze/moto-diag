@@ -205,3 +205,11 @@ This is the **project-level** change log. Records updates to the project's archi
 - Substrate only — English-only content. Track Q phases 308-310 populate Spanish/French/German via `import_translations()` from JSON files.
 - Schema v7 → v8. 40 new tests. Full regression: 1841/1841 passing (7:21 runtime). Zero regressions. Forward-compat pattern maintained (all schema version assertions use `>= 8`).
 - Implementation.md → v0.5.1 (Phase 115 row added to Phase History, `translations` row added to Database Tables, `i18n` package status Planned → Complete).
+
+### 2026-04-17 17:55 — Retrofit Phase 116 complete — feedback/learning hooks substrate
+- Migration 009: `diagnostic_feedback` (12 cols) + `session_overrides` (8 cols) tables. FK CASCADE on session, SET DEFAULT on user (preserves training signal if user deleted). 4 indexes. Rollback drops both.
+- New package `src/motodiag/feedback/`: `FeedbackOutcome` enum (correct/partially_correct/incorrect/inconclusive), `OverrideField` enum (6 fields), `DiagnosticFeedback` + `SessionOverride` Pydantic models, 8 repo functions (submit/get/list/count × feedback; record/get/count × overrides), `FeedbackReader` read-only hook class with `iter_feedback` generator, `get_accuracy_metrics`, `get_common_overrides`.
+- Feedback records are immutable once submitted — no update/delete API (preserves training signal integrity). Writes go through feedback_repo only; FeedbackReader is read-only by design.
+- Substrate only — Track R phases 318-327 build the actual learning loop on top. `get_accuracy_metrics()` already produces the primary accuracy signal Track R phase 327 (continuous learning) needs.
+- Schema v8 → v9. 26 new tests. Full regression: 1867/1867 passing (8:58 runtime). Zero regressions.
+- Implementation.md → v0.5.2 (Phase 116 row, 2 new table rows, `feedback` package status Planned → Complete).
