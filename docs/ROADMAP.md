@@ -199,7 +199,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 110 | Vehicle registry + protocol taxonomy expansion | 🔲 | Extend `vehicles/` for electric, 4/2-stroke/electric/hybrid/desmo, European OBD (BMW K-CAN, Ducati/KTM CAN) |
+| 110 | Vehicle registry + protocol taxonomy expansion | ✅ | Migration framework (reusable), PowertrainType/EngineType/BatteryChemistry enums, European CAN protocols, 35 tests, 1651 total |
 | 111 | Knowledge base schema expansion | 🔲 | DTC schema: HV, battery, motor, regen, TPMS, emissions. OEM-specific DTC classifiers for BMW/Ducati/KTM/Triumph/Aprilia/electric |
 | 112 | User/auth layer introduction | 🔲 | New `auth/` package: users, roles, permissions. Retrofit `user_id` FK onto diagnostic_sessions/repair_plans/known_issues |
 | 113 | Customer/CRM foundation | 🔲 | New `crm/` package: customers, customer_bikes join table. Retrofit `customer_id` FK onto vehicles |

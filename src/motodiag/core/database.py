@@ -8,7 +8,8 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 2
+SCHEMA_VERSION = 3  # Phase 110: target version = baseline (2) + retrofit migration 003
+BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
 -- Vehicles table
@@ -186,21 +187,34 @@ def get_db_path() -> str:
     return get_settings().db_path
 
 
-def init_db(db_path: str | None = None) -> None:
-    """Initialize the database with schema tables."""
+def init_db(db_path: str | None = None, apply_migrations: bool = True) -> None:
+    """Initialize the database with schema tables.
+
+    Phase 110 (Retrofit): after creating the baseline schema, optionally runs
+    `apply_pending_migrations()` to bring the DB up to the latest version.
+    Fresh DBs get baseline + all migrations; existing DBs get only missing
+    migrations applied. Pass apply_migrations=False to skip migrations
+    (useful in tests that want to test migration behavior explicitly).
+    """
     path = db_path or get_db_path()
     Path(path).parent.mkdir(parents=True, exist_ok=True)
 
     with sqlite3.connect(path) as conn:
         conn.executescript(SCHEMA_SQL)
-        # Record schema version if not present
+        # Record baseline schema version if not present (BASELINE, not latest)
         cursor = conn.execute("SELECT COUNT(*) FROM schema_version")
         if cursor.fetchone()[0] == 0:
             conn.execute(
                 "INSERT INTO schema_version (version) VALUES (?)",
-                (SCHEMA_VERSION,),
+                (BASELINE_SCHEMA_VERSION,),
             )
         conn.commit()
+
+    # Apply any migrations beyond baseline — brings DB up to SCHEMA_VERSION
+    if apply_migrations:
+        # Import here to avoid circular import at module load time
+        from motodiag.core.migrations import apply_pending_migrations
+        apply_pending_migrations(path)
 
 
 @contextmanager
