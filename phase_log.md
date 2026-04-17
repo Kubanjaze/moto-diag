@@ -213,3 +213,11 @@ This is the **project-level** change log. Records updates to the project's archi
 - Substrate only — Track R phases 318-327 build the actual learning loop on top. `get_accuracy_metrics()` already produces the primary accuracy signal Track R phase 327 (continuous learning) needs.
 - Schema v8 → v9. 26 new tests. Full regression: 1867/1867 passing (8:58 runtime). Zero regressions.
 - Implementation.md → v0.5.2 (Phase 116 row, 2 new table rows, `feedback` package status Planned → Complete).
+
+### 2026-04-17 18:25 — Retrofit Phase 117 complete — reference data tables
+- Migration 010: 4 new tables (`manual_references`, `parts_diagrams`, `failure_photos`, `video_tutorials`) with 8 indexes. `parts_diagrams.source_manual_id` ON DELETE SET NULL. `failure_photos.submitted_by_user_id` ON DELETE SET DEFAULT (system user id=1). Rollback drops all 4 in FK-safe order.
+- New package `src/motodiag/reference/`: 4 enums (ManualSource 5, DiagramType 4, FailureCategory 7, SkillLevel 4), 4 Pydantic models, 4 repo modules (manual/diagram/photo/video) × 5 CRUD functions each = 20 total.
+- Year-range filter pattern (`year_start <= target AND year_end >= target`, NULL = universal) reused from `known_issues` — now the de-facto knowledge-layer query convention used by 5 tables.
+- Tables empty by design — Phase 117 is substrate only. Track P phases 293-302 populate Clymer/Haynes citations, per-model torque data, failure photo library, video tutorial index.
+- Schema v9 → v10. 28 new tests. Full regression: 1895/1895 passing (8:26 runtime). Zero regressions.
+- Implementation.md → v0.5.3 (Phase 117 row, 4 new table rows, `reference` package status Planned → Complete).

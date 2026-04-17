@@ -576,6 +576,105 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS diagnostic_feedback;
         """,
     ),
+    # Migration 010 — Phase 117: reference data tables
+    Migration(
+        version=10,
+        name="reference_data_tables",
+        description=(
+            "Phase 117: Create 4 empty reference tables — manual_references "
+            "(Clymer/Haynes/OEM citations), parts_diagrams (exploded views, "
+            "schematics, wiring, assembly), failure_photos (failure-mode "
+            "photo library), video_tutorials (YouTube/Vimeo/internal "
+            "tutorials). Year-range targeting via year_start/year_end "
+            "reuses the known_issues pattern. Track P phases 293-302 "
+            "populate content on top of this substrate."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS manual_references (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                source TEXT NOT NULL,
+                title TEXT NOT NULL,
+                publisher TEXT,
+                isbn TEXT,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                page_count INTEGER,
+                section_titles TEXT NOT NULL DEFAULT '[]',
+                url TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_manuals_make_model ON manual_references(make, model);
+            CREATE INDEX IF NOT EXISTS idx_manuals_source ON manual_references(source);
+
+            CREATE TABLE IF NOT EXISTS parts_diagrams (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                diagram_type TEXT NOT NULL,
+                section TEXT,
+                title TEXT NOT NULL,
+                image_ref TEXT NOT NULL,
+                source_manual_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (source_manual_id) REFERENCES manual_references(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_diagrams_make_model ON parts_diagrams(make, model);
+            CREATE INDEX IF NOT EXISTS idx_diagrams_type ON parts_diagrams(diagram_type);
+
+            CREATE TABLE IF NOT EXISTS failure_photos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                failure_category TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                part_affected TEXT,
+                image_ref TEXT NOT NULL,
+                submitted_by_user_id INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (submitted_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_photos_make_model ON failure_photos(make, model);
+            CREATE INDEX IF NOT EXISTS idx_photos_category ON failure_photos(failure_category);
+
+            CREATE TABLE IF NOT EXISTS video_tutorials (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT,
+                source TEXT NOT NULL,
+                source_video_id TEXT,
+                url TEXT,
+                duration_seconds INTEGER,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                skill_level TEXT NOT NULL DEFAULT 'intermediate',
+                topic_tags TEXT NOT NULL DEFAULT '[]',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_videos_make_model ON video_tutorials(make, model);
+            CREATE INDEX IF NOT EXISTS idx_videos_source ON video_tutorials(source);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS parts_diagrams;
+            DROP TABLE IF EXISTS video_tutorials;
+            DROP TABLE IF EXISTS failure_photos;
+            DROP TABLE IF EXISTS manual_references;
+        """,
+    ),
 ]
 
 
