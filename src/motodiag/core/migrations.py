@@ -135,6 +135,122 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS dtc_category_meta;
         """,
     ),
+    # Migration 005 — Phase 112: user/auth layer introduction
+    Migration(
+        version=5,
+        name="auth_layer_introduction",
+        description=(
+            "Phase 112: Create users, roles, permissions, user_roles, "
+            "role_permissions tables. Seed 'system' user (id=1), 4 roles "
+            "(owner/tech/service_writer/apprentice), 12 base permissions. "
+            "Add user_id FK to diagnostic_sessions and repair_plans; "
+            "created_by_user_id FK to known_issues. Existing rows default "
+            "to system user (id=1) to preserve referential integrity."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS users (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                username TEXT NOT NULL UNIQUE,
+                email TEXT,
+                full_name TEXT,
+                password_hash TEXT,
+                tier TEXT NOT NULL DEFAULT 'individual',
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS roles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS permissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                description TEXT
+            );
+
+            CREATE TABLE IF NOT EXISTS user_roles (
+                user_id INTEGER NOT NULL,
+                role_id INTEGER NOT NULL,
+                assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, role_id),
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS role_permissions (
+                role_id INTEGER NOT NULL,
+                permission_id INTEGER NOT NULL,
+                PRIMARY KEY (role_id, permission_id),
+                FOREIGN KEY (role_id) REFERENCES roles(id) ON DELETE CASCADE,
+                FOREIGN KEY (permission_id) REFERENCES permissions(id) ON DELETE CASCADE
+            );
+
+            -- Seed "system" user (id=1) to own all pre-retrofit data
+            INSERT OR IGNORE INTO users (id, username, email, full_name, password_hash, tier, is_active)
+                VALUES (1, 'system', NULL, 'System (pre-retrofit data owner)', NULL, 'company', 1);
+
+            -- Seed 4 baseline roles
+            INSERT OR IGNORE INTO roles (name, description) VALUES
+                ('owner', 'Shop owner — full administrative access'),
+                ('tech', 'Certified mechanic — diagnose, repair, document'),
+                ('service_writer', 'Customer-facing staff — scheduling, invoicing, communication'),
+                ('apprentice', 'Learning mechanic — limited write access, read-mostly');
+
+            -- Seed 12 baseline permissions
+            INSERT OR IGNORE INTO permissions (name, description) VALUES
+                ('read_garage', 'View vehicles in the garage'),
+                ('write_garage', 'Add, edit, or remove vehicles'),
+                ('read_session', 'View diagnostic sessions'),
+                ('write_session', 'Create or modify diagnostic sessions'),
+                ('run_diagnose', 'Execute AI-assisted diagnostic workflows'),
+                ('read_repair_plan', 'View repair plans and cost estimates'),
+                ('write_repair_plan', 'Create or modify repair plans'),
+                ('export_report', 'Export diagnostic reports to PDF/HTML'),
+                ('share_report', 'Share reports externally with customers'),
+                ('manage_users', 'Create, edit, or deactivate user accounts'),
+                ('manage_billing', 'View and modify billing / subscription settings'),
+                ('manage_shop', 'Shop-level admin (work orders, scheduling, analytics)');
+
+            -- Seed default role-permission mappings
+            -- OWNER: all 12 permissions
+            INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+                SELECT (SELECT id FROM roles WHERE name='owner'), p.id FROM permissions p;
+            -- TECH: read/write garage + session + diagnose + read/write repair plan + export
+            INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+                SELECT (SELECT id FROM roles WHERE name='tech'), p.id FROM permissions p
+                WHERE p.name IN ('read_garage','write_garage','read_session','write_session',
+                                 'run_diagnose','read_repair_plan','write_repair_plan','export_report');
+            -- SERVICE_WRITER: read garage/session, write repair plan, export/share, manage shop
+            INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+                SELECT (SELECT id FROM roles WHERE name='service_writer'), p.id FROM permissions p
+                WHERE p.name IN ('read_garage','read_session','read_repair_plan',
+                                 'write_repair_plan','export_report','share_report','manage_shop');
+            -- APPRENTICE: read-mostly plus supervised diagnose
+            INSERT OR IGNORE INTO role_permissions (role_id, permission_id)
+                SELECT (SELECT id FROM roles WHERE name='apprentice'), p.id FROM permissions p
+                WHERE p.name IN ('read_garage','read_session','read_repair_plan','run_diagnose');
+
+            -- Retrofit user_id columns onto existing tables
+            ALTER TABLE diagnostic_sessions ADD COLUMN user_id INTEGER DEFAULT 1;
+            ALTER TABLE repair_plans ADD COLUMN user_id INTEGER DEFAULT 1;
+            ALTER TABLE known_issues ADD COLUMN created_by_user_id INTEGER DEFAULT 1;
+        """,
+        rollback_sql="""
+            -- Rollback 005: drop auth tables only. Keeping the new user_id
+            -- columns on existing tables is harmless (they're nullable-with-default
+            -- and unused). Full column removal would require CREATE-COPY-DROP-RENAME
+            -- and is not needed for testing; auth tables gone is sufficient to prove
+            -- the auth layer can be dismantled without data loss in the core tables.
+            DROP TABLE IF EXISTS role_permissions;
+            DROP TABLE IF EXISTS user_roles;
+            DROP TABLE IF EXISTS permissions;
+            DROP TABLE IF EXISTS roles;
+            DROP TABLE IF EXISTS users;
+        """,
+    ),
 ]
 
 
