@@ -6,6 +6,13 @@ from rich.panel import Panel
 from rich.table import Table
 
 from motodiag import __version__, __app_name__
+from motodiag.cli.subscription import (
+    SubscriptionTier,
+    current_tier,
+    get_tier_features,
+    format_tier_comparison,
+    get_enforcement_mode,
+)
 
 console = Console()
 
@@ -48,6 +55,7 @@ def _show_welcome() -> None:
     table.add_row("code", "Look up a fault code (e.g., P0115)")
     table.add_row("garage", "Manage your vehicle garage")
     table.add_row("history", "Browse past diagnostic sessions")
+    table.add_row("tier", "Show subscription tier and features")
     table.add_row("config", "Show or inspect configuration")
     table.add_row("info", "Show system info and package status")
     console.print(table)
@@ -102,6 +110,88 @@ def info() -> None:
             dep_table.add_row(pkg, purpose, "— not installed")
 
     console.print(dep_table)
+
+
+@cli.command()
+@click.option("--compare", is_flag=True, help="Show side-by-side tier comparison table.")
+def tier(compare: bool) -> None:
+    """Show current subscription tier, limits, and upgrade options."""
+    if compare:
+        console.print()
+        console.print(format_tier_comparison())
+        console.print()
+        return
+
+    user_tier = current_tier()
+    features = get_tier_features(user_tier)
+    mode = get_enforcement_mode()
+
+    # Tier header panel
+    tier_colors = {
+        SubscriptionTier.INDIVIDUAL: "cyan",
+        SubscriptionTier.SHOP: "yellow",
+        SubscriptionTier.COMPANY: "magenta",
+    }
+    color = tier_colors.get(user_tier, "white")
+    mode_note = (
+        "[dim](dev mode — paywall not enforced)[/dim]"
+        if mode == "soft" else "[red](paywall enforced)[/red]"
+    )
+
+    console.print()
+    console.print(Panel(
+        f"[bold {color}]{features.display_name}[/bold {color}]\n"
+        f"${features.price_monthly_usd:.2f}/month · ${features.price_yearly_usd:.2f}/year\n\n"
+        f"Enforcement: {mode_note}",
+        title=f"Current tier: {user_tier.value}",
+        border_style=color,
+    ))
+
+    # Limits table
+    table = Table(show_header=True, header_style="bold cyan", title="Your limits")
+    table.add_column("Resource", style="green")
+    table.add_column("Limit")
+
+    def fmt(n: int) -> str:
+        return "Unlimited" if n == -1 else f"{n:,}"
+
+    table.add_row("Max vehicles in garage", fmt(features.max_vehicles))
+    table.add_row("Diagnostic sessions / month", fmt(features.max_sessions_per_month))
+    table.add_row("User accounts", fmt(features.max_users))
+    table.add_row("Physical locations", fmt(features.max_locations))
+    table.add_row("AI models available", ", ".join(features.ai_model_access))
+    table.add_row("AI cost cap / month", f"${features.ai_monthly_cost_cap_usd:.2f}")
+    console.print(table)
+
+    # Features table
+    feat_table = Table(show_header=True, header_style="bold cyan", title="Features")
+    feat_table.add_column("Feature", style="green")
+    feat_table.add_column("Included")
+    feat_rows = [
+        ("Export to PDF", features.can_export_pdf),
+        ("Share reports with customers", features.can_share_reports),
+        ("Audio/video diagnostics", features.can_use_media_diagnostics),
+        ("REST API access", features.can_use_api),
+        ("Team management", features.can_manage_team),
+        ("Shop management (work orders, scheduling)", features.can_access_shop_management),
+        ("Custom branding", features.can_customize_branding),
+        ("Priority support", features.priority_support),
+    ]
+    for name, included in feat_rows:
+        check = "[green]✓[/green]" if included else "[dim]—[/dim]"
+        feat_table.add_row(name, check)
+    console.print(feat_table)
+
+    # Upgrade hint if not on top tier
+    if user_tier != SubscriptionTier.COMPANY:
+        console.print()
+        console.print(
+            "[dim]Run [bold]motodiag tier --compare[/bold] to see all tiers side-by-side.[/dim]"
+        )
+        console.print(
+            "[dim]Upgrade: https://motodiag.app/pricing[/dim]"
+        )
+    console.print()
 
 
 @cli.group()
