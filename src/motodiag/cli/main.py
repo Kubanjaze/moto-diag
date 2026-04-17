@@ -12,6 +12,7 @@ from motodiag.cli.subscription import (
     format_tier_comparison,
     get_enforcement_mode,
 )
+from motodiag.cli.cache import register_cache
 from motodiag.cli.code import register_code
 from motodiag.cli.completion import register_completion
 from motodiag.cli.diagnose import register_diagnose, register_quick
@@ -635,6 +636,10 @@ register_kb(cli)
 
 # Phase 124: register the `code` command (replaces the legacy inline version)
 register_code(cli)
+
+# Phase 131: register the `cache` subgroup (stats/purge/clear) — must come
+# before completion so shell completion sees the new subgroup.
+register_cache(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

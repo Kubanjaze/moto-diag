@@ -259,11 +259,16 @@ def _default_diagnose_fn(
     engine_type: Optional[str],
     known_issues: Optional[list[dict]],
     ai_model: str,
+    offline: bool = False,
 ) -> tuple[Any, Any]:
     """Default production implementation — calls DiagnosticClient.diagnose().
 
     Separate from orchestration functions so tests inject a mock without
     needing anthropic SDK installed. Returns (DiagnosticResponse, TokenUsage).
+
+    Phase 131: ``offline`` passes through to the engine's cache-first
+    path. When True and the cache has no entry for the input fingerprint,
+    the engine raises ``RuntimeError`` which the CLI surface catches.
     """
     from motodiag.engine.client import DiagnosticClient
 
@@ -278,6 +283,7 @@ def _default_diagnose_fn(
         engine_type=engine_type,
         known_issues=known_issues,
         ai_model=ai_model,
+        offline=offline,
     )
 
 
@@ -291,8 +297,14 @@ def _run_quick(
     ai_model: str,
     db_path: Optional[str] = None,
     diagnose_fn: Optional[Callable] = None,
+    offline: bool = False,
 ) -> tuple[int, Any]:
-    """Create a session, run one diagnose call, persist, close. Returns (session_id, response)."""
+    """Create a session, run one diagnose call, persist, close. Returns (session_id, response).
+
+    Phase 131: when ``offline=True`` the diagnose_fn is asked to serve from
+    cache only; a miss raises ``RuntimeError`` which the CLI surface
+    surfaces to the mechanic as a red message.
+    """
     call = diagnose_fn or _default_diagnose_fn
     session_id = create_session(
         vehicle_make=vehicle["make"],
@@ -305,17 +317,34 @@ def _run_quick(
 
     known = _load_known_issues(vehicle["make"], vehicle["model"], vehicle["year"], db_path)
 
-    response, usage = call(
-        make=vehicle["make"],
-        model_name=vehicle["model"],
-        year=vehicle["year"],
-        symptoms=symptoms,
-        description=description,
-        mileage=vehicle.get("mileage"),
-        engine_type=vehicle.get("engine_type"),
-        known_issues=known,
-        ai_model=ai_model,
-    )
+    # Thread `offline` through to the diagnose_fn. Legacy fixture mocks
+    # that don't accept `offline=` still work via the TypeError fallback.
+    try:
+        response, usage = call(
+            make=vehicle["make"],
+            model_name=vehicle["model"],
+            year=vehicle["year"],
+            symptoms=symptoms,
+            description=description,
+            mileage=vehicle.get("mileage"),
+            engine_type=vehicle.get("engine_type"),
+            known_issues=known,
+            ai_model=ai_model,
+            offline=offline,
+        )
+    except TypeError:
+        # Fallback for legacy test doubles that predate the offline kwarg.
+        response, usage = call(
+            make=vehicle["make"],
+            model_name=vehicle["model"],
+            year=vehicle["year"],
+            symptoms=symptoms,
+            description=description,
+            mileage=vehicle.get("mileage"),
+            engine_type=vehicle.get("engine_type"),
+            known_issues=known,
+            ai_model=ai_model,
+        )
 
     _persist_response(session_id, response, usage, ai_model, db_path)
     close_session(session_id, db_path)
@@ -328,6 +357,7 @@ def _run_interactive(
     db_path: Optional[str] = None,
     diagnose_fn: Optional[Callable] = None,
     prompt_fn: Optional[Callable[[str], str]] = None,
+    offline: bool = False,
 ) -> tuple[int, Any]:
     """Interactive Q&A loop. Returns (session_id, final_response).
 
@@ -357,17 +387,32 @@ def _run_interactive(
     final_response = None
 
     for round_num in range(1, MAX_CLARIFYING_ROUNDS + 1):
-        response, usage = call(
-            make=vehicle["make"],
-            model_name=vehicle["model"],
-            year=vehicle["year"],
-            symptoms=symptoms,
-            description=description,
-            mileage=vehicle.get("mileage"),
-            engine_type=vehicle.get("engine_type"),
-            known_issues=known,
-            ai_model=ai_model,
-        )
+        try:
+            response, usage = call(
+                make=vehicle["make"],
+                model_name=vehicle["model"],
+                year=vehicle["year"],
+                symptoms=symptoms,
+                description=description,
+                mileage=vehicle.get("mileage"),
+                engine_type=vehicle.get("engine_type"),
+                known_issues=known,
+                ai_model=ai_model,
+                offline=offline,
+            )
+        except TypeError:
+            # Legacy test doubles without the offline kwarg.
+            response, usage = call(
+                make=vehicle["make"],
+                model_name=vehicle["model"],
+                year=vehicle["year"],
+                symptoms=symptoms,
+                description=description,
+                mileage=vehicle.get("mileage"),
+                engine_type=vehicle.get("engine_type"),
+                known_issues=known,
+                ai_model=ai_model,
+            )
         total_input += getattr(usage, "input_tokens", 0)
         total_output += getattr(usage, "output_tokens", 0)
         final_response = response
@@ -884,9 +929,14 @@ def register_diagnose(cli_group: click.Group) -> None:
     @click.option("--description", default=None, help="Optional free-text description.")
     @click.option("--model", "ai_model_flag", default=None,
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
+    @click.option("--offline", is_flag=True, default=False,
+                  help="Serve from cache only; error on cache miss. Useful "
+                       "when working without internet. Prime the cache "
+                       "with an online run first.")
     def diagnose_quick(vehicle_id: Optional[int], bike: Optional[str],
                        symptoms: str, description: Optional[str],
-                       ai_model_flag: Optional[str]) -> None:
+                       ai_model_flag: Optional[str],
+                       offline: bool) -> None:
         """Run a one-shot diagnosis without Q&A."""
         console = get_console()
         init_db()
@@ -944,13 +994,19 @@ def register_diagnose(cli_group: click.Group) -> None:
         # Phase 129: spinner during the AI round-trip so the mechanic
         # sees something's happening during the typical 3-10 second wait.
         # Non-TTY (CliRunner) suppresses the animation automatically.
-        with theme_status("Analyzing symptoms..."):
-            session_id, response = _run_quick(
-                vehicle=vehicle,
-                symptoms=symptom_list,
-                description=description,
-                ai_model=ai_model,
-            )
+        try:
+            with theme_status("Analyzing symptoms..."):
+                session_id, response = _run_quick(
+                    vehicle=vehicle,
+                    symptoms=symptom_list,
+                    description=description,
+                    ai_model=ai_model,
+                    offline=offline,
+                )
+        except RuntimeError as exc:
+            # Phase 131: offline cache-miss. Print red message + exit 1.
+            console.print(f"[red]{exc}[/red]")
+            raise click.exceptions.Exit(1) from exc
         console.print(f"[green]Session #{session_id} created and diagnosed.[/green]\n")
         _render_response(response, console)
 
@@ -958,7 +1014,10 @@ def register_diagnose(cli_group: click.Group) -> None:
     @click.option("--vehicle-id", default=None, type=int)
     @click.option("--model", "ai_model_flag", default=None,
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
-    def diagnose_start(vehicle_id: Optional[int], ai_model_flag: Optional[str]) -> None:
+    @click.option("--offline", is_flag=True, default=False,
+                  help="Serve from cache only; error on cache miss.")
+    def diagnose_start(vehicle_id: Optional[int], ai_model_flag: Optional[str],
+                       offline: bool) -> None:
         """Start an interactive diagnostic session with Q&A."""
         console = get_console()
         init_db()
@@ -976,10 +1035,15 @@ def register_diagnose(cli_group: click.Group) -> None:
         # may prompt between rounds — the spinner wraps the whole loop
         # and Rich correctly suspends the animation whenever Click's
         # prompt blocks on user input.
-        with theme_status("Analyzing symptoms..."):
-            session_id, response = _run_interactive(
-                vehicle=vehicle, ai_model=ai_model,
-            )
+        try:
+            with theme_status("Analyzing symptoms..."):
+                session_id, response = _run_interactive(
+                    vehicle=vehicle, ai_model=ai_model,
+                    offline=offline,
+                )
+        except RuntimeError as exc:
+            console.print(f"[red]{exc}[/red]")
+            raise click.exceptions.Exit(1) from exc
         if response is None:
             console.print("[yellow]Session closed with no diagnosis.[/yellow]")
             return

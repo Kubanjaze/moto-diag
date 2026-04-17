@@ -226,11 +226,13 @@ class TestFaultCodeInterpreterMocked:
         client = self._make_mock_client()
         interpreter = FaultCodeInterpreter(client)
 
+        # Phase 131: disable cache so shared default DB state doesn't leak between tests
         result, usage = interpreter.interpret(
             code="P0301",
             make="Honda",
             model_name="CBR600RR",
             year=2007,
+            use_cache=False,
         )
 
         assert isinstance(result, FaultCodeResult)
@@ -248,6 +250,7 @@ class TestFaultCodeInterpreterMocked:
             make="Kawasaki",
             model_name="ZX-6R",
             year=2015,
+            use_cache=False,
         )
 
         assert result.code == "12"
@@ -263,6 +266,7 @@ class TestFaultCodeInterpreterMocked:
             make="Suzuki",
             model_name="GSX-R600",
             year=2010,
+            use_cache=False,
         )
 
         assert result.code == "C28"
@@ -278,6 +282,7 @@ class TestFaultCodeInterpreterMocked:
             model_name="ZX-10R",
             year=2018,
             symptoms=["rough idle", "loss of power"],
+            use_cache=False,
         )
 
         # Verify symptoms were included in the prompt
@@ -300,6 +305,7 @@ class TestFaultCodeInterpreterMocked:
             model_name="Vulcan 900",
             year=2015,
             known_issues=known_issues,
+            use_cache=False,
         )
 
         call_args = client._client.messages.create.call_args
@@ -310,7 +316,10 @@ class TestFaultCodeInterpreterMocked:
         client = self._make_mock_client()
         interpreter = FaultCodeInterpreter(client)
 
-        interpreter.interpret(code="P0171", make="Honda", model_name="CB500F", year=2020)
+        interpreter.interpret(
+            code="P0171", make="Honda", model_name="CB500F", year=2020,
+            use_cache=False,
+        )
 
         call_args = client._client.messages.create.call_args
         system = call_args[1]["system"]
@@ -331,7 +340,12 @@ class TestFaultCodeInterpreterMocked:
         client._client = mock_anthropic_client
         interpreter = FaultCodeInterpreter(client)
 
-        result, usage = interpreter.interpret(code="P0301", make="Honda", model_name="CBR600RR", year=2007)
+        # Phase 131: disable the response cache so an entry primed by another
+        # test (or a prior run) doesn't mask the bad-JSON fallback path.
+        result, usage = interpreter.interpret(
+            code="P0301", make="Honda", model_name="CBR600RR", year=2007,
+            use_cache=False,
+        )
 
         assert isinstance(result, FaultCodeResult)
         assert result.notes is not None

@@ -977,6 +977,43 @@ MIGRATIONS: list[Migration] = [
             -- needed for rollback testing; the column is effectively inert.
         """,
     ),
+    # Migration 015 — Phase 131: AI response cache table (offline mode + caching)
+    Migration(
+        version=15,
+        name="ai_response_cache",
+        description=(
+            "Phase 131: Create ai_response_cache table to support transparent "
+            "caching of AI responses (DiagnosticClient.diagnose + "
+            "FaultCodeInterpreter.interpret) and offline mode. Cache key is "
+            "SHA256 of canonical-JSON inputs (kind-prefixed). Cache entries "
+            "live forever until explicit purge via `motodiag cache purge "
+            "--older-than N` or `motodiag cache clear`. Two indexes: "
+            "cache_key (for lookup) and created_at (for purge-older-than "
+            "queries). hit_count + last_used_at let shop owners see which "
+            "cached queries are actually paying off via `motodiag cache stats`."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS ai_response_cache (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                cache_key TEXT UNIQUE NOT NULL,
+                kind TEXT NOT NULL,
+                model_used TEXT,
+                response_json TEXT NOT NULL,
+                tokens_input INTEGER DEFAULT 0,
+                tokens_output INTEGER DEFAULT 0,
+                cost_cents INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                last_used_at TIMESTAMP,
+                hit_count INTEGER DEFAULT 0
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_ai_cache_key ON ai_response_cache(cache_key);
+            CREATE INDEX IF NOT EXISTS idx_ai_cache_created ON ai_response_cache(created_at);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS ai_response_cache;
+        """,
+    ),
 ]
 
 

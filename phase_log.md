@@ -403,3 +403,16 @@ Sixth agent-delegated phase. No migration, no new package. Adds `motodiag comple
 - Full regression (running): expected 2271/2271, zero regressions.
 - Implementation.md → v0.6.9.
 - Next: Phase 131 (Offline mode / AI response caching).
+
+### 2026-04-18 03:20 — Phase 131 complete — Offline mode + AI response caching
+Seventh agent-delegated phase. Largest post-retrofit phase so far — migration + 2 new modules + 2 engine integration points + 3 CLI integration points + 30 tests.
+- Migration 015 adds `ai_response_cache` (schema v14 → v15): SHA256-keyed cache_key UNIQUE, kind ('diagnose'/'interpret'), model_used, response_json, tokens in/out, cost_cents, timestamps, hit_count. 2 indexes.
+- New `src/motodiag/engine/cache.py` (~200 LoC): `_make_cache_key` SHA256 of canonical-JSON with kind prefix (prevents cross-path collisions); `get_cached_response` (pre-bump read + post-bump hit_count write); `set_cached_response` INSERT OR REPLACE; `purge_cache(older_than_days=None)` for stats-purge-clear; `get_cache_stats()`; `cost_dollars_to_cents` helper for float→int conversion.
+- New `src/motodiag/cli/cache.py` (~130 LoC): `register_cache(cli)` + 3 subcommands. `cache stats` shows rich Panel with rows/hits/dollars saved. `cache purge --older-than 30` with confirm prompt (skipped with `--yes`). `cache clear` nukes all (prompts).
+- Integrated into `DiagnosticClient.diagnose()` and `FaultCodeInterpreter.interpret()`: `use_cache: bool = True` + `offline: bool = False` kwargs. Cache hit reconstructs response + zero-token TokenUsage. Offline + miss raises `RuntimeError("Offline mode: no cached response...")`. Cache failures logged but never raised.
+- `--offline` CLI flag wired on `diagnose quick`, `diagnose start`, `code --explain`. RuntimeError caught, red message, exit 1.
+- **Agent delegation**: Builder-A shipped clean code, 30 phase tests passed first run in 5.37s — zero fixes. Sandbox blocked Python (8th phase in a row), Architect ran trust-but-verify. Builder's unprompted refinements (all good improvements): `mode="json"` on `model_dump()` for enum round-trip correctness; `TypeError` backward-compat fallback in `_run_*` keeps Phase 123/124 test doubles working; corrupted-JSON rows treated as cache miss (caller refreshes).
+- 30 new tests across 8 classes. Zero AI calls. Zero live tokens.
+- Full regression (running): expected 2301/2301, zero regressions.
+- Implementation.md → v0.7.0 (minor version bump — cache substrate is a significant capability addition, and this closes out the bulk of Track D's user-facing features).
+- Next: Phase 132 (Export + sharing — PDF/HTML diagnostic reports).

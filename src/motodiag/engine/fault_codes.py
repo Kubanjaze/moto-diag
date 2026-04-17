@@ -5,13 +5,22 @@ the DTC database and knowledge base, and produces a root cause analysis with
 repair recommendations via Claude AI.
 """
 
+import logging
 import re
 from typing import Optional
 
 from pydantic import BaseModel, Field
 
-from motodiag.engine.client import DiagnosticClient
+from motodiag.engine.cache import (
+    _make_cache_key,
+    cost_dollars_to_cents,
+    get_cached_response,
+    set_cached_response,
+)
+from motodiag.engine.client import DiagnosticClient, _resolve_model
 from motodiag.engine.models import TokenUsage
+
+_log = logging.getLogger(__name__)
 
 
 # --- DTC code classification ---
@@ -272,6 +281,8 @@ class FaultCodeInterpreter:
         mileage: Optional[int] = None,
         known_issues: Optional[list[dict]] = None,
         ai_model: Optional[str] = None,
+        use_cache: bool = True,
+        offline: bool = False,
     ) -> tuple[FaultCodeResult, TokenUsage]:
         """Interpret a DTC code with vehicle context and AI analysis.
 
@@ -284,9 +295,20 @@ class FaultCodeInterpreter:
             mileage: Optional current mileage.
             known_issues: Optional relevant known issues from KB.
             ai_model: Optional model override.
+            use_cache: When True (default), look up + store the AI response
+                in the Phase 131 cache. Set False to bypass the cache.
+            offline: When True, cache-miss raises ``RuntimeError`` instead
+                of calling the API. For on-the-road workflows where the
+                mechanic wants to re-read a previously-cached interpretation
+                without internet.
 
         Returns:
-            Tuple of (FaultCodeResult, TokenUsage).
+            Tuple of (FaultCodeResult, TokenUsage). On a cache hit,
+            ``TokenUsage.input_tokens`` and ``output_tokens`` are 0.
+
+        Raises:
+            RuntimeError: when ``offline=True`` and the cache is empty
+                for this input fingerprint.
         """
         from motodiag.engine.prompts import (
             build_vehicle_context,
@@ -295,6 +317,60 @@ class FaultCodeInterpreter:
 
         # Step 1: Classify the code
         code_format, system_desc = classify_code(code, make)
+
+        # --- Cache key construction ---
+        # The resolved model is part of the key so switching haiku→sonnet
+        # for the same DTC produces a fresh entry (tier upgrade → better
+        # analysis) rather than silently serving the older cheaper result.
+        resolved_model = _resolve_model(ai_model) if ai_model else self.client.model
+        cache_payload = {
+            "code": code,
+            "make": make,
+            "model_name": model_name,
+            "year": year,
+            "symptoms": list(symptoms or []),
+            "mileage": mileage,
+            "ai_model": resolved_model,
+        }
+
+        cache_key = None
+        if use_cache:
+            try:
+                cache_key = _make_cache_key("interpret", cache_payload)
+                cached = get_cached_response(cache_key)
+            except Exception as exc:
+                _log.warning("Interpret cache lookup failed: %s", exc)
+                cached = None
+
+            if cached is not None:
+                try:
+                    result = FaultCodeResult(**cached["response"])
+                except Exception as exc:
+                    _log.warning(
+                        "Cached interpret response could not be "
+                        "reconstructed (%s) — refreshing from API.", exc,
+                    )
+                    result = None
+                if result is not None:
+                    cached_usage = TokenUsage(
+                        input_tokens=0,
+                        output_tokens=0,
+                        model=cached.get("model_used") or resolved_model,
+                        cost_estimate=0.0,
+                        latency_ms=None,
+                    )
+                    # Track the hit on the parent DiagnosticClient's session
+                    # metrics so `get_session_summary` reflects the call.
+                    self.client.session.add_usage(cached_usage)
+                    return result, cached_usage
+
+        # Cache miss — honor offline flag before building the prompt.
+        if offline:
+            raise RuntimeError(
+                "Offline mode: no cached response for this query. "
+                "Either remove --offline or prime the cache with an "
+                "online run."
+            )
 
         # Step 2: Build context
         vehicle_ctx = build_vehicle_context(make=make, model=model_name, year=year, mileage=mileage)
@@ -330,6 +406,24 @@ class FaultCodeInterpreter:
 
         # Step 4: Parse response into FaultCodeResult
         result = self._parse_result(response_text, code, code_format, system_desc)
+
+        # Step 5: Store in cache (best-effort). `mode="json"` ensures
+        # any enum / datetime / path fields serialize to JSON-native
+        # types so the round-trip via `FaultCodeResult(**data)`
+        # reconstructs cleanly.
+        if use_cache and cache_key is not None:
+            try:
+                set_cached_response(
+                    cache_key=cache_key,
+                    kind="interpret",
+                    model_used=usage.model or resolved_model,
+                    response_dict=result.model_dump(mode="json"),
+                    tokens_input=usage.input_tokens,
+                    tokens_output=usage.output_tokens,
+                    cost_cents=cost_dollars_to_cents(usage.cost_estimate),
+                )
+            except Exception as exc:
+                _log.warning("Interpret cache store failed: %s", exc)
 
         return result, usage
 

@@ -107,11 +107,15 @@ def _default_interpret_fn(
     symptoms: list[str],
     ai_model: str,
     known_issues: Optional[list[dict]],
+    offline: bool = False,
 ) -> tuple[Any, Any]:
     """Default production implementation — calls FaultCodeInterpreter.interpret().
 
     Separate from orchestration so tests inject a mock without needing the
     anthropic SDK installed. Returns (FaultCodeResult, TokenUsage).
+
+    Phase 131: ``offline`` passes through to the engine's cache-first
+    path.
     """
     from motodiag.engine.client import DiagnosticClient
     from motodiag.engine.fault_codes import FaultCodeInterpreter
@@ -127,6 +131,7 @@ def _default_interpret_fn(
         mileage=vehicle.get("mileage"),
         known_issues=known_issues,
         ai_model=ai_model,
+        offline=offline,
     )
 
 
@@ -140,22 +145,37 @@ def _run_explain(
     ai_model: str,
     db_path: Optional[str] = None,
     interpret_fn: Optional[Callable] = None,
+    offline: bool = False,
 ) -> tuple[Any, Any]:
     """Load known issues for the bike, then call the interpreter.
 
     Returns (FaultCodeResult, TokenUsage).
+
+    Phase 131: ``offline`` passes through to the interpret call. Legacy
+    test doubles that don't accept ``offline=`` still work via the
+    TypeError fallback — the same pattern as ``_run_quick``.
     """
     call = interpret_fn or _default_interpret_fn
     known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path=db_path,
     )
-    return call(
-        code=code,
-        vehicle=vehicle,
-        symptoms=symptoms,
-        ai_model=ai_model,
-        known_issues=known,
-    )
+    try:
+        return call(
+            code=code,
+            vehicle=vehicle,
+            symptoms=symptoms,
+            ai_model=ai_model,
+            known_issues=known,
+            offline=offline,
+        )
+    except TypeError:
+        return call(
+            code=code,
+            vehicle=vehicle,
+            symptoms=symptoms,
+            ai_model=ai_model,
+            known_issues=known,
+        )
 
 
 # --- Rendering ---
@@ -320,6 +340,10 @@ def register_code(cli_group: click.Group) -> None:
                   help="Optional symptom context for --explain (comma-separated).")
     @click.option("--model", "ai_model_flag", default=None,
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
+    @click.option("--offline", is_flag=True, default=False,
+                  help="With --explain: serve from cache only; error on "
+                       "cache miss. Useful for re-reading a previously "
+                       "cached interpretation without internet.")
     def code(
         dtc_code: Optional[str],
         make: Optional[str],
@@ -328,6 +352,7 @@ def register_code(cli_group: click.Group) -> None:
         vehicle_id: Optional[int],
         symptoms: Optional[str],
         ai_model_flag: Optional[str],
+        offline: bool,
     ) -> None:
         """Look up a diagnostic trouble code (e.g., P0115)."""
         console = get_console()
@@ -366,13 +391,19 @@ def register_code(cli_group: click.Group) -> None:
 
             symptom_list = _parse_symptoms(symptoms or "")
             # Phase 129: spinner during the AI interpretation.
-            with theme_status("Interpreting fault code..."):
-                result, _usage = _run_explain(
-                    vehicle=vehicle,
-                    code=dtc_code,
-                    symptoms=symptom_list,
-                    ai_model=ai_model,
-                )
+            try:
+                with theme_status("Interpreting fault code..."):
+                    result, _usage = _run_explain(
+                        vehicle=vehicle,
+                        code=dtc_code,
+                        symptoms=symptom_list,
+                        ai_model=ai_model,
+                        offline=offline,
+                    )
+            except RuntimeError as exc:
+                # Phase 131: offline cache-miss path.
+                console.print(f"[red]{exc}[/red]")
+                raise click.exceptions.Exit(1) from exc
             _render_explain(result, console)
             return
 

@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 14  # Phase 127: bumped for diagnostic_sessions.notes column (session history annotations) migration 014
+SCHEMA_VERSION = 15  # Phase 131: bumped for ai_response_cache table (offline mode + AI response caching) migration 015
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

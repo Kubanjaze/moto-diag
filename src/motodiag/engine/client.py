@@ -1,12 +1,19 @@
 """Diagnostic engine client — wraps Anthropic SDK for motorcycle diagnostics."""
 
 import json
+import logging
 import os
 import time
 from typing import Optional
 from datetime import datetime, timezone
 
 from motodiag.core.config import get_settings
+from motodiag.engine.cache import (
+    _make_cache_key,
+    cost_dollars_to_cents,
+    get_cached_response,
+    set_cached_response,
+)
 from motodiag.engine.models import (
     DiagnosticResponse,
     DiagnosisItem,
@@ -21,6 +28,8 @@ from motodiag.engine.prompts import (
     build_knowledge_context,
     build_full_prompt,
 )
+
+_log = logging.getLogger(__name__)
 
 # Model pricing per million tokens (USD) as of 2026-04
 MODEL_PRICING = {
@@ -187,6 +196,8 @@ class DiagnosticClient:
         modifications: Optional[list[str]] = None,
         known_issues: Optional[list[dict]] = None,
         ai_model: Optional[str] = None,
+        use_cache: bool = True,
+        offline: bool = False,
     ) -> tuple[DiagnosticResponse, TokenUsage]:
         """Run a full diagnostic analysis on a vehicle with symptoms.
 
@@ -205,10 +216,84 @@ class DiagnosticClient:
             modifications: Optional list of known modifications.
             known_issues: Optional list of relevant known issues from knowledge base.
             ai_model: Optional model override for this diagnosis.
+            use_cache: When True (default), look up + store AI response in the
+                cache. Set False to bypass the cache entirely (e.g., when
+                running comparison experiments that need fresh live output).
+            offline: When True, cache lookup is mandatory — a cache miss
+                raises ``RuntimeError`` rather than calling the API. Use for
+                on-the-road workflows where the mechanic has no internet
+                but needs to re-render a previously-cached diagnosis.
 
         Returns:
-            Tuple of (DiagnosticResponse, TokenUsage).
+            Tuple of (DiagnosticResponse, TokenUsage). On a cache hit,
+            ``TokenUsage.input_tokens`` and ``output_tokens`` are 0 and
+            ``cost_estimate`` is 0.0.
+
+        Raises:
+            RuntimeError: when ``offline=True`` and the cache has no entry
+                for the current input fingerprint.
         """
+        # --- Cache key construction (independent of the prompt string) ---
+        # Only input data that affects the AI's answer is hashed, not the
+        # assembled prompt text — so if the prompt template changes but the
+        # semantic inputs don't, stale cache entries still serve. (Track R
+        # phase 321+ can version-prefix the cache key if a prompt change
+        # ever breaks response compatibility.)
+        resolved_model = _resolve_model(ai_model) if ai_model else self.model
+        cache_payload = {
+            "make": make,
+            "model_name": model_name,
+            "year": year,
+            "symptoms": list(symptoms or []),
+            "description": description,
+            "mileage": mileage,
+            "engine_type": engine_type,
+            "modifications": list(modifications) if modifications else [],
+            "ai_model": resolved_model,
+        }
+
+        cache_key = None
+        if use_cache:
+            try:
+                cache_key = _make_cache_key("diagnose", cache_payload)
+                cached = get_cached_response(cache_key)
+            except Exception as exc:
+                # Cache is an optimization, not a dependency — log and
+                # continue as if cache was unavailable.
+                _log.warning("Cache lookup failed: %s", exc)
+                cached = None
+
+            if cached is not None:
+                try:
+                    diagnostic = DiagnosticResponse(**cached["response"])
+                except Exception as exc:
+                    _log.warning(
+                        "Cached response could not be reconstructed "
+                        "(%s) — refreshing from API.", exc,
+                    )
+                    diagnostic = None
+                if diagnostic is not None:
+                    # Zero-token usage reflects that nothing was billed.
+                    cached_usage = TokenUsage(
+                        input_tokens=0,
+                        output_tokens=0,
+                        model=cached.get("model_used") or resolved_model,
+                        cost_estimate=0.0,
+                        latency_ms=None,
+                    )
+                    # Track the cache hit on session metrics too so the
+                    # session summary reflects the actual (free) call.
+                    self.session.add_usage(cached_usage)
+                    return diagnostic, cached_usage
+
+        # Cache miss — honor offline flag before hitting the API.
+        if offline:
+            raise RuntimeError(
+                "Offline mode: no cached response for this query. "
+                "Either remove --offline or prime the cache with an "
+                "online run."
+            )
+
         # Build context blocks
         vehicle_ctx = build_vehicle_context(
             make=make,
@@ -232,6 +317,26 @@ class DiagnosticClient:
 
         # Parse structured response
         diagnostic = self._parse_diagnostic_response(response_text, make, model_name, year, symptoms)
+
+        # Store in cache (best-effort — never break the live call).
+        # `mode="json"` serializes enums to their string values so the
+        # round-trip through `json.dumps` + `DiagnosticResponse(**data)`
+        # reconstructs cleanly (a plain `str(DiagnosticSeverity.HIGH)`
+        # can yield 'DiagnosticSeverity.HIGH' depending on Python version,
+        # which Pydantic can't re-validate back into the enum).
+        if use_cache and cache_key is not None:
+            try:
+                set_cached_response(
+                    cache_key=cache_key,
+                    kind="diagnose",
+                    model_used=usage.model or resolved_model,
+                    response_dict=diagnostic.model_dump(mode="json"),
+                    tokens_input=usage.input_tokens,
+                    tokens_output=usage.output_tokens,
+                    cost_cents=cost_dollars_to_cents(usage.cost_estimate),
+                )
+            except Exception as exc:
+                _log.warning("Cache store failed: %s", exc)
 
         return diagnostic, usage
 
