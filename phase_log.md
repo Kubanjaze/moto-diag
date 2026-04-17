@@ -328,3 +328,15 @@ Third post-retrofit user-facing phase. **No migration** — reuses Phase 03 `dtc
 - 33 new tests across 8 classes. Full regression: 2123/2123 passing (~9:58 runtime). Zero regressions.
 - Implementation.md → v0.6.3.
 - Next: Track D continues — history browse, export, etc.
+
+### 2026-04-17 23:58 — Phase 125 complete — Quick diagnosis mode (bike slug + shortcut)
+First post-Phase-124 and first agent-delegated build. Pure UX sugar on Phase 123 `diagnose quick` — no new substrate, no migration. Also surfaced a limitation in the "persistent agent pool" pattern I'd just codified: the `SendMessage` tool referenced in Claude Code's Agent docs is not actually available in this runtime. Each `Agent()` call is a fresh spawn; pool-reuse via message-continuation doesn't work. Correction to CLAUDE.md follows.
+- Extended `src/motodiag/cli/diagnose.py` (+180 LoC): `SLUG_YEAR_MIN`/`SLUG_YEAR_MAX` constants, `_parse_slug` (last-hyphen year split with bounds), `_resolve_bike_slug` (4-tier match: exact model → exact make → partial model LIKE → partial make LIKE, deterministic by `created_at, id`), `_list_garage_summary` (UX helper for unknown-slug error body).
+- Added `--bike SLUG` option on `diagnose quick` alongside existing `--vehicle-id INT`. Both-given → ID wins with yellow warning. Neither-given → clear error. Unknown slug → error listing garage (or "Garage is empty" variant).
+- New top-level `motodiag quick "<symptoms>" [--bike | --vehicle-id] ...` via `register_quick(cli_group)`. Pulls `diagnose quick` from the already-registered subgroup and delegates via Click `ctx.invoke()` — single source of truth.
+- Wired `register_quick(cli)` into `cli/main.py` after `register_diagnose(cli)`.
+- **Agent delegation process**: Builder-A produced clean code across `cli/diagnose.py`, `cli/main.py`, and a 34-test file. Sandboxed runtime blocked Python for the agent, so it shipped without self-testing. Architect ran Phase 125 tests as part of trust-but-verify: all 34 passed. Finalization (docs, regression, commit) done by Architect since no SendMessage to dispatch Finalizer-A.
+- Deviations: 4-tier slug match (plan said 3-tier) — added partial-LIKE tiers so `cbr929` → CBR929RR works. Ambiguous-match warning skipped — deterministic `ORDER BY created_at, id` is sufficient. Test count 34 vs planned 15-20 due to thorough boundary coverage.
+- Schema v13 unchanged. Full regression: 2157/2157 passing, zero regressions. Zero live tokens.
+- Implementation.md → v0.6.4.
+- Next: correct CLAUDE.md's agent-pool section re: SendMessage reality; then Phase 126.

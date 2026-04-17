@@ -36,6 +36,11 @@ from motodiag.core.session_repo import (
 from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.vehicles.registry import get_vehicle
 
+# --- Slug parsing tunables ---
+
+SLUG_YEAR_MIN = 1980
+SLUG_YEAR_MAX = 2035
+
 # Engine imports are lazy inside functions to keep CLI import fast and
 # to make mocking via `diagnose_fn` parameter straightforward in tests.
 
@@ -92,6 +97,118 @@ def _resolve_model(tier_value: str, cli_flag: Optional[str]) -> str:
 def _load_vehicle(vehicle_id: int, db_path: Optional[str] = None) -> Optional[dict]:
     """Resolve a vehicle row from the vehicles table, or None if missing."""
     return get_vehicle(vehicle_id, db_path=db_path)
+
+
+def _parse_slug(slug: str) -> tuple[str, Optional[int]]:
+    """Split a slug like 'sportster-2001' into (stem, year_or_None).
+
+    Rules:
+    - Split on the LAST '-'. If the trailing token is a 4-digit int within
+      [SLUG_YEAR_MIN, SLUG_YEAR_MAX], treat it as a year; otherwise no year.
+    - Stem is lowercased and trimmed.
+    - A slug with no '-' (e.g., 'sportster') returns (slug_lower, None).
+    """
+    if not slug:
+        return "", None
+    s = slug.strip().lower()
+    if "-" not in s:
+        return s, None
+    stem, _, tail = s.rpartition("-")
+    try:
+        year = int(tail)
+    except ValueError:
+        return s, None
+    if SLUG_YEAR_MIN <= year <= SLUG_YEAR_MAX:
+        return stem.strip(), year
+    # Out-of-range integer — treat the whole thing as stem.
+    return s, None
+
+
+def _resolve_bike_slug(
+    slug: str, db_path: Optional[str] = None,
+) -> Optional[dict]:
+    """Resolve a human-friendly bike slug to a vehicle row dict (or None).
+
+    Slug format: ``<stem>[-<year>]`` where stem matches make or model
+    case-insensitively via LIKE. Examples: ``sportster-2001``, ``cbr929-2000``,
+    ``harley``.
+
+    Match priority:
+      1. Exact model match (model = stem, case-insensitive)
+      2. Exact make match (make = stem, case-insensitive)
+      3. Partial model LIKE match
+      4. Partial make LIKE match
+
+    Within each tier, if multiple rows match we prefer the oldest by
+    ``created_at`` (deterministic). If a year is parsed from the slug, it
+    is applied as a hard filter in all tiers.
+
+    Returns None when no row matches.
+    """
+    stem, year = _parse_slug(slug)
+    if not stem:
+        return None
+
+    with get_connection(db_path) as conn:
+        # Tier 1: exact model match
+        q1 = "SELECT * FROM vehicles WHERE LOWER(model) = ?"
+        params1: list = [stem]
+        if year is not None:
+            q1 += " AND year = ?"
+            params1.append(year)
+        q1 += " ORDER BY created_at, id LIMIT 1"
+        row = conn.execute(q1, params1).fetchone()
+        if row is not None:
+            return dict(row)
+
+        # Tier 2: exact make match
+        q2 = "SELECT * FROM vehicles WHERE LOWER(make) = ?"
+        params2: list = [stem]
+        if year is not None:
+            q2 += " AND year = ?"
+            params2.append(year)
+        q2 += " ORDER BY created_at, id LIMIT 1"
+        row = conn.execute(q2, params2).fetchone()
+        if row is not None:
+            return dict(row)
+
+        # Tier 3: partial model LIKE
+        q3 = "SELECT * FROM vehicles WHERE LOWER(model) LIKE ?"
+        params3: list = [f"%{stem}%"]
+        if year is not None:
+            q3 += " AND year = ?"
+            params3.append(year)
+        q3 += " ORDER BY created_at, id LIMIT 1"
+        row = conn.execute(q3, params3).fetchone()
+        if row is not None:
+            return dict(row)
+
+        # Tier 4: partial make LIKE
+        q4 = "SELECT * FROM vehicles WHERE LOWER(make) LIKE ?"
+        params4: list = [f"%{stem}%"]
+        if year is not None:
+            q4 += " AND year = ?"
+            params4.append(year)
+        q4 += " ORDER BY created_at, id LIMIT 1"
+        row = conn.execute(q4, params4).fetchone()
+        if row is not None:
+            return dict(row)
+
+    return None
+
+
+def _list_garage_summary(db_path: Optional[str] = None, limit: int = 10) -> list[dict]:
+    """Return a small list of garage rows for error-path hints. Best-effort."""
+    try:
+        with get_connection(db_path) as conn:
+            rows = conn.execute(
+                "SELECT id, make, model, year FROM vehicles "
+                "ORDER BY created_at, id LIMIT ?",
+                (limit,),
+            ).fetchall()
+            return [dict(r) for r in rows]
+    except Exception:
+        return []
 
 
 def _load_known_issues(
@@ -384,20 +501,62 @@ def register_diagnose(cli_group: click.Group) -> None:
         """AI-assisted diagnostic sessions."""
 
     @diagnose.command("quick")
-    @click.option("--vehicle-id", required=True, type=int)
+    @click.option("--vehicle-id", default=None, type=int,
+                  help="Numeric vehicle ID from the garage.")
+    @click.option("--bike", default=None,
+                  help="Human-friendly bike slug, e.g. 'sportster-2001' or 'cbr929-2000'.")
     @click.option("--symptoms", required=True, help="Comma-separated symptom list.")
     @click.option("--description", default=None, help="Optional free-text description.")
     @click.option("--model", "ai_model_flag", default=None,
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
-    def diagnose_quick(vehicle_id: int, symptoms: str,
-                       description: Optional[str], ai_model_flag: Optional[str]) -> None:
+    def diagnose_quick(vehicle_id: Optional[int], bike: Optional[str],
+                       symptoms: str, description: Optional[str],
+                       ai_model_flag: Optional[str]) -> None:
         """Run a one-shot diagnosis without Q&A."""
         console = Console()
         init_db()
-        vehicle = _load_vehicle(vehicle_id)
-        if vehicle is None:
-            console.print(f"[red]Vehicle #{vehicle_id} not found. Add one first with 'garage add'.[/red]")
+
+        # Resolve vehicle — either by ID (primary) or by slug (sugar).
+        if vehicle_id is None and not bike:
+            console.print(
+                "[red]Specify a vehicle with --vehicle-id N or --bike SLUG "
+                "(e.g. --bike sportster-2001).[/red]"
+            )
             raise click.Abort()
+
+        if vehicle_id is not None and bike:
+            console.print(
+                "[yellow]⚠ Both --vehicle-id and --bike given; using --vehicle-id.[/yellow]"
+            )
+
+        vehicle: Optional[dict]
+        if vehicle_id is not None:
+            vehicle = _load_vehicle(vehicle_id)
+            if vehicle is None:
+                console.print(
+                    f"[red]Vehicle #{vehicle_id} not found. "
+                    f"Add one first with 'garage add'.[/red]"
+                )
+                raise click.Abort()
+        else:
+            # bike is non-empty here
+            vehicle = _resolve_bike_slug(bike)  # type: ignore[arg-type]
+            if vehicle is None:
+                console.print(f"[red]No bike matches slug {bike!r}.[/red]")
+                garage = _list_garage_summary()
+                if garage:
+                    console.print("[dim]Your garage:[/dim]")
+                    for v in garage:
+                        console.print(
+                            f"  [cyan]#{v['id']}[/cyan]  "
+                            f"{v['year']} {v['make']} {v['model']}"
+                        )
+                else:
+                    console.print(
+                        "[dim]Your garage is empty. "
+                        "Add a bike with 'motodiag garage add'.[/dim]"
+                    )
+                raise click.Abort()
 
         tier = current_tier().value
         ai_model = _resolve_model(tier, ai_model_flag)
@@ -508,3 +667,60 @@ def register_diagnose(cli_group: click.Group) -> None:
         if steps:
             body += "\n[bold]Repair steps:[/bold]\n" + "\n".join(f"  • {x}" for x in steps)
         console.print(Panel(body, title="Result", border_style="green"))
+
+
+def register_quick(cli_group: click.Group) -> None:
+    """Attach the top-level `quick` shortcut command to the CLI.
+
+    Phase 125: `motodiag quick "<symptoms>" [--bike SLUG | --vehicle-id N]`
+    collapses `motodiag diagnose quick --symptoms "..."` into one less word.
+    Delegates to the existing `diagnose quick` callback via ``ctx.invoke`` so
+    there is a single implementation to maintain.
+
+    Must be called AFTER ``register_diagnose(cli_group)`` — this function
+    looks up the existing ``diagnose quick`` command on the group.
+    """
+    # Resolve the already-registered `diagnose quick` command.
+    diagnose_group = cli_group.commands.get("diagnose")
+    if diagnose_group is None or not isinstance(diagnose_group, click.Group):
+        raise RuntimeError(
+            "register_quick must be called after register_diagnose — "
+            "no 'diagnose' group found on CLI."
+        )
+    quick_cmd = diagnose_group.commands.get("quick")
+    if quick_cmd is None:
+        raise RuntimeError(
+            "register_quick: 'diagnose quick' command not registered."
+        )
+
+    @cli_group.command("quick")
+    @click.argument("symptoms")
+    @click.option("--vehicle-id", default=None, type=int,
+                  help="Numeric vehicle ID from the garage.")
+    @click.option("--bike", default=None,
+                  help="Human-friendly bike slug, e.g. 'sportster-2001'.")
+    @click.option("--description", default=None,
+                  help="Optional free-text description.")
+    @click.option("--model", "ai_model_flag", default=None,
+                  type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
+    @click.pass_context
+    def quick_shortcut(
+        ctx: click.Context,
+        symptoms: str,
+        vehicle_id: Optional[int],
+        bike: Optional[str],
+        description: Optional[str],
+        ai_model_flag: Optional[str],
+    ) -> None:
+        """Shortcut for `motodiag diagnose quick` — fewer keystrokes.
+
+        Example: `motodiag quick "won't start when cold" --bike sportster-2001`
+        """
+        ctx.invoke(
+            quick_cmd,
+            vehicle_id=vehicle_id,
+            bike=bike,
+            symptoms=symptoms,
+            description=description,
+            ai_model_flag=ai_model_flag,
+        )

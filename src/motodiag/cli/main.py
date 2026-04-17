@@ -14,7 +14,7 @@ from motodiag.cli.subscription import (
     get_enforcement_mode,
 )
 from motodiag.cli.code import register_code
-from motodiag.cli.diagnose import register_diagnose
+from motodiag.cli.diagnose import register_diagnose, register_quick
 
 console = Console()
 
@@ -626,6 +626,9 @@ def history() -> None:
 
 # Phase 123: register the diagnose subgroup (start / quick / list / show)
 register_diagnose(cli)
+
+# Phase 125: register the top-level `quick` shortcut (delegates to diagnose quick)
+register_quick(cli)
 
 # Phase 124: register the `code` command (replaces the legacy inline version)
 register_code(cli)
