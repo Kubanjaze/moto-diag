@@ -954,6 +954,29 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS intake_usage_log;
         """,
     ),
+    # Migration 014 — Phase 127: session history browser notes column
+    Migration(
+        version=14,
+        name="session_notes_column",
+        description=(
+            "Phase 127: Add nullable `notes` TEXT column to diagnostic_sessions "
+            "to support append-only post-hoc annotations (reopen + annotate "
+            "workflow). Existing rows get NULL. No index — free-text search "
+            "uses LIKE; Phase 128's knowledge browser may add FTS5 later. "
+            "Follows the same pattern as migration 005's user_id retrofit column."
+        ),
+        upgrade_sql="""
+            ALTER TABLE diagnostic_sessions ADD COLUMN notes TEXT;
+        """,
+        rollback_sql="""
+            -- Rollback 014: SQLite does not support ALTER TABLE DROP COLUMN
+            -- on versions prior to 3.35. The `notes` column is retained (same
+            -- pattern as migration 005's user_id retrofit columns). It is
+            -- nullable with no default, so leaving it in place is harmless.
+            -- Full removal would require CREATE-COPY-DROP-RENAME which is not
+            -- needed for rollback testing; the column is effectively inert.
+        """,
+    ),
 ]
 
 

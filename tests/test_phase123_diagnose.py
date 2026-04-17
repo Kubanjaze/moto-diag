@@ -523,10 +523,12 @@ class TestCliDiagnose:
             r = runner.invoke(cli, ["diagnose", "list", "--status", "closed"])
         assert r.exit_code == 0
         assert "CBR929RR" in r.output
-        # Open-filter should show nothing now
+        # Open-filter should show nothing now. Phase 127 changed the empty
+        # message wording when a filter is applied: "No sessions match the
+        # filters" replaces the old "No sessions yet" in filtered paths.
         r2 = runner.invoke(cli, ["diagnose", "list", "--status", "open"])
         assert r2.exit_code == 0
-        assert "No sessions yet" in r2.output
+        assert "No sessions" in r2.output
 
     def test_show_happy_path(self, cli_db):
         vid = self._seed_vehicle(cli_db)

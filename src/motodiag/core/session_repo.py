@@ -3,6 +3,7 @@
 import json
 import logging
 from datetime import datetime
+from typing import Optional
 
 from motodiag.core.database import get_connection
 
@@ -153,8 +154,30 @@ def list_sessions(
     vehicle_make: str | None = None,
     vehicle_model: str | None = None,
     db_path: str | None = None,
+    *,
+    vehicle_id: int | None = None,
+    search: str | None = None,
+    since: str | None = None,
+    until: str | None = None,
+    limit: int | None = None,
 ) -> list[dict]:
-    """List sessions with optional filters."""
+    """List sessions with optional filters.
+
+    Phase 127: keyword-only filters for the session history browser:
+      - vehicle_id: exact match on the vehicle_id FK column
+      - search:     case-insensitive substring match on `diagnosis`
+      - since:      sessions with created_at >= since (ISO date/datetime string)
+      - until:      sessions with created_at <= until (ISO date/datetime string)
+      - limit:      cap on number of returned rows (None = no cap)
+
+    All filters AND together. Existing positional filters (status,
+    vehicle_make, vehicle_model) retain their behavior and signature
+    position so Phase 123+ callers remain compatible.
+
+    Ordering: ORDER BY created_at DESC, id DESC so ties (same timestamp)
+    are broken deterministically by insertion order newest-first — useful
+    when seeding closely-timed fixtures in tests.
+    """
     sql = "SELECT * FROM diagnostic_sessions WHERE 1=1"
     params: list = []
 
@@ -167,12 +190,105 @@ def list_sessions(
     if vehicle_model:
         sql += " AND vehicle_model LIKE ?"
         params.append(f"%{vehicle_model}%")
+    if vehicle_id is not None:
+        sql += " AND vehicle_id = ?"
+        params.append(vehicle_id)
+    if search:
+        # Case-insensitive LIKE on diagnosis. LOWER() on both sides so the
+        # match works regardless of how the diagnosis was stored.
+        sql += " AND LOWER(diagnosis) LIKE LOWER(?)"
+        params.append(f"%{search}%")
+    if since:
+        sql += " AND created_at >= ?"
+        params.append(since)
+    if until:
+        sql += " AND created_at <= ?"
+        params.append(until)
 
-    sql += " ORDER BY created_at DESC"
+    sql += " ORDER BY created_at DESC, id DESC"
+
+    if limit is not None:
+        sql += " LIMIT ?"
+        params.append(int(limit))
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
         return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
+def reopen_session(session_id: int, db_path: str | None = None) -> bool:
+    """Reopen a closed diagnostic session.
+
+    Flips status back to 'open' and clears closed_at so a mechanic can
+    continue a previously-wrapped diagnosis without losing prior context.
+    Diagnosis, confidence, repair_steps, and all other fields are preserved
+    — this is a pure status flip.
+
+    Returns True if a row was actually updated (i.e., the session exists).
+    Returns False if the session_id does not match any row.
+
+    Note: calling reopen_session on an already-open session is a no-op at
+    the SQL level (UPDATE still affects 1 row because the WHERE id=? matches),
+    so this returns True. CLI callers that want to distinguish already-open
+    from missing-session must check status first.
+    """
+    log.info("Session %d reopened", session_id)
+    now = datetime.now().isoformat()
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            """UPDATE diagnostic_sessions
+               SET status = 'open', closed_at = NULL, updated_at = ?
+               WHERE id = ?""",
+            (now, session_id),
+        )
+        return cursor.rowcount > 0
+
+
+def append_note(
+    session_id: int, note_text: str, db_path: str | None = None,
+) -> bool:
+    """Append a timestamped note to the session's notes column.
+
+    Notes are append-only: each call prepends ``[YYYY-MM-DDTHH:MM] `` to
+    note_text and concatenates it to existing notes separated by a blank
+    line. If the session has no notes yet, the new string becomes the
+    entire value. This preserves annotation history chronologically.
+
+    Returns True if a row was updated, False if the session does not exist.
+    """
+    # First verify the session exists and fetch existing notes in one step.
+    existing = get_notes(session_id, db_path=db_path)
+    # get_notes returns None for both "missing session" and "session exists
+    # but notes is NULL", so disambiguate with a session lookup.
+    session = get_session(session_id, db_path=db_path)
+    if session is None:
+        return False
+
+    stamp = datetime.now().isoformat(timespec="minutes")
+    new_entry = f"[{stamp}] {note_text}"
+    combined = new_entry if not existing else f"{existing}\n\n{new_entry}"
+
+    now = datetime.now().isoformat()
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            """UPDATE diagnostic_sessions
+               SET notes = ?, updated_at = ?
+               WHERE id = ?""",
+            (combined, now, session_id),
+        )
+        return cursor.rowcount > 0
+
+
+def get_notes(session_id: int, db_path: str | None = None) -> Optional[str]:
+    """Return the raw notes column for a session, or None if missing/empty."""
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT notes FROM diagnostic_sessions WHERE id = ?", (session_id,)
+        )
+        row = cursor.fetchone()
+        if row is None:
+            return None
+        return row["notes"] if row["notes"] is not None else None
 
 
 def count_sessions(status: str | None = None, db_path: str | None = None) -> int:

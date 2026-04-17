@@ -353,3 +353,15 @@ Second agent-delegated phase. No migration, no new package. Extended `cli/diagno
 - Full regression (running when this entry was written): expected 2179/2179 passing, zero regressions.
 - Implementation.md → v0.6.5.
 - Next: Phase 127 (session history browser).
+
+### 2026-04-18 01:00 — Phase 127 complete — Session history browser
+Third agent-delegated phase. Migration 014 adds nullable `notes` column to `diagnostic_sessions` (schema v13 → v14); no new table. Extends Phase 123's `diagnose list` into a proper history browser with 7 new filter options, plus new `diagnose reopen` and `diagnose annotate` commands.
+- `core/session_repo.py` (+60 LoC): `list_sessions` kwargs `vehicle_id/search/since/until/limit`; new `reopen_session`, `append_note`, `get_notes` functions. Search is case-insensitive via `LOWER(diagnosis) LIKE LOWER('%..%')`.
+- `cli/diagnose.py` (+150 LoC): `diagnose list --vehicle-id/--make/--model/--search/--since/--until/--limit`; `diagnose reopen <id>` (CLI checks status first for warning — repo runs UPDATE unconditionally); `diagnose annotate <id> <text>` (append-only with `[YYYY-MM-DDTHH:MM]` prefix).
+- Phase 126 formatters updated: terminal rendering gets new Notes panel; `_format_session_text` and `_format_session_md` gain `## Notes` section when notes present; `_format_session_json` picks up the new field automatically via `dict(row)`.
+- Builder-A UX improvement: bare `--until YYYY-MM-DD` is expanded to `T23:59:59` in CLI layer so it means "through end of day".
+- Softened one assertion in `tests/test_phase123_diagnose.py` (exact match → substring) for forward-compat with the new empty-filter wording.
+- **Agent delegation**: Builder-A shipped clean code; sandbox blocked Python for the agent. Architect ran 28 phase tests as trust-but-verify and caught ONE FK constraint failure: the test helper `_seed_diagnosed_session` passed arbitrary vehicle_ids without seeding matching `vehicles` rows. Fixed with `INSERT OR IGNORE INTO vehicles` when explicit vehicle_id is given. All 28 tests passed on retry. Trust-but-verify rule earning its keep.
+- 28 new tests. Full regression (running): expected 2207/2207 passing, zero regressions.
+- Implementation.md → v0.6.6.
+- Next: Phase 128 (Knowledge base browser).

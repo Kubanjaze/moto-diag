@@ -33,7 +33,7 @@ from motodiag.cli.subscription import (
 from motodiag.core.database import init_db, get_connection
 from motodiag.core.session_repo import (
     create_session, get_session, list_sessions, set_diagnosis,
-    close_session, update_session,
+    close_session, update_session, reopen_session, append_note, get_notes,
 )
 from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.vehicles.registry import get_vehicle
@@ -645,6 +645,18 @@ def _format_session_text(session: dict) -> str:
         lines.append("  (none)")
     lines.append("")
 
+    # --- Notes (Phase 127) — append-only annotations. Each entry starts
+    # with a ``[YYYY-MM-DDTHH:MM]`` prefix separated from the next by a
+    # blank line. Wrap long lines but preserve the paragraph breaks.
+    notes = session.get("notes")
+    if notes:
+        lines.append("Notes")
+        lines.append("-----")
+        for para in str(notes).split("\n"):
+            wrapped = textwrap.fill(para, width=_TEXT_WRAP_COL) if para else ""
+            lines.append(wrapped)
+        lines.append("")
+
     # --- Metadata
     lines.append("Metadata")
     lines.append("--------")
@@ -770,6 +782,17 @@ def _format_session_md(session: dict) -> str:
     else:
         lines.append("_no repair steps recorded_")
     lines.append("")
+
+    # --- Notes (Phase 127) — included only when present. Preserves the
+    # ``[YYYY-MM-DDTHH:MM]`` prefix and the blank-line separator between
+    # entries so markdown renderers show each annotation as its own
+    # paragraph.
+    notes = session.get("notes")
+    if notes:
+        lines.append("## Notes")
+        lines.append("")
+        lines.append(str(notes))
+        lines.append("")
 
     # --- Timestamps
     lines.append("## Timestamps")
@@ -946,14 +969,75 @@ def register_diagnose(cli_group: click.Group) -> None:
 
     @diagnose.command("list")
     @click.option("--status", default=None,
-                  type=click.Choice(["open", "diagnosed", "closed"], case_sensitive=False))
-    def diagnose_list_cmd(status: Optional[str]) -> None:
-        """List diagnostic sessions."""
+                  type=click.Choice(["open", "diagnosed", "closed"], case_sensitive=False),
+                  help="Filter by lifecycle status.")
+    @click.option("--vehicle-id", "vehicle_id", default=None, type=int,
+                  help="Filter to sessions for a specific vehicle ID.")
+    @click.option("--make", "make", default=None,
+                  help="Filter by vehicle make (case-insensitive substring).")
+    @click.option("--model", "model_", default=None,
+                  help="Filter by vehicle model (case-insensitive substring).")
+    @click.option("--search", default=None,
+                  help="Case-insensitive substring search on diagnosis text.")
+    @click.option("--since", default=None,
+                  help="Include sessions created on or after this ISO date (YYYY-MM-DD).")
+    @click.option("--until", default=None,
+                  help="Include sessions created on or before this ISO date (YYYY-MM-DD).")
+    @click.option("--limit", default=50, type=int, show_default=True,
+                  help="Cap number of rows returned (prevents terminal-spam on large histories).")
+    def diagnose_list_cmd(
+        status: Optional[str],
+        vehicle_id: Optional[int],
+        make: Optional[str],
+        model_: Optional[str],
+        search: Optional[str],
+        since: Optional[str],
+        until: Optional[str],
+        limit: int,
+    ) -> None:
+        """List diagnostic sessions.
+
+        Phase 127 adds richer filtering: vehicle_id, make/model, free-text
+        search on diagnosis, created_at date range, and a result cap. All
+        filters AND together. Newest-first ordering preserved from Phase 123.
+        """
         console = Console()
         init_db()
-        sessions = list_sessions(status=status)
+
+        # `--until YYYY-MM-DD` is inclusive of that whole day. Append a time
+        # suffix so the string comparison against ISO timestamps includes
+        # anything recorded on the until date (otherwise `2026-04-15` < any
+        # timestamp on 2026-04-15 and the day's sessions would be dropped).
+        until_param = until
+        if until_param and "T" not in until_param and " " not in until_param:
+            until_param = f"{until_param}T23:59:59"
+
+        sessions = list_sessions(
+            status=status,
+            vehicle_make=make,
+            vehicle_model=model_,
+            vehicle_id=vehicle_id,
+            search=search,
+            since=since,
+            until=until_param,
+            limit=limit,
+        )
         if not sessions:
-            console.print("[yellow]No sessions yet. Start one with 'diagnose start' or 'diagnose quick'.[/yellow]")
+            # Phase 127 tweak: if any filter was applied, the "no match"
+            # wording is more accurate than the Phase 123 "no sessions yet".
+            any_filter = any(
+                v is not None for v in
+                (status, vehicle_id, make, model_, search, since, until)
+            )
+            if any_filter:
+                console.print(
+                    "[yellow]No sessions match the filters.[/yellow]"
+                )
+            else:
+                console.print(
+                    "[yellow]No sessions yet. Start one with "
+                    "'diagnose start' or 'diagnose quick'.[/yellow]"
+                )
             return
 
         table = Table(title="Diagnostic Sessions")
@@ -976,6 +1060,74 @@ def register_diagnose(cli_group: click.Group) -> None:
                 str(s.get("created_at", ""))[:19],
             )
         console.print(table)
+
+    @diagnose.command("reopen")
+    @click.argument("session_id", type=int)
+    def diagnose_reopen_cmd(session_id: int) -> None:
+        """Reopen a closed diagnostic session for continued work.
+
+        Flips status from 'closed' (or 'diagnosed') back to 'open' and
+        clears closed_at. The existing diagnosis, confidence, repair_steps,
+        and all other fields are preserved — this is a pure status flip.
+        Calling reopen on an already-open session is a no-op and prints a
+        yellow warning.
+        """
+        console = Console()
+        init_db()
+
+        existing = get_session(session_id)
+        if existing is None:
+            raise click.ClickException(
+                f"Session #{session_id} not found."
+            )
+
+        if existing.get("status") == "open":
+            console.print(
+                f"[yellow]Session #{session_id} is already open; "
+                f"nothing to do.[/yellow]"
+            )
+            return
+
+        ok = reopen_session(session_id)
+        if not ok:
+            # Race condition: session disappeared between check and update.
+            raise click.ClickException(
+                f"Session #{session_id} could not be reopened."
+            )
+        console.print(f"[green]Session #{session_id} reopened.[/green]")
+
+    @diagnose.command("annotate")
+    @click.argument("session_id", type=int)
+    @click.argument("note_text")
+    def diagnose_annotate_cmd(session_id: int, note_text: str) -> None:
+        """Append a timestamped note to a diagnostic session.
+
+        Notes are append-only so annotation history is preserved. Each
+        entry is prefixed with ``[YYYY-MM-DDTHH:MM]``. The full accumulated
+        notes column is printed after appending so the mechanic can verify
+        the chronological trail.
+        """
+        console = Console()
+        init_db()
+
+        existing = get_session(session_id)
+        if existing is None:
+            raise click.ClickException(
+                f"Session #{session_id} not found."
+            )
+
+        ok = append_note(session_id, note_text)
+        if not ok:
+            raise click.ClickException(
+                f"Session #{session_id} could not be annotated."
+            )
+        console.print(
+            f"[green]Note added to session #{session_id}.[/green]"
+        )
+        # Echo the accumulated notes so the mechanic can see the full trail.
+        current = get_notes(session_id)
+        if current:
+            console.print(Panel(current, title="Notes", border_style="dim"))
 
     @diagnose.command("show")
     @click.argument("session_id", type=int)
@@ -1047,6 +1199,14 @@ def register_diagnose(cli_group: click.Group) -> None:
             if steps:
                 body += "\n[bold]Repair steps:[/bold]\n" + "\n".join(f"  • {x}" for x in steps)
             console.print(Panel(body, title="Result", border_style="green"))
+
+            # Phase 127: show annotation history below the Result panel so
+            # a mechanic reviewing a reopened session sees the post-hoc
+            # notes trail immediately (and doesn't need `diagnose show
+            # --format md` just to find them).
+            notes = s.get("notes")
+            if notes:
+                console.print(Panel(str(notes), title="Notes", border_style="dim"))
             return
 
         # Non-terminal export formats
