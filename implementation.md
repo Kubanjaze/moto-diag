@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.5.4 | **Date:** 2026-04-17
+**Version:** 0.5.5 | **Date:** 2026-04-17
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 352 phases across 21 tracks (A-T)
@@ -145,6 +145,7 @@ moto-diag/
 | `recalls` | NHTSA-style recall campaigns with year-range targeting | Retrofit 118 |
 | `warranties` | Per-vehicle warranties — coverage type, provider, mileage limit, claim count | Retrofit 118 |
 | `appointments` | Customer appointments — type/status enums, scheduled ISO times, assigned mechanic | Retrofit 118 |
+| `photo_annotations` | Coordinate-normalized shape annotations (circle/rectangle/arrow/text) on images; optional FK to failure_photos | Retrofit 119 |
 | `schema_version` | Migration tracking | 03 |
 
 ## CLI Commands
@@ -308,6 +309,7 @@ moto-diag/
 | 116 | Retrofit: feedback/learning hooks | 2026-04-17 | Migration 009, feedback/ package (FeedbackOutcome enum 4 values + OverrideField enum 6 values + DiagnosticFeedback + SessionOverride models + 8 repo functions + FeedbackReader read-only hook with iter_feedback generator / get_accuracy_metrics / get_common_overrides), diagnostic_feedback + session_overrides tables with FK CASCADE on session / SET DEFAULT on user, 4 indexes, feedback records immutable once submitted (preserves training signal), foundation for Track R phases 318-327, schema v8→v9, 26 tests, 1867 total passing, zero regressions |
 | 117 | Retrofit: reference data tables | 2026-04-17 | Migration 010, reference/ package (4 enums: ManualSource/DiagramType/FailureCategory/SkillLevel with 5+4+7+4 members, 4 Pydantic models, 4 repo modules with 5 CRUD functions each = 20 total), 4 new tables (manual_references + parts_diagrams + failure_photos + video_tutorials) with 8 indexes, year-range filter pattern (year_start<=target<=year_end, NULL=universal) reused from known_issues, parts_diagrams.source_manual_id ON DELETE SET NULL, failure_photos.submitted_by_user_id ON DELETE SET DEFAULT, foundation for Track P phases 293-302, schema v9→v10, 28 tests, 1895 total passing, zero regressions |
 | 118 | Retrofit: ops substrate (billing+accounting+inventory+scheduling) | 2026-04-17 | Migration 011, 4 new packages (billing, accounting, inventory, scheduling), 8 enums (34 members total), 9 Pydantic models, ~55 repo functions across 8 repo modules. 9 new tables: subscriptions/payments (billing with Stripe column pre-wiring), invoices/invoice_line_items (accounting with recalculate_invoice_totals+tax), inventory_items/vendors/recalls/warranties (inventory with adjust_quantity/items_below_reorder), appointments (scheduling with cancel/complete/list_upcoming). 14 indexes. FK strategy: CASCADE on user/customer/vehicle/invoice parents, SET NULL on vendor/repair_plan/mechanic references. Foundation for Track O phases 273-289 (Stripe, QuickBooks, calendar sync) and Track S phases 328-329 (customer billing portal). Schema v10→v11, 37 tests, 1932 total passing, zero regressions |
+| 119 | Retrofit: photo annotation layer | 2026-04-17 | Migration 012, media/photo_annotation module (AnnotationShape enum 4 members — circle/rectangle/arrow/text), PhotoAnnotation Pydantic model with 3 validators (coord bounds [0.0, 1.0], hex color `#RRGGBB` regex with auto-uppercase, size bounds supporting negative arrow deltas), media/photo_annotation_repo with 8 functions (CRUD + list-by-image + list-by-failure-photo + count + bulk_import). photo_annotations table with 3 indexes. Dual-mode annotation: FK-linked (CASCADE on failure_photos delete) OR orphan-safe (by image_ref, survives photo delete). Coordinate normalization survives image resize/crop. Foundation for Track Q phase 307. Schema v11→v12, 22 tests, 1954 total passing, zero regressions |
 
 ## Completion Gates
 

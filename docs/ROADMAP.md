@@ -180,7 +180,7 @@ The mechanic's daily driver interface. Phase 109 delivered the foundation; remai
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 109 | CLI foundation + command structure | ✅ | Click CLI, subcommands, 3-tier subscription system ($19/$99/$299), tier command, 41 tests |
-| 122 | Vehicle garage management | 🔲 | Add/edit/list/remove vehicles from personal garage (was 110) |
+| 122 | Vehicle garage management + photo intake | 🔲 | Add/edit/list/remove vehicles from personal garage, **PLUS photo-based intake**: snap/upload a bike photo → Claude Haiku 4.5 vision returns `VehicleGuess(make, model, year_range, engine_cc_range, confidence)` → auto-fill VehicleBase fields (low-confidence flagged), user confirms. Image sha256 cache, 1024px max dim, VIN fallback when confidence < 0.5. Per-tier caps: individual 20/mo, shop 200/mo, company unlimited. 80%-of-cap budget alert. New `src/motodiag/intake/` package reusing Phase 101 vision_analysis. (was 110) |
 | 123 | Interactive diagnostic session | 🔲 | Start session → describe problem → guided Q&A → diagnosis (was 111) |
 | 124 | Fault code lookup command | 🔲 | `motodiag code P0115` → plain-English explanation + fix (was 112) |
 | 125 | Quick diagnosis mode | 🔲 | One-shot: `motodiag diagnose "won't start when cold" --bike sportster-2001` (was 113) |
@@ -208,7 +208,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 | 116 | Feedback/learning hooks | ✅ | Migration 009 + feedback/ package (FeedbackOutcome enum, OverrideField enum, DiagnosticFeedback + SessionOverride models, 8 repo functions, FeedbackReader read-only hook). diagnostic_feedback + session_overrides tables with FK CASCADE. Schema v8→v9. 26 tests, 1867 total |
 | 117 | Reference data tables | ✅ | Migration 010 + reference/ package (4 enums, 4 models, 4 repo modules × 5 CRUD = 20 functions). 4 new tables with 8 indexes, year-range filter reused from known_issues pattern. Schema v9→v10. 28 tests, 1895 total |
 | 118 | Billing/invoicing/inventory/scheduling substrate | ✅ | Migration 011 + 4 new packages (billing/accounting/inventory/scheduling). 9 tables + 14 indexes. Stripe column pre-wiring, invoice recalc with tax, low-stock alerts, calendar-ready appointments. Schema v10→v11. 37 tests, 1932 total |
-| 119 | Media annotation layer | 🔲 | Extend `media/` with photo_annotations table + annotation model (shapes, arrows, circles, text) |
+| 119 | Media annotation layer | ✅ | Migration 012 + media/photo_annotation module (AnnotationShape enum 4 members, PhotoAnnotation model with 3 validators, 8 repo functions). photo_annotations table with 3 indexes. Dual-mode: FK-linked CASCADE or orphan-safe by image_ref. Schema v11→v12. 22 tests, 1954 total |
 | 120 | Engine sound signature library expansion | 🔲 | Add electric motor, Ducati L-twin dry clutch, BMW boxer, KTM LC8, Triumph triple signatures |
 | 121 | Gate R — Retrofit integration test | 🔲 | All existing tests pass. Schemas migrate cleanly. No breaking CLI changes. New packages import cleanly. Full regression + migration verification |
 

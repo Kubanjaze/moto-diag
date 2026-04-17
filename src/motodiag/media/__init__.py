@@ -9,4 +9,21 @@ Key capabilities:
 - Multimodal fusion: combine audio + video + text symptoms + DTCs
 - Comparative analysis: "before vs after" audio baselines
 - Real-time audio monitoring via phone microphone
+- Photo annotation (Phase 119): coordinate-based shape overlays on static images
 """
+
+from motodiag.media.photo_annotation import AnnotationShape, PhotoAnnotation
+from motodiag.media.photo_annotation_repo import (
+    add_annotation, get_annotation,
+    list_annotations_for_image, list_annotations_for_failure_photo,
+    count_annotations_for_image,
+    update_annotation, delete_annotation, bulk_import_annotations,
+)
+
+__all__ = [
+    "AnnotationShape", "PhotoAnnotation",
+    "add_annotation", "get_annotation",
+    "list_annotations_for_image", "list_annotations_for_failure_photo",
+    "count_annotations_for_image",
+    "update_annotation", "delete_annotation", "bulk_import_annotations",
+]

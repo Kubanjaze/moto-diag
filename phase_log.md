@@ -233,3 +233,18 @@ This is the **project-level** change log. Records updates to the project's archi
 - Subscriptions.tier column mirrors Phase 109 MOTODIAG_SUBSCRIPTION_TIER env var — Track H 178 switches enforcement to DB-backed.
 - Schema v10 → v11. 37 new tests. Full regression: 1932/1932 passing (10:08 runtime). Zero regressions.
 - Implementation.md → v0.5.4 (Phase 118 row, 9 new table rows, 4 package statuses Planned → Complete).
+
+### 2026-04-17 20:05 — Retrofit Phase 119 complete — photo annotation layer
+- Migration 012: `photo_annotations` table with 3 indexes (image_ref, failure_photo_id, created_by_user_id). FK CASCADE on failure_photos, SET DEFAULT on users. Rollback drops table.
+- New module `src/motodiag/media/photo_annotation.py`: AnnotationShape enum (circle/rectangle/arrow/text), PhotoAnnotation Pydantic model with 3 validators: coord bounds [0.0, 1.0], `#RRGGBB` hex regex with auto-uppercase, size bounds [-1.0, 1.0] (supports negative arrow deltas).
+- New module `src/motodiag/media/photo_annotation_repo.py`: 8 functions (add/get/list_for_image/list_for_failure_photo/count/update/delete/bulk_import). `update_annotation` uses SQL `CURRENT_TIMESTAMP` literal for `updated_at`.
+- Dual-mode annotation: FK-linked annotations CASCADE on failure_photo delete; orphan annotations (image_ref only, no FK) survive — supports both formal failure-photo library workflow AND ad-hoc mechanic notes on phone photos.
+- Coordinate normalization (0.0–1.0 floats) survives image resize/crop/pixel-density differences. Track Q phase 307 builds the canvas overlay renderer.
+- Schema v11 → v12. 22 new tests. Full regression: 1954/1954 passing (9:44 runtime). Zero regressions.
+- Implementation.md → v0.5.5 (Phase 119 row + `photo_annotations` table row).
+
+### 2026-04-17 20:07 — Scope change: Phase 122 expanded for photo-based bike intake
+- User requested mid-retrofit: photo → auto-populate make/model/year/engine_cc for friction-free onboarding.
+- Placement: folded into existing Phase 122 (was "Vehicle garage management") rather than inserting a new phase — photo-based intake is the same endpoint (add a bike to garage), just an alternate UX path. Keeps numbering clean across 12+ downstream Track D phases.
+- Phase 122 now scoped: Click CLI garage commands + `src/motodiag/intake/` package with `vehicle_identifier.py` reusing Phase 101 Claude Vision. Default Claude Haiku 4.5, escalate to Sonnet if confidence < 0.5. Image sha256 cache, 1024px max dim, VIN fallback. Per-tier caps: individual 20/mo, shop 200/mo, company unlimited. 80%-of-cap budget alert.
+- ROADMAP.md updated; memory entry `project_motodiag_photo_bike_id.md` records scope + cost envelope decisions.

@@ -879,6 +879,47 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS subscriptions;
         """,
     ),
+    # Migration 012 — Phase 119: photo annotation layer
+    Migration(
+        version=12,
+        name="photo_annotation_layer",
+        description=(
+            "Phase 119: Create photo_annotations table for coordinate-based "
+            "shape annotations (circles, rectangles, arrows, text labels) "
+            "on arbitrary images. Coords normalized 0.0–1.0 so annotations "
+            "survive image resize. Optional FK to failure_photos (CASCADE) "
+            "for DB-linked annotations; opaque image_ref lets annotations "
+            "attach to any image. Track Q phase 307 renders the canvas overlay."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS photo_annotations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                image_ref TEXT NOT NULL,
+                failure_photo_id INTEGER,
+                shape TEXT NOT NULL,
+                x REAL NOT NULL,
+                y REAL NOT NULL,
+                width REAL,
+                height REAL,
+                text TEXT,
+                color TEXT NOT NULL DEFAULT '#FF0000',
+                stroke_width INTEGER NOT NULL DEFAULT 2,
+                label TEXT,
+                created_by_user_id INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (failure_photo_id) REFERENCES failure_photos(id) ON DELETE CASCADE,
+                FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_photo_ann_image ON photo_annotations(image_ref);
+            CREATE INDEX IF NOT EXISTS idx_photo_ann_photo ON photo_annotations(failure_photo_id);
+            CREATE INDEX IF NOT EXISTS idx_photo_ann_user ON photo_annotations(created_by_user_id);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS photo_annotations;
+        """,
+    ),
 ]
 
 
