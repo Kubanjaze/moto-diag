@@ -31,6 +31,10 @@ from motodiag.cli.subscription import (
     get_enforcement_mode,
     ENFORCEMENT_MODE_HARD,
 )
+from motodiag.cli.completion import (
+    complete_bike_slug,
+    complete_session_id,
+)
 from motodiag.core.database import init_db, get_connection
 from motodiag.core.session_repo import (
     create_session, get_session, list_sessions, set_diagnosis,
@@ -874,7 +878,8 @@ def register_diagnose(cli_group: click.Group) -> None:
     @click.option("--vehicle-id", default=None, type=int,
                   help="Numeric vehicle ID from the garage.")
     @click.option("--bike", default=None,
-                  help="Human-friendly bike slug, e.g. 'sportster-2001' or 'cbr929-2000'.")
+                  help="Human-friendly bike slug, e.g. 'sportster-2001' or 'cbr929-2000'.",
+                  shell_complete=complete_bike_slug)
     @click.option("--symptoms", required=True, help="Comma-separated symptom list.")
     @click.option("--description", default=None, help="Optional free-text description.")
     @click.option("--model", "ai_model_flag", default=None,
@@ -1076,7 +1081,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         console.print(table)
 
     @diagnose.command("reopen")
-    @click.argument("session_id", type=int)
+    @click.argument("session_id", type=int, shell_complete=complete_session_id)
     def diagnose_reopen_cmd(session_id: int) -> None:
         """Reopen a closed diagnostic session for continued work.
 
@@ -1111,7 +1116,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         console.print(f"[green]Session #{session_id} reopened.[/green]")
 
     @diagnose.command("annotate")
-    @click.argument("session_id", type=int)
+    @click.argument("session_id", type=int, shell_complete=complete_session_id)
     @click.argument("note_text")
     def diagnose_annotate_cmd(session_id: int, note_text: str) -> None:
         """Append a timestamped note to a diagnostic session.
@@ -1144,7 +1149,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             console.print(Panel(current, title="Notes", border_style="dim"))
 
     @diagnose.command("show")
-    @click.argument("session_id", type=int)
+    @click.argument("session_id", type=int, shell_complete=complete_session_id)
     @click.option(
         "--format", "output_format",
         type=click.Choice(["terminal", "txt", "json", "md"], case_sensitive=False),
@@ -1271,7 +1276,8 @@ def register_quick(cli_group: click.Group) -> None:
     @click.option("--vehicle-id", default=None, type=int,
                   help="Numeric vehicle ID from the garage.")
     @click.option("--bike", default=None,
-                  help="Human-friendly bike slug, e.g. 'sportster-2001'.")
+                  help="Human-friendly bike slug, e.g. 'sportster-2001'.",
+                  shell_complete=complete_bike_slug)
     @click.option("--description", default=None,
                   help="Optional free-text description.")
     @click.option("--model", "ai_model_flag", default=None,

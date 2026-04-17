@@ -29,6 +29,7 @@ from motodiag.cli.diagnose import (
     _load_known_issues,
     _parse_symptoms,
 )
+from motodiag.cli.completion import complete_dtc_code
 from motodiag.cli.subscription import current_tier
 from motodiag.core.database import init_db
 from motodiag.engine.fault_codes import classify_code
@@ -306,7 +307,7 @@ def register_code(cli_group: click.Group) -> None:
         del cli_group.commands["code"]
 
     @cli_group.command("code")
-    @click.argument("dtc_code", required=False)
+    @click.argument("dtc_code", required=False, shell_complete=complete_dtc_code)
     @click.option("--make", "-m", default=None,
                   help="Narrow to a manufacturer-specific DTC entry.")
     @click.option("--category", default=None,

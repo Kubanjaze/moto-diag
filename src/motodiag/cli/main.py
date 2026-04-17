@@ -13,6 +13,7 @@ from motodiag.cli.subscription import (
     get_enforcement_mode,
 )
 from motodiag.cli.code import register_code
+from motodiag.cli.completion import register_completion
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.kb import register_kb
 from motodiag.cli.theme import get_console, status, tier_style
@@ -634,6 +635,56 @@ register_kb(cli)
 
 # Phase 124: register the `code` command (replaces the legacy inline version)
 register_code(cli)
+
+# Phase 130: register shell completion scripts + dynamic completers.
+register_completion(cli)
+
+
+# Phase 130: hidden short aliases for the highest-frequency paths. Each
+# alias reuses the already-registered command object so there's only one
+# implementation to maintain. `hidden=True` keeps them out of `--help`
+# output so newcomers see canonical names only — power users who know
+# the aliases still get the keystroke savings.
+def _register_short_aliases(cli_group: click.Group) -> None:
+    """Attach hidden single-letter aliases for diagnose, kb, garage, quick.
+
+    Aliases wired:
+      - ``d`` → ``diagnose`` (group)
+      - ``k`` → ``kb`` (group)
+      - ``g`` → ``garage`` (group)
+      - ``q`` → ``quick`` (command)
+
+    Registration strategy: Click's command objects can be attached under
+    multiple names via ``cli.add_command(cmd, name="d")``. We flip
+    ``hidden=True`` on the alias so ``motodiag --help`` renders only the
+    canonical names. The underlying command objects are shared — any
+    later mutation to ``diagnose`` (e.g., a new subcommand) is visible
+    via ``d`` automatically.
+    """
+    for alias, canonical in (("d", "diagnose"), ("k", "kb"),
+                             ("g", "garage"), ("q", "quick")):
+        cmd = cli_group.commands.get(canonical)
+        if cmd is None:
+            # Defensive: if the canonical command isn't registered yet,
+            # skip silently rather than raising during module import.
+            # (Should never happen given the register_* ordering above.)
+            continue
+        cli_group.add_command(cmd, name=alias)
+        # Mutating hidden on the shared object would also hide the
+        # canonical. Instead, we wrap it with a thin alias view whose
+        # `hidden` flag is independent. Easiest path: register a copy of
+        # the command under the alias name with hidden=True.
+        aliased = cli_group.commands[alias]
+        # If aliased is the same object as the canonical, swap to a
+        # hidden shallow clone so `--help` doesn't list the alias.
+        if aliased is cmd:
+            import copy as _copy
+            clone = _copy.copy(cmd)
+            clone.hidden = True
+            cli_group.commands[alias] = clone
+
+
+_register_short_aliases(cli)
 
 
 if __name__ == "__main__":

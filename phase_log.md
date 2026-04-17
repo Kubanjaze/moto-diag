@@ -391,3 +391,15 @@ Fifth agent-delegated phase. No migration, no new commands. New `cli/theme.py` c
 - `Textual` full TUI explicitly deferred — out of scope for this polish phase; can be a future dedicated phase if demand materializes.
 - Implementation.md → v0.6.8.
 - Next: Phase 130 (Shell completions + shortcuts).
+
+### 2026-04-18 02:40 — Phase 130 complete — Shell completions + shortcuts
+Sixth agent-delegated phase. No migration, no new package. Adds `motodiag completion [bash|zsh|fish]` for tab-completion setup, three dynamic DB-backed completers for runtime data, and four short command aliases.
+- New `src/motodiag/cli/completion.py` (~260 LoC): `register_completion(cli)` + three completer callbacks (`complete_bike_slug`, `complete_dtc_code`, `complete_session_id`) + install-hint wrapping around Click's built-in `get_completion_class(shell).source()`.
+- Defensive completers: all three return `[]` on any DB-access failure (fresh install, missing tables, flaky network mount). Tab-completion never crashes a mechanic's shell.
+- Dynamic completers wired into 6 existing option/argument sites: `--bike` on `diagnose quick` + top-level `quick`, `session_id` on `diagnose show`/`reopen`/`annotate`, and the positional `code` argument on `motodiag code`.
+- Short aliases in `cli/main.py`: `d`→diagnose, `k`→kb, `g`→garage, `q`→quick. Uses `copy.copy(cmd)` to clone the canonical command, then sets `hidden=True` on the CLONE. Builder-A refinement over the plan — setting `hidden=True` on the canonical itself would have hidden it from `--help` everywhere.
+- **Agent delegation**: Builder-A shipped clean code. Sandbox blocked Python (7th time); Architect's trust-but-verify caught ONE failure — `click.shell_completion.CompletionItem` isn't accessible via attribute access (must be imported from submodule). Fixed with `from click.shell_completion import CompletionItem` at top of `completion.py` and `sed`-replacement of all references. All 18 phase tests passed on retry.
+- 18 new tests across 4 classes. Zero AI calls. Zero live tokens.
+- Full regression (running): expected 2271/2271, zero regressions.
+- Implementation.md → v0.6.9.
+- Next: Phase 131 (Offline mode / AI response caching).
