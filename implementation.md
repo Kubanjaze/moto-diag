@@ -234,9 +234,23 @@ moto-diag/
 | 76 | Brake system diagnostics (cross-platform) | 2026-04-17 | 10 issues: fluid, calipers, pads, rotors, master cyl, stainless lines, ABS sensors, ABS bleeding, drum, bolt torque, 6 tests |
 | 77 | Drivetrain diagnostics (cross-platform) | 2026-04-17 | 10 issues: chain, sprockets, lube, belt, shaft, clutch drag, cable/hydraulic, transmission, countershaft seal, alignment, 6 tests |
 | 78 | Gate 2 — Knowledge base integration test | 2026-04-17 | 21 integration tests, 650+ issues, all 5 makes, cross-platform systems verified, **GATE 2 PASSED** |
-| 85 | Parts + tools recommendation | 2026-04-16 | PartSource enum, PartRecommendation (cross-refs, prices), ToolRecommendation (essential/alt), PartsRecommender, PARTS_PROMPT (13+ brands), 35 tests |
-| 86 | Cost estimation | 2026-04-16 | ShopType enum, CostLineItem, CostEstimate, PartCost models, CostEstimator (estimate/from_diagnosis/compare), format_estimate, LABOR_RATES, 25 tests |
-| 87 | Safety warnings + critical alerts | 2026-04-16 | AlertLevel enum, SafetyAlert model, SafetyChecker (check_diagnosis/symptoms/repair), 18 SAFETY_RULES, 12 REPAIR_SAFETY_KEYWORDS, format_alerts, 37 tests |
+| 79 | Claude API integration + base client | 2026-04-17 | DiagnosticClient, TokenUsage, SessionMetrics, system prompts, context builders, 32 tests |
+| 80 | Symptom analysis prompt engineering | 2026-04-17 | SymptomAnalyzer, categorize_symptoms, assess_urgency, two-pass KB→AI approach, 28 tests |
+| 81 | Fault code interpretation prompts | 2026-04-17 | FaultCodeInterpreter, 8 DTC format classifiers, 51 local code entries, quick_lookup, 36 tests |
+| 82 | Multi-step diagnostic workflows | 2026-04-17 | DiagnosticWorkflow, 3 predefined templates (no-start/charging/overheating), AI step generation, 26 tests |
+| 83 | Confidence scoring | 2026-04-17 | ConfidenceScore, 8 evidence types, normalization, 5 labels, rank_diagnoses, 23 tests |
+| 84 | Repair procedure generator | 2026-04-17 | RepairProcedureGenerator, RepairStep/RepairProcedure models, SkillLevel assessment, 41 tests |
+| 85 | Parts + tools recommendation | 2026-04-17 | PartsRecommender, PartRecommendation with cross-refs, ToolRecommendation, 13+ brands, 35 tests |
+| 86 | Cost estimation | 2026-04-17 | CostEstimator, ShopType comparison (dealer/independent/DIY), format_estimate, 34 tests |
+| 87 | Safety warnings + critical alerts | 2026-04-17 | SafetyChecker, 18 SAFETY_RULES, 12 REPAIR_SAFETY_KEYWORDS, AlertLevel, format_alerts, 37 tests |
+| 88 | Diagnostic history + learning | 2026-04-17 | DiagnosticHistory, add/get/search/statistics, find_similar for RAG context, 45 tests |
+| 89 | Similar case retrieval | 2026-04-17 | CaseRetriever, Jaccard symptom similarity, vehicle/year matching, ranked results, 32 tests |
+| 90 | Multi-symptom correlation | 2026-04-17 | SymptomCorrelator, 15+ predefined rules, partial match support, ranked by quality, 38 tests |
+| 91 | Intermittent fault analysis | 2026-04-17 | IntermittentAnalyzer, 10+ patterns (cold/hot/rain/load/RPM/random), condition extraction, 43 tests |
+| 92 | Wiring diagram reference | 2026-04-17 | 5 circuit references (charging/starting/FI/ignition/ABS), wire colors, test points, 29 tests |
+| 93 | Torque specs + service data | 2026-04-17 | 20 torque specs, 14 service intervals, 8 valve clearances, auto Nm→ft-lbs, 39 tests |
+| 94 | AI evaluation + accuracy tracking | 2026-04-17 | EvaluationTracker, ADR-005 scorecard (Q:40%+C:40%+L:20%), model comparison, 21 tests |
+| 95 | Gate 3 — AI engine integration test | 2026-04-17 | 39 integration tests, 16 modules verified, 1163 total tests, **GATE 3 PASSED** |
 
 ## Completion Gates
 
@@ -244,7 +258,7 @@ moto-diag/
 |------|-------------|--------|----------|
 | Gate 1 | 12 | ✅ | Vehicle → symptoms → session → DTCs → search → diagnose → close |
 | Gate 2 | 78 | ✅ | Query any target bike → get DTCs, symptoms, known issues, fixes |
-| Gate 3 | ~95 | 🔲 | Full symptom-to-repair flow with confidence + cost |
+| Gate 3 | 95 | ✅ | Full symptom-to-repair flow with confidence + cost |
 | Gate 4 | ~108 | 🔲 | Full mechanic workflow through CLI |
 | Gate 5 | ~122 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |
 | Gate 6 | ~134 | 🔲 | Fleet + history + prediction end-to-end |

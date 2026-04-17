@@ -135,23 +135,23 @@ Claude API integration, prompt engineering, diagnostic reasoning.
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 79 | Claude API integration + base client | 🔲 | API wrapper, model selection, token tracking |
-| 80 | Symptom analysis prompt engineering | 🔲 | Structured symptom intake → differential diagnosis |
-| 81 | Fault code interpretation prompts | 🔲 | DTC + vehicle context → root cause analysis |
-| 82 | Multi-step diagnostic workflows | 🔲 | Guided troubleshooting: test → result → next test |
-| 83 | Confidence scoring | 🔲 | Probability ranking for diagnoses, evidence weighting |
-| 84 | Repair procedure generator | 🔲 | Step-by-step fix instructions from diagnosis |
-| 85 | Parts + tools recommendation | ✅ | What you need to fix it: part numbers, tools, consumables |
-| 86 | Cost estimation | ✅ | Labor hours + parts cost estimate per diagnosis |
-| 87 | Safety warnings + critical alerts | ✅ | Flag dangerous conditions (brake failure, fuel leak, fire risk) |
-| 88 | Diagnostic history + learning | 🔲 | Past sessions inform future diagnoses (RAG-style) |
-| 89 | Similar case retrieval | 🔲 | Find past diagnostics on similar vehicles with similar symptoms |
-| 90 | Multi-symptom correlation | 🔲 | Connect seemingly unrelated symptoms to single root cause |
-| 91 | Intermittent fault analysis | 🔲 | Handle "sometimes it does X" — environmental + temporal patterns |
-| 92 | Wiring diagram reference | 🔲 | Circuit descriptions, connector pinouts, wire colors by model |
-| 93 | Torque specs + service data lookup | 🔲 | Quick reference: torques, capacities, clearances |
-| 94 | AI evaluation + accuracy tracking | 🔲 | Score diagnostic accuracy, track cost per diagnosis |
-| 95 | Gate 3 — AI diagnostic engine integration test | 🔲 | Full symptom-to-repair flow with confidence + cost |
+| 79 | Claude API integration + base client | ✅ | DiagnosticClient, model selection, token tracking, 32 tests |
+| 80 | Symptom analysis prompt engineering | ✅ | SymptomAnalyzer, categorization, urgency, two-pass approach, 28 tests |
+| 81 | Fault code interpretation prompts | ✅ | FaultCodeInterpreter, 8 DTC formats, 51 local codes, 36 tests |
+| 82 | Multi-step diagnostic workflows | ✅ | DiagnosticWorkflow, 3 templates (no-start/charging/overheating), 26 tests |
+| 83 | Confidence scoring | ✅ | ConfidenceScore, 8 evidence types, normalization, ranking, 23 tests |
+| 84 | Repair procedure generator | ✅ | RepairProcedureGenerator, SkillLevel assessment, 41 tests |
+| 85 | Parts + tools recommendation | ✅ | PartsRecommender, cross-refs, 13+ brands, 35 tests |
+| 86 | Cost estimation | ✅ | CostEstimator, ShopType comparison, format_estimate, 34 tests |
+| 87 | Safety warnings + critical alerts | ✅ | SafetyChecker, 18 rules, 12 repair keywords, 37 tests |
+| 88 | Diagnostic history + learning | ✅ | DiagnosticHistory, add/get/search/statistics, find_similar, 45 tests |
+| 89 | Similar case retrieval | ✅ | CaseRetriever, Jaccard similarity, vehicle/year matching, 32 tests |
+| 90 | Multi-symptom correlation | ✅ | SymptomCorrelator, 15+ predefined rules, partial match, 38 tests |
+| 91 | Intermittent fault analysis | ✅ | IntermittentAnalyzer, 10+ patterns, condition extraction, 43 tests |
+| 92 | Wiring diagram reference | ✅ | 5 circuit references, wire colors, test points, 29 tests |
+| 93 | Torque specs + service data lookup | ✅ | 20 torque specs, 14 intervals, 8 clearances, 39 tests |
+| 94 | AI evaluation + accuracy tracking | ✅ | EvaluationTracker, ADR-005 scorecard, model comparison, 21 tests |
+| 95 | Gate 3 — AI diagnostic engine integration test | ✅ | 39 integration tests, 16 modules, 1163 total tests, **GATE 3 PASSED** |
 
 ## Track C2 — Media Diagnostic Intelligence (Phases 96–108)
 
