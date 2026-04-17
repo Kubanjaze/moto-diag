@@ -92,7 +92,7 @@ moto-diag/
 | `knowledge` | B | Active | DTC repo (40 codes), symptom repo (40 symptoms), issues repo (10 Harley known issues), JSON loaders |
 | `pricing` | G | Active | Labor rates (regional/national), repair plan builder (CRUD), cost estimation, prep labor catalog |
 | `engine` | C | Active | AI diagnostic engine — client, models, prompts, symptoms, fault codes, workflows, confidence, cost estimation, parts recommendation |
-| `media` | C2 | Scaffold | Video/audio diagnostic analysis — awaiting Phase 96 |
+| `media` | C2 | Active | Audio/video diagnostic analysis — 12 modules: capture, spectrogram, signatures, anomaly, video frames, vision, fusion, comparative, realtime, annotation, reports, coaching |
 | `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
 | `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
 | `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 123 |
@@ -251,6 +251,19 @@ moto-diag/
 | 93 | Torque specs + service data | 2026-04-17 | 20 torque specs, 14 service intervals, 8 valve clearances, auto Nm→ft-lbs, 39 tests |
 | 94 | AI evaluation + accuracy tracking | 2026-04-17 | EvaluationTracker, ADR-005 scorecard (Q:40%+C:40%+L:20%), model comparison, 21 tests |
 | 95 | Gate 3 — AI engine integration test | 2026-04-17 | 39 integration tests, 16 modules verified, 1163 total tests, **GATE 3 PASSED** |
+| 96 | Audio capture + preprocessing | 2026-04-17 | AudioPreprocessor, WAV management, synthetic generators, 36 tests |
+| 97 | Audio spectrogram analysis | 2026-04-17 | Pure Python DFT, 6 motorcycle frequency bands, Hann windowing, 30 tests |
+| 98 | Engine sound signature database | 2026-04-17 | 7 engine types, RPM-to-firing-frequency, profile matching, 25 tests |
+| 99 | Audio anomaly detection | 2026-04-17 | 9 anomaly signatures (knock, misfire, valve tick, etc.), 29 tests |
+| 100 | Video frame extraction | 2026-04-17 | Frame extraction plan, keyframes, metadata models, 34 tests |
+| 101 | Visual symptom analysis | 2026-04-17 | Claude Vision prompts, smoke/fluid color guides, 34 tests |
+| 102 | Multimodal fusion | 2026-04-17 | Weighted evidence combination, conflict detection, 30 tests |
+| 103 | Comparative audio analysis | 2026-04-17 | Before/after comparison, improvement scoring, 30 tests |
+| 104 | Real-time audio monitoring | 2026-04-17 | Session lifecycle, RPM estimation, alert generation, 26 tests |
+| 105 | Video annotation + timestamps | 2026-04-17 | Timestamped annotations, timeline, auto-annotate, 27 tests |
+| 106 | Media-enhanced diagnostic reports | 2026-04-17 | Reports with media attachments, text formatting, 26 tests |
+| 107 | AI audio coaching | 2026-04-17 | 5 capture protocols, quality evaluation, symptom mapping, 30 tests |
+| 108 | Gate 4 — Media diagnostics integration test | 2026-04-17 | 24 integration tests, 12 modules, 1575 total, **GATE 4 PASSED** |
 
 ## Completion Gates
 
@@ -259,7 +272,7 @@ moto-diag/
 | Gate 1 | 12 | ✅ | Vehicle → symptoms → session → DTCs → search → diagnose → close |
 | Gate 2 | 78 | ✅ | Query any target bike → get DTCs, symptoms, known issues, fixes |
 | Gate 3 | 95 | ✅ | Full symptom-to-repair flow with confidence + cost |
-| Gate 4 | ~108 | 🔲 | Full mechanic workflow through CLI |
+| Gate 4 | 108 | ✅ | Media diagnostics: audio + video + multimodal fusion pipeline |
 | Gate 5 | ~122 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |
 | Gate 6 | ~134 | 🔲 | Fleet + history + prediction end-to-end |
 | Gate 7 | ~144 | 🔲 | Full API workflow: auth → vehicle → diagnose → report |

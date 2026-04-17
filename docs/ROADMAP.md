@@ -159,19 +159,19 @@ Video and audio analysis for hands-free diagnostics. A mechanic films a bike sta
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 96 | Audio capture + preprocessing | 🔲 | Record engine audio, noise reduction, normalize sample rate |
-| 97 | Audio spectrogram analysis | 🔲 | FFT/spectrogram generation, frequency band extraction |
-| 98 | Engine sound signature database | 🔲 | Known-good baselines per engine type (V-twin, inline-4, single) |
-| 99 | Audio anomaly detection | 🔲 | Identify knock, misfire, valve tick, exhaust leak, bearing whine |
-| 100 | Video frame extraction | 🔲 | Extract key frames from mechanic's video clips |
-| 101 | Visual symptom analysis (Claude Vision) | 🔲 | Smoke color, fluid leaks, exhaust behavior, gauge readings |
-| 102 | Multimodal fusion | 🔲 | Combine audio + video + text symptoms + DTCs for diagnosis |
-| 103 | Comparative audio analysis | 🔲 | "Before vs after" — record baseline, compare after repair |
-| 104 | Real-time audio monitoring | 🔲 | Live phone mic → frequency analysis → instant feedback |
-| 105 | Video annotation + timestamps | 🔲 | Mark moments in video ("misfire at 0:03", "smoke at 0:07") |
-| 106 | Media-enhanced diagnostic reports | 🔲 | Attach audio clips + annotated frames to diagnostic session |
-| 107 | AI audio coaching | 🔲 | "Rev to 3000 RPM and hold" — guided audio capture for best results |
-| 108 | Gate 4 — Media diagnostics integration test | 🔲 | Film a running bike → AI analyzes → suggests diagnosis path |
+| 96 | Audio capture + preprocessing | ✅ | AudioPreprocessor, WAV file management, synthetic generators, 36 tests |
+| 97 | Audio spectrogram analysis | ✅ | Pure Python DFT, 6 motorcycle frequency bands, 30 tests |
+| 98 | Engine sound signature database | ✅ | 7 engine types, RPM-to-firing-frequency, profile matching, 25 tests |
+| 99 | Audio anomaly detection | ✅ | 9 anomaly types (knock, misfire, valve tick, etc.), 29 tests |
+| 100 | Video frame extraction | ✅ | Frame extraction plan, keyframes, timestamps, 34 tests |
+| 101 | Visual symptom analysis (Claude Vision) | ✅ | Vision prompts, smoke/fluid color guides, 34 tests |
+| 102 | Multimodal fusion | ✅ | Weighted evidence, conflict detection, 30 tests |
+| 103 | Comparative audio analysis | ✅ | Before/after, improvement scoring, 30 tests |
+| 104 | Real-time audio monitoring | ✅ | Session lifecycle, RPM estimation, alerts, 26 tests |
+| 105 | Video annotation + timestamps | ✅ | Timestamped annotations, timeline, auto-annotate, 27 tests |
+| 106 | Media-enhanced diagnostic reports | ✅ | Reports with media attachments, text formatting, 26 tests |
+| 107 | AI audio coaching | ✅ | 5 capture protocols, quality evaluation, 30 tests |
+| 108 | Gate 4 — Media diagnostics integration test | ✅ | 24 integration tests, 12 modules, 1575 total, **GATE 4 PASSED** |
 
 ## Track D — CLI + User Experience (Phases 109–121)
 
