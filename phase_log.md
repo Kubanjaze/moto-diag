@@ -221,3 +221,15 @@ This is the **project-level** change log. Records updates to the project's archi
 - Tables empty by design — Phase 117 is substrate only. Track P phases 293-302 populate Clymer/Haynes citations, per-model torque data, failure photo library, video tutorial index.
 - Schema v9 → v10. 28 new tests. Full regression: 1895/1895 passing (8:26 runtime). Zero regressions.
 - Implementation.md → v0.5.3 (Phase 117 row, 4 new table rows, `reference` package status Planned → Complete).
+
+### 2026-04-17 19:30 — Retrofit Phase 118 complete — ops substrate (billing/accounting/inventory/scheduling)
+- Largest single retrofit phase. Migration 011: 9 new tables (subscriptions, payments, invoices, invoice_line_items, vendors, inventory_items, recalls, warranties, appointments) + 14 indexes. FK strategy: CASCADE on user/customer/vehicle/invoice parents; SET NULL on vendor/repair_plan/mechanic references.
+- 4 new packages (~1700 LoC, 16 files):
+  - `src/motodiag/billing/`: SubscriptionTier/SubscriptionStatus/PaymentStatus enums, Subscription + Payment models, 11 repo functions with Stripe column pre-wiring
+  - `src/motodiag/accounting/`: InvoiceStatus/InvoiceLineItemType enums, Invoice + InvoiceLineItem models, 11 repo functions including `recalculate_invoice_totals(tax_rate)`
+  - `src/motodiag/inventory/`: CoverageType enum, 4 models (InventoryItem/Vendor/Recall/Warranty), 4 repo modules with 25+ functions including `adjust_quantity(delta)`, `items_below_reorder()`, `list_recalls_for_vehicle(make, year)`, `increment_claim_count()`
+  - `src/motodiag/scheduling/`: AppointmentType/AppointmentStatus enums, Appointment model, 9 repo functions including `cancel_appointment(reason)`, `complete_appointment(actual_end)`, `list_upcoming(from_iso)`, `list_for_user(mechanic_id)`
+- Stripe column names (`stripe_customer_id`, `stripe_subscription_id`, `stripe_payment_intent_id`) match Stripe's own naming — Track O 273 Stripe integration becomes pure plug-in with zero schema changes.
+- Subscriptions.tier column mirrors Phase 109 MOTODIAG_SUBSCRIPTION_TIER env var — Track H 178 switches enforcement to DB-backed.
+- Schema v10 → v11. 37 new tests. Full regression: 1932/1932 passing (10:08 runtime). Zero regressions.
+- Implementation.md → v0.5.4 (Phase 118 row, 9 new table rows, 4 package statuses Planned → Complete).

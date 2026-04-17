@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.5.3 | **Date:** 2026-04-17
+**Version:** 0.5.4 | **Date:** 2026-04-17
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Roadmap:** `docs/ROADMAP.md` | 352 phases across 21 tracks (A-T)
@@ -104,10 +104,10 @@ moto-diag/
 | `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 148 |
 | `shop` | G | Scaffold | Shop management, work orders, triage, scheduling — awaiting Phase 160 |
 | `api` | H | Scaffold | REST API — empty, awaiting Phase 175, hard paywall enforcement activates here |
-| `billing` | Retrofit 118 / O | Planned | Stripe integration, subscription billing, payment processing |
-| `accounting` | Retrofit 118 / O | Planned | QuickBooks/Xero export, financial reports, tax handling |
-| `inventory` | Retrofit 118 / O | Planned | Parts inventory, reorder points, vendor integrations |
-| `scheduling` | Retrofit 118 / O | Planned | Appointments, iCal/Google calendar sync, mechanic calendars |
+| `billing` | Retrofit 118 / O | Complete | SubscriptionTier + SubscriptionStatus + PaymentStatus enums, Subscription + Payment models, 11 repo functions with Stripe column pre-wiring (stripe_customer_id, stripe_subscription_id, stripe_payment_intent_id) |
+| `accounting` | Retrofit 118 / O | Complete | InvoiceStatus + InvoiceLineItemType enums, Invoice + InvoiceLineItem models, 11 repo functions including recalculate_invoice_totals(tax_rate) |
+| `inventory` | Retrofit 118 / O | Complete | CoverageType enum, 4 models (InventoryItem/Vendor/Recall/Warranty), 4 repo modules with 25+ functions including adjust_quantity, items_below_reorder, list_recalls_for_vehicle, increment_claim_count |
+| `scheduling` | Retrofit 118 / O | Complete | AppointmentType + AppointmentStatus enums, Appointment model, 9 repo functions including cancel_appointment(reason), complete_appointment(actual_end), list_upcoming(from_iso), list_for_user(mechanic_id) |
 | `workflows` | Retrofit 114 / N | Planned | PPI, tire service, winterization, break-in templates |
 | `i18n` | Retrofit 115 / Q | Complete | Locale enum (7 codes), Translation model, t() translator with locale → en → `[namespace.key]` fallback, string interpolation, translations table, bulk import, locale_completeness reporter — 45 English strings seeded across 4 namespaces |
 | `reference` | Retrofit 117 / P | Complete | 4 enums (ManualSource / DiagramType / FailureCategory / SkillLevel), 4 Pydantic models, 4 repo modules × 5 CRUD functions each (20 total), year-range filter pattern reused from known_issues — substrate for Track P content phases |
@@ -136,6 +136,15 @@ moto-diag/
 | `parts_diagrams` | Exploded views, schematics, wiring, assembly diagrams; optional FK to manual | Retrofit 117 |
 | `failure_photos` | Failure-mode photo library by category + year range | Retrofit 117 |
 | `video_tutorials` | Tutorial video index (YouTube/Vimeo/internal) with skill_level + topic_tags | Retrofit 117 |
+| `subscriptions` | Per-user subscription tier + status, Stripe customer/subscription IDs | Retrofit 118 |
+| `payments` | Payment records with Stripe payment_intent_id, status enum | Retrofit 118 |
+| `invoices` | Customer invoices (FK customers, optional FK repair_plans), subtotal/tax/total | Retrofit 118 |
+| `invoice_line_items` | Line items per invoice (labor/parts/diagnostic/misc), optional FK repair_plan_items | Retrofit 118 |
+| `vendors` | Parts/service vendors with contact info, payment terms | Retrofit 118 |
+| `inventory_items` | Parts inventory — sku, model_applicable JSON, quantity, reorder point, vendor FK | Retrofit 118 |
+| `recalls` | NHTSA-style recall campaigns with year-range targeting | Retrofit 118 |
+| `warranties` | Per-vehicle warranties — coverage type, provider, mileage limit, claim count | Retrofit 118 |
+| `appointments` | Customer appointments — type/status enums, scheduled ISO times, assigned mechanic | Retrofit 118 |
 | `schema_version` | Migration tracking | 03 |
 
 ## CLI Commands
@@ -298,6 +307,7 @@ moto-diag/
 | 115 | Retrofit: i18n substrate | 2026-04-17 | Migration 008, i18n/ package (Locale enum 7 codes en/es/fr/de/ja/it/pt + Translation model + t() translator with locale→en→`[namespace.key]` fallback + string interpolation + current_locale/set_locale env-var handling + 8 repo functions), translations table with composite PK `(locale, namespace, key)` + 2 indexes, 45 English strings seeded across 4 namespaces (11 cli + 12 ui + 11 diagnostics + 11 workflow), foundation for Track Q phases 308-310, schema v7→v8, 40 tests, 1841 total passing, zero regressions |
 | 116 | Retrofit: feedback/learning hooks | 2026-04-17 | Migration 009, feedback/ package (FeedbackOutcome enum 4 values + OverrideField enum 6 values + DiagnosticFeedback + SessionOverride models + 8 repo functions + FeedbackReader read-only hook with iter_feedback generator / get_accuracy_metrics / get_common_overrides), diagnostic_feedback + session_overrides tables with FK CASCADE on session / SET DEFAULT on user, 4 indexes, feedback records immutable once submitted (preserves training signal), foundation for Track R phases 318-327, schema v8→v9, 26 tests, 1867 total passing, zero regressions |
 | 117 | Retrofit: reference data tables | 2026-04-17 | Migration 010, reference/ package (4 enums: ManualSource/DiagramType/FailureCategory/SkillLevel with 5+4+7+4 members, 4 Pydantic models, 4 repo modules with 5 CRUD functions each = 20 total), 4 new tables (manual_references + parts_diagrams + failure_photos + video_tutorials) with 8 indexes, year-range filter pattern (year_start<=target<=year_end, NULL=universal) reused from known_issues, parts_diagrams.source_manual_id ON DELETE SET NULL, failure_photos.submitted_by_user_id ON DELETE SET DEFAULT, foundation for Track P phases 293-302, schema v9→v10, 28 tests, 1895 total passing, zero regressions |
+| 118 | Retrofit: ops substrate (billing+accounting+inventory+scheduling) | 2026-04-17 | Migration 011, 4 new packages (billing, accounting, inventory, scheduling), 8 enums (34 members total), 9 Pydantic models, ~55 repo functions across 8 repo modules. 9 new tables: subscriptions/payments (billing with Stripe column pre-wiring), invoices/invoice_line_items (accounting with recalculate_invoice_totals+tax), inventory_items/vendors/recalls/warranties (inventory with adjust_quantity/items_below_reorder), appointments (scheduling with cancel/complete/list_upcoming). 14 indexes. FK strategy: CASCADE on user/customer/vehicle/invoice parents, SET NULL on vendor/repair_plan/mechanic references. Foundation for Track O phases 273-289 (Stripe, QuickBooks, calendar sync) and Track S phases 328-329 (customer billing portal). Schema v10→v11, 37 tests, 1932 total passing, zero regressions |
 
 ## Completion Gates
 

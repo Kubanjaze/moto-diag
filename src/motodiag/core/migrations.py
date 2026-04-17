@@ -675,6 +675,210 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS manual_references;
         """,
     ),
+    # Migration 011 — Phase 118: billing/accounting/inventory/scheduling substrate
+    Migration(
+        version=11,
+        name="ops_substrate",
+        description=(
+            "Phase 118: Create 9 business-ops tables across 4 domains — "
+            "billing (subscriptions, payments), accounting (invoices, "
+            "invoice_line_items), inventory (inventory_items, vendors), "
+            "warranty/recalls (recalls, warranties), scheduling "
+            "(appointments). Schema + minimal CRUD substrate only. Track O "
+            "phases 273-289 wire up Stripe + QuickBooks + calendar sync, "
+            "Track S phases 328-329 build the customer billing portal."
+        ),
+        upgrade_sql="""
+            -- Billing: subscriptions
+            CREATE TABLE IF NOT EXISTS subscriptions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                tier TEXT NOT NULL DEFAULT 'individual',
+                status TEXT NOT NULL DEFAULT 'trialing',
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ends_at TIMESTAMP,
+                stripe_customer_id TEXT,
+                stripe_subscription_id TEXT UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_user ON subscriptions(user_id);
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON subscriptions(status);
+
+            -- Billing: payments
+            CREATE TABLE IF NOT EXISTS payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                subscription_id INTEGER,
+                amount REAL NOT NULL,
+                currency TEXT NOT NULL DEFAULT 'USD',
+                status TEXT NOT NULL DEFAULT 'pending',
+                stripe_payment_intent_id TEXT UNIQUE,
+                payment_method TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (subscription_id) REFERENCES subscriptions(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_payments_user ON payments(user_id);
+            CREATE INDEX IF NOT EXISTS idx_payments_status ON payments(status);
+
+            -- Accounting: invoices
+            CREATE TABLE IF NOT EXISTS invoices (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                repair_plan_id INTEGER,
+                invoice_number TEXT NOT NULL UNIQUE,
+                status TEXT NOT NULL DEFAULT 'draft',
+                subtotal REAL NOT NULL DEFAULT 0.0,
+                tax_amount REAL NOT NULL DEFAULT 0.0,
+                total REAL NOT NULL DEFAULT 0.0,
+                currency TEXT NOT NULL DEFAULT 'USD',
+                issued_at TIMESTAMP,
+                due_at TIMESTAMP,
+                paid_at TIMESTAMP,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+                FOREIGN KEY (repair_plan_id) REFERENCES repair_plans(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_invoices_customer ON invoices(customer_id);
+            CREATE INDEX IF NOT EXISTS idx_invoices_status ON invoices(status);
+
+            -- Accounting: invoice line items
+            CREATE TABLE IF NOT EXISTS invoice_line_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_id INTEGER NOT NULL,
+                item_type TEXT NOT NULL,
+                description TEXT NOT NULL,
+                quantity REAL NOT NULL DEFAULT 1.0,
+                unit_price REAL NOT NULL DEFAULT 0.0,
+                line_total REAL NOT NULL DEFAULT 0.0,
+                source_repair_plan_item_id INTEGER,
+                sort_order INTEGER DEFAULT 0,
+                FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE CASCADE,
+                FOREIGN KEY (source_repair_plan_item_id) REFERENCES repair_plan_items(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_invoice_items_invoice ON invoice_line_items(invoice_id);
+
+            -- Inventory: vendors (created before inventory_items for FK)
+            CREATE TABLE IF NOT EXISTS vendors (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL UNIQUE,
+                contact_name TEXT,
+                email TEXT,
+                phone TEXT,
+                website TEXT,
+                address TEXT,
+                payment_terms TEXT,
+                notes TEXT,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_vendors_active ON vendors(is_active);
+
+            -- Inventory: items
+            CREATE TABLE IF NOT EXISTS inventory_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sku TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT,
+                make TEXT,
+                model_applicable TEXT NOT NULL DEFAULT '[]',
+                quantity_on_hand INTEGER NOT NULL DEFAULT 0,
+                reorder_point INTEGER NOT NULL DEFAULT 0,
+                unit_cost REAL DEFAULT 0.0,
+                unit_price REAL DEFAULT 0.0,
+                vendor_id INTEGER,
+                location TEXT,
+                last_counted_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (vendor_id) REFERENCES vendors(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_inventory_sku ON inventory_items(sku);
+            CREATE INDEX IF NOT EXISTS idx_inventory_category ON inventory_items(category);
+
+            -- Recalls
+            CREATE TABLE IF NOT EXISTS recalls (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                campaign_number TEXT NOT NULL UNIQUE,
+                make TEXT NOT NULL,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                description TEXT NOT NULL,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                remedy TEXT,
+                notification_date TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_recalls_make_model ON recalls(make, model);
+
+            -- Warranties
+            CREATE TABLE IF NOT EXISTS warranties (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER NOT NULL,
+                coverage_type TEXT NOT NULL,
+                provider TEXT,
+                start_date TEXT,
+                end_date TEXT,
+                mileage_limit INTEGER,
+                terms TEXT,
+                claim_count INTEGER NOT NULL DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_warranties_vehicle ON warranties(vehicle_id);
+
+            -- Scheduling: appointments
+            CREATE TABLE IF NOT EXISTS appointments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                vehicle_id INTEGER,
+                user_id INTEGER,
+                appointment_type TEXT NOT NULL DEFAULT 'service',
+                status TEXT NOT NULL DEFAULT 'scheduled',
+                scheduled_start TEXT NOT NULL,
+                scheduled_end TEXT NOT NULL,
+                actual_start TEXT,
+                actual_end TEXT,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_appointments_customer ON appointments(customer_id);
+            CREATE INDEX IF NOT EXISTS idx_appointments_status ON appointments(status);
+            CREATE INDEX IF NOT EXISTS idx_appointments_scheduled_start ON appointments(scheduled_start);
+        """,
+        rollback_sql="""
+            -- Rollback in FK-safe order (children first, parents last)
+            DROP TABLE IF EXISTS appointments;
+            DROP TABLE IF EXISTS warranties;
+            DROP TABLE IF EXISTS recalls;
+            DROP TABLE IF EXISTS inventory_items;
+            DROP TABLE IF EXISTS vendors;
+            DROP TABLE IF EXISTS invoice_line_items;
+            DROP TABLE IF EXISTS invoices;
+            DROP TABLE IF EXISTS payments;
+            DROP TABLE IF EXISTS subscriptions;
+        """,
+    ),
 ]
 
 
