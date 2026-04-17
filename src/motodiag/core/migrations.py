@@ -306,6 +306,135 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS customers;
         """,
     ),
+    # Migration 007 — Phase 114: workflow template substrate
+    Migration(
+        version=7,
+        name="workflow_template_substrate",
+        description=(
+            "Phase 114: Create workflow_templates + checklist_items tables. "
+            "Seed 2 built-in templates (generic PPI + generic winterization) "
+            "with 5 + 4 starter checklist items. Track N phases 259-272 "
+            "populate the remaining 11 workflow categories with full content."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS workflow_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL,
+                description TEXT,
+                category TEXT NOT NULL,
+                applicable_powertrains TEXT NOT NULL DEFAULT '["ice","electric","hybrid"]',
+                estimated_duration_minutes INTEGER,
+                required_tier TEXT NOT NULL DEFAULT 'individual',
+                created_by_user_id INTEGER NOT NULL DEFAULT 1,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_templates_category ON workflow_templates(category);
+            CREATE INDEX IF NOT EXISTS idx_templates_slug ON workflow_templates(slug);
+
+            CREATE TABLE IF NOT EXISTS checklist_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                template_id INTEGER NOT NULL,
+                sequence_number INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                instruction_text TEXT NOT NULL,
+                expected_pass TEXT,
+                expected_fail TEXT,
+                diagnosis_if_fail TEXT,
+                required INTEGER NOT NULL DEFAULT 1,
+                tools_needed TEXT NOT NULL DEFAULT '[]',
+                estimated_minutes INTEGER,
+                FOREIGN KEY (template_id) REFERENCES workflow_templates(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_checklist_template ON checklist_items(template_id);
+
+            -- Seed 2 built-in templates
+            INSERT OR IGNORE INTO workflow_templates
+                (slug, name, description, category, applicable_powertrains,
+                 estimated_duration_minutes, required_tier, created_by_user_id)
+                VALUES
+                ('generic_ppi_v1', 'Generic Pre-Purchase Inspection',
+                 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. Track N phase 259 expands with engine-specific content.',
+                 'ppi', '["ice","electric","hybrid"]', 60, 'individual', 1),
+                ('generic_winterization_v1', 'Generic Winterization Protocol',
+                 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. Track N phase 264 expands.',
+                 'winterization', '["ice","hybrid"]', 45, 'individual', 1);
+
+            -- Seed starter checklist for PPI (5 items)
+            INSERT OR IGNORE INTO checklist_items
+                (template_id, sequence_number, title, instruction_text, expected_pass, expected_fail, required, tools_needed, estimated_minutes)
+                VALUES
+                ((SELECT id FROM workflow_templates WHERE slug='generic_ppi_v1'), 1,
+                 'VIN verification',
+                 'Read VIN from frame and match to title/registration. Photograph if discrepancy.',
+                 'VIN matches title and frame/bike year',
+                 'VIN mismatch, altered, or missing',
+                 1, '["flashlight","magnifying glass"]', 5),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_ppi_v1'), 2,
+                 'Frame inspection',
+                 'Inspect frame for cracks, welds, straightness. Check neck bearings for play.',
+                 'Frame straight, no cracks, no aftermarket welds',
+                 'Cracks, repairs, or bent frame',
+                 1, '["flashlight","straight edge"]', 10),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_ppi_v1'), 3,
+                 'Engine compression test',
+                 'Warm engine, remove spark plug, crank and read compression gauge. Repeat all cylinders.',
+                 'Within 10% across cylinders, within OEM spec',
+                 'Low or highly variable compression',
+                 1, '["compression gauge","spark plug socket"]', 15),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_ppi_v1'), 4,
+                 'Fluid inspection',
+                 'Check oil color/level, coolant color/level, brake fluid, fork oil condition.',
+                 'All fluids fresh, correct color, at correct level',
+                 'Milky oil, rusty coolant, dark brake fluid',
+                 1, '["flashlight","rag"]', 10),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_ppi_v1'), 5,
+                 'Brake and tire condition',
+                 'Measure pad thickness, rotor thickness, tire tread depth, DOT date. Check for age cracking.',
+                 'Pads >3mm, rotors >min spec, tires <5 years old, adequate tread',
+                 'Below spec or aged out',
+                 1, '["pad depth gauge","tread depth gauge","caliper"]', 10);
+
+            -- Seed starter checklist for winterization (4 items)
+            INSERT OR IGNORE INTO checklist_items
+                (template_id, sequence_number, title, instruction_text, expected_pass, expected_fail, required, tools_needed, estimated_minutes)
+                VALUES
+                ((SELECT id FROM workflow_templates WHERE slug='generic_winterization_v1'), 1,
+                 'Add fuel stabilizer',
+                 'Add Sta-Bil or equivalent to fuel tank per manufacturer ratio. Run engine 5 minutes to circulate.',
+                 'Stabilizer circulated through fuel system',
+                 'Engine not run after adding — stabilizer did not reach carbs/injectors',
+                 1, '["fuel stabilizer"]', 10),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_winterization_v1'), 2,
+                 'Oil change',
+                 'Change engine oil and filter with recommended winter weight (typically 10W-40).',
+                 'Fresh oil and filter, correct fill level',
+                 'Dirty oil left in engine over winter',
+                 1, '["drain pan","oil filter wrench","torque wrench"]', 15),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_winterization_v1'), 3,
+                 'Connect battery tender',
+                 'Disconnect negative terminal, clean terminals, connect battery tender per manufacturer instructions.',
+                 'Battery on tender, reading float voltage (13.2V-13.6V)',
+                 'Battery left disconnected with no maintenance',
+                 1, '["battery tender","wire brush"]', 5),
+                ((SELECT id FROM workflow_templates WHERE slug='generic_winterization_v1'), 4,
+                 'Storage position and cover',
+                 'Move to storage, put on centerstand/jackstand to unload suspension, cover with breathable cover.',
+                 'Bike stable, weight off tires, cover breathable',
+                 'On sidestand with tires loaded, plastic tarp cover',
+                 1, '["jack stand","breathable cover"]', 10);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS checklist_items;
+            DROP TABLE IF EXISTS workflow_templates;
+        """,
+    ),
 ]
 
 

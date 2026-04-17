@@ -89,7 +89,9 @@ class TestMigration006:
     def test_schema_version_at_6(self, tmp_path):
         db = str(tmp_path / "t.db")
         init_db(db)
-        assert get_schema_version(db) == SCHEMA_VERSION == 6
+        # After migration 006 applies, schema is at least 6. Later retrofit
+        # phases bump further; use >= for forward compatibility.
+        assert get_schema_version(db) >= 6
 
     def test_rollback_drops_crm_tables(self, tmp_path):
         db = str(tmp_path / "t.db")

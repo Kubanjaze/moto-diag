@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 6  # Phase 113: bumped for CRM foundation migration 006
+SCHEMA_VERSION = 7  # Phase 114: bumped for workflow template substrate migration 007
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
