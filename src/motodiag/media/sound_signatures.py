@@ -28,6 +28,11 @@ class EngineType(str, Enum):
 
     Each type has a distinct sound signature due to cylinder count,
     arrangement, firing order, and crankshaft design.
+
+    Phase 120 adds 4 brand-specific / powertrain-specific variants.
+    For electric motors the "firing_freq_*" fields on SoundSignature
+    are reinterpreted as dominant spectral peak frequencies (motor
+    whine fundamental = motor_RPM × pole_pairs / 60).
     """
     SINGLE_CYLINDER = "single_cylinder"
     V_TWIN = "v_twin"
@@ -36,6 +41,11 @@ class EngineType(str, Enum):
     INLINE_FOUR = "inline_four"
     V_FOUR = "v_four"
     BOXER_TWIN = "boxer_twin"
+    # Phase 120 additions
+    ELECTRIC_MOTOR = "electric_motor"
+    DUCATI_L_TWIN = "ducati_l_twin"
+    KTM_LC8_V_TWIN = "ktm_lc8_v_twin"
+    TRIUMPH_TRIPLE = "triumph_triple"
 
 
 class SoundSignature(BaseModel):
@@ -90,7 +100,7 @@ def rpm_to_firing_frequency(rpm: float, engine_type: EngineType) -> float:
     return (rpm / 60.0) * (cylinder_count / 2.0)
 
 
-# Cylinder count lookup for each engine type
+# Cylinder count lookup for each engine type (Phase 120: electric = 0)
 _ENGINE_CYLINDERS: dict[EngineType, int] = {
     EngineType.SINGLE_CYLINDER: 1,
     EngineType.V_TWIN: 2,
@@ -99,7 +109,38 @@ _ENGINE_CYLINDERS: dict[EngineType, int] = {
     EngineType.INLINE_FOUR: 4,
     EngineType.V_FOUR: 4,
     EngineType.BOXER_TWIN: 2,
+    # Phase 120 brand/powertrain variants
+    EngineType.ELECTRIC_MOTOR: 0,      # no cylinders — rotor + stator
+    EngineType.DUCATI_L_TWIN: 2,       # 90° V
+    EngineType.KTM_LC8_V_TWIN: 2,      # 75° V
+    EngineType.TRIUMPH_TRIPLE: 3,      # 120° inline-3
 }
+
+
+def motor_rpm_to_whine_frequency(motor_rpm: float, pole_pairs: int) -> float:
+    """Calculate dominant spectral peak for an electric motor.
+
+    Phase 120: for a permanent-magnet synchronous electric motor the dominant
+    audible frequency is the motor whine fundamental — electrical frequency
+    of the stator windings, given by motor_RPM × pole_pairs / 60.
+
+    Typical motorcycle traction motors have 4-8 pole pairs. Zero SR/F uses
+    4 pole pairs; LiveWire One uses 8. Higher pole counts mean higher whine
+    frequency for the same mechanical RPM.
+
+    Args:
+        motor_rpm: Motor shaft speed in revolutions per minute (pre-reduction).
+        pole_pairs: Number of pole pairs (magnetic pole count ÷ 2).
+
+    Returns:
+        Motor whine fundamental frequency in Hz.
+
+    Examples:
+        Zero SR/F at 3000 motor RPM, 4 pole pairs: 3000 × 4 / 60 = 200 Hz
+        LiveWire One at 3000 motor RPM, 8 pole pairs: 3000 × 8 / 60 = 400 Hz
+        Either at 7500 motor RPM, 4 pole pairs: 7500 × 4 / 60 = 500 Hz
+    """
+    return motor_rpm * pole_pairs / 60.0
 
 
 # --- Known-good sound signatures for each engine type ---
@@ -251,6 +292,112 @@ SIGNATURES: dict[EngineType, SoundSignature] = {
               "arrangement produces a unique lateral rocking vibration. The mechanical valve "
               "train on older air-cooled boxers is louder than DOHC engines. Loose valve "
               "clearances produce a characteristic tick that's very audible with the exposed cylinders.",
+    ),
+    # --- Phase 120 brand/powertrain-specific variants ---
+    EngineType.ELECTRIC_MOTOR: SoundSignature(
+        engine_type=EngineType.ELECTRIC_MOTOR,
+        idle_rpm_range=(0, 0),  # No idle — silent when stationary
+        # Fields reinterpreted as motor whine fundamental (motor_RPM × pole_pairs / 60).
+        # Assumes 4 pole pairs (Zero SR/F); LiveWire One (8 pole pairs) doubles these.
+        # "Low speed" = 3000 motor RPM (~15 mph); "5000 RPM" slot = 7500 motor RPM (~40 mph).
+        firing_freq_idle_low=motor_rpm_to_whine_frequency(3000, 4),   # 200 Hz
+        firing_freq_idle_high=motor_rpm_to_whine_frequency(4500, 4),  # 300 Hz
+        firing_freq_5000_low=motor_rpm_to_whine_frequency(7500, 4),   # 500 Hz
+        firing_freq_5000_high=motor_rpm_to_whine_frequency(9000, 4),  # 600 Hz
+        expected_harmonics=[1.0, 2.0, 3.0, 6.0, 12.0],  # slot harmonics from winding geometry
+        characteristic_sounds=[
+            "smooth rising whine proportional to vehicle speed — no pulsing",
+            "no idle — silent when stationary (no combustion, no clutch creep)",
+            "motor whine fundamental at 200-500 Hz low speed, scales linearly with motor RPM × pole pairs",
+            "inverter IGBT switching carrier tone around 10-16 kHz — audible on LiveWire, quieter on Zero",
+            "gear reduction whine — Zero ~1-3 kHz (9:1 ratio, single-stage), LiveWire ~500-800 Hz (5:1)",
+            "regen braking produces whine shift with clicking from high-voltage contactor relay",
+            "tire and chain noise much more prominent without engine masking",
+        ],
+        cylinders=0,
+        notes="Electric motors have no combustion firing frequency. The firing_freq_* fields "
+              "are reinterpreted as motor whine fundamental = motor_RPM × pole_pairs / 60. "
+              "Common motorcycle traction motors: Zero SR/F and LiveWire One use permanent-magnet "
+              "synchronous motors (4 and 8 pole pairs respectively); Energica uses an oil-cooled PMSM "
+              "(8 pole pairs). Key diagnostic markers: inverter carrier tone indicates IGBT health "
+              "(silence = driver fault or inverter shutdown); gear whine frequency shift under load "
+              "indicates bearing wear in the single-speed reduction gear; regen contactor clicking "
+              "is normal during brake lever pull, a continuous click is a stuck contactor.",
+    ),
+    EngineType.DUCATI_L_TWIN: SoundSignature(
+        engine_type=EngineType.DUCATI_L_TWIN,
+        idle_rpm_range=(1100, 1300),
+        firing_freq_idle_low=rpm_to_firing_frequency(1100, EngineType.DUCATI_L_TWIN),    # 18.33 Hz
+        firing_freq_idle_high=rpm_to_firing_frequency(1300, EngineType.DUCATI_L_TWIN),   # 21.67 Hz
+        firing_freq_5000_low=rpm_to_firing_frequency(4800, EngineType.DUCATI_L_TWIN),    # 80.0 Hz
+        firing_freq_5000_high=rpm_to_firing_frequency(5200, EngineType.DUCATI_L_TWIN),   # 86.67 Hz
+        expected_harmonics=[1.0, 1.5, 2.0, 3.0, 4.0, 6.0],
+        characteristic_sounds=[
+            "pronounced dry clutch rattle at idle — 'rattle-rattle-rattle' in 40-80 Hz band, separate from firing pulses",
+            "desmodromic valve click at 2x firing frequency — sharp tick-tick layered on exhaust note",
+            "270°/450° firing intervals — more even than Harley 45° V-twin, less even than inline-4",
+            "deep but crisper exhaust note — more midrange than Harley, more bass than inline-4",
+            "cam belt hum in 300-600 Hz band on pre-2015 desmo engines (Panigale V2 and later use gear drive)",
+            "oil cooler fan cycling adds low-frequency rumble (~80 Hz) above ambient temp threshold",
+        ],
+        cylinders=2,
+        notes="The Ducati L-twin is a 90° V-twin with desmodromic valve actuation and (on most models "
+              "pre-2020) a dry clutch. DRY CLUTCH RATTLE IS NORMAL — mechanics unfamiliar with Ducatis "
+              "often misdiagnose this as a bearing or valve fault. It is audible at idle, quiets with "
+              "engine RPM (clutch basket spins faster, mechanical coupling tightens), and disappears "
+              "when the clutch lever is pulled. Desmo valve adjustment interval is 12,000 miles on "
+              "modern bikes; stretched timing belts produce an off-pitch whine. Monster, Panigale V2, "
+              "Scrambler 800/1100, Multistrada 950 all share this signature.",
+    ),
+    EngineType.KTM_LC8_V_TWIN: SoundSignature(
+        engine_type=EngineType.KTM_LC8_V_TWIN,
+        idle_rpm_range=(1100, 1400),
+        firing_freq_idle_low=rpm_to_firing_frequency(1100, EngineType.KTM_LC8_V_TWIN),    # 18.33 Hz
+        firing_freq_idle_high=rpm_to_firing_frequency(1400, EngineType.KTM_LC8_V_TWIN),   # 23.33 Hz
+        firing_freq_5000_low=rpm_to_firing_frequency(4800, EngineType.KTM_LC8_V_TWIN),    # 80.0 Hz
+        firing_freq_5000_high=rpm_to_firing_frequency(5200, EngineType.KTM_LC8_V_TWIN),   # 86.67 Hz
+        expected_harmonics=[1.0, 1.5, 2.0, 3.0, 4.0],
+        characteristic_sounds=[
+            "75° V firing at 285°/435° intervals — distinct from 45° (Harley) or 90° (Ducati/SV650) twins",
+            "characteristic intake 'honk' from oval-bore throttle bodies — louder than most twins under acceleration",
+            "balancer shaft smooths low-RPM vibration; failure produces excess vibration above idle",
+            "aggressive midrange growl — between Ducati L-twin smoothness and Harley rumble",
+            "chain and sprocket noise prominent (single-sided drive, no chain guard damping)",
+            "timing chain tensioner hydraulic tick in 400-800 Hz band — loudest at cold start, fades with oil pressure",
+        ],
+        cylinders=2,
+        notes="The KTM LC8 (1190/1290 Super Duke, Adventure, Super Adventure) is a 75° V-twin — a "
+              "firing angle almost unique in motorcycles. The 285°/435° interval produces a rhythm "
+              "that's neither Harley-lumpy nor Ducati-balanced, creating the 'aggressive' character "
+              "KTM markets. Common service-age issues: balancer shaft bearing (produces vibration in "
+              "2000-3500 RPM range), timing chain tensioner (cold-start tick lasting more than 5 "
+              "seconds), and water pump seal (coolant smell + hissing around 1500 Hz).",
+    ),
+    EngineType.TRIUMPH_TRIPLE: SoundSignature(
+        engine_type=EngineType.TRIUMPH_TRIPLE,
+        idle_rpm_range=(1100, 1300),
+        firing_freq_idle_low=rpm_to_firing_frequency(1100, EngineType.TRIUMPH_TRIPLE),    # 27.5 Hz
+        firing_freq_idle_high=rpm_to_firing_frequency(1300, EngineType.TRIUMPH_TRIPLE),   # 32.5 Hz
+        firing_freq_5000_low=rpm_to_firing_frequency(4800, EngineType.TRIUMPH_TRIPLE),    # 120.0 Hz
+        firing_freq_5000_high=rpm_to_firing_frequency(5200, EngineType.TRIUMPH_TRIPLE),   # 130.0 Hz
+        expected_harmonics=[1.0, 2.0, 3.0, 4.0, 5.0, 6.0],
+        characteristic_sounds=[
+            "Triumph signature 'melodic growl' — more musical than inline-4, less bass than twin",
+            "strong third harmonic from 120° even-fire crank — cleaner than generic inline-3",
+            "Street Triple distinctive 'howl' above 8000 RPM from intake airbox resonance",
+            "675/765/765HC/900/1050/1200 displacement variants share the signature, scale frequency linearly",
+            "cam chain guide rattle between 800-1500 Hz on high-mileage engines (>60k mi) — Daytona 675 is especially prone",
+            "balance shaft keeps secondary vibration low; rough idle + elevated vibration = balance shaft issue",
+        ],
+        cylinders=3,
+        notes="Triumph's 120° crank inline-three is the signature sound of the Hinckley brand. "
+              "Distinct from the generic INLINE_THREE signature because of Triumph-specific intake "
+              "tuning (airbox resonance at ~8k RPM produces the 'howl' customers pay for) and the "
+              "HinchCliffe-era exhaust tuning that emphasizes the third harmonic. Matches: Street "
+              "Triple 675/765/765HC, Speed Triple 1050/1200 RS/RR, Daytona 675/765, Tiger 900, "
+              "Tiger 1200 (shaft-drive variant — chain/sprocket noise absent, final-drive whine present instead). "
+              "Prefer this signature when a Triumph make hint is present; fall back to INLINE_THREE "
+              "for MT-09, XSR900, etc.",
     ),
 }
 

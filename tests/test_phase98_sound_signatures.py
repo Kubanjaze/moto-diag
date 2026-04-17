@@ -53,12 +53,14 @@ def make_composite_spectrogram(frequencies: list[float], sample_rate: int = 4410
 
 class TestEngineType:
     def test_all_engine_types_defined(self):
-        expected = {
+        # Forward-compat: Phase 120 adds brand/powertrain-specific variants.
+        # Assert the original 7 are present rather than requiring exact match.
+        expected_baseline = {
             "single_cylinder", "v_twin", "parallel_twin", "inline_three",
             "inline_four", "v_four", "boxer_twin",
         }
         actual = {e.value for e in EngineType}
-        assert actual == expected
+        assert expected_baseline.issubset(actual)
 
     def test_engine_type_string_value(self):
         assert EngineType.V_TWIN.value == "v_twin"
@@ -109,6 +111,15 @@ class TestSoundSignature:
     def test_signature_fields_populated(self):
         for et, sig in SIGNATURES.items():
             assert sig.engine_type == et
+            # Phase 120: ELECTRIC_MOTOR has no idle (0, 0) and 0 cylinders;
+            # firing_freq_* fields are reinterpreted as motor whine frequencies.
+            # Skip combustion-specific assertions for the electric variant.
+            if et == EngineType.ELECTRIC_MOTOR:
+                assert sig.cylinders == 0
+                assert sig.firing_freq_idle_low > 0  # whine fundamental
+                assert sig.firing_freq_5000_low > 0
+                assert len(sig.characteristic_sounds) >= 3
+                continue
             assert sig.idle_rpm_range[0] < sig.idle_rpm_range[1]
             assert sig.firing_freq_idle_low > 0
             assert sig.firing_freq_idle_high > sig.firing_freq_idle_low
@@ -164,8 +175,14 @@ class TestSoundSignatureDB:
         assert abs(rpm - 6000.0) < 1.0
 
     def test_estimate_rpm_roundtrip(self, db):
-        """RPM → firing_freq → RPM should be identity."""
+        """RPM → firing_freq → RPM should be identity for combustion engines.
+
+        Phase 120: ELECTRIC_MOTOR is exempted — electric motors have no
+        combustion firing frequency; estimate_rpm is combustion-specific.
+        """
         for et in EngineType:
+            if et == EngineType.ELECTRIC_MOTOR:
+                continue
             original_rpm = 3500.0
             freq = rpm_to_firing_frequency(original_rpm, et)
             recovered_rpm = db.estimate_rpm(freq, et)

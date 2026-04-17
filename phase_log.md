@@ -248,3 +248,15 @@ This is the **project-level** change log. Records updates to the project's archi
 - Placement: folded into existing Phase 122 (was "Vehicle garage management") rather than inserting a new phase — photo-based intake is the same endpoint (add a bike to garage), just an alternate UX path. Keeps numbering clean across 12+ downstream Track D phases.
 - Phase 122 now scoped: Click CLI garage commands + `src/motodiag/intake/` package with `vehicle_identifier.py` reusing Phase 101 Claude Vision. Default Claude Haiku 4.5, escalate to Sonnet if confidence < 0.5. Image sha256 cache, 1024px max dim, VIN fallback. Per-tier caps: individual 20/mo, shop 200/mo, company unlimited. 80%-of-cap budget alert.
 - ROADMAP.md updated; memory entry `project_motodiag_photo_bike_id.md` records scope + cost envelope decisions.
+
+### 2026-04-17 20:45 — Retrofit Phase 120 complete — engine sound signature library expansion
+- No migration (pure in-memory dict expansion). Extended `src/motodiag/media/sound_signatures.py`:
+  - 4 new EngineType enum members (11 total): ELECTRIC_MOTOR, DUCATI_L_TWIN, KTM_LC8_V_TWIN, TRIUMPH_TRIPLE
+  - 4 new SIGNATURES entries with physics-grounded frequencies, ≥4 characteristic_sounds each, diagnostic notes
+  - New helper `motor_rpm_to_whine_frequency(motor_rpm, pole_pairs)` — Zero SR/F (4 pole pairs → 200 Hz @ 3000 RPM), LiveWire (8 pole pairs → 400 Hz @ 3000 RPM)
+- Electric motor signature reinterprets firing_freq_* fields as motor whine fundamental (documented). Idle_rpm_range=(0,0), cylinders=0. Key diagnostic markers: inverter carrier tone, gear whine shift under load, contactor clicking patterns.
+- Ducati L-twin signature explicitly documents dry clutch rattle as **NORMAL** — prevents mechanic misdiagnosis. Also covers desmo valve click, cam belt hum on pre-Panigale V2.
+- 3 Phase 98 test fixes for forward-compat: `test_all_engine_types_defined` (== → issubset), `test_signature_fields_populated` and `test_estimate_rpm_roundtrip` (ELECTRIC_MOTOR exempted from combustion-specific assertions via `continue`). Original 7 signatures still under full strict assertions.
+- 38 new tests. Full regression: 1992/1992 passing (11:00 runtime). Zero regressions after forward-compat fixes.
+- Implementation.md → v0.5.6 (Phase 120 row added to Phase History).
+- Key finding: existing SoundSignature model handles non-combustion powertrains without architectural change — validates Track L electric phase feasibility. Forward-compat pattern (previously only schema versions) now formally extends to enum membership.
