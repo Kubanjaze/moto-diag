@@ -260,3 +260,26 @@ This is the **project-level** change log. Records updates to the project's archi
 - 38 new tests. Full regression: 1992/1992 passing (11:00 runtime). Zero regressions after forward-compat fixes.
 - Implementation.md → v0.5.6 (Phase 120 row added to Phase History).
 - Key finding: existing SoundSignature model handles non-combustion powertrains without architectural change — validates Track L electric phase feasibility. Forward-compat pattern (previously only schema versions) now formally extends to enum membership.
+
+### 2026-04-17 21:15 — 🎉 RETROFIT COMPLETE — GATE R PASSED
+Phase 121 executed the Retrofit Integration Test. **All 10 Gate R tests pass, full regression 2002/2002 (10:43 runtime), zero regressions across the entire retrofit track.**
+
+**Retrofit totals (phases 110-121):**
+- 12 phases, 10 migrations (003-012), 23 new tables, 12 new packages (auth, crm, workflows, i18n, feedback, reference, billing, accounting, inventory, scheduling, + 2 media-package additions)
+- **386 new tests** (1616 → 2002 passing end-to-end)
+- Zero regressions sustained across all 12 phases
+- Schema version 2 → 12
+
+**Gate R findings:**
+1. Migration 005's rollback SQL intentionally does not DROP the ALTER-added `user_id` column (pre-3.35 SQLite lacks DROP COLUMN, documented as harmless). Consequence: in-place rollback-and-replay is unsafe. Fresh init is fully deterministic — verified by `test_two_fresh_dbs_have_identical_table_sets`.
+2. All 12 retrofit packages import cleanly both as subprocess (`python -m motodiag.cli.main --help`) and in-process.
+3. End-to-end workflow exercises every package on a shared DB — catches cross-package FK integrity, CASCADE behavior, tier enforcement, i18n fallback, and invoice recalc-with-tax.
+
+**Forward-compat patterns formalized during retrofit:**
+- `>=` for schema version assertions (not `==`)
+- `issubset` / `in` for enum membership tests (not `==`)
+- `continue` / conditional branching for powertrain-specific skips (electric motor in combustion-only loops)
+
+**Next**: Track D resumes at Phase 122 — vehicle garage management + photo-based bike intake with Claude Haiku 4.5 (scope locked: make/model/year/engine_cc, tiered caps individual 20/shop 200/company unlimited).
+
+Implementation.md → v0.6.0 (major version bump — Gate R closes the retrofit track, marks architectural completion).

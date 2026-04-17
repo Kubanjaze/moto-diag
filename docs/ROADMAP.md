@@ -210,7 +210,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 | 118 | Billing/invoicing/inventory/scheduling substrate | ✅ | Migration 011 + 4 new packages (billing/accounting/inventory/scheduling). 9 tables + 14 indexes. Stripe column pre-wiring, invoice recalc with tax, low-stock alerts, calendar-ready appointments. Schema v10→v11. 37 tests, 1932 total |
 | 119 | Media annotation layer | ✅ | Migration 012 + media/photo_annotation module (AnnotationShape enum 4 members, PhotoAnnotation model with 3 validators, 8 repo functions). photo_annotations table with 3 indexes. Dual-mode: FK-linked CASCADE or orphan-safe by image_ref. Schema v11→v12. 22 tests, 1954 total |
 | 120 | Engine sound signature library expansion | ✅ | 4 new EngineType enum + SIGNATURES entries (ELECTRIC_MOTOR, DUCATI_L_TWIN, KTM_LC8_V_TWIN, TRIUMPH_TRIPLE). motor_rpm_to_whine_frequency helper. Dry-clutch-as-normal documented. 3 Phase 98 forward-compat test fixes. 38 tests, 1992 total |
-| 121 | Gate R — Retrofit integration test | 🔲 | All existing tests pass. Schemas migrate cleanly. No breaking CLI changes. New packages import cleanly. Full regression + migration verification |
+| 121 | Gate R — Retrofit integration test | ✅ | **GATE R PASSED.** 10 integration tests: end-to-end workflow through every retrofit package, migration determinism (two-fresh-DB identical), CLI smoke + in-process package imports. One known limitation documented (migration 005 ALTER rollback). 1616 → 2002 total tests, zero regressions across the entire retrofit |
 
 ## Track E — Hardware Interface (Phases 134–147)
 
