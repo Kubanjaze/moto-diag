@@ -202,7 +202,7 @@ Before any new tracks (Tracks K+) can build, the existing codebase needs refacto
 | 110 | Vehicle registry + protocol taxonomy expansion | ✅ | Migration framework (reusable), PowertrainType/EngineType/BatteryChemistry enums, European CAN protocols, 35 tests, 1651 total |
 | 111 | Knowledge base schema expansion | ✅ | Migration 004, DTCCategory enum (20), dtc_category_meta table, 6 OEM classifiers (BMW/Ducati/KTM/Triumph/Aprilia/Electric HV), 43 tests, 1694 total |
 | 112 | User/auth layer introduction | ✅ | Migration 005, auth/ package (5 models, users_repo, roles_repo), 4 roles + 12 permissions + 31 mappings seeded, system user (id=1) owns pre-retrofit data, 40 tests, 1734 total |
-| 113 | Customer/CRM foundation | 🔲 | New `crm/` package: customers, customer_bikes join table. Retrofit `customer_id` FK onto vehicles |
+| 113 | Customer/CRM foundation | ✅ | Migration 006, crm/ package (Customer + CustomerBike models, 14 repo functions), customers + customer_bikes tables, ownership history with transfer_ownership(), unassigned placeholder (id=1) owns pre-retrofit vehicles, 35 tests, 1769 total |
 | 114 | Workflow template substrate | 🔲 | New workflow_templates, checklist_items tables. Engine handles non-diagnostic workflows (PPI, tire, winterization, break-in, emissions) |
 | 115 | i18n substrate | 🔲 | String extraction → translations table or locale-suffixed JSON. English-only plumbing before Spanish lands |
 | 116 | Feedback/learning hooks | 🔲 | New diagnostic_feedback table. Override tracking (mechanic's actual vs AI's suggestion). Engine feedback-reader hook interface |

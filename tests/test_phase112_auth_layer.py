@@ -121,13 +121,17 @@ class TestMigration005:
     def test_schema_version_at_5(self, tmp_path):
         db = str(tmp_path / "t.db")
         init_db(db)
-        assert get_schema_version(db) == SCHEMA_VERSION == 5
+        # After migration 005 applies, schema is at least 5. Later retrofit
+        # phases bump the version further (phase 113 → 6, etc.), so use >=.
+        assert get_schema_version(db) >= 5
 
     def test_rollback_drops_auth_tables(self, tmp_path):
         db = str(tmp_path / "t.db")
         init_db(db)
-        m = get_migration_by_version(5)
-        rollback_migration(m, db)
+        # Must rollback later migrations first — migration 006 (CRM) has FKs
+        # to users. This is the expected migration-dependency ordering.
+        from motodiag.core.migrations import rollback_to_version
+        rollback_to_version(4, db)  # Roll back through 006, 005
         with get_connection(db) as conn:
             cursor = conn.execute(
                 "SELECT name FROM sqlite_master WHERE type='table' "

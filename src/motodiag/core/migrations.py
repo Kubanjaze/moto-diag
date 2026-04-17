@@ -251,6 +251,61 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS users;
         """,
     ),
+    # Migration 006 — Phase 113: CRM foundation
+    Migration(
+        version=6,
+        name="crm_foundation",
+        description=(
+            "Phase 113: Create customers + customer_bikes tables. Seed "
+            "'unassigned' placeholder customer (id=1) owned by system user. "
+            "Add customer_id FK onto vehicles; existing rows default to "
+            "unassigned placeholder (id=1)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS customers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_user_id INTEGER NOT NULL DEFAULT 1,
+                name TEXT NOT NULL,
+                email TEXT,
+                phone TEXT,
+                address TEXT,
+                notes TEXT,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_customers_owner ON customers(owner_user_id);
+            CREATE INDEX IF NOT EXISTS idx_customers_name ON customers(name);
+            CREATE INDEX IF NOT EXISTS idx_customers_email ON customers(email);
+
+            CREATE TABLE IF NOT EXISTS customer_bikes (
+                customer_id INTEGER NOT NULL,
+                vehicle_id INTEGER NOT NULL,
+                relationship TEXT NOT NULL DEFAULT 'owner',
+                assigned_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                notes TEXT,
+                PRIMARY KEY (customer_id, vehicle_id, relationship),
+                FOREIGN KEY (customer_id) REFERENCES customers(id) ON DELETE CASCADE,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_customer_bikes_vehicle ON customer_bikes(vehicle_id);
+
+            -- Seed placeholder "unassigned" customer (id=1) owned by system user
+            INSERT OR IGNORE INTO customers (id, owner_user_id, name, email, is_active)
+                VALUES (1, 1, 'Unassigned', NULL, 1);
+
+            -- Retrofit customer_id onto vehicles
+            ALTER TABLE vehicles ADD COLUMN customer_id INTEGER DEFAULT 1;
+        """,
+        rollback_sql="""
+            -- Drop CRM tables; customer_id column on vehicles left in place (harmless).
+            DROP TABLE IF EXISTS customer_bikes;
+            DROP TABLE IF EXISTS customers;
+        """,
+    ),
 ]
 
 
