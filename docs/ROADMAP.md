@@ -4,9 +4,9 @@
 **Repo:** `Kubanjaze/moto-diag`
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
 **Started:** 2026-04-15
-**Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki (all classes — sport, standard, cruiser, dual-sport, vintage)
-**Target Users:** Motorcycle mechanics
-**Total Phases:** 198
+**Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
+**Target Users:** Motorcycle mechanics, shops (solo → multi-location)
+**Total Phases:** 352
 
 ---
 
@@ -173,106 +173,125 @@ Video and audio analysis for hands-free diagnostics. A mechanic films a bike sta
 | 107 | AI audio coaching | ✅ | 5 capture protocols, quality evaluation, 30 tests |
 | 108 | Gate 4 — Media diagnostics integration test | ✅ | 24 integration tests, 12 modules, 1575 total, **GATE 4 PASSED** |
 
-## Track D — CLI + User Experience (Phases 109–121)
+## Track D — CLI + User Experience (Phases 109, 122–133)
 
-The mechanic's daily driver interface.
-
-| Phase | Title | Status | Notes |
-|-------|-------|--------|-------|
-| 109 | CLI foundation + command structure | 🔲 | Click/Typer CLI, subcommands, help system |
-| 110 | Vehicle garage management | 🔲 | Add/edit/list/remove vehicles from personal garage |
-| 111 | Interactive diagnostic session | 🔲 | Start session → describe problem → guided Q&A → diagnosis |
-| 112 | Fault code lookup command | 🔲 | `motodiag code P0115` → plain-English explanation + fix |
-| 113 | Quick diagnosis mode | 🔲 | One-shot: `motodiag diagnose "won't start when cold" --bike sportster-2001` |
-| 114 | Diagnostic report output | 🔲 | Formatted terminal report + save to file (txt/json) |
-| 115 | Session history browser | 🔲 | Browse past diagnostic sessions, re-open, annotate |
-| 116 | Knowledge base browser | 🔲 | Browse known issues by make/model, search, filter |
-| 117 | Rich terminal UI (tables, colors, progress) | 🔲 | Pretty output with rich/textual |
-| 118 | Shell completions + shortcuts | 🔲 | Tab completion, aliases, power-user features |
-| 119 | Offline mode | 🔲 | Cache AI responses, work without internet for code lookups |
-| 120 | Export + sharing | 🔲 | Export diagnosis to PDF/HTML, share with customer |
-| 121 | Gate 5 — CLI integration test | 🔲 | Full mechanic workflow through CLI |
-
-## Track E — Hardware Interface (Phases 122–135)
-
-OBD adapter integration, live sensor data, ECU communication.
+The mechanic's daily driver interface. Phase 109 delivered the foundation; remaining phases shifted to 122-133 after Retrofit track insertion.
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 122 | OBD protocol abstraction layer | 🔲 | Interface definition for all protocol adapters |
-| 123 | ELM327 adapter communication | 🔲 | Serial/Bluetooth ELM327 command protocol |
-| 124 | CAN bus protocol implementation | 🔲 | ISO 15765 — for 2011+ Harleys, modern bikes |
-| 125 | K-line/KWP2000 protocol implementation | 🔲 | ISO 14230 — for 90s/2000s Japanese bikes |
-| 126 | J1850 protocol implementation | 🔲 | For older Harleys (pre-2011) |
-| 127 | ECU auto-detection + handshake | 🔲 | Detect protocol, establish session, identify ECU |
-| 128 | Fault code read/clear operations | 🔲 | Read DTCs from ECU, clear after repair |
-| 129 | Live sensor data streaming | 🔲 | RPM, TPS, coolant temp, battery V, O2 sensor |
-| 130 | Data logging + recording | 🔲 | Record sensor sessions, replay, analyze |
-| 131 | Real-time terminal dashboard | 🔲 | Live gauges/graphs in terminal (textual) |
-| 132 | Hardware simulator | 🔲 | Mock adapter for testing without physical hardware |
-| 133 | Adapter compatibility database | 🔲 | Which adapters work with which bikes |
-| 134 | Connection troubleshooting + recovery | 🔲 | Handle disconnects, timeouts, protocol errors |
-| 135 | Gate 6 — Hardware integration test | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |
+| 109 | CLI foundation + command structure | ✅ | Click CLI, subcommands, 3-tier subscription system ($19/$99/$299), tier command, 41 tests |
+| 122 | Vehicle garage management | 🔲 | Add/edit/list/remove vehicles from personal garage (was 110) |
+| 123 | Interactive diagnostic session | 🔲 | Start session → describe problem → guided Q&A → diagnosis (was 111) |
+| 124 | Fault code lookup command | 🔲 | `motodiag code P0115` → plain-English explanation + fix (was 112) |
+| 125 | Quick diagnosis mode | 🔲 | One-shot: `motodiag diagnose "won't start when cold" --bike sportster-2001` (was 113) |
+| 126 | Diagnostic report output | 🔲 | Formatted terminal report + save to file (txt/json) (was 114) |
+| 127 | Session history browser | 🔲 | Browse past diagnostic sessions, re-open, annotate (was 115) |
+| 128 | Knowledge base browser | 🔲 | Browse known issues by make/model, search, filter (was 116) |
+| 129 | Rich terminal UI (tables, colors, progress) | 🔲 | Pretty output with rich/textual (was 117) |
+| 130 | Shell completions + shortcuts | 🔲 | Tab completion, aliases, power-user features (was 118) |
+| 131 | Offline mode | 🔲 | Cache AI responses, work without internet for code lookups (was 119) |
+| 132 | Export + sharing | 🔲 | Export diagnosis to PDF/HTML, share with customer (was 120) |
+| 133 | Gate 5 — CLI integration test | 🔲 | Full mechanic workflow through CLI (was 121) |
 
-## Track F — Advanced Diagnostics (Phases 136–147)
+## Retrofit Track — Codebase Expansion Preparation (Phases 110–121)
 
-Power features for experienced mechanics.
-
-| Phase | Title | Status | Notes |
-|-------|-------|--------|-------|
-| 136 | Predictive maintenance | 🔲 | Mileage/age-based failure prediction per model |
-| 137 | Wear pattern analysis | 🔲 | Correlate symptoms with known wear patterns |
-| 138 | Fleet management | 🔲 | Manage multiple bikes, shop inventory |
-| 139 | Maintenance scheduling | 🔲 | Service intervals, upcoming maintenance alerts |
-| 140 | Service history tracking | 🔲 | Full repair history per vehicle |
-| 141 | Parts cross-reference | 🔲 | OEM ↔ aftermarket part number lookup |
-| 142 | Technical service bulletin (TSB) database | 🔲 | Known manufacturer issues + fixes |
-| 143 | Recall information | 🔲 | NHTSA recall lookup by VIN/model |
-| 144 | Comparative diagnostics | 🔲 | Same model, different bikes — spot anomalies |
-| 145 | Performance baselining | 🔲 | Establish "healthy" sensor baselines per model |
-| 146 | Degradation tracking | 🔲 | Track sensor drift over time |
-| 147 | Gate 7 — Advanced diagnostics integration test | 🔲 | Fleet + history + prediction end-to-end |
-
-## Track G — Shop Management + Optimization (Phases 148–162)
-
-Shop-level features: log bikes in your shop, track issues across the fleet, triage what to fix first, auto-generate parts lists, optimize workflow.
+Before any new tracks (Tracks K+) can build, the existing codebase needs refactoring to accommodate expanded scope: European brands, electric bikes, CRM, auth, workflows, i18n, reference data, business infrastructure. This is a non-negotiable prerequisite inserted between Track C2 and the remainder of Track D.
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 148 | Shop profile + multi-bike intake | 🔲 | Register shop, log incoming bikes with customer info |
-| 149 | Work order system | 🔲 | Create/assign/track work orders per bike |
-| 150 | Issue logging + categorization | 🔲 | Log reported issues per bike, categorize by system/severity |
-| 151 | Repair priority scoring | 🔲 | AI-ranked priority: safety > ridability > cosmetic, weighted by wait time |
-| 152 | Automated triage queue | 🔲 | "What to fix first" — sorted by priority, parts availability, bay time |
-| 153 | Parts needed aggregation | 🔲 | Cross all active work orders → consolidated parts list |
-| 154 | Parts sourcing + cost optimization | 🔲 | OEM vs aftermarket vs used, vendor price comparison |
-| 155 | Labor time estimation | 🔲 | AI-estimated wrench time per job, based on model + issue |
-| 156 | Bay/lift scheduling | 🔲 | Schedule repairs across available bays/lifts, minimize idle time |
-| 157 | Revenue tracking + invoicing | 🔲 | Parts cost + labor = invoice, track revenue per bike/job |
-| 158 | Customer communication | 🔲 | Status updates, approval requests, completion notifications |
-| 159 | Shop analytics dashboard | 🔲 | Revenue, throughput, avg repair time, common issues |
-| 160 | Multi-mechanic assignment | 🔲 | Assign jobs to mechanics, track who worked on what |
-| 161 | Workflow automation rules | 🔲 | "If safety issue → priority 1", "if parts > $500 → customer approval" |
-| 162 | Gate 8 — Shop management integration test | 🔲 | Intake → triage → parts → schedule → repair → invoice flow |
+| 110 | Vehicle registry + protocol taxonomy expansion | 🔲 | Extend `vehicles/` for electric, 4/2-stroke/electric/hybrid/desmo, European OBD (BMW K-CAN, Ducati/KTM CAN) |
+| 111 | Knowledge base schema expansion | 🔲 | DTC schema: HV, battery, motor, regen, TPMS, emissions. OEM-specific DTC classifiers for BMW/Ducati/KTM/Triumph/Aprilia/electric |
+| 112 | User/auth layer introduction | 🔲 | New `auth/` package: users, roles, permissions. Retrofit `user_id` FK onto diagnostic_sessions/repair_plans/known_issues |
+| 113 | Customer/CRM foundation | 🔲 | New `crm/` package: customers, customer_bikes join table. Retrofit `customer_id` FK onto vehicles |
+| 114 | Workflow template substrate | 🔲 | New workflow_templates, checklist_items tables. Engine handles non-diagnostic workflows (PPI, tire, winterization, break-in, emissions) |
+| 115 | i18n substrate | 🔲 | String extraction → translations table or locale-suffixed JSON. English-only plumbing before Spanish lands |
+| 116 | Feedback/learning hooks | 🔲 | New diagnostic_feedback table. Override tracking (mechanic's actual vs AI's suggestion). Engine feedback-reader hook interface |
+| 117 | Reference data tables | 🔲 | New empty tables: manual_references, parts_diagrams, failure_photos, video_tutorials. Schema only |
+| 118 | Billing/invoicing/inventory/scheduling substrate | 🔲 | New packages: billing, accounting, inventory, scheduling. Tables: appointments, payments, invoices, invoice_line_items, inventory_items, vendors, recalls, warranties |
+| 119 | Media annotation layer | 🔲 | Extend `media/` with photo_annotations table + annotation model (shapes, arrows, circles, text) |
+| 120 | Engine sound signature library expansion | 🔲 | Add electric motor, Ducati L-twin dry clutch, BMW boxer, KTM LC8, Triumph triple signatures |
+| 121 | Gate R — Retrofit integration test | 🔲 | All existing tests pass. Schemas migrate cleanly. No breaking CLI changes. New packages import cleanly. Full regression + migration verification |
 
-## Track H — API + Web Layer (Phases 163–172)
+## Track E — Hardware Interface (Phases 134–147)
 
-REST API for future mobile app / web dashboard.
+OBD adapter integration, live sensor data, ECU communication. Shifted from 122-135 due to Retrofit track insertion.
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 163 | FastAPI foundation + project structure | 🔲 | API scaffold, CORS, error handling |
-| 164 | Auth + API keys | 🔲 | API key management, rate limiting |
-| 165 | Vehicle endpoints | 🔲 | CRUD for garage vehicles |
-| 166 | Diagnostic session endpoints | 🔲 | Start/update/complete diagnostic sessions |
-| 167 | Knowledge base endpoints | 🔲 | Search DTCs, symptoms, known issues |
-| 168 | Shop management endpoints | 🔲 | Work orders, triage, parts, scheduling |
-| 169 | WebSocket live data | 🔲 | Stream sensor data to web clients |
-| 170 | Report generation endpoints | 🔲 | Generate PDF/HTML diagnostic reports + invoices |
-| 171 | API documentation + OpenAPI spec | 🔲 | Auto-generated docs, example requests |
-| 172 | Gate 9 — API integration test | 🔲 | Full API workflow: auth → vehicle → diagnose → shop → report |
+| 134 | OBD protocol abstraction layer | 🔲 | Interface definition for all protocol adapters (was 122) |
+| 135 | ELM327 adapter communication | 🔲 | Serial/Bluetooth ELM327 command protocol (was 123) |
+| 136 | CAN bus protocol implementation | 🔲 | ISO 15765 — for 2011+ Harleys, modern bikes (was 124) |
+| 137 | K-line/KWP2000 protocol implementation | 🔲 | ISO 14230 — for 90s/2000s Japanese bikes (was 125) |
+| 138 | J1850 protocol implementation | 🔲 | For older Harleys (pre-2011) (was 126) |
+| 139 | ECU auto-detection + handshake | 🔲 | Detect protocol, establish session, identify ECU (was 127) |
+| 140 | Fault code read/clear operations | 🔲 | Read DTCs from ECU, clear after repair (was 128) |
+| 141 | Live sensor data streaming | 🔲 | RPM, TPS, coolant temp, battery V, O2 sensor (was 129) |
+| 142 | Data logging + recording | 🔲 | Record sensor sessions, replay, analyze (was 130) |
+| 143 | Real-time terminal dashboard | 🔲 | Live gauges/graphs in terminal (textual) (was 131) |
+| 144 | Hardware simulator | 🔲 | Mock adapter for testing without physical hardware (was 132) |
+| 145 | Adapter compatibility database | 🔲 | Which adapters work with which bikes (was 133) |
+| 146 | Connection troubleshooting + recovery | 🔲 | Handle disconnects, timeouts, protocol errors (was 134) |
+| 147 | Gate 6 — Hardware integration test | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis (was 135) |
 
-## Track I — Mobile App (iOS + Android) (Phases 173–192)
+## Track F — Advanced Diagnostics (Phases 148–159)
+
+Power features for experienced mechanics. Shifted from 136-147 due to Retrofit track insertion.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 148 | Predictive maintenance | 🔲 | Mileage/age-based failure prediction per model (was 136) |
+| 149 | Wear pattern analysis | 🔲 | Correlate symptoms with known wear patterns (was 137) |
+| 150 | Fleet management | 🔲 | Manage multiple bikes, shop inventory (was 138) |
+| 151 | Maintenance scheduling | 🔲 | Service intervals, upcoming maintenance alerts (was 139) |
+| 152 | Service history tracking | 🔲 | Full repair history per vehicle (was 140) |
+| 153 | Parts cross-reference | 🔲 | OEM ↔ aftermarket part number lookup (was 141) |
+| 154 | Technical service bulletin (TSB) database | 🔲 | Known manufacturer issues + fixes (was 142) |
+| 155 | Recall information | 🔲 | NHTSA recall lookup by VIN/model (was 143) |
+| 156 | Comparative diagnostics | 🔲 | Same model, different bikes — spot anomalies (was 144) |
+| 157 | Performance baselining | 🔲 | Establish "healthy" sensor baselines per model (was 145) |
+| 158 | Degradation tracking | 🔲 | Track sensor drift over time (was 146) |
+| 159 | Gate 7 — Advanced diagnostics integration test | 🔲 | Fleet + history + prediction end-to-end (was 147) |
+
+## Track G — Shop Management + Optimization (Phases 160–174)
+
+Shop-level features: log bikes in your shop, track issues across the fleet, triage what to fix first, auto-generate parts lists, optimize workflow. Shifted from 148-162 due to Retrofit track insertion.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 160 | Shop profile + multi-bike intake | 🔲 | Register shop, log incoming bikes with customer info (was 148) |
+| 161 | Work order system | 🔲 | Create/assign/track work orders per bike (was 149) |
+| 162 | Issue logging + categorization | 🔲 | Log reported issues per bike, categorize by system/severity (was 150) |
+| 163 | Repair priority scoring | 🔲 | AI-ranked priority: safety > ridability > cosmetic, weighted by wait time (was 151) |
+| 164 | Automated triage queue | 🔲 | "What to fix first" — sorted by priority, parts availability, bay time (was 152) |
+| 165 | Parts needed aggregation | 🔲 | Cross all active work orders → consolidated parts list (was 153) |
+| 166 | Parts sourcing + cost optimization | 🔲 | OEM vs aftermarket vs used, vendor price comparison (was 154) |
+| 167 | Labor time estimation | 🔲 | AI-estimated wrench time per job, based on model + issue (was 155) |
+| 168 | Bay/lift scheduling | 🔲 | Schedule repairs across available bays/lifts, minimize idle time (was 156) |
+| 169 | Revenue tracking + invoicing | 🔲 | Parts cost + labor = invoice, track revenue per bike/job (was 157) |
+| 170 | Customer communication | 🔲 | Status updates, approval requests, completion notifications (was 158) |
+| 171 | Shop analytics dashboard | 🔲 | Revenue, throughput, avg repair time, common issues (was 159) |
+| 172 | Multi-mechanic assignment | 🔲 | Assign jobs to mechanics, track who worked on what (was 160) |
+| 173 | Workflow automation rules | 🔲 | "If safety issue → priority 1", "if parts > $500 → customer approval" (was 161) |
+| 174 | Gate 8 — Shop management integration test | 🔲 | Intake → triage → parts → schedule → repair → invoice flow (was 162) |
+
+## Track H — API + Web Layer (Phases 175–184)
+
+REST API for future mobile app / web dashboard. Paywall enforcement flips to HARD mode here. Shifted from 163-172 due to Retrofit track insertion.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 175 | FastAPI foundation + project structure | 🔲 | API scaffold, CORS, error handling (was 163) |
+| 176 | Auth + API keys | 🔲 | API key management, rate limiting, Stripe integration, hard paywall enforcement (was 164) |
+| 177 | Vehicle endpoints | 🔲 | CRUD for garage vehicles (was 165) |
+| 178 | Diagnostic session endpoints | 🔲 | Start/update/complete diagnostic sessions (was 166) |
+| 179 | Knowledge base endpoints | 🔲 | Search DTCs, symptoms, known issues (was 167) |
+| 180 | Shop management endpoints | 🔲 | Work orders, triage, parts, scheduling (was 168) |
+| 181 | WebSocket live data | 🔲 | Stream sensor data to web clients (was 169) |
+| 182 | Report generation endpoints | 🔲 | Generate PDF/HTML diagnostic reports + invoices (was 170) |
+| 183 | API documentation + OpenAPI spec | 🔲 | Auto-generated docs, example requests (was 171) |
+| 184 | Gate 9 — API integration test | 🔲 | Full API workflow: auth → vehicle → diagnose → shop → report (was 172) |
+
+## Track I — Mobile App (iOS + Android) (Phases 185–204)
 
 **Distribution:** iOS App Store + Google Play Store (paid app or freemium)
 **Framework:** React Native (single codebase → both platforms, broad device support)
@@ -296,39 +315,284 @@ Full-featured mobile app for mechanics in the field. Same capabilities as deskto
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 173 | Mobile architecture decision (React Native vs Flutter) | 🔲 | Evaluate framework, decide on shared codebase approach |
-| 174 | Mobile project scaffold + CI/CD | 🔲 | iOS + Android build pipeline, TestFlight / Play Store beta |
-| 175 | Auth + API client library | 🔲 | Secure token storage, API wrapper, offline token refresh |
-| 176 | Vehicle garage screen | 🔲 | Add/edit/view bikes, VIN scanner (camera), big touch targets |
-| 177 | DTC code lookup screen | 🔲 | Search by code or text, voice input, offline DTC database |
-| 178 | Interactive diagnostic session (mobile) | 🔲 | Guided Q&A with large buttons, voice input for symptoms |
-| 179 | Video diagnostic capture (mobile) | 🔲 | Film bike running, auto-extract audio + key frames → AI analysis |
-| 180 | Diagnostic report viewer | 🔲 | View/share diagnosis, PDF export, AirDrop/Share Sheet |
-| 181 | Shop dashboard (mobile) | 🔲 | Work order list, triage queue, tap to assign/update |
-| 182 | Camera + photo integration | 🔲 | Photograph issues, attach to work orders, before/after |
-| 183 | Voice input for symptom description | 🔲 | Speech-to-text, structured symptom extraction from voice |
-| 184 | Bluetooth OBD adapter connection | 🔲 | Scan for adapters, pair, connect, protocol handshake |
-| 185 | Live sensor data dashboard (mobile) | 🔲 | Real-time gauges, swipe between sensors, landscape mode |
-| 186 | Offline mode + local database | 🔲 | SQLite on device, full DTC database cached, queue API calls |
-| 187 | Push notifications | 🔲 | Work order updates, diagnostic results, parts arrival alerts |
-| 188 | Customer-facing share view | 🔲 | Simplified report for bike owners, text/email share |
-| 189 | Parts ordering from mobile | 🔲 | Browse needed parts, add to cart, order from phone |
-| 190 | Mechanic time tracking | 🔲 | Clock in/out per job, timer for labor billing |
-| 191 | Dark mode + shop-friendly UI | 🔲 | High contrast, readable in sunlight and under shop lights |
-| 192 | Gate 10 — Mobile integration test | 🔲 | Full flow: film bike → diagnose → share report |
+| 185 | Mobile architecture decision (React Native vs Flutter) | 🔲 | Evaluate framework, decide on shared codebase approach (was 173) |
+| 186 | Mobile project scaffold + CI/CD | 🔲 | iOS + Android build pipeline, TestFlight / Play Store beta (was 174) |
+| 187 | Auth + API client library | 🔲 | Secure token storage, API wrapper, offline token refresh (was 175) |
+| 188 | Vehicle garage screen | 🔲 | Add/edit/view bikes, VIN scanner (camera), big touch targets (was 176) |
+| 189 | DTC code lookup screen | 🔲 | Search by code or text, voice input, offline DTC database (was 177) |
+| 190 | Interactive diagnostic session (mobile) | 🔲 | Guided Q&A with large buttons, voice input for symptoms (was 178) |
+| 191 | Video diagnostic capture (mobile) | 🔲 | Film bike running, auto-extract audio + key frames → AI analysis (was 179) |
+| 192 | Diagnostic report viewer | 🔲 | View/share diagnosis, PDF export, AirDrop/Share Sheet (was 180) |
+| 193 | Shop dashboard (mobile) | 🔲 | Work order list, triage queue, tap to assign/update (was 181) |
+| 194 | Camera + photo integration | 🔲 | Photograph issues, attach to work orders, before/after (was 182) |
+| 195 | Voice input for symptom description | 🔲 | Speech-to-text, structured symptom extraction from voice (was 183) |
+| 196 | Bluetooth OBD adapter connection | 🔲 | Scan for adapters, pair, connect, protocol handshake (was 184) |
+| 197 | Live sensor data dashboard (mobile) | 🔲 | Real-time gauges, swipe between sensors, landscape mode (was 185) |
+| 198 | Offline mode + local database | 🔲 | SQLite on device, full DTC database cached, queue API calls (was 186) |
+| 199 | Push notifications | 🔲 | Work order updates, diagnostic results, parts arrival alerts (was 187) |
+| 200 | Customer-facing share view | 🔲 | Simplified report for bike owners, text/email share (was 188) |
+| 201 | Parts ordering from mobile | 🔲 | Browse needed parts, add to cart, order from phone (was 189) |
+| 202 | Mechanic time tracking | 🔲 | Clock in/out per job, timer for labor billing (was 190) |
+| 203 | Dark mode + shop-friendly UI | 🔲 | High contrast, readable in sunlight and under shop lights (was 191) |
+| 204 | Gate 10 — Mobile integration test | 🔲 | Full flow: film bike → diagnose → share report (was 192) |
 
-## Track J — Ship + Scale (Phases 193–198)
+## Track J — Ship + Scale (Phases 205–210)
 
-Polish, package, launch.
+Polish, package, launch the core product (pre-expansion). Shifted from 193-198 due to Retrofit track insertion.
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 193 | End-to-end integration testing | 🔲 | All tracks working together (desktop + mobile) |
-| 194 | Performance optimization | 🔲 | Query speed, API response time, memory usage |
-| 195 | Security audit | 🔲 | API keys, input validation, SQL injection prevention |
-| 196 | Documentation + user guide | 🔲 | README, usage guide, mechanic quickstart, app store listing |
-| 197 | Packaging + distribution | 🔲 | pip install, standalone binary, Docker, App Store, Play Store |
-| 198 | Launch readiness + full integration | 🔲 | Everything together — the complete MotoDiag platform |
+| 205 | End-to-end integration testing | 🔲 | All tracks working together (desktop + mobile) (was 193) |
+| 206 | Performance optimization | 🔲 | Query speed, API response time, memory usage (was 194) |
+| 207 | Security audit | 🔲 | API keys, input validation, SQL injection prevention (was 195) |
+| 208 | Documentation + user guide | 🔲 | README, usage guide, mechanic quickstart, app store listing (was 196) |
+| 209 | Packaging + distribution | 🔲 | pip install, standalone binary, Docker, App Store, Play Store (was 197) |
+| 210 | Launch readiness + full integration | 🔲 | Everything together — the complete MotoDiag platform (was 198) |
+
+---
+
+# Expansion Tracks (Phases 211–352)
+
+The following tracks extend MotoDiag beyond the original 210-phase core product into a complete commercial platform. Planning-only; these phases unlock once the core platform has launched and generated customer feedback to prioritize expansion.
+
+## Track K — European Brand Coverage (Phases 211–240)
+
+European motorcycle brands — BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta. Each brand gets dedicated phases for its model lines, electrical systems, and cross-model common issues, matching the pattern established in Tracks B.
+
+### BMW (Phases 211–215)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 211 | BMW R-series boxer twin (1969+) | 🔲 | R nineT, R1200GS/R1250GS, R1200/1250RT, oilhead/hexhead/wethead generations |
+| 212 | BMW GS adventure line | 🔲 | F650GS/F800GS/F750GS/F850GS/F900GS, ADV accessories, paralever final drive |
+| 213 | BMW S1000RR / S1000R / S1000XR | 🔲 | Inline-4 superbike line, electronics, shift assist pro |
+| 214 | BMW K-series touring | 🔲 | K1200RS, K1200GT, K1300S, K1600GT/GTL inline-6, Duolever front |
+| 215 | BMW electrical + FI dealer mode | 🔲 | ZFE (Central Electronics), GS-911 diagnostic tool integration, BMW-specific DTC format |
+
+### Ducati (Phases 216–220)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 216 | Ducati Monster / Streetfighter (1993+) | 🔲 | Air-cooled, liquid-cooled generations, trellis frame, Testastretta evolution |
+| 217 | Ducati Panigale superbike line | 🔲 | 899/959/1199/1299/V4, Superquadro, V4 engine, Ohlins electronic suspension |
+| 218 | Ducati Multistrada | 🔲 | 1200/1260/V4, adventure-touring, skyhook suspension, Ducati Safety Pack |
+| 219 | Ducati desmodromic valve service | 🔲 | Desmo 10K-18K mile service intervals, shim-over-bucket opener/closer, cost-intensive |
+| 220 | Ducati electrical + FI | 🔲 | Magneti Marelli ECU, DDA+ (data analyzer), Ducati-specific CAN format, DDS diagnostic tool |
+
+### KTM (Phases 221–225)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 221 | KTM 1290 Super Duke / Super Adventure | 🔲 | LC8 V-twin, R/GT variants, cornering ABS, MSC |
+| 222 | KTM Duke naked line (125/390/790/890) | 🔲 | Single + parallel twin, beginner (125/390) through advanced (790/890) |
+| 223 | KTM enduro / adventure (EXC/690/450) | 🔲 | Off-road single-cylinder race bikes, hard enduro, 450/500 EXC, 690 Enduro R |
+| 224 | KTM LC8 V-twin common issues | 🔲 | Cam chain tensioner, electric start issues, valve clearance intervals |
+| 225 | KTM electrical + Keihin FI | 🔲 | Keihin ECU, Tuneboy, PowerParts cross-platform |
+
+### Triumph (Phases 226–230)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 226 | Triumph Bonneville / T100 / Speed Twin | 🔲 | Parallel twin modern classics, 865/900/1200cc, classic styling modern internals |
+| 227 | Triumph Tiger adventure (800/900/1200) | 🔲 | Triple-cylinder adventure, XC/XR/XRt/Rally variants, Ohlins on top trim |
+| 228 | Triumph Street Triple / Speed Triple | 🔲 | Triple naked sport, 675/765/1050/1200, factory race-derived |
+| 229 | Triumph vintage (pre-Hinckley + early Hinckley) | 🔲 | Classic British triples, T509/T595, early Hinckley carbureted |
+| 230 | Triumph electrical + TuneBoy | 🔲 | Triumph-specific DTC format, TuneECU software, dealer mode |
+
+### Aprilia + MV Agusta (Phases 231–235)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 231 | Aprilia RSV4 / Tuono V4 | 🔲 | V4 superbike/hyper-naked, Ohlins, aPRC electronics, factory race heritage |
+| 232 | Aprilia Dorsoduro / Shiver / SR Max | 🔲 | V-twin supermoto (Dorsoduro), naked (Shiver), scooter (SR Max) |
+| 233 | MV Agusta 3-cylinder (F3 / Brutale 675/800 / Turismo Veloce) | 🔲 | Counter-rotating crank 675/800cc triples, Italian engineering, known reliability quirks |
+| 234 | MV Agusta 4-cylinder (F4 / Brutale 990/1090) | 🔲 | Radial valve inline-4, exotic pricing, limited dealer network |
+| 235 | Aprilia + MV electrical + dealer tools | 🔲 | Marelli (Aprilia), Mercuri (MV), diagnostic tool access, parts availability constraints |
+
+### Cross-European (Phases 236–240)
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 236 | European electrical cross-platform | 🔲 | CAN-bus variations, bike-specific OBD adapters, GS-911, TuneECU, Ducati DDS |
+| 237 | European common failure patterns | 🔲 | Voltage regulator issues (BMW hexhead), stator (Ducati), cam chain (Triumph), OEM parts pricing |
+| 238 | European valve service intervals | 🔲 | Desmo service (Ducati), shim-under-bucket (BMW K/S1000), shim-over (Triumph) |
+| 239 | European parts sourcing + pricing | 🔲 | Manufacturer dealer networks, aftermarket availability, OEM-only parts markup |
+| 240 | Gate 11 — European brand coverage integration test | 🔲 | Query any European bike → get DTCs, symptoms, known issues, fixes |
+
+## Track L — Electric Motorcycles (Phases 241–250)
+
+Electric motorcycle diagnostics — fundamentally different from ICE: HV safety, BMS, motor controllers, regen, thermal management. Requires foundational safety phases before brand-specific coverage.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 241 | HV safety + lockout/tagout procedures | 🔲 | Service plug removal, HV discharge verification, insulated tooling, safety PPE, training requirement |
+| 242 | Zero Motorcycles (S/DS/SR/FX/FXE) | 🔲 | Z-Force powertrain, Interior Permanent Magnet motor, Zero app diagnostics |
+| 243 | Harley LiveWire / LiveWire One | 🔲 | Revelation powertrain, Showa suspension, H-D dealer integration |
+| 244 | Energica (Ego/Eva/Esse/Experia) | 🔲 | Italian premium electric, PMAC motor, Öhlins, fast DC charging |
+| 245 | Damon HyperSport / HyperFighter | 🔲 | Shift smart suspension, copilot safety system, startup-phase reliability concerns |
+| 246 | BMS diagnostics (battery management) | 🔲 | Cell balancing, SOH (state of health), voltage curves, thermal derating, cycle counting |
+| 247 | Motor controller / inverter faults | 🔲 | IGBT failures, phase-loss detection, overcurrent faults, controller firmware |
+| 848 | Regenerative braking diagnostics | 🔲 | Regen ratios, coast-down behavior, brake light trigger on regen, single-pedal mode |
+| 249 | Thermal management (battery + motor) | 🔲 | Liquid cooling loops (battery), air cooling (motor), thermal derating curves, ambient temp effects |
+| 250 | Gate 12 — Electric motorcycle integration test | 🔲 | Query electric bike → BMS/motor/regen/thermal analysis end-to-end |
+
+## Track M — Scooters & Small Displacement (Phases 251–258)
+
+50-300cc class: commuter scooters, Honda Grom/Ruckus, Vespa, learner bikes. CVT diagnostics, small-battery electrical, low-cost repair workflows.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 251 | Vespa / Piaggio (50-300cc) | 🔲 | Italian scooters, air/liquid-cooled, MP3 tilting 3-wheelers, LX/GTS/Primavera |
+| 252 | Honda Ruckus / Grom / Metropolitan / PCX | 🔲 | Cult-favorite small Hondas, Grom 125 modding community, Ruckus/Metro 50cc scooters |
+| 253 | Yamaha Zuma / Vino + Kymco / SYM / Genuine | 🔲 | Budget scooters, Taiwanese manufacturers, parts availability |
+| 254 | Small-displacement CVT diagnostics | 🔲 | Belt wear, variator/clutch bells, roller weights, kickstart backup |
+| 255 | Twist-and-go vs manual small bikes | 🔲 | Scooter vs small motorcycle diagnostic differences |
+| 256 | Scooter electrical (12V minimal) | 🔲 | Stator-to-battery, no FI on older carb scooters, simple wiring |
+| 257 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions |
+| 258 | Gate 13 — Scooter / small displacement integration test | 🔲 | Query scooter/small bike → CVT + electrical + carb workflow |
+
+## Track N — Specialized Workflows (Phases 259–272)
+
+Non-diagnostic workflows that shops perform: pre-purchase inspection, tire service, insurance claims, track prep, seasonal protocols, valve adjustments, brake service.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 259 | Pre-purchase inspection (PPI) — engine | 🔲 | Compression test, leak-down, oil sample, fuel quality, starter/charging health, visual inspection checklist |
+| 260 | Pre-purchase inspection — chassis | 🔲 | Frame straightness, fork seals, steering head bearings, swingarm, wheel bearings, brake/tire condition, accident history |
+| 261 | Tire service workflow | 🔲 | Wear patterns (cupping, squaring, feathering), DOT date decoding, age cracking, balance, TPMS |
+| 262 | Crash / insurance claim support | 🔲 | Photo documentation standards, damage estimation, frame-straightness measurement, salvage vs repair decision |
+| 263 | Track-day / race prep checklist | 🔲 | Safety wire, lockwire torque, brake bleed, coolant swap, tech inspection, number plate prep |
+| 264 | Winterization protocol | 🔲 | Fuel stabilizer, battery tender, oil change, carb drain (if carbed), cover, storage position |
+| 265 | De-winterization protocol | 🔲 | Battery check, brake exercise, fluid inspection, tire pressure, spring test ride |
+| 266 | Engine break-in procedures | 🔲 | Rebuilt engine/top-end break-in, RPM restrictions, heat cycles, oil changes schedule |
+| 267 | Emissions / smog compliance (CA-first) | 🔲 | California smog requirements, EPA compliance, cat converter status, CARB database |
+| 268 | Valve adjustment workflow | 🔲 | Generic workflow + per-engine-type templates (inline-4, V-twin, single, boxer, Desmo) |
+| 269 | Brake service workflow | 🔲 | Pad replacement, caliper rebuild, rotor thickness check, fluid flush, bleed procedure |
+| 270 | Suspension service workflow | 🔲 | Fork seal replacement, oil change, spring rate selection, rear shock rebuild, sag setup |
+| 271 | Chain / belt / shaft service workflow | 🔲 | Chain/sprocket replacement, belt tension/alignment, shaft drive oil, u-joint inspection |
+| 272 | Gate 14 — Specialized workflows integration test | 🔲 | Run PPI → tire service → winterization → valve adjust → brake service end-to-end |
+
+## Track O — Business Infrastructure (Phases 273–292)
+
+Payment processing, CRM, booking, accounting, inventory, warranty/recall claims, vendor integrations — the business systems a shop needs beyond Track G's shop management.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
+| 274 | Customer CRM | 🔲 | Customer profiles, bike ownership history, communication log, notes |
+| 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
+| 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
+| 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |
+| 278 | Accounting export (Xero) | 🔲 | Xero-specific export format, tax handling, multi-currency |
+| 279 | Parts inventory with reorder points | 🔲 | Stock levels, reorder points, automatic PO generation, distinct from per-job sourcing |
+| 280 | OEM warranty claim processing | 🔲 | Warranty validity lookup, claim documentation, OEM-specific submission flows |
+| 281 | NHTSA recall processing | 🔲 | VIN-based recall lookup, recall completion tracking, OEM reimbursement |
+| 282 | Vendor: Parts Unlimited integration | 🔲 | API integration, parts availability, wholesale pricing, dropship |
+| 283 | Vendor: NAPA integration | 🔲 | NAPA TRACS integration, parts catalog, local store inventory |
+| 284 | Vendor: Drag Specialties integration | 🔲 | Drag Specialties wholesale, Harley/V-twin parts focus |
+| 285 | Vendor: Dennis Kirk integration | 🔲 | Dennis Kirk wholesale, Japanese parts, off-road |
+| 286 | Vendor: tire distributor integrations | 🔲 | Dunlop, Michelin, Metzeler, Bridgestone — wholesale tire ordering |
+| 287 | VIN decoder service | 🔲 | NHTSA VPIC integration, make-specific VIN structure decoding, model-year lookup |
+| 288 | Tax rate lookup by shop location | 🔲 | State/county/city sales tax, automated tax calculation on invoices |
+| 289 | Multi-currency support | 🔲 | USD/CAD/EUR/GBP exchange rates, multi-currency invoicing, currency conversion |
+| 290 | Financial reporting | 🔲 | P&L per mechanic, per bay, per customer, monthly/quarterly/annual |
+| 291 | Estimate vs actual variance tracking | 🔲 | Quote accuracy, labor time variance, parts cost variance |
+| 292 | Gate 15 — Business infrastructure integration test | 🔲 | Customer books → intake → warranty check → repair → invoice → payment → accounting export |
+
+## Track P — Reference Data Library (Phases 293–302)
+
+Deep reference database: service manual citations, exploded parts diagrams, visual failure library, video tutorials, per-model specs.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 293 | Factory service manual references | 🔲 | Clymer/Haynes/OEM page citation database, searchable by make/model/year/topic |
+| 294 | Exploded parts diagram integration | 🔲 | Partzilla/BikeBandit part number → diagram lookup, visual parts browser |
+| 295 | Visual failure library | 🔲 | Photo database of common failures, user-contributed + curated, failure signatures |
+| 296 | Curated video tutorial index | 🔲 | YouTube embeds by symptom/repair, verified mechanic channels, offline viewing |
+| 297 | Per-model torque spec database | 🔲 | Expand Phase 93 generic specs → complete per-model torque database |
+| 298 | Per-model fluid capacity database | 🔲 | Oil/coolant/brake fluid/fork oil capacities by exact model/year |
+| 299 | Electrical schematic references | 🔲 | Wire color codes per model/year, connector pinouts, module locations |
+| 300 | Special tool database | 🔲 | Tools required per repair, OEM vs aftermarket, cost, rental availability |
+| 301 | Service interval tables | 🔲 | OEM service intervals per model, normal vs severe service, expand Phase 93 |
+| 302 | Gate 16 — Reference data library integration test | 🔲 | Query any bike/repair → manual page + diagram + torque + tool + video |
+
+## Track Q — Extended UX Affordances (Phases 303–317)
+
+Multi-user auth, voice-first mode, printing, barcode scanning, photo annotation, i18n, AR overlay, accessibility, customization.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 303 | Multi-user auth with roles | 🔲 | Owner/tech/service writer/apprentice, permission gating, session management |
+| 304 | Voice-first mode (expand Phase 183) | 🔲 | Hands-free wrenching, voice commands, continuous listening mode |
+| 305 | Print + label support | 🔲 | Service tags, work order printouts, parts labels, Brother/Dymo printer integration |
+| 306 | Barcode / QR scanning | 🔲 | Parts inventory scanning, bike check-in via VIN barcode, mobile camera or USB scanner |
+| 307 | Photo annotation | 🔲 | Draw circles on leaks, arrows to cracks, text labels, annotation persistence |
+| 308 | Spanish localization | 🔲 | Priority language — large US mechanic demographic, full UI + knowledge base translation |
+| 309 | French localization | 🔲 | Quebec, Europe markets, UI + knowledge base |
+| 310 | German localization | 🔲 | European market, aftermarket catalogs, UI + knowledge base |
+| 311 | AR overlay (research/placeholder) | 🔲 | ARKit/ARCore integration for camera-based diagnostic overlay, scope-deferred — research phase only |
+| 312 | Accessibility (screen reader + high contrast) | 🔲 | WCAG 2.1 AA compliance, VoiceOver/TalkBack, keyboard navigation |
+| 313 | Dark mode (desktop) | 🔲 | High contrast dark theme, complement Phase 203 mobile, user preference |
+| 314 | Keyboard shortcuts + power user features | 🔲 | Desktop CLI hotkeys, vim-style navigation, command palette, custom aliases |
+| 315 | Customizable dashboards | 🔲 | Drag-and-drop widgets, per-user layouts, saved views |
+| 316 | Workflow recording (train-by-example) | 🔲 | Record my process → replay for training, generate workflow templates from recordings |
+| 317 | Gate 17 — Extended UX integration test | 🔲 | Multi-user auth → voice input → photo annotation → Spanish UI → print work order |
+
+## Track R — Advanced AI Capabilities (Phases 318–327)
+
+Beyond the base AI engine: human-in-the-loop learning, tuning recommendations, expanded predictive maintenance, cross-fleet anomaly detection, knowledge graph.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 318 | Human-in-the-loop learning | 🔲 | Mechanic overrides train the system, feedback loop closes on diagnostic accuracy, retraining pipeline |
+| 319 | Tuning recommendations | 🔲 | Jetting calculations (altitude/mods), Power Commander/FTECU/Dynojet map suggestions |
+| 320 | Predictive maintenance expansion | 🔲 | Beyond Phase 148 — per-customer, per-fleet, per-usage-pattern failure prediction |
+| 321 | Fleet anomaly detection | 🔲 | Cross-bike pattern recognition, identify "same model same issue" at scale |
+| 322 | AI-assisted customer communication | 🔲 | Draft status updates, explain repairs in plain English, estimate customer questions |
+| 323 | Image similarity search | 🔲 | "Show me bikes with this symptom" — visual failure similarity via embedding |
+| 324 | Repair success prediction | 🔲 | "Will this fix work for this bike?" — historical outcome prediction |
+| 325 | Knowledge graph construction | 🔲 | Symptom ↔ cause ↔ fix relationships, graph queries for complex diagnostics |
+| 326 | Continuous learning pipeline | 🔲 | Automated model fine-tuning from accumulated diagnostic feedback |
+| 327 | Gate 18 — Advanced AI integration test | 🔲 | Feedback → learning → prediction → anomaly detection → customer draft end-to-end |
+
+## Track S — Launch + Business Layer (Phases 328–342)
+
+Commercial launch infrastructure: billing, onboarding, data migration from competitors, legal, training/certification, community.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 328 | Subscription billing foundation | 🔲 | Stripe integration from Track O wired to subscription tiers, tier enforcement flips to hard mode here |
+| 329 | Self-service signup flow (web) | 🔲 | Trial signup, credit card capture, email verification, onboarding trigger |
+| 330 | Onboarding wizard for new shops | 🔲 | Bike inventory import, staff setup, initial data entry, first diagnostic walkthrough |
+| 331 | Data migration: Mitchell 1 → MotoDiag | 🔲 | Import existing shop data from Mitchell 1 (auto/moto), vehicle history, work orders |
+| 332 | Data migration: ShopKey → MotoDiag | 🔲 | Import from Snap-on ShopKey, SMS Pro |
+| 333 | Data migration: ALLDATA → MotoDiag | 🔲 | Import from AutoZone ALLDATA Shop Management |
+| 334 | Terms of Service + liability framework | 🔲 | Legal ToS, liability disclaimers on repair recommendations, mechanic indemnification |
+| 335 | MotoDiag Certified training track | 🔲 | Online courses, video tutorials, structured learning paths for new mechanics |
+| 336 | Certification exam system | 🔲 | Proctored exam, certificate generation, renewal requirements, certification tiers |
+| 337 | In-app mechanic community | 🔲 | Q&A forum, moderated discussion, expert verification, reputation system |
+| 338 | Customer referral program | 🔲 | Referral codes, tracking, credits/discounts, viral acquisition |
+| 339 | Promotional codes + discounts | 🔲 | Coupon system, time-limited promotions, tier upgrade incentives |
+| 340 | Enterprise sales portal | 🔲 | B2B lead management, custom quotes, multi-year contracts, SLA negotiation |
+| 341 | SLA + uptime dashboard | 🔲 | Public status page, uptime metrics, incident communication, enterprise SLAs |
+| 342 | Gate 19 — Launch readiness check | 🔲 | Billing → signup → onboarding → data migration → first diagnostic under paid plan |
+
+## Track T — Operational Infrastructure (Phases 343–352)
+
+Running MotoDiag as a production service: observability, support, backup, feature flags, admin tools.
+
+| Phase | Title | Status | Notes |
+|-------|-------|--------|-------|
+| 343 | Telemetry + crash reporting (Sentry) | 🔲 | Sentry integration, crash reports, performance monitoring, user session replay |
+| 344 | In-app support channel | 🔲 | Chat widget or ticketing, support team routing, knowledge base integration |
+| 345 | Cloud backup + sync | 🔲 | S3 encrypted backups, automatic sync, point-in-time restore |
+| 346 | Multi-location / franchise support | 🔲 | Shared customers across locations, inter-location parts transfer, centralized reporting |
+| 347 | Real-time sync between devices | 🔲 | Desktop ↔ mobile ↔ web real-time data sync, conflict resolution |
+| 348 | Audit log (who did what, when) | 🔲 | Immutable event log, security audit trail, compliance readiness |
+| 349 | Feature flags / gradual rollout | 🔲 | LaunchDarkly-style feature flags, percentage rollouts, kill switches |
+| 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
+| 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
+| 352 | Gate 20 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
 
 ---
 
@@ -341,15 +605,28 @@ moto-diag/
 │   └── motodiag/
 │       ├── __init__.py
 │       ├── core/           ← config, database, base models (Track A)
-│       ├── vehicles/       ← vehicle registry, specs (Track A/B)
-│       ├── knowledge/      ← DTC codes, symptoms, known issues (Track B)
+│       ├── vehicles/       ← vehicle registry, specs (Track A/B, expanded Retrofit 110)
+│       ├── knowledge/      ← DTC codes, symptoms, known issues (Track B, expanded Retrofit 111)
 │       ├── engine/         ← AI diagnostic engine (Track C)
-│       ├── media/          ← video/audio diagnostic analysis (Track C2)
+│       ├── media/          ← video/audio diagnostic analysis (Track C2, annotations Retrofit 119)
 │       ├── cli/            ← terminal interface (Track D)
+│       ├── auth/           ← users, roles, permissions (Retrofit 112)
+│       ├── crm/            ← customers, customer-bikes join (Retrofit 113)
 │       ├── hardware/       ← OBD adapter interface (Track E)
 │       ├── advanced/       ← fleet, maintenance, prediction (Track F)
 │       ├── shop/           ← shop management, work orders, triage, scheduling (Track G)
-│       └── api/            ← REST API (Track H)
+│       ├── api/            ← REST API + web layer (Track H)
+│       ├── billing/        ← Stripe integration, subscriptions, payments (Retrofit 118, Track O/S)
+│       ├── accounting/     ← QuickBooks/Xero export, financial reports (Retrofit 118, Track O)
+│       ├── inventory/      ← parts inventory, reorder points, vendor integration (Retrofit 118, Track O)
+│       ├── scheduling/     ← appointments, calendar sync (Retrofit 118, Track O)
+│       ├── workflows/      ← PPI, tire service, winterization templates (Retrofit 114, Track N)
+│       ├── i18n/           ← translations, locale handling (Retrofit 115, Track Q)
+│       ├── reference/      ← manual refs, parts diagrams, video tutorials (Retrofit 117, Track P)
+│       ├── feedback/       ← diagnostic feedback, override tracking (Retrofit 116, Track R)
+│       ├── ai_advanced/    ← human-in-loop learning, tuning, knowledge graph (Track R)
+│       ├── launch/         ← signup, onboarding, migration, community (Track S)
+│       └── ops/            ← telemetry, support, backups, feature flags, admin (Track T)
 ├── data/
 │   ├── dtc_codes/          ← fault code databases
 │   ├── vehicles/           ← make/model specs

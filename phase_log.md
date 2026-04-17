@@ -163,3 +163,38 @@ This is the **project-level** change log. Records updates to the project's archi
 - **Track C2 COMPLETE — Gate 4 PASSED** — full media diagnostic pipeline functional
 - 3-tier subscription model noted as architecture requirement (individual, shop, company)
 - Ready for Track D (CLI + User Experience)
+
+### 2026-04-17 11:00 — Phase 109 complete — CLI foundation + 3-tier subscription
+- Created `cli/subscription.py`: SubscriptionTier enum, TierFeatures, TIER_LIMITS for 3 tiers ($19/$99/$299/mo)
+- Created `cli/registry.py`: CommandRegistry singleton for modular command registration
+- Dual enforcement modes: SOFT (dev default) vs HARD (Track H+ activates via MOTODIAG_PAYWALL_MODE)
+- New CLI: `motodiag tier` (show current tier) + `motodiag tier --compare` (3-tier ASCII table)
+- 41 tests, 1616/1616 total regression passing
+- Subscription architecture now foundational — all downstream Tracks D-T use it
+
+### 2026-04-17 12:00 — ROADMAP EXPANSION — 198 phases → 352 phases, 11 tracks → 21 tracks
+- User committed to full expansion scope: brand coverage, electric, scooters, specialized workflows, business infrastructure, reference data, UX, AI, launch, operational
+- **Inserted 12-phase Retrofit Track (110-121)** between Track C2 and Track D remainder, to refactor codebase for expansion before new tracks build
+  - Retrofit adds: vehicle/protocol taxonomy, DTC schema expansion, auth layer, CRM foundation, workflow substrate, i18n substrate, feedback hooks, reference tables, billing/accounting/inventory/scheduling substrate, media annotations, sound signature expansion, Gate R
+- **Renumbered Tracks D-J** (shifted by +12 from phase 122 onward):
+  - Track D (remainder): 110-121 → 122-133 (Gate 5)
+  - Track E: 122-135 → 134-147 (Gate 6)
+  - Track F: 136-147 → 148-159 (Gate 7)
+  - Track G: 148-162 → 160-174 (Gate 8)
+  - Track H: 163-172 → 175-184 (Gate 9) — hard paywall activates
+  - Track I: 173-192 → 185-204 (Gate 10)
+  - Track J: 193-198 → 205-210
+- **Appended 10 new expansion tracks (K-T, phases 211-352):**
+  - Track K — European Brand Coverage (211-240, 30 phases): BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta
+  - Track L — Electric Motorcycles (241-250, 10 phases): HV safety, Zero, LiveWire, Energica, Damon, BMS, inverter, regen, thermal
+  - Track M — Scooters & Small Displacement (251-258, 8 phases): Vespa, Grom/Ruckus, Kymco/SYM, CVT, small electrical
+  - Track N — Specialized Workflows (259-272, 14 phases): PPI, tire service, crash/insurance, track prep, winterization, break-in, emissions, valve/brake/suspension/chain service
+  - Track O — Business Infrastructure (273-292, 20 phases): Stripe, CRM, booking, accounting, inventory, warranty/recall, 5 vendor integrations, VIN decoder, multi-currency, financial reporting
+  - Track P — Reference Data Library (293-302, 10 phases): Clymer/Haynes citations, exploded diagrams, failure library, video index, per-model torque/fluid/schematic/tool/service data
+  - Track Q — Extended UX Affordances (303-317, 15 phases): multi-user auth, voice-first, print/labels, barcode scan, photo annotation, Spanish/French/German, AR placeholder, accessibility, dark mode, shortcuts, dashboards, workflow recording
+  - Track R — Advanced AI Capabilities (318-327, 10 phases): human-in-loop learning, tuning recs, predictive maintenance expansion, fleet anomaly, customer draft, image similarity, repair success prediction, knowledge graph, continuous learning
+  - Track S — Launch + Business Layer (328-342, 15 phases): billing, signup, onboarding, Mitchell 1/ShopKey/ALLDATA migration, ToS/liability, certification, community, referrals, promo codes, enterprise sales, SLA dashboard
+  - Track T — Operational Infrastructure (343-352, 10 phases): Sentry, support, cloud backup, multi-location, real-time sync, audit log, feature flags, A/B testing, admin panel
+- 18 new packages planned: auth, crm, billing, accounting, inventory, scheduling, workflows, i18n, reference, feedback, ai_advanced, launch, ops
+- Gates: Gate R (retrofit), Gates 5-20 (tracks D-T)
+- Next: execute Part 2 — auto-iterate through 12 retrofit phases (110-121) before any new tracks begin

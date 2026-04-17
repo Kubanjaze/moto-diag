@@ -1,9 +1,9 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.4.0 | **Date:** 2026-04-16
+**Version:** 0.5.0 | **Date:** 2026-04-17
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `docs/ROADMAP.md` | 198 phases across 11 tracks
+**Roadmap:** `docs/ROADMAP.md` | 352 phases across 21 tracks (A-T)
 
 ---
 
@@ -51,7 +51,11 @@ MotoDiag is an AI-powered motorcycle diagnostic tool designed for mechanics. It 
 - Dual-sport: DR-Z400S/SM (2000+), DR650SE (1996+)
 - Vintage: GS550/750/850/1000/1100, GSX1100 Katana
 
-**Target users:** Motorcycle mechanics helping fellow mechanics
+**European brands** (Track K, phases 211–240) — BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta
+**Electric motorcycles** (Track L, phases 241–250) — Zero, Harley LiveWire, Energica, Damon
+**Scooters & small-displacement** (Track M, phases 251–258) — Vespa, Honda Grom/Ruckus, Kymco, SYM, 50-300cc class
+
+**Target users:** Motorcycle mechanics (solo → shop → multi-location), subscription tiers $19/$99/$299/mo
 
 ---
 
@@ -93,11 +97,24 @@ moto-diag/
 | `pricing` | G | Active | Labor rates (regional/national), repair plan builder (CRUD), cost estimation, prep labor catalog |
 | `engine` | C | Active | AI diagnostic engine — client, models, prompts, symptoms, fault codes, workflows, confidence, cost estimation, parts recommendation |
 | `media` | C2 | Active | Audio/video diagnostic analysis — 12 modules: capture, spectrogram, signatures, anomaly, video frames, vision, fusion, comparative, realtime, annotation, reports, coaching |
-| `cli` | D | Scaffold | Click CLI with 5 subcommands (placeholder stubs) |
-| `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 59 |
-| `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 123 |
-| `shop` | G | Scaffold | Shop management, work orders, triage, scheduling — awaiting Phase 135 |
-| `api` | H | Scaffold | REST API — empty, awaiting Phase 150 |
+| `cli` | D | Active | Click CLI + subscription tier system ($19/$99/$299), command registry, tier command |
+| `auth` | Retrofit 112 | Planned | Users, roles, permissions — users/roles/permissions tables, FK retrofit onto sessions/plans/issues |
+| `crm` | Retrofit 113 | Planned | Customers + customer-bikes join — customer_id FK retrofit onto vehicles |
+| `hardware` | E | Scaffold | OBD adapter interface — empty, awaiting Phase 134 |
+| `advanced` | F | Scaffold | Fleet management — empty, awaiting Phase 148 |
+| `shop` | G | Scaffold | Shop management, work orders, triage, scheduling — awaiting Phase 160 |
+| `api` | H | Scaffold | REST API — empty, awaiting Phase 175, hard paywall enforcement activates here |
+| `billing` | Retrofit 118 / O | Planned | Stripe integration, subscription billing, payment processing |
+| `accounting` | Retrofit 118 / O | Planned | QuickBooks/Xero export, financial reports, tax handling |
+| `inventory` | Retrofit 118 / O | Planned | Parts inventory, reorder points, vendor integrations |
+| `scheduling` | Retrofit 118 / O | Planned | Appointments, iCal/Google calendar sync, mechanic calendars |
+| `workflows` | Retrofit 114 / N | Planned | PPI, tire service, winterization, break-in templates |
+| `i18n` | Retrofit 115 / Q | Planned | Translations table, locale handling, Spanish/French/German support |
+| `reference` | Retrofit 117 / P | Planned | Manual citations, parts diagrams, failure photos, video tutorials |
+| `feedback` | Retrofit 116 / R | Planned | Diagnostic feedback, override tracking, learning hooks |
+| `ai_advanced` | R | Planned | Human-in-loop learning, tuning recs, knowledge graph (phases 318-327) |
+| `launch` | S | Planned | Signup, onboarding, data migration, community, certification (phases 328-342) |
+| `ops` | T | Planned | Telemetry, support, backups, feature flags, admin panel (phases 343-352) |
 
 ## Database Tables
 
@@ -264,6 +281,8 @@ moto-diag/
 | 106 | Media-enhanced diagnostic reports | 2026-04-17 | Reports with media attachments, text formatting, 26 tests |
 | 107 | AI audio coaching | 2026-04-17 | 5 capture protocols, quality evaluation, symptom mapping, 30 tests |
 | 108 | Gate 4 — Media diagnostics integration test | 2026-04-17 | 24 integration tests, 12 modules, 1575 total, **GATE 4 PASSED** |
+| 109 | CLI foundation + 3-tier subscription | 2026-04-17 | Click CLI, SubscriptionTier enum, $19/$99/$299 pricing, requires_tier decorator (soft/hard modes), tier command, 41 tests, 1616 total |
+| — | **Roadmap expansion planning** | 2026-04-17 | Expanded roadmap from 198 to 352 phases. Inserted 12-phase Retrofit track (110-121). Renumbered Tracks D-J. Appended Tracks K-T. 18 new packages planned. 20 gates + Gate R. |
 
 ## Completion Gates
 
@@ -273,8 +292,20 @@ moto-diag/
 | Gate 2 | 78 | ✅ | Query any target bike → get DTCs, symptoms, known issues, fixes |
 | Gate 3 | 95 | ✅ | Full symptom-to-repair flow with confidence + cost |
 | Gate 4 | 108 | ✅ | Media diagnostics: audio + video + multimodal fusion pipeline |
-| Gate 5 | ~122 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis |
-| Gate 6 | ~134 | 🔲 | Fleet + history + prediction end-to-end |
-| Gate 7 | ~144 | 🔲 | Full API workflow: auth → vehicle → diagnose → report |
-| Gate 8 | ~159 | 🔲 | Full API + shop management workflow |
-| Gate 9 | ~179 | 🔲 | Full mobile flow: scan VIN → diagnose → share report |
+| Gate R | 121 | 🔲 | Retrofit: schema migrations + new packages + all 1616 existing tests still pass |
+| Gate 5 | 133 | 🔲 | Full CLI mechanic workflow: garage → diagnose → code → history → export |
+| Gate 6 | 147 | 🔲 | Simulated ECU → adapter → read codes → AI diagnosis (Hardware) |
+| Gate 7 | 159 | 🔲 | Fleet + history + prediction end-to-end (Advanced Diagnostics) |
+| Gate 8 | 174 | 🔲 | Shop: intake → triage → parts → schedule → repair → invoice |
+| Gate 9 | 184 | 🔲 | Full API workflow: auth → vehicle → diagnose → shop → report (hard paywall activates) |
+| Gate 10 | 204 | 🔲 | Mobile: film bike → diagnose → share report |
+| Gate 11 | 240 | 🔲 | European brand coverage: BMW/Ducati/KTM/Triumph/Aprilia/MV full diagnostic |
+| Gate 12 | 250 | 🔲 | Electric motorcycle: BMS + motor controller + regen + thermal analysis |
+| Gate 13 | 258 | 🔲 | Scooter / small displacement: CVT + electrical + carb workflow |
+| Gate 14 | 272 | 🔲 | Specialized workflows: PPI + tire service + winterization + valve adjust + brake |
+| Gate 15 | 292 | 🔲 | Business infrastructure: customer → intake → warranty → invoice → payment → accounting |
+| Gate 16 | 302 | 🔲 | Reference data: manual + diagram + torque + tool + video per any bike/repair |
+| Gate 17 | 317 | 🔲 | Extended UX: multi-user → voice → photo annotation → Spanish UI → print |
+| Gate 18 | 327 | 🔲 | Advanced AI: feedback → learning → prediction → anomaly → customer draft |
+| Gate 19 | 342 | 🔲 | Launch readiness: billing → signup → onboarding → migration → paid first diagnostic |
+| Gate 20 | 352 | 🔲 | Operational readiness: telemetry + support + backup + multi-location + audit |
