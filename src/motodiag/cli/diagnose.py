@@ -24,6 +24,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from motodiag.cli.theme import get_console, status as theme_status, severity_style
 from motodiag.cli.subscription import (
     SubscriptionTier,
     current_tier,
@@ -470,11 +471,15 @@ def _render_response(response: Any, console: Console) -> None:
         t.add_column("Rationale", overflow="fold")
         for i, d in enumerate(diagnoses, 1):
             conf = getattr(d, "confidence", 0.0) or 0.0
+            sev = getattr(d, "severity", None)
+            # Phase 129: severity color comes from the shared theme map.
+            sev_text = sev if sev else "-"
+            sev_style = severity_style(sev)
             t.add_row(
                 str(i),
                 getattr(d, "diagnosis", "?"),
                 f"{conf:.2f}",
-                getattr(d, "severity", "-") or "-",
+                f"[{sev_style}]{sev_text}[/{sev_style}]",
                 getattr(d, "rationale", "") or "",
             )
         console.print(t)
@@ -878,7 +883,7 @@ def register_diagnose(cli_group: click.Group) -> None:
                        symptoms: str, description: Optional[str],
                        ai_model_flag: Optional[str]) -> None:
         """Run a one-shot diagnosis without Q&A."""
-        console = Console()
+        console = get_console()
         init_db()
 
         # Resolve vehicle — either by ID (primary) or by slug (sugar).
@@ -931,12 +936,16 @@ def register_diagnose(cli_group: click.Group) -> None:
             )
 
         symptom_list = _parse_symptoms(symptoms)
-        session_id, response = _run_quick(
-            vehicle=vehicle,
-            symptoms=symptom_list,
-            description=description,
-            ai_model=ai_model,
-        )
+        # Phase 129: spinner during the AI round-trip so the mechanic
+        # sees something's happening during the typical 3-10 second wait.
+        # Non-TTY (CliRunner) suppresses the animation automatically.
+        with theme_status("Analyzing symptoms..."):
+            session_id, response = _run_quick(
+                vehicle=vehicle,
+                symptoms=symptom_list,
+                description=description,
+                ai_model=ai_model,
+            )
         console.print(f"[green]Session #{session_id} created and diagnosed.[/green]\n")
         _render_response(response, console)
 
@@ -946,7 +955,7 @@ def register_diagnose(cli_group: click.Group) -> None:
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
     def diagnose_start(vehicle_id: Optional[int], ai_model_flag: Optional[str]) -> None:
         """Start an interactive diagnostic session with Q&A."""
-        console = Console()
+        console = get_console()
         init_db()
         if vehicle_id is None:
             vehicle_id = click.prompt("Vehicle ID", type=int)
@@ -958,9 +967,14 @@ def register_diagnose(cli_group: click.Group) -> None:
         tier = current_tier().value
         ai_model = _resolve_model(tier, ai_model_flag)
 
-        session_id, response = _run_interactive(
-            vehicle=vehicle, ai_model=ai_model,
-        )
+        # Phase 129: spinner during the Q&A loop. The interactive path
+        # may prompt between rounds — the spinner wraps the whole loop
+        # and Rich correctly suspends the animation whenever Click's
+        # prompt blocks on user input.
+        with theme_status("Analyzing symptoms..."):
+            session_id, response = _run_interactive(
+                vehicle=vehicle, ai_model=ai_model,
+            )
         if response is None:
             console.print("[yellow]Session closed with no diagnosis.[/yellow]")
             return
@@ -1001,7 +1015,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         search on diagnosis, created_at date range, and a result cap. All
         filters AND together. Newest-first ordering preserved from Phase 123.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         # `--until YYYY-MM-DD` is inclusive of that whole day. Append a time
@@ -1072,7 +1086,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         Calling reopen on an already-open session is a no-op and prints a
         yellow warning.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         existing = get_session(session_id)
@@ -1107,7 +1121,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         notes column is printed after appending so the mechanic can verify
         the chronological trail.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         existing = get_session(session_id)
@@ -1161,7 +1175,7 @@ def register_diagnose(cli_group: click.Group) -> None:
         With --format txt|json|md, prints the chosen format to stdout, or writes
         to --output PATH if given.
         """
-        console = Console()
+        console = get_console()
         init_db()
         s = get_session(session_id)
         if s is None:

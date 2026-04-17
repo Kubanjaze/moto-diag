@@ -1,7 +1,6 @@
 """MotoDiag CLI — main entry point."""
 
 import click
-from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
@@ -16,8 +15,9 @@ from motodiag.cli.subscription import (
 from motodiag.cli.code import register_code
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.kb import register_kb
+from motodiag.cli.theme import get_console, status, tier_style
 
-console = Console()
+console = get_console()
 
 
 @click.group(invoke_without_command=True)
@@ -129,13 +129,9 @@ def tier(compare: bool) -> None:
     features = get_tier_features(user_tier)
     mode = get_enforcement_mode()
 
-    # Tier header panel
-    tier_colors = {
-        SubscriptionTier.INDIVIDUAL: "cyan",
-        SubscriptionTier.SHOP: "yellow",
-        SubscriptionTier.COMPANY: "magenta",
-    }
-    color = tier_colors.get(user_tier, "white")
+    # Tier header panel. The color comes from the shared theme map
+    # (Phase 129) so a future theme swap is a one-dict edit.
+    color = tier_style(user_tier.value)
     mode_note = (
         "[dim](dev mode — paywall not enforced)[/dim]"
         if mode == "soft" else "[red](paywall enforced)[/red]"
@@ -499,7 +495,8 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None
     init_db()
     identifier = VehicleIdentifier()
     try:
-        guess = identifier.identify(image_path, user_id=1, hints=hints)
+        with status("Identifying bike..."):
+            guess = identifier.identify(image_path, user_id=1, hints=hints)
     except QuotaExceededError as e:
         console.print(f"[red]{e}[/red]")
         raise click.Abort() from e
@@ -557,7 +554,8 @@ def intake_photo(image_path: str, hints: str | None) -> None:
     init_db()
     identifier = VehicleIdentifier()
     try:
-        guess = identifier.identify(image_path, user_id=1, hints=hints)
+        with status("Identifying bike..."):
+            guess = identifier.identify(image_path, user_id=1, hints=hints)
     except QuotaExceededError as e:
         console.print(f"[red]{e}[/red]")
         raise click.Abort() from e

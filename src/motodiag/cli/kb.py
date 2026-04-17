@@ -28,6 +28,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from motodiag.cli.theme import get_console, severity_style
 from motodiag.core.database import init_db
 from motodiag.knowledge.issues_repo import (
     find_issues_by_dtc,
@@ -101,12 +102,17 @@ def _render_issue_table(
 
     for row in rows:
         parts = row.get("parts_needed") or []
+        sev = row.get("severity")
+        sev_text = sev if sev else "-"
+        # Phase 129: severity color from the shared theme map so a future
+        # theme swap is a one-file edit.
+        sev_style = severity_style(sev)
         table.add_row(
             str(row.get("id", "?")),
             row.get("make") or "all",
             row.get("model") or "all",
             _year_range_str(row),
-            row.get("severity") or "-",
+            f"[{sev_style}]{sev_text}[/{sev_style}]",
             _truncate(row.get("title")),
             str(len(parts)),
         )
@@ -155,10 +161,16 @@ def _render_issue_detail(row: dict, console: Console) -> None:
     make = row.get("make") or "all makes"
     model = row.get("model") or "all models"
     years = _year_range_str(row)
-    severity = row.get("severity") or "-"
+    severity_raw = row.get("severity")
+    severity_text = severity_raw if severity_raw else "-"
+    # Phase 129: severity color from the shared theme map.
+    severity_rich = (
+        f"[{severity_style(severity_raw)}]{severity_text}"
+        f"[/{severity_style(severity_raw)}]"
+    )
 
     header = (
-        f"[bold]Issue #{issue_id}[/bold]   [dim]severity:[/dim] {severity}\n"
+        f"[bold]Issue #{issue_id}[/bold]   [dim]severity:[/dim] {severity_rich}\n"
         f"[bold yellow]{title}[/bold yellow]\n"
         f"[dim]{make} {model}   {years}[/dim]"
     )
@@ -245,7 +257,7 @@ def register_kb(cli_group: click.Group) -> None:
         existing `search_known_issues` function — same AND semantics as
         Phase 08.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         # search_known_issues doesn't support a symptom filter directly
@@ -291,7 +303,7 @@ def register_kb(cli_group: click.Group) -> None:
     @click.argument("issue_id", type=int)
     def kb_show(issue_id: int) -> None:
         """Render the full detail of a single known issue by ID."""
-        console = Console()
+        console = get_console()
         init_db()
 
         row = get_known_issue(issue_id)
@@ -309,7 +321,7 @@ def register_kb(cli_group: click.Group) -> None:
         Case-insensitive LIKE. Empty query is rejected — searching for
         '%%' would dump the whole knowledge base with no signal.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         if not query or not query.strip():
@@ -333,7 +345,7 @@ def register_kb(cli_group: click.Group) -> None:
     @click.argument("symptom")
     def kb_by_symptom(symptom: str) -> None:
         """Find known issues that list the given symptom in their symptoms array."""
-        console = Console()
+        console = get_console()
         init_db()
 
         rows = find_issues_by_symptom(symptom)
@@ -356,7 +368,7 @@ def register_kb(cli_group: click.Group) -> None:
         the field frequently type codes in lowercase, and the
         knowledge-base JSON stores them uppercase by convention.
         """
-        console = Console()
+        console = get_console()
         init_db()
 
         code = (dtc or "").strip().upper()

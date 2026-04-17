@@ -377,3 +377,17 @@ Fourth agent-delegated phase. No migration, no new package. Adds a `motodiag kb`
 - Full regression (running): expected 2233/2233 passing, zero regressions.
 - Implementation.md → v0.6.7.
 - Next: Phase 129 (Rich terminal UI / progress / colors enhancements).
+
+### 2026-04-18 02:10 — Phase 129 complete — Rich terminal UI polish (theme + progress)
+Fifth agent-delegated phase. No migration, no new commands. New `cli/theme.py` centralizes what was previously scattered: Console construction, severity/status/tier color coding, icon constants, spinner context for AI calls.
+- New `src/motodiag/cli/theme.py` (~230 LoC): `get_console()` singleton + `reset_console()`, `SEVERITY_COLORS` / `STATUS_COLORS` / `TIER_COLORS` maps, style + markup helpers, 5 icon constants, `status(msg)` spinner context manager. Respects `NO_COLOR` and `COLUMNS` env vars.
+- Migrated 10+ inline `Console()` sites across `cli/main.py`, `cli/subscription.py`, `cli/diagnose.py`, `cli/code.py`, `cli/kb.py`. Zero remaining inline Console construction in the cli package after this phase.
+- Wired progress spinners around long-running AI operations: `diagnose quick` and `diagnose start` (around `_run_quick`/`_run_interactive`), `code --explain` (around `_run_explain`), `garage add-from-photo` and `intake photo` (around `VehicleIdentifier.identify`).
+- Canonicalized severity coloring: dropped `code.py`'s local `_SEVERITY_COLORS` map (was `"critical": "red bold"`; now canonical `"red"` from theme.SEVERITY_COLORS). `kb.py`'s issue-detail header severity gained colorization (implicit consistency improvement).
+- Added autouse fixture `_reset_console_around_every_test` alongside `cli_db`'s reset for defense-in-depth across all test classes.
+- **Agent delegation**: Builder-A's cleanest pass so far — 20 tests passed first run in 1.29s, zero iterative fixes, zero assertion softening, zero fixture tweaks. Sandbox blocked Python (6th time), Architect ran trust-but-verify locally.
+- 20 new tests. Zero AI calls. Zero live tokens.
+- Full regression (running): expected 2253/2253, zero regressions.
+- `Textual` full TUI explicitly deferred — out of scope for this polish phase; can be a future dedicated phase if demand materializes.
+- Implementation.md → v0.6.8.
+- Next: Phase 130 (Shell completions + shortcuts).

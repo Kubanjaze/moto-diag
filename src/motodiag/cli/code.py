@@ -22,6 +22,7 @@ from rich.console import Console
 from rich.panel import Panel
 from rich.table import Table
 
+from motodiag.cli.theme import get_console, status as theme_status, severity_style
 from motodiag.cli.diagnose import (
     _resolve_model,
     _load_vehicle,
@@ -41,14 +42,10 @@ from motodiag.knowledge.dtc_repo import (
 
 
 # --- Severity colors for rich rendering ---
-
-_SEVERITY_COLORS: dict[str, str] = {
-    "critical": "red bold",
-    "high": "red",
-    "medium": "yellow",
-    "low": "green",
-    "info": "dim",
-}
+#
+# Phase 129: the canonical severity → style map lives in
+# :mod:`motodiag.cli.theme`. We re-export the ``severity_style``
+# helper above so existing call sites keep working unchanged.
 
 
 # --- Core lookup helpers ---
@@ -173,7 +170,7 @@ def _render_local(row: dict, console: Console) -> None:
         )
 
     sev = row.get("severity") or "unknown"
-    sev_style = _SEVERITY_COLORS.get(sev, "white")
+    sev_style = severity_style(sev)
     category = row.get("category") or row.get("code_format") or "unknown"
     make_str = row.get("make") or "Generic (all makes)"
 
@@ -281,7 +278,7 @@ def _render_category_list(
     t.add_column("Make")
     for row in rows:
         sev = row.get("severity") or "-"
-        sev_style = _SEVERITY_COLORS.get(sev, "white")
+        sev_style = severity_style(sev)
         t.add_row(
             row.get("code", "?"),
             row.get("description", "") or "-",
@@ -332,7 +329,7 @@ def register_code(cli_group: click.Group) -> None:
         ai_model_flag: Optional[str],
     ) -> None:
         """Look up a diagnostic trouble code (e.g., P0115)."""
-        console = Console()
+        console = get_console()
         init_db()
 
         # --- Mode 1: category list ---
@@ -367,12 +364,14 @@ def register_code(cli_group: click.Group) -> None:
                 )
 
             symptom_list = _parse_symptoms(symptoms or "")
-            result, _usage = _run_explain(
-                vehicle=vehicle,
-                code=dtc_code,
-                symptoms=symptom_list,
-                ai_model=ai_model,
-            )
+            # Phase 129: spinner during the AI interpretation.
+            with theme_status("Interpreting fault code..."):
+                result, _usage = _run_explain(
+                    vehicle=vehicle,
+                    code=dtc_code,
+                    symptoms=symptom_list,
+                    ai_model=ai_model,
+                )
             _render_explain(result, console)
             return
 
