@@ -135,9 +135,15 @@ class TestLoader:
 
 class TestCLI:
     def test_code_help(self):
+        """`motodiag code --help` renders help text (exit 0).
+
+        Phase 124 update: the bare `motodiag code` invocation (no DTC arg)
+        now errors with a ClickException, so this test exercises `--help`
+        instead. Help text is the right surface to verify CLI wiring.
+        """
         from click.testing import CliRunner
         from motodiag.cli.main import cli
         runner = CliRunner()
-        result = runner.invoke(cli, ["code"])
+        result = runner.invoke(cli, ["code", "--help"])
         assert result.exit_code == 0
         assert "Usage" in result.output

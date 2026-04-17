@@ -314,3 +314,17 @@ Second post-retrofit user-facing phase. **No migration** — reuses Phase 03 `di
 - 39 new tests. Full regression: 2090/2090 passing (11:43 runtime). Zero regressions.
 - Implementation.md → v0.6.2.
 - Next: Track D resumes at Phase 124 (Fault code lookup command).
+
+### 2026-04-17 23:50 — Phase 124 complete — Fault code lookup CLI
+Third post-retrofit user-facing phase. **No migration** — reuses Phase 03 `dtc_codes` + Phase 111 `dtc_category_meta` substrates. Replaces Phase 01's inline `code` command (a 50-line DB-only scaffold) with a full orchestration module and three explicit modes. Track D is now halfway through the CLI surface that paying users will actually touch.
+
+- New `src/motodiag/cli/code.py` (392 LoC): `_lookup_local` (make-specific → generic fallback chain), `_classify_fallback` (classify_code heuristic → dtc_row-shaped dict), `_default_interpret_fn` (production wrapper around `FaultCodeInterpreter`), `_run_explain` (known-issues loader + injected interpret call), `_render_local` (DB row or fallback with yellow banner), `_render_explain` (7-section AI result renderer with safety-critical callout), `_render_category_list` (table), `register_code(cli_group)` (with legacy-command eviction guard).
+- Modified `src/motodiag/cli/main.py`: deleted the Phase 01 inline `code` command, added `from motodiag.cli.code import register_code`, called `register_code(cli)` alongside `register_diagnose(cli)`.
+- Three CLI modes in one command: (1) `motodiag code P0115` — default DB lookup, zero tokens; (2) `motodiag code --category hv_battery` — list DTCs in a category, zero tokens; (3) `motodiag code P0115 --explain --vehicle-id N` — AI root-cause analysis, tier-gated.
+- Tier gating reused from Phase 123: individual → Haiku only; shop/company → Sonnet available via `--model sonnet`. HARD raises; SOFT falls back with warning. `_resolve_model`, `_load_vehicle`, `_load_known_issues`, `_parse_symptoms` all imported from `cli.diagnose` (no copy-paste).
+- Fallback chain ensures the mechanic always gets something back: DB make-specific → DB generic → `classify_code()` heuristic. The heuristic output gets a yellow "No DB entry — heuristic classification only" banner and a hint to re-run with `--explain`.
+- `_default_interpret_fn` injected via `patch("motodiag.cli.code._default_interpret_fn", fn)` in every AI-hitting test — zero live tokens burned across the full Phase 124 test suite.
+- Phase 05 `test_code_help` regression: updated to invoke `motodiag code --help` instead of `motodiag code` with no args, since the new command correctly raises `ClickException` on missing args per Phase 124's spec. Documented under Deviations.
+- 33 new tests across 8 classes. Full regression: 2123/2123 passing (~9:58 runtime). Zero regressions.
+- Implementation.md → v0.6.3.
+- Next: Track D continues — history browse, export, etc.
