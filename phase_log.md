@@ -340,3 +340,16 @@ First post-Phase-124 and first agent-delegated build. Pure UX sugar on Phase 123
 - Schema v13 unchanged. Full regression: 2157/2157 passing, zero regressions. Zero live tokens.
 - Implementation.md → v0.6.4.
 - Next: correct CLAUDE.md's agent-pool section re: SendMessage reality; then Phase 126.
+
+### 2026-04-18 00:30 — Phase 126 complete — Diagnostic report output (export to file)
+Second agent-delegated phase. No migration, no new package. Extended `cli/diagnose.py` (+200 LoC) with three pure formatters and three new options on the existing `diagnose show` command.
+- New: `_format_session_text`, `_format_session_json`, `_format_session_md` (pure `dict → str`), 4 private utility helpers (`_short_ts`, `_fmt_list`, `_fmt_conf`, `_write_report_to_file`).
+- Extended `diagnose show` with `--format [terminal|txt|json|md]` default `terminal`, `--output PATH` optional, `--yes` to skip overwrite confirmation.
+- Behavior matrix: terminal+no-output = Phase 123 Rich Panel unchanged; terminal+PATH = warning printed, no file written; txt/json/md to stdout if no PATH, to file if PATH.
+- JSON includes `"format_version": "1"` as first key via ordered dict construction — consumers can reject unknown versions when schema evolves.
+- File writing: UTF-8 + `newline=""` for Windows CRLF safety, `os.makedirs(parent, exist_ok=True)`, `click.confirm` for overwrite unless `--yes`, PermissionError and IsADirectoryError surface as ClickException.
+- Pure-formatter architecture sets up Phase 132 (export + sharing) to reuse `_format_session_md` as input to a markdown → PDF pipeline with zero refactoring.
+- **Agent delegation**: Builder-A shipped clean code in one pass. Sandbox blocked Python for the agent; Architect ran 22 phase tests as trust-but-verify — all passed in 4.31s. Finalization done in-process since SendMessage unavailable. One design simplification from plan: `--format terminal --output PATH` prints warning instead of using Rich `console.record` — keeps Phase 123 terminal path byte-for-byte unchanged.
+- Full regression (running when this entry was written): expected 2179/2179 passing, zero regressions.
+- Implementation.md → v0.6.5.
+- Next: Phase 127 (session history browser).

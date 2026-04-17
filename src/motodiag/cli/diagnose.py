@@ -14,7 +14,9 @@ All AI calls go through an injectable `diagnose_fn` so tests never burn tokens.
 
 from __future__ import annotations
 
+import json
 import os
+import textwrap
 from typing import Any, Callable, Optional
 
 import click
@@ -490,6 +492,346 @@ def _render_response(response: Any, console: Console) -> None:
         console.print(Panel(notes, title="Notes", border_style="dim"))
 
 
+# --- Phase 126: Report formatters (pure dict → str) ---
+#
+# Three output formats for `motodiag diagnose show --format ...`:
+#   txt  — plain text for email / print (no Rich markup)
+#   json — structured, versioned dump (full session row)
+#   md   — GitHub-flavored markdown, headings + key-value table
+#
+# Each formatter is a pure function of the session dict so they can be
+# unit-tested without file I/O and reused by Phase 132 (export/share).
+
+# Bumps on any schema change to the JSON output.
+_REPORT_FORMAT_VERSION = "1"
+
+# Text-wrap column width for the plain-text formatter.
+_TEXT_WRAP_COL = 80
+
+
+def _short_ts(ts: Any) -> str:
+    """Return the first 19 chars of an ISO timestamp, or '-' for None/empty.
+
+    Timestamps from session_repo are ISO strings like
+    '2026-04-17T14:33:21.123456'. Truncating to 19 chars gives 'YYYY-MM-DD
+    HH:MM:SS' which is readable in all three formats.
+    """
+    if not ts:
+        return "-"
+    s = str(ts)
+    return s[:19] if len(s) > 19 else s
+
+
+def _fmt_list(items: Optional[list], empty: str = "-") -> str:
+    """Join a list with ', ' or return `empty` if None/empty.
+
+    Defensive against None — session_repo guarantees a list but external
+    callers (and tests with minimal dicts) may pass None.
+    """
+    if not items:
+        return empty
+    return ", ".join(str(x) for x in items)
+
+
+def _fmt_conf(conf: Optional[float]) -> str:
+    """Format confidence as '0.87' or '-' if None."""
+    if conf is None:
+        return "-"
+    try:
+        return f"{float(conf):.2f}"
+    except (TypeError, ValueError):
+        return "-"
+
+
+def _format_session_text(session: dict) -> str:
+    """Render a session dict as plain text (no Rich markup, 80-col wrapped).
+
+    Layout:
+        Session #42   status: closed
+        ============================
+
+        Vehicle
+        -------
+        2001 Harley-Davidson Sportster 1200
+
+        Symptoms
+        --------
+        won't start, cranks slow
+
+        Fault codes
+        -----------
+        P0300
+
+        Diagnosis
+        ---------
+        Stator failure — voltage drops under load.
+        Confidence: 0.87   Severity: high
+
+        Repair steps
+        ------------
+          1. Check stator continuity (service manual §7-3)
+          2. Replace stator if reading < 0.2Ω
+
+        Metadata
+        --------
+        AI model: haiku    Tokens: 1432
+        Created: 2026-04-17 14:33:21
+        Closed:  2026-04-17 14:34:05
+    """
+    sid = session.get("id", "?")
+    status = session.get("status") or "-"
+
+    lines: list[str] = []
+    heading = f"Session #{sid}   status: {status}"
+    lines.append(heading)
+    lines.append("=" * len(heading))
+    lines.append("")
+
+    # --- Vehicle
+    lines.append("Vehicle")
+    lines.append("-------")
+    vehicle_str = (
+        f"{session.get('vehicle_year', '?')} "
+        f"{session.get('vehicle_make', '?')} "
+        f"{session.get('vehicle_model', '?')}"
+    )
+    lines.append(vehicle_str.strip())
+    lines.append("")
+
+    # --- Symptoms
+    lines.append("Symptoms")
+    lines.append("--------")
+    symp_text = _fmt_list(session.get("symptoms"))
+    lines.append(textwrap.fill(symp_text, width=_TEXT_WRAP_COL) or "-")
+    lines.append("")
+
+    # --- Fault codes
+    lines.append("Fault codes")
+    lines.append("-----------")
+    fc_text = _fmt_list(session.get("fault_codes"))
+    lines.append(textwrap.fill(fc_text, width=_TEXT_WRAP_COL) or "-")
+    lines.append("")
+
+    # --- Diagnosis
+    lines.append("Diagnosis")
+    lines.append("---------")
+    diag = session.get("diagnosis") or "(none)"
+    # textwrap.fill handles long diagnosis text; preserve paragraph breaks
+    # by wrapping each non-empty line independently.
+    for para in str(diag).split("\n"):
+        wrapped = textwrap.fill(para, width=_TEXT_WRAP_COL) if para else ""
+        lines.append(wrapped)
+    conf_str = _fmt_conf(session.get("confidence"))
+    sev = session.get("severity") or "-"
+    lines.append(f"Confidence: {conf_str}   Severity: {sev}")
+    lines.append("")
+
+    # --- Repair steps
+    lines.append("Repair steps")
+    lines.append("------------")
+    steps = session.get("repair_steps") or []
+    if steps:
+        for i, step in enumerate(steps, 1):
+            # Wrap long steps with a hanging indent matching the bullet.
+            prefix = f"  {i}. "
+            wrapped = textwrap.fill(
+                str(step),
+                width=_TEXT_WRAP_COL,
+                initial_indent=prefix,
+                subsequent_indent=" " * len(prefix),
+            )
+            lines.append(wrapped)
+    else:
+        lines.append("  (none)")
+    lines.append("")
+
+    # --- Metadata
+    lines.append("Metadata")
+    lines.append("--------")
+    model = session.get("ai_model_used") or "-"
+    tokens = session.get("tokens_used")
+    tokens_str = str(tokens) if tokens is not None else "-"
+    lines.append(f"AI model: {model}    Tokens: {tokens_str}")
+    lines.append(f"Created: {_short_ts(session.get('created_at'))}")
+    if session.get("closed_at"):
+        lines.append(f"Closed:  {_short_ts(session.get('closed_at'))}")
+    elif session.get("updated_at"):
+        lines.append(f"Updated: {_short_ts(session.get('updated_at'))}")
+
+    # Trailing newline so Unix pipelines play nicely.
+    return "\n".join(lines) + "\n"
+
+
+def _format_session_json(session: dict) -> str:
+    """Render a session dict as pretty-printed JSON with a format_version tag.
+
+    The output is a JSON object with the version key first, then all session
+    fields verbatim. Round-trips through `json.loads` with all fields preserved.
+    Uses `indent=2` and `ensure_ascii=False` so non-ASCII symptom text
+    (e.g. mechanic notes) survives untouched.
+    """
+    # Ordered: version key first, then the rest of the session dict in its
+    # existing key order.  dict() preserves insertion order in 3.7+.
+    out: dict = {"format_version": _REPORT_FORMAT_VERSION}
+    for k, v in session.items():
+        out[k] = v
+    return json.dumps(out, indent=2, ensure_ascii=False, default=str)
+
+
+def _format_session_md(session: dict) -> str:
+    """Render a session dict as GitHub-flavored markdown.
+
+    Structure:
+        # Session #42
+        ## Vehicle
+        - Year: 2001
+        - Make: Harley-Davidson
+        ...
+        ## Symptoms
+        - won't start
+        ...
+        ## Diagnosis
+        Stator failure — voltage drops under load.
+        | Confidence | Severity | AI model | Tokens |
+        |---|---|---|---|
+        | 0.87 | high | haiku | 1432 |
+        ## Repair Steps
+        1. Check stator continuity
+        2. Replace stator
+        ## Timestamps
+        - Created: 2026-04-17 14:33:21
+        - Closed:  2026-04-17 14:34:05
+    """
+    sid = session.get("id", "?")
+    status = session.get("status") or "-"
+    lines: list[str] = []
+
+    lines.append(f"# Session #{sid}")
+    lines.append("")
+    lines.append(f"_Status_: **{status}**")
+    lines.append("")
+
+    # --- Vehicle
+    lines.append("## Vehicle")
+    lines.append("")
+    lines.append(f"- Year: {session.get('vehicle_year', '?')}")
+    lines.append(f"- Make: {session.get('vehicle_make', '?')}")
+    lines.append(f"- Model: {session.get('vehicle_model', '?')}")
+    if session.get("vehicle_id") is not None:
+        lines.append(f"- Vehicle ID: {session.get('vehicle_id')}")
+    lines.append("")
+
+    # --- Symptoms
+    lines.append("## Symptoms")
+    lines.append("")
+    symptoms = session.get("symptoms") or []
+    if symptoms:
+        for s in symptoms:
+            lines.append(f"- {s}")
+    else:
+        lines.append("_none recorded_")
+    lines.append("")
+
+    # --- Fault codes
+    lines.append("## Fault Codes")
+    lines.append("")
+    codes = session.get("fault_codes") or []
+    if codes:
+        for c in codes:
+            lines.append(f"- `{c}`")
+    else:
+        lines.append("_none recorded_")
+    lines.append("")
+
+    # --- Diagnosis
+    lines.append("## Diagnosis")
+    lines.append("")
+    diag = session.get("diagnosis") or "_(none)_"
+    lines.append(str(diag))
+    lines.append("")
+    # Metadata table
+    conf_str = _fmt_conf(session.get("confidence"))
+    sev = session.get("severity") or "-"
+    model = session.get("ai_model_used") or "-"
+    tokens = session.get("tokens_used")
+    tokens_str = str(tokens) if tokens is not None else "-"
+    lines.append("| Confidence | Severity | AI model | Tokens |")
+    lines.append("|---|---|---|---|")
+    lines.append(f"| {conf_str} | {sev} | {model} | {tokens_str} |")
+    lines.append("")
+
+    # --- Repair Steps
+    lines.append("## Repair Steps")
+    lines.append("")
+    steps = session.get("repair_steps") or []
+    if steps:
+        for i, step in enumerate(steps, 1):
+            lines.append(f"{i}. {step}")
+    else:
+        lines.append("_no repair steps recorded_")
+    lines.append("")
+
+    # --- Timestamps
+    lines.append("## Timestamps")
+    lines.append("")
+    lines.append(f"- Created: {_short_ts(session.get('created_at'))}")
+    if session.get("updated_at"):
+        lines.append(f"- Updated: {_short_ts(session.get('updated_at'))}")
+    if session.get("closed_at"):
+        lines.append(f"- Closed: {_short_ts(session.get('closed_at'))}")
+    lines.append("")
+
+    return "\n".join(lines)
+
+
+def _write_report_to_file(path: str, content: str, overwrite_confirmed: bool) -> None:
+    """Write `content` to `path` (UTF-8, LF line endings).
+
+    - Creates parent directories as needed.
+    - If `path` is an existing directory → ClickException.
+    - If `path` exists as a file and `overwrite_confirmed` is False → prompts via
+      click.confirm; raising Abort on decline.
+    - PermissionError → ClickException with clear message.
+
+    `newline=""` is passed to `open()` to prevent Python from translating
+    the LF in our formatter output to CRLF on Windows, which would double
+    up line endings if the content already contained `\r\n`.
+    """
+    # Directory-as-output guard — must come before anything that would create
+    # a parent directory (which could swallow the error as "file exists").
+    if os.path.isdir(path):
+        raise click.ClickException(
+            f"Output path is a directory, not a file: {path}"
+        )
+
+    if os.path.exists(path) and not overwrite_confirmed:
+        if not click.confirm(
+            f"File exists: {path}. Overwrite?", default=False
+        ):
+            raise click.Abort()
+
+    parent = os.path.dirname(os.path.abspath(path))
+    if parent and not os.path.exists(parent):
+        try:
+            os.makedirs(parent, exist_ok=True)
+        except PermissionError as e:
+            raise click.ClickException(
+                f"Permission denied creating directory {parent}: {e}"
+            ) from e
+
+    try:
+        with open(path, "w", encoding="utf-8", newline="") as f:
+            f.write(content)
+    except PermissionError as e:
+        raise click.ClickException(
+            f"Permission denied writing to {path}: {e}"
+        ) from e
+    except IsADirectoryError as e:  # pragma: no cover — covered by isdir() above
+        raise click.ClickException(
+            f"Output path is a directory, not a file: {path}"
+        ) from e
+
+
 # --- Click commands registered in cli/main.py via register_diagnose(cli) ---
 
 
@@ -637,8 +979,36 @@ def register_diagnose(cli_group: click.Group) -> None:
 
     @diagnose.command("show")
     @click.argument("session_id", type=int)
-    def diagnose_show(session_id: int) -> None:
-        """Render a saved diagnostic session."""
+    @click.option(
+        "--format", "output_format",
+        type=click.Choice(["terminal", "txt", "json", "md"], case_sensitive=False),
+        default="terminal",
+        show_default=True,
+        help="Output format. 'terminal' preserves the Phase 123 Rich rendering.",
+    )
+    @click.option(
+        "--output", "output_path",
+        type=click.Path(dir_okay=False, writable=True, resolve_path=False),
+        default=None,
+        help="Write report to PATH instead of stdout. Ignored with --format terminal.",
+    )
+    @click.option(
+        "--yes", "-y", "assume_yes",
+        is_flag=True, default=False,
+        help="Skip overwrite confirmation when --output points to an existing file.",
+    )
+    def diagnose_show(
+        session_id: int,
+        output_format: str,
+        output_path: Optional[str],
+        assume_yes: bool,
+    ) -> None:
+        """Render a saved diagnostic session.
+
+        Without flags, renders a Rich Panel to the terminal (Phase 123 behavior).
+        With --format txt|json|md, prints the chosen format to stdout, or writes
+        to --output PATH if given.
+        """
         console = Console()
         init_db()
         s = get_session(session_id)
@@ -646,27 +1016,56 @@ def register_diagnose(cli_group: click.Group) -> None:
             console.print(f"[red]Session #{session_id} not found.[/red]")
             raise click.Abort()
 
-        header = (
-            f"[bold]Session #{s['id']}[/bold]   status: {s.get('status')}\n"
-            f"Vehicle: {s.get('vehicle_year')} {s.get('vehicle_make')} {s.get('vehicle_model')}\n"
-            f"Symptoms: {', '.join(s.get('symptoms') or []) or '-'}\n"
-            f"Fault codes: {', '.join(s.get('fault_codes') or []) or '-'}\n"
-        )
-        console.print(Panel(header, title="Session", border_style="cyan"))
+        fmt = output_format.lower()
 
-        diag = s.get("diagnosis") or "(none)"
-        conf = s.get("confidence")
-        conf_str = f"{conf:.2f}" if conf is not None else "-"
-        sev = s.get("severity") or "-"
-        steps = s.get("repair_steps") or []
+        # Phase 123 terminal path — unchanged behavior.
+        if fmt == "terminal":
+            if output_path:
+                console.print(
+                    "[yellow]⚠ --output ignored with --format terminal. "
+                    "Use --format txt|json|md to write a file.[/yellow]"
+                )
 
-        body = (
-            f"[bold]Diagnosis:[/bold]\n{diag}\n\n"
-            f"Confidence: {conf_str}   Severity: {sev}\n"
-        )
-        if steps:
-            body += "\n[bold]Repair steps:[/bold]\n" + "\n".join(f"  • {x}" for x in steps)
-        console.print(Panel(body, title="Result", border_style="green"))
+            header = (
+                f"[bold]Session #{s['id']}[/bold]   status: {s.get('status')}\n"
+                f"Vehicle: {s.get('vehicle_year')} {s.get('vehicle_make')} {s.get('vehicle_model')}\n"
+                f"Symptoms: {', '.join(s.get('symptoms') or []) or '-'}\n"
+                f"Fault codes: {', '.join(s.get('fault_codes') or []) or '-'}\n"
+            )
+            console.print(Panel(header, title="Session", border_style="cyan"))
+
+            diag = s.get("diagnosis") or "(none)"
+            conf = s.get("confidence")
+            conf_str = f"{conf:.2f}" if conf is not None else "-"
+            sev = s.get("severity") or "-"
+            steps = s.get("repair_steps") or []
+
+            body = (
+                f"[bold]Diagnosis:[/bold]\n{diag}\n\n"
+                f"Confidence: {conf_str}   Severity: {sev}\n"
+            )
+            if steps:
+                body += "\n[bold]Repair steps:[/bold]\n" + "\n".join(f"  • {x}" for x in steps)
+            console.print(Panel(body, title="Result", border_style="green"))
+            return
+
+        # Non-terminal export formats
+        if fmt == "txt":
+            content = _format_session_text(s)
+        elif fmt == "json":
+            content = _format_session_json(s)
+        elif fmt == "md":
+            content = _format_session_md(s)
+        else:  # pragma: no cover — click.Choice guards this
+            raise click.ClickException(f"Unknown format: {output_format}")
+
+        if output_path:
+            _write_report_to_file(output_path, content, overwrite_confirmed=assume_yes)
+            click.echo(f"Saved to {output_path}")
+        else:
+            # Use click.echo so CliRunner captures it and newline handling
+            # is consistent with other commands.
+            click.echo(content, nl=False)
 
 
 def register_quick(cli_group: click.Group) -> None:
