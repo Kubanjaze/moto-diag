@@ -12,6 +12,7 @@ from motodiag.cli.subscription import (
     format_tier_comparison,
     get_enforcement_mode,
 )
+from motodiag.cli.advanced import register_advanced
 from motodiag.cli.cache import register_cache
 from motodiag.cli.code import register_code
 from motodiag.cli.completion import register_completion
@@ -645,6 +646,11 @@ register_cache(cli)
 # Phase 140: register the `hardware` subgroup (scan/clear/info). Like
 # cache, must come before completion so shell-completion scripts see it.
 register_hardware(cli)
+
+# Phase 148: register the `advanced` subgroup (predict; Phases 149-159
+# will append more subcommands to the same group). Must come before
+# completion so shell-completion scripts see the new subgroup.
+register_advanced(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)
