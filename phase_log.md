@@ -515,3 +515,37 @@ Tenth agent-delegated phase. **Builder-A's cleanest pass yet** — no sandbox bl
 - Full regression (running): expected 2614/2614, zero regressions.
 - Implementation.md to v0.7.3.
 - **Next**: Phase 141 (live sensor data streaming — RPM / TPS / coolant / battery V / O2 via `motodiag hardware stream`).
+
+### 2026-04-18 18:15 — Phases 141-148 complete — Track E CLOSED via Gate 6 + Track F OPENED
+
+**Sixteen consecutive phases shipped in one session (133-148).** Full regression `pytest tests/ -q` → **3003 passed in 647.23s (0:10:47)**. Implementation.md bumped 0.7.3 → 0.8.0.
+
+**Phase 141 — Live sensor data streaming (Wave 1):** new `hardware/sensors.py` (SAE J1979 Mode 01 PID catalog with 23 entries + `SensorSpec` dataclass + `SensorReading` Pydantic v2 model + `SensorStreamer` one-shot iterator + `parse_pid_list`). `cli/hardware.py` +400 LoC: `stream` subcommand with Rich `Live(auto_refresh=False)` loop + `_StreamCsvWriter` wide-format CSV append. `mock.py` +34 LoC: `pid_values` additive kwarg (None preserves Phase 140 byte-identity). Error taxonomy: `TimeoutError` per-PID → `status=timeout` cell + retry next tick; `ConnectionError`/other `ProtocolError` → re-raise → red panel + exit 1. 42 tests GREEN. Bug fix #1: hz-throttle test expectation (generator post-yield sleep semantics).
+
+**Phase 142 — Data logging + recording (Wave 2):** migration 016 (v15→v16). `sensor_recordings` + `sensor_samples` + 4 indexes. `hardware/recorder.py` (864 LoC — `RecordingManager` with SQLite/JSONL split at 1000 rows, transparent merge via (captured_at, pid_hex, raw) signature dedup, linear-interp `DiffReport` via stdlib `bisect`). `cli/hardware.py` +1300 LoC: `log {start,stop,list,show,replay,diff,export,prune}` 8-subcommand subgroup. Export: CSV wide / JSON / Parquet (lazy pyarrow). `parquet = [pyarrow>=15.0]` optional extra. 52 tests GREEN on first trust-but-verify — no bug fixes needed.
+
+**Phase 143 — Textual TUI dashboard (Wave 3):** new `hardware/dashboard.py` (1282 LoC — lazy Textual import with stubs for missing-dep. `DashboardApp(App)` with 3-column CSS grid + BINDINGS ctrl+q/ctrl+r/d/1-6. `GaugeWidget`/`PidChart`/`DTCPanel`/`StatusBar`. `LiveDashboardSource` wraps Phase 141 SensorStreamer iterator; `ReplayDashboardSource` walks Phase 142 RecordingManager). `hardware dashboard` subcommand. `dashboard = [textual>=0.40,<1.0]` optional extra. 46 tests GREEN. Bug fix #1: `GaugeWidget.render()` used `numeric` (unclamped) in display; fixed to `clamped`.
+
+**Phase 144 — Hardware simulator (Wave 1):** new `hardware/simulator.py` (1212 LoC — SimulationClock + 9 Pydantic event models discriminated-union on `action` + Scenario aggregate with cross-event validators + ScenarioLoader from_yaml/from_recording/list_builtins + `SimulatedAdapter(ProtocolAdapter)` sibling to MockAdapter). 10 built-in YAML scenarios. `hardware simulate {list,run,validate}` subgroup + `--simulator SCENARIO` opt-in on scan/clear/info. `pyyaml>=6` base dep + `package-data` YAML assets. 81 tests GREEN. Bug fix #1: `_coerce_pid` bare-number → decimal (JSON round-trip identity).
+
+**Phase 145 — Adapter compatibility database (Wave 2):** migration 017 (v16→v17). 3 tables (`obd_adapters` + `adapter_compatibility` + `compat_notes`) + 6 indexes. `hardware/compat_repo.py` (814 LoC CRUD + ranking + filter hook). `compat_loader.py` (206 LoC idempotent). Seed data: 24 real adapters across 5 price tiers + 110 compat matrix rows + 12 curated notes. `hardware compat {list,recommend,check,show,note add,note list,seed}` 7-subcommand subgroup. AutoDetector `compat_repo=None` kwarg (Phase 139 backward-compat). 57 tests GREEN after 2 bug fixes. Bug fix #1 (Builder-145-Fix): fixture three-layer db_path redirect. Bug fix #2 (Architect): `obdlink-cx` → `scantool-obdlink-cx` slug drift between adapters.json and compat_notes.json.
+
+**Phase 146 — Retry/recover + diagnose troubleshooter (Wave 3):** `connection.py` +446 LoC (RetryPolicy + ResilientAdapter + retry_policy/auto_reconnect kwargs + try_reconnect). `ecu_detect.py` +62 LoC (`verbose`/`on_attempt` kwargs after compat_repo). `mock.py` +91 LoC (`flaky_rate`/`flaky_seed` with _roll_flaky; flaky_rate=0.0 preserves Phase 140 byte-identity). `cli/hardware.py` +1089 LoC: `--retry`/`--no-retry` on scan/info (on) and clear (off) + `hardware diagnose` 5-step troubleshooter. 56 tests GREEN after 2 bug fixes. Bug fix #1: MockAdapter missing import in diagnose `--mock` branch. Bug fix #2: `--retry`/`--simulator` mutex too strict → silent `retry=False`.
+
+**Phase 147 — Gate 6 (Track E CLOSED):** single new `tests/test_phase147_gate_6.py` (875 LoC, 8 tests across 3 classes, zero production code). Class A `test_full_hardware_flow`: one big CliRunner workflow (garage add → compat seed/recommend → hardware info/scan --simulator → log start/list/show/replay/export → stream → diagnose --mock → clear --simulator) on shared DB + 3 defensive AI mocks + time.sleep no-op patches. Class B: 4 surface tests (9-subcommand registration, subgroup children, --help, submodule imports). Class C: 3 regression (subprocess Gate 5 + Gate R + tiered schema floor). 8 tests GREEN after 2 bug fixes. Bug fix #1: `CliRunner(mix_stderr=False)` removed in Click 8.2+. Bug fix #2: `FROM recordings` wrong — Phase 142 table is `sensor_recordings`.
+
+**Phase 148 — Track F kickoff (predictive maintenance):** promotes `advanced` package Scaffold → Active. `advanced/models.py` (frozen Pydantic v2 FailurePrediction + PredictionConfidence). `advanced/predictor.py` (395 LoC — predict_failures with 4-pass retrieval, match-tier scoring exact_model=1.0/family=0.75/make=0.5/generic=0.3, severity-keyed heuristic onset critical=15k/high=30k/medium=50k/low=80k mi, mileage + age scoring bonuses, Forum-tip-precedence preventive_action extraction, verified_by substring heuristic, horizon/severity filters). `cli/advanced.py` (281 LoC — `predict --bike SLUG | --make/--model/--year/--current-miles`). 44 tests GREEN on first trust-but-verify. Zero migration, zero AI, zero live tokens.
+
+**Updates to this implementation.md + ROADMAP.md:**
+- Implementation version 0.7.3 → 0.8.0.
+- Package Inventory: `hardware` → Complete (Track E closed); `advanced` → Active (Phase 148); `auth`/`crm` stale "Planned" → Complete (Audit-Agent-3 finding).
+- Database Tables: added sensor_recordings, sensor_samples, obd_adapters, adapter_compatibility, compat_notes. Schema version noted as v17.
+- CLI Commands: full rewrite by track with 20+ previously-missing commands documented. Hidden aliases d/k/g/q noted.
+- Dependencies: added pyyaml base, python-can optional, pyarrow optional, textual optional.
+- Phase History rows for 141-148.
+- Completion Gates: Gate 6 ✅ (Track E closed).
+- ROADMAP: Phases 141-148 flipped 🔲 → ✅ with rich completion summaries. Track E header annotated "✅ COMPLETE".
+
+**Bug-fix discipline honored per CLAUDE.md peak-efficiency mode:** 9 total bug fixes across phases, each documented with Issue/Root cause/Fix/Files/Verified in the respective phase's phase_log.md + committed separately where practical.
+
+**Next session:** Track F continues (phases 149-159: wear pattern analysis / fleet management / maintenance scheduling / service history / cross-referencing / TSB+recall integration / comparison / baseline / drift detection / Gate 7).
