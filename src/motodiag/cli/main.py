@@ -16,6 +16,7 @@ from motodiag.cli.cache import register_cache
 from motodiag.cli.code import register_code
 from motodiag.cli.completion import register_completion
 from motodiag.cli.diagnose import register_diagnose, register_quick
+from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
 from motodiag.cli.theme import get_console, status, tier_style
 
@@ -640,6 +641,10 @@ register_code(cli)
 # Phase 131: register the `cache` subgroup (stats/purge/clear) — must come
 # before completion so shell completion sees the new subgroup.
 register_cache(cli)
+
+# Phase 140: register the `hardware` subgroup (scan/clear/info). Like
+# cache, must come before completion so shell-completion scripts see it.
+register_hardware(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

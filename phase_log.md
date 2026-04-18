@@ -488,3 +488,30 @@ Summary of the 7-phase Track D to E transition:
 - **Schema version**: unchanged at v15 — Track E is library-only until Phase 140 lands the CLI surface.
 - **Next up**: Phase 140 (fault code read/clear + hardware CLI `motodiag connect/scan`) wires the Phase 139 detector into user-facing flows.
 - Implementation.md to v0.7.2.
+
+### 2026-04-18 08:30 — Phase 140 complete — Hardware CLI scan/clear/info (first user-facing Track E phase)
+Tenth agent-delegated phase. **Builder-A's cleanest pass yet** — no sandbox block, Builder ran the tests before reporting: 40 passed locally in 21.24s, zero iterative fixes. Architect's trust-but-verify reproduced 40/40 in 24.52s.
+
+**The phase that turns hardware from library code into a shippable feature** — a mechanic can now plug an OBD dongle into a serial port and pull DTCs from a bike via `motodiag hardware scan --port COM3 --bike harley-glide-2015`. Or test the full flow without hardware via `--mock`.
+
+- **CLI surface**: 3 new subcommands under `motodiag hardware`:
+  - `hardware scan --port COM3 [--bike SLUG | --make harley] [--baud] [--timeout] [--mock]` — auto-detect + Mode 03 DTC read + Rich table with Code/Description/Category/Severity/Source columns (3-tier enrichment: db_make → db_generic → classifier heuristic).
+  - `hardware clear --port COM3 [--bike|--make] [--yes] [--mock]` — yellow safety warning panel ("do NOT clear before diagnosis is complete") + confirm prompt + Mode 04 clear + green/red outcome panels.
+  - `hardware info --port COM3 [--bike|--make] [--mock]` — `identify_ecu()` → Rich Panel with Protocol / VIN / ECU Part # / SW Version / Supported OBD Modes.
+- **5 new files** (2012 LoC total):
+  - `hardware/mock.py` (249 LoC) — `MockAdapter(ProtocolAdapter)` concrete class with configurable state (dtcs/vin/ecu_part/sw_version/supported_modes/clear_returns/protocol_name/fail_on_connect/vin_unsupported kwargs). All 8 ABC methods satisfied plus additive `identify_info()` helper. Docstring explicitly marks it "not for production — substrate for `--mock` flag and Phase 144 simulator."
+  - `hardware/connection.py` (255 LoC) — `HardwareSession` context manager with three construction paths: real (`AutoDetector.detect()`), mock (`MockAdapter` with defaults), `adapter_override` (test injection with pre-configured adapter). `__exit__` swallows disconnect failures per Phase 134 ABC contract — never masks propagating exception.
+  - `knowledge/dtc_lookup.py` (147 LoC) — `resolve_dtc_info(code, make_hint) -> DTCInfo` with 3-tier fallback. `source` discriminator checks returned row's `.make` field to accurately distinguish make-specific hits from `get_dtc()`'s internal cascade downgrades (so `db_make` means "actually matched the make column," not "we passed make to the query").
+  - `cli/hardware.py` (556 LoC) — `register_hardware(cli)` + the 3 subcommands. Reuses `_resolve_bike_slug` from `cli.diagnose`, `get_console()` / `format_severity` / `ICON_*` from `cli.theme`. `[MOCK]` yellow badge when `--mock`. `NoECUDetectedError` handler unpacks `errors=[(name, exception), ...]` into a per-adapter breakdown with actionable "hint: use --mock to test without hardware" footer — not a raw traceback.
+  - `tests/test_phase140_hardware_cli.py` (805 LoC, 40 tests) — 6 classes: MockAdapterContract×5 (ABC + state round-trip), HardwareSession×6 (mock/override/disconnect-on-exception/error propagation), ScanCommand×10 (happy path + enrichment variants + error paths), ClearCommand×8 (safety + prompt flow + outcomes), InfoCommand×6 (all-fields/VIN-None/empty-modes), DTCLookup×5 (source discriminator semantics).
+- **File modified**: `cli/main.py` — added `register_hardware(cli)` call alongside the existing `register_*` registrations.
+- **Deviations (all documented in 140_implementation.md v1.1):**
+  1. DTC lookup extraction deferred: `cli/code.py`'s `_lookup_local` + `_classify_fallback` are entangled with `_render_local`'s populated fields (`common_causes`/`fix_summary`/`code_format`) beyond `DTCInfo`'s schema. Clean extraction would require renderer changes too. `cli/hardware.py` uses the new helper; `cli/code.py` unchanged; TODO noted for Phase 145 cleanup.
+  2. `MockAdapter.identify_info()` is additive beyond the ABC — not a contract change. Session method delegates to this on mock path, `AutoDetector.identify_ecu()` on the real path.
+  3. `_resolve_bike_slug` imported as underscore-private from `motodiag.cli.diagnose` — matches existing cross-module reuse patterns.
+  4. `source` discriminator checks row's `.make` post-query (nuance: the repo's own fallback meant `db_make` → `db_generic` downgrade had to live in `resolve_dtc_info`).
+  5. `classify_code` returns `(code_format, system_description)` — Builder put `system_description` (not `code_format`) into `DTCInfo.category` for meaningful UI text.
+- **No migration, no new DB tables, no AI.** Schema stays at v15. Zero live tokens.
+- Full regression (running): expected 2614/2614, zero regressions.
+- Implementation.md to v0.7.3.
+- **Next**: Phase 141 (live sensor data streaming — RPM / TPS / coolant / battery V / O2 via `motodiag hardware stream`).

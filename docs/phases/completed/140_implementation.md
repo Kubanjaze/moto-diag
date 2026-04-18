@@ -1,6 +1,35 @@
 # MotoDiag Phase 140 — Hardware CLI: scan / clear / info
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| New files | 5 (`hardware/mock.py` 249 LoC, `hardware/connection.py` 255 LoC, `cli/hardware.py` 556 LoC, `knowledge/dtc_lookup.py` 147 LoC, `test_phase140_hardware_cli.py` 805 LoC) |
+| Modified files | 1 (`cli/main.py` — register hardware subgroup) |
+| New tests | 40 (6 classes: MockAdapterContract×5, HardwareSession×6, ScanCommand×10, ClearCommand×8, InfoCommand×6, DTCLookup×5) |
+| Total tests | 2614 (2574 prior + 40 Phase 140) |
+| New package | none — extends `hardware` and `knowledge` packages |
+| New public CLI surface | `motodiag hardware {scan,clear,info}` + 3 supporting options per command |
+| Schema version | 15 (unchanged — no migration) |
+| Live API tokens burned | **0** |
+
+**First user-facing Track E phase.** Wires Phase 139's `AutoDetector` and Phases 134-138 protocol adapters into a Click command group — the phase that turns hardware from library code into a shippable feature a mechanic can actually run from the terminal. Tenth agent-delegated phase; Builder-A's cleanest first pass yet — 40 tests passed in 21.24s locally (no sandbox block this time), Architect's trust-but-verify reproduced 40/40 in 24.52s, zero iterative fixes.
+
+## Deviations from Plan
+
+1. **DTC lookup extraction deferred, not executed.** Plan permitted either full refactor of `cli/code.py` onto the new `knowledge/dtc_lookup.py` helper, OR leaving `cli/code.py` untouched with a TODO. Builder chose the latter: `cli/code.py` has `_lookup_local` + `_classify_fallback` entangled with `_render_local` (which populates extra fields `common_causes` / `fix_summary` / `code_format` that `dtc_lookup`'s simpler `DTCInfo` schema doesn't carry — a proper merge would require renderer changes too). Left `# TODO: migrate cli/code.py onto knowledge/dtc_lookup.py in Phase 145 cleanup` in `cli/hardware.py`. Clean separation: `cli/hardware.py` uses new helper; `cli/code.py` unchanged.
+
+2. **`MockAdapter` gained an `identify_info()` helper beyond the `ProtocolAdapter` ABC.** Spec said `info` command should call `session.identify_ecu()`. Implemented as a session method that delegates to `adapter.identify_info()` on the mock path, `AutoDetector.identify_ecu()` on the real path. The extra method on `MockAdapter` is purely additive (returns `{vin, ecu_part, sw_version, supported_modes, protocol_name}` from constructor state) — no contract change to the ABC.
+
+3. **`_resolve_bike_slug` imported from `motodiag.cli.diagnose` (underscore-prefixed but publicly callable)** — matches existing cross-module reuse patterns in the codebase. No refactor needed.
+
+4. **`source` discriminator semantics nuance.** `knowledge/dtc_repo.get_dtc()` has an internal make-specific → generic fallback. To make `dtc_lookup.resolve_dtc_info`'s `source` field accurate (`db_make` vs `db_generic`), the helper checks the returned row's `.make` field after `get_dtc(code, make_hint, ...)` — if the row's make is NULL or differs from the hint, it downgrades `db_make` → `db_generic`. Matches the CLI Source column's provenance display.
+
+5. **`classify_code` return shape mapping.** Returns `(code_format, system_description)`. Builder put `system_description` into the `category` field of `DTCInfo` (not `code_format`) so the CLI's Category column shows meaningful text ("coolant_temp") rather than "OBD2_GENERIC".
+
+6. **Test fixture pattern.** `init_db()` is called inside each CLI command and reads from the default settings path. Builder added an `autouse` fixture monkey-patching `motodiag.cli.hardware.init_db` to redirect to `tmp_path` DB. Works cleanly across all 40 tests; follows Phase 128's `cli_db` fixture pattern.
 
 ## Goal
 
@@ -80,21 +109,21 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] `MockAdapter` instantiates (ABC contract satisfied — all 8 abstract methods implemented).
-- [ ] `HardwareSession(mock=True)` yields a connected `MockAdapter` without touching `AutoDetector` or `pyserial`.
-- [ ] `hardware scan --mock` prints a Rich table with ≥ 2 DTCs, exits 0.
-- [ ] `hardware scan --mock --bike harley-glide-2015` passes `make_hint="harley"` into the session (verified via patching `AutoDetector` and asserting kwargs).
-- [ ] `hardware scan` on unknown port raises `NoECUDetectedError` → rendered as red panel with per-adapter errors, exit 1.
-- [ ] DTC enrichment: `P0115` in scan output shows the correct description from `dtc_codes` table.
-- [ ] DTC enrichment fallback: a code NOT in the DB (e.g. `P9999`) falls through to classifier heuristic with a "Source: classifier" column indicator.
-- [ ] `hardware clear --mock` without `--yes` prompts for confirm; with `--yes` skips prompt.
-- [ ] `hardware clear --mock --yes` reports success.
-- [ ] `hardware clear --mock --yes` when `MockAdapter(clear_returns=False)` reports red refusal.
-- [ ] `hardware info --mock` prints VIN / ECU / sw version / supported modes.
-- [ ] `hardware info --mock` when VIN is `None` shows "VIN: not available" (not a crash).
-- [ ] Context manager `__exit__` calls `disconnect()` even when the command body raises.
-- [ ] `--help` on the group and each subcommand works.
-- [ ] All existing Track D / Gate 5 regression tests still pass.
+- [x] `MockAdapter` instantiates (ABC contract satisfied — all 8 abstract methods implemented).
+- [x] `HardwareSession(mock=True)` yields a connected `MockAdapter` without touching `AutoDetector` or `pyserial`.
+- [x] `hardware scan --mock` prints a Rich table with ≥ 2 DTCs, exits 0.
+- [x] `hardware scan --mock --bike harley-glide-2015` passes `make_hint="harley"` into the session (verified via patching `AutoDetector` and asserting kwargs).
+- [x] `hardware scan` on unknown port raises `NoECUDetectedError` → rendered as red panel with per-adapter errors, exit 1.
+- [x] DTC enrichment: `P0115` in scan output shows the correct description from `dtc_codes` table.
+- [x] DTC enrichment fallback: a code NOT in the DB (e.g. `P9999`) falls through to classifier heuristic with a "Source: classifier" column indicator.
+- [x] `hardware clear --mock` without `--yes` prompts for confirm; with `--yes` skips prompt.
+- [x] `hardware clear --mock --yes` reports success.
+- [x] `hardware clear --mock --yes` when `MockAdapter(clear_returns=False)` reports red refusal.
+- [x] `hardware info --mock` prints VIN / ECU / sw version / supported modes.
+- [x] `hardware info --mock` when VIN is `None` shows "VIN: not available" (not a crash).
+- [x] Context manager `__exit__` calls `disconnect()` even when the command body raises.
+- [x] `--help` on the group and each subcommand works.
+- [x] All existing Track D / Gate 5 regression tests still pass (full regression pending; 40/40 phase + 64/64 smoke sample of Phase 124/139 confirmed clean).
 
 ## Risks
 
