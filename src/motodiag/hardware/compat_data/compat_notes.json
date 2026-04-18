@@ -56,7 +56,7 @@
     "source_url": "https://www.autel.com/subscription-renewal-info"
   },
   {
-    "adapter_slug": "obdlink-cx",
+    "adapter_slug": "scantool-obdlink-cx",
     "make": "*",
     "note_type": "tip",
     "body": "The CX is BLE-only — Windows classic-Bluetooth OBD apps (many older scanners) do NOT see it. Before buying the CX over the MX+, verify your scanner software pairs over BLE. iOS apps (OBD Fusion, BimmerCode) are all BLE-native and work fine.",

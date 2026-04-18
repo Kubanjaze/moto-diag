@@ -30,7 +30,7 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from click.testing import CliRunner
@@ -636,27 +636,51 @@ def _make_cli():
 
 @pytest.fixture
 def cli_runner_with_db(tmp_path, monkeypatch):
-    """CliRunner fixture with a seeded DB. Reroutes the default DB path
-    through env + settings cache invalidation so CLI subcommands that
-    call repo functions without a db_path argument pick up the tmp DB.
+    """CliRunner fixture with a fully-seeded compat DB.
+
+    The Phase 145 CLI subcommands call repo functions without a
+    ``db_path=`` argument (``_cr.list_adapters(...)`` etc.), so those
+    calls resolve their DB path via ``get_connection(None)`` →
+    ``get_db_path()`` → ``get_settings().db_path``. Three layers of
+    redirection are pinned here so every path the CLI might take lands
+    on the per-test tmp DB regardless of which resolution route it
+    travels:
+
+    1. ``MOTODIAG_DB_PATH`` env var + ``reset_settings()`` — covers any
+       call that goes through ``get_settings()`` (the normal path).
+    2. Monkey-patch ``motodiag.core.database.get_db_path`` to return the
+       tmp path directly — belt-and-braces bypass of settings entirely,
+       so any cached ``Settings`` singleton imported at module load
+       time can't steer us back to the developer's real DB.
+    3. Monkey-patch ``motodiag.cli.hardware.init_db`` to default to the
+       tmp path when called with no args (mirrors the Phase 140 pattern).
+
+    Seeding runs AFTER the redirects are installed so ``seed_all`` with
+    its explicit ``db_path=path`` lands in the same file the CLI will
+    read from.
     """
     path = str(tmp_path / "cli.db")
 
     from motodiag.core import config as cfg_mod
+    from motodiag.core import database as db_mod
 
-    # Set the env var BEFORE init_db so Settings picks it up.
+    # Redirect 1: env var + settings cache reset.
     monkeypatch.setenv("MOTODIAG_DB_PATH", path)
-    cfg_mod.get_settings.cache_clear()
-    assert cfg_mod.get_settings().db_path == path
+    cfg_mod.reset_settings()
 
+    # Redirect 2: bypass settings entirely by patching get_db_path
+    # everywhere it's imported. The database module re-exports it, and
+    # get_connection() / init_db() call it directly when db_path is None.
+    monkeypatch.setattr(db_mod, "get_db_path", lambda: path)
+
+    # Initialize + seed the tmp DB now that resolution is pinned.
     init_db(path)
-    # Seed the full knowledge base so CLI tests have real data.
     cl.seed_all(db_path=path)
 
-    # Also patch init_db inside the hardware module so it doesn't race
-    # against the env-based default on Windows (init_db creates dirs,
-    # and a stale settings object in another module would target the
-    # real shop DB).
+    # Redirect 3: patch init_db inside the hardware CLI module so
+    # subcommands that call `init_db()` (no args) hit the tmp DB. Even
+    # with Redirects 1 and 2 in place, this keeps the test explicit and
+    # matches the Phase 140 / 141 / 142 / 144 pattern.
     from motodiag.cli import hardware as hw_mod
 
     original_init_db = hw_mod.init_db
@@ -669,9 +693,12 @@ def cli_runner_with_db(tmp_path, monkeypatch):
     monkeypatch.setattr(hw_mod, "init_db", _patched_init)
 
     runner = CliRunner()
-    yield runner, path
-    # Clear the cache on the way out so other tests start fresh.
-    cfg_mod.get_settings.cache_clear()
+    try:
+        yield runner, path
+    finally:
+        # Clear the settings cache on the way out so subsequent tests
+        # don't inherit this test's env-var-shaped Settings singleton.
+        cfg_mod.get_settings.cache_clear()
 
 
 class TestCompatCLI:
