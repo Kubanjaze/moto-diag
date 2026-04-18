@@ -39,3 +39,36 @@ Planner-141 drafted v1.0 for Phase 141 — live sensor data streaming. Second us
 - `hardware/mock.py` shared with Phase 144. One kwarg, one new branch. Existing methods untouched.
 
 **Next:** build — dispatch to Builder-141 after coordination with 142/144 (Wave 1 — independent files). Medium complexity (~900 LoC across 1 new + 2 extended files + ~40 tests).
+
+### 2026-04-18 13:15 — Build complete (Builder-141 + Architect trust-but-verify)
+
+Eleventh agent-delegated phase. Builder-141 shipped the spec: new `src/motodiag/hardware/sensors.py` (617 LoC — overshot ~300 LoC target per CLAUDE.md "detailed and meticulous" standard, all extra is docstring + SAE J1979 citations + design-decision notes), extended `cli/hardware.py` (+~400 LoC additive — new `stream` subcommand + `_run_stream`/`_render_stream_panel`/`_StreamCsvWriter` helpers), extended `hardware/mock.py` (+34 LoC — one `pid_values: Optional[dict[int, int]] = None` kwarg + one branch in `read_pid`), new `tests/test_phase141_stream.py` (724 LoC, 42 tests across 6 classes).
+
+Sandbox blocked Python for Builder — Architect ran trust-but-verify.
+
+**Test run: 42 tests, initial 1 failure, fixed, now 42/42 passing.**
+
+### 2026-04-18 13:20 — Bug fix #1: hz-throttle test expectation
+
+**Issue:** `test_hz_throttle_calls_sleep_with_reciprocal` failed with `AssertionError: assert 1 == 2`. Test called `next(gen)` twice and expected 2 sleep calls.
+
+**Root cause:** SensorStreamer's contract (per spec) sleeps AFTER each yield — so after the 2nd `next()` returns tick 2's readings, only 1 sleep has fired (between yield 1 and the work for yield 2). The 2nd sleep fires AFTER yield 2 but only when the consumer calls `next()` a 3rd time, forcing the generator's loop body to resume and sleep.
+
+**Fix:** Added a 3rd `next(gen)` call to trigger the 2nd sleep. Test assertion `call_count == 2` remains correct. Updated inline comment explaining generator + post-yield sleep semantics.
+
+**Files:** `tests/test_phase141_stream.py` lines 311-314.
+
+**Verified:** `pytest tests/test_phase141_stream.py::TestSensorStreamer -v` → 8/8 passing.
+
+### 2026-04-18 13:30 — Build-complete sign-off
+
+42/42 phase tests passing locally. Additive-only changes verified (`git diff` on `cli/hardware.py` and `mock.py` show additions only — Phase 140 `_run_scan`/`_run_clear`/`_run_info` and existing mock kwargs untouched). Zero live tokens, no migration.
+
+Deviations from plan v1.0:
+1. LoC overshot on sensors.py (617 vs ~300 target) and cli/hardware.py (+400 vs ~250 target). Every extra LoC is docstring/inline rationale — zero logic padding. Judged as "detailed and meticulous" quality bar.
+2. `status` field uses Pydantic v2 `Literal[...]` natively; separate vocabulary validator removed as redundant.
+3. `_StreamCsvWriter.write_row(readings, elapsed_s)` takes elapsed monotonic clock as arg rather than recomputing from `captured_at` — avoids sub-ms drift accumulation.
+4. Empty placeholder panel rendered before first tick to prevent Rich Live flicker.
+5. Title augmented with `• elapsed {elapsed_s:.1f}s` so mechanics see clock running between ticks.
+
+**Next:** finalize to v1.1 + move to `completed/` + update project implementation.md + ROADMAP.md.

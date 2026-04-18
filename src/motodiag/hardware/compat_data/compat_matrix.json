@@ -1,0 +1,1102 @@
+[
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 1996,
+    "year_max": 2010,
+    "status": "partial",
+    "notes": "J1850 VPW read/clear works reliably. Bidirectional (idle reset, fuel trim) NOT supported — Harley proprietary PIDs unavailable.",
+    "verified_by": "https://www.hdforums.com/forum/twin-cam-88-96-103-114/obdlink-mx-plus-twin-cam-reports-745381/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "CAN read/clear + Mode 22 PIDs work. Bidirectional requires Dynojet or V&H — MX+ cannot send HD-proprietary write commands.",
+    "verified_by": "service-manual + https://www.hdforums.com/forum/touring-models/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "sportster%",
+    "year_min": 2004,
+    "year_max": 2021,
+    "status": "partial",
+    "notes": "CAN read/clear on rubber-mount Sportsters (2004+). Pre-2004 Sportsters have no OBD-II port.",
+    "verified_by": "https://www.xlforum.net/forums/2004-2021-sportsters/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "sportster s",
+    "year_min": 2022,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Revolution Max Sportster S uses modern CAN — Mode 03/07/09 all work. Service intervals + bidirectional require V&H FP4 or dealer tool.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2000,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "J1850 until 2010, CAN 2011+. Basic DTC read/clear works across both eras.",
+    "verified_by": "https://www.hdforums.com/forum/softail-models/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "model_pattern": "dyna%",
+    "year_min": 2004,
+    "year_max": 2017,
+    "status": "partial",
+    "notes": "J1850 through 2010, CAN 2011-2017. Dyna was discontinued after 2017.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 1996,
+    "year_max": 2010,
+    "status": "incompatible",
+    "notes": "Counterfeit ELM327 silicon does NOT handle J1850 VPW correctly — will connect but returns garbage or times out on code reads. Do not trust.",
+    "verified_by": "https://www.hdforums.com/forum/touring-models/elm327-wont-read-codes-677422/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "CAN 500 kbit: Mode 03/07/09 works on ~70% of units. 30% drop frames or fail handshake. Mode 22 unsupported.",
+    "verified_by": "https://www.hdforums.com/forum/touring-models/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Generic CAN CBRs (2008+) — Mode 03/09 work. Older K-line CBRs (pre-2007) not compatible.",
+    "verified_by": "https://www.cbrforum.com/threads/elm327-on-cbr1000rr.432178/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "yamaha",
+    "model_pattern": "R1",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "CAN-bus R1 (2009+) — generic OBD-II only. Yamaha-specific PIDs require YDS.",
+    "verified_by": "https://www.r1-forum.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "kawasaki",
+    "model_pattern": "ZX-%",
+    "year_min": 2010,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "CAN ZX models (2010+) — Mode 03/09 works. Bidirectional (idle reset) requires KDS.",
+    "verified_by": "https://www.zx-forums.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "GSX-R CAN (2008+) — generic Mode 03 works. Pre-2008 K-line models not compatible.",
+    "verified_by": "https://www.gsxr.com/forum/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "CAN read/clear + Mode 22 sub-PIDs. Slower than MX+ on multi-frame reads but works reliably.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "honda",
+    "model_pattern": "gold wing",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Gold Wing GL1800 CAN + HFT. Mode 03/07/09 + Mode 22 HondaMC PIDs readable.",
+    "verified_by": "https://www.goldwingfacts.com/forums/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "yamaha",
+    "model_pattern": "MT%",
+    "year_min": 2014,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "MT-series CAN (MT-07, MT-09, MT-10). Read/clear + live data work; Yamaha proprietary service functions don't.",
+    "verified_by": "https://www.mt-10.net/forum/"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "USB variant — same CAN read/clear as LX. Good laptop-tethered option.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "CAN CBR models — Mode 03/07/09 + Mode 22. Works well on CBR1000RR, CBR600RR.",
+    "verified_by": "https://www.cbrforum.com/"
+  },
+  {
+    "adapter_slug": "bafx-bluetooth-34t5",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "CAN Mode 03 works on post-2011 Touring. J1850 (pre-2011) claimed but unreliable.",
+    "verified_by": "https://www.hdforums.com/"
+  },
+  {
+    "adapter_slug": "bafx-bluetooth-34t5",
+    "make": "honda",
+    "model_pattern": "shadow%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Shadow 750/1100 CAN-equipped models. Generic OBD-II only.",
+    "verified_by": "https://www.honda-shadow.com/"
+  },
+  {
+    "adapter_slug": "bafx-bluetooth-34t5",
+    "make": "yamaha",
+    "model_pattern": "V-Star%",
+    "year_min": 2010,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "V-Star 650/1100 CAN-era bikes.",
+    "verified_by": "https://www.vstar1100forum.com/"
+  },
+  {
+    "adapter_slug": "vgate-icar-pro-bt4",
+    "make": "honda",
+    "model_pattern": "VFR%",
+    "year_min": 2010,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "VFR800/1200 CAN. BLE pairing occasionally drops mid-session.",
+    "verified_by": "https://www.vfrworld.com/"
+  },
+  {
+    "adapter_slug": "vgate-icar-pro-bt4",
+    "make": "yamaha",
+    "model_pattern": "FZ%",
+    "year_min": 2009,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "FZ6, FZ8, FZ1 CAN-era bikes. Generic Mode 03 only.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "vgate-icar-pro-bt4",
+    "make": "kawasaki",
+    "model_pattern": "ninja%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Ninja 300/400/650/1000 CAN. Mode 03/09 work.",
+    "verified_by": "https://www.ninja250r.com/"
+  },
+  {
+    "adapter_slug": "els27-forscan",
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "R1200GS water-cooled (2013+). CAN read/clear works. BMW-specific coding via BimmerCode app recommended instead.",
+    "verified_by": "https://www.advrider.com/forums/r1200gs/"
+  },
+  {
+    "adapter_slug": "els27-forscan",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "S1000RR CAN. Mode 03/07/09 + Mode 22 sub-PIDs on K46/K67 variants.",
+    "verified_by": "https://www.s1000rrforum.com/"
+  },
+  {
+    "adapter_slug": "els27-forscan",
+    "make": "ducati",
+    "model_pattern": "monster%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Monster 796/1100/1200 CAN. Read works; bidirectional varies by ECU firmware.",
+    "verified_by": "https://www.ducati.ms/forums/"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "CAN CBRs with Autel's motorcycle database subscription — bidirectional (idle reset, injector balance) supported.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "yamaha",
+    "model_pattern": "R%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "R1, R3, R6 CAN. Autel's YDS-compatible PID set. Service interval reset supported.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "suzuki",
+    "model_pattern": "V-Strom%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "V-Strom 650/1000/1050 CAN. Bidirectional with Autel SDS subscription.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "foxwell-nt301",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Handheld works for generic CAN Mode 03. HD-specific menus unavailable.",
+    "verified_by": "https://www.hdforums.com/"
+  },
+  {
+    "adapter_slug": "foxwell-nt301",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Handheld generic Mode 03 works across CAN CBR lineup.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2001,
+    "year_max": 2010,
+    "status": "full",
+    "notes": "Pre-2011 J1850 Touring. Full bidirectional + tune flash. PV3 dongle handles J1850 VPW natively.",
+    "verified_by": "https://www.dynojet.com/product-support/power-vision-3/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "2011+ CAN Touring. Full bidirectional (idle trim, injector balance, knock test, actuator sweep) + tune flash.",
+    "verified_by": "https://www.dynojet.com/product-support/power-vision-3/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2001,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Softail J1850 + CAN era. Same bidirectional feature set as Touring.",
+    "verified_by": "https://www.dynojet.com/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "sportster%",
+    "year_min": 2004,
+    "year_max": 2021,
+    "status": "full",
+    "notes": "Rubber-mount Sportster (2004+). Full tune + bidirectional.",
+    "verified_by": "https://www.dynojet.com/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "dyna%",
+    "year_min": 2004,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "Dyna series (discontinued 2017). Full tune + diagnostic support.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "daytona-twintec-tcfi-gen5",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2001,
+    "year_max": 2010,
+    "status": "full",
+    "notes": "Replaces Delphi ECM entirely on pre-2011 Touring. Full tuning authority + diagnostic logging.",
+    "verified_by": "https://www.daytona-twintec.com/"
+  },
+  {
+    "adapter_slug": "daytona-twintec-tcfi-gen5",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2001,
+    "year_max": 2010,
+    "status": "full",
+    "notes": "Softail pre-2011 replacement ECM.",
+    "verified_by": "https://www.daytona-twintec.com/"
+  },
+  {
+    "adapter_slug": "vance-hines-fuelpak-fp4",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2007,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Touring 2007+. Full Bluetooth tune flash + bidirectional diagnostic + V&H slip-on auto-tune.",
+    "verified_by": "https://www.vanceandhines.com/fuelpak-fp4"
+  },
+  {
+    "adapter_slug": "vance-hines-fuelpak-fp4",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2007,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Softail 2007+.",
+    "verified_by": "https://www.vanceandhines.com/"
+  },
+  {
+    "adapter_slug": "vance-hines-fuelpak-fp4",
+    "make": "harley",
+    "model_pattern": "sportster%",
+    "year_min": 2007,
+    "year_max": 2021,
+    "status": "full",
+    "notes": "Sportster 2007-2021.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "sepro-harley-scanner",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2007,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Full DTC + bidirectional + idle relearn. Android app only.",
+    "verified_by": "https://seproscanner.com/"
+  },
+  {
+    "adapter_slug": "sepro-harley-scanner",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2007,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Softail 2007+.",
+    "verified_by": "https://seproscanner.com/"
+  },
+  {
+    "adapter_slug": "sepro-harley-scanner",
+    "make": "harley",
+    "model_pattern": "sportster%",
+    "year_min": 2007,
+    "year_max": 2021,
+    "status": "full",
+    "notes": "Sportster 2007-2021.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "hd-digital-tech-ii-clone",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2000,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Clone of dealer tool — full access depends on clone firmware quality. Some clones ship with outdated firmware missing Milwaukee-Eight (2017+) support.",
+    "verified_by": "https://www.hdforums.com/"
+  },
+  {
+    "adapter_slug": "hd-dealer-mat-ii",
+    "make": "harley",
+    "model_pattern": "%",
+    "year_min": 1998,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "All Harley-Davidson motorcycles. Dealer-only.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "motodiag-mock",
+    "make": "harley",
+    "model_pattern": "%",
+    "year_min": 1996,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Simulator harness — not a real adapter. Phase 144 scenarios exercise compat flow via this slug.",
+    "verified_by": "phase-144"
+  },
+  {
+    "adapter_slug": "motodiag-mock",
+    "make": "honda",
+    "model_pattern": "%",
+    "year_min": 1996,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Simulator harness.",
+    "verified_by": "phase-144"
+  },
+  {
+    "adapter_slug": "scantool-obdlink-cx",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "BLE-only; iOS pairing is the default. Same CAN capability as MX+.",
+    "verified_by": "https://www.obdlink.com/products/obdlink-cx/"
+  },
+  {
+    "adapter_slug": "scantool-obdlink-cx",
+    "make": "ducati",
+    "model_pattern": "panigale%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "1199/1299/V4 Panigale CAN + BimmerCode-style coding app support.",
+    "verified_by": "https://www.ducati.ms/"
+  },
+  {
+    "adapter_slug": "scantool-obdlink-cx",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "iOS BimmerCode app pairs well with CX for S1000RR.",
+    "verified_by": "https://www.s1000rrforum.com/"
+  },
+  {
+    "adapter_slug": "innova-3100i",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2008,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "Handheld — generic OBD-II on CAN CBRs. No make-specific menus.",
+    "verified_by": "https://www.innova.com/"
+  },
+  {
+    "adapter_slug": "innova-3100i",
+    "make": "yamaha",
+    "model_pattern": "R%",
+    "year_min": 2009,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "R1/R6 CAN. Generic Mode 03.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "launch-creader-vi-plus",
+    "make": "harley",
+    "model_pattern": "touring%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "With Launch motorcycle database add-on. Mode 03/07 + some HD-specific sub-PIDs.",
+    "verified_by": "https://www.cnlaunch.com/"
+  },
+  {
+    "adapter_slug": "launch-creader-vi-plus",
+    "make": "ducati",
+    "model_pattern": "panigale%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Generic OBD-II only. Launch Ducati menu requires extra paid add-on.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "bimmercode-obdlink-mx-plus",
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "BMW Motorrad coding profile unlocked — full diagnostic + coding (TPMS calibration, service interval reset, suspension settings).",
+    "verified_by": "https://bimmercode.app/bmw/motorcycle-compatibility"
+  },
+  {
+    "adapter_slug": "bimmercode-obdlink-mx-plus",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "S1000RR full coding profile.",
+    "verified_by": "https://bimmercode.app/"
+  },
+  {
+    "adapter_slug": "bimmercode-obdlink-mx-plus",
+    "make": "bmw",
+    "model_pattern": "F%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "F700/F800/F850/F900 series.",
+    "verified_by": "https://bimmercode.app/"
+  },
+  {
+    "adapter_slug": "ducati-dds-readiness-tool",
+    "make": "ducati",
+    "model_pattern": "%",
+    "year_min": 2005,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Dealer-only. All Ducati models full diagnostic + service.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "kawasaki-kds-dealer",
+    "make": "kawasaki",
+    "model_pattern": "%",
+    "year_min": 2005,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Dealer-only. All Kawasaki models full diagnostic + ECU update.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "kawasaki",
+    "model_pattern": "versys%",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Versys 650/1000 CAN. Generic Mode 03 works; no Kawasaki-specific PIDs.",
+    "verified_by": "https://www.versys.com/forum/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "kawasaki",
+    "model_pattern": "vulcan%",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Vulcan S / 900 / 1700 CAN models.",
+    "verified_by": "https://www.vulcanforums.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "suzuki",
+    "model_pattern": "SV%",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "SV650 CAN (2016+ generation).",
+    "verified_by": "https://www.svrider.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "suzuki",
+    "model_pattern": "Bandit%",
+    "year_min": 2005,
+    "year_max": 2016,
+    "status": "read-only",
+    "notes": "GSF-series Bandit — CAN from 2007+.",
+    "verified_by": "https://www.bandit1200.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-wifi-clone",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "iOS-pair via WiFi (works around BT licensing). Same counterfeit firmware problems as BT clone.",
+    "verified_by": "https://www.cbrforum.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-wifi-clone",
+    "make": "yamaha",
+    "model_pattern": "R6",
+    "year_min": 2009,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "R6 CAN (2009+ generation). Generic Mode 03 only.",
+    "verified_by": "https://www.r6-world.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-usb-clone",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2010,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "USB tether — no Bluetooth/WiFi drop issues. Same counterfeit silicon problems.",
+    "verified_by": "https://www.cbrforum.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-usb-clone",
+    "make": "kawasaki",
+    "model_pattern": "ZX-%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "ZX-6R / ZX-10R / ZX-14R CAN.",
+    "verified_by": "https://www.zx10r.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "honda",
+    "model_pattern": "VFR%",
+    "year_min": 2010,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "VFR800/1200 CAN — Mode 03/09 + Mode 22 Honda PIDs.",
+    "verified_by": "https://www.vfrworld.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "kawasaki",
+    "model_pattern": "ZX-10R",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "ZX-10R CAN (2011+ gen). Read + Mode 22 KIBS sub-PIDs.",
+    "verified_by": "https://www.zx10r.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "GSX-R 600/750/1000 CAN.",
+    "verified_by": "https://www.gsxr.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "yamaha",
+    "model_pattern": "R1",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "R1 CAN (2009+).",
+    "verified_by": "https://www.r1-forum.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "R1200GS water-cooled CAN. Use BimmerCode app for coding.",
+    "verified_by": "https://www.advrider.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "ducati",
+    "model_pattern": "monster%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Monster CAN. Mode 03 + Mode 22 sub-PIDs.",
+    "verified_by": "https://www.ducati.ms/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "ktm",
+    "model_pattern": "1290%",
+    "year_min": 2014,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "KTM 1290 Super Duke / Super Adventure CAN.",
+    "verified_by": "https://www.ktmforum.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "triumph",
+    "model_pattern": "tiger%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Tiger 800/900/1200 CAN — Mode 03/09 reliable; Triumph-specific coding requires TuneECU.",
+    "verified_by": "https://www.triumph-tiger.com/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "triumph",
+    "model_pattern": "675",
+    "year_min": 2006,
+    "year_max": 2017,
+    "status": "partial",
+    "notes": "Daytona 675 + Street Triple 675. K-line pre-2009; CAN 2009+.",
+    "verified_by": "https://www.triumph675.net/"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "kawasaki",
+    "model_pattern": "ninja%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Ninja 300/400/650/1000 with Autel KDS subscription.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "S1000RR CAN via Autel BMW subscription.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "ducati",
+    "model_pattern": "panigale%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Panigale 1199/1299/V4 CAN. Autel Ducati database required for bidirectional.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "ktm",
+    "model_pattern": "690%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "690 Duke / Enduro CAN. Limited bidirectional via Autel KTM subscription.",
+    "verified_by": "https://www.ktmforum.com/"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "ktm",
+    "model_pattern": "390%",
+    "year_min": 2014,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "390 Duke / RC390 CAN.",
+    "verified_by": "https://www.ktmforum.com/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "kawasaki",
+    "model_pattern": "ninja%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Ninja CAN models — Mode 03/09 + Mode 22.",
+    "verified_by": "https://www.kawiforums.com/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "suzuki",
+    "model_pattern": "V-Strom%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "V-Strom 650/1000/1050 CAN.",
+    "verified_by": "https://www.stromtrooper.com/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "bmw",
+    "model_pattern": "F%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "F700/F750/F800/F850/F900 CAN.",
+    "verified_by": "https://www.advrider.com/"
+  },
+  {
+    "adapter_slug": "obdlink-lx",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2016,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Bonneville water-cooled (2016+) CAN.",
+    "verified_by": "https://www.bonnevilletalk.com/"
+  },
+  {
+    "adapter_slug": "els27-forscan",
+    "make": "ktm",
+    "model_pattern": "1290%",
+    "year_min": 2014,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "1290 Super Duke CAN. Generic mode only — no KTM coding.",
+    "verified_by": "https://www.ktmforum.com/"
+  },
+  {
+    "adapter_slug": "vgate-icar-pro-bt4",
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Limited by ELM327 silicon. Read-only; use BimmerCode for real BMW work.",
+    "verified_by": "https://www.advrider.com/"
+  },
+  {
+    "adapter_slug": "vgate-icar-pro-bt4",
+    "make": "ducati",
+    "model_pattern": "monster%",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Monster CAN. Generic Mode 03.",
+    "verified_by": "https://www.ducati.ms/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "ducati",
+    "model_pattern": "panigale%",
+    "year_min": 2014,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "Panigale CAN-FD on newer variants (V4) breaks counterfeit ELM327 silicon. Avoid.",
+    "verified_by": "https://www.ducati.ms/forums/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "S1000RR uses BMW proprietary CAN session layer that rejects generic ELM327 handshake.",
+    "verified_by": "https://www.s1000rrforum.com/"
+  },
+  {
+    "adapter_slug": "hd-digital-tech-ii-clone",
+    "make": "harley",
+    "model_pattern": "softail%",
+    "year_min": 2000,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "Dealer-tool clone — full diagnostic on all Softail generations.",
+    "verified_by": "https://www.hdforums.com/"
+  },
+  {
+    "adapter_slug": "hd-digital-tech-ii-clone",
+    "make": "harley",
+    "model_pattern": "sportster%",
+    "year_min": 2000,
+    "year_max": 2021,
+    "status": "full",
+    "notes": "Sportster full diagnostic access.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "hd-digital-tech-ii-clone",
+    "make": "harley",
+    "model_pattern": "v-rod",
+    "year_min": 2002,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "V-Rod Revolution engine series. Dealer-tool access to Revolution-specific sub-PIDs.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "v-rod",
+    "year_min": 2008,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "V-Rod 2008+ CAN. Full tune + diagnostic.",
+    "verified_by": "https://www.dynojet.com/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "model_pattern": "milwaukee-eight%",
+    "year_min": 2017,
+    "year_max": 2025,
+    "status": "full",
+    "notes": "M8 Touring/Softail from 2017+.",
+    "verified_by": "https://www.dynojet.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "triumph",
+    "model_pattern": "675",
+    "year_min": 2010,
+    "year_max": 2017,
+    "status": "read-only",
+    "notes": "Street Triple / Daytona 675 CAN (2010+ gen). Generic Mode 03 works.",
+    "verified_by": "https://www.triumph675.net/"
+  },
+  {
+    "adapter_slug": "elm327-generic-usb-clone",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "GSX-R 600/750/1000 CAN.",
+    "verified_by": "https://www.gsxr.com/"
+  },
+  {
+    "adapter_slug": "elm327-generic-wifi-clone",
+    "make": "kawasaki",
+    "model_pattern": "ninja%",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Ninja CAN.",
+    "verified_by": "https://www.kawiforums.com/"
+  },
+  {
+    "adapter_slug": "foxwell-nt301",
+    "make": "yamaha",
+    "model_pattern": "R%",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "R1/R3/R6 generic Mode 03.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "foxwell-nt301",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "GSX-R generic Mode 03.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "innova-3100i",
+    "make": "kawasaki",
+    "model_pattern": "ZX-%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "ZX CAN models — handheld generic Mode 03.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "innova-3100i",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "GSX-R generic. No Suzuki-specific menus.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "launch-creader-vi-plus",
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "year_min": 2010,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "With Launch moto add-on: basic Mode 03. Without add-on: generic OBD-II only.",
+    "verified_by": "https://www.cnlaunch.com/"
+  },
+  {
+    "adapter_slug": "launch-creader-vi-plus",
+    "make": "bmw",
+    "model_pattern": "S1000RR",
+    "year_min": 2012,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Generic Mode 03. BMW-specific menus require separate subscription.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "bafx-bluetooth-34t5",
+    "make": "kawasaki",
+    "model_pattern": "vulcan%",
+    "year_min": 2015,
+    "year_max": 2025,
+    "status": "read-only",
+    "notes": "Vulcan CAN (2015+).",
+    "verified_by": "https://www.vulcanforums.com/"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "yamaha",
+    "model_pattern": "R1",
+    "year_min": 2009,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "R1 CAN — Mode 03/09 + Mode 22.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "kawasaki",
+    "model_pattern": "ZX-%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "ZX CAN — Mode 03/09.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "GSX-R CAN.",
+    "verified_by": "service-manual"
+  },
+  {
+    "adapter_slug": "obdlink-sx",
+    "make": "triumph",
+    "model_pattern": "tiger%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "partial",
+    "notes": "Tiger 800/900/1200.",
+    "verified_by": "https://www.triumph-tiger.com/"
+  }
+]

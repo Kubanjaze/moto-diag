@@ -1,0 +1,20 @@
+name: lean_fault
+description: STFT bank-1 climbs from 128 to 150+; P0171 lean drops at 60s.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 88
+  0x0C: 920
+  0x11: 14
+  0x0F: 35
+  0x06: 128
+  0x14: 150
+  0x42: 14000
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 920, 0x11: 14, 0x0F: 35, 0x06: 128, 0x14: 150, 0x42: 14000}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: idle}
+  - {action: ramp, at: 5s, pid: 0x06, from: 128, to: 150, duration: 120s}
+  - {action: ramp, at: 5s, pid: 0x14, from: 150, to: 100, duration: 100s}
+  - {action: inject_dtc, at: 60s, code: P0171}
+  - {action: phase, at: 60s, name: lean_confirmed}
+  - {action: end, at: 150s}

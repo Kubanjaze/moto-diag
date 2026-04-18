@@ -1,0 +1,22 @@
+name: harley_sporty_warmup
+description: Sportster 883 warmup — J1850 VPW, 30->95 F oil temp, richer cold idle.
+protocol: SAE J1850 VPW
+vin: 1HD1CZ3189K456789
+initial:
+  0x05: 18
+  0x0C: 1500
+  0x11: 12
+  0x0F: 18
+  0x06: 135
+  0x42: 13800
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 18, 0x0C: 1500, 0x11: 12, 0x0F: 18, 0x06: 135, 0x42: 13800}, dtcs: [], vin: 1HD1CZ3189K456789, protocol: SAE J1850 VPW}
+  - {action: phase, at: 0s, name: cold_crank}
+  - {action: ramp, at: 10s, pid: 0x42, from: 13800, to: 14350, duration: 40s}
+  - {action: ramp, at: 10s, pid: 0x0C, from: 1500, to: 1100, duration: 60s}
+  - {action: phase, at: 75s, name: fast_idle}
+  - {action: ramp, at: 80s, pid: 0x05, from: 18, to: 35, duration: 100s}
+  - {action: ramp, at: 80s, pid: 0x0C, from: 1100, to: 950, duration: 100s}
+  - {action: ramp, at: 80s, pid: 0x06, from: 135, to: 122, duration: 120s}
+  - {action: phase, at: 185s, name: warm_idle}
+  - {action: end, at: 240s}

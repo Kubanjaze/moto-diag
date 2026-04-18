@@ -1,0 +1,18 @@
+name: cbr600_warm_idle
+description: Honda CBR600 warm idle — ISO 14230 KWP2000, tight 1300 RPM idle.
+protocol: ISO 14230 KWP2000
+vin: JH2PC40A7WM123456
+initial:
+  0x05: 82
+  0x0C: 1300
+  0x11: 10
+  0x0F: 28
+  0x06: 125
+  0x42: 14100
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 82, 0x0C: 1300, 0x11: 10, 0x0F: 28, 0x06: 125, 0x42: 14100}, dtcs: [], vin: JH2PC40A7WM123456, protocol: ISO 14230 KWP2000}
+  - {action: phase, at: 0s, name: warm_idle}
+  - {action: ramp, at: 10s, pid: 0x0C, from: 1300, to: 1320, duration: 20s}
+  - {action: ramp, at: 35s, pid: 0x0C, from: 1320, to: 1290, duration: 20s}
+  - {action: ramp, at: 60s, pid: 0x0C, from: 1290, to: 1310, duration: 20s}
+  - {action: end, at: 90s}

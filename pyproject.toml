@@ -19,6 +19,7 @@ dependencies = [
     "rich>=13.0",
     "pydantic>=2.0",
     "pydantic-settings>=2.0",
+    "pyyaml>=6",
 ]
 
 [project.optional-dependencies]
@@ -47,8 +48,11 @@ export = [
 can = [
     "python-can>=4.0",
 ]
+parquet = [
+    "pyarrow>=15.0",
+]
 all = [
-    "motodiag[dev,ai,api,hardware,vision,export,can]",
+    "motodiag[dev,ai,api,hardware,vision,export,can,parquet]",
 ]
 
 [project.scripts]
@@ -56,6 +60,9 @@ motodiag = "motodiag.cli.main:cli"
 
 [tool.setuptools.packages.find]
 where = ["src"]
+
+[tool.setuptools.package-data]
+"motodiag.hardware.scenarios" = ["*.yaml"]
 
 [tool.ruff]
 line-length = 100

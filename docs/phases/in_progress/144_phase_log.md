@@ -55,3 +55,47 @@ Planner-144 drafted v1.0 for Phase 144 — hardware simulator. Track E's test-in
 5. `schema_version: int = 1` in YAMLs for forward-compat — low-risk addition.
 
 **Next:** delegate build to Builder-144 — Wave 1 candidate (independent of 141's cli/hardware.py since 144 adds its own `simulate` subgroup). Parallel with Phase 141. Architect trust-but-verify. Require recording-roundtrip green if Phase 142 landed; graceful-skip path green otherwise.
+
+### 2026-04-18 13:00 — Build complete (Builder-144 + Architect trust-but-verify)
+
+Twelfth agent-delegated phase. Builder-144 shipped: new `src/motodiag/hardware/simulator.py` (1212 LoC — overshot ~500 target due to extensive Pydantic validators + exception context + PID-alias table + duration parser + ScenarioLoader), `scenarios/__init__.py` (59 LoC) + 10 built-in YAML scenarios, extended `cli/hardware.py` (+~630 LoC — new `simulate` subgroup + `--simulator` opt-in on scan/clear/info), extended `pyproject.toml` (added `pyyaml>=6` base dep + `[tool.setuptools.package-data]` entry), new `tests/test_phase144_simulator.py` (939 LoC, 63 test functions + parametrize expansions).
+
+`hardware/mock.py` byte-untouched per CI diff-check requirement.
+
+Sandbox blocked Python for Builder — Architect ran trust-but-verify.
+
+### 2026-04-18 13:22 — Bug fix #1: `_coerce_pid` bare-number hex-vs-decimal ambiguity
+
+**Issue:** `test_start_state_roundtrip` failed — Pydantic model round-trip via `model_dump_json` → `model_validate_json` produced wrong dict keys. Input `{0x0C: 1800}` round-tripped to `{0x12: 1800}` (12 decimal → "12" JSON string → 0x12 hex = 18 decimal).
+
+**Root cause:** `_coerce_pid` at line 150 had fallback `return int(lower, 16)` for bare numeric strings — correctly parsing `"0x05"` as hex but incorrectly treating `"12"` (JSON round-trip of int key) as hex `0x12 = 18`.
+
+**Fix:** Changed the bare-numeric path to decimal (`int(lower, 10)`). Hex parsing now requires explicit `"0x"` or `"0X"` prefix. This preserves JSON round-trip identity: `{12: ...}` serializes to `{"12": ...}` and deserializes back to `{12: ...}`.
+
+**Files:** `src/motodiag/hardware/simulator.py` lines 144-152.
+
+**Verified:** `pytest tests/test_phase144_simulator.py::TestScenarioModels::test_start_state_roundtrip -v` → PASS.
+
+### 2026-04-18 13:45 — KNOWN ISSUES — follow-up Builder-144-Fix needed
+
+Architect trust-but-verify surfaced **35 additional test failures beyond the 2 bugs fixed above**. Not blocking Phase 141 commit but require a dedicated follow-up before Phase 144 can close to v1.1.
+
+**Failure clusters:**
+1. **TestScenarioFromRecording (5 tests)** — `ScenarioLoader.from_recording(recording_id)` calls `int(recording_id)` but tests pass string IDs like `"test_rec_1"`. Tests need either (a) integer IDs via real `RecordingManager.start_recording()` setup, or (b) graceful ValueError handling. Builder's deviation note confirms this cluster was substituted with guard-path coverage instead of real round-trip assertions — the substituted tests still fail on the int() conversion.
+2. **TestSimulateCommand (7+ tests)** — `simulate validate <builtin_yaml>` + `simulate run <builtin>` paths fail. Likely scenario YAML schema mismatch with Pydantic validators, OR `--simulator` flag + `--mock` mutex not properly wired on scan command.
+3. **Builtin YAML validation failures** — `misfire.yaml`, `o2_sensor_fail.yaml`, `overheat.yaml` fail `simulate validate`. Likely overlapping RampPid entries (Phase 144 validators reject same-PID overlap) in the Builder's misfire scenario (which uses 20+ rapid ramps).
+4. **Malformed-YAML / reconnect-without-disconnect** — CLI error surfacing not matching test expectations.
+
+**Recommendation:** dispatch Builder-144-Fix agent to:
+- Review + fix the 10 built-in YAML scenarios (especially `misfire.yaml` RampPid overlap).
+- Rewrite TestScenarioFromRecording to use real int IDs from a setup fixture creating a mock recording.
+- Verify `--simulator` flag wiring end-to-end through CliRunner.
+- Target: bring Phase 144 from 91 pass / 35 fail to full green.
+
+### 2026-04-18 13:50 — Build-incomplete sign-off (v1.0 plan met; v1.1 finalization BLOCKED)
+
+Production code ships (all spec artifacts present). **Docs do NOT move to `completed/` until Builder-144-Fix closes the 35 test failures.** Phase 144 stays in `in_progress/` until green regression.
+
+**Fix #1 verified:** the `_coerce_pid` bare-number correctness bug is a genuine root-cause fix (not a test hack) — protects future phases that JSON-serialize scenarios.
+
+**Next:** Builder-144-Fix dispatch.

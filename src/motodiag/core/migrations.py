@@ -1014,6 +1014,180 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS ai_response_cache;
         """,
     ),
+    # Migration 016 — Phase 142: sensor recordings + samples substrate
+    Migration(
+        version=16,
+        name="sensor_recordings",
+        description=(
+            "Phase 142: Create sensor_recordings (session metadata) and "
+            "sensor_samples (individual PID readings) tables supporting "
+            "`motodiag hardware log start/stop/list/show/replay/diff/export/"
+            "prune`. Designed for the SQLite + JSONL split policy: under "
+            "1000 rows per recording stays in SQLite with file_ref NULL; "
+            "above the threshold spills to ~/.motodiag/recordings/<uuid>.jsonl "
+            "and sensor_samples retains every 100th reading as a sparse "
+            "summary (file_ref stores the sidecar filename). "
+            "sensor_recordings.vehicle_id is NULLABLE for dealer-lot scenarios "
+            "(pre-sale diagnostic without a garage entry yet) and uses ON "
+            "DELETE SET NULL so deleting a vehicle does not cascade-destroy "
+            "its recording history. sensor_samples.recording_id uses ON "
+            "DELETE CASCADE so removing a recording cleanly removes its "
+            "SQLite rows. pid_hex is stored as the Phase 141 SensorReading "
+            "format `\"0x0C\"` (with `0x` prefix, uppercase hex byte) to "
+            "keep one canonical string representation across the codebase. "
+            "Four indexes support the dominant query shapes: list by "
+            "vehicle, list by recency, time-ordered playback, and per-PID "
+            "diff joins."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS sensor_recordings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER,
+                session_label TEXT,
+                started_at TIMESTAMP NOT NULL,
+                stopped_at TIMESTAMP,
+                protocol_name TEXT NOT NULL,
+                pids_csv TEXT NOT NULL,
+                notes TEXT,
+                sample_count INTEGER NOT NULL DEFAULT 0,
+                max_hz REAL,
+                min_hz REAL,
+                file_ref TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_recordings_vehicle
+                ON sensor_recordings(vehicle_id);
+            CREATE INDEX IF NOT EXISTS idx_recordings_started
+                ON sensor_recordings(started_at);
+
+            CREATE TABLE IF NOT EXISTS sensor_samples (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                recording_id INTEGER NOT NULL,
+                captured_at TIMESTAMP NOT NULL,
+                pid_hex TEXT NOT NULL,
+                value REAL,
+                raw INTEGER,
+                unit TEXT,
+                FOREIGN KEY (recording_id) REFERENCES sensor_recordings(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_samples_recording_time
+                ON sensor_samples(recording_id, captured_at);
+            CREATE INDEX IF NOT EXISTS idx_samples_recording_pid
+                ON sensor_samples(recording_id, pid_hex);
+        """,
+        rollback_sql="""
+            -- Child table first to respect FK ordering even under PRAGMA
+            -- foreign_keys=ON semantics during rollback tests.
+            DROP TABLE IF EXISTS sensor_samples;
+            DROP TABLE IF EXISTS sensor_recordings;
+        """,
+    ),
+    # Migration 017 — Phase 145: adapter compatibility database
+    Migration(
+        version=17,
+        name="adapter_compatibility",
+        description=(
+            "Phase 145: Create three-table adapter compatibility knowledge "
+            "base supporting `motodiag hardware compat "
+            "{list,recommend,check,show,note add,note list,seed}`. "
+            "obd_adapters catalogs 20-25 real-world OBD adapters across "
+            "five price tiers (generic ELM327 clones through OEM dealer "
+            "tools) with chipset, transport, supported protocols, "
+            "bidirectional/Mode22 flags, and reliability 1-5. "
+            "adapter_compatibility stores (adapter, make, model-pattern, "
+            "year-range) → status rows using SQL LIKE patterns so one "
+            "entry can cover a model family (`'CBR%'`). compat_notes is "
+            "the free-text mechanic knowledge layer — quirks, "
+            "workarounds, known-failures, tips — scoped per (adapter, "
+            "make) with `'*'` as the any-make wildcard. Three CHECK "
+            "constraints (reliability 1-5, price >= 0, bit-flags 0/1) "
+            "+ two enum CHECKs (status, note_type). FK cascades: "
+            "compat_notes + adapter_compatibility child-delete when "
+            "adapter_id is removed; submitted_by_user_id → users SET "
+            "DEFAULT so removing a user preserves the note attributed "
+            "to system user id=1. Six indexes support the dominant "
+            "query shapes: slug lookup, chipset filter, make+model-"
+            "pattern match, make+year range, adapter join, and note "
+            "lookup by (adapter, make)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS obd_adapters (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT NOT NULL UNIQUE,
+                brand TEXT NOT NULL,
+                model TEXT NOT NULL,
+                chipset TEXT NOT NULL,
+                transport TEXT NOT NULL,
+                price_usd_cents INTEGER NOT NULL DEFAULT 0,
+                purchase_url TEXT,
+                supported_protocols_csv TEXT NOT NULL,
+                supports_bidirectional INTEGER NOT NULL DEFAULT 0,
+                supports_mode22 INTEGER NOT NULL DEFAULT 0,
+                reliability_1to5 INTEGER NOT NULL DEFAULT 3,
+                known_issues TEXT,
+                notes TEXT,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CHECK (reliability_1to5 BETWEEN 1 AND 5),
+                CHECK (price_usd_cents >= 0),
+                CHECK (supports_bidirectional IN (0, 1)),
+                CHECK (supports_mode22 IN (0, 1))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_obd_adapters_slug
+                ON obd_adapters(slug);
+            CREATE INDEX IF NOT EXISTS idx_obd_adapters_chipset
+                ON obd_adapters(chipset);
+
+            CREATE TABLE IF NOT EXISTS adapter_compatibility (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                adapter_id INTEGER NOT NULL,
+                vehicle_make TEXT NOT NULL,
+                vehicle_model_pattern TEXT NOT NULL,
+                year_min INTEGER,
+                year_max INTEGER,
+                status TEXT NOT NULL,
+                notes TEXT,
+                verified_by TEXT,
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (adapter_id) REFERENCES obd_adapters(id) ON DELETE CASCADE,
+                CHECK (status IN ('full','partial','read-only','incompatible'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_compat_make_model
+                ON adapter_compatibility(vehicle_make, vehicle_model_pattern);
+            CREATE INDEX IF NOT EXISTS idx_compat_make_year
+                ON adapter_compatibility(vehicle_make, year_min, year_max);
+            CREATE INDEX IF NOT EXISTS idx_compat_adapter
+                ON adapter_compatibility(adapter_id);
+
+            CREATE TABLE IF NOT EXISTS compat_notes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                adapter_id INTEGER NOT NULL,
+                vehicle_make TEXT NOT NULL,
+                note_type TEXT NOT NULL,
+                body TEXT NOT NULL,
+                source_url TEXT,
+                submitted_by_user_id INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (adapter_id) REFERENCES obd_adapters(id) ON DELETE CASCADE,
+                FOREIGN KEY (submitted_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT,
+                CHECK (note_type IN ('quirk','workaround','known-failure','tip'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_compat_notes_adapter_make
+                ON compat_notes(adapter_id, vehicle_make);
+        """,
+        rollback_sql="""
+            -- Child-first drop order respects FK (compat_notes and
+            -- adapter_compatibility both reference obd_adapters).
+            DROP TABLE IF EXISTS compat_notes;
+            DROP TABLE IF EXISTS adapter_compatibility;
+            DROP TABLE IF EXISTS obd_adapters;
+        """,
+    ),
 ]
 
 

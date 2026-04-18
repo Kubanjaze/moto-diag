@@ -1,0 +1,20 @@
+name: ecu_crash_recovery
+description: Simulated ECU dropout — Disconnect@20s, Timeout 3s@22s, Reconnect@30s.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 88
+  0x0C: 950
+  0x11: 14
+  0x0F: 33
+  0x06: 128
+  0x42: 14050
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 950, 0x11: 14, 0x0F: 33, 0x06: 128, 0x42: 14050}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: pre_crash}
+  - {action: disconnect, at: 20s}
+  - {action: inject_timeout, at: 22s, duration: 3s}
+  - {action: phase, at: 25s, name: ecu_silent}
+  - {action: reconnect, at: 30s}
+  - {action: phase, at: 30s, name: recovered}
+  - {action: end, at: 60s}

@@ -1,0 +1,18 @@
+name: charging_fault
+description: Battery voltage drifts 14.2V -> 11.8V as regulator fails; P0620 at 90s.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 88
+  0x0C: 950
+  0x11: 14
+  0x0F: 34
+  0x06: 128
+  0x42: 14200
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 950, 0x11: 14, 0x0F: 34, 0x06: 128, 0x42: 14200}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: baseline}
+  - {action: ramp, at: 10s, pid: 0x42, from: 14200, to: 11800, duration: 150s}
+  - {action: inject_dtc, at: 90s, code: P0620}
+  - {action: phase, at: 90s, name: charging_lost}
+  - {action: end, at: 180s}

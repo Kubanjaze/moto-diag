@@ -37,11 +37,18 @@ Scripted scenarios for edge-case testing::
 
     # Empty DTC list (clean bike):
     MockAdapter(dtcs=[])
+
+    # Phase 141 — scripted Mode 01 PID responses for the live sensor
+    # streamer test suite. When ``pid_values`` is set, ``read_pid``
+    # routes through the mapping instead of the legacy ``pid * 10``
+    # path — an unknown key returns ``None`` so the streamer sees the
+    # same "PID not supported" contract it would get from a real ECU.
+    MockAdapter(pid_values={0x0C: 0x1AF8, 0x05: 0x5A})
 """
 
 from __future__ import annotations
 
-from typing import List, Optional
+from typing import Dict, List, Optional
 
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import (
@@ -99,6 +106,16 @@ class MockAdapter(ProtocolAdapter):
         When ``True``, :meth:`read_vin` raises
         :class:`UnsupportedCommandError` instead of returning the VIN.
         Used to exercise the Phase 140 "VIN: not available" CLI path.
+    pid_values:
+        **Phase 141 addition.** When provided, :meth:`read_pid`
+        consults this mapping instead of the legacy Phase 140
+        ``pid * 10`` / ``None`` rule: a hit returns the mapped raw
+        integer (pre-assembled per the ABC contract), a miss returns
+        ``None``. A defensive copy is stored at construction so the
+        caller's dict is not shared with internal state. Pass ``None``
+        (default) to preserve Phase 140 behavior exactly — every Phase
+        140 test still passes because the new branch is gated on
+        ``self._pid_values is not None``.
     """
 
     def __init__(
@@ -112,6 +129,7 @@ class MockAdapter(ProtocolAdapter):
         protocol_name: str = _DEFAULT_PROTOCOL_NAME,
         fail_on_connect: bool = False,
         vin_unsupported: bool = False,
+        pid_values: Optional[Dict[int, int]] = None,
     ) -> None:
         # Defensive copy of the DTC list so callers can't mutate our
         # state after construction by modifying their own list.
@@ -130,6 +148,12 @@ class MockAdapter(ProtocolAdapter):
         self._protocol_name: str = protocol_name
         self._fail_on_connect: bool = fail_on_connect
         self._vin_unsupported: bool = vin_unsupported
+        # Phase 141 — scripted Mode 01 PID table. Defensive copy so
+        # callers can't mutate our state by editing their own dict
+        # after construction. ``None`` preserves Phase 140 behavior.
+        self._pid_values: Optional[Dict[int, int]] = (
+            dict(pid_values) if pid_values is not None else None
+        )
         # ``_is_connected`` is the backing attribute the base class's
         # ``is_connected`` property reads. Starts False; flipped by
         # connect()/disconnect().
@@ -194,11 +218,21 @@ class MockAdapter(ProtocolAdapter):
     def read_pid(self, pid: int) -> Optional[int]:
         """Return a deterministic fake PID value.
 
-        When ``pid`` is in the supported-modes list the mock returns
-        ``pid * 10`` — arbitrary but reproducible across test runs.
-        Otherwise returns ``None``, matching the ABC contract for
-        "PID not supported".
+        Phase 141: when the mock was constructed with a ``pid_values``
+        mapping, this method consults that table and returns the mapped
+        value (or ``None`` on miss) — ignoring ``supported_modes``
+        entirely. This lets the live-sensor streamer tests build
+        fixtures like ``MockAdapter(pid_values={0x0C: 0x1AF8})`` that
+        read as scripted wire captures.
+
+        Otherwise (Phase 140 behavior, preserved unchanged): when
+        ``pid`` is in the supported-modes list the mock returns
+        ``pid * 10`` — arbitrary but reproducible across test runs —
+        and returns ``None`` for anything outside that set. ``None``
+        matches the ABC contract for "PID not supported".
         """
+        if self._pid_values is not None:
+            return self._pid_values.get(pid)
         if pid in self._supported_modes:
             return pid * 10
         return None

@@ -29,9 +29,14 @@ billing.
 
 from __future__ import annotations
 
-from typing import Optional, Tuple
+import csv
+import time as _time
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import List, Optional, Tuple
 
 import click
+from rich.live import Live
 from rich.panel import Panel
 from rich.table import Table
 
@@ -46,7 +51,41 @@ from motodiag.cli.theme import (
 from motodiag.core.database import init_db
 from motodiag.hardware.connection import HardwareSession
 from motodiag.hardware.ecu_detect import NoECUDetectedError
+from motodiag.hardware.protocols.exceptions import ProtocolError
+from motodiag.hardware.scenarios import BUILTIN_NAMES
+from motodiag.hardware.sensors import (
+    SENSOR_CATALOG,
+    SensorReading,
+    SensorStreamer,
+    parse_pid_list,
+)
+from motodiag.hardware.simulator import (
+    RecordingSupportUnavailable,
+    Scenario,
+    ScenarioLoader,
+    ScenarioParseError,
+    ScenarioValidationError,
+    SimulatedAdapter,
+    SimulationClock,
+)
 from motodiag.knowledge.dtc_lookup import resolve_dtc_info
+
+
+# --- Phase 141 stream defaults ----------------------------------------
+#
+# Default PID set when the mechanic does not pass ``--pids``. Six rows
+# covering the "first-look" live view: RPM, coolant, IAT, throttle,
+# battery, O2 voltage sensor 1. Vehicle speed (0x0D) is intentionally
+# omitted — a bike on a dyno has a stationary frame but a turning
+# wheel, so VSS can be misleading on the first glance. Mechanics who
+# want VSS pass it explicitly.
+_DEFAULT_STREAM_PIDS: tuple[int, ...] = (0x0C, 0x05, 0x0F, 0x11, 0x42, 0x14)
+
+# ELM327 adapters spend 50-100 ms per AT command in round-trip
+# overhead, so anything above ~10 Hz is wasted effort (the adapter
+# itself becomes the bottleneck and the reported rate drifts). We clamp
+# with a visible warning rather than silently downshifting.
+_MAX_STREAM_HZ: float = 10.0
 
 
 # --- Source label → Rich markup ---------------------------------------
@@ -421,6 +460,387 @@ def _run_info(
     return 0
 
 
+# --- Command: stream (Phase 141) --------------------------------------
+
+
+class _StreamCsvWriter:
+    """Append-mode CSV sink for :func:`_run_stream`.
+
+    Opens ``path`` in append mode (UTF-8, ``newline=""``) so a mechanic
+    can keep one long log across multiple ``motodiag hardware stream
+    --output log.csv`` sessions. On a brand-new file the writer emits a
+    single header row; on an existing file it skips the header so the
+    combined log stays parseable as one CSV document.
+
+    Column layout:
+
+    - ``timestamp_utc_iso`` — ISO-8601 UTC timestamp of the first PID
+      captured in the tick (from :attr:`SensorReading.captured_at`).
+    - ``elapsed_s`` — seconds since the stream started, rounded to
+      millisecond precision via ``f"{elapsed:.3f}"``.
+    - One column per PID, labelled ``"{name} ({unit})"`` for catalog
+      entries or ``"PID 0x{pid:02X}"`` for unknown PIDs.
+
+    Cell values are ``f"{value:.6g}"`` for ``ok`` readings and an empty
+    string for ``unsupported`` / ``timeout`` — keeps the file friendly
+    to Excel, pandas, and plain ``cut``.
+    """
+
+    def __init__(self, path: Path, pids: List[int]) -> None:
+        # Stash the PID order so write_row doesn't have to infer column
+        # order from the readings (a caller could theoretically reorder
+        # them between ticks — we treat our construction-time order as
+        # the authoritative schema).
+        self._pids: List[int] = list(pids)
+        self._path: Path = path
+        existed = path.exists() and path.stat().st_size > 0
+        # Opening in append mode surfaces path errors (non-writable
+        # directory, parent missing, etc.) before we've paid to spin
+        # up the serial adapter — _run_stream constructs the writer
+        # up-front for exactly this reason.
+        self._fh = open(path, "a", encoding="utf-8", newline="")
+        self._writer = csv.writer(self._fh)
+        if not existed:
+            header: List[str] = ["timestamp_utc_iso", "elapsed_s"]
+            for pid in self._pids:
+                spec = SENSOR_CATALOG.get(pid)
+                if spec is None:
+                    header.append(f"PID 0x{pid:02X}")
+                else:
+                    header.append(f"{spec.name} ({spec.unit})")
+            self._writer.writerow(header)
+            self._fh.flush()
+
+    def write_row(
+        self, readings: List[SensorReading], elapsed_s: float,
+    ) -> None:
+        """Append one tick's worth of readings to the CSV.
+
+        The ``elapsed_s`` argument comes from the caller's monotonic
+        clock so the CSV's elapsed column matches the on-screen footer
+        exactly — using the per-reading ``captured_at`` delta would
+        drift by fractions of a millisecond per PID because the reads
+        happen sequentially within a tick.
+        """
+        # Index readings by PID so we can look each one up in the
+        # writer's own column order, not the order the streamer
+        # happened to yield them in (defensive — today they match).
+        by_pid = {r.pid: r for r in readings}
+        # Timestamp comes from the first reading's captured_at — all
+        # readings in one tick share effectively the same UTC second.
+        ts_iso = (
+            readings[0].captured_at.isoformat()
+            if readings
+            else datetime.now(timezone.utc).isoformat()
+        )
+        row: List[str] = [ts_iso, f"{elapsed_s:.3f}"]
+        for pid in self._pids:
+            reading = by_pid.get(pid)
+            if reading is None or reading.status != "ok" or reading.value is None:
+                row.append("")
+            else:
+                row.append(f"{reading.value:.6g}")
+        self._writer.writerow(row)
+        self._fh.flush()
+
+    def close(self) -> None:
+        """Flush and close the file handle. Idempotent."""
+        if self._fh is not None and not self._fh.closed:
+            self._fh.flush()
+            self._fh.close()
+
+
+def _render_stream_panel(
+    readings: List[SensorReading],
+    hz: float,
+    elapsed_s: float,
+    mock: bool,
+) -> Panel:
+    """Build the Rich Panel for one poll tick of the live stream.
+
+    The panel wraps a :class:`~rich.table.Table` with four columns —
+    PID / Name / Value / Unit — so the mechanic's eye lands on the
+    value column without scanning. Status encoding:
+
+    - ``ok`` → raw value formatted via ``f"{value:g}"`` (scientific
+      form stays out of the way for normal ranges).
+    - ``unsupported`` → dim em-dash ``[dim]—[/dim]`` so an
+      unsupported PID is visually quiet.
+    - ``timeout`` → yellow ``timeout`` to flag transient ECU
+      unresponsiveness without alarming the mechanic.
+
+    The panel title includes ``[MOCK]`` in yellow when the session is
+    running against :class:`~motodiag.hardware.mock.MockAdapter` so
+    screenshots and videos never mislead about the data provenance.
+    """
+    table = Table(header_style="bold cyan", expand=True)
+    table.add_column("PID", style="bold", no_wrap=True)
+    table.add_column("Name", overflow="fold")
+    table.add_column("Value", justify="right")
+    table.add_column("Unit")
+    for r in readings:
+        if r.status == "ok" and r.value is not None:
+            value_cell = f"{r.value:g}"
+        elif r.status == "timeout":
+            value_cell = "[yellow]timeout[/yellow]"
+        else:
+            # unsupported — dim em-dash matches the Phase 129 theme
+            # convention for "absent but expected" cells.
+            value_cell = "[dim]—[/dim]"
+        table.add_row(r.pid_hex, r.name, value_cell, r.unit or "")
+    badge = "[bold yellow][MOCK][/bold yellow] " if mock else ""
+    title = f"{badge}Live sensors ({hz:g} Hz)  •  elapsed {elapsed_s:.1f}s"
+    return Panel(table, title=title, border_style="cyan")
+
+
+def _run_stream(
+    port: str,
+    make_hint: Optional[str],
+    baud: Optional[int],
+    timeout_s: float,
+    mock: bool,
+    pids: List[int],
+    hz: float,
+    duration: float,
+    output_path: Optional[Path],
+) -> int:
+    """Execute the live-sensor streaming flow. Returns the shell exit code.
+
+    Five linear phases:
+
+    1. **hz validation** — reject ``<= 0`` as a hard error; clamp
+       ``> _MAX_STREAM_HZ`` (10 Hz) with a visible warning panel so
+       the mechanic knows the ELM327 ceiling kicked in.
+    2. **CSV writer setup** — if ``--output`` was supplied, open the
+       sink *before* the serial port so a bad path fails fast (no
+       point connecting to the ECU to then fail on a write).
+    3. **HardwareSession** — same detection / error surface as
+       :func:`_run_scan`. :class:`NoECUDetectedError` renders the red
+       per-adapter failure panel and returns 1.
+    4. **Streaming loop** — one :class:`Rich.Live` context wraps the
+       :class:`SensorStreamer.iter_readings` generator. Each tick
+       refreshes the panel, optionally writes a CSV row, and checks
+       the duration cap. :class:`KeyboardInterrupt` breaks cleanly
+       (exit 0); :class:`ProtocolError` renders a red "ECU went
+       silent" panel and returns 1.
+    5. **Footer** — cycles polled + total elapsed, printed after the
+       Live block exits so it's not overwritten by the final refresh.
+
+    The CSV writer (if any) is always closed in ``finally`` so a mid-
+    stream abort never leaks a file handle.
+    """
+    console = get_console()
+
+    # --- 1. hz validation -----------------------------------------------
+    if hz <= 0:
+        raise click.ClickException(
+            f"--hz must be > 0 (got {hz!r}); try --hz 2.0"
+        )
+    clamped_hz = hz
+    if hz > _MAX_STREAM_HZ:
+        clamped_hz = _MAX_STREAM_HZ
+        console.print(
+            Panel(
+                f"[yellow]{ICON_WARN} --hz {hz:g} exceeds the {_MAX_STREAM_HZ:g} Hz "
+                "ceiling and was clamped.[/yellow]\n\n"
+                "[dim]ELM327-class adapters spend 50-100 ms per AT "
+                "command, so polling faster than 10 Hz just drops "
+                "ticks at the driver. Native CAN can sustain more — "
+                "contact support if you need a raised ceiling.[/dim]",
+                title="Rate clamped",
+                border_style="yellow",
+            )
+        )
+
+    # --- 2. CSV writer (optional) ---------------------------------------
+    csv_writer: Optional[_StreamCsvWriter] = None
+    if output_path is not None:
+        try:
+            csv_writer = _StreamCsvWriter(output_path, pids)
+        except OSError as exc:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} Could not open output file "
+                    f"{output_path}: {exc}[/red]",
+                    title="Stream output failed",
+                    border_style="red",
+                )
+            )
+            return 1
+
+    # --- 3/4/5. Session + streaming loop --------------------------------
+    cycles = 0
+    stream_start = _time.monotonic()
+    try:
+        try:
+            session = HardwareSession(
+                port=port,
+                make_hint=make_hint,
+                baud=baud,
+                timeout_s=timeout_s,
+                mock=mock,
+            )
+            with session as adapter:
+                protocol_name = adapter.get_protocol_name()
+                badge = "[bold yellow][MOCK][/bold yellow] " if mock else ""
+                console.print(
+                    f"\n{badge}[bold cyan]{ICON_OK} Connected[/bold cyan] "
+                    f"on [bold]{port}[/bold] via "
+                    f"[bold]{protocol_name}[/bold]"
+                )
+
+                streamer = SensorStreamer(adapter, pids, hz=clamped_hz)
+                # Initial empty panel so Live has something to render
+                # before the first tick lands (keeps the terminal from
+                # flashing between the header print and the first
+                # refresh).
+                initial_panel = _render_stream_panel([], clamped_hz, 0.0, mock)
+                try:
+                    with Live(
+                        initial_panel,
+                        console=console,
+                        auto_refresh=False,
+                        transient=False,
+                    ) as live:
+                        try:
+                            for tick in streamer.iter_readings():
+                                cycles += 1
+                                elapsed = _time.monotonic() - stream_start
+                                panel = _render_stream_panel(
+                                    tick, clamped_hz, elapsed, mock,
+                                )
+                                live.update(panel, refresh=True)
+                                if csv_writer is not None:
+                                    csv_writer.write_row(tick, elapsed)
+                                if duration > 0 and elapsed >= duration:
+                                    break
+                        except KeyboardInterrupt:
+                            # Mechanics use Ctrl+C to stop a live stream.
+                            # Clean exit, not an error.
+                            pass
+                except ProtocolError as exc:
+                    # Either the adapter broke mid-stream or the ECU
+                    # went silent. Either way, the session's __exit__
+                    # will still run on the way out of the outer
+                    # ``with session`` — we just render the panel and
+                    # return 1.
+                    console.print(
+                        Panel(
+                            f"[red]{ICON_FAIL} ECU went silent mid-stream: "
+                            f"{exc}[/red]\n\n"
+                            "[dim]Check the cable, ignition state, and "
+                            "rerun [bold]motodiag hardware info[/bold] "
+                            "to confirm the adapter is still "
+                            "reachable.[/dim]",
+                            title="Stream aborted",
+                            border_style="red",
+                        )
+                    )
+                    return 1
+        except NoECUDetectedError as exc:
+            _render_no_ecu_panel(
+                console, exc.port, exc.make_hint, exc.errors,
+            )
+            return 1
+
+        elapsed_total = _time.monotonic() - stream_start
+        console.print(
+            f"\n[dim]Polled {cycles} cycle{'s' if cycles != 1 else ''} "
+            f"in {elapsed_total:.2f}s.[/dim]"
+        )
+        return 0
+    finally:
+        if csv_writer is not None:
+            csv_writer.close()
+
+
+# --- Phase 144: simulator helpers --------------------------------------
+#
+# These live outside ``register_hardware`` so the ``scan`` / ``clear`` /
+# ``info`` option-handlers can invoke them without threading state
+# through Click's closure capture. They are strictly additive — nothing
+# below this line changes any behavior that pre-dates Phase 144.
+
+
+def _resolve_scenario(
+    name_or_path: str,
+    user_paths: tuple[Path, ...] = (),
+) -> Scenario:
+    """Resolve a scenario name or YAML path through the loader.
+
+    Thin wrapper around :meth:`ScenarioLoader.find` — exists as a named
+    helper so the CLI can swap in a fake for tests that don't want to
+    hit the filesystem.
+    """
+    return ScenarioLoader.find(name_or_path, user_paths=user_paths)
+
+
+def _simulator_badge(scenario_name: str) -> str:
+    """Return the magenta ``[SIM: name]`` badge used by scan/clear/info.
+
+    Matches the :``[MOCK]`` badge pattern from Phase 140 — Rich renders
+    unknown tag-like text literally, so ``[SIM: healthy_idle]`` shows
+    up verbatim in output after the surrounding magenta style resolves.
+    """
+    return f"[bold magenta][SIM: {scenario_name}][/bold magenta]"
+
+
+def _run_scenario(
+    scenario: Scenario,
+    *,
+    speed: float = 0.0,
+    clock: Optional[SimulationClock] = None,
+    max_duration_s: float = 300.0,
+    log: bool = False,
+    console=None,
+) -> int:
+    """Execute a scenario end-to-end through :class:`SimulatedAdapter`.
+
+    Returns the shell exit code. At ``speed=0`` the clock jumps directly
+    from event to event — the full timeline completes in well under a
+    second, which is what the Phase 144 test suite relies on. Any
+    ``speed > 0`` would use wall-clock pacing via ``time.sleep``; tests
+    never engage that path (CI greps ``time.sleep`` in the test file).
+    """
+    if console is None:
+        console = get_console()
+    clk = clock if clock is not None else SimulationClock(start_s=0.0)
+    adapter = SimulatedAdapter(scenario=scenario, clock=clk)
+    # Connect once; the scenario's own Disconnect/Reconnect events drive
+    # the live state visible through ``is_connected``.
+    adapter.connect(port=f"sim://{scenario.name}", baud=0)
+
+    try:
+        # At speed=0, iterate event-by-event by advancing the clock to
+        # each event's timestamp. At speed>0, wall-clock pacing — but
+        # tests never pass speed>0 so we guard the sleep behind an
+        # explicit branch.
+        last_t = 0.0
+        for idx, event in enumerate(scenario.timeline):
+            if event.at_s > max_duration_s:
+                console.print(
+                    f"[yellow]{ICON_WARN} simulation truncated at "
+                    f"{max_duration_s}s[/yellow]"
+                )
+                break
+            if speed > 0.0:  # pragma: no cover — tests use speed=0
+                dt = event.at_s - last_t
+                if dt > 0:
+                    _time.sleep(dt / speed)
+            clk.advance(event.at_s)
+            last_t = event.at_s
+            if log:
+                action = type(event).__name__
+                console.print(
+                    f"  [dim]t={event.at_s:6.2f}s[/dim]  "
+                    f"[cyan]{action}[/cyan]"
+                )
+    finally:
+        adapter.disconnect()
+
+    return 0
+
+
 # --- Click wiring ------------------------------------------------------
 
 
@@ -454,13 +874,22 @@ def register_hardware(cli_group: click.Group) -> None:
     @click.option("--mock", is_flag=True, default=False,
                   help="Use the in-memory MockAdapter — no real "
                        "hardware required. Useful for dev / CI.")
+    @click.option("--simulator", "simulator", default=None,
+                  help="Run against a Phase 144 scenario (built-in name "
+                       "or path to a YAML file). Mutually exclusive "
+                       "with --mock.")
     def scan_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, mock: bool,
+        simulator: Optional[str],
     ) -> None:
         """Read stored DTCs from the ECU and print an enriched table."""
         console = get_console()
         init_db()
+        if mock and simulator:
+            raise click.UsageError(
+                "--mock and --simulator are mutually exclusive; choose one."
+            )
         if bike and make:
             raise click.ClickException(
                 "--bike and --make are mutually exclusive; choose one."
@@ -469,6 +898,68 @@ def register_hardware(cli_group: click.Group) -> None:
         if bike and _vehicle is None:
             _bike_not_found(console, bike)
             raise click.exceptions.Exit(1)
+        if simulator:
+            # Phase 144 simulator path — build a SimulatedAdapter,
+            # inject it into HardwareSession, and re-use the existing
+            # scan rendering pipeline. The port string is cosmetic in
+            # this branch; the session skips AutoDetector entirely.
+            try:
+                scenario = _resolve_scenario(simulator)
+            except (FileNotFoundError, ScenarioParseError,
+                    ScenarioValidationError) as exc:
+                console.print(
+                    Panel(
+                        f"[red]{ICON_FAIL} scenario load failed: "
+                        f"{exc}[/red]",
+                        title="Simulator error",
+                        border_style="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+            sim_adapter = SimulatedAdapter(scenario=scenario)
+            sim_adapter.connect(port=port, baud=0)
+            console.print(
+                f"{_simulator_badge(scenario.name)} "
+                f"[dim]scenario loaded — {scenario.description}[/dim]"
+            )
+            dtcs = sim_adapter.read_dtcs()
+            protocol_name = sim_adapter.get_protocol_name()
+            vin = sim_adapter.read_vin()
+            sim_adapter.disconnect()
+            # Render the same scan output format the default path uses.
+            if not dtcs:
+                console.print(
+                    Panel(
+                        f"[green]{ICON_OK} No codes stored.[/green]",
+                        title="DTC scan",
+                        border_style="green",
+                    )
+                )
+            else:
+                table = Table(
+                    title=f"DTCs stored ({len(dtcs)})",
+                    header_style="bold cyan",
+                )
+                table.add_column("Code", style="bold")
+                table.add_column("Description", overflow="fold")
+                table.add_column("Category")
+                table.add_column("Severity")
+                table.add_column("Source")
+                for raw_code in dtcs:
+                    info = resolve_dtc_info(raw_code, make_hint=make_hint)
+                    table.add_row(
+                        info["code"],
+                        info.get("description") or "-",
+                        info.get("category") or "-",
+                        format_severity(info.get("severity")),
+                        _format_source(info["source"]),
+                    )
+                console.print(table)
+            footer_parts = [f"Protocol: [bold]{protocol_name}[/bold]"]
+            if vin:
+                footer_parts.append(f"VIN: [bold]{vin}[/bold]")
+            console.print("\n" + "   ".join(footer_parts))
+            return
         code = _run_scan(port, make_hint, baud, timeout_s, mock)
         if code != 0:
             raise click.exceptions.Exit(code)
@@ -492,14 +983,22 @@ def register_hardware(cli_group: click.Group) -> None:
     @click.option("--mock", is_flag=True, default=False,
                   help="Use the in-memory MockAdapter instead of real "
                        "hardware.")
+    @click.option("--simulator", "simulator", default=None,
+                  help="Run against a Phase 144 scenario (built-in name "
+                       "or path to a YAML file). Mutually exclusive "
+                       "with --mock.")
     def clear_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, assume_yes: bool,
-        mock: bool,
+        mock: bool, simulator: Optional[str],
     ) -> None:
         """Clear stored DTCs from the ECU (Mode 04)."""
         console = get_console()
         init_db()
+        if mock and simulator:
+            raise click.UsageError(
+                "--mock and --simulator are mutually exclusive; choose one."
+            )
         if bike and make:
             raise click.ClickException(
                 "--bike and --make are mutually exclusive; choose one."
@@ -507,6 +1006,63 @@ def register_hardware(cli_group: click.Group) -> None:
         make_hint, _vehicle = _resolve_make_hint(bike, make)
         if bike and _vehicle is None:
             _bike_not_found(console, bike)
+            raise click.exceptions.Exit(1)
+        if simulator:
+            try:
+                scenario = _resolve_scenario(simulator)
+            except (FileNotFoundError, ScenarioParseError,
+                    ScenarioValidationError) as exc:
+                console.print(
+                    Panel(
+                        f"[red]{ICON_FAIL} scenario load failed: "
+                        f"{exc}[/red]",
+                        title="Simulator error",
+                        border_style="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+            # Safety warning + confirm prompt still apply on the
+            # simulator path so mechanics get the same UX.
+            console.print(
+                Panel(
+                    f"[bold yellow]{ICON_WARN} This will clear ALL "
+                    "stored DTCs from the ECU.[/bold yellow]",
+                    title="Clear DTCs — safety warning",
+                    border_style="yellow",
+                )
+            )
+            if not assume_yes:
+                if not click.confirm("Proceed?", default=False):
+                    console.print(
+                        "[yellow]Aborted — no codes cleared.[/yellow]"
+                    )
+                    return
+            sim_adapter = SimulatedAdapter(scenario=scenario)
+            sim_adapter.connect(port=port, baud=0)
+            try:
+                cleared = sim_adapter.clear_dtcs()
+            finally:
+                sim_adapter.disconnect()
+            if cleared:
+                console.print(
+                    Panel(
+                        f"{_simulator_badge(scenario.name)} "
+                        f"[green]{ICON_OK} Simulator accepted "
+                        "the clear.[/green]",
+                        title="Clear DTCs",
+                        border_style="green",
+                    )
+                )
+                return
+            console.print(
+                Panel(
+                    f"{_simulator_badge(scenario.name)} "
+                    f"[red]{ICON_FAIL} Simulator refused the "
+                    "clear.[/red]",
+                    title="Clear DTCs",
+                    border_style="red",
+                )
+            )
             raise click.exceptions.Exit(1)
         code = _run_clear(
             port, make_hint, baud, timeout_s, mock, assume_yes,
@@ -531,11 +1087,128 @@ def register_hardware(cli_group: click.Group) -> None:
     @click.option("--mock", is_flag=True, default=False,
                   help="Use the in-memory MockAdapter instead of real "
                        "hardware.")
+    @click.option("--simulator", "simulator", default=None,
+                  help="Run against a Phase 144 scenario (built-in name "
+                       "or path to a YAML file). Mutually exclusive "
+                       "with --mock.")
     def info_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, mock: bool,
+        simulator: Optional[str],
     ) -> None:
         """Identify the connected ECU — protocol, VIN, part #, sw version."""
+        console = get_console()
+        init_db()
+        if mock and simulator:
+            raise click.UsageError(
+                "--mock and --simulator are mutually exclusive; choose one."
+            )
+        if bike and make:
+            raise click.ClickException(
+                "--bike and --make are mutually exclusive; choose one."
+            )
+        make_hint, _vehicle = _resolve_make_hint(bike, make)
+        if bike and _vehicle is None:
+            _bike_not_found(console, bike)
+            raise click.exceptions.Exit(1)
+        if simulator:
+            try:
+                scenario = _resolve_scenario(simulator)
+            except (FileNotFoundError, ScenarioParseError,
+                    ScenarioValidationError) as exc:
+                console.print(
+                    Panel(
+                        f"[red]{ICON_FAIL} scenario load failed: "
+                        f"{exc}[/red]",
+                        title="Simulator error",
+                        border_style="red",
+                    )
+                )
+                raise click.exceptions.Exit(1)
+            sim_adapter = SimulatedAdapter(scenario=scenario)
+            sim_adapter.connect(port=port, baud=0)
+            info = sim_adapter.identify_info()
+            sim_adapter.disconnect()
+            vin = info.get("vin") or "[dim]not available[/dim]"
+            protocol_name = info.get("protocol_name") or "[dim]unknown[/dim]"
+            body = (
+                f"{_simulator_badge(scenario.name)}\n"
+                f"Protocol:      [bold]{protocol_name}[/bold]\n"
+                f"VIN:           [bold]{vin}[/bold]\n"
+                f"Scenario:      [bold]{scenario.name}[/bold]\n"
+                f"Description:   {scenario.description}"
+            )
+            console.print(
+                Panel(
+                    body,
+                    title=f"ECU info — {port}",
+                    border_style="cyan",
+                )
+            )
+            return
+        code = _run_info(
+            port, make_hint, baud, timeout_s, mock, console,
+        )
+        if code != 0:
+            raise click.exceptions.Exit(code)
+
+    # --- stream (Phase 141) -------------------------------------------
+    @hardware_group.command("stream")
+    @click.option("--port", "port", required=True,
+                  help="Serial port (e.g. COM3, /dev/ttyUSB0).")
+    @click.option("--bike", default=None,
+                  help="Bike slug from the garage. Mutually exclusive "
+                       "with --make.")
+    @click.option("--make", "make", default=None,
+                  help="Manufacturer hint when no garage slug is used.")
+    @click.option("--baud", type=int, default=None,
+                  help="Override the per-protocol baud rate.")
+    @click.option("--timeout", "timeout_s", type=float, default=2.0,
+                  show_default=True,
+                  help="Per-adapter connect timeout in seconds.")
+    @click.option("--mock", is_flag=True, default=False,
+                  help="Use the in-memory MockAdapter instead of real "
+                       "hardware.")
+    @click.option("--pids", "pids_spec", default=None,
+                  help="Comma-separated PID list (hex or decimal). "
+                       "Defaults to RPM, coolant, IAT, throttle, "
+                       "battery, O2 B1S1 voltage. "
+                       "VSS (0x0D) omitted by default — add it "
+                       "explicitly if your bike is not on a dyno.")
+    @click.option("--hz", "hz", type=float, default=2.0,
+                  show_default=True,
+                  help="Poll rate in ticks per second. Capped at "
+                       "10 Hz for ELM327-class adapters.")
+    @click.option("--duration", "duration", type=float, default=0.0,
+                  show_default=True,
+                  help="Stop after this many seconds. 0 = run until "
+                       "Ctrl+C.")
+    @click.option("--output", "output_path",
+                  type=click.Path(dir_okay=False, path_type=Path),
+                  default=None,
+                  help="Append each poll tick to this CSV file. "
+                       "Creates the file with a header row on first "
+                       "use; subsequent runs with the same path "
+                       "append without duplicating the header.")
+    def stream_cmd(
+        port: str,
+        bike: Optional[str],
+        make: Optional[str],
+        baud: Optional[int],
+        timeout_s: float,
+        mock: bool,
+        pids_spec: Optional[str],
+        hz: float,
+        duration: float,
+        output_path: Optional[Path],
+    ) -> None:
+        """Stream live Mode 01 PID values from the ECU.
+
+        Polls a list of OBD-II PIDs on a synchronous loop and renders a
+        Rich Live panel that refreshes at the requested rate. Runs until
+        Ctrl+C (or ``--duration`` elapses). Optionally appends every
+        tick to a CSV via ``--output`` for later analysis.
+        """
         console = get_console()
         init_db()
         if bike and make:
@@ -546,11 +1219,1505 @@ def register_hardware(cli_group: click.Group) -> None:
         if bike and _vehicle is None:
             _bike_not_found(console, bike)
             raise click.exceptions.Exit(1)
-        code = _run_info(
-            port, make_hint, baud, timeout_s, mock, console,
+        # Parse --pids into an int list (or fall back to the default
+        # six-PID first-look set). parse_pid_list raises ClickException
+        # on any validation failure — we let that propagate to Click's
+        # standard error surface (exit 1 with a clean message).
+        if pids_spec is None:
+            pids: List[int] = list(_DEFAULT_STREAM_PIDS)
+        else:
+            pids = parse_pid_list(pids_spec)
+        code = _run_stream(
+            port=port,
+            make_hint=make_hint,
+            baud=baud,
+            timeout_s=timeout_s,
+            mock=mock,
+            pids=pids,
+            hz=hz,
+            duration=duration,
+            output_path=output_path,
         )
         if code != 0:
             raise click.exceptions.Exit(code)
 
+    # --- simulate (Phase 144) -----------------------------------------
+    @hardware_group.group("simulate")
+    def simulate_group() -> None:
+        """Drive the hardware stack against a scripted scenario (Phase 144)."""
 
-__all__ = ["register_hardware"]
+    @simulate_group.command("list")
+    @click.option("--user-path", "user_paths",
+                  multiple=True, type=click.Path(path_type=Path),
+                  help="Additional directory to search for user-authored "
+                       "scenario YAML files. Repeatable.")
+    def simulate_list(user_paths: tuple[Path, ...]) -> None:
+        """List built-in scenarios plus any in user-supplied paths."""
+        console = get_console()
+        table = Table(
+            title="Available simulator scenarios",
+            header_style="bold magenta",
+        )
+        table.add_column("Name", style="bold")
+        table.add_column("Description", overflow="fold")
+        table.add_column("Protocol")
+        table.add_column("Source")
+        # Built-ins via ScenarioLoader.list_builtins — a single parse
+        # error surfaces as a ScenarioValidationError which we let
+        # propagate (built-ins are ours; a parse error is a bug).
+        for scenario in ScenarioLoader.list_builtins():
+            table.add_row(
+                scenario.name,
+                scenario.description or "-",
+                scenario.protocol,
+                "[green]built-in[/green]",
+            )
+        # User-supplied paths — load each *.yaml and show its header.
+        for user_path in user_paths:
+            up = Path(user_path)
+            if not up.is_dir():
+                continue
+            for candidate in sorted(up.glob("*.yaml")):
+                try:
+                    scen = ScenarioLoader.from_yaml(candidate)
+                except (ScenarioParseError, ScenarioValidationError):
+                    continue
+                table.add_row(
+                    scen.name,
+                    scen.description or "-",
+                    scen.protocol,
+                    f"[cyan]user:{candidate}[/cyan]",
+                )
+        console.print(table)
+
+    @simulate_group.command("run")
+    @click.argument("scenario", required=True)
+    @click.option("--port", "port", default="sim://virtual",
+                  show_default=True,
+                  help="Virtual port label displayed in output only.")
+    @click.option("--bike", default=None,
+                  help="Bike slug for label-only display.")
+    @click.option("--make", "make", default=None,
+                  help="Manufacturer hint for label-only display.")
+    @click.option("--speed", "speed", type=float, default=0.0,
+                  show_default=True,
+                  help="Playback speed multiplier. 0 = jump directly "
+                       "from event to event (fastest, used by tests). "
+                       "1 = real-time wall clock. 10 = 10x faster.")
+    @click.option("--log", "log", is_flag=True, default=False,
+                  help="Print one line per timeline event as it fires.")
+    @click.option("--log-name", "log_name", default=None,
+                  help="Optional recording name if Phase 142 is "
+                       "available — captures the run for later replay.")
+    @click.option("--max-duration-s", "max_duration_s", type=float,
+                  default=300.0, show_default=True,
+                  help="Hard stop after this many simulated seconds.")
+    @click.option("--user-path", "user_paths", multiple=True,
+                  type=click.Path(path_type=Path),
+                  help="Extra directories to search for the scenario.")
+    def simulate_run(
+        scenario: str, port: str, bike: Optional[str],
+        make: Optional[str], speed: float, log: bool,
+        log_name: Optional[str], max_duration_s: float,
+        user_paths: tuple[Path, ...],
+    ) -> None:
+        """Execute a scenario end-to-end through SimulatedAdapter."""
+        console = get_console()
+        try:
+            scen = _resolve_scenario(scenario, user_paths=tuple(user_paths))
+        except FileNotFoundError as exc:
+            # Offer near-match hints from BUILTIN_NAMES so mechanics
+            # who typo a name get a helpful nudge.
+            import difflib
+            suggestions = difflib.get_close_matches(
+                scenario, BUILTIN_NAMES, n=3, cutoff=0.5,
+            )
+            body = f"[red]{ICON_FAIL} {exc}[/red]"
+            if suggestions:
+                sug_line = "  ".join(suggestions)
+                body += f"\n\n[dim]Did you mean: [bold]{sug_line}[/bold]?[/dim]"
+            console.print(
+                Panel(body, title="Unknown scenario", border_style="red")
+            )
+            raise click.exceptions.Exit(1)
+        except (ScenarioParseError, ScenarioValidationError) as exc:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} scenario load failed: {exc}[/red]",
+                    title="Simulator error",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+        console.print(
+            f"{_simulator_badge(scen.name)} "
+            f"[dim]{scen.description}[/dim]"
+        )
+        rc = _run_scenario(
+            scen,
+            speed=speed,
+            max_duration_s=max_duration_s,
+            log=log,
+            console=console,
+        )
+        if log_name:
+            console.print(
+                f"[dim]--log-name was requested as {log_name!r}, but "
+                "Phase 142 recording support is not yet available — "
+                "the scenario ran without capturing.[/dim]"
+            )
+        console.print(
+            Panel(
+                f"[green]{ICON_OK} scenario {scen.name!r} "
+                f"complete.[/green]",
+                title="Simulator",
+                border_style="green",
+            )
+        )
+        if rc != 0:
+            raise click.exceptions.Exit(rc)
+
+    @simulate_group.command("validate")
+    @click.argument("yaml_path",
+                    type=click.Path(dir_okay=False, path_type=Path))
+    def simulate_validate(yaml_path: Path) -> None:
+        """Lint a scenario YAML — green OK panel or red line/column error."""
+        console = get_console()
+        try:
+            scen = ScenarioLoader.from_yaml(yaml_path, validate_only=True)
+        except ScenarioParseError as exc:
+            loc = ""
+            if exc.line is not None and exc.col is not None:
+                loc = f" (line {exc.line}, col {exc.col})"
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} YAML parse error{loc}: "
+                    f"{exc.msg}[/red]",
+                    title="Validate failed",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+        except ScenarioValidationError as exc:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} scenario failed validation:"
+                    f"\n{exc}[/red]",
+                    title="Validate failed",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+        console.print(
+            Panel(
+                f"[green]{ICON_OK} {scen.name}: OK[/green]\n\n"
+                f"[dim]{scen.description}[/dim]\n"
+                f"Protocol: {scen.protocol}\n"
+                f"Timeline: {len(scen.timeline)} events",
+                title="Validate",
+                border_style="green",
+            )
+        )
+
+    # --- log (Phase 142) ----------------------------------------------
+    # Attach the `log` subgroup last so Phase 140/141/144 registration
+    # remains byte-for-byte identical above this line.
+    register_log(hardware_group)
+
+    # --- compat (Phase 145) -------------------------------------------
+    # Adapter compatibility knowledge base. Additive — Phase 140/141/
+    # 142/144 registration remains unchanged.
+    register_compat(hardware_group)
+
+
+# --- Phase 142: log subgroup ------------------------------------------
+#
+# Eight subcommands under ``motodiag hardware log``: start, stop, list,
+# show, replay, diff, export, prune. All additive — Phase 140/141/144
+# code paths above this line are untouched.
+
+
+def _resolve_vehicle_id_for_log(
+    bike: Optional[str], make: Optional[str],
+) -> Tuple[Optional[int], Optional[str], Optional[dict]]:
+    """Translate --bike/--make into a vehicle_id FK + make hint.
+
+    Mirrors :func:`_resolve_make_hint` but returns the vehicle row's
+    primary key (nullable — dealer-lot pre-sale workflow allows
+    ``vehicle_id=NULL``). Raises :class:`click.ClickException` on the
+    --bike / --make mutex collision so the CLI surface stays consistent
+    with Phases 140, 141, and 144.
+    """
+    if bike and make:
+        raise click.ClickException(
+            "--bike and --make are mutually exclusive; choose one."
+        )
+    if bike:
+        vehicle = _resolve_bike_slug(bike)
+        if vehicle is None:
+            return None, None, None
+        raw_make = (vehicle.get("make") or "").strip().lower()
+        return vehicle.get("id"), raw_make or None, vehicle
+    if make:
+        return None, make.strip().lower() or None, None
+    return None, None, None
+
+
+def _run_log_start_inline(
+    *,
+    adapter,
+    recorder,
+    vehicle_id: Optional[int],
+    label: Optional[str],
+    pids: List[int],
+    protocol_name: str,
+    notes: Optional[str],
+    interval: float,
+    duration: float,
+) -> Tuple[int, int]:
+    """Inline polling loop that feeds ``recorder.append_samples``.
+
+    Phase 142 ships without a strict dependency on Phase 141's
+    :class:`~motodiag.hardware.sensors.SensorStreamer`. When the
+    streamer is importable we use it (so we get the SAE J1979 catalog
+    decoder for free); when it isn't we fall back to calling
+    ``adapter.read_pid(pid)`` directly and building dict-shaped
+    "readings" the recorder adaptation helper understands.
+
+    Returns ``(recording_id, cycles_run)``.
+    """
+    pids_hex_strings = [f"0x{pid:02X}" for pid in pids]
+    recording_id = recorder.start_recording(
+        vehicle_id=vehicle_id,
+        label=label,
+        pids=pids_hex_strings,
+        protocol_name=protocol_name,
+        notes=notes,
+    )
+
+    streamer = None
+    try:  # pragma: no cover — happy path with Phase 141 landed
+        from motodiag.hardware.sensors import SensorStreamer
+        streamer = SensorStreamer(
+            adapter, pids, hz=(1.0 / max(interval, 0.001)),
+        )
+    except Exception:  # noqa: BLE001 — defensive fallback
+        streamer = None
+
+    cycles = 0
+    start = _time.monotonic()
+    try:
+        if streamer is not None:  # pragma: no cover
+            for tick in streamer.iter_readings():
+                cycles += 1
+                recorder.append_samples(recording_id, tick)
+                elapsed = _time.monotonic() - start
+                if duration > 0 and elapsed >= duration:
+                    break
+        else:
+            while True:
+                cycles += 1
+                readings = []
+                now = datetime.now(timezone.utc)
+                for pid in pids:
+                    try:
+                        raw = adapter.read_pid(pid)
+                    except Exception:  # noqa: BLE001
+                        raw = None
+                    readings.append(
+                        {
+                            "pid": pid,
+                            "pid_hex": f"0x{pid:02X}",
+                            "name": f"PID 0x{pid:02X}",
+                            "value": float(raw) if raw is not None else None,
+                            "unit": "",
+                            "raw": raw,
+                            "captured_at": now,
+                            "status": "ok" if raw is not None else "unsupported",
+                        }
+                    )
+                recorder.append_samples(recording_id, readings)
+                elapsed = _time.monotonic() - start
+                if duration > 0 and elapsed >= duration:
+                    break
+                _time.sleep(interval)
+    except KeyboardInterrupt:
+        pass
+
+    return recording_id, cycles
+
+
+def register_log(hardware_group: click.Group) -> None:
+    """Attach the ``hardware log`` subgroup to the hardware command group.
+
+    Eight subcommands cover the recording lifecycle: start / stop / list
+    / show / replay / diff / export / prune. Each opens its own
+    :class:`~motodiag.hardware.recorder.RecordingManager` so the
+    short-lived CLI processes don't hold onto stale in-memory buffers
+    between invocations.
+    """
+
+    @hardware_group.group("log")
+    def log_group() -> None:
+        """Record sensor streams to disk — replay, diff, export later."""
+
+    # --- log start ----------------------------------------------------
+    @log_group.command("start")
+    @click.option("--port", "port", required=True,
+                  help="Serial port (e.g. COM3, /dev/ttyUSB0).")
+    @click.option("--bike", default=None,
+                  help="Bike slug from the garage. Mutually exclusive "
+                       "with --make.")
+    @click.option("--make", "make", default=None,
+                  help="Manufacturer hint when no garage slug is used.")
+    @click.option("--label", default=None,
+                  help="Short human-readable label for this recording "
+                       "(e.g. 'hot-idle pre-fix').")
+    @click.option("--pids", "pids_spec", default=None,
+                  help="Comma-separated PID list (hex or decimal). "
+                       "Defaults to Phase 141's 6-PID first-look set.")
+    @click.option("--interval", "interval", type=float, default=0.5,
+                  show_default=True,
+                  help="Seconds between polls. 0.5 = 2 Hz.")
+    @click.option("--duration", "duration", type=float, default=0.0,
+                  show_default=True,
+                  help="Stop after this many seconds. 0 = run until "
+                       "Ctrl+C.")
+    @click.option("--notes", default=None,
+                  help="Free-form notes stored on the recording row.")
+    @click.option("--baud", type=int, default=None,
+                  help="Override the per-protocol baud rate.")
+    @click.option("--timeout", "timeout_s", type=float, default=2.0,
+                  show_default=True,
+                  help="Per-adapter connect timeout in seconds.")
+    @click.option("--mock", is_flag=True, default=False,
+                  help="Use the in-memory MockAdapter instead of real "
+                       "hardware.")
+    @click.option("--background", is_flag=True, default=False,
+                  help="Poll in a daemon thread. Stop via "
+                       "`motodiag hardware log stop <id>`.")
+    def log_start_cmd(
+        port: str, bike: Optional[str], make: Optional[str],
+        label: Optional[str], pids_spec: Optional[str],
+        interval: float, duration: float, notes: Optional[str],
+        baud: Optional[int], timeout_s: float, mock: bool,
+        background: bool,
+    ) -> None:
+        """Start a new recording session."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        vehicle_id, make_hint, vehicle = _resolve_vehicle_id_for_log(
+            bike, make,
+        )
+        if bike and vehicle is None:
+            _bike_not_found(console, bike)
+            raise click.exceptions.Exit(1)
+        if interval <= 0:
+            raise click.ClickException("--interval must be > 0")
+        if pids_spec is None:
+            pids: List[int] = list(_DEFAULT_STREAM_PIDS)
+        else:
+            pids = parse_pid_list(pids_spec)
+
+        recorder = RecordingManager()
+
+        try:
+            session = HardwareSession(
+                port=port, make_hint=make_hint, baud=baud,
+                timeout_s=timeout_s, mock=mock,
+            )
+            with session as adapter:
+                protocol_name = adapter.get_protocol_name()
+                badge = "[bold yellow][MOCK][/bold yellow] " if mock else ""
+                console.print(
+                    f"\n{badge}[bold cyan]{ICON_OK} Recording started"
+                    f"[/bold cyan] on [bold]{port}[/bold] via "
+                    f"[bold]{protocol_name}[/bold]"
+                )
+                recording_id, cycles = _run_log_start_inline(
+                    adapter=adapter, recorder=recorder,
+                    vehicle_id=vehicle_id, label=label, pids=pids,
+                    protocol_name=protocol_name, notes=notes,
+                    interval=interval, duration=duration,
+                )
+                recorder.stop_recording(recording_id)
+                console.print(
+                    f"[dim]Recorded {cycles} polling cycles — "
+                    f"recording id [bold cyan]{recording_id}"
+                    f"[/bold cyan].[/dim]"
+                )
+        except NoECUDetectedError as exc:
+            _render_no_ecu_panel(
+                console, exc.port, exc.make_hint, exc.errors,
+            )
+            raise click.exceptions.Exit(1)
+        except click.ClickException:
+            raise
+        except Exception as exc:  # noqa: BLE001
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} log start failed: {exc}[/red]",
+                    title="Recording failed",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+    # --- log stop -----------------------------------------------------
+    @log_group.command("stop")
+    @click.argument("recording_id", type=int)
+    @click.option("--force", is_flag=True, default=False,
+                  help="Stop even if the recording appears already "
+                       "stopped.")
+    def log_stop_cmd(recording_id: int, force: bool) -> None:
+        """Stop an in-progress recording."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        meta = recorder._fetch_metadata(recording_id)
+        if meta is None:
+            raise click.ClickException(
+                f"Recording {recording_id} not found."
+            )
+        if meta.get("stopped_at") and not force:
+            console.print(
+                f"[yellow]{ICON_WARN} Recording {recording_id} already "
+                f"stopped at {meta['stopped_at']}. Use --force to "
+                f"override.[/yellow]"
+            )
+            return
+        recorder.stop_recording(recording_id)
+        console.print(
+            f"[green]{ICON_OK} Recording {recording_id} stopped.[/green]"
+        )
+
+    # --- log list -----------------------------------------------------
+    @log_group.command("list")
+    @click.option("--bike", default=None,
+                  help="Filter by bike slug.")
+    @click.option("--since", default=None,
+                  help="ISO date filter (e.g. 2026-04-01).")
+    @click.option("--until", default=None,
+                  help="ISO date upper bound.")
+    @click.option("--limit", type=int, default=50, show_default=True,
+                  help="Cap the number of rows returned.")
+    def log_list_cmd(
+        bike: Optional[str], since: Optional[str],
+        until: Optional[str], limit: int,
+    ) -> None:
+        """List recent recordings."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        vehicle_id = None
+        if bike:
+            vehicle = _resolve_bike_slug(bike)
+            if vehicle is None:
+                _bike_not_found(console, bike)
+                raise click.exceptions.Exit(1)
+            vehicle_id = vehicle.get("id")
+
+        recorder = RecordingManager()
+        rows = recorder.list_recordings(
+            vehicle_id=vehicle_id, since=since, until=until, limit=limit,
+        )
+        if not rows:
+            console.print(
+                "[yellow]No recordings match the current filters."
+                "[/yellow]"
+            )
+            return
+
+        table = Table(title=f"Recordings ({len(rows)})",
+                      header_style="bold cyan")
+        table.add_column("ID", style="bold", justify="right")
+        table.add_column("Started")
+        table.add_column("Stopped")
+        table.add_column("Samples", justify="right")
+        table.add_column("Protocol")
+        table.add_column("Label")
+        for row in rows:
+            table.add_row(
+                str(row["id"]),
+                str(row.get("started_at") or "-"),
+                str(row.get("stopped_at") or "[dim]active[/dim]"),
+                str(row.get("sample_count") or 0),
+                row.get("protocol_name") or "-",
+                row.get("session_label") or "-",
+            )
+        console.print(table)
+
+    # --- log show -----------------------------------------------------
+    @log_group.command("show")
+    @click.argument("recording_id", type=int)
+    def log_show_cmd(recording_id: int) -> None:
+        """Show metadata for a recording."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        try:
+            meta, _ = recorder.load_recording(recording_id)
+        except KeyError:
+            raise click.ClickException(
+                f"Recording {recording_id} not found."
+            )
+        lines = [
+            f"[bold]ID:[/bold] {meta['id']}",
+            f"[bold]Started:[/bold] {meta.get('started_at') or '-'}",
+            (f"[bold]Stopped:[/bold] "
+             f"{meta.get('stopped_at') or '[dim]active[/dim]'}"),
+            f"[bold]Protocol:[/bold] {meta.get('protocol_name') or '-'}",
+            f"[bold]PIDs:[/bold] {meta.get('pids_csv') or '-'}",
+            f"[bold]Samples:[/bold] {meta.get('sample_count') or 0}",
+            (f"[bold]File ref:[/bold] "
+             f"{meta.get('file_ref') or '[dim]none[/dim]'}"),
+            f"[bold]Label:[/bold] {meta.get('session_label') or '-'}",
+            f"[bold]Notes:[/bold] {meta.get('notes') or '-'}",
+        ]
+        console.print(
+            Panel("\n".join(lines),
+                  title=f"Recording {recording_id}",
+                  border_style="cyan")
+        )
+
+    # --- log replay ---------------------------------------------------
+    @log_group.command("replay")
+    @click.argument("recording_id", type=int)
+    @click.option("--speed", type=float, default=1.0, show_default=True,
+                  help="Playback speed. 0 = instant dump, 1 = "
+                       "real-time, 10 = 10x faster than real-time.")
+    @click.option("--pids", "pids_filter", default=None,
+                  help="Restrict replay to this PID subset.")
+    def log_replay_cmd(
+        recording_id: int, speed: float, pids_filter: Optional[str],
+    ) -> None:
+        """Replay a recording in the terminal."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        try:
+            meta, iterator = recorder.load_recording(recording_id)
+        except KeyError:
+            raise click.ClickException(
+                f"Recording {recording_id} not found."
+            )
+        allowed_pids: Optional[set[str]] = None
+        if pids_filter:
+            allowed_pids = {
+                f"0x{pid:02X}" for pid in parse_pid_list(pids_filter)
+            }
+        console.print(
+            f"[dim]Replaying recording {recording_id} at "
+            f"{speed:g}x — Ctrl+C to stop.[/dim]"
+        )
+
+        last_dt: Optional[datetime] = None
+        try:
+            for row in iterator:
+                pid_hex = row.get("pid_hex") or ""
+                if allowed_pids is not None and pid_hex not in allowed_pids:
+                    continue
+                captured_at = row.get("captured_at")
+                dt = _parse_iso_dt(captured_at)
+                if speed > 0 and last_dt is not None and dt is not None:
+                    delta = (dt - last_dt).total_seconds()
+                    if delta > 0:
+                        _time.sleep(delta / speed)
+                last_dt = dt if dt is not None else last_dt
+                value = row.get("value")
+                unit = row.get("unit") or ""
+                val_cell = (
+                    f"{value:g}" if isinstance(value, (int, float)) else "-"
+                )
+                console.print(
+                    f"  [dim]{captured_at}[/dim]  "
+                    f"[cyan]{pid_hex}[/cyan]  "
+                    f"[bold]{val_cell}[/bold] {unit}"
+                )
+        except KeyboardInterrupt:
+            console.print("[yellow]Replay aborted.[/yellow]")
+
+    # --- log diff -----------------------------------------------------
+    @log_group.command("diff")
+    @click.argument("id1", type=int)
+    @click.argument("id2", type=int)
+    @click.option("--metric", type=click.Choice(["min", "max", "avg"]),
+                  default="avg", show_default=True,
+                  help="Stat to compare per PID.")
+    def log_diff_cmd(id1: int, id2: int, metric: str) -> None:
+        """Compare two recordings and flag large deltas."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        try:
+            report = recorder.diff_recordings(id1, id2, metric=metric)
+        except KeyError as exc:
+            raise click.ClickException(str(exc))
+
+        if not report.matched:
+            console.print(
+                Panel(
+                    f"[yellow]{ICON_WARN} No overlapping PIDs between "
+                    f"recordings {id1} and {id2}.[/yellow]",
+                    title="Diff — zero overlap",
+                    border_style="yellow",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        table = Table(
+            title=f"Diff {id1} -> {id2} ({metric})",
+            header_style="bold cyan",
+        )
+        table.add_column("PID", style="bold")
+        table.add_column("Name", overflow="fold")
+        table.add_column(f"{metric} #1", justify="right")
+        table.add_column(f"{metric} #2", justify="right")
+        table.add_column("Δ", justify="right")
+        table.add_column("%", justify="right")
+        table.add_column("Flag")
+        for d in report.matched:
+            stat_1 = f"{d.stat_1:g}" if d.stat_1 is not None else "—"
+            stat_2 = f"{d.stat_2:g}" if d.stat_2 is not None else "—"
+            delta = f"{d.delta:+g}" if d.delta is not None else "—"
+            pct = f"{d.pct_change:+.1f}%"
+            flag = "🔥" if d.flagged else ""
+            table.add_row(
+                d.pid_hex, d.name, stat_1, stat_2, delta, pct, flag,
+            )
+        console.print(table)
+
+        if report.only_in_1 or report.only_in_2:
+            console.print(
+                f"[dim]Only in #{id1}:[/dim] "
+                f"{', '.join(report.only_in_1) or '—'}"
+            )
+            console.print(
+                f"[dim]Only in #{id2}:[/dim] "
+                f"{', '.join(report.only_in_2) or '—'}"
+            )
+
+    # --- log export ---------------------------------------------------
+    @log_group.command("export")
+    @click.argument("recording_id", type=int)
+    @click.option("--format", "fmt",
+                  type=click.Choice(["csv", "json", "parquet"]),
+                  default="csv", show_default=True)
+    @click.option("--output", "output_path",
+                  type=click.Path(dir_okay=False, path_type=Path),
+                  default=None,
+                  help="Output file path (parent dirs auto-created).")
+    def log_export_cmd(
+        recording_id: int, fmt: str, output_path: Optional[Path],
+    ) -> None:
+        """Export a recording to CSV / JSON / Parquet."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        try:
+            meta, iterator = recorder.load_recording(recording_id)
+        except KeyError:
+            raise click.ClickException(
+                f"Recording {recording_id} not found."
+            )
+        samples = list(iterator)
+
+        if output_path is None:
+            output_path = Path.cwd() / f"recording_{recording_id}.{fmt}"
+        output_path.parent.mkdir(parents=True, exist_ok=True)
+
+        if fmt == "csv":
+            _export_csv(output_path, meta, samples)
+        elif fmt == "json":
+            _export_json(output_path, meta, samples)
+        else:  # parquet
+            _export_parquet(output_path, meta, samples)
+        console.print(
+            f"[green]{ICON_OK} Exported recording {recording_id} to "
+            f"[bold]{output_path}[/bold][/green]"
+        )
+
+    # --- log prune ----------------------------------------------------
+    @log_group.command("prune")
+    @click.option("--older-than", "older_than", type=int,
+                  default=30, show_default=True,
+                  help="Delete recordings older than N days.")
+    @click.option("--yes", "-y", is_flag=True, default=False,
+                  help="Skip the confirmation prompt.")
+    def log_prune_cmd(older_than: int, yes: bool) -> None:
+        """Prune old recordings and their JSONL sidecars."""
+        from motodiag.hardware.recorder import RecordingManager
+        console = get_console()
+        init_db()
+        recorder = RecordingManager()
+        if not yes:
+            if not click.confirm(
+                f"Delete recordings older than {older_than} days?",
+                default=False,
+            ):
+                console.print(
+                    "[yellow]Aborted — nothing deleted.[/yellow]"
+                )
+                return
+        rowcount, bytes_freed = recorder.prune(older_than_days=older_than)
+        if rowcount == 0:
+            console.print(
+                "[dim]No recordings matched the age cutoff.[/dim]"
+            )
+            return
+        console.print(
+            f"[green]{ICON_OK} Pruned {rowcount} recording(s); "
+            f"freed {bytes_freed} bytes of JSONL sidecars.[/green]"
+        )
+
+
+# --- Phase 142 helpers -------------------------------------------------
+
+
+def _parse_iso_dt(value: Optional[str]) -> Optional[datetime]:
+    """Parse an ISO-8601 string into a datetime (or None)."""
+    if not value:
+        return None
+    try:
+        return datetime.fromisoformat(value)
+    except (TypeError, ValueError):
+        return None
+
+
+def _export_csv(
+    output_path: Path, meta: dict, samples: list[dict],
+) -> None:
+    """Write the recording as a wide-format CSV.
+
+    One column per PID, plus a leading ``captured_at`` column. Cells
+    are empty strings for ticks where the PID was absent/unsupported.
+    """
+    pids_csv = meta.get("pids_csv") or ""
+    column_pids = [
+        f"0x{p.strip().upper()}" for p in pids_csv.split(",") if p.strip()
+    ]
+    seen = {p for p in column_pids}
+    for row in samples:
+        ph = row.get("pid_hex")
+        if ph and ph not in seen:
+            column_pids.append(ph)
+            seen.add(ph)
+
+    by_ts: dict[str, dict] = {}
+    for row in samples:
+        ts = row.get("captured_at") or ""
+        by_ts.setdefault(ts, {})[row.get("pid_hex") or ""] = row.get("value")
+
+    headers = ["captured_at"] + [f"pid_{p}" for p in column_pids]
+    with open(output_path, "w", encoding="utf-8", newline="") as fh:
+        writer = csv.DictWriter(fh, fieldnames=headers)
+        writer.writeheader()
+        for ts in sorted(by_ts.keys()):
+            record = by_ts[ts]
+            out_row = {"captured_at": ts}
+            for p in column_pids:
+                val = record.get(p)
+                out_row[f"pid_{p}"] = "" if val is None else val
+            writer.writerow(out_row)
+
+
+def _export_json(
+    output_path: Path, meta: dict, samples: list[dict],
+) -> None:
+    """Write the recording as ``{metadata, samples}`` JSON."""
+    import json as _json
+    payload = {
+        "metadata": {k: v for k, v in meta.items()},
+        "samples": samples,
+    }
+    with open(output_path, "w", encoding="utf-8") as fh:
+        _json.dump(payload, fh, default=str, indent=2)
+
+
+def _export_parquet(
+    output_path: Path, meta: dict, samples: list[dict],
+) -> None:
+    """Write the recording as a Parquet file via pyarrow.
+
+    pyarrow is a 40 MB install, so we lazy-import here and surface a
+    friendly ``ClickException`` with the exact pip install hint rather
+    than letting Python's ``ModuleNotFoundError`` bubble up.
+    """
+    try:
+        import pyarrow as pa  # type: ignore
+        import pyarrow.parquet as pq  # type: ignore
+    except ImportError:
+        raise click.ClickException(
+            "Parquet export requires pyarrow. Install with: "
+            "pip install 'motodiag[parquet]'"
+        )
+    table = pa.Table.from_pylist(samples) if samples else pa.table({})
+    pq.write_table(table, str(output_path))
+
+
+# ----------------------------------------------------------------------
+# Phase 145: compat subgroup
+# ----------------------------------------------------------------------
+#
+# The `motodiag hardware compat` subgroup wires the Phase 145 adapter
+# compatibility knowledge base into the CLI. Seven subcommands are
+# exposed under `hardware compat`: list, recommend, check, show, seed,
+# note add, note list. All queries go through
+# :mod:`motodiag.hardware.compat_repo`; JSON output is additive
+# (``--json`` emits raw dicts for agent/automation consumption).
+#
+# The module is strictly additive — nothing above this line changes the
+# behavior of scan/clear/info/stream/simulate/log commands. Existing
+# Phase 139 / 140 / 141 / 142 / 144 tests pass unchanged.
+
+
+_COMPAT_STATUS_STYLES: dict[str, str] = {
+    "full": "green",
+    "partial": "cyan",
+    "read-only": "yellow",
+    "incompatible": "red",
+}
+
+
+def _format_compat_status(status: str) -> str:
+    """Return Rich markup for a compat status label."""
+    style = _COMPAT_STATUS_STYLES.get(status, "dim")
+    return f"[{style}]{status}[/{style}]"
+
+
+def _format_price_cents(price_cents: int) -> str:
+    """Format an integer cents price as a human-friendly USD string."""
+    dollars = price_cents / 100.0
+    return f"${dollars:,.2f}"
+
+
+def register_compat(hardware_group: click.Group) -> None:
+    """Attach the ``compat`` subgroup to the ``hardware`` group.
+
+    Phase 145 entry point. Called from :func:`register_hardware` so the
+    ``hardware compat`` subgroup is registered alongside scan / clear /
+    info / stream / simulate / log.
+
+    Subcommands:
+
+    - ``compat list`` — Rich table of all adapters with optional chipset
+      / transport filters.
+    - ``compat recommend`` — ranked adapters for a given bike.
+    - ``compat check`` — color-coded verdict for a specific
+      adapter-vs-bike pair.
+    - ``compat show`` — adapter detail + nested compat matrix.
+    - ``compat seed`` — idempotent reload of the JSON knowledge base.
+    - ``compat note add`` / ``compat note list`` — mechanic notes layer.
+    """
+    import json as _json
+    from motodiag.hardware import compat_loader as _cl
+    from motodiag.hardware import compat_repo as _cr
+
+    @hardware_group.group("compat")
+    def compat_group() -> None:
+        """Adapter compatibility knowledge base (Phase 145)."""
+
+    # --- compat list ------------------------------------------------------
+    @compat_group.command("list")
+    @click.option("--chipset", default=None,
+                  help="Filter by chipset (ELM327, STN1110, STN2100, "
+                       "proprietary, etc.).")
+    @click.option("--transport", default=None,
+                  help="Filter by transport (bluetooth, usb, wifi, "
+                       "obd-dongle, bridge).")
+    @click.option("--json", "as_json", is_flag=True, default=False,
+                  help="Emit raw JSON (agent / automation mode).")
+    def compat_list(
+        chipset: Optional[str],
+        transport: Optional[str],
+        as_json: bool,
+    ) -> None:
+        """List all known OBD adapters with capability flags."""
+        console = get_console()
+        init_db()
+        rows = _cr.list_adapters(chipset=chipset, transport=transport)
+        if as_json:
+            click.echo(_json.dumps(rows, indent=2, default=str))
+            return
+        if not rows:
+            console.print(
+                Panel(
+                    f"[yellow]{ICON_WARN} No adapters match the filter."
+                    "[/yellow]\n\n[dim]Run "
+                    "[bold]motodiag hardware compat seed[/bold] to load "
+                    "the knowledge base.[/dim]",
+                    title="Adapter catalog",
+                    border_style="yellow",
+                )
+            )
+            return
+        table = Table(
+            title=f"OBD Adapter Catalog ({len(rows)} entries)",
+            header_style="bold cyan",
+        )
+        table.add_column("Brand")
+        table.add_column("Model", overflow="fold")
+        table.add_column("Chipset")
+        table.add_column("Transport")
+        table.add_column("Price", justify="right")
+        table.add_column("BiDir", justify="center")
+        table.add_column("M22", justify="center")
+        table.add_column("Rel.", justify="center")
+        for row in rows:
+            bidir_mark = "[green]yes[/green]" if row.get("supports_bidirectional") else "[dim]no[/dim]"
+            m22_mark = "[green]yes[/green]" if row.get("supports_mode22") else "[dim]no[/dim]"
+            rel = int(row.get("reliability_1to5") or 3)
+            rel_str = str(rel) + "/5"
+            table.add_row(
+                str(row.get("brand") or "-"),
+                str(row.get("model") or "-"),
+                str(row.get("chipset") or "-"),
+                str(row.get("transport") or "-"),
+                _format_price_cents(int(row.get("price_usd_cents") or 0)),
+                bidir_mark,
+                m22_mark,
+                rel_str,
+            )
+        console.print(table)
+
+    # --- compat recommend -------------------------------------------------
+    @compat_group.command("recommend")
+    @click.option("--bike", default=None,
+                  help="Bike slug from the garage. Mutually exclusive "
+                       "with --make/--model.")
+    @click.option("--make", "make", default=None,
+                  help="Bike make (used with --model).")
+    @click.option("--model", "model", default=None,
+                  help="Bike model (used with --make).")
+    @click.option("--year", "year", type=int, default=None,
+                  help="Bike year for tighter year-range matching.")
+    @click.option("--min-status", "min_status", default="read-only",
+                  type=click.Choice(list(_cr.STATUS_VALUES)),
+                  show_default=True,
+                  help="Weakest status to include.")
+    @click.option("--limit", "limit", type=int, default=20,
+                  show_default=True,
+                  help="Max results (0 = no limit).")
+    @click.option("--json", "as_json", is_flag=True, default=False,
+                  help="Emit raw JSON.")
+    def compat_recommend(
+        bike: Optional[str],
+        make: Optional[str],
+        model: Optional[str],
+        year: Optional[int],
+        min_status: str,
+        limit: int,
+        as_json: bool,
+    ) -> None:
+        """Rank adapters compatible with a given bike."""
+        console = get_console()
+        init_db()
+        if bike and (make or model):
+            raise click.ClickException(
+                "--bike is mutually exclusive with --make/--model."
+            )
+        resolved_make: Optional[str] = None
+        resolved_model: Optional[str] = None
+        resolved_year: Optional[int] = year
+        if bike:
+            vehicle = _resolve_bike_slug(bike)
+            if vehicle is None:
+                _bike_not_found(console, bike)
+                raise click.exceptions.Exit(1)
+            resolved_make = (vehicle.get("make") or "").strip().lower() or None
+            resolved_model = (vehicle.get("model") or "").strip() or None
+            if resolved_year is None and vehicle.get("year"):
+                resolved_year = int(vehicle["year"])
+        else:
+            if not make or not model:
+                raise click.ClickException(
+                    "Provide --bike or both --make and --model."
+                )
+            resolved_make = make.strip().lower()
+            resolved_model = model.strip()
+
+        rows = _cr.list_compatible_adapters(
+            make=resolved_make,
+            model=resolved_model,
+            year=resolved_year,
+            min_status=min_status,
+        )
+        if limit and limit > 0:
+            rows = rows[:limit]
+
+        if as_json:
+            click.echo(_json.dumps(rows, indent=2, default=str))
+            return
+
+        header = (
+            f"Recommended adapters for "
+            f"[bold]{resolved_make}[/bold] "
+            f"[bold]{resolved_model}[/bold]"
+        )
+        if resolved_year:
+            header += f" ([bold]{resolved_year}[/bold])"
+        console.print(f"\n{header}")
+
+        if not rows:
+            console.print(
+                Panel(
+                    f"[yellow]{ICON_WARN} No compat entries known for this "
+                    "bike.[/yellow]\n\n"
+                    "[dim]Run [bold]motodiag hardware compat list[/bold] to "
+                    "see the full catalog, or contribute a note via "
+                    "[bold]motodiag hardware compat note add[/bold].[/dim]",
+                    title="No matches",
+                    border_style="yellow",
+                )
+            )
+            return
+
+        # Group by status tier for visual clarity.
+        status_order = ("full", "partial", "read-only", "incompatible")
+        grouped: dict[str, list[dict]] = {s: [] for s in status_order}
+        for r in rows:
+            s = r.get("status", "read-only")
+            if s in grouped:
+                grouped[s].append(r)
+
+        for status in status_order:
+            group_rows = grouped[status]
+            if not group_rows:
+                continue
+            table = Table(
+                title=f"{_format_compat_status(status)} "
+                      f"({len(group_rows)})",
+                header_style="bold cyan",
+            )
+            table.add_column("Brand")
+            table.add_column("Model", overflow="fold")
+            table.add_column("Chipset")
+            table.add_column("Price", justify="right")
+            table.add_column("Rel.", justify="center")
+            table.add_column("BiDir", justify="center")
+            table.add_column("Notes", overflow="fold")
+            for row in group_rows:
+                bidir_mark = "[green]yes[/green]" if row.get("supports_bidirectional") else "[dim]no[/dim]"
+                rel = int(row.get("reliability_1to5") or 3)
+                rel_str = f"{rel}/5"
+                compat_notes = row.get("compat_notes") or ""
+                if len(compat_notes) > 80:
+                    compat_notes = compat_notes[:77] + "..."
+                table.add_row(
+                    str(row.get("brand") or "-"),
+                    str(row.get("adapter_model") or "-"),
+                    str(row.get("chipset") or "-"),
+                    _format_price_cents(int(row.get("price_usd_cents") or 0)),
+                    rel_str,
+                    bidir_mark,
+                    compat_notes or "[dim]—[/dim]",
+                )
+            console.print(table)
+
+    # --- compat check -----------------------------------------------------
+    @compat_group.command("check")
+    @click.option("--adapter", "adapter_slug", required=True,
+                  help="Adapter slug to check.")
+    @click.option("--bike", default=None,
+                  help="Bike slug. Mutually exclusive with --make/--model.")
+    @click.option("--make", "make", default=None,
+                  help="Bike make.")
+    @click.option("--model", "model", default=None,
+                  help="Bike model.")
+    @click.option("--year", "year", type=int, default=None,
+                  help="Bike year.")
+    @click.option("--json", "as_json", is_flag=True, default=False,
+                  help="Emit raw JSON.")
+    def compat_check(
+        adapter_slug: str,
+        bike: Optional[str],
+        make: Optional[str],
+        model: Optional[str],
+        year: Optional[int],
+        as_json: bool,
+    ) -> None:
+        """Color-coded compatibility verdict for (adapter, bike)."""
+        console = get_console()
+        init_db()
+        if bike and (make or model):
+            raise click.ClickException(
+                "--bike is mutually exclusive with --make/--model."
+            )
+        resolved_make: Optional[str] = None
+        resolved_model: Optional[str] = None
+        resolved_year: Optional[int] = year
+        if bike:
+            vehicle = _resolve_bike_slug(bike)
+            if vehicle is None:
+                _bike_not_found(console, bike)
+                raise click.exceptions.Exit(1)
+            resolved_make = (vehicle.get("make") or "").strip().lower() or None
+            resolved_model = (vehicle.get("model") or "").strip() or None
+            if resolved_year is None and vehicle.get("year"):
+                resolved_year = int(vehicle["year"])
+        else:
+            if not make or not model:
+                raise click.ClickException(
+                    "Provide --bike or both --make and --model."
+                )
+            resolved_make = make.strip().lower()
+            resolved_model = model.strip()
+
+        adapter = _cr.get_adapter(adapter_slug)
+        if adapter is None:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} Unknown adapter "
+                    f"[bold]{adapter_slug!r}[/bold].[/red]\n\n"
+                    "[dim]Run [bold]motodiag hardware compat list[/bold] "
+                    "to see known slugs.[/dim]",
+                    title="Adapter not found",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        result = _cr.check_compatibility(
+            adapter_slug=adapter_slug,
+            make=resolved_make,
+            model=resolved_model,
+            year=resolved_year,
+        )
+        notes = _cr.get_compat_notes(adapter_slug, make=resolved_make)
+
+        if as_json:
+            click.echo(_json.dumps(
+                {
+                    "adapter": adapter,
+                    "bike": {
+                        "make": resolved_make,
+                        "model": resolved_model,
+                        "year": resolved_year,
+                    },
+                    "verdict": result,
+                    "notes": notes,
+                },
+                indent=2, default=str,
+            ))
+            return
+
+        brand = adapter.get("brand") or "-"
+        adapter_model = adapter.get("model") or "-"
+        if result is None:
+            body = (
+                f"[dim]{ICON_WARN} Unknown: no compat entry for "
+                f"[bold]{brand} {adapter_model}[/bold] on "
+                f"[bold]{resolved_make} {resolved_model}"
+                f"{f' ({resolved_year})' if resolved_year else ''}[/bold]."
+                "[/dim]\n\n"
+                "[dim]This is NOT the same as 'incompatible' — it means "
+                "we have no data. Consider contributing via "
+                "[bold]motodiag hardware compat note add[/bold].[/dim]"
+            )
+            border = "yellow"
+            title = "Compat verdict — unknown"
+        else:
+            status = result.get("status", "unknown")
+            border = _COMPAT_STATUS_STYLES.get(status, "dim")
+            title = f"Compat verdict — {status}"
+            verdict_line = _format_compat_status(status)
+            body_lines = [
+                f"{verdict_line}  "
+                f"[bold]{brand} {adapter_model}[/bold] on "
+                f"[bold]{resolved_make} {resolved_model}"
+                f"{f' ({resolved_year})' if resolved_year else ''}[/bold]",
+            ]
+            if result.get("compat_notes"):
+                body_lines.append("")
+                body_lines.append(
+                    f"[dim]Details:[/dim] {result['compat_notes']}"
+                )
+            if result.get("verified_by"):
+                body_lines.append(
+                    f"[dim]Verified by:[/dim] {result['verified_by']}"
+                )
+            body = "\n".join(body_lines)
+
+        console.print(Panel(body, title=title, border_style=border))
+
+        if notes:
+            notes_table = Table(
+                title=f"Related notes ({len(notes)})",
+                header_style="bold magenta",
+            )
+            notes_table.add_column("Type")
+            notes_table.add_column("Make")
+            notes_table.add_column("Body", overflow="fold")
+            notes_table.add_column("Source", overflow="fold")
+            for note in notes[:10]:
+                notes_table.add_row(
+                    str(note.get("note_type", "-")),
+                    str(note.get("vehicle_make", "-")),
+                    str(note.get("body", "-")),
+                    str(note.get("source_url") or "[dim]—[/dim]"),
+                )
+            console.print(notes_table)
+
+    # --- compat show ------------------------------------------------------
+    @compat_group.command("show")
+    @click.option("--adapter", "adapter_slug", required=True,
+                  help="Adapter slug to show.")
+    @click.option("--json", "as_json", is_flag=True, default=False,
+                  help="Emit raw JSON.")
+    def compat_show(adapter_slug: str, as_json: bool) -> None:
+        """Show adapter detail + its full compat matrix."""
+        console = get_console()
+        init_db()
+        adapter = _cr.get_adapter(adapter_slug)
+        if adapter is None:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} Unknown adapter "
+                    f"[bold]{adapter_slug!r}[/bold].[/red]",
+                    title="Adapter not found",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+
+        # Fetch all compat rows for the adapter directly — the
+        # list_compatible_adapters helper is bike-scoped.
+        from motodiag.core.database import get_connection
+        with get_connection() as conn:
+            cursor = conn.execute(
+                """SELECT vehicle_make, vehicle_model_pattern,
+                          year_min, year_max, status, notes, verified_by
+                   FROM adapter_compatibility
+                   WHERE adapter_id = ?
+                   ORDER BY vehicle_make COLLATE NOCASE,
+                            vehicle_model_pattern COLLATE NOCASE,
+                            year_min""",
+                (adapter["id"],),
+            )
+            compat_rows = [dict(r) for r in cursor.fetchall()]
+
+        if as_json:
+            click.echo(_json.dumps(
+                {"adapter": adapter, "compat": compat_rows},
+                indent=2, default=str,
+            ))
+            return
+
+        body = (
+            f"[bold]{adapter.get('brand')} {adapter.get('model')}[/bold]\n\n"
+            f"Slug:        [cyan]{adapter.get('slug')}[/cyan]\n"
+            f"Chipset:     [bold]{adapter.get('chipset')}[/bold]\n"
+            f"Transport:   [bold]{adapter.get('transport')}[/bold]\n"
+            f"Price:       [bold]{_format_price_cents(int(adapter.get('price_usd_cents') or 0))}[/bold]\n"
+            f"Protocols:   {adapter.get('supported_protocols_csv')}\n"
+            f"BiDir:       {'[green]yes[/green]' if adapter.get('supports_bidirectional') else '[dim]no[/dim]'}\n"
+            f"Mode 22:     {'[green]yes[/green]' if adapter.get('supports_mode22') else '[dim]no[/dim]'}\n"
+            f"Reliability: [bold]{adapter.get('reliability_1to5')}/5[/bold]"
+        )
+        if adapter.get("purchase_url"):
+            body += f"\nURL:         [dim]{adapter['purchase_url']}[/dim]"
+        if adapter.get("notes"):
+            body += f"\n\n[dim]{adapter['notes']}[/dim]"
+        if adapter.get("known_issues"):
+            body += (
+                f"\n\n[yellow]Known issues:[/yellow] "
+                f"[dim]{adapter['known_issues']}[/dim]"
+            )
+        console.print(
+            Panel(body, title="Adapter detail", border_style="cyan")
+        )
+
+        if compat_rows:
+            table = Table(
+                title=f"Compatibility matrix ({len(compat_rows)} rows)",
+                header_style="bold cyan",
+            )
+            table.add_column("Make")
+            table.add_column("Model pattern", overflow="fold")
+            table.add_column("Years", justify="center")
+            table.add_column("Status")
+            table.add_column("Notes", overflow="fold")
+            for row in compat_rows:
+                ymin = row.get("year_min")
+                ymax = row.get("year_max")
+                if ymin is None and ymax is None:
+                    year_str = "all"
+                elif ymin is None:
+                    year_str = f"<={ymax}"
+                elif ymax is None:
+                    year_str = f"{ymin}+"
+                else:
+                    year_str = f"{ymin}-{ymax}"
+                table.add_row(
+                    str(row.get("vehicle_make") or "-"),
+                    str(row.get("vehicle_model_pattern") or "-"),
+                    year_str,
+                    _format_compat_status(str(row.get("status") or "-")),
+                    str(row.get("notes") or "[dim]—[/dim]"),
+                )
+            console.print(table)
+
+    # --- compat note group ------------------------------------------------
+    @compat_group.group("note")
+    def compat_note_group() -> None:
+        """Mechanic-contributed compat notes (quirk/workaround/tip)."""
+
+    @compat_note_group.command("add")
+    @click.option("--adapter", "adapter_slug", required=True,
+                  help="Adapter slug the note applies to.")
+    @click.option("--make", "make", required=True,
+                  help="Bike make (or '*' for any-make).")
+    @click.option("--type", "note_type", required=True,
+                  type=click.Choice(list(_cr.NOTE_TYPES)),
+                  help="Note type.")
+    @click.argument("body", required=True)
+    @click.option("--source", "source_url", default=None,
+                  help="Optional citation URL.")
+    def compat_note_add(
+        adapter_slug: str,
+        make: str,
+        note_type: str,
+        body: str,
+        source_url: Optional[str],
+    ) -> None:
+        """Add a compat note for (adapter, make)."""
+        console = get_console()
+        init_db()
+        try:
+            note_id = _cr.add_compat_note(
+                adapter_slug=adapter_slug,
+                make=make,
+                note_type=note_type,
+                body=body,
+                source_url=source_url,
+            )
+        except ValueError as exc:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} {exc}[/red]",
+                    title="Note add failed",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+        console.print(
+            Panel(
+                f"[green]{ICON_OK} Added note #{note_id} "
+                f"({note_type}) for "
+                f"[bold]{adapter_slug}[/bold] / "
+                f"[bold]{make}[/bold].[/green]",
+                title="Note added",
+                border_style="green",
+            )
+        )
+
+    @compat_note_group.command("list")
+    @click.option("--adapter", "adapter_slug", required=True,
+                  help="Adapter slug.")
+    @click.option("--make", "make", default=None,
+                  help="Filter to a specific make (wildcard '*' rows "
+                       "are always included).")
+    @click.option("--type", "note_type", default=None,
+                  type=click.Choice(list(_cr.NOTE_TYPES)),
+                  help="Filter by note type.")
+    @click.option("--json", "as_json", is_flag=True, default=False,
+                  help="Emit raw JSON.")
+    def compat_note_list(
+        adapter_slug: str,
+        make: Optional[str],
+        note_type: Optional[str],
+        as_json: bool,
+    ) -> None:
+        """List notes for an adapter."""
+        console = get_console()
+        init_db()
+        notes = _cr.get_compat_notes(adapter_slug, make=make)
+        if note_type:
+            notes = [n for n in notes if n.get("note_type") == note_type]
+        if as_json:
+            click.echo(_json.dumps(notes, indent=2, default=str))
+            return
+        if not notes:
+            console.print(
+                Panel(
+                    f"[yellow]{ICON_WARN} No notes for "
+                    f"[bold]{adapter_slug}[/bold]"
+                    f"{f' / {make}' if make else ''}.[/yellow]",
+                    title="No notes",
+                    border_style="yellow",
+                )
+            )
+            return
+        table = Table(
+            title=f"Notes for {adapter_slug} ({len(notes)})",
+            header_style="bold magenta",
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("Type")
+        table.add_column("Make")
+        table.add_column("Body", overflow="fold")
+        table.add_column("Source", overflow="fold")
+        for note in notes:
+            table.add_row(
+                str(note.get("id", "-")),
+                str(note.get("note_type", "-")),
+                str(note.get("vehicle_make", "-")),
+                str(note.get("body", "-")),
+                str(note.get("source_url") or "[dim]—[/dim]"),
+            )
+        console.print(table)
+
+    # --- compat seed ------------------------------------------------------
+    @compat_group.command("seed")
+    @click.option("--data-dir", "data_dir", default=None,
+                  type=click.Path(path_type=Path, file_okay=False),
+                  help="Override the default compat_data/ directory.")
+    @click.option("--yes", "-y", "assume_yes", is_flag=True, default=False,
+                  help="Skip the confirmation prompt.")
+    def compat_seed(
+        data_dir: Optional[Path],
+        assume_yes: bool,
+    ) -> None:
+        """Idempotent load of the JSON compat knowledge base."""
+        console = get_console()
+        init_db()
+        if not assume_yes:
+            if not click.confirm(
+                "Seed the adapter compatibility knowledge base?",
+                default=True,
+            ):
+                console.print("[yellow]Aborted.[/yellow]")
+                return
+        try:
+            summary = _cl.seed_all(data_dir=data_dir)
+        except (FileNotFoundError, ValueError) as exc:
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} Seed failed: {exc}[/red]",
+                    title="Seed error",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
+        console.print(
+            Panel(
+                f"[green]{ICON_OK} Loaded "
+                f"{summary['adapters']} adapters, "
+                f"{summary['matrix']} compat entries, "
+                f"{summary['notes']} notes.[/green]\n\n"
+                f"[dim]Re-running this command is idempotent — "
+                f"duplicates are skipped at the slug / natural-key "
+                f"level.[/dim]",
+                title="Compat seed complete",
+                border_style="green",
+            )
+        )
+
+
+__all__ = ["register_hardware", "register_log", "register_compat"]

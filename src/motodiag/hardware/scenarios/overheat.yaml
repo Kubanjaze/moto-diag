@@ -1,0 +1,20 @@
+name: overheat
+description: Coolant climbs from 90 to 118 C; P0217 engine overheat drops at 120s.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 90
+  0x0C: 1100
+  0x11: 16
+  0x0F: 38
+  0x06: 128
+  0x42: 13900
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 90, 0x0C: 1100, 0x11: 16, 0x0F: 38, 0x06: 128, 0x42: 13900}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: warm_idle}
+  - {action: ramp, at: 10s, pid: 0x05, from: 90, to: 105, duration: 60s}
+  - {action: phase, at: 70s, name: thermal_stress}
+  - {action: ramp, at: 75s, pid: 0x05, from: 105, to: 118, duration: 75s}
+  - {action: inject_dtc, at: 120s, code: P0217}
+  - {action: phase, at: 150s, name: overheat_confirmed}
+  - {action: end, at: 180s}

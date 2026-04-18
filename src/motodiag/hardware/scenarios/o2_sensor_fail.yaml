@@ -1,0 +1,18 @@
+name: o2_sensor_fail
+description: O2 bank-1 sensor-1 flatlines at 0.45V (raw 0x5AB0 / 23216); P0134 at 45s.
+protocol: ISO 15765-4 (CAN)
+vin: JH2PC40A7WM123456
+initial:
+  0x05: 88
+  0x0C: 950
+  0x11: 14
+  0x14: 450
+  0x06: 128
+  0x42: 14000
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 950, 0x11: 14, 0x14: 450, 0x06: 128, 0x42: 14000}, dtcs: [], vin: JH2PC40A7WM123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: idle}
+  - {action: ramp, at: 5s, pid: 0x14, from: 450, to: 450, duration: 30s}
+  - {action: inject_dtc, at: 45s, code: P0134}
+  - {action: phase, at: 45s, name: o2_no_activity}
+  - {action: end, at: 120s}

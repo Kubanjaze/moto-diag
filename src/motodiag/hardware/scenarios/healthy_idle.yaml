@@ -1,0 +1,15 @@
+name: healthy_idle
+description: Stable warm idle — clean bike, zero DTCs, 60 seconds.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 88
+  0x0C: 950
+  0x11: 14
+  0x0F: 32
+  0x06: 100
+  0x42: 14050
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 950, 0x11: 14, 0x0F: 32, 0x06: 100, 0x42: 14050}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: warm_idle}
+  - {action: end, at: 60s}

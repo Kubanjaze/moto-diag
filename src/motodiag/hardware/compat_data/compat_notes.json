@@ -1,0 +1,86 @@
+[
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "*",
+    "note_type": "quirk",
+    "body": "Windows 11 Home onboard Bluetooth stack frequently drops the MX+ pairing after sleep. Workaround: use a USB-BT dongle (the Plugable BT-USB3 is the shop-lab reference). Completely stable on Windows 10 and macOS.",
+    "source_url": "https://www.obdlink.com/support/windows-11-bluetooth/"
+  },
+  {
+    "adapter_slug": "obdlink-mx-plus",
+    "make": "harley",
+    "note_type": "tip",
+    "body": "On pre-2011 J1850 Touring, pass --timeout 3 (not the default 2) when scanning. The MX+'s STN2100 respects the J1850 wakeup envelope but Harley's VPW timing is at the lazy end of spec; 2s can miss the first DLC byte.",
+    "source_url": "https://www.hdforums.com/forum/touring-models/obdlink-touring-timeout-tip-788234/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "*",
+    "note_type": "known-failure",
+    "body": "Fake-v2.1 firmware is ubiquitous on AliExpress/eBay clones. The chip reports v2.1 but is actually v1.5 silicon with counterfeit flash. You'll see this as intermittent CAN frame drops at 500kbit and complete J1850 failure. There is no firmware update path — the unit is broken by design. Accept that this adapter class is 'read basic Mode 03 on modern CAN or discard.'",
+    "source_url": "https://www.obdinnovations.com/counterfeit-elm327-detection/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "harley",
+    "note_type": "known-failure",
+    "body": "Pre-2011 Harley J1850 VPW: the counterfeit ELM327 silicon will complete the Bluetooth pairing, ATZ init, and even respond to ATDP — but when you issue Mode 03 on J1850 it returns ERROR or NODATA 100% of the time. Do not use on pre-2011 Harleys. Save yourself the hour of troubleshooting and buy the OBDLink MX+ or a Dynojet PV3.",
+    "source_url": "https://www.hdforums.com/forum/twin-cam-88-96-103-114/elm327-j1850-vpw-does-not-work-on-harley-770223/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "note_type": "workaround",
+    "body": "When purchasing used, ALWAYS verify the tune-slot count. Each ECU flash consumes one of the PV3's three or six slots (depending on model). A used PV3 with all slots consumed requires a $100 Dynojet unlock before it can flash a new bike. Ask the seller for a screenshot of Power Core showing remaining slots before committing.",
+    "source_url": "https://www.dynojet.com/product-support/power-vision-3/"
+  },
+  {
+    "adapter_slug": "dynojet-power-vision-3",
+    "make": "harley",
+    "note_type": "tip",
+    "body": "For shops doing volume tune work, the PV3 dongle unlocks 'PV Touch' data logging even without the handheld display attached. Pair the PV3 with a shop laptop running Power Core on the bench, then take the dongle off while the bike rides. The captured log auto-imports when the bike returns.",
+    "source_url": "https://www.dynojet.com/"
+  },
+  {
+    "adapter_slug": "vance-hines-fuelpak-fp4",
+    "make": "harley",
+    "note_type": "quirk",
+    "body": "FP4 is VIN-locked on first pairing. Moving an FP4 from one bike to another requires a V&H-side unlock via the app (they're generous about approving the request, but you need internet access and a 24-48h wait). For shops running multiple bikes through the shop, budget for one FP4 per active project.",
+    "source_url": "https://www.vanceandhines.com/support/fuelpak-fp4-vin-unlock"
+  },
+  {
+    "adapter_slug": "autel-ap200bt",
+    "make": "*",
+    "note_type": "quirk",
+    "body": "Autel's annual subscription renewal for motorcycle databases is aggressive — you lose access to motorcycle menus entirely when the subscription lapses (the AP200 reverts to generic OBD-II). Budget $60-100/year on top of the hardware cost. The AP200 is still a great read-only scanner without the subscription.",
+    "source_url": "https://www.autel.com/subscription-renewal-info"
+  },
+  {
+    "adapter_slug": "obdlink-cx",
+    "make": "*",
+    "note_type": "tip",
+    "body": "The CX is BLE-only — Windows classic-Bluetooth OBD apps (many older scanners) do NOT see it. Before buying the CX over the MX+, verify your scanner software pairs over BLE. iOS apps (OBD Fusion, BimmerCode) are all BLE-native and work fine.",
+    "source_url": "https://www.obdlink.com/products/obdlink-cx/"
+  },
+  {
+    "adapter_slug": "sepro-harley-scanner",
+    "make": "harley",
+    "note_type": "tip",
+    "body": "Android-only app. iPhone users in a shop setting either keep a dedicated Android tablet or fall back to the V&H FP4 (which is iOS+Android). SEPro regularly updates the app; keep auto-update enabled or you'll miss Milwaukee-Eight compatibility fixes that ship every 2-3 months.",
+    "source_url": "https://seproscanner.com/"
+  },
+  {
+    "adapter_slug": "hd-digital-tech-ii-clone",
+    "make": "harley",
+    "note_type": "known-failure",
+    "body": "eBay DTII clones regularly ship with 2014-era firmware that does NOT support Milwaukee-Eight (2017+). If the seller's description doesn't explicitly name M8 compatibility, assume you're getting the older firmware and it won't talk to M8 ECMs. No remedy — these clones have no official update channel.",
+    "source_url": "https://www.hdforums.com/forum/milwaukee-eight-engine/dtii-clone-m8-compatibility-834129/"
+  },
+  {
+    "adapter_slug": "bimmercode-obdlink-mx-plus",
+    "make": "bmw",
+    "note_type": "tip",
+    "body": "The BimmerCode app sells the MX+ + BMW Motorrad profile as a bundle. Buying the plain MX+ separately and then in-app-purchasing the motorcycle profile costs ~$30 more than the bundle. If you know you want the BMW coding functionality, buy the bundle up-front.",
+    "source_url": "https://bimmercode.app/pricing"
+  }
+]

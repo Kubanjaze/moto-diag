@@ -1,0 +1,37 @@
+name: misfire
+description: RPM oscillates +/-200 around idle; P0300 random-misfire drops at 30s.
+protocol: ISO 15765-4 (CAN)
+vin: 1HD1KHM19NB123456
+initial:
+  0x05: 88
+  0x0C: 950
+  0x11: 14
+  0x0F: 32
+  0x06: 112
+  0x42: 14020
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 88, 0x0C: 950, 0x11: 14, 0x0F: 32, 0x06: 112, 0x42: 14020}, dtcs: [], vin: 1HD1KHM19NB123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: idle}
+  - {action: ramp, at: 2s, pid: 0x0C, from: 950, to: 1150, duration: 3s}
+  - {action: ramp, at: 6s, pid: 0x0C, from: 1150, to: 750, duration: 3s}
+  - {action: ramp, at: 10s, pid: 0x0C, from: 750, to: 1200, duration: 3s}
+  - {action: ramp, at: 14s, pid: 0x0C, from: 1200, to: 720, duration: 3s}
+  - {action: ramp, at: 18s, pid: 0x0C, from: 720, to: 1180, duration: 3s}
+  - {action: ramp, at: 22s, pid: 0x0C, from: 1180, to: 760, duration: 3s}
+  - {action: ramp, at: 26s, pid: 0x0C, from: 760, to: 1160, duration: 3s}
+  - {action: inject_dtc, at: 30s, code: P0300}
+  - {action: ramp, at: 32s, pid: 0x0C, from: 1160, to: 740, duration: 3s}
+  - {action: ramp, at: 36s, pid: 0x0C, from: 740, to: 1170, duration: 3s}
+  - {action: ramp, at: 40s, pid: 0x0C, from: 1170, to: 760, duration: 3s}
+  - {action: ramp, at: 44s, pid: 0x0C, from: 760, to: 1150, duration: 3s}
+  - {action: ramp, at: 48s, pid: 0x0C, from: 1150, to: 780, duration: 3s}
+  - {action: ramp, at: 52s, pid: 0x0C, from: 780, to: 1140, duration: 3s}
+  - {action: ramp, at: 56s, pid: 0x0C, from: 1140, to: 790, duration: 3s}
+  - {action: ramp, at: 60s, pid: 0x0C, from: 790, to: 1130, duration: 3s}
+  - {action: ramp, at: 64s, pid: 0x0C, from: 1130, to: 800, duration: 3s}
+  - {action: ramp, at: 68s, pid: 0x0C, from: 800, to: 1120, duration: 3s}
+  - {action: ramp, at: 72s, pid: 0x0C, from: 1120, to: 820, duration: 3s}
+  - {action: ramp, at: 76s, pid: 0x0C, from: 820, to: 1100, duration: 3s}
+  - {action: ramp, at: 80s, pid: 0x0C, from: 1100, to: 830, duration: 3s}
+  - {action: phase, at: 85s, name: misfire_logged}
+  - {action: end, at: 90s}

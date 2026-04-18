@@ -1,0 +1,19 @@
+name: cold_start
+description: ECU boots cold — coolant 20->90 C, RPM 1800->900, clean completion.
+protocol: ISO 15765-4 (CAN)
+vin: JH2PC40A7WM123456
+initial:
+  0x05: 20
+  0x0C: 1800
+  0x11: 18
+  0x0F: 15
+  0x06: 128
+  0x42: 14100
+timeline:
+  - {action: start, at: 0s, pids: {0x05: 20, 0x0C: 1800, 0x11: 18, 0x0F: 15, 0x06: 128, 0x42: 14100}, dtcs: [], vin: JH2PC40A7WM123456, protocol: ISO 15765-4 (CAN)}
+  - {action: phase, at: 0s, name: cold_start}
+  - {action: ramp, at: 5s, pid: 0x05, from: 20, to: 90, duration: 60s}
+  - {action: ramp, at: 5s, pid: 0x0C, from: 1800, to: 900, duration: 45s}
+  - {action: ramp, at: 5s, pid: 0x0F, from: 15, to: 34, duration: 60s}
+  - {action: phase, at: 65s, name: warm_idle}
+  - {action: end, at: 120s}

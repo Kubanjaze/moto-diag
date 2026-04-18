@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 15  # Phase 131: bumped for ai_response_cache table (offline mode + AI response caching) migration 015
+SCHEMA_VERSION = 17  # Phase 145: bumped for obd_adapters + adapter_compatibility + compat_notes tables (adapter compatibility database) migration 017
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
