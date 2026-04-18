@@ -197,6 +197,17 @@ class AutoDetector:
         Applied per-adapter ``connect()`` attempt. Adapters that accept
         a timeout kwarg receive it; adapters that don't get ignored.
         Default: 5.0 seconds.
+    compat_repo:
+        Optional compatibility-knowledge module exposing
+        ``protocols_to_skip_for_make(make) -> set[str]`` (Phase 145).
+        When supplied AND a make_hint is given, :meth:`detect` filters
+        the priority order to skip protocols that no known-compatible
+        adapter for this make actually supports. When ``None``
+        (default), behavior is identical to Phase 139 — zero Phase 139
+        tests change. Duck-typed (any object with the named method
+        works), so the caller passes
+        :mod:`motodiag.hardware.compat_repo` directly or a custom
+        shim for tests.
     """
 
     def __init__(
@@ -205,11 +216,13 @@ class AutoDetector:
         baud: Optional[int] = None,
         make_hint: Optional[str] = None,
         timeout_s: float = 5.0,
+        compat_repo: Optional[Any] = None,
     ) -> None:
         self.port: str = port
         self.baud: Optional[int] = baud
         self.make_hint: Optional[str] = self._normalize_hint(make_hint)
         self.timeout_s: float = timeout_s
+        self._compat_repo: Optional[Any] = compat_repo
 
     # ------------------------------------------------------------------
     # Public API
@@ -366,10 +379,33 @@ class AutoDetector:
         tuple is consumed by :meth:`_build_adapter` which maps each
         label to a concrete adapter class + protocol-specific
         constructor kwargs.
+
+        Phase 145: when a :attr:`_compat_repo` is attached AND a
+        ``make_hint`` is available, protocols that no known adapter
+        for this make supports are filtered out of the order. Falls
+        back to the unfiltered order if the filter would leave an
+        empty list (never brick detection because the knowledge base
+        happens to be sparse for a new make).
         """
         if make_hint is None:
-            return _DEFAULT_ORDER
-        return _MAKE_HINT_ORDER.get(make_hint, _DEFAULT_ORDER)
+            order = _DEFAULT_ORDER
+        else:
+            order = _MAKE_HINT_ORDER.get(make_hint, _DEFAULT_ORDER)
+
+        if self._compat_repo is None or make_hint is None:
+            return order
+
+        try:
+            skip = self._compat_repo.protocols_to_skip_for_make(make_hint)
+        except Exception:  # noqa: BLE001
+            # A buggy compat_repo must not break detection — silently
+            # fall back to the unfiltered order.
+            return order
+
+        if not skip:
+            return order
+        filtered = tuple(p for p in order if p not in skip)
+        return filtered or order  # safety: never empty
 
     # ------------------------------------------------------------------
     # Internals — adapter construction (non-uniform signatures)
