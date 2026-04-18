@@ -430,3 +430,61 @@ Eighth agent-delegated phase. No migration, no new commands. Extends Phase 126's
 - Full regression (running): expected 2326/2326, zero regressions.
 - Implementation.md → v0.7.1.
 - Next: Phase 133 — **Gate 5 integration test** (full mechanic workflow through CLI). Closes out Track D.
+
+### 2026-04-18 05:00 — Phase 133 complete — Gate 5 PASSED, Track D closed
+Ninth agent-delegated phase. **GATE 5 PASSED** — the mechanic CLI track (phases 109 + 122-132) is fully integrated. Pure observation test file, zero new production code.
+- New `tests/test_phase133_gate_5.py` with 7 tests across 3 classes.
+  - `TestMechanicEndToEnd` (1 big test): `CliRunner`-driven 19-command workflow on a shared DB fixture — `garage add`/`list` → `motodiag quick "won't start"` → `diagnose list`/`show [--format md/html/pdf --output]` → `diagnose annotate`/`reopen` → `code P0115 [--explain]` → `kb list`/`search "stator"`/`show --format md` → `cache stats` → `intake quota` → `tier --compare` → `completion bash`. State flows through the whole workflow (session created → annotated → reopened → exported) — any cross-step regression gets caught. 3 AI mocks (`_default_diagnose_fn`/`_default_interpret_fn`/`_default_vision_call`) patched at import time.
+  - `TestCliSurface` (4 tests): all 14 canonical top-level commands registered, 4 hidden aliases (`d`/`k`/`g`/`q`) present but omitted from `--help`, expected subcommands per subgroup, subprocess `--help` exits 0.
+  - `TestRegression` (2 tests): Phase 121's Gate R workflow still passes + schema >= v15 + all `motodiag.cli.*` submodules import cleanly.
+- Consolidated 15-20 planned tests into 7 cohesive ones (same pattern as Gate R's 20 to 10). CliRunner over subprocess for workflow tests (10-100x faster, cleaner exception surface); subprocess reserved for the `--help` smoke test only.
+- Seeded DTC P0115 + one known-issue entry in the shared fixture to keep `code P0115` and `kb search "stator"` hermetic.
+- Builder-A clean first pass, no iterative fixes. Sandbox blocked Python (expected), Architect ran trust-but-verify: 7 tests passed in 6.04s.
+- Zero new production code (pure observation over the Phase 109-132 CLI surface), zero schema changes, zero live tokens burned.
+- Full regression: 2333/2333, zero regressions.
+- Implementation.md to v0.7.2.
+- **Track D closed.** Track E (hardware) is next.
+
+### 2026-04-18 06:00 — Phase 134 complete — Track E opens: OBD protocol abstraction layer
+First Track E phase. New `hardware/protocols/` package — library-only scaffolding that subsequent Track E phases (135-139) build against.
+- New package `src/motodiag/hardware/protocols/` with 4 new modules + `__init__.py` exporting 8 public names.
+  - `base.py` — `ProtocolAdapter` ABC with 8 abstract methods: `connect(port, baud)`, `disconnect`, `is_connected` (concrete property with `getattr(self, "_is_connected", False)` fallback so subclasses only flip the backing attribute), `read_dtcs`, `clear_dtcs -> bool`, `read_pid(pid) -> Optional[int]`, `read_vin`, `send_raw(service, data)`, `get_protocol_name`.
+  - `models.py` — `ProtocolConnection` frozen + `extra="forbid"` Pydantic model (port/baud/protocol_name/connected_at); `DTCReadResult` with `mode="before"` validator that uppercases DTC codes before type validation; `PIDResponse` with paired value+unit presence validator.
+  - `exceptions.py` — `ProtocolError` base + `ConnectionError` + `TimeoutError` (both intentionally shadow built-ins with clear docstring callouts) + `UnsupportedCommandError` with custom `__init__(command: str)` carrying `.command` attribute (the only custom init — `ConnectionError`/`TimeoutError` stay plain).
+- Wave 1 of the parallel-pipeline dispatch pattern: Planner then Builder then Architect phase-test-verify then Finalizer, with many agents in flight simultaneously across phases that do not share files. Builder-A delivered clean first pass, 49 tests passed locally in 0.35s.
+- **Package inventory update**: `hardware` moves from Scaffold to Active. No migration, no CLI, no AI.
+
+### 2026-04-18 06:30 — Phases 135-138 complete — Wave 2: four concrete protocol adapters
+Parallel-pipeline Wave 2 shipped four concrete `ProtocolAdapter` implementations — one per bike ecosystem era — in parallel, all building against Phase 134's abstraction. Each adapter is a standalone module with its own test file; no shared state between them (which is what enables the parallel dispatch).
+- **Phase 135 — ELM327** (`hardware/protocols/elm327.py` ~584 LoC, 52 tests). Wraps ELM327 chip via pyserial. Full AT-command handshake (`ATZ`/`ATE0`/`ATL0`/`ATSP0`), multi-frame response tolerance scanning for `43`/`41 XX` service echo, mode 03 DTC parsing, mode 09 VIN assembly. Unlocks ~80% of aftermarket OBD dongles.
+- **Phase 136 — CAN/ISO 15765** (`hardware/protocols/can.py` ~470 LoC, 38 tests). ISO 15765-4 over `python-can` (any backend). Hand-rolled ISO-TP (not `python-can-isotp`). Modes 03 DTCs / 04 clear / 09 VIN / read_pid. Added `can = ["python-can>=4.0"]` optional extras. Target: 2011+ Harley Touring, modern CAN bikes.
+- **Phase 137 — K-line/KWP2000** (`hardware/protocols/kline.py` ~670 LoC, 44 tests). ISO 14230-4 over pyserial. Target: 90s/2000s Japanese sport-bikes + vintage Euro. Slow-baud wakeup, checksum, local-echo cancellation, strict timing. Services 0x10/0x11/0x14/0x18/0x1A/0x21. Write services deliberately out of scope for tune-writing safety.
+- **Phase 138 — J1850 VPW** (`hardware/protocols/j1850.py` ~600 LoC, 27 tests). Pre-2011 Harley via bridge devices (Scan Gauge II / Daytona Twin Tec / Dynojet Power Commander / Digital Tech II clones). Multi-ECM DTC read merges ECM (P-codes) + BCM (B-codes) + ABS (C-codes). `read_pid` raises `NotImplementedError` (Phase 141); `read_vin` raises `UnsupportedCommandError` (pre-2008 HDs lacked Mode 09).
+- All four adapters reconciled their concrete signatures to match Phase 134's ABC contract (same `connect(port, baud)` shape, `read_pid -> Optional[int]`, `clear_dtcs -> bool`). Consistent deviation pattern across the wave — documented once, applied everywhere.
+- All Wave 2 builds were clean first passes. 161 tests across the wave, all passed locally.
+- Dependencies: `pyproject.toml` adds `can = ["python-can>=4.0"]` optional extras (CAN backend).
+
+### 2026-04-18 07:00 — Phase 139 complete — ECU auto-detection + handshake (Wave 3)
+Wave 3 of Track E: glue layer over all four Phase 134-138 protocol adapters. New `src/motodiag/hardware/ecu_detect.py` (~460 LoC).
+- `AutoDetector(port, make_hint=None, timeout_s=2.0, baud=None)` tries protocol adapters in priority order keyed by bike make hint until one negotiates a live session:
+  - Harley -> J1850 first (covers pre-2011 FLH/FXR/Sportster) then CAN (covers 2011+ Touring)
+  - Japanese (honda/yamaha/kawasaki/suzuki) -> CAN then KWP2000 then ELM327
+  - European (ducati/bmw/ktm/triumph) -> CAN then KWP2000
+  - No hint -> try all four in default order (CAN, KWP2000, J1850, ELM327)
+- Per-protocol `_build_adapter` factory handles non-uniform adapter kwargs — each of the four adapters has a different constructor signature (CAN uses `channel/bitrate/request_timeout+multiframe_timeout`, K-line uses `port/baud/read_timeout`, J1850 uses `port/baudrate/timeout_s`, ELM327 uses `port/baud/timeout`). Plan flagged this as a Risk; confirmed and solved.
+- Lazy per-adapter imports so missing optional deps (`python-can`, `pyserial`) only surface when that protocol is actually attempted. Means the detector does not require all four optional extras installed.
+- `identify_ecu()` best-effort probes VIN (mode 09 PID 02) + ECU part number (mode 09 PID 04) + software version (mode 09 PID 06) + supported OBD modes (mode 01 PID 00). Each probe is independent — VIN failure does not prevent ECU ID lookup.
+- `_decode_vin` handles both the `49 02 01` echo-prefixed form and the stripped response form; ASCII decode strips padding bytes; returns `None` if the decoded string is not exactly 17 chars (prevents bogus truncation).
+- `NoECUDetectedError(port, make_hint, errors=[(name, exception), ...])` subclass of `ProtocolError` carries programmatic error list for introspection — callers can log which adapters failed with what.
+- Zero live hardware — all 31 tests use `MagicMock` adapters. Passed locally in 0.25s.
+- Phase 140 (hardware CLI `motodiag connect/scan`) picks up `AutoDetector` for user-facing flows.
+
+### 2026-04-18 07:30 — Track E substrate closed (phases 134-139) + Gate 5 consolidated
+Summary of the 7-phase Track D to E transition:
+- **Gate 5 PASSED** at Phase 133. Track D closed.
+- **Track E substrate shipped** at Phases 134-139: protocol ABC + 4 concrete adapters (ELM327/CAN/K-line/J1850) + ECU auto-detector. `hardware` package Active.
+- **Test count**: 2326 -> 2574 (+248 tests across 7 phases).
+- **New dependency**: `python-can>=4.0` (optional, behind `motodiag[can]`).
+- **Schema version**: unchanged at v15 — Track E is library-only until Phase 140 lands the CLI surface.
+- **Next up**: Phase 140 (fault code read/clear + hardware CLI `motodiag connect/scan`) wires the Phase 139 detector into user-facing flows.
+- Implementation.md to v0.7.2.

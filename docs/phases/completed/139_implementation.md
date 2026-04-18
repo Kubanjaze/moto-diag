@@ -1,8 +1,19 @@
 # MotoDiag Phase 139 — ECU Auto-Detection + Handshake
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/ecu_detect.py` ~460 LoC, `tests/test_phase139_ecu_detect.py` ~680 LoC) |
+| New tests | 25 methods / 31 collected (passed locally 31/31 in 0.25s) |
+| Live API tokens burned | 0 |
+
+**Key deviation**: adapter constructor non-uniformity confirmed (flagged in plan's Risks). Each adapter uses different kwargs: CAN `channel/bitrate/request_timeout+multiframe_timeout`, K-line `port/baud/read_timeout`, J1850 `port/baudrate/timeout_s`, ELM327 `port/baud/timeout`. Solved via per-protocol `_build_adapter` with string-label priority table. Lazy imports per-adapter so missing optional deps only surface when tried. Best-effort `send_request` with fallback to `send_command`. `_decode_vin` handles both `49 02 01`-echo and stripped responses. `NoECUDetectedError` carries `port`, `make_hint`, and `errors: list[(name, exception)]` for programmatic introspection.
+
+---
+
+## Goal (v1.0)
 Glue layer over Phases 134-138's protocol adapters. Given a serial port (and optionally a bike make hint), try each protocol adapter in a priority order chosen from the hint, negotiate a live session, and identify the ECU (VIN + ECU part number + software version). Returns the successfully-connected `ProtocolAdapter` ready for Phase 140's DTC read/clear operations. No new CLI command in this phase (Phase 140 owns the user-facing surface). No migration. No live hardware — all tests use `MagicMock` adapters.
 
 ```python

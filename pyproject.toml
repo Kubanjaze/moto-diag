@@ -44,8 +44,11 @@ export = [
     "markdown>=3.5",
     "xhtml2pdf>=0.2.13",
 ]
+can = [
+    "python-can>=4.0",
+]
 all = [
-    "motodiag[dev,ai,api,hardware,vision,export]",
+    "motodiag[dev,ai,api,hardware,vision,export,can]",
 ]
 
 [project.scripts]

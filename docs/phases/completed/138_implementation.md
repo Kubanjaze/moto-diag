@@ -1,8 +1,20 @@
 # MotoDiag Phase 138 — J1850 VPW Protocol Adapter (Pre-2011 Harley-Davidson)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/protocols/j1850.py` ~600 LoC, `tests/test_phase138_j1850.py` ~25 tests) |
+| Modified files | 1 (`hardware/protocols/__init__.py` export) |
+| New tests | 27 (passed locally 27/27 in batch run) |
+| Live API tokens burned | 0 |
+
+**Deviations**: ABC signature reconciliation (same pattern as other Wave 2 phases). `read_dtcs() -> list[str]` flat merge (ECM→BCM→ABS); supplementary `read_dtcs_by_module() -> dict[str, list[str]]` for labeled access. `clear_dtcs(module=None)` accepts optional module kwarg while preserving bool return. `read_pid` raises `NotImplementedError` with Phase-141 pointer; `read_vin` raises `UnsupportedCommandError` (pre-2008 Harleys lacked Mode 09). Bridge keys simplified: `daytona/scangauge/dynojet/generic`.
+
+---
+
+## Goal (v1.0)
 Implement `J1850Adapter`, the third concrete `ProtocolAdapter` in the Track E hardware stack (after Phase 136 CAN / ISO 15765 and Phase 137 K-line / KWP2000). J1850 VPW is the pre-2011 Harley-Davidson ECM diagnostic protocol — specifically 10.4 kbps Variable Pulse Width, not the 41.6 kbps PWM variant. Pre-2007 Sportsters / Big Twin Evo / TC88 Touring bikes speak pure Harley-proprietary J1850; 2007-2010 EFI Harleys (Delphi / Magneti Marelli ECMs, Delphi BCM, Brembo/HD ABS modules) speak J1850 VPW with partial SAE OBD-II Mode 03 bolted on. 2011+ Harleys moved to CAN (Phase 136). Because genuine J1850 silicon is rare and consumer ELM327 clones drop back to `ATTP 2`/`ATTP A`-style auto-detect badly on Harley-proprietary frames, real shop-floor workflow goes through a hard-wired **bridge device** (Scan Gauge II, Daytona Twin Tec TCFI tuner, Dynojet Power Commander diagnostic mode, Harley Digital Tech II clones). Our adapter talks serial to that bridge, the bridge talks J1850 VPW to the bike. No direct bus-level bit-banging from Python.
 
 Adds the multi-ECM story that neither Phase 136 nor 137 needed: a single `read_dtc()` call must query **ECM (powertrain / P-codes)**, **BCM (body / B-codes)**, and on 2007+ Touring **ABS (chassis / C-codes)** — three separate module addresses on the same J1850 bus, each with its own DTC list. The adapter concatenates all three into the `DTCReading` list Phase 140 consumes.

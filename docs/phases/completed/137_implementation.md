@@ -1,8 +1,19 @@
 # MotoDiag Phase 137 — K-line / KWP2000 Protocol Adapter (ISO 14230)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/protocols/kline.py` ~670 LoC, `tests/test_phase137_kline.py` ~775 LoC) |
+| New tests | 44 (passed locally 44/44 in 0.96s) |
+| Live API tokens burned | 0 |
+
+**Deviations**: ABC signature reconciliation (same pattern as 135/136). `_build_frame`/`_parse_frame` module-level pure functions for testability. DTC decode corrected: `(0x02, 0x01) → P0201`. `read_vin` uses SID 0x1A identifier 0x90. Write services (0x27/0x2E/0x31) out of scope (tune-writing safety).
+
+---
+
+## Goal (v1.0)
 Add a second concrete `ProtocolAdapter` implementation (after Phase 136's CAN adapter): a K-line / KWP2000 (ISO 14230-4) adapter covering the 90s/2000s Japanese sport-bike era — Honda CBR600/900/1000RR, Kawasaki ZX-6R/ZX-10R, Suzuki GSX-R/SV650, Yamaha YZF-R1/R6 — and many Euro bikes of the same vintage (Aprilia RSV, Ducati 748/996/998, KTM LC4/Adventure) before they migrated to CAN. K-line is electrically simple (a single bidirectional data line + ground, typically 12V idle with active-low signalling) but protocol-wise it's finicky: a slow-baud wakeup handshake, strict inter-byte and inter-message timing windows, and the transmitter reads its own transmissions back (local echo) which must be filtered out before treating incoming bytes as ECU responses.
 
 This phase wires that protocol on top of `pyserial`, uses `ProtocolAdapter` as the abstract parent (defined in Phase 134), exposes KWP2000 diagnostic services 0x10/0x11/0x14/0x18/0x1A, and ships ~20-25 unit tests that drive a mocked serial port through every bytewise corner — wakeup, framing, checksum, echo cancellation, short/long reads, and defensive failure modes. No CLI wiring and no migration land in this phase — Phase 140 (connection manager) picks the adapter up and plumbs it into `motodiag connect`.

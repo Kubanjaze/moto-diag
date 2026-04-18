@@ -1,8 +1,20 @@
 # MotoDiag Phase 135 — ELM327 Adapter Communication
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/protocols/elm327.py` ~584 LoC, `tests/test_phase135_elm327.py`) |
+| Modified files | 1 (`hardware/protocols/__init__.py` — export `ELM327Adapter`) |
+| New tests | 52 (Wave 2, passed locally 52/52) |
+| Live API tokens burned | 0 |
+
+**Deviations**: ABC signature reconciliation (Phase 134 contract differed from plan assumption — `connect(port, baud)` params, `read_pid → Optional[int]`, `clear_dtcs → bool`), multi-frame tolerance scans for `43`/`41 XX` service echo rather than anchoring at index 0. Test count 52 > planned ~25.
+
+---
+
+## Goal (v1.0)
 First concrete `ProtocolAdapter` on top of Phase 134's `hardware/protocols/base.py`. Wraps the ubiquitous ELM327 OBD-II interface chip (serial / USB / Bluetooth-SPP) in a clean Python API so higher layers can fetch DTCs, live PIDs, and VIN without caring about AT-command strings. This is the workhorse adapter — ~80% of the aftermarket OBD-II dongles on the market (Bluetooth OBDLink MX+, Vgate iCar, OBDLink SX, generic "ELM327 v1.5" clones) speak this protocol. Shipping this unlocks real-world motorcycle scan support for every J1939/ISO 15765 / ISO 9141-2 / KWP2000 platform covered by CAN-to-ELM bridges.
 
 No new CLI command — Phase 140 (hardware CLI `motodiag scan live`) wires this into user-facing flows. No migration. No AI. Pure protocol driver + exhaustive mock-serial test coverage.

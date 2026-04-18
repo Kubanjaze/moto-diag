@@ -1,8 +1,28 @@
 # MotoDiag Phase 134 — OBD Protocol Abstraction Layer
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 6 (`hardware/protocols/__init__.py`, `base.py`, `models.py`, `exceptions.py`, test file, update `hardware/__init__.py`) |
+| New tests | 30 methods, 49 parametrized cases |
+| Total tests | 2382 (projected with 134 added; Wave 1 also brings in 133's 7) |
+| New package | `src/motodiag/hardware/protocols/` |
+| New public API | 8 names (ProtocolAdapter, ProtocolConnection, DTCReadResult, PIDResponse, ProtocolError, ConnectionError, TimeoutError, UnsupportedCommandError) |
+| Schema version | 15 (unchanged — no migration) |
+| Live API tokens burned | **0** |
+
+Wave 1 Builder delivered clean on first pass. 49 tests passed locally in 0.35s. Key design choices validated: `ConnectionError`/`TimeoutError` intentionally shadow built-ins with docstring callouts; `is_connected` is a concrete property with `getattr(self, "_is_connected", False)` fallback so subclasses only flip the backing attribute; `ProtocolConnection` frozen + `extra="forbid"` + `mode="before"` uppercase normalization on DTCReadResult.codes; `PIDResponse` paired-presence validator on value+unit.
+
+## Deviations from Plan
+- Test file named `test_phase134_protocol_base.py` (Builder followed explicit filename in dispatch; plan body said `_protocol_abstraction.py`).
+- `UnsupportedCommandError` gets a custom `__init__(command: str)` to carry the `.command` attribute. Plan said "no custom __init__" in general; this one subclass is the exception. `ConnectionError` and `TimeoutError` stay plain.
+- Test count 30 methods expand to 49 parametrized cases at collection time.
+
+---
+
+## Goal (v1.0)
 Stand up the Track E foundation: a pure-Python `ProtocolAdapter` abstract base class plus supporting Pydantic models and an exception hierarchy, so later phases (135 ELM327, 136 CAN, 137 K-line, 138 J1850, 139 ECU detect) can each drop in a concrete implementation without touching each other or shared client code. This is a definitional phase — no hardware I/O, no CLI surface, no migration, zero tokens. Phase 140 wires the first real adapter through a `hardware diagnose` CLI; this phase gives that wiring a contract to code against.
 
 CLI: **none** — this phase adds no new command. Protocol adapters are internal library surfaces consumed by later Track E phases and by Phase 140's `motodiag hardware diagnose` command.

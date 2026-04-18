@@ -1,8 +1,20 @@
 # MotoDiag Phase 136 — CAN bus protocol (ISO 15765)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/protocols/can.py` ~470 LoC, `tests/test_phase136_can.py`) |
+| Modified files | 2 (`pyproject.toml` adds `can = ["python-can>=4.0"]`, `hardware/protocols/__init__.py` export) |
+| New tests | 38 (Wave 2, passed locally 38/38 in 0.43s) |
+| Live API tokens burned | 0 |
+
+**Deviations**: Hand-rolled ISO-TP (not `python-can-isotp`) — narrower scope, fewer Windows-fragile deps. ABC signature reconciliation (same as Phase 135). `clear_dtcs` returns `bool` per ABC (True on positive, False on NRC 0x22, raises on others). `read_pid` returns `Optional[int]` with big-endian byte combination. Added required `get_protocol_name()`.
+
+---
+
+## Goal (v1.0)
 Deliver a concrete `ProtocolAdapter` implementation for ISO 15765-4 (OBD-II over CAN) — the transport used by 2011+ Harley-Davidson (J1939/CAN-based diagnostic bus), modern Japanese sportbikes with factory OBD-II compliant ECUs, and most post-2010 EU-market bikes. The adapter speaks to a physical bike via `python-can` (any back-end supported by that library — SocketCAN, PCAN, Vector, Kvaser, slcan, Peak USB — Track E does not pick one) and exposes the same small surface as Phase 134's `ProtocolAdapter` base: `connect()`, `disconnect()`, `read_dtcs()`, `clear_dtcs()`, `read_vin()`, `read_pid(pid)`, `send_raw(service, data)`. The value: once this phase is done, MotoDiag can pull real DTCs and the VIN from a 2011+ Touring, a 2015+ R1, a 2016+ ZX-10R, and most modern CAN-equipped bikes through any python-can-compatible dongle — no proprietary Harley Digital Technician or Yamaha YDS licence required for read-side diagnostics. Write-side (active tests, bi-directional control) is deliberately out of scope; this phase only implements the readable OBD-II standard modes.
 
 CLI: no new command in this phase — Phase 139 (ECU auto-detection) and Phase 133/later Track E integration tests are what hook these adapters into the user-facing `motodiag` entry point. Phase 136 ships library code and tests only.

@@ -1,8 +1,30 @@
 # MotoDiag Phase 133 — Gate 5: CLI Integration Test
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
-## Goal
+## Results
+| Metric | Value |
+|--------|------:|
+| New files | 1 (`tests/test_phase133_gate_5.py`) |
+| Modified files | 0 — test-only phase |
+| New tests | 7 (1 workflow + 4 surface-breadth + 2 Gate R regression) |
+| Total tests | 2333 passing (was 2326) |
+| Workflow CLI invocations | 19 commands in one shared-DB test |
+| AI mocks | 3 (`_default_diagnose_fn`, `_default_interpret_fn`, `_default_vision_call`) |
+| Gate 5 status | ✅ **PASSED** |
+| Schema version | 15 (unchanged) |
+| Live API tokens burned | **0** |
+
+**GATE 5 PASSED** — Track D's user-facing CLI feature set works end-to-end. Ninth agent-delegated phase; Builder shipped clean code, 7 tests passed first run (6.04s) on Architect's trust-but-verify. Consolidated 19 CLI invocations into one cohesive workflow test (mirroring Gate R's Part A pattern over 20 siloed tests — one workflow proves cross-command state transitions that siloed per-command tests cannot).
+
+## Deviations from Plan
+- Test count 7 vs planned 15-20: Builder consolidated. One 19-step workflow covers more ground than 19 separate tests.
+- `test_phase121_gate_r_still_passes` subprocess test dropped in favor of schema-version assertion + per-module-import diagnostic. Gate R already runs in the regular suite.
+- Build fix: initial draft used non-existent `DTCCategory.SENSOR`; changed to `DTCCategory.ENGINE` (P0115 is ECT).
+
+---
+
+## Goal (v1.0)
 Gate 5 is the integration checkpoint that closes Track D (mechanic CLI, phases 109-132). Prove the full mechanic workflow works end-to-end across every Track D command — from `garage add` through `diagnose quick` through report export and knowledge-base lookup — wired together on one shared DB fixture via Click's `CliRunner`. Pattern mirrors Phase 121's Gate R: **one big integration test file with ~15-20 tests**, zero new production code, pure observation over the existing CLI surface. If this test passes, Track D is closed and Phase 134 opens the next track.
 
 CLI: `python -m pytest tests/test_phase133_gate_5.py -v` — **test-only phase, no new CLI commands, no new modules, no new migrations.**
