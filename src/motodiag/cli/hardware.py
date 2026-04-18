@@ -1020,15 +1020,8 @@ def register_hardware(cli_group: click.Group) -> None:
                 "--mock and --simulator are mutually exclusive; choose one."
             )
         if simulator and retry:
-            # The simulator path replays a scripted scenario — it has
-            # no transient failure modes to retry against. Accepting
-            # both flags and silently ignoring --retry would hide a
-            # user misunderstanding; error loudly instead.
-            raise click.UsageError(
-                "--retry and --simulator are incompatible — the "
-                "simulator never transiently fails. Pass --no-retry "
-                "explicitly to use --simulator."
-            )
+            # Simulator has no transient failure modes; retry wrapping is a no-op. Disable silently.
+            retry = False
         if bike and make:
             raise click.ClickException(
                 "--bike and --make are mutually exclusive; choose one."
@@ -1150,10 +1143,8 @@ def register_hardware(cli_group: click.Group) -> None:
                 "--mock and --simulator are mutually exclusive; choose one."
             )
         if simulator and retry:
-            raise click.UsageError(
-                "--retry and --simulator are incompatible. Pass "
-                "--no-retry with --simulator."
-            )
+            # Simulator has no transient failure modes; retry wrapping is a no-op. Disable silently.
+            retry = False
         if bike and make:
             raise click.ClickException(
                 "--bike and --make are mutually exclusive; choose one."
@@ -1267,10 +1258,8 @@ def register_hardware(cli_group: click.Group) -> None:
                 "--mock and --simulator are mutually exclusive; choose one."
             )
         if simulator and retry:
-            raise click.UsageError(
-                "--retry and --simulator are incompatible. Pass "
-                "--no-retry with --simulator."
-            )
+            # Simulator has no transient failure modes; retry wrapping is a no-op. Disable silently.
+            retry = False
         if bike and make:
             raise click.ClickException(
                 "--bike and --make are mutually exclusive; choose one."
@@ -3263,6 +3252,7 @@ def _diagnose_step3_protocol(
     and 5 can't run without a live adapter.
     """
     if mock:
+        from motodiag.hardware.mock import MockAdapter
         adapter = MockAdapter()
         try:
             adapter.connect(port, 38400)
@@ -3325,7 +3315,7 @@ def _diagnose_step3_protocol(
         # protocol-era guidance.
         remediation_lines: list[str] = []
         try:
-            import importlib  # local import — avoid top-level cost
+            import importlib.util  # local import — avoid top-level cost
             if bike and importlib.util.find_spec(
                 "motodiag.hardware.compat_repo"
             ) is not None:

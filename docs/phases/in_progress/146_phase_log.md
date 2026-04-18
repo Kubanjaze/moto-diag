@@ -65,3 +65,40 @@ Planner-146 drafted v1.0 for Phase 146 — connection troubleshooting + recovery
 6. `diagnose` persistence — ephemeral console-only. Phase 147 Gate 6 may reconsider.
 
 **Next:** build — recommend agent-delegated Builder-A. Architect trust-but-verify on completion. Phase 147 (Gate 6) natural consumer — integration test exercises both bare and resilient HardwareSession paths end-to-end.
+
+### 2026-04-18 16:15 — Build complete (Builder-146 + Architect trust-but-verify)
+
+Fifteenth agent-delegated phase. Builder-146 shipped three-layer resilience:
+- `hardware/connection.py` +446 LoC — RetryPolicy Pydantic model + ResilientAdapter wrapper + HardwareSession `retry_policy`/`auto_reconnect` kwargs + `try_reconnect()` method + `_enter_once()` refactor.
+- `hardware/ecu_detect.py` +62 LoC — `verbose=False` + `on_attempt=None` kwargs AFTER `compat_repo` (Phase 145 kwarg ordering preserved).
+- `hardware/mock.py` +91 LoC — `flaky_rate=0.0` + `flaky_seed=None` additive kwargs + `_roll_flaky()` helper. `flaky_rate=0.0` short-circuits → Phase 140 behavior byte-preserved.
+- `cli/hardware.py` +1089 LoC — `--retry/--no-retry` on scan (default on), info (default on), clear (default off). New `diagnose` subcommand with 5-step troubleshooter (port open / ATZ probe / AutoDetector negotiation / VIN read / DTC scan) + Rich panels with mechanic-readable remediation.
+- `tests/test_phase146_recovery.py` new 941 LoC, 56 tests across 7 classes.
+
+Sandbox blocked Python for Builder. Architect ran trust-but-verify.
+
+### 2026-04-18 16:20 — Bug fix #1: MockAdapter missing import in diagnose command
+
+**Issue:** 9 tests in TestDiagnoseCommand failed with `NameError: name 'MockAdapter' is not defined`. `_diagnose_step3_protocol` referenced MockAdapter in the `--mock` branch but never imported it.
+
+**Root cause:** `cli/hardware.py` module-level imports didn't include `MockAdapter`. Other subcommands instantiate it via `HardwareSession(mock=True)` which imports internally; diagnose constructs it directly.
+
+**Fix:** Added lazy import `from motodiag.hardware.mock import MockAdapter` inside the `if mock:` branch of `_diagnose_step3_protocol`. Avoids pulling mock into module-level imports.
+
+**Files:** `src/motodiag/cli/hardware.py` line 3266 area.
+
+**Verified:** `pytest tests/test_phase146_recovery.py -q` → 56 passed in 16.80s.
+
+### 2026-04-18 16:25 — Bug fix #2: `--retry`/`--simulator` mutex too strict
+
+**Issue:** Phase 144's `test_scan_with_simulator_prints_sim_badge` regressed. Test invoked `scan --port X --simulator healthy_idle` (no explicit `--retry`); Click exited 2 with UsageError "—retry and --simulator are incompatible".
+
+**Root cause:** Builder-146 added a hard mutex `if simulator and retry: raise UsageError(...)`, but `--retry` defaults to True on scan/info — so users passing ONLY `--simulator` tripped the mutex silently-by-default-value. Click doesn't expose "was this explicitly set" without sentinel defaults.
+
+**Fix:** Replaced the 3 raise-UsageError blocks (in scan/clear/info command bodies) with silent retry-disable: `if simulator and retry: retry = False`. Simulator has no transient failure modes — retry-wrapping is a no-op in that path, so silent skip is the correct semantic. One-line automation via regex sub across all 3 sites.
+
+**Files:** `src/motodiag/cli/hardware.py` lines ~1022, ~1148, ~1265 (3 blocks).
+
+**Verified:** `pytest tests/test_phase144_simulator.py tests/test_phase146_recovery.py -q` → 137 passed in 41.44s.
+
+**Build-complete sign-off:** Phase 146 GREEN. 56/56 own tests + 81/81 Phase 144 regression clean + 351/352 broader regression clean (then 352/352 after fix #2). Three-layer resilience substrate complete.

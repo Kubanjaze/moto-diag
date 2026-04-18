@@ -208,6 +208,22 @@ class AutoDetector:
         works), so the caller passes
         :mod:`motodiag.hardware.compat_repo` directly or a custom
         shim for tests.
+    verbose:
+        **Phase 146 addition.** When ``True``, :meth:`detect` logs at
+        INFO level before each protocol attempt — ``"AutoDetector
+        trying CAN"``. The default ``False`` preserves Phase 139
+        silence so every Phase 139 test still passes.
+    on_attempt:
+        **Phase 146 addition.** Optional callback fired on each
+        protocol attempt with signature
+        ``(protocol_name: str, exception: Optional[BaseException])``.
+        The exception argument is ``None`` on a successful attempt and
+        the caught :class:`BaseException` on a failed one. The CLI
+        ``diagnose`` subcommand uses this to drive a live Rich table
+        of protocol negotiation progress — mechanics see "J1850 ·
+        FAIL · TimeoutError" appear in real time rather than waiting
+        for the final :class:`NoECUDetectedError`. Default ``None``
+        preserves Phase 139 behaviour (no callback invocation).
     """
 
     def __init__(
@@ -217,12 +233,20 @@ class AutoDetector:
         make_hint: Optional[str] = None,
         timeout_s: float = 5.0,
         compat_repo: Optional[Any] = None,
+        verbose: bool = False,
+        on_attempt: Optional[
+            Callable[[str, Optional[BaseException]], None]
+        ] = None,
     ) -> None:
         self.port: str = port
         self.baud: Optional[int] = baud
         self.make_hint: Optional[str] = self._normalize_hint(make_hint)
         self.timeout_s: float = timeout_s
         self._compat_repo: Optional[Any] = compat_repo
+        self.verbose: bool = verbose
+        self.on_attempt: Optional[
+            Callable[[str, Optional[BaseException]], None]
+        ] = on_attempt
 
     # ------------------------------------------------------------------
     # Public API
@@ -248,6 +272,11 @@ class AutoDetector:
         errors: List[Tuple[str, BaseException]] = []
 
         for protocol in protocol_names:
+            # Phase 146 — optional verbose log + callback hooks. The
+            # ``if`` guard on verbose keeps Phase 139's default-silence
+            # contract.
+            if self.verbose:
+                logger.info("AutoDetector trying %s", protocol)
             try:
                 adapter = self._build_adapter(protocol)
             except Exception as err:  # noqa: BLE001
@@ -259,6 +288,16 @@ class AutoDetector:
                 logger.debug(
                     "build_adapter(%s) failed: %s", protocol, err
                 )
+                if self.on_attempt is not None:
+                    # Protect the loop from a misbehaving callback —
+                    # the caller's observer must never break detection.
+                    try:
+                        self.on_attempt(protocol, err)
+                    except Exception:  # noqa: BLE001
+                        logger.debug(
+                            "on_attempt callback raised on %s", protocol,
+                            exc_info=True,
+                        )
                 continue
 
             try:
@@ -270,6 +309,14 @@ class AutoDetector:
                     type(adapter).__name__,
                     err,
                 )
+                if self.on_attempt is not None:
+                    try:
+                        self.on_attempt(protocol, err)
+                    except Exception:  # noqa: BLE001
+                        logger.debug(
+                            "on_attempt callback raised on %s", protocol,
+                            exc_info=True,
+                        )
                 continue
             except Exception as err:  # noqa: BLE001
                 # Unexpected failure (OSError from a buggy driver,
@@ -282,6 +329,14 @@ class AutoDetector:
                     type(err).__name__,
                     err,
                 )
+                if self.on_attempt is not None:
+                    try:
+                        self.on_attempt(protocol, err)
+                    except Exception:  # noqa: BLE001
+                        logger.debug(
+                            "on_attempt callback raised on %s", protocol,
+                            exc_info=True,
+                        )
                 continue
 
             # First successful connect wins. Adapter is live and owned
@@ -291,6 +346,14 @@ class AutoDetector:
                 self.port,
                 type(adapter).__name__,
             )
+            if self.on_attempt is not None:
+                try:
+                    self.on_attempt(protocol, None)
+                except Exception:  # noqa: BLE001
+                    logger.debug(
+                        "on_attempt callback raised on %s (success)",
+                        protocol, exc_info=True,
+                    )
             return adapter
 
         raise NoECUDetectedError(

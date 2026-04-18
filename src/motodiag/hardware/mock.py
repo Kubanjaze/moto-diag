@@ -48,11 +48,13 @@ Scripted scenarios for edge-case testing::
 
 from __future__ import annotations
 
+import random
 from typing import Dict, List, Optional
 
 from motodiag.hardware.protocols.base import ProtocolAdapter
 from motodiag.hardware.protocols.exceptions import (
     ConnectionError,
+    TimeoutError as ProtocolTimeoutError,
     UnsupportedCommandError,
 )
 
@@ -116,6 +118,23 @@ class MockAdapter(ProtocolAdapter):
         (default) to preserve Phase 140 behavior exactly — every Phase
         140 test still passes because the new branch is gated on
         ``self._pid_values is not None``.
+    flaky_rate:
+        **Phase 146 addition.** Probability in ``[0.0, 1.0]`` that any
+        wire-layer call (``connect``, ``send_command``, ``read_dtcs``,
+        ``clear_dtcs``, ``read_pid``, ``read_vin``) raises a
+        :class:`ProtocolTimeoutError` before producing its normal
+        result. Values outside ``[0.0, 1.0]`` are clamped. Default
+        ``0.0`` short-circuits every roll — Phase 140 behavior
+        preserved.
+    flaky_seed:
+        **Phase 146 addition.** Seed for the internal
+        :class:`random.Random` instance backing the flaky rolls. When
+        ``None`` (default), the PRNG is seeded from ``random.Random()``
+        defaults (currently OS entropy) — a brand-new adapter is
+        non-deterministic across processes. Pass a fixed integer (e.g.
+        ``42``) to make test runs deterministic: two
+        ``MockAdapter(flaky_rate=0.5, flaky_seed=42)`` instances will
+        raise on the same call indices.
     """
 
     def __init__(
@@ -130,6 +149,8 @@ class MockAdapter(ProtocolAdapter):
         fail_on_connect: bool = False,
         vin_unsupported: bool = False,
         pid_values: Optional[Dict[int, int]] = None,
+        flaky_rate: float = 0.0,
+        flaky_seed: Optional[int] = None,
     ) -> None:
         # Defensive copy of the DTC list so callers can't mutate our
         # state after construction by modifying their own list.
@@ -154,10 +175,48 @@ class MockAdapter(ProtocolAdapter):
         self._pid_values: Optional[Dict[int, int]] = (
             dict(pid_values) if pid_values is not None else None
         )
+        # Phase 146 — flaky-mock scaffolding. ``_flaky_rate=0.0``
+        # short-circuits every call's :meth:`_roll_flaky`, so a default
+        # :class:`MockAdapter()` is byte-identical to Phase 140. The
+        # PRNG is always constructed so ``_roll_flaky`` can access it
+        # without a None-check; when ``flaky_seed`` is ``None`` the
+        # Random constructor seeds from OS entropy — tests that need
+        # determinism pass an explicit integer.
+        self._flaky_rate: float = max(0.0, min(1.0, float(flaky_rate)))
+        self._flaky_rng: random.Random = random.Random(flaky_seed)
         # ``_is_connected`` is the backing attribute the base class's
         # ``is_connected`` property reads. Starts False; flipped by
         # connect()/disconnect().
         self._is_connected: bool = False
+
+    # --- Phase 146: flaky roll helper ---------------------------------
+
+    def _roll_flaky(self, method_name: str) -> None:
+        """Raise :class:`ProtocolTimeoutError` with ``self._flaky_rate``.
+
+        Called at the top of every wire-layer method (``connect``,
+        ``send_command``, ``read_dtcs``, ``clear_dtcs``, ``read_pid``,
+        ``read_vin``) to simulate transient timeouts. The early-out
+        when ``self._flaky_rate == 0.0`` guarantees byte-identical
+        Phase 140 behavior for the default mock — the PRNG is never
+        even consulted, so a Phase 140 test that asserts "N calls
+        succeeded" is unaffected.
+
+        The raised exception uses the domain-layer
+        :class:`ProtocolTimeoutError` (aliased at import time so it
+        doesn't collide with the built-in :class:`TimeoutError`) — a
+        :class:`RetryPolicy` with defaults catches this type.
+
+        NOT called from ``disconnect`` (ABC contract: never raises) or
+        ``get_protocol_name`` (no wire interaction — just returns a
+        stored string).
+        """
+        if self._flaky_rate <= 0.0:
+            return
+        if self._flaky_rng.random() < self._flaky_rate:
+            raise ProtocolTimeoutError(
+                f"mock flaky failure in {method_name}"
+            )
 
     # --- ProtocolAdapter contract --------------------------------------
 
@@ -173,7 +232,13 @@ class MockAdapter(ProtocolAdapter):
             When the adapter was constructed with
             ``fail_on_connect=True``. Used to exercise the CLI's
             "no ECU detected" path.
+        TimeoutError
+            When the mock was constructed with a non-zero
+            ``flaky_rate`` and the internal PRNG decided this call
+            rolls a transient failure. Phase 146 — used to exercise
+            retry paths.
         """
+        self._roll_flaky("connect")
         if self._fail_on_connect:
             raise ConnectionError("mock refused connect")
         # Idempotent — re-connecting an already-connected mock is a no-op,
@@ -195,7 +260,10 @@ class MockAdapter(ProtocolAdapter):
             If called on a disconnected adapter — mirrors the real
             wire-protocol contract so CLI paths that accidentally skip
             ``connect()`` fail the same way they would on hardware.
+        TimeoutError
+            On a flaky-mock roll (Phase 146).
         """
+        self._roll_flaky("send_command")
         if not self._is_connected:
             raise ConnectionError("mock adapter not connected")
         # No wire protocol to simulate at this level. Phase 144 will
@@ -207,11 +275,24 @@ class MockAdapter(ProtocolAdapter):
 
         Copy (not reference) so a caller that clears the returned list
         in-place doesn't silently empty our internal state.
+
+        Raises
+        ------
+        TimeoutError
+            On a flaky-mock roll (Phase 146).
         """
+        self._roll_flaky("read_dtcs")
         return list(self._dtcs)
 
     def clear_dtcs(self) -> bool:
-        """Empty the stored DTC list, return the configured success flag."""
+        """Empty the stored DTC list, return the configured success flag.
+
+        Raises
+        ------
+        TimeoutError
+            On a flaky-mock roll (Phase 146).
+        """
+        self._roll_flaky("clear_dtcs")
         self._dtcs = []
         return self._clear_returns
 
@@ -230,7 +311,13 @@ class MockAdapter(ProtocolAdapter):
         ``pid * 10`` — arbitrary but reproducible across test runs —
         and returns ``None`` for anything outside that set. ``None``
         matches the ABC contract for "PID not supported".
+
+        Raises
+        ------
+        TimeoutError
+            On a flaky-mock roll (Phase 146).
         """
+        self._roll_flaky("read_pid")
         if self._pid_values is not None:
             return self._pid_values.get(pid)
         if pid in self._supported_modes:
@@ -246,7 +333,12 @@ class MockAdapter(ProtocolAdapter):
             When the adapter was constructed with
             ``vin_unsupported=True``. Used to simulate protocols that
             physically cannot carry VIN data (early J1850 VPW).
+        TimeoutError
+            On a flaky-mock roll (Phase 146). Rolled BEFORE the
+            ``vin_unsupported`` check so the flaky layer shows up even
+            on unsupported-VIN adapters.
         """
+        self._roll_flaky("read_vin")
         if self._vin_unsupported:
             raise UnsupportedCommandError("read_vin")
         return self._vin
