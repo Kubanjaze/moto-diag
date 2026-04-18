@@ -49,9 +49,15 @@ from motodiag.cli.theme import (
     get_console,
 )
 from motodiag.core.database import init_db
-from motodiag.hardware.connection import HardwareSession
-from motodiag.hardware.ecu_detect import NoECUDetectedError
+from motodiag.hardware.connection import (
+    HardwareSession,
+    RetryPolicy,
+)
+from motodiag.hardware.ecu_detect import AutoDetector, NoECUDetectedError
 from motodiag.hardware.protocols.exceptions import ProtocolError
+from motodiag.hardware.protocols.exceptions import (
+    UnsupportedCommandError,
+)
 from motodiag.hardware.scenarios import BUILTIN_NAMES
 from motodiag.hardware.sensors import (
     SENSOR_CATALOG,
@@ -209,8 +215,15 @@ def _run_scan(
     baud: Optional[int],
     timeout_s: float,
     mock: bool,
+    retry_policy: Optional[RetryPolicy] = None,
 ) -> int:
-    """Execute the scan flow. Returns the shell exit code."""
+    """Execute the scan flow. Returns the shell exit code.
+
+    The optional ``retry_policy`` (Phase 146) wraps the negotiated
+    adapter in a :class:`ResilientAdapter` so transient
+    connect/read failures retry with exponential backoff. When
+    ``None`` the Phase 140 code path runs unchanged.
+    """
     console = get_console()
     try:
         with HardwareSession(
@@ -219,6 +232,7 @@ def _run_scan(
             baud=baud,
             timeout_s=timeout_s,
             mock=mock,
+            retry_policy=retry_policy,
         ) as adapter:
             dtcs = adapter.read_dtcs()
             protocol_name = adapter.get_protocol_name()
@@ -309,8 +323,17 @@ def _run_clear(
     timeout_s: float,
     mock: bool,
     assume_yes: bool,
+    retry_policy: Optional[RetryPolicy] = None,
 ) -> int:
-    """Execute the clear flow. Returns the shell exit code."""
+    """Execute the clear flow. Returns the shell exit code.
+
+    The optional ``retry_policy`` (Phase 146) is explicitly default-off
+    for ``clear`` commands — duplicating a Mode 04 on a Harley is a
+    mechanic-surprise hazard. A mechanic who wants to retry transient
+    connect failures can pass ``--retry`` on the CLI; even then the
+    :class:`ResilientAdapter` wrapper does NOT retry ``clear_dtcs``
+    itself (destructive-op protection).
+    """
     console = get_console()
 
     console.print(
@@ -339,6 +362,7 @@ def _run_clear(
             baud=baud,
             timeout_s=timeout_s,
             mock=mock,
+            retry_policy=retry_policy,
         ) as adapter:
             cleared = adapter.clear_dtcs()
     except NoECUDetectedError as exc:
@@ -392,12 +416,18 @@ def _run_info(
     timeout_s: float,
     mock: bool,
     console=None,
+    retry_policy: Optional[RetryPolicy] = None,
 ) -> int:
     """Execute the info flow. Returns the shell exit code.
 
     Calls :meth:`HardwareSession.identify_ecu` while the session is
     open (so the adapter is still connected), then lets the ``with``
     block tear down the connection cleanly on exit.
+
+    The optional ``retry_policy`` (Phase 146) wraps the negotiated
+    adapter in a :class:`ResilientAdapter` so transient
+    connect/read failures retry with exponential backoff. When
+    ``None`` the Phase 140 code path runs unchanged.
     """
     if console is None:
         console = get_console()
@@ -408,6 +438,7 @@ def _run_info(
             baud=baud,
             timeout_s=timeout_s,
             mock=mock,
+            retry_policy=retry_policy,
         )
         with session:
             info = session.identify_ecu()
@@ -841,6 +872,98 @@ def _run_scenario(
     return 0
 
 
+# --- Phase 143: dashboard helpers --------------------------------------
+#
+# Module-scope helpers for the ``motodiag hardware dashboard`` subcommand.
+# Kept outside ``register_hardware`` so the Phase 143 test suite can
+# exercise them directly without spinning up Click. Additive only —
+# Phase 140-142 / 144-145 code above this line is untouched.
+
+
+def _require_textual() -> None:
+    """Raise a :class:`click.ClickException` with the install hint.
+
+    Mirrors :func:`motodiag.hardware.dashboard._require_textual` so the
+    CLI surfaces the missing-dep error before any other argument
+    validation runs — the mechanic sees the install command first.
+    """
+    from motodiag.hardware.dashboard import (
+        TEXTUAL_AVAILABLE,
+        _require_textual as _inner_require,
+    )
+
+    if not TEXTUAL_AVAILABLE:
+        _inner_require()
+
+
+def _validate_dashboard_args(
+    port: Optional[str],
+    replay_id: Optional[str],
+    speed: float,
+    bike: Optional[str],
+    make: Optional[str],
+    mock: bool,
+) -> None:
+    """Enforce the ``hardware dashboard`` flag-compatibility rules.
+
+    Rules:
+
+    - ``--port`` and ``--replay`` are mutually exclusive; at least one
+      required.
+    - ``--speed`` is replay-only and must live in ``(0.1, 100.0]``.
+    - ``--bike`` / ``--make`` / ``--mock`` are live-mode only — combining
+      any of them with ``--replay`` is a user error.
+    - Default ``--speed=1.0`` does not trigger the "replay-only" check
+      (it is the documented default) — the check only fires when the
+      user explicitly sets a non-default speed in live mode.
+    """
+    if port and replay_id:
+        raise click.UsageError(
+            "--port and --replay are mutually exclusive; choose one."
+        )
+    if not port and not replay_id:
+        raise click.UsageError(
+            "--port or --replay is required — live mode needs a port, "
+            "replay mode needs a recording id."
+        )
+    if replay_id:
+        # Replay mode: live-only flags are errors.
+        if bike:
+            raise click.UsageError(
+                "--bike is live-mode only; cannot combine with --replay."
+            )
+        if make:
+            raise click.UsageError(
+                "--make is live-mode only; cannot combine with --replay."
+            )
+        if mock:
+            raise click.UsageError(
+                "--mock is live-mode only; cannot combine with --replay."
+            )
+        # Validate speed inside (0.1, 100.0].
+        if speed <= 0.1 or speed > 100.0:
+            raise click.UsageError(
+                f"--speed must be in (0.1, 100.0] (got {speed!r})."
+            )
+        return
+    # Live mode.
+    if speed != 1.0:
+        raise click.UsageError(
+            "--speed is only valid with --replay (replay-mode playback "
+            "speed multiplier)."
+        )
+
+
+def _parse_dashboard_pids(raw: str) -> List[int]:
+    """Parse ``--pids`` for the dashboard subcommand.
+
+    Thin wrapper around :func:`parse_pid_list` — kept separate so the
+    dashboard-specific tests can mock this without affecting the Phase
+    141 stream parser.
+    """
+    return parse_pid_list(raw)
+
+
 # --- Click wiring ------------------------------------------------------
 
 
@@ -878,10 +1001,16 @@ def register_hardware(cli_group: click.Group) -> None:
                   help="Run against a Phase 144 scenario (built-in name "
                        "or path to a YAML file). Mutually exclusive "
                        "with --mock.")
+    @click.option("--retry/--no-retry", "retry", default=True,
+                  show_default=True,
+                  help="Retry transient connect/read failures with "
+                       "exponential backoff (Phase 146). Defaults to "
+                       "on for scan (safe read-only operation). "
+                       "Mutually exclusive with --simulator.")
     def scan_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, mock: bool,
-        simulator: Optional[str],
+        simulator: Optional[str], retry: bool,
     ) -> None:
         """Read stored DTCs from the ECU and print an enriched table."""
         console = get_console()
@@ -889,6 +1018,16 @@ def register_hardware(cli_group: click.Group) -> None:
         if mock and simulator:
             raise click.UsageError(
                 "--mock and --simulator are mutually exclusive; choose one."
+            )
+        if simulator and retry:
+            # The simulator path replays a scripted scenario — it has
+            # no transient failure modes to retry against. Accepting
+            # both flags and silently ignoring --retry would hide a
+            # user misunderstanding; error loudly instead.
+            raise click.UsageError(
+                "--retry and --simulator are incompatible — the "
+                "simulator never transiently fails. Pass --no-retry "
+                "explicitly to use --simulator."
             )
         if bike and make:
             raise click.ClickException(
@@ -960,7 +1099,11 @@ def register_hardware(cli_group: click.Group) -> None:
                 footer_parts.append(f"VIN: [bold]{vin}[/bold]")
             console.print("\n" + "   ".join(footer_parts))
             return
-        code = _run_scan(port, make_hint, baud, timeout_s, mock)
+        retry_policy = RetryPolicy() if retry else None
+        code = _run_scan(
+            port, make_hint, baud, timeout_s, mock,
+            retry_policy=retry_policy,
+        )
         if code != 0:
             raise click.exceptions.Exit(code)
 
@@ -987,10 +1130,17 @@ def register_hardware(cli_group: click.Group) -> None:
                   help="Run against a Phase 144 scenario (built-in name "
                        "or path to a YAML file). Mutually exclusive "
                        "with --mock.")
+    @click.option("--retry/--no-retry", "retry", default=False,
+                  show_default=True,
+                  help="Retry transient connect failures with "
+                       "exponential backoff (Phase 146). Defaults to "
+                       "OFF for clear — destructive ops don't duplicate "
+                       "well. The ResilientAdapter wrapper never "
+                       "retries clear_dtcs itself even with --retry.")
     def clear_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, assume_yes: bool,
-        mock: bool, simulator: Optional[str],
+        mock: bool, simulator: Optional[str], retry: bool,
     ) -> None:
         """Clear stored DTCs from the ECU (Mode 04)."""
         console = get_console()
@@ -998,6 +1148,11 @@ def register_hardware(cli_group: click.Group) -> None:
         if mock and simulator:
             raise click.UsageError(
                 "--mock and --simulator are mutually exclusive; choose one."
+            )
+        if simulator and retry:
+            raise click.UsageError(
+                "--retry and --simulator are incompatible. Pass "
+                "--no-retry with --simulator."
             )
         if bike and make:
             raise click.ClickException(
@@ -1064,8 +1219,10 @@ def register_hardware(cli_group: click.Group) -> None:
                 )
             )
             raise click.exceptions.Exit(1)
+        retry_policy = RetryPolicy() if retry else None
         code = _run_clear(
             port, make_hint, baud, timeout_s, mock, assume_yes,
+            retry_policy=retry_policy,
         )
         if code != 0:
             raise click.exceptions.Exit(code)
@@ -1091,10 +1248,16 @@ def register_hardware(cli_group: click.Group) -> None:
                   help="Run against a Phase 144 scenario (built-in name "
                        "or path to a YAML file). Mutually exclusive "
                        "with --mock.")
+    @click.option("--retry/--no-retry", "retry", default=True,
+                  show_default=True,
+                  help="Retry transient connect/read failures with "
+                       "exponential backoff (Phase 146). Defaults to "
+                       "on for info (safe read-only operation). "
+                       "Mutually exclusive with --simulator.")
     def info_cmd(
         port: str, bike: Optional[str], make: Optional[str],
         baud: Optional[int], timeout_s: float, mock: bool,
-        simulator: Optional[str],
+        simulator: Optional[str], retry: bool,
     ) -> None:
         """Identify the connected ECU — protocol, VIN, part #, sw version."""
         console = get_console()
@@ -1102,6 +1265,11 @@ def register_hardware(cli_group: click.Group) -> None:
         if mock and simulator:
             raise click.UsageError(
                 "--mock and --simulator are mutually exclusive; choose one."
+            )
+        if simulator and retry:
+            raise click.UsageError(
+                "--retry and --simulator are incompatible. Pass "
+                "--no-retry with --simulator."
             )
         if bike and make:
             raise click.ClickException(
@@ -1146,8 +1314,10 @@ def register_hardware(cli_group: click.Group) -> None:
                 )
             )
             return
+        retry_policy = RetryPolicy() if retry else None
         code = _run_info(
             port, make_hint, baud, timeout_s, mock, console,
+            retry_policy=retry_policy,
         )
         if code != 0:
             raise click.exceptions.Exit(code)
@@ -1419,6 +1589,123 @@ def register_hardware(cli_group: click.Group) -> None:
             )
         )
 
+    # --- dashboard (Phase 143) ----------------------------------------
+    @hardware_group.command("dashboard")
+    @click.option("--port", "port", default=None,
+                  help="Serial port (e.g. COM3, /dev/ttyUSB0). "
+                       "Mutually exclusive with --replay.")
+    @click.option("--bike", default=None,
+                  help="Bike slug from the garage. Live-mode only.")
+    @click.option("--make", "make", default=None,
+                  help="Manufacturer hint. Live-mode only.")
+    @click.option("--mock", is_flag=True, default=False,
+                  help="Use the in-memory MockAdapter. Live-mode only.")
+    @click.option("--replay", "replay_id", default=None,
+                  help="Replay a recorded session by ID. Mutually "
+                       "exclusive with --port.")
+    @click.option("--speed", "speed", type=float, default=1.0,
+                  show_default=True,
+                  help="Replay playback speed multiplier. Valid range "
+                       "(0.1, 100.0]. Requires --replay.")
+    @click.option("--pids", "pids_raw", default="0x0C,0x05,0x11,0x42",
+                  show_default=True,
+                  help="Comma-separated PID list (hex or decimal).")
+    @click.option("--hz", type=float, default=5.0, show_default=True,
+                  help="Poll rate in ticks per second. Live mode only. "
+                       "Must be in [0.5, 20.0].")
+    @click.option("--baud", type=int, default=None,
+                  help="Override the per-protocol baud rate.")
+    @click.option("--timeout", "timeout_s", type=float, default=2.0,
+                  show_default=True,
+                  help="Per-adapter connect timeout (live mode).")
+    def dashboard_cmd(
+        port: Optional[str],
+        bike: Optional[str],
+        make: Optional[str],
+        mock: bool,
+        replay_id: Optional[str],
+        speed: float,
+        pids_raw: str,
+        hz: float,
+        baud: Optional[int],
+        timeout_s: float,
+    ) -> None:
+        """Launch the real-time Textual TUI dashboard.
+
+        Requires the ``motodiag[dashboard]`` optional extra. Either
+        provide ``--port`` (live) or ``--replay`` (historical playback).
+        """
+        # Import gate first so the user sees the install hint before
+        # any other validation error.
+        _require_textual()
+        _validate_dashboard_args(port, replay_id, speed, bike, make, mock)
+        # --hz bounds (live mode only; replay ignores it).
+        if not replay_id and (hz < 0.5 or hz > 20.0):
+            raise click.UsageError(
+                f"--hz must be in [0.5, 20.0] (got {hz!r})."
+            )
+        pids = _parse_dashboard_pids(pids_raw)
+        init_db()
+        # --- replay mode ---------------------------------------------
+        if replay_id:
+            from motodiag.hardware.dashboard import (
+                DashboardApp,
+                ReplayDashboardSource,
+            )
+
+            try:
+                rec_id_int = int(replay_id)
+            except (TypeError, ValueError):
+                raise click.UsageError(
+                    f"--replay must be an integer recording id (got "
+                    f"{replay_id!r})."
+                ) from None
+            source = ReplayDashboardSource(rec_id_int, speed=speed)
+            app = DashboardApp(
+                source=source,
+                pids=pids,
+                recording_manager=None,
+            )
+            app.run()
+            return
+        # --- live mode ------------------------------------------------
+        console = get_console()
+        if bike and make:
+            raise click.ClickException(
+                "--bike and --make are mutually exclusive; choose one."
+            )
+        make_hint, _veh = _resolve_make_hint(bike, make)
+        if bike and _veh is None:
+            _bike_not_found(console, bike)
+            raise click.exceptions.Exit(1)
+        from motodiag.hardware.dashboard import (
+            DashboardApp,
+            LiveDashboardSource,
+        )
+        from motodiag.hardware.recorder import RecordingManager
+
+        # port must be non-None here (validator guarantees it).
+        with HardwareSession(
+            port=port or "",
+            make_hint=make_hint,
+            baud=baud,
+            timeout_s=timeout_s,
+            mock=mock,
+        ) as adapter:
+            source = LiveDashboardSource(adapter, pids, hz)
+            rec_mgr = RecordingManager()
+            vehicle_id_fk = None
+            if _veh is not None:
+                vehicle_id_fk = _veh.get("id")
+            app = DashboardApp(
+                source=source,
+                pids=pids,
+                recording_manager=rec_mgr,
+                vehicle_id=vehicle_id_fk,
+                make_hint=make_hint,
+            )
+            app.run()
+
     # --- log (Phase 142) ----------------------------------------------
     # Attach the `log` subgroup last so Phase 140/141/144 registration
     # remains byte-for-byte identical above this line.
@@ -1428,6 +1715,11 @@ def register_hardware(cli_group: click.Group) -> None:
     # Adapter compatibility knowledge base. Additive — Phase 140/141/
     # 142/144 registration remains unchanged.
     register_compat(hardware_group)
+
+    # --- diagnose (Phase 146) -----------------------------------------
+    # 5-step interactive connection troubleshooter. Additive — no
+    # existing command body changes.
+    register_diagnose(hardware_group)
 
 
 # --- Phase 142: log subgroup ------------------------------------------
@@ -2720,4 +3012,801 @@ def register_compat(hardware_group: click.Group) -> None:
         )
 
 
-__all__ = ["register_hardware", "register_log", "register_compat"]
+# ----------------------------------------------------------------------
+# Phase 146: diagnose subcommand (5-step interactive troubleshooter)
+# ----------------------------------------------------------------------
+#
+# ``motodiag hardware diagnose --port COM3 [--bike SLUG] [--make MAKE]
+# [--mock] [--verbose]`` walks the mechanic through five numbered checks
+# and emits a summary panel at the end. Each step renders a Rich panel
+# with a green OK / yellow WARN / red FAIL icon, a plain-English
+# observation, and (on WARN/FAIL) specific mechanic-facing remediation.
+#
+# Design rules that flow through every step:
+#
+# - No raw Python tracebacks ever reach the mechanic. Every caught
+#   exception becomes a shop-floor-vocabulary sentence.
+# - WARN does NOT short-circuit the run — the mechanic still gets the
+#   remaining diagnostic signal. FAIL short-circuits ONLY when a later
+#   step physically cannot succeed (e.g. step 1 port-open failure means
+#   steps 2-5 cannot run; step 3 protocol-negotiate failure means
+#   steps 4-5 cannot read).
+# - ``--mock`` auto-passes the transport-level steps (1, 2) and uses
+#   :class:`MockAdapter` for step 3. Steps 4 and 5 run against the mock
+#   just like the real path so green-screen demos read the same way.
+
+
+def _render_diagnose_step_panel(
+    console,
+    step_num: int,
+    step_title: str,
+    status: str,  # "OK", "WARN", or "FAIL"
+    observation: str,
+    remediation: Optional[str] = None,
+) -> None:
+    """Render a Rich panel for one diagnose step.
+
+    Status colors:
+
+    - ``"OK"`` — green border, :data:`ICON_OK` prefix.
+    - ``"WARN"`` — yellow border, :data:`ICON_WARN` prefix.
+    - ``"FAIL"`` — red border, :data:`ICON_FAIL` prefix.
+
+    The observation line is always rendered; the remediation block (if
+    supplied) follows an empty line for visual breathing room. The
+    panel title includes the step number so the mechanic can jump to
+    the right spot in the summary's "(step 3) FAIL" reference.
+    """
+    if status == "OK":
+        icon = ICON_OK
+        border = "green"
+        style = "green"
+    elif status == "WARN":
+        icon = ICON_WARN
+        border = "yellow"
+        style = "yellow"
+    else:  # FAIL
+        icon = ICON_FAIL
+        border = "red"
+        style = "red"
+    body_lines: list[str] = [f"[{style}]{icon} {observation}[/{style}]"]
+    if remediation:
+        body_lines.append("")
+        body_lines.append(remediation)
+    console.print(
+        Panel(
+            "\n".join(body_lines),
+            title=f"Step {step_num}: {step_title}",
+            border_style=border,
+        )
+    )
+
+
+def _diagnose_step1_port(
+    console,
+    port: str,
+    mock: bool,
+) -> Tuple[str, Optional[str]]:
+    """Run step 1 — verify the serial port can be opened.
+
+    Returns ``(status, failure_message)``. ``status`` is ``"OK"``,
+    ``"FAIL"``. On ``"OK"`` the caller proceeds; on ``"FAIL"`` the
+    caller short-circuits the remaining steps because steps 2-5
+    physically require an open port.
+
+    ``--mock`` auto-passes — the mock has no real transport.
+    """
+    if mock:
+        _render_diagnose_step_panel(
+            console, 1, "Serial port open",
+            "OK",
+            f"[MOCK] skipping real port open on {port}",
+        )
+        return "OK", None
+    try:
+        import serial  # type: ignore
+    except ImportError:
+        observation = (
+            "pyserial not importable — cannot check the serial port."
+        )
+        remediation = (
+            "[dim]Install pyserial: [bold]pip install pyserial[/bold]."
+            "[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 1, "Serial port open",
+            "FAIL", observation, remediation,
+        )
+        return "FAIL", "pyserial missing"
+    try:
+        ser = serial.Serial(port)
+        ser.close()
+    except Exception as exc:  # noqa: BLE001
+        # Serial exceptions subclass OSError on many platforms and
+        # SerialException on Windows. Catch broadly — we want to
+        # produce mechanic-facing prose for any open failure.
+        observation = f"Could not open [bold]{port}[/bold]: {exc}"
+        remediation = (
+            "[dim]Remediation:[/dim]\n"
+            "  • [bold]Windows:[/bold] run "
+            "[bold]python -m serial.tools.list_ports[/bold] or check "
+            "Device Manager → Ports (COM & LPT) for the right port "
+            "name.\n"
+            "  • [bold]Linux/macOS:[/bold] [bold]ls /dev/tty*[/bold] "
+            "to find the adapter; add your user to the [bold]dialout"
+            "[/bold] group "
+            "([bold]sudo usermod -aG dialout $USER[/bold], then log out"
+            " and back in).\n"
+            "  • [bold]Bluetooth adapter:[/bold] pair and trust it in "
+            "the OS Bluetooth settings first — paired devices expose "
+            "a virtual COM / rfcomm port.\n"
+            "  • [bold]USB-serial driver missing:[/bold] common "
+            "chipsets are CH340, FTDI, CP210x — install the "
+            "manufacturer driver if Windows doesn't recognize the "
+            "adapter."
+        )
+        _render_diagnose_step_panel(
+            console, 1, "Serial port open",
+            "FAIL", observation, remediation,
+        )
+        return "FAIL", str(exc)
+    _render_diagnose_step_panel(
+        console, 1, "Serial port open",
+        "OK",
+        f"Port [bold]{port}[/bold] opened successfully.",
+    )
+    return "OK", None
+
+
+def _diagnose_step2_atz(
+    console,
+    port: str,
+    mock: bool,
+) -> Tuple[str, Optional[str]]:
+    """Run step 2 — ATZ handshake probe.
+
+    Writes ``b"ATZ\\r"`` to the port, reads up to 50 bytes with a 2s
+    timeout, and checks whether the reply contains any printable
+    characters. A printable reply indicates an ELM327-compatible
+    adapter; silence does NOT indicate failure — many non-ELM adapters
+    legitimately don't speak AT. Returns ``"OK"`` on a printable reply,
+    ``"WARN"`` on silence (not ``"FAIL"``).
+
+    ``--mock`` auto-passes.
+    """
+    if mock:
+        _render_diagnose_step_panel(
+            console, 2, "Adapter responds to ATZ",
+            "OK",
+            "[MOCK] skipping real AT handshake — mock adapter is "
+            "always ready.",
+        )
+        return "OK", None
+    try:
+        import serial  # type: ignore
+    except ImportError:
+        # Already handled in step 1 — this branch is defensive only.
+        return "WARN", "pyserial missing"
+    try:
+        ser = serial.Serial(port, timeout=2.0)
+        try:
+            ser.write(b"ATZ\r")
+            reply = ser.read(50)
+        finally:
+            ser.close()
+    except Exception as exc:  # noqa: BLE001
+        observation = (
+            f"Could not send ATZ to [bold]{port}[/bold]: {exc}"
+        )
+        remediation = (
+            "[dim]This usually means the port opened but the adapter "
+            "did not accept the write. Power-cycle the adapter and "
+            "retry.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 2, "Adapter responds to ATZ",
+            "WARN", observation, remediation,
+        )
+        return "WARN", str(exc)
+    printable_count = sum(1 for b in bytes(reply) if 0x20 <= b < 0x7F)
+    if printable_count > 0:
+        _render_diagnose_step_panel(
+            console, 2, "Adapter responds to ATZ",
+            "OK",
+            "Adapter responded to ATZ — appears ELM327-compatible.",
+        )
+        return "OK", None
+    observation = (
+        "No printable reply to ATZ within 2 seconds."
+    )
+    remediation = (
+        "[dim]Not all adapters speak AT (native CAN dongles don't). "
+        "But if yours should:[/dim]\n"
+        "  • [bold]Adapter power:[/bold] OBD-II pin 16 carries +12V "
+        "directly from the battery — verify with a multimeter. No "
+        "power means a blown OBD fuse or a bike that cuts OBD power "
+        "when the ignition is off.\n"
+        "  • [bold]Power-cycle:[/bold] unplug the adapter for 10 "
+        "seconds, then plug it back in. Many ELM327 clones latch up "
+        "on a bad first handshake.\n"
+        "  • [bold]Bluetooth:[/bold] unpair and re-pair the adapter "
+        "in OS settings — stale pairings lose the serial service.\n"
+        "  • [bold]Ignition:[/bold] some bikes power the OBD port "
+        "only when the ignition is ON. Turn the key."
+    )
+    _render_diagnose_step_panel(
+        console, 2, "Adapter responds to ATZ",
+        "WARN", observation, remediation,
+    )
+    return "WARN", "silence"
+
+
+def _diagnose_step3_protocol(
+    console,
+    port: str,
+    make_hint: Optional[str],
+    mock: bool,
+    verbose: bool,
+    bike: Optional[str],
+) -> Tuple[str, Optional[object], Optional[str]]:
+    """Run step 3 — protocol negotiation.
+
+    On ``--mock`` the mock adapter is constructed directly and
+    returned. Otherwise a real :class:`AutoDetector` is constructed
+    with a live ``on_attempt`` callback that updates a Rich table of
+    protocol attempts; the full table renders at the end of the step
+    so CliRunner output stays in stable order.
+
+    Returns ``(status, adapter_or_None, failure_message)``.
+    On ``"OK"`` the live adapter is returned so steps 4 and 5 can
+    read from it. On ``"FAIL"`` the caller short-circuits — steps 4
+    and 5 can't run without a live adapter.
+    """
+    if mock:
+        adapter = MockAdapter()
+        try:
+            adapter.connect(port, 38400)
+        except Exception as exc:  # noqa: BLE001
+            _render_diagnose_step_panel(
+                console, 3, "Negotiate protocol",
+                "FAIL",
+                f"[MOCK] adapter refused connect: {exc}",
+                "[dim]This is an unusual mock configuration — check "
+                "test fixtures.[/dim]",
+            )
+            return "FAIL", None, str(exc)
+        _render_diagnose_step_panel(
+            console, 3, "Negotiate protocol",
+            "OK",
+            f"[MOCK] negotiated protocol: "
+            f"[bold]{adapter.get_protocol_name()}[/bold].",
+        )
+        return "OK", adapter, None
+
+    # Real path — AutoDetector with live callback.
+    attempts_log: list[tuple[str, Optional[BaseException]]] = []
+
+    def _on_attempt(name: str, err: Optional[BaseException]) -> None:
+        attempts_log.append((name, err))
+
+    detector = AutoDetector(
+        port=port,
+        make_hint=make_hint,
+        timeout_s=2.0,
+        verbose=verbose,
+        on_attempt=_on_attempt,
+    )
+    try:
+        adapter = detector.detect()
+    except NoECUDetectedError as exc:
+        # Render the attempts table for mechanic-readable failure
+        # explanation.
+        table = Table(
+            title="Protocol attempts",
+            header_style="bold cyan",
+        )
+        table.add_column("Protocol", style="bold")
+        table.add_column("Result")
+        table.add_column("Detail", overflow="fold")
+        for name, err in attempts_log:
+            if err is None:
+                table.add_row(name, "[green]OK[/green]", "")
+            else:
+                table.add_row(
+                    name,
+                    "[red]FAIL[/red]",
+                    f"{type(err).__name__}: {err}",
+                )
+        console.print(table)
+
+        # Mechanic-facing remediation. If the user passed --bike and
+        # Phase 145 compat_repo is importable, show ranked compat hits
+        # as the primary remediation. Otherwise fall back to generic
+        # protocol-era guidance.
+        remediation_lines: list[str] = []
+        try:
+            import importlib  # local import — avoid top-level cost
+            if bike and importlib.util.find_spec(
+                "motodiag.hardware.compat_repo"
+            ) is not None:
+                from motodiag.hardware import compat_repo as _cr
+                from motodiag.cli.diagnose import _resolve_bike_slug
+                vehicle = _resolve_bike_slug(bike)
+                if vehicle is not None:
+                    resolved_make = (
+                        (vehicle.get("make") or "").strip().lower()
+                        or None
+                    )
+                    resolved_model = (
+                        (vehicle.get("model") or "").strip() or None
+                    )
+                    resolved_year = vehicle.get("year")
+                    if resolved_make and resolved_model:
+                        compat_hits = _cr.list_compatible_adapters(
+                            make=resolved_make,
+                            model=resolved_model,
+                            year=resolved_year,
+                            min_status="read-only",
+                        )
+                        top = compat_hits[:3]
+                        if top:
+                            remediation_lines.append(
+                                "[dim]Ranked compat hits for this bike "
+                                "(run [bold]motodiag hardware compat "
+                                "recommend --bike {}[/bold] for the "
+                                "full list):[/dim]".format(bike)
+                            )
+                            for row in top:
+                                remediation_lines.append(
+                                    "  • [bold]{} {}[/bold] "
+                                    "([cyan]{}[/cyan])".format(
+                                        row.get("brand") or "-",
+                                        row.get("adapter_model") or "-",
+                                        row.get("status") or "-",
+                                    )
+                                )
+        except Exception:  # noqa: BLE001
+            # Compat lookup is best-effort — never let a DB miss kill
+            # the diagnose flow.
+            pass
+
+        if not remediation_lines:
+            remediation_lines.append(
+                "[dim]Generic guidance by manufacturer era:[/dim]\n"
+                "  • [bold]Harley:[/bold] J1850 VPW pre-2011, CAN "
+                "11-bit 500k 2011+. K-line is NOT used.\n"
+                "  • [bold]Japanese (Honda/Yamaha/Kawasaki/Suzuki):"
+                "[/bold] K-line (ISO 14230 KWP2000) pre-2010, CAN "
+                "2010+. J1850 is NOT used.\n"
+                "  • [bold]European (Ducati/BMW/KTM/Triumph):[/bold] "
+                "CAN-first; older models may use K-line.\n"
+                "  • [bold]Verify basics:[/bold] bike ignition ON, "
+                "adapter LED lit, OBD port cable fully seated."
+            )
+
+        observation = (
+            f"No ECU detected on [bold]{port}[/bold] after "
+            f"{len(attempts_log)} protocol attempts."
+        )
+        _render_diagnose_step_panel(
+            console, 3, "Negotiate protocol",
+            "FAIL", observation, "\n".join(remediation_lines),
+        )
+        return "FAIL", None, str(exc)
+
+    # Render the attempts table on success too — mechanic sees which
+    # protocol won.
+    if attempts_log:
+        table = Table(
+            title="Protocol attempts",
+            header_style="bold cyan",
+        )
+        table.add_column("Protocol", style="bold")
+        table.add_column("Result")
+        table.add_column("Detail", overflow="fold")
+        for name, err in attempts_log:
+            if err is None:
+                table.add_row(name, "[green]OK[/green]", "")
+            else:
+                table.add_row(
+                    name,
+                    "[red]FAIL[/red]",
+                    f"{type(err).__name__}: {err}",
+                )
+        console.print(table)
+
+    _render_diagnose_step_panel(
+        console, 3, "Negotiate protocol",
+        "OK",
+        f"Negotiated protocol: "
+        f"[bold]{adapter.get_protocol_name()}[/bold].",
+    )
+    return "OK", adapter, None
+
+
+def _diagnose_step4_vin(
+    console,
+    adapter,
+) -> Tuple[str, Optional[str]]:
+    """Run step 4 — VIN read (Mode 09 PID 02).
+
+    Returns ``(status, detail)``. ``status`` is ``"OK"`` on a 17-char
+    VIN, ``"WARN"`` on ``None`` (many pre-2008 bikes don't implement
+    Mode 09) or :class:`UnsupportedCommandError`. Never ``"FAIL"`` —
+    absence of VIN does not block step 5.
+    """
+    try:
+        vin = adapter.read_vin()
+    except UnsupportedCommandError:
+        observation = "Adapter reports VIN read is not supported."
+        remediation = (
+            "[dim]Many pre-2008 bikes predate Mode 09 PID 02. "
+            "Physical fallback: check the frame neck sticker or the "
+            "engine case stamping. This is not a real failure — most "
+            "diagnostic workflows don't need the VIN from the ECU."
+            "[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 4, "Read VIN",
+            "WARN", observation, remediation,
+        )
+        return "WARN", "unsupported"
+    except Exception as exc:  # noqa: BLE001
+        observation = f"VIN read raised an error: {exc}"
+        remediation = (
+            "[dim]Continuing — the DTC scan in step 5 may still work. "
+            "If all reads fail, return to step 3 and verify the "
+            "protocol negotiation.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 4, "Read VIN",
+            "WARN", observation, remediation,
+        )
+        return "WARN", str(exc)
+    if vin is None:
+        observation = (
+            "ECU did not respond to Mode 09 PID 02 (VIN)."
+        )
+        remediation = (
+            "[dim]Many pre-2008 bikes don't implement VIN. Use the "
+            "frame neck sticker or engine case stamping instead. "
+            "This is not a real failure — most diagnostic workflows "
+            "don't need the VIN from the ECU.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 4, "Read VIN",
+            "WARN", observation, remediation,
+        )
+        return "WARN", "not-responded"
+    if len(vin) != 17:
+        observation = (
+            f"VIN response length {len(vin)} is not the expected 17 "
+            f"characters: [bold]{vin}[/bold]"
+        )
+        remediation = (
+            "[dim]The ECU returned a short or garbled VIN — the adapter "
+            "may be reassembling a multi-frame response incorrectly. "
+            "Try a different adapter if this recurs.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 4, "Read VIN",
+            "WARN", observation, remediation,
+        )
+        return "WARN", "short-vin"
+    _render_diagnose_step_panel(
+        console, 4, "Read VIN",
+        "OK",
+        f"Read 17-char VIN: [bold]{vin}[/bold]",
+    )
+    return "OK", vin
+
+
+def _diagnose_step5_dtcs(
+    console,
+    adapter,
+    make_hint: Optional[str],
+) -> Tuple[str, Optional[str]]:
+    """Run step 5 — full DTC scan (Mode 03).
+
+    Returns ``(status, detail)``. ``status`` is ``"OK"`` on a
+    successful list (empty list also counts as OK — clean bike), or
+    ``"FAIL"`` when the read raises :class:`ProtocolError`. Renders
+    the inline enrichment table for context.
+    """
+    try:
+        dtcs = adapter.read_dtcs()
+    except ProtocolError as exc:
+        observation = f"Mode 03 DTC scan failed: {exc}"
+        remediation = (
+            "[dim]Typical causes:\n"
+            "  • [bold]ECU security lockout:[/bold] turn the ignition "
+            "OFF for 30 seconds, then ON — many ECUs auto-clear "
+            "lockout after a power cycle.\n"
+            "  • [bold]Enhanced DTC modes:[/bold] some makes use "
+            "Mode 13 (pending) or Mode 17 (permanent) instead of "
+            "Mode 03. A generic OBD-II adapter may not speak those "
+            "modes — a manufacturer-specific dongle might.\n"
+            "  • [bold]Ignition state:[/bold] Mode 03 requires "
+            "ignition ON (engine can be OFF). Verify the key is at "
+            "RUN, not OFF or ACC.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 5, "DTC scan",
+            "FAIL", observation, remediation,
+        )
+        return "FAIL", str(exc)
+    except Exception as exc:  # noqa: BLE001
+        observation = f"DTC scan raised an unexpected error: {exc}"
+        remediation = (
+            "[dim]This is not a normal protocol failure — may "
+            "indicate an adapter driver bug. Power-cycle the adapter "
+            "and retry.[/dim]"
+        )
+        _render_diagnose_step_panel(
+            console, 5, "DTC scan",
+            "FAIL", observation, remediation,
+        )
+        return "FAIL", str(exc)
+    if not dtcs:
+        _render_diagnose_step_panel(
+            console, 5, "DTC scan",
+            "OK",
+            "No DTCs stored — ECU reports clean fault memory.",
+        )
+        return "OK", "0 codes"
+    # Enrich codes via resolve_dtc_info.
+    table = Table(
+        title=f"DTCs stored ({len(dtcs)})",
+        header_style="bold cyan",
+    )
+    table.add_column("Code", style="bold")
+    table.add_column("Description", overflow="fold")
+    table.add_column("Category")
+    for code in dtcs:
+        info = resolve_dtc_info(code, make_hint=make_hint)
+        table.add_row(
+            info["code"],
+            info.get("description") or "-",
+            info.get("category") or "-",
+        )
+    console.print(table)
+    _render_diagnose_step_panel(
+        console, 5, "DTC scan",
+        "OK",
+        f"Read {len(dtcs)} stored DTC{'s' if len(dtcs) != 1 else ''}.",
+    )
+    return "OK", f"{len(dtcs)} codes"
+
+
+def _run_diagnose(
+    port: str,
+    make_hint: Optional[str],
+    bike: Optional[str],
+    mock: bool,
+    verbose: bool,
+) -> int:
+    """Execute the 5-step diagnose flow. Returns the shell exit code.
+
+    Returns 0 when all 5 steps end ``"OK"`` or ``"WARN"``; returns 1
+    when any step ends ``"FAIL"``. WARN alone is not a failure — the
+    mechanic may proceed to the fault that matters.
+    """
+    console = get_console()
+    badge = "[bold yellow][MOCK][/bold yellow] " if mock else ""
+    console.print(
+        f"\n{badge}[bold cyan]Running 5-step connection "
+        f"diagnose on {port}...[/bold cyan]\n"
+    )
+
+    results: list[tuple[int, str, str, Optional[str]]] = []
+
+    # Step 1 — port open.
+    s1_status, s1_detail = _diagnose_step1_port(console, port, mock)
+    results.append((1, "Serial port open", s1_status, s1_detail))
+    if s1_status == "FAIL":
+        _render_diagnose_summary(console, results)
+        return 1
+
+    # Step 2 — ATZ probe.
+    s2_status, s2_detail = _diagnose_step2_atz(console, port, mock)
+    results.append((2, "Adapter responds to ATZ", s2_status, s2_detail))
+
+    # Step 3 — protocol negotiate.
+    s3_status, adapter, s3_detail = _diagnose_step3_protocol(
+        console, port, make_hint, mock, verbose, bike,
+    )
+    results.append((3, "Negotiate protocol", s3_status, s3_detail))
+    if s3_status == "FAIL" or adapter is None:
+        _render_diagnose_summary(console, results)
+        return 1
+
+    # Step 4 — VIN read.
+    try:
+        s4_status, s4_detail = _diagnose_step4_vin(console, adapter)
+    finally:
+        pass
+    results.append((4, "Read VIN", s4_status, s4_detail))
+
+    # Step 5 — DTC scan.
+    try:
+        s5_status, s5_detail = _diagnose_step5_dtcs(
+            console, adapter, make_hint,
+        )
+    finally:
+        # Tear down the adapter now that we're done. Never let a
+        # disconnect error mask the already-reported step status.
+        try:
+            adapter.disconnect()
+        except Exception:  # noqa: BLE001
+            pass
+    results.append((5, "DTC scan", s5_status, s5_detail))
+
+    _render_diagnose_summary(console, results)
+
+    # Exit code policy: any FAIL → 1. WARN alone → 0.
+    if any(r[2] == "FAIL" for r in results):
+        return 1
+    return 0
+
+
+def _render_diagnose_summary(
+    console,
+    results: list[tuple[int, str, str, Optional[str]]],
+) -> None:
+    """Render the summary panel after all 5 steps ran (or short-circuited).
+
+    Displays "N/5 checks passed" (OK only), lists WARN/FAIL steps with
+    their numbers, and offers a next-step hint keyed to the first
+    failure tier found.
+    """
+    ok_count = sum(1 for r in results if r[2] == "OK")
+    total = len(results)
+    issues: list[str] = []
+    for step_num, title, status, detail in results:
+        if status == "WARN":
+            issues.append(
+                f"[yellow]({step_num}) WARN[/yellow] — {title}"
+                + (f": {detail}" if detail else "")
+            )
+        elif status == "FAIL":
+            issues.append(
+                f"[red]({step_num}) FAIL[/red] — {title}"
+                + (f": {detail}" if detail else "")
+            )
+
+    header = f"[bold]{ok_count}/{total} checks passed.[/bold]"
+    body_lines: list[str] = [header]
+    if issues:
+        body_lines.append("")
+        body_lines.append("[bold]Issues:[/bold]")
+        body_lines.extend(f"  • {line}" for line in issues)
+
+    # Next-step hint — keyed off the highest-severity failure.
+    hint: Optional[str] = None
+    fails = [r for r in results if r[2] == "FAIL"]
+    warns = [r for r in results if r[2] == "WARN"]
+    if fails:
+        first_fail_step = fails[0][0]
+        if first_fail_step == 1:
+            hint = (
+                "[dim]Next: fix the port name / driver / OS "
+                "permissions before retrying.[/dim]"
+            )
+        elif first_fail_step == 3:
+            hint = (
+                "[dim]Next: run [bold]motodiag hardware compat "
+                "recommend --bike SLUG[/bold] for adapters known to "
+                "work with this bike.[/dim]"
+            )
+        elif first_fail_step == 5:
+            hint = (
+                "[dim]Next: verify ignition is ON (engine can be "
+                "OFF) and retry; if the failure persists the bike "
+                "may use enhanced Mode 13/17 DTCs.[/dim]"
+            )
+        else:
+            hint = (
+                "[dim]Next: review the failed step's remediation "
+                "panel above.[/dim]"
+            )
+    elif warns:
+        hint = (
+            "[dim]Hardware is reachable but some optional capabilities "
+            "are missing. Proceed with diagnosis — the WARN items "
+            "are not blockers.[/dim]"
+        )
+    else:
+        hint = (
+            "[dim]Hardware is fully operational. You can proceed to "
+            "[bold]motodiag hardware scan[/bold] or [bold]motodiag "
+            "hardware stream[/bold].[/dim]"
+        )
+    if hint:
+        body_lines.append("")
+        body_lines.append(hint)
+
+    # Overall border color — red if any fail, yellow if only warns,
+    # green if all ok.
+    if fails:
+        border = "red"
+        title = "Diagnose summary — failed"
+    elif warns:
+        border = "yellow"
+        title = "Diagnose summary — partial"
+    else:
+        border = "green"
+        title = "Diagnose summary — all green"
+    console.print(
+        Panel(
+            "\n".join(body_lines),
+            title=title,
+            border_style=border,
+        )
+    )
+
+
+def register_diagnose(hardware_group: click.Group) -> None:
+    """Attach the ``diagnose`` subcommand to the hardware command group.
+
+    Phase 146 entry point. Called from :func:`register_hardware` after
+    the other subgroups so existing command registration remains
+    byte-for-byte identical above the call.
+    """
+
+    @hardware_group.command("diagnose")
+    @click.option("--port", "port", required=True,
+                  help="Serial port (e.g. COM3, /dev/ttyUSB0).")
+    @click.option("--bike", default=None,
+                  help="Bike slug from the garage. Mutually exclusive "
+                       "with --make. Used to tailor protocol priority "
+                       "and to rank compat hits on failure.")
+    @click.option("--make", "make", default=None,
+                  help="Manufacturer hint when no garage slug is used.")
+    @click.option("--mock", is_flag=True, default=False,
+                  help="Use the in-memory MockAdapter for a no-hardware "
+                       "happy-path walkthrough of all 5 steps.")
+    @click.option("--verbose", is_flag=True, default=False,
+                  help="Raise the motodiag.hardware logger to INFO so "
+                       "AutoDetector's per-protocol attempt log "
+                       "streams to stderr alongside the step panels.")
+    def diagnose_cmd(
+        port: str, bike: Optional[str], make: Optional[str],
+        mock: bool, verbose: bool,
+    ) -> None:
+        """5-step interactive connection troubleshooter (Phase 146).
+
+        Walks the mechanic through: (1) serial-port open, (2) ATZ
+        handshake, (3) protocol negotiate, (4) VIN read, (5) DTC scan.
+        Each step renders a green/yellow/red panel with plain-English
+        remediation. A summary at the end lists all issues plus a
+        next-step hint.
+        """
+        console = get_console()
+        init_db()
+        if bike and make:
+            raise click.ClickException(
+                "--bike and --make are mutually exclusive; choose one."
+            )
+        make_hint, _vehicle = _resolve_make_hint(bike, make)
+        if bike and _vehicle is None:
+            _bike_not_found(console, bike)
+            raise click.exceptions.Exit(1)
+        if verbose:
+            # Bump the hardware logger so AutoDetector's "trying CAN"
+            # lines reach the mechanic. Best-effort — this does not
+            # touch handler configuration.
+            import logging as _logging
+            _logging.getLogger("motodiag.hardware").setLevel(
+                _logging.INFO,
+            )
+        code = _run_diagnose(port, make_hint, bike, mock, verbose)
+        if code != 0:
+            raise click.exceptions.Exit(code)
+
+
+__all__ = [
+    "register_hardware",
+    "register_log",
+    "register_compat",
+    "register_diagnose",
+]

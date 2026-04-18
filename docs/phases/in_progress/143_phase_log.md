@@ -55,3 +55,23 @@ All tests `pytest.mark.asyncio`, skipped via `pytest.importorskip("textual")` at
 6. Subcommand ordering in `register_hardware` — alphabetical for clean `--help`.
 
 **Next:** wait for 141/142 to merge, lift final adapter/recording signatures, then auto-iterate or hand to Builder-A.
+
+### 2026-04-18 15:30 — Build complete (Builder-143 + Architect trust-but-verify)
+
+Fourteenth agent-delegated phase. Builder-143 shipped: new `hardware/dashboard.py` (1282 LoC — lazy Textual import with stubs for missing-dep mode, `DashboardSource` Protocol + `LiveDashboardSource` + `ReplayDashboardSource`, `GaugeWidget`/`PidChart`/`DTCPanel`/`StatusBar` widgets, `DashboardApp` with 3-column layout + keybindings ctrl+q/ctrl+r/d/1-6, `ReplayCompleteMessage`), extended `cli/hardware.py` +233 LoC additive (`_require_textual`, `_validate_dashboard_args`, `_parse_dashboard_pids`, `dashboard` subcommand), `pyproject.toml` +4 LoC (`dashboard = ["textual>=0.40,<1.0"]` optional extra + appended to `all`), new `tests/test_phase143_dashboard.py` (814 LoC, 46 tests across 7 classes with `pytest.importorskip("textual")` at module top).
+
+Sandbox blocked Python for Builder. Architect installed Textual 6.5.0 + ran trust-but-verify.
+
+### 2026-04-18 15:35 — Bug fix #1: GaugeWidget numeric display not clamped
+
+**Issue:** `test_value_clamps_to_min_max` failed. Expected `100.00` (clamped) but widget rendered `250.00` (unclamped).
+
+**Root cause:** `GaugeWidget.render()` correctly computed `clamped = max(min, min(max, numeric))` and used `clamped` for the bar fill fraction, but the numeric display line used `{numeric:>7.2f}` (unclamped).
+
+**Fix:** Changed `{numeric:>7.2f}` → `{clamped:>7.2f}` on line 694 of `hardware/dashboard.py`.
+
+**Files:** `src/motodiag/hardware/dashboard.py` line 694.
+
+**Verified:** `.venv/Scripts/python.exe -m pytest tests/test_phase143_dashboard.py -q` → `46 passed in 16.38s`.
+
+**Build-complete sign-off:** Phase 143 GREEN. Dashboard Textual TUI shipped.

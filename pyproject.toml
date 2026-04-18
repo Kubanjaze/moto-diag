@@ -51,8 +51,11 @@ can = [
 parquet = [
     "pyarrow>=15.0",
 ]
+dashboard = [
+    "textual>=0.40,<1.0",
+]
 all = [
-    "motodiag[dev,ai,api,hardware,vision,export,can,parquet]",
+    "motodiag[dev,ai,api,hardware,vision,export,can,parquet,dashboard]",
 ]
 
 [project.scripts]
