@@ -41,3 +41,26 @@ Planner-142 drafted v1.0 for Phase 142 — data logging + recording. Third Track
 All mock `time.sleep` where relevant; zero real serial; zero tokens.
 
 **Next:** build after Phase 141 merges (recorder.py imports sensors.py). Architect trust-but-verify on migration + JSONL spill (highest-risk pieces).
+
+### 2026-04-18 14:30 — Build complete (Builder-142 + Architect trust-but-verify)
+
+Thirteenth agent-delegated phase. Builder-142 shipped the spec: new `src/motodiag/hardware/recorder.py` (864 LoC — overshot ~350 LoC target per "detailed and meticulous" quality bar; RecordingManager with SQLite/JSONL split at 1000 rows, linear-interp `DiffReport` via stdlib `bisect`, transparent load-recording merge with `(captured_at, pid_hex, raw)` signature dedup), extended `cli/hardware.py` (+~1300 LoC — new `register_log` subgroup with 8 subcommands), migration 016 (`sensor_recordings` + `sensor_samples` + 4 indexes with FK CASCADE, child-first rollback), extended `pyproject.toml` (parquet optional extra), new `tests/test_phase142_log.py` (1217 LoC, 52 tests across 5 classes).
+
+`hardware/mock.py`, Phase 140 scan/clear/info bodies, Phase 141 stream subcommand — all byte-untouched.
+
+Sandbox blocked Python for Builder-142 AND Builder-142-Fix. Architect ran trust-but-verify as Phase 125 discipline documents.
+
+### 2026-04-18 14:35 — Trust-but-verify: test suite GREEN 52/52
+
+**Run:** `.venv/Scripts/python.exe -m pytest tests/test_phase142_log.py -q` → `52 passed in 24.21s`.
+
+No bug fixes needed. Builder-142-Fix's static analysis was accurate:
+- Phase 141 `SensorReading` contract alignment via `_reading_to_sample_row` duck-type (attribute-access + dict fallback) — works correctly for real Pydantic model AND test synthetic dataclass.
+- SQLite/JSONL split at 1000 rows traces correctly: under-1000 → all SQLite file_ref=NULL; over-1000 → 5 sparse summary rows (every 100th) + JSONL sidecar; merge dedup via `(captured_at, pid_hex, raw)` signature.
+- Migration 016 in place at `migrations.py:1017-1087` with proper FK CASCADE + child-first rollback.
+- Replay speed=0 bypasses `time.sleep` via `if speed > 0` gate; speed=1/10 scales correctly.
+- Parquet lazy-import with install-hint ClickException.
+
+**Build-complete sign-off:** Phase 142 moves from YELLOW → GREEN. Docs ready to finalize to v1.1 + move to `completed/`.
+
+**Next:** finalize docs + commit as own `Phase 142 Verified` entry + push.
