@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 17  # Phase 145: bumped for obd_adapters + adapter_compatibility + compat_notes tables (adapter compatibility database) migration 017
+SCHEMA_VERSION = 18  # Phase 150: bumped for fleets + fleet_bikes tables (fleet management) migration 018
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

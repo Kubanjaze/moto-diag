@@ -228,6 +228,8 @@ def predict_failures(
             vehicle_year=int(year),
             age_years=age_years,
             current_mileage=current_mileage,
+            vehicle=vehicle,
+            db_path=db_path,
         )
         if pred is None:
             continue
@@ -274,6 +276,8 @@ def _build_prediction(
     vehicle_year: int,
     age_years: int,
     current_mileage: Optional[int],
+    vehicle: Optional[dict] = None,
+    db_path: Optional[str] = None,
 ) -> Optional[FailurePrediction]:
     """Convert one known_issues row into a FailurePrediction.
 
@@ -339,6 +343,13 @@ def _build_prediction(
 
     # Clamp score to [0, 1].
     score = max(0.0, min(1.0, score))
+
+    # --- Phase 158: drift bonus --------------------------------------
+    # If the bike has drifting-fast PIDs whose catalog name overlaps
+    # one of the issue's symptoms, bump the confidence score by a
+    # single +0.1 (capped). Best-effort — any failure reading the
+    # drift module leaves the score unchanged.
+    score = _apply_drift_bonus(score, issue, vehicle, db_path)
 
     # --- Confidence enum ---
     if score >= _CONF_HIGH_THRESHOLD:
@@ -463,3 +474,83 @@ def _classify_verified_by(issue: dict) -> Optional[str]:
         if marker in haystack:
             return "service_manual"
     return None
+
+
+# --- Phase 158: drift bonus -------------------------------------------
+
+
+# Single-match cap. Any number of drifting-fast PIDs matching an
+# issue's symptoms still yields only this +0.1 bump — we don't want
+# one issue to crowd out peers by stacking bonuses, and the score is
+# already clamped to [0, 1] so cumulative gains would be minimally
+# additive anyway.
+_DRIFT_BONUS: float = 0.10
+
+
+def _apply_drift_bonus(
+    score: float,
+    issue: dict,
+    vehicle: Optional[dict],
+    db_path: Optional[str],
+) -> float:
+    """Optionally bump ``score`` by +0.1 when drifting-fast PIDs overlap.
+
+    Heuristic: for each drifting-fast PID on the bike, if the PID's
+    catalog ``pid_name`` overlaps (substring-wise, case-insensitive)
+    any of the issue's symptoms, award a single +0.1 bonus — capped at
+    the clamp ceiling of 1.0. The function is intentionally
+    best-effort: no vehicle id means no bonus, and any exception
+    reading the drift module falls through to the unbonused score so
+    predictive maintenance never breaks because drift tracking is
+    unavailable.
+
+    Lazy-imports :func:`motodiag.advanced.drift.detect_drifting_pids`
+    to avoid an import-time circular between predictor and drift
+    modules inside the advanced package.
+    """
+    if vehicle is None:
+        return score
+    vehicle_id = vehicle.get("id")
+    if vehicle_id is None:
+        return score
+
+    try:
+        # Lazy-import to avoid circular (drift doesn't import predictor,
+        # but keeping the import local lets the module load even if the
+        # drift sub-module is broken in some future refactor).
+        from motodiag.advanced.drift import detect_drifting_pids
+
+        drifting = detect_drifting_pids(
+            vehicle_id=int(vehicle_id),
+            threshold_pct=5.0,
+            db_path=db_path,
+        )
+    except Exception:
+        return score
+
+    # Filter to drifting-fast only — drifting-slow doesn't qualify.
+    fast = [d for d in drifting if d.bucket.value == "drifting-fast"]
+    if not fast:
+        return score
+
+    symptoms = issue.get("symptoms") or []
+    if not symptoms:
+        return score
+
+    symptom_terms = [
+        (s or "").strip().lower() for s in symptoms if s
+    ]
+    if not symptom_terms:
+        return score
+
+    for pid in fast:
+        name_lc = (pid.pid_name or "").lower().strip()
+        if not name_lc:
+            continue
+        for symptom in symptom_terms:
+            if not symptom:
+                continue
+            if name_lc in symptom or symptom in name_lc:
+                # Single cumulative +0.10, clamped at 1.0.
+                return min(1.0, score + _DRIFT_BONUS)
+    return score

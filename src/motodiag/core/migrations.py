@@ -1188,6 +1188,63 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS obd_adapters;
         """,
     ),
+    # Migration 018 — Phase 150: fleet management
+    Migration(
+        version=18,
+        name="fleet_management",
+        description=(
+            "Phase 150: Create two-table fleet management system. "
+            "`fleets` catalogs named groupings of bikes (rental fleets, "
+            "demo lineups, race teams) scoped per-owner via UNIQUE "
+            "(owner_user_id, name). `fleet_bikes` is the many-to-many "
+            "junction between fleets and vehicles, carrying a per-"
+            "assignment `role` (rental/demo/race/customer) and "
+            "`added_at` timestamp. FK CASCADE on both sides of the "
+            "junction: deleting a fleet drops its junction rows but "
+            "leaves vehicles intact (bikes survive fleet dissolution "
+            "— non-negotiable spec #3); deleting a vehicle drops its "
+            "junction rows but leaves fleets intact. `owner_user_id` "
+            "→ users.id ON DELETE SET DEFAULT so removing a user "
+            "reassigns their fleets to the system user (id=1), "
+            "mirroring the Phase 112/145 retrofit pattern. Two indexes "
+            "support the dominant query shapes: lookup fleets by "
+            "(owner, name) and reverse-lookup `list_fleets_for_bike`."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS fleets (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                name TEXT NOT NULL,
+                description TEXT,
+                owner_user_id INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET DEFAULT,
+                UNIQUE (owner_user_id, name)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_fleets_owner_name
+                ON fleets(owner_user_id, name);
+
+            CREATE TABLE IF NOT EXISTS fleet_bikes (
+                fleet_id INTEGER NOT NULL,
+                vehicle_id INTEGER NOT NULL,
+                role TEXT NOT NULL DEFAULT 'customer',
+                added_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (fleet_id, vehicle_id),
+                FOREIGN KEY (fleet_id) REFERENCES fleets(id) ON DELETE CASCADE,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+                CHECK (role IN ('rental','demo','race','customer'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_fleet_bikes_vehicle
+                ON fleet_bikes(vehicle_id);
+        """,
+        rollback_sql="""
+            -- Child-first drop order respects FK (fleet_bikes references
+            -- fleets and vehicles).
+            DROP TABLE IF EXISTS fleet_bikes;
+            DROP TABLE IF EXISTS fleets;
+        """,
+    ),
 ]
 
 

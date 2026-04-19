@@ -16,3 +16,17 @@ Eleventh Track F phase. Sensor degradation tracking — linear regression across
 **Dependencies:** Phase 142 hard (sensor_recordings+samples+indexes). Phase 148 hard (FailurePrediction model + advanced group). Phase 143 — copy 8-char tuple only, no import. Phase 141 PID_CATALOG best-effort.
 
 **Next:** Builder-158 agent-delegated. Architect trust-but-verify + Phase 148/142 regression.
+
+### 2026-04-18 19:48 — Build complete (Builder-158 + Architect trust-but-verify)
+
+Phase 158 shipped. `advanced/drift.py` 597 LoC + `cli/advanced.py` +540 LoC drift subgroup + `predictor.py` +90 LoC drift-bonus hook + 39 tests.
+
+### 2026-04-18 19:50 — Bug fix #1: `_normalize_pid_hex` missing zero-pad
+
+**Issue:** `test_pid_hex_normalization` failed. `compute_trend(vid, "5")` returned None because normalized query used `"0x5"` but sensor_samples stores canonical `"0x05"`.
+
+**Fix:** `_normalize_pid_hex` changed `body.upper()` → `body.upper().zfill(2)`. One-line fix.
+
+**Files:** `src/motodiag/advanced/drift.py:156`.
+
+**Verified:** 39/39 tests GREEN in 10.23s.
