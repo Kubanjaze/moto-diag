@@ -1,6 +1,6 @@
 # MotoDiag Phase 159 — Gate 7: Advanced Diagnostics Integration Test
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -63,15 +63,15 @@ Final integrity asserts:
 
 ## Verification Checklist
 
-- [ ] `tests/test_phase159_gate_7.py` created with 3 classes.
-- [ ] Class A: big end-to-end workflow (13 steps) on shared DB with graceful-skip.
-- [ ] Class A: 3 AI mocks + time.sleep no-ops.
-- [ ] Class A: final integrity asserts (1 vehicle, schema tier, CSV export).
-- [ ] Class B: 4 surface tests verify advanced group + all subgroup children.
-- [ ] Class C: subprocess Gate 5 + Gate 6 re-runs + schema tier floor.
-- [ ] 7-10 tests total.
-- [ ] Zero live tokens, zero real serial, zero production code changed.
-- [ ] All Phase 148-158 regressions green.
+- [x] `tests/test_phase159_gate_7.py` created with 3 classes.
+- [x] Class A: big end-to-end workflow (13 steps) on shared DB with graceful-skip.
+- [x] Class A: 3 AI mocks + time.sleep no-ops.
+- [x] Class A: final integrity asserts (1 vehicle, schema tier, CSV export).
+- [x] Class B: 4 surface tests verify advanced group + all subgroup children.
+- [x] Class C: subprocess Gate 5 + Gate 6 re-runs + schema tier floor.
+- [x] 7-10 tests total.
+- [x] Zero live tokens, zero real serial, zero production code changed.
+- [x] All Phase 148-158 regressions green.
 
 ## Risks
 
@@ -81,3 +81,20 @@ Final integrity asserts:
 - **Phase 155 NHTSA ID lookup** requires actual campaign data from recalls.json — seed sufficient.
 - **Cross-phase coupling** (drift bonus in predict; TSB/recall in predict; parts cost in predict) all additive + default-factory=[] / None; non-breaking.
 - **Subprocess Gate 5 + Gate 6 re-runs** double test runtime ~20s. Acceptable — explicit closure claim.
+
+## Deviations from Plan
+
+- Test count 8 vs 7-10 target range (on target).
+- Two inline fixes during Gate writing: (1) drift step swapped `drift bike --bike ... --pid ...` → `drift show --bike ...` (single-arg, exercises the same Phase 158 code path); (2) forward-compat loosened `SCHEMA_VERSION == 17` / `== 18` asserts in test_phase145_compat / test_phase150_fleet to `>=` so Track F's schema bumps (v19-v24) don't retrospectively break earlier-phase tests.
+- Architect-direct Gate closure per convention (no Builder delegation for integration gates).
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 8 GREEN |
+| LoC delivered | ~580 (tests/test_phase159_gate_7.py, zero production code) |
+| Bug fixes | 2 (inline, test-infrastructure only) |
+| Commit | `68f65f4` |
+
+Gate 7 closes Track F. Full Phase 148→158 pipeline proves green end-to-end via CliRunner (garage → predict → wear → fleet → schedule → history → parts → tsb → recall → compare → baseline → drift). Subprocess re-runs of Gate 5 + Gate 6 confirm zero earlier-gate regression. 3349/3351 full regression (two pre-existing brittle `==` schema asserts fixed as part of this commit).

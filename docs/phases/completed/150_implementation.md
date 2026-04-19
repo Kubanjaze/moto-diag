@@ -1,6 +1,6 @@
 # MotoDiag Phase 150 — Fleet Management
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -103,17 +103,17 @@ def fleet_group(): ...
 
 ## Verification Checklist
 
-- [ ] Migration 018 bumps v17→v18; rollback drops both tables.
-- [ ] `fleets.UNIQUE(owner, name)` violation → IntegrityError.
-- [ ] Delete fleet → junction rows gone, vehicles survive.
-- [ ] Delete vehicle → junction rows gone, fleet survives.
-- [ ] `role` CHECK rejects invalid values.
-- [ ] `add_bike_to_fleet` twice → `BikeAlreadyInFleetError`.
-- [ ] `list_fleets_for_bike` returns ≥2 for shared bike.
-- [ ] `fleet_status_summary` Phase 149 soft-guard: False today, True when 149 lands.
-- [ ] CLI happy paths + mutex + invalid role + empty panel.
-- [ ] `fleet delete --force` skips prompt; without force prompts.
-- [ ] Phase 148 + Phase 112 regressions green.
+- [x] Migration 018 bumps v17→v18; rollback drops both tables.
+- [x] `fleets.UNIQUE(owner, name)` violation → IntegrityError.
+- [x] Delete fleet → junction rows gone, vehicles survive.
+- [x] Delete vehicle → junction rows gone, fleet survives.
+- [x] `role` CHECK rejects invalid values.
+- [x] `add_bike_to_fleet` twice → `BikeAlreadyInFleetError`.
+- [x] `list_fleets_for_bike` returns ≥2 for shared bike.
+- [x] `fleet_status_summary` Phase 149 soft-guard: False today, True when 149 lands.
+- [x] CLI happy paths + mutex + invalid role + empty panel.
+- [x] `fleet delete --force` skips prompt; without force prompts.
+- [x] Phase 148 + Phase 112 regressions green.
 
 ## Risks
 
@@ -121,3 +121,20 @@ def fleet_group(): ...
 - **Phase 149 soft-guard** is dead code until 149 lands. Test via monkeypatch of `_HAS_WEAR` + stub.
 - **Phase 148 cost per bike × fleet size.** Acceptable for N≤50; caching in Phase 155+.
 - **Migration 018 collision** with Phase 149. Communicate "150 owns 018" to 149 planner.
+
+## Deviations from Plan
+
+- Test count 35 on target (TestMigration018×4, TestFleetRepo×10, TestFleetAnalytics×8, TestFleetCLI×12, TestPhase149Soft×1).
+- Phase 149 soft-guard `_HAS_WEAR` resolves True today (Phase 149 landed same day); tests monkeypatch both branches to preserve the degradation-safe code path.
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 35 GREEN |
+| LoC delivered | ~1369 (fleet_repo.py 388 + fleet_analytics.py 288 + cli/advanced.py +693) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 150 introduces fleet aggregation (rental/demo/race/customer) as the first Track F phase that rolls up Phase 148 predictions + Phase 149 wear across many bikes — the substrate for every downstream multi-bike workflow.

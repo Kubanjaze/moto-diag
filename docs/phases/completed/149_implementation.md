@@ -1,6 +1,6 @@
 # MotoDiag Phase 149 — Wear Pattern Analysis
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -132,23 +132,23 @@ __all__ = ["FailurePrediction", "PredictionConfidence", "predict_failures",
 
 ## Verification Checklist
 
-- [ ] `wear_patterns.json` loads without error (30 entries, all fields present, all `confidence_hint ∈ [0,1]`).
-- [ ] `WearPattern` + `WearMatch` Pydantic round-trip via `model_validate(model_dump(mode="json"))`.
-- [ ] `analyze_wear(vehicle, "")` returns `[]`.
-- [ ] `analyze_wear(tc88_bike, "tick of death")` → `cam chain tensioner` top match, confidence ≥ 0.6.
-- [ ] Comma AND semicolon symptom splitting both work.
-- [ ] Substring-either-direction match fires on "dim headlight" vs "headlight dim".
-- [ ] Non-matching explicit make drops pattern (Kawasaki never scores for Sportster).
-- [ ] Generic patterns (make=null) score against all bikes.
-- [ ] `min_confidence` filter: 0.0 returns all, 1.0 only perfect.
-- [ ] CLI Rich table 6 columns + footer; `--json` parseable.
-- [ ] `--bike` + `--make` → ClickException.
-- [ ] `--symptoms` missing → Click required-field error.
-- [ ] `--min-confidence 1.5` → ClickException.
-- [ ] Unknown bike → Phase 125 remediation panel.
-- [ ] `advanced/__init__.py` exports both Phase 148 + 149 names.
-- [ ] Phase 148 predict + Phase 140 hardware regressions still pass.
-- [ ] Zero AI, zero migration, zero tokens.
+- [x] `wear_patterns.json` loads without error (30 entries, all fields present, all `confidence_hint ∈ [0,1]`).
+- [x] `WearPattern` + `WearMatch` Pydantic round-trip via `model_validate(model_dump(mode="json"))`.
+- [x] `analyze_wear(vehicle, "")` returns `[]`.
+- [x] `analyze_wear(tc88_bike, "tick of death")` → `cam chain tensioner` top match, confidence ≥ 0.6.
+- [x] Comma AND semicolon symptom splitting both work.
+- [x] Substring-either-direction match fires on "dim headlight" vs "headlight dim".
+- [x] Non-matching explicit make drops pattern (Kawasaki never scores for Sportster).
+- [x] Generic patterns (make=null) score against all bikes.
+- [x] `min_confidence` filter: 0.0 returns all, 1.0 only perfect.
+- [x] CLI Rich table 6 columns + footer; `--json` parseable.
+- [x] `--bike` + `--make` → ClickException.
+- [x] `--symptoms` missing → Click required-field error.
+- [x] `--min-confidence 1.5` → ClickException.
+- [x] Unknown bike → Phase 125 remediation panel.
+- [x] `advanced/__init__.py` exports both Phase 148 + 149 names.
+- [x] Phase 148 predict + Phase 140 hardware regressions still pass.
+- [x] Zero AI, zero migration, zero tokens.
 
 ## Risks
 
@@ -158,3 +158,19 @@ __all__ = ["FailurePrediction", "PredictionConfidence", "predict_failures",
 - **Click group re-entry collision.** Phase 148 owns `register_advanced`; Phase 149 appends commands inside that function. Single registration invariant.
 - **Windows cmd.exe quote handling** on `--symptoms`. Help string shows exact form; tests use CliRunner (bypasses shell).
 - **`confidence_hint` floor can't overrule `min_confidence` intent.** Floor only helps; partial-match + high-hint patterns still gated by default 0.5 threshold.
+
+## Deviations from Plan
+
+- Test count 33 vs ~30 target — extra edge-case coverage on bike_match_tier transitions and vocabulary-drift substring matching.
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 33 GREEN |
+| LoC delivered | ~670 (wear.py 309 + wear_patterns.json 662 lines + cli/advanced.py +180) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 149 opens the Track F advanced-diagnostics Click group for symptom-driven wear-pattern ranking, with 30 real forum-cited patterns serving as the editorial seed that subsequent phases build on. Zero-migration, zero-token wear triage is now mechanic-CLI-reachable.

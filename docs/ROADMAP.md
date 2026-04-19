@@ -240,17 +240,17 @@ Power features for experienced mechanics. Shifted from 136-147 due to Retrofit t
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 148 | Predictive maintenance | ✅ | **First Track F phase.** Promotes `advanced` package Scaffold → Active. New `advanced/models.py` (frozen Pydantic v2 `FailurePrediction` + `PredictionConfidence` enum), `advanced/predictor.py` (395 LoC — `predict_failures(vehicle, horizon_days, min_severity, db_path)` with 4-pass candidate retrieval, match-tier scoring exact_model=1.0/family=0.75/make=0.5/generic=0.3, severity-keyed heuristic onset critical=15k/high=30k/medium=50k/low=80k mi, mileage + age scoring bonuses, Forum-tip-precedence `preventive_action` extraction, `verified_by` substring heuristic, horizon/severity filters, stable sort cap 50). `motodiag advanced predict --bike SLUG \| --make/--model/--year/--current-miles [--horizon-days] [--min-severity] [--json]`. Zero migration, zero AI, zero live tokens. 44 tests GREEN. |
-| 149 | Wear pattern analysis | 🔲 | Correlate symptoms with known wear patterns (was 137) |
-| 150 | Fleet management | 🔲 | Manage multiple bikes, shop inventory (was 138) |
-| 151 | Maintenance scheduling | 🔲 | Service intervals, upcoming maintenance alerts (was 139) |
-| 152 | Service history tracking | 🔲 | Full repair history per vehicle (was 140) |
-| 153 | Parts cross-reference | 🔲 | OEM ↔ aftermarket part number lookup (was 141) |
-| 154 | Technical service bulletin (TSB) database | 🔲 | Known manufacturer issues + fixes (was 142) |
-| 155 | Recall information | 🔲 | NHTSA recall lookup by VIN/model (was 143) |
-| 156 | Comparative diagnostics | 🔲 | Same model, different bikes — spot anomalies (was 144) |
-| 157 | Performance baselining | 🔲 | Establish "healthy" sensor baselines per model (was 145) |
-| 158 | Degradation tracking | 🔲 | Track sensor drift over time (was 146) |
-| 159 | Gate 7 — Advanced diagnostics integration test | 🔲 | Fleet + history + prediction end-to-end (was 147) |
+| 149 | Wear pattern analysis | ✅ | File-seeded 30-pattern `advanced/wear.py` with overlap-ratio scoring. Mechanic symptom vocabulary ("tick of death" / "chain slap on decel" / "dim headlight"). Substring-either-direction matching. `motodiag advanced wear --bike SLUG --symptoms ...`. 33 tests GREEN. |
+| 150 | Fleet management | ✅ | Migration 018: `fleets` + `fleet_bikes` tables. `advanced/fleet_repo.py` (12 CRUD) + `fleet_analytics.py` (Phase 148/149 rollups). `motodiag advanced fleet {create,list,show,add-bike,remove-bike,rename,delete,status}` (8 subcommands). 35 tests GREEN. |
+| 151 | Maintenance scheduling | ✅ | Migration 019: `service_intervals` + `service_interval_templates` (44 seeded). `advanced/schedule_repo.py` + `scheduler.py` dual-axis (miles OR months) with month-end clamp. `motodiag advanced schedule {init,list,due,overdue,complete,history}`. 37 tests GREEN. |
+| 152 | Service history + monotonic mileage | ✅ | Migration 020: `service_history` + `vehicles.mileage` column. `advanced/history_repo.py` with monotonic mileage bump. `predictor.py` +0.05 bonus when `mileage_source='db'`. `motodiag advanced history {add,list,show,show-all,by-type}`. 35 tests GREEN. |
+| 153 | Parts cross-reference | ✅ | Migration 021: `parts` + `parts_xref` tables. `advanced/parts_repo.py` + `parts_loader.py` with OEM ↔ aftermarket catalog. `predictor.py` populates `parts_cost_cents` on FailurePrediction. `motodiag advanced parts {search,xref,show,seed}`. 31 tests GREEN. |
+| 154 | OEM Technical Service Bulletins (TSBs) | ✅ | Migration 022: `technical_service_bulletins` with SQL LIKE `model_pattern` + partial unique index. `advanced/tsb_repo.py` (466 LoC) + 44 real HD/Honda/Yamaha entries seeded. Auto-seed on `init_db()`. `predictor.py` `applicable_tsbs` via 4-char token overlap + severity bucket-adjacency. `motodiag advanced tsb {list,search,show,by-make}`. 32 tests GREEN. |
+| 155 | NHTSA safety recalls | ✅ | Migration 023: extends `recalls` with nhtsa_id/vin_range/open + new `recall_resolutions` junction. `advanced/recall_repo.py` (603 LoC) with VIN validation + range check + WMI decode + resolutions. `predictor.py` `applicable_recalls` + critical-severity escalation. `motodiag advanced recall {list,check-vin,lookup,mark-resolved}`. 31 tests GREEN. |
+| 156 | Comparative diagnostics | ✅ | No migration. `advanced/comparative.py` (709 LoC) two-stage reduction — per-recording summary → percentile across recordings. `--peers-min 5` noisy-stats guard. 200-row cohort cap. `motodiag advanced compare {bike,recording,fleet}`. 34 tests GREEN. |
+| 157 | Healthy baselines | ✅ | Migration 024: `baselines` table with per-(make, model, year, pid) percentile statistics aggregated from mechanic-flagged-healthy recordings. `motodiag advanced baseline {show,flag-healthy,rebuild,list}`. 31 tests GREEN. |
+| 158 | Sensor drift tracking | ✅ | No migration. `advanced/drift.py` (597 LoC) stdlib mean-of-products linear regression. Flags drifting >5%/30d slow / ≥10%/30d fast. O2 aging / coolant silting / battery decay. Unicode sparkline + CSV export. `predictor.py` opt-in `_apply_drift_bonus` (capped +0.1). `motodiag advanced drift {bike,show,recording,plot}`. 39 tests GREEN. |
+| 159 | Gate 7 — Advanced diagnostics integration test | ✅ | **GATE 7 PASSED — Track F closed.** `tests/test_phase159_gate_7.py` (8 tests): end-to-end workflow across all 10 advanced subgroups + surface breadth + Gate 5/6 subprocess re-runs. 3349/3351 full regression passing. Zero new production code. |
 
 ## Track G — Shop Management + Optimization (Phases 160–174)
 

@@ -1,6 +1,6 @@
 # MotoDiag Phase 152 — Phase Log
 
-**Status:** 🟡 Planned | **Started:** 2026-04-18 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-18 | **Completed:** 2026-04-19
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -33,3 +33,23 @@ Fifth Track F phase. Persistent service-history log + adds `vehicles.mileage` co
 **Open questions:** migration version literal vs next-integer, mechanic UX (username vs user_id), --yes vs separate reset command, event type extensibility, auto-log from diagnose (Phase 153), auto-log from hardware scan recall-check (deferred).
 
 **Next:** Builder-152 agent-delegated. Architect trust-but-verify including Phase 148 full 44-test regression.
+
+### 2026-04-19 11:55 — Build complete (Architect trust-but-verify)
+
+Builder-152 delivered: `advanced/history_repo.py` (291 LoC), `cli/advanced.py` +~250 LoC history subgroup (add/list/show/show-all/by-type), migration 020 adds `service_history` table + `vehicles.mileage` column. `predictor.py` +0.05 bonus when `vehicle["mileage_source"]=="db"`. 35 tests delivered.
+
+Architect pytest run: **35/35 GREEN** in 45s after bug fix #1 (below).
+
+**Commit:** 68f65f4 "Track F Wave 1b + Gate 7"
+
+### 2026-04-19 11:40 — Bug fix #1: Phase 148 integration test fixture saturation
+
+**Issue:** 2 tests in `TestPhase148IntegrationBonus` failed with `assert 1.0 > 1.0`. The fixture used an exact-model stator issue whose base match_tier score (1.00) + age bonuses already saturated at the [0.0, 1.0] clamp ceiling, making the +0.05 DB bonus invisible.
+
+**Root cause:** `_MATCH_TIER_SCORE["exact_model"]=1.00` + age-bonus +0.20 for a 2010 Sportster in 2026 = 1.20 pre-clamp → clamped to 1.0. Both `mileage_source="flag"` and `mileage_source="db"` saturated identically, so `stator_db > stator_flag` could never be true.
+
+**Fix:** Rewrote `TestPhase148IntegrationBonus._seed_issue` to use family-make tier (`model=None`, no year_start/year_end, severity=low) producing base 0.50 + age +0.20 = 0.70 pre-bonus. +0.05 DB bonus now observable as a clean 0.05 delta under the clamp ceiling.
+
+**Files:** `tests/test_phase152_history.py:727-749`.
+
+**Verified:** 35/35 tests GREEN in 45s.

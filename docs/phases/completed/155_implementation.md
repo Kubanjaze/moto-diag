@@ -1,6 +1,6 @@
 # MotoDiag Phase 155 — NHTSA Safety Recall Lookup
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -30,18 +30,18 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 023 ALTER + partial unique index + new table + rollback.
-- [ ] Partial unique: two NULL allowed, two matching non-NULL rejected.
-- [ ] FK cascade: delete vehicle → resolutions gone; delete recall → resolutions gone; delete user → SET NULL.
-- [ ] `decode_vin` rejects 16/18-char and I/O/Q chars.
-- [ ] Year code `L` returns both 1990 and 2020; CLI picks closest to current year.
-- [ ] `_vin_in_range(vin, None)` → True (all-VIN).
-- [ ] `list_open_for_bike` excludes resolved.
-- [ ] `mark_resolved` duplicate returns 0, no IntegrityError.
-- [ ] recalls.json seed 30 campaigns; loader idempotent; malformed → ValueError with filename + line.
-- [ ] CLI 4 subcommands + `--json` + VIN validation + unknown bike remediation + duplicate-resolve yellow.
-- [ ] `FailurePrediction.applicable_recalls` populates; severity raises to critical when matched critical recall.
-- [ ] Phase 148 44 tests still pass; Phase 118 recall_* tests still pass.
+- [x] Migration 023 ALTER + partial unique index + new table + rollback.
+- [x] Partial unique: two NULL allowed, two matching non-NULL rejected.
+- [x] FK cascade: delete vehicle → resolutions gone; delete recall → resolutions gone; delete user → SET NULL.
+- [x] `decode_vin` rejects 16/18-char and I/O/Q chars.
+- [x] Year code `L` returns both 1990 and 2020; CLI picks closest to current year.
+- [x] `_vin_in_range(vin, None)` → True (all-VIN).
+- [x] `list_open_for_bike` excludes resolved.
+- [x] `mark_resolved` duplicate returns 0, no IntegrityError.
+- [x] recalls.json seed 30 campaigns; loader idempotent; malformed → ValueError with filename + line.
+- [x] CLI 4 subcommands + `--json` + VIN validation + unknown bike remediation + duplicate-resolve yellow.
+- [x] `FailurePrediction.applicable_recalls` populates; severity raises to critical when matched critical recall.
+- [x] Phase 148 44 tests still pass; Phase 118 recall_* tests still pass.
 
 ## Risks
 
@@ -53,3 +53,19 @@ Outputs:
 - `FailurePrediction.applicable_recalls` additive; round-trip preserves.
 - Real NHTSA IDs as seed; idempotent INSERT OR IGNORE on nhtsa_id.
 - `cli/advanced.py` growth (~800 LoC after multiple Track F phases); extraction deferred.
+
+## Deviations from Plan
+
+- Test count 31 vs ~30 target — one extra class for VIN-range edge cases (empty-list, None sentinel, prefix-miss).
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 31 GREEN |
+| LoC delivered | ~983 (recall_repo.py 603 + cli/advanced.py +~380) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 155 extends Phase 118's empty `recalls` substrate into a working NHTSA lookup with 30 real federal campaigns, adds the `recall_resolutions` junction for idempotent mark-resolved, and wires critical open recalls to severity-escalate Phase 148 predictions to "critical" within the issue's year envelope. First PPI-ready recall flow now mechanic-CLI-reachable.

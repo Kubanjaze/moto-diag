@@ -1,6 +1,6 @@
 # MotoDiag Phase 151 — Phase Log
 
-**Status:** 🟡 Planned | **Started:** 2026-04-18 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-18 | **Completed:** 2026-04-19
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -32,3 +32,13 @@ Fourth Track F phase. Dual-axis (miles OR months) service-interval scheduling. M
 **Open questions:** 018/019 slot, JSON template path config, month-arith library (manual chosen), schedule history panel when 152 absent, first-run re-seed policy (no, destroys last_done), parts-cost integration (Phase 154).
 
 **Next:** Builder-151 agent-delegated. Architect trust-but-verify.
+
+### 2026-04-19 11:55 — Build complete (Architect trust-but-verify)
+
+Builder-151 delivered while sandbox-blocked: `advanced/schedule_repo.py` (366 LoC), `scheduler.py` (482 LoC), `cli/advanced.py` +~350 LoC schedule subgroup (6 subcommands), migration 019, 37 tests. Architect ran `pytest tests/test_phase151_schedule.py` locally: **37/37 GREEN** in 12s on first architect-run. Zero bug fixes needed.
+
+Deviations from plan: test count 37 vs ~35 target (extra edge-case coverage on dual-axis month-clamp arithmetic). Phase 152 soft-dep via `importlib.util.find_spec` resolved True on final main (Phase 152 landed same day).
+
+Full Track F regression: 3349/3351 GREEN (two pre-existing brittle `==` schema asserts fixed in test_phase145/150 as part of the Wave 1b commit).
+
+**Commit:** 68f65f4 "Track F Wave 1b + Gate 7"

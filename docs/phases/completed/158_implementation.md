@@ -1,6 +1,6 @@
 # MotoDiag Phase 158 — Sensor Degradation Tracking (drift)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -43,18 +43,18 @@ Edge cases: `n < 2` → None; `sxx == 0` (all same instant) → None; `syy == 0`
 
 ## Verification Checklist
 
-- [ ] `compute_trend` stdlib-only (no numpy/scipy/pandas).
-- [ ] Slope/intercept/r² match hand-computed fixture to 4 decimals.
-- [ ] `n<2` → None; `sxx==0` → None.
-- [ ] `drift_pct_per_30_days` signed.
-- [ ] Bucket boundaries at threshold + 2*threshold.
-- [ ] `summary_for_bike` three buckets always present.
-- [ ] `_detect_drifting_pids` deterministic sort by `abs(pct) DESC, pid_hex ASC`.
-- [ ] CLI 4 subcommands + `--json` + `--since/--until` validation + `--bike MISSING` → remediation.
-- [ ] `drift plot --format ascii` Unicode blocks; `csv --output PATH` wide format.
-- [ ] `_apply_drift_bonus` +0.1 on match; no-op on no-id/no-drift/no-overlap; never breaks predict.
-- [ ] Phase 148 44 tests + Phase 142 tests still green.
-- [ ] No migration; SCHEMA_VERSION unchanged.
+- [x] `compute_trend` stdlib-only (no numpy/scipy/pandas).
+- [x] Slope/intercept/r² match hand-computed fixture to 4 decimals.
+- [x] `n<2` → None; `sxx==0` → None.
+- [x] `drift_pct_per_30_days` signed.
+- [x] Bucket boundaries at threshold + 2*threshold.
+- [x] `summary_for_bike` three buckets always present.
+- [x] `_detect_drifting_pids` deterministic sort by `abs(pct) DESC, pid_hex ASC`.
+- [x] CLI 4 subcommands + `--json` + `--since/--until` validation + `--bike MISSING` → remediation.
+- [x] `drift plot --format ascii` Unicode blocks; `csv --output PATH` wide format.
+- [x] `_apply_drift_bonus` +0.1 on match; no-op on no-id/no-drift/no-overlap; never breaks predict.
+- [x] Phase 148 44 tests + Phase 142 tests still green.
+- [x] No migration; SCHEMA_VERSION unchanged.
 
 ## Risks
 
@@ -67,3 +67,19 @@ Edge cases: `n < 2` → None; `sxx == 0` (all same instant) → None; `syy == 0`
 - Sparse summary uniform in count not time — acceptable (captured_at is x).
 - Windows CSV blank-row: use `newline=""` + csv.DictWriter.
 - Zero-variance flat series → stable (correct).
+
+## Deviations from Plan
+
+- Test count 39 vs ~30 target — extra TestNormalizePidHex class and additional regression/trend-edge coverage.
+- Bug fix #1: `_normalize_pid_hex` was missing zero-pad — `"5"` normalized to `"0x5"` but canonical storage uses `"0x05"`. One-line fix (`.zfill(2)` on the body).
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 39 GREEN |
+| LoC delivered | ~1227 (drift.py 597 + cli/advanced.py +540 + predictor.py +90) |
+| Bug fixes | 1 |
+| Commit | `68f65f4` |
+
+Phase 158 closes the Track F advanced-diagnostics loop by tracking slow-onset sensor drift over monthly recordings — linear-regression trend per PID with 5%/30d (slow) and 10%/30d (fast) thresholds. The predictor hook applies a capped +0.1 drift bonus to Phase 148 predictions on PIDs the symptom cluster implicates, making O2 aging / coolant silting / battery decay observable in routine predict output.

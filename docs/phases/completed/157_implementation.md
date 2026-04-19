@@ -1,6 +1,6 @@
 # MotoDiag Phase 157 — Performance Baselining
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -30,18 +30,18 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 024 + 2 indexes + 3 CHECK constraints + rollback child-first.
-- [ ] `operating_state` CHECK rejects invalid enum values.
-- [ ] `UNIQUE(recording_id)` on exemplars (idempotent flag).
-- [ ] FK CASCADE on recording_id delete; SET NULL on vehicle_id.
-- [ ] `_detect_operating_state` returns ordered spans on synthetic mixed-trace.
-- [ ] `flag_recording_as_healthy` rejects in-progress + dealer-lot (vehicle_id NULL).
-- [ ] `rebuild_baseline` confidence map 1/2/3/4/5 matches 0/3/6/11/26 exemplar thresholds.
-- [ ] `get_baseline` narrowest-year tiebreak.
-- [ ] 5/50/95 percentile math on synthetic values.
-- [ ] Stale-row DELETE before INSERT atomic.
-- [ ] CLI 4 subcommands + `--json` round-trip + `--yes` skip confirm + Phase 125 remediation.
-- [ ] Phase 142 + Phase 148 regressions green.
+- [x] Migration 024 + 2 indexes + 3 CHECK constraints + rollback child-first.
+- [x] `operating_state` CHECK rejects invalid enum values.
+- [x] `UNIQUE(recording_id)` on exemplars (idempotent flag).
+- [x] FK CASCADE on recording_id delete; SET NULL on vehicle_id.
+- [x] `_detect_operating_state` returns ordered spans on synthetic mixed-trace.
+- [x] `flag_recording_as_healthy` rejects in-progress + dealer-lot (vehicle_id NULL).
+- [x] `rebuild_baseline` confidence map 1/2/3/4/5 matches 0/3/6/11/26 exemplar thresholds.
+- [x] `get_baseline` narrowest-year tiebreak.
+- [x] 5/50/95 percentile math on synthetic values.
+- [x] Stale-row DELETE before INSERT atomic.
+- [x] CLI 4 subcommands + `--json` round-trip + `--yes` skip confirm + Phase 125 remediation.
+- [x] Phase 142 + Phase 148 regressions green.
 
 ## Risks
 
@@ -53,3 +53,19 @@ Outputs:
 - Percentile approximation imprecise <20 samples — bisect fallback.
 - Cross-model exemplar mismatch → 0 matches, yellow panel, no crash.
 - Concurrent rebuilds serialized by SQLite; last-writer-wins on aggregate row.
+
+## Deviations from Plan
+
+- Test count 31 vs ~30 target — one extra test for `_detect_operating_state` on single-sample RPM traces (unclassified guard).
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 31 GREEN |
+| LoC delivered | ~530 (baseline.py ~280 + cli/advanced.py +~250) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 157 delivers per-(make, model, year-band, PID, operating-state) healthy baselines aggregated from mechanic-flagged exemplar recordings. Phase 156 can now hit one baseline row instead of scanning N peers, and operating-state auto-classification (idle / 2500rpm / redline) trims the RPM-dependent noise that was confounding peer comparisons.

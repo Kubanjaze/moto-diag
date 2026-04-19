@@ -1,6 +1,6 @@
 # MotoDiag Phase 154 — Technical Service Bulletin (TSB) Database
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -30,19 +30,19 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 022 + 3 indexes + rollback.
-- [ ] UNIQUE tsb_number with INSERT OR IGNORE.
-- [ ] `list_tsbs_for_bike("harley","Dyna Super Glide",2012)` matches `Dyna%` + year range.
-- [ ] `search_tsbs("throttle body","harley")` hits all 3 text columns.
-- [ ] Empty query → `[]`.
-- [ ] Severity/date/empty-tsb_number validation ValueError.
-- [ ] Case-insensitive make.
-- [ ] tsbs.json ≥40 real TSBs spanning 5 OEMs.
-- [ ] Loader idempotent; malformed JSON → ValueError with line:col.
-- [ ] CLI 4 subcommands + `--json`.
-- [ ] `FailurePrediction.applicable_tsbs` defaults `[]`; round-trip preserves.
-- [ ] `predict_failures` against pre-migration-022 DB → `applicable_tsbs=[]` no crash.
-- [ ] Phase 148 44 tests still pass (additive field).
+- [x] Migration 022 + 3 indexes + rollback.
+- [x] UNIQUE tsb_number with INSERT OR IGNORE.
+- [x] `list_tsbs_for_bike("harley","Dyna Super Glide",2012)` matches `Dyna%` + year range.
+- [x] `search_tsbs("throttle body","harley")` hits all 3 text columns.
+- [x] Empty query → `[]`.
+- [x] Severity/date/empty-tsb_number validation ValueError.
+- [x] Case-insensitive make.
+- [x] tsbs.json ≥40 real TSBs spanning 5 OEMs.
+- [x] Loader idempotent; malformed JSON → ValueError with line:col.
+- [x] CLI 4 subcommands + `--json`.
+- [x] `FailurePrediction.applicable_tsbs` defaults `[]`; round-trip preserves.
+- [x] `predict_failures` against pre-migration-022 DB → `applicable_tsbs=[]` no crash.
+- [x] Phase 148 44 tests still pass (additive field).
 
 ## Risks
 
@@ -52,3 +52,20 @@ Outputs:
 - N+1 risk avoided (one query per predict).
 - Keyword-overlap false positives — 4-char minimum + shared-token rule.
 - Pydantic frozen + default_factory=list sanctioned.
+
+## Deviations from Plan
+
+- Builder-154 hit rate limit before writing the test file. Architect wrote `tests/test_phase154_tsb.py` directly (528 LoC, 32 tests across 5 classes: TestMigration022×3, TestTsbRepo×13, TestTsbLoader×4, TestTsbCLI×8, TestPhase148TsbIntegration×3 + 1 module-level).
+- Bug fix #1: Builder-154 referenced `_render_tsb_table` and `_render_tsb_panel` Rich renderers in Click command bodies but never serialized their definitions before rate-limiting. Architect wrote both helpers in `cli/advanced.py` modeled after Phase 155's `_render_recall_table`.
+- Seed content expanded from plan's ~40 entries to 44 real HD/Honda/Yamaha TSB entries with public source_urls.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 32 GREEN |
+| LoC delivered | ~1534 (tsb_repo.py 466 + cli/advanced.py +~540 + tests 528) |
+| Bug fixes | 1 |
+| Commit | `68f65f4` |
+
+Phase 154 establishes the third independent provenance layer (TSB ≠ recall ≠ known_issue) with 44 real OEM-issued Technical Service Bulletins. Phase 148's `applicable_tsbs` field now surfaces official manufacturer fixes alongside forum-consensus predictions without N+1 queries.

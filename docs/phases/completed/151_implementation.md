@@ -1,6 +1,6 @@
 # MotoDiag Phase 151 — Service-Interval Scheduling
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -121,16 +121,16 @@ def schedule_group(): ...
 
 ## Verification Checklist
 
-- [ ] Migration 019 bumps v18→v19; rollback drops both tables.
-- [ ] `load_templates_from_json` loads 44 rows idempotently.
-- [ ] `seed_from_template` skips existing slugs on re-run.
-- [ ] `next_due_calc` miles-only / months-only / dual-axis.
-- [ ] Month-end clamp: Feb 28 + 2 months = Apr 28, Jan 31 + 1 month = Feb 28/29.
-- [ ] `due_items` + `overdue_items` never overlap.
-- [ ] `record_completion` without mileage source raises clear error.
-- [ ] All 6 subcommands work + Phase 125 remediation on unknown bike.
-- [ ] `--json` round-trip.
-- [ ] Phase 148 + Phase 145 regressions green.
+- [x] Migration 019 bumps v18→v19; rollback drops both tables.
+- [x] `load_templates_from_json` loads 44 rows idempotently.
+- [x] `seed_from_template` skips existing slugs on re-run.
+- [x] `next_due_calc` miles-only / months-only / dual-axis.
+- [x] Month-end clamp: Feb 28 + 2 months = Apr 28, Jan 31 + 1 month = Feb 28/29.
+- [x] `due_items` + `overdue_items` never overlap.
+- [x] `record_completion` without mileage source raises clear error.
+- [x] All 6 subcommands work + Phase 125 remediation on unknown bike.
+- [x] `--json` round-trip.
+- [x] Phase 148 + Phase 145 regressions green.
 
 ## Risks
 
@@ -139,3 +139,20 @@ def schedule_group(): ...
 - **Month arithmetic corner cases** (Jan 31 + 1 month). `calendar.monthrange` clamp tested.
 - **Template coverage uneven** — European OEMs thin. Content, not bug.
 - **CLI LoC ~300** tight — if stretches to 400, split into `cli/schedule.py` + helper registrar.
+
+## Deviations from Plan
+
+- Test count 37 vs ~35 target — extra edge-case coverage on dual-axis month-clamp arithmetic (calendar.monthrange boundary cases).
+- Phase 152 soft-dep via `importlib.util.find_spec` resolved True on final main — Phase 152 landed same day — but both branches are monkeypatched in tests.
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 37 GREEN |
+| LoC delivered | ~1198 (schedule_repo.py 366 + scheduler.py 482 + cli/advanced.py +350) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 151 ships dual-axis (miles OR months, whichever first) service-interval scheduling with 44 canonical OEM intervals pre-seeded. Mechanics can now run `motodiag advanced schedule due` to surface overdue and upcoming maintenance across any registered bike.

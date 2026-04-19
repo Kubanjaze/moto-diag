@@ -1,6 +1,6 @@
 # MotoDiag Phase 156 — Comparative Diagnostics (Peer-Cohort Anomaly Detection)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -41,21 +41,21 @@ No migration. No tables.
 
 ## Verification Checklist
 
-- [ ] `compare bike` returns non-None peer stats when ≥5 same-model peers.
-- [ ] `<5 peers` → "insufficient cohort" yellow + exit 0.
-- [ ] `compare recording <id>` end-to-end.
-- [ ] `--cohort strict` narrows to exact year + protocol.
-- [ ] `--cohort fleet` without Phase 150 table → yellow panel + exit 0.
-- [ ] Target excluded from peer set (assertion).
-- [ ] Orphan recording (vehicle_id NULL) → yellow panel + exit 1.
-- [ ] `--pid 0x5` / `05` / `5` / `0x05` all canonical `"0x05"`.
-- [ ] Unknown bike → Phase 125 remediation.
-- [ ] Bucket at boundary: target == p95 → `">=p95"`.
-- [ ] `anomaly_flag=True` at tails.
-- [ ] `--json` round-trip.
-- [ ] `distinct_bikes` count in payload distinct from `cohort.size`.
-- [ ] LIMIT 200 honored on synthetic 300-recording cohort.
-- [ ] Phase 148 + Phase 142 regressions green.
+- [x] `compare bike` returns non-None peer stats when ≥5 same-model peers.
+- [x] `<5 peers` → "insufficient cohort" yellow + exit 0.
+- [x] `compare recording <id>` end-to-end.
+- [x] `--cohort strict` narrows to exact year + protocol.
+- [x] `--cohort fleet` without Phase 150 table → yellow panel + exit 0.
+- [x] Target excluded from peer set (assertion).
+- [x] Orphan recording (vehicle_id NULL) → yellow panel + exit 1.
+- [x] `--pid 0x5` / `05` / `5` / `0x05` all canonical `"0x05"`.
+- [x] Unknown bike → Phase 125 remediation.
+- [x] Bucket at boundary: target == p95 → `">=p95"`.
+- [x] `anomaly_flag=True` at tails.
+- [x] `--json` round-trip.
+- [x] `distinct_bikes` count in payload distinct from `cohort.size`.
+- [x] LIMIT 200 honored on synthetic 300-recording cohort.
+- [x] Phase 148 + Phase 142 regressions green.
 
 ## Risks
 
@@ -66,3 +66,20 @@ No migration. No tables.
 - Percentile math on n<5 handled via `statistics.quantiles` inclusive method + `--peers-min` guard.
 - `cli/advanced.py` growth (~530 LoC) acceptable; extraction option documented.
 - Phase 150 fleet branch tested via monkeypatched True path + documented False path.
+
+## Deviations from Plan
+
+- Test count 34 vs ~28 target — extra `TestNormalizePidHex` class (+2 tests) and additional cohort-boundary coverage.
+- Fleet branch in `find_peer_recordings` falls back to strict same-year match when `fleet_memberships` present — conservative placeholder for Phase 150 until peer-cohort-by-fleet is first-class.
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 34 GREEN |
+| LoC delivered | ~1780 (comparative.py 709 + test file 691 + cli/advanced.py +380) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 156 adds peer-cohort anomaly detection over Phase 142 sensor recordings — mechanics can now run `motodiag advanced compare bike ...` and see percentile rank + forum-idiom verdict (p95 hottest / p50 typical / p5 coolest) against same-make/model/year peers. First Track F phase that turns raw sensor history into comparative diagnostic signal.

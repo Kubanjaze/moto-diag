@@ -1,6 +1,6 @@
 # MotoDiag Phase 157 — Phase Log
 
-**Status:** 🟡 Planned | **Started:** 2026-04-18 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-18 | **Completed:** 2026-04-19
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ### 2026-04-18 19:10 — Plan written, v1.0
@@ -16,3 +16,11 @@ Tenth Track F phase. Performance baselining — reusable per-model healthy profi
 **Dependencies:** Phase 142 hard (sensor_recordings + load_recording). Phase 148 hard (advanced_group). Phase 156 no code dep (157 is baseline source; 156 is consumer; independent order).
 
 **Next:** Builder-157 agent-delegated. Architect trust-but-verify.
+
+### 2026-04-19 11:55 — Build complete (Architect trust-but-verify)
+
+Builder-157 delivered: `advanced/baseline.py` with per-(make, model, year, PID) healthy-baseline statistics aggregated from mechanic-flagged-healthy recordings, `cli/advanced.py` +~250 LoC baseline subgroup (show/flag-healthy/rebuild/list), migration 024 `baselines` table. 31 tests.
+
+Architect pytest run: **31/31 GREEN**. Zero bug fixes needed.
+
+**Commit:** 68f65f4 "Track F Wave 1b + Gate 7"

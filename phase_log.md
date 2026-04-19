@@ -549,3 +549,34 @@ Tenth agent-delegated phase. **Builder-A's cleanest pass yet** — no sandbox bl
 **Bug-fix discipline honored per CLAUDE.md peak-efficiency mode:** 9 total bug fixes across phases, each documented with Issue/Root cause/Fix/Files/Verified in the respective phase's phase_log.md + committed separately where practical.
 
 **Next session:** Track F continues (phases 149-159: wear pattern analysis / fleet management / maintenance scheduling / service history / cross-referencing / TSB+recall integration / comparison / baseline / drift detection / Gate 7).
+
+### 2026-04-19 12:15 — Track F closed, Gate 7 passed (v0.9.0)
+
+**Summary:** Wave 1a (Phases 149, 150, 156, 158) shipped earlier today. Wave 1b (Phases 151, 152, 153, 154, 155, 157) + Gate 7 (Phase 159) shipped this cycle.
+
+**Track F (Phases 148-159) complete.** `advanced` package promoted from Active → **Complete**. 11 subgroups under `motodiag advanced`: `predict, wear, fleet, schedule, history, parts, tsb, recall, compare, baseline, drift`.
+
+**New DB tables (migrations 018-024):** `fleets`, `fleet_bikes`, `service_intervals`, `service_interval_templates`, `service_history`, `parts`, `parts_xref`, `technical_service_bulletins`, `recall_resolutions`, `baselines`. Plus `vehicles.mileage` column (Phase 152) + extension of existing `recalls` table with nhtsa_id/vin_range/open (Phase 155). Schema bumped from v17 → **v24**.
+
+**Predictor cross-wiring:** Phase 148's `predict_failures()` now emits enriched `FailurePrediction` objects with `applicable_tsbs` (Phase 154), `applicable_recalls` (Phase 155), and `parts_cost_cents` (Phase 153) populated opportunistically from whatever migrations have landed. Drift bonus (Phase 158) and DB-sourced mileage bonus (Phase 152) layer cleanly into the confidence score.
+
+**Gate 7 passed:** `tests/test_phase159_gate_7.py` (8 tests, 92s runtime): end-to-end workflow exercising all 10 advanced subgroups on a shared DB + surface breadth + subprocess Gate 5/Gate 6 re-runs. 3349/3351 full regression passing.
+
+**Bug fixes landed this cycle (each logged in its phase's phase_log.md):**
+- Phase 152 #1: Test fixture saturation — stator exact-model issue saturated score clamp, rewrote to family-make tier for observable +0.05 DB bonus delta.
+- Phase 154 #1: Builder-154 rate-limited before test file created; Architect wrote 528-LoC test suite directly.
+- Phase 154 #2: Missing `_render_tsb_table` + `_render_tsb_panel` renderer helpers in `cli/advanced.py`; Architect added definitions modeled after Phase 155's `_render_recall_table`.
+- Phase 158 #1: `_normalize_pid_hex` missed zero-pad causing `"0x5"` vs canonical `"0x05"` mismatch; one-line `.zfill(2)` fix.
+
+**Peak-Efficiency mode deployed:** Per user request, the agent pool ran 8+ concurrent agents across Planner / Builder / Architect / Validator / Finalizer roles with file-overlap-analyzed parallel dispatch. The pattern has been formalized as a dedicated section in `C:\Users\Kerwyn\PycharmProjects\CLAUDE.md` ("Peak-Efficiency Agent Pool Mode"). Several Builders (153, 154, 155, 157) hit Anthropic rate limits mid-build; Architect recovered by writing remaining test files + bug-fix patches directly.
+
+**Forward-compat cleanup:** Two pre-existing brittle `SCHEMA_VERSION == N` asserts in `tests/test_phase145_compat.py` and `tests/test_phase150_fleet.py` loosened to `>=` so future migration bumps don't retroactively break earlier-phase tests.
+
+**Project version:** 0.8.0 → **0.9.0**.
+
+**Completion gates status:**
+- Gates 1-6: ✅ (as before)
+- Gate 7 (Phase 159): ✅ — Track F closed
+- Gates 8-20: 🔲 (future tracks)
+
+Track G (phases 160-174) opens next — shop management + work orders + triage + parts auto-pick + repair scheduling.

@@ -1,6 +1,6 @@
 # MotoDiag Phase 152 — Service History Tracking + vehicles.mileage
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -116,17 +116,17 @@ Phase 152 does NOT touch `scheduling/` code. Phase 152 exposes `vehicles.mileage
 
 ## Verification Checklist
 
-- [ ] Migration 020 applies cleanly to Phase 148-state DB.
-- [ ] `vehicles.mileage` INTEGER NULL, accepts 0 and 999999.
-- [ ] CHECK rejects unknown event types.
-- [ ] FK cascade: delete vehicle → history gone; delete user → mechanic NULL.
-- [ ] `add_service_event` at_miles > current bumps vehicles.mileage.
-- [ ] `add_service_event` at_miles < current does NOT decrease.
-- [ ] `garage update --mileage` persists; decrease requires `--yes`.
-- [ ] CLI happy paths + remediation + `--json` round-trip.
-- [ ] Phase 148 `--current-miles` identical to Phase 148 baseline.
-- [ ] Phase 148 `--bike` with DB mileage shows +0.05 bonus in JSON.
-- [ ] Phase 148 + Phase 140 + Phase 12 + Phase 08 regressions green.
+- [x] Migration 020 applies cleanly to Phase 148-state DB.
+- [x] `vehicles.mileage` INTEGER NULL, accepts 0 and 999999.
+- [x] CHECK rejects unknown event types.
+- [x] FK cascade: delete vehicle → history gone; delete user → mechanic NULL.
+- [x] `add_service_event` at_miles > current bumps vehicles.mileage.
+- [x] `add_service_event` at_miles < current does NOT decrease.
+- [x] `garage update --mileage` persists; decrease requires `--yes`.
+- [x] CLI happy paths + remediation + `--json` round-trip.
+- [x] Phase 148 `--current-miles` identical to Phase 148 baseline.
+- [x] Phase 148 `--bike` with DB mileage shows +0.05 bonus in JSON.
+- [x] Phase 148 + Phase 140 + Phase 12 + Phase 08 regressions green.
 
 ## Risks
 
@@ -137,3 +137,19 @@ Phase 152 does NOT touch `scheduling/` code. Phase 152 exposes `vehicles.mileage
 - **Phase 151 not land-synchronized.** Phase 152 doesn't import from scheduling/; exposes column for 151 to read.
 - **Empty table on day 1** — expected; `diagnose` auto-log deferred to Phase 153.
 - **Event type list evolution** — 11 values baseline. Growth requires paired migration + Literal update.
+
+## Deviations from Plan
+
+- Test count 35 on target (TestMigration020×4, TestHistoryRepo×10, TestHistoryCLI×12, TestPhase148IntegrationBonus×5, TestRegression×4).
+- Bug fix #1: `TestPhase148IntegrationBonus` fixture was using `exact_model` match tier that saturated at the [0.0, 1.0] clamp ceiling, making the +0.05 DB bonus invisible. Fixture rewritten to use family-make tier so the bonus is observable as a clean 0.05 delta.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 35 GREEN |
+| LoC delivered | ~541 (history_repo.py 291 + cli/advanced.py +250) |
+| Bug fixes | 1 |
+| Commit | `68f65f4` |
+
+Phase 152 closes Phase 148's mileage deferral by adding a persistent `vehicles.mileage` column (source of truth) and a service-history event log. The +0.05 DB-sourced mileage bonus in the Phase 148 predictor makes DB-verified mileage observably preferable to user-flag assertion, giving mechanics a quiet reward for keeping the log populated.

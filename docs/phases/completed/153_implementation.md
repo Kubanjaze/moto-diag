@@ -1,6 +1,6 @@
 # MotoDiag Phase 153 — Parts Cross-Reference
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-19
 
 ## Goal
 
@@ -29,15 +29,15 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 021 bumps SCHEMA_VERSION; rollback FK-safe (child first).
-- [ ] parts.json ≥60 entries across 5 price tiers + bikes; parts_xref.json ≥80 real xrefs.
-- [ ] Loader idempotent (second seed_all: zero new inserts).
-- [ ] Self-xref via CHECK prevented.
-- [ ] `get_xrefs` sort: rating DESC → cost ASC → brand ASC → id ASC.
-- [ ] `lookup_typical_cost` None on miss, int on hit.
-- [ ] CLI 4 subcommands work + `--json` round-trip.
-- [ ] Phase 148 `predict_failures` populates `parts_cost_cents` when seeded.
-- [ ] Phase 148 44 tests still green when parts table empty.
+- [x] Migration 021 bumps SCHEMA_VERSION; rollback FK-safe (child first).
+- [x] parts.json ≥60 entries across 5 price tiers + bikes; parts_xref.json ≥80 real xrefs.
+- [x] Loader idempotent (second seed_all: zero new inserts).
+- [x] Self-xref via CHECK prevented.
+- [x] `get_xrefs` sort: rating DESC → cost ASC → brand ASC → id ASC.
+- [x] `lookup_typical_cost` None on miss, int on hit.
+- [x] CLI 4 subcommands work + `--json` round-trip.
+- [x] Phase 148 `predict_failures` populates `parts_cost_cents` when seeded.
+- [x] Phase 148 44 tests still green when parts table empty.
 
 ## Risks
 
@@ -46,3 +46,19 @@ Outputs:
 - `cli/advanced.py` growth (~500 LoC after +250) — acceptable; extract option documented.
 - Phase 148 import-delayed hook + broad `except` guards regression.
 - SQLite LIKE case-insensitivity for ASCII; lowercase normalization on insert.
+
+## Deviations from Plan
+
+- Test count 31 vs ~30 target — one extra test for `lookup_typical_cost` graceful-None path on missing table.
+- Zero bug fixes needed on first pytest run.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests | 31 GREEN |
+| LoC delivered | ~600 (parts_repo.py ~250 + parts_loader.py ~100 + cli/advanced.py +~250) |
+| Bug fixes | 0 |
+| Commit | `68f65f4` |
+
+Phase 153 delivers OEM↔aftermarket parts cross-reference with ~60 real parts + ~80 curated xrefs across 9 makes. The `_lookup_parts_cost` hook opportunistically populates Phase 148's previously-always-None `parts_cost_cents` field — mechanics now see dollar estimates alongside failure predictions without breaking the Phase 148 regression envelope.
