@@ -1,0 +1,662 @@
+[
+  {
+    "id": "tc88-cam-tensioner",
+    "component": "cam chain tensioner (Twin Cam 88)",
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "year_min": 1999,
+    "year_max": 2006,
+    "symptoms": [
+      "tick of death",
+      "valvetrain tick at 2000 rpm",
+      "metallic grinding from cam chest",
+      "shavings on magnetic drain plug"
+    ],
+    "inspection_steps": [
+      "Pull cam cover and inspect both inner + outer CCT shoes for cracks, missing chunks, or glazed wear marks",
+      "Check cam chain deflection with feeler gauge — replace if slack exceeds 0.030 in. beyond stock",
+      "Pull magnetic drain plug and primary chaincase magnet, look for ferrous shavings from shoe wear",
+      "If shoes are glazed but intact, upgrade to S&S gear-drive conversion before the engine eats a cam bearing"
+    ],
+    "confidence_hint": 0.92,
+    "verified_by": "hdforums consensus + service manual 99500-00"
+  },
+  {
+    "id": "sportster-stator-undercharge",
+    "component": "stator (charging system)",
+    "make": "harley-davidson",
+    "model_pattern": "sportster%",
+    "year_min": 2004,
+    "year_max": 2021,
+    "symptoms": [
+      "dim headlight at idle",
+      "battery not charging",
+      "charging voltage below 13.5v",
+      "stator AC output drops with heat"
+    ],
+    "inspection_steps": [
+      "Measure AC output between stator leads at 1000 rpm — spec is 18-22 VAC; below 16 VAC replace",
+      "Check stator resistance lead-to-lead (0.1-0.3 ohm) and lead-to-ground (infinite)",
+      "Inspect stator wire loom where it exits the primary case for chafed insulation against inner chaincase",
+      "Upgrade to Cycle Electric CE-32A 32-amp stator if original keeps cooking under load"
+    ],
+    "confidence_hint": 0.90,
+    "verified_by": "xlforum.net + HD TSB M1320"
+  },
+  {
+    "id": "chain-stretch-sprocket",
+    "component": "drive chain and sprockets",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "chain slap on deceleration",
+      "hooked rear sprocket teeth",
+      "chain noise at steady cruise",
+      "uneven chain tension across swingarm travel"
+    ],
+    "inspection_steps": [
+      "Pull chain away from rear sprocket at 3 o'clock position — if teeth show more than half a link, chain is stretched",
+      "Inspect front sprocket teeth for shark-finning or asymmetric wear (tells you chain was run too tight or too loose)",
+      "Measure 20-pin span with caliper; if over 1% above factory spec, replace chain, both sprockets, and rubber dampers as a set",
+      "Never mix old chain with new sprocket or vice versa — always replace chain/countershaft/rear as a matched set"
+    ],
+    "confidence_hint": 0.85,
+    "verified_by": "universal service-manual procedure + ADVrider consensus"
+  },
+  {
+    "id": "fork-seal-leak-upper",
+    "component": "fork seal (upper)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "oil film on fork tube",
+      "oil ring around fork wiper",
+      "clunk over sharp bumps",
+      "soft front end dive under braking"
+    ],
+    "inspection_steps": [
+      "Wipe fork tube clean, ride 10 miles, inspect again — a fresh oily ring above the wiper confirms seal failure",
+      "Pull fork dust wiper and slip a Seal Mate tool under the seal to scrape embedded grit; often buys 6+ months before full rebuild",
+      "Check tube for nicks or pitting under the dust seal — a pitted tube will eat a new seal in weeks",
+      "Full service: drain, pull cartridge, replace seal + bushing + dust wiper, refill with spec'd viscosity fork oil to correct level"
+    ],
+    "confidence_hint": 0.88,
+    "verified_by": "ADVrider + Cycle World tech column"
+  },
+  {
+    "id": "wheel-bearing-whine-rear",
+    "component": "rear wheel bearing",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "speed-proportional whine",
+      "rumbling noise on deceleration",
+      "rear end feels loose in corners",
+      "rear wheel play when rocked side to side"
+    ],
+    "inspection_steps": [
+      "Jack rear wheel, grab at 12 and 6 — any detectable play means bearing is shot; also spin and listen for dry grinding",
+      "Pull the rear wheel, remove seals, spin bearings by finger — should be silent glass-smooth; grit or notchy rotation = replace",
+      "Replace bearings as a PAIR per side (both bearings in a hub, both wheels if both show any play) and always renew the inner spacer",
+      "Pack new bearings with waterproof moly grease before install; factory pre-pack is usually insufficient for rainy-season riders"
+    ],
+    "confidence_hint": 0.87,
+    "verified_by": "universal service-manual procedure + Motorcyclist forum"
+  },
+  {
+    "id": "klr-doohickey",
+    "component": "balancer chain adjuster lever (doohickey)",
+    "make": "kawasaki",
+    "model_pattern": "klr%",
+    "year_min": 1987,
+    "year_max": 2007,
+    "symptoms": [
+      "ticking from right side case",
+      "rattling at 3000-4000 rpm",
+      "metallic clack on engine shutdown",
+      "balancer chain noise"
+    ],
+    "inspection_steps": [
+      "Drain oil, remove right engine case cover, inspect cast aluminum lever for stress cracks at the fulcrum and spring perch",
+      "If original factory lever is still in the engine and mileage > 15k, preemptively replace with Eagle Mike upgraded doohickey kit",
+      "Install upgraded torsion spring at the same time — the stock spring loses tension and compounds lever failure",
+      "Reset balancer chain timing per service manual before buttoning up — a timing error here self-destructs the balancer"
+    ],
+    "confidence_hint": 0.95,
+    "verified_by": "klrworld + Eagle Mike tech notes"
+  },
+  {
+    "id": "cbr600rr-cct",
+    "component": "cam chain tensioner (hydraulic)",
+    "make": "honda",
+    "model_pattern": "cbr600%",
+    "year_min": 2003,
+    "year_max": 2012,
+    "symptoms": [
+      "cold start rattle for first 5 seconds",
+      "timing chain noise at 4000-6000 rpm",
+      "rattle that fades after oil pressure builds",
+      "cct plunger extended past service limit"
+    ],
+    "inspection_steps": [
+      "Remove CCT from head, inspect plunger extension against service manual limit — if at max, tensioner is done",
+      "Pull valve cover, check cam chain for stretch by counting free-play links at the tensioner rail",
+      "Install APE manual cam chain tensioner (PN RT-600) — eliminates the Honda hydraulic failure mode permanently",
+      "After installing manual CCT, set cam chain tension by rotating engine to TDC compression and adjusting per APE instructions"
+    ],
+    "confidence_hint": 0.88,
+    "verified_by": "600rr.net + APE Race Products"
+  },
+  {
+    "id": "clutch-basket-judder",
+    "component": "clutch basket",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "clutch judder on takeoff",
+      "chatter when releasing clutch from stop",
+      "clunky engagement",
+      "uneven drive plate tab wear"
+    ],
+    "inspection_steps": [
+      "Pull primary/clutch cover, inspect basket fingers where steel plate tabs ride — notches deeper than 0.5 mm cause judder",
+      "Dress minor grooving with a flat file; deep grooves require basket replacement, no exceptions",
+      "Check primary reduction gear backlash — excessive backlash amplifies basket wear and must be corrected first",
+      "Replace steel + friction plates as a set when basket is replaced; mixing old friction plates with a new basket re-wears it fast"
+    ],
+    "confidence_hint": 0.82,
+    "verified_by": "ADVrider wrenching forum + Clymer procedures"
+  },
+  {
+    "id": "steering-head-notchy",
+    "component": "steering head bearings",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "notchy feeling at dead ahead",
+      "bars want to center themselves off-straight",
+      "front end wobble at low speed",
+      "detent when turning handlebars slowly"
+    ],
+    "inspection_steps": [
+      "Lift front wheel, grab lower fork legs, pull straight up — any knock on re-seating means loose bearings or brinelling",
+      "With front raised and steering in the bike's normal range, rock bars slowly side to side feeling for detents at dead-center",
+      "Full fix: remove triple clamp, press out old races from head tube and lower stem, install tapered All Balls or stock replacement",
+      "Always pack new bearings with waterproof grease and torque stem nut to spec (typically 45-55 Nm, check service manual)"
+    ],
+    "confidence_hint": 0.85,
+    "verified_by": "universal service-manual procedure + ADVrider"
+  },
+  {
+    "id": "hd-compensator",
+    "component": "primary compensator (Big Twin)",
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "year_min": 2007,
+    "year_max": 2016,
+    "symptoms": [
+      "thunk from primary on start",
+      "bang on shutdown",
+      "chirp at idle in gear",
+      "rattle from primary chaincase"
+    ],
+    "inspection_steps": [
+      "Pull primary cover and inspect stock compensator sprocket and spring pack — collapsed springs or visibly worn ramps mean replace",
+      "Upgrade to SE Screamin' Eagle compensator PN 40041-10 or aftermarket (BAKER, Rivera) — eliminates the stock OEM failure mode",
+      "Inspect primary chain adjuster shoe while in there; deeply grooved shoes often accompany a tired compensator",
+      "Torque compensator bolt to 150-170 ft-lb with red Loctite — this bolt backs off and destroys the primary if undertorqued"
+    ],
+    "confidence_hint": 0.88,
+    "verified_by": "hdforums + HD service bulletin M-1285"
+  },
+  {
+    "id": "primary-chain-tensioner",
+    "component": "primary chain tensioner shoe",
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "year_min": 2007,
+    "year_max": 2024,
+    "symptoms": [
+      "primary chain slap",
+      "whine from primary cover",
+      "rattle under acceleration",
+      "slack in primary chain when checked through inspection plug"
+    ],
+    "inspection_steps": [
+      "Remove derby/inspection cover and measure primary chain deflection at the tensioner with factory gauge — max 0.625 in",
+      "If tensioner is factory manual, loosen lock nut and adjust per service manual (1998-2006); if automatic, check shoe wear level",
+      "Pull primary cover to inspect tensioner shoe for cracks or chunks missing — replace before metal-on-metal contact starts",
+      "On 2007+ auto-tensioners, a failed tensioner will shed plastic into the primary — flush chaincase after replacement"
+    ],
+    "confidence_hint": 0.86,
+    "verified_by": "hdforums + HD service manual"
+  },
+  {
+    "id": "intake-air-leak",
+    "component": "intake manifold boots / o-rings",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "high idle that won't adjust",
+      "surging at steady throttle",
+      "lean stumble off idle",
+      "idle drop when spraying carb cleaner on manifold"
+    ],
+    "inspection_steps": [
+      "Spray carb cleaner or propane around the intake-to-head joint while at idle — any idle rise confirms an air leak",
+      "Pull intake boots (or manifold on EFI) and inspect rubber for cracks where it flexes — replace whole boot, not just o-ring",
+      "On EFI bikes, re-seat or replace the manifold-to-head O-ring AND the throttle body mating seal; both can leak independently",
+      "After repair, recheck idle mixture screw (CV carbs) or run TPS/IAC reset procedure (EFI) — air-leak comp is locked in ECU otherwise"
+    ],
+    "confidence_hint": 0.83,
+    "verified_by": "universal carb/EFI diagnosis + FactoryPro manuals"
+  },
+  {
+    "id": "rr-overcharge",
+    "component": "regulator/rectifier (overcharge mode)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "charging voltage above 15v",
+      "battery boiling or swelling",
+      "headlight bulbs blowing prematurely",
+      "bulging battery case"
+    ],
+    "inspection_steps": [
+      "Verify charging at 3000 rpm with known-good DVM — 14.0-14.8V normal, over 15.2V is regulator failure mode",
+      "Check R/R heatsink for heat discoloration and loose mounting; a bad ground through the mount can spike output",
+      "On Shindengen-style units, test stator leads for balance — imbalanced legs will trip a weak R/R into overcharge",
+      "Replace with upgraded MOSFET R/R (SH775 from later bikes is a common swap) — runs cooler and fails-safe to undercharge"
+    ],
+    "confidence_hint": 0.85,
+    "verified_by": "roadstertech.com + ADVrider electrical forum"
+  },
+  {
+    "id": "brake-rotor-warp",
+    "component": "front brake rotor",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "brake lever pulsation",
+      "bars shake under braking",
+      "rotor run-out over 0.2 mm",
+      "steering wobble when applying front brake"
+    ],
+    "inspection_steps": [
+      "Measure rotor run-out with dial indicator at rotor OD — service limit typically 0.3 mm, replace if exceeded",
+      "Measure rotor thickness at 4 spots around circumference — taper of 0.05 mm indicates uneven pad deposit (not true warp)",
+      "If taper, bed pads properly (ten stops from 60 mph, no coming to full stop) before condemning rotor",
+      "Replace rotors in pairs when both wear/warp — uneven front rotors cause bar pull under braking"
+    ],
+    "confidence_hint": 0.82,
+    "verified_by": "EBC tech + Motorcyclist braking tech article"
+  },
+  {
+    "id": "injector-clog",
+    "component": "fuel injector (clogged nozzle)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": 1998,
+    "year_max": null,
+    "symptoms": [
+      "cold start hard",
+      "surge at part throttle",
+      "miss under load",
+      "unbalanced cylinder EGT on multi-cyl"
+    ],
+    "inspection_steps": [
+      "Run a tank of Techron Concentrate Plus at double-dose (1 oz per gal) and ride aggressively 100 miles — cheapest first attempt",
+      "If no improvement, pull injectors and have them ultrasonic-cleaned and flow-tested (RC Engineering, Witch Hunter)",
+      "Check fuel pressure at the rail against spec — low pressure mimics clogged injectors and must be ruled out first",
+      "Replace fuel filter in-line or in-tank at the same service; a plugged filter will re-contaminate freshly cleaned injectors"
+    ],
+    "confidence_hint": 0.78,
+    "verified_by": "Witch Hunter tech notes + ADVrider EFI troubleshooting"
+  },
+  {
+    "id": "tb-sync-drift",
+    "component": "throttle body synchronization",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": 2000,
+    "year_max": null,
+    "symptoms": [
+      "rough idle on multi-cylinder",
+      "uneven pulse at low rpm",
+      "throttle response flat-spotted on one bank",
+      "popping on decel"
+    ],
+    "inspection_steps": [
+      "Warm engine fully, connect Morgan Carbtune or vacuum gauges to each intake port sync nipple",
+      "Adjust slave throttle bodies to match master body's vacuum reading at 1200 rpm within 10 mmHg across all cylinders",
+      "Sweep throttle to 3000 rpm and confirm readings stay in sync — drift at higher rpm indicates a cable/linkage issue not a sync issue",
+      "Always sync AFTER setting valve clearances (out-of-spec lash mimics a sync problem)"
+    ],
+    "confidence_hint": 0.80,
+    "verified_by": "Morgan Carbtune docs + shop service procedures"
+  },
+  {
+    "id": "starter-clutch-slip",
+    "component": "one-way starter clutch",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "starter motor spins without cranking",
+      "grinding on start attempt",
+      "intermittent start that works after rocking bike",
+      "zing sound from starter idler"
+    ],
+    "inspection_steps": [
+      "Pull starter and inspect idler gear teeth + starter pinion for chipped teeth — replace any damaged gear",
+      "Remove alternator rotor to access starter clutch sprag — inspect rollers/springs for galling or flat spots",
+      "Replace sprag clutch assembly as a unit; individual rollers can be sourced but alignment is critical",
+      "Always inspect the ring gear on the back of the flywheel at the same time — worn ring-gear teeth cause repeat slip"
+    ],
+    "confidence_hint": 0.84,
+    "verified_by": "Clymer + CBR forum collected wisdom"
+  },
+  {
+    "id": "shift-fork-wear",
+    "component": "shift fork (transmission)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "jumps out of gear under load",
+      "false neutral between 3rd and 4th",
+      "gear pops out on deceleration",
+      "notchy shift into one specific gear"
+    ],
+    "inspection_steps": [
+      "Split cases, pull transmission mainshaft + countershaft, inspect shift fork tips for mushrooming or bluing (heat damage)",
+      "Measure shift fork groove width on sliding gears with caliper against service-manual spec — wear here is rarer but real",
+      "Check shift drum detents for wear at the detent plate — a weak detent lets gears walk under load",
+      "Always replace shift fork AND the mated sliding gear — worn pair causes repeat failure even with new fork alone"
+    ],
+    "confidence_hint": 0.83,
+    "verified_by": "Clymer manuals + transmission rebuild forum threads"
+  },
+  {
+    "id": "flat-tappet-cam-lobe",
+    "component": "camshaft lobe (flat-tappet engines)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": 2010,
+    "symptoms": [
+      "valvetrain tick under load",
+      "loss of power on one cylinder",
+      "cam lobe shows scuffing on inspection",
+      "shiny metallic flake on drain plug"
+    ],
+    "inspection_steps": [
+      "Pull valve cover, rotate engine through one cycle, inspect each lobe surface with strong light — scuffing/galling is terminal",
+      "Check that oil has proper ZDDP level (1200+ ppm zinc); modern SN/SP oils are too low-zinc for flat-tappet cams",
+      "If wear is caught early, replace lobe-matching lifter AND cam together — NEVER reuse old lifters on a new cam",
+      "Re-break-in with high-zinc break-in oil (Lucas Hot Rod, Brad Penn Break-In) at 2000 rpm for 20 minutes no idling"
+    ],
+    "confidence_hint": 0.88,
+    "verified_by": "Summit Racing tech + Harley Davidson tech service bulletins"
+  },
+  {
+    "id": "valve-lash-tight",
+    "component": "valve clearances (tight lash)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "hard starting when hot",
+      "loss of compression on one cylinder",
+      "burned exhaust valve",
+      "soft pop through the exhaust at idle"
+    ],
+    "inspection_steps": [
+      "Warm engine, shut down, pull valve cover, measure lash on each valve at TDC compression per service manual sequence",
+      "Compare to spec — tight exhaust side is the killer; zero lash means valve cannot close and will burn a seat in hours",
+      "For shim-over-bucket heads, swap shims to bring lash into spec; for screw-and-locknut, back off adjuster and re-torque locknut",
+      "Re-check lash after 500-1000 miles — new seats bed in and often tighten; ignoring this burns the valve you just fixed"
+    ],
+    "confidence_hint": 0.87,
+    "verified_by": "service manual + 2-stroke / 4-stroke tuning handbooks"
+  },
+  {
+    "id": "ring-blowby",
+    "component": "piston rings (blow-by)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "oil consumption over 1 qt/1000 mi",
+      "puff of smoke under load",
+      "crankcase pressurization",
+      "oil in airbox"
+    ],
+    "inspection_steps": [
+      "Run a compression test cold, then wet (oil down the cylinder), then hot — 15%+ rise wet-vs-dry means rings, not valves",
+      "Leakdown test: pressurize cylinder at TDC, listen for hiss — hiss at oil fill = rings; at intake = intake valve; at exhaust = exhaust valve",
+      "Pull head, inspect cylinder bore for wear ridge at top of ring travel — a nail-catching ridge means bore is worn past service",
+      "Rebore to next oversize and fit matching oversized piston + fresh ring set; always plateau-hone for proper ring seating"
+    ],
+    "confidence_hint": 0.80,
+    "verified_by": "Clymer + engine rebuilder's handbook"
+  },
+  {
+    "id": "crank-seal-weep",
+    "component": "crankshaft seal (output side)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "oil weep behind front sprocket",
+      "oil film on countershaft",
+      "drip from stator cover seam",
+      "oil residue on underside of frame"
+    ],
+    "inspection_steps": [
+      "Clean area, run bike, re-inspect — identifying the actual seal source is 80% of the job; gravity can disguise origin",
+      "For output-side: pull front sprocket, snap out old seal with pick, drive new one in flush with proper seal driver (not a socket)",
+      "Inspect output shaft sealing surface for grooving — any groove deeper than 0.1 mm needs a Speedi-Sleeve or shaft replacement",
+      "Always replace the seal during clutch/primary service; the labor is zero-added and the seal is $10-$30"
+    ],
+    "confidence_hint": 0.84,
+    "verified_by": "universal service-manual procedure + ADVrider garage threads"
+  },
+  {
+    "id": "header-crack",
+    "component": "exhaust header pipe",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "tick that goes away at high rpm",
+      "black sooty mark on header flange",
+      "exhaust leak at mid-pipe seam",
+      "popping on decel that wasn't there before"
+    ],
+    "inspection_steps": [
+      "With engine cold, run at idle and feel around header with a shop rag — pulse of hot air or soot line betrays the leak",
+      "Inspect collector welds and slip-joint at mid-pipe; aftermarket pipes crack at bends from cold-cycling fatigue",
+      "For hairline cracks at welds, a shop with TIG and stainless filler can re-weld; for split collectors, replace the pipe",
+      "Check exhaust gasket at head flange when tracing header leaks — gaskets harden and crumble, especially on air-cooled V-twins"
+    ],
+    "confidence_hint": 0.79,
+    "verified_by": "exhaust fabricator forums + Cycle World tech"
+  },
+  {
+    "id": "clutch-cable-stretch",
+    "component": "clutch cable",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "clutch engagement at end of lever travel",
+      "cable free-play won't adjust out",
+      "heavy clutch pull",
+      "clutch drags when fully released"
+    ],
+    "inspection_steps": [
+      "Set free-play at the perch to factory spec (typically 2-4 mm); if adjusters are maxed out, cable is stretched and due",
+      "Lube cable with cable luber + motor oil or proper cable lube — dry cables feel stretched when they're actually binding",
+      "Inspect cable ends for frayed strands at the ferrules — any broken strand = replace whole cable immediately",
+      "When replacing, route new cable matching original path through frame; wrong routing causes early re-stretch"
+    ],
+    "confidence_hint": 0.85,
+    "verified_by": "universal service-manual procedure + shop practice"
+  },
+  {
+    "id": "grip-weight-wear",
+    "component": "handlebar end weights / grip pucks",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "buzz through grips at cruise",
+      "numb hands after short rides",
+      "vibration worse than when new",
+      "loose bar-end weight rattle"
+    ],
+    "inspection_steps": [
+      "Pull bar-end weights and inspect internal rubber isolators — collapsed rubber is the #1 cause of new-vibration complaints",
+      "Torque bar-end bolt to spec with blue Loctite; undertorqued weight rattles and loses isolation effectiveness",
+      "If factory rubber is gone, aftermarket heavier weights (ProTaper, Rizoma) reduce buzz significantly — 40-50% mass helps",
+      "Check that grips themselves aren't bonded directly to bar without glue — direct bond transmits more vibration than clean grip glue"
+    ],
+    "confidence_hint": 0.72,
+    "verified_by": "Cycle World ergonomics + forum tribal knowledge"
+  },
+  {
+    "id": "swingarm-bearing-slop",
+    "component": "swingarm pivot bearings",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "rear end wags at cruise",
+      "chain tension varies as suspension cycles",
+      "swingarm has lateral play when pulled side to side",
+      "hinge feeling in rear end on throttle application"
+    ],
+    "inspection_steps": [
+      "Put bike on center stand or lift, grab swingarm near axle, push/pull laterally — any detectable play = pivot bearings worn",
+      "Pull swingarm, inspect needle/tapered bearings for brinelling or dry rust — repack with waterproof grease if still in service",
+      "Check pivot shaft for wear groove at the bearing contact patch; a grooved shaft will eat a new bearing in weeks",
+      "Torque pivot shaft nut to service-manual spec; over-torquing binds bearings, under-torquing lets them hammer themselves out"
+    ],
+    "confidence_hint": 0.84,
+    "verified_by": "ADVrider + universal service-manual procedure"
+  },
+  {
+    "id": "countershaft-seal-leak",
+    "component": "countershaft / output shaft seal",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "oil film on front sprocket",
+      "chain wet with engine oil",
+      "gearcase dripping behind sprocket cover",
+      "oil sprayed onto swingarm by chain"
+    ],
+    "inspection_steps": [
+      "Remove sprocket cover, clean countershaft area, run bike — oil forming behind the sprocket confirms countershaft seal failure",
+      "Pull front sprocket (lock rear brake + breaker bar), pry old seal out with pick, drive new seal in square with seal driver",
+      "Inspect countershaft sealing surface for groove under old seal lip — a grooved shaft needs Speedi-Sleeve or shaft replacement",
+      "Fill transmission to spec level after seal replacement — leak was probably dropping level while you weren't watching"
+    ],
+    "confidence_hint": 0.83,
+    "verified_by": "universal service-manual procedure + sportbike shop wisdom"
+  },
+  {
+    "id": "final-drive-splines",
+    "component": "final drive / rear hub splines (shaft / belt hubs)",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "clunk on throttle pickup",
+      "loose feel in rear drive",
+      "spline grease leaking from hub",
+      "shaft drive lash beyond service limit"
+    ],
+    "inspection_steps": [
+      "Pull rear wheel, clean spline grease off drive hub, inspect male + female splines for worn or rounded teeth",
+      "Measure drive lash at sprocket/pulley — over service-manual spec indicates worn splines or bearing pre-load loss",
+      "Repack splines with moly-60 anti-seize (NOT regular chassis grease — heat cooks it out in a month) at each tire change",
+      "Replace hub + matching drive if spline tips are rolled or teeth chipped; running it grenades the rear-drive unit"
+    ],
+    "confidence_hint": 0.82,
+    "verified_by": "BMW / Harley shaft-drive forums + Moto Guzzi service procedures"
+  },
+  {
+    "id": "turn-signal-relay-click-death",
+    "component": "turn signal flasher relay",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "turn signal won't flash",
+      "one side blinks hyper-fast",
+      "clicking sound without bulb flash",
+      "LED conversion caused flasher issues"
+    ],
+    "inspection_steps": [
+      "Swap in a known-good bulb first — a single blown bulb is the #1 cause of hyper-flash and 'won't flash' symptoms",
+      "Measure battery voltage at flasher pin — below 12.2V causes thermal-style flashers to malfunction intermittently",
+      "If an LED conversion was done recently, install an LED-compatible electronic flasher OR add load resistors to each turn signal",
+      "Pull the flasher relay and test on the bench with a 12V source + bulb; a dead relay will not click and must be replaced"
+    ],
+    "confidence_hint": 0.80,
+    "verified_by": "universal electrical troubleshooting + Custom Dynamics LED install guide"
+  },
+  {
+    "id": "coolant-weep-water-pump",
+    "component": "water pump mechanical seal",
+    "make": null,
+    "model_pattern": "%",
+    "year_min": null,
+    "year_max": null,
+    "symptoms": [
+      "coolant drip from water pump weep hole",
+      "crusty green residue under pump",
+      "coolant loss with no visible leak",
+      "sweet smell near engine when warm"
+    ],
+    "inspection_steps": [
+      "Locate water pump weep hole on pump housing underside — a wet or crusty weep hole is an unambiguous seal failure indicator",
+      "Check coolant reservoir level and top-tank level weekly; ongoing loss confirms seal (not just a one-time spill)",
+      "Replace water pump as an assembly (not just seal + impeller) unless you have precision bearings-and-seals tools and know-how",
+      "Flush + refill with OEM-spec coolant and bleed per service manual; an air pocket in the pump kills a fresh seal fast"
+    ],
+    "confidence_hint": 0.85,
+    "verified_by": "liquid-cooled bike service manuals + shop repair experience"
+  }
+]

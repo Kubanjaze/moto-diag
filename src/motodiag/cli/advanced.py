@@ -32,6 +32,7 @@ Click's ``@group.command("...")`` adds them without re-registering.
 
 from __future__ import annotations
 
+import csv
 import json as _json
 from typing import Optional
 
@@ -1983,20 +1984,27 @@ def _resolve_fleet_or_die(fleet: str) -> dict:
     Accepts either an integer id (as a string — Click-argument) or a
     human-readable name. Used by every `fleet <subcmd>` to normalize
     fleet addressing. Owner scoping defaults to the system user (id=1).
+
+    If the input looks like an integer we try id-lookup first; on miss
+    we fall back to name-lookup (in case the mechanic literally named a
+    fleet "7"). This keeps both `fleet show 7` (id) and `fleet show
+    "7-day loaner"` (name) ergonomic.
     """
     from motodiag.advanced.fleet_repo import (
         FleetNotFoundError,
         _resolve_fleet,
     )
 
-    identifier: int | str
     raw = str(fleet).strip()
     if raw.isdigit():
-        identifier = int(raw)
-    else:
-        identifier = raw
+        try:
+            return _resolve_fleet(int(raw))
+        except FleetNotFoundError:
+            # Fall back to name lookup — mechanic may have named a fleet
+            # numerically.
+            pass
     try:
-        return _resolve_fleet(identifier)
+        return _resolve_fleet(raw)
     except FleetNotFoundError as exc:
         raise click.ClickException(str(exc)) from exc
 

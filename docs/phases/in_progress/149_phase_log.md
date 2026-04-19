@@ -34,3 +34,7 @@ Second Track F phase. Appends `wear` subcommand to the `advanced` Click group Ph
 **Dependencies:** Phase 148 complete (required). No Track E migration dependency. No hardware dependency.
 
 **Next:** Build — agent-delegated Builder-149. Architect trust-but-verify reproduces 30-test run.
+
+### 2026-04-18 19:40 — Build complete (Builder-149 + Architect trust-but-verify)
+
+Phase 149 shipped. 309 LoC `advanced/wear.py` + 30-entry `wear_patterns.json` (662 lines, real mechanic vocabulary + forum citations) + `cli/advanced.py` +180 LoC `wear_cmd` + 33 tests. 33/33 GREEN on first run (3.5s). No bug fixes needed.
