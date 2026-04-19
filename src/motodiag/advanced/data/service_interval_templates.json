@@ -1,0 +1,398 @@
+[
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "oil-change",
+    "description": "Engine + primary oil change (20W-50 HD oil)",
+    "every_miles": 5000,
+    "every_months": 12,
+    "notes": "HD 2017+ service manual — 20W-50 HD oil. Forum consensus on V&H and HD forums: change annually even if under 5k miles; engines sit more than they run for weekend riders."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "Sportster%",
+    "item_slug": "primary-chain-adjust",
+    "description": "Primary chain tension adjustment",
+    "every_miles": 2500,
+    "every_months": null,
+    "notes": "Sportster service manual — 0.25\" free play. Forum tip: re-check 500 mi after an adjust, primary tends to seat."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "stator-inspection",
+    "description": "Stator + voltage regulator inspection",
+    "every_miles": 20000,
+    "every_months": null,
+    "notes": "HD stators are a known wear item. Inspection at 20k gives enough lead time to catch the gray-goop failure before it strands the bike."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "transmission-oil-change",
+    "description": "Transmission fluid change",
+    "every_miles": 20000,
+    "every_months": 24,
+    "notes": "HD service manual — Formula+ or equivalent. Forum: many riders shorten to 10k on Twin Cam for cleaner shifts."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "brake-pad-inspection",
+    "description": "Front + rear brake pad thickness check",
+    "every_miles": 5000,
+    "every_months": 6,
+    "notes": "HD OEM minimum thickness 1.0 mm; replace at 2.0 mm for safety margin."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "drive-belt-inspection",
+    "description": "Drive belt + sprocket tension + wear check",
+    "every_miles": 5000,
+    "every_months": null,
+    "notes": "HD belts: 5/8\" deflection w/ 10 lb load. Forum: inspect for missing teeth post-rainy-season."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "fork-oil-change",
+    "description": "Front fork oil change",
+    "every_miles": 25000,
+    "every_months": 60,
+    "notes": "Forum consensus: every 5 years or 25k, whichever first; fork oil degrades with heat cycling even without big mileage."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "Touring%",
+    "item_slug": "clutch-cable-adjust",
+    "description": "Clutch cable free-play adjustment",
+    "every_miles": 5000,
+    "every_months": 12,
+    "notes": "Touring models stretch cables fast with heavy clutch pulls; check after every major service."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "Softail%",
+    "item_slug": "swingarm-bearing-grease",
+    "description": "Swingarm pivot bearing re-grease",
+    "every_miles": 20000,
+    "every_months": null,
+    "notes": "Softail rear-swingarm pivot is often neglected. Mobil 1 grease, 20k interval."
+  },
+  {
+    "make": "harley-davidson",
+    "model_pattern": "%",
+    "item_slug": "cam-chain-tensioner-check",
+    "description": "Cam chain tensioner (Twin Cam hydraulic) inspection",
+    "every_miles": 20000,
+    "every_months": null,
+    "notes": "Twin Cam pre-2007 shoes wear fast; late-model hydraulic units are better but still inspect at 20k."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "CBR%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection",
+    "every_miles": 16000,
+    "every_months": null,
+    "notes": "Honda CBR service manual — shim-under-bucket. 16k interval for CBR600RR / CBR1000RR / CBR929. Forum tip: most stay in spec past 30k."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "Gold Wing%",
+    "item_slug": "oil-change",
+    "description": "Engine oil + filter change (GL1800 platform)",
+    "every_miles": 8000,
+    "every_months": 12,
+    "notes": "Gold Wing service manual — 10W-30. Touring owners stretch to 8k; urban riders should stay closer to 4k."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "Shadow%",
+    "item_slug": "air-filter",
+    "description": "Air filter replacement",
+    "every_miles": 12000,
+    "every_months": null,
+    "notes": "Shadow OEM paper filter — not washable. Replace at 12k; dusty climates earlier."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "%",
+    "item_slug": "coolant-flush",
+    "description": "Coolant flush + refill (50/50 ethylene glycol)",
+    "every_miles": null,
+    "every_months": 24,
+    "notes": "Honda service spec — Pro Honda HP coolant. 24-month interval independent of mileage."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "CB%",
+    "item_slug": "carb-sync",
+    "description": "Carburetor synchronization (multi-cylinder)",
+    "every_miles": 12000,
+    "every_months": 24,
+    "notes": "Only applies to pre-FI CB models. Forum tip: a mercury stick is the most reliable tool; vacuum gauges drift."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "Gold Wing%",
+    "item_slug": "final-drive-oil",
+    "description": "Final drive (shaft) gear oil change",
+    "every_miles": 24000,
+    "every_months": null,
+    "notes": "Hypoid 80W-90 per Honda spec. Gold Wing shaft lasts forever if fluid is kept fresh."
+  },
+  {
+    "make": "honda",
+    "model_pattern": "CRF%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection (CRF platform)",
+    "every_miles": 6000,
+    "every_months": null,
+    "notes": "CRF450R/CRF450L race engines — shorter interval due to high-compression single-cylinder. Forum tip: check after first 500 mi too."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "YZF-R1%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection (R1 crossplane)",
+    "every_miles": 26600,
+    "every_months": null,
+    "notes": "Yamaha R1 service manual — 42,800 km. Crossplane engines rarely need shim changes before 40k."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "MT-09%",
+    "item_slug": "oil-change",
+    "description": "Engine oil + filter change",
+    "every_miles": 4000,
+    "every_months": 12,
+    "notes": "Yamaha spec — 10W-40. MT-09 triple runs hot in traffic; 4k keeps the film intact."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "YZF-R6%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection (R6 inline-four)",
+    "every_miles": 26600,
+    "every_months": null,
+    "notes": "R6 shim-under-bucket; valve-check labor is ~3 hours. Forum: many riders go 40k+ without adjustment."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "FZ%",
+    "item_slug": "throttle-body-sync",
+    "description": "Throttle body synchronization",
+    "every_miles": 16000,
+    "every_months": 24,
+    "notes": "FZ-series triple/four TBS requires a Carbtune or equivalent. Restored smoothness is dramatic when out of sync."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "V Star%",
+    "item_slug": "shaft-drive-oil",
+    "description": "Shaft drive oil change",
+    "every_miles": 16000,
+    "every_months": 24,
+    "notes": "V Star 650/1100 — hypoid 80W-90. Factory fill is meant to last; 16k is a good rhythm check."
+  },
+  {
+    "make": "yamaha",
+    "model_pattern": "%",
+    "item_slug": "air-filter",
+    "description": "Air filter replacement",
+    "every_miles": 12000,
+    "every_months": null,
+    "notes": "Generic Yamaha air-filter cadence. OEM paper or aftermarket K&N both OK."
+  },
+  {
+    "make": "kawasaki",
+    "model_pattern": "KLR%",
+    "item_slug": "doohickey-check",
+    "description": "Balancer doohickey inspection + torque-limiter bolt check",
+    "every_miles": 15000,
+    "every_months": null,
+    "notes": "KLR650 forum consensus — critical failure mode. Eagle Mike's billet doohickey is the universal aftermarket fix; stock unit eats itself eventually."
+  },
+  {
+    "make": "kawasaki",
+    "model_pattern": "Ninja%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection",
+    "every_miles": 15000,
+    "every_months": null,
+    "notes": "Kawasaki Ninja 300/400/650/ZX service manual — shim-under-bucket. Forum: Ninja 650 most commonly needs intake shim adjust at 30k."
+  },
+  {
+    "make": "kawasaki",
+    "model_pattern": "Vulcan%",
+    "item_slug": "shaft-drive-oil",
+    "description": "Shaft drive / final gear oil change",
+    "every_miles": 15000,
+    "every_months": 24,
+    "notes": "Vulcan shaft models — 80W-90 GL-5. Owners often skip; don't."
+  },
+  {
+    "make": "kawasaki",
+    "model_pattern": "ZX%",
+    "item_slug": "cam-chain-tensioner-check",
+    "description": "Cam chain tensioner inspection",
+    "every_miles": 20000,
+    "every_months": null,
+    "notes": "ZX-10R / ZX-6R have known CCT failure patterns — forum: APE manual tensioner is the preferred swap."
+  },
+  {
+    "make": "kawasaki",
+    "model_pattern": "%",
+    "item_slug": "brake-fluid-flush",
+    "description": "Brake fluid flush (front + rear)",
+    "every_miles": null,
+    "every_months": 24,
+    "notes": "Kawasaki spec DOT-4. Fluid absorbs water; replace every 2 years regardless of mileage."
+  },
+  {
+    "make": "suzuki",
+    "model_pattern": "GSX-R%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection",
+    "every_miles": 15000,
+    "every_months": null,
+    "notes": "Suzuki GSX-R service manual. Forum tip: GSX-R 1000 K5-K8 most needs attention; later generations stable."
+  },
+  {
+    "make": "suzuki",
+    "model_pattern": "SV%",
+    "item_slug": "oil-change",
+    "description": "Engine oil + filter change",
+    "every_miles": 3500,
+    "every_months": 12,
+    "notes": "SV650/SV1000 V-twin runs hot; 3,500 mi is more realistic than the factory 6k for spirited riders."
+  },
+  {
+    "make": "suzuki",
+    "model_pattern": "V-Strom%",
+    "item_slug": "air-filter",
+    "description": "Air filter replacement",
+    "every_miles": 12000,
+    "every_months": null,
+    "notes": "V-Strom 650/1000 adventure riders frequently ride dusty roads — pull at half-interval to check."
+  },
+  {
+    "make": "suzuki",
+    "model_pattern": "Hayabusa%",
+    "item_slug": "cam-chain-tensioner-check",
+    "description": "Cam chain tensioner inspection",
+    "every_miles": 20000,
+    "every_months": null,
+    "notes": "Hayabusa hydraulic CCT is reliable but worth inspecting at 20k on high-mileage bikes."
+  },
+  {
+    "make": "ktm",
+    "model_pattern": "1290%",
+    "item_slug": "coolant-flush",
+    "description": "Coolant flush + refill",
+    "every_miles": null,
+    "every_months": 24,
+    "notes": "KTM 1290 Super Duke / Super Adventure — OEM long-life coolant, 24-month replacement."
+  },
+  {
+    "make": "ktm",
+    "model_pattern": "690%",
+    "item_slug": "valve-check",
+    "description": "Valve clearance inspection",
+    "every_miles": 15000,
+    "every_months": null,
+    "notes": "KTM 690 Duke/Enduro — LC4 single. Forum: shim-over-bucket, labor-heavy; plan a full day in the garage."
+  },
+  {
+    "make": "ktm",
+    "model_pattern": "%",
+    "item_slug": "oil-change",
+    "description": "Engine oil + filter change",
+    "every_miles": 4500,
+    "every_months": 12,
+    "notes": "KTM spec — Motorex 4T 10W-50. High-RPM singles and twins need fresh oil frequently."
+  },
+  {
+    "make": "ducati",
+    "model_pattern": "%",
+    "item_slug": "valve-check",
+    "description": "Desmodromic valve service",
+    "every_miles": 7500,
+    "every_months": null,
+    "notes": "Ducati desmo — shorter interval than poppet engines. Air-cooled 2-valve: 7.5k. Testastretta 11°: 15k. Forum: always cross-check model year."
+  },
+  {
+    "make": "ducati",
+    "model_pattern": "%",
+    "item_slug": "timing-belt-replace",
+    "description": "Timing belt replacement",
+    "every_miles": null,
+    "every_months": 60,
+    "notes": "Ducati belt-driven engines — 5-year replacement interval regardless of miles. Skipping kills valves."
+  },
+  {
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "item_slug": "service-inspection",
+    "description": "BMW annual service + inspection",
+    "every_miles": 6000,
+    "every_months": 12,
+    "notes": "R1200GS service book — 6k interval is tight vs Japanese norms; BMW labor is pricey so plan ahead."
+  },
+  {
+    "make": "bmw",
+    "model_pattern": "%",
+    "item_slug": "final-drive-oil",
+    "description": "Final drive (paralever / cardan) oil change",
+    "every_miles": 20000,
+    "every_months": 24,
+    "notes": "BMW FD — 75W-90 hypoid. FD failures can be $1000+; keep fluid fresh."
+  },
+  {
+    "make": "*",
+    "model_pattern": "%",
+    "item_slug": "brake-fluid-flush",
+    "description": "Brake fluid flush (hygroscopic, universal)",
+    "every_miles": null,
+    "every_months": 24,
+    "notes": "Universal DOT-4 2-year rule — fluid absorbs moisture, drops boiling point, and darkens. Applies to every motorcycle."
+  },
+  {
+    "make": "*",
+    "model_pattern": "%",
+    "item_slug": "chain-clean-lube",
+    "description": "Chain clean + lube",
+    "every_miles": 1000,
+    "every_months": null,
+    "notes": "Universal chain maintenance — every 500-1000 mi depending on conditions. Skip for belt/shaft-drive bikes."
+  },
+  {
+    "make": "*",
+    "model_pattern": "%",
+    "item_slug": "tire-pressure-check",
+    "description": "Tire pressure + tread depth check",
+    "every_miles": null,
+    "every_months": 1,
+    "notes": "Universal — monthly pressure check. Low pressure is the #1 cause of premature tire wear and poor handling."
+  },
+  {
+    "make": "*",
+    "model_pattern": "%",
+    "item_slug": "spark-plug",
+    "description": "Spark plug replacement",
+    "every_miles": 15000,
+    "every_months": null,
+    "notes": "Universal iridium plugs. Copper plugs halve this to 7.5k. Inspect gap even when not replacing."
+  },
+  {
+    "make": "*",
+    "model_pattern": "%",
+    "item_slug": "air-filter",
+    "description": "Air filter replacement (universal fallback)",
+    "every_miles": 12000,
+    "every_months": null,
+    "notes": "Universal fallback for bikes with no make-specific template. Shorten in dusty climates."
+  }
+]

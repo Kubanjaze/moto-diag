@@ -219,6 +219,18 @@ def predict_failures(
     now_year = datetime.now().year
     age_years = now_year - int(year)
 
+    # --- Phase 155: fetch open recalls for this bike once, reuse for
+    # every prediction. Graceful degradation: any OperationalError or
+    # missing vehicle id leaves the list empty — applicable_recalls
+    # comes back as [] and predictor keeps working exactly as before.
+    open_recalls = _fetch_open_recalls_for_vehicle(vehicle, db_path)
+
+    # --- Phase 154: fetch applicable TSBs once per predict call.
+    # Single DB round-trip per (make, model, year) tuple — the per-
+    # issue matching is keyword-overlap filtering in Python, not N
+    # extra queries. Graceful degradation on pre-migration-022 DBs.
+    tsb_rows = _fetch_tsb_rows_for_vehicle(make, model_name, year, db_path)
+
     predictions: list[FailurePrediction] = []
     for issue in candidates.values():
         pred = _build_prediction(
@@ -230,6 +242,8 @@ def predict_failures(
             current_mileage=current_mileage,
             vehicle=vehicle,
             db_path=db_path,
+            open_recalls=open_recalls,
+            tsb_rows=tsb_rows,
         )
         if pred is None:
             continue
@@ -278,12 +292,21 @@ def _build_prediction(
     current_mileage: Optional[int],
     vehicle: Optional[dict] = None,
     db_path: Optional[str] = None,
+    open_recalls: Optional[list[dict]] = None,
+    tsb_rows: Optional[list[dict]] = None,
 ) -> Optional[FailurePrediction]:
     """Convert one known_issues row into a FailurePrediction.
 
     Returns ``None`` for unusable rows (missing severity/title). The
     match-tier ladder is evaluated first; scoring then layers
     year-range tightness, mileage, and age bonuses.
+
+    ``open_recalls`` (Phase 155) is a pre-fetched list of open NHTSA
+    recall rows for the vehicle. Recalls whose make/model/year
+    envelope overlaps the issue's year_range contribute their
+    ``nhtsa_id`` to ``applicable_recalls`` and — if the recall is
+    ``severity=="critical"`` — bump the prediction's severity floor
+    to ``"critical"`` (recalls trump forum consensus on safety).
     """
     title = (issue.get("title") or "").strip()
     if not title:
@@ -332,6 +355,22 @@ def _build_prediction(
         if current_mileage >= onset_miles:
             score += _ONSET_BAND_BONUS
 
+    # --- Phase 152: DB-sourced mileage bonus -------------------------
+    # When the bike's mileage came from vehicles.mileage (written by
+    # add_service_event's monotonic bump), not from an ad-hoc
+    # --current-miles flag, the reading is corroborated by at least
+    # one logged service event — a stronger trust signal. The CLI
+    # sets vehicle["mileage_source"] = "db" in that case; direct-args
+    # mode and --current-miles overrides set "flag", which yields no
+    # bonus so Phase 148's regression surface is untouched when the
+    # old call shape is used.
+    if (
+        current_mileage is not None
+        and vehicle is not None
+        and vehicle.get("mileage_source") == "db"
+    ):
+        score += 0.05
+
     # --- Age bonus ---
     years_to_onset: Optional[float] = None
     if onset_years is not None:
@@ -363,6 +402,45 @@ def _build_prediction(
     preventive_action = _extract_preventive_action(issue)
     verified_by = _classify_verified_by(issue)
 
+    # --- Phase 153: parts cost lookup (opportunistic).
+    # Import-delayed + broad except so Phase 148 regression stays green
+    # when migration 021 has not been applied or the parts table is
+    # empty. Uses the first entry in parts_needed as the lookup key.
+    parts_cost_cents = _lookup_parts_cost(
+        issue.get("parts_needed"), issue.get("make"), db_path=db_path,
+    )
+
+    # --- Phase 155: match open recalls against this issue's year range.
+    # A recall "applies" to this prediction when the recall's year
+    # envelope overlaps the issue's [year_start, year_end] range. If
+    # any matched recall is severity=="critical", raise the
+    # prediction's severity floor to "critical" — safety recalls
+    # trump forum consensus severity.
+    applicable_recalls: list[str] = []
+    if open_recalls:
+        for rc in open_recalls:
+            if _recall_applies_to_issue(rc, year_start, year_end):
+                nid = rc.get("nhtsa_id")
+                if nid:
+                    applicable_recalls.append(nid)
+                rc_sev = (rc.get("severity") or "").strip().lower()
+                if rc_sev == "critical" and severity != "critical":
+                    severity = "critical"
+                    # Re-bucket confidence for the new severity floor —
+                    # critical recalls always deserve HIGH confidence.
+                    if score < _CONF_HIGH_THRESHOLD:
+                        score = _CONF_HIGH_THRESHOLD
+                        confidence = PredictionConfidence.HIGH
+
+    # --- Phase 154: match TSBs against this issue via keyword overlap.
+    # Each candidate TSB already passed the vehicle (make, model, year)
+    # filter up-front; here we require a shared alphanumeric token of
+    # length ≥ 4 between issue.title+description and tsb.title+
+    # description AND severity bucket-adjacency. Deterministic sort.
+    applicable_tsbs = _match_tsbs_to_issue(
+        tsb_rows, issue, severity,
+    )
+
     return FailurePrediction(
         issue_id=int(issue["id"]),
         issue_title=title,
@@ -377,9 +455,11 @@ def _build_prediction(
         confidence=confidence,
         confidence_score=round(score, 4),
         preventive_action=preventive_action,
-        parts_cost_cents=None,   # Phase 149 populates from migration 018.
+        parts_cost_cents=parts_cost_cents,   # Phase 153 populates from migration 021.
         verified_by=verified_by,
         match_tier=match_tier,
+        applicable_tsbs=applicable_tsbs,
+        applicable_recalls=applicable_recalls,
     )
 
 
@@ -554,3 +634,217 @@ def _apply_drift_bonus(
                 # Single cumulative +0.10, clamped at 1.0.
                 return min(1.0, score + _DRIFT_BONUS)
     return score
+
+
+# --- Phase 155: NHTSA recall integration ------------------------------
+
+
+def _fetch_open_recalls_for_vehicle(
+    vehicle: Optional[dict],
+    db_path: Optional[str],
+) -> list[dict]:
+    """Return open recalls applicable to a garage bike, or [] on any error.
+
+    Graceful-degradation wrapper around
+    :func:`motodiag.advanced.recall_repo.list_open_for_bike`. Any
+    sqlite OperationalError (pre-migration-023 DB), missing vehicle
+    id, or import-time failure returns an empty list so the predictor
+    continues working. This keeps Phase 148's regression surface
+    untouched on older DBs.
+    """
+    if vehicle is None:
+        return []
+    vehicle_id = vehicle.get("id")
+    if vehicle_id is None:
+        return []
+    try:
+        from motodiag.advanced.recall_repo import list_open_for_bike
+        return list_open_for_bike(int(vehicle_id), db_path=db_path)
+    except Exception:
+        return []
+
+
+def _recall_applies_to_issue(
+    recall: dict,
+    issue_year_start: Optional[int],
+    issue_year_end: Optional[int],
+) -> bool:
+    """Return True if a recall's year envelope overlaps an issue's range.
+
+    Both endpoints may be None (open-ended). The overlap test:
+    [rc_start, rc_end] intersect [is_start, is_end] is non-empty.
+    Missing endpoints are treated as plus/minus infinity via the
+    comparison chain.
+    """
+    rc_start = recall.get("year_start")
+    rc_end = recall.get("year_end")
+
+    # When both issue endpoints are None, the issue is "all years" —
+    # any recall overlaps trivially.
+    if issue_year_start is None and issue_year_end is None:
+        return True
+
+    # Compute overlap using the inclusive-range intersection test.
+    if issue_year_start is not None and rc_end is not None:
+        if int(rc_end) < int(issue_year_start):
+            return False
+    if issue_year_end is not None and rc_start is not None:
+        if int(rc_start) > int(issue_year_end):
+            return False
+    return True
+
+
+# --- Phase 153: parts cost lookup ------------------------------------
+
+
+def _lookup_parts_cost(
+    parts_needed_raw,
+    make: Optional[str],
+    db_path: Optional[str] = None,
+) -> Optional[int]:
+    """Return ``typical_cost_cents`` for the first part in the list, or ``None``.
+
+    Phase 148's ``known_issues.parts_needed`` is stored as a JSON array
+    string by the repo layer but can arrive as a Python list when the
+    caller has already deserialised it. Both shapes are accepted. The
+    first entry in the list is used as the lookup key — the predictor
+    surfaces the most-prominent part's cost as the ballpark estimate
+    for the whole repair.
+
+    Import is delayed and the outer try/except is broad so Phase 148's
+    44-test regression stays green in every environment where the
+    parts table is missing (migration 021 not applied) or empty
+    (no seed run yet). ``None`` on any failure preserves the original
+    Phase 148 behaviour.
+    """
+    try:
+        from motodiag.advanced.parts_repo import lookup_typical_cost
+        import json as _json
+
+        if isinstance(parts_needed_raw, list):
+            names = parts_needed_raw
+        elif isinstance(parts_needed_raw, str):
+            try:
+                names = _json.loads(parts_needed_raw)
+            except Exception:
+                names = []
+        else:
+            names = []
+        if not names:
+            return None
+        first = names[0]
+        if not first:
+            return None
+        return lookup_typical_cost(first, make=make, db_path=db_path)
+    except Exception:
+        return None
+
+
+# --- Phase 154: TSB attach -------------------------------------------
+
+
+# Keyword-overlap tokenizer. Tokens are runs of ASCII letters/digits of
+# length >= 4 — short tokens like "the", "fix", "cam" generate too many
+# false positives. Case-insensitive.
+_TSB_TOKEN_RE = re.compile(r"[a-z0-9]{4,}")
+
+
+def _fetch_tsb_rows_for_vehicle(
+    make: Optional[str],
+    model: Optional[str],
+    year,
+    db_path: Optional[str],
+) -> list[dict]:
+    """Return TSB rows matching (make, model, year), or [] on any error.
+
+    Graceful-degradation wrapper around
+    :func:`motodiag.advanced.tsb_repo.list_tsbs_for_bike`. Any
+    ``sqlite3.OperationalError`` (pre-migration-022 DB) or import-time
+    failure returns an empty list so the predictor keeps working on
+    older schemas. Single DB call per predict_failures invocation —
+    the caller caches the return.
+    """
+    if not make or not model:
+        return []
+    try:
+        from motodiag.advanced.tsb_repo import list_tsbs_for_bike
+        return list_tsbs_for_bike(
+            make=make,
+            model=model,
+            year=int(year) if year is not None else None,
+            db_path=db_path,
+        )
+    except Exception:
+        return []
+
+
+def _tokenize_for_tsb(*fragments: Optional[str]) -> set[str]:
+    """Extract lowercase alphanumeric tokens of length >= 4 from text.
+
+    Combines every non-empty fragment into one haystack before
+    tokenizing so callers can cheaply union title + description.
+    Returned as a set for O(1) overlap checks.
+    """
+    haystack = " ".join(f for f in fragments if f).lower()
+    if not haystack:
+        return set()
+    return set(_TSB_TOKEN_RE.findall(haystack))
+
+
+def _match_tsbs_to_issue(
+    tsb_rows: Optional[list[dict]],
+    issue: dict,
+    severity: str,
+) -> list[str]:
+    """Return sorted TSB numbers whose content overlaps the issue.
+
+    Match criteria:
+      1. Shared token of length >= 4 between the combined
+         (title + description) text of the issue and the TSB.
+      2. Severity bucket-adjacency: the TSB severity rank must be
+         within 1 bucket of the issue severity rank (critical ↔ high,
+         high ↔ medium, medium ↔ low, same-band always matches).
+
+    Returns a lexicographically-sorted list of TSB numbers for
+    deterministic output across runs.
+    """
+    if not tsb_rows:
+        return []
+
+    issue_tokens = _tokenize_for_tsb(
+        issue.get("title"),
+        issue.get("description"),
+    )
+    if not issue_tokens:
+        return []
+
+    severity_rank = {
+        "critical": 4, "high": 3, "medium": 2, "low": 1,
+    }
+    issue_severity_weight = severity_rank.get(
+        (severity or "").strip().lower(), 0,
+    )
+
+    matched: set[str] = set()
+    for tsb in tsb_rows:
+        tsb_number = tsb.get("tsb_number")
+        if not tsb_number:
+            continue
+
+        # Severity bucket-adjacency filter.
+        if issue_severity_weight:
+            tsb_weight = severity_rank.get(
+                (tsb.get("severity") or "").strip().lower(), 0,
+            )
+            if tsb_weight and abs(tsb_weight - issue_severity_weight) > 1:
+                continue
+
+        tsb_tokens = _tokenize_for_tsb(
+            tsb.get("title"),
+            tsb.get("description"),
+        )
+        # Require at least one shared token of length >= 4.
+        if issue_tokens & tsb_tokens:
+            matched.add(tsb_number)
+
+    return sorted(matched)

@@ -1245,6 +1245,484 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS fleets;
         """,
     ),
+    # Migration 019 — Phase 151: service-interval scheduling
+    Migration(
+        version=19,
+        name="service_interval_scheduling",
+        description=(
+            "Phase 151: Create a two-table service-interval scheduling "
+            "system layered over the vehicles registry. "
+            "`service_intervals` carries per-bike maintenance schedules "
+            "(oil change, valve check, chain lube, etc.) keyed by "
+            "(vehicle_id, item_slug) UNIQUE, with FK CASCADE on "
+            "vehicle_id so deleting a bike drops its schedule. Dual-"
+            "axis due: every_miles OR every_months may be set (CHECK "
+            "ensures at least one is non-NULL), and last_done_* + "
+            "next_due_* track the most recent completion plus the "
+            "computed next-due point. "
+            "`service_interval_templates` is a global seed catalog — "
+            "OEM-recommended intervals per (make, model_pattern). Both "
+            "'harley-davidson' + SQL LIKE 'Sportster%' model patterns "
+            "and universal '*'/'%' wildcards are supported so a single "
+            "template can cover a whole make or the entire fleet. "
+            "Three indexes support the dominant query shapes: "
+            "`idx_svc_int_vehicle` for per-bike schedule loads, "
+            "`idx_svc_int_next_due` for ORDER BY next_due_at sweeps, "
+            "and `idx_svc_tpl_make_model` for template lookups. "
+            "Phase 152 will add `vehicles.mileage` + `service_history` "
+            "— this phase's record_completion reads/writes them via "
+            "try/except so the soft-dep is free when 152 lands."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS service_intervals (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER NOT NULL,
+                item_slug TEXT NOT NULL,
+                description TEXT NOT NULL,
+                every_miles INTEGER,
+                every_months INTEGER,
+                last_done_miles INTEGER,
+                last_done_at TEXT,
+                next_due_miles INTEGER,
+                next_due_at TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+                UNIQUE (vehicle_id, item_slug),
+                CHECK (every_miles IS NOT NULL OR every_months IS NOT NULL)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_svc_int_vehicle
+                ON service_intervals(vehicle_id);
+            CREATE INDEX IF NOT EXISTS idx_svc_int_next_due
+                ON service_intervals(next_due_at);
+
+            CREATE TABLE IF NOT EXISTS service_interval_templates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model_pattern TEXT NOT NULL,
+                item_slug TEXT NOT NULL,
+                description TEXT NOT NULL,
+                every_miles INTEGER,
+                every_months INTEGER,
+                notes TEXT,
+                CHECK (every_miles IS NOT NULL OR every_months IS NOT NULL),
+                UNIQUE (make, model_pattern, item_slug)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_svc_tpl_make_model
+                ON service_interval_templates(make, model_pattern);
+        """,
+        rollback_sql="""
+            -- Child-first drop order respects FK (service_intervals
+            -- references vehicles). No cross-table FK between the two
+            -- 019 tables, so order between them is only stylistic.
+            DROP TABLE IF EXISTS service_intervals;
+            DROP TABLE IF EXISTS service_interval_templates;
+        """,
+    ),
+    # Migration 020 — Phase 152: service history tracking + vehicles.mileage
+    Migration(
+        version=20,
+        name="service_history_tracking",
+        description=(
+            "Phase 152: Add `vehicles.mileage` INTEGER NULL column as "
+            "the persistent source-of-truth for per-bike odometer "
+            "readings. Create `service_history` table — one row per "
+            "completed service event across the 11-value event_type "
+            "vocabulary (oil-change, tire, valve-adjust, brake, "
+            "diagnostic, recall, chain, coolant, air-filter, "
+            "spark-plug, custom). Each event stores at_miles + at_date "
+            "(ISO-8601), optional notes, cost_cents, mechanic_user_id "
+            "FK, and a comma-separated parts_csv. A CHECK constraint "
+            "enforces the event_type enum; the set is mirrored in the "
+            "Pydantic `ServiceEvent.event_type: Literal[...]` so the "
+            "model and DB can't drift without touching both. FK "
+            "cascades: vehicle_id → vehicles(id) ON DELETE CASCADE "
+            "(service history dies with its bike — non-negotiable "
+            "spec #4); mechanic_user_id → users(id) ON DELETE SET "
+            "NULL (history survives mechanic removal, loses "
+            "attribution only — mirrors the Phase 112/145/150 user-"
+            "deletion preservation pattern). Three indexes support "
+            "the dominant query shapes: per-bike timeline "
+            "`(vehicle_id, at_date DESC)`, per-type cross-bike "
+            "filters `(event_type, at_date DESC)`, and a global "
+            "recent-events feed `(at_date DESC)`. Rollback drops "
+            "service_history + its indexes but leaves vehicles.mileage "
+            "in place — SQLite pre-3.35 lacks native DROP COLUMN and "
+            "the CREATE-COPY-DROP-RENAME dance would churn every "
+            "existing row for a nullable column that causes no harm. "
+            "The predictor gains a +0.05 confidence bonus when "
+            "`vehicle['mileage_source'] == 'db'` — the CLI sets this "
+            "flag when the bike's stored mileage is used without a "
+            "--current-miles override, telling the scorer that the "
+            "reading came from a logged service event rather than a "
+            "user-asserted value."
+        ),
+        upgrade_sql="""
+            ALTER TABLE vehicles ADD COLUMN mileage INTEGER;
+
+            CREATE TABLE IF NOT EXISTS service_history (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER NOT NULL,
+                event_type TEXT NOT NULL,
+                at_miles INTEGER,
+                at_date TEXT NOT NULL,
+                notes TEXT,
+                cost_cents INTEGER,
+                mechanic_user_id INTEGER,
+                parts_csv TEXT,
+                completed_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+                FOREIGN KEY (mechanic_user_id) REFERENCES users(id) ON DELETE SET NULL,
+                CHECK (event_type IN (
+                    'oil-change','tire','valve-adjust','brake',
+                    'diagnostic','recall','chain','coolant',
+                    'air-filter','spark-plug','custom'
+                ))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_service_history_vehicle
+                ON service_history(vehicle_id, at_date DESC);
+            CREATE INDEX IF NOT EXISTS idx_service_history_type
+                ON service_history(event_type, at_date DESC);
+            CREATE INDEX IF NOT EXISTS idx_service_history_date
+                ON service_history(at_date DESC);
+        """,
+        rollback_sql="""
+            -- vehicles.mileage stays in place: SQLite pre-3.35 lacks
+            -- native DROP COLUMN; the nullable leftover is inert.
+            DROP INDEX IF EXISTS idx_service_history_vehicle;
+            DROP INDEX IF EXISTS idx_service_history_type;
+            DROP INDEX IF EXISTS idx_service_history_date;
+            DROP TABLE IF EXISTS service_history;
+        """,
+    ),
+    # Migration 021 — Phase 153: parts cross-reference
+    Migration(
+        version=21,
+        name="parts_cross_reference",
+        description=(
+            "Phase 153: Create a two-table OEM ↔ aftermarket parts "
+            "cross-reference system. `parts` catalogs individual parts "
+            "(both OEM and aftermarket) keyed by a UNIQUE `slug` so "
+            "re-seeding is idempotent. Each row carries the "
+            "manufacturer-side identity (`oem_part_number`, `brand`), "
+            "the mechanic-facing descriptor (`description`, `category`), "
+            "the bike scope (`make` lowercased on insert, "
+            "`model_pattern` using SQL LIKE wildcards so one row can "
+            "cover 'CBR%' or 'Sportster%' families, plus optional "
+            "`year_min`/`year_max`), economic metadata "
+            "(`typical_cost_cents` CHECK ≥ 0, `purchase_url`), and "
+            "provenance (`notes`, `verified_by`). "
+            "`parts_xref` is the many-to-many join between OEM and "
+            "aftermarket parts, carrying a curated `equivalence_rating` "
+            "1-5 (5=drop-in, 4=minor notes, 3=functional-equiv-with-"
+            "tweak, 2=partial, 1=related) along with optional `notes` "
+            "and `source_url`. UNIQUE(oem_part_id, aftermarket_part_id) "
+            "de-dupes cross-references so loaders can INSERT OR IGNORE "
+            "on the natural key for idempotent re-seeding. A CHECK "
+            "constraint `oem_part_id != aftermarket_part_id` blocks "
+            "self-reference. FK cascades: both xref sides → parts(id) "
+            "ON DELETE CASCADE so removing a part drops its "
+            "cross-references automatically; submitted_by_user_id → "
+            "users(id) ON DELETE SET DEFAULT preserves xrefs attributed "
+            "to the system user id=1 when the submitter is removed "
+            "(mirrors the Phase 112/145/150/152 user-deletion "
+            "preservation pattern). Four indexes support the dominant "
+            "query shapes: `idx_parts_oem` (lookup by OEM part "
+            "number), `idx_parts_make_cat` (list-for-bike queries), "
+            "`idx_parts_slug` (slug lookups), and `idx_xref_oem` "
+            "(reverse traversal from one OEM to its aftermarket "
+            "alternatives)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS parts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                slug TEXT NOT NULL UNIQUE,
+                oem_part_number TEXT,
+                brand TEXT NOT NULL,
+                description TEXT NOT NULL,
+                category TEXT NOT NULL,
+                make TEXT NOT NULL,
+                model_pattern TEXT NOT NULL,
+                year_min INTEGER,
+                year_max INTEGER,
+                typical_cost_cents INTEGER NOT NULL DEFAULT 0,
+                purchase_url TEXT,
+                notes TEXT,
+                verified_by TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CHECK (typical_cost_cents >= 0)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_parts_oem
+                ON parts(oem_part_number);
+            CREATE INDEX IF NOT EXISTS idx_parts_make_cat
+                ON parts(make, category);
+            CREATE INDEX IF NOT EXISTS idx_parts_slug
+                ON parts(slug);
+
+            CREATE TABLE IF NOT EXISTS parts_xref (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                oem_part_id INTEGER NOT NULL,
+                aftermarket_part_id INTEGER NOT NULL,
+                equivalence_rating INTEGER NOT NULL DEFAULT 3,
+                notes TEXT,
+                source_url TEXT,
+                submitted_by_user_id INTEGER DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (oem_part_id) REFERENCES parts(id) ON DELETE CASCADE,
+                FOREIGN KEY (aftermarket_part_id) REFERENCES parts(id) ON DELETE CASCADE,
+                FOREIGN KEY (submitted_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT,
+                UNIQUE (oem_part_id, aftermarket_part_id),
+                CHECK (equivalence_rating BETWEEN 1 AND 5),
+                CHECK (oem_part_id != aftermarket_part_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_xref_oem
+                ON parts_xref(oem_part_id);
+        """,
+        rollback_sql="""
+            -- Child-first drop order respects FK (parts_xref references
+            -- parts on both sides).
+            DROP TABLE IF EXISTS parts_xref;
+            DROP TABLE IF EXISTS parts;
+        """,
+    ),
+    # Migration 022 — Phase 154: technical service bulletins (TSBs)
+    Migration(
+        version=22,
+        name="technical_service_bulletins",
+        description=(
+            "Phase 154: Create the `technical_service_bulletins` table "
+            "catalogging OEM-issued Technical Service Bulletins — "
+            "official fixes for known issues, distinct from Phase 155 "
+            "federal safety recalls and Phase 08 forum-consensus "
+            "`known_issues`. Keyed by UNIQUE `tsb_number` (HD 'M-1287', "
+            "Honda 'MC-19-123', Yamaha 'TB-2019-045') so re-seeding is "
+            "idempotent via INSERT OR IGNORE. `make` stores lowercased, "
+            "`model_pattern` uses SQL LIKE wildcards so a single row can "
+            "cover 'Dyna%' or 'CBR600%' families, with optional "
+            "`year_min`/`year_max` bounds. `severity` CHECK in "
+            "(critical, high, medium, low) mirrors the knowledge-base "
+            "severity ladder. `source_url` tracks the public citation "
+            "(service.h-d.com, powersports.honda.com, forum archives); "
+            "`verified_by` captures the provenance chain. Three indexes "
+            "support the dominant query shapes: `idx_tsb_make_model` "
+            "(list-for-bike), `idx_tsb_number` (show by tsb_number), "
+            "and `idx_tsb_issued` DESC (recent-first list + by-make "
+            "queries). No FK to other tables — TSBs are a standalone "
+            "provenance layer referenced by id/number strings only."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS technical_service_bulletins (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                tsb_number TEXT NOT NULL UNIQUE,
+                make TEXT NOT NULL,
+                model_pattern TEXT NOT NULL,
+                year_min INTEGER,
+                year_max INTEGER,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                fix_procedure TEXT NOT NULL,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                issued_date TEXT NOT NULL,
+                source_url TEXT,
+                verified_by TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                CHECK (severity IN ('critical', 'high', 'medium', 'low'))
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_tsb_make_model
+                ON technical_service_bulletins(make, model_pattern);
+            CREATE INDEX IF NOT EXISTS idx_tsb_number
+                ON technical_service_bulletins(tsb_number);
+            CREATE INDEX IF NOT EXISTS idx_tsb_issued
+                ON technical_service_bulletins(issued_date DESC);
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS technical_service_bulletins;
+        """,
+    ),
+    # Migration 023 — Phase 155: NHTSA safety recall extension
+    Migration(
+        version=23,
+        name="recalls_nhtsa_extension",
+        description=(
+            "Phase 155: EXTEND the Phase 118 `recalls` substrate (schema-"
+            "only, zero data) into a working NHTSA safety-recall lookup. "
+            "Distinct from Phase 154 TSBs (manufacturer non-safety) — "
+            "recalls are federal-mandate-to-fix, free to the owner, and "
+            "trump forum consensus. "
+            "ALTER TABLE (SQLite-safe) adds three columns: `nhtsa_id TEXT` "
+            "stores the opaque NHTSA campaign identifier (22V123000 "
+            "pattern); `vin_range TEXT` is either NULL (all-VIN campaign) "
+            "or a JSON list of [prefix_start, prefix_end] tuples for "
+            "partial-VIN scoped recalls; `open INTEGER NOT NULL DEFAULT "
+            "1` tracks whether the campaign is still outstanding (the "
+            "NOT NULL + default preserves pre-existing Phase 118 NULL "
+            "rows — they retrofit to open=1 on the ALTER). "
+            "Since SQLite ALTER cannot add a UNIQUE constraint, "
+            "`idx_recalls_nhtsa_id` is declared as a partial UNIQUE INDEX "
+            "WHERE nhtsa_id IS NOT NULL — two rows with NULL nhtsa_id "
+            "(Phase 118 substrate) coexist; two non-NULL matching rows "
+            "raise IntegrityError. `idx_recalls_open` supports the "
+            "dominant filter (most list_ queries scope to open=1). "
+            "The new `recall_resolutions` table records per-vehicle "
+            "resolutions: UNIQUE(vehicle_id, recall_id) makes "
+            "`mark_resolved` idempotent, FK CASCADE on vehicle + recall "
+            "deletes drops resolutions automatically, FK SET NULL on "
+            "the optional resolved_by_user_id preserves resolution "
+            "history when a user is removed (mirrors Phase 112/150/152 "
+            "user-deletion preservation pattern). Two indexes support "
+            "the dominant queries: `idx_recall_res_vehicle` "
+            "(list_open_for_bike LEFT JOIN) and `idx_recall_res_recall` "
+            "(by-campaign rollup)."
+        ),
+        upgrade_sql="""
+            -- ALTER recalls table: add NHTSA-ID, VIN range, open-status columns.
+            -- SQLite ALTER cannot add UNIQUE; we follow with a partial
+            -- UNIQUE INDEX that only enforces non-NULL rows (Phase 118
+            -- substrate rows with NULL nhtsa_id remain valid).
+            ALTER TABLE recalls ADD COLUMN nhtsa_id TEXT;
+            ALTER TABLE recalls ADD COLUMN vin_range TEXT;
+            ALTER TABLE recalls ADD COLUMN open INTEGER NOT NULL DEFAULT 1;
+
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_recalls_nhtsa_id
+                ON recalls(nhtsa_id) WHERE nhtsa_id IS NOT NULL;
+            CREATE INDEX IF NOT EXISTS idx_recalls_open
+                ON recalls(open);
+
+            -- New table: recall_resolutions tracks per-vehicle closure.
+            CREATE TABLE IF NOT EXISTS recall_resolutions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER NOT NULL,
+                recall_id INTEGER NOT NULL,
+                resolved_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                resolved_by_user_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE CASCADE,
+                FOREIGN KEY (recall_id) REFERENCES recalls(id) ON DELETE CASCADE,
+                FOREIGN KEY (resolved_by_user_id) REFERENCES users(id) ON DELETE SET NULL,
+                UNIQUE (vehicle_id, recall_id)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_recall_res_vehicle
+                ON recall_resolutions(vehicle_id);
+            CREATE INDEX IF NOT EXISTS idx_recall_res_recall
+                ON recall_resolutions(recall_id);
+        """,
+        rollback_sql="""
+            -- Child-first drop order (recall_resolutions has FKs to
+            -- recalls and vehicles; recalls is parent). Drop the
+            -- resolutions table + its indexes, then drop the partial
+            -- UNIQUE INDEX and the open index. SQLite pre-3.35 cannot
+            -- DROP COLUMN via ALTER — the nhtsa_id / vin_range / open
+            -- columns are left in place on rollback. This is a
+            -- documented limitation: callers needing a strict schema-
+            -- only rollback should rebuild via CREATE-COPY-DROP-RENAME
+            -- against the Phase 118 recalls shape.
+            DROP INDEX IF EXISTS idx_recall_res_vehicle;
+            DROP INDEX IF EXISTS idx_recall_res_recall;
+            DROP TABLE IF EXISTS recall_resolutions;
+            DROP INDEX IF EXISTS idx_recalls_nhtsa_id;
+            DROP INDEX IF EXISTS idx_recalls_open;
+        """,
+    ),
+    # Migration 024 — Phase 157: performance baselining
+    Migration(
+        version=24,
+        name="performance_baselines",
+        description=(
+            "Phase 157: Two-table split — `performance_baselines` holds the "
+            "aggregated expected-range band (min / median / max) for each "
+            "(make, model_pattern SQL LIKE, optional year_min / year_max, "
+            "canonical pid_hex `0x05`, operating_state in "
+            "{idle, 2500rpm, redline}) tuple, while `baseline_exemplars` "
+            "records provenance: which sensor recordings mechanics flagged "
+            "as known-healthy and thus fed the aggregates. The split "
+            "mirrors Phase 145 `obd_adapters`/`compat_notes` and Phase "
+            "153 `parts`/`parts_xref`: aggregate rows stay cheap to query "
+            "while raw exemplars preserve the audit trail. "
+            "`performance_baselines` CHECK constraints: `operating_state` "
+            "IN ('idle','2500rpm','redline'), `confidence_1to5` BETWEEN "
+            "1 AND 5, and `expected_min <= expected_median <= "
+            "expected_max` (band sanity — a rebuild producing a "
+            "degenerate band fails fast rather than silently persisting "
+            "bad data). `sample_count` DEFAULT 0 so INSERT OR IGNORE "
+            "stubs don't NULL-out the raw count; `last_rebuilt_at` "
+            "defaults to CURRENT_TIMESTAMP so stale rows are easy to "
+            "spot. `baseline_exemplars` UNIQUE(recording_id) enforces "
+            "idempotent `flag_recording_as_healthy` — re-flagging the "
+            "same recording is a no-op via INSERT OR IGNORE. FK cascades "
+            "match Phase 142 / Phase 112 conventions: vehicle_id → "
+            "vehicles(id) ON DELETE SET NULL (exemplar survives when the "
+            "bike is deleted, loses its back-reference only); "
+            "recording_id → sensor_recordings(id) ON DELETE CASCADE "
+            "(exemplar dies with its underlying recording — without the "
+            "raw data the flag is meaningless); flagged_by_user_id → "
+            "users(id) ON DELETE SET DEFAULT (preserves attribution to "
+            "the system user id=1 when a mechanic account is removed). "
+            "Two indexes support dominant query shapes: "
+            "`idx_baselines_lookup` on (make, model_pattern, pid_hex, "
+            "operating_state) covers `get_baseline` exactly, and "
+            "`idx_exemplars_vehicle` covers the 'which recordings for "
+            "bike #N count as healthy?' reverse lookup. Rollback drops "
+            "baseline_exemplars first (child) then performance_baselines "
+            "(parent) to respect the FK."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS performance_baselines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model_pattern TEXT NOT NULL,
+                year_min INTEGER,
+                year_max INTEGER,
+                pid_hex TEXT NOT NULL,
+                operating_state TEXT NOT NULL,
+                expected_min REAL NOT NULL,
+                expected_max REAL NOT NULL,
+                expected_median REAL NOT NULL,
+                sample_count INTEGER NOT NULL DEFAULT 0,
+                last_rebuilt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                confidence_1to5 INTEGER NOT NULL DEFAULT 1,
+                CHECK (operating_state IN ('idle', '2500rpm', 'redline')),
+                CHECK (confidence_1to5 BETWEEN 1 AND 5),
+                CHECK (expected_min <= expected_median
+                       AND expected_median <= expected_max)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_baselines_lookup
+                ON performance_baselines(
+                    make, model_pattern, pid_hex, operating_state
+                );
+
+            CREATE TABLE IF NOT EXISTS baseline_exemplars (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER,
+                recording_id INTEGER NOT NULL UNIQUE,
+                flagged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                flagged_by_user_id INTEGER DEFAULT 1,
+                FOREIGN KEY (vehicle_id)
+                    REFERENCES vehicles(id) ON DELETE SET NULL,
+                FOREIGN KEY (recording_id)
+                    REFERENCES sensor_recordings(id) ON DELETE CASCADE,
+                FOREIGN KEY (flagged_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_exemplars_vehicle
+                ON baseline_exemplars(vehicle_id);
+        """,
+        rollback_sql="""
+            -- Child-first drop respects the recording_id FK.
+            DROP INDEX IF EXISTS idx_exemplars_vehicle;
+            DROP TABLE IF EXISTS baseline_exemplars;
+            DROP INDEX IF EXISTS idx_baselines_lookup;
+            DROP TABLE IF EXISTS performance_baselines;
+        """,
+    ),
 ]
 
 

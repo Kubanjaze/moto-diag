@@ -152,8 +152,10 @@ class TestMigration017:
     """Migration 017 applies cleanly, creates 3 tables + 6 indexes, rolls back."""
 
     def test_schema_version_bumped_to_17(self, db_path):
-        assert SCHEMA_VERSION == 17
-        assert get_schema_version(db_path) == 17
+        # Forward-compat: later phases bump SCHEMA_VERSION past 17.
+        # Verify 17 is the floor, not an exact match.
+        assert SCHEMA_VERSION >= 17
+        assert get_schema_version(db_path) >= 17
 
     def test_three_tables_created(self, db_path):
         assert table_exists("obd_adapters", db_path) is True

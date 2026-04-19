@@ -1,0 +1,583 @@
+[
+  {
+    "oem_slug": "hd-26499-08-oem-cam-tensioner",
+    "aftermarket_slug": "feuling-4124-cam-tensioner",
+    "equivalence_rating": 5,
+    "notes": "Direct drop-in. Stronger spring, same mounting. Forum-canonical upgrade.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "hd-26499-08-oem-cam-tensioner",
+    "aftermarket_slug": "sands-33-4220-cam-tensioner",
+    "equivalence_rating": 5,
+    "notes": "Exact replacement. S&S QC tighter than OEM.",
+    "source_url": "https://www.v-twinforum.com/"
+  },
+  {
+    "oem_slug": "hd-63731-99-oil-filter",
+    "aftermarket_slug": "kn-kn-170-oil-filter-hd",
+    "equivalence_rating": 5,
+    "notes": "17mm hex nut retained. Anti-drainback valve matches OEM.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "hd-29965-07a-stator",
+    "aftermarket_slug": "cycle-electric-ce-4000-stator",
+    "equivalence_rating": 5,
+    "notes": "Higher output (50A vs 38A) — requires also replacing regulator.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "honda-15410-mcj-505-oil-filter",
+    "aftermarket_slug": "kn-kn-204-oil-filter-honda",
+    "equivalence_rating": 5,
+    "notes": "Identical fitment. Forum reports zero issues over 50k miles.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "honda-15410-mcj-505-oil-filter",
+    "aftermarket_slug": "purolator-pl14610-oil-filter",
+    "equivalence_rating": 4,
+    "notes": "Slightly lower bypass pressure — recommended only for street use.",
+    "source_url": "https://www.sportbikes.net/"
+  },
+  {
+    "oem_slug": "honda-06455-mee-000-brake-pads",
+    "aftermarket_slug": "ebc-fa388-hh-brake-pads",
+    "equivalence_rating": 5,
+    "notes": "Direct sintered replacement. Better cold-bite than OEM.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "honda-06455-mee-000-brake-pads",
+    "aftermarket_slug": "dp-dp828-brake-pads",
+    "equivalence_rating": 4,
+    "notes": "Race compound — harder on rotors long-term, superior braking.",
+    "source_url": "https://www.f4iforum.com/"
+  },
+  {
+    "oem_slug": "yamaha-4xv-w0045-50-brake-pads",
+    "aftermarket_slug": "ebc-fa380hh-brake-pads-r1",
+    "equivalence_rating": 5,
+    "notes": "Double-H sintered — direct OEM replacement for R1 1998-2015.",
+    "source_url": "https://www.r1-forum.com/"
+  },
+  {
+    "oem_slug": "yamaha-4xv-w0045-50-brake-pads",
+    "aftermarket_slug": "sbs-806hs-brake-pads",
+    "equivalence_rating": 5,
+    "notes": "Race-series sintered. Better rotor compatibility than DP.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "kawasaki-13239-1091-doohickey",
+    "aftermarket_slug": "eagle-mike-05-dohickey-klr650",
+    "equivalence_rating": 5,
+    "notes": "Forged steel replaces the failure-prone OEM casting. Canonical KLR650 preventive upgrade.",
+    "source_url": "https://www.klr650.net/"
+  },
+  {
+    "oem_slug": "suzuki-16510-07j00-oil-filter",
+    "aftermarket_slug": "kn-kn-138-oil-filter-suzuki",
+    "equivalence_rating": 5,
+    "notes": "Exact OEM fitment. 17mm nut, anti-drainback valve present.",
+    "source_url": "https://www.gsxr.com/"
+  },
+  {
+    "oem_slug": "bmw-33117660878-final-drive-seal",
+    "aftermarket_slug": "all-balls-25-1486-final-drive-seal",
+    "equivalence_rating": 5,
+    "notes": "Complete kit (seal + O-ring). BMW Hexhead/Camhead FD standard rebuild.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "ducati-19020221a-clutch-plates",
+    "aftermarket_slug": "barnett-306-90-20131-clutch-plates",
+    "equivalence_rating": 5,
+    "notes": "Kevlar handles wet-clutch heat better than OEM paper.",
+    "source_url": "https://www.ducati.ms/"
+  },
+  {
+    "oem_slug": "triumph-t2017070-sprocket-front",
+    "aftermarket_slug": "superlite-rs8-525-sprocket-front",
+    "equivalence_rating": 3,
+    "notes": "Lighter but shorter-lived. Race/track use only — 8-10k mi lifespan.",
+    "source_url": "https://www.triumph675.net/"
+  },
+  {
+    "oem_slug": "triumph-t2017070-sprocket-front",
+    "aftermarket_slug": "jt-jtf520-15-sprocket-front",
+    "equivalence_rating": 5,
+    "notes": "Direct steel replacement. JT is the aftermarket sprocket standard.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "triumph-t2017070-sprocket-front",
+    "aftermarket_slug": "sunstar-321-15-sprocket-front",
+    "equivalence_rating": 5,
+    "notes": "Heat-treated steel. Slightly longer life than JT for moderate price premium.",
+    "source_url": "https://www.triumph675.net/"
+  },
+  {
+    "oem_slug": "ktm-75030088000-water-pump-seal",
+    "aftermarket_slug": "all-balls-25-5132-water-pump-seal",
+    "equivalence_rating": 5,
+    "notes": "Complete seal + O-ring set. Direct OEM replacement.",
+    "source_url": "https://www.ktmtalk.com/"
+  },
+  {
+    "oem_slug": "hd-26349-99-oem-cam-bearings",
+    "aftermarket_slug": "torrington-b168-cam-bearing",
+    "equivalence_rating": 5,
+    "notes": "Caged-needle bearing solves the HB88508 cage-failure mode. Forum-canonical Gen 1 TC88 fix.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "honda-17211-mbw-j20-air-filter",
+    "aftermarket_slug": "kn-ha-6001-air-filter-f4i",
+    "equivalence_rating": 4,
+    "notes": "Reusable cotton element — cleans + re-oils. Minor airflow increase.",
+    "source_url": "https://www.f4iforum.com/"
+  },
+  {
+    "oem_slug": "ngk-cr9eh-9-spark-plug",
+    "aftermarket_slug": "ngk-cr9eix-iridium-spark-plug",
+    "equivalence_rating": 5,
+    "notes": "Iridium tip doubles service life. Direct cross — same NGK line.",
+    "source_url": "https://www.ngksparkplugs.com/"
+  },
+  {
+    "oem_slug": "yamaha-2c0-11181-00-head-gasket",
+    "aftermarket_slug": "cometic-c8560-head-gasket-r6",
+    "equivalence_rating": 4,
+    "notes": "MLS with viton coating — standard big-bore rebuild.",
+    "source_url": "https://www.yamahar6.org/"
+  },
+  {
+    "oem_slug": "hd-62921-03-fuel-pump",
+    "aftermarket_slug": "quantum-hfp-383-fuel-pump",
+    "equivalence_rating": 4,
+    "notes": "Bosch-made drop-in. Slightly quieter than OEM.",
+    "source_url": "https://www.xlforum.net/"
+  },
+  {
+    "oem_slug": "kawasaki-14044-1284-chain-tensioner",
+    "aftermarket_slug": "ape-tsk160-manual-tensioner-zx6r",
+    "equivalence_rating": 5,
+    "notes": "Permanent fix for the hydraulic-retract failure. Track-use standard.",
+    "source_url": "https://www.zx-6r.com/"
+  },
+  {
+    "oem_slug": "honda-14520-kzs-901-cct",
+    "aftermarket_slug": "ape-tsh301-manual-cct-cbr600rr",
+    "equivalence_rating": 5,
+    "notes": "Forum-standard CBR600RR upgrade — solves cold-start rattle permanently.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "bmw-11417722956-oil-filter",
+    "aftermarket_slug": "mahle-ox-119d-oil-filter-bmw",
+    "equivalence_rating": 5,
+    "notes": "Mahle IS the BMW OEM supplier — identical filter without BMW dealer markup.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "ducati-44440034a-clutch-spring",
+    "aftermarket_slug": "barnett-519-90-06028-clutch-springs",
+    "equivalence_rating": 4,
+    "notes": "+20% spring rate — firmer pull, no slip with modded bikes.",
+    "source_url": "https://www.ducatimonster.org/"
+  },
+  {
+    "oem_slug": "yamaha-5vy-2580w-10-brake-caliper-seal",
+    "aftermarket_slug": "all-balls-18-3019-brake-caliper-kit",
+    "equivalence_rating": 5,
+    "notes": "Both sides in one kit — saves half the cost of OEM Yamaha kits.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "kawasaki-92161-1478-cushion-rubber",
+    "aftermarket_slug": "all-balls-23-5001-cush-drive-klr",
+    "equivalence_rating": 4,
+    "notes": "Harder compound lasts longer, transmits more driveline shock.",
+    "source_url": "https://www.klr650.net/"
+  },
+  {
+    "oem_slug": "suzuki-09482-00413-spark-plug",
+    "aftermarket_slug": "ngk-cr9ek-spark-plug",
+    "equivalence_rating": 5,
+    "notes": "Suzuki rebrands NGK — exact same plug, cheaper from any dealer.",
+    "source_url": "https://www.gsxr.com/"
+  },
+  {
+    "oem_slug": "bmw-11537726068-coolant-hose",
+    "aftermarket_slug": "samco-bmw-112-coolant-hose",
+    "equivalence_rating": 5,
+    "notes": "4-ply silicone lifetime hose. Popular advrider long-distance upgrade.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "triumph-t1261150-water-pump",
+    "aftermarket_slug": "all-balls-25-6004-water-pump-triumph",
+    "equivalence_rating": 3,
+    "notes": "Seal-only kit — reuses stock impeller. OK if impeller vanes are intact.",
+    "source_url": "https://www.triumph675.net/"
+  },
+  {
+    "oem_slug": "ktm-60003086000-oil-filter",
+    "aftermarket_slug": "hiflo-hf157-oil-filter-ktm",
+    "equivalence_rating": 5,
+    "notes": "Hiflofiltro supplies KTM — same filter, half the dealer markup.",
+    "source_url": "https://www.ktmtalk.com/"
+  },
+  {
+    "oem_slug": "honda-44650-mee-j20-front-wheel-bearing",
+    "aftermarket_slug": "all-balls-22-1019-wheel-bearing",
+    "equivalence_rating": 5,
+    "notes": "Both bearings + seals. Aftermarket standard — identical NTN bearings.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "hd-26499-08-oem-cam-tensioner",
+    "aftermarket_slug": "torrington-b168-cam-bearing",
+    "equivalence_rating": 3,
+    "notes": "Related — replace cam bearings at the same time as tensioners on pre-2007 TC88.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "hd-26349-99-oem-cam-bearings",
+    "aftermarket_slug": "feuling-4124-cam-tensioner",
+    "equivalence_rating": 3,
+    "notes": "Related upgrade — pair Torrington bearings with Feuling tensioner for full Gen 1 TC88 cam-drive rebuild.",
+    "source_url": "https://www.v-twinforum.com/"
+  },
+  {
+    "oem_slug": "kawasaki-13239-1091-doohickey",
+    "aftermarket_slug": "kawasaki-92161-1478-cushion-rubber",
+    "equivalence_rating": 3,
+    "notes": "Related — when pulling the clutch side for the doohickey, replace cush drives while in there.",
+    "source_url": "https://www.klr650.net/"
+  },
+  {
+    "oem_slug": "honda-15410-mcj-505-oil-filter",
+    "aftermarket_slug": "ngk-cr9eh-9-spark-plug",
+    "equivalence_rating": 3,
+    "notes": "Related — service-schedule pairing for CBR600 routine 15k-mile service.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "bmw-11417722956-oil-filter",
+    "aftermarket_slug": "bmw-33117660878-final-drive-seal",
+    "equivalence_rating": 3,
+    "notes": "Related — do both at 40k service; final drive oil change + crankcase oil.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "yamaha-4xv-w0045-50-brake-pads",
+    "aftermarket_slug": "yamaha-5vy-2580w-10-brake-caliper-seal",
+    "equivalence_rating": 3,
+    "notes": "Related — when replacing pads past 50k mi, rebuild caliper seals at same time.",
+    "source_url": "https://www.r1-forum.com/"
+  },
+  {
+    "oem_slug": "ducati-19020221a-clutch-plates",
+    "aftermarket_slug": "ducati-44440034a-clutch-spring",
+    "equivalence_rating": 4,
+    "notes": "Highly recommended — replace springs when replacing plates to avoid slip.",
+    "source_url": "https://www.ducatimonster.org/"
+  },
+  {
+    "oem_slug": "ducati-19020221a-clutch-plates",
+    "aftermarket_slug": "barnett-519-90-06028-clutch-springs",
+    "equivalence_rating": 4,
+    "notes": "Pair Barnett plates with Barnett springs for a complete clutch upgrade.",
+    "source_url": "https://www.ducatimonster.org/"
+  },
+  {
+    "oem_slug": "triumph-t2017070-sprocket-front",
+    "aftermarket_slug": "triumph-t1261150-water-pump",
+    "equivalence_rating": 2,
+    "notes": "Related via service schedule — 30k mi Street Triple major service covers both.",
+    "source_url": "https://www.triumph675.net/"
+  },
+  {
+    "oem_slug": "ktm-75030088000-water-pump-seal",
+    "aftermarket_slug": "ktm-60003086000-oil-filter",
+    "equivalence_rating": 2,
+    "notes": "Related — 20k service replaces both on LC4.",
+    "source_url": "https://www.ktmtalk.com/"
+  },
+  {
+    "oem_slug": "hd-63731-99-oil-filter",
+    "aftermarket_slug": "hd-29965-07a-stator",
+    "equivalence_rating": 2,
+    "notes": "Related — every other oil change is a good time to test stator output.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "honda-06455-mee-000-brake-pads",
+    "aftermarket_slug": "honda-44650-mee-j20-front-wheel-bearing",
+    "equivalence_rating": 2,
+    "notes": "Related — inspect bearings when replacing pads after 40k mi.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "kn-kn-170-oil-filter-hd",
+    "aftermarket_slug": "feuling-4124-cam-tensioner",
+    "equivalence_rating": 2,
+    "notes": "Related via service — 30k cam upgrade is a good time for premium filter switch.",
+    "source_url": "https://www.v-twinforum.com/"
+  },
+  {
+    "oem_slug": "honda-14520-kzs-901-cct",
+    "aftermarket_slug": "honda-44650-mee-j20-front-wheel-bearing",
+    "equivalence_rating": 2,
+    "notes": "Related via 30k service schedule on CBR600RR.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "kawasaki-14044-1284-chain-tensioner",
+    "aftermarket_slug": "kawasaki-92161-1478-cushion-rubber",
+    "equivalence_rating": 2,
+    "notes": "Related — ZX-6R 30k major service covers cam + final drive inspection.",
+    "source_url": "https://www.zx-6r.com/"
+  },
+  {
+    "oem_slug": "hd-29965-07a-stator",
+    "aftermarket_slug": "hd-62921-03-fuel-pump",
+    "equivalence_rating": 1,
+    "notes": "Loosely related — both are electrical-system replacement parts on Sportsters.",
+    "source_url": "https://www.xlforum.net/"
+  },
+  {
+    "oem_slug": "hd-26499-08-oem-cam-tensioner",
+    "aftermarket_slug": "hd-26349-99-oem-cam-bearings",
+    "equivalence_rating": 5,
+    "notes": "Pair bearings + tensioner on pre-2007 TC88 — they fail together.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "honda-14520-kzs-901-cct",
+    "aftermarket_slug": "honda-06455-mee-000-brake-pads",
+    "equivalence_rating": 1,
+    "notes": "Loosely related — CBR600RR service catalog crossref.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "ngk-cr9eh-9-spark-plug",
+    "aftermarket_slug": "honda-17211-mbw-j20-air-filter",
+    "equivalence_rating": 2,
+    "notes": "Related tune-up parts — replace together at 15k service.",
+    "source_url": "https://www.f4iforum.com/"
+  },
+  {
+    "oem_slug": "ngk-cr9eh-9-spark-plug",
+    "aftermarket_slug": "kn-ha-6001-air-filter-f4i",
+    "equivalence_rating": 3,
+    "notes": "Tune-up pairing — F4i 15k service = plugs + K&N filter upgrade.",
+    "source_url": "https://www.f4iforum.com/"
+  },
+  {
+    "oem_slug": "hd-29965-07a-stator",
+    "aftermarket_slug": "hd-26499-08-oem-cam-tensioner",
+    "equivalence_rating": 2,
+    "notes": "Related — both are aging TC88 wear items at 40-60k mi.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "hd-62921-03-fuel-pump",
+    "aftermarket_slug": "kn-kn-170-oil-filter-hd",
+    "equivalence_rating": 1,
+    "notes": "Unrelated functionally — both appear on Sportster 15k service.",
+    "source_url": "https://www.xlforum.net/"
+  },
+  {
+    "oem_slug": "cycle-electric-ce-4000-stator",
+    "aftermarket_slug": "kn-kn-170-oil-filter-hd",
+    "equivalence_rating": 2,
+    "notes": "Related — CE stator install is a good time for filter change.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "feuling-4124-cam-tensioner",
+    "aftermarket_slug": "torrington-b168-cam-bearing",
+    "equivalence_rating": 5,
+    "notes": "Canonical Gen 1 TC88 rebuild — Feuling tensioner + Torrington bearings.",
+    "source_url": "https://www.v-twinforum.com/"
+  },
+  {
+    "oem_slug": "sands-33-4220-cam-tensioner",
+    "aftermarket_slug": "torrington-b168-cam-bearing",
+    "equivalence_rating": 4,
+    "notes": "S&S + Torrington — alt Gen 1 TC88 rebuild combo.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "honda-15410-mcj-505-oil-filter",
+    "aftermarket_slug": "ngk-cr9eix-iridium-spark-plug",
+    "equivalence_rating": 2,
+    "notes": "Service-schedule pairing — 15k CBR service with iridium upgrade.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "suzuki-16510-07j00-oil-filter",
+    "aftermarket_slug": "ngk-cr9ek-spark-plug",
+    "equivalence_rating": 3,
+    "notes": "GSX-R 15k tune-up — oil filter + plugs together.",
+    "source_url": "https://www.gsxr.com/"
+  },
+  {
+    "oem_slug": "suzuki-16510-07j00-oil-filter",
+    "aftermarket_slug": "suzuki-09482-00413-spark-plug",
+    "equivalence_rating": 3,
+    "notes": "Same service interval — paired Suzuki GSX-R 15k parts.",
+    "source_url": "https://www.gsxr.com/"
+  },
+  {
+    "oem_slug": "yamaha-4xv-w0045-50-brake-pads",
+    "aftermarket_slug": "all-balls-18-3019-brake-caliper-kit",
+    "equivalence_rating": 4,
+    "notes": "Pair pads + caliper seals on high-mileage R1 for full front brake service.",
+    "source_url": "https://www.r1-forum.com/"
+  },
+  {
+    "oem_slug": "bmw-33117660878-final-drive-seal",
+    "aftermarket_slug": "bmw-11417722956-oil-filter",
+    "equivalence_rating": 3,
+    "notes": "R1200GS 40k service pairing — both fluids changed together.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "bmw-11537726068-coolant-hose",
+    "aftermarket_slug": "bmw-11417722956-oil-filter",
+    "equivalence_rating": 2,
+    "notes": "Related — 40k R1200GS LC service does both.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "triumph-t1261150-water-pump",
+    "aftermarket_slug": "triumph-t2017070-sprocket-front",
+    "equivalence_rating": 2,
+    "notes": "Related — 30k Triumph 675 major service replaces both.",
+    "source_url": "https://www.triumph675.net/"
+  },
+  {
+    "oem_slug": "ktm-75030088000-water-pump-seal",
+    "aftermarket_slug": "hiflo-hf157-oil-filter-ktm",
+    "equivalence_rating": 2,
+    "notes": "Related — 20k KTM LC4 service covers both.",
+    "source_url": "https://www.ktmtalk.com/"
+  },
+  {
+    "oem_slug": "ducati-19020221a-clutch-plates",
+    "aftermarket_slug": "barnett-519-90-06028-clutch-springs",
+    "equivalence_rating": 5,
+    "notes": "Full Barnett-compatible rebuild — OEM plates + Barnett springs.",
+    "source_url": "https://www.ducatimonster.org/"
+  },
+  {
+    "oem_slug": "eagle-mike-05-dohickey-klr650",
+    "aftermarket_slug": "all-balls-23-5001-cush-drive-klr",
+    "equivalence_rating": 3,
+    "notes": "Big-service pairing — doohickey + cush drive at 20k on KLR.",
+    "source_url": "https://www.klr650.net/"
+  },
+  {
+    "oem_slug": "kawasaki-13239-1091-doohickey",
+    "aftermarket_slug": "all-balls-23-5001-cush-drive-klr",
+    "equivalence_rating": 2,
+    "notes": "Related — KLR 30k service covers both.",
+    "source_url": "https://www.klr650.net/"
+  },
+  {
+    "oem_slug": "honda-06455-mee-000-brake-pads",
+    "aftermarket_slug": "purolator-pl14610-oil-filter",
+    "equivalence_rating": 2,
+    "notes": "Related — budget service combo on CBR.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "kn-kn-204-oil-filter-honda",
+    "aftermarket_slug": "ngk-cr9eix-iridium-spark-plug",
+    "equivalence_rating": 3,
+    "notes": "Full K&N + iridium upgrade path for CBR 15k service.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "jt-jtf520-15-sprocket-front",
+    "aftermarket_slug": "sunstar-321-15-sprocket-front",
+    "equivalence_rating": 5,
+    "notes": "Cross-brand aftermarket equivalents — both steel, same tooth count.",
+    "source_url": "https://www.revzilla.com/"
+  },
+  {
+    "oem_slug": "ebc-fa388-hh-brake-pads",
+    "aftermarket_slug": "dp-dp828-brake-pads",
+    "equivalence_rating": 4,
+    "notes": "Cross-brand aftermarket. EBC for longevity, DP for track bite.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "ebc-fa380hh-brake-pads-r1",
+    "aftermarket_slug": "sbs-806hs-brake-pads",
+    "equivalence_rating": 5,
+    "notes": "Cross-brand sintered pads — both fit R1 Sumitomo calipers.",
+    "source_url": "https://www.r1-forum.com/"
+  },
+  {
+    "oem_slug": "feuling-4124-cam-tensioner",
+    "aftermarket_slug": "sands-33-4220-cam-tensioner",
+    "equivalence_rating": 4,
+    "notes": "Cross-brand aftermarket TC88 tensioners. Feuling stronger spring; S&S cheaper.",
+    "source_url": "https://www.hdforums.com/"
+  },
+  {
+    "oem_slug": "ape-tsh301-manual-cct-cbr600rr",
+    "aftermarket_slug": "ape-tsk160-manual-tensioner-zx6r",
+    "equivalence_rating": 2,
+    "notes": "Same brand, different bike — related only via APE's manual-CCT product line.",
+    "source_url": "https://www.apemanualtensioner.com/"
+  },
+  {
+    "oem_slug": "all-balls-25-1486-final-drive-seal",
+    "aftermarket_slug": "mahle-ox-119d-oil-filter-bmw",
+    "equivalence_rating": 2,
+    "notes": "Related — both All Balls / Mahle supply BMW consumables.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "samco-bmw-112-coolant-hose",
+    "aftermarket_slug": "mahle-ox-119d-oil-filter-bmw",
+    "equivalence_rating": 2,
+    "notes": "Pairing — silicone hose upgrade alongside standard oil change.",
+    "source_url": "https://www.advrider.com/"
+  },
+  {
+    "oem_slug": "cometic-c8560-head-gasket-r6",
+    "aftermarket_slug": "ebc-fa380hh-brake-pads-r1",
+    "equivalence_rating": 1,
+    "notes": "Loosely related — both on Yamaha sportbikes, different systems.",
+    "source_url": "https://www.yamahar6.org/"
+  },
+  {
+    "oem_slug": "quantum-hfp-383-fuel-pump",
+    "aftermarket_slug": "cycle-electric-ce-4000-stator",
+    "equivalence_rating": 2,
+    "notes": "Related electrical-system upgrades — both common Sportster preventive fixes.",
+    "source_url": "https://www.xlforum.net/"
+  },
+  {
+    "oem_slug": "honda-44650-mee-j20-front-wheel-bearing",
+    "aftermarket_slug": "ebc-fa388-hh-brake-pads",
+    "equivalence_rating": 3,
+    "notes": "Related — both front-end service on CBR600RR 40k+ service.",
+    "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "all-balls-22-1019-wheel-bearing",
+    "aftermarket_slug": "dp-dp828-brake-pads",
+    "equivalence_rating": 3,
+    "notes": "Aftermarket crossref pair — front-wheel service kit for CBR600RR.",
+    "source_url": "https://www.cbrforum.com/"
+  }
+]

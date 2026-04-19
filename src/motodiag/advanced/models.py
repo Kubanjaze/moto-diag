@@ -31,8 +31,9 @@ Design notes
 
 from __future__ import annotations
 
+from datetime import date, datetime
 from enum import Enum
-from typing import Optional, Tuple
+from typing import Literal, Optional, Tuple
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -86,3 +87,112 @@ class FailurePrediction(BaseModel):
     verified_by: Optional[str]
     # Match strength label: "exact_model" | "family" | "make" | "generic".
     match_tier: str
+    # Phase 154: OEM TSB numbers that apply to this bike. Empty when the
+    # TSB subsystem is unavailable (pre-migration-022) or no matching
+    # TSBs pass the keyword-overlap filter. Additive — existing
+    # consumers ignore it. Sorted for deterministic output.
+    applicable_tsbs: list[str] = Field(default_factory=list)
+    # Phase 155: NHTSA campaign IDs that apply to this bike. Empty when
+    # the recall subsystem is unavailable (pre-migration-023) or no
+    # open recalls match. Additive — existing consumers ignore it.
+    applicable_recalls: list[str] = Field(default_factory=list)
+
+
+# ---------------------------------------------------------------------------
+# Phase 151 — Service-interval scheduling
+# ---------------------------------------------------------------------------
+
+
+class ServiceInterval(BaseModel):
+    """A single per-bike maintenance-interval row from ``service_intervals``.
+
+    Dual-axis: ``every_miles`` OR ``every_months`` may be set; the DB
+    CHECK constraint ensures at least one is non-NULL. ``last_done_*``
+    captures the most recent completion; ``next_due_*`` caches the
+    computed next due-point so queries can ORDER BY directly without
+    re-deriving on every read.
+
+    Non-frozen (unlike the other advanced models) because the repo
+    layer mutates these rows in-place on ``record_completion``. Consumers
+    that need immutability can call ``.model_copy(deep=True)``.
+    """
+
+    model_config = ConfigDict()
+
+    # id is optional so callers can construct an instance pre-INSERT.
+    id: Optional[int] = None
+    vehicle_id: int
+    item_slug: str
+    description: str
+    every_miles: Optional[int] = None
+    every_months: Optional[int] = None
+    last_done_miles: Optional[int] = None
+    last_done_at: Optional[str] = None
+    next_due_miles: Optional[int] = None
+    next_due_at: Optional[str] = None
+    created_at: Optional[str] = None
+
+
+# ---------------------------------------------------------------------------
+# Phase 152 — Service history tracking
+# ---------------------------------------------------------------------------
+
+
+# The event_type vocabulary. Mirrors the CHECK constraint on
+# service_history.event_type verbatim so the Pydantic validator and the
+# DB reject the same set of strings. Growth requires a paired migration
+# + Literal update (documented in implementation.md risks).
+ServiceEventType = Literal[
+    "oil-change",
+    "tire",
+    "valve-adjust",
+    "brake",
+    "diagnostic",
+    "recall",
+    "chain",
+    "coolant",
+    "air-filter",
+    "spark-plug",
+    "custom",
+]
+
+
+class ServiceEvent(BaseModel):
+    """A single completed service event from ``service_history``.
+
+    Non-frozen: the repo layer bumps ``id`` post-INSERT on a returned
+    instance is not the pattern here (we just return the lastrowid),
+    but leaving off ``frozen=True`` keeps the model consistent with
+    Phase 151's ``ServiceInterval``.
+
+    Notes
+    -----
+    - ``event_type`` is a ``Literal[...]`` of the 11 DB-enforced values;
+      Pydantic rejects anything outside the set with a ValidationError.
+    - ``at_date`` is a Python ``date`` (not a string). The repo layer
+      serializes to ISO-8601 at INSERT time.
+    - ``at_miles`` is optional — a diagnostic event may have no reading.
+      When present, the repo layer monotonically bumps
+      ``vehicles.mileage`` in the same transaction.
+    - ``mechanic_user_id`` is the FK attribution; None means "no
+      logged-in user" (the Phase 112 auth layer is soft-coupled).
+    - ``parts_csv`` is free-form (e.g. ``"O-125,FILT-9"``); the storage
+      format lets Phase 153 parts indexing parse without schema churn.
+    - ``completed_at`` is populated by the DB's ``DEFAULT
+      CURRENT_TIMESTAMP``. Callers don't need to set it.
+    """
+
+    model_config = ConfigDict()
+
+    id: Optional[int] = None
+    vehicle_id: int
+    event_type: ServiceEventType
+    at_miles: Optional[int] = None
+    at_date: date
+    notes: Optional[str] = None
+    cost_cents: Optional[int] = None
+    mechanic_user_id: Optional[int] = None
+    parts_csv: Optional[str] = None
+    # ISO-8601 string from the DB. Optional so callers can construct
+    # pre-INSERT instances without populating it.
+    completed_at: Optional[str] = None

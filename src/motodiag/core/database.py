@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 18  # Phase 150: bumped for fleets + fleet_bikes tables (fleet management) migration 018
+SCHEMA_VERSION = 24  # Phase 157: performance_baselines + baseline_exemplars tables (migration 024)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
@@ -215,6 +215,29 @@ def init_db(db_path: str | None = None, apply_migrations: bool = True) -> None:
         # Import here to avoid circular import at module load time
         from motodiag.core.migrations import apply_pending_migrations
         apply_pending_migrations(path)
+
+        # Phase 154: seed default TSBs on first init (best-effort).
+        # Guarded by count_tsbs()==0 so existing DBs are untouched, and
+        # wrapped in a broad except so a missing data file / schema race
+        # never blocks init_db.
+        try:
+            from motodiag.advanced.tsb_repo import (
+                count_tsbs,
+                load_tsbs_file,
+            )
+
+            if count_tsbs(path) == 0:
+                default = (
+                    Path(__file__).parent.parent
+                    / "advanced"
+                    / "data"
+                    / "tsbs.json"
+                )
+                if default.exists():
+                    load_tsbs_file(str(default), path)
+        except Exception:
+            # Best-effort seed — never block init_db on TSB seeding.
+            pass
 
 
 @contextmanager

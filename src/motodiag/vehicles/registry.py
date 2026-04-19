@@ -94,6 +94,9 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
     allowed = {
         "make", "model", "year", "engine_cc", "vin", "protocol", "notes",
         "powertrain", "engine_type", "battery_chemistry", "motor_kw", "bms_present",
+        # Phase 152: persistent mileage source-of-truth. Added by migration
+        # 020; update_vehicle is the only non-add_service_event writer.
+        "mileage",
     }
     filtered = {k: v for k, v in updates.items() if k in allowed}
     if not filtered:

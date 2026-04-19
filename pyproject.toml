@@ -66,6 +66,8 @@ where = ["src"]
 
 [tool.setuptools.package-data]
 "motodiag.hardware.scenarios" = ["*.yaml"]
+"motodiag.advanced" = ["*.json"]
+"motodiag.advanced.data" = ["*.json"]
 
 [tool.ruff]
 line-length = 100

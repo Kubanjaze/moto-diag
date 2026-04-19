@@ -19,13 +19,96 @@ from motodiag.advanced.fleet_repo import (
     FleetNotFoundError,
     FleetRole,
 )
-from motodiag.advanced.models import FailurePrediction, PredictionConfidence
+from motodiag.advanced.history_repo import (
+    ServiceEventNotFoundError,
+    add_service_event,
+    count_service_events,
+    delete_service_event,
+    get_service_event,
+    list_all_service_events,
+    list_by_type,
+    list_service_events,
+)
+from motodiag.advanced.models import (
+    FailurePrediction,
+    PredictionConfidence,
+    ServiceEvent,
+    ServiceEventType,
+    ServiceInterval,
+)
 from motodiag.advanced.predictor import predict_failures
+from motodiag.advanced.schedule_repo import (
+    ServiceIntervalError,
+    create_interval,
+    delete_interval,
+    get_interval,
+    get_interval_by_slug,
+    list_intervals,
+    list_templates,
+    load_templates_from_json,
+    match_templates_for_vehicle,
+    seed_from_template,
+    update_interval,
+)
+from motodiag.advanced.scheduler import (
+    due_items,
+    history,
+    next_due_calc,
+    overdue_items,
+    record_completion,
+)
+from motodiag.advanced.baseline import (
+    BaselineProfile,
+    OperatingState,
+    flag_recording_as_healthy,
+    get_baseline,
+    list_baselines,
+    rebuild_baseline,
+)
+from motodiag.advanced.parts_repo import (
+    add_part,
+    add_xref,
+    get_part,
+    get_part_by_oem,
+    get_xrefs,
+    list_parts_for_bike,
+    lookup_typical_cost,
+    search_parts,
+)
+from motodiag.advanced.recall_repo import (
+    check_vin,
+    decode_vin,
+    get_resolutions_for_bike,
+    list_open_for_bike,
+    load_recalls_from_json,
+    lookup as lookup_recalls,
+    mark_resolved,
+)
+from motodiag.advanced.tsb_repo import (
+    add_tsb,
+    count_tsbs,
+    get_tsb,
+    list_tsbs,
+    list_tsbs_for_bike,
+    load_tsbs_file,
+    search_tsbs,
+    tsb_numbers_for_vehicle,
+)
 from motodiag.advanced.wear import WearMatch, WearPattern, analyze_wear
 
 __all__ = [
     "FailurePrediction",
     "PredictionConfidence",
+    "ServiceEvent",
+    "ServiceEventType",
+    "ServiceEventNotFoundError",
+    "add_service_event",
+    "get_service_event",
+    "list_service_events",
+    "list_all_service_events",
+    "list_by_type",
+    "count_service_events",
+    "delete_service_event",
     "predict_failures",
     "PeerStats",
     "PeerComparison",
@@ -44,4 +127,55 @@ __all__ = [
     "FleetNameExistsError",
     "BikeAlreadyInFleetError",
     "fleet_status_summary",
+    # Phase 151 — scheduling
+    "ServiceInterval",
+    "ServiceIntervalError",
+    "create_interval",
+    "get_interval",
+    "get_interval_by_slug",
+    "list_intervals",
+    "update_interval",
+    "delete_interval",
+    "load_templates_from_json",
+    "list_templates",
+    "match_templates_for_vehicle",
+    "seed_from_template",
+    "next_due_calc",
+    "due_items",
+    "overdue_items",
+    "record_completion",
+    "history",
+    # Phase 157 — performance baselining
+    "BaselineProfile",
+    "OperatingState",
+    "flag_recording_as_healthy",
+    "rebuild_baseline",
+    "get_baseline",
+    "list_baselines",
+    # Phase 153 — parts cross-reference
+    "add_part",
+    "add_xref",
+    "get_part",
+    "get_part_by_oem",
+    "get_xrefs",
+    "list_parts_for_bike",
+    "lookup_typical_cost",
+    "search_parts",
+    # Phase 155 — NHTSA recall lookup
+    "check_vin",
+    "decode_vin",
+    "get_resolutions_for_bike",
+    "list_open_for_bike",
+    "load_recalls_from_json",
+    "lookup_recalls",
+    "mark_resolved",
+    # Phase 154 — Technical Service Bulletins
+    "add_tsb",
+    "count_tsbs",
+    "get_tsb",
+    "list_tsbs",
+    "list_tsbs_for_bike",
+    "load_tsbs_file",
+    "search_tsbs",
+    "tsb_numbers_for_vehicle",
 ]

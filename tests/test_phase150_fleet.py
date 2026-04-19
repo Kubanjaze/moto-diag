@@ -129,8 +129,10 @@ class TestMigration018:
     """Migration 018 bumps v17→v18, creates 2 tables + 2 indexes, rolls back."""
 
     def test_schema_version_bumped_to_18(self, db):
-        assert SCHEMA_VERSION == 18
-        assert get_schema_version(db) == 18
+        # Forward-compat: later phases bump SCHEMA_VERSION past 18.
+        # Verify 18 is the floor, not an exact match.
+        assert SCHEMA_VERSION >= 18
+        assert get_schema_version(db) >= 18
 
     def test_fleets_and_fleet_bikes_created_with_indexes(self, db):
         assert table_exists("fleets", db) is True

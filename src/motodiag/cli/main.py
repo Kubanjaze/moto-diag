@@ -542,6 +542,91 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None
     console.print(f"[green]Added vehicle #{vid}: {year_mid} {guess.make} {guess.model}[/green]")
 
 
+@garage.command("update")
+@click.option(
+    "--bike", required=True,
+    help="Garage bike slug (e.g. sportster-2010).",
+)
+@click.option(
+    "--mileage", type=int, default=None,
+    help=(
+        "Set the bike's mileage. Phase 152: decreasing an existing "
+        "mileage value requires --yes (mechanic override for cluster "
+        "replacements)."
+    ),
+)
+@click.option(
+    "--notes", default=None,
+    help="Replace the bike's notes field.",
+)
+@click.option(
+    "--vin", default=None,
+    help="Set or replace the bike's VIN.",
+)
+@click.option(
+    "--yes", is_flag=True, default=False,
+    help="Confirm a non-monotonic mileage change (required for decreases).",
+)
+def garage_update(
+    bike: str,
+    mileage: int | None,
+    notes: str | None,
+    vin: str | None,
+    yes: bool,
+) -> None:
+    """Update a bike's mileage, notes, or VIN.
+
+    Mileage is the Phase 152 source-of-truth. The monotonic guard
+    refuses to write a value lower than what's already on the row
+    unless ``--yes`` is passed (intended for cluster replacements or
+    mechanic corrections).
+    """
+    from motodiag.cli.diagnose import _resolve_bike_slug
+    from motodiag.core.database import init_db
+    from motodiag.vehicles.registry import get_vehicle, update_vehicle
+
+    init_db()
+
+    resolved = _resolve_bike_slug(bike)
+    if resolved is None:
+        console.print(
+            f"[red]No bike matches slug {bike!r}. "
+            "Run [bold]motodiag garage list[/bold] to see existing slugs.[/red]"
+        )
+        raise click.Abort()
+    vehicle_id = int(resolved["id"])
+    existing = get_vehicle(vehicle_id) or resolved
+
+    if mileage is None and notes is None and vin is None:
+        raise click.ClickException(
+            "Nothing to update — pass at least one of --mileage, --notes, --vin."
+        )
+
+    updates: dict = {}
+    if mileage is not None:
+        current = existing.get("mileage")
+        if current is not None and int(mileage) < int(current) and not yes:
+            raise click.ClickException(
+                f"Refusing to decrease mileage {int(current):,} → "
+                f"{int(mileage):,} for bike #{vehicle_id}. Pass --yes "
+                "if this is a cluster replacement or known correction."
+            )
+        updates["mileage"] = int(mileage)
+    if notes is not None:
+        updates["notes"] = notes
+    if vin is not None:
+        updates["vin"] = vin
+
+    if not update_vehicle(vehicle_id, updates):
+        raise click.ClickException(
+            f"Failed to update bike #{vehicle_id}."
+        )
+    changed = ", ".join(f"{k}={v!r}" for k, v in updates.items())
+    console.print(
+        f"[green]Updated bike #{vehicle_id}: {changed}[/green]"
+    )
+
+
 @cli.group()
 def intake() -> None:
     """Photo-based bike identification (preview-only) and quota status."""
