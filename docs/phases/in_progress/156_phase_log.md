@@ -16,3 +16,9 @@ Ninth Track F phase. Peer-cohort anomaly detection. No AI, no migration, no toke
 **Dependencies:** Phase 148 + Phase 142 hard. Phase 150 soft (feature-detect).
 
 **Next:** Builder-156 agent-delegated. Architect trust-but-verify + 3-CLI-transcript spot-check.
+
+### 2026-04-18 19:30 — Build complete (Builder-156 + Architect trust-but-verify)
+
+Phase 156 shipped. Builder-156 delivered 709 LoC `advanced/comparative.py` + 691 LoC test file + `cli/advanced.py` +380 LoC compare subgroup. 34 tests GREEN on first run (20.57s). No bug fixes needed.
+
+Deviations from plan: test count 34 vs ~28 target (extra `TestNormalizePidHex` class +2 tests). Fleet branch in `find_peer_recordings` falls back to strict same-year match when `fleet_memberships` present — conservative placeholder for Phase 150.
