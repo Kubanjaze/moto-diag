@@ -1723,6 +1723,100 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS performance_baselines;
         """,
     ),
+    # Migration 025 — Phase 160: shop profile + multi-bike intake (Track G)
+    Migration(
+        version=25,
+        name="shops_and_intake_visits",
+        description=(
+            "Phase 160: First Track G phase. Opens shop management with the "
+            "narrowest possible slice — register a shop profile and log bike "
+            "arrivals as intake_visits rows. Explicitly reuses Phase 113's "
+            "customers + customer_bikes (migration 006) rather than "
+            "duplicating CRM state. Two tables: `shops` (profile: name, "
+            "address, contact, hours_json, tax_id, scoped UNIQUE(owner, "
+            "name) per the fleets pattern from migration 018) and "
+            "`intake_visits` (arrival event linking shop_id + customer_id + "
+            "vehicle_id at intake_at with reported_problems freetext + "
+            "guarded status lifecycle `open -> closed | cancelled -> "
+            "(reopen) -> open`). FK asymmetry is deliberate: shop_id "
+            "CASCADE (shop deletion is rare, explicit, confirmed — "
+            "cascading keeps history tidy), customer_id + vehicle_id "
+            "RESTRICT (prevents accidental history erasure via unrelated "
+            "deletes — mechanics deactivate customers rather than "
+            "deleting them). Three indexes cover the dominant access "
+            "patterns: (shop_id, status) for the daily open-queue query, "
+            "(vehicle_id) for 'is this bike already checked in?' duplicate-"
+            "intake prevention, and (customer_id) for 'show me this "
+            "customer's visit history.' mileage_at_intake nullable "
+            "because walk-in carb rebuilds on bikes with broken speedos "
+            "happen — and intake_visits is an at-arrival snapshot, not "
+            "a service record (the Phase 152 monotonic-mileage rules "
+            "apply to service_history, not to intake). Rollback drops "
+            "intake_visits first (child of shops) then shops."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS shops (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_user_id INTEGER NOT NULL DEFAULT 1,
+                name TEXT NOT NULL,
+                address TEXT,
+                city TEXT,
+                state TEXT,
+                zip TEXT,
+                phone TEXT,
+                email TEXT,
+                tax_id TEXT,
+                hours_json TEXT,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET DEFAULT,
+                UNIQUE (owner_user_id, name)
+            );
+            CREATE INDEX IF NOT EXISTS idx_shops_owner_name
+                ON shops(owner_user_id, name);
+
+            CREATE TABLE IF NOT EXISTS intake_visits (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                customer_id INTEGER NOT NULL,
+                vehicle_id INTEGER NOT NULL,
+                intake_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                mileage_at_intake INTEGER,
+                reported_problems TEXT,
+                intake_user_id INTEGER NOT NULL DEFAULT 1,
+                status TEXT NOT NULL DEFAULT 'open'
+                    CHECK (status IN ('open','closed','cancelled')),
+                closed_at TIMESTAMP,
+                close_reason TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (customer_id)
+                    REFERENCES customers(id) ON DELETE RESTRICT,
+                FOREIGN KEY (vehicle_id)
+                    REFERENCES vehicles(id) ON DELETE RESTRICT,
+                FOREIGN KEY (intake_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE INDEX IF NOT EXISTS idx_intake_shop_status
+                ON intake_visits(shop_id, status);
+            CREATE INDEX IF NOT EXISTS idx_intake_vehicle
+                ON intake_visits(vehicle_id);
+            CREATE INDEX IF NOT EXISTS idx_intake_customer
+                ON intake_visits(customer_id);
+        """,
+        rollback_sql="""
+            -- Child-first drop respects the shop_id FK.
+            DROP INDEX IF EXISTS idx_intake_customer;
+            DROP INDEX IF EXISTS idx_intake_vehicle;
+            DROP INDEX IF EXISTS idx_intake_shop_status;
+            DROP TABLE IF EXISTS intake_visits;
+            DROP INDEX IF EXISTS idx_shops_owner_name;
+            DROP TABLE IF EXISTS shops;
+        """,
+    ),
 ]
 
 

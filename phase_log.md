@@ -580,3 +580,23 @@ Tenth agent-delegated phase. **Builder-A's cleanest pass yet** — no sandbox bl
 - Gates 8-20: 🔲 (future tracks)
 
 Track G (phases 160-174) opens next — shop management + work orders + triage + parts auto-pick + repair scheduling.
+
+### 2026-04-21 15:55 — Phase 160 complete (Track G opens)
+
+**First Track G phase shipped.** Architect-direct auto-iterate build. Migration 025 adds `shops` + `intake_visits` tables + 4 indexes, bumping `SCHEMA_VERSION` 24→25. New `shop/` package shipped with `shop_repo.py` (337 LoC, 11 fns incl. `reactivate_shop` + hours_json JSON-object validator) and `intake_repo.py` (481 LoC, 12 fns with guarded `open→closed|cancelled→(reopen)→open` status lifecycle — generic `update_intake` cannot mutate `status`, only dedicated transition helpers can). New top-level `motodiag shop` CLI group surfaces 3 subgroups × 22 subcommands: `profile` (5), `customer` (9), `intake` (8). `cli/shop.py` landed at 1003 LoC including Rich Panel/Table rendering helpers + Phase 125-style remediation errors. 44 tests GREEN across 5 classes; full regression 3395 passed, 0 failed (up from 3349 at Phase 159 close — +44 phase 160 + 2 formerly-skipped conditional tests that now run with shops in schema).
+
+**Load-bearing architectural reuse:** Phase 160 is the first CLI surface for Phase 113's dormant `crm/` substrate. `customers` + `customer_bikes` tables and repos have been in the codebase since Phase 113 (March) but never wired to Click. Phase 160's `shop customer` subgroup (9 subcommands) delegates to `crm/customer_repo.py` + `crm/customer_bikes_repo.py` without modifying them — "build substrate first, surface later" rhythm validated across 47 phases of shelf time. This unlocks the intake pipeline without requiring a parallel schema.
+
+**FK delete asymmetry as a deliberate contract:** `intake_visits.shop_id` cascades on shop delete (explicit, confirmed, rare — retaining orphan intakes pointing at a dead shop_id produces more confusion than value); `customer_id` and `vehicle_id` use `ON DELETE RESTRICT` (prevents accidental history erasure via unrelated deletes — mechanics deactivate customers via Phase 113's `deactivate_customer`, they don't delete). Tests cover both paths including the "delete customer with 0 intakes succeeds / delete customer with 1 intake raises" boundary.
+
+**New package:** `shop` joins the active-package roster alongside `hardware` and `advanced`. Phase 161 (work orders) will extend under the same top-level `motodiag shop` group; file-overlap planning applies — 161's migration 026 needs to land serially on top of 025, same for any `cli/main.py` edits.
+
+**Deviations from plan (all strict expansions):** `profile list`/`profile delete` added (plan had 3 profile subcommands, shipped 5). `intake cancel` added distinct from `close` so Phase 171 analytics can filter completed-from-withdrawn at SQL (plan had 7 intake subcommands, shipped 8). `reactivate_shop` symmetric counterpart added to shop_repo during test-writing (plan omitted). 22 subcommands shipped vs 19 planned; 44 tests vs 40 planned; zero planned surface contracted.
+
+**Project version:** 0.9.0 → **0.9.1**.
+
+**Completion gates status:**
+- Gates 1-7: ✅ (as before)
+- Gate 8 (Phase 174): 🔲 — shop management intake-to-invoice integration test, pending Phases 161-173.
+
+Phases 161-174 queued. Track G compounding begins: work orders (161) attach to `intake_visits.id`, issues (162) link to work orders, invoicing (169) closes the loop back on the intake row created this phase.

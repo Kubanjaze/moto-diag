@@ -19,6 +19,7 @@ from motodiag.cli.completion import register_completion
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
+from motodiag.cli.shop import register_shop
 from motodiag.cli.theme import get_console, status, tier_style
 
 console = get_console()
@@ -736,6 +737,12 @@ register_hardware(cli)
 # will append more subcommands to the same group). Must come before
 # completion so shell-completion scripts see the new subgroup.
 register_advanced(cli)
+
+# Phase 160: register the `shop` subgroup (profile + customer + intake;
+# Phases 161-174 will append work-orders, issues, parts, scheduling,
+# invoicing, analytics). Must come before completion so shell-completion
+# scripts see the new subgroup.
+register_shop(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

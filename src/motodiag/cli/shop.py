@@ -1,0 +1,1003 @@
+"""Shop management CLI — ``motodiag shop {profile,customer,intake}``.
+
+Phase 160. First Track G command surface. Opens shop management with
+three subgroups:
+
+- ``profile`` (3 subcommands) — register / show / update a shop's
+  identity (name, address, contact, hours, tax ID).
+- ``customer`` (9 subcommands) — CRUD + bike-link operations over the
+  existing Phase 113 ``crm/`` substrate. This is the first CLI surface
+  for customers (Phase 113 shipped the repo but never wired the CLI).
+- ``intake`` (7 subcommands) — log bike arrivals as intake_visits rows
+  with guarded status lifecycle (open / closed / cancelled / reopen).
+
+Downstream Track G phases will append more subgroups (work orders in
+161, issues in 162, parts in 165-166, scheduling in 168, invoicing in
+169) via ``shop_group.group("...")`` — Click supports additive growth.
+"""
+
+from __future__ import annotations
+
+import json as _json
+from typing import Optional
+
+import click
+from rich.panel import Panel
+from rich.table import Table
+
+from motodiag.cli.theme import get_console
+from motodiag.core.database import get_connection, init_db
+from motodiag.crm import customer_bikes_repo, customer_repo
+from motodiag.crm.models import Customer, CustomerRelationship
+from motodiag.shop import (
+    INTAKE_CLOSE_REASONS,
+    INTAKE_STATUSES,
+    IntakeAlreadyClosedError,
+    IntakeNotFoundError,
+    ShopNameExistsError,
+    ShopNotFoundError,
+    cancel_intake,
+    close_intake,
+    create_intake,
+    create_shop,
+    delete_shop,
+    get_intake,
+    get_shop,
+    get_shop_by_name,
+    list_intakes,
+    list_open_for_bike,
+    list_shops,
+    reopen_intake,
+    update_intake,
+    update_shop,
+)
+
+
+# ---------------------------------------------------------------------------
+# Internal helpers
+# ---------------------------------------------------------------------------
+
+
+UNASSIGNED_CUSTOMER_ID = 1
+
+
+def _resolve_shop_identifier(
+    identifier: Optional[str], *, require: bool = True,
+) -> Optional[dict]:
+    """Resolve a shop identifier (CLI-friendly): numeric id or name.
+
+    When ``identifier`` is None and exactly one active shop exists,
+    auto-select it (ambiguity remediation per Phase 125 style). When
+    multiple active shops exist and no identifier is given, raise a
+    ClickException with the list of choices.
+    """
+    if identifier is None:
+        shops = list_shops()
+        if not shops:
+            if not require:
+                return None
+            raise click.ClickException(
+                "No shop registered. Run `motodiag shop profile init` first."
+            )
+        if len(shops) == 1:
+            return shops[0]
+        names = ", ".join(s["name"] for s in shops)
+        raise click.ClickException(
+            f"Multiple shops exist ({names}); pass --shop NAME or --shop ID."
+        )
+
+    # Numeric first — fastest path.
+    try:
+        shop_id = int(identifier)
+    except (TypeError, ValueError):
+        row = get_shop_by_name(str(identifier))
+    else:
+        row = get_shop(shop_id)
+        if row is None:
+            # Might have been passed a numeric-looking name; fall back.
+            row = get_shop_by_name(str(identifier))
+
+    if row is None:
+        raise click.ClickException(
+            f"Shop not found: {identifier!r}. "
+            "Run `motodiag shop profile list` to see registered shops."
+        )
+    return row
+
+
+def _resolve_customer_identifier(identifier: str) -> dict:
+    """Resolve a customer identifier (CLI-friendly): id, name, or email."""
+    try:
+        customer_id = int(identifier)
+    except (TypeError, ValueError):
+        results = customer_repo.search_customers(str(identifier))
+        if not results:
+            raise click.ClickException(
+                f"Customer not found: {identifier!r}. "
+                "Use `motodiag shop customer search QUERY` to look them up."
+            )
+        if len(results) > 1:
+            names = ", ".join(
+                f"{r['name']} (id={r['id']})" for r in results[:5]
+            )
+            raise click.ClickException(
+                f"Ambiguous customer {identifier!r}; matches: {names}. "
+                "Pass the customer id instead."
+            )
+        return results[0]
+    row = customer_repo.get_customer(customer_id)
+    if row is None:
+        raise click.ClickException(
+            f"Customer not found: id={customer_id}."
+        )
+    return row
+
+
+def _resolve_bike_slug_or_id(identifier: str) -> dict:
+    """Resolve a bike by integer id or LIKE-match on model/make.
+
+    Narrower than diagnose.py's full slug parser (this phase does not
+    need year-stripping). On miss, raises a Phase 125-style
+    remediation ClickException pointing the mechanic at
+    ``motodiag garage add`` (created by Phase 128) or ``motodiag
+    vehicle list``.
+    """
+    try:
+        vehicle_id = int(identifier)
+    except (TypeError, ValueError):
+        vehicle_id = None
+
+    with get_connection() as conn:
+        if vehicle_id is not None:
+            row = conn.execute(
+                "SELECT * FROM vehicles WHERE id = ?", (vehicle_id,),
+            ).fetchone()
+            if row is not None:
+                return dict(row)
+        pattern = f"%{str(identifier)}%"
+        row = conn.execute(
+            """SELECT * FROM vehicles
+               WHERE LOWER(model) LIKE LOWER(?)
+                  OR LOWER(make) LIKE LOWER(?)
+               ORDER BY created_at, id
+               LIMIT 1""",
+            (pattern, pattern),
+        ).fetchone()
+    if row is None:
+        raise click.ClickException(
+            f"Bike not found: {identifier!r}. "
+            "Run `motodiag vehicle list` to see your garage, or "
+            "`motodiag vehicle add` to register one."
+        )
+    return dict(row)
+
+
+def _parse_set_pairs(pairs: tuple[str, ...]) -> dict:
+    """Parse repeated ``--set key=value`` pairs into a dict."""
+    out: dict = {}
+    for pair in pairs:
+        if "=" not in pair:
+            raise click.ClickException(
+                f"--set expects KEY=VALUE (got {pair!r})"
+            )
+        key, _, value = pair.partition("=")
+        key = key.strip()
+        value = value.strip()
+        if not key:
+            raise click.ClickException(
+                f"--set key must not be empty (got {pair!r})"
+            )
+        out[key] = value if value != "" else None
+    return out
+
+
+def _render_shop_panel(console, shop: dict) -> None:
+    """Render one shop as a Rich Panel."""
+    lines: list[str] = []
+    lines.append(f"[bold]{shop['name']}[/bold]  (id={shop['id']})")
+    addr_bits = [
+        shop.get("address"),
+        ", ".join(
+            b for b in (shop.get("city"), shop.get("state"), shop.get("zip"))
+            if b
+        ),
+    ]
+    addr = "  ".join(b for b in addr_bits if b)
+    if addr:
+        lines.append(f"Address: {addr}")
+    if shop.get("phone"):
+        lines.append(f"Phone:   {shop['phone']}")
+    if shop.get("email"):
+        lines.append(f"Email:   {shop['email']}")
+    if shop.get("tax_id"):
+        lines.append(f"Tax ID:  {shop['tax_id']}")
+    if shop.get("hours_json"):
+        lines.append(f"Hours:   {shop['hours_json']}")
+    if not shop.get("is_active", 1):
+        lines.append("[dim]INACTIVE[/dim]")
+    console.print(Panel("\n".join(lines), title="Shop Profile"))
+
+
+def _render_customer_panel(console, customer: dict) -> None:
+    """Render one customer as a Rich Panel."""
+    lines: list[str] = []
+    lines.append(f"[bold]{customer['name']}[/bold]  (id={customer['id']})")
+    if customer.get("email"):
+        lines.append(f"Email: {customer['email']}")
+    if customer.get("phone"):
+        lines.append(f"Phone: {customer['phone']}")
+    if customer.get("address"):
+        lines.append(f"Address: {customer['address']}")
+    if customer.get("notes"):
+        lines.append(f"Notes: {customer['notes']}")
+    if not customer.get("is_active", 1):
+        lines.append("[dim]INACTIVE[/dim]")
+    console.print(Panel("\n".join(lines), title="Customer"))
+
+
+def _render_intake_panel(console, intake: dict) -> None:
+    """Render one intake as a Rich Panel."""
+    status = intake.get("status", "open")
+    status_color = {
+        "open": "green", "closed": "blue", "cancelled": "red",
+    }.get(status, "white")
+    lines: list[str] = []
+    lines.append(
+        f"[bold]Intake id={intake['id']}[/bold]  "
+        f"[{status_color}]{status.upper()}[/{status_color}]"
+    )
+    lines.append(
+        f"Shop:     {intake.get('shop_name', '?')}  "
+        f"(id={intake['shop_id']})"
+    )
+    lines.append(
+        f"Customer: {intake.get('customer_name', '?')}  "
+        f"(id={intake['customer_id']})"
+    )
+    bike_label = " ".join(
+        str(b) for b in (
+            intake.get("vehicle_year"),
+            intake.get("vehicle_make"),
+            intake.get("vehicle_model"),
+        ) if b
+    )
+    lines.append(
+        f"Bike:     {bike_label or '?'}  (id={intake['vehicle_id']})"
+    )
+    lines.append(f"Intake at: {intake.get('intake_at', '?')}")
+    if intake.get("mileage_at_intake") is not None:
+        lines.append(f"Mileage:  {intake['mileage_at_intake']}")
+    if intake.get("reported_problems"):
+        lines.append(f"\nReported problems:\n  {intake['reported_problems']}")
+    if status != "open":
+        lines.append(f"\nClosed at: {intake.get('closed_at', '?')}")
+        if intake.get("close_reason"):
+            lines.append(f"Reason:    {intake['close_reason']}")
+    console.print(Panel("\n".join(lines), title="Intake Visit"))
+
+
+# ---------------------------------------------------------------------------
+# Register the top-level group
+# ---------------------------------------------------------------------------
+
+
+def register_shop(cli_group: click.Group) -> None:
+    """Attach the ``shop`` subgroup to the top-level CLI.
+
+    Phase 160 registers three nested subgroups (``profile``,
+    ``customer``, ``intake``) and 19 subcommands. Subsequent Track G
+    phases append new subgroups — e.g. ``shop work-order`` (161),
+    ``shop issue`` (162), ``shop invoice`` (169) — without touching
+    this function.
+    """
+
+    @cli_group.group("shop")
+    def shop_group() -> None:
+        """Shop management: profile, customers, intake."""
+
+    # -----------------------------------------------------------------
+    # shop profile {init, show, update, list, delete}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("profile")
+    def profile_group() -> None:
+        """Register and manage shop profiles."""
+
+    @profile_group.command("init")
+    @click.option("--name", required=True, help="Shop name (must be unique per owner).")
+    @click.option("--address", default=None)
+    @click.option("--city", default=None)
+    @click.option("--state", default=None)
+    @click.option("--zip", "zip_code", default=None)
+    @click.option("--phone", default=None)
+    @click.option("--email", default=None)
+    @click.option("--tax-id", "tax_id", default=None)
+    @click.option(
+        "--hours", "hours_json", default=None,
+        help='Hours as JSON object, e.g. \'{"mon":"08:00-17:00"}\'.',
+    )
+    def profile_init(
+        name: str,
+        address: Optional[str],
+        city: Optional[str],
+        state: Optional[str],
+        zip_code: Optional[str],
+        phone: Optional[str],
+        email: Optional[str],
+        tax_id: Optional[str],
+        hours_json: Optional[str],
+    ) -> None:
+        """Register a new shop. Idempotent on (owner, name)."""
+        console = get_console()
+        init_db()
+        existing = get_shop_by_name(name)
+        if existing is not None:
+            console.print(
+                f"[yellow]Shop {name!r} already exists "
+                f"(id={existing['id']}).[/yellow]"
+            )
+            _render_shop_panel(console, existing)
+            return
+        try:
+            shop_id = create_shop(
+                name=name, address=address, city=city, state=state,
+                zip=zip_code, phone=phone, email=email, tax_id=tax_id,
+                hours_json=hours_json,
+            )
+        except (ShopNameExistsError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        row = get_shop(shop_id)
+        assert row is not None
+        console.print(f"[green]Registered shop id={shop_id}.[/green]")
+        _render_shop_panel(console, row)
+
+    @profile_group.command("show")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Shop id or name (defaults to only active shop).")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def profile_show(shop_identifier: Optional[str], as_json: bool) -> None:
+        """Show a shop profile."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        if as_json:
+            click.echo(_json.dumps(shop, default=str, indent=2))
+            return
+        _render_shop_panel(console, shop)
+
+    @profile_group.command("list")
+    @click.option("--include-inactive", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def profile_list(include_inactive: bool, as_json: bool) -> None:
+        """List registered shops."""
+        console = get_console()
+        init_db()
+        shops = list_shops(include_inactive=include_inactive)
+        if as_json:
+            click.echo(_json.dumps(shops, default=str, indent=2))
+            return
+        if not shops:
+            console.print("[dim]No shops registered.[/dim]")
+            return
+        table = Table(title="Shops", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Name")
+        table.add_column("Phone")
+        table.add_column("Open intakes", justify="right")
+        table.add_column("Total intakes", justify="right")
+        for s in shops:
+            label = s["name"]
+            if not s.get("is_active", 1):
+                label = f"[dim]{label} (inactive)[/dim]"
+            table.add_row(
+                str(s["id"]),
+                label,
+                s.get("phone") or "—",
+                str(s.get("open_intake_count", 0)),
+                str(s.get("total_intake_count", 0)),
+            )
+        console.print(table)
+
+    @profile_group.command("update")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Shop id or name (defaults to only active shop).")
+    @click.option("--set", "set_pairs", multiple=True,
+                  help="Repeated KEY=VALUE updates, e.g. --set phone=555-0101.")
+    def profile_update(
+        shop_identifier: Optional[str], set_pairs: tuple[str, ...],
+    ) -> None:
+        """Update fields on a shop profile."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        if not set_pairs:
+            raise click.ClickException(
+                "No updates specified. Pass one or more --set KEY=VALUE."
+            )
+        updates = _parse_set_pairs(set_pairs)
+        try:
+            changed = update_shop(shop["id"], updates)
+        except (ShopNameExistsError, ShopNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if not changed:
+            console.print(
+                "[yellow]No updatable fields recognized in --set payload.[/yellow]"
+            )
+            return
+        row = get_shop(shop["id"])
+        assert row is not None
+        console.print(f"[green]Updated shop id={shop['id']}.[/green]")
+        _render_shop_panel(console, row)
+
+    @profile_group.command("delete")
+    @click.option("--shop", "shop_identifier", required=True,
+                  help="Shop id or name.")
+    @click.option("--force", is_flag=True, default=False,
+                  help="Skip confirmation prompt.")
+    def profile_delete(shop_identifier: str, force: bool) -> None:
+        """Hard-delete a shop (CASCADE drops intake history)."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        if not force:
+            click.confirm(
+                f"Really delete shop {shop['name']!r} (id={shop['id']})? "
+                "This CASCADE-drops all intake history.",
+                abort=True,
+            )
+        try:
+            delete_shop(shop["id"])
+        except ShopNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Deleted shop id={shop['id']}.[/green]")
+
+    # -----------------------------------------------------------------
+    # shop customer {add, list, show, search, update, deactivate,
+    #                link-bike, unlink-bike, bikes}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("customer")
+    def customer_group() -> None:
+        """Manage customer records (wraps Phase 113 CRM layer)."""
+
+    @customer_group.command("add")
+    @click.option("--name", required=True)
+    @click.option("--email", default=None)
+    @click.option("--phone", default=None)
+    @click.option("--address", default=None)
+    @click.option("--notes", default=None)
+    def customer_add(
+        name: str,
+        email: Optional[str],
+        phone: Optional[str],
+        address: Optional[str],
+        notes: Optional[str],
+    ) -> None:
+        """Add a new customer."""
+        console = get_console()
+        init_db()
+        try:
+            customer = Customer(
+                name=name, email=email, phone=phone,
+                address=address, notes=notes,
+            )
+        except Exception as e:
+            raise click.ClickException(f"Invalid customer data: {e}") from e
+        customer_id = customer_repo.create_customer(customer)
+        row = customer_repo.get_customer(customer_id)
+        assert row is not None
+        console.print(f"[green]Added customer id={customer_id}.[/green]")
+        _render_customer_panel(console, row)
+
+    @customer_group.command("list")
+    @click.option("--inactive", is_flag=True, default=False,
+                  help="Include deactivated customers.")
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def customer_list(
+        inactive: bool, limit: int, as_json: bool,
+    ) -> None:
+        """List customers."""
+        console = get_console()
+        init_db()
+        is_active = None if inactive else True
+        rows = customer_repo.list_customers(is_active=is_active)
+        rows = rows[: max(0, int(limit))] if limit else rows
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No customers.[/dim]")
+            return
+        table = Table(title="Customers", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Name")
+        table.add_column("Phone")
+        table.add_column("Email")
+        for r in rows:
+            label = r["name"]
+            if not r.get("is_active", 1):
+                label = f"[dim]{label} (inactive)[/dim]"
+            table.add_row(
+                str(r["id"]), label,
+                r.get("phone") or "—", r.get("email") or "—",
+            )
+        console.print(table)
+
+    @customer_group.command("show")
+    @click.argument("customer_identifier")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def customer_show(
+        customer_identifier: str, as_json: bool,
+    ) -> None:
+        """Show a customer + their linked bikes."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        bikes = customer_bikes_repo.list_bikes_for_customer(customer["id"])
+        payload = {"customer": customer, "bikes": bikes}
+        if as_json:
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        _render_customer_panel(console, customer)
+        if not bikes:
+            console.print("[dim]No linked bikes.[/dim]")
+            return
+        table = Table(title="Linked bikes", show_lines=False)
+        table.add_column("Vehicle ID", justify="right")
+        table.add_column("Make")
+        table.add_column("Model")
+        table.add_column("Year", justify="right")
+        table.add_column("Relationship")
+        for b in bikes:
+            table.add_row(
+                str(b.get("vehicle_id", b.get("id", "?"))),
+                str(b.get("make", "?")),
+                str(b.get("model", "?")),
+                str(b.get("year", "?")),
+                str(b.get("relationship", "?")),
+            )
+        console.print(table)
+
+    @customer_group.command("search")
+    @click.argument("query")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def customer_search(query: str, as_json: bool) -> None:
+        """Search customers by name, email, or phone."""
+        console = get_console()
+        init_db()
+        rows = customer_repo.search_customers(query)
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print(f"[dim]No matches for {query!r}.[/dim]")
+            return
+        table = Table(title=f"Search: {query!r}", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Name")
+        table.add_column("Phone")
+        table.add_column("Email")
+        for r in rows:
+            table.add_row(
+                str(r["id"]), r["name"],
+                r.get("phone") or "—", r.get("email") or "—",
+            )
+        console.print(table)
+
+    @customer_group.command("update")
+    @click.argument("customer_identifier")
+    @click.option("--set", "set_pairs", multiple=True)
+    def customer_update(
+        customer_identifier: str, set_pairs: tuple[str, ...],
+    ) -> None:
+        """Update fields on a customer record."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        if not set_pairs:
+            raise click.ClickException(
+                "No updates specified. Pass one or more --set KEY=VALUE."
+            )
+        updates = _parse_set_pairs(set_pairs)
+        ok = customer_repo.update_customer(customer["id"], updates)
+        if not ok:
+            console.print("[yellow]No fields updated.[/yellow]")
+            return
+        row = customer_repo.get_customer(customer["id"])
+        assert row is not None
+        console.print(
+            f"[green]Updated customer id={customer['id']}.[/green]"
+        )
+        _render_customer_panel(console, row)
+
+    @customer_group.command("deactivate")
+    @click.argument("customer_identifier")
+    def customer_deactivate(customer_identifier: str) -> None:
+        """Soft-delete a customer (preserves history)."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        if customer["id"] == UNASSIGNED_CUSTOMER_ID:
+            raise click.ClickException(
+                "Cannot deactivate the Unassigned placeholder customer."
+            )
+        ok = customer_repo.deactivate_customer(customer["id"])
+        if not ok:
+            console.print(
+                "[yellow]Customer already inactive or no change.[/yellow]"
+            )
+            return
+        console.print(
+            f"[green]Deactivated customer id={customer['id']}.[/green]"
+        )
+
+    @customer_group.command("link-bike")
+    @click.argument("customer_identifier")
+    @click.option("--bike", "bike_identifier", required=True,
+                  help="Vehicle id or model/make substring.")
+    @click.option(
+        "--relationship",
+        type=click.Choice(
+            [r.value for r in CustomerRelationship], case_sensitive=False,
+        ),
+        default=CustomerRelationship.OWNER.value,
+    )
+    def customer_link_bike(
+        customer_identifier: str,
+        bike_identifier: str,
+        relationship: str,
+    ) -> None:
+        """Link a bike to a customer with the given relationship."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        bike = _resolve_bike_slug_or_id(bike_identifier)
+        customer_bikes_repo.link_customer_bike(
+            customer["id"], bike["id"],
+            relationship=CustomerRelationship(relationship),
+        )
+        console.print(
+            f"[green]Linked bike id={bike['id']} to customer id={customer['id']} "
+            f"as {relationship!r}.[/green]"
+        )
+
+    @customer_group.command("unlink-bike")
+    @click.argument("customer_identifier")
+    @click.option("--bike", "bike_identifier", required=True)
+    @click.option(
+        "--relationship",
+        type=click.Choice(
+            [r.value for r in CustomerRelationship], case_sensitive=False,
+        ),
+        default=CustomerRelationship.OWNER.value,
+    )
+    def customer_unlink_bike(
+        customer_identifier: str,
+        bike_identifier: str,
+        relationship: str,
+    ) -> None:
+        """Unlink a bike from a customer."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        bike = _resolve_bike_slug_or_id(bike_identifier)
+        ok = customer_bikes_repo.unlink_customer_bike(
+            customer["id"], bike["id"],
+            relationship=CustomerRelationship(relationship),
+        )
+        if not ok:
+            raise click.ClickException(
+                f"No {relationship!r} link found between customer "
+                f"id={customer['id']} and bike id={bike['id']}."
+            )
+        console.print(
+            f"[green]Unlinked bike id={bike['id']} from customer "
+            f"id={customer['id']}.[/green]"
+        )
+
+    @customer_group.command("bikes")
+    @click.argument("customer_identifier")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def customer_bikes(
+        customer_identifier: str, as_json: bool,
+    ) -> None:
+        """List bikes linked to a customer."""
+        console = get_console()
+        init_db()
+        customer = _resolve_customer_identifier(customer_identifier)
+        bikes = customer_bikes_repo.list_bikes_for_customer(customer["id"])
+        if as_json:
+            click.echo(_json.dumps(bikes, default=str, indent=2))
+            return
+        if not bikes:
+            console.print(
+                f"[dim]No bikes linked to {customer['name']!r}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Bikes for {customer['name']}", show_lines=False,
+        )
+        table.add_column("Vehicle ID", justify="right")
+        table.add_column("Make")
+        table.add_column("Model")
+        table.add_column("Year", justify="right")
+        table.add_column("Relationship")
+        for b in bikes:
+            table.add_row(
+                str(b.get("vehicle_id", b.get("id", "?"))),
+                str(b.get("make", "?")),
+                str(b.get("model", "?")),
+                str(b.get("year", "?")),
+                str(b.get("relationship", "?")),
+            )
+        console.print(table)
+
+    # -----------------------------------------------------------------
+    # shop intake {create, list, show, update, close, reopen, open-for-bike}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("intake")
+    def intake_group() -> None:
+        """Log and manage bike intake visits."""
+
+    @intake_group.command("create")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Shop id or name (defaults to only active shop).")
+    @click.option("--customer", "customer_identifier", required=True,
+                  help="Customer id, name, or email.")
+    @click.option("--bike", "bike_identifier", required=True,
+                  help="Vehicle id or model/make substring.")
+    @click.option("--mileage", type=int, default=None,
+                  help="Mileage at intake (optional).")
+    @click.option("--notes", default=None,
+                  help="Reported problems freetext.")
+    def intake_create(
+        shop_identifier: Optional[str],
+        customer_identifier: str,
+        bike_identifier: str,
+        mileage: Optional[int],
+        notes: Optional[str],
+    ) -> None:
+        """Log a new intake visit."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        customer = _resolve_customer_identifier(customer_identifier)
+        bike = _resolve_bike_slug_or_id(bike_identifier)
+
+        # UX guard: warn if this bike is already checked in.
+        already_open = list_open_for_bike(bike["id"])
+        if already_open:
+            ids = ", ".join(str(x["id"]) for x in already_open)
+            console.print(
+                f"[yellow]Warning: bike id={bike['id']} already has "
+                f"{len(already_open)} open intake(s) (ids={ids}).[/yellow]"
+            )
+
+        try:
+            intake_id = create_intake(
+                shop_id=shop["id"],
+                customer_id=customer["id"],
+                vehicle_id=bike["id"],
+                reported_problems=notes,
+                mileage_at_intake=mileage,
+            )
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        row = get_intake(intake_id)
+        assert row is not None
+        console.print(f"[green]Created intake id={intake_id}.[/green]")
+        _render_intake_panel(console, row)
+
+    @intake_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option(
+        "--status",
+        type=click.Choice(list(INTAKE_STATUSES) + ["all"], case_sensitive=False),
+        default="open",
+    )
+    @click.option("--since", default=None,
+                  help="Relative offset (7d/24h/30m) or ISO timestamp.")
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def intake_list(
+        shop_identifier: Optional[str],
+        status: str,
+        since: Optional[str],
+        limit: int,
+        as_json: bool,
+    ) -> None:
+        """List intake visits (default: open queue)."""
+        console = get_console()
+        init_db()
+        shop_id: Optional[int] = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        filter_status: Optional[str] = (
+            None if status.lower() == "all" else status.lower()
+        )
+        rows = list_intakes(
+            shop_id=shop_id, status=filter_status, since=since, limit=limit,
+        )
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No intakes match filters.[/dim]")
+            return
+        table = Table(
+            title=f"Intakes ({filter_status or 'all'})", show_lines=False,
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("Intake at")
+        table.add_column("Shop")
+        table.add_column("Customer")
+        table.add_column("Bike")
+        table.add_column("Status")
+        for r in rows:
+            bike_label = " ".join(
+                str(b) for b in (
+                    r.get("vehicle_year"),
+                    r.get("vehicle_make"),
+                    r.get("vehicle_model"),
+                ) if b
+            )
+            table.add_row(
+                str(r["id"]),
+                str(r.get("intake_at", "?")),
+                str(r.get("shop_name", "?")),
+                str(r.get("customer_name", "?")),
+                bike_label or "?",
+                str(r.get("status", "?")),
+            )
+        console.print(table)
+
+    @intake_group.command("show")
+    @click.argument("intake_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def intake_show(intake_id: int, as_json: bool) -> None:
+        """Show one intake visit."""
+        console = get_console()
+        init_db()
+        row = get_intake(intake_id)
+        if row is None:
+            raise click.ClickException(f"intake not found: id={intake_id}")
+        if as_json:
+            click.echo(_json.dumps(row, default=str, indent=2))
+            return
+        _render_intake_panel(console, row)
+
+    @intake_group.command("update")
+    @click.argument("intake_id", type=int)
+    @click.option("--mileage", type=int, default=None)
+    @click.option("--notes", default=None)
+    def intake_update_cmd(
+        intake_id: int,
+        mileage: Optional[int],
+        notes: Optional[str],
+    ) -> None:
+        """Update mileage or reported_problems on an intake."""
+        console = get_console()
+        init_db()
+        updates: dict = {}
+        if mileage is not None:
+            updates["mileage_at_intake"] = mileage
+        if notes is not None:
+            updates["reported_problems"] = notes
+        if not updates:
+            raise click.ClickException(
+                "Nothing to update. Pass --mileage or --notes."
+            )
+        try:
+            update_intake(intake_id, updates)
+        except (IntakeNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        row = get_intake(intake_id)
+        assert row is not None
+        console.print(f"[green]Updated intake id={intake_id}.[/green]")
+        _render_intake_panel(console, row)
+
+    @intake_group.command("close")
+    @click.argument("intake_id", type=int)
+    @click.option(
+        "--reason",
+        type=click.Choice(INTAKE_CLOSE_REASONS, case_sensitive=False),
+        default="completed",
+    )
+    def intake_close(intake_id: int, reason: str) -> None:
+        """Close an intake visit (open → closed)."""
+        console = get_console()
+        init_db()
+        try:
+            close_intake(intake_id, close_reason=reason.lower())
+        except (IntakeAlreadyClosedError, IntakeNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Closed intake id={intake_id} (reason={reason}).[/green]"
+        )
+
+    @intake_group.command("cancel")
+    @click.argument("intake_id", type=int)
+    @click.option(
+        "--reason",
+        type=click.Choice(INTAKE_CLOSE_REASONS, case_sensitive=False),
+        default="customer-withdrew",
+    )
+    def intake_cancel(intake_id: int, reason: str) -> None:
+        """Cancel an intake visit (open → cancelled)."""
+        console = get_console()
+        init_db()
+        try:
+            cancel_intake(intake_id, reason=reason.lower())
+        except (IntakeAlreadyClosedError, IntakeNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Cancelled intake id={intake_id} (reason={reason}).[/green]"
+        )
+
+    @intake_group.command("reopen")
+    @click.argument("intake_id", type=int)
+    @click.option("--yes", is_flag=True, default=False,
+                  help="Skip confirmation prompt.")
+    def intake_reopen(intake_id: int, yes: bool) -> None:
+        """Reopen a closed/cancelled intake visit."""
+        console = get_console()
+        init_db()
+        row = get_intake(intake_id)
+        if row is None:
+            raise click.ClickException(f"intake not found: id={intake_id}")
+        if row["status"] == "open":
+            console.print("[yellow]Intake is already open.[/yellow]")
+            return
+        if not yes:
+            click.confirm(
+                f"Really reopen intake id={intake_id} (was {row['status']!r})?",
+                abort=True,
+            )
+        try:
+            reopen_intake(intake_id)
+        except IntakeNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Reopened intake id={intake_id}.[/green]")
+
+    @intake_group.command("open-for-bike")
+    @click.argument("bike_identifier")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def intake_open_for_bike(
+        bike_identifier: str, as_json: bool,
+    ) -> None:
+        """Show open intakes currently logged for a given bike."""
+        console = get_console()
+        init_db()
+        bike = _resolve_bike_slug_or_id(bike_identifier)
+        rows = list_open_for_bike(bike["id"])
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print(
+                f"[dim]No open intakes for bike id={bike['id']}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Open intakes for bike id={bike['id']}", show_lines=False,
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("Intake at")
+        table.add_column("Shop")
+        table.add_column("Customer")
+        for r in rows:
+            table.add_row(
+                str(r["id"]),
+                str(r.get("intake_at", "?")),
+                str(r.get("shop_name", "?")),
+                str(r.get("customer_name", "?")),
+            )
+        console.print(table)

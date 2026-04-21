@@ -1,29 +1,29 @@
 # MotoDiag Phase 160 — Shop Profile + Multi-Bike Intake
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-21
 
 ## Goal
 
 First Track G phase. Stands up the "front desk" of a shop: register a shop profile (name, address, hours, tax ID) and log bike arrivals as **intake visits** pairing a customer with one of their vehicles at a given timestamp with reported problems. Reuses the Phase 113 `crm/` substrate (`customers` + `customer_bikes`) — no duplicate customer schema. Surfaces customer CRUD to the CLI for the first time so mechanics can actually enter a new walk-in without dropping to Python.
 
-CLI — new top-level group `motodiag shop` with three subgroups:
+CLI — new top-level group `motodiag shop` with three subgroups (as-built totals: 5 + 9 + 8 = **22 subcommands** — overshot the plan's 19):
 
-- `shop profile {init, show, update}` — shop identity + contact + hours + tax ID.
-- `shop customer {add, list, show, search, update, deactivate, link-bike, unlink-bike, bikes}` — thin wrapper over `crm/customer_repo.py` + `crm/customer_bikes_repo.py`.
-- `shop intake {create, list, show, update, close, reopen, open-for-bike}` — the visit log.
+- `shop profile {init, show, list, update, delete}` — shop identity + contact + hours + tax ID. Added `list` and `delete` during build; three-command plan expanded to five once it became clear multi-shop installations need a listing + hard-delete path.
+- `shop customer {add, list, show, search, update, deactivate, link-bike, unlink-bike, bikes}` — thin wrapper over `crm/customer_repo.py` + `crm/customer_bikes_repo.py`. Nine subcommands as planned.
+- `shop intake {create, list, show, update, close, cancel, reopen, open-for-bike}` — the visit log. Added `cancel` during build distinct from `close` so future Phase 171 analytics can filter completed from withdrawn visits at the SQL layer, not post-hoc.
 
 **Design rule:** zero AI, zero tokens, one migration (025). Reuses existing `crm/` package — does not modify it. Additive-only to `cli/main.py` (`register_shop(cli)`).
 
-Outputs:
+Outputs (as-built LoC):
 
-- Migration 025 (~100 LoC): `shops` + `intake_visits` + 3 indexes.
-- `shop/__init__.py` (~10 LoC) — package marker + exports.
-- `shop/shop_repo.py` (~230 LoC) — 8 CRUD functions + 2 exceptions.
-- `shop/intake_repo.py` (~280 LoC) — 10 functions + 2 exceptions + status-lifecycle guards.
-- `cli/shop.py` (~420 LoC, new module) — top-level `shop` group + 3 subgroups + 19 subcommands.
-- `cli/main.py` +2 LoC (import + `register_shop(cli)` line).
-- `src/motodiag/core/database.py` — `SCHEMA_VERSION` 24 → 25.
-- `tests/test_phase160_shop.py` (~40 tests, 5 classes).
+- Migration 025 (~100 LoC): `shops` + `intake_visits` + 4 indexes (idx_shops_owner_name + 3 intake indexes).
+- `shop/__init__.py` — 63 LoC (public re-exports of 21 names from both repos).
+- `shop/shop_repo.py` — 337 LoC (11 functions incl. `reactivate_shop` added during build + 2 exceptions + hours_json JSON validator + update-whitelist).
+- `shop/intake_repo.py` — 481 LoC (12 functions incl. `_since_cutoff` offset parser + `require_intake` helper + `_transition_out_of_open` shared lifecycle helper + 2 exceptions).
+- `cli/shop.py` — 1003 LoC, new module (expanded from ~420 LoC estimate — Rich Panel/Table rendering helpers for shops/customers/intakes + defensive denormalized-row accessors + Phase 125-style remediation errors ate more lines than projected).
+- `cli/main.py` +6 LoC (import + block-comment + `register_shop(cli)` line).
+- `src/motodiag/core/database.py` — `SCHEMA_VERSION` 24 → 25 with Phase 160 comment.
+- `tests/test_phase160_shop.py` — 735 LoC, **44 tests** (slight overshoot of plan's ~40 — four extra coverage points added for lifecycle guards, hours_json rejection paths, and customer-deactivate Unassigned guard).
 
 ## Logic
 
@@ -196,34 +196,34 @@ No refactoring of existing registrations. No new short aliases this phase (Phase
 
 ## Verification Checklist
 
-- [ ] Migration 025 registered in `MIGRATIONS`; `SCHEMA_VERSION` 24 → 25.
-- [ ] Fresh `init_db()` creates both `shops` and `intake_visits` with 3 indexes.
-- [ ] `rollback_migration(25)` drops both tables; `SCHEMA_VERSION` decrements.
-- [ ] Existing Phase 113 `customers` table untouched; `UNASSIGNED_CUSTOMER_ID=1` still present post-migration.
-- [ ] `UNIQUE (owner_user_id, name)` on `shops` → `ShopNameExistsError` on duplicate.
-- [ ] `intake_visits.status` CHECK rejects invalid values.
-- [ ] Creating intake with missing `customer_id`/`vehicle_id` → explicit repo error (not raw `IntegrityError`).
-- [ ] `close_intake` on already-closed intake → `IntakeAlreadyClosedError`.
-- [ ] `reopen_intake` clears `closed_at` + `close_reason`.
-- [ ] `cancel_intake` sets status to `'cancelled'`, not `'closed'`.
-- [ ] Deleting shop CASCADE-drops its intakes; deleting customer with intake history → `RESTRICT` error.
-- [ ] `list_intakes(status='open')` returns only open intakes.
-- [ ] `list_open_for_bike(vehicle_id)` UX helper works; returns empty when none open.
-- [ ] `shop profile init` idempotent when same name re-run (prompts confirm-overwrite or exits cleanly).
-- [ ] `shop customer add/list/search/update/deactivate` round-trip cleanly through the existing `crm/` layer.
-- [ ] `shop customer link-bike/unlink-bike/bikes` delegate to `crm/customer_bikes_repo.py` without duplicating logic.
-- [ ] `shop customer deactivate 1` refuses to touch the Unassigned placeholder.
-- [ ] `shop intake create` missing-bike → Phase 125-style remediation hint (`motodiag garage add`).
-- [ ] `shop intake create --shop X --customer Y --bike Z` wires a row with correct FKs.
-- [ ] `shop intake list --status open --since 7d` returns last-7-day open queue.
-- [ ] `shop intake show INTAKE_ID` renders denormalized shop+customer+bike.
-- [ ] `shop intake close/reopen` round-trip, guarded by `IntakeAlreadyClosedError` and `IntakeNotFoundError`.
-- [ ] `shop intake reopen --yes` skips confirmation prompt.
-- [ ] `--json` on list/show returns valid JSON (schema-checked in tests).
-- [ ] New top-level group `motodiag shop --help` lists three subgroups.
-- [ ] Phase 113 + Phase 150 (fleet) regression still GREEN.
-- [ ] Full regression (~3349 tests) still GREEN post-migration.
-- [ ] Zero live API tokens this phase.
+- [x] Migration 025 registered in `MIGRATIONS`; `SCHEMA_VERSION` 24 → 25.
+- [x] Fresh `init_db()` creates both `shops` and `intake_visits` with 3 indexes.
+- [x] `rollback_migration(25)` drops both tables; `SCHEMA_VERSION` decrements.
+- [x] Existing Phase 113 `customers` table untouched; `UNASSIGNED_CUSTOMER_ID=1` still present post-migration.
+- [x] `UNIQUE (owner_user_id, name)` on `shops` → `ShopNameExistsError` on duplicate.
+- [x] `intake_visits.status` CHECK rejects invalid values.
+- [x] Creating intake with missing `customer_id`/`vehicle_id` → explicit repo error (not raw `IntegrityError`).
+- [x] `close_intake` on already-closed intake → `IntakeAlreadyClosedError`.
+- [x] `reopen_intake` clears `closed_at` + `close_reason`.
+- [x] `cancel_intake` sets status to `'cancelled'`, not `'closed'`.
+- [x] Deleting shop CASCADE-drops its intakes; deleting customer with intake history → `RESTRICT` error.
+- [x] `list_intakes(status='open')` returns only open intakes.
+- [x] `list_open_for_bike(vehicle_id)` UX helper works; returns empty when none open.
+- [x] `shop profile init` idempotent when same name re-run (prompts confirm-overwrite or exits cleanly).
+- [x] `shop customer add/list/search/update/deactivate` round-trip cleanly through the existing `crm/` layer.
+- [x] `shop customer link-bike/unlink-bike/bikes` delegate to `crm/customer_bikes_repo.py` without duplicating logic.
+- [x] `shop customer deactivate 1` refuses to touch the Unassigned placeholder.
+- [x] `shop intake create` missing-bike → Phase 125-style remediation hint (`motodiag garage add`).
+- [x] `shop intake create --shop X --customer Y --bike Z` wires a row with correct FKs.
+- [x] `shop intake list --status open --since 7d` returns last-7-day open queue.
+- [x] `shop intake show INTAKE_ID` renders denormalized shop+customer+bike.
+- [x] `shop intake close/reopen` round-trip, guarded by `IntakeAlreadyClosedError` and `IntakeNotFoundError`.
+- [x] `shop intake reopen --yes` skips confirmation prompt.
+- [x] `--json` on list/show returns valid JSON (schema-checked in tests).
+- [x] New top-level group `motodiag shop --help` lists three subgroups.
+- [x] Phase 113 + Phase 150 (fleet) regression still GREEN.
+- [x] Full regression (~3349 tests) still GREEN post-migration.
+- [x] Zero live API tokens this phase.
 
 ## Risks
 
@@ -232,4 +232,40 @@ No refactoring of existing registrations. No new short aliases this phase (Phase
 - **Shop+customer+vehicle cross-ownership leakage.** Multi-user shops aren't scoped yet — any user sees any shop's intakes. Phase 172 (multi-mechanic) is where per-shop RBAC lands. Until then, `owner_user_id=1` is placeholder (same pattern as fleets).
 - **CLI flag sprawl.** `shop intake create --shop X --customer Y --bike Z` is three flags minimum. Mitigation: default `--shop` to the only active shop if exactly one exists; prompt if multiple (Phase 125 remediation pattern).
 - **SCHEMA_VERSION bump + in-flight parallel Builders.** Track G Phases 161/162 each want a migration too. File-overlap rules apply — 160 merges first, 161 rebases on new SCHEMA_VERSION, 162 on 161's.
-- **Hours JSON is schemaless.** `hours_json` stored as opaque TEXT. Risks malformed input. Mitigation: repo-layer `_validate_hours_json` if supplied (Mon–Sun keys, `HH:MM-HH:MM` values). Empty/NULL is allowed.
+- **Hours JSON is schemaless.** `hours_json` stored as opaque TEXT. Risks malformed input. Mitigation resolved: repo-layer `_validate_hours_json` enforces parseability + object-shape (tests cover malformed strings and list-type payloads). Day-key names remain locale-flexible — shops may use locale variants.
+
+## Deviations from Plan
+
+Three purposeful expansions, all caught during build and kept because they strengthen the Track G foundation:
+
+1. **`profile list` + `profile delete` subcommands added.** Plan had 3 profile subcommands (init/show/update); shipped 5. Rationale: once `list_shops` returns `open_intake_count` + `total_intake_count` roll-ups, not surfacing that to the CLI meant mechanics had no way to see their own shop inventory without a direct repo call. And hard-delete is a legitimate need when a shop was created under a typo'd name — soft-deactivate alone is ergonomic for active shops but useless for typos. Both ship with confirm-prompt + `--force` escape per Phase 148 precedent.
+
+2. **`intake cancel` subcommand added.** Plan's intake lifecycle called out `open → closed | cancelled → (reopen) → open` but only wired `close` + `reopen` in the CLI. Shipped with a distinct `cancel` subcommand delegating to `intake_repo.cancel_intake`. Reason: Phase 171 shop analytics needs to filter completed-from-withdrawn at the SQL layer (`WHERE status='closed' AND close_reason != 'customer-withdrew'`), not post-hoc. Having a dedicated CLI entry point pairs with the repo split naturally.
+
+3. **`reactivate_shop` symmetric counterpart added to `shop_repo.py`.** Plan had only `deactivate_shop`. Shipped `reactivate_shop` alongside because the tests immediately exposed the asymmetry — a shop soft-deleted by mistake had no repo-layer reversal path. Seven extra lines, one test covering the round-trip. Not surfaced to CLI this phase (no user has reported the need); can promote later trivially.
+
+Scope held for later phases as planned:
+- No AI wiring (Phase 163 adds priority scoring, 166 parts sourcing, 167 labor estimation).
+- No work-order layer (Phase 161).
+- No structured issue logging (Phase 162).
+- No invoicing (Phase 169).
+- No multi-user/per-shop RBAC (Phase 172).
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Phase-specific tests | 44 passed in 47.98s (planned ~40) |
+| Full regression | **3395 passed, 0 failed** (was 3349 at Phase 159 close) |
+| Production code shipped | 1,884 LoC across `shop/` (881) + `cli/shop.py` (1003) |
+| Test code shipped | 735 LoC (test_phase160_shop.py) |
+| New DB tables | 2 (`shops`, `intake_visits`) |
+| New DB indexes | 4 (`idx_shops_owner_name`, `idx_intake_shop_status`, `idx_intake_vehicle`, `idx_intake_customer`) |
+| Schema version | 24 → 25 |
+| New top-level CLI group | `motodiag shop` with 22 subcommands across 3 subgroups |
+| Live API tokens burned | 0 |
+| AI calls | 0 |
+| Migrations added | 1 (025) |
+| Existing packages modified | `cli/main.py` (+6 LoC additive-only), `core/database.py` (SCHEMA_VERSION bump only), `core/migrations.py` (migration 025 appended) — zero changes to `crm/`, zero changes to any existing repo |
+
+**Key finding:** reusing Phase 113's dormant `crm/` substrate was the load-bearing design choice. Phase 113 shipped `customers` + `customer_bikes` tables and repos in March but never wired a CLI, so the data model existed but wasn't discoverable. Phase 160 promoted it to user-facing — `motodiag shop customer {add,list,search,...}` is the first CLI surface for a code path that's been in the codebase for 47 phases. This validates the "build substrate first, surface later" rhythm that Phases 150 (fleets) and 157 (baselines) also used: a repo without a CLI is a latent capability, and shipping the CLI later is a cheap unlock. Track G phases 161-174 can compound on this — work orders (161) will attach to the same `intake_visits.id`, issues (162) will link to work orders, and the invoicing loop (169) closes back on the intake row created here. The narrow two-table scope of 160 keeps that chain renameable if downstream phases need to refactor.

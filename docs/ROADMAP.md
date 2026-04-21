@@ -258,7 +258,7 @@ Shop-level features: log bikes in your shop, track issues across the fleet, tria
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 160 | Shop profile + multi-bike intake | 🔲 | Register shop, log incoming bikes with customer info (was 148) |
+| 160 | Shop profile + multi-bike intake | ✅ | Migration 025: `shops` + `intake_visits` tables. `shop/shop_repo.py` (337 LoC, 11 fns + hours_json validator) + `shop/intake_repo.py` (481 LoC, guarded `open→closed\|cancelled→(reopen)→open` lifecycle). `cli/shop.py` (1003 LoC) new top-level `motodiag shop` group with 3 subgroups × 22 subcommands — `profile` (5), `customer` (9, first CLI for Phase 113 dormant `crm/`), `intake` (8). 44 tests GREEN. Zero AI. |
 | 161 | Work order system | 🔲 | Create/assign/track work orders per bike (was 149) |
 | 162 | Issue logging + categorization | 🔲 | Log reported issues per bike, categorize by system/severity (was 150) |
 | 163 | Repair priority scoring | 🔲 | AI-ranked priority: safety > ridability > cosmetic, weighted by wait time (was 151) |
