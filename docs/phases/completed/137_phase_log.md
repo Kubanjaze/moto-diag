@@ -1,6 +1,6 @@
 # MotoDiag Phase 137 — Phase Log
 
-**Status:** Planned | **Started:** 2026-04-17 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-17 | **Completed:** 2026-04-18
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -38,3 +38,21 @@ K-line is single-wire half-duplex. Every byte the tester writes to the UART is e
 This phase is strictly the protocol module + its tests. `motodiag connect --protocol kline` wiring lands in Phase 140 (connection manager). Tune-writing (SecurityAccess, WriteData) lands in a much later dedicated phase with explicit user confirmations. The `[hardware]` extras entry is already declared from Phase 135 — no `pyproject.toml` change.
 
 Plan docs written to `docs/phases/in_progress/137_implementation.md` and `137_phase_log.md`. Not yet committed or pushed per caller's instruction.
+
+### 2026-04-18 06:30 — Build complete
+
+Wave 2 Builder shipped `src/motodiag/hardware/protocols/kline.py` (~670 LoC — overshot ~450-550 target per "detailed and meticulous" standard; extra is docstring + KWP2000 service identifier reference + strict-timing commentary) plus `tests/test_phase137_kline.py` (~775 LoC, 44 tests across 7 classes vs plan's ~26 target — extra coverage on echo cancellation edge cases, DTC decoder, and defensive framing). Target platform: 90s/2000s Japanese sport bikes (CBR600/900/1000RR, ZX-6R/9R/10R, GSX-R/SV650, YZF-R1/R6) + vintage Euro (Aprilia RSV, Ducati 748/996/998, KTM LC4/Adventure). Module-level pure `_build_frame`/`_parse_frame` helpers — tested directly without touching the adapter for correctness + fuzzing readiness.
+
+Slow-baud wakeup handshake (5-baud address via `serial.break_condition` toggling — `pyserial` rejects sub-50-baud on FTDI/CH340 chips), strict inter-byte and inter-message timing windows, sum-mod-256 checksum validation on parse + computation on build, local-echo cancellation via strict byte-equality drain (the #1 gotcha in DIY K-line projects — professional tools handle echo in hardware, we do it in software). KWP2000 services: 0x10 StartDiagnosticSession, 0x11 ECUReset, 0x14 ClearDiagnosticInformation, 0x18 ReadDTCsByStatus, 0x1A ReadECUIdentification (identifier 0x90 for VIN), 0x21 ReadDataByLocalID.
+
+Deviations from plan: ABC signature reconciliation (same pattern as 135/136). DTC decode corrected — `(0x02, 0x01) → P0201` (not the plan's original draft encoding). Write services (0x27 SecurityAccess / 0x2E WriteDataByIdentifier / 0x31 RoutineControl) deliberately out of scope — tune-writing lands in a later dedicated phase with multi-layer safety confirmations.
+
+44 tests passed locally in 0.96s. Running total: 2516 tests. Zero real hardware, zero network, zero API tokens.
+
+**Commit:** `15c658d` (Phases 133-139: Gate 5 PASSED + Track E hardware substrate).
+
+### 2026-04-18 07:00 — Documentation finalization
+
+`implementation.md` already at v1.1 with Results + Deviations at top. Verification Checklist marked `[x]` post-Gate 6 integration test. Moved to `docs/phases/completed/`.
+
+Key finding: the echo-cancellation via strict byte-equality drain is the non-obvious load-bearing piece of this adapter. Without it, every frame parser crashes on checksum mismatch because the first bytes of what looks like an "ECU response" are actually the tail of the tester's own request. Phase 137 also cemented the module-level pure-helper pattern (`_build_frame`/`_parse_frame`) that later phases (138 J1850, 144 simulator Pydantic validators) reused for testability without full adapter instantiation.

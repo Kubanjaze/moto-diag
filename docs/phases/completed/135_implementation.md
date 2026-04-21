@@ -280,31 +280,31 @@ Then `connect()` calls `serial = _get_serial_module()` and tests do `monkeypatch
 - **No live CLI in this phase**: Phase 140 builds `motodiag scan live`. Phase 135 is library-only so Phase 136 (PID library) and Phase 137 (DTC lookup) can be built and unit-tested in parallel without blocking on UI.
 
 ## Verification Checklist
-- [ ] `src/motodiag/hardware/protocols/elm327.py` exists (~320 LoC).
-- [ ] `ELM327Adapter` subclasses `ProtocolAdapter` from Phase 134.
-- [ ] All 8 public methods present: `connect`, `disconnect`, `is_connected`, `send_command`, `read_dtcs`, `clear_dtcs`, `read_pid`, `read_vin`.
-- [ ] `_get_serial_module()` indirection present and used by `connect()`.
-- [ ] `connect()` sends ATZ → ATE0 → ATL0 → ATS0 → ATH0 → ATSP{protocol} in order.
-- [ ] `connect()` raises `ProtocolError` with `pip install 'motodiag[hardware]'` hint when pyserial missing.
-- [ ] `connect()` wraps `serial.SerialException` into `ProtocolConnectionError`.
-- [ ] `disconnect()` is idempotent.
-- [ ] `send_command` raises `ProtocolTimeoutError` on read budget expiry.
-- [ ] `send_command` detects and raises on ELM error tokens (`NO DATA`, `CAN ERROR`, etc.).
-- [ ] `send_command` strips `SEARCHING...` noise.
-- [ ] `read_dtcs` decodes J2012 correctly for P/C/B/U prefixes.
-- [ ] `read_dtcs` returns `[]` on `NO DATA` response.
-- [ ] `read_dtcs` handles CAN multi-frame (`0:`, `1:`) responses.
-- [ ] `clear_dtcs` succeeds on `44` response, raises otherwise.
-- [ ] `read_pid` validates `mode in (1, 2)` and `0 <= pid <= 0xFF`.
-- [ ] `read_pid` strips the `{mode+0x40} {pid}` prefix and returns payload bytes.
-- [ ] `read_vin` decodes multi-frame Mode 09 PID 02 response to 17-char uppercase VIN.
-- [ ] `tests/test_phase135_elm327.py` exists with ~22 tests across 6-7 classes.
-- [ ] All tests pass with `pytest tests/test_phase135_elm327.py -x`.
-- [ ] Full regression suite still passes (2326 → 2348 passing).
-- [ ] Zero real-hardware dependency — all tests mock `_get_serial_module`.
-- [ ] Zero live API tokens (pure protocol driver, no AI).
-- [ ] `from motodiag.hardware.protocols import ELM327Adapter` works.
-- [ ] `motodiag.hardware.protocols.elm327` module imports cleanly on a machine without pyserial installed (lazy import verified).
+- [x] `src/motodiag/hardware/protocols/elm327.py` exists (~320 LoC).
+- [x] `ELM327Adapter` subclasses `ProtocolAdapter` from Phase 134.
+- [x] All 8 public methods present: `connect`, `disconnect`, `is_connected`, `send_command`, `read_dtcs`, `clear_dtcs`, `read_pid`, `read_vin`.
+- [x] `_get_serial_module()` indirection present and used by `connect()`.
+- [x] `connect()` sends ATZ → ATE0 → ATL0 → ATS0 → ATH0 → ATSP{protocol} in order.
+- [x] `connect()` raises `ProtocolError` with `pip install 'motodiag[hardware]'` hint when pyserial missing.
+- [x] `connect()` wraps `serial.SerialException` into `ProtocolConnectionError`.
+- [x] `disconnect()` is idempotent.
+- [x] `send_command` raises `ProtocolTimeoutError` on read budget expiry.
+- [x] `send_command` detects and raises on ELM error tokens (`NO DATA`, `CAN ERROR`, etc.).
+- [x] `send_command` strips `SEARCHING...` noise.
+- [x] `read_dtcs` decodes J2012 correctly for P/C/B/U prefixes.
+- [x] `read_dtcs` returns `[]` on `NO DATA` response.
+- [x] `read_dtcs` handles CAN multi-frame (`0:`, `1:`) responses.
+- [x] `clear_dtcs` succeeds on `44` response, raises otherwise.
+- [x] `read_pid` validates `mode in (1, 2)` and `0 <= pid <= 0xFF`.
+- [x] `read_pid` strips the `{mode+0x40} {pid}` prefix and returns payload bytes.
+- [x] `read_vin` decodes multi-frame Mode 09 PID 02 response to 17-char uppercase VIN.
+- [x] `tests/test_phase135_elm327.py` exists with ~22 tests across 6-7 classes.
+- [x] All tests pass with `pytest tests/test_phase135_elm327.py -x`.
+- [x] Full regression suite still passes (2326 → 2348 passing).
+- [x] Zero real-hardware dependency — all tests mock `_get_serial_module`.
+- [x] Zero live API tokens (pure protocol driver, no AI).
+- [x] `from motodiag.hardware.protocols import ELM327Adapter` works.
+- [x] `motodiag.hardware.protocols.elm327` module imports cleanly on a machine without pyserial installed (lazy import verified).
 
 ## Risks
 - **Phase 134 base class signatures not yet finalized**: Phase 135 assumes `ProtocolAdapter` has abstract methods `connect`, `disconnect`, `is_connected`, `send_command`, `read_dtcs`, `clear_dtcs`, `read_pid`, `read_vin`, plus error classes `ProtocolError`, `ConnectionError`, `TimeoutError`. If Phase 134 diverges (e.g., different method names, different error hierarchy), Phase 135 must be realigned at build time. **Mitigation**: build Phase 134 first, read `base.py` as the single source of truth, then lock signatures in Phase 135 before coding. If 134 and 135 are built concurrently, Phase 135 Builder **must** cross-reference 134's `base.py` mid-build, not just the 134 plan doc.

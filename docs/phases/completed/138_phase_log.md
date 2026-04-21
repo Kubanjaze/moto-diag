@@ -1,6 +1,6 @@
 # MotoDiag Phase 138 — Phase Log
 
-**Status:** 🔲 Planned | **Started:** 2026-04-17 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-17 | **Completed:** 2026-04-18
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -37,3 +37,21 @@ Third concrete `ProtocolAdapter` in Track E: J1850 VPW for pre-2011 Harley-David
 - Zero live API tokens burned.
 
 Next step: Builder (agent or direct) implements per plan, runs tests locally, updates to v1.1.
+
+### 2026-04-18 06:30 — Build complete
+
+Wave 2 Builder shipped `src/motodiag/hardware/protocols/j1850.py` (~600 LoC — overshot ~420 target per "detailed and meticulous" standard; extra is bridge-specific command table docs + multi-ECM coordination commentary + Harley model-year coverage narrative) plus `tests/test_phase138_j1850.py` with 27 tests across 6 classes. Target: pre-2011 Harley-Davidson — pre-2007 Sportster / Big Twin Evo / TC88 (pure Harley-proprietary J1850), 2007-2010 EFI HDs (Delphi / Magneti Marelli ECMs, partial SAE Mode 03 bolted on). 2011+ HDs use CAN (Phase 136, not this phase).
+
+No direct bit-banging — adapter talks serial to hard-wired bridge devices (Scan Gauge II / Daytona Twin Tec TCFI tuner / Dynojet Power Commander diagnostic mode / Harley Digital Tech II clones), bridge talks J1850 VPW (10.4 kbps Variable Pulse Width — NOT the 41.6 kbps PWM Ford variant) to the bike. Multi-ECM diagnostic story is this adapter's unique value: single `read_dtcs()` call queries ECM (P-codes) + BCM (B-codes) + 2007+ Touring ABS (C-codes) via three separate module addresses on the same bus, merges into a flat list (ECM → BCM → ABS order). Supplementary `read_dtcs_by_module() -> dict[str, list[str]]` for labeled access.
+
+Deviations from plan: ABC signature reconciliation (same Wave 2 pattern). `clear_dtcs(module=None)` accepts optional module kwarg while preserving `bool` ABC return. `read_pid` raises `NotImplementedError` with a Phase-141 pointer (Harley PIDs require per-bridge knowledge — deferred to live sensor streaming work). `read_vin` raises `UnsupportedCommandError` (pre-2008 HDs lacked Mode 09 PID 02 — Phase 146's `diagnose` step 4 surfaces this as a WARN with "frame neck sticker" guidance). Bridge variants: `daytona` / `scangauge` / `dynojet` / `generic` (plan had longer names; Builder shortened for CLI usability).
+
+27 tests passed locally. Running total: 2543 tests. Zero live API tokens.
+
+**Commit:** `15c658d` (Phases 133-139: Gate 5 PASSED + Track E hardware substrate).
+
+### 2026-04-18 07:00 — Documentation finalization
+
+`implementation.md` already at v1.1 with Results + Deviations. Verification Checklist marked `[x]` after Gate 6 integration test. Moved to `docs/phases/completed/`.
+
+Key finding: the bridge-device abstraction is the pragmatic win of this phase. Real J1850 silicon is rare and consumer ELM327 clones handle Harley-proprietary frames poorly — by designing around the bridge layer (which every real-world HD mechanic already owns), Phase 138 ships usable Harley diagnostics without requiring anyone to buy a purpose-built J1850 transceiver. The `_BRIDGE_COMMANDS` dict + variant kwarg makes future bridge additions a data change, not a code change.

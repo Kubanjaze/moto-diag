@@ -200,27 +200,27 @@ Total: 25 tests. All use `MagicMock` for adapters — **zero live hardware, zero
 - **No live hardware in tests.** `MagicMock` adapters with `connect()` that succeeds or raises on demand is enough to exercise every code path. Real-hardware tests are a future integration-test phase (Gate 6 / Phase 147).
 
 ## Verification Checklist
-- [ ] `src/motodiag/hardware/ecu_detect.py` exists with `AutoDetector` class + `NoECUDetectedError` exception
-- [ ] `NoECUDetectedError` is a subclass of `ProtocolError` (Phase 134 base class)
-- [ ] `AutoDetector.__init__` accepts `port`, `baud=None`, `make_hint=None`, `timeout_s=5.0`
-- [ ] `make_hint` is normalized (lowercase + strip) before dispatch
-- [ ] `_protocol_order_for_hint("harley")` returns `[J1850, CAN, ELM327]`
-- [ ] `_protocol_order_for_hint("honda")` returns `[K-line, CAN, ELM327]` (same for yamaha/kawasaki/suzuki)
-- [ ] `_protocol_order_for_hint("ducati")` returns `[CAN, K-line, ELM327]` (same for bmw/ktm/triumph)
-- [ ] `_protocol_order_for_hint(None)` returns `[CAN, K-line, J1850, ELM327]`
-- [ ] `_protocol_order_for_hint("unknown-make")` returns the same default fallback
-- [ ] `detect()` returns the first adapter whose `connect()` succeeds
-- [ ] `detect()` does NOT call `disconnect()` on the successful adapter
-- [ ] `detect()` tries each candidate exactly once before giving up
-- [ ] `detect()` raises `NoECUDetectedError` when every candidate fails
-- [ ] `NoECUDetectedError` message includes port, make_hint, and per-adapter error summary
-- [ ] `detect()` catches non-`ProtocolError` exceptions and continues (doesn't propagate)
-- [ ] `identify_ecu()` returns a dict with keys `vin`, `ecu_id`, `ecu_part_number`, `software_version`, `supported_modes`
-- [ ] `identify_ecu()` never raises — partial failures yield `None` for affected fields
-- [ ] VIN decoder validates 17-char length and rejects malformed responses
-- [ ] `supported_modes` probes modes 01, 02, 03, 04, 09 and lists only those that responded
-- [ ] ~20-25 tests in `tests/test_phase139_ecu_detect.py` — all pass with zero live hardware
-- [ ] All tests use `MagicMock` adapters — zero real serial I/O, zero AI calls
+- [x] `src/motodiag/hardware/ecu_detect.py` exists with `AutoDetector` class + `NoECUDetectedError` exception
+- [x] `NoECUDetectedError` is a subclass of `ProtocolError` (Phase 134 base class)
+- [x] `AutoDetector.__init__` accepts `port`, `baud=None`, `make_hint=None`, `timeout_s=5.0`
+- [x] `make_hint` is normalized (lowercase + strip) before dispatch
+- [x] `_protocol_order_for_hint("harley")` returns `[J1850, CAN, ELM327]`
+- [x] `_protocol_order_for_hint("honda")` returns `[K-line, CAN, ELM327]` (same for yamaha/kawasaki/suzuki)
+- [x] `_protocol_order_for_hint("ducati")` returns `[CAN, K-line, ELM327]` (same for bmw/ktm/triumph)
+- [x] `_protocol_order_for_hint(None)` returns `[CAN, K-line, J1850, ELM327]`
+- [x] `_protocol_order_for_hint("unknown-make")` returns the same default fallback
+- [x] `detect()` returns the first adapter whose `connect()` succeeds
+- [x] `detect()` does NOT call `disconnect()` on the successful adapter
+- [x] `detect()` tries each candidate exactly once before giving up
+- [x] `detect()` raises `NoECUDetectedError` when every candidate fails
+- [x] `NoECUDetectedError` message includes port, make_hint, and per-adapter error summary
+- [x] `detect()` catches non-`ProtocolError` exceptions and continues (doesn't propagate)
+- [x] `identify_ecu()` returns a dict with keys `vin`, `ecu_id`, `ecu_part_number`, `software_version`, `supported_modes`
+- [x] `identify_ecu()` never raises — partial failures yield `None` for affected fields
+- [x] VIN decoder validates 17-char length and rejects malformed responses
+- [x] `supported_modes` probes modes 01, 02, 03, 04, 09 and lists only those that responded
+- [x] ~20-25 tests in `tests/test_phase139_ecu_detect.py` — all pass with zero live hardware
+- [x] All tests use `MagicMock` adapters — zero real serial I/O, zero AI calls
 
 ## Risks
 - **Phases 134-138 adapter signatures may differ from assumed.** Plan assumes each adapter has `connect()`, `disconnect()`, `send_request(mode, pid)` and raises `ProtocolError` on failure. If 134's abstraction layer settles on different method names, `ecu_detect.py` needs to match. Mitigation: read 134's `ProtocolAdapter` ABC before coding and update method calls accordingly. If signatures diverge significantly, bump to v1.2.

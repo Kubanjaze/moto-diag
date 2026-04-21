@@ -225,31 +225,31 @@ Target: **22 tests**, all passing against mocks in < 2 seconds, zero live API to
 - **Why not `python-can-isotp`?**: the `can-isotp` PyPI package is a third-party ISO-TP stack built on python-can. It would save ~150 LoC of this phase. Deliberately not used for three reasons: (1) one less optional dep to support on Windows where native builds are fragile; (2) our ISO-TP needs are narrow (standard addressing, single session, no flow-control sophistication) and a hand-rolled implementation is more auditable; (3) mechanics reading the code learn the protocol — it becomes a reference, not a black box. If future phases need full UDS with padded IDs, extended addressing, and multi-session, adopt `can-isotp` in a follow-up phase.
 
 ## Verification Checklist
-- [ ] `src/motodiag/hardware/protocols/__init__.py` exists and is importable without `python-can` installed.
-- [ ] `src/motodiag/hardware/protocols/can.py` defines `CANAdapter` subclassing Phase 134's `ProtocolAdapter` base.
-- [ ] `CANAdapter` implements all 6 abstract methods: `connect`, `disconnect`, `read_dtcs`, `clear_dtcs`, `read_vin`, `read_pid` (plus `send_raw`).
-- [ ] Importing the module succeeds when `python-can` is absent (lazy import).
-- [ ] `connect()` raises `HardwareError` with install hint `pip install 'motodiag[can]'` when `python-can` is absent.
-- [ ] Constructor rejects unsupported bitrates with `ValueError` listing the supported set.
-- [ ] `read_dtcs()` correctly decodes zero DTCs (count=0 → `[]`).
-- [ ] `read_dtcs()` correctly decodes one DTC (`P0133`) from wire format.
-- [ ] `read_dtcs()` correctly decodes multiple DTCs (`P0420`, `C0055`, `U0100`).
-- [ ] `clear_dtcs()` returns None on positive response, raises `HardwareError` on NRC.
-- [ ] `read_vin()` correctly reassembles a 17-char VIN from FF + CF frames.
-- [ ] `read_vin()` sends a proper Flow Control frame between FF and CF.
-- [ ] `read_vin()` raises `HardwareError` on sequence number mismatch.
-- [ ] `read_pid(pid)` returns only data bytes (after SID+PID echo).
-- [ ] `send_raw(service, data)` works for both standard OBD-II services and UDS services.
-- [ ] Negative responses (NRC 0x11, 0x22, 0x31) are decoded into readable error messages.
-- [ ] Unknown NRC produces `unknownNRC(0xNN)` fallback.
-- [ ] Timeout on silent bus raises `HardwareError("timeout")` within `multiframe_timeout` + small slack.
-- [ ] `can.Bus(...)` OSError on `connect()` is wrapped as `HardwareError` with channel + interface in message.
-- [ ] `disconnect()` is idempotent.
-- [ ] `pyproject.toml` has `can = ["python-can>=4.0"]` in `[project.optional-dependencies]`.
-- [ ] `can` is included in the `all` extras alias.
-- [ ] All 22 new tests pass in < 2 seconds.
-- [ ] All existing tests (2326 from Phase 132) still pass — zero regressions.
-- [ ] Zero live API tokens burned — pure hardware-protocol code, no AI calls.
+- [x] `src/motodiag/hardware/protocols/__init__.py` exists and is importable without `python-can` installed.
+- [x] `src/motodiag/hardware/protocols/can.py` defines `CANAdapter` subclassing Phase 134's `ProtocolAdapter` base.
+- [x] `CANAdapter` implements all 6 abstract methods: `connect`, `disconnect`, `read_dtcs`, `clear_dtcs`, `read_vin`, `read_pid` (plus `send_raw`).
+- [x] Importing the module succeeds when `python-can` is absent (lazy import).
+- [x] `connect()` raises `HardwareError` with install hint `pip install 'motodiag[can]'` when `python-can` is absent.
+- [x] Constructor rejects unsupported bitrates with `ValueError` listing the supported set.
+- [x] `read_dtcs()` correctly decodes zero DTCs (count=0 → `[]`).
+- [x] `read_dtcs()` correctly decodes one DTC (`P0133`) from wire format.
+- [x] `read_dtcs()` correctly decodes multiple DTCs (`P0420`, `C0055`, `U0100`).
+- [x] `clear_dtcs()` returns None on positive response, raises `HardwareError` on NRC.
+- [x] `read_vin()` correctly reassembles a 17-char VIN from FF + CF frames.
+- [x] `read_vin()` sends a proper Flow Control frame between FF and CF.
+- [x] `read_vin()` raises `HardwareError` on sequence number mismatch.
+- [x] `read_pid(pid)` returns only data bytes (after SID+PID echo).
+- [x] `send_raw(service, data)` works for both standard OBD-II services and UDS services.
+- [x] Negative responses (NRC 0x11, 0x22, 0x31) are decoded into readable error messages.
+- [x] Unknown NRC produces `unknownNRC(0xNN)` fallback.
+- [x] Timeout on silent bus raises `HardwareError("timeout")` within `multiframe_timeout` + small slack.
+- [x] `can.Bus(...)` OSError on `connect()` is wrapped as `HardwareError` with channel + interface in message.
+- [x] `disconnect()` is idempotent.
+- [x] `pyproject.toml` has `can = ["python-can>=4.0"]` in `[project.optional-dependencies]`.
+- [x] `can` is included in the `all` extras alias.
+- [x] All 22 new tests pass in < 2 seconds.
+- [x] All existing tests (2326 from Phase 132) still pass — zero regressions.
+- [x] Zero live API tokens burned — pure hardware-protocol code, no AI calls.
 
 ## Risks
 - **Phase 134's `ProtocolAdapter` base isn't built yet**: this plan assumes a specific contract (6 abstract methods, `HardwareError` exception class, `self.connected` attribute). If Phase 134 lands a different surface, Phase 136 needs minor signature adjustments during build. Mitigation: the Phase 134 plan will be written first; this plan will be revised to match before dispatch. Flag to the builder during auto-iterate sequencing.

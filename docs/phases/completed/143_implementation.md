@@ -1,6 +1,6 @@
 # MotoDiag Phase 143 — Real-Time Terminal Dashboard (Textual TUI)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -137,28 +137,28 @@ def dashboard_cmd(...):
 
 ## Verification Checklist
 
-- [ ] `pip install motodiag[dashboard]` pulls `textual>=0.40`.
-- [ ] `pip install motodiag` (no extras) succeeds; `motodiag hardware dashboard --mock` exits 1 with install hint.
-- [ ] With Textual installed, `--mock` launches TUI with gauges + DTC panel + status bar.
-- [ ] Ctrl+Q exits cleanly — adapter disconnected, no leaked ports.
-- [ ] Ctrl+R starts/stops Phase 142 recording; `[●REC]` indicator visible.
-- [ ] Exiting with active recording auto-stops (no orphans).
-- [ ] Number keys 1-6 swap chart PID; out-of-range silent.
-- [ ] `D` toggles DTC panel.
-- [ ] DTC panel polls every 5s; stale after 15s.
-- [ ] Gauges clamp to [min, max]; color zones change at thresholds; None → `--`.
-- [ ] PidChart windows to `history_len`; Braille chars; None creates gaps.
-- [ ] LiveDashboardSource wraps SensorStreamer; ReplayDashboardSource walks recording.
-- [ ] Replay speed respects original hz at default; 10× arrives faster; exhaustion fires completion.
-- [ ] `--port`/`--replay` mutex; `--mock`/`--replay` mutex; `--bike`/`--replay` mutex.
-- [ ] `--speed` outside `(0.1, 100.0]` rejected; `--speed` without `--replay` rejected.
-- [ ] `--pids` parses hex/decimal; bad token → ClickException.
-- [ ] `--hz` outside `[0.5, 20.0]` rejected.
-- [ ] ~45 tests pass; Textual skipped via `pytest.importorskip`.
-- [ ] Phase 140/141/142 tests pass unchanged.
-- [ ] `cli/hardware.py` diff additive; existing subcommands byte-identical.
-- [ ] `hardware --help` lists `dashboard`.
-- [ ] No schema migration.
+- [x] `pip install motodiag[dashboard]` pulls `textual>=0.40`.
+- [x] `pip install motodiag` (no extras) succeeds; `motodiag hardware dashboard --mock` exits 1 with install hint.
+- [x] With Textual installed, `--mock` launches TUI with gauges + DTC panel + status bar.
+- [x] Ctrl+Q exits cleanly — adapter disconnected, no leaked ports.
+- [x] Ctrl+R starts/stops Phase 142 recording; `[●REC]` indicator visible.
+- [x] Exiting with active recording auto-stops (no orphans).
+- [x] Number keys 1-6 swap chart PID; out-of-range silent.
+- [x] `D` toggles DTC panel.
+- [x] DTC panel polls every 5s; stale after 15s.
+- [x] Gauges clamp to [min, max]; color zones change at thresholds; None → `--`.
+- [x] PidChart windows to `history_len`; Braille chars; None creates gaps.
+- [x] LiveDashboardSource wraps SensorStreamer; ReplayDashboardSource walks recording.
+- [x] Replay speed respects original hz at default; 10× arrives faster; exhaustion fires completion.
+- [x] `--port`/`--replay` mutex; `--mock`/`--replay` mutex; `--bike`/`--replay` mutex.
+- [x] `--speed` outside `(0.1, 100.0]` rejected; `--speed` without `--replay` rejected.
+- [x] `--pids` parses hex/decimal; bad token → ClickException.
+- [x] `--hz` outside `[0.5, 20.0]` rejected.
+- [x] ~45 tests pass; Textual skipped via `pytest.importorskip`.
+- [x] Phase 140/141/142 tests pass unchanged.
+- [x] `cli/hardware.py` diff additive; existing subcommands byte-identical.
+- [x] `hardware --help` lists `dashboard`.
+- [x] No schema migration.
 
 ## Risks
 
@@ -172,3 +172,25 @@ def dashboard_cmd(...):
 - **Recording lifecycle on crash.** `on_unmount` normally fires even on exception; outer `HardwareSession.__exit__` too. Hard SIGKILL leaks — Phase 146 recovery will handle.
 - **Number-keys collision** with Textual widget navigation. If collision arises, bindings move to Alt+1..6. One-line fallback.
 - **Color-blind mechanics.** Red/yellow/green canonical; accessibility via future `--palette=high-contrast`.
+
+## Deviations from Plan
+
+1. **LoC overshot on `dashboard.py`** (1282 vs ~500 target). Extra content: lazy Textual import plus stubs for missing-dep environments, extensive reactive widget docstrings, sparkline rendering commentary, async `DashboardSource` Protocol + two concretes (`LiveDashboardSource` with asyncio task fanout, `ReplayDashboardSource` with bisect-based time walking).
+2. **`cli/hardware.py` additions** came in at +233 LoC (vs ~150 planned) — subcommand callback with `_require_textual`, `_validate_dashboard_args`, `_parse_dashboard_pids`, and lazy-import fencing so Textual-less installs can still register the subcommand and fail cleanly with an install hint.
+3. **Bug fix #1 (Architect trust-but-verify): `GaugeWidget.render()` numeric display not clamped.** The widget correctly computed `clamped = max(min, min(max, numeric))` for the bar fill fraction, but the numeric display line used `{numeric:>7.2f}` (unclamped). Out-of-range values showed their raw number next to a clamped bar — confusing UI. Fixed by changing `{numeric:>7.2f}` → `{clamped:>7.2f}` on line 694. Test `test_value_clamps_to_min_max` now passes.
+4. **Textual version pin landed at `>=0.40,<1.0`** as planned. Textual 6.5.0 was the version used during trust-but-verify; no API breaks.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/dashboard.py` 1282 LoC, `tests/test_phase143_dashboard.py` 814 LoC) |
+| Modified files | 2 (`cli/hardware.py` +233 LoC additive, `pyproject.toml` +4 LoC dashboard extra) |
+| New tests | 46 across 7 classes (passed locally 46/46 in 16.38s post-fix) |
+| Total test count after | 2712 |
+| Live API tokens burned | 0 |
+| Bug fixes during build | 1 (GaugeWidget numeric display clamping) |
+
+**Commit:** `8e49ecd` (Phase 143: Real-time Textual TUI dashboard — 46/46 GREEN).
+
+**Key finding:** the `DashboardSource` Protocol abstraction is the cleanest reuse-win in Track E — the same `DashboardApp` widget tree drives live mode (Phase 141 `SensorStreamer` wrapped by `LiveDashboardSource`) and replay mode (Phase 142 `RecordingManager.load_recording(int_id)` wrapped by `ReplayDashboardSource`) with zero UI code duplication. Mechanics replay a colleague's recording at their desk with the same widgets they see live on the bike. The async model via `set_interval` (not threads) also avoided Windows terminal cursor issues that bit Phase 129's Rich Live — Textual owns the event loop end-to-end.

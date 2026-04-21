@@ -1,6 +1,6 @@
 # MotoDiag Phase 145 — Adapter Compatibility Database
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -206,30 +206,30 @@ Typed with string forward-ref + duck typing (just needs `protocols_to_skip_for_m
 
 ## Verification Checklist
 
-- [ ] Migration 017 version=17 (assumes 142 ships 016; amend if slips).
-- [ ] 3 tables + 6 indexes created.
-- [ ] FK-safe rollback (child-first).
-- [ ] compat_repo.py exposes all listed functions.
-- [ ] `reliability_1to5` out of [1..5] raises ValueError.
-- [ ] `price_usd_cents` float → TypeError.
-- [ ] Ranking: status tier → reliability DESC → price ASC → adapter_id ASC.
-- [ ] `list_compatible_adapters` matches SQL LIKE patterns; year range nullable; min_status filters.
-- [ ] `check_compatibility` most-specific match wins; None for unknown.
-- [ ] adapters.json ≥ 20 entries across 5 tiers.
-- [ ] compat_matrix.json ≥ 100 entries.
-- [ ] Loader idempotent (second seed_all: zero new inserts).
-- [ ] Malformed JSON → ValueError with filename + line.
-- [ ] `compat list` runs, shows seeded adapters.
-- [ ] `compat recommend --bike SLUG` returns ranked results grouped by status.
-- [ ] `compat check --adapter X --bike Y` color-coded verdict panel.
-- [ ] `compat show` prints adapter + nested compat table.
-- [ ] `compat note add/list` round-trip.
-- [ ] `compat seed --yes` loads all three JSONs.
-- [ ] `AutoDetector(compat_repo=None)` — Phase 139's 31 tests unchanged.
-- [ ] `AutoDetector(compat_repo=repo)` filters protocols per `protocols_to_skip_for_make`.
-- [ ] Filter never empties list (fallback to unfiltered on total skip).
-- [ ] Notes cascade-delete when adapter removed.
-- [ ] ~57 tests pass; zero live tokens.
+- [x] Migration 017 version=17 (assumes 142 ships 016; amend if slips).
+- [x] 3 tables + 6 indexes created.
+- [x] FK-safe rollback (child-first).
+- [x] compat_repo.py exposes all listed functions.
+- [x] `reliability_1to5` out of [1..5] raises ValueError.
+- [x] `price_usd_cents` float → TypeError.
+- [x] Ranking: status tier → reliability DESC → price ASC → adapter_id ASC.
+- [x] `list_compatible_adapters` matches SQL LIKE patterns; year range nullable; min_status filters.
+- [x] `check_compatibility` most-specific match wins; None for unknown.
+- [x] adapters.json ≥ 20 entries across 5 tiers.
+- [x] compat_matrix.json ≥ 100 entries.
+- [x] Loader idempotent (second seed_all: zero new inserts).
+- [x] Malformed JSON → ValueError with filename + line.
+- [x] `compat list` runs, shows seeded adapters.
+- [x] `compat recommend --bike SLUG` returns ranked results grouped by status.
+- [x] `compat check --adapter X --bike Y` color-coded verdict panel.
+- [x] `compat show` prints adapter + nested compat table.
+- [x] `compat note add/list` round-trip.
+- [x] `compat seed --yes` loads all three JSONs.
+- [x] `AutoDetector(compat_repo=None)` — Phase 139's 31 tests unchanged.
+- [x] `AutoDetector(compat_repo=repo)` filters protocols per `protocols_to_skip_for_make`.
+- [x] Filter never empties list (fallback to unfiltered on total skip).
+- [x] Notes cascade-delete when adapter removed.
+- [x] ~57 tests pass; zero live tokens.
 
 ## Risks
 

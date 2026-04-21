@@ -1,6 +1,6 @@
 # MotoDiag Phase 147 — Gate 6: Hardware Integration Test
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -86,16 +86,16 @@ def gate6_db(tmp_path, monkeypatch):
 
 ## Verification Checklist
 
-- [ ] `tests/test_phase147_gate_6.py` created with exactly 3 classes.
-- [ ] Class A drives 12-13 CLI invocations on one shared DB fixture.
-- [ ] Class A: 3 AI mocks + 3 time.sleep no-op patches active.
-- [ ] Each sub-step gracefully skips if its phase absent.
-- [ ] CSV export file persisted, header row present, >0 bytes.
-- [ ] Final asserts: tiered schema, 1 vehicle, 1 recording (if 142), CSV on disk.
-- [ ] Class B: 4 surface tests pass.
-- [ ] Class C: Gate 5 + Gate R subprocess-pytest re-runs pass.
-- [ ] 7-10 tests total (matches Gate 5 consolidation).
-- [ ] Zero live tokens, zero real serial, zero production code changed.
+- [x] `tests/test_phase147_gate_6.py` created with exactly 3 classes.
+- [x] Class A drives 12-13 CLI invocations on one shared DB fixture.
+- [x] Class A: 3 AI mocks + 3 time.sleep no-op patches active.
+- [x] Each sub-step gracefully skips if its phase absent.
+- [x] CSV export file persisted, header row present, >0 bytes.
+- [x] Final asserts: tiered schema, 1 vehicle, 1 recording (if 142), CSV on disk.
+- [x] Class B: 4 surface tests pass.
+- [x] Class C: Gate 5 + Gate R subprocess-pytest re-runs pass.
+- [x] 7-10 tests total (matches Gate 5 consolidation).
+- [x] Zero live tokens, zero real serial, zero production code changed.
 
 ## Risks
 

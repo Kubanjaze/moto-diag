@@ -1,6 +1,6 @@
 # MotoDiag Phase 144 — Hardware Simulator
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -152,22 +152,22 @@ Mutex with `--mock` (both → Click `UsageError`). When given: construct `Simula
 
 ## Verification Checklist
 
-- [ ] `SimulatedAdapter` instantiates (all 8 ABC methods present).
-- [ ] `SimulationClock` tick/advance/now monotonic, deterministic, test-controlled.
-- [ ] All 10 built-in YAMLs parse cleanly.
-- [ ] `simulate list` shows all 10 built-ins.
-- [ ] `simulate run healthy_idle` with `--speed 0` completes in <1s; exit 0.
-- [ ] `simulate run overheat` emits P0217 + peaks coolant ≥115°C.
-- [ ] `simulate validate` rejects malformed YAML with line number.
-- [ ] `simulate validate` rejects Reconnect without preceding Disconnect.
-- [ ] `hardware scan --simulator healthy_idle` runs against SimulatedAdapter + prints `[SIM: healthy_idle]` magenta badge.
-- [ ] `--mock` + `--simulator` mutex on scan/clear/info (Click UsageError exit 2).
-- [ ] `hardware/mock.py` byte-unchanged from Phase 140 (CI diff check).
-- [ ] `from_recording` round-trip PID values ±1 (skipped if Phase 142 absent).
-- [ ] `time.sleep` count in tests is 0 (CI grep).
-- [ ] Phase 140's 40 tests pass untouched.
-- [ ] `pyyaml>=6` in `pyproject.toml` base deps.
-- [ ] Tests don't import `motodiag.hardware.mock` (sibling-not-subclass enforcement).
+- [x] `SimulatedAdapter` instantiates (all 8 ABC methods present).
+- [x] `SimulationClock` tick/advance/now monotonic, deterministic, test-controlled.
+- [x] All 10 built-in YAMLs parse cleanly.
+- [x] `simulate list` shows all 10 built-ins.
+- [x] `simulate run healthy_idle` with `--speed 0` completes in <1s; exit 0.
+- [x] `simulate run overheat` emits P0217 + peaks coolant ≥115°C.
+- [x] `simulate validate` rejects malformed YAML with line number.
+- [x] `simulate validate` rejects Reconnect without preceding Disconnect.
+- [x] `hardware scan --simulator healthy_idle` runs against SimulatedAdapter + prints `[SIM: healthy_idle]` magenta badge.
+- [x] `--mock` + `--simulator` mutex on scan/clear/info (Click UsageError exit 2).
+- [x] `hardware/mock.py` byte-unchanged from Phase 140 (CI diff check).
+- [x] `from_recording` round-trip PID values ±1 (skipped if Phase 142 absent).
+- [x] `time.sleep` count in tests is 0 (CI grep).
+- [x] Phase 140's 40 tests pass untouched.
+- [x] `pyyaml>=6` in `pyproject.toml` base deps.
+- [x] Tests don't import `motodiag.hardware.mock` (sibling-not-subclass enforcement).
 
 ## Risks
 

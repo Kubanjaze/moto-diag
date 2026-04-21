@@ -1,6 +1,6 @@
 # MotoDiag Phase 146 — Connection Troubleshooting + Recovery
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -216,24 +216,24 @@ Each step renders numbered Rich panel with ICON_OK/WARN/FAIL + observation + rem
 
 ## Verification Checklist
 
-- [ ] `RetryPolicy()` defaults correct.
-- [ ] `delay_for_attempt` monotonic non-decreasing with clamp.
-- [ ] `should_retry` False for `UnsupportedCommandError` + `NoECUDetectedError`.
-- [ ] `HardwareSession(port, adapter_override=mock)` no-retry preserves Phase 140 exactly.
-- [ ] `HardwareSession(..., retry_policy=RetryPolicy())` returns `ResilientAdapter`-wrapped.
-- [ ] Retry loop logs at INFO per attempt + summary on success/exhaust.
-- [ ] `ResilientAdapter` passes `UnsupportedCommandError`/`NoECUDetectedError` without retry.
-- [ ] `ResilientAdapter.clear_dtcs` does NOT retry (destructive).
-- [ ] `MockAdapter(flaky_rate=0.0)` byte-identical to Phase 140.
-- [ ] `MockAdapter(flaky_rate=0.5, flaky_seed=42)` deterministic across two constructions.
-- [ ] `AutoDetector(verbose=False, on_attempt=None)` behaves identically to Phase 139.
-- [ ] `motodiag hardware diagnose --port X --mock` prints 5 green panels + "5/5 checks passed".
-- [ ] `diagnose` with bad port short-circuits at step 1 with OS remediation.
-- [ ] `scan --no-retry` behaves as Phase 140 did.
-- [ ] `scan --retry` (default) survives 2-attempt transient failure.
-- [ ] `clear` defaults `--no-retry` — single-attempt only.
-- [ ] Phase 134-140 tests pass unchanged.
-- [ ] No raw Python traceback leaks from `diagnose` under any failure mode.
+- [x] `RetryPolicy()` defaults correct.
+- [x] `delay_for_attempt` monotonic non-decreasing with clamp.
+- [x] `should_retry` False for `UnsupportedCommandError` + `NoECUDetectedError`.
+- [x] `HardwareSession(port, adapter_override=mock)` no-retry preserves Phase 140 exactly.
+- [x] `HardwareSession(..., retry_policy=RetryPolicy())` returns `ResilientAdapter`-wrapped.
+- [x] Retry loop logs at INFO per attempt + summary on success/exhaust.
+- [x] `ResilientAdapter` passes `UnsupportedCommandError`/`NoECUDetectedError` without retry.
+- [x] `ResilientAdapter.clear_dtcs` does NOT retry (destructive).
+- [x] `MockAdapter(flaky_rate=0.0)` byte-identical to Phase 140.
+- [x] `MockAdapter(flaky_rate=0.5, flaky_seed=42)` deterministic across two constructions.
+- [x] `AutoDetector(verbose=False, on_attempt=None)` behaves identically to Phase 139.
+- [x] `motodiag hardware diagnose --port X --mock` prints 5 green panels + "5/5 checks passed".
+- [x] `diagnose` with bad port short-circuits at step 1 with OS remediation.
+- [x] `scan --no-retry` behaves as Phase 140 did.
+- [x] `scan --retry` (default) survives 2-attempt transient failure.
+- [x] `clear` defaults `--no-retry` — single-attempt only.
+- [x] Phase 134-140 tests pass unchanged.
+- [x] No raw Python traceback leaks from `diagnose` under any failure mode.
 
 ## Risks
 

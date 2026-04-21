@@ -491,33 +491,33 @@ Total: 26 tests across 7 classes. (May land as 24 or 25 if any are collapsed dur
 - **`ProtocolError` is the single exception type raised.** Inherits from a base defined in Phase 134 (`src/motodiag/hardware/errors.py` or similar). Every failure mode — missing dep, wrong baud, wrong echo, bad checksum, timeout, negative response — lands as a `ProtocolError` with a specific diagnostic message. Callers catch one type, not fifteen.
 
 ## Verification Checklist
-- [ ] `src/motodiag/hardware/protocols/kline.py` exists and declares `class KLineAdapter(ProtocolAdapter)`
-- [ ] `KLineAdapter.PROTOCOL_NAME == "kline"`
-- [ ] Constructor accepts `port`, `baud`, `ecu_address`, `tester_address`, `init_mode`, `read_timeout` with sensible defaults
-- [ ] `init_mode` accepts `"slow"` and `"fast"`; raises `ValueError` on other values
-- [ ] `connect()` dispatches to `_slow_baud_init()` or `_fast_init()` based on `init_mode`
-- [ ] `_slow_baud_init()` emits exactly 200 ms per bit via `break_condition` toggling (test asserts call count via mock)
-- [ ] `_slow_baud_init()` reads 3 bytes (sync + 2 keybytes) and writes inverted keybyte2
-- [ ] `_slow_baud_init()` verifies ECU echoes `~ecu_address`
-- [ ] `_fast_init()` sends `0x81` StartCommunication and validates `0xC1` positive response
-- [ ] `_build_frame()` encodes payload ≤63 bytes as 3-byte header + payload + 1-byte checksum
-- [ ] `_build_frame()` encodes payload >63 bytes as 4-byte header (with LEN byte) + payload + checksum
-- [ ] `_parse_frame()` validates checksum and raises `ProtocolError` on mismatch
-- [ ] `_parse_frame()` validates length and raises `ProtocolError` on truncation/overrun
-- [ ] `_drain_echo()` reads back exactly the sent bytes and raises `ProtocolError` on mismatch
-- [ ] `read_dtcs()` returns `list[DTC]` with codes in P/C/B/U format (e.g., `"P0111"`)
-- [ ] `read_dtcs()` handles empty DTC list (num=0) without error
-- [ ] `clear_dtcs()` sends SID 0x14 with group 0xFF00 and validates 0x54 positive response
-- [ ] `reset_ecu()` sends SID 0x11 subfunction 0x01 and validates 0x51 positive response
-- [ ] `read_ecu_id()` sends SID 0x1A identifier 0x9B and returns `dict[str, str]`
-- [ ] Negative response `0x7F <sid> <nrc>` raises `ProtocolError` with SID and NRC in message
-- [ ] Missing pyserial raises `ProtocolError` with `pip install 'motodiag[hardware]'` hint
-- [ ] `disconnect()` is idempotent (safe to call when never connected)
-- [ ] `disconnect()` suppresses StopDiagnosticSession failures and still closes the port
-- [ ] All ~20-25 tests in `tests/test_phase137_kline.py` pass
-- [ ] Full existing regression suite still passes (zero regressions)
-- [ ] No live serial port required — all tests run with mocked `serial.Serial`
-- [ ] Zero live API tokens (pure protocol code, no AI involvement)
+- [x] `src/motodiag/hardware/protocols/kline.py` exists and declares `class KLineAdapter(ProtocolAdapter)`
+- [x] `KLineAdapter.PROTOCOL_NAME == "kline"`
+- [x] Constructor accepts `port`, `baud`, `ecu_address`, `tester_address`, `init_mode`, `read_timeout` with sensible defaults
+- [x] `init_mode` accepts `"slow"` and `"fast"`; raises `ValueError` on other values
+- [x] `connect()` dispatches to `_slow_baud_init()` or `_fast_init()` based on `init_mode`
+- [x] `_slow_baud_init()` emits exactly 200 ms per bit via `break_condition` toggling (test asserts call count via mock)
+- [x] `_slow_baud_init()` reads 3 bytes (sync + 2 keybytes) and writes inverted keybyte2
+- [x] `_slow_baud_init()` verifies ECU echoes `~ecu_address`
+- [x] `_fast_init()` sends `0x81` StartCommunication and validates `0xC1` positive response
+- [x] `_build_frame()` encodes payload ≤63 bytes as 3-byte header + payload + 1-byte checksum
+- [x] `_build_frame()` encodes payload >63 bytes as 4-byte header (with LEN byte) + payload + checksum
+- [x] `_parse_frame()` validates checksum and raises `ProtocolError` on mismatch
+- [x] `_parse_frame()` validates length and raises `ProtocolError` on truncation/overrun
+- [x] `_drain_echo()` reads back exactly the sent bytes and raises `ProtocolError` on mismatch
+- [x] `read_dtcs()` returns `list[DTC]` with codes in P/C/B/U format (e.g., `"P0111"`)
+- [x] `read_dtcs()` handles empty DTC list (num=0) without error
+- [x] `clear_dtcs()` sends SID 0x14 with group 0xFF00 and validates 0x54 positive response
+- [x] `reset_ecu()` sends SID 0x11 subfunction 0x01 and validates 0x51 positive response
+- [x] `read_ecu_id()` sends SID 0x1A identifier 0x9B and returns `dict[str, str]`
+- [x] Negative response `0x7F <sid> <nrc>` raises `ProtocolError` with SID and NRC in message
+- [x] Missing pyserial raises `ProtocolError` with `pip install 'motodiag[hardware]'` hint
+- [x] `disconnect()` is idempotent (safe to call when never connected)
+- [x] `disconnect()` suppresses StopDiagnosticSession failures and still closes the port
+- [x] All ~20-25 tests in `tests/test_phase137_kline.py` pass
+- [x] Full existing regression suite still passes (zero regressions)
+- [x] No live serial port required — all tests run with mocked `serial.Serial`
+- [x] Zero live API tokens (pure protocol code, no AI involvement)
 
 ## Risks
 - **pyserial `break_condition` toggle latency on Windows.** The `pyserial` implementation on Windows uses `SetCommBreak`/`ClearCommBreak` which are kernel calls; rapid toggling at 5 baud (5 bits/sec) may actually work fine, but real-hardware slow-init has been flaky on USB-to-serial FTDI adapters for 20 years. *Mitigation*: tests use a mocked `break_condition` property so this is a runtime-only risk. Document in Phase 147 (Gate 6) that users with init failures should try the MC33290 + native serial route.

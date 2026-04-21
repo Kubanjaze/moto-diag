@@ -1,6 +1,6 @@
 # MotoDiag Phase 139 — Phase Log
 
-**Status:** 🔲 Planned | **Started:** 2026-04-17 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-17 | **Completed:** 2026-04-18
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -39,3 +39,21 @@ Planner agent (moto-diag) drafted v1.0 plan docs for Phase 139 — ECU auto-dete
 - Phases 134 (ProtocolAdapter ABC + ProtocolError), 135 (ELM327), 136 (CAN), 137 (K-line), 138 (J1850) must all be built first. Plan assumes uniform `(port, baud, timeout)` constructor signature and `connect()` / `disconnect()` / `send_request(mode, pid)` method signatures across adapters. If 134's abstraction settles on different names, Phase 139 code needs a small rework — documented in Risks.
 
 Next step: wait for Phases 134-138 to land, then either auto-iterate the build or hand v1.0 off to Pisces for a standard-mode architect pass.
+
+### 2026-04-18 07:00 — Build complete
+
+Wave 3 Builder shipped `src/motodiag/hardware/ecu_detect.py` (~460 LoC — overshot ~280 target due to per-adapter factory kwargs reconciliation + best-effort ECU identification probes + `NoECUDetectedError` programmatic error list) plus `tests/test_phase139_ecu_detect.py` (~680 LoC) with 31 tests collected (25 test methods). Glue layer over Phases 134-138's protocol adapters. `AutoDetector(port, make_hint=None, timeout_s=2.0, baud=None)` given a serial port and optional make hint tries protocol adapters in priority order until one negotiates.
+
+Priority tables: Harley → J1850 first (covers pre-2011 FLH/FXR/Sportster) then CAN (2011+ Touring); Japanese → CAN then KWP2000 then ELM327 (covers R1/CBR/ZX/GSX-R/SV modern + vintage); European → CAN then KWP2000 (covers Ducati/BMW/KTM/Triumph); unknown → all four in default order. Worst-case detection ~20s → ~5s on a known-make first-try hit.
+
+Deviations from plan: adapter constructor non-uniformity confirmed as flagged in Risks. CAN uses `channel/bitrate/request_timeout+multiframe_timeout`, K-line uses `port/baud/read_timeout`, J1850 uses `port/baudrate/timeout_s`, ELM327 uses `port/baud/timeout`. Solved via per-protocol `_build_adapter` factory with string-label priority table + lazy per-adapter imports (missing optional deps only surface when that protocol is actually tried). `identify_ecu()` is best-effort — VIN + ECU part number + software version + supported OBD modes independently probed. `_decode_vin` handles both `49 02 01`-echo and stripped response forms, ASCII decode strips padding bytes, returns `None` on wrong length (no bogus truncation). `NoECUDetectedError(port, make_hint, errors=[(name, exception)])` subclasses `ProtocolError` and carries programmatic error list for introspection.
+
+31 tests passed locally in 0.25s. Running total: 2574 tests. Zero live hardware — all tests use `MagicMock` adapters.
+
+**Commit:** `15c658d` (Phases 133-139: Gate 5 PASSED + Track E hardware substrate).
+
+### 2026-04-18 07:30 — Documentation finalization
+
+`implementation.md` already at v1.1 with Results + Deviations. Verification Checklist marked `[x]` post-Gate 6. Moved to `docs/phases/completed/`.
+
+Key finding: Phase 139 is what makes the Phase 134-138 protocol layer actually usable — before this glue layer, a mechanic pointed at a bike had to manually pick a protocol. The `make_hint` priority tables turn ECU detection from a 20-second full scan into a sub-5-second first-try hit on any bike whose make is already in the garage. Phase 140 (`motodiag hardware scan`) consumes this detector as its core flow, and Phase 146's `diagnose` troubleshooter step 3 wraps it with verbose per-attempt callbacks for mechanic-readable negotiation traces.

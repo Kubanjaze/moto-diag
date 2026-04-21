@@ -1,6 +1,6 @@
 # MotoDiag Phase 141 — Live Sensor Data Streaming
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -106,24 +106,24 @@ Defensive-copy on construction. Phase 140 behavior preserved when unset.
 
 ## Verification Checklist
 
-- [ ] `sensors.py` created with catalog, `SensorSpec`, `SensorReading`, `SensorStreamer`, `decode_pid`, `parse_pid_list`.
-- [ ] Catalog has entries for PIDs 0x04, 0x05, 0x0A-0x11, 0x14-0x1B, 0x1F, 0x2F, 0x42, 0x46, 0x5C.
-- [ ] 8 canonical J1979 test vectors pass.
-- [ ] `SensorReading` Pydantic v2 with validator enforcing pid_hex uppercase + status-value coherence.
-- [ ] `SensorStreamer.iter_readings` one-shot (second call raises).
-- [ ] `TimeoutError` mid-stream → status=timeout reading, next tick retries; does NOT re-raise.
-- [ ] `ConnectionError` mid-stream re-raises (loop stops).
-- [ ] `hz` throttle calls injected `sleep` with `1/hz`.
-- [ ] `parse_pid_list` accepts mixed hex/decimal; rejects empty/garbage/out-of-range.
-- [ ] `MockAdapter(pid_values=...)` returns configured value or None; `pid_values=None` preserves Phase 140 behavior.
-- [ ] `stream --mock --duration 1 --hz 2` prints 6-row default table, exits 0.
-- [ ] `stream --mock --pids 0x0C,0x42` prints exactly 2 rows.
-- [ ] `--hz 0` rejected; `--hz 20` clamped + yellow warning.
-- [ ] `--output` CSV has header once + rows; re-run appends without duplicate header.
-- [ ] Unsupported PID shown as `—`; ECU silence → red panel + exit 1.
-- [ ] Ctrl+C exits 0 with `disconnect()` called.
-- [ ] ~40 tests in `test_phase141_stream.py`; zero live hardware; zero tokens.
-- [ ] All Phase 140 tests still pass.
+- [x] `sensors.py` created with catalog, `SensorSpec`, `SensorReading`, `SensorStreamer`, `decode_pid`, `parse_pid_list`.
+- [x] Catalog has entries for PIDs 0x04, 0x05, 0x0A-0x11, 0x14-0x1B, 0x1F, 0x2F, 0x42, 0x46, 0x5C.
+- [x] 8 canonical J1979 test vectors pass.
+- [x] `SensorReading` Pydantic v2 with validator enforcing pid_hex uppercase + status-value coherence.
+- [x] `SensorStreamer.iter_readings` one-shot (second call raises).
+- [x] `TimeoutError` mid-stream → status=timeout reading, next tick retries; does NOT re-raise.
+- [x] `ConnectionError` mid-stream re-raises (loop stops).
+- [x] `hz` throttle calls injected `sleep` with `1/hz`.
+- [x] `parse_pid_list` accepts mixed hex/decimal; rejects empty/garbage/out-of-range.
+- [x] `MockAdapter(pid_values=...)` returns configured value or None; `pid_values=None` preserves Phase 140 behavior.
+- [x] `stream --mock --duration 1 --hz 2` prints 6-row default table, exits 0.
+- [x] `stream --mock --pids 0x0C,0x42` prints exactly 2 rows.
+- [x] `--hz 0` rejected; `--hz 20` clamped + yellow warning.
+- [x] `--output` CSV has header once + rows; re-run appends without duplicate header.
+- [x] Unsupported PID shown as `—`; ECU silence → red panel + exit 1.
+- [x] Ctrl+C exits 0 with `disconnect()` called.
+- [x] ~40 tests in `test_phase141_stream.py`; zero live hardware; zero tokens.
+- [x] All Phase 140 tests still pass.
 
 ## Risks
 
@@ -136,3 +136,27 @@ Defensive-copy on construction. Phase 140 behavior preserved when unset.
 - **Deterministic test clock.** `SensorStreamer(sleep=Mock(), clock=lambda: FIXED_UTC)` kwargs exist specifically for testability.
 - **`--pids` default excludes VSS (0x0D)** — dyno has wheel turning but frame stationary. Documented in help.
 - **Pydantic v2** — project uses v2 idioms (`@field_validator`). Builder should verify via pyproject pin.
+
+## Deviations from Plan
+
+1. **LoC overshot on `sensors.py`** (617 vs ~300 target) and `cli/hardware.py` (+400 vs ~250 target). Every extra LoC is docstring, inline rationale, or SAE J1979 citation — zero logic padding. Judged against the "detailed and meticulous" quality bar.
+2. **`status` field uses Pydantic v2 `Literal[...]` natively** — separate vocabulary validator removed as redundant once `Literal["ok", "unsupported", "timeout"]` captured the enum at the type layer.
+3. **`_StreamCsvWriter.write_row(readings, elapsed_s)` takes elapsed monotonic clock as arg** rather than recomputing from `captured_at` — avoids sub-millisecond drift accumulation across long recording sessions.
+4. **Empty placeholder panel rendered before first tick** to prevent Rich Live flicker on cold start.
+5. **Panel title augmented with `• elapsed {elapsed_s:.1f}s`** so mechanics see the clock running between ticks even when values haven't changed yet.
+6. **Bug fix #1 (hz-throttle test expectation):** `test_hz_throttle_calls_sleep_with_reciprocal` originally expected 2 sleep calls after 2 `next()` invocations. Corrected to 3 `next()` calls — `SensorStreamer` is a generator that sleeps AFTER each yield, so N `next()` invocations trigger N-1 sleeps. Inline comment added explaining generator + post-yield sleep semantics.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/sensors.py` 617 LoC, `tests/test_phase141_stream.py` 724 LoC) |
+| Modified files | 2 (`cli/hardware.py` +~400 LoC additive, `hardware/mock.py` +34 LoC one kwarg) |
+| New tests | 42 across 6 classes (passed locally 42/42) |
+| Total test count after | 2614 |
+| Live API tokens burned | 0 |
+| Bug fixes during build | 1 (hz-throttle test expectation) |
+
+**Commit:** `4943db1` (Wave 1+2: Phase 141 shipped — sensor streaming + Phase 144 partial + Phase 142/145 code landed).
+
+**Key finding:** Phase 141 turned the Track E hardware stack from library-only into a mechanic's live diagnostic tool — `motodiag hardware stream --port COM3 --pids 0x0C,0x05,0x11,0x42` is the first phase where a mechanic can actually watch RPM / coolant / throttle / battery refresh in real-time from the CLI. The `SensorStreamer(sleep=Mock(), clock=lambda: FIXED_UTC)` test-DX decision (inject both time sources via constructor kwargs) became the template Phases 142 / 143 / 144 adopted for their own deterministic time-based tests across the remainder of Track E.

@@ -1,6 +1,6 @@
 # MotoDiag Phase 142 — Data Logging + Recording
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -134,35 +134,35 @@ Imports: `SensorReading`, `SensorStreamer`, PID catalog from `motodiag.hardware.
 
 ## Verification Checklist
 
-- [ ] Migration 016 in MIGRATIONS, version 16.
-- [ ] Fresh init_db creates both tables + 4 indexes.
-- [ ] SCHEMA_VERSION bumped 15 → 16.
-- [ ] rollback_migration(16) drops both.
-- [ ] Vehicle_id nullable (dealer-lot); FK=42 invalid raises IntegrityError.
-- [ ] Under 1000 rows stay in SQLite; file_ref NULL.
-- [ ] Crossing 1000 creates JSONL sidecar; file_ref set; subsequent batches append; sensor_samples grows sparsely.
-- [ ] `load_recording` transparent merge yields time-ordered samples.
-- [ ] Concurrent recordings' buffers isolated.
-- [ ] `prune(30)` removes rows + unlinks JSONL (missing files tolerated).
-- [ ] `log start/stop/list/show/replay/diff/export/prune` all work.
-- [ ] `--bike MISSING` → Phase 125-style remediation, exit 1.
-- [ ] `--bike X --make Y` → ClickException mutex.
-- [ ] Ctrl+C in foreground calls stop_recording.
-- [ ] `log show MISSING` → clean ClickException.
-- [ ] `log replay --speed 0` instant (no sleep — verified via patch).
-- [ ] `log replay --speed 1.0` calls `time.sleep` with per-sample deltas.
-- [ ] `log replay --speed 10.0` deltas scaled by 1/10.
-- [ ] Ctrl+C in replay exits 0.
-- [ ] `log diff` fully/partial/zero-overlap all handled.
-- [ ] Flag emoji 🔥 at `|pct_change| > 10%`.
-- [ ] Diff aligns 200-sample vs 500-sample sessions via linear interp.
-- [ ] Export csv/json/parquet; parquet missing-dep → install hint.
-- [ ] Export creates parent dir if missing.
-- [ ] Export of JSONL-spilled recording = SQLite-only recording (transparent).
-- [ ] `log prune` confirm + yes paths.
-- [ ] All Track E tests still pass (Phases 134-141).
-- [ ] Phase 140's 40 hardware tests pass unchanged.
-- [ ] Zero live tokens, zero real serial.
+- [x] Migration 016 in MIGRATIONS, version 16.
+- [x] Fresh init_db creates both tables + 4 indexes.
+- [x] SCHEMA_VERSION bumped 15 → 16.
+- [x] rollback_migration(16) drops both.
+- [x] Vehicle_id nullable (dealer-lot); FK=42 invalid raises IntegrityError.
+- [x] Under 1000 rows stay in SQLite; file_ref NULL.
+- [x] Crossing 1000 creates JSONL sidecar; file_ref set; subsequent batches append; sensor_samples grows sparsely.
+- [x] `load_recording` transparent merge yields time-ordered samples.
+- [x] Concurrent recordings' buffers isolated.
+- [x] `prune(30)` removes rows + unlinks JSONL (missing files tolerated).
+- [x] `log start/stop/list/show/replay/diff/export/prune` all work.
+- [x] `--bike MISSING` → Phase 125-style remediation, exit 1.
+- [x] `--bike X --make Y` → ClickException mutex.
+- [x] Ctrl+C in foreground calls stop_recording.
+- [x] `log show MISSING` → clean ClickException.
+- [x] `log replay --speed 0` instant (no sleep — verified via patch).
+- [x] `log replay --speed 1.0` calls `time.sleep` with per-sample deltas.
+- [x] `log replay --speed 10.0` deltas scaled by 1/10.
+- [x] Ctrl+C in replay exits 0.
+- [x] `log diff` fully/partial/zero-overlap all handled.
+- [x] Flag emoji 🔥 at `|pct_change| > 10%`.
+- [x] Diff aligns 200-sample vs 500-sample sessions via linear interp.
+- [x] Export csv/json/parquet; parquet missing-dep → install hint.
+- [x] Export creates parent dir if missing.
+- [x] Export of JSONL-spilled recording = SQLite-only recording (transparent).
+- [x] `log prune` confirm + yes paths.
+- [x] All Track E tests still pass (Phases 134-141).
+- [x] Phase 140's 40 hardware tests pass unchanged.
+- [x] Zero live tokens, zero real serial.
 
 ## Risks
 
@@ -176,3 +176,27 @@ Imports: `SensorReading`, `SensorStreamer`, PID catalog from `motodiag.hardware.
 - **Parquet discoverability** — CSV default; parquet hint explicit.
 - **Recordings dir on Windows** — `Path.home() / ".motodiag"` for parity with Phase 131.
 - **Migration number if Phase 141 adds one** — unlikely, but Builder verifies `MIGRATIONS` before creating 016.
+
+## Deviations from Plan
+
+1. **LoC overshot on `recorder.py`** (864 vs ~350 target). Extra content is docstring + in-context design-decision notes covering the SQLite/JSONL split threshold rationale, `(captured_at, pid_hex, raw)` dedup signature, and linear-interp alignment discussion. Judged against the "detailed and meticulous" standard.
+2. **`cli/hardware.py` additions** came in at +~1300 LoC vs ~400 planned — 8 subcommands each with full Rich-formatted output + error handling + CSV/JSON/Parquet export paths + replay speed logic + `--since`/`--until` filtering + diff report rendering.
+3. **Phase 141 `SensorReading` contract alignment** handled via `_reading_to_sample_row` duck-type (attribute-access with dict fallback). Works correctly for real Pydantic model AND test synthetic dataclass without import coupling.
+4. **Parquet optional extra** landed in `pyproject.toml` as planned (`parquet = ["pyarrow>=15.0"]`); lazy import inside the exporter with ClickException install-hint when missing. No change to base deps.
+5. **Zero bug fixes during trust-but-verify** — Builder-142-Fix's static analysis was fully accurate. SQLite/JSONL threshold at 1000 rows, child-first migration rollback, replay `speed=0` bypass all worked first try.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| New files | 2 (`src/motodiag/hardware/recorder.py` 864 LoC, `tests/test_phase142_log.py` 1217 LoC) |
+| Modified files | 2 (`cli/hardware.py` +~1300 LoC additive, `pyproject.toml` +3 LoC parquet extra) |
+| New migrations | 1 (migration 016, schema v15 → v16 — `sensor_recordings` + `sensor_samples` + 4 indexes) |
+| New tests | 52 across 5 classes (passed locally 52/52 in 24.21s) |
+| Total test count after | 2666 |
+| Live API tokens burned | 0 |
+| Bug fixes during build | 0 |
+
+**Commit:** `4943db1` (Wave 1+2 landing commit) + `b1661ae` (Phase 142 verified GREEN: 52/52 passing — Architect trust-but-verify).
+
+**Key finding:** the 1000-row SQLite/JSONL split threshold is the load-bearing decision of this phase. Under it, all samples live in SQLite with `file_ref=NULL` — zero sidecar files, fast queries, simple backup. Over it, every 100th sample lands as a sparse SQLite summary + the full fine-grained data spills to `~/.motodiag/recordings/<uuid>.jsonl`, and `load_recording` transparently merges both via the `(captured_at, pid_hex, raw)` dedup signature. This keeps multi-hour high-Hz recordings from bloating the shop DB while preserving query-level summaries. Phase 143's `ReplayDashboardSource` and Phase 144's `ScenarioLoader.from_recording` both consume this same merged load path without needing to know whether the data is SQLite-only or SQLite+JSONL.

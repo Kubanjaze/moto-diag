@@ -1,6 +1,6 @@
 # MotoDiag Phase 148 — Predictive Maintenance (mileage/age-based failure prediction)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-18
 
 ## Goal
 
@@ -134,26 +134,26 @@ register_advanced(cli)
 
 ## Verification Checklist
 
-- [ ] `advanced/__init__.py` exports FailurePrediction, PredictionConfidence, predict_failures.
-- [ ] `implementation.md` flips `advanced` Scaffold → Active.
-- [ ] Pydantic round-trip stable (enum serialization `mode="json"`).
-- [ ] `predict_failures(vehicle)` with `mileage=None` returns age-only predictions without crash.
-- [ ] Dedupes across model-specific + make-wide queries.
-- [ ] Match tier ordering reflected in confidence_score.
-- [ ] `horizon_days` filter drops predictions beyond horizon.
-- [ ] `min_severity` filter drops lower severities.
-- [ ] `preventive_action` extraction picks "Forum tip:" when present.
-- [ ] `verified_by = "forum"` flagged on stator + TC88 + CCT + KLR canonical rows.
-- [ ] `motodiag advanced predict --bike ...` returns ≥1 prediction against seed data.
-- [ ] Direct args path works without garage entry.
-- [ ] `--bike` + `--make` → red error + exit 1.
-- [ ] Unknown bike → Phase 125 remediation.
-- [ ] Empty predictions → yellow panel with widen-horizon hint.
-- [ ] `--json` round-trips through `model_validate`.
-- [ ] `--horizon-days 0` → Click validation error.
-- [ ] `register_advanced` placed correctly in `cli/main.py`.
-- [ ] Phase 140 + Phase 12 Gate 1 + Phase 08 regressions still pass.
-- [ ] Zero live AI tokens, zero migration.
+- [x] `advanced/__init__.py` exports FailurePrediction, PredictionConfidence, predict_failures.
+- [x] `implementation.md` flips `advanced` Scaffold → Active.
+- [x] Pydantic round-trip stable (enum serialization `mode="json"`).
+- [x] `predict_failures(vehicle)` with `mileage=None` returns age-only predictions without crash.
+- [x] Dedupes across model-specific + make-wide queries.
+- [x] Match tier ordering reflected in confidence_score.
+- [x] `horizon_days` filter drops predictions beyond horizon.
+- [x] `min_severity` filter drops lower severities.
+- [x] `preventive_action` extraction picks "Forum tip:" when present.
+- [x] `verified_by = "forum"` flagged on stator + TC88 + CCT + KLR canonical rows.
+- [x] `motodiag advanced predict --bike ...` returns ≥1 prediction against seed data.
+- [x] Direct args path works without garage entry.
+- [x] `--bike` + `--make` → red error + exit 1.
+- [x] Unknown bike → Phase 125 remediation.
+- [x] Empty predictions → yellow panel with widen-horizon hint.
+- [x] `--json` round-trips through `model_validate`.
+- [x] `--horizon-days 0` → Click validation error.
+- [x] `register_advanced` placed correctly in `cli/main.py`.
+- [x] Phase 140 + Phase 12 Gate 1 + Phase 08 regressions still pass.
+- [x] Zero live AI tokens, zero migration.
 
 ## Risks
 

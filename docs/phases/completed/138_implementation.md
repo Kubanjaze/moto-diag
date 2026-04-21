@@ -219,33 +219,33 @@ Phase 138 assumes Phase 134 has landed `ProtocolAdapter` ABC at `src/motodiag/ha
 - **No migration, no CLI, no schema change**: pure module addition. Zero risk to Phase 132's database or Phase 130's CLI surface. This phase is fully invisible to end-users until Phase 139 (auto-detect) and Phase 140 (fault code read/clear) wire it into the diagnostic flow.
 
 ## Verification Checklist
-- [ ] `src/motodiag/hardware/protocols/j1850.py` exists and imports without side effects
-- [ ] `J1850Adapter` inherits from `ProtocolAdapter` (Phase 134)
-- [ ] `J1850_VPW_BAUD` constant equals `10400` (not 41600 — that's Ford PWM)
-- [ ] `MODULE_ADDRESS` dict contains `"ECM": 0x10, "BCM": 0x40, "ABS": 0x28`
-- [ ] `SUPPORTED_BRIDGES` contains at least `daytona_twin_tec`, `scan_gauge_ii`, `dynojet_pc`, `generic_j1850`
-- [ ] `_ensure_pyserial()` raises ClickException with install hint when `pyserial` missing
-- [ ] Constructor accepts `serial_factory` kwarg for test DI
-- [ ] `connect()` sends handshake then set-protocol bytes in order; raises `J1850ConnectionError` on timeout
-- [ ] `disconnect()` closes serial and clears `_connected`
-- [ ] `read_dtc()` polls ECM, BCM, ABS in that order, sequentially, not in parallel
-- [ ] `read_dtc()` returns merged `list[DTCReading]` with `module` field set per source
-- [ ] `read_dtc()` returns `[]` (no raise) when all three modules respond empty / `NO DATA`
-- [ ] `clear_dtc()` with no arg sends all three clear commands; returns count of successes
-- [ ] `clear_dtc("ECM")` sends only ECM clear; raises `J1850ClearError` if bridge rejects
-- [ ] `read_live_data(pid)` raises `NotImplementedError` with reference to Phase 141
-- [ ] `adapter_info()` returns dict with protocol, baud, bridge, port
-- [ ] `_parse_j1850_response` decodes `"10 02 01 72 00 43"` (ECM) → `["P0172", "P0043"]`
-- [ ] `_parse_j1850_response` handles BCM single-code frame without header byte
-- [ ] `_parse_j1850_response` strips prompt byte `>` and whitespace and is case-insensitive
-- [ ] `_parse_j1850_response` returns `[]` on empty / `NO DATA` response
-- [ ] Module prefix overrides SAE high-nibble (BCM frame returns `B*` not `P*`)
-- [ ] Unknown bridge string raises `ValueError` in constructor with supported-list message
-- [ ] `pyproject.toml` has `hardware` extras with `pyserial>=3.5` (confirmed or added)
-- [ ] ~22 new tests in `tests/test_phase138_j1850.py` across 6 classes, all pass
-- [ ] Zero regressions in Phases 01-132 test suite
-- [ ] Zero live API tokens burned (pure mock-serial, no AI)
-- [ ] Zero real hardware required for any test
+- [x] `src/motodiag/hardware/protocols/j1850.py` exists and imports without side effects
+- [x] `J1850Adapter` inherits from `ProtocolAdapter` (Phase 134)
+- [x] `J1850_VPW_BAUD` constant equals `10400` (not 41600 — that's Ford PWM)
+- [x] `MODULE_ADDRESS` dict contains `"ECM": 0x10, "BCM": 0x40, "ABS": 0x28`
+- [x] `SUPPORTED_BRIDGES` contains at least `daytona_twin_tec`, `scan_gauge_ii`, `dynojet_pc`, `generic_j1850`
+- [x] `_ensure_pyserial()` raises ClickException with install hint when `pyserial` missing
+- [x] Constructor accepts `serial_factory` kwarg for test DI
+- [x] `connect()` sends handshake then set-protocol bytes in order; raises `J1850ConnectionError` on timeout
+- [x] `disconnect()` closes serial and clears `_connected`
+- [x] `read_dtc()` polls ECM, BCM, ABS in that order, sequentially, not in parallel
+- [x] `read_dtc()` returns merged `list[DTCReading]` with `module` field set per source
+- [x] `read_dtc()` returns `[]` (no raise) when all three modules respond empty / `NO DATA`
+- [x] `clear_dtc()` with no arg sends all three clear commands; returns count of successes
+- [x] `clear_dtc("ECM")` sends only ECM clear; raises `J1850ClearError` if bridge rejects
+- [x] `read_live_data(pid)` raises `NotImplementedError` with reference to Phase 141
+- [x] `adapter_info()` returns dict with protocol, baud, bridge, port
+- [x] `_parse_j1850_response` decodes `"10 02 01 72 00 43"` (ECM) → `["P0172", "P0043"]`
+- [x] `_parse_j1850_response` handles BCM single-code frame without header byte
+- [x] `_parse_j1850_response` strips prompt byte `>` and whitespace and is case-insensitive
+- [x] `_parse_j1850_response` returns `[]` on empty / `NO DATA` response
+- [x] Module prefix overrides SAE high-nibble (BCM frame returns `B*` not `P*`)
+- [x] Unknown bridge string raises `ValueError` in constructor with supported-list message
+- [x] `pyproject.toml` has `hardware` extras with `pyserial>=3.5` (confirmed or added)
+- [x] ~22 new tests in `tests/test_phase138_j1850.py` across 6 classes, all pass
+- [x] Zero regressions in Phases 01-132 test suite
+- [x] Zero live API tokens burned (pure mock-serial, no AI)
+- [x] Zero real hardware required for any test
 
 ## Risks
 

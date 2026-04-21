@@ -1,6 +1,6 @@
 # MotoDiag Phase 136 — Phase Log
 
-**Status:** Planned | **Started:** 2026-04-17 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-04-17 | **Completed:** 2026-04-18
 **Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
@@ -34,3 +34,19 @@ Out of scope (intentional):
 - Any new CLI command — Phase 139 (auto-detect + handshake) is what exposes these adapters to the user.
 
 Docs at `docs/phases/in_progress/136_implementation.md` (v1.0) and `docs/phases/in_progress/136_phase_log.md` (this file). Not committed yet — Planner agent output only. No build has started.
+
+### 2026-04-18 06:30 — Build complete
+
+Wave 2 Builder shipped `src/motodiag/hardware/protocols/can.py` (~470 LoC — larger than plan's ~380-450 target due to hand-rolled ISO-TP sender + receiver + comprehensive NRC decoder). Target bikes: 2011+ Harley Touring (J1939/CAN diagnostic bus), 2015+ R1 / ZX-10R / modern Japanese + EU CAN-equipped bikes. Backend-agnostic via `python-can>=4.0` — supports SocketCAN / PCAN / Vector / Kvaser / slcan / Peak USB transparently. Hand-rolled ISO 15765-2 transport (not `python-can-isotp` — narrower scope, fewer Windows-fragile deps, educational value for mechanics reading source). OBD services: Mode 03 DTCs, Mode 04 clear (returns `True` on positive response, `False` on NRC 0x22 "conditionsNotCorrect", raises on other NRCs per the ~10 hard-coded SAE J2190 NRC table), Mode 09 VIN, `read_pid` with big-endian byte combination returning `Optional[int]` per ABC.
+
+Deviations from plan: same ABC signature reconciliation pattern as Phase 135 — `clear_dtcs → bool` and `read_pid → Optional[int]` per Phase 134's shipped contract. Added required `get_protocol_name()` method (plan omitted it). `pyproject.toml` gains new optional extra `can = ["python-can>=4.0"]`.
+
+38 tests passed locally in 0.43s (plan targeted ~22). `FakeBus` helper (~40 LoC) simulates `can.Bus` with `sent`/`rx_queue` lists — zero real hardware. Running total: 2472 tests. Zero live API tokens.
+
+**Commit:** `15c658d` (Phases 133-139: Gate 5 PASSED + Track E hardware substrate).
+
+### 2026-04-18 07:00 — Documentation finalization
+
+`implementation.md` already at v1.1 with Results table + Deviations section from the Wave 2 batch commit. Verification Checklist items marked `[x]` post-Gate 6. Phase docs live in `docs/phases/completed/` alongside the rest of Track E's protocol layer (135-139).
+
+Key finding: the decision to hand-roll ISO-TP instead of pulling `python-can-isotp` turned out to be the right call — the transport module is ~120 LoC, fully testable via `FakeBus`, and the protocol tracing is readable end-to-end when a mechanic's CAN dump goes sideways. Phase 136 also established the "any python-can backend" posture that Track E preserves throughout — MotoDiag never picks a specific CAN dongle vendor for users.
