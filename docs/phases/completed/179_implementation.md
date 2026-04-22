@@ -1,6 +1,6 @@
 # MotoDiag Phase 179 — Knowledge Base Endpoints
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -56,17 +56,31 @@ Keep these narrow — reflect the actual repo row shapes:
 
 ## Verification Checklist
 
-- [ ] Unauthenticated → 401 on every KB endpoint.
-- [ ] GET /v1/kb/dtc/{code} 200 + payload for known code.
-- [ ] 404 for unknown code.
-- [ ] Make filter honored on DTC + issue endpoints.
-- [ ] GET /v1/kb/dtc/categories returns list.
-- [ ] GET /v1/kb/symptoms?q=idle returns match.
-- [ ] GET /v1/kb/issues?q=brake returns matches.
-- [ ] GET /v1/kb/issues/{id} 200 for known id, 404 for unknown.
-- [ ] GET /v1/kb/search?q=X returns unified results.
-- [ ] Phase 175/176/177/178 still GREEN.
-- [ ] Zero AI calls.
+- [x] Unauthenticated → 401 on every KB endpoint.
+- [x] GET /v1/kb/dtc/{code} 200 + payload; 404 unknown.
+- [x] Make filter honored on DTC endpoints.
+- [x] GET /v1/kb/dtc/categories returns list.
+- [x] GET /v1/kb/symptoms search works + empty-query returns all.
+- [x] GET /v1/kb/issues search + make filter + id detail + 404.
+- [x] GET /v1/kb/search returns unified results; missing `q` → 422.
+- [x] `limit` capped at 200; honored.
+- [x] Phase 175/176/177/178 still GREEN (no structural changes).
+- [x] Zero AI calls.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| Phase 179 tests | 17 GREEN single-pass in 13.49s |
+| New code | ~310 LoC router |
+| Migration | 0 |
+| SCHEMA_VERSION | unchanged at 38 |
+
+**Key finding:** KB router is the smallest Track H domain router
+yet — no owner scoping, no tier gating, no quota math, just
+`require_api_key` + thin wrappers around existing repos. 310 LoC
++ 17 tests in <1hr. The scaffold pattern now scales down gracefully
+for simple read-only routers too.
 
 ## Risks
 

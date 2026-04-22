@@ -92,6 +92,7 @@ def create_app(
 
     # --- Routers (lazy import to keep module-import cheap) ---
     from motodiag.api.routes.billing import router as billing_router
+    from motodiag.api.routes.kb import router as kb_router
     from motodiag.api.routes.meta import router as meta_router
     from motodiag.api.routes.sessions import router as sessions_router
     from motodiag.api.routes.shops import router as shops_router
@@ -102,6 +103,7 @@ def create_app(
     app.include_router(billing_router, prefix="/v1")
     app.include_router(vehicles_router, prefix="/v1")
     app.include_router(sessions_router, prefix="/v1")
+    app.include_router(kb_router, prefix="/v1")
 
     # --- Startup log ---
     logger = logging.getLogger("motodiag.api")

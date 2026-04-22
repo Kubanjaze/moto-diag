@@ -1351,3 +1351,23 @@ Project version 0.12.1 → **0.12.2**.
 **Key finding:** zero-migration domain routers are now the default pattern. Phase 112's retrofit added `user_id` to 3 core tables (`diagnostic_sessions`, `repair_plans`, `known_issues`) — Phase 178 consumed the first. Phase 179 (KB search over `known_issues`) and Phase 180 (shop CRUD) can both ship migration-free. Track H's domain-router velocity is now <1hr per phase on the Phase 177 recipe.
 
 Next: **Phase 179** (KB search endpoints — expose DTC lookup + known-issues search + symptom search over HTTP). Read-heavy; probably individual-tier-only gating since reading the KB is a core product feature.
+
+---
+
+### 2026-04-22 — Phase 179 complete — KB endpoints
+
+**Smallest Track H domain router** (310 LoC, 17 tests, <1hr). 7 endpoints over `/v1/kb/*` exposing Phase 05/06/08/09 KB repos. **Zero migration, zero tier gating** — any authenticated caller sees the full KB.
+
+Endpoints: `GET /v1/kb/dtc/{code}`, `GET /v1/kb/dtc?q&make&category&severity`, `GET /v1/kb/dtc/categories`, `GET /v1/kb/symptoms?q&category`, `GET /v1/kb/issues?q&make&model&year`, `GET /v1/kb/issues/{id}`, `GET /v1/kb/search?q` (unified via Phase 09 `search_all`). Limit capped at 200.
+
+**17 tests GREEN single-pass in 13.49s**.
+
+**Track H scorecard through Phase 179:**
+- Phases: 175, 176, 177, 178, 179 (5)
+- Phase-specific tests: 169 (26 + 58 + 33 + 35 + 17)
+- Endpoints: 27 unique paths (meta 2, shops 1, billing 4, vehicles 6, sessions 7, KB 7)
+- Migrations: 2 Track H migrations (037 + 038)
+
+Project version 0.12.2 → **0.12.3**.
+
+Next: **Phase 180** (shop CRUD — the biggest composer yet, mapping Track G's 16-subgroup CLI console onto `/v1/shop/*` HTTP routes). Should ship in ~600-800 LoC with ~40 tests — still <2hrs on the Phase 177 recipe. Phase 181 adds WebSocket live data, 182 PDF reports, 183 OpenAPI enrichment, 184 Gate 9 closes Track H.
