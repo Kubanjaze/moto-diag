@@ -7,6 +7,29 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.labor_models import (
+    AlternativeEstimate,
+    LaborEstimate,
+    LaborStep,
+    ReconcileBucket,
+    ReconciliationReport,
+    SkillTier,
+)
+from motodiag.shop.labor_estimator import (
+    DEFAULT_SKILL_ADJUSTMENTS,
+    LABOR_SYSTEM_PROMPT,
+    MATH_TOLERANCE_HOURS,
+    RECONCILE_DELTA_THRESHOLD_PCT,
+    VALID_SKILL_TIERS,
+    LaborEstimateMathError,
+    LaborEstimatorError,
+    ReconcileMissingDataError,
+    bulk_estimate_open_wos,
+    estimate_labor,
+    labor_budget,
+    list_labor_estimates,
+    reconcile_with_actual,
+)
 from motodiag.shop.sourcing_models import (
     Availability,
     SourceTier,
@@ -166,6 +189,26 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # labor_estimator + labor_models (Phase 167)
+    "AlternativeEstimate",
+    "DEFAULT_SKILL_ADJUSTMENTS",
+    "LABOR_SYSTEM_PROMPT",
+    "LaborEstimate",
+    "LaborEstimateMathError",
+    "LaborEstimatorError",
+    "LaborStep",
+    "MATH_TOLERANCE_HOURS",
+    "RECONCILE_DELTA_THRESHOLD_PCT",
+    "ReconcileBucket",
+    "ReconcileMissingDataError",
+    "ReconciliationReport",
+    "SkillTier",
+    "VALID_SKILL_TIERS",
+    "bulk_estimate_open_wos",
+    "estimate_labor",
+    "labor_budget",
+    "list_labor_estimates",
+    "reconcile_with_actual",
     # parts_sourcing + sourcing_models (Phase 166)
     "Availability",
     "BatchTimeoutError",

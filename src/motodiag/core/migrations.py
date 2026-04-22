@@ -2233,6 +2233,69 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS sourcing_recommendations;
         """,
     ),
+    # Migration 031 — Phase 167: AI labor time estimation history
+    Migration(
+        version=31,
+        name="labor_estimates",
+        description=(
+            "Phase 167: AI-driven labor time estimates persisted to a "
+            "history table. Each row carries the estimate (base + "
+            "adjusted hours + skill/mileage multipliers + confidence + "
+            "rationale + breakdown JSON + alternative scenarios) + full "
+            "AI audit metadata (model + tokens + cost + cache_hit + "
+            "prompt_cache_hit). Append-only; reopened work orders "
+            "spawn new estimate rows (history preserved). FK wo_id "
+            "CASCADE — estimates follow their work order lifecycle. "
+            "Three indexes cover dominant queries: "
+            "idx_labor_est_wo (per-WO history list), "
+            "idx_labor_est_generated (budget time filter), "
+            "idx_labor_est_model (model-comparison audit). "
+            "Write-back to work_orders.estimated_hours routes through "
+            "Phase 161 update_work_order whitelist — NEVER raw SQL, "
+            "enforced by anti-regression grep test mirroring Phase "
+            "165's cost-recompute audit guarantee."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS labor_estimates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                wo_id INTEGER NOT NULL,
+                skill_tier TEXT NOT NULL DEFAULT 'journeyman'
+                    CHECK (skill_tier IN
+                           ('apprentice', 'journeyman', 'master')),
+                base_hours REAL NOT NULL,
+                adjusted_hours REAL NOT NULL,
+                skill_adjustment REAL NOT NULL DEFAULT 0.0,
+                mileage_adjustment REAL NOT NULL DEFAULT 0.0,
+                confidence REAL NOT NULL
+                    CHECK (confidence BETWEEN 0.0 AND 1.0),
+                rationale TEXT NOT NULL,
+                breakdown_json TEXT NOT NULL DEFAULT '[]',
+                alternatives_json TEXT NOT NULL DEFAULT '[]',
+                environment_notes TEXT,
+                ai_model TEXT NOT NULL,
+                tokens_in INTEGER NOT NULL DEFAULT 0,
+                tokens_out INTEGER NOT NULL DEFAULT 0,
+                cost_cents INTEGER NOT NULL DEFAULT 0,
+                prompt_cache_hit INTEGER NOT NULL DEFAULT 0,
+                user_prompt_snapshot TEXT,
+                generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (wo_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_labor_est_wo
+                ON labor_estimates(wo_id);
+            CREATE INDEX IF NOT EXISTS idx_labor_est_generated
+                ON labor_estimates(generated_at);
+            CREATE INDEX IF NOT EXISTS idx_labor_est_model
+                ON labor_estimates(ai_model);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_labor_est_model;
+            DROP INDEX IF EXISTS idx_labor_est_generated;
+            DROP INDEX IF EXISTS idx_labor_est_wo;
+            DROP TABLE IF EXISTS labor_estimates;
+        """,
+    ),
 ]
 
 

@@ -806,3 +806,49 @@ Build deviations:
 **Project version:** 0.9.7 → **0.9.8**.
 
 Next: Phase 167 (AI labor time estimation) — composes against Phase 162.5 `ShopAIClient` + reads work_orders + issues; writes back `work_orders.estimated_hours` via Phase 161 `update_work_order` whitelist (never raw SQL, verified by grep test like Phase 165's cost-recompute audit).
+
+### 2026-04-22 02:00 — Phase 167 complete (Track G third AI phase)
+
+**Third Track G AI phase.** Composes against Phase 162.5 `shop/ai_client.py` — zero direct `anthropic` imports AND zero raw `UPDATE work_orders` SQL (both enforced by anti-regression grep tests, mirroring Phase 165's cost-recompute audit pattern).
+
+Migration 031 (schema v30→v31) creates `labor_estimates` audit history table: full estimate breakdown + alternatives + environment notes + complete AI metadata (model + tokens + cost + prompt_cache_hit + user_prompt_snapshot 8KB cap). 3 indexes. Append-only; reopened WOs spawn new estimate rows.
+
+Two new modules:
+- `shop/labor_models.py` (60 LoC) — `LaborEstimate` + `LaborStep` + `AlternativeEstimate` + `ReconciliationReport` Pydantic + `SkillTier`/`ReconcileBucket` Literals. Separated so tests + Phase 169 can import without SDK seam.
+- `shop/labor_estimator.py` (466 LoC) — `estimate_labor` + `bulk_estimate_open_wos` + `reconcile_with_actual` + `list_labor_estimates` + `labor_budget` + 3 exceptions + 4 helpers + `_default_scorer_fn=None` injection seam.
+
+System prompt baked from Domain-Researcher pricing brief (`_research/track_g_pricing_brief.md`):
+- Labor norms rubric (oil change 0.5h, valve adjust 2-3h, brake pad per wheel 1-1.5h, top-end rebuild 8-14h)
+- Per-platform adjustments (HD Twin Cam/M8 pushrod 1.5h vs Honda/Yamaha/Suzuki/Kawasaki I4 shim 5-6h vs dual-sport screw 2h)
+- Skill tier multipliers (apprentice +25%, journeyman 0%, master -15%)
+- Mileage/environment adjustments (>50k +10%, >100k +20%, coastal salt +30-50%)
+
+**Math-consistency guard:** After parsing AI response, verify `adjusted_hours ≈ base_hours * (1 + skill_adjustment) * (1 + mileage_adjustment)` within 0.01h. On mismatch, retry once at temperature 0.1; second failure raises `LaborEstimateMathError`. Defensive against AI hallucinating inconsistent math.
+
+**Write-back discipline (Phase 161 whitelist):** `estimate_labor(wo_id, ..., write_back=True)` writes back `estimated_hours` via `update_work_order(wo_id, {"estimated_hours": est.adjusted_hours})` — NEVER raw SQL. Inherits `_validate_hours` (non-negative check) for free. Two grep-test guarantees:
+- `test_labor_estimator_does_not_import_anthropic_directly`
+- `test_labor_estimator_does_not_write_raw_sql_to_work_orders`
+
+**Reconciliation:** `reconcile_with_actual(wo_id)` is pure arithmetic (no AI call) comparing most-recent estimate against completed WO's actual_hours. Buckets delta at ±20%: "within" / "under" (actual > estimated by >20%) / "over" (actual < estimated by >20%). Raises `ReconcileMissingDataError` on non-completed WO, missing actual_hours, or no prior estimate.
+
+New CLI: `motodiag shop labor {estimate, bulk, show, history, reconcile, budget}` (6 subcommands, +255 LoC in cli/shop.py).
+
+**Tests:** 33 GREEN across 6 classes (TestMigration031×4 + TestEstimateLabor×11 + TestReconcile×5 + TestBulkEstimate×4 + TestLaborCLI×6 + 2 anti-regression grep) in 50.32s. All AI calls via `_default_scorer_fn` injection seam — zero live tokens.
+
+**Targeted regression: 370 GREEN in 542s (9m 2s)** covering Phase 131 + 153 + Track G 160-167 + Phase 162.5. Zero regressions.
+
+**Canonical Track G AI pattern now proven across 3 phases (163 priority, 166 sourcing, 167 labor):**
+1. Pydantic models in their own file (testable without SDK)
+2. Scorer/orchestrator module composes against `ShopAIClient.ask()`
+3. `_default_scorer_fn=None` injection seam for tests
+4. Audit-log table with full AI metadata (tokens + cost + cache_hit)
+5. Write-back via existing whitelist (Phase 161 `update_work_order`)
+6. Anti-regression grep test: no direct anthropic import
+7. Anti-regression grep test (write-back phases): no raw SQL to shared tables
+8. Phase 131 `ai_response_cache` partition via unique `kind=` value
+
+Build deviations: test fixture closure pattern bug caught early (call-site kwargs overrode closure defaults; fixed via renamed closure captures + `**_call_kwargs` sink); 33 tests vs ~32 planned (+1 grep test for raw-SQL audit).
+
+**Project version:** 0.9.8 → **0.9.9**.
+
+Next: Phase 168 (bay/lift scheduling — deterministic greedy + simulated-annealing optimizer, stdlib only; migration 032 adds `shop_bays` + `bay_schedule_slots` tables; guarded slot lifecycle + overrun detection at 25% buffer).

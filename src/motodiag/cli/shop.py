@@ -42,6 +42,9 @@ from motodiag.shop import (
     IssueFKError,
     IssueNotFoundError,
     InvalidTierPreferenceError,
+    LaborEstimatorError,
+    LaborEstimateMathError,
+    ReconcileMissingDataError,
     PartNotFoundError,
     PartNotInCatalogError,
     PriorityBudgetExhausted,
@@ -63,6 +66,11 @@ from motodiag.shop import (
     get_recommendation,
     recommend_source,
     sourcing_budget,
+    bulk_estimate_open_wos,
+    estimate_labor,
+    labor_budget,
+    list_labor_estimates,
+    reconcile_with_actual,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
     WorkOrderFKError,
@@ -2764,5 +2772,263 @@ def register_shop(cli_group: click.Group) -> None:
             f"({rollup['cache_hit_count']}/{rollup['calls']})\n"
             f"\nTier distribution:\n{tier_lines}",
             title="Sourcing budget"
+            + (f" (since {since})" if since else ""),
+        ))
+
+    # -----------------------------------------------------------------
+    # shop labor {estimate, bulk, show, history, reconcile, budget}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("labor")
+    def labor_group() -> None:
+        """AI labor time estimation (Phase 167)."""
+
+    def _render_labor_estimate(console, est) -> None:
+        cache_label = (
+            "[dim](prompt cache)[/dim]" if est.prompt_cache_hit else ""
+        )
+        lines = [
+            f"[bold]WO id={est.wo_id}[/bold] skill={est.skill_tier} {cache_label}",
+            f"Base: {est.base_hours:.2f}h  →  "
+            f"Adjusted: [bold]{est.adjusted_hours:.2f}h[/bold]",
+            f"Skill adj: {est.skill_adjustment:+.2f}  "
+            f"Mileage adj: {est.mileage_adjustment:+.2f}",
+            f"Confidence: {est.confidence:.2f}",
+            f"\nRationale: {est.rationale}",
+        ]
+        if est.breakdown:
+            lines.append("\nBreakdown:")
+            for step in est.breakdown:
+                lines.append(
+                    f"  • {step.step_name}: {step.step_hours:.2f}h"
+                    + (
+                        f"  ({', '.join(step.tools_needed)})"
+                        if step.tools_needed else ""
+                    )
+                )
+        if est.alternative_estimates:
+            lines.append("\nAlternative scenarios:")
+            for alt in est.alternative_estimates:
+                lines.append(
+                    f"  • {alt.scenario_name}: {alt.hours:.2f}h — {alt.notes}"
+                )
+        if est.environment_notes:
+            lines.append(f"\nEnvironment: {est.environment_notes}")
+        lines.append(
+            f"\nModel: {est.ai_model}  tokens: {est.tokens_in}→{est.tokens_out}  "
+            f"cost: {est.cost_cents}¢"
+        )
+        console.print(Panel("\n".join(lines), title="Labor estimate"))
+
+    @labor_group.command("estimate")
+    @click.argument("wo_id", type=int)
+    @click.option(
+        "--skill-tier",
+        type=click.Choice(
+            ["apprentice", "journeyman", "master"], case_sensitive=False,
+        ),
+        default="journeyman",
+    )
+    @click.option(
+        "--model",
+        type=click.Choice(["haiku", "sonnet"], case_sensitive=False),
+        default="haiku",
+    )
+    @click.option("--environment", "environment_hint", default=None)
+    @click.option("--no-write-back", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_estimate_cmd(
+        wo_id, skill_tier, model, environment_hint, no_write_back, as_json,
+    ):
+        """Estimate labor hours for a work order. Writes back to WO unless --no-write-back."""
+        console = get_console()
+        init_db()
+        try:
+            est = estimate_labor(
+                wo_id, skill_tier=skill_tier.lower(), model=model.lower(),
+                environment_hint=environment_hint,
+                write_back=not no_write_back,
+            )
+        except (LaborEstimatorError, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(est.model_dump(mode="json"), default=str, indent=2))
+            return
+        _render_labor_estimate(console, est)
+
+    @labor_group.command("bulk")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option(
+        "--skill-tier",
+        type=click.Choice(
+            ["apprentice", "journeyman", "master"], case_sensitive=False,
+        ),
+        default="journeyman",
+    )
+    @click.option(
+        "--model",
+        type=click.Choice(["haiku", "sonnet"], case_sensitive=False),
+        default="haiku",
+    )
+    @click.option("--force", is_flag=True, default=False,
+                  help="Re-estimate even if WO.estimated_hours already set.")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_bulk_cmd(shop_id, skill_tier, model, force, as_json):
+        """Bulk-estimate all open/in-progress WOs for a shop."""
+        console = get_console()
+        init_db()
+        results = bulk_estimate_open_wos(
+            shop_id, model=model.lower(),
+            skill_tier=skill_tier.lower(), force=force,
+        )
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump(mode="json") for r in results],
+                default=str, indent=2,
+            ))
+            return
+        if not results:
+            console.print("[dim]No WOs estimated.[/dim]")
+            return
+        table = Table(
+            title=f"Bulk labor estimate ({len(results)} WOs)",
+            show_header=True,
+        )
+        table.add_column("WO", justify="right")
+        table.add_column("Base h", justify="right")
+        table.add_column("Adj h", justify="right")
+        table.add_column("Skill")
+        table.add_column("Conf", justify="right")
+        table.add_column("Cost¢", justify="right")
+        for r in results:
+            table.add_row(
+                str(r.wo_id), f"{r.base_hours:.2f}",
+                f"{r.adjusted_hours:.2f}", r.skill_tier,
+                f"{r.confidence:.2f}", str(r.cost_cents),
+            )
+        console.print(table)
+        total_cost = sum(r.cost_cents for r in results)
+        console.print(f"\nTotal cost: {total_cost}¢")
+
+    @labor_group.command("show")
+    @click.argument("est_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_show_cmd(est_id, as_json):
+        """Show a persisted labor estimate."""
+        console = get_console()
+        init_db()
+        with get_connection() as conn:
+            row = conn.execute(
+                "SELECT * FROM labor_estimates WHERE id = ?", (est_id,),
+            ).fetchone()
+        if row is None:
+            raise click.ClickException(f"labor estimate not found: id={est_id}")
+        d = dict(row)
+        if as_json:
+            click.echo(_json.dumps(d, default=str, indent=2))
+            return
+        lines = [
+            f"[bold]Labor estimate id={est_id}[/bold]",
+            f"WO: {d['wo_id']}  skill={d['skill_tier']}",
+            f"Base: {d['base_hours']}h  →  Adjusted: {d['adjusted_hours']}h",
+            f"Confidence: {d['confidence']}",
+            f"Model: {d['ai_model']}  tokens: {d['tokens_in']}→{d['tokens_out']}  "
+            f"cost: {d['cost_cents']}¢",
+            f"Generated: {d['generated_at']}",
+            f"\nRationale: {d['rationale']}",
+        ]
+        console.print(Panel("\n".join(lines), title="Labor estimate record"))
+
+    @labor_group.command("history")
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_history_cmd(wo_id, as_json):
+        """Show all labor estimates for a WO (newest first)."""
+        console = get_console()
+        init_db()
+        rows = list_labor_estimates(wo_id=wo_id)
+        wo_row = get_work_order(wo_id)
+        actual = wo_row.get("actual_hours") if wo_row else None
+        if as_json:
+            click.echo(_json.dumps({
+                "wo_id": wo_id, "actual_hours": actual, "estimates": rows,
+            }, default=str, indent=2))
+            return
+        if not rows:
+            console.print(f"[dim]No labor estimates for WO id={wo_id}.[/dim]")
+            return
+        table = Table(title=f"Labor history — WO {wo_id}", show_header=True)
+        table.add_column("Est ID", justify="right")
+        table.add_column("Adj h", justify="right")
+        table.add_column("Skill")
+        table.add_column("Confidence", justify="right")
+        table.add_column("Generated")
+        table.add_column("Delta", justify="right")
+        for r in rows:
+            delta_str = "—"
+            if actual is not None:
+                d = float(actual) - float(r["adjusted_hours"])
+                delta_str = f"{d:+.2f}h"
+            table.add_row(
+                str(r["id"]), f"{r['adjusted_hours']:.2f}",
+                r["skill_tier"], f"{r['confidence']:.2f}",
+                str(r["generated_at"]), delta_str,
+            )
+        console.print(table)
+        if actual is not None:
+            console.print(f"Actual hours on WO: {actual:.2f}")
+
+    @labor_group.command("reconcile")
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_reconcile_cmd(wo_id, as_json):
+        """Compare estimate vs actual for a completed WO (no AI call)."""
+        console = get_console()
+        init_db()
+        try:
+            report = reconcile_with_actual(wo_id)
+        except (LaborEstimatorError, ReconcileMissingDataError,
+                WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                report.model_dump(mode="json"), default=str, indent=2,
+            ))
+            return
+        bucket_color = {
+            "within": "green", "under": "yellow", "over": "red",
+        }.get(report.bucket, "white")
+        lines = [
+            f"[bold]WO id={wo_id}[/bold]  "
+            f"[{bucket_color}]{report.bucket.upper()}[/{bucket_color}]",
+            f"Estimated: {report.estimated_hours:.2f}h  "
+            f"Actual: {report.actual_hours:.2f}h",
+            f"Delta: {report.delta_hours:+.2f}h"
+            + (f" ({report.delta_pct:+.1f}%)" if report.delta_pct is not None else ""),
+            f"\n{report.notes}",
+        ]
+        console.print(Panel("\n".join(lines), title="Reconciliation"))
+
+    @labor_group.command("budget")
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--from", "since", default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def labor_budget_cmd(shop_id, since, as_json):
+        """Aggregate labor-AI spend + cache-hit rate."""
+        console = get_console()
+        init_db()
+        rollup = labor_budget(shop_id=shop_id, since=since)
+        if as_json:
+            click.echo(_json.dumps(rollup, indent=2))
+            return
+        console.print(Panel(
+            f"Calls: {rollup['calls']}\n"
+            f"Tokens in: {rollup['tokens_in']:,}\n"
+            f"Tokens out: {rollup['tokens_out']:,}\n"
+            f"Cost: ¢{rollup['cost_cents']} "
+            f"(${rollup['cost_cents']/100:.2f})\n"
+            f"Prompt cache hit rate: {rollup['cache_hit_rate']:.1%} "
+            f"({rollup['cache_hit_count']}/{rollup['calls']})",
+            title="Labor estimation budget"
             + (f" (since {since})" if since else ""),
         ))

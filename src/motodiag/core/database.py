@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 30  # Phase 166: sourcing_recommendations table (migration 030)
+SCHEMA_VERSION = 31  # Phase 167: labor_estimates table (migration 031)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

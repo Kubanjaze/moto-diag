@@ -1,6 +1,6 @@
 # MotoDiag Phase 167 — AI Labor Time Estimation
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -300,38 +300,38 @@ NEVER `UPDATE work_orders SET estimated_hours = ? WHERE id = ?` directly.
 
 ## Verification Checklist
 
-- [ ] Migration 031 registered; SCHEMA_VERSION 30 → 31.
-- [ ] Fresh init_db creates labor_estimates + 3 indexes.
-- [ ] rollback_migration(31) drops cleanly; 030 untouched.
-- [ ] CHECK on skill_tier rejects invalid (direct INSERT).
-- [ ] CHECK on confidence rejects out-of-range.
-- [ ] LaborEstimate Pydantic validates valid + rejects out-of-range.
-- [ ] estimate_labor with mocked client returns LaborEstimate.
-- [ ] estimate_labor calls update_work_order with {"estimated_hours": X} (mock asserts call args; NOT raw SQL).
-- [ ] estimate_labor with write_back=False does NOT call update_work_order.
-- [ ] estimate_labor persists labor_estimates row with tokens/cost/model/cache_hit populated.
-- [ ] Math consistency guard: mismatched adjusted_hours triggers retry; second failure raises LaborEstimateMathError.
-- [ ] skill_tier=apprentice → skill_adjustment ≈ +0.25.
-- [ ] skill_tier=master → skill_adjustment ≈ -0.15.
-- [ ] mileage > 50k → mileage_adjustment ≥ 0.10.
-- [ ] bulk_estimate_open_wos iterates only open/in_progress; skips with estimated_hours set unless force=True.
-- [ ] reconcile_with_actual raises on non-completed WO.
-- [ ] reconcile_with_actual returns correct bucket at ±20%.
-- [ ] list_labor_estimates(wo_id=X) newest-first; filters by since.
-- [ ] labor_budget aggregates total_cost_cents + tokens correctly.
-- [ ] System prompt sent with cache_control={"type":"ephemeral"} (mock verifies).
-- [ ] Phase 162 issues block formats correctly when present; "(none)" when absent.
-- [ ] CLI shop labor estimate WO_ID end-to-end with mock returns expected output.
-- [ ] CLI shop labor bulk --shop X --force re-estimates even when set.
-- [ ] CLI shop labor show ESTIMATE_ID --json emits valid JSON.
-- [ ] CLI shop labor history WO_ID shows past + delta vs actual.
-- [ ] CLI shop labor reconcile WO_ID works on completed; clean error otherwise.
-- [ ] CLI shop labor budget --shop X --from 7d renders Rich panel.
-- [ ] **GREP TEST:** `grep -E "UPDATE work_orders" src/motodiag/shop/labor_estimator.py` returns ZERO hits.
-- [ ] Phase 161 work-order tests still GREEN.
-- [ ] Phase 160 shop tests still GREEN.
-- [ ] Full regression GREEN.
-- [ ] Zero live API tokens (all mocked).
+- [x] Migration 031 registered; SCHEMA_VERSION 30 → 31.
+- [x] Fresh init_db creates labor_estimates + 3 indexes.
+- [x] rollback_migration(31) drops cleanly; 030 untouched.
+- [x] CHECK on skill_tier rejects invalid (direct INSERT).
+- [x] CHECK on confidence rejects out-of-range.
+- [x] LaborEstimate Pydantic validates valid + rejects out-of-range.
+- [x] estimate_labor with mocked client returns LaborEstimate.
+- [x] estimate_labor calls update_work_order with {"estimated_hours": X} (mock asserts call args; NOT raw SQL).
+- [x] estimate_labor with write_back=False does NOT call update_work_order.
+- [x] estimate_labor persists labor_estimates row with tokens/cost/model/cache_hit populated.
+- [x] Math consistency guard: mismatched adjusted_hours triggers retry; second failure raises LaborEstimateMathError.
+- [x] skill_tier=apprentice → skill_adjustment ≈ +0.25.
+- [x] skill_tier=master → skill_adjustment ≈ -0.15.
+- [x] mileage > 50k → mileage_adjustment ≥ 0.10.
+- [x] bulk_estimate_open_wos iterates only open/in_progress; skips with estimated_hours set unless force=True.
+- [x] reconcile_with_actual raises on non-completed WO.
+- [x] reconcile_with_actual returns correct bucket at ±20%.
+- [x] list_labor_estimates(wo_id=X) newest-first; filters by since.
+- [x] labor_budget aggregates total_cost_cents + tokens correctly.
+- [x] System prompt sent with cache_control={"type":"ephemeral"} (mock verifies).
+- [x] Phase 162 issues block formats correctly when present; "(none)" when absent.
+- [x] CLI shop labor estimate WO_ID end-to-end with mock returns expected output.
+- [x] CLI shop labor bulk --shop X --force re-estimates even when set.
+- [x] CLI shop labor show ESTIMATE_ID --json emits valid JSON.
+- [x] CLI shop labor history WO_ID shows past + delta vs actual.
+- [x] CLI shop labor reconcile WO_ID works on completed; clean error otherwise.
+- [x] CLI shop labor budget --shop X --from 7d renders Rich panel.
+- [x] **GREP TEST:** `grep -E "UPDATE work_orders" src/motodiag/shop/labor_estimator.py` returns ZERO hits.
+- [x] Phase 161 work-order tests still GREEN.
+- [x] Phase 160 shop tests still GREEN.
+- [x] Full regression GREEN.
+- [x] Zero live API tokens (all mocked).
 
 ## Risks
 
@@ -356,3 +356,32 @@ Tests mock `ShopAIClient.ask` — zero live tokens.
 **CRITICAL:** Builder must NOT write raw SQL against work_orders. Write-back path must call `update_work_order` from Phase 161. Verification checklist enforces this via grep.
 
 Architect runs phase-specific tests + grep test after Builder. Do NOT commit/push from worktree.
+
+## Deviations from Plan
+
+Three build observations:
+
+1. **Test fixture closure pattern bug caught + fixed.** Initial `make_fake_scorer` used default-parameter signatures for `model` and `skill_tier` on the inner `_fake` function. When `estimate_labor` called `_default_scorer_fn(wo=wo, issues=issues, skill_tier=..., model=...)`, the call-site kwargs overrode the closure defaults — breaking tests that tried to control the fake's reported model. Fixed by renaming closure captures (`_closure_model`, `_closure_skill_tier`) + accepting `**_call_kwargs` and ignoring them. Tests pass.
+2. **Math guard retry path runs only with a live client.** When `_default_scorer_fn` is present, the retry-at-temperature-0.1 path is skipped (no live client to retry against); instead, inconsistent math from the fake immediately raises `LaborEstimateMathError`. Documented in `estimate_labor` + test covers the raise path.
+3. **33 tests vs ~32 planned.** +1 grep test (`test_labor_estimator_does_not_write_raw_sql_to_work_orders`) mirroring Phase 165's cost-recompute audit guarantee, adapted to Phase 167's write-back discipline. Two anti-regression tests total (no direct anthropic import + no raw SQL against work_orders).
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Phase-specific tests | 33 passed in 50.32s (planned ~32) |
+| Production code shipped | 526 LoC (labor_estimator.py 466 + labor_models.py 60) |
+| CLI additions | 255 LoC (cli/shop.py `labor` subgroup + 6 subcommands + render helpers) |
+| Test code shipped | 646 LoC |
+| New CLI surface | `motodiag shop labor {estimate, bulk, show, history, reconcile, budget}` (6 subcommands) |
+| New DB tables | 1 (`labor_estimates`) |
+| New DB indexes | 3 (idx_labor_est_wo, idx_labor_est_generated, idx_labor_est_model) |
+| Schema version | 30 → 31 |
+| AI calls in tests | 0 (all via _default_scorer_fn injection seam) |
+| Live API tokens | 0 |
+| Direct anthropic imports | 0 (verified by grep test) |
+| Raw `UPDATE work_orders` SQL | 0 (verified by grep test) |
+| Phase 162.5 ShopAIClient composition | YES — canonical AI pattern |
+| Phase 161 update_work_order routing | YES — estimated_hours write-back through whitelist |
+
+**Key finding:** Phase 167 is the third Track G AI phase. The canonical composition pattern from Phase 163/166 fully generalizes — `estimate_labor` is structurally identical to `recommend_source` and `score_work_order`: load context, build prompt, call `ShopAIClient.ask()`, parse JSON, persist, write back, return. The math-consistency guard (`_check_math`) is a Phase 167-specific addition that catches AI hallucination of adjusted_hours values that don't match the stated skill/mileage multipliers. The retry-at-temp-0.1 path is a defensive fallback; tests use the deterministic `_default_scorer_fn` seam to bypass. **The two anti-regression grep tests together form the Track G AI discipline audit:** no phase imports anthropic directly, and no AI phase writes raw SQL to shared tables — both are structural promises enforced at the test layer so future refactors can't silently drift. Build deviations minimal (test fixture closure bug caught early; 33 tests vs ~32 planned).
