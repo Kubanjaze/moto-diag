@@ -1817,6 +1817,100 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS shops;
         """,
     ),
+    # Migration 026 — Phase 161: work orders (Track G, continues)
+    Migration(
+        version=26,
+        name="work_orders",
+        description=(
+            "Phase 161: Second Track G phase. Creates `work_orders` — the "
+            "mechanic's unit of work on a specific bike. Attaches to "
+            "Phase 160 `intake_visits` via nullable `intake_visit_id` FK "
+            "(SET NULL on intake delete; work history survives an "
+            "accidental intake wipe). Denormalizes `shop_id` + "
+            "`vehicle_id` + `customer_id` onto the work order itself so "
+            "dominant queries — 'list work orders for shop X', 'list "
+            "work orders for bike Y', 'list work orders for customer "
+            "Z' — are single-index lookups rather than JOINs. FK "
+            "asymmetry mirrors Phase 160: shop_id CASCADE (rare, "
+            "explicit, confirmed), vehicle_id + customer_id RESTRICT "
+            "(prevent accidental history erasure), "
+            "assigned_mechanic_user_id SET NULL (orphaned WOs remain "
+            "re-assignable when a mechanic account is removed in Phase "
+            "172), created_by_user_id SET DEFAULT (fallback to system "
+            "user id=1 per Phase 112 pattern). Status CHECK enforces "
+            "('draft','open','in_progress','on_hold','completed',"
+            "'cancelled'); priority CHECK enforces BETWEEN 1 AND 5 "
+            "(grid-sortable mechanic-settable integer; AI-overridable "
+            "in Phase 163 only when confidence exceeds a threshold). "
+            "Timestamp columns `opened_at` + `started_at` + "
+            "`completed_at` + `closed_at` populate as the order moves "
+            "through the lifecycle; `on_hold_reason` + "
+            "`cancellation_reason` carry freetext. Four indexes cover "
+            "the dominant access patterns: (shop_id, status) for the "
+            "daily open-queue query, (vehicle_id) for 'show me this "
+            "bike's work history', (customer_id) for per-customer "
+            "roll-ups, (intake_visit_id) for 1:N intake→WOs lookups. "
+            "Rollback drops indexes then DROP TABLE work_orders."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS work_orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                intake_visit_id INTEGER,
+                vehicle_id INTEGER NOT NULL,
+                customer_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                priority INTEGER NOT NULL DEFAULT 3
+                    CHECK (priority BETWEEN 1 AND 5),
+                estimated_hours REAL,
+                actual_hours REAL,
+                estimated_parts_cost_cents INTEGER,
+                assigned_mechanic_user_id INTEGER,
+                created_by_user_id INTEGER NOT NULL DEFAULT 1,
+                status TEXT NOT NULL DEFAULT 'draft'
+                    CHECK (status IN (
+                        'draft','open','in_progress',
+                        'on_hold','completed','cancelled'
+                    )),
+                on_hold_reason TEXT,
+                cancellation_reason TEXT,
+                opened_at TIMESTAMP,
+                started_at TIMESTAMP,
+                completed_at TIMESTAMP,
+                closed_at TIMESTAMP,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (intake_visit_id)
+                    REFERENCES intake_visits(id) ON DELETE SET NULL,
+                FOREIGN KEY (vehicle_id)
+                    REFERENCES vehicles(id) ON DELETE RESTRICT,
+                FOREIGN KEY (customer_id)
+                    REFERENCES customers(id) ON DELETE RESTRICT,
+                FOREIGN KEY (assigned_mechanic_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (created_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE INDEX IF NOT EXISTS idx_wo_shop_status
+                ON work_orders(shop_id, status);
+            CREATE INDEX IF NOT EXISTS idx_wo_vehicle
+                ON work_orders(vehicle_id);
+            CREATE INDEX IF NOT EXISTS idx_wo_customer
+                ON work_orders(customer_id);
+            CREATE INDEX IF NOT EXISTS idx_wo_intake_visit
+                ON work_orders(intake_visit_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_wo_intake_visit;
+            DROP INDEX IF EXISTS idx_wo_customer;
+            DROP INDEX IF EXISTS idx_wo_vehicle;
+            DROP INDEX IF EXISTS idx_wo_shop_status;
+            DROP TABLE IF EXISTS work_orders;
+        """,
+    ),
 ]
 
 

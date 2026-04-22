@@ -188,14 +188,24 @@ class TestMigration025:
                 )
 
     def test_rollback_drops_child_first(self, tmp_path):
-        """intake_visits (child via shop_id FK) must drop before shops."""
+        """intake_visits (child via shop_id FK) must drop before shops.
+
+        Forward-compat: any later migration (Phase 161+ work_orders, etc.)
+        that adds an FK to intake_visits or shops must be rolled back first
+        so this test isolates Phase 160's rollback semantics. We use
+        rollback_to_version(target=24) to peel everything above 24 in
+        reverse-version order.
+        """
+        from motodiag.core.migrations import rollback_to_version
+
         path = str(tmp_path / "rollback.db")
         init_db(path)
         assert table_exists("shops", path) is True
         assert table_exists("intake_visits", path) is True
-        migration = get_migration_by_version(25)
-        assert migration is not None
-        rollback_migration(migration, path)
+        # Roll back ALL migrations beyond 24 (which is Phase 157, the last
+        # Track F migration). This drops migration 025 (Phase 160) plus
+        # any later migrations (026+) that depend on shops/intake_visits.
+        rollback_to_version(24, path)
         assert table_exists("intake_visits", path) is False
         assert table_exists("shops", path) is False
 

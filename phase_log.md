@@ -600,3 +600,28 @@ Track G (phases 160-174) opens next — shop management + work orders + triage +
 - Gate 8 (Phase 174): 🔲 — shop management intake-to-invoice integration test, pending Phases 161-173.
 
 Phases 161-174 queued. Track G compounding begins: work orders (161) attach to `intake_visits.id`, issues (162) link to work orders, invoicing (169) closes the loop back on the intake row created this phase.
+
+### 2026-04-21 22:35 — Phase 161 complete + 10-agent peak-efficiency pool dispatched
+
+**Phase 161 closed.** Architect-direct auto-iterate build. Migration 026 adds `work_orders` table + 4 indexes, bumping `SCHEMA_VERSION` 25→26. New `shop/work_order_repo.py` (748 LoC, 14 functions + 7 dedicated lifecycle transition helpers, guarded `draft→open→in_progress→(on_hold|completed|cancelled)→(reopen)→open` lifecycle — generic `update_work_order` cannot mutate status, only the 7 transition functions can). FK delete asymmetry mirrors Phase 160: shop_id CASCADE, intake_visit_id SET NULL (work history survives intake delete), vehicle_id + customer_id RESTRICT. New top-level CLI `motodiag shop work-order` group with 12 subcommands appended additively to Phase 160's `register_shop` (no main.py edit). 47 tests GREEN across 4 classes; full regression 3441 passed / 1 failed.
+
+**Bug fix #1 — forward-compat rollback test pattern.** Full regression flagged `test_phase160_shop.py::TestMigration025::test_rollback_drops_child_first` failing with `sqlite3.OperationalError: no such table: main.intake_visits`. Root cause: Phase 161's `work_orders.intake_visit_id` FK references `intake_visits`; Phase 160's rollback test ran `rollback_migration(25)` directly, which attempted bare `DROP TABLE intake_visits` while work_orders still referenced it. Solution: migrated both Phase 160 + Phase 161 rollback tests to `rollback_to_version(target_version, path)` — peels all migrations beyond `target_version` in correct reverse-version order. Phase 160 uses `rollback_to_version(24, path)`; Phase 161 preemptively uses `rollback_to_version(25, path)` for when Phase 162 lands. Forward-compat protection now standard for all future phases. Re-verified 91/91 Phase 160 + Phase 161 tests GREEN in 56.98s post-fix. Pattern matches the Phase 145/150 SCHEMA_VERSION `>= N` loosening from Track F closure — codified as canonical MotoDiag rollback-test pattern going forward.
+
+**10-agent peak-efficiency pool dispatched in same session.** Per user request ("auto iterate with 10 agents", "operate all agents under CLAUDE.md"), dispatched a Stage A planning wave: 7 Planner agents (Phases 162-168) + 2 Domain-Researcher agents (mechanic workflow + parts/labor pricing) + 1 Architect-Auditor (project-level docs drift audit). All 10 returned. Outcomes:
+
+- **Plans 162-168 + new micro-phase 162.5 persisted to `docs/phases/in_progress/`** (8 implementation.md files committed across 2 batches: `06c36f5` + `22d65d5`).
+- **Three independent AI-phase planners (163, 166, 167) converged on a duplication risk** — each proposed re-implementing Anthropic client setup + cost math + prompt caching + JSON extraction. Inserted **micro-phase 162.5 (NEW, not in original ROADMAP)** to extract `src/motodiag/shop/ai_client.py` BEFORE Phase 163 ships; subsequent AI phases compose on it.
+- **Domain-Researcher-Workflow brief overrode Phase 162's category taxonomy** — Planner reused the existing 7 `SymptomCategory` values; Researcher found that misfiles ~40-50% of real shop tickets to "other." **Phase 162 now ships with 12 categories** (existing 7 + brakes/suspension/drivetrain/tires_wheels/accessories/rider_complaint).
+- **Domain-Researcher-Workflow priority formula converged independently with Planner-163's** (base tier 1000/500/200/50 + per-tier daily aging 100/50/20/10 + customer-history bonus 0/25/75/150). High confidence in Phase 163's scoring approach.
+- **Domain-Researcher-Pricing brief seeds Phase 166 sourcing prompt** with concrete OEM-vs-aftermarket rubric (Ricks Motorsports stators > OEM on 80s-00s Japanese; EBC HH > OEM on most sport bikes; etc.) + 6-tier vendor taxonomy (T1 OEM dealer → T6 AliExpress-avoid). Same brief seeds Phase 167 labor estimator with per-platform baseline labor table + skill/mileage adjustments.
+- **Architect-Auditor flagged 5 finalization fixes for this commit:** SCHEMA_VERSION footnote (25→26), Database Tables row for work_orders, Phase History row for 161, Shop CLI subcommand count bump (22→34), and pyproject/doc version split documentation. All 5 applied.
+- **Migration numbering locked across Track G:** 027 (Phase 162 issues), no migration (Phase 163 AI), 028 (Phase 164 triage_weights column), 029 (Phase 165 parts_needs three tables), 030 (Phase 166 sourcing_recommendations), 031 (Phase 167 labor_estimates), 032 (Phase 168 bay_scheduler two tables).
+- **Build order locked: serial per-phase end-to-end** per user direction ("complete each in entirety before moving on") — no parallel Builders across phases since cli/shop.py + migrations.py + SCHEMA_VERSION are inherently serializing.
+
+**Project version:** 0.9.1 → **0.9.2**.
+
+**Completion gates status:**
+- Gates 1-7: ✅ (as before)
+- Gate 8 (Phase 174): 🔲 — shop management intake-to-invoice integration test, pending Phases 162-173.
+
+Track G work-order pillar landed. Next: Phase 162 (issues, 12-category shop taxonomy) → Phase 162.5 (shop/ai_client.py extraction) → Phase 163 (AI priority scoring). Each fully complete before next begins.

@@ -34,22 +34,39 @@ from motodiag.shop import (
     INTAKE_STATUSES,
     IntakeAlreadyClosedError,
     IntakeNotFoundError,
+    InvalidWorkOrderTransition,
     ShopNameExistsError,
     ShopNotFoundError,
+    WORK_ORDER_STATUSES,
+    WorkOrderFKError,
+    WorkOrderNotFoundError,
+    assign_mechanic,
     cancel_intake,
+    cancel_work_order,
     close_intake,
+    complete_work_order,
     create_intake,
     create_shop,
+    create_work_order,
     delete_shop,
     get_intake,
     get_shop,
     get_shop_by_name,
+    get_work_order,
     list_intakes,
     list_open_for_bike,
     list_shops,
+    list_work_orders,
+    open_work_order,
+    pause_work,
     reopen_intake,
+    reopen_work_order,
+    resume_work,
+    start_work,
+    unassign_mechanic,
     update_intake,
     update_shop,
+    update_work_order,
 )
 
 
@@ -233,6 +250,69 @@ def _render_customer_panel(console, customer: dict) -> None:
     if not customer.get("is_active", 1):
         lines.append("[dim]INACTIVE[/dim]")
     console.print(Panel("\n".join(lines), title="Customer"))
+
+
+def _render_work_order_panel(console, wo: dict) -> None:
+    """Render one work order as a Rich Panel."""
+    status = wo.get("status", "draft")
+    status_color = {
+        "draft": "dim", "open": "green", "in_progress": "cyan",
+        "on_hold": "yellow", "completed": "blue", "cancelled": "red",
+    }.get(status, "white")
+    priority = wo.get("priority", 3)
+    prio_color = {1: "bold red", 2: "red", 3: "yellow", 4: "dim", 5: "dim"}
+    prio_style = prio_color.get(priority, "white")
+    lines: list[str] = []
+    lines.append(
+        f"[bold]WO id={wo['id']}:[/bold] {wo.get('title', '?')}  "
+        f"[{status_color}]{status.upper().replace('_', ' ')}[/{status_color}]  "
+        f"[{prio_style}]P{priority}[/{prio_style}]"
+    )
+    bike_label = " ".join(
+        str(b) for b in (
+            wo.get("vehicle_year"),
+            wo.get("vehicle_make"),
+            wo.get("vehicle_model"),
+        ) if b
+    )
+    lines.append(
+        f"Shop:     {wo.get('shop_name', '?')}  (id={wo['shop_id']})"
+    )
+    lines.append(
+        f"Customer: {wo.get('customer_name', '?')}  (id={wo['customer_id']})"
+    )
+    lines.append(
+        f"Bike:     {bike_label or '?'}  (id={wo['vehicle_id']})"
+    )
+    if wo.get("intake_visit_id"):
+        lines.append(f"Intake:   id={wo['intake_visit_id']}")
+    mech = wo.get("assigned_mechanic_name") or wo.get(
+        "assigned_mechanic_user_id"
+    )
+    if mech:
+        lines.append(f"Mechanic: {mech}")
+    if wo.get("estimated_hours") is not None:
+        lines.append(f"Est hrs:  {wo['estimated_hours']}")
+    if wo.get("actual_hours") is not None:
+        lines.append(f"Act hrs:  {wo['actual_hours']}")
+    if wo.get("estimated_parts_cost_cents") is not None:
+        cents = int(wo["estimated_parts_cost_cents"])
+        lines.append(f"Parts $:  ${cents / 100:.2f}")
+    if wo.get("description"):
+        lines.append(f"\nDescription:\n  {wo['description']}")
+    if wo.get("opened_at"):
+        lines.append(f"\nOpened:    {wo['opened_at']}")
+    if wo.get("started_at"):
+        lines.append(f"Started:   {wo['started_at']}")
+    if wo.get("completed_at"):
+        lines.append(f"Completed: {wo['completed_at']}")
+    if wo.get("closed_at") and status == "cancelled":
+        lines.append(f"Cancelled: {wo['closed_at']}")
+    if wo.get("on_hold_reason"):
+        lines.append(f"\nHold reason: {wo['on_hold_reason']}")
+    if wo.get("cancellation_reason"):
+        lines.append(f"\nCancel reason: {wo['cancellation_reason']}")
+    console.print(Panel("\n".join(lines), title="Work Order"))
 
 
 def _render_intake_panel(console, intake: dict) -> None:
@@ -1001,3 +1081,396 @@ def register_shop(cli_group: click.Group) -> None:
                 str(r.get("customer_name", "?")),
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # shop work-order {create, list, show, update, start, pause, resume,
+    #                  complete, cancel, reopen, assign, unassign}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("work-order")
+    def work_order_group() -> None:
+        """Create and manage work orders (the mechanic's unit of work)."""
+
+    @work_order_group.command("create")
+    @click.option("--intake", "intake_identifier", default=None, type=int,
+                  help="Existing intake visit id; auto-fills shop/customer/bike.")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Required when --intake is not provided.")
+    @click.option("--customer", "customer_identifier", default=None,
+                  help="Required when --intake is not provided.")
+    @click.option("--bike", "bike_identifier", default=None,
+                  help="Required when --intake is not provided.")
+    @click.option("--title", required=True)
+    @click.option("--description", default=None)
+    @click.option("--priority", type=click.IntRange(1, 5), default=3)
+    @click.option("--estimated-hours", "estimated_hours",
+                  type=float, default=None)
+    @click.option("--parts-cost-cents", "estimated_parts_cost_cents",
+                  type=int, default=None,
+                  help="Estimated parts cost in cents (optional).")
+    @click.option("--mechanic", "mechanic_user_id", type=int, default=None,
+                  help="User id of the assigned mechanic (optional).")
+    def wo_create(
+        intake_identifier: Optional[int],
+        shop_identifier: Optional[str],
+        customer_identifier: Optional[str],
+        bike_identifier: Optional[str],
+        title: str,
+        description: Optional[str],
+        priority: int,
+        estimated_hours: Optional[float],
+        estimated_parts_cost_cents: Optional[int],
+        mechanic_user_id: Optional[int],
+    ) -> None:
+        """Create a new work order (starts in draft status)."""
+        console = get_console()
+        init_db()
+
+        if intake_identifier is not None:
+            intake = get_intake(intake_identifier)
+            if intake is None:
+                raise click.ClickException(
+                    f"Intake not found: id={intake_identifier}"
+                )
+            direct_args = any([
+                shop_identifier, customer_identifier, bike_identifier,
+            ])
+            if direct_args:
+                raise click.ClickException(
+                    "--intake is mutually exclusive with "
+                    "--shop/--customer/--bike."
+                )
+            shop_id = intake["shop_id"]
+            customer_id = intake["customer_id"]
+            vehicle_id = intake["vehicle_id"]
+        else:
+            if not (shop_identifier and customer_identifier and bike_identifier):
+                raise click.ClickException(
+                    "Without --intake, all of --shop, --customer, --bike "
+                    "are required."
+                )
+            shop = _resolve_shop_identifier(shop_identifier)
+            customer = _resolve_customer_identifier(customer_identifier)
+            bike = _resolve_bike_slug_or_id(bike_identifier)
+            shop_id = shop["id"]
+            customer_id = customer["id"]
+            vehicle_id = bike["id"]
+
+        try:
+            wo_id = create_work_order(
+                shop_id=shop_id,
+                vehicle_id=vehicle_id,
+                customer_id=customer_id,
+                title=title,
+                description=description,
+                priority=priority,
+                estimated_hours=estimated_hours,
+                estimated_parts_cost_cents=estimated_parts_cost_cents,
+                intake_visit_id=intake_identifier,
+                assigned_mechanic_user_id=mechanic_user_id,
+            )
+        except (ValueError, WorkOrderFKError) as e:
+            raise click.ClickException(str(e)) from e
+        row = get_work_order(wo_id)
+        assert row is not None
+        console.print(f"[green]Created work order id={wo_id}.[/green]")
+        _render_work_order_panel(console, row)
+
+    @work_order_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--bike", "bike_identifier", default=None)
+    @click.option("--customer", "customer_identifier", default=None)
+    @click.option("--mechanic", "mechanic_user_id", type=int, default=None)
+    @click.option("--intake", "intake_visit_id", type=int, default=None)
+    @click.option(
+        "--status",
+        type=click.Choice(list(WORK_ORDER_STATUSES) + ["all"],
+                          case_sensitive=False),
+        default=None,
+        help="Single status filter; 'all' includes terminal.",
+    )
+    @click.option("--priority", type=click.IntRange(1, 5), default=None)
+    @click.option("--since", default=None,
+                  help="Relative offset (7d/24h/30m) or ISO timestamp.")
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def wo_list(
+        shop_identifier: Optional[str],
+        bike_identifier: Optional[str],
+        customer_identifier: Optional[str],
+        mechanic_user_id: Optional[int],
+        intake_visit_id: Optional[int],
+        status: Optional[str],
+        priority: Optional[int],
+        since: Optional[str],
+        limit: int,
+        as_json: bool,
+    ) -> None:
+        """List work orders (default: exclude terminal completed/cancelled)."""
+        console = get_console()
+        init_db()
+        shop_id: Optional[int] = None
+        vehicle_id: Optional[int] = None
+        customer_id: Optional[int] = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        if bike_identifier is not None:
+            vehicle_id = _resolve_bike_slug_or_id(bike_identifier)["id"]
+        if customer_identifier is not None:
+            customer_id = _resolve_customer_identifier(
+                customer_identifier,
+            )["id"]
+        rows = list_work_orders(
+            shop_id=shop_id,
+            vehicle_id=vehicle_id,
+            customer_id=customer_id,
+            assigned_mechanic_user_id=mechanic_user_id,
+            intake_visit_id=intake_visit_id,
+            status=status.lower() if status else None,
+            priority=priority,
+            since=since,
+            limit=limit,
+        )
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No work orders match filters.[/dim]")
+            return
+        table = Table(
+            title=f"Work orders ({status or 'active'})", show_lines=False,
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("P", justify="right")
+        table.add_column("Status")
+        table.add_column("Title")
+        table.add_column("Shop")
+        table.add_column("Customer")
+        table.add_column("Bike")
+        table.add_column("Mechanic")
+        for r in rows:
+            bike_label = " ".join(
+                str(b) for b in (
+                    r.get("vehicle_year"),
+                    r.get("vehicle_make"),
+                    r.get("vehicle_model"),
+                ) if b
+            )
+            table.add_row(
+                str(r["id"]),
+                str(r.get("priority", "?")),
+                str(r.get("status", "?")),
+                str(r.get("title", "?")),
+                str(r.get("shop_name", "?")),
+                str(r.get("customer_name", "?")),
+                bike_label or "?",
+                str(r.get("assigned_mechanic_name") or "—"),
+            )
+        console.print(table)
+
+    @work_order_group.command("show")
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def wo_show(wo_id: int, as_json: bool) -> None:
+        """Show one work order."""
+        console = get_console()
+        init_db()
+        row = get_work_order(wo_id)
+        if row is None:
+            raise click.ClickException(f"work order not found: id={wo_id}")
+        if as_json:
+            click.echo(_json.dumps(row, default=str, indent=2))
+            return
+        _render_work_order_panel(console, row)
+
+    @work_order_group.command("update")
+    @click.argument("wo_id", type=int)
+    @click.option("--set", "set_pairs", multiple=True,
+                  help="Repeated KEY=VALUE updates, e.g. --set priority=1.")
+    def wo_update(wo_id: int, set_pairs: tuple[str, ...]) -> None:
+        """Update whitelisted fields on a work order.
+
+        Allowed keys: title, description, priority, estimated_hours,
+        estimated_parts_cost_cents, actual_hours.
+        """
+        console = get_console()
+        init_db()
+        if not set_pairs:
+            raise click.ClickException(
+                "No updates specified. Pass one or more --set KEY=VALUE."
+            )
+        updates = _parse_set_pairs(set_pairs)
+        try:
+            changed = update_work_order(wo_id, updates)
+        except (WorkOrderNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if not changed:
+            console.print(
+                "[yellow]No updatable fields recognized in --set payload.[/yellow]"
+            )
+            return
+        row = get_work_order(wo_id)
+        assert row is not None
+        console.print(f"[green]Updated work order id={wo_id}.[/green]")
+        _render_work_order_panel(console, row)
+
+    @work_order_group.command("start")
+    @click.argument("wo_id", type=int)
+    def wo_start(wo_id: int) -> None:
+        """Transition a work order to in_progress.
+
+        Works from both 'open' (initial start) and 'on_hold' (resume).
+        For an 'on_hold' order you can also use `resume` for clarity.
+        """
+        console = get_console()
+        init_db()
+        row = get_work_order(wo_id)
+        if row is None:
+            raise click.ClickException(f"work order not found: id={wo_id}")
+        if row["status"] == "draft":
+            # Auto-open when starting a draft. Mechanic convenience —
+            # one less click from intake to in-progress.
+            try:
+                open_work_order(wo_id)
+            except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+                raise click.ClickException(str(e)) from e
+        try:
+            start_work(wo_id)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Started work order id={wo_id}.[/green]")
+
+    @work_order_group.command("pause")
+    @click.argument("wo_id", type=int)
+    @click.option("--reason", default=None,
+                  help="Why the work is paused (e.g. 'parts back-ordered').")
+    def wo_pause(wo_id: int, reason: Optional[str]) -> None:
+        """Transition in_progress → on_hold."""
+        console = get_console()
+        init_db()
+        if reason is None:
+            reason = click.prompt(
+                "Reason (optional, press Enter to skip)",
+                default="", show_default=False,
+            ) or None
+        try:
+            pause_work(wo_id, reason=reason)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[yellow]Paused work order id={wo_id}.[/yellow]")
+
+    @work_order_group.command("resume")
+    @click.argument("wo_id", type=int)
+    def wo_resume(wo_id: int) -> None:
+        """Transition on_hold → in_progress (alias for start on paused)."""
+        console = get_console()
+        init_db()
+        try:
+            resume_work(wo_id)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Resumed work order id={wo_id}.[/green]")
+
+    @work_order_group.command("complete")
+    @click.argument("wo_id", type=int)
+    @click.option("--actual-hours", "actual_hours", type=float, default=None,
+                  help="Actual hours worked (optional, persisted if given).")
+    def wo_complete(
+        wo_id: int, actual_hours: Optional[float],
+    ) -> None:
+        """Transition in_progress → completed."""
+        console = get_console()
+        init_db()
+        try:
+            complete_work_order(wo_id, actual_hours=actual_hours)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[blue]Completed work order id={wo_id}.[/blue]"
+        )
+
+    @work_order_group.command("cancel")
+    @click.argument("wo_id", type=int)
+    @click.option("--reason", default="customer-withdrew",
+                  help="Cancellation reason.")
+    @click.option("--yes", is_flag=True, default=False,
+                  help="Skip confirmation prompt.")
+    def wo_cancel(wo_id: int, reason: str, yes: bool) -> None:
+        """Transition any non-terminal status → cancelled."""
+        console = get_console()
+        init_db()
+        row = get_work_order(wo_id)
+        if row is None:
+            raise click.ClickException(f"work order not found: id={wo_id}")
+        if not yes:
+            click.confirm(
+                f"Really cancel work order id={wo_id} "
+                f"(was {row['status']!r})?",
+                abort=True,
+            )
+        try:
+            cancel_work_order(wo_id, reason=reason)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[red]Cancelled work order id={wo_id} (reason={reason}).[/red]"
+        )
+
+    @work_order_group.command("reopen")
+    @click.argument("wo_id", type=int)
+    @click.option("--yes", is_flag=True, default=False,
+                  help="Skip confirmation prompt.")
+    def wo_reopen(wo_id: int, yes: bool) -> None:
+        """Transition completed|cancelled → open (clears terminal fields)."""
+        console = get_console()
+        init_db()
+        row = get_work_order(wo_id)
+        if row is None:
+            raise click.ClickException(f"work order not found: id={wo_id}")
+        if row["status"] == "open":
+            console.print("[yellow]Work order is already open.[/yellow]")
+            return
+        if not yes:
+            click.confirm(
+                f"Really reopen work order id={wo_id} "
+                f"(was {row['status']!r})? Terminal timestamps will be cleared.",
+                abort=True,
+            )
+        try:
+            reopen_work_order(wo_id)
+        except (InvalidWorkOrderTransition, WorkOrderNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Reopened work order id={wo_id}.[/green]")
+
+    @work_order_group.command("assign")
+    @click.argument("wo_id", type=int)
+    @click.option("--mechanic", "mechanic_user_id", type=int, required=True,
+                  help="User id of the mechanic to assign.")
+    def wo_assign(wo_id: int, mechanic_user_id: int) -> None:
+        """Assign a mechanic to a work order."""
+        console = get_console()
+        init_db()
+        try:
+            assign_mechanic(wo_id, mechanic_user_id)
+        except (WorkOrderNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Assigned mechanic user_id={mechanic_user_id} to "
+            f"work order id={wo_id}.[/green]"
+        )
+
+    @work_order_group.command("unassign")
+    @click.argument("wo_id", type=int)
+    def wo_unassign(wo_id: int) -> None:
+        """Clear the assigned mechanic on a work order."""
+        console = get_console()
+        init_db()
+        try:
+            unassign_mechanic(wo_id)
+        except WorkOrderNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Unassigned mechanic from work order id={wo_id}.[/green]"
+        )

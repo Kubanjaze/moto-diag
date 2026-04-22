@@ -259,7 +259,7 @@ Shop-level features: log bikes in your shop, track issues across the fleet, tria
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 160 | Shop profile + multi-bike intake | ✅ | Migration 025: `shops` + `intake_visits` tables. `shop/shop_repo.py` (337 LoC, 11 fns + hours_json validator) + `shop/intake_repo.py` (481 LoC, guarded `open→closed\|cancelled→(reopen)→open` lifecycle). `cli/shop.py` (1003 LoC) new top-level `motodiag shop` group with 3 subgroups × 22 subcommands — `profile` (5), `customer` (9, first CLI for Phase 113 dormant `crm/`), `intake` (8). 44 tests GREEN. Zero AI. |
-| 161 | Work order system | 🔲 | Create/assign/track work orders per bike (was 149) |
+| 161 | Work order system | ✅ | Migration 026: `work_orders` table with denormalized shop_id/vehicle_id/customer_id + intake_visit_id FK SET NULL + 4 indexes. `shop/work_order_repo.py` (748 LoC, 14 fns + 7 dedicated lifecycle transitions + guarded `draft→open→in_progress→(on_hold\|completed\|cancelled)→(reopen)→open` + composable list filters). `cli/shop.py` +473 LoC = `motodiag shop work-order {create,list,show,update,start,pause,resume,complete,cancel,reopen,assign,unassign}` (12 subcommands). 47 tests GREEN. Forward-compat bug fix: Phase 160 + Phase 161 rollback tests migrated to `rollback_to_version` pattern after Phase 161 FK broke Phase 160's bare-drop test. |
 | 162 | Issue logging + categorization | 🔲 | Log reported issues per bike, categorize by system/severity (was 150) |
 | 163 | Repair priority scoring | 🔲 | AI-ranked priority: safety > ridability > cosmetic, weighted by wait time (was 151) |
 | 164 | Automated triage queue | 🔲 | "What to fix first" — sorted by priority, parts availability, bay time (was 152) |
