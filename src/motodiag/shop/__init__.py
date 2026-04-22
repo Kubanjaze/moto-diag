@@ -7,6 +7,25 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.priority_models import (
+    PriorityScore,
+    PriorityScoreResponse,
+    PriorityScorerInput,
+)
+from motodiag.shop.priority_scorer import (
+    CONFIDENCE_APPLY_THRESHOLD,
+    DEFAULT_RESCORE_LIMIT,
+    DEFAULT_SESSION_BUDGET_CENTS,
+    PER_CALL_COST_CAP_CENTS,
+    PRIORITY_SYSTEM_PROMPT,
+    PriorityBudgetExhausted,
+    PriorityCostCapExceeded,
+    PriorityScorerError,
+    get_latest_priority_score,
+    priority_budget,
+    rescore_all_open,
+    score_work_order,
+)
 from motodiag.shop.ai_client import (
     MODEL_ALIASES,
     MODEL_PRICING,
@@ -95,6 +114,22 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # priority_scorer + priority_models (Phase 163)
+    "CONFIDENCE_APPLY_THRESHOLD",
+    "DEFAULT_RESCORE_LIMIT",
+    "DEFAULT_SESSION_BUDGET_CENTS",
+    "PER_CALL_COST_CAP_CENTS",
+    "PRIORITY_SYSTEM_PROMPT",
+    "PriorityBudgetExhausted",
+    "PriorityCostCapExceeded",
+    "PriorityScore",
+    "PriorityScoreResponse",
+    "PriorityScorerError",
+    "PriorityScorerInput",
+    "get_latest_priority_score",
+    "priority_budget",
+    "rescore_all_open",
+    "score_work_order",
     # ai_client (Phase 162.5)
     "MODEL_ALIASES",
     "MODEL_PRICING",

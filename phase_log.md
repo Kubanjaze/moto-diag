@@ -668,3 +668,37 @@ Zero migrations, zero CLI surface, zero schema changes. Pure helper-module micro
 **Project version:** 0.9.3 → **0.9.4**.
 
 Next: Phase 163 (AI priority scoring) composes against `ShopAIClient.ask(...)` in 3 lines instead of ~80 LoC of duplicated SDK + cost + cache integration.
+
+### 2026-04-22 00:00 — Phase 163 complete (Track G first AI phase)
+
+**First Track G phase to spend AI tokens.** Composes against the Phase 162.5 `shop/ai_client.py` substrate — zero direct `anthropic` imports anywhere (enforced by `test_priority_scorer_does_not_import_anthropic_directly` anti-regression grep test). Two new modules:
+
+- `shop/priority_models.py` (82 LoC) — `PriorityScorerInput` + `PriorityScoreResponse` + `PriorityScore` Pydantic models. Separated from priority_scorer so tests import schemas without pulling SDK seam.
+- `shop/priority_scorer.py` (311 LoC) — `score_work_order` + `rescore_all_open` + `priority_budget` + `get_latest_priority_score` + 6 helper functions (`_wait_time_penalty`, `_priority_from_rubric`, `_should_apply`, `_load_issues_safe`, `_find_kb_matches_safe`, `_customer_prior_ticket_count`) + 3 exceptions (`PriorityScorerError`, `PriorityCostCapExceeded`, `PriorityBudgetExhausted`). Constants: CONFIDENCE_APPLY_THRESHOLD=0.75, PER_CALL_COST_CAP_CENTS=3, DEFAULT_SESSION_BUDGET_CENTS=50, DEFAULT_RESCORE_LIMIT=10.
+
+System prompt baked from Domain-Researcher 4-tier rubric (CRITICAL safety / HIGH ridability / MEDIUM service-interval / LOW cosmetic) + wait-time aging (24h/72h penalties) + customer-history bonus (0/+25/+75/+150). Sent with `cache_control={"type":"ephemeral"}` automatically via `ShopAIClient` — every `score` call after the first within 5 minutes hits the prompt cache.
+
+**Mechanic-intent preservation:** AI-proposed priority overwrites `work_orders.priority` ONLY when `confidence > 0.75`. Below threshold, score is logged to Phase 131 `ai_response_cache` (kind='priority_score') but DB priority untouched. Safety override (`safety_risk=true AND priority=1`) bypasses threshold. `--force` CLI flag is the explicit human override.
+
+**Write-back routing:** `update_work_order(wo_id, {"priority": int})` from Phase 161 — never raw SQL. Inherits `_validate_priority` (1-5 CHECK) for free.
+
+CLI: new `motodiag shop priority {score, rescore-all, show, budget}` (4 subcommands, +188 LoC in cli/shop.py). All AI calls in tests injected via `_default_scorer_fn=None` seam — zero live tokens.
+
+**Tests:** 26 GREEN across 5 classes (TestPureHelpers×9 + TestScoreSingle×7 + TestRescoreAll×5 + TestPriorityCLI×4 + TestAntiRegression×1) in 10.74s. Targeted regression sample: 209 GREEN in 111.76s covering Phase 131 (ai_response_cache direct dependency) + Track G phases 160-163 + Phase 162.5.
+
+**Phase 162.5 extraction paid off as predicted:** scorer module composes against `ShopAIClient.ask()` in 5 lines instead of the ~80 LoC of duplicated SDK + cost + cache integration that 162.5's plan estimated. Injection seam pattern (`_default_scorer_fn`) is the load-bearing test convention every Track G AI phase will use (166, 167). Anti-regression grep test enforces no direct anthropic imports going forward — if a future Phase 175 author tries to bypass `shop/ai_client`, the test fails loudly.
+
+**Project version:** 0.9.4 → **0.9.5**.
+
+**Track G AI substrate (162.5) + first AI phase (163) = canonical pattern:**
+1. Pydantic models in their own file (testable without SDK).
+2. Scorer/orchestrator module composes against `ShopAIClient.ask()`.
+3. `_default_scorer_fn=None` injection seam for tests.
+4. Write-back via existing whitelist (never raw SQL).
+5. Anti-regression grep test enforces shop.ai_client composition.
+6. Phase 131 `ai_response_cache` partition via unique `kind=` value.
+7. Per-call cost cap (diagnostic) + session budget cap (hard stop with PriorityBudgetExhausted carrying partial results).
+
+Phases 166 (AI parts sourcing) and 167 (AI labor estimation) follow this exact shape. Pattern is now the Track G AI canonical.
+
+Next: Phase 164 (deterministic triage queue, no AI).

@@ -41,6 +41,8 @@ from motodiag.shop import (
     InvalidWorkOrderTransition,
     IssueFKError,
     IssueNotFoundError,
+    PriorityBudgetExhausted,
+    PriorityScorerError,
     ShopNameExistsError,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
@@ -74,6 +76,9 @@ from motodiag.shop import (
     mark_wontfix_issue,
     open_work_order,
     pause_work,
+    priority_budget,
+    rescore_all_open,
+    score_work_order,
     reopen_intake,
     reopen_issue,
     reopen_work_order,
@@ -1908,3 +1913,187 @@ def register_shop(cli_group: click.Group) -> None:
         for sev, n in stats["by_severity"].items():
             t3.add_row(sev, str(n))
         console.print(t3)
+
+    # -----------------------------------------------------------------
+    # shop priority {score, rescore-all, show, budget}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("priority")
+    def priority_group() -> None:
+        """AI-ranked repair priority scoring (Phase 163)."""
+
+    def _render_priority_score(console, ps) -> None:
+        applied_color = "green" if ps.applied else "yellow"
+        applied_label = (
+            "[green]APPLIED[/green]" if ps.applied
+            else "[yellow]LOGGED ONLY[/yellow]"
+        )
+        safety_label = (
+            "[bold red]SAFETY-RISK[/bold red] " if ps.safety_risk else ""
+        )
+        cache_label = (
+            "[dim](cache hit)[/dim]" if ps.cache_hit else ""
+        )
+        lines = [
+            f"[bold]WO id={ps.wo_id}[/bold] {applied_label} {cache_label}",
+            f"{safety_label}Priority: {ps.priority_before} → "
+            f"[bold]{ps.priority_after}[/bold]",
+            f"Confidence: {ps.confidence:.2f}",
+            f"Ridability impact: {ps.ridability_impact}",
+            f"\nRationale: {ps.rationale}",
+            f"\nModel: {ps.ai_model}",
+            f"Tokens: {ps.tokens_in} in / {ps.tokens_out} out",
+            f"Cost: {ps.cost_cents}¢",
+        ]
+        console.print(Panel("\n".join(lines), title="Priority score"))
+
+    @priority_group.command("score")
+    @click.argument("wo_id", type=int)
+    @click.option(
+        "--model",
+        type=click.Choice(["haiku", "sonnet"], case_sensitive=False),
+        default="haiku",
+    )
+    @click.option(
+        "--force", is_flag=True, default=False,
+        help="Apply AI priority even on low confidence.",
+    )
+    @click.option(
+        "--escalate-on-low-confidence", is_flag=True, default=False,
+        help="Re-run with sonnet if first-pass confidence < 0.50.",
+    )
+    @click.option("--no-cache", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def priority_score_cmd(
+        wo_id, model, force, escalate_on_low_confidence, no_cache, as_json,
+    ):
+        """Score one work order against the AI priority rubric."""
+        console = get_console()
+        init_db()
+        try:
+            ps = score_work_order(
+                wo_id, model=model.lower(),
+                use_cache=not no_cache,
+                force=force,
+                escalate_on_low_confidence=escalate_on_low_confidence,
+            )
+        except (PriorityScorerError, ShopNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(ps.model_dump(mode="json"), indent=2))
+            return
+        _render_priority_score(console, ps)
+
+    @priority_group.command("rescore-all")
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--since", default=None,
+                  help="Relative offset (24h/7d) or ISO timestamp.")
+    @click.option("--limit", type=int, default=10)
+    @click.option("--budget-cents", "budget_cents", type=int, default=50)
+    @click.option(
+        "--model",
+        type=click.Choice(["haiku", "sonnet"], case_sensitive=False),
+        default="haiku",
+    )
+    @click.option("--dry-run", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def priority_rescore_all_cmd(
+        shop_id, since, limit, budget_cents, model, dry_run, as_json,
+    ):
+        """Re-score every open / in-progress / on-hold WO matching filters."""
+        console = get_console()
+        init_db()
+        try:
+            results = rescore_all_open(
+                shop_id=shop_id, since=since, limit=limit,
+                budget_cents=budget_cents, model=model.lower(),
+                dry_run=dry_run,
+            )
+        except PriorityBudgetExhausted as e:
+            console.print(f"[yellow]{e}[/yellow]")
+            results = e.scored_so_far
+        except PriorityScorerError as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump(mode="json") for r in results], indent=2,
+            ))
+            return
+        if not results:
+            console.print("[dim]No work orders matched filters.[/dim]")
+            return
+        table = Table(
+            title=f"Priority scoring ({len(results)} WOs)",
+            show_header=True,
+        )
+        table.add_column("WO", justify="right")
+        table.add_column("P-before", justify="right")
+        table.add_column("P-after", justify="right")
+        table.add_column("Conf", justify="right")
+        table.add_column("Safety")
+        table.add_column("Applied")
+        table.add_column("Cost¢", justify="right")
+        for r in results:
+            table.add_row(
+                str(r.wo_id),
+                str(r.priority_before),
+                str(r.priority_after),
+                f"{r.confidence:.2f}",
+                "🚨" if r.safety_risk else "—",
+                "✅" if r.applied else "—",
+                str(r.cost_cents),
+            )
+        console.print(table)
+        total_cost = sum(r.cost_cents for r in results)
+        console.print(f"\nTotal cost: {total_cost}¢")
+
+    @priority_group.command("show")
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def priority_show_cmd(wo_id, as_json):
+        """Show the latest cached priority score for a WO."""
+        from motodiag.shop import get_latest_priority_score
+        console = get_console()
+        init_db()
+        row = get_latest_priority_score(wo_id)
+        if row is None:
+            raise click.ClickException(
+                f"no priority score found for wo_id={wo_id}"
+            )
+        if as_json:
+            click.echo(_json.dumps(row, default=str, indent=2))
+            return
+        lines = [
+            f"[bold]WO id={wo_id}[/bold]",
+            f"Priority: {row.get('priority')}",
+            f"Confidence: {row.get('confidence')}",
+            f"Safety risk: {row.get('safety_risk')}",
+            f"Rationale: {row.get('rationale')}",
+            f"Model: {row.get('ai_model')}",
+            f"Tokens: {row.get('tokens_in')} in / {row.get('tokens_out')} out",
+            f"Cost: {row.get('cost_cents')}¢",
+            f"Generated: {row.get('generated_at')}",
+        ]
+        console.print(Panel("\n".join(lines), title="Cached priority score"))
+
+    @priority_group.command("budget")
+    @click.option("--from", "since", default=None,
+                  help="ISO date or relative offset (e.g. '30d').")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def priority_budget_cmd(since, as_json):
+        """Sum cumulative priority-scoring spend."""
+        console = get_console()
+        init_db()
+        rollup = priority_budget(since=since)
+        if as_json:
+            click.echo(_json.dumps(rollup, indent=2))
+            return
+        console.print(Panel(
+            f"Calls: {rollup['calls']}\n"
+            f"Tokens in: {rollup['tokens_in']:,}\n"
+            f"Tokens out: {rollup['tokens_out']:,}\n"
+            f"Cost: {rollup['cost_cents']}¢ "
+            f"(${rollup['cost_cents']/100:.2f})",
+            title="Priority scoring budget"
+            + (f" (since {since})" if since else ""),
+        ))
