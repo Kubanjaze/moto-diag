@@ -19,6 +19,8 @@ from motodiag.cli.completion import register_completion
 from motodiag.cli.diagnose import register_diagnose, register_quick
 from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
+from motodiag.cli.apikey import register_apikey
+from motodiag.cli.billing import register_subscription
 from motodiag.cli.serve import register_serve
 from motodiag.cli.shop import register_shop
 from motodiag.cli.theme import get_console, status, tier_style
@@ -749,6 +751,12 @@ register_shop(cli)
 # the FastAPI HTTP server via uvicorn). Must come before completion
 # so shell-completion sees it.
 register_serve(cli)
+
+# Phase 176: register `apikey` + `subscription` subgroups (Track H
+# monetization gate — API key management + Stripe billing CLI).
+# Must come before completion so shell-completion sees them.
+register_apikey(cli)
+register_subscription(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

@@ -88,6 +88,19 @@ def _exc_class_chain():
     from motodiag.shop.workflow_rules import (
         DuplicateRuleNameError, InvalidEventError, RuleNotFoundError,
     )
+    # Phase 176 — auth + billing
+    from motodiag.auth.api_key_repo import (
+        ApiKeyNotFoundError, InvalidApiKeyError,
+    )
+    from motodiag.auth.deps import (
+        SubscriptionRequiredError,
+        SubscriptionTierInsufficientError,
+    )
+    from motodiag.auth.rate_limiter import RateLimitExceededError
+    from motodiag.billing.providers import (
+        BillingProviderError, StripeLibraryMissingError,
+        WebhookSignatureError,
+    )
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -148,6 +161,24 @@ def _exc_class_chain():
          "Invalid rule condition"),
         (InvalidActionError, 400, "invalid-action",
          "Invalid rule action"),
+        # Phase 176 — auth / billing / rate limit
+        (InvalidApiKeyError, 401, "invalid-api-key",
+         "Invalid or missing API key"),
+        (ApiKeyNotFoundError, 404, "api-key-not-found",
+         "API key not found"),
+        (SubscriptionRequiredError, 402, "subscription-required",
+         "Active subscription required"),
+        (SubscriptionTierInsufficientError, 402,
+         "subscription-tier-insufficient",
+         "Subscription tier insufficient"),
+        (RateLimitExceededError, 429, "rate-limit-exceeded",
+         "Rate limit exceeded"),
+        (WebhookSignatureError, 400, "webhook-signature-failed",
+         "Webhook signature verification failed"),
+        (StripeLibraryMissingError, 500, "stripe-not-installed",
+         "Stripe library not installed on server"),
+        (BillingProviderError, 502, "billing-provider-error",
+         "Billing provider error"),
     ]
 
 
@@ -190,6 +221,24 @@ async def _value_error_handler(request: Request, exc: Exception):
     )
 
 
+async def _rate_limit_handler(request: Request, exc: Exception):
+    """Specialized handler that adds ``Retry-After`` +
+    ``X-RateLimit-*`` headers to the 429 response."""
+    retry_after = getattr(exc, "retry_after_s", 60)
+    limit_per_minute = getattr(exc, "limit_per_minute", None)
+    tier = getattr(exc, "tier", "unknown")
+    response = _problem_response(
+        request, status=429, type_slug="rate-limit-exceeded",
+        title="Rate limit exceeded",
+        detail=str(exc) if str(exc) else None,
+    )
+    response.headers["Retry-After"] = str(int(retry_after))
+    if limit_per_minute is not None:
+        response.headers["X-RateLimit-Limit"] = str(limit_per_minute)
+    response.headers["X-RateLimit-Tier"] = str(tier)
+    return response
+
+
 async def _unhandled_handler(request: Request, exc: Exception):
     """Last-resort handler. Logs the stack trace; returns a safe
     500 body (no server internals exposed to clients)."""
@@ -218,4 +267,9 @@ def register_exception_handlers(app: FastAPI) -> None:
         app.add_exception_handler(
             exc_cls, _make_handler(status, slug, title),
         )
+    # Specialized handler must register AFTER the generic one so it wins.
+    from motodiag.auth.rate_limiter import RateLimitExceededError
+    app.add_exception_handler(
+        RateLimitExceededError, _rate_limit_handler,
+    )
     app.add_exception_handler(Exception, _unhandled_handler)

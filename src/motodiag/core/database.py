@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 36  # Phase 173: workflow_rules + workflow_rule_runs (migration 036)
+SCHEMA_VERSION = 37  # Phase 176: api_keys + subscriptions + stripe_webhook_events (migration 037)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

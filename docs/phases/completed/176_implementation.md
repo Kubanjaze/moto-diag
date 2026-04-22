@@ -1,6 +1,6 @@
 # MotoDiag Phase 176 — Auth + API Keys + Stripe + Hard Paywall
 
-**Version:** 1.0 | **Tier:** Large | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Large | **Date:** 2026-04-22
 
 ## Goal
 
@@ -447,38 +447,134 @@ subscription sync --user USER_ID    # pull from Stripe, reconcile
 
 ## Verification Checklist
 
-- [ ] Migration 037 creates 3 tables + 5 indexes + CHECK constraints.
-- [ ] SCHEMA_VERSION 36 → 37.
-- [ ] Rollback to 36 drops cleanly.
-- [ ] `generate_api_key("live")` returns `mdk_live_<32>`; `("test")`
-      returns `mdk_test_<32>`.
-- [ ] `hash_api_key` is deterministic; two different keys never
-      collide.
-- [ ] `create_api_key` persists hash + prefix; returns plaintext
-      exactly once.
-- [ ] `verify_api_key` accepts active; rejects revoked; bumps
-      `last_used_at`.
-- [ ] Rate limiter: within limit → allowed; over limit → blocked
-      with retry_after.
-- [ ] Per-tier limits honored.
-- [ ] `X-RateLimit-*` headers set.
-- [ ] `/healthz` + `/v1/version` exempt from rate limit.
-- [ ] `require_api_key` 401s on missing / invalid header.
-- [ ] `require_tier("shop")` passes for shop+company users; 402s
-      for individual.
-- [ ] `FakeBillingProvider.create_checkout_session` returns
-      deterministic URL.
-- [ ] Stripe webhook with valid signature → dispatches handler; same
-      event replayed → 200 but handler not re-called.
-- [ ] Stripe webhook with bad signature → 400.
-- [ ] Subscription CRUD + status transitions work.
-- [ ] `customer.subscription.created` webhook creates a subscription
-      row with correct tier.
-- [ ] CLI `apikey {create, list, revoke, show}` round-trip.
-- [ ] CLI `subscription {show, checkout-url, portal-url, cancel}`
-      round-trip.
-- [ ] Phase 113/118/131/153/160-175 tests still GREEN.
-- [ ] Zero AI calls.
+- [x] Migration 037: api_keys + stripe_webhook_events created;
+      subscriptions extended with 6 new columns (Phase 118 reuse
+      pattern). 4 new indexes.
+- [x] SCHEMA_VERSION 36 → 37.
+- [x] Rollback to 36 drops cleanly (api_keys + webhook_events
+      dropped; subscriptions rename-recreated back to Phase 118 shape).
+- [x] `generate_api_key("live")` returns `mdk_live_<32>`; `("test")`
+      returns `mdk_test_<32>`; bogus env raises.
+- [x] `hash_api_key` is deterministic sha256 hex (64 chars).
+- [x] `create_api_key` persists hash + prefix; returns plaintext
+      exactly once; caller must display immediately.
+- [x] `verify_api_key` accepts active; rejects revoked; rejects
+      unknown; rejects malformed. (Best-effort `last_used_at` update
+      covered by integration test path.)
+- [x] Rate limiter: within limit → allowed; over limit → blocked
+      with `retry_after_s > 0`.
+- [x] Minute window resets on new epoch-minute.
+- [x] Daily window enforced separately from minute.
+- [x] Per-tier limits honored (anonymous / individual / shop /
+      company get different budgets).
+- [x] `X-RateLimit-Limit` / `X-RateLimit-Remaining` / `X-RateLimit-
+      Reset` / `X-RateLimit-Tier` set on every response.
+- [x] `/healthz` + `/v1/version` + `/v1/billing/webhooks/*` exempt
+      from rate limit.
+- [x] 429 response includes `Retry-After` header.
+- [x] `require_api_key` 401s on missing / invalid / revoked key.
+- [x] `X-API-Key` header AND `Authorization: Bearer <key>` both
+      accepted.
+- [x] `require_tier("shop")` 402s for no-sub callers (distinct type
+      URI: subscription-required) AND for individual-tier callers
+      (distinct type: subscription-tier-insufficient).
+- [x] Shop tier satisfies shop requirement; company satisfies both.
+- [x] `FakeBillingProvider` produces deterministic checkout/portal
+      URLs; rejects signatures other than `"fake_signature_ok"`.
+- [x] Stripe webhook with valid signature → dispatches handler;
+      replay returns `processed=False` + no duplicate sub rows.
+- [x] `customer.subscription.created` webhook creates sub row with
+      correct tier + stripe IDs.
+- [x] `customer.subscription.updated` upserts in place (no duplicates).
+- [x] `customer.subscription.deleted` marks status='canceled';
+      `get_active_subscription` returns None.
+- [x] Unhandled event types get recorded + marked processed (audit
+      preserved) but no-op.
+- [x] CLI `apikey {create, list, revoke, show}` round-trip.
+- [x] CLI `subscription {show, checkout-url, portal-url, cancel,
+      sync}` round-trip.
+- [x] `StripeBillingProvider._stripe()` raises
+      `StripeLibraryMissingError` when `stripe` lib absent.
+- [x] Phase 113/118/131/153/160-175 tests still GREEN (736/736 + 1
+      Phase 174 assertion widened from == 36 to >= 36).
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- **Subscriptions table extended, not recreated.** Phase 118 already
+  shipped a `subscriptions` table; Phase 169's substrate-reuse
+  pattern dictated that Phase 176 extend via ALTER TABLE (6 new
+  columns) rather than duplicate. Rollback uses the rename-recreate
+  pattern to restore Phase 118 shape.
+- **CLI file named `billing.py` not `subscription.py`.** Phase 109
+  already shipped a utility module at
+  `src/motodiag/cli/subscription.py` (tier-enforcement decorator
+  + TIER_LIMITS dict — not a CLI subgroup). My new CLI subgroup
+  landed at `cli/billing.py` to avoid shadowing. Names don't
+  conflict — the Click subgroup is still `motodiag subscription`.
+- **Middleware-raised exceptions don't reach FastAPI handlers.**
+  First test run failed because `RateLimitExceededError` raised
+  inside `BaseHTTPMiddleware.dispatch()` bubbles through
+  Starlette's stream layer unhandled — FastAPI's exception-handler
+  registry only picks up exceptions raised inside route handlers,
+  not middleware. Fixed by building the 429 response inline in the
+  middleware (JSONResponse with ProblemDetail body + Retry-After
+  header). The specialized handler in `errors.py` for
+  `RateLimitExceededError` still exists as a safety net for any
+  route-raised instances.
+- **Gate 8 (Phase 174) assertion widened.** Phase 174's
+  `test_schema_version_at_gate` asserted `SCHEMA_VERSION == 36`
+  exactly; Phase 176 legitimately bumps to 37. Widened to `>= 36`
+  (same widening pattern as Phase 172 applied to Phase 171). The
+  intent (Gate 8 adds no migration) still holds via the phase_log +
+  completion docs.
+- **58 tests landed vs ~50 planned.** Extra tests covered the
+  in-middleware 429 path, CLI happy paths, and the Stripe lazy-
+  import safeguard. All were revealed as worth testing during the
+  build.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Phase 176 tests landed | 58 GREEN (10 classes) |
+| Full regression (w/ 175 + 174) | 89/89 GREEN (after Phase 174 widening) |
+| Targeted regression | 736/736 GREEN in 8m 3s |
+| Coverage range | Phase 113 + 118 + 131 + 153 + Track G 160-174 + 162.5 + 175 + 176 |
+| New code | ~1400 LoC (auth + billing + middleware + routes + CLI) |
+| `auth/api_key_repo.py` | 201 LoC |
+| `auth/rate_limiter.py` | 196 LoC |
+| `auth/deps.py` | 178 LoC |
+| `billing/providers.py` | 242 LoC |
+| `billing/webhook_handlers.py` | 237 LoC |
+| `billing/subscription_repo.py` | +145 LoC (Phase 176 additions) |
+| `api/routes/billing.py` | 175 LoC |
+| `api/middleware.py` | +162 LoC (RateLimitMiddleware) |
+| `api/errors.py` | +54 LoC (8 new exception mappings + rate-limit handler) |
+| `cli/apikey.py` | 148 LoC |
+| `cli/billing.py` | 189 LoC |
+| `core/config.py` | +20 LoC (9 new fields) |
+| SCHEMA_VERSION | 36 → **37** |
+| AI calls | 0 (zero tokens spent) |
+| Tests run with `stripe` lib missing | ✅ (FakeBillingProvider exclusively) |
+
+**Key finding:** Phase 176 is the monetization gate. API keys +
+rate limiting + Stripe billing + hard tier-based paywall all land
+behind one coherent set of FastAPI dependencies: `get_api_key` →
+`require_api_key` → `get_current_user` → `require_tier(X)`. Routes
+opt in by adding one of them to their `dependencies=[...]` list. No
+route handler has to know about auth, subscriptions, or rate limits
+— the middleware + dep stack handles everything. The `BillingProvider`
+ABC pays off immediately: tests run entirely with
+`FakeBillingProvider` (deterministic URLs + fake HMAC) while prod
+swaps in `StripeBillingProvider` via a single `MOTODIAG_BILLING_
+PROVIDER=stripe` env var. Webhook idempotency via `event_id` PK
+means Stripe can retry freely without corrupting state — Phase
+176's `dispatch_event` returns `processed=False` on replay but
+still 200s so Stripe stops retrying. Phases 177-180 (domain CRUD
+routers) will just declare `dependencies=[Depends(require_tier(
+"individual"))]` per route; the scaffold does everything else.
+**moto-diag is now a real paywalled API service.**
 
 ## Risks
 

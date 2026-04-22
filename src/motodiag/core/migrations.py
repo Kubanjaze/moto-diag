@@ -2624,6 +2624,109 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS workflow_rules;
         """,
     ),
+    # Migration 037 — Phase 176: auth + billing substrate
+    Migration(
+        version=37,
+        name="auth_and_billing",
+        description=(
+            "Phase 176: Create `api_keys` (Stripe-style mdk_live_* "
+            "keys, sha256-hashed — plaintext never stored), extend "
+            "Phase 118 `subscriptions` with Stripe billing-cycle "
+            "columns (period_start/end, cancel_at_period_end, "
+            "trial_end, canceled_at, stripe_price_id), and create "
+            "`stripe_webhook_events` (idempotent event log keyed by "
+            "Stripe event_id). Reuses Phase 118 `subscriptions` "
+            "substrate unchanged — matches the Phase 169 pattern "
+            "(substrate reuse across phase gaps) applied to the "
+            "auth + billing domain. FK user_id CASCADE — when a "
+            "user is deleted, their keys + subscriptions disappear "
+            "(Stripe customer record lives on at Stripe regardless)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS api_keys (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                key_prefix TEXT NOT NULL,
+                key_hash TEXT NOT NULL UNIQUE,
+                name TEXT,
+                last_used_at TIMESTAMP,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                revoked_at TIMESTAMP,
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_api_keys_user
+                ON api_keys(user_id, is_active);
+            CREATE INDEX IF NOT EXISTS idx_api_keys_prefix
+                ON api_keys(key_prefix);
+
+            -- Extend Phase 118 subscriptions with Stripe billing-cycle
+            -- columns (reuse-substrate pattern, not duplication).
+            ALTER TABLE subscriptions ADD COLUMN stripe_price_id TEXT;
+            ALTER TABLE subscriptions ADD COLUMN current_period_start TIMESTAMP;
+            ALTER TABLE subscriptions ADD COLUMN current_period_end TIMESTAMP;
+            ALTER TABLE subscriptions ADD COLUMN cancel_at_period_end INTEGER NOT NULL DEFAULT 0;
+            ALTER TABLE subscriptions ADD COLUMN canceled_at TIMESTAMP;
+            ALTER TABLE subscriptions ADD COLUMN trial_end TIMESTAMP;
+
+            CREATE INDEX IF NOT EXISTS idx_subs_user_status
+                ON subscriptions(user_id, status);
+            CREATE INDEX IF NOT EXISTS idx_subs_stripe_cust
+                ON subscriptions(stripe_customer_id);
+
+            CREATE TABLE IF NOT EXISTS stripe_webhook_events (
+                event_id TEXT PRIMARY KEY,
+                type TEXT NOT NULL,
+                payload_json TEXT NOT NULL,
+                received_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                processed_at TIMESTAMP,
+                error TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_webhook_events_type
+                ON stripe_webhook_events(type);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_webhook_events_type;
+            DROP TABLE IF EXISTS stripe_webhook_events;
+            DROP INDEX IF EXISTS idx_subs_stripe_cust;
+            DROP INDEX IF EXISTS idx_subs_user_status;
+
+            -- Rollback subscriptions new columns via rename-recreate
+            -- (SQLite can't DROP COLUMN reliably on older versions)
+            CREATE TABLE subscriptions_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                tier TEXT NOT NULL DEFAULT 'individual',
+                status TEXT NOT NULL DEFAULT 'trialing',
+                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                ends_at TIMESTAMP,
+                stripe_customer_id TEXT,
+                stripe_subscription_id TEXT UNIQUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+            );
+            INSERT INTO subscriptions_rollback
+                (id, user_id, tier, status, started_at, ends_at,
+                 stripe_customer_id, stripe_subscription_id,
+                 created_at, updated_at)
+            SELECT id, user_id, tier, status, started_at, ends_at,
+                   stripe_customer_id, stripe_subscription_id,
+                   created_at, updated_at
+            FROM subscriptions;
+            DROP TABLE subscriptions;
+            ALTER TABLE subscriptions_rollback RENAME TO subscriptions;
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_user
+                ON subscriptions(user_id);
+            CREATE INDEX IF NOT EXISTS idx_subscriptions_status
+                ON subscriptions(status);
+
+            DROP INDEX IF EXISTS idx_api_keys_prefix;
+            DROP INDEX IF EXISTS idx_api_keys_user;
+            DROP TABLE IF EXISTS api_keys;
+        """,
+    ),
 ]
 
 

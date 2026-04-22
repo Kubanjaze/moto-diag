@@ -17,6 +17,7 @@ from motodiag.api.deps import get_db_path, get_settings
 from motodiag.api.errors import register_exception_handlers
 from motodiag.api.middleware import (
     AccessLogMiddleware,
+    RateLimitMiddleware,
     RequestIdMiddleware,
 )
 from motodiag.core.config import Settings
@@ -71,7 +72,12 @@ def create_app(
 
     # --- Request-scoped middleware (innermost first in FastAPI order) ---
     app.add_middleware(AccessLogMiddleware)
+    app.add_middleware(RateLimitMiddleware)
     app.add_middleware(RequestIdMiddleware)
+
+    # Reset rate limiter so each app-instance has fresh state (tests).
+    from motodiag.auth.rate_limiter import reset_rate_limiter
+    reset_rate_limiter(settings=app_settings)
 
     # --- Exception → HTTP mapping ---
     register_exception_handlers(app)
@@ -85,11 +91,13 @@ def create_app(
         )
 
     # --- Routers (lazy import to keep module-import cheap) ---
+    from motodiag.api.routes.billing import router as billing_router
     from motodiag.api.routes.meta import router as meta_router
     from motodiag.api.routes.shops import router as shops_router
 
     app.include_router(meta_router)             # /healthz, /v1/version
     app.include_router(shops_router, prefix="/v1")
+    app.include_router(billing_router, prefix="/v1")
 
     # --- Startup log ---
     logger = logging.getLogger("motodiag.api")

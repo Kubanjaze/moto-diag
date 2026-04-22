@@ -75,6 +75,27 @@ class Settings(BaseSettings):
             return []
         return [o.strip() for o in raw.split(",") if o.strip()]
 
+    # Billing (Phase 176+)
+    billing_provider: str = "fake"  # "fake" | "stripe"
+    stripe_api_key: str = ""
+    stripe_webhook_secret: str = ""
+    stripe_price_individual: str = ""
+    stripe_price_shop: str = ""
+    stripe_price_company: str = ""
+    checkout_success_url: str = "http://localhost:3000/billing/success"
+    checkout_cancel_url: str = "http://localhost:3000/billing/cancel"
+    billing_portal_return_url: str = "http://localhost:3000/billing"
+
+    # Rate limiting (Phase 176+)
+    rate_limit_anonymous_per_minute: int = 30
+    rate_limit_individual_per_minute: int = 60
+    rate_limit_shop_per_minute: int = 300
+    rate_limit_company_per_minute: int = 1000
+    rate_limit_anonymous_per_day: int = 100
+    rate_limit_individual_per_day: int = 1000
+    rate_limit_shop_per_day: int = 10000
+    rate_limit_company_per_day: int = 50000
+
     @field_validator("max_tokens")
     @classmethod
     def validate_max_tokens(cls, v: int) -> int:

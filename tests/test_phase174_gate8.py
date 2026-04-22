@@ -444,8 +444,12 @@ class TestRuleFiresAcrossLifecycle:
 class TestGate8AntiRegression:
 
     def test_schema_version_at_gate(self):
-        """Gate 8 closes at schema v36 (Phase 173's migration)."""
-        assert SCHEMA_VERSION == 36
+        """Gate 8 closed at schema v36 (Phase 173's migration).
+        Widened to >= so downstream Track H+ migrations don't
+        break this assertion — the intent (Gate 8 is read-only
+        integration coverage, adds no migration) still holds via
+        the phase_log + docs."""
+        assert SCHEMA_VERSION >= 36
 
     def test_track_g_summary_doc_exists(self):
         from pathlib import Path
