@@ -50,6 +50,16 @@ from motodiag.shop import (
     mark_invoice_paid,
     revenue_rollup,
     void_invoice,
+    customer_repeat_rate,
+    dashboard_snapshot,
+    labor_accuracy,
+    mechanic_performance,
+    overrun_rate,
+    throughput as analytics_throughput,
+    top_issues as analytics_top_issues,
+    top_parts as analytics_top_parts,
+    turnaround,
+    utilization_rollup,
     NOTIFICATION_EVENTS,
     NotificationContextError,
     NotificationNotFoundError,
@@ -3871,3 +3881,207 @@ def register_shop(cli_group: click.Group) -> None:
                 "yes" if row["has_subject"] else "—",
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # shop analytics {snapshot, throughput, turnaround, utilization,
+    #                 overruns, labor-accuracy, top-issues, top-parts,
+    #                 mechanic, customer-repeat}
+    # Phase 171 — shop analytics dashboard
+    # -----------------------------------------------------------------
+
+    @shop_group.group("analytics")
+    def analytics_group() -> None:
+        """Read-only analytics over Track G state — no writes."""
+
+    def _resolve_shop_id(identifier) -> int:
+        shop = _resolve_shop_identifier(identifier)
+        assert shop is not None
+        return int(shop["id"])
+
+    @analytics_group.command("snapshot")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--since", default="30d",
+                  help="Rolling window: 30d, 7d, 24h, or ISO timestamp.")
+    @click.option("--utilization-days", type=int, default=7)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def analytics_snapshot_cmd(
+        shop_identifier, since, utilization_days, as_json,
+    ):
+        """All-in-one dashboard snapshot."""
+        console = get_console()
+        init_db()
+        shop_id = _resolve_shop_id(shop_identifier)
+        try:
+            snap = dashboard_snapshot(
+                shop_id, since=since,
+                utilization_window_days=utilization_days,
+            )
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                snap.model_dump(), default=str, indent=2,
+            ))
+            return
+        lines = [
+            f"Shop:       {shop_id}",
+            f"Since:      {since}",
+            f"Generated:  {snap.generated_at}",
+            "",
+            f"[bold]Throughput[/bold]",
+            f"  Completed:         {snap.throughput.completed_total}",
+            f"  By status:         "
+            + ", ".join(
+                f"{k}={v}" for k, v in snap.throughput.by_status.items()
+            ),
+            "",
+            f"[bold]Turnaround (WO opened → completed)[/bold]",
+            f"  Sample size:       {snap.turnaround.sample_size}",
+            f"  Mean hours:        {snap.turnaround.mean_hours}",
+            f"  Median hours:      {snap.turnaround.median_hours}",
+            f"  p90 hours:         {snap.turnaround.p90_hours}",
+            "",
+            f"[bold]Utilization ({snap.utilization.from_date} → {snap.utilization.to_date})[/bold]",
+            f"  Mean util:         {snap.utilization.mean_pct:.1%}",
+            f"  Over-threshold days: {snap.utilization.over_threshold_days}",
+            "",
+            f"[bold]Overrun rate[/bold]",
+            f"  Total slots:       {snap.overrun.total_slots}",
+            f"  Overrun slots:     {snap.overrun.overrun_slots}",
+            f"  Rate:              {snap.overrun.rate:.1%}",
+            "",
+            f"[bold]Labor accuracy (est vs actual, ±20%)[/bold]",
+            f"  Sample:            {snap.labor_accuracy.sample_size}",
+            f"  Within ±20%:       {snap.labor_accuracy.within_pct:.1%}",
+            f"  Median delta pct:  {snap.labor_accuracy.median_delta_pct}",
+            "",
+            f"[bold]Customer repeat rate[/bold]",
+            f"  Total WOs:         {snap.customer_repeat.total_wos}",
+            f"  Repeat WOs:        {snap.customer_repeat.repeat_wos}",
+            f"  Rate:              {snap.customer_repeat.repeat_rate:.1%}",
+            "",
+            f"[bold]Revenue (Phase 169)[/bold]",
+            f"  Invoices:          {snap.revenue.invoice_count}",
+            f"  Total invoiced:    ${snap.revenue.total_invoiced_cents / 100:.2f}",
+            f"  Total paid:        ${snap.revenue.total_paid_cents / 100:.2f}",
+            f"  Pending:           ${snap.revenue.total_pending_cents / 100:.2f}",
+        ]
+        if snap.top_issues:
+            lines.append("")
+            lines.append("[bold]Top issues[/bold]")
+            for row in snap.top_issues[:5]:
+                lines.append(
+                    f"  {row.category:<20} {row.severity:<10} {row.count}"
+                )
+        if snap.top_parts:
+            lines.append("")
+            lines.append("[bold]Top parts by cost[/bold]")
+            for row in snap.top_parts[:5]:
+                lines.append(
+                    f"  {row.slug:<35} qty={row.total_qty:<4} "
+                    f"${row.total_cost_cents / 100:.2f}"
+                )
+        console.print(Panel("\n".join(lines), title="Dashboard"))
+
+    def _simple_rollup_cmd(
+        group, name: str, fn, as_model=True,
+    ):
+        @group.command(name)
+        @click.option("--shop", "shop_identifier", default=None)
+        @click.option("--since", default="30d")
+        @click.option("--json", "as_json", is_flag=True, default=False)
+        def _cmd(shop_identifier, since, as_json):
+            console = get_console()
+            init_db()
+            shop_id = _resolve_shop_id(shop_identifier)
+            try:
+                result = fn(shop_id, since=since)
+            except ValueError as e:
+                raise click.ClickException(str(e)) from e
+            if as_json or not as_model:
+                payload = (
+                    result.model_dump()
+                    if hasattr(result, "model_dump") else result
+                )
+                click.echo(_json.dumps(payload, default=str, indent=2))
+                return
+            console.print(_json.dumps(
+                result.model_dump() if hasattr(result, "model_dump") else result,
+                default=str, indent=2,
+            ))
+        _cmd.__name__ = f"analytics_{name}_cmd"
+        return _cmd
+
+    _simple_rollup_cmd(analytics_group, "throughput", analytics_throughput)
+    _simple_rollup_cmd(analytics_group, "turnaround", turnaround)
+    _simple_rollup_cmd(analytics_group, "overruns", overrun_rate)
+    _simple_rollup_cmd(analytics_group, "labor-accuracy", labor_accuracy)
+    _simple_rollup_cmd(analytics_group, "mechanic", mechanic_performance)
+    _simple_rollup_cmd(
+        analytics_group, "customer-repeat", customer_repeat_rate,
+    )
+
+    @analytics_group.command("utilization")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--from", "from_date", required=True)
+    @click.option("--to", "to_date", required=True)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def analytics_utilization_cmd(
+        shop_identifier, from_date, to_date, as_json,
+    ):
+        """Per-day utilization across a window."""
+        console = get_console()
+        init_db()
+        shop_id = _resolve_shop_id(shop_identifier)
+        try:
+            result = utilization_rollup(shop_id, from_date, to_date)
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                result.model_dump(), default=str, indent=2,
+            ))
+            return
+        console.print(_json.dumps(
+            result.model_dump(), default=str, indent=2,
+        ))
+
+    @analytics_group.command("top-issues")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--since", default="30d")
+    @click.option("--limit", type=int, default=10)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def analytics_top_issues_cmd(shop_identifier, since, limit, as_json):
+        """Top issue (category, severity) pairs."""
+        console = get_console()
+        init_db()
+        shop_id = _resolve_shop_id(shop_identifier)
+        try:
+            rows = analytics_top_issues(shop_id, since=since, limit=limit)
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        payload = [r.model_dump() for r in rows]
+        if as_json:
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        console.print(_json.dumps(payload, default=str, indent=2))
+
+    @analytics_group.command("top-parts")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--since", default="30d")
+    @click.option("--limit", type=int, default=10)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def analytics_top_parts_cmd(shop_identifier, since, limit, as_json):
+        """Top parts by aggregate cost."""
+        console = get_console()
+        init_db()
+        shop_id = _resolve_shop_id(shop_identifier)
+        try:
+            rows = analytics_top_parts(shop_id, since=since, limit=limit)
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        payload = [r.model_dump() for r in rows]
+        if as_json:
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        console.print(_json.dumps(payload, default=str, indent=2))

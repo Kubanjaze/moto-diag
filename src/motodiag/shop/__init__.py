@@ -7,6 +7,30 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.analytics import (
+    CustomerRepeatRollup,
+    DashboardSnapshot,
+    DayBucket,
+    DayUtilization,
+    LaborAccuracyRollup,
+    MechanicPerformanceRow,
+    OverrunRateRollup,
+    ThroughputRollup,
+    TopIssueRow,
+    TopPartRow,
+    TurnaroundRollup,
+    UtilizationRollup,
+    customer_repeat_rate,
+    dashboard_snapshot,
+    labor_accuracy,
+    mechanic_performance,
+    overrun_rate,
+    throughput,
+    top_issues,
+    top_parts,
+    turnaround,
+    utilization_rollup,
+)
 from motodiag.shop.notification_templates import (
     NOTIFICATION_CHANNELS,
     NOTIFICATION_EVENTS,
@@ -267,6 +291,29 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # analytics (Phase 171)
+    "CustomerRepeatRollup",
+    "DashboardSnapshot",
+    "DayBucket",
+    "DayUtilization",
+    "LaborAccuracyRollup",
+    "MechanicPerformanceRow",
+    "OverrunRateRollup",
+    "ThroughputRollup",
+    "TopIssueRow",
+    "TopPartRow",
+    "TurnaroundRollup",
+    "UtilizationRollup",
+    "customer_repeat_rate",
+    "dashboard_snapshot",
+    "labor_accuracy",
+    "mechanic_performance",
+    "overrun_rate",
+    "throughput",
+    "top_issues",
+    "top_parts",
+    "turnaround",
+    "utilization_rollup",
     # notifications (Phase 170)
     "NOTIFICATION_CHANNELS",
     "NOTIFICATION_EVENTS",

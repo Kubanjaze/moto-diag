@@ -990,3 +990,49 @@ Project version 0.10.1 → **0.10.2** (Track G comms plumbing landed).
 **Key finding:** "Plumbing before transport" is the right pattern for comms. By writing rendered audit-logged notifications to a queue with explicit status transitions, any future delivery integration becomes a pluggable consumer rather than module-internal logic — any operator can wire Twilio/SendGrid today by polling `SELECT * FROM customer_notifications WHERE status='pending'` and calling the status-transition functions. Phase 173 automation rules will compose on top: `trigger_notification(...)` becomes the action side of any rule without having to invent templates. `string.Template` over f-strings caught the one placeholder-drift bug at test time with a clean error rather than leaking half-rendered content to a live customer.
 
 Next: Phase 171 (shop analytics dashboard — consumes Phase 168 utilization + Phase 167 reconciliation + Phase 169 revenue) → Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules that fire `trigger_notification` + lifecycle transitions as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate).
+
+---
+
+### 2026-04-22 — Phase 171 complete (Track G analytics layer)
+
+**Read-only deterministic rollups over existing Track G state.** Zero migrations, zero AI, zero tokens — pure SQL aggregations. 10 rollup functions + 10 Pydantic summaries + a composed `DashboardSnapshot`. CLI `motodiag shop analytics` surfaces 10 subcommands, each a thin wrapper around one rollup.
+
+New `shop/analytics.py` (~524 LoC):
+- `throughput(shop_id, since)` → WO count by status + completions-by-day timeseries
+- `turnaround(shop_id, since)` → mean/median/p90 opened_at→completed_at hours (p90=None if sample<5)
+- `utilization_rollup(shop_id, from, to)` → per-day utilization % via Phase 168
+- `overrun_rate(shop_id, since)` → overrun-slot / total-slot rate + per-mechanic breakdown
+- `labor_accuracy(shop_id, since)` → reconcile buckets (within/under/over ±20%) across window
+- `top_issues(shop_id, since, limit)` → (category, severity) frequency
+- `top_parts(shop_id, since, limit)` → aggregate cost honoring Phase 165 override priority
+- `mechanic_performance(shop_id, since)` → per-mechanic WOs/turnaround/overrun/labor-accuracy; NULL bucket for unassigned
+- `customer_repeat_rate(shop_id, since)` → % of window WOs from customers with ≥1 prior WO
+- `dashboard_snapshot(...)` → composes all 9 rollups + Phase 169 `revenue_rollup` into one view
+
+**Deterministic ordering + composability:** each rollup sorts list outputs by stable keys (count DESC, then category ASC, then id ASC). Two calls with the same args produce identical output. Phase 173 automation rules can use any rollup as a rule-condition evaluator: `if revenue_rollup(...).total_invoiced_cents < threshold: trigger_notification('owner_alert', ...)`.
+
+**Composition-over-duplication:** `dashboard_snapshot` delegates revenue to Phase 169, per-day utilization to Phase 168, and only computes cross-phase aggregations (turnaround, overrun, mechanic, top parts, repeat rate) that weren't already owned by a prior phase.
+
+**Bug fixes during build:**
+- **Bug fix #1**: `bay_schedule_slots` has no `shop_id` column — slots FK to `shop_bays` which FKs to `shops`. Overrun + mechanic-performance queries now JOIN through `shop_bays` to resolve shop scope. Each fix was a one-edit change to the JOIN clause.
+- **Bug fix #2**: Customer-repeat uses `prior.id < wo.id` ordering, not `created_at`. SQLite `CURRENT_TIMESTAMP` resolution is 1 second — two WOs created in the same second collide on timestamp comparison. `id` is monotonic by insertion order.
+
+New CLI `motodiag shop analytics {snapshot, throughput, turnaround, utilization, overruns, labor-accuracy, top-issues, top-parts, mechanic, customer-repeat}` (**10 subcommands**, +212 LoC in cli/shop.py using `_simple_rollup_cmd` factory for the 6 shape-identical commands). Total `cli/shop.py` now ~4850 LoC across **14 subgroups and 106 subcommands**.
+
+31 tests GREEN across 5 classes (TestDateWindow×5 + TestRollups×12 + TestDashboardSnapshot×3 + TestAnalyticsCLI×8 + TestAntiRegression×3) in 18.32s.
+
+**Targeted regression: 574 GREEN in 357.21s (5m 57s)** covering Phase 113 + 118 + 131 + 153 + Track G 160-171 + 162.5. Zero regressions.
+
+**Track G scorecard through Phase 171:**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169, 170, 171 (12)
+- Phase-specific tests: 397 (366 + 31)
+- Track G regression: 574/574 GREEN at Phase 171 close
+- CLI surface: **14 subgroups, 106 subcommands under `motodiag shop`**
+- DB tables added: still 10 (Phase 171 is read-only — no migration)
+- Migrations: still 10 (025-034)
+
+Project version 0.10.2 → **0.10.3** (Track G analytics layer landed).
+
+**Key finding:** "Compose existing rollups, don't duplicate" is the right pattern for analytics. By delegating revenue to Phase 169 and utilization to Phase 168, Phase 171 stayed at ~520 LoC without touching prior modules. Each rollup is a stateless pure function — Phase 173 automation rules will use any rollup as a rule-condition evaluator, paired with `trigger_notification()` (Phase 170) on the action side. No new plumbing needed. The two schema-discovery bugs (`bay_schedule_slots.shop_id` nonexistence; `created_at` sub-second collision) both landed in the test pass — no false-positive migration drift; the fixes held on first rerun.
+
+Next: Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules that compose Phase 171 rollups as conditions + Phase 170 notifications as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate closure).

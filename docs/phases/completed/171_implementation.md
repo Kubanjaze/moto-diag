@@ -1,6 +1,6 @@
 # MotoDiag Phase 171 — Shop Analytics Dashboard
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -152,32 +152,82 @@ analytics customer-repeat [--shop X] [--since 30d] [--json]
 
 ## Verification Checklist
 
-- [ ] All 10 rollup functions return the stated Pydantic types.
-- [ ] Each rollup handles the zero-data case (sample_size=0, None
+- [x] All 10 rollup functions return the stated Pydantic types.
+- [x] Each rollup handles the zero-data case (sample_size=0, None
       means, empty lists).
-- [ ] `throughput` buckets by status + day; respects `since` cutoff.
-- [ ] `turnaround` computes mean/median/p90 correctly against a
-      known fixture; skips non-completed WOs.
-- [ ] `utilization_rollup` aggregates per-day from Phase 168
+- [x] `throughput` buckets by status + day; respects `since` cutoff.
+- [x] `turnaround` computes mean/median/p90 correctly against a
+      known fixture; skips non-completed WOs; p90=None when n<5.
+- [x] `utilization_rollup` aggregates per-day from Phase 168
       `utilization_for_day` across the range.
-- [ ] `overrun_rate` counts status='overrun' slots; per-mechanic map.
-- [ ] `labor_accuracy` reads `labor_estimates` + `work_orders.actual_hours`
-      joined.
-- [ ] `top_issues` counts by (category, severity) with ties broken by
+- [x] `overrun_rate` counts status='overrun' slots; per-mechanic map.
+      JOIN through `shop_bays` (slots have no direct `shop_id`).
+- [x] `labor_accuracy` reads `labor_estimates` + `work_orders.actual_hours`
+      joined; keeps only latest estimate per WO.
+- [x] `top_issues` counts by (category, severity) with ties broken by
       category ASC.
-- [ ] `top_parts` sums `work_order_parts.quantity * effective_cost`,
+- [x] `top_parts` sums `work_order_parts.quantity * effective_cost`,
       respects Phase 165 `unit_cost_cents_override` priority.
-- [ ] `mechanic_performance` rolls up per-mechanic; NULL bucket shows
+- [x] `mechanic_performance` rolls up per-mechanic; NULL bucket shows
       as `mechanic_id=None`.
-- [ ] `customer_repeat_rate` flags customers with ≥1 WO pre-window.
-- [ ] `dashboard_snapshot` composes all + includes Phase 169 revenue
+- [x] `customer_repeat_rate` flags customers with prior WO (uses
+      `prior.id < wo.id` for ordering; timestamp ordering is unreliable
+      when WOs created in the same second).
+- [x] `dashboard_snapshot` composes all + includes Phase 169 revenue
       rollup.
-- [ ] `_parse_date_window` handles `Nd`, `Nh`, ISO, bad-input raise.
-- [ ] CLI `analytics {snapshot, throughput, turnaround, utilization,
+- [x] `_parse_date_window` handles `Nd`, `Nh`, `Nm`, ISO, bad-input
+      raise.
+- [x] CLI `analytics {snapshot, throughput, turnaround, utilization,
       overruns, labor-accuracy, top-issues, top-parts, mechanic,
       customer-repeat}` round-trip.
-- [ ] Phase 113/118/131/153/160-170 tests still GREEN.
-- [ ] Zero AI calls.
+- [x] Phase 113/118/131/153/160-170 tests still GREEN (574/574).
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- **`bay_schedule_slots` has no `shop_id` column** — slots FK to
+  `shop_bays` which FKs to `shops`. The overrun and mechanic
+  performance rollups JOIN through `shop_bays` to resolve shop scope.
+  Caught during first test run; fixed both queries with one Edit each.
+- **Customer-repeat ordering uses `id` not `created_at`.** Two WOs
+  created in the same second via `CURRENT_TIMESTAMP` have identical
+  timestamps, so the `created_at < created_at` test returned zero
+  repeats. Switched to `prior.id < wo.id` which is monotonic by
+  insertion order — robust against sub-second collisions.
+- **`schedule_wo` can't reserve a slot for a completed WO** (rightly
+  rejects terminal statuses). Test fixture for `overrun_rate` inserts
+  slot rows directly via SQL to control status exactly; this is test-
+  only and does not affect production flows.
+- **Added `_parse_date_window('Nm')` unit** — plan mentioned `Nd`/`Nh`/
+  ISO; added minute unit for symmetry (Phase 173 rules might want
+  "fired in last 5 minutes" windows).
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Phase 171 tests landed | 31 GREEN (5 classes) |
+| Targeted regression | 574/574 GREEN in 357.21s (5m 57s) |
+| Coverage range | Phase 113 + 118 + 131 + 153 + Track G 160-171 + 162.5 |
+| Migration LoC | 0 (read-only phase) |
+| `shop/analytics.py` LoC | 524 (10 rollup functions + 10 Pydantic + 2 helpers) |
+| `cli/shop.py` addition | +212 LoC (`analytics` subgroup: 10 subcommands + `_simple_rollup_cmd` factory) |
+| `shop/__init__.py` addition | +22 re-exports |
+| Total `cli/shop.py` | ~4850 LoC, **14 subgroups**, **106 subcommands** |
+| SCHEMA_VERSION | unchanged at **34** |
+| AI calls | 0 (zero tokens spent) |
+
+**Key finding:** Phase 171 validates "compose existing rollups, don't
+duplicate". `dashboard_snapshot` delegates the revenue section to Phase
+169 `revenue_rollup`, the per-day utilization to Phase 168
+`utilization_for_day`, and computes only the cross-phase aggregations
+(turnaround, overrun rate, mechanic performance, top parts/issues,
+customer repeat) that weren't already owned by a prior phase. The
+result: ~520 LoC of analytics shipped without touching any prior
+module. Phase 173 automation rules can now express conditions like
+"IF weekly_revenue < $X THEN notify_owner" by composing
+`revenue_rollup()` (Phase 169) + `trigger_notification()` (Phase 170)
+— no new plumbing needed.
 
 ## Risks
 
