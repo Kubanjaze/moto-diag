@@ -702,3 +702,29 @@ CLI: new `motodiag shop priority {score, rescore-all, show, budget}` (4 subcomma
 Phases 166 (AI parts sourcing) and 167 (AI labor estimation) follow this exact shape. Pattern is now the Track G AI canonical.
 
 Next: Phase 164 (deterministic triage queue, no AI).
+
+### 2026-04-22 00:30 — Phase 164 complete
+
+**Track G triage queue pillar landed.** Migration 028 adds nullable `shops.triage_weights TEXT` column (NULL = ShopTriageWeights pydantic defaults), bumping SCHEMA_VERSION 27 → 28. Pure query-synthesis layer over Phase 161 work_orders + Phase 162 issues + Phase 163 AI priority (consumed via work_orders.priority) + Phase 165 parts (soft-guarded since 165 hasn't shipped).
+
+New `shop/triage_queue.py` (365 LoC):
+- `build_triage_queue()` — pure read; returns ranked `list[TriageItem]`.
+- `ShopTriageWeights` — Pydantic with 5 tunable scalars + `extra="forbid"`.
+- `TriageItem` — Pydantic carrying work_order + issues + parts_ready + missing_skus + wait_hours + flag + skip_reason + score + rank.
+- 6 helpers: `_parse_triage_markers`, `_build_marked_description`, `_parts_available_for` (Phase 165 soft-guard via `importlib.util.find_spec`), `_compute_wait_hours`, `_compute_score`, `_load_issues_safe`.
+- 5 mutators: `load/save/reset_triage_weights`, `flag_urgent`/`clear_urgent` (writes priority=1 + `[TRIAGE_URGENT] ` prefix; idempotent), `skip_work_order(reason)` (writes `[TRIAGE_SKIP: reason] ` prefix; empty reason clears).
+- `ShopTriageError` exception.
+
+**Triage score formula:** `priority_weight*(1/priority) + wait_weight*(wait_hours/24) + parts_ready_weight*ready + urgent_flag_bonus*urgent - skip_penalty*skipped`. Defaults: priority_weight=100, wait_weight=1.0, parts_ready_weight=10, urgent_flag_bonus=500, skip_penalty=50 — per-shop tunable via `shop triage weights --set key=value`.
+
+**Markers ride on work_orders.description** via prefix tokens — no new triage-state column. `[TRIAGE_URGENT] ` and `[TRIAGE_SKIP: reason] ` parsed on read. Idempotent (calling `flag_urgent` twice doesn't double-prefix). `clear_urgent` removes prefix but does NOT auto-restore prior priority — explicit mechanic action via `work-order update --set priority=N`.
+
+**Phase 165 soft-guard pattern:** `_parts_available_for` returns `(True, [])` when Phase 165 module absent; when 165 ships and exports `list_parts_for_wo(wo_id, db_path=None)`, the guard automatically picks up real parts data with no Phase 164 code change.
+
+CLI: new `motodiag shop triage {queue, next, flag-urgent, skip, weights}` (5 subcommands, +250 LoC in cli/shop.py).
+
+**Tests:** 32 GREEN across 5 classes (TestMigration028×5 + TestTriageWeights×6 + TestTriageMarkers×4 + TestBuildTriageQueue×10 + TestTriageCLI×7) in 21.15s. Targeted regression sample (Phase 131 + 160-164 + 162.5): 241 GREEN in 165.54s.
+
+**Project version:** 0.9.5 → **0.9.6**.
+
+Next: Phase 165 (parts needs aggregation — bridges Phase 153 catalog to Phase 161 work_orders; transactional cost recompute through Phase 161 update_work_order whitelist).

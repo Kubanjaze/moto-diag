@@ -44,6 +44,8 @@ from motodiag.shop import (
     PriorityBudgetExhausted,
     PriorityScorerError,
     ShopNameExistsError,
+    ShopTriageError,
+    ShopTriageWeights,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
     WorkOrderFKError,
@@ -79,6 +81,13 @@ from motodiag.shop import (
     priority_budget,
     rescore_all_open,
     score_work_order,
+    build_triage_queue,
+    clear_urgent,
+    flag_urgent,
+    load_triage_weights,
+    reset_triage_weights,
+    save_triage_weights,
+    skip_work_order,
     reopen_intake,
     reopen_issue,
     reopen_work_order,
@@ -2096,4 +2105,231 @@ def register_shop(cli_group: click.Group) -> None:
             f"(${rollup['cost_cents']/100:.2f})",
             title="Priority scoring budget"
             + (f" (since {since})" if since else ""),
+        ))
+
+    # -----------------------------------------------------------------
+    # shop triage {queue, next, flag-urgent, skip, weights}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("triage")
+    def triage_group() -> None:
+        """Automated triage queue — 'what to fix first' ranking."""
+
+    def _render_triage_table(console, items, status_label: str) -> None:
+        table = Table(
+            title=f"Triage queue ({status_label}, {len(items)} WOs)",
+            show_lines=False,
+        )
+        table.add_column("Rank", justify="right")
+        table.add_column("WO", justify="right")
+        table.add_column("Pri", justify="right")
+        table.add_column("Title")
+        table.add_column("Bike")
+        table.add_column("Customer")
+        table.add_column("Wait")
+        table.add_column("Parts")
+        table.add_column("Mech")
+        table.add_column("Flag")
+        for item in items:
+            wo = item.work_order
+            pri = wo.get("priority", 3)
+            pri_color = {1: "bold red", 2: "red", 3: "yellow", 4: "dim", 5: "dim"}
+            pri_style = pri_color.get(pri, "white")
+            bike = " ".join(
+                str(b) for b in (
+                    wo.get("vehicle_year"),
+                    wo.get("vehicle_make"),
+                    wo.get("vehicle_model"),
+                ) if b
+            )
+            wait_label = (
+                f"{int(item.wait_hours / 24)}d"
+                if item.wait_hours >= 24
+                else f"{int(item.wait_hours)}h"
+            )
+            if item.parts_ready:
+                parts_label = "[green]ready[/green]"
+            else:
+                parts_label = (
+                    f"[yellow]{len(item.parts_missing_skus)} missing[/yellow]"
+                )
+            flag_label = ""
+            if item.triage_flag == "urgent":
+                flag_label = "[bold red]URGENT[/bold red]"
+            elif item.triage_skip_reason:
+                flag_label = f"[dim]skipped ({item.triage_skip_reason})[/dim]"
+            from motodiag.shop.triage_queue import _parse_triage_markers
+            clean = _parse_triage_markers(wo.get("description"))[
+                "clean_description"
+            ]
+            title = wo.get("title", "?")
+            if clean and clean != wo.get("description", ""):
+                title = title  # display original WO title (markers strip from description, not title)
+            table.add_row(
+                str(item.rank),
+                f"#{wo['id']}",
+                f"[{pri_style}]{pri}[/{pri_style}]",
+                str(title)[:40],
+                bike,
+                str(wo.get("customer_name", "?")),
+                wait_label,
+                parts_label,
+                str(wo.get("assigned_mechanic_name") or "—"),
+                flag_label,
+            )
+        console.print(table)
+
+    @triage_group.command("queue")
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--mechanic", "assigned_mechanic_user_id", type=int, default=None)
+    @click.option("--top", type=int, default=10)
+    @click.option("--include-terminal", is_flag=True, default=False)
+    @click.option(
+        "--assume-parts-available/--require-parts",
+        default=True,
+        help="When Phase 165 absent, treat parts as ready (default).",
+    )
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def triage_queue_cmd(
+        shop_id, assigned_mechanic_user_id, top,
+        include_terminal, assume_parts_available, as_json,
+    ):
+        """Print the ranked triage queue."""
+        console = get_console()
+        init_db()
+        items = build_triage_queue(
+            shop_id=shop_id,
+            assigned_mechanic_user_id=assigned_mechanic_user_id,
+            include_terminal=include_terminal,
+            top=top,
+            assumed_parts_available=assume_parts_available,
+        )
+        if as_json:
+            payload = [item.model_dump(mode="json") for item in items]
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        if not items:
+            console.print("[dim]No work orders match filters.[/dim]")
+            return
+        _render_triage_table(
+            console, items, "open + in_progress + on_hold",
+        )
+
+    @triage_group.command("next")
+    @click.option("--shop", "shop_id", type=int, default=None)
+    def triage_next_cmd(shop_id):
+        """Show the single highest-ranked WO."""
+        console = get_console()
+        init_db()
+        items = build_triage_queue(shop_id=shop_id, top=1)
+        if not items:
+            console.print("[yellow]No open work orders.[/yellow]")
+            raise click.exceptions.Exit(1)
+        item = items[0]
+        wo = item.work_order
+        bike = " ".join(
+            str(b) for b in (
+                wo.get("vehicle_year"),
+                wo.get("vehicle_make"),
+                wo.get("vehicle_model"),
+            ) if b
+        )
+        flag_line = ""
+        if item.triage_flag == "urgent":
+            flag_line = "\n[bold red]URGENT-FLAGGED[/bold red]"
+        lines = [
+            f"[bold]Pull this bike in next: WO #{wo['id']}[/bold]",
+            f"Title: {wo.get('title', '?')}",
+            f"Priority: {wo.get('priority', '?')}",
+            f"Bike: {bike}",
+            f"Customer: {wo.get('customer_name', '?')}",
+            f"Wait: {item.wait_hours:.1f}h",
+            f"Parts ready: {item.parts_ready}",
+            f"Triage score: {item.triage_score:.1f}{flag_line}",
+        ]
+        console.print(Panel("\n".join(lines), title="Next up"))
+
+    @triage_group.command("flag-urgent")
+    @click.argument("wo_id", type=int)
+    def triage_flag_urgent_cmd(wo_id):
+        """Force a WO to the top — sets priority=1 + [TRIAGE_URGENT] marker."""
+        console = get_console()
+        init_db()
+        try:
+            flag_urgent(wo_id)
+        except WorkOrderNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[bold red]Flagged WO id={wo_id} as URGENT.[/bold red] "
+            "Priority set to 1."
+        )
+
+    @triage_group.command("skip")
+    @click.argument("wo_id", type=int)
+    @click.option("--reason", default="deferred",
+                  help="Skip reason. Empty string clears the skip.")
+    def triage_skip_cmd(wo_id, reason):
+        """Soft-demote WO via [TRIAGE_SKIP: reason] marker."""
+        console = get_console()
+        init_db()
+        try:
+            skip_work_order(wo_id, reason)
+        except WorkOrderNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        if not reason or not reason.strip():
+            console.print(
+                f"[green]Cleared skip on WO id={wo_id}.[/green]"
+            )
+        else:
+            console.print(
+                f"[yellow]Skipped WO id={wo_id} (reason={reason!r}).[/yellow]"
+            )
+
+    @triage_group.command("weights")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--set", "set_pairs", multiple=True,
+                  help="Repeated KEY=VALUE updates (e.g. --set wait_weight=2.5).")
+    @click.option("--reset", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def triage_weights_cmd(shop_id, set_pairs, reset, as_json):
+        """Show or tune per-shop triage weights."""
+        console = get_console()
+        init_db()
+        if reset:
+            reset_triage_weights(shop_id)
+            console.print(
+                f"[green]Reset triage weights for shop id={shop_id} to defaults.[/green]"
+            )
+        if set_pairs:
+            current = load_triage_weights(shop_id).model_dump()
+            for pair in set_pairs:
+                if "=" not in pair:
+                    raise click.ClickException(
+                        f"--set expects KEY=VALUE (got {pair!r})"
+                    )
+                key, _, value = pair.partition("=")
+                key = key.strip()
+                try:
+                    current[key] = float(value)
+                except ValueError as e:
+                    raise click.ClickException(
+                        f"weight value must be numeric (got {value!r})"
+                    ) from e
+            try:
+                weights = ShopTriageWeights(**current)
+            except Exception as e:
+                raise click.ClickException(str(e)) from e
+            save_triage_weights(shop_id, weights)
+            console.print(
+                f"[green]Updated triage weights for shop id={shop_id}.[/green]"
+            )
+        weights = load_triage_weights(shop_id)
+        if as_json:
+            click.echo(_json.dumps(weights.model_dump(), indent=2))
+            return
+        console.print(Panel(
+            "\n".join(
+                f"{k}: {v}" for k, v in weights.model_dump().items()
+            ),
+            title=f"Triage weights for shop id={shop_id}",
         ))

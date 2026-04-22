@@ -2007,6 +2007,61 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS issues;
         """,
     ),
+    # Migration 028 — Phase 164: per-shop tunable triage weights
+    Migration(
+        version=28,
+        name="shops_triage_weights",
+        description=(
+            "Phase 164: Adds nullable JSON column `triage_weights` to "
+            "the shops table for per-shop tunable triage scoring "
+            "weights. NULL means use ShopTriageWeights pydantic "
+            "defaults (priority_weight=100, wait_weight=1.0, "
+            "parts_ready_weight=10, urgent_flag_bonus=500, "
+            "skip_penalty=50). Stored as TEXT (SQLite has no native "
+            "JSON type); application layer parses via json.loads. "
+            "Single ALTER TABLE — no new tables, no new indexes. "
+            "Rollback uses the SQLite-portable rename-recreate-copy-"
+            "drop pattern (matches Phase 145/150 forward-compat work) "
+            "rather than depending on DROP COLUMN (only available "
+            "since SQLite 3.35)."
+        ),
+        upgrade_sql="""
+            ALTER TABLE shops ADD COLUMN triage_weights TEXT;
+        """,
+        rollback_sql="""
+            -- SQLite-portable column drop via rebuild.
+            CREATE TABLE shops_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                owner_user_id INTEGER NOT NULL DEFAULT 1,
+                name TEXT NOT NULL,
+                address TEXT,
+                city TEXT,
+                state TEXT,
+                zip TEXT,
+                phone TEXT,
+                email TEXT,
+                tax_id TEXT,
+                hours_json TEXT,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (owner_user_id) REFERENCES users(id) ON DELETE SET DEFAULT,
+                UNIQUE (owner_user_id, name)
+            );
+            INSERT INTO shops_rollback
+                (id, owner_user_id, name, address, city, state, zip,
+                 phone, email, tax_id, hours_json, is_active,
+                 created_at, updated_at)
+            SELECT id, owner_user_id, name, address, city, state, zip,
+                   phone, email, tax_id, hours_json, is_active,
+                   created_at, updated_at
+            FROM shops;
+            DROP TABLE shops;
+            ALTER TABLE shops_rollback RENAME TO shops;
+            CREATE INDEX IF NOT EXISTS idx_shops_owner_name
+                ON shops(owner_user_id, name);
+        """,
+    ),
 ]
 
 

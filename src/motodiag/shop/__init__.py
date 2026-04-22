@@ -7,6 +7,18 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.triage_queue import (
+    ShopTriageError,
+    ShopTriageWeights,
+    TriageItem,
+    build_triage_queue,
+    clear_urgent,
+    flag_urgent,
+    load_triage_weights,
+    reset_triage_weights,
+    save_triage_weights,
+    skip_work_order,
+)
 from motodiag.shop.priority_models import (
     PriorityScore,
     PriorityScoreResponse,
@@ -114,6 +126,17 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # triage_queue (Phase 164)
+    "ShopTriageError",
+    "ShopTriageWeights",
+    "TriageItem",
+    "build_triage_queue",
+    "clear_urgent",
+    "flag_urgent",
+    "load_triage_weights",
+    "reset_triage_weights",
+    "save_triage_weights",
+    "skip_work_order",
     # priority_scorer + priority_models (Phase 163)
     "CONFIDENCE_APPLY_THRESHOLD",
     "DEFAULT_RESCORE_LIMIT",
