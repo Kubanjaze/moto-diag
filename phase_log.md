@@ -757,3 +757,52 @@ CLI: new `motodiag shop parts-needs {add, list, consolidate, mark-ordered, mark-
 **Project version:** 0.9.6 → **0.9.7**.
 
 Next: Phase 166 (AI parts sourcing — composes against Phase 162.5 ShopAIClient + reads Phase 165 ConsolidatedPartNeed for OEM-vs-aftermarket recommendations seeded from research-brief vendor taxonomy).
+
+### 2026-04-22 01:35 — Phase 166 complete (Track G second AI phase)
+
+**Second Track G AI phase.** Composes against Phase 162.5 `shop/ai_client.py` substrate — zero direct `anthropic` imports anywhere (enforced by `test_parts_sourcing_does_not_import_anthropic_directly` anti-regression grep test).
+
+Migration 030 (schema v29→v30) creates single audit table `sourcing_recommendations` with full AI response log (recommendation_json TEXT + ai_model + tokens + cache_hit + cost_cents + batch_id reserved). 2 indexes: `(part_id, generated_at DESC)` + `(requisition_id, requisition_line_id)` reserved.
+
+Two new modules:
+- `shop/sourcing_models.py` (65 LoC) — `SourcingRecommendation` + `VendorSuggestion` Pydantic models + `SourceTier`/`TierPreference`/`Availability` Literal types. Separated so tests + Phase 169 can import without SDK seam.
+- `shop/parts_sourcing.py` (482 LoC) — `recommend_source` + `get_recommendation` + `sourcing_budget` + 3 exceptions (`PartNotFoundError`, `InvalidTierPreferenceError`, `SourcingParseError`) + `BatchTimeoutError` reserved + 4 helpers + `_default_scorer_fn=None` injection seam.
+
+**System prompt baked from Domain-Researcher pricing brief** (`_research/track_g_pricing_brief.md`):
+- Decision tree (safety-critical path-of-force → OEM only; consumables → aftermarket first)
+- 6-tier vendor taxonomy (T1 OEM dealer → T6 AliExpress-avoid)
+- Counter-intuitive aftermarket wins (Ricks Motorsports stators on 80s-00s Japanese; EBC HH brake pads on most sport bikes)
+- Discontinued-OEM cascade (used → aftermarket reproduction → China-direct)
+
+**Canonical Track G AI pattern (inherited from Phase 163):**
+```python
+def recommend_source(part_id, ..., _default_scorer_fn=None):
+    part = _require_part(part_id)              # Phase 153 reuse
+    xrefs = _load_xrefs(part_id)               # Phase 153 reuse
+    if _default_scorer_fn is not None:
+        payload, ai_resp = _default_scorer_fn(...)  # test injection
+    else:
+        client = ShopAIClient(...)             # Phase 162.5 composition
+        ai_resp = client.ask(...)              # cached prompt automatic
+        payload = _parse_recommendation(ai_resp.text)
+    rec = SourcingRecommendation(**payload)
+    _persist_recommendation(rec, ...)          # audit log
+    return rec
+```
+
+5-line integration vs ~80 LoC duplication without Phase 162.5. Pattern is now proven across 2 AI phases (163 priority, 166 sourcing) — Phase 167 will follow identically.
+
+New CLI `motodiag shop sourcing {recommend, show, budget}` (3 subcommands, +175 LoC in cli/shop.py).
+
+**Tests:** 27 GREEN across 5 classes (TestMigration030×4 + TestRecommendSource×10 + TestPersistence×5 + TestSourcingCLI×7 + TestAntiRegression×1) in 35.86s.
+
+**Targeted regression: 337 GREEN in 484s (8m 4s)** covering Phase 131 (ai_response_cache) + Phase 153 (parts catalog) + Track G phases 160-166 + Phase 162.5. Zero regressions across all dependencies.
+
+Build deviations:
+- `optimize_requisition` Batches API path deferred to Phase 169 (when invoicing needs bulk-source for finalized WOs).
+- CLI `compare` subcommand reserved for Phase 169 (Rich Columns side-by-side rendering).
+- 27 tests vs ~30 planned (deferred coverage matches deferred subcommands).
+
+**Project version:** 0.9.7 → **0.9.8**.
+
+Next: Phase 167 (AI labor time estimation) — composes against Phase 162.5 `ShopAIClient` + reads work_orders + issues; writes back `work_orders.estimated_hours` via Phase 161 `update_work_order` whitelist (never raw SQL, verified by grep test like Phase 165's cost-recompute audit).

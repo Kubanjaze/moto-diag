@@ -41,6 +41,8 @@ from motodiag.shop import (
     InvalidWorkOrderTransition,
     IssueFKError,
     IssueNotFoundError,
+    InvalidTierPreferenceError,
+    PartNotFoundError,
     PartNotInCatalogError,
     PriorityBudgetExhausted,
     PriorityScorerError,
@@ -58,6 +60,9 @@ from motodiag.shop import (
     list_requisitions,
     mark_part_ordered,
     mark_part_received,
+    get_recommendation,
+    recommend_source,
+    sourcing_budget,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
     WorkOrderFKError,
@@ -2629,3 +2634,135 @@ def register_shop(cli_group: click.Group) -> None:
                 ",".join(str(w) for w in item.wo_ids),
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # shop sourcing {recommend, show, budget}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("sourcing")
+    def sourcing_group() -> None:
+        """AI parts sourcing + cost optimization (Phase 166)."""
+
+    def _render_sourcing_panel(console, rec) -> None:
+        cache_label = "[dim](cache hit)[/dim]" if rec.cache_hit else ""
+        risk_block = (
+            f"\nRisk notes: {rec.risk_notes}" if rec.risk_notes else ""
+        )
+        alts = (
+            ", ".join(str(a) for a in rec.alternative_parts)
+            if rec.alternative_parts else "—"
+        )
+        lines = [
+            f"[bold]Part id={rec.part_id}[/bold] qty={rec.quantity} {cache_label}",
+            f"Tier: [bold]{rec.source_tier.upper()}[/bold]  "
+            f"confidence={rec.confidence:.2f}",
+            f"Estimated cost: ¢{rec.estimated_cost_cents} "
+            f"(${rec.estimated_cost_cents/100:.2f})",
+            f"\nRationale: {rec.rationale}",
+            f"\nAlternative parts: {alts}{risk_block}",
+        ]
+        if rec.vendor_suggestions:
+            lines.append("\nVendor suggestions:")
+            for v in rec.vendor_suggestions:
+                url_line = (
+                    f" — {v.url}" if v.url else " — URL unavailable"
+                )
+                lines.append(
+                    f"  • {v.name} ({v.availability}) "
+                    f"~¢{v.rough_price_cents}{url_line}"
+                )
+        lines.append(
+            f"\nModel: {rec.ai_model}  tokens: {rec.tokens_in}→{rec.tokens_out}  "
+            f"cost: {rec.cost_cents}¢"
+        )
+        console.print(Panel("\n".join(lines), title="Sourcing recommendation"))
+
+    @sourcing_group.command("recommend")
+    @click.option("--part-id", "part_id", type=int, required=True)
+    @click.option("--qty", "quantity", type=int, default=1, show_default=True)
+    @click.option("--vehicle-id", "vehicle_id", type=int, default=None)
+    @click.option(
+        "--tier",
+        type=click.Choice(["oem", "aftermarket", "used", "balanced"],
+                          case_sensitive=False),
+        default="balanced",
+    )
+    @click.option(
+        "--model",
+        type=click.Choice(["haiku", "sonnet"], case_sensitive=False),
+        default="haiku",
+    )
+    @click.option("--no-cache", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def sourcing_recommend(
+        part_id, quantity, vehicle_id, tier, model, no_cache, as_json,
+    ):
+        """Ask Claude to pick the best source for a single part."""
+        console = get_console()
+        init_db()
+        try:
+            rec = recommend_source(
+                part_id, quantity=quantity, vehicle_id=vehicle_id,
+                tier_preference=tier.lower(), model=model.lower(),
+                use_cache=not no_cache,
+            )
+        except (PartNotFoundError, InvalidTierPreferenceError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(rec.model_dump(mode="json"), default=str, indent=2))
+            return
+        _render_sourcing_panel(console, rec)
+
+    @sourcing_group.command("show")
+    @click.argument("rec_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def sourcing_show(rec_id, as_json):
+        """Show one persisted sourcing recommendation."""
+        console = get_console()
+        init_db()
+        row = get_recommendation(rec_id)
+        if row is None:
+            raise click.ClickException(f"recommendation not found: id={rec_id}")
+        if as_json:
+            click.echo(_json.dumps(row, default=str, indent=2))
+            return
+        rec = row.get("recommendation") or {}
+        lines = [
+            f"[bold]Recommendation id={rec_id}[/bold]",
+            f"Part id={row['part_id']} qty={row['quantity']}",
+            f"Tier: {row['source_tier']}",
+            f"Confidence: {row['confidence']}",
+            f"Estimated cost: ¢{row['estimated_cost_cents']}",
+            f"Model: {row['ai_model']}  tokens: {row['tokens_in']}→{row['tokens_out']}  "
+            f"cost: {row['cost_cents']}¢",
+            f"Cache hit: {bool(row['cache_hit'])}",
+            f"\nRationale: {rec.get('rationale', '?')}",
+        ]
+        console.print(Panel("\n".join(lines), title="Sourcing record"))
+
+    @sourcing_group.command("budget")
+    @click.option("--from", "since", default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def sourcing_budget_cmd(since, as_json):
+        """Aggregate sourcing AI spend + tier distribution + cache-hit rate."""
+        console = get_console()
+        init_db()
+        rollup = sourcing_budget(since=since)
+        if as_json:
+            click.echo(_json.dumps(rollup, indent=2))
+            return
+        tier_lines = "\n".join(
+            f"  {t}: {n}" for t, n in rollup["tier_distribution"].items()
+        ) or "  (no calls yet)"
+        console.print(Panel(
+            f"Calls: {rollup['calls']}\n"
+            f"Tokens in: {rollup['tokens_in']:,}\n"
+            f"Tokens out: {rollup['tokens_out']:,}\n"
+            f"Cost: ¢{rollup['cost_cents']} "
+            f"(${rollup['cost_cents']/100:.2f})\n"
+            f"Cache hit rate: {rollup['cache_hit_rate']:.1%} "
+            f"({rollup['cache_hit_count']}/{rollup['calls']})\n"
+            f"\nTier distribution:\n{tier_lines}",
+            title="Sourcing budget"
+            + (f" (since {since})" if since else ""),
+        ))

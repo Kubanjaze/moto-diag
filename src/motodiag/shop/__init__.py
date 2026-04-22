@@ -7,6 +7,24 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.sourcing_models import (
+    Availability,
+    SourceTier,
+    SourcingRecommendation,
+    TierPreference,
+    VendorSuggestion,
+)
+from motodiag.shop.parts_sourcing import (
+    SOURCING_SYSTEM_PROMPT,
+    VALID_TIER_PREFERENCES,
+    BatchTimeoutError,
+    InvalidTierPreferenceError,
+    PartNotFoundError,
+    SourcingParseError,
+    get_recommendation,
+    recommend_source,
+    sourcing_budget,
+)
 from motodiag.shop.parts_needs import (
     PART_STATUSES,
     ConsolidatedPartNeed,
@@ -148,6 +166,21 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # parts_sourcing + sourcing_models (Phase 166)
+    "Availability",
+    "BatchTimeoutError",
+    "InvalidTierPreferenceError",
+    "PartNotFoundError",
+    "SOURCING_SYSTEM_PROMPT",
+    "SourceTier",
+    "SourcingParseError",
+    "SourcingRecommendation",
+    "TierPreference",
+    "VALID_TIER_PREFERENCES",
+    "VendorSuggestion",
+    "get_recommendation",
+    "recommend_source",
+    "sourcing_budget",
     # parts_needs (Phase 165)
     "PART_STATUSES",
     "ConsolidatedPartNeed",

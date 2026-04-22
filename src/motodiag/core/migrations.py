@@ -2169,6 +2169,70 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS work_order_parts;
         """,
     ),
+    # Migration 030 — Phase 166: AI parts sourcing recommendations
+    Migration(
+        version=30,
+        name="sourcing_recommendations",
+        description=(
+            "Phase 166: First Track G AI phase to use both ShopAIClient "
+            "(Phase 162.5) AND read Phase 165 ConsolidatedPartNeed. "
+            "Single small audit table `sourcing_recommendations` "
+            "persists every AI sourcing call (synchronous + future "
+            "batch path) with full recommendation_json blob for "
+            "downstream Phase 169 invoicing + Phase 171 analytics. "
+            "Append-only — no deduplication; cache_hit=1 rows persist "
+            "alongside cache_miss=0 rows so `shop sourcing budget` can "
+            "separate paid impressions from free. FK part_id CASCADE "
+            "(recommendation specific to part identity); vehicle_id "
+            "SET NULL (recommendation outlives vehicle deletion as a "
+            "generic part-level artifact). No FK on requisition_id / "
+            "requisition_line_id — Phase 165 owns those ids; storing "
+            "advisorily as TEXT-ish ints avoids cross-table coupling. "
+            "Two indexes: (part_id, generated_at DESC) for catalog-side "
+            "lookups (most recent recommendation for a part); "
+            "(requisition_id, requisition_line_id) for batch-result "
+            "correlation in Phase 166's optimize_requisition path."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS sourcing_recommendations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                part_id INTEGER NOT NULL,
+                vehicle_id INTEGER,
+                requisition_id INTEGER,
+                requisition_line_id INTEGER,
+                quantity INTEGER NOT NULL DEFAULT 1
+                    CHECK (quantity > 0),
+                tier_preference TEXT NOT NULL DEFAULT 'balanced'
+                    CHECK (tier_preference IN
+                           ('oem','aftermarket','used','balanced')),
+                source_tier TEXT NOT NULL
+                    CHECK (source_tier IN
+                           ('oem','aftermarket','used','superseded')),
+                confidence REAL NOT NULL
+                    CHECK (confidence BETWEEN 0.0 AND 1.0),
+                estimated_cost_cents INTEGER NOT NULL DEFAULT 0,
+                recommendation_json TEXT NOT NULL,
+                ai_model TEXT NOT NULL,
+                tokens_in INTEGER NOT NULL DEFAULT 0,
+                tokens_out INTEGER NOT NULL DEFAULT 0,
+                cache_hit INTEGER NOT NULL DEFAULT 0,
+                cost_cents INTEGER NOT NULL DEFAULT 0,
+                batch_id TEXT,
+                generated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (part_id) REFERENCES parts(id) ON DELETE CASCADE,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_sr_part
+                ON sourcing_recommendations(part_id, generated_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_sr_requisition
+                ON sourcing_recommendations(requisition_id, requisition_line_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_sr_requisition;
+            DROP INDEX IF EXISTS idx_sr_part;
+            DROP TABLE IF EXISTS sourcing_recommendations;
+        """,
+    ),
 ]
 
 
