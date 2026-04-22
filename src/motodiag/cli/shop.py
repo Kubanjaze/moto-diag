@@ -42,6 +42,14 @@ from motodiag.shop import (
     IssueFKError,
     IssueNotFoundError,
     InvalidTierPreferenceError,
+    InvoiceGenerationError,
+    InvoiceNotFoundError,
+    generate_invoice_for_wo,
+    get_invoice_with_items,
+    list_invoices_for_shop,
+    mark_invoice_paid,
+    revenue_rollup,
+    void_invoice,
     BayNotFoundError,
     InvalidSlotTransition,
     LaborEstimatorError,
@@ -430,6 +438,40 @@ def _render_intake_panel(console, intake: dict) -> None:
         if intake.get("close_reason"):
             lines.append(f"Reason:    {intake['close_reason']}")
     console.print(Panel("\n".join(lines), title="Intake Visit"))
+
+
+def _render_invoice_panel(console, summary) -> None:
+    """Render an InvoiceSummary as a Rich Panel."""
+    status_color = {
+        "draft": "white", "sent": "cyan", "paid": "green",
+        "overdue": "red", "cancelled": "dim",
+    }.get(summary.status, "white")
+    lines: list[str] = [
+        f"[bold]Invoice {summary.invoice_number}[/bold]  "
+        f"[{status_color}]{summary.status.upper()}[/{status_color}]",
+        f"ID:        {summary.id}",
+        f"WO:        {summary.work_order_id or '—'}",
+        f"Customer:  {summary.customer_name or '—'} "
+        f"(id={summary.customer_id})",
+        f"Issued:    {summary.issued_at or '—'}",
+    ]
+    if summary.paid_at:
+        lines.append(f"Paid at:   {summary.paid_at}")
+    lines.append("")
+    lines.append("[bold]Line items[/bold]")
+    for i in summary.items:
+        lines.append(
+            f"  {i.item_type:<10} qty={i.quantity:g} "
+            f"@ ${i.unit_price_cents / 100:.2f} "
+            f"→ ${i.line_total_cents / 100:.2f}   {i.description}"
+        )
+    lines.append("")
+    lines.append(f"Subtotal:  ${summary.subtotal_cents / 100:.2f}")
+    lines.append(f"Tax:       ${summary.tax_cents / 100:.2f}")
+    lines.append(f"[bold]Total:     ${summary.total_cents / 100:.2f}[/bold]")
+    if summary.notes:
+        lines.append(f"\nNotes:     {summary.notes}")
+    console.print(Panel("\n".join(lines), title="Invoice"))
 
 
 # ---------------------------------------------------------------------------
@@ -3339,3 +3381,198 @@ def register_shop(cli_group: click.Group) -> None:
                 str(s.get("work_order_id") or "—"),
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # shop invoice {generate, list, show, mark-paid, revenue, void}
+    # Phase 169 — revenue tracking + invoicing
+    # -----------------------------------------------------------------
+
+    @shop_group.group("invoice")
+    def invoice_group() -> None:
+        """Invoices + revenue: generate from WOs, mark paid, roll up totals."""
+
+    @invoice_group.command("generate")
+    @click.argument("wo_id", type=int)
+    @click.option("--tax-rate", type=float, default=0.0,
+                  help="Sales tax rate 0-1 (e.g. 0.0825 for 8.25%).")
+    @click.option("--supplies-pct", type=float, default=0.0,
+                  help="Shop supplies percentage 0-1.")
+    @click.option("--supplies-flat", "supplies_flat_cents", type=int, default=0,
+                  help="Shop supplies flat fee (cents).")
+    @click.option("--diagnostic-fee", "diagnostic_fee_cents", type=int, default=0,
+                  help="Optional diagnostic fee line (cents).")
+    @click.option("--hourly-rate", "hourly_rate_cents", type=int, default=None,
+                  help="Labor hourly rate override (cents/hr).")
+    @click.option("--notes", default=None, help="Invoice-level notes.")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def invoice_generate_cmd(
+        wo_id, tax_rate, supplies_pct, supplies_flat_cents,
+        diagnostic_fee_cents, hourly_rate_cents, notes, as_json,
+    ):
+        """Generate an invoice from a completed work order."""
+        console = get_console()
+        init_db()
+        try:
+            invoice_id = generate_invoice_for_wo(
+                wo_id,
+                tax_rate=tax_rate,
+                shop_supplies_pct=supplies_pct,
+                shop_supplies_flat_cents=supplies_flat_cents,
+                diagnostic_fee_cents=diagnostic_fee_cents,
+                labor_hourly_rate_cents=hourly_rate_cents,
+                notes=notes,
+            )
+        except InvoiceGenerationError as e:
+            raise click.ClickException(str(e)) from e
+        except WorkOrderNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        summary = get_invoice_with_items(invoice_id)
+        if as_json:
+            click.echo(_json.dumps(
+                summary.model_dump() if summary else {"id": invoice_id},
+                default=str, indent=2,
+            ))
+            return
+        assert summary is not None
+        console.print(
+            f"[green]Generated invoice id={invoice_id} "
+            f"({summary.invoice_number}).[/green]"
+        )
+        _render_invoice_panel(console, summary)
+
+    @invoice_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Shop id or name (defaults to only active shop).")
+    @click.option("--status", default=None,
+                  help="Filter: draft|sent|paid|overdue|cancelled")
+    @click.option("--since", default=None,
+                  help="ISO timestamp or date (issued_at >= since).")
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def invoice_list_cmd(
+        shop_identifier, status, since, limit, as_json,
+    ):
+        """List invoices for a shop."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        try:
+            rows = list_invoices_for_shop(
+                shop["id"], status=status, since=since, limit=limit,
+            )
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print(
+                f"[dim]No invoices for shop {shop['name']!r}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Invoices — {shop['name']}", show_lines=False,
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("Number")
+        table.add_column("WO", justify="right")
+        table.add_column("Status")
+        table.add_column("Total", justify="right")
+        table.add_column("Issued")
+        status_color = {
+            "draft": "white", "sent": "cyan", "paid": "green",
+            "overdue": "red", "cancelled": "dim",
+        }
+        for r in rows:
+            st = r.get("status", "?")
+            color = status_color.get(st, "white")
+            total_cents = int(r.get("total_cents") or 0)
+            table.add_row(
+                str(r["id"]), str(r.get("invoice_number") or ""),
+                str(r.get("work_order_id") or "—"),
+                f"[{color}]{st}[/{color}]",
+                f"${total_cents / 100:.2f}",
+                str(r.get("issued_at") or "—"),
+            )
+        console.print(table)
+
+    @invoice_group.command("show")
+    @click.argument("invoice_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def invoice_show_cmd(invoice_id, as_json):
+        """Show an invoice with its line items."""
+        console = get_console()
+        init_db()
+        summary = get_invoice_with_items(invoice_id)
+        if summary is None:
+            raise click.ClickException(f"invoice not found: id={invoice_id}")
+        if as_json:
+            click.echo(_json.dumps(summary.model_dump(), default=str, indent=2))
+            return
+        _render_invoice_panel(console, summary)
+
+    @invoice_group.command("mark-paid")
+    @click.argument("invoice_id", type=int)
+    @click.option("--paid-at", default=None,
+                  help="ISO timestamp (defaults to now UTC).")
+    def invoice_mark_paid_cmd(invoice_id, paid_at):
+        """Mark an invoice as paid."""
+        console = get_console()
+        init_db()
+        try:
+            mark_invoice_paid(invoice_id, paid_at=paid_at)
+        except InvoiceNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Invoice id={invoice_id} marked paid.[/green]"
+        )
+
+    @invoice_group.command("void")
+    @click.argument("invoice_id", type=int)
+    @click.option("--reason", default=None, help="Reason (appended to notes).")
+    def invoice_void_cmd(invoice_id, reason):
+        """Void an invoice (sets status=cancelled, allows regeneration)."""
+        console = get_console()
+        init_db()
+        try:
+            void_invoice(invoice_id, reason=reason)
+        except InvoiceNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[yellow]Invoice id={invoice_id} voided.[/yellow]"
+        )
+
+    @invoice_group.command("revenue")
+    @click.option("--shop", "shop_identifier", default=None,
+                  help="Shop id or name (omit for all-shops rollup).")
+    @click.option("--since", default=None,
+                  help="ISO timestamp or date (issued_at >= since).")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def invoice_revenue_cmd(shop_identifier, since, as_json):
+        """Revenue rollup by status for the shop dashboard."""
+        console = get_console()
+        init_db()
+        shop_id = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        rollup = revenue_rollup(shop_id=shop_id, since=since)
+        if as_json:
+            click.echo(_json.dumps(rollup.model_dump(), default=str, indent=2))
+            return
+        lines = [
+            f"Shop:          {shop_id if shop_id is not None else '(all)'}",
+            f"Since:         {since or '(all time)'}",
+            f"Invoices:      {rollup.invoice_count}",
+            f"Total invoiced: ${rollup.total_invoiced_cents / 100:.2f}",
+            f"Total paid:    ${rollup.total_paid_cents / 100:.2f}",
+            f"Pending:       ${rollup.total_pending_cents / 100:.2f}",
+        ]
+        if rollup.by_status:
+            lines.append("")
+            lines.append("By status:")
+            for st, n in sorted(rollup.by_status.items()):
+                lines.append(f"  {st:<10} {n}")
+        console.print(Panel("\n".join(lines), title="Revenue Rollup"))

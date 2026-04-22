@@ -7,6 +7,21 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.invoicing import (
+    INVOICE_STATUSES,
+    InvoiceGenerationError,
+    InvoiceLineItemSummary,
+    InvoiceNotFoundError,
+    InvoiceStatus,
+    InvoiceSummary,
+    RevenueRollup,
+    generate_invoice_for_wo,
+    get_invoice_with_items,
+    list_invoices_for_shop,
+    mark_invoice_paid,
+    revenue_rollup,
+    void_invoice,
+)
 from motodiag.shop.bay_scheduler import (
     BAY_TYPES,
     DEFAULT_DURATION_HOURS,
@@ -224,6 +239,20 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # invoicing (Phase 169)
+    "INVOICE_STATUSES",
+    "InvoiceGenerationError",
+    "InvoiceLineItemSummary",
+    "InvoiceNotFoundError",
+    "InvoiceStatus",
+    "InvoiceSummary",
+    "RevenueRollup",
+    "generate_invoice_for_wo",
+    "get_invoice_with_items",
+    "list_invoices_for_shop",
+    "mark_invoice_paid",
+    "revenue_rollup",
+    "void_invoice",
     # bay_scheduler (Phase 168)
     "BAY_TYPES",
     "DEFAULT_DURATION_HOURS",

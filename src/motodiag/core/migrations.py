@@ -2373,6 +2373,56 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS shop_bays;
         """,
     ),
+    # Migration 033 — Phase 169: invoices.work_order_id soft FK
+    Migration(
+        version=33,
+        name="invoices_work_order_id",
+        description=(
+            "Phase 169: Add nullable `work_order_id` column to the "
+            "Phase 118 `invoices` table so invoices can reference the "
+            "Phase 161 work_order they were generated from. SQLite "
+            "ALTER TABLE can't add FK constraints, so this is a soft "
+            "reference — repo-layer validates on write; mechanics "
+            "don't delete work_orders (Phase 161 cancels instead). "
+            "Plus one index for shop-level revenue rollup queries."
+        ),
+        upgrade_sql="""
+            ALTER TABLE invoices ADD COLUMN work_order_id INTEGER;
+            CREATE INDEX IF NOT EXISTS idx_invoices_work_order
+                ON invoices(work_order_id);
+        """,
+        rollback_sql="""
+            -- SQLite-portable column drop: recreate table without column.
+            DROP INDEX IF EXISTS idx_invoices_work_order;
+            CREATE TABLE invoices_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER,
+                repair_plan_id INTEGER,
+                invoice_number TEXT UNIQUE,
+                status TEXT DEFAULT 'draft',
+                subtotal INTEGER NOT NULL DEFAULT 0,
+                tax_amount INTEGER NOT NULL DEFAULT 0,
+                total INTEGER NOT NULL DEFAULT 0,
+                currency TEXT DEFAULT 'USD',
+                issued_at TIMESTAMP,
+                due_at TIMESTAMP,
+                paid_at TIMESTAMP,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            );
+            INSERT INTO invoices_rollback
+                (id, customer_id, repair_plan_id, invoice_number, status,
+                 subtotal, tax_amount, total, currency, issued_at, due_at,
+                 paid_at, notes, created_at, updated_at)
+            SELECT id, customer_id, repair_plan_id, invoice_number, status,
+                   subtotal, tax_amount, total, currency, issued_at, due_at,
+                   paid_at, notes, created_at, updated_at
+            FROM invoices;
+            DROP TABLE invoices;
+            ALTER TABLE invoices_rollback RENAME TO invoices;
+        """,
+    ),
 ]
 
 

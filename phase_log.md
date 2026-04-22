@@ -892,3 +892,53 @@ Build deviations:
 - AI substrate: `shop/ai_client.py` (Phase 162.5) composes 3 downstream AI phases; canonical pattern locked
 
 Next: Phase 169-173 (shop analytics + customer communications + revenue rollups — layer on Track G substrate without adding new fundamental state) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate test).
+
+---
+
+### 2026-04-22 — Phase 169 complete (Track G commercial core closes — intake→invoice)
+
+**Track G commercial core closed.** The mechanic now has a full workflow — intake → triage → WO → parts → labor → bay → completion → invoice → revenue rollup — entirely through `motodiag shop *`. Phase 169 is the last Track G scope phase before the final handful of polish/analytics phases (170-173) and Gate 8 (174).
+
+Micro-migration 033 (schema v32→v33): single `ALTER TABLE invoices ADD COLUMN work_order_id INTEGER` + `idx_invoices_work_order` index. Rename-recreate rollback pattern. **Zero new tables — reuses Phase 118 `invoices` + `invoice_line_items` + `accounting.invoice_repo` CRUD unchanged.** This is the second time Track G has leveraged existing substrate (after Phase 160 wiring Phase 113's dormant CRM tables) — and it validates that the "reuse, don't duplicate" discipline holds even across a 50+ phase gap.
+
+New `shop/invoicing.py` (~496 LoC):
+- 3 Pydantic summaries: `InvoiceSummary`, `InvoiceLineItemSummary`, `RevenueRollup`
+- 2 exceptions: `InvoiceGenerationError`, `InvoiceNotFoundError`
+- 6 public APIs: `generate_invoice_for_wo`, `mark_invoice_paid`, `void_invoice`, `get_invoice_with_items`, `list_invoices_for_shop`, `revenue_rollup`
+- 7 helpers including `_lookup_labor_rate_cents` (three-stage state → national → any fallback), `_format_invoice_number` (with `-Rn` regeneration suffix), `_add_line_cents` (cents→dollars boundary helper)
+
+**Phase 118 substrate reconciliation at the module boundary — three mismatches, all resolved without touching Phase 118 code:**
+1. **Enum vocabulary**: Phase 118 `InvoiceStatus` uses `"sent"`/`"cancelled"`; the plan had `"issued"`/`"void"`. CLI surfaces "void" for mechanic-friendly language but writes `InvoiceStatus.CANCELLED`.
+2. **Dollars vs cents**: Phase 118 stores `subtotal`/`tax_amount`/`total` as REAL dollars; public API accepts cents (`--hourly-rate 10000` = $100/hr). Module converts at every I/O boundary.
+3. **`invoices.customer_id` NOT NULL**: WOs without a customer can't be invoiced. Defensive runtime check raises `InvoiceGenerationError` with remediation hint.
+
+**Line-item composition:** labor from Phase 167 `actual_hours` (falls back to `estimated_hours` if WO was completed without hours booked) → line 1; Phase 165 installed+received parts → one line per row with `unit_cost_cents_override` priority over `typical_cost_cents`; optional diagnostic fee; optional shop supplies (percent of pre-supplies subtotal AND/OR flat cents); tax applied to final subtotal. Idempotent per WO — duplicate generation raises; `void_invoice` enables regeneration with `-R1`, `-R2`, ... suffixes to avoid `invoice_number UNIQUE` collision on same-day flows.
+
+New CLI `motodiag shop invoice {generate, list, show, mark-paid, void, revenue}` (**6 subcommands** — `void` was added mid-build as an explicit public function/CLI; plan had 5). Each takes `--json` for programmatic callers. +196 LoC in `cli/shop.py` including new `_render_invoice_panel` helper. **Total `cli/shop.py` now ~4340 LoC across 12 subgroups and 88 subcommands.**
+
+32 tests GREEN across 6 classes (TestMigration033×5 + TestInvoiceGeneration×9 + TestMarkPaidAndVoid×5 + TestListAndRollup×6 + TestInvoiceCLI×6 + TestAntiRegression×1) in 53.62s.
+
+**Targeted regression: 511 GREEN in 328.77s (5m 28s)** covering Phase 113 (CRM) + Phase 118 (billing/accounting — 40+ tests unchanged) + Phase 131 (ai-cache) + Phase 153 (parts catalog) + Track G 160-169 + Phase 162.5. Zero regressions.
+
+Build deviations:
+- Added `void_invoice` public function (plan had mark-paid only).
+- Invoice number format extended with `-Rn` regeneration suffix.
+- Dropped "no customer" test branch (structurally unreachable after Phase 161 NOT NULL).
+- `list_invoices_for_shop` tightened to INNER JOIN (strict shop-scope); unlinked pre-169 invoices reachable via `get_invoice_with_items(id)` directly.
+- `revenue_rollup` dual-mode: shop-scoped (JOIN) or all-invoices (no JOIN) for future multi-tenant dashboards.
+- 32 tests vs ~28 planned (+4 on void/regeneration/rollup-math paths).
+
+**Track G scorecard through Phase 169:**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169 (10)
+- Phase-specific tests: 334 (302 + 32)
+- Track G regression: 511/511 GREEN at Phase 169 close
+- CLI surface: **12 subgroups, 88 subcommands under `motodiag shop`**
+- DB tables added: still 9 net-new (shops, intake_visits, work_orders, issues, work_order_parts, parts_requisitions, parts_requisition_items, sourcing_recommendations, labor_estimates, shop_bays, bay_schedule_slots — Phase 169 reuses Phase 118 `invoices` + `invoice_line_items` unchanged, only adding a column)
+- Migrations added: 9 (025-033)
+- AI substrate: `shop/ai_client.py` composes 3 AI phases; canonical pattern locked
+
+**Key finding:** Phase 169 validates "reuse existing substrate" across a 50+ phase gap. Phase 118 `invoices`/`invoice_line_items`/`accounting.invoice_repo` shipped untouched; Phase 169 added one column + an orchestration module and got a complete revenue-tracking console. Three substrate vocabulary mismatches were reconciled at the new module's boundary rather than by renaming old fields. Pattern generalizes to future phases that lean on older tracks (e.g., Phase 172 on Phase 117 mechanic RBAC): expect 2-3 mismatches, reconcile at the boundary, preserve old-track tests unchanged.
+
+Project version 0.10.0 → **0.10.1** (Track G commercial core closure; Gate 8 runway entered).
+
+Next: Phase 170 (customer communication — SMS/email status updates) → Phase 171 (analytics dashboard — consumes Phase 168 utilization + Phase 167 reconciliation + Phase 169 revenue) → Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules) → Phase 174 Gate 8 (intake-to-invoice integration test).
