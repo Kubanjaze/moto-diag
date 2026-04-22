@@ -7,6 +7,28 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.parts_needs import (
+    PART_STATUSES,
+    ConsolidatedPartNeed,
+    InvalidPartNeedTransition,
+    PartNotInCatalogError,
+    Requisition,
+    WorkOrderPartLine,
+    WorkOrderPartNotFoundError,
+    add_part_to_work_order,
+    build_requisition,
+    cancel_part_need,
+    get_requisition,
+    list_parts_for_shop_open_wos,
+    list_parts_for_wo,
+    list_requisitions,
+    mark_part_installed,
+    mark_part_ordered,
+    mark_part_received,
+    remove_part_from_work_order,
+    update_part_cost_override,
+    update_part_quantity,
+)
 from motodiag.shop.triage_queue import (
     ShopTriageError,
     ShopTriageWeights,
@@ -126,6 +148,27 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # parts_needs (Phase 165)
+    "PART_STATUSES",
+    "ConsolidatedPartNeed",
+    "InvalidPartNeedTransition",
+    "PartNotInCatalogError",
+    "Requisition",
+    "WorkOrderPartLine",
+    "WorkOrderPartNotFoundError",
+    "add_part_to_work_order",
+    "build_requisition",
+    "cancel_part_need",
+    "get_requisition",
+    "list_parts_for_shop_open_wos",
+    "list_parts_for_wo",
+    "list_requisitions",
+    "mark_part_installed",
+    "mark_part_ordered",
+    "mark_part_received",
+    "remove_part_from_work_order",
+    "update_part_cost_override",
+    "update_part_quantity",
     # triage_queue (Phase 164)
     "ShopTriageError",
     "ShopTriageWeights",

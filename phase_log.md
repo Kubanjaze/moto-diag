@@ -728,3 +728,32 @@ CLI: new `motodiag shop triage {queue, next, flag-urgent, skip, weights}` (5 sub
 **Project version:** 0.9.5 → **0.9.6**.
 
 Next: Phase 165 (parts needs aggregation — bridges Phase 153 catalog to Phase 161 work_orders; transactional cost recompute through Phase 161 update_work_order whitelist).
+
+### 2026-04-22 01:00 — Phase 165 complete
+
+**Track G parts pillar landed.** Migration 029 (schema v28→v29) creates 3 new tables bridging Phase 153 parts catalog (`parts` + `parts_xref`) to Phase 161 work_orders via FK reuse — zero schema duplication.
+
+New `shop/parts_needs.py` (605 LoC) — 18 functions:
+- 5 CRUD (`add_part_to_work_order` / `remove_part_from_work_order` / `update_part_quantity` / `update_part_cost_override` / `cancel_part_need`)
+- 3 lifecycle transitions (`mark_part_ordered` / `mark_part_received` / `mark_part_installed`)
+- 1 critical helper `_recompute_wo_parts_cost` — writes back via Phase 161 `update_work_order(wo_id, {"estimated_parts_cost_cents": ...})` — NEVER raw SQL
+- 2 read APIs (`list_parts_for_wo` for Phase 164 contract + `list_parts_for_shop_open_wos` for cross-WO consolidation with OEM/aftermarket cost surfacing via `parts_repo.get_xrefs`)
+- 3 requisition APIs (`build_requisition` / `get_requisition` / `list_requisitions`) — immutable snapshots
+- 3 Pydantic models (`WorkOrderPartLine` / `ConsolidatedPartNeed` / `Requisition`)
+- 3 exceptions (`WorkOrderPartNotFoundError` / `InvalidPartNeedTransition` / `PartNotInCatalogError`)
+
+**Critical audit guarantee:** `test_recompute_routes_through_update_work_order` patches `motodiag.shop.parts_needs.update_work_order` and asserts it's called with `{"estimated_parts_cost_cents": new_total}` in the updates dict. Proves the cost recompute routes through the Phase 161 whitelist — if a future author tries to bypass with raw `UPDATE work_orders SET ...`, the test fails loudly.
+
+**Phase 164 contract satisfied automatically:** `list_parts_for_wo(wo_id, db_path=None)` exported with the exact name Phase 164's `_parts_available_for` soft-guard imports. The `test_phase164_soft_guard_contract` test in this phase's suite verifies the contract end-to-end: when no parts exist on a WO, soft-guard returns `(True, [])`; when an open part exists, soft-guard returns `(False, [missing_skus])`. Phase 164's triage queue automatically picks up real parts-availability data with no Phase 164 code change.
+
+**Immutable requisition snapshots:** `build_requisition(shop_id, wo_ids=None|list)` validates wo_ids belong to shop_id (raises ValueError on mismatch), then freezes header + items at creation. Subsequent edits to `work_order_parts` do NOT mutate the snapshot — gives the shop an auditable "as-of" record. Empty requisition still creates a header row with zero counts (intentional — explicit "we checked, found nothing" record).
+
+**FK asymmetry mirrors Phases 160/161:** structural ownership (WO→lines, requisition→items) cascades; curated reference data (`parts`) is RESTRICT-protected so removing a part referenced anywhere is blocked at the FK layer (preserves cost audit history).
+
+CLI: new `motodiag shop parts-needs {add, list, consolidate, mark-ordered, mark-received, requisition {create, list, show}}` (5 top-level + 3 nested = 8 subcommands; +320 LoC in cli/shop.py).
+
+**Tests:** 38 GREEN across 5 classes (TestMigration029×5 + TestPartsNeedsCRUD×12 + TestPartsLifecycle×5 + TestRequisitions×8 + TestPartsNeedsCLI×8) in 32.96s. Targeted regression sample (Phase 131 + 153 + 160-165 + 162.5): 310 GREEN in 229.41s. Phase 153 parts catalog tests pass unchanged.
+
+**Project version:** 0.9.6 → **0.9.7**.
+
+Next: Phase 166 (AI parts sourcing — composes against Phase 162.5 ShopAIClient + reads Phase 165 ConsolidatedPartNeed for OEM-vs-aftermarket recommendations seeded from research-brief vendor taxonomy).

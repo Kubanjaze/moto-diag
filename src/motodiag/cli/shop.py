@@ -41,11 +41,23 @@ from motodiag.shop import (
     InvalidWorkOrderTransition,
     IssueFKError,
     IssueNotFoundError,
+    PartNotInCatalogError,
     PriorityBudgetExhausted,
     PriorityScorerError,
     ShopNameExistsError,
     ShopTriageError,
     ShopTriageWeights,
+    WorkOrderPartNotFoundError,
+    InvalidPartNeedTransition,
+    add_part_to_work_order,
+    build_requisition,
+    cancel_part_need,
+    get_requisition,
+    list_parts_for_shop_open_wos,
+    list_parts_for_wo,
+    list_requisitions,
+    mark_part_ordered,
+    mark_part_received,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
     WorkOrderFKError,
@@ -2333,3 +2345,287 @@ def register_shop(cli_group: click.Group) -> None:
             ),
             title=f"Triage weights for shop id={shop_id}",
         ))
+
+    # -----------------------------------------------------------------
+    # shop parts-needs {add, list, consolidate, mark-ordered, mark-received,
+    #                   requisition {create, list, show}}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("parts-needs")
+    def parts_needs_group() -> None:
+        """Parts aggregation: link parts to WOs + roll up shopping lists."""
+
+    @parts_needs_group.command("add")
+    @click.argument("wo_id", type=int)
+    @click.option("--part-id", "-p", required=True, type=int)
+    @click.option("--qty", "-q", type=int, default=1, show_default=True)
+    @click.option("--unit-cost", "unit_cost_override", type=int, default=None,
+                  help="Override catalog unit cost in cents (nullable).")
+    @click.option("--notes", default=None)
+    def pn_add(wo_id, part_id, qty, unit_cost_override, notes):
+        """Add a part line to a work order; recomputes parent WO cost."""
+        console = get_console()
+        init_db()
+        try:
+            wop_id = add_part_to_work_order(
+                wo_id, part_id, quantity=qty,
+                unit_cost_override=unit_cost_override, notes=notes,
+            )
+        except (PartNotInCatalogError, WorkOrderNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Added work_order_part id={wop_id} "
+            f"(wo={wo_id}, part={part_id}, qty={qty}).[/green]"
+        )
+
+    @parts_needs_group.command("list")
+    @click.option("--wo", "wo_id", type=int, default=None)
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--include-cancelled", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def pn_list(wo_id, shop_id, include_cancelled, as_json):
+        """List parts lines for a WO or aggregated across a shop."""
+        console = get_console()
+        init_db()
+        if (wo_id is None) == (shop_id is None):
+            raise click.ClickException(
+                "Pass exactly one of --wo or --shop."
+            )
+        if wo_id is not None:
+            rows = list_parts_for_wo(
+                wo_id, include_cancelled=include_cancelled,
+            )
+            if as_json:
+                click.echo(_json.dumps(rows, default=str, indent=2))
+                return
+            if not rows:
+                console.print(
+                    f"[dim]No parts on WO id={wo_id}.[/dim]"
+                )
+                return
+            table = Table(
+                title=f"Parts on WO id={wo_id}", show_lines=False,
+            )
+            table.add_column("WOP", justify="right")
+            table.add_column("Part")
+            table.add_column("Qty", justify="right")
+            table.add_column("Unit ¢", justify="right")
+            table.add_column("Subtotal ¢", justify="right")
+            table.add_column("Status")
+            for r in rows:
+                table.add_row(
+                    str(r["id"]),
+                    f"{r.get('part_slug', '?')} (id={r['part_id']})",
+                    str(r["quantity"]),
+                    str(r["unit_cost_cents"]),
+                    str(r["line_subtotal_cents"]),
+                    r["status"],
+                )
+            console.print(table)
+        else:
+            consolidated = list_parts_for_shop_open_wos(shop_id)
+            if as_json:
+                payload = [c.model_dump() for c in consolidated]
+                click.echo(_json.dumps(payload, default=str, indent=2))
+                return
+            if not consolidated:
+                console.print(
+                    f"[dim]No active parts needs for shop id={shop_id}.[/dim]"
+                )
+                return
+            table = Table(
+                title=f"Consolidated parts needs (shop id={shop_id})",
+                show_lines=False,
+            )
+            table.add_column("Part")
+            table.add_column("Qty", justify="right")
+            table.add_column("WO ids")
+            table.add_column("Est ¢", justify="right")
+            table.add_column("OEM ¢", justify="right")
+            table.add_column("Aftermarket ¢", justify="right")
+            for c in consolidated:
+                table.add_row(
+                    f"{c.part_slug} (id={c.part_id})",
+                    str(c.total_quantity),
+                    ",".join(str(w) for w in c.wo_ids),
+                    str(c.estimated_cost_cents),
+                    str(c.oem_cost_cents) if c.oem_cost_cents is not None else "—",
+                    str(c.aftermarket_cost_cents) if c.aftermarket_cost_cents is not None else "—",
+                )
+            console.print(table)
+
+    @parts_needs_group.command("consolidate")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--top", "top_n", type=int, default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def pn_consolidate(shop_id, top_n, as_json):
+        """Show cross-WO aggregated shopping list WITHOUT persisting."""
+        console = get_console()
+        init_db()
+        consolidated = list_parts_for_shop_open_wos(shop_id)
+        if top_n:
+            consolidated = consolidated[:top_n]
+        if as_json:
+            payload = [c.model_dump() for c in consolidated]
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        if not consolidated:
+            console.print("[dim]No active parts needs.[/dim]")
+            return
+        total = sum(c.estimated_cost_cents for c in consolidated)
+        table = Table(
+            title=f"Top parts needs (shop id={shop_id}) — total ¢{total}",
+            show_lines=False,
+        )
+        table.add_column("Part")
+        table.add_column("Qty", justify="right")
+        table.add_column("WOs", justify="right")
+        table.add_column("Est ¢", justify="right")
+        for c in consolidated:
+            table.add_row(
+                f"{c.part_slug}",
+                str(c.total_quantity),
+                str(len(c.wo_ids)),
+                str(c.estimated_cost_cents),
+            )
+        console.print(table)
+
+    @parts_needs_group.command("mark-ordered")
+    @click.argument("wop_id", type=int)
+    def pn_mark_ordered(wop_id):
+        """Advance a parts line from open → ordered."""
+        console = get_console()
+        init_db()
+        try:
+            mark_part_ordered(wop_id)
+        except (WorkOrderPartNotFoundError, InvalidPartNeedTransition) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[yellow]Marked work_order_part id={wop_id} as ordered.[/yellow]"
+        )
+
+    @parts_needs_group.command("mark-received")
+    @click.argument("wop_id", type=int)
+    def pn_mark_received(wop_id):
+        """Advance a parts line from ordered → received."""
+        console = get_console()
+        init_db()
+        try:
+            mark_part_received(wop_id)
+        except (WorkOrderPartNotFoundError, InvalidPartNeedTransition) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Marked work_order_part id={wop_id} as received.[/green]"
+        )
+
+    # Nested requisition subgroup
+
+    @parts_needs_group.group("requisition")
+    def requisition_group() -> None:
+        """Persisted consolidated shopping-list snapshots."""
+
+    @requisition_group.command("create")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--wo", "wo_ids", multiple=True, type=int,
+                  help="Limit to specific WOs (repeatable). Default: all active.")
+    @click.option("--notes", default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def req_create(shop_id, wo_ids, notes, as_json):
+        """Persist a new requisition snapshot."""
+        console = get_console()
+        init_db()
+        try:
+            req_id = build_requisition(
+                shop_id,
+                wo_ids=list(wo_ids) if wo_ids else None,
+                notes=notes,
+            )
+        except ValueError as e:
+            raise click.ClickException(str(e)) from e
+        req = get_requisition(req_id)
+        assert req is not None
+        if as_json:
+            click.echo(_json.dumps(req.model_dump(), default=str, indent=2))
+            return
+        console.print(Panel(
+            f"Requisition id={req_id}\n"
+            f"Shop: {shop_id}\n"
+            f"Distinct parts: {req.total_distinct_parts}\n"
+            f"Total quantity: {req.total_quantity}\n"
+            f"Estimated cost: ¢{req.total_estimated_cost_cents} "
+            f"(${req.total_estimated_cost_cents/100:.2f})",
+            title="Requisition created",
+        ))
+
+    @requisition_group.command("list")
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--since", default=None)
+    @click.option("--limit", type=int, default=20)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def req_list_cmd(shop_id, since, limit, as_json):
+        """List recent requisitions (headers)."""
+        console = get_console()
+        init_db()
+        rows = list_requisitions(
+            shop_id=shop_id, since=since, limit=limit,
+        )
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No requisitions found.[/dim]")
+            return
+        table = Table(title="Requisitions", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Shop", justify="right")
+        table.add_column("Generated")
+        table.add_column("Parts", justify="right")
+        table.add_column("Qty", justify="right")
+        table.add_column("Est ¢", justify="right")
+        for r in rows:
+            table.add_row(
+                str(r["id"]),
+                str(r["shop_id"]),
+                str(r["generated_at"]),
+                str(r["total_distinct_parts"]),
+                str(r["total_quantity"]),
+                str(r["total_estimated_cost_cents"]),
+            )
+        console.print(table)
+
+    @requisition_group.command("show")
+    @click.argument("req_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def req_show(req_id, as_json):
+        """Show a persisted requisition with its full item list."""
+        console = get_console()
+        init_db()
+        req = get_requisition(req_id)
+        if req is None:
+            raise click.ClickException(f"requisition not found: id={req_id}")
+        if as_json:
+            click.echo(_json.dumps(req.model_dump(), default=str, indent=2))
+            return
+        console.print(Panel(
+            f"Generated: {req.generated_at}\n"
+            f"Distinct parts: {req.total_distinct_parts}\n"
+            f"Total quantity: {req.total_quantity}\n"
+            f"Estimated cost: ¢{req.total_estimated_cost_cents}",
+            title=f"Requisition id={req_id} (shop {req.shop_id})",
+        ))
+        if not req.items:
+            console.print("[dim]No items.[/dim]")
+            return
+        table = Table(title="Items", show_lines=False)
+        table.add_column("Part")
+        table.add_column("Qty", justify="right")
+        table.add_column("Est ¢", justify="right")
+        table.add_column("Contributing WOs")
+        for item in req.items:
+            table.add_row(
+                f"{item.part_slug} (id={item.part_id})",
+                str(item.total_quantity),
+                str(item.estimated_cost_cents),
+                ",".join(str(w) for w in item.wo_ids),
+            )
+        console.print(table)

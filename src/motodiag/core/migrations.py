@@ -2062,6 +2062,113 @@ MIGRATIONS: list[Migration] = [
                 ON shops(owner_user_id, name);
         """,
     ),
+    # Migration 029 — Phase 165: parts needs aggregation (work_order_parts +
+    # parts_requisitions + parts_requisition_items)
+    Migration(
+        version=29,
+        name="parts_needs_aggregation",
+        description=(
+            "Phase 165: Bridges Phase 153 parts catalog (parts + "
+            "parts_xref) to Phase 161 work_orders. Three new tables:\n"
+            "1) `work_order_parts` — junction (work_order_id FK CASCADE, "
+            "part_id FK RESTRICT) with quantity (>0 CHECK), optional "
+            "unit_cost_cents_override (nullable; NULL = use catalog "
+            "typical_cost_cents), 5-state lifecycle CHECK IN "
+            "('open','ordered','received','installed','cancelled'), "
+            "ordered_at/received_at/installed_at timestamps, notes, "
+            "created_by_user_id FK SET DEFAULT.\n"
+            "2) `parts_requisitions` — immutable shop-scoped consolidated "
+            "shopping-list snapshots with shop_id FK CASCADE, generated_at, "
+            "wo_id_scope (JSON array of wo_ids OR NULL = all open), "
+            "total_distinct_parts/total_quantity/total_estimated_cost_cents "
+            "frozen at generation time, notes, generated_by_user_id FK SET "
+            "DEFAULT.\n"
+            "3) `parts_requisition_items` — frozen per-part snapshot rows "
+            "(requisition_id FK CASCADE, part_id FK RESTRICT, total_quantity "
+            "CHECK >0, estimated_cost_cents, contributing_wo_ids JSON array).\n"
+            "FK asymmetry mirrors Phases 160/161: structural ownership "
+            "(WO→lines, requisition→items) cascades; curated reference data "
+            "(parts) is RESTRICT-protected so removing a part referenced "
+            "anywhere is blocked at the FK layer (preserves cost audit "
+            "history). 3 indexes cover dominant access patterns: "
+            "idx_wop_wo_status (per-WO active-line lookup), idx_wop_part "
+            "(parts-side reverse lookup for catalog hygiene + Phase 166 AI "
+            "sourcing aggregation), idx_parts_req_shop_date (shop history "
+            "browse). Cost recompute (work_orders.estimated_parts_cost_cents) "
+            "ALWAYS routes through Phase 161 update_work_order whitelist — "
+            "never raw SQL — preserving the lifecycle guard + audit "
+            "integrity Phase 161 established."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS work_order_parts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                part_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL DEFAULT 1
+                    CHECK (quantity > 0),
+                unit_cost_cents_override INTEGER
+                    CHECK (unit_cost_cents_override IS NULL OR
+                           unit_cost_cents_override >= 0),
+                status TEXT NOT NULL DEFAULT 'open'
+                    CHECK (status IN ('open','ordered','received',
+                                      'installed','cancelled')),
+                ordered_at TIMESTAMP,
+                received_at TIMESTAMP,
+                installed_at TIMESTAMP,
+                notes TEXT,
+                created_by_user_id INTEGER NOT NULL DEFAULT 1,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (part_id)
+                    REFERENCES parts(id) ON DELETE RESTRICT,
+                FOREIGN KEY (created_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE TABLE IF NOT EXISTS parts_requisitions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                generated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                generated_by_user_id INTEGER NOT NULL DEFAULT 1,
+                wo_id_scope TEXT,
+                total_distinct_parts INTEGER NOT NULL DEFAULT 0,
+                total_quantity INTEGER NOT NULL DEFAULT 0,
+                total_estimated_cost_cents INTEGER NOT NULL DEFAULT 0,
+                notes TEXT,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (generated_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE TABLE IF NOT EXISTS parts_requisition_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                requisition_id INTEGER NOT NULL,
+                part_id INTEGER NOT NULL,
+                total_quantity INTEGER NOT NULL CHECK (total_quantity > 0),
+                estimated_cost_cents INTEGER NOT NULL DEFAULT 0,
+                contributing_wo_ids TEXT NOT NULL,
+                FOREIGN KEY (requisition_id)
+                    REFERENCES parts_requisitions(id) ON DELETE CASCADE,
+                FOREIGN KEY (part_id)
+                    REFERENCES parts(id) ON DELETE RESTRICT
+            );
+            CREATE INDEX IF NOT EXISTS idx_wop_wo_status
+                ON work_order_parts(work_order_id, status);
+            CREATE INDEX IF NOT EXISTS idx_wop_part
+                ON work_order_parts(part_id);
+            CREATE INDEX IF NOT EXISTS idx_parts_req_shop_date
+                ON parts_requisitions(shop_id, generated_at DESC);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_parts_req_shop_date;
+            DROP INDEX IF EXISTS idx_wop_part;
+            DROP INDEX IF EXISTS idx_wop_wo_status;
+            DROP TABLE IF EXISTS parts_requisition_items;
+            DROP TABLE IF EXISTS parts_requisitions;
+            DROP TABLE IF EXISTS work_order_parts;
+        """,
+    ),
 ]
 
 
