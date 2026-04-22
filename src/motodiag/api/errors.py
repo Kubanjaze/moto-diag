@@ -101,6 +101,10 @@ def _exc_class_chain():
         BillingProviderError, StripeLibraryMissingError,
         WebhookSignatureError,
     )
+    # Phase 177 — vehicle domain
+    from motodiag.vehicles.registry import (
+        VehicleOwnershipError, VehicleQuotaExceededError,
+    )
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -179,6 +183,11 @@ def _exc_class_chain():
          "Stripe library not installed on server"),
         (BillingProviderError, 502, "billing-provider-error",
          "Billing provider error"),
+        # Phase 177 — vehicles
+        (VehicleOwnershipError, 404, "vehicle-not-found",
+         "Vehicle not found"),
+        (VehicleQuotaExceededError, 402, "vehicle-quota-exceeded",
+         "Vehicle quota exceeded for current subscription tier"),
     ]
 
 

@@ -2727,6 +2727,65 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS api_keys;
         """,
     ),
+    # Migration 038 — Phase 177: vehicles.owner_user_id retrofit
+    Migration(
+        version=38,
+        name="vehicles_owner_user_id",
+        description=(
+            "Phase 177: Retrofit owner_user_id column on Phase 04 "
+            "vehicles table. Pre-retrofit rows default to system "
+            "user (id=1) — invisible via API until an operator "
+            "explicitly re-owns them. Matches Phase 112's pattern "
+            "of retrofitting user_id columns onto existing tables."
+        ),
+        upgrade_sql="""
+            ALTER TABLE vehicles
+                ADD COLUMN owner_user_id INTEGER NOT NULL DEFAULT 1;
+            CREATE INDEX IF NOT EXISTS idx_vehicles_owner
+                ON vehicles(owner_user_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_vehicles_owner;
+            -- SQLite pre-3.35 can't DROP COLUMN; use rename-recreate
+            -- to restore the pre-Phase-177 shape.
+            CREATE TABLE vehicles_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                engine_cc INTEGER,
+                vin TEXT,
+                protocol TEXT NOT NULL DEFAULT 'none',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                powertrain TEXT DEFAULT 'ice',
+                engine_type TEXT DEFAULT 'four_stroke',
+                battery_chemistry TEXT,
+                motor_kw REAL,
+                bms_present INTEGER DEFAULT 0,
+                customer_id INTEGER DEFAULT 1,
+                mileage INTEGER
+            );
+            INSERT INTO vehicles_rollback
+                (id, make, model, year, engine_cc, vin, protocol,
+                 notes, created_at, updated_at,
+                 powertrain, engine_type, battery_chemistry,
+                 motor_kw, bms_present, customer_id, mileage)
+            SELECT
+                id, make, model, year, engine_cc, vin, protocol,
+                notes, created_at, updated_at,
+                powertrain, engine_type, battery_chemistry,
+                motor_kw, bms_present, customer_id, mileage
+            FROM vehicles;
+            DROP TABLE vehicles;
+            ALTER TABLE vehicles_rollback RENAME TO vehicles;
+            CREATE INDEX IF NOT EXISTS idx_vehicles_make_model
+                ON vehicles(make, model);
+            CREATE INDEX IF NOT EXISTS idx_vehicles_year
+                ON vehicles(year);
+        """,
+    ),
 ]
 
 

@@ -1294,3 +1294,36 @@ That's it. Every step above is deploy-time config; no code change needed.
 Project version 0.11.1 → **0.12.0** (major minor bump — monetization is a structural product change).
 
 Next: **Phase 177** (vehicle endpoints) is the first full-CRUD domain router on top of the paywall. Phases 178-180 follow in parallel (session / KB / shop CRUD). Phase 181 adds WebSocket live data for OBD streams. Phase 182 generates PDF reports. Phase 183 enriches OpenAPI. Phase 184 is Gate 9 — full intake-to-invoice integration test through HTTP instead of CLI. Every one of these consumes the Phase 175 + 176 scaffold without needing to extend it.
+
+---
+
+### 2026-04-22 — Phase 177 complete — first full-CRUD Track H domain router
+
+**Vehicle endpoints ship.** `GET/POST/PATCH/DELETE /v1/vehicles*` exposes the Phase 04 vehicles table via HTTP with owner scoping + tier-gated quotas. The 301-LoC router validates the Track H composition pattern — every subsequent domain router (178 session / 179 KB / 180 shop) will inherit the same ceremony-free pattern.
+
+**Migration 038**: retrofit `owner_user_id` column on Phase 04 vehicles (Phase 112's retrofit pattern). Pre-retrofit rows default to system user id=1 — invisible via API until explicit re-ownership. Rollback uses rename-recreate to restore the Phase 04+110+152 shape.
+
+**Owner scoping at the repo layer.** `vehicles/registry.py` gains 7 new `_for_owner` functions that take `owner_user_id` as a required arg — structurally impossible for a route to forget the scope. Existing unscoped helpers (`list_vehicles`, `get_vehicle`, etc.) stay working — Phase 04 CLI + background jobs continue to see vehicles globally.
+
+**Tier quota**: `TIER_VEHICLE_LIMITS` dict (5/50/-1 for individual/shop/company) + `check_vehicle_quota()` helper. POST enforces at count-then-insert; 402 response includes `tier` + `limit` + "upgrade" hint. List response exposes `tier` + `quota_limit` + `quota_remaining` so clients can show "2 of 5" UI without a second round-trip.
+
+**Cross-user 404 policy**: `get_vehicle_for_owner` returns None for both nonexistent and cross-user vehicles — routes translate None → 404. Standard enumeration-attack prevention; a caller can't tell whether vehicle id 42 exists unless they own it.
+
+**33 tests GREEN in 26.07s** — single-pass, no fixups. Tests cover migration + owner-scoped repo helpers + quota boundaries + every HTTP endpoint happy path + every error path (401 unauthenticated, 404 cross-user, 402 quota exceeded, 422 bad request body, 422 bad year).
+
+**Targeted regression: 784/784 GREEN in 528.58s (8m 49s)** covering Phase 04 + 113 + 118 + 131 + 153 + Track G 160-174 + 162.5 + 175 + 176 + 177. Zero functional regressions.
+
+**Track H scorecard through Phase 177:**
+- Phases: 175, 176, 177 (3)
+- Phase-specific tests: 117 (26 + 58 + 33)
+- Targeted regression: 784/784 GREEN
+- New /v1/* endpoints: 11 (meta 2, shops 1, billing 4, vehicles 6 − counted once per path/verb combo)
+- DB tables added: 2 net-new (api_keys, stripe_webhook_events) + 7 new columns across 2 existing tables (subscriptions +6, vehicles +1)
+- Migrations: 38 (3 Track H migrations: 037 auth/billing, 038 vehicle owner)
+- Rate-limit exempt paths: 5
+
+Project version 0.12.0 → **0.12.1**.
+
+**Key finding:** the monetization + scaffold decisions in Phases 175 + 176 pay dividends from Phase 177 onward. The full-CRUD vehicle router is 301 LoC because auth is automatic (`Depends(get_current_user)`), domain exceptions auto-map to HTTP (`VehicleOwnershipError` → 404, `VehicleQuotaExceededError` → 402), Pydantic handles request validation (422 for bad year / missing make / invalid protocol string), and the `_for_owner` repo convention makes scoping structurally enforced. Route handlers never write try/except; never check tiers manually; never hash API keys. **Track H's hardest work is behind us.**
+
+Next: **Phase 178** (diagnostic session endpoints — start/update/complete sessions over HTTP with tier gating) follows the same pattern. Phases 179 (KB search endpoints) and 180 (shop CRUD endpoints — composing Track G's 16-subgroup console into `/v1/shop/*` routes) complete the full-CRUD surface. Phase 181 WebSocket adds live OBD data; 182 PDF reports; 183 OpenAPI enrichment; 184 Gate 9 closes Track H.

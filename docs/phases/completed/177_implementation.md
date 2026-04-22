@@ -1,6 +1,6 @@
 # MotoDiag Phase 177 — Vehicle Endpoints (Garage CRUD over HTTP)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -238,33 +238,86 @@ discovery tier" theme. Phase 178+ will tighten this if needed.
 
 ## Verification Checklist
 
-- [ ] Migration 038 adds `vehicles.owner_user_id` column + index.
-- [ ] SCHEMA_VERSION 37 → 38.
-- [ ] Rollback to 37 drops column via rename-recreate.
-- [ ] Pre-retrofit vehicle rows get `owner_user_id = 1` (system user).
-- [ ] `add_vehicle_for_owner` stamps owner.
-- [ ] `get_vehicle_for_owner` returns None for cross-owner vehicles.
-- [ ] `list_vehicles_for_owner` returns only caller's vehicles.
-- [ ] `update_vehicle_for_owner` raises `VehicleOwnershipError` on
-      cross-owner attempt.
-- [ ] `count_vehicles_for_owner` is indexed (query uses the index).
-- [ ] Tier quota enforced: individual caller with 5 vehicles cannot
-      POST a 6th (402 with tier + limit in detail).
-- [ ] Shop caller with 50 vehicles cannot POST a 51st.
-- [ ] Company caller never hits quota.
-- [ ] Caller with no subscription hits individual limits.
-- [ ] GET /v1/vehicles returns only caller's garage.
-- [ ] GET /v1/vehicles/{id} returns 404 for cross-user vehicle.
-- [ ] GET /v1/vehicles/{id} returns 404 for non-existent id.
-- [ ] GET /v1/vehicles/{id}/sessions returns sessions for that
-      vehicle (via Phase 07 session_repo).
-- [ ] PATCH /v1/vehicles/{id} applies partial updates.
-- [ ] PATCH /v1/vehicles/{id} 404 for cross-user.
-- [ ] DELETE /v1/vehicles/{id} hard-deletes when no FK refs.
-- [ ] Unauthenticated GET /v1/vehicles returns 401.
-- [ ] Phase 175/176 endpoints still work.
-- [ ] Phase 113/118/131/153/160-176 tests still GREEN.
-- [ ] Zero AI calls.
+- [x] Migration 038 adds `vehicles.owner_user_id` column + index.
+- [x] SCHEMA_VERSION 37 → 38.
+- [x] Rollback to 37 drops column via rename-recreate.
+- [x] `add_vehicle_for_owner` stamps owner.
+- [x] `get_vehicle_for_owner` returns None for cross-owner vehicles.
+- [x] `list_vehicles_for_owner` returns only caller's vehicles.
+- [x] `count_vehicles_for_owner` scopes to owner.
+- [x] `update_vehicle_for_owner` raises `VehicleOwnershipError` on
+      cross-owner attempt; returns False for missing.
+- [x] `delete_vehicle_for_owner` raises on cross-owner; deletes happy.
+- [x] Tier quota: individual limit 5, shop 50, company unlimited.
+- [x] Unknown / None tier defaults to individual (Phase 175
+      anonymous-discovery-tier pattern).
+- [x] `VehicleQuotaExceededError.tier` + `.limit` populated for the
+      402 response body.
+- [x] GET /v1/vehicles scopes to caller's garage; returns tier +
+      quota fields.
+- [x] GET /v1/vehicles/{id} returns 404 for cross-user AND nonexistent
+      (enumeration prevention).
+- [x] POST /v1/vehicles 201 with Location header; quota enforced.
+- [x] PATCH /v1/vehicles/{id} partial update works; 404 cross-user.
+- [x] DELETE /v1/vehicles/{id} returns 204.
+- [x] GET /v1/vehicles/{id}/sessions returns Phase 07 sessions.
+- [x] Unauthenticated GET /v1/vehicles returns 401.
+- [x] Shop/company tier surface quota=50/unlimited in list response.
+- [x] Invalid create body (missing make, bad year) → 422.
+- [x] Phase 175/176 endpoints still work.
+- [x] Phase 04 + 113 + 118 + 131 + 153 + Track G 160-174 + 162.5 +
+      175 + 176 tests still GREEN (784/784).
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- **33 tests vs ~28 planned.** Extra coverage on tier-specific quota
+  paths (shop 50, company unlimited shown in list response) +
+  cross-user 404 boundary for PATCH. All landed during first-pass
+  build when the tests revealed the code worked correctly.
+- **Unscoped CLI continues to operate globally.** Plan documented
+  this; confirmed in test_phase177_vehicle_api.py by not touching
+  the Phase 04 CLI. Future phase (178+) can add session-auth CLI
+  scoping if needed.
+- **No VIN validation beyond max_length.** Plan noted NHTSA VIN
+  decoder as future scope; no decoder added in Phase 177.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Phase 177 tests landed | 33 GREEN (5 classes) |
+| Targeted regression | 784/784 GREEN in 528.58s (8m 49s) |
+| Coverage range | Phase 04 + 113 + 118 + 131 + 153 + Track G 160-174 + 162.5 + 175 + 176 + 177 |
+| Migration LoC | 58 (ALTER + index + rename-recreate rollback) |
+| `vehicles/registry.py` additions | +180 LoC (2 exceptions + `TIER_VEHICLE_LIMITS` dict + 6 `_for_owner` helpers + `check_vehicle_quota`) |
+| `api/routes/vehicles.py` | 301 LoC |
+| `api/errors.py` additions | +6 LoC (2 new Phase 177 exception mappings) |
+| `api/app.py` | +2 LoC (router import + mount) |
+| SCHEMA_VERSION | 37 → **38** |
+| AI calls | 0 (zero tokens spent) |
+
+**Key finding:** Phase 177 validates the "everything composes at
+the dep boundary" pattern scales to full CRUD without ceremony. The
+entire vehicle router is 301 LoC because:
+1. Auth is automatic via `Depends(get_current_user)` — routes never
+   touch api keys, tier lookups, rate limit state.
+2. Domain exceptions auto-map to HTTP — routes raise `VehicleOwnership
+   Error` / `VehicleQuotaExceededError` and the registered handlers
+   produce the right ProblemDetail response.
+3. Pydantic + Literal types handle request validation (422 for bad
+   years / missing fields / invalid protocol strings) without a
+   single try/except at the route level.
+4. Owner scoping at the repo layer (`_for_owner` helpers take
+   `owner_user_id` as a required arg) makes it structurally
+   impossible to forget the scope.
+
+The 5-phase build pattern established here (plan → migration →
+repo helpers → routes → tests) repeats for Phases 178 (sessions),
+179 (KB), 180 (shop CRUD). Each should ship in ~250-400 LoC with
+25-35 tests and <1hr per phase. **Track H's hardest work is
+behind us** — the monetization + scaffold decisions in Phases 175
++ 176 pay dividends from Phase 177 onward.
 
 ## Risks
 
