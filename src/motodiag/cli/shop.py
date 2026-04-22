@@ -42,9 +42,13 @@ from motodiag.shop import (
     IssueFKError,
     IssueNotFoundError,
     InvalidTierPreferenceError,
+    BayNotFoundError,
+    InvalidSlotTransition,
     LaborEstimatorError,
     LaborEstimateMathError,
     ReconcileMissingDataError,
+    SlotNotFoundError,
+    SlotOverlapError,
     PartNotFoundError,
     PartNotInCatalogError,
     PriorityBudgetExhausted,
@@ -71,6 +75,21 @@ from motodiag.shop import (
     labor_budget,
     list_labor_estimates,
     reconcile_with_actual,
+    BAY_TYPES,
+    add_bay,
+    cancel_slot,
+    complete_slot,
+    deactivate_bay,
+    detect_conflicts,
+    get_bay,
+    get_slot,
+    list_bays,
+    list_slots,
+    optimize_shop_day,
+    reschedule_slot,
+    schedule_wo as bay_schedule_wo,
+    start_slot,
+    utilization_for_day,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
     WorkOrderFKError,
@@ -3032,3 +3051,291 @@ def register_shop(cli_group: click.Group) -> None:
             title="Labor estimation budget"
             + (f" (since {since})" if since else ""),
         ))
+
+    # -----------------------------------------------------------------
+    # shop bay {add, list, show, deactivate, schedule, reschedule,
+    #          conflicts, optimize, utilization, calendar}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("bay")
+    def bay_group() -> None:
+        """Bay/lift scheduling (Phase 168, deterministic, stdlib-only)."""
+
+    @bay_group.command("add")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--name", required=True)
+    @click.option(
+        "--type", "bay_type",
+        type=click.Choice(list(BAY_TYPES), case_sensitive=False),
+        default="lift",
+    )
+    @click.option("--max-weight-lbs", "max_bike_weight_lbs",
+                  type=int, default=None)
+    @click.option("--notes", default=None)
+    def bay_add_cmd(shop_id, name, bay_type, max_bike_weight_lbs, notes):
+        """Register a new physical bay/lift for a shop."""
+        console = get_console()
+        init_db()
+        try:
+            bay_id = add_bay(
+                shop_id, name, bay_type=bay_type.lower(),
+                max_bike_weight_lbs=max_bike_weight_lbs, notes=notes,
+            )
+        except Exception as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Registered bay id={bay_id} '{name}' ({bay_type}).[/green]"
+        )
+
+    @bay_group.command("list")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--include-inactive", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def bay_list_cmd(shop_id, include_inactive, as_json):
+        """List bays for a shop."""
+        console = get_console()
+        init_db()
+        rows = list_bays(shop_id, include_inactive=include_inactive)
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print(f"[dim]No bays registered for shop id={shop_id}.[/dim]")
+            return
+        table = Table(title=f"Bays (shop id={shop_id})", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Name")
+        table.add_column("Type")
+        table.add_column("Active")
+        table.add_column("Max lbs", justify="right")
+        for r in rows:
+            table.add_row(
+                str(r["id"]), r["name"], r["bay_type"],
+                "yes" if r["is_active"] else "no",
+                str(r["max_bike_weight_lbs"]) if r["max_bike_weight_lbs"] is not None else "—",
+            )
+        console.print(table)
+
+    @bay_group.command("show")
+    @click.argument("bay_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def bay_show_cmd(bay_id, as_json):
+        """Show a bay + today's slot list."""
+        console = get_console()
+        init_db()
+        bay = get_bay(bay_id)
+        if bay is None:
+            raise click.ClickException(f"bay not found: id={bay_id}")
+        if as_json:
+            click.echo(_json.dumps(bay, default=str, indent=2))
+            return
+        console.print(Panel(
+            f"Name: {bay['name']}\n"
+            f"Type: {bay['bay_type']}\n"
+            f"Active: {'yes' if bay['is_active'] else 'no'}\n"
+            f"Max weight: {bay['max_bike_weight_lbs']} lbs"
+            if bay['max_bike_weight_lbs'] else "Max weight: —",
+            title=f"Bay id={bay_id}",
+        ))
+
+    @bay_group.command("deactivate")
+    @click.argument("bay_id", type=int)
+    @click.option("--yes", is_flag=True, default=False)
+    def bay_deactivate_cmd(bay_id, yes):
+        """Soft-delete a bay (planned slots preserved but flagged in conflicts)."""
+        console = get_console()
+        init_db()
+        if not yes:
+            click.confirm(
+                f"Deactivate bay id={bay_id}? (Planned slots remain but "
+                "will surface as warnings in `bay conflicts`.)",
+                abort=True,
+            )
+        try:
+            deactivate_bay(bay_id)
+        except BayNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[yellow]Deactivated bay id={bay_id}.[/yellow]")
+
+    @bay_group.command("schedule")
+    @click.argument("wo_id", type=int)
+    @click.option("--bay", "bay_id", type=int, default=None)
+    @click.option("--start", "scheduled_start", default=None,
+                  help="ISO datetime; next-available if omitted.")
+    @click.option("--duration-hours", "duration_hours", type=float, default=None,
+                  help="Override WO.estimated_hours; defaults to 1.0.")
+    @click.option("--notes", default=None)
+    def bay_schedule_cmd(
+        wo_id, bay_id, scheduled_start, duration_hours, notes,
+    ):
+        """Reserve a bay slot for a work order."""
+        console = get_console()
+        init_db()
+        try:
+            slot_id = bay_schedule_wo(
+                wo_id, bay_id=bay_id, scheduled_start=scheduled_start,
+                duration_hours=duration_hours,
+            )
+        except (WorkOrderNotFoundError, BayNotFoundError,
+                SlotOverlapError, InvalidSlotTransition) as e:
+            raise click.ClickException(str(e)) from e
+        slot = get_slot(slot_id)
+        console.print(Panel(
+            f"Slot id: {slot_id}\n"
+            f"Bay id: {slot['bay_id']}\n"
+            f"Start: {slot['scheduled_start']}\n"
+            f"End: {slot['scheduled_end']}\n"
+            f"WO: {slot['work_order_id']}",
+            title="Bay slot reserved",
+        ))
+
+    @bay_group.command("reschedule")
+    @click.argument("slot_id", type=int)
+    @click.option("--start", "new_start", default=None)
+    @click.option("--bay", "new_bay_id", type=int, default=None)
+    def bay_reschedule_cmd(slot_id, new_start, new_bay_id):
+        """Move a planned slot (preserves duration)."""
+        console = get_console()
+        init_db()
+        try:
+            reschedule_slot(
+                slot_id, new_start=new_start, new_bay_id=new_bay_id,
+            )
+        except (SlotNotFoundError, InvalidSlotTransition,
+                SlotOverlapError, BayNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Rescheduled slot id={slot_id}.[/green]")
+
+    @bay_group.command("conflicts")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--from", "from_date", default=None)
+    @click.option("--to", "to_date", default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def bay_conflicts_cmd(shop_id, from_date, to_date, as_json):
+        """Find overlapping slots in a date range."""
+        console = get_console()
+        init_db()
+        date_range = None
+        if from_date and to_date:
+            date_range = (from_date, to_date)
+        conflicts = detect_conflicts(shop_id, date_range=date_range)
+        if as_json:
+            click.echo(_json.dumps(
+                [c.model_dump() for c in conflicts], default=str, indent=2,
+            ))
+            return
+        if not conflicts:
+            console.print(f"[green]No conflicts on shop id={shop_id}.[/green]")
+            return
+        table = Table(title=f"Conflicts (shop id={shop_id})", show_lines=False)
+        table.add_column("Slots")
+        table.add_column("Bay")
+        table.add_column("Overlap (min)", justify="right")
+        table.add_column("Severity")
+        for c in conflicts:
+            sev_color = "red" if c.severity == "error" else "yellow"
+            table.add_row(
+                f"{c.slot_a_id}↔{c.slot_b_id}",
+                str(c.bay_id),
+                f"{c.overlap_minutes:.1f}",
+                f"[{sev_color}]{c.severity}[/{sev_color}]",
+            )
+        console.print(table)
+
+    @bay_group.command("optimize")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--date", "date_str", required=True)
+    @click.option("--iterations", type=int, default=500)
+    @click.option("--seed", "random_seed", type=int, default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def bay_optimize_cmd(shop_id, date_str, iterations, random_seed, as_json):
+        """Run greedy + annealing optimization (dry-run only; returns report)."""
+        console = get_console()
+        init_db()
+        report = optimize_shop_day(
+            shop_id, date_str,
+            annealing_iterations=iterations,
+            random_seed=random_seed,
+        )
+        if as_json:
+            click.echo(_json.dumps(
+                report.model_dump(), default=str, indent=2,
+            ))
+            return
+        console.print(Panel(
+            f"Utilization before: {report.utilization_before:.1%}\n"
+            f"Utilization after:  {report.utilization_after:.1%}\n"
+            f"Iterations run: {report.iterations_run}\n"
+            f"Moves proposed: {len(report.moves)}\n"
+            + (
+                "[yellow]" + "\n".join(report.warnings) + "[/yellow]"
+                if report.warnings else ""
+            ),
+            title=f"Optimization report (shop {shop_id}, {date_str})",
+        ))
+
+    @bay_group.command("utilization")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--date", "date_str", required=True)
+    @click.option("--day-hours", "shop_day_hours", type=float, default=8.0)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def bay_utilization_cmd(shop_id, date_str, shop_day_hours, as_json):
+        """Show utilization fraction for a shop-day."""
+        console = get_console()
+        init_db()
+        result = utilization_for_day(
+            shop_id, date_str, shop_day_hours=shop_day_hours,
+        )
+        if as_json:
+            click.echo(_json.dumps(result, default=str, indent=2))
+            return
+        console.print(Panel(
+            f"Utilization: [bold]{result['utilization']:.1%}[/bold]\n"
+            f"Shop day: {result['shop_day_hours']:.1f}h\n"
+            f"Date: {result['date']}",
+            title=f"Shop {shop_id} utilization",
+        ))
+
+    @bay_group.command("calendar")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--from", "from_date", required=True)
+    @click.option("--to", "to_date", required=True)
+    @click.option("--bay", "bay_filter", type=int, default=None)
+    def bay_calendar_cmd(shop_id, from_date, to_date, bay_filter):
+        """Render multi-day calendar (Rich table with hour-rows x bay-columns)."""
+        console = get_console()
+        init_db()
+        slots = list_slots(
+            shop_id=shop_id, bay_id=bay_filter,
+            date_range=(from_date, to_date),
+        )
+        if not slots:
+            console.print(
+                f"[dim]No slots on shop id={shop_id} between "
+                f"{from_date} and {to_date}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Calendar: shop {shop_id} {from_date}..{to_date}",
+            show_lines=False,
+        )
+        table.add_column("Slot", justify="right")
+        table.add_column("Bay")
+        table.add_column("Start")
+        table.add_column("End")
+        table.add_column("Status")
+        table.add_column("WO")
+        status_color = {
+            "planned": "cyan", "active": "yellow",
+            "completed": "green", "cancelled": "dim", "overrun": "red",
+        }
+        for s in slots:
+            status = s.get("status", "?")
+            color = status_color.get(status, "white")
+            table.add_row(
+                str(s["id"]), str(s.get("bay_name", s["bay_id"])),
+                str(s["scheduled_start"]), str(s["scheduled_end"]),
+                f"[{color}]{status}[/{color}]",
+                str(s.get("work_order_id") or "—"),
+            )
+        console.print(table)

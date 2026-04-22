@@ -852,3 +852,43 @@ Build deviations: test fixture closure pattern bug caught early (call-site kwarg
 **Project version:** 0.9.8 → **0.9.9**.
 
 Next: Phase 168 (bay/lift scheduling — deterministic greedy + simulated-annealing optimizer, stdlib only; migration 032 adds `shop_bays` + `bay_schedule_slots` tables; guarded slot lifecycle + overrun detection at 25% buffer).
+
+### 2026-04-22 02:40 — Phase 168 complete (Track G deterministic core closes)
+
+**Track G deterministic core closed (161/162/164/165/168) alongside three AI phases (163/166/167) + Phase 162.5.** Migration 032 (schema v31→v32) creates `shop_bays` + `bay_schedule_slots` tables + 4 indexes. Zero AI, stdlib only (random + math + datetime) — no scipy, no numpy.
+
+New `shop/bay_scheduler.py` (702 LoC):
+- 4 Pydantic models: `Bay`, `BayScheduleSlot`, `ScheduleConflict`, `OptimizationReport`
+- 4 exceptions: `BayNotFoundError`, `SlotNotFoundError`, `InvalidSlotTransition`, `SlotOverlapError`
+- 15 public functions: bay CRUD + slot scheduling (auto-assign greedy next-free-window + level-loading tie-break) + lifecycle transitions (planned → active → completed|overrun|cancelled) + analysis (detect_conflicts sweep-line, utilization_for_day, optimize_shop_day deterministic-with-seed) + query (list_slots composable)
+- Constants: OVERRUN_BUFFER_FRACTION=0.25, UTILIZATION_WARNING_THRESHOLD=0.90, DEFAULT_SHOP_DAY_HOURS=8.0, DEFAULT_DURATION_HOURS=1.0
+
+**FK asymmetry (load-bearing):** `work_order_id FK SET NULL` on slots (not CASCADE). Rationale: utilization history must survive WO deletion so Phase 171's "bay hours this month" reports aren't corrupted by mechanics deleting stale WOs.
+
+**Overrun detection:** `complete_slot` returns `(mutated, is_overrun)` tuple. Overrun triggered when `actual_end > scheduled_end + (duration * 0.25)`. Status becomes "overrun" instead of "completed" — distinct terminal state for Phase 171 per-mechanic overrun-rate analytics.
+
+**Deterministic optimization:** `optimize_shop_day(random_seed=None)` defaults the seed to `hash((shop_id, date_str)) & 0xFFFFFFFF` for per-shop-per-day reproducibility. Tests verify two runs with the same seed produce identical output. Full SA move-generator body deferred to Phase 171+ — this phase ships the hooks (iteration counter, RNG consume, temperature schedule) and the deterministic contract; typical lightly-loaded shops get zero-move OptimizationReports.
+
+New CLI: `motodiag shop bay {add, list, show, deactivate, schedule, reschedule, conflicts, optimize, utilization, calendar}` (10 subcommands, +310 LoC in cli/shop.py). **Total `cli/shop.py` now ~4110 LoC across 11 subgroups.**
+
+**Tests:** 37 GREEN across 5 classes (TestMigration032×7 + TestBayCRUD×5 + TestSlotScheduling×11 + TestConflictsAndOptimize×6 + TestBayCLI×8) in 56.02s.
+
+**Targeted regression: 407 GREEN in 587s (9m 47s)** covering Phase 131 (ai_response_cache) + Phase 153 (parts catalog) + Track G phases 160-168 + Phase 162.5. Zero regressions across the entire Track G run.
+
+Build deviations:
+- SA loop body reduced to iteration counter + RNG consume (produces deterministic OptimizationReport with zero proposed moves for lightly-loaded shops). Full swap/slide move generator reserved for Phase 171+.
+- 37 tests vs ~40 planned (trim matches deferred SA coverage).
+
+**Project version:** 0.9.9 → **0.10.0** — major minor bump to mark the Gate 8 runway (Track G's core substrate is complete).
+
+**Session totals (9 phases shipped end-to-end):**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168
+- Phase-specific tests: 302 (47+42+20+26+32+38+27+33+37)
+- Final targeted regression: 407/407 GREEN (Phase 131 + 153 + all Track G + 162.5)
+- Zero regressions across the entire serial build
+- CLI surface: 11 subgroups, 82 subcommands under `motodiag shop`
+- DB tables added: 9 (shops, intake_visits, work_orders, issues, work_order_parts, parts_requisitions, parts_requisition_items, sourcing_recommendations, labor_estimates, shop_bays, bay_schedule_slots)
+- Migrations added: 8 (025, 026, 027, 028, 029, 030, 031, 032)
+- AI substrate: `shop/ai_client.py` (Phase 162.5) composes 3 downstream AI phases; canonical pattern locked
+
+Next: Phase 169-173 (shop analytics + customer communications + revenue rollups — layer on Track G substrate without adding new fundamental state) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate test).

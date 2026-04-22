@@ -2296,6 +2296,83 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS labor_estimates;
         """,
     ),
+    # Migration 032 — Phase 168: bay/lift scheduling
+    Migration(
+        version=32,
+        name="bays_and_schedule_slots",
+        description=(
+            "Phase 168: Physical shop bay/lift scheduling. Two tables: "
+            "shop_bays (bay inventory — name, type CHECK IN "
+            "('lift','flat','specialty','tire','dyno','wash'), "
+            "max_bike_weight_lbs, is_active flag, UNIQUE(shop_id, name)) "
+            "and bay_schedule_slots (per-slot reservations — bay_id FK "
+            "CASCADE, work_order_id FK SET NULL so utilization history "
+            "survives WO deletion, scheduled_start + scheduled_end CHECK "
+            "end > start, actual_start + actual_end, status CHECK IN "
+            "('planned','active','completed','cancelled','overrun'), "
+            "created_by_user_id FK SET DEFAULT). 4 indexes: "
+            "idx_bays_shop_active (shop-filtered listings), "
+            "idx_slots_bay_start (per-bay chronological queries), "
+            "idx_slots_wo (WO->slots reverse lookup), "
+            "idx_slots_status_start (active-slot sweep). Overrun "
+            "detection: actual_end > scheduled_end + 25% buffer "
+            "(OVERRUN_BUFFER_FRACTION module constant)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS shop_bays (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                bay_type TEXT NOT NULL DEFAULT 'lift'
+                    CHECK (bay_type IN
+                           ('lift','flat','specialty','tire','dyno','wash')),
+                is_active INTEGER NOT NULL DEFAULT 1,
+                max_bike_weight_lbs INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                UNIQUE (shop_id, name)
+            );
+            CREATE TABLE IF NOT EXISTS bay_schedule_slots (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                bay_id INTEGER NOT NULL,
+                work_order_id INTEGER,
+                scheduled_start TIMESTAMP NOT NULL,
+                scheduled_end TIMESTAMP NOT NULL,
+                actual_start TIMESTAMP,
+                actual_end TIMESTAMP,
+                status TEXT NOT NULL DEFAULT 'planned'
+                    CHECK (status IN
+                           ('planned','active','completed',
+                            'cancelled','overrun')),
+                created_by_user_id INTEGER NOT NULL DEFAULT 1,
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (bay_id) REFERENCES shop_bays(id) ON DELETE CASCADE,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL,
+                FOREIGN KEY (created_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT,
+                CHECK (scheduled_end > scheduled_start)
+            );
+            CREATE INDEX IF NOT EXISTS idx_bays_shop_active
+                ON shop_bays(shop_id, is_active);
+            CREATE INDEX IF NOT EXISTS idx_slots_bay_start
+                ON bay_schedule_slots(bay_id, scheduled_start);
+            CREATE INDEX IF NOT EXISTS idx_slots_wo
+                ON bay_schedule_slots(work_order_id);
+            CREATE INDEX IF NOT EXISTS idx_slots_status_start
+                ON bay_schedule_slots(status, scheduled_start);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_slots_status_start;
+            DROP INDEX IF EXISTS idx_slots_wo;
+            DROP INDEX IF EXISTS idx_slots_bay_start;
+            DROP INDEX IF EXISTS idx_bays_shop_active;
+            DROP TABLE IF EXISTS bay_schedule_slots;
+            DROP TABLE IF EXISTS shop_bays;
+        """,
+    ),
 ]
 
 
