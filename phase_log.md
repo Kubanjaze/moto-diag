@@ -1036,3 +1036,42 @@ Project version 0.10.2 → **0.10.3** (Track G analytics layer landed).
 **Key finding:** "Compose existing rollups, don't duplicate" is the right pattern for analytics. By delegating revenue to Phase 169 and utilization to Phase 168, Phase 171 stayed at ~520 LoC without touching prior modules. Each rollup is a stateless pure function — Phase 173 automation rules will use any rollup as a rule-condition evaluator, paired with `trigger_notification()` (Phase 170) on the action side. No new plumbing needed. The two schema-discovery bugs (`bay_schedule_slots.shop_id` nonexistence; `created_at` sub-second collision) both landed in the test pass — no false-positive migration drift; the fixes held on first rerun.
 
 Next: Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules that compose Phase 171 rollups as conditions + Phase 170 notifications as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate closure).
+
+---
+
+### 2026-04-22 — Phase 172 complete (Track G RBAC + reassignment history)
+
+**Shop-scoped RBAC layered on Phase 112 global RBAC + work-order reassignment audit trail.** A user can own one shop AND be a tech at another via `shop_members` (migration 035), which holds per-shop roles stacked on top of Phase 112's `users`/`roles`/`permissions` catalog. Work-order reassignments get audit-logged to `work_order_assignments` — `assigned_at` / `unassigned_at` / `reason` / `assigned_by_user_id` — so a WO that bounces between mechanics over its lifetime preserves the full history (load-bearing for Phase 171 per-mechanic analytics and Phase 173 rule conditions).
+
+Migration 035 (schema v34→v35): 2 new tables + 4 indexes + CHECK on role enum. FK rules chosen for forward-compat: user+shop CASCADE (member rows follow entity lifecycle); WO CASCADE on assignments (history lives on the WO); mechanic_user_id SET NULL so rows survive user deletion (attribution preserved via `assigned_by_user_id` + `reason`).
+
+New `shop/rbac.py` (~475 LoC):
+- 3 Pydantic summaries + 4 exceptions
+- Membership: `add_shop_member` (idempotent, reactivates deactivated rows), `get_shop_member`, `list_shop_members`, `set_member_role`, `deactivate_member`, `reactivate_member`, `list_shops_for_user`, `seed_first_owner` (for backfilling shops created before Phase 172), `list_shop_mechanics`
+- Permissions: `has_shop_permission(shop_id, user_id, perm)` walks `shop_members.role → roles → role_permissions → permissions.name` — **zero catalog duplication**; `require_shop_permission` raises `PermissionDenied`
+- Reassignment: `reassign_work_order` opens new `work_order_assignments` row, stamps `unassigned_at` on the prior open row, and routes `work_orders.assigned_mechanic_user_id` update **through Phase 161 `update_work_order` whitelist — never raw SQL** (anti-regression grep test enforces). Guards: terminal WO raises `InvalidWorkOrderTransition`; non-shop/apprentice mechanic raises `MechanicNotInShopError` (apprentices not in `ELIGIBLE_ASSIGN_ROLES = ('tech', 'owner')`).
+- `list_work_order_assignments` / `current_assignment` / `mechanic_workload`
+
+New CLI `motodiag shop member {add, list, set-role, deactivate, reactivate}` (**5 subcommands**) + `shop work-order {reassign, assignments}` (**2 subcommands added to the existing work-order subgroup** — now 14 subcommands). Total shop CLI: **15 subgroups, 113 subcommands**.
+
+**Bug fixes during build:**
+- **Bug fix #1**: Anti-regression grep for raw `UPDATE work_orders` SQL initially false-matched the module docstring (which explicitly documents the forbidden pattern). Fixed by stripping `#`-comments and `"""..."""` docstrings before applying the regex, and adding `\b` word boundary.
+- **Bug fix #2**: Phase 171 anti-regression test asserted `SCHEMA_VERSION == 34` exactly — brittle against every downstream migration. Widened to `>= 34`. Intent ("Phase 171 is read-only") preserved because the test lives in Phase 171's file; no migration row was added by Phase 171's commits.
+
+32 tests GREEN across 6 classes (TestMigration035×4 + TestMembership×10 + TestShopPermissions×5 + TestReassignment×7 + TestRbacCLI×5 + TestAntiRegression×1) in 22.65s.
+
+**Targeted regression: 605 GREEN in 384.10s (6m 24s)** covering Phase 113 + 118 + 131 + 153 + Track G 160-172 + 162.5. One Phase 171 assertion widening required.
+
+**Track G scorecard through Phase 172:**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172 (13)
+- Phase-specific tests: 429 (397 + 32)
+- Track G regression: 605/605 GREEN at Phase 172 close
+- CLI surface: **15 subgroups, 113 subcommands under `motodiag shop`**
+- DB tables added: 12 net-new (shops, intake_visits, work_orders, issues, work_order_parts, parts_requisitions, parts_requisition_items, sourcing_recommendations, labor_estimates, shop_bays, bay_schedule_slots, customer_notifications, shop_members, work_order_assignments)
+- Migrations: 11 (025-035)
+
+Project version 0.10.3 → **0.10.4**.
+
+**Key finding:** Shop-scoped RBAC layers cleanly on Phase 112 global RBAC without duplicating the permission catalog. `shop_members.role` joins directly to Phase 112 `roles.name`, and permission lookups walk the Phase 112 `role_permissions` + `permissions` tables unchanged. The write-back-through-whitelist discipline from Phase 161 extends to reassignment via `update_work_order({"assigned_mechanic_user_id": ...})`; the anti-regression grep test catches any regression to raw SQL. Pattern recommendation: every future Phase that mutates `work_orders` should duplicate the grep test in its own module — cheap test, catches entire classes of drift before code review even starts.
+
+Next: Phase 173 (workflow automation rules — compose Phase 171 rollups as conditions, Phase 170 `trigger_notification` + Phase 161 lifecycle + Phase 172 `reassign_work_order` as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate closure).

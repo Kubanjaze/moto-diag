@@ -7,6 +7,33 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.rbac import (
+    ELIGIBLE_ASSIGN_ROLES,
+    SHOP_ROLES,
+    InvalidRoleError,
+    MechanicNotInShopError,
+    MechanicWorkload,
+    PermissionDenied,
+    ShopMember,
+    ShopMembershipNotFoundError,
+    ShopRole,
+    WorkOrderAssignment,
+    add_shop_member,
+    current_assignment,
+    deactivate_member,
+    get_shop_member,
+    has_shop_permission,
+    list_shop_members,
+    list_shop_mechanics,
+    list_shops_for_user,
+    list_work_order_assignments,
+    mechanic_workload,
+    reactivate_member,
+    reassign_work_order,
+    require_shop_permission,
+    seed_first_owner,
+    set_member_role,
+)
 from motodiag.shop.analytics import (
     CustomerRepeatRollup,
     DashboardSnapshot,
@@ -291,6 +318,32 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # rbac (Phase 172)
+    "ELIGIBLE_ASSIGN_ROLES",
+    "SHOP_ROLES",
+    "InvalidRoleError",
+    "MechanicNotInShopError",
+    "MechanicWorkload",
+    "PermissionDenied",
+    "ShopMember",
+    "ShopMembershipNotFoundError",
+    "ShopRole",
+    "WorkOrderAssignment",
+    "add_shop_member",
+    "current_assignment",
+    "deactivate_member",
+    "get_shop_member",
+    "has_shop_permission",
+    "list_shop_members",
+    "list_shop_mechanics",
+    "list_shops_for_user",
+    "list_work_order_assignments",
+    "mechanic_workload",
+    "reactivate_member",
+    "reassign_work_order",
+    "require_shop_permission",
+    "seed_first_owner",
+    "set_member_role",
     # analytics (Phase 171)
     "CustomerRepeatRollup",
     "DashboardSnapshot",

@@ -50,6 +50,21 @@ from motodiag.shop import (
     mark_invoice_paid,
     revenue_rollup,
     void_invoice,
+    SHOP_ROLES,
+    InvalidRoleError,
+    MechanicNotInShopError,
+    PermissionDenied,
+    ShopMembershipNotFoundError,
+    add_shop_member,
+    current_assignment,
+    deactivate_member,
+    list_shop_mechanics,
+    list_shop_members,
+    list_work_order_assignments,
+    mechanic_workload,
+    reactivate_member,
+    reassign_work_order,
+    set_member_role,
     customer_repeat_rate,
     dashboard_snapshot,
     labor_accuracy,
@@ -1643,6 +1658,81 @@ def register_shop(cli_group: click.Group) -> None:
         console.print(
             f"[green]Unassigned mechanic from work order id={wo_id}.[/green]"
         )
+
+    @work_order_group.command("reassign")
+    @click.argument("wo_id", type=int)
+    @click.option("--to", "new_mechanic_id", type=int, default=None,
+                  help="Target mechanic user id (omit to unassign).")
+    @click.option("--by", "assigned_by_user_id", type=int, default=None)
+    @click.option("--reason", default=None)
+    def wo_reassign_cmd(
+        wo_id, new_mechanic_id, assigned_by_user_id, reason,
+    ):
+        """Reassign a work order and log to the assignment history."""
+        console = get_console()
+        init_db()
+        try:
+            assignment_id = reassign_work_order(
+                wo_id,
+                new_mechanic_user_id=new_mechanic_id,
+                assigned_by_user_id=assigned_by_user_id,
+                reason=reason,
+            )
+        except (
+            WorkOrderNotFoundError, InvalidWorkOrderTransition,
+            MechanicNotInShopError,
+        ) as e:
+            raise click.ClickException(str(e)) from e
+        target = (
+            f"user id={new_mechanic_id}" if new_mechanic_id is not None
+            else "(unassigned)"
+        )
+        console.print(
+            f"[green]WO #{wo_id} reassigned to {target} "
+            f"(assignment #{assignment_id}).[/green]"
+        )
+
+    @work_order_group.command("assignments")
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def wo_assignments_cmd(wo_id, as_json):
+        """Show the full assignment history for a work order."""
+        console = get_console()
+        init_db()
+        rows = list_work_order_assignments(wo_id)
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump() for r in rows], default=str, indent=2,
+            ))
+            return
+        if not rows:
+            console.print(
+                f"[dim]No assignment history for WO #{wo_id}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Assignment history — WO #{wo_id}", show_lines=False,
+        )
+        table.add_column("ID", justify="right")
+        table.add_column("Mechanic")
+        table.add_column("Assigned")
+        table.add_column("Unassigned")
+        table.add_column("By")
+        table.add_column("Reason")
+        for r in rows:
+            mech = (
+                r.mechanic_username
+                or (f"user#{r.mechanic_user_id}"
+                    if r.mechanic_user_id is not None else "—")
+            )
+            table.add_row(
+                str(r.id), mech,
+                str(r.assigned_at),
+                str(r.unassigned_at or "—"),
+                str(r.assigned_by_user_id or "—"),
+                str(r.reason or "—"),
+            )
+        console.print(table)
 
     # -----------------------------------------------------------------
     # shop issue {add, list, show, update, resolve, reopen, mark-duplicate,
@@ -4085,3 +4175,133 @@ def register_shop(cli_group: click.Group) -> None:
             click.echo(_json.dumps(payload, default=str, indent=2))
             return
         console.print(_json.dumps(payload, default=str, indent=2))
+
+    # -----------------------------------------------------------------
+    # shop member {add, list, set-role, deactivate, reactivate}
+    # Phase 172 — shop-scoped RBAC membership
+    # -----------------------------------------------------------------
+
+    @shop_group.group("member")
+    def member_group() -> None:
+        """Shop-scoped membership + role management."""
+
+    @member_group.command("add")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--user", "user_id", type=int, required=True)
+    @click.option("--role", type=click.Choice(list(SHOP_ROLES)),
+                  default="tech")
+    def member_add_cmd(shop_identifier, user_id, role):
+        """Add (or reactivate) a shop member."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        try:
+            add_shop_member(shop["id"], user_id, role)
+        except InvalidRoleError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Added user id={user_id} as {role} of "
+            f"shop {shop['name']!r}.[/green]"
+        )
+
+    @member_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--role", default=None,
+                  type=click.Choice(list(SHOP_ROLES)))
+    @click.option("--include-inactive", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def member_list_cmd(
+        shop_identifier, role, include_inactive, as_json,
+    ):
+        """List members of a shop."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        rows = list_shop_members(
+            shop["id"], role=role, active_only=not include_inactive,
+        )
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump() for r in rows], default=str, indent=2,
+            ))
+            return
+        if not rows:
+            console.print(
+                f"[dim]No members in shop {shop['name']!r}.[/dim]"
+            )
+            return
+        table = Table(
+            title=f"Members — {shop['name']}", show_lines=False,
+        )
+        table.add_column("User", justify="right")
+        table.add_column("Username")
+        table.add_column("Role")
+        table.add_column("Active")
+        table.add_column("Joined")
+        for r in rows:
+            table.add_row(
+                str(r.user_id),
+                r.username or "—",
+                r.role,
+                "yes" if r.is_active else "no",
+                str(r.joined_at),
+            )
+        console.print(table)
+
+    @member_group.command("set-role")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--user", "user_id", type=int, required=True)
+    @click.option("--role", type=click.Choice(list(SHOP_ROLES)),
+                  required=True)
+    def member_set_role_cmd(shop_identifier, user_id, role):
+        """Change a member's role."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        try:
+            set_member_role(shop["id"], user_id, role)
+        except (InvalidRoleError, ShopMembershipNotFoundError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]User id={user_id} is now {role} at shop "
+            f"{shop['name']!r}.[/green]"
+        )
+
+    @member_group.command("deactivate")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--user", "user_id", type=int, required=True)
+    def member_deactivate_cmd(shop_identifier, user_id):
+        """Deactivate a member (soft-delete — preserves audit trail)."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        try:
+            deactivate_member(shop["id"], user_id)
+        except ShopMembershipNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[yellow]User id={user_id} deactivated at shop "
+            f"{shop['name']!r}.[/yellow]"
+        )
+
+    @member_group.command("reactivate")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--user", "user_id", type=int, required=True)
+    def member_reactivate_cmd(shop_identifier, user_id):
+        """Reactivate a deactivated member."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        try:
+            reactivate_member(shop["id"], user_id)
+        except ShopMembershipNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]User id={user_id} reactivated at shop "
+            f"{shop['name']!r}.[/green]"
+        )

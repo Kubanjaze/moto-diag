@@ -460,8 +460,9 @@ class TestAnalyticsCLI:
 class TestAntiRegression:
 
     def test_no_migration_added(self):
-        # Phase 171 is read-only; SCHEMA_VERSION stays at 34.
-        assert SCHEMA_VERSION == 34
+        # Phase 171 itself is read-only — it shipped at schema v34
+        # without bumping. Later phases may bump further.
+        assert SCHEMA_VERSION >= 34
 
     def test_analytics_reexports(self):
         from motodiag.shop import (

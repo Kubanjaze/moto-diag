@@ -2488,6 +2488,70 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS customer_notifications;
         """,
     ),
+    # Migration 035 — Phase 172: shop-scoped RBAC + WO assignment history
+    Migration(
+        version=35,
+        name="shop_members_and_assignments",
+        description=(
+            "Phase 172: Create `shop_members` (per-shop role for users; "
+            "stacks on Phase 112 global RBAC so a user can own one "
+            "shop AND be a tech at another) + `work_order_assignments` "
+            "(audit log of WO mechanic reassignments preserving "
+            "attribution over the WO lifetime). FKs: user+shop "
+            "CASCADE (member deletion follows shop/user deletion); "
+            "wo CASCADE for assignments; mechanic SET NULL (preserves "
+            "history when a user is deleted)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS shop_members (
+                user_id INTEGER NOT NULL,
+                shop_id INTEGER NOT NULL,
+                role TEXT NOT NULL CHECK(role IN (
+                    'owner', 'tech', 'service_writer', 'apprentice'
+                )),
+                joined_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                updated_at TIMESTAMP,
+                PRIMARY KEY (user_id, shop_id),
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_shop_members_shop_role
+                ON shop_members(shop_id, role, is_active);
+            CREATE INDEX IF NOT EXISTS idx_shop_members_user
+                ON shop_members(user_id);
+
+            CREATE TABLE IF NOT EXISTS work_order_assignments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                mechanic_user_id INTEGER,
+                assigned_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                unassigned_at TIMESTAMP,
+                assigned_by_user_id INTEGER,
+                reason TEXT,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (mechanic_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL,
+                FOREIGN KEY (assigned_by_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_wo_assignments_wo
+                ON work_order_assignments(work_order_id, assigned_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_wo_assignments_mechanic
+                ON work_order_assignments(mechanic_user_id, assigned_at DESC);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_wo_assignments_mechanic;
+            DROP INDEX IF EXISTS idx_wo_assignments_wo;
+            DROP TABLE IF EXISTS work_order_assignments;
+            DROP INDEX IF EXISTS idx_shop_members_user;
+            DROP INDEX IF EXISTS idx_shop_members_shop_role;
+            DROP TABLE IF EXISTS shop_members;
+        """,
+    ),
 ]
 
 
