@@ -1168,3 +1168,61 @@ Gate test structure (5 tests, 3.25s runtime):
 **Track G is closed.** The `motodiag shop *` console is the reference consumer for Track H (auth + transport + cross-shop + mobile/web UI).
 
 Next track: **Track H (Phase 175+)** will wire auto-fire Phase 173 rules on CLI lifecycle transitions, add session auth + CLI permission guards, build a transport worker for the Phase 170 notification queue, add cross-shop analytics for company-tier subscribers, and eventually ship a minimal API layer for Track I's mobile app.
+
+---
+
+### 2026-04-22 — Phase 175 complete — **🚀 TRACK H OPEN (API + Web Layer)**
+
+**This is the watershed moment.** MotoDiag graduates from local-CLI-only to a real HTTP API platform. Track H opens with the FastAPI scaffold that Phases 176-184 all build on (auth + API keys + Stripe paywall, vehicle/session/KB/shop CRUD routers, WebSocket live data, report generation, OpenAPI enrichment, Gate 9 integration test). Track I's mobile app (185-204) will consume this API as its backend.
+
+New `src/motodiag/api/` package (~750 LoC, 8 files):
+
+1. **`app.py`** (108 LoC) — `create_app(settings, db_path_override)` factory. Not a singleton — each call returns a fresh FastAPI instance. Tests inject their own DB path via kwarg; prod launches via `uvicorn motodiag.api:create_app --factory`. CORS + `RequestIdMiddleware` + `AccessLogMiddleware` + 30+ domain exception handlers + all v1 routers wired in one place.
+
+2. **`deps.py`** (42 LoC) — `get_settings`, `get_db_path`, `get_request_id` as FastAPI `Depends(...)` providers. **The canonical test-override seam** for every Track H/I/J phase: `app.dependency_overrides[dep] = lambda: stub`.
+
+3. **`errors.py`** (224 LoC) — **30+ Track G domain exceptions auto-mapped to HTTP status** via a lazy `_exc_class_chain()` that defers Track G imports until the first request. Route handlers raise domain exceptions as-is; the global handler translates to RFC 7807 `ProblemDetail` JSON (with `type` URI + `title` + `status` + `detail` + `request_id` + `instance` fields). Unhandled `Exception` → safe 500 with no stack-trace leak. Map:
+   - 404: `ShopNotFoundError`, `WorkOrderNotFoundError`, `IssueNotFoundError`, `InvoiceNotFoundError`, `NotificationNotFoundError`, `RuleNotFoundError`, `ShopMembershipNotFoundError`, plus parts / intake / bay / slot not-found variants
+   - 403: `PermissionDenied`
+   - 409: `InvalidWorkOrderTransition`, `InvalidIssueTransition`, `InvalidSlotTransition`, `InvalidNotificationTransition`, `InvalidPartNeedTransition`, `IntakeAlreadyClosedError`, `SlotOverlapError`, `ShopNameExistsError`, `DuplicateRuleNameError`
+   - 422: `InvoiceGenerationError`, `MechanicNotInShopError`, `NotificationContextError`, `IssueFKError`, `WorkOrderFKError`
+   - 400: `InvalidRoleError`, `InvalidEventError`, `InvalidConditionError`, `InvalidActionError`, generic `ValueError`
+
+4. **`middleware.py`** (68 LoC) — `RequestIdMiddleware` accepts client-supplied `X-Request-ID` for distributed tracing or generates a fresh UUID4; echoes on every response. `AccessLogMiddleware` logs one structured line per request (`method path status duration_ms rid=<id>`).
+
+5. **`routes/meta.py`** (78 LoC) — `GET /healthz` (DB connectivity probe — opens a SQLite connection, reads `schema_version`; 200 on success, 503 on failure. Used by load balancers + container schedulers.) + `GET /v1/version` (returns package version + schema_version + api_version. **Track I mobile clients poll this on app startup to detect schema drift + refuse to write against an incompatible server.**)
+
+6. **`routes/shops.py`** (28 LoC) — `GET /v1/shops/{id}` smoke route. Proves the full DI chain end-to-end: Settings → `get_db_path` → Phase 160 `get_shop` repo → JSON serialization. Phases 177-180 will replace with full CRUD on the same pattern.
+
+7. **`cli/serve.py`** (75 LoC) — `register_serve(cli)` wires `motodiag serve [--host X --port N --reload --log-level Y --workers N]`. Respects `MOTODIAG_API_HOST/PORT/LOG_LEVEL` env vars + Settings defaults. `--reload` forces `workers=1` (uvicorn constraint; autoreload and multi-worker are incompatible).
+
+8. **`core/config.py`** — added `api_host`, `api_port`, `api_cors_origins` (comma-separated string), `api_log_level` fields + `api_cors_origins_list` property that splits + strips. `MOTODIAG_API_*` env vars loaded via existing pydantic-settings pattern.
+
+**Canonical patterns locked for Track H/I/J:**
+- **App factory over singleton** — every test gets a clean instance.
+- **Dependency-injection test seam** — no monkey-patching, no subclassing; just `app.dependency_overrides`.
+- **RFC 7807 Problem Details** — mobile + web clients parse errors once.
+- **Lazy domain imports** — `from motodiag.api import create_app` stays fast; Track G modules load on first request.
+- **Request-ID correlation** — tie together audit trails across Phase 170 notifications + Phase 173 rule runs + future transport worker logs.
+- **Domain exceptions auto-map** — route handlers stay terse (~5 lines); no try/except boilerplate at every call site.
+
+26 tests GREEN in 15.14s across 6 classes (TestAppFactory×4 + TestMetaEndpoints×5 + TestSmokeShopRoute×4 + TestErrorHandling×7 + TestMiddleware×3 + TestServeCLI×3). **Single-pass, zero fixups.**
+
+**Targeted regression: 679 GREEN in 439.45s (7m 19s)** covering Phase 113 + 118 + 131 + 153 + Track G 160-174 + 162.5 + 175. **Zero regressions.** The API layer adds net-new functionality without touching any existing code path — every Track G repo remains the single source of truth; routes compose on top.
+
+Build deviations vs plan:
+- CORS "denies non-allowed origin" test dropped (CORS is browser-enforced via missing `Access-Control-Allow-Origin` header, not server 403).
+- `httpx` ships with `fastapi.testclient` — no new dev-dep needed.
+- Exception catalog is ~30 not 21 (under-counted in plan; full map in `_exc_class_chain()`).
+- 26 tests vs ~30 planned — per-Track-G tests already prove exception raising; adding redundant coverage here was not valuable.
+
+**Track H scorecard (opening):**
+- 1 phase shipped (175)
+- 26 phase-specific tests
+- 679 targeted regression GREEN (up from 653 at Track G close = +26 = exact Phase 175 test delta — no regressions)
+- FastAPI 0.136 + uvicorn 0.45 + httpx 0.28 pinned
+- Project version 0.11.0 → **0.11.1** (incremental; Track H is opening, not yet delivering a full gate)
+
+**Key finding:** Phase 175 is the single most consequential scaffold of the project's life so far. The decisions baked in here — factory semantics, dependency-override test seams, RFC 7807 error wire format, request-id correlation, 30-exception auto-map — are the contract that all remaining product surface (Phase 176 paywall, 177-180 CRUD, 181 WS, 182 reports, 183 OpenAPI, 184 Gate 9, 185-204 mobile app) consumes. Getting them right on the first pass was critical; regression of 679/679 GREEN proves the scaffold lands cleanly.
+
+Next: **Phase 176** (Auth + API keys + Stripe integration + hard paywall enforcement) layers authentication middleware and rate-limiting on this scaffold. The existing `get_request_id` dep will be joined by `get_current_user` / `get_api_key` / `require_subscription_tier` deps; no app-factory refactor needed. **This is where the product starts earning real money.**

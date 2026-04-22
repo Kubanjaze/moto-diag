@@ -280,7 +280,7 @@ REST API for future mobile app / web dashboard. Paywall enforcement flips to HAR
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 175 | FastAPI foundation + project structure | 🔲 | API scaffold, CORS, error handling (was 163) |
+| 175 | FastAPI foundation + project structure | ✅ | **🚀 TRACK H OPEN.** New `src/motodiag/api/` package (~750 LoC, 8 files): `create_app(settings, db_path_override)` factory returns fresh FastAPI instance per call; `deps.py` with `get_settings`/`get_db_path`/`get_request_id` `Depends()` providers (canonical test-override seam); `errors.py` maps **30+ Track G domain exceptions** to RFC 7807 `ProblemDetail` JSON with correct HTTP status (404/409/422/403/400/500) + request-id echo; `RequestIdMiddleware` (accepts client-supplied `X-Request-ID` or generates UUID4) + `AccessLogMiddleware`; `/healthz` DB connectivity probe + `/v1/version` contract endpoint + `/v1/shops/{id}` smoke route proving full DI chain end-to-end; `motodiag serve [--host X --port N --reload --workers N]` uvicorn launcher. CORS wired with mechanic-friendly dev defaults (localhost:3000 + 5173). Lazy Track G imports keep app-creation fast. 26 tests GREEN single-pass. Targeted regression: 679/679 GREEN. **FastAPI 0.136 + uvicorn 0.45. Project version 0.11.0 → 0.11.1.** |
 | 176 | Auth + API keys | 🔲 | API key management, rate limiting, Stripe integration, hard paywall enforcement (was 164) |
 | 177 | Vehicle endpoints | 🔲 | CRUD for garage vehicles (was 165) |
 | 178 | Diagnostic session endpoints | 🔲 | Start/update/complete diagnostic sessions (was 166) |

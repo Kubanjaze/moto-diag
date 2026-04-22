@@ -59,6 +59,22 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     log_file: Optional[str] = None
 
+    # API (Phase 175+)
+    api_host: str = "127.0.0.1"
+    api_port: int = 8080
+    api_cors_origins: str = (
+        "http://localhost:3000,http://localhost:5173"
+    )
+    api_log_level: str = "INFO"
+
+    @property
+    def api_cors_origins_list(self) -> list[str]:
+        """Parse comma-separated origins into a clean list."""
+        raw = (self.api_cors_origins or "").strip()
+        if not raw:
+            return []
+        return [o.strip() for o in raw.split(",") if o.strip()]
+
     @field_validator("max_tokens")
     @classmethod
     def validate_max_tokens(cls, v: int) -> int:
