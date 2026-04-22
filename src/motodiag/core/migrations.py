@@ -2552,6 +2552,78 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS shop_members;
         """,
     ),
+    # Migration 036 — Phase 173: workflow_rules + workflow_rule_runs
+    Migration(
+        version=36,
+        name="workflow_rules",
+        description=(
+            "Phase 173: Create `workflow_rules` (JSON-defined "
+            "if-this-then-that rules composing Track G primitives) + "
+            "`workflow_rule_runs` (audit log of every rule firing, "
+            "matched or not — feeds Phase 171 analytics). event_trigger "
+            "CHECK restricts to known lifecycle events + 'manual'. "
+            "UNIQUE(shop_id, name) prevents duplicate rule names per "
+            "shop. FK shop CASCADE; rule CASCADE; wo SET NULL on runs "
+            "so audit history survives WO deletion."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS workflow_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                name TEXT NOT NULL,
+                description TEXT,
+                event_trigger TEXT NOT NULL CHECK(event_trigger IN (
+                    'wo_opened', 'wo_in_progress', 'wo_completed',
+                    'wo_cancelled', 'parts_arrived', 'invoice_issued',
+                    'invoice_paid', 'issue_added', 'manual'
+                )),
+                conditions_json TEXT NOT NULL,
+                actions_json TEXT NOT NULL,
+                priority INTEGER NOT NULL DEFAULT 100,
+                is_active INTEGER NOT NULL DEFAULT 1,
+                created_by_user_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                UNIQUE(shop_id, name),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (created_by_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS workflow_rule_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                rule_id INTEGER NOT NULL,
+                work_order_id INTEGER,
+                triggered_event TEXT,
+                matched INTEGER NOT NULL,
+                actions_log TEXT,
+                error TEXT,
+                actor_user_id INTEGER,
+                fired_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (rule_id)
+                    REFERENCES workflow_rules(id) ON DELETE CASCADE,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL,
+                FOREIGN KEY (actor_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_rules_shop_active
+                ON workflow_rules(shop_id, is_active, event_trigger);
+            CREATE INDEX IF NOT EXISTS idx_rule_runs_rule
+                ON workflow_rule_runs(rule_id, fired_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_rule_runs_wo
+                ON workflow_rule_runs(work_order_id, fired_at DESC);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_rule_runs_wo;
+            DROP INDEX IF EXISTS idx_rule_runs_rule;
+            DROP TABLE IF EXISTS workflow_rule_runs;
+            DROP INDEX IF EXISTS idx_rules_shop_active;
+            DROP TABLE IF EXISTS workflow_rules;
+        """,
+    ),
 ]
 
 

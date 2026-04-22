@@ -7,6 +7,42 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.workflow_conditions import (
+    CONDITION_TYPES,
+    InvalidConditionError,
+    evaluate_condition,
+    evaluate_conditions,
+    validate_conditions,
+)
+from motodiag.shop.workflow_actions import (
+    ACTION_TYPES,
+    InvalidActionError,
+    execute_action,
+    validate_actions,
+)
+from motodiag.shop.workflow_rules import (
+    EVENT_TRIGGERS,
+    DuplicateRuleNameError,
+    EventTrigger,
+    InvalidEventError,
+    RuleNotFoundError,
+    RuleRunResult,
+    WorkflowRule,
+    WorkflowRuleRun,
+    build_wo_context,
+    create_rule,
+    delete_rule,
+    disable_rule,
+    enable_rule,
+    evaluate_rule,
+    fire_rule_for_wo,
+    get_rule,
+    list_rule_runs,
+    list_rules,
+    require_rule,
+    trigger_rules_for_event,
+    update_rule,
+)
 from motodiag.shop.rbac import (
     ELIGIBLE_ASSIGN_ROLES,
     SHOP_ROLES,
@@ -318,6 +354,37 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # workflow rules (Phase 173)
+    "ACTION_TYPES",
+    "CONDITION_TYPES",
+    "EVENT_TRIGGERS",
+    "DuplicateRuleNameError",
+    "EventTrigger",
+    "InvalidActionError",
+    "InvalidConditionError",
+    "InvalidEventError",
+    "RuleNotFoundError",
+    "RuleRunResult",
+    "WorkflowRule",
+    "WorkflowRuleRun",
+    "build_wo_context",
+    "create_rule",
+    "delete_rule",
+    "disable_rule",
+    "enable_rule",
+    "evaluate_condition",
+    "evaluate_conditions",
+    "evaluate_rule",
+    "execute_action",
+    "fire_rule_for_wo",
+    "get_rule",
+    "list_rule_runs",
+    "list_rules",
+    "require_rule",
+    "trigger_rules_for_event",
+    "update_rule",
+    "validate_actions",
+    "validate_conditions",
     # rbac (Phase 172)
     "ELIGIBLE_ASSIGN_ROLES",
     "SHOP_ROLES",

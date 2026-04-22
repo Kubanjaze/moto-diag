@@ -50,6 +50,24 @@ from motodiag.shop import (
     mark_invoice_paid,
     revenue_rollup,
     void_invoice,
+    EVENT_TRIGGERS,
+    DuplicateRuleNameError,
+    InvalidActionError,
+    InvalidConditionError,
+    InvalidEventError,
+    RuleNotFoundError,
+    build_wo_context,
+    create_rule,
+    delete_rule,
+    disable_rule,
+    enable_rule,
+    evaluate_rule,
+    fire_rule_for_wo,
+    get_rule,
+    list_rule_runs,
+    list_rules,
+    trigger_rules_for_event,
+    update_rule,
     SHOP_ROLES,
     InvalidRoleError,
     MechanicNotInShopError,
@@ -4305,3 +4323,335 @@ def register_shop(cli_group: click.Group) -> None:
             f"[green]User id={user_id} reactivated at shop "
             f"{shop['name']!r}.[/green]"
         )
+
+    # -----------------------------------------------------------------
+    # shop rule {add, list, show, update, enable, disable, delete,
+    #            fire, test, history}
+    # Phase 173 — workflow automation rules
+    # -----------------------------------------------------------------
+
+    @shop_group.group("rule")
+    def rule_group() -> None:
+        """Workflow automation: if-this-then-that rules."""
+
+    def _parse_json_opt(raw, flag_name):
+        if not raw:
+            return []
+        try:
+            parsed = _json.loads(raw)
+        except ValueError as e:
+            raise click.ClickException(
+                f"--{flag_name} must be valid JSON: {e}"
+            ) from e
+        if not isinstance(parsed, list):
+            raise click.ClickException(
+                f"--{flag_name} must be a JSON array"
+            )
+        return parsed
+
+    @rule_group.command("add")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--name", required=True)
+    @click.option("--event", "event_trigger",
+                  type=click.Choice(list(EVENT_TRIGGERS)), required=True)
+    @click.option("--conditions", "conditions_raw", default="[]",
+                  help='JSON array of condition dicts, e.g. '
+                       '\'[{"type":"priority_lte","value":2}]\'')
+    @click.option("--actions", "actions_raw", required=True,
+                  help='JSON array of action dicts, e.g. '
+                       '\'[{"type":"flag_urgent"}]\'')
+    @click.option("--priority", type=int, default=100)
+    @click.option("--description", default=None)
+    def rule_add_cmd(
+        shop_identifier, name, event_trigger,
+        conditions_raw, actions_raw, priority, description,
+    ):
+        """Create a new workflow rule."""
+        console = get_console()
+        init_db()
+        shop = _resolve_shop_identifier(shop_identifier)
+        assert shop is not None
+        conditions = _parse_json_opt(conditions_raw, "conditions")
+        actions = _parse_json_opt(actions_raw, "actions")
+        try:
+            rule_id = create_rule(
+                shop_id=shop["id"], name=name,
+                event_trigger=event_trigger,
+                conditions=conditions, actions=actions,
+                priority=priority, description=description,
+            )
+        except (
+            DuplicateRuleNameError, InvalidEventError,
+            InvalidConditionError, InvalidActionError,
+        ) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Created rule #{rule_id} {name!r} "
+            f"(event={event_trigger}).[/green]"
+        )
+
+    @rule_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--event", "event_trigger", default=None,
+                  type=click.Choice(list(EVENT_TRIGGERS)))
+    @click.option("--include-inactive", is_flag=True, default=False)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def rule_list_cmd(
+        shop_identifier, event_trigger, include_inactive, as_json,
+    ):
+        """List rules."""
+        console = get_console()
+        init_db()
+        shop_id = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        rules = list_rules(
+            shop_id=shop_id, event_trigger=event_trigger,
+            active_only=not include_inactive,
+        )
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump() for r in rules], default=str, indent=2,
+            ))
+            return
+        if not rules:
+            console.print("[dim]No rules match.[/dim]")
+            return
+        table = Table(title="Workflow rules", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Shop")
+        table.add_column("Name")
+        table.add_column("Event")
+        table.add_column("Priority", justify="right")
+        table.add_column("Active")
+        for r in rules:
+            table.add_row(
+                str(r.id), str(r.shop_id),
+                r.name, r.event_trigger,
+                str(r.priority),
+                "yes" if r.is_active else "no",
+            )
+        console.print(table)
+
+    @rule_group.command("show")
+    @click.argument("rule_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def rule_show_cmd(rule_id, as_json):
+        """Show one rule with conditions + actions."""
+        console = get_console()
+        init_db()
+        rule = get_rule(rule_id)
+        if rule is None:
+            raise click.ClickException(f"rule not found: id={rule_id}")
+        if as_json:
+            click.echo(_json.dumps(
+                rule.model_dump(), default=str, indent=2,
+            ))
+            return
+        lines = [
+            f"[bold]Rule #{rule.id}: {rule.name}[/bold]",
+            f"Shop:       {rule.shop_id}",
+            f"Event:      {rule.event_trigger}",
+            f"Priority:   {rule.priority}",
+            f"Active:     {'yes' if rule.is_active else 'no'}",
+        ]
+        if rule.description:
+            lines.append(f"Description: {rule.description}")
+        lines.append("")
+        lines.append("[bold]Conditions (AND-composed)[/bold]")
+        for c in rule.conditions:
+            lines.append(f"  {_json.dumps(c)}")
+        if not rule.conditions:
+            lines.append("  (always)")
+        lines.append("")
+        lines.append("[bold]Actions (fire-in-order)[/bold]")
+        for a in rule.actions:
+            lines.append(f"  {_json.dumps(a)}")
+        console.print(Panel("\n".join(lines), title="Rule"))
+
+    @rule_group.command("update")
+    @click.argument("rule_id", type=int)
+    @click.option("--name", default=None)
+    @click.option("--description", default=None)
+    @click.option("--priority", type=int, default=None)
+    @click.option("--conditions", "conditions_raw", default=None)
+    @click.option("--actions", "actions_raw", default=None)
+    def rule_update_cmd(
+        rule_id, name, description, priority, conditions_raw, actions_raw,
+    ):
+        """Update an existing rule."""
+        console = get_console()
+        init_db()
+        updates = {}
+        if name is not None:
+            updates["name"] = name
+        if description is not None:
+            updates["description"] = description
+        if priority is not None:
+            updates["priority"] = priority
+        if conditions_raw is not None:
+            updates["conditions"] = _parse_json_opt(
+                conditions_raw, "conditions",
+            )
+        if actions_raw is not None:
+            updates["actions"] = _parse_json_opt(
+                actions_raw, "actions",
+            )
+        if not updates:
+            raise click.ClickException("no updates specified")
+        try:
+            update_rule(rule_id, **updates)
+        except (InvalidConditionError, InvalidActionError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Rule #{rule_id} updated.[/green]"
+        )
+
+    @rule_group.command("enable")
+    @click.argument("rule_id", type=int)
+    def rule_enable_cmd(rule_id):
+        """Activate a rule."""
+        console = get_console()
+        init_db()
+        enable_rule(rule_id)
+        console.print(f"[green]Rule #{rule_id} enabled.[/green]")
+
+    @rule_group.command("disable")
+    @click.argument("rule_id", type=int)
+    def rule_disable_cmd(rule_id):
+        """Deactivate a rule."""
+        console = get_console()
+        init_db()
+        disable_rule(rule_id)
+        console.print(f"[yellow]Rule #{rule_id} disabled.[/yellow]")
+
+    @rule_group.command("delete")
+    @click.argument("rule_id", type=int)
+    @click.option("--yes", is_flag=True, default=False)
+    def rule_delete_cmd(rule_id, yes):
+        """Delete a rule (and cascades its run history)."""
+        console = get_console()
+        init_db()
+        if not yes:
+            if not click.confirm(
+                f"Delete rule #{rule_id} and its run history?",
+            ):
+                raise click.ClickException("aborted")
+        delete_rule(rule_id)
+        console.print(f"[red]Rule #{rule_id} deleted.[/red]")
+
+    @rule_group.command("fire")
+    @click.argument("rule_id", type=int)
+    @click.argument("wo_id", type=int)
+    @click.option("--actor", "actor_user_id", type=int, default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def rule_fire_cmd(rule_id, wo_id, actor_user_id, as_json):
+        """Manually fire a rule against a WO."""
+        console = get_console()
+        init_db()
+        try:
+            result = fire_rule_for_wo(
+                rule_id, wo_id,
+                actor_user_id=actor_user_id,
+                triggered_event="manual",
+            )
+        except RuleNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                result.model_dump(), default=str, indent=2,
+            ))
+            return
+        verdict = "MATCHED" if result.matched else "did not match"
+        color = "green" if result.matched else "dim"
+        console.print(
+            f"[{color}]Rule #{rule_id} on WO #{wo_id}: {verdict}."
+            f"[/{color}]"
+        )
+        for a in result.actions_log:
+            ok = "[green]OK[/green]" if a.get("ok") else "[red]FAIL[/red]"
+            console.print(f"  {ok}  {a}")
+        if result.error:
+            console.print(f"[red]Error: {result.error}[/red]")
+
+    @rule_group.command("test")
+    @click.argument("rule_id", type=int)
+    @click.argument("wo_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def rule_test_cmd(rule_id, wo_id, as_json):
+        """Dry-run: evaluate a rule against a WO without executing actions."""
+        console = get_console()
+        init_db()
+        rule = get_rule(rule_id)
+        if rule is None:
+            raise click.ClickException(f"rule not found: id={rule_id}")
+        ctx = build_wo_context(wo_id)
+        matched = evaluate_rule(rule, ctx)
+        payload = {
+            "rule_id": rule_id, "rule_name": rule.name,
+            "work_order_id": wo_id, "matched": matched,
+            "would_fire_actions": rule.actions if matched else [],
+        }
+        if as_json:
+            click.echo(_json.dumps(payload, default=str, indent=2))
+            return
+        color = "green" if matched else "dim"
+        console.print(
+            f"[{color}]Rule #{rule_id} on WO #{wo_id}: "
+            f"{'MATCHED' if matched else 'did not match'}.[/{color}]"
+        )
+        if matched:
+            console.print(f"Would fire {len(rule.actions)} action(s):")
+            for a in rule.actions:
+                console.print(f"  {_json.dumps(a)}")
+
+    @rule_group.command("history")
+    @click.option("--rule", "rule_id", type=int, default=None)
+    @click.option("--wo", "wo_id", type=int, default=None)
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--matched-only", is_flag=True, default=False)
+    @click.option("--since", default=None)
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def rule_history_cmd(
+        rule_id, wo_id, shop_identifier, matched_only,
+        since, limit, as_json,
+    ):
+        """Show rule firing history."""
+        console = get_console()
+        init_db()
+        shop_id = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        rows = list_rule_runs(
+            rule_id=rule_id, wo_id=wo_id, shop_id=shop_id,
+            matched_only=matched_only, since=since, limit=limit,
+        )
+        if as_json:
+            click.echo(_json.dumps(
+                [r.model_dump() for r in rows], default=str, indent=2,
+            ))
+            return
+        if not rows:
+            console.print("[dim]No rule runs match.[/dim]")
+            return
+        table = Table(title="Rule firing history", show_lines=False)
+        table.add_column("Run", justify="right")
+        table.add_column("Rule", justify="right")
+        table.add_column("WO", justify="right")
+        table.add_column("Event")
+        table.add_column("Matched")
+        table.add_column("Fired at")
+        for r in rows:
+            table.add_row(
+                str(r.id), str(r.rule_id),
+                str(r.work_order_id or "—"),
+                str(r.triggered_event or "—"),
+                "yes" if r.matched else "no",
+                str(r.fired_at),
+            )
+        console.print(table)

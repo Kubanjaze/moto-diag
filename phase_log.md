@@ -1075,3 +1075,44 @@ Project version 0.10.3 → **0.10.4**.
 **Key finding:** Shop-scoped RBAC layers cleanly on Phase 112 global RBAC without duplicating the permission catalog. `shop_members.role` joins directly to Phase 112 `roles.name`, and permission lookups walk the Phase 112 `role_permissions` + `permissions` tables unchanged. The write-back-through-whitelist discipline from Phase 161 extends to reassignment via `update_work_order({"assigned_mechanic_user_id": ...})`; the anti-regression grep test catches any regression to raw SQL. Pattern recommendation: every future Phase that mutates `work_orders` should duplicate the grep test in its own module — cheap test, catches entire classes of drift before code review even starts.
 
 Next: Phase 173 (workflow automation rules — compose Phase 171 rollups as conditions, Phase 170 `trigger_notification` + Phase 161 lifecycle + Phase 172 `reassign_work_order` as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate closure).
+
+---
+
+### 2026-04-22 — Phase 173 complete (Track G automation layer closes)
+
+**If-this-then-that rule engine composing every prior Track G primitive without touching any of them.** Operators author rules as JSON in the DB; the engine is a fixed dispatcher over condition (12 types) + action (8 types) registries. Action executors are thin wrappers that call existing Phase 161/162/164/170/172 whitelists — no raw SQL, anti-regression grep test enforces in `workflow_actions.py`.
+
+Migration 036 (schema v35→v36): `workflow_rules` (id, shop_id, name, description, event_trigger CHECK, conditions_json, actions_json, priority, is_active, created_by_user_id) + `workflow_rule_runs` (id, rule_id, wo_id, triggered_event, matched 0/1, actions_log JSON, error, actor_user_id, fired_at) + 3 indexes. UNIQUE(shop_id, name). FKs: shop CASCADE; rule CASCADE; wo SET NULL; users SET NULL (history survives user deletion).
+
+Three new modules (~900 LoC total):
+- **`shop/workflow_conditions.py`** (~195 LoC): 12 condition evaluators in `_REGISTRY` dict (`always`, `priority_gte/lte/eq`, `status_eq/in`, `severity_eq/in`, `category_in`, `parts_cost_gt_cents`, `invoice_total_gt_cents`, `has_unresolved_issue`) + shape-level `validate_condition` + AND-composed `evaluate_conditions` (empty list → True).
+- **`shop/workflow_actions.py`** (~229 LoC): 8 action executors (`set_priority`, `flag_urgent`, `skip_triage`, `reassign_to_user`, `unassign`, `trigger_notification`, `add_issue_note`, `change_status`). **Every mutation routes through a canonical Track G whitelist** — set_priority calls Phase 161 `update_work_order({"priority": ...})`; flag_urgent/skip_triage call Phase 164 triage_queue helpers; reassign_to_user/unassign call Phase 172 `reassign_work_order`; trigger_notification calls Phase 170; add_issue_note calls Phase 162 `update_issue`; change_status calls Phase 161 lifecycle transition functions (start_work / pause_work / complete_work_order / cancel_work_order / reopen_work_order) — never generic `update_work_order` for status mutations.
+- **`shop/workflow_rules.py`** (~470 LoC): 4 Pydantic models (`WorkflowRule`, `WorkflowRuleRun`, `RuleRunResult` + `ShopRole` reused) + 3 exceptions + `build_wo_context(wo_id)` one-time context assembly (wo + issues + parts + invoice + shop — condition evaluators all read from the same dict) + CRUD (`create_rule`, `get_rule`, `require_rule`, `list_rules`, `update_rule`, `enable_rule`, `disable_rule`, `delete_rule`) + `evaluate_rule` (AND-compose) + `fire_rule_for_wo` (evaluates + executes actions if matched; **always logs a run row** whether matched or not; fail-one-continue-rest — first action failure captured in `error` column, sibling actions continue) + `trigger_rules_for_event` (priority-ordered firing; rejects `event='manual'` with remediation hint) + `list_rule_runs`.
+
+**Dispatcher + registry pattern**: adding a 13th condition type or 9th action type is a 5-line change (registry entry + validator shape-check + docstring) with no schema touch. Rules stay forward-compatible; existing JSON rules keep working.
+
+**Fail-one-continue-rest rationale**: an action raising doesn't unwind prior actions (they may have already mutated DB state). The run row's `actions_log` JSON captures per-action outcomes; mechanic reviews and compensates manually if needed. Strict nested-savepoint rollback was rejected as disproportionate complexity for a local-first CLI — the audit trail gives enough information.
+
+New CLI `motodiag shop rule {add, list, show, update, enable, disable, delete, fire, test, history}` (**10 subcommands**, +335 LoC in cli/shop.py). Total `cli/shop.py` now ~5500 LoC across **16 subgroups and 123 subcommands**.
+
+**Bug fixes during build:**
+- **Bug fix #1**: Fixture issue category `'safety'` violated Phase 162's CHECK constraint (restricts to 13 specific categories). Switched to `'brakes'` via replace-all.
+- **Bug fix #2**: Mock-patch target. First draft patched `motodiag.shop.workflow_actions._a_set_priority` but the `_REGISTRY` dict holds direct function references — module-attribute patching doesn't intercept registry calls. Fixed by `patch.object(work_order_repo, "update_work_order")` — audits the actual Phase 161 whitelist use.
+
+42 tests GREEN across 7 classes (TestMigration036×4 + TestConditions×12 + TestActions×8 + TestRuleCRUD×6 + TestFiring×6 + TestRuleCLI×5 + TestAntiRegression×1) in 29.93s.
+
+**Targeted regression: 648 GREEN in 413.15s (6m 53s)** covering Phase 113 + 118 + 131 + 153 + Track G 160-173 + 162.5. Zero regressions.
+
+**Track G scorecard through Phase 173 (automation layer closed):**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173 (14)
+- Phase-specific tests: 471 (429 + 42)
+- Track G regression: 648/648 GREEN at Phase 173 close
+- CLI surface: **16 subgroups, 123 subcommands under `motodiag shop`**
+- DB tables added: 14 (shops, intake_visits, work_orders, issues, work_order_parts, parts_requisitions, parts_requisition_items, sourcing_recommendations, labor_estimates, shop_bays, bay_schedule_slots, customer_notifications, shop_members, work_order_assignments, workflow_rules, workflow_rule_runs)
+- Migrations: 12 (025-036)
+
+Project version 0.10.4 → **0.10.5**.
+
+**Key finding:** Track G's 5-phase commercial arc (169 invoicing + 170 notifications + 171 analytics + 172 RBAC + 173 automation) all compose on the Phase 161-168 foundational core without any of them modifying prior schema or repo logic. Rules are JSON data; engine is code. A mechanic can author "if severity='critical' and category_in=['brakes','drivetrain'] → set priority=1 + flag urgent + trigger approval_requested" without touching Python. Pattern recommendation for future automation: keep the engine a fixed dispatcher over registries; keep rules as data; let fail-one-continue-rest semantics + audit logs handle edge cases instead of complex transactional rollback.
+
+Next: **Phase 174 Gate 8** — intake-to-invoice integration test closing Track G. The gate test will run a full end-to-end flow: intake → triage → WO → parts sourcing → labor estimate → bay scheduling → in-progress → completion → invoice generation → payment → revenue rollup → automation-rule firing → customer notification — all through the public `motodiag shop *` CLI to validate the 16-subgroup surface holds together.
