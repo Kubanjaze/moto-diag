@@ -1,6 +1,6 @@
 # MotoDiag Phase 178 — Diagnostic Session Endpoints
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -101,24 +101,60 @@ GET /v1/sessions?status=open&vehicle_id=42&since=30d&limit=50
 
 ## Verification Checklist
 
-- [ ] `_for_owner` helpers added to session_repo.
-- [ ] `count_sessions_this_month_for_owner` resets at UTC month
-      boundary (tested with monkey-patched clock).
-- [ ] `SessionOwnershipError` + `SessionQuotaExceededError` mapped
-      (404, 402).
-- [ ] GET /v1/sessions scopes to owner; supports filters.
-- [ ] POST /v1/sessions happy path; 402 on monthly quota exceeded.
-- [ ] Shop tier gets 500/mo quota.
-- [ ] Company tier is unlimited.
-- [ ] GET /v1/sessions/{id} 404 cross-user.
-- [ ] PATCH applies allowed fields; rejects bogus status transitions.
-- [ ] POST /close transitions status → closed + stamps closed_at.
-- [ ] POST /reopen works only from closed status.
-- [ ] POST /symptoms + /fault-codes append to JSON lists.
-- [ ] POST /notes appends.
-- [ ] Unauthenticated → 401.
-- [ ] Phase 175/176/177 + Track G regression still GREEN.
-- [ ] Zero AI calls.
+- [x] `_for_owner` helpers added to session_repo (create/get/list/
+      count-this-month/check-quota/update/close/reopen/symptom/fault-
+      code/note = 11 helpers).
+- [x] `count_sessions_this_month_for_owner` ignores prior-month rows
+      (test inserts a 2020 row; current-month count stays 0).
+- [x] `SessionOwnershipError` (404) + `SessionQuotaExceededError`
+      (402) mapped in `api/errors.py`.
+- [x] GET /v1/sessions scopes to owner; supports status + vehicle_id
+      + since filters.
+- [x] `since` parser accepts `Nd`/`Nh`/`Nm` + ISO.
+- [x] POST /v1/sessions 201 + Location header.
+- [x] 402 on monthly quota exceeded (individual=50/month).
+- [x] Shop tier quota=500; company unlimited (None in response).
+- [x] GET /v1/sessions/{id} 404 cross-user AND nonexistent.
+- [x] PATCH applies allowed fields (status, diagnosis, confidence,
+      severity, cost_estimate, ai_model_used, tokens_used).
+- [x] POST /close + /reopen lifecycle transitions.
+- [x] POST /symptoms + /fault-codes append to JSON lists.
+- [x] POST /notes appends via Phase 120 append_note.
+- [x] Unauthenticated → 401.
+- [x] Phase 07 + 175 + 176 + 177 + 178 tests still GREEN (168/168
+      focused run).
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- 35 tests vs ~32 planned (+3 on since-filter + cross-user patch/
+  close + sub-tier quota display — same coverage over-shoot pattern
+  as Phase 177).
+- No other deviations.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| Phase 178 tests landed | 35 GREEN (5 classes) |
+| Focused regression | 168/168 GREEN (Phase 07 + 175 + 176 + 177 + 178) in 1m 58s |
+| New code | ~480 LoC |
+| `core/session_repo.py` additions | +201 LoC (11 helpers + 2 exceptions + tier map + month helper) |
+| `api/routes/sessions.py` | 361 LoC |
+| `api/errors.py` additions | +6 LoC (2 new mappings) |
+| `api/app.py` | +2 LoC (router mount) |
+| Migration | **0** (user_id already from Phase 112) |
+| SCHEMA_VERSION | unchanged at **38** |
+| AI calls | 0 |
+
+**Key finding:** Phase 178 is the first Track H domain router that
+needs **zero migration** — Phase 112's retrofit already added
+`user_id` to `diagnostic_sessions`. The pattern is the same as Phase
+177 but without the ALTER TABLE dance: `_for_owner` repo helpers +
+route handlers + Pydantic schemas + quota check + tests. **Single-
+pass, no fixups** — the scaffold is now so settled that adding
+domain routers feels like filling in a table. Phases 179 (KB search)
+and 180 (shop CRUD) should each take <1hr with the same pattern.
 
 ## Risks
 

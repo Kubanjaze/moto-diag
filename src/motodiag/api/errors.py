@@ -105,6 +105,10 @@ def _exc_class_chain():
     from motodiag.vehicles.registry import (
         VehicleOwnershipError, VehicleQuotaExceededError,
     )
+    # Phase 178 — diagnostic session domain
+    from motodiag.core.session_repo import (
+        SessionOwnershipError, SessionQuotaExceededError,
+    )
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -188,6 +192,11 @@ def _exc_class_chain():
          "Vehicle not found"),
         (VehicleQuotaExceededError, 402, "vehicle-quota-exceeded",
          "Vehicle quota exceeded for current subscription tier"),
+        # Phase 178 — diagnostic sessions
+        (SessionOwnershipError, 404, "session-not-found",
+         "Diagnostic session not found"),
+        (SessionQuotaExceededError, 402, "session-quota-exceeded",
+         "Monthly session quota exceeded for current subscription tier"),
     ]
 
 

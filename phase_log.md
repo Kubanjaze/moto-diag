@@ -1327,3 +1327,27 @@ Project version 0.12.0 → **0.12.1**.
 **Key finding:** the monetization + scaffold decisions in Phases 175 + 176 pay dividends from Phase 177 onward. The full-CRUD vehicle router is 301 LoC because auth is automatic (`Depends(get_current_user)`), domain exceptions auto-map to HTTP (`VehicleOwnershipError` → 404, `VehicleQuotaExceededError` → 402), Pydantic handles request validation (422 for bad year / missing make / invalid protocol string), and the `_for_owner` repo convention makes scoping structurally enforced. Route handlers never write try/except; never check tiers manually; never hash API keys. **Track H's hardest work is behind us.**
 
 Next: **Phase 178** (diagnostic session endpoints — start/update/complete sessions over HTTP with tier gating) follows the same pattern. Phases 179 (KB search endpoints) and 180 (shop CRUD endpoints — composing Track G's 16-subgroup console into `/v1/shop/*` routes) complete the full-CRUD surface. Phase 181 WebSocket adds live OBD data; 182 PDF reports; 183 OpenAPI enrichment; 184 Gate 9 closes Track H.
+
+---
+
+### 2026-04-22 — Phase 178 complete — diagnostic session endpoints
+
+**9 endpoints over `/v1/sessions*`** exposing Phase 07 `diagnostic_sessions` with owner scoping + monthly quota (individual=50/mo, shop=500/mo, company=unlimited). **Zero migration** — Phase 112's retrofit already added `user_id` to `diagnostic_sessions`.
+
+`core/session_repo.py` gains 11 `_for_owner` helpers + 2 exceptions + `TIER_SESSION_MONTHLY_LIMITS` dict + monthly-count helper. New `api/routes/sessions.py` (361 LoC): list / create / get / patch + lifecycle transitions (close, reopen) + additive POSTs (symptoms, fault-codes, notes). 7 Pydantic request/response schemas with Literal-typed status fields. `_parse_since` helper accepts `Nd`/`Nh`/`Nm`/ISO for list filtering.
+
+**Lifecycle transitions as dedicated POSTs** (not PATCH) — mirrors Phase 07's guarded transition functions. PATCH only touches diagnosis/confidence/severity/cost fields.
+
+**35 tests GREEN single-pass in 33.58s.** **Focused regression: 168/168 GREEN in 117.65s** covering Phase 07 + 175 + 176 + 177 + 178. Full targeted regression deferred — Phase 178 touches no shared state, no migration, no schema changes.
+
+**Track H scorecard through Phase 178:**
+- Phases: 175, 176, 177, 178 (4)
+- Phase-specific tests: 152 (26 + 58 + 33 + 35)
+- Endpoints: 20 (meta 2, shops 1, billing 4, vehicles 6, sessions 7 unique paths)
+- Migrations: 2 Track H migrations (037 auth/billing, 038 vehicle owner)
+
+Project version 0.12.1 → **0.12.2**.
+
+**Key finding:** zero-migration domain routers are now the default pattern. Phase 112's retrofit added `user_id` to 3 core tables (`diagnostic_sessions`, `repair_plans`, `known_issues`) — Phase 178 consumed the first. Phase 179 (KB search over `known_issues`) and Phase 180 (shop CRUD) can both ship migration-free. Track H's domain-router velocity is now <1hr per phase on the Phase 177 recipe.
+
+Next: **Phase 179** (KB search endpoints — expose DTC lookup + known-issues search + symptom search over HTTP). Read-heavy; probably individual-tier-only gating since reading the KB is a core product feature.

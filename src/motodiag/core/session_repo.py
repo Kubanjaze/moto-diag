@@ -317,3 +317,237 @@ def _row_to_dict(row) -> dict:
         else:
             d[field] = []
     return d
+
+
+# ---------------------------------------------------------------------------
+# Phase 178 additions: owner scoping + monthly quota
+# ---------------------------------------------------------------------------
+
+
+from datetime import timezone
+
+
+class SessionOwnershipError(ValueError):
+    """Raised when a caller tries to touch a session they don't own."""
+
+
+class SessionQuotaExceededError(Exception):
+    """Raised when creating a session would exceed the caller's
+    monthly tier quota. Mapped to HTTP 402."""
+
+    def __init__(self, current_count: int, limit: int, tier: str) -> None:
+        self.current_count = current_count
+        self.limit = limit
+        self.tier = tier
+        super().__init__(
+            f"monthly session quota exceeded: {current_count}/{limit} "
+            f"({tier} tier). Upgrade for more diagnostic sessions."
+        )
+
+
+TIER_SESSION_MONTHLY_LIMITS: dict[str, int] = {
+    "individual": 50,
+    "shop": 500,
+    "company": -1,  # unlimited
+}
+
+
+def _month_start_iso() -> str:
+    """First instant of the current UTC calendar month as ISO string."""
+    now = datetime.now(timezone.utc)
+    return now.replace(
+        day=1, hour=0, minute=0, second=0, microsecond=0,
+    ).isoformat()
+
+
+def create_session_for_owner(
+    owner_user_id: int,
+    vehicle_make: str,
+    vehicle_model: str,
+    vehicle_year: int,
+    symptoms: list[str] | None = None,
+    fault_codes: list[str] | None = None,
+    vehicle_id: int | None = None,
+    db_path: str | None = None,
+) -> int:
+    """Same as :func:`create_session` but stamps ``user_id``. Does NOT
+    check tier quota — caller should call
+    :func:`check_session_quota` first."""
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            """INSERT INTO diagnostic_sessions
+               (vehicle_id, vehicle_make, vehicle_model, vehicle_year,
+                status, symptoms, fault_codes, created_at, user_id)
+               VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)""",
+            (
+                vehicle_id, vehicle_make, vehicle_model, vehicle_year,
+                json.dumps(symptoms or []),
+                json.dumps(fault_codes or []),
+                datetime.now().isoformat(),
+                owner_user_id,
+            ),
+        )
+        return cursor.lastrowid
+
+
+def get_session_for_owner(
+    session_id: int, owner_user_id: int,
+    db_path: str | None = None,
+) -> dict | None:
+    """Return session iff owned by `owner_user_id`; None otherwise —
+    routes translate None → 404 (nonexistent and cross-user
+    indistinguishable to the caller)."""
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT * FROM diagnostic_sessions "
+            "WHERE id = ? AND user_id = ?",
+            (session_id, owner_user_id),
+        )
+        row = cursor.fetchone()
+        return _row_to_dict(row) if row else None
+
+
+def list_sessions_for_owner(
+    owner_user_id: int,
+    status: str | None = None,
+    vehicle_id: int | None = None,
+    since_iso: str | None = None,
+    limit: int = 100,
+    db_path: str | None = None,
+) -> list[dict]:
+    query = "SELECT * FROM diagnostic_sessions WHERE user_id = ?"
+    params: list = [owner_user_id]
+    if status is not None:
+        query += " AND status = ?"
+        params.append(status)
+    if vehicle_id is not None:
+        query += " AND vehicle_id = ?"
+        params.append(vehicle_id)
+    if since_iso is not None:
+        query += " AND created_at >= ?"
+        params.append(since_iso)
+    query += " ORDER BY created_at DESC, id DESC"
+    if limit and limit > 0:
+        query += " LIMIT ?"
+        params.append(int(limit))
+    with get_connection(db_path) as conn:
+        rows = conn.execute(query, params).fetchall()
+        return [_row_to_dict(r) for r in rows]
+
+
+def count_sessions_this_month_for_owner(
+    owner_user_id: int, db_path: str | None = None,
+) -> int:
+    """Count sessions created by `owner_user_id` in the current UTC
+    calendar month. Used by the POST endpoint's quota check."""
+    month_start = _month_start_iso()
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) AS n FROM diagnostic_sessions "
+            "WHERE user_id = ? AND created_at >= ?",
+            (owner_user_id, month_start),
+        ).fetchone()
+    return int(row["n"]) if row else 0
+
+
+def check_session_quota(
+    owner_user_id: int, tier: str | None,
+    db_path: str | None = None,
+) -> None:
+    """Raise `SessionQuotaExceededError` when creating one more
+    session would exceed the monthly tier quota."""
+    effective = (
+        tier if tier in TIER_SESSION_MONTHLY_LIMITS else "individual"
+    )
+    limit = TIER_SESSION_MONTHLY_LIMITS[effective]
+    if limit < 0:
+        return
+    current = count_sessions_this_month_for_owner(
+        owner_user_id, db_path=db_path,
+    )
+    if current >= limit:
+        raise SessionQuotaExceededError(
+            current_count=current, limit=limit, tier=effective,
+        )
+
+
+def _assert_owner(
+    session_id: int, owner_user_id: int,
+    db_path: str | None,
+) -> dict | None:
+    """Return session row if owned by caller; None if missing;
+    raise `SessionOwnershipError` on cross-owner."""
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT user_id, status FROM diagnostic_sessions "
+            "WHERE id = ?",
+            (session_id,),
+        ).fetchone()
+    if row is None:
+        return None
+    if int(row["user_id"] or 0) != owner_user_id:
+        raise SessionOwnershipError(
+            f"session id={session_id} not owned by "
+            f"user id={owner_user_id}"
+        )
+    return dict(row)
+
+
+def update_session_for_owner(
+    session_id: int, owner_user_id: int, updates: dict,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return update_session(session_id, updates, db_path=db_path)
+
+
+def close_session_for_owner(
+    session_id: int, owner_user_id: int,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return close_session(session_id, db_path=db_path)
+
+
+def reopen_session_for_owner(
+    session_id: int, owner_user_id: int,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return reopen_session(session_id, db_path=db_path)
+
+
+def add_symptom_for_owner(
+    session_id: int, owner_user_id: int, symptom: str,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return add_symptom_to_session(session_id, symptom, db_path=db_path)
+
+
+def add_fault_code_for_owner(
+    session_id: int, owner_user_id: int, code: str,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return add_fault_code_to_session(session_id, code, db_path=db_path)
+
+
+def append_note_for_owner(
+    session_id: int, owner_user_id: int, note: str,
+    db_path: str | None = None,
+) -> bool:
+    guard = _assert_owner(session_id, owner_user_id, db_path)
+    if guard is None:
+        return False
+    return append_note(session_id, note, db_path=db_path)
