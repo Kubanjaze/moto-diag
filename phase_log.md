@@ -1116,3 +1116,55 @@ Project version 0.10.4 → **0.10.5**.
 **Key finding:** Track G's 5-phase commercial arc (169 invoicing + 170 notifications + 171 analytics + 172 RBAC + 173 automation) all compose on the Phase 161-168 foundational core without any of them modifying prior schema or repo logic. Rules are JSON data; engine is code. A mechanic can author "if severity='critical' and category_in=['brakes','drivetrain'] → set priority=1 + flag urgent + trigger approval_requested" without touching Python. Pattern recommendation for future automation: keep the engine a fixed dispatcher over registries; keep rules as data; let fail-one-continue-rest semantics + audit logs handle edge cases instead of complex transactional rollback.
 
 Next: **Phase 174 Gate 8** — intake-to-invoice integration test closing Track G. The gate test will run a full end-to-end flow: intake → triage → WO → parts sourcing → labor estimate → bay scheduling → in-progress → completion → invoice generation → payment → revenue rollup → automation-rule firing → customer notification — all through the public `motodiag shop *` CLI to validate the 16-subgroup surface holds together.
+
+---
+
+### 2026-04-22 — Phase 174 / Gate 8 complete — **🎯 TRACK G CLOSED**
+
+**End-to-end Track G integration test closing the 14-phase shop management arc.** Ships no new code, no migrations, no CLI additions — only 5 integration tests + a ~510-LoC track closure summary doc (`TRACK_G_SUMMARY.md`).
+
+Gate test structure (5 tests, 3.25s runtime):
+- `TestEndToEndHappyPath::test_full_lifecycle` — 19-step walkthrough: shop profile init → owner + tech membership add → customer + bike → WO create → issue log (brakes, high) → parts add/order/receive → bay add + schedule 2hr slot → work start + slot start → **mid-repair reassignment (owner → tech)** → wo_in_progress notification triggered → complete WO (2.5h actual) + slot + mark parts installed → invoice generation ($250 labor + $39.90 parts × 1.0825 tax) → revenue rollup (one invoice, total matches) → mark paid → analytics snapshot (WO appears in throughput + revenue) → rule creation (wo_completed → trigger_notification) → manual `trigger_rules_for_event('wo_completed')` → notification queue has 2 entries → rule firing history shows matched run → assignment history preserves the reassignment.
+- `TestShopScopedIsolation` — two shops with their own customers + vehicles + WOs don't cross-pollinate. Revenue rollups scope correctly; invoice lists scope correctly; `MechanicNotInShopError` protects against cross-shop reassignment.
+- `TestRuleFiresAcrossLifecycle` — two rules on two distinct events (wo_completed, invoice_issued) each fire independently; audit rows record correct `triggered_event`.
+- `TestGate8AntiRegression` — SCHEMA_VERSION stays at 36 (Gate 8 adds no migrations); `TRACK_G_SUMMARY.md` exists.
+
+**`docs/phases/completed/TRACK_G_SUMMARY.md`** (~510 LoC) captures:
+- 14-phase inventory + DB schema diagram (14 Track G tables + 12 migrations)
+- **8 design pillars**: write-back-through-whitelist, canonical AI composition pattern (Phase 162.5), guarded status lifecycles, compose-existing-rollups-don't-duplicate (Phase 171), rules-are-data-engine-is-code (Phase 173), fail-one-continue-rest action semantics (Phase 173), reuse-existing-substrate-across-phase-gaps (Phase 169 over Phase 118), plumbing-before-transport (Phase 170 notifications queue)
+- Full 23-step mechanic workflow from shop profile init through rule-fired follow-up notification
+- File + LoC inventory: ~4700 LoC shop/* modules, ~5500 LoC cli/shop.py, ~6500 LoC tests
+- Known limitations → Track H roadmap seeds
+
+**Bug fix during build:** `shop issue add` uses `--work-order` flag, not `--wo`. Cross-subgroup flag convention drift surfaced during the gate test (each subgroup is internally consistent; short-form `--wo` appears in work-order + assignment commands, long-form `--work-order` appears in issue / parts contexts). Per-phase tests pass because they each use the correct flag; Gate 8 caught the inconsistency across subgroups. Documented as a Track H cleanup candidate in the summary doc.
+
+**Targeted regression: 653 GREEN in 416.55s (6m 57s)** covering Phase 113 + 118 + 131 + 153 + Track G 160-174 + 162.5.
+
+---
+
+## 🎯 Track G Final Scorecard
+
+| Metric | Value |
+|--------|------:|
+| Phases shipped | 14 (160, 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169, 170, 171, 172, 173, 174) |
+| Phase-specific tests | ~475 |
+| Targeted regression | 653/653 GREEN |
+| CLI subgroups | **16** (profile, member, customer, intake, work-order, issue, priority, triage, parts-needs, sourcing, labor, bay, invoice, notify, analytics, rule) |
+| CLI subcommands | **123** |
+| DB tables added | 14 |
+| Migrations | 12 (025-036) |
+| Regressions across Track G build | **0** |
+| AI phases | 3 (163, 166, 167) — all via Phase 162.5 canonical pattern |
+| Zero-AI phases | 11 |
+| Package version at close | **0.11.0** (was 0.9.9 at Phase 167 close; +6 minor versions across Track G commercial arc + closure) |
+
+**Design principles proven by the full-track build:**
+1. **Write-back-through-whitelist** scaled cleanly from Phase 161 through Phase 173 without a single raw-SQL regression — grep-test discipline caught drift before it landed.
+2. **Canonical AI composition pattern** (Phase 162.5 shared `ShopAIClient`) saved ~250 LoC of duplication across 3 AI phases and standardized cost/cache/token-accounting integration.
+3. **Substrate reuse across phase gaps** is reliable — Phase 169 used Phase 118's 6-month-old `invoices` substrate, Phase 172 used Phase 112's 11-month-old RBAC substrate, both with zero prior-phase test regressions.
+4. **Rules-as-data, engine-is-code** kept Phase 173 automation at ~900 LoC despite composing 8 prior phases.
+5. **Compose existing rollups** kept Phase 171 analytics at ~520 LoC despite presenting 10 distinct rollups.
+
+**Track G is closed.** The `motodiag shop *` console is the reference consumer for Track H (auth + transport + cross-shop + mobile/web UI).
+
+Next track: **Track H (Phase 175+)** will wire auto-fire Phase 173 rules on CLI lifecycle transitions, add session auth + CLI permission guards, build a transport worker for the Phase 170 notification queue, add cross-shop analytics for company-tier subscribers, and eventually ship a minimal API layer for Track I's mobile app.
