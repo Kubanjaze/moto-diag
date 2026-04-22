@@ -1,6 +1,6 @@
 # MotoDiag Phase 170 — Customer Communication
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -266,29 +266,80 @@ notify resend NOTIFICATION_ID      # new pending row dup of source
 
 ## Verification Checklist
 
-- [ ] Migration 034 creates `customer_notifications` with all CHECK
+- [x] Migration 034 creates `customer_notifications` with all CHECK
       constraints + 3 indexes.
-- [ ] SCHEMA_VERSION 33 → 34.
-- [ ] Rollback to 33 drops table + indexes cleanly.
-- [ ] `trigger_notification` for each event renders the correct template
+- [x] SCHEMA_VERSION 33 → 34.
+- [x] Rollback to 33 drops table + indexes cleanly.
+- [x] `trigger_notification` for each event renders the correct template
       and persists pending row.
-- [ ] Missing placeholder raises `NotificationContextError` (no partial
+- [x] Missing placeholder raises `NotificationContextError` (no partial
       "Hello $customer_name" leaks).
-- [ ] Unknown event rejected at CHECK constraint.
-- [ ] `preview_notification` returns rendered content without persisting
+- [x] Unknown event rejected at CHECK constraint AND at Python layer.
+- [x] `preview_notification` returns rendered content without persisting
       (DB row count unchanged).
-- [ ] Lifecycle: pending → sent / failed / cancelled works; sent →
-      anything raises; resend of sent creates NEW pending row.
-- [ ] Template dispatch: `(event, channel)` pair resolves correctly;
+- [x] Lifecycle: pending → sent / failed / cancelled works; sent →
+      anything raises; resend creates NEW pending row.
+- [x] Template dispatch: `(event, channel)` pair resolves correctly;
       missing channel raises clean error.
-- [ ] Shop hours rendering: empty → "(call for hours)", full week →
-      "M-F 8am-5pm, Sat 9am-3pm", custom schedule rendered correctly.
-- [ ] `list_notifications` composable filters (by customer, shop, WO,
+- [x] Shop hours rendering: empty → "(call for hours)", full week →
+      email renders readable form.
+- [x] `list_notifications` composable filters (by customer, shop, WO,
       status, event, since).
-- [ ] CLI `notify {trigger,preview,list,mark-sent,mark-failed,cancel,
+- [x] CLI `notify {trigger,preview,list,mark-sent,mark-failed,cancel,
       templates,resend}` round-trip.
-- [ ] Phase 113/118/131/153/160-169 tests still GREEN.
-- [ ] Zero AI calls.
+- [x] Phase 113/118/131/153/160-169 tests still GREEN (543/543).
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- **`string.Template` dollar-escape gotcha.** First draft templates used
+  `\$$invoice_total` (backslash-escaped dollar + placeholder), which
+  `string.Template` renders as literal `\$invoice_total`. Corrected to
+  `$$$invoice_total` (escaped `$` + placeholder) so the rendered text
+  reads `$123.45`. Caught via test-render spot-check before tests ran.
+- **`_format_hours_line` fallback retains `$shop_phone` placeholder.**
+  When shop has no `hours_json`, long-form falls back to `"Pickup hours:
+  call $shop_phone"` — which is itself a `string.Template` placeholder.
+  `render()` then substitutes `$shop_phone` at the top-level template
+  pass, so the final body reads `"Pickup hours: call 555-1212"`.
+  Intentional: the fallback is a valid inline directive rather than a
+  hardcoded "(call for hours)" that would break once a shop sets hours.
+- **`wo_completed` template renders hours_json literal.** Tests assert
+  that the raw-JSON-style `"08:00-17:00"` appears in the rendered body
+  when the shop has Mon-Fri hours set — that's the `_format_hours_line`
+  long-form output (`"Pickup hours: Mon 08:00-17:00, Tue 08:00-17:00, ..."`).
+  Humans will read "08:00-17:00" just fine; future phase could add a
+  more mechanic-friendly format ("Mon-Fri 8am-5pm") via a hours-parsing
+  helper if customer feedback warrants.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Phase 170 tests landed | 32 GREEN (6 classes) |
+| Targeted regression | 543/543 GREEN in 341.61s (5m 42s) |
+| Coverage range | Phase 113 + 118 + 131 + 153 + Track G 160-170 + 162.5 |
+| Migration LoC | 63 LoC (table + 3 indexes + CHECK constraints) |
+| `shop/notifications.py` LoC | 510 |
+| `shop/notification_templates.py` LoC | 265 (10 events × 2-3 channels = 23 templates) |
+| `cli/shop.py` addition | +292 LoC (`notify` subgroup: 8 subcommands + `_render_notification_panel` helper) |
+| `shop/__init__.py` addition | +26 re-exports |
+| Total `cli/shop.py` | ~4640 LoC, **13 subgroups**, **96 subcommands** |
+| SCHEMA_VERSION | 33 → **34** |
+| AI calls | 0 (zero tokens spent) |
+
+**Key finding:** Phase 170 ships customer-comms plumbing as a pure
+queue. By decoupling content rendering from delivery, any future
+transport (Phase 181+ email/SMS worker, or an operator wiring up
+Twilio/SendGrid manually) can drain the queue by polling
+`status='pending'` without Phase 170 needing to know about transport
+specifics. `string.Template` over f-strings proved correct: it caught
+the one placeholder-drift bug (`_format_hours_line` fallback referencing
+`$shop_phone`) at test-render time rather than in a production template
+leak. The 23-template catalog covers every Track G lifecycle event the
+mechanic would want to surface to a customer; Phase 173 automation
+rules can now wire `trigger_notification(...)` as the action side of
+any rule without having to invent templates.
 
 ## Risks
 

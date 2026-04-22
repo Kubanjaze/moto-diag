@@ -942,3 +942,51 @@ Build deviations:
 Project version 0.10.0 → **0.10.1** (Track G commercial core closure; Gate 8 runway entered).
 
 Next: Phase 170 (customer communication — SMS/email status updates) → Phase 171 (analytics dashboard — consumes Phase 168 utilization + Phase 167 reconciliation + Phase 169 revenue) → Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules) → Phase 174 Gate 8 (intake-to-invoice integration test).
+
+---
+
+### 2026-04-22 — Phase 170 complete (Track G customer-comms plumbing)
+
+**Template-rendered audit-logged customer-notification queue for shop-workflow events.** Queue-only — actual email/SMS delivery deferred to Track J transport infrastructure (Phase 181+). Mechanics (or Phase 173 automation rules) call `trigger_notification(event, wo_id=..., channel='email'|'sms'|'in_app')`; the module renders a `string.Template` + persists the result with `status='pending'`; an external worker or integration drains the queue and flips status via `mark_notification_sent` / `mark_notification_failed`.
+
+Migration 034 (schema v33→v34): new `customer_notifications` table with 4 FKs (customer/shop CASCADE; wo+invoice SET NULL so history survives), 2 CHECK constraints (event + channel whitelists), 3 indexes.
+
+New `shop/notification_templates.py` (~265 LoC):
+- `NotificationTemplate` class wrapping `string.Template` subject + body
+- 23 registered templates across 10 events × 2-3 channels each
+- Events: `wo_opened`, `wo_in_progress`, `wo_on_hold`, `wo_completed`, `wo_cancelled`, `invoice_issued`, `invoice_paid`, `parts_arrived`, `estimate_ready`, `approval_requested`
+- `get_template(event, channel)` + `list_templates()` + `UnknownEventError` + `TemplateNotFoundError`
+
+Content principles baked from motorcycle-mechanic feedback: first-name recipient, WO # + shop phone in every message, plain language, prominent totals, shop hours in completed/pickup messages, SMS under 320 chars (2-part max).
+
+New `shop/notifications.py` (~510 LoC):
+- 2 Pydantic models: `Notification` (full row), `NotificationPreview` (rendered content without id/status)
+- 3 exceptions: `NotificationContextError`, `NotificationNotFoundError`, `InvalidNotificationTransition`
+- 8 public APIs: `trigger_notification`, `preview_notification`, `mark_notification_sent`, `mark_notification_failed`, `cancel_notification`, `resend_notification`, `list_notifications`, `get_notification`
+- 7 private helpers: `_load_event_context` (assembles WO + customer + vehicle + shop + optional invoice + optional parts into template context dict), `_format_hours_line` (JSON hours → long+short form tuple), `_first_name`, `_money`, `_bike_label`, `_recipient_for` (channel-specific contact picker), `_transition` (guarded status change)
+- `_VALID_TRANSITIONS` dict: `pending → sent|failed|cancelled`; all three are terminal. `resend_notification` creates a NEW pending row rather than mutating — preserves audit trail.
+
+**Key build discoveries:**
+- **`string.Template` dollar-escape**: `$$$identifier` (not `\$$identifier`) renders `$<value>`. First-draft templates had `\$$invoice_total` which rendered as literal `\$invoice_total`. Caught via pre-test render spot-check; fixed across all 23 templates with a single `replace_all`.
+- **`_format_hours_line` fallback**: returns `"Pickup hours: call $shop_phone"` (not `"(call for hours)"`) so the outer render substitutes `$shop_phone` into the final body — cleaner UX than a hardcoded unknown-state string.
+- **Event context assembler** resolves from any of wo_id / invoice_id / customer_id, with progressively softer shop-inference rules (most-recent WO as fallback when customer_id alone is given).
+
+New CLI `motodiag shop notify {trigger, preview, list, mark-sent, mark-failed, cancel, resend, templates}` (**8 subcommands**, +292 LoC in cli/shop.py). Total `cli/shop.py` now ~4640 LoC across **13 subgroups and 96 subcommands**.
+
+32 tests GREEN across 6 classes (TestMigration034×5 + TestTemplates×5 + TestTriggerAndPreview×9 + TestLifecycle×5 + TestListing×3 + TestNotifyCLI×5) in 20.35s. **Single pass — zero test fixes needed.**
+
+**Targeted regression: 543 GREEN in 341.61s (5m 42s)** covering Phase 113 (CRM) + Phase 118 (accounting) + Phase 131 (ai-cache) + Phase 153 (parts catalog) + Track G 160-170 + Phase 162.5. Zero regressions.
+
+**Track G scorecard through Phase 170:**
+- Phases: 161, 162, 162.5, 163, 164, 165, 166, 167, 168, 169, 170 (11 phase commits)
+- Phase-specific tests: 366 (334 + 32)
+- Track G regression: 543/543 GREEN at Phase 170 close
+- CLI surface: **13 subgroups, 96 subcommands under `motodiag shop`**
+- DB tables added: 10 net-new (shops, intake_visits, work_orders, issues, work_order_parts, parts_requisitions, parts_requisition_items, sourcing_recommendations, labor_estimates, shop_bays, bay_schedule_slots, customer_notifications)
+- Migrations added: 10 (025-034)
+
+Project version 0.10.1 → **0.10.2** (Track G comms plumbing landed).
+
+**Key finding:** "Plumbing before transport" is the right pattern for comms. By writing rendered audit-logged notifications to a queue with explicit status transitions, any future delivery integration becomes a pluggable consumer rather than module-internal logic — any operator can wire Twilio/SendGrid today by polling `SELECT * FROM customer_notifications WHERE status='pending'` and calling the status-transition functions. Phase 173 automation rules will compose on top: `trigger_notification(...)` becomes the action side of any rule without having to invent templates. `string.Template` over f-strings caught the one placeholder-drift bug at test time with a clean error rather than leaking half-rendered content to a live customer.
+
+Next: Phase 171 (shop analytics dashboard — consumes Phase 168 utilization + Phase 167 reconciliation + Phase 169 revenue) → Phase 172 (multi-mechanic assignment w/ RBAC) → Phase 173 (workflow automation rules that fire `trigger_notification` + lifecycle transitions as actions) → Phase 174 Gate 8 (intake-to-invoice integration test — Track G gate).

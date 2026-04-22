@@ -7,6 +7,34 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.notification_templates import (
+    NOTIFICATION_CHANNELS,
+    NOTIFICATION_EVENTS,
+    NotificationChannel,
+    NotificationEvent,
+    NotificationTemplate,
+    TemplateNotFoundError,
+    UnknownEventError,
+    get_template,
+)
+from motodiag.shop.notifications import (
+    NOTIFICATION_STATUSES,
+    InvalidNotificationTransition,
+    Notification,
+    NotificationContextError,
+    NotificationNotFoundError,
+    NotificationPreview,
+    NotificationStatus,
+    cancel_notification,
+    get_notification,
+    list_notifications,
+    list_template_catalog,
+    mark_notification_failed,
+    mark_notification_sent,
+    preview_notification,
+    resend_notification,
+    trigger_notification,
+)
 from motodiag.shop.invoicing import (
     INVOICE_STATUSES,
     InvoiceGenerationError,
@@ -239,6 +267,31 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # notifications (Phase 170)
+    "NOTIFICATION_CHANNELS",
+    "NOTIFICATION_EVENTS",
+    "NOTIFICATION_STATUSES",
+    "InvalidNotificationTransition",
+    "Notification",
+    "NotificationChannel",
+    "NotificationContextError",
+    "NotificationEvent",
+    "NotificationNotFoundError",
+    "NotificationPreview",
+    "NotificationStatus",
+    "NotificationTemplate",
+    "TemplateNotFoundError",
+    "UnknownEventError",
+    "cancel_notification",
+    "get_notification",
+    "get_template",
+    "list_notifications",
+    "list_template_catalog",
+    "mark_notification_failed",
+    "mark_notification_sent",
+    "preview_notification",
+    "resend_notification",
+    "trigger_notification",
     # invoicing (Phase 169)
     "INVOICE_STATUSES",
     "InvoiceGenerationError",

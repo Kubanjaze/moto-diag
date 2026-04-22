@@ -2423,6 +2423,71 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE invoices_rollback RENAME TO invoices;
         """,
     ),
+    # Migration 034 — Phase 170: customer_notifications audit-log table
+    Migration(
+        version=34,
+        name="customer_notifications",
+        description=(
+            "Phase 170: Create `customer_notifications` — audit-log + "
+            "queue for shop-workflow customer messages (WO status, "
+            "invoice issued/paid, parts arrived, estimate-ready, "
+            "approval-requested). This phase owns templating + "
+            "persistence; actual email/SMS transport is deferred to "
+            "Track J infrastructure. Lifecycle: pending → "
+            "sent|failed|cancelled. Resend creates new pending row "
+            "(preserves failure audit). FKs: customer/shop CASCADE, "
+            "work_order_id + invoice_id SET NULL so history survives."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS customer_notifications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                shop_id INTEGER NOT NULL,
+                work_order_id INTEGER,
+                invoice_id INTEGER,
+                event TEXT NOT NULL CHECK(event IN (
+                    'wo_opened', 'wo_in_progress', 'wo_on_hold',
+                    'wo_completed', 'wo_cancelled', 'invoice_issued',
+                    'invoice_paid', 'parts_arrived', 'estimate_ready',
+                    'approval_requested'
+                )),
+                channel TEXT NOT NULL CHECK(channel IN (
+                    'email', 'sms', 'in_app'
+                )),
+                recipient TEXT NOT NULL,
+                subject TEXT,
+                body TEXT NOT NULL,
+                status TEXT NOT NULL DEFAULT 'pending' CHECK(status IN (
+                    'pending', 'sent', 'failed', 'cancelled'
+                )),
+                failure_reason TEXT,
+                triggered_by_user_id INTEGER,
+                triggered_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                sent_at TIMESTAMP,
+                updated_at TIMESTAMP,
+                FOREIGN KEY (customer_id)
+                    REFERENCES customers(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL,
+                FOREIGN KEY (invoice_id)
+                    REFERENCES invoices(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_notif_customer
+                ON customer_notifications(customer_id, triggered_at DESC);
+            CREATE INDEX IF NOT EXISTS idx_notif_shop_status
+                ON customer_notifications(shop_id, status);
+            CREATE INDEX IF NOT EXISTS idx_notif_wo
+                ON customer_notifications(work_order_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_notif_wo;
+            DROP INDEX IF EXISTS idx_notif_shop_status;
+            DROP INDEX IF EXISTS idx_notif_customer;
+            DROP TABLE IF EXISTS customer_notifications;
+        """,
+    ),
 ]
 
 

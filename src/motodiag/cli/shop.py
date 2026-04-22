@@ -50,6 +50,19 @@ from motodiag.shop import (
     mark_invoice_paid,
     revenue_rollup,
     void_invoice,
+    NOTIFICATION_EVENTS,
+    NotificationContextError,
+    NotificationNotFoundError,
+    UnknownEventError,
+    cancel_notification,
+    get_notification,
+    list_notifications,
+    list_template_catalog,
+    mark_notification_failed,
+    mark_notification_sent,
+    preview_notification,
+    resend_notification,
+    trigger_notification,
     BayNotFoundError,
     InvalidSlotTransition,
     LaborEstimatorError,
@@ -438,6 +451,34 @@ def _render_intake_panel(console, intake: dict) -> None:
         if intake.get("close_reason"):
             lines.append(f"Reason:    {intake['close_reason']}")
     console.print(Panel("\n".join(lines), title="Intake Visit"))
+
+
+def _render_notification_panel(console, notif) -> None:
+    """Render a Notification or NotificationPreview as a Rich Panel."""
+    status_color = {
+        "pending": "yellow", "sent": "green",
+        "failed": "red", "cancelled": "dim",
+    }
+    # Preview objects don't have id/status; guard with getattr
+    notif_id = getattr(notif, "id", None)
+    notif_status = getattr(notif, "status", "preview")
+    color = status_color.get(notif_status, "white")
+    header = (
+        f"[bold]{notif.event}[/bold] / {notif.channel}  "
+        f"[{color}]{notif_status}[/{color}]"
+    )
+    if notif_id is not None:
+        header = f"[bold]Notification #{notif_id}[/bold]  " + header
+    lines: list[str] = [header, "", f"To: {notif.recipient}"]
+    if notif.subject:
+        lines.append(f"Subject: {notif.subject}")
+    lines.append("")
+    lines.append(notif.body)
+    title = (
+        f"Notification #{notif_id}" if notif_id is not None
+        else "Preview"
+    )
+    console.print(Panel("\n".join(lines), title=title))
 
 
 def _render_invoice_panel(console, summary) -> None:
@@ -3576,3 +3617,257 @@ def register_shop(cli_group: click.Group) -> None:
             for st, n in sorted(rollup.by_status.items()):
                 lines.append(f"  {st:<10} {n}")
         console.print(Panel("\n".join(lines), title="Revenue Rollup"))
+
+    # -----------------------------------------------------------------
+    # shop notify {trigger, preview, list, mark-sent, mark-failed,
+    #              cancel, templates, resend}
+    # Phase 170 — customer communication
+    # -----------------------------------------------------------------
+
+    @shop_group.group("notify")
+    def notify_group() -> None:
+        """Customer communications — template-rendered audit-logged queue."""
+
+    def _parse_extra(raw: Optional[str]) -> Optional[dict]:
+        if not raw:
+            return None
+        try:
+            parsed = _json.loads(raw)
+        except ValueError as e:
+            raise click.ClickException(
+                f"--extra must be JSON object: {e}"
+            ) from e
+        if not isinstance(parsed, dict):
+            raise click.ClickException(
+                "--extra must be a JSON object, not a list/scalar"
+            )
+        return parsed
+
+    @notify_group.command("trigger")
+    @click.argument("event")
+    @click.option("--wo", "wo_id", type=int, default=None)
+    @click.option("--invoice", "invoice_id", type=int, default=None)
+    @click.option("--customer", "customer_id", type=int, default=None)
+    @click.option("--channel", type=click.Choice(
+        ["email", "sms", "in_app"],
+    ), default="email")
+    @click.option("--extra", "extra_raw", default=None,
+                  help='JSON object of template overrides, e.g. '
+                       '\'{"approval_finding":"valves leaking"}\'')
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def notify_trigger_cmd(
+        event, wo_id, invoice_id, customer_id, channel, extra_raw, as_json,
+    ):
+        """Render + queue a notification (status=pending)."""
+        console = get_console()
+        init_db()
+        extra = _parse_extra(extra_raw)
+        try:
+            notif_id = trigger_notification(
+                event,
+                wo_id=wo_id, invoice_id=invoice_id,
+                customer_id=customer_id, channel=channel,
+                extra_context=extra,
+            )
+        except (UnknownEventError, NotificationContextError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        notif = get_notification(notif_id)
+        if as_json:
+            click.echo(_json.dumps(
+                notif.model_dump() if notif else {"id": notif_id},
+                default=str, indent=2,
+            ))
+            return
+        assert notif is not None
+        console.print(
+            f"[green]Notification #{notif_id} queued "
+            f"({event}/{channel}).[/green] "
+            f"Mark sent with `shop notify mark-sent {notif_id}` "
+            f"once delivered."
+        )
+        _render_notification_panel(console, notif)
+
+    @notify_group.command("preview")
+    @click.argument("event")
+    @click.option("--wo", "wo_id", type=int, default=None)
+    @click.option("--invoice", "invoice_id", type=int, default=None)
+    @click.option("--customer", "customer_id", type=int, default=None)
+    @click.option("--channel", type=click.Choice(
+        ["email", "sms", "in_app"],
+    ), default="email")
+    @click.option("--extra", "extra_raw", default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def notify_preview_cmd(
+        event, wo_id, invoice_id, customer_id, channel, extra_raw, as_json,
+    ):
+        """Render without persisting."""
+        console = get_console()
+        init_db()
+        extra = _parse_extra(extra_raw)
+        try:
+            preview = preview_notification(
+                event,
+                wo_id=wo_id, invoice_id=invoice_id,
+                customer_id=customer_id, channel=channel,
+                extra_context=extra,
+            )
+        except (UnknownEventError, NotificationContextError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(
+                preview.model_dump(), default=str, indent=2,
+            ))
+            return
+        _render_notification_panel(console, preview)
+
+    @notify_group.command("list")
+    @click.option("--shop", "shop_identifier", default=None)
+    @click.option("--customer", "customer_id", type=int, default=None)
+    @click.option("--wo", "wo_id", type=int, default=None)
+    @click.option("--status", default=None,
+                  type=click.Choice([
+                      "pending", "sent", "failed", "cancelled",
+                  ]))
+    @click.option("--event", default=None)
+    @click.option("--since", default=None)
+    @click.option("--limit", type=int, default=50)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def notify_list_cmd(
+        shop_identifier, customer_id, wo_id, status, event, since,
+        limit, as_json,
+    ):
+        """List notifications with composable filters."""
+        console = get_console()
+        init_db()
+        shop_id = None
+        if shop_identifier is not None:
+            shop = _resolve_shop_identifier(shop_identifier)
+            assert shop is not None
+            shop_id = shop["id"]
+        try:
+            rows = list_notifications(
+                customer_id=customer_id, shop_id=shop_id, wo_id=wo_id,
+                status=status, event=event, since=since, limit=limit,
+            )
+        except (UnknownEventError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No notifications match.[/dim]")
+            return
+        table = Table(title="Notifications", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Event")
+        table.add_column("Channel")
+        table.add_column("Recipient")
+        table.add_column("Status")
+        table.add_column("Triggered")
+        status_color = {
+            "pending": "yellow", "sent": "green",
+            "failed": "red", "cancelled": "dim",
+        }
+        for r in rows:
+            st = r.get("status", "?")
+            color = status_color.get(st, "white")
+            table.add_row(
+                str(r["id"]),
+                str(r.get("event", "?")),
+                str(r.get("channel", "?")),
+                str(r.get("recipient") or "—"),
+                f"[{color}]{st}[/{color}]",
+                str(r.get("triggered_at") or "—"),
+            )
+        console.print(table)
+
+    @notify_group.command("mark-sent")
+    @click.argument("notification_id", type=int)
+    @click.option("--sent-at", default=None,
+                  help="ISO timestamp (defaults to now UTC).")
+    def notify_mark_sent_cmd(notification_id, sent_at):
+        """Transition pending → sent."""
+        console = get_console()
+        init_db()
+        try:
+            mark_notification_sent(notification_id, sent_at=sent_at)
+        except NotificationNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        except Exception as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Notification #{notification_id} marked sent.[/green]"
+        )
+
+    @notify_group.command("mark-failed")
+    @click.argument("notification_id", type=int)
+    @click.option("--reason", required=True,
+                  help="Why it failed (bounce, invalid number, etc).")
+    def notify_mark_failed_cmd(notification_id, reason):
+        """Transition pending → failed."""
+        console = get_console()
+        init_db()
+        try:
+            mark_notification_failed(
+                notification_id, failure_reason=reason,
+            )
+        except NotificationNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        except Exception as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[red]Notification #{notification_id} marked failed: "
+            f"{reason}[/red]"
+        )
+
+    @notify_group.command("cancel")
+    @click.argument("notification_id", type=int)
+    @click.option("--reason", default=None)
+    def notify_cancel_cmd(notification_id, reason):
+        """Transition pending → cancelled."""
+        console = get_console()
+        init_db()
+        try:
+            cancel_notification(notification_id, reason=reason)
+        except NotificationNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        except Exception as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[yellow]Notification #{notification_id} cancelled.[/yellow]"
+        )
+
+    @notify_group.command("resend")
+    @click.argument("notification_id", type=int)
+    def notify_resend_cmd(notification_id):
+        """Create a NEW pending notification duplicating a prior one."""
+        console = get_console()
+        init_db()
+        try:
+            new_id = resend_notification(notification_id)
+        except NotificationNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Resent as notification #{new_id}.[/green] "
+            f"(source #{notification_id} untouched for audit.)"
+        )
+
+    @notify_group.command("templates")
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def notify_templates_cmd(as_json):
+        """Enumerate all registered templates."""
+        console = get_console()
+        catalog = list_template_catalog()
+        if as_json:
+            click.echo(_json.dumps(catalog, default=str, indent=2))
+            return
+        table = Table(title="Notification Templates", show_lines=False)
+        table.add_column("Event")
+        table.add_column("Channel")
+        table.add_column("Has Subject")
+        for row in catalog:
+            table.add_row(
+                row["event"], row["channel"],
+                "yes" if row["has_subject"] else "—",
+            )
+        console.print(table)
