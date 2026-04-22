@@ -1,6 +1,6 @@
 # MotoDiag Phase 162.5 — Shared AI Client Helper
 
-**Version:** 1.0 | **Tier:** Micro | **Date:** 2026-04-21
+**Version:** 1.1 | **Tier:** Micro | **Date:** 2026-04-21
 
 ## Goal
 
@@ -301,23 +301,23 @@ All tests mock `anthropic.Anthropic` + `motodiag.engine.cache.get_cached_respons
 
 ## Verification Checklist
 
-- [ ] `from motodiag.shop.ai_client import ShopAIClient, resolve_model, calculate_cost, MODEL_PRICING, MODEL_ALIASES` imports clean.
-- [ ] `resolve_model("haiku")` → `"claude-haiku-4-5-20251001"`.
-- [ ] `resolve_model("claude-haiku-4-5-20251001")` → passthrough.
-- [ ] `resolve_model("gpt-4")` raises `ShopAIClientError`.
-- [ ] `calculate_cost("claude-haiku-4-5-20251001", TokenUsage(1_000_000, 0))` returns 80.
-- [ ] `calculate_cost` cache_read tokens at 10% of input price.
-- [ ] `calculate_cost` cache_creation tokens at 125% of input price.
-- [ ] `extract_json_block('```json\n{"a":1}\n```')` returns `'{"a":1}'`.
-- [ ] `extract_json_block('{"a":1}')` returns unchanged.
-- [ ] `ShopAIClient(model="haiku")` resolves `self.model` to full id.
-- [ ] `.ask(user_prompt, system_prompt)` with mocked Anthropic returns `AIResponse(text=..., cost_cents>0, cache_hit=False)`.
-- [ ] `.ask` with cache_kind + cache_payload and cached response returns `cache_hit=True`, `cost_cents=0`.
-- [ ] `.ask` sends system block with `cache_control={"type":"ephemeral"}` (verified via mock assertion).
-- [ ] SDK error wrapped in `ShopAIClientError`.
-- [ ] All Phase 160/161/162 tests still GREEN (additive only; no regressions).
-- [ ] Full regression GREEN.
-- [ ] Zero live API tokens.
+- [x] `from motodiag.shop.ai_client import ShopAIClient, resolve_model, calculate_cost, MODEL_PRICING, MODEL_ALIASES` imports clean.
+- [x] `resolve_model("haiku")` → `"claude-haiku-4-5-20251001"`.
+- [x] `resolve_model("claude-haiku-4-5-20251001")` → passthrough.
+- [x] `resolve_model("gpt-4")` raises `ShopAIClientError`.
+- [x] `calculate_cost("claude-haiku-4-5-20251001", TokenUsage(1_000_000, 0))` returns 80.
+- [x] `calculate_cost` cache_read tokens at 10% of input price.
+- [x] `calculate_cost` cache_creation tokens at 125% of input price.
+- [x] `extract_json_block('```json\n{"a":1}\n```')` returns `'{"a":1}'`.
+- [x] `extract_json_block('{"a":1}')` returns unchanged.
+- [x] `ShopAIClient(model="haiku")` resolves `self.model` to full id.
+- [x] `.ask(user_prompt, system_prompt)` with mocked Anthropic returns `AIResponse(text=..., cost_cents>0, cache_hit=False)`.
+- [x] `.ask` with cache_kind + cache_payload and cached response returns `cache_hit=True`, `cost_cents=0`.
+- [x] `.ask` sends system block with `cache_control={"type":"ephemeral"}` (verified via mock assertion).
+- [x] SDK error wrapped in `ShopAIClientError`.
+- [x] All Phase 160/161/162 tests still GREEN (additive only; no regressions).
+- [x] Full regression GREEN.
+- [x] Zero live API tokens.
 
 ## Risks
 
@@ -325,3 +325,27 @@ All tests mock `anthropic.Anthropic` + `motodiag.engine.cache.get_cached_respons
 - **Phase 131 cache table migration lag.** If a future migration renames cache columns, both engine/client.py and shop/ai_client.py need updates. Mitigation: shop/ai_client.py uses the public helpers `get_cached_response` / `set_cached_response` from `engine.cache` — those functions own the column names; only one surface to update.
 - **`lru_cache(maxsize=1)` + changing api_key.** If the api_key changes mid-session, the cached client still uses the old key. Mitigation: production use is one key per process; tests that need to swap keys call `get_anthropic_client.cache_clear()`.
 - **SDK version drift.** Anthropic SDK may evolve the `cache_control` shape. Mitigation: tests verify the shape explicitly; breaking SDK updates surface as test failures, not silent regressions.
+
+## Deviations from Plan
+
+Build matched plan exactly. Two minor adjustments:
+
+1. **20 tests vs ~15 planned** — added 4 helper coverage variants (zero-usage cost, unknown-model cost, bare-fence extract, no-fence passthrough) + 1 additional ShopAIClient test (no_system_omits_system_kwarg). All passed first try after one trivial fixture-tuning iteration (mock token counts had to be 1M+ for cost to round to non-zero cents — fixed by bumping mock to realistic 1M input + 200K output, asserting exact 160¢ math).
+2. **Storage helper signature alignment** — actual `engine.cache.set_cached_response` signature is `(cache_key, kind, model_used, response_dict, tokens_input=0, tokens_output=0, cost_cents=0, db_path=None)`; ShopAIClient persists with `response_dict={"text": ..., "model": ..., "input_tokens": ..., "output_tokens": ...}` and reads back via `cached["response"]["text"]`. Plan had a placeholder shape; build aligned to real API.
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Phase-specific tests | 20 passed in 2.08s (planned ~15) |
+| Targeted regression sample (Phase 131 + 160 + 161 + 162 + 162.5) | 183 GREEN in 99.43s |
+| Production code shipped | 273 LoC (`src/motodiag/shop/ai_client.py`) |
+| Test code shipped | 233 LoC |
+| New CLI surface | None (helper-only micro-phase) |
+| New DB tables | 0 |
+| New migrations | 0 |
+| Schema version | unchanged at 27 |
+| Live API tokens | 0 |
+| AI calls | 0 |
+
+**Key finding:** the rule-of-three extract pays for itself immediately. Phase 163 (next) will compose against `ShopAIClient.ask(...)` — three lines of integration code instead of ~80 LoC of duplicated SDK setup + cost math + cache integration. Phase 166 and 167 inherit the same savings. The ephemeral `cache_control={"type": "ephemeral"}` handling is now opt-out (always-on by default) which means every Track G AI phase benefits from prompt caching automatically — no per-phase decision needed.

@@ -648,3 +648,23 @@ Track G work-order pillar landed. Next: Phase 162 (issues, 12-category shop taxo
 - Gate 8 (Phase 174): 🔲 — pending Phases 162.5, 163-173.
 
 Next: Phase 162.5 (shop/ai_client.py extraction — micro-phase from convergent 163/166/167 planner findings) → Phase 163 (AI priority scoring uses shop.ai_client) → Phase 164 (triage queue) → ...
+
+### 2026-04-21 23:40 — Phase 162.5 complete (NEW micro-phase shipped)
+
+**Track G shared AI client helper landed.** Inserted between Phase 162 and Phase 163 per `_research/consolidation_notes.md`. Three independent Track G AI planners (163, 166, 167) flagged the same duplication risk; rule-of-three extract executed BEFORE Phase 163 ships. Single new module `src/motodiag/shop/ai_client.py` (273 LoC) provides:
+
+- `MODEL_ALIASES` dict (haiku/sonnet/opus → full ids)
+- `MODEL_PRICING` table (cache_read 10%, cache_creation 125%)
+- `TokenUsage` + `AIResponse` frozen dataclasses
+- Pure helpers: `resolve_model`, `calculate_cost`, `extract_json_block`
+- Lazy singleton `get_anthropic_client` via `@lru_cache(maxsize=1)`
+- `ShopAIClient` high-level wrapper with always-on ephemeral prompt caching + Phase 131 `ai_response_cache` integration (cache hit returns zero cost; cache miss persists; cache write errors silently swallowed)
+- `ShopAIClientError` for SDK + setup failures
+
+20 tests GREEN in 2.08s across 2 classes (TestHelpers×12 + TestShopAIClient×8). All Anthropic SDK calls mocked — zero live tokens. Targeted regression sample (Phase 131 ai_response_cache direct dependency + Phase 160/161/162 Track G + Phase 162.5): 183 GREEN in 99.43s.
+
+Zero migrations, zero CLI surface, zero schema changes. Pure helper-module micro-phase. Total cost: ~30 minutes wall-clock + 0 AI tokens. Estimated savings: ~250 LoC of duplication across Phases 163/166/167 + ~3 hours of consolidation refactor work that won't be needed.
+
+**Project version:** 0.9.3 → **0.9.4**.
+
+Next: Phase 163 (AI priority scoring) composes against `ShopAIClient.ask(...)` in 3 lines instead of ~80 LoC of duplicated SDK + cost + cache integration.

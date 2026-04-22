@@ -7,6 +7,18 @@ work orders (161), structured issues (162), triage + scheduling
 intake_visits row introduced here.
 """
 
+from motodiag.shop.ai_client import (
+    MODEL_ALIASES,
+    MODEL_PRICING,
+    AIResponse,
+    ShopAIClient,
+    ShopAIClientError,
+    TokenUsage,
+    calculate_cost,
+    extract_json_block,
+    get_anthropic_client,
+    resolve_model,
+)
 from motodiag.shop.shop_repo import (
     ShopNameExistsError,
     ShopNotFoundError,
@@ -83,6 +95,17 @@ from motodiag.shop.issue_repo import (
 
 
 __all__ = [
+    # ai_client (Phase 162.5)
+    "MODEL_ALIASES",
+    "MODEL_PRICING",
+    "AIResponse",
+    "ShopAIClient",
+    "ShopAIClientError",
+    "TokenUsage",
+    "calculate_cost",
+    "extract_json_block",
+    "get_anthropic_client",
+    "resolve_model",
     # shop_repo
     "ShopNameExistsError",
     "ShopNotFoundError",
