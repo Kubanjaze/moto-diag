@@ -625,3 +625,26 @@ Phases 161-174 queued. Track G compounding begins: work orders (161) attach to `
 - Gate 8 (Phase 174): 🔲 — shop management intake-to-invoice integration test, pending Phases 162-173.
 
 Track G work-order pillar landed. Next: Phase 162 (issues, 12-category shop taxonomy) → Phase 162.5 (shop/ai_client.py extraction) → Phase 163 (AI priority scoring). Each fully complete before next begins.
+
+### 2026-04-21 23:05 — Phase 162 complete
+
+**Track G issues pillar landed.** Migration 027 adds `issues` table with FK CASCADE to work_orders + 5 indexes, bumping `SCHEMA_VERSION` 26→27. **12-category taxonomy shipped on day one** (override from Planner-162's original 7-value reuse — Domain-Researcher-Workflow brief found existing `SymptomCategory` misfiles ~40-50% of real shop tickets to "other"; brakes/suspension/drivetrain/tires_wheels/accessories/rider_complaint added as first-class buckets). 4-tier severity + 4-state guarded lifecycle (open → resolved | duplicate | wont_fix → reopen → open). New `shop/issue_repo.py` (720 LoC, 14 functions + 4 dedicated transition helpers + `SYMPTOM_CATEGORY_TO_ISSUE_CATEGORY` 18-entry crosswalk dict — the canonical bridge between diagnostic symptom-class vocabulary and shop repair-class vocabulary that Phase 163 AI categorization will route through). New `motodiag shop issue` subgroup with 12 subcommands appended additively to Phase 160's `register_shop`.
+
+**Tests:** 42 GREEN across 4 classes (TestMigration027×6 + TestIssueRepo×16 + TestIssueLifecycle×10 + TestIssueCLI×10) in 27.74s. Track G regression sample (160+161+162): 133 GREEN in 84.40s. Full regression in flight at finalize-doc-write time.
+
+**Architectural decisions baked in:**
+- `mark_wontfix_issue` REQUIRES non-empty `resolution_notes` — deliberate audit-trail asymmetry vs `resolve_issue` (which has WO actual_hours + parts for context). "Customer declined $800 rebuild on $400 bike" needs the audit justification.
+- `linked_dtc_code` stored as TEXT not FK — survives `dtc_codes` seed reloads via soft-validation (logging.warning on miss; persist anyway). Keeps issue log populated on fresh shop installs before the DTC library is imported.
+- `linked_symptom_id` is hard FK with SET NULL — symptoms table is shop-lifetime stable; SET NULL covers rare hard-deletes.
+- Self-referencing `duplicate_of_issue_id` FK with one-hop cycle prevention (canonical issue cannot itself be a duplicate).
+- Forward-compat rollback test (`test_rollback_to_version_26_drops_issues_only`) inherits the Phase 161-codified `rollback_to_version(target_version)` pattern automatically.
+
+**Architect-direct serial build per user direction** "complete each in entirety before moving on" — no parallel Builders across phases (cli/shop.py + migrations.py + SCHEMA_VERSION serialize naturally).
+
+**Project version:** 0.9.2 → **0.9.3**.
+
+**Completion gates status:**
+- Gates 1-7: ✅
+- Gate 8 (Phase 174): 🔲 — pending Phases 162.5, 163-173.
+
+Next: Phase 162.5 (shop/ai_client.py extraction — micro-phase from convergent 163/166/167 planner findings) → Phase 163 (AI priority scoring uses shop.ai_client) → Phase 164 (triage queue) → ...

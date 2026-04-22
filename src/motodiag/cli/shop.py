@@ -32,9 +32,15 @@ from motodiag.crm.models import Customer, CustomerRelationship
 from motodiag.shop import (
     INTAKE_CLOSE_REASONS,
     INTAKE_STATUSES,
+    ISSUE_CATEGORIES,
+    ISSUE_SEVERITIES,
+    ISSUE_STATUSES,
     IntakeAlreadyClosedError,
     IntakeNotFoundError,
+    InvalidIssueTransition,
     InvalidWorkOrderTransition,
+    IssueFKError,
+    IssueNotFoundError,
     ShopNameExistsError,
     ShopNotFoundError,
     WORK_ORDER_STATUSES,
@@ -43,28 +49,40 @@ from motodiag.shop import (
     assign_mechanic,
     cancel_intake,
     cancel_work_order,
+    categorize_issue,
     close_intake,
     complete_work_order,
     create_intake,
+    create_issue,
     create_shop,
     create_work_order,
     delete_shop,
     get_intake,
+    get_issue,
     get_shop,
     get_shop_by_name,
     get_work_order,
+    issue_stats,
+    link_dtc,
+    link_symptom,
     list_intakes,
+    list_issues,
     list_open_for_bike,
     list_shops,
     list_work_orders,
+    mark_duplicate_issue,
+    mark_wontfix_issue,
     open_work_order,
     pause_work,
     reopen_intake,
+    reopen_issue,
     reopen_work_order,
+    resolve_issue,
     resume_work,
     start_work,
     unassign_mechanic,
     update_intake,
+    update_issue,
     update_shop,
     update_work_order,
 )
@@ -1474,3 +1492,419 @@ def register_shop(cli_group: click.Group) -> None:
         console.print(
             f"[green]Unassigned mechanic from work order id={wo_id}.[/green]"
         )
+
+    # -----------------------------------------------------------------
+    # shop issue {add, list, show, update, resolve, reopen, mark-duplicate,
+    #             mark-wontfix, categorize, link-dtc, link-symptom, stats}
+    # -----------------------------------------------------------------
+
+    @shop_group.group("issue")
+    def issue_group() -> None:
+        """Structured issue logging: categorize, triage, resolve."""
+
+    SEVERITY_COLORS = {
+        "critical": "bold red", "high": "yellow",
+        "medium": "white", "low": "dim",
+    }
+
+    def _render_issue_panel(console, issue: dict) -> None:
+        sev = issue.get("severity", "medium")
+        sev_style = SEVERITY_COLORS.get(sev, "white")
+        status = issue.get("status", "open")
+        status_color = {
+            "open": "green", "resolved": "blue",
+            "duplicate": "magenta", "wont_fix": "red",
+        }.get(status, "white")
+        lines: list[str] = []
+        lines.append(
+            f"[bold]Issue id={issue['id']}:[/bold] "
+            f"{issue.get('title', '?')}  "
+            f"[{status_color}]{status.upper()}[/{status_color}]  "
+            f"[{sev_style}]{sev.upper()}[/{sev_style}]"
+        )
+        lines.append(f"Category: {issue.get('category', '?')}")
+        lines.append(
+            f"Work order: id={issue.get('work_order_id')} "
+            f"({issue.get('work_order_title', '?')})"
+        )
+        bike_label = " ".join(
+            str(b) for b in (
+                issue.get("vehicle_year"),
+                issue.get("vehicle_make"),
+                issue.get("vehicle_model"),
+            ) if b
+        )
+        if bike_label:
+            lines.append(f"Bike: {bike_label}")
+        if issue.get("customer_name"):
+            lines.append(f"Customer: {issue['customer_name']}")
+        if issue.get("shop_name"):
+            lines.append(f"Shop: {issue['shop_name']}")
+        if issue.get("linked_dtc_code"):
+            dtc_desc = issue.get("linked_dtc_description")
+            label = (
+                f"{issue['linked_dtc_code']} — {dtc_desc}"
+                if dtc_desc else f"{issue['linked_dtc_code']} (unknown code)"
+            )
+            lines.append(f"Linked DTC: {label}")
+        if issue.get("linked_symptom_id"):
+            sym_name = issue.get("linked_symptom_name") or "?"
+            lines.append(
+                f"Linked symptom: id={issue['linked_symptom_id']} ({sym_name})"
+            )
+        if issue.get("duplicate_of_issue_id"):
+            dup_title = issue.get("duplicate_of_title") or "?"
+            lines.append(
+                f"Duplicate of: id={issue['duplicate_of_issue_id']} ({dup_title})"
+            )
+        if issue.get("description"):
+            lines.append(f"\nDescription:\n  {issue['description']}")
+        lines.append(f"\nReported: {issue.get('reported_at', '?')}")
+        if issue.get("resolved_at"):
+            lines.append(f"Resolved: {issue['resolved_at']}")
+        if issue.get("resolution_notes"):
+            lines.append(f"Resolution notes:\n  {issue['resolution_notes']}")
+        console.print(Panel("\n".join(lines), title="Issue"))
+
+    @issue_group.command("add")
+    @click.option("--work-order", "work_order_id", type=int, required=True)
+    @click.option("--title", required=True)
+    @click.option("--description", default=None)
+    @click.option(
+        "--category",
+        type=click.Choice(list(ISSUE_CATEGORIES), case_sensitive=False),
+        default="other",
+    )
+    @click.option(
+        "--severity",
+        type=click.Choice(list(ISSUE_SEVERITIES), case_sensitive=False),
+        default="medium",
+    )
+    @click.option("--dtc", "linked_dtc_code", default=None)
+    @click.option("--symptom", "linked_symptom_id", type=int, default=None)
+    @click.option("--session", "diagnostic_session_id", type=int, default=None)
+    def issue_add(
+        work_order_id, title, description, category, severity,
+        linked_dtc_code, linked_symptom_id, diagnostic_session_id,
+    ):
+        """Add a new issue to a work order."""
+        console = get_console()
+        init_db()
+        try:
+            issue_id = create_issue(
+                work_order_id=work_order_id,
+                title=title,
+                description=description,
+                category=category.lower(),
+                severity=severity.lower(),
+                linked_dtc_code=linked_dtc_code,
+                linked_symptom_id=linked_symptom_id,
+                diagnostic_session_id=diagnostic_session_id,
+            )
+        except (ValueError, IssueFKError) as e:
+            raise click.ClickException(str(e)) from e
+        row = get_issue(issue_id)
+        assert row is not None
+        console.print(f"[green]Created issue id={issue_id}.[/green]")
+        _render_issue_panel(console, row)
+
+    @issue_group.command("list")
+    @click.option("--work-order", "work_order_id", type=int, default=None)
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option(
+        "--category",
+        type=click.Choice(list(ISSUE_CATEGORIES), case_sensitive=False),
+        default=None,
+    )
+    @click.option(
+        "--severity",
+        type=click.Choice(list(ISSUE_SEVERITIES), case_sensitive=False),
+        default=None,
+    )
+    @click.option(
+        "--status",
+        type=click.Choice(list(ISSUE_STATUSES) + ["all"], case_sensitive=False),
+        default=None,
+    )
+    @click.option("--vehicle", "vehicle_id", type=int, default=None)
+    @click.option("--customer", "customer_id", type=int, default=None)
+    @click.option("--since", default=None)
+    @click.option("--limit", type=int, default=100)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def issue_list(
+        work_order_id, shop_id, category, severity, status,
+        vehicle_id, customer_id, since, limit, as_json,
+    ):
+        """List issues (default excludes terminal statuses)."""
+        console = get_console()
+        init_db()
+        rows = list_issues(
+            work_order_id=work_order_id,
+            category=category.lower() if category else None,
+            severity=severity.lower() if severity else None,
+            status=status.lower() if status else None,
+            shop_id=shop_id,
+            vehicle_id=vehicle_id,
+            customer_id=customer_id,
+            since=since,
+            limit=limit,
+        )
+        if as_json:
+            click.echo(_json.dumps(rows, default=str, indent=2))
+            return
+        if not rows:
+            console.print("[dim]No issues match filters.[/dim]")
+            return
+        table = Table(title="Issues", show_lines=False)
+        table.add_column("ID", justify="right")
+        table.add_column("Cat")
+        table.add_column("Sev")
+        table.add_column("Status")
+        table.add_column("Title")
+        table.add_column("WO")
+        table.add_column("Reported")
+        for r in rows:
+            sev = r.get("severity", "medium")
+            sev_style = SEVERITY_COLORS.get(sev, "white")
+            table.add_row(
+                str(r["id"]),
+                str(r.get("category", "?")),
+                f"[{sev_style}]{sev}[/{sev_style}]",
+                str(r.get("status", "?")),
+                str(r.get("title", "?")),
+                str(r.get("work_order_id", "?")),
+                str(r.get("reported_at", "?")),
+            )
+        console.print(table)
+
+    @issue_group.command("show")
+    @click.argument("issue_id", type=int)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def issue_show(issue_id, as_json):
+        """Show one issue."""
+        console = get_console()
+        init_db()
+        row = get_issue(issue_id)
+        if row is None:
+            raise click.ClickException(f"issue not found: id={issue_id}")
+        if as_json:
+            click.echo(_json.dumps(row, default=str, indent=2))
+            return
+        _render_issue_panel(console, row)
+
+    @issue_group.command("update")
+    @click.argument("issue_id", type=int)
+    @click.option("--set", "set_pairs", multiple=True)
+    def issue_update(issue_id, set_pairs):
+        """Update whitelisted fields on an issue.
+
+        Allowed: title, description, category, severity, linked_dtc_code,
+        linked_symptom_id, diagnostic_session_id.
+        """
+        console = get_console()
+        init_db()
+        if not set_pairs:
+            raise click.ClickException(
+                "No updates specified. Pass one or more --set KEY=VALUE."
+            )
+        updates = _parse_set_pairs(set_pairs)
+        # Coerce types for known integer fields
+        for k in ("linked_symptom_id", "diagnostic_session_id"):
+            if k in updates and updates[k] is not None:
+                try:
+                    updates[k] = int(updates[k])
+                except (TypeError, ValueError) as e:
+                    raise click.ClickException(
+                        f"{k} must be an integer (got {updates[k]!r})"
+                    ) from e
+        try:
+            changed = update_issue(issue_id, updates)
+        except (IssueNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        if not changed:
+            console.print(
+                "[yellow]No updatable fields recognized in --set payload.[/yellow]"
+            )
+            return
+        row = get_issue(issue_id)
+        assert row is not None
+        console.print(f"[green]Updated issue id={issue_id}.[/green]")
+        _render_issue_panel(console, row)
+
+    @issue_group.command("resolve")
+    @click.argument("issue_id", type=int)
+    @click.option("--notes", default=None)
+    @click.option("--yes", is_flag=True, default=False)
+    def issue_resolve(issue_id, notes, yes):
+        """Mark an issue resolved (open → resolved)."""
+        console = get_console()
+        init_db()
+        if not yes:
+            click.confirm(
+                f"Resolve issue id={issue_id}?", abort=True,
+            )
+        try:
+            resolve_issue(issue_id, resolution_notes=notes)
+        except (IssueNotFoundError, InvalidIssueTransition) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[blue]Resolved issue id={issue_id}.[/blue]")
+
+    @issue_group.command("reopen")
+    @click.argument("issue_id", type=int)
+    @click.option("--yes", is_flag=True, default=False)
+    def issue_reopen(issue_id, yes):
+        """Reopen a terminal issue (resolved/duplicate/wont_fix → open)."""
+        console = get_console()
+        init_db()
+        row = get_issue(issue_id)
+        if row is None:
+            raise click.ClickException(f"issue not found: id={issue_id}")
+        if row["status"] == "open":
+            console.print("[yellow]Issue is already open.[/yellow]")
+            return
+        if not yes:
+            click.confirm(
+                f"Reopen issue id={issue_id} (was {row['status']!r})?",
+                abort=True,
+            )
+        try:
+            reopen_issue(issue_id)
+        except (IssueNotFoundError, InvalidIssueTransition) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[green]Reopened issue id={issue_id}.[/green]")
+
+    @issue_group.command("mark-duplicate")
+    @click.argument("issue_id", type=int)
+    @click.option("--of", "duplicate_of_issue_id", type=int, required=True)
+    @click.option("--notes", default=None)
+    def issue_mark_duplicate(issue_id, duplicate_of_issue_id, notes):
+        """Mark an issue as duplicate of another (open → duplicate)."""
+        console = get_console()
+        init_db()
+        try:
+            mark_duplicate_issue(
+                issue_id, duplicate_of_issue_id,
+                resolution_notes=notes,
+            )
+        except (IssueNotFoundError, InvalidIssueTransition, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[magenta]Marked issue id={issue_id} as duplicate of "
+            f"id={duplicate_of_issue_id}.[/magenta]"
+        )
+
+    @issue_group.command("mark-wontfix")
+    @click.argument("issue_id", type=int)
+    @click.option("--notes", required=True,
+                  help="REQUIRED audit-trail justification.")
+    def issue_mark_wontfix(issue_id, notes):
+        """Mark an issue won't-fix (open → wont_fix). Notes required."""
+        console = get_console()
+        init_db()
+        if not notes or not notes.strip():
+            raise click.ClickException(
+                "--notes is required for mark-wontfix (audit-trail)."
+            )
+        try:
+            mark_wontfix_issue(issue_id, resolution_notes=notes)
+        except (IssueNotFoundError, InvalidIssueTransition, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(f"[red]Marked issue id={issue_id} as wont_fix.[/red]")
+
+    @issue_group.command("categorize")
+    @click.argument("issue_id", type=int)
+    @click.option(
+        "--category",
+        type=click.Choice(list(ISSUE_CATEGORIES), case_sensitive=False),
+        required=True,
+    )
+    @click.option(
+        "--severity",
+        type=click.Choice(list(ISSUE_SEVERITIES), case_sensitive=False),
+        default=None,
+    )
+    def issue_categorize(issue_id, category, severity):
+        """Re-categorize an issue (convenience wrapper)."""
+        console = get_console()
+        init_db()
+        sev = severity.lower() if severity else None
+        try:
+            categorize_issue(issue_id, category.lower(), severity=sev)
+        except (IssueNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Categorized issue id={issue_id} as {category}"
+            + (f"/{severity}" if severity else "") + ".[/green]"
+        )
+
+    @issue_group.command("link-dtc")
+    @click.argument("issue_id", type=int)
+    @click.option("--code", required=True)
+    def issue_link_dtc(issue_id, code):
+        """Link a DTC code to an issue (soft-validate; persist on miss)."""
+        console = get_console()
+        init_db()
+        try:
+            link_dtc(issue_id, code)
+        except IssueNotFoundError as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Linked DTC {code} to issue id={issue_id}.[/green]"
+        )
+
+    @issue_group.command("link-symptom")
+    @click.argument("issue_id", type=int)
+    @click.option("--symptom", "symptom_id", type=int, required=True)
+    def issue_link_symptom(issue_id, symptom_id):
+        """Link a symptom to an issue (hard FK)."""
+        console = get_console()
+        init_db()
+        try:
+            link_symptom(issue_id, symptom_id)
+        except (IssueNotFoundError, ValueError) as e:
+            raise click.ClickException(str(e)) from e
+        console.print(
+            f"[green]Linked symptom id={symptom_id} to issue id={issue_id}.[/green]"
+        )
+
+    @issue_group.command("stats")
+    @click.option("--work-order", "work_order_id", type=int, default=None)
+    @click.option("--shop", "shop_id", type=int, default=None)
+    @click.option("--json", "as_json", is_flag=True, default=False)
+    def issue_stats_cmd(work_order_id, shop_id, as_json):
+        """Show issue rollup stats."""
+        console = get_console()
+        init_db()
+        stats = issue_stats(
+            work_order_id=work_order_id, shop_id=shop_id,
+        )
+        if as_json:
+            click.echo(_json.dumps(stats, default=str, indent=2))
+            return
+        console.print(Panel(
+            f"Total: [bold]{stats['total']}[/bold]\n"
+            f"Open: [green]{stats['open_count']}[/green]\n"
+            f"[bold red]Critical open: {stats['critical_open_count']}[/bold red]",
+            title="Issue stats",
+        ))
+        # by_status table
+        t1 = Table(title="By status", show_header=True)
+        t1.add_column("Status")
+        t1.add_column("Count", justify="right")
+        for status, n in stats["by_status"].items():
+            t1.add_row(status, str(n))
+        console.print(t1)
+        # by_category table
+        t2 = Table(title="By category", show_header=True)
+        t2.add_column("Category")
+        t2.add_column("Count", justify="right")
+        for cat, n in stats["by_category"].items():
+            t2.add_row(cat, str(n))
+        console.print(t2)
+        # by_severity table
+        t3 = Table(title="By severity", show_header=True)
+        t3.add_column("Severity")
+        t3.add_column("Count", justify="right")
+        for sev, n in stats["by_severity"].items():
+            t3.add_row(sev, str(n))
+        console.print(t3)

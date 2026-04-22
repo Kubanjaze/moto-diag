@@ -1911,6 +1911,102 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS work_orders;
         """,
     ),
+    # Migration 027 — Phase 162: structured issue logging + categorization (Track G)
+    Migration(
+        version=27,
+        name="issues",
+        description=(
+            "Phase 162: Third Track G phase. Promotes Phase 161 "
+            "work_orders.reported_problems freetext into a structured, "
+            "categorized, severity-scored `issues` list. Each issue "
+            "attaches to a work_orders row via work_order_id FK CASCADE "
+            "(issue exists only in WO context), carries title + "
+            "description + 12-category taxonomy + 4-tier severity + "
+            "guarded `open → resolved | duplicate | wont_fix → "
+            "(reopen) → open` lifecycle, and optionally cross-references "
+            "a dtc_codes.code (TEXT, soft-validated to survive seed "
+            "reloads) and a symptoms.id (hard FK SET NULL). "
+            "Self-referencing duplicate_of_issue_id FK with SET NULL on "
+            "canonical delete preserves the duplicate row even when "
+            "its canonical disappears. Diagnostic_session_id FK SET NULL "
+            "links back to Phase 07 sessions opportunistically. "
+            "Reported_by_user_id FK SET DEFAULT (Phase 112 system user "
+            "fallback). Five indexes cover the dominant queries: "
+            "(work_order_id, status) for per-WO filtered lists, "
+            "(category) for shop-wide category roll-ups, (severity) for "
+            "critical-first sorts, (reported_at) for time-range filters, "
+            "(duplicate_of_issue_id) for canonical-resolution lookups. "
+            "**12-category taxonomy** (override from Domain-Researcher "
+            "brief — see _research/track_g_workflow_brief.md): existing "
+            "engine/fuel_system/electrical/cooling/exhaust/transmission/"
+            "other PLUS new brakes/suspension/drivetrain/tires_wheels/"
+            "accessories/rider_complaint. Existing 7-value SymptomCategory "
+            "enum misfiles ~40-50% of real shop tickets to 'other'; "
+            "12 values cover ~95%. Severity reuses Severity minus INFO "
+            "(low/medium/high/critical). Status CHECK enforces "
+            "open|resolved|duplicate|wont_fix. Rollback drops indexes "
+            "reverse-order then DROP TABLE issues."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS issues (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                description TEXT,
+                category TEXT NOT NULL DEFAULT 'other'
+                    CHECK (category IN (
+                        'engine','fuel_system','electrical','cooling',
+                        'exhaust','transmission','brakes','suspension',
+                        'drivetrain','tires_wheels','accessories',
+                        'rider_complaint','other'
+                    )),
+                severity TEXT NOT NULL DEFAULT 'medium'
+                    CHECK (severity IN ('low','medium','high','critical')),
+                status TEXT NOT NULL DEFAULT 'open'
+                    CHECK (status IN (
+                        'open','resolved','duplicate','wont_fix'
+                    )),
+                resolution_notes TEXT,
+                reported_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                resolved_at TIMESTAMP,
+                reported_by_user_id INTEGER NOT NULL DEFAULT 1,
+                diagnostic_session_id INTEGER,
+                linked_dtc_code TEXT,
+                linked_symptom_id INTEGER,
+                duplicate_of_issue_id INTEGER,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (reported_by_user_id)
+                    REFERENCES users(id) ON DELETE SET DEFAULT,
+                FOREIGN KEY (diagnostic_session_id)
+                    REFERENCES diagnostic_sessions(id) ON DELETE SET NULL,
+                FOREIGN KEY (linked_symptom_id)
+                    REFERENCES symptoms(id) ON DELETE SET NULL,
+                FOREIGN KEY (duplicate_of_issue_id)
+                    REFERENCES issues(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_issues_wo_status
+                ON issues(work_order_id, status);
+            CREATE INDEX IF NOT EXISTS idx_issues_category
+                ON issues(category);
+            CREATE INDEX IF NOT EXISTS idx_issues_severity
+                ON issues(severity);
+            CREATE INDEX IF NOT EXISTS idx_issues_reported_at
+                ON issues(reported_at);
+            CREATE INDEX IF NOT EXISTS idx_issues_duplicate_of
+                ON issues(duplicate_of_issue_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_issues_duplicate_of;
+            DROP INDEX IF EXISTS idx_issues_reported_at;
+            DROP INDEX IF EXISTS idx_issues_severity;
+            DROP INDEX IF EXISTS idx_issues_category;
+            DROP INDEX IF EXISTS idx_issues_wo_status;
+            DROP TABLE IF EXISTS issues;
+        """,
+    ),
 ]
 
 

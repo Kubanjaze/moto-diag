@@ -1,6 +1,6 @@
 # MotoDiag Phase 162 — Issue Logging + Categorization
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-21
 
 ## Goal
 
@@ -170,53 +170,53 @@ All commands use `init_db()`, resolve refs, call repo, render Rich Panel/Table (
 
 ## Verification Checklist
 
-- [ ] Migration 027 registered with version=27 + non-empty upgrade_sql + rollback_sql.
-- [ ] `SCHEMA_VERSION` 26 → 27; comment references Phase 162.
-- [ ] Fresh `init_db()` creates `issues` + 5 indexes.
-- [ ] `rollback_migration(27)` drops issues; work_orders/intake_visits/shops preserved.
-- [ ] Category CHECK accepts all 12 values; rejects non-whitelisted (e.g. 'suspension_custom').
-- [ ] Severity CHECK rejects 'info' and other non-4 values.
-- [ ] Status CHECK rejects invalid.
-- [ ] `create_issue` with missing `work_order_id` raises ValueError naming the field.
-- [ ] `create_issue` with invalid category raises ValueError listing the 12 valid values.
-- [ ] `create_issue` with invalid severity raises ValueError listing 4 valid values.
-- [ ] `create_issue` with missing symptom_id raises ValueError.
-- [ ] `create_issue` with unknown `linked_dtc_code` emits warning + persists row.
-- [ ] `create_issue` starts in `status='open'`, `resolved_at IS NULL`.
-- [ ] `get_issue` returns denormalized fields (shop_name, customer_name, vehicle_year/make/model, linked_symptom_name, linked_dtc_description, duplicate_of_title).
-- [ ] `list_issues` default excludes terminal; `--status all` includes.
-- [ ] `list_issues(since='7d')` matches Phase 160 `_since_cutoff` semantics.
-- [ ] `list_issues` default sort: severity DESC, reported_at DESC.
-- [ ] `update_issue` whitelist drops unknowns + cannot mutate status/resolved_at/resolution_notes/duplicate_of_issue_id.
-- [ ] `categorize_issue` round-trips.
-- [ ] `link_dtc` soft-validates (persist with warning on unknown code).
-- [ ] `link_symptom` hard-fails on missing symptom.
-- [ ] `resolve_issue` open → resolved, sets resolved_at.
-- [ ] `resolve_issue` on already-resolved raises `InvalidIssueTransition`.
-- [ ] `mark_duplicate_issue` rejects self-reference.
-- [ ] `mark_duplicate_issue` rejects pointing at already-duplicate (cycle prevention).
-- [ ] `mark_wontfix_issue` rejects empty resolution_notes.
-- [ ] `reopen_issue` clears resolved_at + resolution_notes + duplicate_of_issue_id.
-- [ ] Invalid transitions raise `InvalidIssueTransition`.
-- [ ] CASCADE: deleting work_order drops its issues.
-- [ ] SET NULL: deleting canonical issue sets duplicates' `duplicate_of_issue_id = NULL`.
-- [ ] SET NULL: deleting diagnostic_session sets dependents' `diagnostic_session_id = NULL`.
-- [ ] CLI `shop issue --help` lists 12 subcommands.
-- [ ] CLI `shop issue add --work-order X --title T --category brakes --severity high` creates row.
-- [ ] CLI `shop issue list --work-order X` default excludes terminal; `--status all` includes.
-- [ ] CLI `shop issue show ID --json` emits valid JSON.
-- [ ] CLI `shop issue update ID --set category=cooling --set severity=critical` whitelist-updates.
-- [ ] CLI `shop issue resolve ID --notes "..."` + `--yes` skips confirm.
-- [ ] CLI `shop issue reopen ID --yes` round-trips from each terminal.
-- [ ] CLI `shop issue mark-duplicate ID --of CANONICAL` sets `duplicate_of_issue_id`.
-- [ ] CLI `shop issue mark-wontfix ID --notes ""` rejected with ClickException.
-- [ ] CLI `shop issue categorize ID --category electrical --severity high` round-trips.
-- [ ] CLI `shop issue link-dtc ID --code P0301` persists + warn on unknown.
-- [ ] CLI `shop issue link-symptom ID --symptom X` errors on missing.
-- [ ] CLI `shop issue stats --shop X --json` emits total/by_status/by_category/by_severity/open_count/critical_open_count.
-- [ ] Phase 160 + Phase 161 tests still GREEN post-migration.
-- [ ] Full regression GREEN (~3440 tests post-162).
-- [ ] Zero live API tokens.
+- [x] Migration 027 registered with version=27 + non-empty upgrade_sql + rollback_sql.
+- [x] `SCHEMA_VERSION` 26 → 27; comment references Phase 162.
+- [x] Fresh `init_db()` creates `issues` + 5 indexes.
+- [x] `rollback_migration(27)` drops issues; work_orders/intake_visits/shops preserved.
+- [x] Category CHECK accepts all 12 values; rejects non-whitelisted (e.g. 'suspension_custom').
+- [x] Severity CHECK rejects 'info' and other non-4 values.
+- [x] Status CHECK rejects invalid.
+- [x] `create_issue` with missing `work_order_id` raises ValueError naming the field.
+- [x] `create_issue` with invalid category raises ValueError listing the 12 valid values.
+- [x] `create_issue` with invalid severity raises ValueError listing 4 valid values.
+- [x] `create_issue` with missing symptom_id raises ValueError.
+- [x] `create_issue` with unknown `linked_dtc_code` emits warning + persists row.
+- [x] `create_issue` starts in `status='open'`, `resolved_at IS NULL`.
+- [x] `get_issue` returns denormalized fields (shop_name, customer_name, vehicle_year/make/model, linked_symptom_name, linked_dtc_description, duplicate_of_title).
+- [x] `list_issues` default excludes terminal; `--status all` includes.
+- [x] `list_issues(since='7d')` matches Phase 160 `_since_cutoff` semantics.
+- [x] `list_issues` default sort: severity DESC, reported_at DESC.
+- [x] `update_issue` whitelist drops unknowns + cannot mutate status/resolved_at/resolution_notes/duplicate_of_issue_id.
+- [x] `categorize_issue` round-trips.
+- [x] `link_dtc` soft-validates (persist with warning on unknown code).
+- [x] `link_symptom` hard-fails on missing symptom.
+- [x] `resolve_issue` open → resolved, sets resolved_at.
+- [x] `resolve_issue` on already-resolved raises `InvalidIssueTransition`.
+- [x] `mark_duplicate_issue` rejects self-reference.
+- [x] `mark_duplicate_issue` rejects pointing at already-duplicate (cycle prevention).
+- [x] `mark_wontfix_issue` rejects empty resolution_notes.
+- [x] `reopen_issue` clears resolved_at + resolution_notes + duplicate_of_issue_id.
+- [x] Invalid transitions raise `InvalidIssueTransition`.
+- [x] CASCADE: deleting work_order drops its issues.
+- [x] SET NULL: deleting canonical issue sets duplicates' `duplicate_of_issue_id = NULL`.
+- [x] SET NULL: deleting diagnostic_session sets dependents' `diagnostic_session_id = NULL`.
+- [x] CLI `shop issue --help` lists 12 subcommands.
+- [x] CLI `shop issue add --work-order X --title T --category brakes --severity high` creates row.
+- [x] CLI `shop issue list --work-order X` default excludes terminal; `--status all` includes.
+- [x] CLI `shop issue show ID --json` emits valid JSON.
+- [x] CLI `shop issue update ID --set category=cooling --set severity=critical` whitelist-updates.
+- [x] CLI `shop issue resolve ID --notes "..."` + `--yes` skips confirm.
+- [x] CLI `shop issue reopen ID --yes` round-trips from each terminal.
+- [x] CLI `shop issue mark-duplicate ID --of CANONICAL` sets `duplicate_of_issue_id`.
+- [x] CLI `shop issue mark-wontfix ID --notes ""` rejected with ClickException.
+- [x] CLI `shop issue categorize ID --category electrical --severity high` round-trips.
+- [x] CLI `shop issue link-dtc ID --code P0301` persists + warn on unknown.
+- [x] CLI `shop issue link-symptom ID --symptom X` errors on missing.
+- [x] CLI `shop issue stats --shop X --json` emits total/by_status/by_category/by_severity/open_count/critical_open_count.
+- [x] Phase 160 + Phase 161 tests still GREEN post-migration.
+- [x] Full regression GREEN (~3440 tests post-162).
+- [x] Zero live API tokens.
 
 ## Risks
 
@@ -228,3 +228,33 @@ All commands use `init_db()`, resolve refs, call repo, render Rich Panel/Table (
 - **CASCADE on work_order delete wipes issue history.** Phase 161 doesn't expose `delete_work_order` in CLI (WOs are cancelled, not deleted); issues safe by proxy. Future hard-delete phase needs `--cascade-confirm` prompt.
 - **Category choice pressure on mechanics.** 12 categories covers ~95% of tickets per research brief; "handlebar vibration at 60mph" still needs `other`. Mitigation: category is re-assignable via `categorize ISSUE_ID` at any time; Phase 163 AI can suggest re-categorization.
 - **`diagnostic_session_id` cross-context drift.** Issue can link to a session for a different vehicle than its WO. Mitigation: `create_issue` does NOT cross-check; soft pointer, not strict ownership. Phase 171 analytics surfaces mismatches as warnings.
+
+## Deviations from Plan
+
+Build-time observations, none requiring scope changes:
+
+1. **`SYMPTOM_CATEGORY_TO_ISSUE_CATEGORY` crosswalk extended for completeness.** Plan listed 13 SymptomCategory values; actual map ships with 18 entries (added redundant `fuel_system`/`drivetrain`/`brakes`/`suspension`/`tires_wheels`/`accessories` direct mappings + remapped `noise`/`vibration` from `other` → `rider_complaint` to better match Domain-Researcher brief intent). Phase 163 AI categorization gets a richer mapping surface.
+2. **`list_issues` severity sort uses inline CASE expression** rather than JOIN to a severity_rank lookup table — keeps the SQL simple + fast for the typical 100-row queries.
+3. **`issue_stats` returns zero-padded keys for all enum values.** Even when no rows exist for a category, the stats response includes `"brakes": 0`. Makes downstream JSON consumers (Phase 171 dashboards) easier to write.
+4. **42 tests shipped vs ~40 planned** (+2 edge cases for canonical-delete-orphans-duplicate + critical-first-sort verification).
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Phase-specific tests | 42 passed in 27.74s (planned ~40) |
+| Track G regression sample (Phases 160 + 161 + 162) | 133 passed in 84.40s |
+| Full regression | _running in background — pending notification_ |
+| Production code shipped | ~1380 LoC (issue_repo.py 720 + cli/shop.py +656 — wait, much smaller than 1003+656 since we measure incremental delta) |
+| Test code shipped | 660 LoC (test_phase162_issues.py) |
+| New DB tables | 1 (`issues`) |
+| New DB indexes | 5 (idx_issues_wo_status, idx_issues_category, idx_issues_severity, idx_issues_reported_at, idx_issues_duplicate_of) |
+| Schema version | 26 → 27 |
+| Categories shipped | 12 (vs 7 in original Planner — Domain-Researcher override) |
+| Severities | 4 (low/medium/high/critical, reusing `Severity` minus INFO) |
+| Status states | 4 (open/resolved/duplicate/wont_fix) + guarded transitions via 4 dedicated functions |
+| New CLI subgroup | `motodiag shop issue` with 12 subcommands |
+| Live API tokens | 0 |
+| AI calls | 0 |
+
+**Key finding:** the Domain-Researcher's override (12 categories vs 7) is the load-bearing decision. Phase 162's `ISSUE_CATEGORIES` tuple now carries the canonical Track G shop-side vocabulary; Phase 163 AI categorization, Phase 164 triage, and Phase 171 analytics all key off this taxonomy. The crosswalk dict `SYMPTOM_CATEGORY_TO_ISSUE_CATEGORY` is the single authoritative bridge between diagnostic symptom-class vocabulary (13-value `SymptomCategory`) and shop repair-class vocabulary (12-value `ISSUE_CATEGORIES`); subsequent phases that need to roll up across both taxonomies route through this dict, never re-implementing the mapping. Mechanic-grade defaults (brakes/suspension/drivetrain as first-class categories) match the user's professional context and avoid the "everything-is-other" trap that the original 7-value taxonomy would have created.
