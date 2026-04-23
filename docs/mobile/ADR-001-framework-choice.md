@@ -1,8 +1,10 @@
 # ADR-001 — Mobile Framework + Project Architecture
 
-**Status:** Accepted — 2026-04-23 (Phase 185, Track I opener).
+**Status:** Accepted — 2026-04-23 (Phase 185, Track I opener). **Partially superseded** for Phase 186 operational specifics by [`phase-186-handoff.md`](./phase-186-handoff.md) on 2026-04-23 (same day).
 **Supersedes:** None (first ADR).
-**Superseded by:** None.
+**Superseded by:** None for the framework-choice decision (D1: React Native bare, D2: TypeScript strict, D3: sibling repo, D5: openapi-fetch, D7: ble-plx behind provider seam — all still authoritative). **Superseded operationally** for D4 (state management) and D6 (offline) + CI specifics: the Phase 186 handoff defers state management and CI wholesale, and does not install TanStack Query / persistence libraries in the scaffold. See the handoff's ADR-003 (state) and ADR-004 (CI) for the binding Phase 186 stance; this document's D4 + D6 descriptions now describe the *eventual target*, not Phase 186 scope.
+
+**Operational contract for Phase 186:** follow `phase-186-handoff.md` — it locks RN 0.85.x pin, New Architecture disabled pending ble-plx #1277, state management deferred, CI deferred, backend client stubbed (no TanStack Query in 186), and bundle ID `com.bandithero.motodiag`. The 7 high-level decisions here (framework, language, repo, state eventually, API client pattern, offline eventually, BLE seam) remain the Track I north star.
 
 ---
 
