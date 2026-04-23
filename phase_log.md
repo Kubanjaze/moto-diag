@@ -1492,3 +1492,41 @@ Project version 0.12.5 → **0.12.6**.
 **Key finding:** the renderer-ABC + dict-document pattern collapses three report kinds onto one rendering pipeline and one router shape. Adding a fourth kind (intake summary PDF, triage overview, labor estimate PDF) would be ~100 LoC of builder + 2 endpoints + 5 tests. The PDF scaffolding lives in `motodiag/reporting/`, not in any domain module — Track G modules stay paperwork-agnostic. Phase 184 Gate 9 can compose these primitives rather than invent its own PDF layer. reportlab 4.4.10 is BSD-licensed and was already installed as a transitive dep.
 
 Next: **Phase 183** (OpenAPI enrichment — examples, descriptions, tags, response models). Phase 184 is Gate 9 — the full intake-to-invoice integration test through HTTP instead of CLI, closing Track H.
+
+---
+
+### 2026-04-23 — Phase 183 complete — OpenAPI enrichment
+
+**Pure spec polish — zero runtime-behavior change; only `/openapi.json` + `/docs` output changes.** FastAPI's auto-generated OpenAPI captures route signatures + types but nothing about the product — no tag descriptions, no server URLs, no security schemes, no documented error envelopes. Phase 183 fixes all of that at the spec level via a single `openapi()` override, without touching any of the 48 route handlers.
+
+**New `src/motodiag/api/openapi.py` (459 LoC):**
+- Static metadata catalogs: `TAG_CATALOG` (10 entries with ≥60-char descriptions), `SECURITY_SCHEMES` (apiKey X-API-Key header + bearerAuth HTTP Bearer), `ERROR_RESPONSES` (7 reusable envelopes — 401 / 402 / 403 / 404 / 422 / 429 / 500, all $ref'd to `components.schemas.ProblemDetail`), `PROBLEM_DETAIL_SCHEMA` fallback (FastAPI only emits the schema when a route declares it as a return type; most don't), `PUBLIC_TAGS={"meta"}`, `PUBLIC_PATH_PREFIXES=("/v1/billing/webhooks",)`, `_ALWAYS_TIER_GATED_TAGS` for 402 routing.
+- `build_openapi(app)` — calls `get_openapi(..., tags=TAG_CATALOG)` for construction-time tag injection (setting `app.openapi_tags` after the override fires gets ignored), then enriches `info` / `servers` / `components` / per-operation security + responses, caches on `app.openapi_schema`.
+- `install_openapi(app)` — one-line wiring. Resets the cache then replaces `app.openapi` with a lambda bound to `build_openapi`.
+- `_walk_operations` → `_enrich_operation` — walks every path × method, skips non-HTTP verbs, skips public routes, attaches `security=[{"apiKey": []}, {"bearerAuth": []}]` + 401/429/500 refs to auth'd routes, adds 402 for tier-gated tags, 404 for path-params, 422 for request bodies.
+
+**New `Settings.api_servers`** (comma-separated, pipe-split `url|description` pairs) + `api_servers_list` property — matches the `api_cors_origins` pattern. `MOTODIAG_API_SERVERS="https://api.motodiag.dev|Prod,https://staging.motodiag.dev|Staging"` is now a valid deployment config.
+
+**Build deviations:**
+1. LoC overshoot 459 vs planned 300 — static catalogs with long-form descriptions so Swagger UI renders useful help text instead of stubs. Plan didn't account for the PROBLEM_DETAIL_SCHEMA fallback.
+2. `TAG_CATALOG` passed via `get_openapi(tags=...)` at construction time, not via `app.openapi_tags`. Discovered during build that the post-construction hook is ignored by our override path.
+3. `api_servers` as comma/pipe string not JSON list — pydantic-settings can't natively coerce `list[dict]` from env vars.
+4. 43 tests vs ~20 planned — the plan undercounted. Each catalog member deserved at least one assertion (parametrized over 7 `ERROR_RESPONSES` keys) and every operation-enrichment rule (public-tag, path-param, request-body, tier-gated) wanted isolated coverage.
+
+**Test results:**
+- Phase 183: **43 / 43 GREEN in 23.16s** across 8 classes (TestInfoBlock ×3 + TestServers ×6 + TestTags ×3 + TestSecuritySchemes ×3 + TestErrorResponses ×10 + TestOperationEnrichment ×12 + TestCaching ×2 + TestModuleInvariants ×4).
+- **Full Track H regression (phases 175-183): 291 / 291 GREEN in 7m 01s (421.60s). Zero regressions.** Phase 183 is spec-only so nothing else could break; regression just confirms prior tests are insensitive to the spec change.
+- Schema version unchanged at 38 — no migration.
+- Zero AI calls, zero network.
+
+**Track H scorecard through Phase 183:**
+- Phases: 175, 176, 177, 178, 179, 180, 181, 182, 183 (9)
+- Phase-specific tests: 291 (26 + 58 + 33 + 35 + 17 + 22 + 24 + 33 + 43)
+- Endpoints: **57 HTTP + 1 WebSocket across 10 sub-surfaces, fully-documented OpenAPI 3.1 spec at `/openapi.json`**
+- Migrations: still 2 (037 + 038) — Phases 181 + 182 + 183 all ship migration-free
+
+Project version 0.12.6 → **0.12.7**.
+
+**Key finding:** the FastAPI `openapi()` override is the right abstraction. Enriching the spec at one choke point costs ~460 LoC and zero route-handler edits, versus ~3× that if every route declared its own `responses=` kwarg. Future route additions automatically inherit the enrichment (walker is path/tag-driven, not hand-mapped). The spec is now good enough for openapi-generator to emit usable Track I mobile SDK stubs without further polish.
+
+Next: **Phase 184 — Gate 9 (intake-to-invoice integration test through HTTP).** The end-to-end workflow that closes Track H: TestClient walks customer intake → vehicle registration → diagnostic session → work-order creation → issue triage → parts ordering → invoice generation → PDF download, entirely through HTTP instead of CLI. When Gate 9 lands green, Track H is closed and Track I (mobile app) opens.

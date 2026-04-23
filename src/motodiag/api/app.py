@@ -20,6 +20,7 @@ from motodiag.api.middleware import (
     RateLimitMiddleware,
     RequestIdMiddleware,
 )
+from motodiag.api.openapi import install_openapi
 from motodiag.core.config import Settings
 
 
@@ -110,6 +111,9 @@ def create_app(
     app.include_router(shop_mgmt_router, prefix="/v1")
     app.include_router(reports_router, prefix="/v1")
     app.include_router(live_router)             # WS route declares full /v1/live/... path
+
+    # --- Phase 183: OpenAPI enrichment (after routers are mounted) ---
+    install_openapi(app)
 
     # --- Startup log ---
     logger = logging.getLogger("motodiag.api")

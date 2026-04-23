@@ -66,6 +66,39 @@ class Settings(BaseSettings):
         "http://localhost:3000,http://localhost:5173"
     )
     api_log_level: str = "INFO"
+    # Phase 183 — OpenAPI servers list. Comma-separated
+    # "url|description" pairs; parsed to list[dict] by the
+    # `api_servers_list` property. Default includes only the local
+    # dev server; deployments override via MOTODIAG_API_SERVERS.
+    api_servers: str = (
+        "http://localhost:8080|Local dev"
+    )
+
+    @property
+    def api_servers_list(self) -> list[dict]:
+        """Parse the `api_servers` Setting into OpenAPI server objects.
+
+        Format: ``url|description,url|description,...`` — pipe-
+        separated url/description, comma-separated entries.
+        Entries without a ``|`` are url-only.
+        """
+        raw = (self.api_servers or "").strip()
+        if not raw:
+            return []
+        out: list[dict] = []
+        for entry in raw.split(","):
+            entry = entry.strip()
+            if not entry:
+                continue
+            if "|" in entry:
+                url, desc = entry.split("|", 1)
+                out.append({
+                    "url": url.strip(),
+                    "description": desc.strip(),
+                })
+            else:
+                out.append({"url": entry})
+        return out
 
     @property
     def api_cors_origins_list(self) -> list[str]:
