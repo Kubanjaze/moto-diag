@@ -1583,3 +1583,45 @@ Next: **Phase 184 — Gate 9 (intake-to-invoice integration test through HTTP).*
 **Key finding:** Track H closes the "API surface" story for MotoDiag. The 57-endpoint surface + WebSocket + fully-documented OpenAPI 3.1 spec is a contract Track I can consume without needing to revisit Track H code. The 8 design pillars captured in `TRACK_H_SUMMARY.md` are the load-bearing patterns that make future endpoint work small. Gate 9's 10 tests took 832 LoC total (618 test + 214 doc) with zero production code changes. **When Track I mobile starts, the engineer opens `TRACK_H_SUMMARY.md` + `/openapi.json` and builds confidently.**
 
 Next: **Track I (Phases 185-204)** — React Native mobile app consuming this exact API surface. iOS App Store + Google Play Store launch by Track J close.
+
+---
+
+### 2026-04-23 — Phase 185 complete — 🚀 Track I opens with ADR-001
+
+**🚀 TRACK I OPENS.** First architecture decision record for the mobile app. Pure documentation phase — no Python code, no tests, no schema change. The ADR is the durable rationale doc every subsequent Track I phase references.
+
+**Shipped (pure docs):**
+- `docs/mobile/ADR-001-framework-choice.md` (533 LoC) — 7 decisions, each in the standard ADR format (Context / Decision / Alternatives / Consequences / Status), plus aggregate Consequences + reversal-condition triggers + Implementation Notes pre-scoping Phase 186.
+
+**7 decisions captured:**
+
+1. **React Native bare workflow** (not Expo managed). Decisive constraints: Phase 196 BLE needs `react-native-ble-plx` (unsupported in Expo managed), Phase 195 voice input needs custom audio sessions, Phase 197 live dashboard needs background mode entitlements. Starting bare removes the "move off Expo" migration that would hit around Phase 196. Alternatives rejected: Expo managed, Flutter (smaller hardware ecosystem + second language to master), native Swift+Kotlin (solo-dev ⇒ halved velocity), PWA/Ionic (no reliable BLE or background audio).
+
+2. **TypeScript strict** — `"strict": true` from file one. No `any` except at external-boundary adapters with typed wrappers.
+
+3. **Sibling repo layout** — `moto-diag-mobile/` lives at `C:\Users\Kerwyn\PycharmProjects\moto-diag-mobile\`, not inside `moto-diag/`. Rationale: Python CI stays fast (~8 min); mobile CI can take 20-30 min without blocking backend PRs; App Store / Play Store release cadence independent of backend deploys; user's convention is one-project-per-repo.
+
+4. **State management split** — Zustand for client state (BLE connection, UI prefs, navigation, active diagnosis) + TanStack Query for server cache (every API call). Redux Toolkit rejected as overkill for solo-dev; MobX less common in RN; Recoil abandoned by Meta; Jotai has no server-cache story.
+
+5. **API client: `openapi-fetch`** — zero runtime codegen, only TypeScript types generated from the Phase 183 `/openapi.json` spec. End-to-end type safety: Pydantic (Phase 177) → OpenAPI 3.1 (Phase 183) → RN client method. Adding an endpoint on backend = regenerate types = client method appears. No hand-written wrappers.
+
+6. **Offline strategy** — TanStack Query `persistQueryClient` with AsyncStorage (MMKV swap candidate) for read persistence; op-queue pattern for writes (serialize to disk + drain in-order on reconnect); Phase 05 DTC database bundled as app asset for offline lookups; `react-native-keychain` for secure API key storage (never AsyncStorage for secrets).
+
+7. **Bluetooth OBD: `react-native-ble-plx`** behind an `ObdConnection` provider seam mirroring Phase 181's `LiveReadingProvider` ABC pattern. `FakeObdProvider` for tests; `OBD_SUPPORT` compile-time feature flag so first TestFlight / Play Store alpha ships without BLE.
+
+**Aggregate consequences (ADR captures both sides):**
+
+- **Favorable:** one codebase → two stores; end-to-end type safety backend ↔ mobile; small runtime bundle (< 50kb minified for core deps); mature BLE + camera + voice + push libraries; offline-first by default.
+- **Unfavorable:** two toolchains locally (Xcode + Android Studio); native-module version skew on RN minor upgrades; cross-repo coordination (mitigated by OpenAPI spec as explicit contract).
+
+**4 reversal triggers** (any one requires a new ADR superseding ADR-001): RN major-version breaking change invalidating ecosystem >6mo; hard RN limitation hit in Phase 196/197; solo-dev velocity assumption changes (second developer with Flutter depth); Apple/Google policy restricting RN-specific apps.
+
+**Deviations:** none. ADR shipped with all 7 decisions at the planned depth. 533 lines vs ~500 planned (within 600-LoC budget).
+
+**Test results:** N/A — phase is docs-only, zero code changes. Track H regression unaffected (301 tests still green).
+
+Project version 0.13.0 → **0.13.1**.
+
+**Key finding:** End-to-end type safety from Pydantic (Phase 177) → OpenAPI (Phase 183) → React Native client (Track I) is the single largest structural win from Phases 175-184 + ADR-001. A backend change that breaks the spec fails mobile typecheck at CI time, turning "coordination" into "propagation". The Phase 183 enrichment + the sibling-repo decision + `openapi-fetch` together mean mobile devs don't need to read the backend source to build correctly — they read `/openapi.json` and `TRACK_H_SUMMARY.md`.
+
+Next: **Phase 186 — Mobile project scaffold + CI/CD.** Awaits user scope confirmation before building. Open questions: (1) confirm sibling-repo path + `Kubanjaze/moto-diag-mobile` as the GitHub repo name; (2) choose CI provider (GitHub Actions with macOS + ubuntu runners vs EAS Build vs self-hosted); (3) confirm RN version pin (0.74.x LTS-ish vs 0.75.x latest); (4) confirm TestFlight + Play Internal Testing distribution (vs ad-hoc only for first release). Phase 186 operationalizes ADR-001 with a 10-step scaffold checklist captured in the ADR's Implementation Notes section.

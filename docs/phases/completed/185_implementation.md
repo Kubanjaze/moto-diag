@@ -1,6 +1,6 @@
 # MotoDiag Phase 185 — Mobile Architecture Decision (Track I opener)
 
-**Version:** 1.0 | **Tier:** ADR (Architecture Decision Record) | **Date:** 2026-04-23
+**Version:** 1.1 | **Tier:** ADR (Architecture Decision Record) | **Date:** 2026-04-23
 
 ## Goal
 
@@ -247,19 +247,52 @@ version is newer than what the server reports.
 
 ## Verification Checklist
 
-- [ ] ADR-001 file created at `docs/mobile/ADR-001-framework-choice.md`.
-- [ ] ADR covers all 7 decisions (framework, language, repo,
+- [x] ADR-001 file created at `docs/mobile/ADR-001-framework-choice.md`.
+- [x] ADR covers all 7 decisions (framework, language, repo,
       state, API client, offline, BLE).
-- [ ] Each decision has Context / Decision / Alternatives /
+- [x] Each decision has Context / Decision / Alternatives /
       Consequences / Status.
-- [ ] `docs/mobile/` directory exists and is committed.
-- [ ] Project `implementation.md` version bumped 0.13.0 → 0.13.1.
-- [ ] Project `phase_log.md` has Phase 185 entry.
-- [ ] `docs/ROADMAP.md` Phase 185 marked ✅.
-- [ ] No Python code changes, no tests added/modified.
-- [ ] Track H regression (301 tests) still GREEN — but since no
-      code changes, sanity check is a `pytest --collect-only`
-      rather than a full re-run.
+- [x] `docs/mobile/` directory exists and is committed.
+- [x] Project `implementation.md` version bumped 0.13.0 → 0.13.1.
+- [x] Project `phase_log.md` has Phase 185 entry.
+- [x] `docs/ROADMAP.md` Phase 185 marked ✅.
+- [x] No Python code changes, no tests added/modified.
+- [x] Track H regression (301 tests) unaffected — Phase 185 is
+      docs-only; test collection sanity-checked.
+
+## Deviations from Plan
+
+None. ADR-001 shipped with all 7 decisions covered in the
+planned shape. Document length came in at 533 lines vs ~500
+planned, within the "~600 LoC of docs" budget in the plan's
+Outputs section.
+
+## Results
+
+| Metric                              | Value                       |
+|-------------------------------------|-----------------------------|
+| ADR-001 LoC                         | 533                         |
+| Phase 185 implementation.md LoC     | 293                         |
+| Phase 185 phase_log.md LoC          | ~25                         |
+| Total docs LoC                      | ~850                        |
+| Python code changes                 | 0                           |
+| Tests added                         | 0                           |
+| Schema version                      | 38 (unchanged)              |
+| Migration                           | None                        |
+| Decisions captured                  | 7 (framework, language, repo, state, API client, offline, BLE) |
+| Track I phases opened               | 20 (185-204)                |
+| Project version                     | 0.13.0 → 0.13.1             |
+
+**Key finding:** The mobile architecture locks onto React
+Native bare + TypeScript strict + sibling-repo layout, with the
+Phase 183 OpenAPI spec as the explicit backend-mobile contract.
+End-to-end type safety from Pydantic (Phase 177) through OpenAPI
+(Phase 183) to React components (Track I) is the single largest
+structural win from Phases 175-184 + this ADR: a backend change
+that breaks the spec fails the mobile typecheck at CI time,
+turning "coordination" into "propagation". Phase 186 creates the
+actual mobile repo with all the scaffold + CI/CD operationalizing
+the seven decisions.
 
 ## Risks
 
