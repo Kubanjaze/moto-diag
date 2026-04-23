@@ -1402,3 +1402,49 @@ Bug fixes during build:
 Project version 0.12.3 → **0.12.4**.
 
 **Key finding:** Phase 180 closes the bulk-CRUD work on Track H. Six phases of routers later, the scaffold pattern is settled enough that 838 LoC ships with one short debug cycle. Track H's remaining phases (181 WS / 182 reports / 183 OpenAPI / 184 Gate 9) are infrastructure-flavored — WebSocket primitives, PDF generation, OpenAPI enrichment, integration testing — not more domain CRUD. **Track I's mobile app already has 51 endpoints to consume.**
+
+
+---
+
+### 2026-04-22 — Phase 181 complete — WebSocket live data endpoint
+
+**First non-CRUD surface on Track H.** `ws /v1/live/{session_id}` streams live OBD sensor frames (rpm / coolant_c / throttle_pct / voltage_v / ts) to authenticated paid-tier clients, session-scoped. Zero migration (schema stays at 38), zero AI, zero network.
+
+**New `src/motodiag/api/routes/live.py` (462 LoC):**
+- `LiveReadingProvider` ABC — `open` / `read_frame` / `close` / `set_interval_ms`. Providers return `None` from `read_frame` to signal stream end → server closes with 1000.
+- `FakeLiveProvider` — deterministic seeded synthetic stream. `random.Random(seed)` walks RPM 1000-3000, coolant 80-95°C, throttle 0-100%, voltage 13.5-14.5V. Same seed → identical sequences (test invariant).
+- `ConnectionManager` — per-process `dict[session_id → set[WebSocket]]`. Multi-worker shared state deferred to Track J (Redis-backed).
+- `get_live_provider(session_id)` — env-dispatched factory. `MOTODIAG_LIVE_PROVIDER=fake` default; `=obd` raises `ProviderUnavailableError` (Phase 140 hardware wiring deferred; hook in place).
+- Six custom 4xxx close-code constants: 4401 invalid key / 4402 subscription required / 4404 session not found or cross-user / 4429 rate limit / 4500 provider error / 1000 normal close.
+- `_clamp_interval` — prevents client-driven DOS by capping `set_interval_ms` to [50, 10000].
+- `_extract_ws_key` — accepts `?api_key=...` query param OR `Sec-WebSocket-Protocol: bearer.<key>` subprotocol. Browser WS clients cannot set arbitrary headers, so auth must travel via one of these two paths. Query param wins on conflict.
+
+**Route flow:** accept WS (echoing any `bearer.<key>` subprotocol offered) → validate key via Phase 176 `verify_api_key` → check active subscription via Phase 176 `get_active_subscription` (any paid tier satisfies) → check session ownership via Phase 178 `get_session_for_owner` (cross-user → 4404) → construct provider → stream loop. Each loop iteration non-blockingly polls for client actions via `asyncio.wait_for(receive_text, timeout=0.001)`, honors pause/resume/set_interval_ms, reads one frame from the provider and sends it as JSON. `read_frame()` returning `None` = normal 1000 close; provider exception = 4500 close.
+
+Every path wraps in `try/finally` so `provider.close()` + `manager.unregister()` always fire — even on client-initiated `WebSocketDisconnect` — no hardware handle leaks.
+
+**Rate limiter exemption:** `/v1/live` added to `_RATE_LIMIT_EXEMPT_PATHS` in `api/middleware.py`. Strictly defensive: Starlette's `BaseHTTPMiddleware` does not fire on WebSocket connections anyway, but the exempt entry documents intent and covers any future HTTP endpoint under the prefix.
+
+**Build deviation:** removed `provider_override` kwarg from the WS route signature after FastAPI raised `FastAPIError: Invalid args for response field!` at module-import time — FastAPI tried to coerce the annotated `Optional[LiveReadingProvider]` into a query-parameter Pydantic field. Moved the override seam to the module-level `get_live_provider` symbol; tests inject fakes via `monkeypatch.setattr(live_mod, "get_live_provider", ...)`. Strictly cleaner than the planned signature. Documented in `docs/phases/completed/181_implementation.md` Deviations section for any future WS phase.
+
+**24 tests GREEN in 23.09s** across 6 classes:
+- `TestFakeProvider` ×5: determinism, divergent seeds, max_frames stop, clamp, idempotent close.
+- `TestModuleHelpers` ×6: `_clamp_interval` unit, default interval constant, `ConnectionManager` register/unregister, factory override, `obd=` raises, fake-default.
+- `TestWebSocketAuth` ×6: missing-key-4401, bogus-key-4401, no-subscription-4402, cross-user-4404, nonexistent-session-4404, subprotocol bearer auth.
+- `TestFrameStreaming` ×4: happy-path + 1000 close, client-disconnect-unregisters, `set_interval_ms` roundtrip, invalid-JSON-ignored.
+- `TestProviderErrors` ×2: `read_frame` exception → 4500, `ProviderUnavailableError` → 4500.
+- `TestRateLimitExemption` ×1: exempt-list membership.
+
+**Full Track H regression (phases 175-181): 215 / 215 GREEN in 5m 19s (319.03s).** Zero regressions. Phase 175/176/177/178/179/180 all pass unchanged.
+
+**Track H scorecard through Phase 181:**
+- Phases: 175, 176, 177, 178, 179, 180, 181 (7)
+- Phase-specific tests: 215 (26 + 58 + 33 + 35 + 17 + 22 + 24)
+- Endpoints: **51 HTTP + 1 WebSocket across 9 sub-surfaces** (meta 2, shops 1, billing 4, vehicles 6, sessions 7, KB 7, shop-mgmt 24, live 1 WS)
+- Migrations: still 2 (037 + 038) — Phase 181 ships migration-free
+
+Project version 0.12.4 → **0.12.5**.
+
+**Key finding:** WebSocket transports collapse cleanly into the Track H shape once two gotchas are handled — (1) FastAPI's WS route signature cannot hold arbitrary annotated parameters without tripping query-param coercion (only `WebSocket` + path params are safe), and (2) browser WebSocket clients cannot set arbitrary headers, so auth must travel via query param or subprotocol. The `LiveReadingProvider` ABC gives Phase 140's adapter an obvious insertion point with no transport-layer rework required — real hardware wiring lands when needed, with the 4xxx close-code contract and session-ownership gate already in place. 
+
+Next: **Phase 182** (PDF report generation endpoints — intake summaries, work-order receipts, diagnostic session reports). Phase 183 enriches the OpenAPI spec (examples, descriptions, tags, response models). Phase 184 is Gate 9 — the full intake-to-invoice integration test running entirely through HTTP instead of CLI, closing Track H.

@@ -74,6 +74,7 @@ _RATE_LIMIT_EXEMPT_PATHS = (
     "/docs/oauth2-redirect",
     "/redoc",
     "/v1/billing/webhooks",  # Stripe retries shouldn't be throttled
+    "/v1/live",  # Phase 181 — WebSocket streams don't fit req/min token buckets
 )
 
 
