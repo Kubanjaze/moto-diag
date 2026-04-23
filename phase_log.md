@@ -1371,3 +1371,34 @@ Endpoints: `GET /v1/kb/dtc/{code}`, `GET /v1/kb/dtc?q&make&category&severity`, `
 Project version 0.12.2 → **0.12.3**.
 
 Next: **Phase 180** (shop CRUD — the biggest composer yet, mapping Track G's 16-subgroup CLI console onto `/v1/shop/*` HTTP routes). Should ship in ~600-800 LoC with ~40 tests — still <2hrs on the Phase 177 recipe. Phase 181 adds WebSocket live data, 182 PDF reports, 183 OpenAPI enrichment, 184 Gate 9 closes Track H.
+
+---
+
+### 2026-04-22 — Phase 180 complete — shop management endpoints
+
+**Biggest pure-composer router on Track H** (838 LoC, 24 endpoints, 22 tests). Zero migration, zero new business logic — dispatches to Track G's existing repos via dependency-injected scope checks.
+
+**24 endpoints across 9 sub-surfaces:** profile (4) + members (3) + customers (3) + intake (2) + work-orders (4) + issues (2) + invoices (2) + notifications (2) + analytics (3). All require `require_tier("shop")` + per-shop membership check via Phase 172 RBAC.
+
+`require_shop_access` helper is mode-aware: bare call = any active member (reads + tech-writable mutations); `permission="manage_shop"` = only owner/service_writer (the 3 admin write endpoints). Cross-shop = 403 (not 404) since shops are global-registry entities.
+
+**`TransitionAction` Literal** dispatches the 7 work-order lifecycle states (open/start/pause/resume/complete/cancel/reopen) through one POST endpoint with body validation — keeps the route surface clean.
+
+**Pragmatic omissions** (Phase 181+ scope): parts/sourcing/labor estimator/bay scheduler/triage/priority/rules subgroups deferred. Gate 8 already proves them via CLI; Gate 9 will via HTTP.
+
+Bug fixes during build:
+1. **Permission catalog gap**: `read_shop` doesn't exist in Phase 112's catalog. Refactored helper to softer membership check (any active member can read).
+2. **update_shop signature**: takes `(id, dict, db_path)` not `**kwargs`.
+3. **Scaffolding artifact**: triple-imported `add_shop_member` from a placeholder walrus-op-in-import. Cleaned.
+
+**22 tests GREEN in 31.13s** after fixes.
+
+**Track H scorecard through Phase 180:**
+- Phases: 175, 176, 177, 178, 179, 180 (6)
+- Phase-specific tests: 191 (26 + 58 + 33 + 35 + 17 + 22)
+- Endpoints: **51 across 8 sub-surfaces** (meta 2, shops 1, billing 4, vehicles 6, sessions 7, KB 7, shop-mgmt 24)
+- Migrations: still 2 (037 + 038)
+
+Project version 0.12.3 → **0.12.4**.
+
+**Key finding:** Phase 180 closes the bulk-CRUD work on Track H. Six phases of routers later, the scaffold pattern is settled enough that 838 LoC ships with one short debug cycle. Track H's remaining phases (181 WS / 182 reports / 183 OpenAPI / 184 Gate 9) are infrastructure-flavored — WebSocket primitives, PDF generation, OpenAPI enrichment, integration testing — not more domain CRUD. **Track I's mobile app already has 51 endpoints to consume.**

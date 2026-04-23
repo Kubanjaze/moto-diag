@@ -1,6 +1,6 @@
 # MotoDiag Phase 180 — Shop Management Endpoints
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-22
 
 ## Goal
 
@@ -105,18 +105,64 @@ and maps naturally to 403.
 
 ## Verification Checklist
 
-- [ ] Unauthenticated → 401 across every endpoint.
-- [ ] Individual-tier caller → 402 (no shop access).
-- [ ] Shop-tier caller who isn't a member of `shop_id` → 403.
-- [ ] Owner of `shop_id` → 200 on reads + writes.
-- [ ] POST `/v1/shop/profile` creates shop + stamps caller as owner
-      via `seed_first_owner` (Phase 172).
-- [ ] Work-order `transition` endpoint dispatches to the 7 Phase
-      161 lifecycle functions correctly.
-- [ ] Invoice generation composes Phase 169 end-to-end.
-- [ ] Analytics snapshot composes Phase 171 rollups.
-- [ ] Phase 175-179 still GREEN.
-- [ ] Zero AI calls.
+- [x] Unauthenticated → 401 across every endpoint.
+- [x] Individual-tier caller → 402 (no shop access).
+- [x] Shop-tier caller who isn't a member of `shop_id` → 403.
+- [x] Owner of `shop_id` → 200 on reads + writes.
+- [x] POST `/v1/shop/profile` creates shop + stamps caller as owner
+      via `seed_first_owner`.
+- [x] Work-order `transition` endpoint dispatches to all 7 Phase 161
+      lifecycle functions.
+- [x] Invoice generation composes Phase 169 end-to-end.
+- [x] Analytics snapshot composes Phase 171 rollups.
+- [x] Phase 175-179 still GREEN.
+- [x] Zero AI calls.
+
+## Deviations from Plan
+
+- **`require_shop_access` widened**. Plan called for
+  `permission="read_shop"` on read endpoints, but Phase 112's
+  permission catalog doesn't have `read_shop`. Refactored the helper
+  to accept `permission=None` (any active member can read) versus an
+  explicit permission string (only roles holding it can write).
+  Reads use the membership check; only `update_shop_profile` +
+  `add_member` + `deactivate_member_endpoint` require
+  `manage_shop`. Other writes (work-order create / transition /
+  issue create / invoice generate / notification trigger / customer
+  create) accept any active member — matches the product UX where
+  techs need to write WOs without requiring owner permission.
+- **`update_shop` repo signature**. Took `(shop_id, updates_dict,
+  db_path=None)` not `**fields`. Caller fixed.
+- **Triple-imported `add_shop_member`** in the route module due to
+  a placeholder I left during scaffolding. Cleaned up.
+- **22 tests vs ~40 planned**. The test count over-shoot didn't
+  materialize — the 22 tests cover the full surface (auth boundary,
+  profile CRUD, members, customers, work-order create + transition,
+  invoices, analytics) without redundant duplication.
+
+## Results
+
+| Metric | Value |
+|--------|------:|
+| Phase 180 tests | 22 GREEN in 31.13s |
+| New code | 838 LoC router + 0 LoC migration |
+| `api/routes/shop_mgmt.py` | 838 LoC |
+| Endpoints | 24 |
+| Migration | 0 |
+| SCHEMA_VERSION | unchanged at 38 |
+| AI calls | 0 |
+
+**Key finding:** Phase 180 is the biggest pure-composer router on
+Track H (838 LoC) but added zero new business logic — it dispatches
+to Track G's existing repos via dependency-injected scope checks.
+The `require_shop_access(shop_id, user, db_path, permission=...)`
+helper makes the per-endpoint authorization a one-liner. Permission
+catalog gap (no `read_shop`) was caught at first test run and fixed
+with a softer membership check, which is actually the right product
+UX. With Phases 175-180 done, Track H has **51 HTTP endpoints across
+8 sub-surfaces** — the full mechanic + shop API surface that mobile
+clients will consume. Phase 181 (WebSocket OBD streams), 182 (PDF
+reports), 183 (OpenAPI enrichment), 184 (Gate 9) remain.
 
 ## Risks
 
