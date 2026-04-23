@@ -1448,3 +1448,47 @@ Project version 0.12.4 → **0.12.5**.
 **Key finding:** WebSocket transports collapse cleanly into the Track H shape once two gotchas are handled — (1) FastAPI's WS route signature cannot hold arbitrary annotated parameters without tripping query-param coercion (only `WebSocket` + path params are safe), and (2) browser WebSocket clients cannot set arbitrary headers, so auth must travel via query param or subprotocol. The `LiveReadingProvider` ABC gives Phase 140's adapter an obvious insertion point with no transport-layer rework required — real hardware wiring lands when needed, with the 4xxx close-code contract and session-ownership gate already in place. 
 
 Next: **Phase 182** (PDF report generation endpoints — intake summaries, work-order receipts, diagnostic session reports). Phase 183 enriches the OpenAPI spec (examples, descriptions, tags, response models). Phase 184 is Gate 9 — the full intake-to-invoice integration test running entirely through HTTP instead of CLI, closing Track H.
+
+---
+
+### 2026-04-23 — Phase 182 complete — PDF report generation endpoints
+
+**Three distinct downloadable artifacts over one renderer pipeline + one router shape.** Diagnostic session reports (session owner), work-order receipts (shop-tier), and invoice PDFs (shop-tier, composes Phase 169) all share the same `ReportDocument` dict contract and the same `ReportRenderer` ABC. No migration, zero AI, zero network.
+
+**New `src/motodiag/reporting/` package (832 LoC, 3 files):**
+- `renderers.py` (326 LoC) — `ReportRenderer` ABC + `TextReportRenderer` (stdlib-only, always-available) + `PdfReportRenderer` (reportlab 4.4.10 Platypus flowables) + `get_renderer` factory + `PDF_AVAILABLE` runtime flag.
+- `builders.py` (473 LoC) — `build_session_report_doc` / `build_work_order_report_doc` / `build_invoice_report_doc`, each raising Phase 178/172/169 domain exceptions the existing API error handler maps to HTTP status.
+- `__init__.py` (33 LoC) — package entry.
+
+**New `src/motodiag/api/routes/reports.py` (163 LoC):**
+- 6 endpoints (3 JSON preview + 3 PDF download) — `GET /v1/reports/session/{id}` / `/pdf`, `GET /v1/reports/work-order/{id}` / `/pdf`, `GET /v1/reports/invoice/{id}` / `/pdf`.
+- Session reports owner-gated (no tier required — DIY users get their own diagnostics on paper). WO + invoice reports `require_tier("shop")` + `_require_member` shop-membership check.
+
+**`ReportDocument` shape:** plain dict with `title` / `subtitle` / `issued_at` / `sections` / `footer`. Sections are one of `{heading, body}`, `{heading, rows}`, `{heading, bullets}`, or `{heading, table: {columns, rows}}`. Unknown shapes are silently skipped — forward compat for future section kinds.
+
+**`PdfReportRenderer` XML escape helper** guards against customer names containing `<`, `>`, `&`. A customer named "Alice & Bob" would otherwise break the Paragraph builder. Tests include the escape path (`test_pdf_renderer_escapes_xml_special_chars`) and a unicode customer name (`test_pdf_renderer_handles_unicode`).
+
+**New `api/errors.py` mapping:** `ReportBuildError` → 500 (for cases like "invoice has no resolvable shop — cannot authorize", which would indicate data corruption rather than a caller-fixable error).
+
+**Build deviations:**
+1. `get_dtc` returns a dict, not an object — one-line fix in session builder.
+2. `generate_invoice_for_wo` takes `wo_id=` not `work_order_id=` — one-line fix in test helper.
+3. LoC overshoot: 962 product code vs. planned 750. Builders grew because each of the three report kinds needed its own section-composition logic with defensive handling of optional DB columns. `TextReportRenderer` ships as a first-class renderer rather than a conditional fallback.
+4. 33 tests vs ~30 planned: three extras for forward-compat (`test_renderer_skips_unknown_section_kind`), XML escaping (`test_pdf_renderer_escapes_xml_special_chars`), and factory-error coverage (`test_get_renderer_unknown_raises`).
+
+**Test results:**
+- Phase 182: **33 / 33 GREEN in 41.62s** across 7 classes.
+- **Full Track H regression (phases 175-182): 248 / 248 GREEN in 6m 36s (396.37s). Zero regressions.**
+- Schema version unchanged at 38 — no migration.
+
+**Track H scorecard through Phase 182:**
+- Phases: 175, 176, 177, 178, 179, 180, 181, 182 (8)
+- Phase-specific tests: 248 (26 + 58 + 33 + 35 + 17 + 22 + 24 + 33)
+- Endpoints: **57 HTTP + 1 WebSocket across 10 sub-surfaces** (meta 2, shops 1, billing 4, vehicles 6, sessions 7, KB 7, shop-mgmt 24, reports 6, live 1 WS, auth)
+- Migrations: still 2 (037 + 038) — Phases 181 + 182 ship migration-free
+
+Project version 0.12.5 → **0.12.6**.
+
+**Key finding:** the renderer-ABC + dict-document pattern collapses three report kinds onto one rendering pipeline and one router shape. Adding a fourth kind (intake summary PDF, triage overview, labor estimate PDF) would be ~100 LoC of builder + 2 endpoints + 5 tests. The PDF scaffolding lives in `motodiag/reporting/`, not in any domain module — Track G modules stay paperwork-agnostic. Phase 184 Gate 9 can compose these primitives rather than invent its own PDF layer. reportlab 4.4.10 is BSD-licensed and was already installed as a transitive dep.
+
+Next: **Phase 183** (OpenAPI enrichment — examples, descriptions, tags, response models). Phase 184 is Gate 9 — the full intake-to-invoice integration test through HTTP instead of CLI, closing Track H.

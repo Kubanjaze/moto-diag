@@ -109,6 +109,8 @@ def _exc_class_chain():
     from motodiag.core.session_repo import (
         SessionOwnershipError, SessionQuotaExceededError,
     )
+    # Phase 182 — report builders
+    from motodiag.reporting.builders import ReportBuildError
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -197,6 +199,9 @@ def _exc_class_chain():
          "Diagnostic session not found"),
         (SessionQuotaExceededError, 402, "session-quota-exceeded",
          "Monthly session quota exceeded for current subscription tier"),
+        # Phase 182 — report builders
+        (ReportBuildError, 500, "report-build-failed",
+         "Report could not be assembled"),
     ]
 
 

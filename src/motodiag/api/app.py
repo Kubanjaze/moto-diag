@@ -95,6 +95,7 @@ def create_app(
     from motodiag.api.routes.kb import router as kb_router
     from motodiag.api.routes.live import router as live_router
     from motodiag.api.routes.meta import router as meta_router
+    from motodiag.api.routes.reports import router as reports_router
     from motodiag.api.routes.sessions import router as sessions_router
     from motodiag.api.routes.shop_mgmt import router as shop_mgmt_router
     from motodiag.api.routes.shops import router as shops_router
@@ -107,6 +108,7 @@ def create_app(
     app.include_router(sessions_router, prefix="/v1")
     app.include_router(kb_router, prefix="/v1")
     app.include_router(shop_mgmt_router, prefix="/v1")
+    app.include_router(reports_router, prefix="/v1")
     app.include_router(live_router)             # WS route declares full /v1/live/... path
 
     # --- Startup log ---
