@@ -1530,3 +1530,56 @@ Project version 0.12.6 → **0.12.7**.
 **Key finding:** the FastAPI `openapi()` override is the right abstraction. Enriching the spec at one choke point costs ~460 LoC and zero route-handler edits, versus ~3× that if every route declared its own `responses=` kwarg. Future route additions automatically inherit the enrichment (walker is path/tag-driven, not hand-mapped). The spec is now good enough for openapi-generator to emit usable Track I mobile SDK stubs without further polish.
 
 Next: **Phase 184 — Gate 9 (intake-to-invoice integration test through HTTP).** The end-to-end workflow that closes Track H: TestClient walks customer intake → vehicle registration → diagnostic session → work-order creation → issue triage → parts ordering → invoice generation → PDF download, entirely through HTTP instead of CLI. When Gate 9 lands green, Track H is closed and Track I (mobile app) opens.
+
+---
+
+### 2026-04-23 — Phase 184 complete — 🎯 Gate 9 green, Track H closed
+
+**🎯 TRACK H CLOSED.** End-to-end integration test that walks a full mechanic workflow from customer intake to paid invoice entirely through HTTP, using only Phase 175-183 endpoints. Gate 8 (Phase 174) proved the same workflow via CLI; Gate 9 proves it via the API surface Track I mobile + external consumers will use. No production code, no migration — Gate 9 is pure test + documentation closure.
+
+**Shipped (832 LoC total):**
+- `tests/test_phase184_gate9.py` (618 LoC, 10 tests across 5 classes: `TestGate9HappyPath` ×1, `TestGate9CrossUserIsolation` ×1, `TestGate9CrossShopIsolation` ×1, `TestGate9OpenAPIContract` ×4, `TestGate9AntiRegression` ×3).
+- `docs/phases/completed/TRACK_H_SUMMARY.md` (214 LoC) — Track H closure doc with 10-phase inventory + sub-surface breakdown + 8 design pillars + mechanic-facing HTTP workflow map + known limitations organized by resolving future track.
+
+**Test walkthrough (TestGate9HappyPath):** 27 HTTP calls — meta (`/v1/version`) + shop creation + customer + vehicle + diagnostic session with symptoms/DTCs/diagnosis + session report PDF download + KB lookups + session close + WO creation/open/start + issue log + WO complete + invoice generation (asserts $200 subtotal + tax) + WO receipt PDF + invoice PDF + invoice JSON preview + shop analytics snapshot + session/vehicle/invoice listings + OpenAPI spec sanity. Every step asserts HTTP status + 1-2 structural invariants. Non-2xx mid-walk fails the gate.
+
+**8 design pillars codified in TRACK_H_SUMMARY.md:**
+1. **Auto-mapped domain exceptions** — routes raise domain exceptions, global handler maps to RFC 7807 responses. Zero try/except boilerplate.
+2. **Compose-don't-duplicate routers** — Phase 180's 24 endpoints in 838 LoC by dispatching to Track G repos; Phase 182's reports compose Phase 178/169/160 reads; Phase 184's gate composes Phase 175-183 endpoints.
+3. **Scope-as-code** — `*_for_owner` repo helpers enforce owner scoping at the repo layer (not route); cross-user = 404 (not 403) for enumeration-attack prevention; shop scoping via `require_shop_access`.
+4. **Renderer ABC for document endpoints** — Phase 182's pattern enables 3 distinct artifacts (session/WO/invoice) on one PDF pipeline; future report kinds cost ~100 LoC each.
+5. **Spec-as-single-source-of-truth** — Phase 183's OpenAPI override centralizes spec polish at one choke point.
+6. **Factory pattern for transport-layer providers** — Phase 181's LiveReadingProvider ABC + FakeLiveProvider + env-dispatched factory; plain-dict ReportDocument follows the same shape.
+7. **Hard-paywall-soft-discovery** — `require_tier` enforces the paywall but discovery tier lets anonymous callers browse `/v1/version` + KB reads.
+8. **RFC 7807 + correlation IDs** — every error response has `type`/`title`/`status`/`detail`/`instance`/`request_id` matching the `X-Request-ID` header.
+
+**Known limitations → future tracks (captured in TRACK_H_SUMMARY.md):**
+- **Track I (185-204):** HTTP signup flow, password/OAuth login, file uploads, photo→make/model auto-ID.
+- **Track J (193-198):** Multi-worker state via Redis (Phase 181 connection manager is per-process), IP rate limiting for pre-key flows, notification-queue transport worker (Phase 170 queue is producer-only), production uvicorn/gunicorn config.
+- **Post-Gate-9:** OBD hardware wiring for Phase 181 LiveReadingProvider (`MOTODIAG_LIVE_PROVIDER=obd` hook in place; adapter swap deferred), OpenAPI external docs site, PDF brand customization.
+
+**Build deviations:**
+1. 10 tests vs ~20 planned — each test class's single test walks many endpoints in an integration-sweep pattern matching Gate 8.
+2. `/v1/version` response shape correction — actual response is `{api_version, package, schema_version}` not `{version}`. One-line fix after first run.
+3. Bootstrap via direct repo calls (users, API keys, subscriptions, shop memberships) is explicit — those surfaces are Track I's scope.
+4. Closure doc 214 LoC vs ~180 planned — 8-pillar + limitations-by-future-track sections deserved more detail as the Track I handoff.
+
+**Test results:**
+- Gate 9: **10 / 10 GREEN single-pass in 18.22s.** Zero test iterations (caught the one shape issue on first run, fixed in one edit).
+- **Full Track H regression (phases 175-184): 301 / 301 GREEN in 6m 02s (362.14s). Zero regressions. 🎯 Track H closes green.**
+- Schema version unchanged at 38 — no migration.
+- Zero AI calls, zero network, zero production code.
+
+**Track H final scorecard:**
+- **Phases: 175, 176, 177, 178, 179, 180, 181, 182, 183, 184 (10 total).**
+- **Endpoints: 57 HTTP + 1 WebSocket across 10 sub-surfaces** (meta 2, shops 1, billing 4, vehicles 6, sessions 7, KB 7, shop-mgmt 24, reports 6, live 1 WS, auth).
+- **Tests: 301 Track H phase-specific tests** (26 + 58 + 33 + 35 + 17 + 22 + 24 + 33 + 43 + 10).
+- **Migrations: 2** (037 api_keys/subscriptions/webhooks + 038 vehicles.owner_user_id retrofit).
+- **Design pillars codified: 8.**
+- **OpenAPI 3.1 spec** with 10 tagged sub-surfaces, 2 security schemes, 7 reusable error response envelopes.
+
+**Project version 0.12.7 → 0.13.0** (minor bump reflects Track H closure as a structural milestone — `0.12.x` tracked Track G closure through Track H build; `0.13.x` opens the Track I mobile-app cycle).
+
+**Key finding:** Track H closes the "API surface" story for MotoDiag. The 57-endpoint surface + WebSocket + fully-documented OpenAPI 3.1 spec is a contract Track I can consume without needing to revisit Track H code. The 8 design pillars captured in `TRACK_H_SUMMARY.md` are the load-bearing patterns that make future endpoint work small. Gate 9's 10 tests took 832 LoC total (618 test + 214 doc) with zero production code changes. **When Track I mobile starts, the engineer opens `TRACK_H_SUMMARY.md` + `/openapi.json` and builds confidently.**
+
+Next: **Track I (Phases 185-204)** — React Native mobile app consuming this exact API surface. iOS App Store + Google Play Store launch by Track J close.
