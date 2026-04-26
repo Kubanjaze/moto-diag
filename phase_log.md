@@ -1625,3 +1625,133 @@ Project version 0.13.0 → **0.13.1**.
 **Key finding:** End-to-end type safety from Pydantic (Phase 177) → OpenAPI (Phase 183) → React Native client (Track I) is the single largest structural win from Phases 175-184 + ADR-001. A backend change that breaks the spec fails mobile typecheck at CI time, turning "coordination" into "propagation". The Phase 183 enrichment + the sibling-repo decision + `openapi-fetch` together mean mobile devs don't need to read the backend source to build correctly — they read `/openapi.json` and `TRACK_H_SUMMARY.md`.
 
 Next: **Phase 186 — Mobile project scaffold + CI/CD.** Awaits user scope confirmation before building. Open questions: (1) confirm sibling-repo path + `Kubanjaze/moto-diag-mobile` as the GitHub repo name; (2) choose CI provider (GitHub Actions with macOS + ubuntu runners vs EAS Build vs self-hosted); (3) confirm RN version pin (0.74.x LTS-ish vs 0.75.x latest); (4) confirm TestFlight + Play Internal Testing distribution (vs ad-hoc only for first release). Phase 186 operationalizes ADR-001 with a 10-step scaffold checklist captured in the ADR's Implementation Notes section.
+
+---
+
+### 2026-04-23 — Phase 186 complete — Mobile project scaffold (sibling repo)
+
+**Mobile repo born.** First Track I phase that puts code on disk. ADR-001's "bare RN + sibling repo + RN 0.85.x + TypeScript strict + bundle ID `com.bandithero.motodiag`" gets operationalized as a real `npm`-buildable, Android-emulator-runnable project at `C:\Users\Kerwyn\PycharmProjects\moto-diag-mobile\` and pushed to `Kubanjaze/moto-diag-mobile`.
+
+**Shipped (mobile repo, not this backend):**
+- React Native 0.85.2 bare-workflow scaffold via `@react-native-community/cli init`
+- Bundle ID set to `com.bandithero.motodiag` (per ADR-001 + user's own brand)
+- TypeScript strict mode, no `any` slips
+- Stub `src/` layout: `screens/HomeScreen.tsx`, `api/`, `auth/`, `obd/` placeholders + `App.tsx` wiring
+- Android BLE permissions (`BLUETOOTH_SCAN`, `BLUETOOTH_CONNECT`, `ACCESS_FINE_LOCATION`) + `newArchEnabled=false` (pending ble-plx #1277)
+- 4 ADRs copied across from backend `docs/mobile/` (ADR-001 from Phase 185 + 3 new: ADR-002 `ble-plx`, ADR-003 `react-native-keychain`, ADR-004 `react-native-config`)
+- README + `LICENSE` + `.env.example` + `.gitignore`
+
+**Notable build deviation:** ble-plx 3.5.0 ships a CMake bug whose `isNewArchitectureEnabled()` call fails on bare-workflow projects with newArch disabled. Resolved in Phase 186 with an in-place `node_modules` edit (~30 min diagnosis); Phase 187 formalizes via `patch-package`.
+
+**Verified:** `npm run android` builds clean (after ble-plx fix), launches on Pixel 7 API 35 emulator showing "MotoDiag · v0.0.1 · Phase 186 scaffold" + BLE state cycler.
+
+**Backend repo impact:** zero code change. This entry exists because Phase 186 belongs to the MotoDiag project ledger even though its code lives in the sibling repo. **Phase docs (`186_implementation.md`, `186_phase_log.md`) live in this backend repo's `docs/phases/completed/` per the project convention** — the mobile repo points back here rather than maintaining a parallel doc tree.
+
+Project version unchanged (no backend code change). Mobile package version 0.0.1.
+
+**Key finding:** Sibling-repo + monorepo-of-docs is the right shape. Mobile dev/CI cycle stays decoupled (Android Studio + npm + Gradle), backend Python CI stays fast, but the "what work happened in MotoDiag" story stays in one ledger (`phase_log.md` + `docs/phases/completed/`). Anyone reading the project log gets the full Track I narrative without crossing repo boundaries.
+
+Next: **Phase 187 — Auth + typed API client.** First real backend integration: `openapi-fetch` + committed `openapi.json` snapshot + `react-native-keychain` for API-key storage + end-to-end `/v1/version` + `/v1/vehicles` smoke on emulator.
+
+---
+
+### 2026-04-24 — Phase 187 complete — Auth + typed API client (feature-branch + 5-commit cadence)
+
+**First real backend integration.** Mobile app can now talk to MotoDiag with end-to-end type safety: Pydantic (Phase 177) → OpenAPI 3.1 (Phase 183) → `openapi-fetch` typed methods → React Native screen.
+
+**Shipped (mobile repo, branch `phase-187-auth-api`, 5 commits, rebase-merged to `main` at finalize):**
+
+| # | Hash | Title |
+|--:|------|-------|
+| 1 | `b425e94` | deps + openapi-typescript setup + ble-plx & keychain patches + ADR-005 |
+| 2 | `3362e8b` | auth context + modal + Keychain storage + auth unit tests |
+| 3 | `d82a91b` | real openapi-fetch client + spec snapshot + types + 26 tests |
+| 4 | `b13ebfd` | HomeScreen end-to-end smoke surface + Phase 186 type fix |
+| 5 | `f30246d` | README overhaul + version bump 0.0.1 → 0.0.2 |
+
+**Architecture decisions:**
+- **ADR-005 (committed snapshot)** — `api-schema/openapi.json` (219.7 KB) lives IN the mobile repo, NOT fetched at build time. Initial snapshot generated via `python -c "from motodiag.api import create_app; ..."` directly (no running-server dependency for first build). `npm run refresh-api-schema` curls a live backend for subsequent updates.
+- **`patch-package` 8.0.1** formalizes the Phase 186 ble-plx CMake fix (`patches/react-native-ble-plx+3.5.0.patch`, 1016 B) + a new `react-native-keychain` patch for the same `isNewArchitectureEnabled()` issue (986 B). Both touch only `android/build.gradle` — zero `src/` or `ios/` impact. Survives clean `npm install` (verified: 927 packages in 41s, no ERESOLVE, no patch errors).
+- **`react-native-keychain`** for API-key storage — Android Keystore (hardware TEE on most 6.0+ devices), iOS Keychain Services. NEVER AsyncStorage for secrets.
+- **`react-native-config`** loads `MOTODIAG_API_BASE_URL` at native build time (not JS runtime — env-var changes require Android rebuild, documented).
+
+**Verified on Android Pixel 7 API 35:**
+- Backend card: `✓ Connected · package v0.1.0 · schema v38 · api v1`
+- Auth card: `✓ Authenticated · mdk_live_NF2a•••` (key partially masked)
+- `/v1/vehicles` result: `✓ 0 vehicles · individual tier · 5/5 quota remaining`
+- Keychain persistence: killed app via swipe, relaunched, auth card immediately showed authenticated state with no prompt
+- Phase 186 BLE smoke: cycles through states identically — zero regression
+- 41/41 Jest tests passing in 0.44s; `tsc --noEmit` clean
+
+**Backend repo impact:** zero code change. Per Phase 186 convention, phase docs (`187_implementation.md`, `187_phase_log.md`) live in this backend repo's `docs/phases/completed/`.
+
+Project version unchanged. Mobile package version 0.0.1 → 0.0.2.
+
+**Latent bug planted (caught in Phase 188):** the custom `fetch` wrapper in `src/api/client.ts` stripped `Content-Type` on POST/PATCH because it built `headers` from `init` only (not the `Request` object's headers). Phase 187 didn't catch this because the smoke test was GET-only. **Lesson re-learned:** GET-only smoke tests give false confidence on transport-layer code.
+
+Next: **Phase 188 — Vehicle garage screen.** Add/view/edit/delete bikes via `/v1/vehicles`. VIN scanner deferred (camera + OCR is its own work).
+
+---
+
+### 2026-04-26 — Phase 188 complete — Vehicle garage screen (8 commits, 2 latent bugs surfaced + fixed)
+
+**First real product screen.** A user can now manage their bike garage end-to-end: add a bike, view it, edit it, delete it — all over the Phase 177 `/v1/vehicles` API surface using Phase 187's typed client.
+
+**Shipped (mobile repo, branch `phase-188-vehicle-garage`, 8 commits, rebase-merged to `main`):**
+
+| # | Hash | Title |
+|--:|------|-------|
+| 1 | `2a9bd0d` | nav scaffolding + screen stubs + Button component |
+| 2 | `91e887c` | useVehicles + VehiclesScreen list |
+| 3 | `10bfa35` | useVehicle(id) + VehicleDetailScreen view mode + delete |
+| 4 | `9651a7f` | NewVehicleScreen form + Field/SelectField + create |
+| 5 | `9947615` | edit mode + README + 0.0.3 |
+| 6 | `7f3fc88` | (fix) customFetch preserves Request headers — root-cause 422 fix |
+| 7 | `eb42c21` | (fix) describeError handles HTTPValidationError |
+| 8 | `1ae92b6` | (fix) extract vehicleEnums + view-mode labels |
+
+**3 new screens + 2 hooks:**
+- `VehiclesScreen` — `FlatList` with pull-to-refresh, empty state, error banner, tier+quota footer; tap row → detail
+- `VehicleDetailScreen` — view + edit toggle, all 14 vehicle fields, delete with confirm
+- `NewVehicleScreen` — form with `Field` + `SelectField` validation, surfaces 402 quota-exceeded clearly
+- `useVehicles` — list + tier metadata; `useVehicle(id)` — single vehicle + mutate/delete
+
+**Architect-gate found 2 blockers + 1 cosmetic nit (commits 6/7/8 fix all three):**
+- **Blocker 1 — POST /v1/vehicles returned 422 every time.** Root cause was a Phase 187 latent bug: `customFetch` built `headers` from `init.headers` without consulting the `Request` object's headers, so the JSON `Content-Type` set by `openapi-fetch` was stripped. Fix reads Request headers FIRST, then `init.headers`, then layers auth on top. **17 regression-guard tests** added (Content-Type preserved on POST + PATCH; auth still wins; query string still preserved). Confirmed via curl by Kerwyn pre-fix that the backend was fine — this was 100% transport.
+- **Blocker 2 — `describeError` rendered `[object Object]` for FastAPI HTTPValidationError.** RFC 7807 ProblemDetail shape (Phase 178 backend) is `{type, title, detail, ...}` but FastAPI's stock validation errors are `{detail: [{loc, msg, type}, ...]}` — different shape. Fix adds `isHTTPValidationError` predicate + `formatHTTPValidationError` helper that renders `field: msg, field2: msg2`. `describeError` checks HVE before ProblemDetail. Specific assertion against the literal string `"[object Object]"` so the symptom can never re-appear silently.
+- **Nit 1 — Raw enum values like `ice` / `four_stroke` in view mode.** Symptom of duplication: protocol/powertrain/engine_type option lists + label maps were copy-pasted across `NewVehicleScreen` + `VehicleDetailScreen` edit pane (~60 LoC each). Fix extracts `src/types/vehicleEnums.ts` as single source of truth: `PROTOCOL_OPTIONS` / `PROTOCOL_LABELS` (and powertrain + engine_type) + a `labelFor(value, kind)` helper for view-mode rendering. If backend adds an enum value, openapi-typescript regenerates the union and TypeScript flags this list as incomplete until updated.
+
+**Verified post-fix:**
+- 90/90 Jest tests passing in 1.0s (41 Phase 187 baseline + 7 useVehicles + 4 useVehicle + 17 Field validators + 2 commit-6 Content-Type guards + 17 commit-7 HVE guards + 2 commit-7 integration tests)
+- `tsc --noEmit` clean
+- Android emulator: full add/view/edit/delete flow works; 402 quota-exceeded surfaces with backend's "upgrade to shop tier" message; HVE renders as `engine_cc: ensure this value is greater than 0` not `[object Object]`
+- Phase 186 BLE + Phase 187 auth: zero regression
+
+**Architect sign-off:** GATE PASSED on round 2. One non-blocking follow-up filed as F1 in `moto-diag-mobile/docs/FOLLOWUPS.md`: `battery_chemistry` field accepts free-text but should be a `SelectField` using the same enum-source pattern (Phase 189 ticket).
+
+**Backend repo impact:** zero code change. **All Phase 188 docs (`188_implementation.md`, `188_phase_log.md`) live in this backend repo's `docs/phases/completed/`** per the convention restored this session (see next entry).
+
+Mobile package version 0.0.2 → 0.0.3. Project `implementation.md` 0.0.4 → 0.0.5.
+
+**Key finding:** **Transport bugs hide in GET-only test surfaces.** Phase 187 looked clean for 41 tests because the smoke test was GET-only. Phase 188's first form submit blew up the latent Content-Type bug immediately. Two takeaways for the rest of Track I: (1) every new HTTP verb should land with at least one regression-guard test that asserts the on-the-wire shape (not just the response handling); (2) error-formatting code needs a literal-symptom assertion (`expect(...).not.toContain('[object Object]')`) so visual bugs can't slip through unit tests that only check happy paths.
+
+Next: **Phase 189 — Diagnostic session UI (start/end session, DTC list, freeze frame display).** Picks up the F1 follow-up (battery_chemistry SelectField) as a small Commit 1 cleanup before the main session-UI work.
+
+---
+
+### 2026-04-26 — Doc convention restored: per-phase docs back in backend repo
+
+**Housekeeping, no production code change.** Phases 186-188 had per-phase docs landing in `moto-diag-mobile/docs/phases/`, breaking the project convention that ALL phase docs (Tracks A through J, regardless of which repo holds the code) live in this backend repo's `docs/phases/completed/`.
+
+**Migrated:**
+- `moto-diag-mobile/docs/phases/completed/186_*.md`, `187_*.md`, `188_*.md` (6 files) → `moto-diag/docs/phases/completed/`
+- Mobile repo's `docs/phases/` directory deleted entirely
+- Mobile repo's standalone `phase_log.md` removed (redundant — closure entries live here in the backend's `phase_log.md`)
+- Mobile repo's `implementation.md` Phase History trimmed to a small pointer table referencing this backend ledger
+- Mobile repo's `README.md` project-tree updated to remove `docs/phases/` and `phase_log.md`
+- New `moto-diag-mobile/docs/FOLLOWUPS.md` captures F1 (battery_chemistry SelectField for Phase 189)
+- Mobile repo committed (`797f515`), fast-forward merged to `main`, feature branch deleted local + remote
+
+**Why this matters:** The MotoDiag ledger is a single thing. Anyone reading the project log should not need to know whether Track I work happened in one repo vs another — `phase_log.md` here is the source of truth for what shipped, when, and why. `docs/phases/completed/NNN_*.md` is the per-phase detail. Sibling repos house code; the ledger stays unified.
+
+**Going forward:** every Track I (and J) phase writes its `NNN_implementation.md` v1.0 + `NNN_phase_log.md` directly to `moto-diag/docs/phases/in_progress/` per the standard CLAUDE.md product-project workflow, then moves to `completed/` at finalize. Mobile repo holds code + ADRs only; no per-phase docs.
