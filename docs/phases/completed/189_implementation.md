@@ -1,6 +1,6 @@
 # Phase 189 — Diagnostic Session UI (mobile)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-27
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-27 | **Status:** ✅ Complete
 
 ## Goal
 
@@ -19,34 +19,44 @@ CLI — none (mobile has no CLI).
 
 ## Outputs
 
-**New files (8):**
-- `src/screens/SessionsListScreen.tsx` — list view. Pull-to-refresh. Empty state with "Start your first session" CTA. Tap row → SessionDetail. Footer shows tier + monthly quota ("individual tier · 47/50 sessions remaining this month").
-- `src/screens/SessionDetailScreen.tsx` — single session view. Three sub-sections: **Vehicle** (make / model / year, optionally linked vehicle id), **Diagnosis state** (symptoms list + append + DTC list + append + diagnosis text + severity + confidence + cost estimate + edit-mode), **Lifecycle** (status badge + Close / Reopen buttons, gated by current status). Read-mode by default; tap "Edit diagnosis" to enter mutation mode.
-- `src/screens/NewSessionScreen.tsx` — form. Required: vehicle make/model/year (or pick-from-garage). Optional initial symptoms[] + fault_codes[] (chip-style add-one inputs). Submit → POST → navigate to SessionDetail of the new session.
-- `src/hooks/useSessions.ts` — `{sessions, listResponse, isLoading, error, refetch}` wrapping `api.GET('/v1/sessions')`. Refetches on focus. `listResponse` carries `{total_this_month, tier, monthly_quota_limit, monthly_quota_remaining}` for the footer.
+**New files (12 — plan said 8; 4 extras emerged for testability + nav modularity):**
+- `src/screens/SessionsListScreen.tsx` — list view. Pull-to-refresh. Empty state with "Start your first session" CTA. Tap row → SessionDetail. Footer shows tier + monthly quota ("individual tier · 49/50 sessions remaining this month") using session-shaped keys (`total_this_month` / `monthly_quota_limit` / `monthly_quota_remaining`). Per-row `StatusBadge` (open / in_progress / closed).
+- `src/screens/SessionDetailScreen.tsx` — single session view. Six cards: **Vehicle** (read-only) → **Symptoms** (read-only list + always-visible inline append input) → **Fault codes** (same shape, monospace + auto-uppercase on append) → **Diagnosis** (view-mode read-only with prettified severity via `renderSeverityForView`; edit-mode toggles a full form with diagnosis text + severity SelectField + custom-severity Field + confidence 0-1 + cost estimate ≥ 0) → **Notes** (read-only string + multiline append input) → **Lifecycle** (status badge + Created/Closed timestamps + Close/Reopen button per current status).
+- `src/screens/NewSessionScreen.tsx` — form. Required: vehicle make / model / year, both freehand AND tap-to-fill from `useVehicles`-backed garage list. Optional initial symptoms (multiline, newline-separated to allow commas inside symptoms) + fault codes (comma-separated, uppercased on submit). Submit → POST `/v1/sessions` → `navigation.replace` to SessionDetail of the new session (back-button skips the form).
+- `src/screens/sessionFormHelpers.ts` — pure helpers `packSymptoms` + `packFaultCodes` for input parsing. Lives outside the screen so unit tests can import without pulling the api/keychain/openapi-fetch graph through the screen entry point.
+- `src/hooks/useSessions.ts` — `{sessions, listResponse, isLoading, error, refetch}` wrapping `api.GET('/v1/sessions')`. Refetches on focus.
 - `src/hooks/useSession.ts` — `{session, isLoading, error, refetch}` single-session hook for `api.GET('/v1/sessions/{session_id}')`.
-- `src/navigation/TabNavigator.tsx` — bottom-tab navigator (`@react-navigation/bottom-tabs`). Three tabs: Home / Garage (= Vehicles stack) / Sessions. Each tab is its own native-stack so back-navigation within a tab doesn't pop you to a different tab.
-- `src/screens/SessionsListScreen.tsx` (and detail screen) — see above.
+- `src/navigation/RootNavigator.tsx` (rewritten) — bottom-tab navigator (`@react-navigation/bottom-tabs` v7.15.10). Three tabs: HomeTab / GarageTab / SessionsTab.
+- `src/navigation/HomeStack.tsx` — single-screen native-stack for the Home tab.
+- `src/navigation/GarageStack.tsx` — native-stack for the Garage tab (Vehicles / VehicleDetail / NewVehicle, Phase 188 surface unchanged).
+- `src/navigation/SessionsStack.tsx` — native-stack for the Sessions tab (Sessions / SessionDetail / NewSession).
+- `src/navigation/types.ts` — `RootTabParamList` + per-tab param-lists.
+- `src/types/sessionEnums.ts` — `SeverityLiteral` (`'low' | 'medium' | 'high' | 'critical'`) + `SEVERITY_OPTIONS` + `SEVERITY_LABELS` + 3 helpers per the Commit 6 sign-off sketch: `deriveSeverityState` (decompose backend value → screen state), `packSeverityForSubmit` (pack screen state → PATCH body), `renderSeverityForView` (pretty closed labels + verbatim custom values).
 
-**Modified files (8):**
-- `src/navigation/RootNavigator.tsx` — refactor: root becomes the `TabNavigator`; the existing flat stack is broken into per-tab stacks (`HomeStack`, `GarageStack`, `SessionsStack`). `RootStackParamList` is replaced by `RootTabParamList` + per-tab param-lists. Existing screens slot into the right per-tab stack with no behavior change.
-- `src/screens/HomeScreen.tsx` — remove the "My garage" Section (its own tab now); keep Backend / Auth / Authed-smoke / BLE sections. Update subtitle "v0.0.4 · Phase 189".
-- `src/screens/NewVehicleScreen.tsx` — battery_chemistry: `Field` → `SelectField<BatteryChemistryLiteral>` (F1 follow-up resolution).
-- `src/screens/VehicleDetailScreen.tsx` — battery_chemistry: edit mode swaps `Field` for `SelectField`; view mode uses `labelFor()` for friendly label.
-- `src/types/api.ts` — add `SessionResponse`, `SessionListResponse`, `SessionCreateRequest`, `SessionUpdateRequest`, `SymptomRequest`, `FaultCodeRequest`, `NoteRequest`, `SessionStatusLiteral` aliases. Add `BatteryChemistryLiteral` extracted via `NonNullable<>`.
-- `src/types/vehicleEnums.ts` — add `BATTERY_CHEMISTRY_OPTIONS`, `BATTERY_CHEMISTRY_LABELS`. Extend `labelFor()` overload to accept `'battery_chemistry'` kind.
-- `src/api/index.ts` — re-export new session-shaped type aliases for screen convenience.
-- `package.json` + `package-lock.json` — add `@react-navigation/bottom-tabs` dep; bump `version` 0.0.3 → 0.0.4.
-- `README.md` — update src/ tree for new screens / hooks / navigator, add Phase 189 entry to project structure.
+**Modified files (10):**
+- `src/components/SelectField.tsx` — discriminated-union props with `nullable` discriminator. Existing closed-required call sites (protocol/powertrain/engine_type) unchanged. New nullable variant adds opt-in `allowNull` (renders "—" clear row) + `allowCustom` (renders "Other…" row + supports customValue round-trip-display via the trigger). Pure helpers `buildSelectRows` + `getTriggerDisplay` exported for unit tests.
+- `src/components/Field.tsx` — converted to `forwardRef<TextInput, Props>` so callers can imperatively focus the underlying TextInput (used by the severity custom-value Field on Other… selection).
+- `src/screens/HomeScreen.tsx` — dropped the "My garage" Section (Garage is its own tab now); dropped `useNavigation` / `NativeStackNavigationProp` / `Button` imports (unused after removal); subtitle "v0.0.3 · Phase 188 scaffold" → "v{appVersion} · Phase 189".
+- `src/screens/NewVehicleScreen.tsx` — battery_chemistry: `Field` → `SelectField<BatteryChemistryLiteral>` with `nullable allowNull` (F1 follow-up resolution). Param-list type swap `RootStackParamList` → `GarageStackParamList`.
+- `src/screens/VehicleDetailScreen.tsx` — battery_chemistry: edit mode swaps `Field` for `SelectField`; view mode uses `labelFor()` for friendly label. Param-list type swap.
+- `src/screens/VehiclesScreen.tsx` — param-list type swap `RootStackParamList` → `GarageStackParamList`.
+- `src/types/api.ts` — added `SessionListResponse` / `SessionResponse` / `SessionCreateRequest` / `SessionUpdateRequest` / `SymptomRequest` / `FaultCodeRequest` / `NoteRequest` / `SessionStatusLiteral` aliases pulled from generated api-types. Added `BatteryChemistryLiteral` (manually defined — backend exposes the field as bare `Optional[str]` even though the route handler enforces a closed enum at the boundary).
+- `src/types/vehicleEnums.ts` — added `BATTERY_CHEMISTRY_OPTIONS` (5 values: `li_ion` / `lfp` / `nmc` / `nca` / `lead_acid`) + `BATTERY_CHEMISTRY_LABELS`. Extended `labelFor()` switch to include `'battery_chemistry'` kind.
+- `package.json` + `package-lock.json` — added `@react-navigation/bottom-tabs@^7.15.10`; bumped `version` 0.0.3 → 0.0.4.
+- `README.md` — Status updated to Phase 189; tech-stack entry expanded for bottom-tabs; project-structure tree refreshed; testing section bumped to "162 tests as of Phase 189 commit 6" + explicit list of helper-test coverage + transport-regression guards.
 
-**New tests (4 files, ~25-30 tests):**
-- `__tests__/hooks/useSessions.test.ts` — mocks `api.GET('/v1/sessions')`; verifies loading/success/error states, listResponse passthrough, refetch referential stability. ~7 tests.
-- `__tests__/hooks/useSession.test.ts` — same pattern for single-session fetch. ~5 tests.
-- `__tests__/types/sessionEnums.test.ts` — `SESSION_STATUS_LABELS` / `SEVERITY_LABELS` rendering helpers (if extracted). ~4 tests.
-- `__tests__/types/vehicleEnums.test.ts` (extend existing) — battery_chemistry options + labels + labelFor coverage. ~4 tests.
-- `__tests__/api/client.test.ts` (extend existing) — add 2 new regression-guard tests asserting Content-Type preserved on `POST /v1/sessions/{id}/symptoms` + `POST /v1/sessions/{id}/close` (covers both body-bearing and empty-body POST paths added in Phase 189). ~2 tests.
+**Plan dropped:** `src/api/index.ts` re-export of session-shaped aliases. Not needed in practice — screens import from `../types/api` directly without ergonomic friction.
 
-Phase 188 contracted regression-guard pattern: every new code path that issues a body-bearing or empty-body POST/PATCH gets a transport guard.
+**New tests (5 files, 72 new tests vs ~25-30 planned — overshot for completeness):**
+- `__tests__/components/SelectField.test.ts` — 18 tests covering `buildSelectRows` (closed-set / allowNull / allowCustom / both) and `getTriggerDisplay` (selected label / null label / placeholder / "Other: customValue" round-trip / defensive cases).
+- `__tests__/types/vehicleEnums.test.ts` — 10 tests covering battery_chemistry options + labels completeness, `labelFor` battery_chemistry round-trip, legacy off-enum fall-through, regression spot-checks for protocol/powertrain/engine_type.
+- `__tests__/hooks/useSessions.test.ts` — 8 tests mirroring `useVehicles` patterns + one explicit guard test asserting session-shaped quota keys (`total_this_month` / `monthly_quota_*`) are present and vehicle-shape keys are absent.
+- `__tests__/hooks/useSession.test.ts` — 5 tests (path-param passthrough, loading→success, 404 ProblemDetail, refetch invocation + state update, refetch referential stability).
+- `__tests__/screens/NewSessionScreen.test.ts` — 9 tests on `packSymptoms` + `packFaultCodes` (empty handling, newline + CRLF splits, comma-preservation in symptoms, DTC uppercasing + dropping empties).
+- `__tests__/types/sessionEnums.test.ts` — 20 tests on SEVERITY_OPTIONS shape + label-map completeness + `deriveSeverityState` (null / closed / off-enum / case-sensitive) + `packSeverityForSubmit` (choice / custom / both-empty / whitespace / invariant defense) + `renderSeverityForView` (closed prettified vs custom verbatim) + a 3-test round-trip integration block proving `derive → pack` survives all three logical states unchanged.
+- `__tests__/api/client.test.ts` — extended with 2 new regression-guard tests asserting Content-Type + X-API-Key preserved on `POST /v1/sessions/{id}/symptoms` (body-bearing) and X-API-Key + Accept + correct path-param URL on `POST /v1/sessions/{id}/close` (empty-body).
+
+Phase 188 contracted regression-guard pattern held: every new HTTP verb code path is implicitly a Phase 187 transport-regression check; the 2 explicit guards in `client.test.ts` are belt-and-suspenders.
 
 **New runtime dep:** `@react-navigation/bottom-tabs` (latest 7.x — same major as `@react-navigation/native` 7.2.2 already present). No new native modules — relies on `react-native-screens` + `react-native-safe-area-context` already installed for native-stack.
 
@@ -272,30 +282,30 @@ This commit lands first because (a) it's the smallest scoped change, (b) it vali
 
 ## Verification Checklist
 
-- [ ] `npm test` → all prior 90 + ~25 new tests passing (target ~115 total).
-- [ ] `npx tsc --noEmit` clean.
-- [ ] Bottom-tab nav renders three tabs with labels Home / Garage / Sessions.
-- [ ] Switching tabs preserves inner-stack position (e.g., open VehicleDetail in Garage tab, switch to Sessions, switch back → still on VehicleDetail).
-- [ ] Sessions tab → SessionsListScreen → empty state ("No sessions yet · Start your first session" CTA).
-- [ ] CTA → NewSessionScreen → form rendered with required + optional sections.
-- [ ] Submit empty form → inline errors on make/model/year.
-- [ ] Submit valid freehand form → POST → navigate to SessionDetail of new session (back-button goes to list, not form).
-- [ ] Pick from garage flow: dropdown shows owned vehicles, selecting one auto-fills make/model/year + sends `vehicle_id`.
-- [ ] SessionDetailScreen renders all sections (Vehicle / Diagnosis state / Lifecycle).
-- [ ] Append symptom → input clears → list updates with new item.
-- [ ] Append fault code → list updates.
-- [ ] Append note → notes section reflects appended content.
-- [ ] Edit diagnosis → change diagnosis text + severity + confidence + cost_estimate → Save → view mode reflects edits.
-- [ ] Close session → status badge flips to "closed" → button changes to "Reopen session".
-- [ ] Reopen session → status badge flips back to "open" → button changes back to "Close session".
-- [ ] Pull-to-refresh on SessionsListScreen works.
-- [ ] Quota footer shows "individual tier · X/50 sessions this month" with correct numbers.
-- [ ] Quota exceeded (51st session this month on individual tier) → POST /v1/sessions returns 402 → readable message ("Session quota reached: 50/50 (individual tier this month) · upgrade or wait").
-- [ ] Garage tab still works end-to-end (no Phase 188 regression).
-- [ ] Battery chemistry is now a dropdown in NewVehicleScreen + VehicleDetailScreen edit mode (F1 fix verified); view mode shows friendly label.
-- [ ] Home tab still shows Backend / Auth / Authed-smoke / BLE sections (no regression).
-- [ ] Phase 187 auth persistence still works (cold relaunch keeps API key).
-- [ ] Phase 186 BLE scan still works.
+- [x] `npm test` → **162 / 162 green** (90 baseline + 72 new — well over the ~25-30 plan target). Suites: 12 passed, 12 total. Time: ~3.5–4.5s per run.
+- [x] `npx tsc --noEmit` clean (exit 0) every commit.
+- [x] Bottom-tab nav renders three tabs with labels Home / Garage / Sessions. **Verified at architect gate Step 19.**
+- [x] Switching tabs preserves inner-stack position. **Verified at gate Step 19 — open SessionDetail in Sessions, switch to Garage (still on vehicle detail), switch back to Sessions (still on SessionDetail). No popping to root, no stack corruption.**
+- [x] Sessions tab → SessionsListScreen → empty state ("No sessions yet · Start your first session" CTA). **Gate Step 3.**
+- [x] CTA → NewSessionScreen → form rendered with required + optional sections. **Gate Step 4.**
+- [x] Submit empty form → inline errors on make/model/year. **Gate Step 5.**
+- [x] Submit valid freehand form → POST → navigate to SessionDetail of new session (back-button goes to list, not form). **Gate Step 7 — 201 Created, `navigation.replace` skipped the form on back.**
+- [x] Pick from garage flow: dropdown shows owned vehicles, selecting one auto-fills make/model/year + sends `vehicle_id`. **Gate Step 6 — "Linked to garage #5" banner visible with Unlink escape hatch.**
+- [x] SessionDetailScreen renders all sections (Vehicle / Symptoms / Fault codes / Diagnosis / Notes / Lifecycle). **Gate Step 9 — all six cards rendered, status "open".**
+- [x] Append symptom → input clears → list updates with new item. **Gate Steps 10–11 — two distinct symptom appends verified, multi-item list growth confirmed.**
+- [x] Append fault code → list updates. **Gate Step 11 — client-side lowercase→uppercase normalization on submit verified ("p0171" → "P0171").**
+- [x] Append note → notes section reflects appended content. **Gate Step 12 — backend appended with auto-timestamp prefix.**
+- [x] Edit diagnosis → change diagnosis text + severity + confidence + cost_estimate → Save → view mode reflects edits. **Gate Steps 13–16 — three saves verified across closed-pick (Medium → 'medium'), Other… (custom = 'investigating'), and closed-after-custom (High → 'high'). Round-trip render proof verified at Step 16: re-entering edit-mode pre-selected "Other…" with the custom Field pre-populated with "investigating", exactly as sketched.**
+- [x] Close session → status badge flips to "closed" → button changes to "Reopen session". **Gate Step 17 — Closed timestamp populates from server response.**
+- [x] Reopen session → status badge flips back to "open" → button changes back to "Close session". **Gate Step 18 — Closed timestamp vanishes (logged as Nit 2 for Phase 191 — pure-state vs audit-history is a product call, not a bug).**
+- [x] Pull-to-refresh on SessionsListScreen works. **Verified during gate.**
+- [x] Quota footer shows "individual tier · X/50 sessions this month" with correct numbers. **Gate Step 8 — "individual tier · 49/50 sessions remaining this month" using session-shaped keys (`total_this_month` / `monthly_quota_limit` / `monthly_quota_remaining`); the planning-time shape-difference flag is fully de-risked.**
+- [-] Quota exceeded (51st session this month on individual tier) → 402. **Skipped (would burn through quota); copy + handler exists in `handleApiError`. Architect cleared without exercising it. Re-test if a real user hits the quota.**
+- [x] Garage tab still works end-to-end (no Phase 188 regression). **Gate Step 2 — battery chemistry edit mode shows closed dropdown (5 options + null clear, no Other…), view mode renders prettified "Lithium-ion".**
+- [x] Battery chemistry is now a dropdown in NewVehicleScreen + VehicleDetailScreen edit mode (F1 fix verified); view mode shows friendly label. **Gate Step 2.**
+- [x] Home tab still shows Backend / Auth / Authed-smoke / BLE sections (no regression). **Gate Step 1.**
+- [x] Phase 187 auth persistence still works (cold relaunch keeps API key). **Gate Step 1 + Step 20 — keychain restored auth across cold relaunch; full session state hydrated from backend (vehicle link, 2 symptoms, 1 fault code, full diagnosis with severity = High, 1 note, lifecycle, status pill).**
+- [x] Phase 186 BLE scan still works. **Verified — no regressions.**
 
 ## Risks
 
@@ -366,9 +376,75 @@ Each commit: `npm test` green + `npx tsc --noEmit` clean before push. Commit-2 a
 
 After commit 7, paste a build summary for Kerwyn-side smoke test (the 18-step list above). If round 1 finds issues, fix commits land before rebase-merge — Phase 188 8-commit pattern (5 build + 3 fix) is the precedent. Once green, rebase-merge `phase-189-diagnostic-session-ui` → `main`, delete branch local + remote.
 
-## Versioning targets at v1.1 finalize
+**Outcome:** GATE PASSED on round 1. Zero fix commits required. 7-commit feature branch rebase-merged to `main` at finalize.
 
-- Mobile `package.json`: 0.0.3 → 0.0.4.
-- Mobile `implementation.md`: 0.0.5 → 0.0.6.
-- Backend `implementation.md`: 0.13.4 → 0.13.5 (Phase History row added; track phase progress).
-- Backend `pyproject.toml`: unchanged (Track I is mobile-side; backend package only bumps at next backend gate / release milestone).
+## Deviations from Plan
+
+1. **Navigation file structure split into 5 files instead of 1 `TabNavigator.tsx`.** Plan called for one `src/navigation/TabNavigator.tsx`. Actual: `RootNavigator.tsx` (rewritten as the bottom-tab root) + `HomeStack.tsx` + `GarageStack.tsx` + `SessionsStack.tsx` + `types.ts`. Each per-tab stack is self-contained ~30 LoC; types live in one shared module. Cleaner ownership for the rest of Track I — Phase 190+ adds DTC screens to `SessionsStack.tsx` without touching the tab root.
+
+2. **Symptoms input switched from comma-separated to newline-separated.** Plan v1.0 sketched chips/comma input; actual ships multiline with one symptom per line because natural-language symptoms commonly contain commas ("idle bog at 4500 rpm, started after fuel-filter swap" is one symptom, not two). Fault codes stay comma-separated since DTCs don't contain commas. Test `packSymptoms preserves commas inside symptoms (intentional)` documents the choice.
+
+3. **`src/screens/sessionFormHelpers.ts` emerged as a separate module.** Plan didn't anticipate it. Test for `NewSessionScreen` initially imported helpers from the screen file directly, which transitively pulled `../api` (keychain / openapi-fetch graph) and broke the test loader. Fix: extract pack helpers to a sibling module that's testable in isolation. Same separation pattern as `Field.tsx`'s exported `validate*` / `parse*` helpers. Same pattern then re-applied for severity helpers in Commit 6 via `src/types/sessionEnums.ts`.
+
+4. **`src/components/Field.tsx` converted to `forwardRef`.** Plan v1.0 didn't call this out; it emerged in Commit 6 to support the severity custom-input auto-focus per the sketch sign-off. Small, contained — backward-compatible for existing call sites. Worth flagging as a load-bearing change because every existing Field caller now sees the new ref-forwarding behavior even if they don't use it.
+
+5. **Severity Other… UX clarification at smoke-flow review.** During the Commit 6 sketch posting, the Step 5 wording promised "trigger shows Other immediately on tap" which would have required Option 2 (a SelectField change). The sign-off resolution agreed with Option 1 — trigger reads "—" until first keystroke; the custom Field appears focused below. The sketch was updated; the implementation is honest about state. **Visually verified at Gate Step 14.**
+
+6. **`src/api/index.ts` re-export of session types — dropped.** Plan said "re-export new session-shaped type aliases for screen convenience"; not needed in practice. Screens import `SessionResponse` etc. directly from `../types/api`. Less duplication; one source of truth.
+
+7. **Test count overshot by ~3×.** Plan: ~25-30 new tests. Actual: 72 new (162 total = 90 baseline + 72). Driven by helper extraction yielding more pure-test surface (SelectField buildSelectRows + getTriggerDisplay; sessionEnums derive/pack/render trio; sessionFormHelpers pack functions) and explicit guards (the session-shape-vs-vehicles-shape guard test, the 2 transport-regression guards, the regression-guard for legacy off-enum battery_chemistry fall-through). Net positive — every test guards a real failure mode.
+
+8. **Architect gate round 1 PASSED with zero fix commits.** Phase 188 set the precedent of "round 1 BLOCKED, 3 fix commits, round 2 GREEN." Phase 189 inverted it: round 1 GREEN, no fix commits. Two factors: (1) Phase 188 commits 6/7/8 fixed transport bugs that would have re-surfaced here; their guard tests covered the new POST surfaces in advance. (2) The pre-Commit-5 sketch sign-off for severity Other… caught the design ambiguity (Option 1 vs 2) before code; Phase 188 had no such gate.
+
+## Results
+
+| Metric                              | Value                                                                                |
+|-------------------------------------|--------------------------------------------------------------------------------------|
+| Branch                              | `phase-189-diagnostic-session-ui` (7 commits, rebase-merged to `main` at finalize)   |
+| Tests passing                       | 162 / 162 (12 suites)                                                                |
+| Tests added this phase              | 72 (90 baseline → 162)                                                               |
+| Test runtime                        | ~3.5–4.5s                                                                            |
+| Typecheck                           | clean (`tsc --noEmit`, exit 0 every commit)                                          |
+| New runtime deps                    | 1 (`@react-navigation/bottom-tabs@7.15.10`)                                          |
+| New native modules                  | 0 (bottom-tabs is pure JS; relies on already-installed `react-native-screens` + `react-native-safe-area-context`) |
+| Gradle smoke (cold rebuild)         | clean (cd android && ./gradlew clean && cd .. && npm run android)                    |
+| Architect gate                      | PASSED round 1 (zero fix commits)                                                    |
+| Phase 186 BLE regressions           | none                                                                                 |
+| Phase 187 auth regressions          | none                                                                                 |
+| Phase 188 garage CRUD regressions   | none                                                                                 |
+| New HTTP verb code paths            | 8 distinct POSTs + 1 PATCH + 2 GETs (against Phase 178 `/v1/sessions/*`)             |
+| Transport-regression guards added   | 2 (`POST /v1/sessions/{id}/symptoms` body-bearing; `POST /v1/sessions/{id}/close` empty-body) |
+| Bug 1 (customFetch Content-Type)    | held across 7 distinct POST/PATCH calls in the gate (both body-bearing and empty-body branches) |
+| Mobile package version              | 0.0.3 → 0.0.4                                                                        |
+| Mobile project `implementation.md`  | 0.0.5 → 0.0.6 (this finalize)                                                        |
+| Backend project `implementation.md` | 0.13.4 → 0.13.5 (this finalize)                                                      |
+| Backend `pyproject.toml`            | unchanged (Track I is mobile-side; backend package only bumps at backend-side gates) |
+| Backend code change                 | zero (pure mobile phase)                                                             |
+| Backend schema change               | none (still v38)                                                                     |
+
+**Commits, in order on the feature branch:**
+
+| # | Hash      | Title |
+|--:|-----------|-------|
+| 1 | `c6f5683` | battery_chemistry → SelectField (F1 fix) |
+| 2 | `e572292` | bottom-tab nav refactor + session screen stubs |
+| 3 | `e4c35a9` | useSessions hook + SessionsListScreen real impl |
+| 4 | `dd9c0cf` | useSession(id) + SessionDetailScreen view + lifecycle |
+| 5 | `77dfa8b` | NewSessionScreen form + POST /v1/sessions |
+| 6 | `ba5a93c` | SessionDetail mutations + severity edit + guards |
+| 7 | `cc8929b` | README + project structure update + version 0.0.4 |
+
+**Key finding: when an architect-gate sketch sign-off lands BEFORE the implementation, round 1 holds.** Phase 188 had no pre-implementation review for vehicle CRUD and the gate caught 2 transport bugs + 1 cosmetic nit. Phase 189 paused before Commit 5 to sketch the severity Other… round-trip UX in writing — the State A/B/C model, the `deriveSeverityState` / `packSeverityForSubmit` / `renderSeverityForView` trio, the Option 1 vs Option 2 trigger-display question, the agreed customLabel: 'Other'. The user spotted a real inconsistency in Step 5 wording before any code existed; resolution was a 1-line update to the smoke-flow doc. Round 1 then passed clean. Two takeaways for the rest of Track I: (1) every commit that introduces a non-obvious state machine (severity round-trip, optimistic update layer, offline op-queue) gets a pre-implementation sketch posted for sign-off, not just an implementation.md plan section; (2) the architect-gate's round 1 GREEN result this phase is repeatable — pre-implementation sketches let the user catch design issues at sketch-cost (~30 min) instead of implementation-cost (~3-4 fix commits).
+
+## Versioning landed at v1.1 finalize
+
+- Mobile `package.json`: 0.0.3 → 0.0.4 ✅
+- Mobile `implementation.md`: 0.0.5 → 0.0.6 ✅
+- Backend `implementation.md`: 0.13.4 → 0.13.5 ✅
+- Backend `pyproject.toml`: unchanged (Track I is mobile-side)
+
+## Post-merge follow-ups (NOT blocking, logged in `moto-diag-mobile/docs/FOLLOWUPS.md`)
+
+1. **F2 — Per-entry edit/delete on open sessions.** Smoke testing surfaced the demand: a typo committed to the symptoms list with no way to correct it. Defensible middle ground: open sessions → entries can be edited/deleted; closed sessions → immutable (or edits tracked as new entries with `[edited at X]`). Backend likely needs a `deleted_at` soft-delete column. Matches the dev team's "defer until a real flow demands it" pattern — the real flow has now demanded it. **Recommended target: Phase 191.**
+
+2. **F3 — Lifecycle audit history.** Closed timestamp vanishes from the Lifecycle card on Reopen, reflecting pure current state rather than audit history. For forensic-style diagnostic logs, persisting close/reopen events as a timeline ("Closed 12:22 PM, Reopened 12:24 PM") is generally more useful than pure-state. **Product call, not a bug. Recommended target: Phase 191 follow-up.**
