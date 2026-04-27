@@ -14,7 +14,21 @@ def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
 
     JSON format: array of objects with keys matching DTCCode fields.
     Returns number of DTCs loaded.
+
+    Phase 190 commit 8 (Bug 3a fix). Pre-deletes existing rows
+    matching the (code, make) pairs in the file before inserting,
+    so re-seeding the same file is idempotent. Necessary because
+    SQLite's UNIQUE(code, make) constraint on `dtc_codes` does NOT
+    catch duplicates when `make IS NULL` (NULL is not equal to NULL
+    in UNIQUE semantics) — without this pre-delete, every
+    `motodiag db init` (or any caller of this loader) would insert
+    another copy of every generic row, accumulating duplicates and
+    breaking direct-lookup determinism. Existing dev DBs that
+    accumulated duplicates pre-fix self-clean on the next
+    re-seed via this pre-delete.
     """
+    from motodiag.core.database import get_connection
+
     path = Path(file_path)
     if not path.exists():
         raise FileNotFoundError(f"DTC file not found: {path}")
@@ -24,6 +38,27 @@ def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
 
     if not isinstance(data, list):
         raise ValueError(f"Expected JSON array, got {type(data).__name__}")
+
+    # Pre-delete any rows that match (code, make) pairs about to be
+    # inserted. This is the dedupe step — UNIQUE(code, make) doesn't
+    # enforce uniqueness for NULL-make rows, so we have to clean
+    # them ourselves before INSERT OR REPLACE runs. Done in one
+    # transaction so a partial seed leaves the DB at the prior
+    # committed state.
+    with get_connection(db_path) as conn:
+        for item in data:
+            code = str(item["code"]).upper()
+            make = item.get("make")
+            if make is None:
+                conn.execute(
+                    "DELETE FROM dtc_codes WHERE code = ? AND make IS NULL",
+                    (code,),
+                )
+            else:
+                conn.execute(
+                    "DELETE FROM dtc_codes WHERE code = ? AND make = ?",
+                    (code, make),
+                )
 
     count = 0
     for item in data:
