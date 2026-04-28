@@ -1,6 +1,6 @@
 # Phase 190 — Phase Log
 
-**Status:** 🚧 In Progress | **Started:** 2026-04-27
+**Status:** ✅ Complete | **Started:** 2026-04-27 | **Completed:** 2026-04-28
 **Repo:** https://github.com/Kubanjaze/moto-diag-mobile (code) + https://github.com/Kubanjaze/moto-diag (docs)
 **Branch:** `phase-190-dtc-code-lookup-screen` (will be created in mobile repo at Commit 1)
 
@@ -158,3 +158,54 @@ Verified:
 Architect's emulator backend needs `motodiag db init` re-run to (a) pick up the new common codes, (b) self-clean accumulated NULL-make duplicates via the new loader pre-delete. After that, the mobile feature branch (now 7 commits — 5 build + 2 fix) holds the typed-error contract and the composite keyExtractor; both work paired with the backend Bug 3 fix.
 
 Re-smoke resumes from Step 11 (Sessions tab → SessionDetail → tap P0171 fault-code row). Steps 1-10 are confirmed and don't need re-running unless a fix touched search/debounce code (commit 7 didn't; commit 6 changed the keyExtractor only).
+
+---
+
+### 2026-04-28 — Architect gate ROUND 2: PASSED
+
+After `motodiag db init` re-run on architect's emulator backend (full catalog loaded, accumulated NULL-make duplicates self-cleaned via the new loader pre-delete + idempotent INSERT OR REPLACE flow), Kerwyn re-ran the 7-step round-2 smoke. **All 7 verifications green:**
+
+- **Sanity check (Bug 1 + Bug 3a + Bug 3b)**: typed "P0" in DTCSearch — results show varied codes (P0100, P0105, P0107, P0110, P0112, P0115, P0117) with distinct descriptions and varied severities. NO duplicate-key toast. Single P0100 result for exact-code search (was 7+ identical rows in round 1). P0171 found, P0420 found. The accumulated NULL-make duplicates from round 1 are gone. Composite keyExtractor + loader idempotence both verified end-to-end. (P0101 / P0102 returned "No DTCs match" — confirmed as seed scope, not a bug; filed as F5 polish.)
+- **Step 11 (P0171 happy path)**: DTCDetailScreen loaded with full data — code in monospace, Medium badge, description "System Too Lean (Bank 1)", Category=fuel, Make="Generic (any make)", 5 common causes (vacuum leak / faulty MAF / weak fuel pump / clogged filter / stuck-open EVAP), real fix-summary with PSI ranges ("43-58 PSI on most fuel-injected bikes"). "Opened from session #1" footer present. Backend logged the request twice — StrictMode double-invocation, cosmetic only; filed as F6.
+- **Step 12 (no [object Object] anywhere)**: visually scanned all cards — every field rendered with real content. Bug 2's typed-error refactor verified at the integration level.
+- **Step 13 (back-button stack correctness)**: back from DTCDetail → SessionDetail (Session #1, Sessions tab still highlighted). Routes did not collide across stacks despite shared name.
+- **Step 14 (tab state preservation)**: Garage → Home → Sessions navigation cycle landed back on SessionDetail, not popped to list. Same as Phase 189 Step 19.
+- **Step 15 (the rematch — BOGUS123 404 path)**: appended BOGUS123 via Phase 189 fault-code append flow, tapped row. DTCDetailScreen rendered the not_found branch correctly:
+  - Title: "DTC code not found" (red, NOT "Couldn't load DTC")
+  - Body: "DTC code 'BOGUS123' not found" — server-supplied message with the queried code interpolated
+  - Hint: "Check the code spelling, or try the search if you're not sure of the exact code."
+  - Buttons: Back only — NO Retry per spec
+  - ZERO [object Object] anywhere on screen
+- **Step 16 (P0420 happy path — different newly-seeded code)**: code in monospace, Medium badge, description "Catalyst System Efficiency Below Threshold (Bank 1)", Category=exhaust (different from P0171's fuel — confirms distinct seed entries, not template clones), 3 causes (worn cat / exhaust leak before cat / O2 sensor issue), fix-summary with right diagnostic hierarchy. "Opened from session #1" footer present. Bug 3b's catalog expansion verified across multiple codes.
+- **Step 17 (cold relaunch persistence)**: killed app, relaunched. Auth restored from keychain. DTCSearch landed in clean idle state (NOT preserved by design, deferred to Phase 198 still appropriate). All Session #1 data intact across the kill: bike link, 2 symptoms, FAULT CODES list now showing P0171 + BOGUS123 + P0420 (round 2 appends survived), full DIAGNOSIS (High / 65% / $180.00), NOTES timestamped entry, LIFECYCLE state.
+
+No Phase 186 BLE / Phase 187 auth / Phase 188 vehicle CRUD / Phase 189 session CRUD regressions surfaced in round 2.
+
+Three round-1 bugs all verified fixed end-to-end:
+- **Bug 1 (composite keyExtractor)**: no duplicate-key toast across all DTCSearch interactions; single P0100 result on exact-code search where round 1 had 7+ identical rows.
+- **Bug 2 (typed-error discriminated union)**: both happy-path (200) and not-found (404) branches verified rendering correctly with no [object Object] on either path. The 27 regression tests + the type system together close the entire family of error-render bugs that Phase 188 Bug 1 first surfaced.
+- **Bug 3a (loader idempotence)**: NULL-make duplicates from round 1 are gone after re-init; idempotent re-load confirmed by clean post-init catalog state. **Bug 3b (catalog expansion)**: P0171 and P0420 both verified with distinct, real diagnostic content; high confidence rest of the top-20 set is similarly well-formed.
+
+**Architect cleared for v1.1 finalize.**
+
+**Three new Phase 191 polish items filed alongside the Phase 189 carry-overs (F2 + F3):**
+- **F4** — Make/family chip on DTCSearch result rows when catalog returns legitimate same-code multi-make variants (orthogonal to Bug 1 — even with unique keys, visual disambiguation helps).
+- **F5** — "Code not in catalog yet" empty-state copy when user types an exact code that 404s on direct-lookup (vs current generic catalog-scope hint). Surfaced when the architect typed P0101/P0102 and saw the same "No DTCs match" copy as a typo query.
+- **F6** — `useDTC` memoization to suppress StrictMode double-fetch on mount (cosmetic; React 18 StrictMode intentionally double-invokes effects in dev mode; production builds run a single fetch).
+
+---
+
+### 2026-04-28 — v1.1 finalize (this commit)
+
+- Plan → v1.1: header bumped (date 2026-04-28, status ✅ Complete); ALL Verification Checklist items `[x]` with verification notes from both round-1 and round-2 gate reports; the 4 explicit bug-verification rows added at the bottom. New sections: Deviations from Plan (9 items including the 3 fix-commits, the broken commit-1 useDTC mock that was the proximate cause of Bug 2, the test-count overshoot, the helper-extraction emergence pattern); Results table with 7-commit hash chain + the round-1/round-2 gate result; Key finding (mock fidelity is a load-bearing concern — the Phase 189 sketch-sign-off lesson doesn't generalize to mock-fidelity / error-shape-typing / seed-completeness, those need the real backend in the loop); Versioning landed; Post-merge follow-ups (F2 + F3 + F4 + F5 + F6, all filed for Phase 191 polish).
+- Phase log → this file (timestamped milestones from plan v1.0 through round-1 fail through fix commits 6/7/8 through round-2 pass through this finalize).
+- Move both files from `docs/phases/in_progress/` → `docs/phases/completed/`.
+- Backend `implementation.md` version bump 0.13.5 → 0.13.6; Phase 190 row added to Phase History above the Phase 189 row (reverse-chronological position for Track G/H/I).
+- Backend `phase_log.md` Phase 190 closure entry.
+- Backend `docs/ROADMAP.md` Phase 190 marked ✅.
+- Mobile `implementation.md` version bump 0.0.6 → 0.0.7; Phase 190 row added to Phase History pointer table.
+- `moto-diag-mobile/docs/FOLLOWUPS.md`: F4 + F5 + F6 added to Open list (F2 + F3 carried over from Phase 189).
+- Rebase-merge `phase-190-dtc-code-lookup-screen` → `main` (7 commits, fast-forward).
+- Delete feature branch local + (remote was never pushed per Phase 188/189 precedent — local-only deletion is sufficient).
+
+**Phase 190 closes green. Track I scorecard: 6 of 20 phases complete (185 / 186 / 187 / 188 / 189 / 190).** Next: **Phase 191 — Video diagnostic capture (mobile)** per ROADMAP — film bike running, auto-extract audio + key frames → AI analysis. Phase 191 polish ticket list (F2-F6) may be folded into 191 if the touched code overlaps, or filed as a standalone polish phase if it doesn't.
