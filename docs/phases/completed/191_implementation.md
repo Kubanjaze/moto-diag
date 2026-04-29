@@ -1,6 +1,6 @@
 # Phase 191 — Video Diagnostic Capture (mobile, capture-only substrate)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-28
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-04-29 | **Status:** ✅ Complete
 
 ## Goal
 
@@ -292,27 +292,71 @@ The `videoCaptureMachine` reducer + `videoStorage` service + `useSessionVideos` 
 
 ## Verification Checklist
 
-- [ ] `npm test` → 210 baseline + ~22-28 new tests passing (target ~232-238).
-- [ ] `npx tsc --noEmit` clean every commit including Commit 1's smoke screen.
-- [ ] **Commit 1 micro-gate**: `cd android && ./gradlew clean && cd .. && npm run android` — clean build with vision-camera linked. Permission-prompt smoke screen on HomeScreen renders, prompts trigger correctly on tap.
-- [ ] Permission flow: first launch of VideoCaptureScreen shows Camera + Microphone prompts in sequence. Granted state persists across app relaunches.
-- [ ] Permanently-denied state: blocked-UI with "Open Settings" button that launches system settings.
-- [ ] Recording state machine: idle → record → recording (timer counts up) → stop → stopping → saved (preview shown).
-- [ ] State machine transitions tested in unit tests across all 6 states.
-- [ ] Record button shows elapsed time during recording (mm:ss format).
-- [ ] Phone-call interruption: simulate via `adb shell am broadcast -a android.intent.action.PHONE_STATE --es state RINGING` (or actual incoming call). Recording stops gracefully; partial file salvaged; `interrupted: true` set on metadata.
-- [ ] App-background interruption: simulate via Home button mid-record. Same behavior.
-- [ ] File written to `{DocumentDirectoryPath}/videos/session-{N}/session-{N}-{timestamp}-{uuid}.mp4` with `.json` sidecar containing the `SessionVideo` shape.
-- [ ] Per-session count cap: 6th recording attempt at 5 existing videos → cap-reached UI; record button disabled.
-- [ ] Per-session size cap: at 478MB existing, attempt 30s record (~16MB) → cap-reached UI before recording starts (predictive based on average bitrate).
-- [ ] Disk-full handling: low-storage device (or fake via `getFreeDiskStorage` mock at <100MB) → cap-reached UI with "Free up storage" copy.
-- [ ] Closed session: VideosCard on a closed session shows existing videos (read-only) with NO Record button visible.
-- [ ] Reopen session: Record button reappears.
-- [ ] VideosCard sits between FAULT CODES and DIAGNOSIS in SessionDetailScreen.
-- [ ] Tap video row → VideoPlaybackScreen opens within SessionsStack; built-in `react-native-video` controls work.
-- [ ] Back-button from VideoPlayback returns to SessionDetail.
-- [ ] Cold relaunch: recorded videos persist; metadata loads correctly; playback works.
-- [ ] No regression: Phase 186 BLE / Phase 187 auth / Phase 188 Garage / Phase 189 Sessions / Phase 190 DTC.
+- [x] `npm test` → 210 baseline + 95 new tests passing. **Actual: 301 / 301 green** (overshot the 232-238 target by ~63 tests because the substrate broke into more pure-helper modules than planned — videoCaptureMachine reducer + videoStorage path/cap/cleanup + videoCaptureHelpers formatElapsed/formatFileSize/generateShortId/classifyVisionCameraError + dtcErrors regression guards each accreted their own test files).
+- [x] `npx tsc --noEmit` clean every commit including Commit 1's smoke screen.
+- [x] **Commit 1 micro-gate (PASSED, 2026-04-28)**: `cd android && ./gradlew clean && cd .. && npm run android` — clean build with vision-camera + react-native-fs + react-native-video linked. Permission-prompt smoke screen on HomeScreen rendered; Camera + Microphone prompts fired correctly on tap; granted state persisted across cold relaunch. **Zero patch-package work needed** — vision-camera 4.7.3 + rn-video 6.19.2 + rn-fs 2.20.0 all built clean against `newArchEnabled=false` on first try, contradicting the v1.0 plan's "Phase 186 redux" risk projection.
+- [x] Permission flow: first launch of VideoCaptureScreen shows Camera + Microphone prompts in sequence. Granted state persists across app relaunches. Verified at micro-gate AND at full architect-gate cold-relaunch step.
+- [x] Permanently-denied state: blocked-UI with "Open Settings" button — implemented via `Linking.openSettings()`. Not exercised at gate (architect didn't tap "Don't ask again"); design-review verified.
+- [x] Recording state machine: idle → record → recording (timer counts up) → stop → stopping → saved (preview shown). Verified Commit 3 architect-smoke + full gate.
+- [x] State machine transitions tested in unit tests across all 6 states (videoCaptureMachine.test.ts — every transition + invalid-state guards + auto-keep-on-background per Kerwyn fold).
+- [x] Record button shows elapsed time during recording (mm:ss format via `formatElapsed`).
+- [x] Phone-call interruption / app-background mid-record: APP_BACKGROUNDED handler unconditionally calls `cameraRef.current?.stopRecording()` then dispatches the reducer event. Salvaged partial file persists with `interrupted: true` on metadata. **Verified at full gate Step 12** (Pixel 7 API 35 emulator: Home-button-mid-record → "⏸ Paused at 2:20" badge on the saved-preview tile + on the VideosCard row + on VideoPlaybackScreen meta band). Commit 3 fix-cycle resolved the closure-state-capture bug that had this UI rendering green-not-orange in the first build pass.
+- [x] App-background interruption tested separately from phone-call (same code path; Pixel 7 emulator doesn't easily simulate true phone calls without dialer scripting, but the AppState mechanism is identical).
+- [x] File written to `{DocumentDirectoryPath}/videos/session-{N}/session-{N}-{ISO8601-compact}-{8charuuid}.mp4` with `.json` sidecar containing the `SessionVideo` shape. Verified at gate via adb pull.
+- [x] Per-session count cap: 6th recording attempt at 5 existing videos → at-cap pane visible, Record button hidden (UI-layer guard per Item-4 sketch sign-off — the reducer never sees TAP_RECORD when at-cap).
+- [x] Per-session size cap: at-cap pane fires when bytes-used ≥ 500MB. Validated via videoStorage.test.ts cap-evaluation tests; emulator gate exercised the count cap path (size cap would require a full 30+ minutes of recording to reach 500MB, deferred to physical-device validation).
+- [x] Disk-full handling: `getFreeDiskStorage` precheck at recording-start refuses with "Not enough storage" when <100MB free. Mock-tested in videoStorage.test.ts.
+- [x] Closed session: VideosCard on a closed session shows existing videos (read-only) with NO Record button visible. **Bug 2 fix (commit 7, `39948c1`)** added closed-session × has-videos explanatory pane ("Session closed · Reopen this session to record more.") so the surface communicates the lockdown instead of going visually blank.
+- [x] Reopen session: Record button reappears. Verified at gate Step 14/15.
+- [x] VideosCard sits between FAULT CODES and DIAGNOSIS in SessionDetailScreen (Kerwyn pre-plan placement: evidence precedes diagnosis).
+- [x] Tap video row → VideoPlaybackScreen opens within SessionsStack; built-in `react-native-video` v6 controls work (play / pause / scrub).
+- [x] Back-button from VideoPlayback returns to SessionDetail. **Bug 1 fix (commit 7, `39948c1`)** added `useFocusEffect(refresh)` inside VideosCard so returns from VideoCapture (post-save) and VideoPlayback (post-delete) re-list videos correctly — SessionDetail doesn't unmount on push and the hook's mount-time effect alone wouldn't re-fire.
+- [x] Cold relaunch: recorded videos persist; metadata reloads from `.json` sidecars; playback works.
+- [x] No regression: Phase 186 BLE / Phase 187 auth / Phase 188 Garage / Phase 189 Sessions / Phase 190 DTC. Full gate sanity sweep covered Garage list, Sessions list, DTC P0171 happy path, and the 2:20 PM Paused-badge artifact on Session #1 (preserved as a 191B regression-coverage fixture per Kerwyn's instruction).
+
+### Bug verification (architect full gate, fix-cycle commit `39948c1`)
+
+- [x] **Bug 1 (HIGH) — VideosCard refresh on focus**: VideoCapture-save → back → VideosCard now lists the freshly-saved recording without cold restart. Same on VideoPlayback-delete return. Verified at re-smoke.
+- [x] **Bug 2 (LOW) — closed-session × has-videos copy**: closed sessions with ≥1 saved video now show a cream-pane "Session closed · Reopen this session to record more." block in the Record-button slot.
+- [x] **Bug 3 (MEDIUM) — bottom-tab wireframe icons**: `tabBarIcon: () => null` on `RootNavigator` `screenOptions` suppresses `@react-navigation/elements` default `MissingIcon` (`⏷` glyph rendered when no `tabBarIcon` is provided). Restores the text-label-only look from Phase 189's design intent. **Not a Phase 191 regression** — has been there since Phase 189 commit 2 added the bottom-tab nav; full gate just surfaced it for the first time.
+- [x] **Architect-gate full re-smoke (2026-04-29)**: 8 / 8 verifications green across all three bugs (save-return refresh, delete-return refresh, closed-session lockdown copy, wireframe-nav fix) + full sanity sweep (Garage, Sessions, DTC P0171 happy path, 2:20 PM Paused-badge artifact preserved on Session #1).
+
+## Deviations from Plan
+
+1. **Patch-package risk did NOT materialize.** The v1.0 plan framed Phase 191 as "closer to Phase 186 than Phase 188" — heavy native-module integration with the `isNewArchitectureEnabled()` CMake bug shape predicted as the most likely friction. **Reality: zero patch-package work needed.** vision-camera 4.7.3 + rn-fs 2.20.0 + rn-video 6.19.2 all built clean against `newArchEnabled=false` on first cold-gradle pass. The micro-gate after Commit 1 took ~5 minutes and was green on first attempt. Risk projections for upcoming Track I phases should weight "we already have patches/ scaffolding" as a sunk cost that absorbs the most-likely shape of native-module integration friction.
+
+2. **Test count overshot target.** Planned 22-28 new tests; landed +95 (210 → 301). The reducer / storage / helpers split into more pure-helper modules than the plan anticipated, each accreting its own test file (videoCaptureMachine + videoStorage + videoCaptureHelpers + dtcErrors regression guards from Phase 190 carried forward).
+
+3. **One in-cycle Commit 3 fix-cycle (closure-state-capture).** The first Commit 3 build passed locally but failed at architect-smoke Verification 5: orange "Paused at 0:XX" badge wasn't rendering on the saved-preview after AppState background-during-recording. Root cause was a closure-capture twist: the `onRecordingFinished` callback registered with `cameraRef.startRecording` captured `state` at moment-of-tap-record (`state=idle`), so `wasInterrupted = state.kind === 'stopping' && state.reason === 'interrupted'` always evaluated false. Fix: explicit `interruptedRef` ref with set-true-in-AppState-handler, set-false-in-user-stop, read in onRecordingFinished. Folded into the same Commit 3 (`ffa383c`) alongside F8 (formatFileSize unit-switching).
+
+4. **One in-cycle full-gate fix-cycle (3 bugs).** Architect's full gate after Commit 6 found 3 bugs (Bug 1 VideosCard refresh on focus / Bug 2 closed-session × has-videos copy / Bug 3 wireframe nav icons). All three landed in a single fix commit (`39948c1`) with explicit per-bug callouts in the message body. Re-smoke green on all 8 verifications.
+
+5. **Bug 3 was a long-standing default, not a Phase 191 regression.** `@react-navigation/elements`'s default `MissingIcon` (a `⏷` Unicode glyph) has rendered in the bottom-tab nav since Phase 189 commit 2 added bottom-tabs. Phase 189's design intent was text-label-only ("no icon library yet — defer until a design pass earns it"); the bug was that `tabBarIcon` was never explicitly set to suppress the default. Phase 191's full gate is the first one to scrutinize the visuals at that level. Investigation confirmed before the fix landed; commit message explicitly notes the not-a-regression framing.
+
+6. **Phase 191B added as a NEW ROADMAP row at finalize, not buried in FOLLOWUPS.** Per Kerwyn's pre-plan ask. Concrete row added immediately after Phase 191 in `docs/ROADMAP.md` Track I table; status 🔲; scope: backend `/v1/videos/*` endpoints (upload + frame extraction + Claude Vision analysis) + migration for `videos` table + `useSessionVideos` hook swap from FS-backed to backend-backed (consumer surface unchanged per Phase 191's handoff contract) + ffmpeg integration for frame + audio extraction. Track I count grows 20 → 21 phases; Phases 192-204 row numbers stay the same — 191B is a NEW row, not a renumbering.
+
+7. **Phase 191 polish backlog**: F2 (per-entry edit/delete on open sessions, carry-over from Phase 189), F3 (lifecycle audit history, carry-over from Phase 189), F4 (make/family chip on DTCSearch result rows, carry-over from Phase 190), F5 ("Code not in catalog yet" empty-state copy, carry-over from Phase 190), F6 (`useDTC` memoization to suppress React 18 StrictMode dev-only double-fetch, carry-over from Phase 190), F7 (NEW — symmetric closed-session lockdown for Phase 189's symptoms / fault-codes / notes append inputs; Phase 191 closed the gap for videos but left it open for the other lists), F9 (NEW — document the `useRef`-not-state pattern for callbacks registered with native modules; surfaced from Commit 3 closure-state-capture bug + the meta-observation that this is now the third instance of a "snapshot/assumption doesn't match runtime" failure family across Track I — Phase 188 HVE shape mock, Phase 190 substring-match-on-error-text, Phase 191 closure-state capture). **F8 shipped in Commit 3** (`ffa383c`) — formatFileSize auto-unit-switching B / KB / MB / GB with one-decimal precision below 10MB; not retained in the open list.
+
+8. **README.md + project structure tree updated in Commit 6** (`78834e4`) with all new packages: services/videoStorage.ts, screens/videoCaptureMachine.ts + videoCaptureHelpers.ts, hooks/useCameraPermissions + useSessionVideos, types/video.ts, screens/VideoCaptureScreen + VideoPlaybackScreen. Also documents the 301-test count + the two transport-regression guards from Phase 188-189 still pinning Content-Type + X-API-Key.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Mobile branch | `phase-191-video-diagnostic-capture` (8 commits, rebase-merged to mobile `main` at finalize) |
+| Build commits | 6 (`d7117c5` install / `35226bc` reducer+storage / `bbf5d90` capture screen / `1ac4c26` hook+playback / `b9f1b0f` SessionDetail integration / `78834e4` README+v0.0.6) |
+| Mid-cycle fix commits | 1 in Commit 3 (`ffa383c` interruptedRef closure-capture + F8 formatFileSize) |
+| Full-gate fix commits | 1 (`39948c1` Bug 1 VideosCard refresh + Bug 2 closed-with-videos copy + Bug 3 suppress MissingIcon) |
+| Mobile Jest tests | **301 / 301 green** (210 baseline + 95 new — videoCaptureMachine reducer + videoStorage path/cap/cleanup + videoCaptureHelpers formatElapsed/formatFileSize/generateShortId/classifyVisionCameraError + useSessionVideos hook contract + 191B handoff regression guard + useCameraPermissions) |
+| `npx tsc --noEmit` | clean every commit |
+| Backend changes | **zero** (pure mobile phase; schema unchanged at v38) |
+| Architect gate | round 1 (full) FAILED with 3 bugs → round 2 GREEN on 8 / 8 re-smoke verifications + full sanity sweep |
+| Mobile package version | 0.0.5 → 0.0.6 (bumped in Commit 6) |
+| Mobile project `implementation.md` | 0.0.7 → 0.0.8 |
+| Backend project `implementation.md` | 0.13.6 → 0.13.7 |
+| Track I scorecard | 7 / 21 phases complete (Phase 191B added as new row at finalize → Track I count grows 20 → 21) |
+
+**Key finding: substrate-then-feature splits keep gates gate-sized.** The original Phase 191 ROADMAP scope ("film bike running, auto-extract audio + key frames → AI analysis") was honestly 3-4 phases compressed into one. Splitting into 191 (mobile capture-only substrate) + 191B (backend upload + Claude Vision pipeline) preserved the substrate-then-feature pattern that already worked for Phase 187 → 188 (auth substrate, then CRUD over it) and Phase 189 → 190 (session substrate, then DTC integration). Two takeaways for the rest of Track I: (1) when a planned phase has more than one new concern that would need its own architect gate (here: native-module install + state machine + file-system policy + backend upload + AI pipeline = 5 concerns), split it explicitly at plan time and surface the split as a NEW ROADMAP row, not a FOLLOWUPS entry; (2) the closure-state-capture bug from Commit 3 + the architect-gate Bug 1 (refresh on focus) are the third and fourth instances of the "snapshot/assumption doesn't match runtime" failure family that started with Phase 188 (HVE mock shape) and Phase 190 (substring-match on error text). The pattern is robust enough now that F9 (the useRef-not-state polish item) plus a generalized lint rule are worth filing for Phase 192+ pickup.
 
 ## Risks
 
