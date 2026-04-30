@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 38  # Phase 177: vehicles.owner_user_id retrofit (migration 038)
+SCHEMA_VERSION = 39  # Phase 191B: videos table for video diagnostic capture (migration 039)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

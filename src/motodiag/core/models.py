@@ -232,3 +232,122 @@ class LaborRateType(str, Enum):
     INDEPENDENT = "independent"
     DEALERSHIP = "dealership"
     MOBILE = "mobile"
+
+
+# ---------------------------------------------------------------------------
+# Phase 191B: video diagnostic capture + AI analysis models
+# ---------------------------------------------------------------------------
+
+
+class VideoUploadState(str, Enum):
+    """Upload-side state for a session video.
+
+    Phase 191B reserves only `uploaded` — Phase 192+ may add `pending`
+    (multi-part upload in progress) and `failed` (network drop mid-upload).
+    """
+    UPLOADED = "uploaded"
+
+
+class VideoAnalysisState(str, Enum):
+    """Analysis state machine for a session video.
+
+    Transitions (per Phase 191B v1.0 plan):
+        pending      ──worker-picks-up──▶ analyzing
+        analyzing    ──findings-saved──▶  analyzed
+        analyzing    ──ffmpeg-failed──▶   unsupported  (terminal)
+        analyzing    ──vision-failed──▶   analysis_failed  (retryable)
+    """
+    PENDING = "pending"
+    ANALYZING = "analyzing"
+    ANALYZED = "analyzed"
+    ANALYSIS_FAILED = "analysis_failed"
+    UNSUPPORTED = "unsupported"
+
+
+class VideoBase(BaseModel):
+    """Mobile-supplied metadata for a session video (Phase 191 sidecar JSON).
+
+    These fields mirror the mobile `SessionVideo` shape minus the
+    backend-managed columns. The mobile app constructs this dict at
+    capture time and posts it as the multipart `metadata` JSON sidecar.
+    """
+    started_at: str = Field(
+        ..., description="ISO 8601 timestamp when recording started",
+    )
+    duration_ms: int = Field(
+        ..., gt=0, description="Recording duration in milliseconds",
+    )
+    width: int = Field(..., gt=0, description="Pixel width")
+    height: int = Field(..., gt=0, description="Pixel height")
+    file_size_bytes: int = Field(
+        ..., ge=0, description="File size in bytes",
+    )
+    format: str = Field(
+        default="mp4", description="Container format (default mp4)",
+    )
+    codec: str = Field(
+        default="h264", description="Video codec (default h264)",
+    )
+    interrupted: bool = Field(
+        default=False,
+        description=(
+            "True iff the recording was stopped by phone-call/app-"
+            "background rather than the mechanic's explicit Stop tap."
+        ),
+    )
+
+
+class VideoCreate(VideoBase):
+    """Server-side construction shape — adds session_id + file_path + sha256.
+
+    Used by the upload route handler after the file is persisted to disk
+    and the SHA-256 is computed. NOT a wire shape — clients send
+    `VideoBase` (the mobile sidecar) and the route handler enriches.
+    """
+    session_id: int = Field(
+        ..., gt=0, description="Owning session id (FK to diagnostic_sessions.id)",
+    )
+    file_path: str = Field(
+        ..., description="Canonical disk path on the backend",
+    )
+    sha256: str = Field(
+        ...,
+        min_length=64,
+        max_length=64,
+        description="SHA-256 hex digest of mp4 contents (lowercase, 64 chars)",
+    )
+
+
+class VideoResponse(VideoBase):
+    """API response shape — includes server-managed fields + analysis state.
+
+    Note: `file_path` and `sha256` are deliberately omitted from this
+    response model. They are internal storage details and exposing them
+    on the wire leaks information about the backend's filesystem layout
+    and dedup pipeline. Mobile reads videos via the dedicated
+    `/v1/sessions/{id}/videos/{video_id}/file` stream endpoint.
+    """
+    id: int = Field(..., description="Server-assigned video id")
+    session_id: int = Field(..., description="Owning diagnostic session id")
+    upload_state: VideoUploadState = Field(
+        default=VideoUploadState.UPLOADED,
+        description="Upload-side state machine value",
+    )
+    analysis_state: VideoAnalysisState = Field(
+        default=VideoAnalysisState.PENDING,
+        description="Analysis-side state machine value",
+    )
+    analysis_findings: Optional[dict] = Field(
+        default=None,
+        description=(
+            "Serialized VisualAnalysisResult once analyzed. NULL while "
+            "analysis_state is pending|analyzing or terminally failed."
+        ),
+    )
+    analyzed_at: Optional[str] = Field(
+        default=None,
+        description="ISO 8601 timestamp when analysis_state advanced past `analyzing`",
+    )
+    created_at: str = Field(
+        ..., description="ISO 8601 timestamp when row was inserted",
+    )

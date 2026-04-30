@@ -184,6 +184,131 @@ class DiagnosticClient:
 
         return text, usage
 
+    def ask_with_images(
+        self,
+        prompt: str,
+        images: list,
+        system: Optional[str] = None,
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+        tools: Optional[list[dict]] = None,
+        tool_choice: Optional[dict] = None,
+    ) -> tuple[object, TokenUsage]:
+        """Send a prompt with image content blocks (Claude Vision).
+
+        Phase 191B addition. Builds a multi-content-block messages
+        payload from the given image file paths + the text prompt,
+        threads through the existing cost / token-usage / session-
+        metric tracking, and returns the raw Anthropic ``Message``
+        object so callers can inspect ``tool_use`` blocks for
+        structured output.
+
+        The cache layer is intentionally NOT used here — the existing
+        cache keys hash the prompt string, but image-cache keys would
+        need to also hash each image's bytes (potentially expensive
+        for 60-frame batches). Image-response caching is a Commit 2
+        concern at the earliest, and may not be high-value at all
+        given the diagnostic uniqueness of each video. Critically,
+        this method does not break the existing ``ask()`` cache path
+        — it's a sibling method, not a replacement.
+
+        Args:
+            prompt: User text prompt (joined to image blocks as the
+                    final ``text`` content block).
+            images: Iterable of file paths (``pathlib.Path`` or strings)
+                    pointing at JPEG/PNG images. Encoded as base64
+                    content blocks in the messages payload.
+            system: System prompt override.
+            model: Model alias or full model ID override.
+            max_tokens: Max tokens override.
+            temperature: Temperature override.
+            tools: Optional tool definitions for structured output via
+                   the Anthropic tool-use trick. When provided the
+                   model can (and with ``tool_choice`` must) emit a
+                   ``tool_use`` block instead of plain text.
+            tool_choice: Optional tool-selection directive. Pass
+                   ``{"type": "tool", "name": "..."}`` to force a
+                   specific tool call.
+
+        Returns:
+            Tuple of ``(raw Message, TokenUsage)``. The raw Message
+            lets callers extract ``tool_use`` blocks for structured
+            output via something like
+            ``next(b for b in resp.content if b.type == "tool_use")``.
+        """
+        import base64
+        from pathlib import Path as _Path
+
+        client = self._get_client()
+        resolved_model = (
+            _resolve_model(model) if model else self.model
+        )
+        resolved_max = max_tokens or self.max_tokens
+        resolved_temp = (
+            temperature if temperature is not None else self.temperature
+        )
+        resolved_system = system or DIAGNOSTIC_SYSTEM_PROMPT
+
+        # Build image content blocks (base64-encoded). Assume JPEG by
+        # default — the upload pipeline only ever produces JPEGs from
+        # ffmpeg's frame extractor. PNG/other-format detection via
+        # magic bytes is a future enhancement if Vision returns an
+        # unsupported-media-type error in practice.
+        content_blocks: list[dict] = []
+        for img in images:
+            img_path = _Path(img)
+            img_bytes = img_path.read_bytes()
+            content_blocks.append({
+                "type": "image",
+                "source": {
+                    "type": "base64",
+                    "media_type": "image/jpeg",
+                    "data": base64.b64encode(img_bytes).decode(),
+                },
+            })
+        # Final content block is the user text prompt.
+        content_blocks.append({"type": "text", "text": prompt})
+
+        start_ms = int(time.time() * 1000)
+
+        # Only thread tools/tool_choice into the SDK call when the
+        # caller actually provided them — passing ``tools=None``
+        # explicitly would change the SDK's behavior.
+        kwargs: dict = {
+            "model": resolved_model,
+            "max_tokens": resolved_max,
+            "temperature": resolved_temp,
+            "system": resolved_system,
+            "messages": [
+                {"role": "user", "content": content_blocks}
+            ],
+        }
+        if tools is not None:
+            kwargs["tools"] = tools
+        if tool_choice is not None:
+            kwargs["tool_choice"] = tool_choice
+
+        response = client.messages.create(**kwargs)
+
+        end_ms = int(time.time() * 1000)
+        latency = end_ms - start_ms
+
+        usage = TokenUsage(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            model=resolved_model,
+            cost_estimate=_calculate_cost(
+                resolved_model,
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+            ),
+            latency_ms=latency,
+        )
+        self.session.add_usage(usage)
+
+        return response, usage
+
     def diagnose(
         self,
         make: str,

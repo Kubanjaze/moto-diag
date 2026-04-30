@@ -2786,6 +2786,59 @@ MIGRATIONS: list[Migration] = [
                 ON vehicles(year);
         """,
     ),
+    # Migration 039 — Phase 191B: video diagnostic capture + AI analysis
+    Migration(
+        version=39,
+        name="videos_table",
+        description=(
+            "Phase 191B: Add videos table for diagnostic video capture + "
+            "Claude Vision AI analysis pipeline. session_id FK with "
+            "ON DELETE CASCADE; soft-delete via deleted_at; "
+            "analysis_state machine (pending|analyzing|analyzed|"
+            "analysis_failed|unsupported); SHA-256 dedup; analysis_findings "
+            "stored as JSON serialization of VisualAnalysisResult. "
+            "Note: FK targets diagnostic_sessions(id) — the canonical "
+            "session table in this codebase (the v1.0.1 plan's `sessions` "
+            "shorthand maps to diagnostic_sessions)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS videos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                started_at TEXT NOT NULL,
+                duration_ms INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                file_size_bytes INTEGER NOT NULL,
+                format TEXT NOT NULL DEFAULT 'mp4',
+                codec TEXT NOT NULL DEFAULT 'h264',
+                interrupted INTEGER NOT NULL DEFAULT 0,
+                file_path TEXT NOT NULL,
+                sha256 TEXT NOT NULL,
+                upload_state TEXT NOT NULL DEFAULT 'uploaded',
+                analysis_state TEXT NOT NULL DEFAULT 'pending',
+                analysis_findings TEXT,
+                analyzed_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                deleted_at TEXT,
+                FOREIGN KEY (session_id) REFERENCES diagnostic_sessions(id) ON DELETE CASCADE
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_videos_session
+                ON videos(session_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_videos_analysis_state
+                ON videos(analysis_state)
+                WHERE analysis_state IN ('pending', 'analyzing');
+            CREATE INDEX IF NOT EXISTS idx_videos_sha256
+                ON videos(sha256);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_videos_sha256;
+            DROP INDEX IF EXISTS idx_videos_analysis_state;
+            DROP INDEX IF EXISTS idx_videos_session;
+            DROP TABLE IF EXISTS videos;
+        """,
+    ),
 ]
 
 
