@@ -1,6 +1,133 @@
 # Phase 191B — Video Diagnostic Upload + Claude Vision AI Analysis Pipeline
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-04-29
+**Version:** 1.0.1 | **Tier:** Standard | **Date:** 2026-04-30 (v1.0 written 2026-04-29; v1.0.1 corrects pre-Commit-1 path/scope drift after deeper codebase audit)
+
+## Plan v1.0.1 — pre-Commit-1 corrections from codebase audit
+
+Plan v1.0 was written from architect intent rather than a careful audit of `src/motodiag/`. After reading the actual code structure pre-build, five corrections land here. None change the goal (video upload + AI analysis); they realign the file paths, scope framing, and dependency claims with what's already shipped.
+
+**Why a v1.0.1 amendment instead of capturing as deviations at v1.1 finalize:** corrections this large should land on the plan-of-record before the Builder agents are dispatched, otherwise the Builders will work from the inaccurate plan + the deviations multiply. Single load-bearing assertion (the `useSessionVideos.test.ts` Phase 191 handoff guarantee) stays unchanged.
+
+### Correction 1 — `anthropic` is already a required dep
+
+Plan v1.0 said: "Add `anthropic` to required deps (was optional pre-Phase-191B since 100-103 were standalone)."
+
+Actual: `anthropic >= 0.40` is in [`pyproject.toml`](../../../pyproject.toml) line 32 as a required dep — has been since Phase 79 (the Claude API series, NOT 100-103). Plan v1.0's pyproject.toml change is **drop the "anthropic" line item from the diff** at Commit 7. Backend venv has `anthropic 0.96.0` installed. No-op.
+
+### Correction 2 — Storage paths
+
+Plan v1.0 used a `src/motodiag/storage/...` layout that doesn't exist. Backend uses [`src/motodiag/core/`](../../../src/motodiag/core/) (single-package, function-based repos, module-flat models).
+
+| Plan v1.0 said | v1.0.1 corrected |
+|---|---|
+| `src/motodiag/storage/database.py` (SCHEMA_VERSION 38→39) | [`src/motodiag/core/database.py`](../../../src/motodiag/core/database.py) line 11 — SCHEMA_VERSION constant |
+| `src/motodiag/storage/migrations/039_videos.py` (new file per migration) | APPEND `Migration(version=39, ...)` entry to [`src/motodiag/core/migrations.py`](../../../src/motodiag/core/migrations.py) `MIGRATIONS` list (single file pattern; latest entry is version=38 at line 2731) |
+| `src/motodiag/storage/models/video.py` | EXTEND [`src/motodiag/core/models.py`](../../../src/motodiag/core/models.py) (module-flat — `VehicleBase` + `DiagnosticSessionBase` already cohabit; new `VideoBase` + `VideoCreate` + `VideoResponse` join them) |
+| `src/motodiag/storage/repositories/video_repo.py` | NEW file `src/motodiag/core/video_repo.py` mirroring [`src/motodiag/core/session_repo.py`](../../../src/motodiag/core/session_repo.py) — function-based (`create_video`, `get_video`, `list_session_videos`, `soft_delete_video`, `update_analysis_state`, `set_analysis_findings`) + `_for_owner` variants for tier/auth-aware CRUD |
+
+### Correction 3 — `motodiag.ai` package does NOT exist and shouldn't be created
+
+Plan v1.0 specified `src/motodiag/ai/video_analysis.py` + `src/motodiag/ai/analysis_worker.py`. The right home for this work is [`src/motodiag/media/`](../../../src/motodiag/media/) (Track C2 — Media Diagnostic Intelligence, Phases 96-108). Existing siblings: `vision_analysis.py`, `video_frames.py`, `audio_capture.py`, `spectrogram.py`, `sound_signatures.py`, `photo_annotation.py` + 7 others. New Phase 191B modules belong as siblings:
+- `src/motodiag/media/ffmpeg.py` (NEW) — real ffmpeg subprocess wrapper
+- `src/motodiag/media/video_analysis_pipeline.py` (NEW) — orchestrates ffmpeg → real Vision call → findings persistence
+- `src/motodiag/media/analysis_worker.py` (NEW) — `BackgroundTasks` entry point that drives the pipeline
+
+`motodiag.ai` is dropped. Test file paths follow: `tests/test_phase191b_ffmpeg.py` ✓ unchanged, `tests/test_phase191b_video_analysis.py` → renamed `tests/test_phase191b_video_analysis_pipeline.py`, `tests/test_phase191b_video_repo.py` ✓ unchanged.
+
+### Correction 4 — `media/video_frames.py` (Phase 100) is metadata-only
+
+Plan v1.0 framed Phase 191B as "first production wiring of Claude Vision + ffmpeg into the HTTP layer" with the implication that Phase 100/101 were standalone scripts. Reading [`media/video_frames.py`](../../../src/motodiag/media/video_frames.py):
+
+> "Phase 100: Simulated video frame extraction — models video metadata, generates frame extraction plans based on intervals or keyframe detection, and returns structured frame objects with placeholder descriptions. **No actual video processing occurs**; this module operates on metadata models to define the extraction contract that a real video backend would fulfill."
+
+Phase 100 ships **types + the contract**: `VideoFormat` enum, `VideoResolution`, `VideoMetadata`, `VideoFrame` (with placeholder description + tags), `FrameExtractionConfig`, `SceneChangeMarker`, `VideoFrameExtractor` class with `extract_frames` / `extract_keyframes` / `get_frame_at_timestamp` / `get_extraction_plan` (all simulation-only).
+
+Phase 191B's role: **build the real ffmpeg backend that fulfills the contract.** Concretely:
+- `media/ffmpeg.py` defines `RealVideoFrameExtractor(FrameExtractionConfig)` that subclasses or composes the existing `VideoFrameExtractor` and overrides the `_generate_placeholder_*` calls with real frame extraction. Returns the same `VideoFrame` shape — type-stable.
+- `VideoFrame.description` + `VideoFrame.tags` populate from the Vision pipeline (Correction 5), not from `_generate_placeholder_description`.
+- The metadata-only `VideoMetadata` Pydantic model is REUSED unchanged for sidecar JSON parsing on upload.
+
+**Type reuse > redefinition.** Phase 191B's plan-v1.0 `VideoAnalysisFindings` model with its own `VisualFinding` is dropped — see Correction 5.
+
+### Correction 5 — `media/vision_analysis.py` (Phase 101) is text-only with the right schema
+
+Plan v1.0 said Phase 101 is "a Claude Vision wrapper, mocked in tests." Half-true: [`media/vision_analysis.py`](../../../src/motodiag/media/vision_analysis.py)'s `VisualAnalyzer.analyze_image` takes `image_description: str` (text-only — NOT image bytes) and calls `DiagnosticClient.ask()`. The Pydantic schema is DONE and CORRECT for Phase 191B's needs:
+
+| Plan v1.0 (drop) | Phase 101 (reuse) |
+|---|---|
+| `class VisualFinding(BaseModel)` with `category: Literal[...]` 8-value | [`FindingType`](../../../src/motodiag/media/vision_analysis.py) enum (8 values: SMOKE / LEAK / DAMAGE / GAUGE_READING / WEAR / CORROSION / MISSING_PART / MODIFICATION) — plus `VisualFinding` model with `finding_type` + `description` + `confidence` + `location_in_image` + `severity` |
+| Plan-v1.0 `VideoAnalysisFindings` (`summary` + `findings` + `no_findings_reason` + `frames_analyzed` + `model_used` + `cost_estimate_usd`) | [`VisualAnalysisResult`](../../../src/motodiag/media/vision_analysis.py) (`findings` + `overall_assessment` + `suggested_diagnostics` + `image_quality_note`) — close shape; v1.0.1 ADDS `frames_analyzed: int` + `model_used: str` + `cost_estimate_usd: float` to `VisualAnalysisResult` (3-field non-breaking extension) rather than redefining the whole model |
+| Plan-v1.0 `VehicleContext` | [`VehicleContext`](../../../src/motodiag/media/vision_analysis.py) — already exists with `make` + `model` + `year` + `mileage` + `reported_symptoms` + `to_context_string()` — REUSE unchanged |
+
+Phase 191B Commit 2's NEW work in `media/vision_analysis_pipeline.py`:
+- `VisionAnalyzer.analyze_video_frames(frames: list[Path], vehicle_context: VehicleContext, model="sonnet") -> VisualAnalysisResult` — takes real image file paths, base64-encodes them as content blocks, calls extended `DiagnosticClient.ask_with_images()`, parses tool-use response into `VisualAnalysisResult`. Reuses `VISION_ANALYSIS_PROMPT` + `SMOKE_COLOR_GUIDE` + `FLUID_COLOR_GUIDE` constants from Phase 101 unchanged.
+- The existing text-only `VisualAnalyzer.analyze_image` from Phase 101 is left in place — it's used by other Track C2 code paths and shouldn't break.
+
+### Correction 6 (sub-correction) — `DiagnosticClient` extension instead of new VisionClient
+
+Plan v1.0 implied a brand-new Anthropic-SDK call inside `media/vision_analysis_pipeline.py`. Cleaner: extend [`engine/client.py:DiagnosticClient`](../../../src/motodiag/engine/client.py) with a new `ask_with_images(prompt, images: list[Path], system, model, max_tokens, temperature, tools, tool_choice) -> tuple[Message, TokenUsage]` method that:
+- builds the multi-content-block messages payload (image blocks via base64 + the text prompt)
+- threads through the existing cost-pricing table + cache + token-usage tracking + session-metric accounting
+- returns the raw `Message` (not text) so callers can inspect `tool_use` blocks for structured output
+
+Tool-use structured output stays per plan v1.0's design — `tools=[...]` + `tool_choice={"type":"tool","name":"report_video_findings"}`. The `report_video_findings` tool's `input_schema` = `VisualAnalysisResult.model_json_schema()` (the Phase 101 model — nothing redefined).
+
+### Updated Outputs section
+
+Backend new files now (10 instead of 12):
+- ~~`src/motodiag/storage/migrations/039_videos.py`~~ → APPEND to `core/migrations.py` MIGRATIONS list
+- ~~`src/motodiag/storage/models/video.py`~~ → EXTEND `core/models.py` with `VideoBase` + `VideoCreate` + `VideoResponse`
+- `src/motodiag/core/video_repo.py` ✓ NEW (mirrors `session_repo.py`)
+- `src/motodiag/api/routes/videos.py` ✓ NEW
+- `src/motodiag/media/ffmpeg.py` ✓ NEW
+- ~~`src/motodiag/ai/video_analysis.py`~~ → `src/motodiag/media/vision_analysis_pipeline.py`
+- ~~`src/motodiag/ai/analysis_worker.py`~~ → `src/motodiag/media/analysis_worker.py`
+- ~~`src/motodiag/media/__init__.py`~~ — already exists with Track C2 modules; do not overwrite
+- `data/videos/.gitkeep` ✓ NEW
+- `tests/fixtures/videos/sample_3sec.mp4` + `tests/fixtures/videos/README.md` (regen instructions for ffmpeg-less environments)
+- `tests/fixtures/anthropic_responses/video_analysis_*.json` + `_regen.py`
+
+Backend modified files (5 instead of 5, content shifts):
+- `src/motodiag/api/app.py` — register `videos_router` (unchanged)
+- `src/motodiag/core/database.py` — `SCHEMA_VERSION = 38 → 39` (path correction, mechanism same)
+- `src/motodiag/core/migrations.py` — APPEND Migration(version=39, ...) (NEW — was a separate file in plan v1.0)
+- `src/motodiag/core/models.py` — APPEND `VideoBase` + `VideoCreate` + `VideoResponse` (NEW — was a separate file in plan v1.0)
+- `src/motodiag/engine/client.py` — extend `DiagnosticClient` with `ask_with_images()` (NEW — wasn't in plan v1.0; required for real Vision calls)
+- `src/motodiag/media/vision_analysis.py` — extend `VisualAnalysisResult` with `frames_analyzed` + `model_used` + `cost_estimate_usd` (3 non-breaking optional fields — NEW)
+- `src/motodiag/api/openapi.py` — add `videos` tag + multipart shape (unchanged)
+- `src/motodiag/api/errors.py` — add 413 mapping (unchanged)
+- `pyproject.toml` — version 0.1.0 → 0.2.0 ONLY (anthropic line stays as-is — already required, see Correction 1)
+
+### Updated Test Files
+
+Three test files (renamed to align with corrected paths):
+- `tests/test_phase191b_migration_039.py` ✓ unchanged
+- `tests/test_phase191b_video_repo.py` ✓ unchanged
+- `tests/test_phase191b_ffmpeg.py` ✓ unchanged
+- ~~`tests/test_phase191b_video_analysis.py`~~ → `tests/test_phase191b_video_analysis_pipeline.py` (renamed; uses recorded Anthropic fixtures + extends `VisualAnalysisResult` test coverage)
+- `tests/test_phase191b_videos_api.py` ✓ unchanged
+- (NEW) `tests/test_phase191b_diagnostic_client_images.py` — guards `DiagnosticClient.ask_with_images()` extension; ~6-8 tests for image content block construction + base64 encoding + tool-use response parsing.
+
+### Updated Risks
+
+The "first production wiring of Claude Vision + ffmpeg" framing remains accurate — Phase 100 ships types/contract only; Phase 101 ships text-only mock; Phase 191B ships real image-bytes Vision API calls + real ffmpeg. The cost surprise risk + Anthropic rate limit risk + multipart upload behavior in openapi-fetch + concurrent same-file upload race + hook surface drift risks all stand unchanged.
+
+NEW risk added in v1.0.1: **`DiagnosticClient.ask_with_images()` extension may surface a latent bug in the existing text-only path** (cache key derivation now needs to include image hashes; cost calculation still uses standard input/output token pricing — Anthropic's image tokens are billed at the same rate as text input tokens per current pricing). Mitigation: regression-guard test asserting existing `ask()` calls produce identical cost + cache key as before the extension.
+
+### Updated Commit Plan
+
+Commit numbering unchanged (1-7). Commit content shifts:
+- **Commit 1** now also touches `engine/client.py` to add `ask_with_images()` (since Commit 2's vision pipeline depends on it). Commit 1 expands to: migration v39 entry + `core/models.py` extension + `core/video_repo.py` NEW + `media/ffmpeg.py` NEW + `engine/client.py` extension. ~30 unit tests across 4 test files (migration + repo + ffmpeg + diagnostic_client_images).
+- **Commit 2** unchanged in scope but file paths corrected (was `ai/video_analysis.py`, now `media/vision_analysis_pipeline.py`). ~15 tests.
+- **Commits 3-5** unchanged.
+- **Commit 6** (mobile hook swap) unchanged — load-bearing useSessionVideos.test.ts assertion preserved.
+- **Commit 7** (finalize) unchanged.
+
+---
+
+(End of v1.0.1 corrections. Original v1.0 plan continues below — paths and module names within the original sections remain stale and are superseded by the corrections above. Re-reading the original Outputs / Logic / etc. sections is OK as long as the v1.0.1 corrections override path-level details.)
+
+---
 
 ## Goal
 

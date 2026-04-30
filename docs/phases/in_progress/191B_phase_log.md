@@ -74,3 +74,43 @@
 **Smoke-test plan written into v1.0** — single full architect gate after Commit 7 (~18-22 steps): cold backend launch + schema_version=39; mobile cold-relaunch with no Phase 186-191 regression; Phase 191 paused-badge artifact still present on Session #1; new recording → upload-progress indicator → analysis_state polling pending → analyzing → analyzed → findings tile expansion; cost log inspection; per-session caps + per-tier monthly quota verified via curl bypass; tier-gate enforcement; ffmpeg-missing simulation (env override) → 503; Vision-failure simulation (invalid API key) → analysis_failed; soft-delete + cascade-delete; cold relaunch persistence; multipart on-the-wire body shape sanity; ProblemDetail envelope shape across all error cases; full Phase 175-184 backend regression + Phase 188-191 mobile regression; **load-bearing assertion: useSessionVideos.test.ts unchanged.**
 
 **Next:** plan commit on backend `master` (this file + 191B_implementation.md v1.0), then create `phase-191B-video-upload-ai-analysis` branch in backend repo and start Commit 1 (migration v39 + Video model + repo + ffmpeg subprocess wrapper).
+
+---
+
+### 2026-04-30 — Plan v1.0.1 — pre-Commit-1 corrections from codebase audit
+
+Six corrections to plan v1.0 surfaced when starting Commit 1 prep work — pre-Builder-dispatch audit of `src/motodiag/` revealed plan-vs-codebase drift on paths + module existence + dependency claims that would have multiplied into Builder confusion. Corrections land here on the plan-of-record before any Builder dispatches; full v1.0 → v1.0.1 diff committed to backend `master` separately.
+
+**Why a v1.0.1 amendment instead of capturing as deviations at v1.1 finalize:** corrections this large should land on the plan-of-record before Builder agents start. Otherwise the Builders work from inaccurate paths + the deviations multiply.
+
+**The six corrections:**
+
+1. **`anthropic >= 0.40` is already required in pyproject.toml line 32** — has been since Phase 79 (the Claude API series, not Phases 100-103 as plan v1.0 implied). Backend venv has `anthropic 0.96.0`. Plan v1.0's "add anthropic to required deps" diff is a no-op; drop from Commit 7.
+
+2. **Storage paths**: backend uses `src/motodiag/core/` (single-package, function-based repos, module-flat models), NOT `src/motodiag/storage/`. Specifically:
+   - `core/database.py` SCHEMA_VERSION constant — bump 38 → 39 in place.
+   - `core/migrations.py` MIGRATIONS list — APPEND `Migration(version=39, ...)` entry (single-file pattern, not per-version files).
+   - `core/models.py` — APPEND `VideoBase` + `VideoCreate` + `VideoResponse` to existing module (cohabits with `VehicleBase` + `DiagnosticSessionBase`).
+   - `core/video_repo.py` NEW (mirror `core/session_repo.py` shape).
+
+3. **`motodiag.ai` package does NOT exist and shouldn't be created.** Right home is `motodiag.media.*` (Track C2 — Phases 96-108 already shipped the package with `vision_analysis.py`, `video_frames.py`, `audio_capture.py`, `spectrogram.py`, `sound_signatures.py`, `photo_annotation.py` + 7 others). Phase 191B's NEW modules become siblings:
+   - `media/ffmpeg.py` (subprocess wrapper)
+   - `media/vision_analysis_pipeline.py` (orchestrator)
+   - `media/analysis_worker.py` (BackgroundTasks entry)
+
+4. **`media/video_frames.py` (Phase 100) is metadata-only** — operates on `VideoMetadata` Pydantic models with placeholder descriptions. NO actual ffmpeg. Phase 191B builds the real backend that fulfills the Phase 100 contract; reuses `VideoFormat` / `VideoResolution` / `VideoMetadata` / `VideoFrame` / `FrameExtractionConfig` / `SceneChangeMarker` types unchanged.
+
+5. **`media/vision_analysis.py` (Phase 101) is text-only with the right schema** — `VisualAnalyzer.analyze_image` takes `image_description: str`, calls `DiagnosticClient.ask()` (text completion). Phase 191B reuses `FindingType` + `Severity` + `VisualFinding` + `VisualAnalysisResult` + `VehicleContext` + `VISION_ANALYSIS_PROMPT` + `SMOKE_COLOR_GUIDE` + `FLUID_COLOR_GUIDE`; ADDS `frames_analyzed` + `model_used` + `cost_estimate_usd` as 3 non-breaking optional fields on `VisualAnalysisResult` (no model redefinition). Plan v1.0's brand-new `VideoAnalysisFindings` model is dropped.
+
+6. **`engine/client.py:DiagnosticClient.ask()` is text-only** — `messages=[{"role": "user", "content": prompt}]` is string-only, no image content blocks. Plan v1.0.1 adds `DiagnosticClient.ask_with_images(prompt, images: list[Path], ...) -> tuple[Message, TokenUsage]` that builds multi-content-block messages with base64-encoded images + threads through the existing cost / cache / token-usage tracking. `media/vision_analysis_pipeline.py` is the consumer of this new method. NEW dedicated test file `tests/test_phase191b_diagnostic_client_images.py` (~6-8 tests).
+
+**Net effect on commit plan:**
+- Commit 1 expands slightly to also touch `engine/client.py` (the new `ask_with_images()` method is a Commit 2 dependency). +1 test file.
+- Commit 2 file paths corrected (was `ai/video_analysis.py`, now `media/vision_analysis_pipeline.py`). Schema reuse drops plan v1.0's `VideoAnalysisFindings` model entirely.
+- Commits 3-7 unchanged.
+
+**Pre-Commit-1 architect time spent on audit and corrections: ~25 min.** Catching this before Builder dispatch prevents an estimated 2-3 hours of Builder rework + a phase_log polluted with mechanical-correction deviations at v1.1 finalize.
+
+**Lesson for the rest of Track I:** every plan v1.0 should ground every file-path claim in a `Glob` or `ls` of the actual codebase **before** the plan commit lands on master, not after. The `mock fidelity` lesson from Phase 190 has a sibling: **path fidelity** — every path in a plan should anchor to `git ls-files` evidence, not to architect assumption about how the codebase is laid out. Filed under F9's broader "snapshot/assumption doesn't match runtime" failure family.
+
+**Next:** Builder-A dispatched for Commit 1 (migration v39 entry + Video models + video_repo + ffmpeg wrapper + DiagnosticClient.ask_with_images extension); Builder-B dispatched for Commit 2 (real Vision pipeline + recorded Anthropic fixtures) in parallel since file overlap is zero.
