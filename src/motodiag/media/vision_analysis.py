@@ -75,6 +75,22 @@ class VisualAnalysisResult(BaseModel):
         description="Notes on image quality issues that may affect analysis accuracy",
     )
 
+    # Phase 191B additions (non-breaking — defaults preserve Phase 101 callers).
+    frames_analyzed: int = Field(
+        default=0,
+        ge=0,
+        description="Number of video frames analyzed in this batch (Phase 191B; 0 for non-video Phase 101 paths)",
+    )
+    model_used: str = Field(
+        default="",
+        description="Claude model that produced these findings (e.g., 'claude-sonnet-4-5-20241022')",
+    )
+    cost_estimate_usd: float = Field(
+        default=0.0,
+        ge=0.0,
+        description="USD cost estimate for the analysis call (Phase 191B; 0.0 for non-API mock paths)",
+    )
+
     @property
     def finding_count(self) -> int:
         """Total number of findings."""
