@@ -101,6 +101,7 @@ def create_app(
     from motodiag.api.routes.shop_mgmt import router as shop_mgmt_router
     from motodiag.api.routes.shops import router as shops_router
     from motodiag.api.routes.vehicles import router as vehicles_router
+    from motodiag.api.routes.videos import router as videos_router
 
     app.include_router(meta_router)             # /healthz, /v1/version
     app.include_router(shops_router, prefix="/v1")
@@ -110,6 +111,7 @@ def create_app(
     app.include_router(kb_router, prefix="/v1")
     app.include_router(shop_mgmt_router, prefix="/v1")
     app.include_router(reports_router, prefix="/v1")
+    app.include_router(videos_router, prefix="/v1")
     app.include_router(live_router)             # WS route declares full /v1/live/... path
 
     # --- Phase 183: OpenAPI enrichment (after routers are mounted) ---

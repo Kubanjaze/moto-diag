@@ -119,6 +119,25 @@ def _now_iso() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _update_file_path(
+    video_id: int, file_path: str, db_path: Optional[str] = None,
+) -> bool:
+    """Update the `file_path` column for a video row; return True on success.
+
+    Internal helper used by the upload route after writing the file to
+    disk: the canonical disk path is derived from ``video_id``, so it's
+    only known post-INSERT. The route inserts with a placeholder, writes
+    the file, then calls this to record the real path.
+    """
+    path = db_path
+    with get_connection(path) as conn:
+        cursor = conn.execute(
+            "UPDATE videos SET file_path = ? WHERE id = ?",
+            (file_path, video_id),
+        )
+        return cursor.rowcount > 0
+
+
 # ---------------------------------------------------------------------------
 # Core CRUD
 # ---------------------------------------------------------------------------

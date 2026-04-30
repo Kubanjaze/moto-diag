@@ -111,6 +111,11 @@ def _exc_class_chain():
     )
     # Phase 182 — report builders
     from motodiag.reporting.builders import ReportBuildError
+    # Phase 191B — video domain
+    from motodiag.core.video_repo import (
+        VideoOwnershipError, VideoQuotaExceededError,
+    )
+    from motodiag.api.routes.videos import VideoFileTooLargeError
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -202,6 +207,13 @@ def _exc_class_chain():
         # Phase 182 — report builders
         (ReportBuildError, 500, "report-build-failed",
          "Report could not be assembled"),
+        # Phase 191B — video domain
+        (VideoOwnershipError, 404, "video-not-found",
+         "Video not found"),
+        (VideoQuotaExceededError, 402, "video-quota-exceeded",
+         "Video quota exceeded"),
+        (VideoFileTooLargeError, 413, "video-too-large",
+         "Video file too large"),
     ]
 
 
