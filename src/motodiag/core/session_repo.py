@@ -353,7 +353,32 @@ TIER_SESSION_MONTHLY_LIMITS: dict[str, int] = {
 
 
 def _month_start_iso() -> str:
-    """First instant of the current UTC calendar month as ISO string."""
+    """First instant of the current UTC calendar month as ISO string.
+
+    Note (Phase 191B fix-cycle 2026-05-01): this function has TWO
+    pre-existing latent bugs that surface together on calendar-month
+    boundaries when the dev machine's local clock and UTC straddle the
+    boundary. Filed for follow-up rather than fixed here:
+
+    1. Format mismatch: returns isoformat() (T-separator) but the
+       table's `created_at` rows are written by `create_session` using
+       ``datetime.now().isoformat()`` (also T-separator, but NAIVE
+       LOCAL time). The lex comparison happens to work BECAUSE of (2)
+       — fixing one without the other gets a different wrong answer.
+
+    2. Naive-local vs UTC: `create_session` writes naive local-time
+       ISO strings; `_month_start_iso` returns aware-UTC ISO. On
+       boundary days (e.g., the dev machine in PT during 17:00-23:59
+       PT corresponds to UTC May 1 — local-PT-April-30 stamps don't
+       count as "this month" by UTC reckoning).
+
+    Fix requires consolidating ALL session_repo writes to UTC + matching
+    the format here. Out of scope for the Phase 191B fix-cycle which
+    only touches video_repo's identical (but only one-bug) variant.
+    Phase 178's quota tests visibly fail today (2026-05-01) until the
+    sister fix lands — track as F10 in moto-diag-mobile/docs/FOLLOWUPS.md
+    or a backend bug ticket.
+    """
     now = datetime.now(timezone.utc)
     return now.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0,

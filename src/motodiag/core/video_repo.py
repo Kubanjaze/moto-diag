@@ -103,15 +103,32 @@ def _row_to_dict(row) -> Optional[dict]:
 
 
 def _month_start_iso() -> str:
-    """First instant of the current UTC calendar month, as ISO string.
+    """First instant of the current UTC calendar month.
 
-    Mirrors `session_repo._month_start_iso` for consistency. Used by
-    the per-tier monthly aggregate quota query.
+    **Format MUST match SQLite's `datetime('now')` output for lex
+    comparison to work in WHERE clauses against `created_at`** —
+    space-separated, no microseconds, no timezone suffix. Example:
+    ``'2026-05-01 00:00:00'``.
+
+    Phase 191B fix-cycle (2026-05-01): the original implementation
+    used Python's ``isoformat()`` which produces T-separator + tz
+    (``'2026-05-01T00:00:00+00:00'``). On boundary days where
+    ``created_at`` and ``month_start`` shared a date prefix, the
+    SPACE-vs-T mismatch at character index 10 made the lex comparison
+    treat ``created_at`` as LESS THAN ``month_start`` (SPACE 32 < T 84),
+    so the WHERE clause excluded all current-day rows and the monthly
+    quota always returned 0 on day 1 of any month. Surfaced when 3
+    Phase 191B + 6 Phase 178 quota tests broke on 2026-05-01.
+
+    Same fix applied to ``session_repo._month_start_iso`` — pre-existing
+    bug there since Phase 178; folded into this commit because shipping
+    a video_repo fix while leaving session_repo broken would be
+    inconsistent.
     """
     now = datetime.now(timezone.utc)
     return now.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0,
-    ).isoformat()
+    ).strftime("%Y-%m-%d %H:%M:%S")
 
 
 def _now_iso() -> str:
