@@ -39,7 +39,7 @@ class TestModelResolution:
         assert _resolve_model("haiku") == "claude-haiku-4-5-20251001"
 
     def test_resolve_sonnet_alias(self):
-        assert _resolve_model("sonnet") == "claude-sonnet-4-5-20241022"
+        assert _resolve_model("sonnet") == "claude-sonnet-4-6"
 
     def test_resolve_full_model_id_passthrough(self):
         full_id = "claude-haiku-4-5-20251001"
@@ -57,7 +57,7 @@ class TestCostCalculation:
 
     def test_sonnet_cost_higher(self):
         haiku_cost = _calculate_cost("claude-haiku-4-5-20251001", 1000, 500)
-        sonnet_cost = _calculate_cost("claude-sonnet-4-5-20241022", 1000, 500)
+        sonnet_cost = _calculate_cost("claude-sonnet-4-6", 1000, 500)
         assert sonnet_cost > haiku_cost
 
     def test_zero_tokens_zero_cost(self):
@@ -221,7 +221,7 @@ class TestClientInit:
 
     def test_client_model_override(self):
         client = DiagnosticClient(api_key="sk-test", model="sonnet")
-        assert client.model == "claude-sonnet-4-5-20241022"
+        assert client.model == "claude-sonnet-4-6"
 
     def test_client_session_initialized(self):
         client = DiagnosticClient(api_key="sk-test")

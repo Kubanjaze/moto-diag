@@ -23,6 +23,7 @@ providing the real-bytes Vision call that consumes ffmpeg-extracted frames.
 from __future__ import annotations
 
 import logging
+import os
 from pathlib import Path
 from typing import Optional
 
@@ -36,7 +37,15 @@ _log = logging.getLogger(__name__)
 
 
 # Sonnet for default; Haiku for cost-tier override per plan B5.
-DEFAULT_VISION_MODEL = "sonnet"
+#
+# Phase 191B fix-cycle-4 (2026-05-04): default reads MOTODIAG_VISION_MODEL
+# env var first to allow ops-time override without a code change. Architect
+# ask after the hardcoded "sonnet" alias resolved to a non-existent model
+# ID at re-smoke step 7. The env var accepts an alias ("sonnet" / "haiku")
+# OR a full model ID (e.g., "claude-sonnet-4-6"). Aliases route through
+# engine/client.py's _resolve_model + MODEL_ALIASES table so both the
+# pricing dict + the SDK call see the same resolved ID.
+DEFAULT_VISION_MODEL = os.environ.get("MOTODIAG_VISION_MODEL", "sonnet")
 
 # Defensive cap; matches media/ffmpeg.py MAX_FRAMES (Builder-A's Commit 1).
 # If the caller passes more than this, we trim silently — ffmpeg's own

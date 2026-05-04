@@ -83,7 +83,7 @@ class VisualAnalysisResult(BaseModel):
     )
     model_used: str = Field(
         default="",
-        description="Claude model that produced these findings (e.g., 'claude-sonnet-4-5-20241022')",
+        description="Claude model that produced these findings (e.g., 'claude-sonnet-4-6')",
     )
     cost_estimate_usd: float = Field(
         default=0.0,

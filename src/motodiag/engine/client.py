@@ -31,16 +31,35 @@ from motodiag.engine.prompts import (
 
 _log = logging.getLogger(__name__)
 
-# Model pricing per million tokens (USD) as of 2026-04
+# Model pricing per million tokens (USD) as of 2026-05.
+#
+# Phase 191B fix-cycle-4 (2026-05-04): the prior "sonnet" entry pointed
+# at "claude-sonnet-4-5-20241022" which was a fabricated/unreleased
+# model ID — Anthropic's Sonnet 4 family went 4.0 -> 4.6 with no 4.5
+# release. Architect-gate caught the bug at re-smoke step 7: the live
+# Anthropic API returned 404 not_found_error every Vision call. Latent
+# since the engine module was first written; surfaced by Phase 191B's
+# Commit 2 because that's the first phase to do REAL Anthropic API
+# calls instead of mocked-only test paths. Sixth instance of the F9
+# "snapshot/assumption doesn't match runtime" failure family.
+#
+# When Anthropic releases a new generation, update BOTH the alias map
+# AND this pricing dict in lockstep. F15 (filed at fix-cycle-4) wires
+# a regression test that asserts the resolved model ID is in a known-
+# good set so this drift is caught at pytest-time instead of
+# 404-from-live-API time.
 MODEL_PRICING = {
     "claude-haiku-4-5-20251001": {"input": 0.80, "output": 4.00},
-    "claude-sonnet-4-5-20241022": {"input": 3.00, "output": 15.00},
+    "claude-sonnet-4-6": {"input": 3.00, "output": 15.00},
 }
 
-# Default model alias mapping
+# Default model alias mapping. Aliases insulate callers from full model
+# ID changes — bump the value here when Anthropic ships a new generation;
+# call sites that pass "sonnet" / "haiku" pick up the new model
+# automatically.
 MODEL_ALIASES = {
     "haiku": "claude-haiku-4-5-20251001",
-    "sonnet": "claude-sonnet-4-5-20241022",
+    "sonnet": "claude-sonnet-4-6",
 }
 
 

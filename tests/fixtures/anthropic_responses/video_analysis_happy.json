@@ -2,7 +2,7 @@
   "id": "msg_synthetic_phase191B_happy_01",
   "type": "message",
   "role": "assistant",
-  "model": "claude-sonnet-4-5-20241022",
+  "model": "claude-sonnet-4-6",
   "stop_reason": "tool_use",
   "stop_sequence": null,
   "usage": {

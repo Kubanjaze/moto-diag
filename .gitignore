@@ -26,6 +26,12 @@ env/
 data/motodiag.db
 output/
 
+# Phase 191B uploaded video files + per-session frame extracts.
+# Keep the data/videos/.gitkeep so the directory persists for fresh
+# deploys, but never commit actual uploaded media or frame extracts.
+data/videos/*
+!data/videos/.gitkeep
+
 # OS
 .DS_Store
 Thumbs.db

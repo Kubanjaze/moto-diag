@@ -168,7 +168,7 @@ class TestSoftDeleteAndState:
         }
         assert set_analysis_findings(
             vid, findings,
-            model_used="claude-sonnet-4-5-20241022",
+            model_used="claude-sonnet-4-6",
             cost_usd=0.085,
             db_path=db,
         ) is True
@@ -179,7 +179,7 @@ class TestSoftDeleteAndState:
         assert row["analysis_findings"]["overall_assessment"] == "looks fine"
         # model_used + cost_estimate_usd were folded in.
         assert row["analysis_findings"]["model_used"] == \
-            "claude-sonnet-4-5-20241022"
+            "claude-sonnet-4-6"
         assert row["analysis_findings"]["cost_estimate_usd"] == 0.085
 
 

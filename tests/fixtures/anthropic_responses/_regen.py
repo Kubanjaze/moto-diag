@@ -102,7 +102,7 @@ def _call_real_api(prompt_kind: str, frame_paths: list[Path]) -> dict:
     }]
 
     response = client.messages.create(
-        model="claude-sonnet-4-5-20241022",
+        model="claude-sonnet-4-6",
         max_tokens=4096,
         tools=tools,
         tool_choice={"type": "tool", "name": "report_video_findings"},
