@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "motodiag"
-version = "0.1.0"
+version = "0.2.0"
 description = "AI-powered motorcycle diagnostic tool — symptom analysis, fault code interpretation, guided troubleshooting"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -34,6 +34,12 @@ ai = [
 api = [
     "fastapi>=0.110",
     "uvicorn>=0.29",
+    # Phase 191B: required by FastAPI's Form() + UploadFile for the
+    # POST /v1/sessions/{id}/videos multipart upload endpoint. Without
+    # it, FastAPI raises RuntimeError("Form data requires
+    # python-multipart") at create_app() time. Pinned at 0.0.20+ to
+    # match the version installed during Phase 191B fix-cycle-1.
+    "python-multipart>=0.0.20",
 ]
 hardware = [
     "pyserial>=3.5",

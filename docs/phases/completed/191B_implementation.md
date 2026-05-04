@@ -1,6 +1,8 @@
 # Phase 191B — Video Diagnostic Upload + Claude Vision AI Analysis Pipeline
 
-**Version:** 1.0.1 | **Tier:** Standard | **Date:** 2026-04-30 (v1.0 written 2026-04-29; v1.0.1 corrects pre-Commit-1 path/scope drift after deeper codebase audit)
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-05-04 | **Status:** ✅ Complete
+
+(v1.0 written 2026-04-29; v1.0.1 plan-of-record correction 2026-04-30; v1.1 finalize 2026-05-04 after architect-gate PASS on 22/22 steps + 4 fix-cycles surfacing 7 bugs of varying provenance.)
 
 ## Plan v1.0.1 — pre-Commit-1 corrections from codebase audit
 
@@ -474,26 +476,77 @@ Polling for analysis state lives in `useSessionVideos`'s effect: when `videos` a
 
 ## Verification Checklist
 
-- [ ] Migration v38 → v39 applies cleanly; v39 → v38 down works; cascade-delete from sessions verified.
-- [ ] All 5 video endpoints return ProblemDetail envelope on every error path (404 / 422 / 413 / 500 / 503).
-- [ ] X-API-Key propagation guard test passes for all 5 endpoints.
-- [ ] Multipart Content-Type preservation guard test passes for POST upload (mirrors Phase 188 commit-6 lesson).
-- [ ] `require_tier('shop')` enforced on POST; individual-tier API key gets 403 with ProblemDetail.
-- [ ] `require_api_key` enforced on GET / DELETE / file-stream.
-- [ ] Per-session count cap (10) + size cap (1 GB) enforced; 413 Payload Too Large on size cap exceedance.
-- [ ] Per-tier monthly aggregate quota enforced; shop tier 201st upload in calendar month → 402 with ProblemDetail.
-- [ ] Soft-delete: list endpoint excludes `deleted_at IS NOT NULL`; GET on soft-deleted returns 404; DELETE is idempotent (second call returns 204).
-- [ ] File-stream returns Content-Type `video/mp4` + Content-Length + Accept-Ranges `bytes`.
-- [ ] ffmpeg subprocess wrapper extracts expected frame count from sample fixture; audio mp3 sidecar created.
-- [ ] ffmpeg-missing detection: env-var `FFMPEG_BIN_OVERRIDE=/nonexistent` → upload returns 503 with ProblemDetail.
-- [ ] Claude Vision wrapper structured-output schema validates; mocked Anthropic SDK returns shape pulled from real-API-response fixture (per Phase 190 Bug 2 lesson).
-- [ ] End-to-end happy path: POST upload → response 201 with `analysis_state='pending'` → BackgroundTask fires → poll until `analyzed` → `analysis_findings` populated.
-- [ ] Failure paths: ffmpeg fails → `analysis_state='unsupported'` (terminal); Anthropic call fails 3x → `analysis_state='analysis_failed'` (retryable later).
-- [ ] Mobile `useSessionVideos.test.ts` continues passing UNCHANGED after hook swap (load-bearing assertion for Phase 191's handoff guarantee).
-- [ ] Mobile videoCaptureMachine reducer extended with `uploading` state; existing 191 tests still pass.
-- [ ] Mobile VideosCard renders 5-state analysis badge correctly per state.
-- [ ] OpenAPI spec refresh adds `videos` tag + multipart request body shape + binary response media type for file-stream.
-- [ ] No regression: full Phase 175-184 backend integration tests + Phase 188-191 mobile tests.
+- [x] Migration v38 → v39 applies cleanly; v39 → v38 down works; cascade-delete from sessions verified. **15 tests in test_phase191b_migration_039.py**.
+- [x] All 5 video endpoints return ProblemDetail envelope on every error path (404 / 422 / 413 / 500 / 503). Architect-gate Step 8 verified end-to-end.
+- [x] X-API-Key propagation guard test passes for all 5 endpoints.
+- [x] Multipart Content-Type preservation guard test passes for POST upload (mirrors Phase 188 commit-6 lesson).
+- [x] `require_tier('shop')` enforced on POST; individual-tier API key gets 403 with ProblemDetail. **Architect-gate organic verification at re-smoke step 5** (essentially closed planned Step 12 ahead of schedule).
+- [x] `require_api_key` enforced on GET / DELETE / file-stream.
+- [x] Per-session count cap (10) + size cap (1 GB) enforced; 413 Payload Too Large on size cap exceedance.
+- [x] Per-tier monthly aggregate quota enforced; shop tier 201st upload in calendar month → 402 with ProblemDetail.
+- [x] Soft-delete: list endpoint excludes `deleted_at IS NOT NULL`; GET on soft-deleted returns 404; DELETE is idempotent (second call returns 204). Architect-gate verified DELETE → 204.
+- [x] File-stream returns Content-Type `video/mp4` + Content-Length + Accept-Ranges `bytes`.
+- [x] ffmpeg subprocess wrapper extracts expected frame count from sample fixture; audio mp3 sidecar created. **20/20 ffmpeg tests pass at Commit 7 finalize** (5 previously-gated TestRealFFmpeg tests un-skipped after generating `tests/fixtures/videos/sample_3sec.mp4` + parser fix for ffmpeg 8.1's codec-tag-vs-resolution collision).
+- [x] ffmpeg-missing detection: env-var `FFMPEG_BIN_OVERRIDE=/nonexistent` → upload returns 503 with ProblemDetail. **Architect-gate organic verification at smoke Step 13** (fired before ffmpeg install; clean transition to analysis_failed with documented log line).
+- [x] Claude Vision wrapper structured-output schema validates; mocked Anthropic SDK returns shape pulled from real-API-response fixture (per Phase 190 Bug 2 lesson).
+- [x] End-to-end happy path: POST upload → response 201 with `analysis_state='pending'` → BackgroundTask fires → poll until `analyzed` → `analysis_findings` populated. **Architect-gate verified end-to-end against live Anthropic API at re-smoke**: 5 frames analyzed, model_used confirmed as `claude-sonnet-4-6`, cost = $0.0354/video, structured findings + suggested_diagnostics returned (Sonnet correctly noted the test recording was a CGI living room and not a motorcycle).
+- [x] Failure paths: ffmpeg fails → `analysis_state='unsupported'` (terminal); Anthropic call fails 3x → `analysis_state='analysis_failed'` (retryable later). **3 organic verifications at re-smoke**: ffmpeg-missing → analysis_failed, Vision-key-missing → analysis_failed, bogus-model → analysis_failed (the bogus-model failure was actually fix-cycle-4's bug; resolved + retested).
+- [x] Mobile `useSessionVideos.test.ts` continues passing UNCHANGED after hook swap (load-bearing assertion for Phase 191's handoff guarantee). **10 of 12 it() titles preserved verbatim; 2 reframed for HTTP-equivalent failure modes** (FS-disk-absence-silent-no-op has no HTTP analog → reframed as backend 404; the "all 4 Phase 191B fields stub null" assertion inverted to "analysisState + analysisFindings propagate from backend"). Mapping table documented in the test file's top comment.
+- [x] Mobile videoCaptureMachine reducer extended with `uploading` state; existing 191 tests still pass. **38 tests total** (was 22; +16 for uploading-state transitions + RETRY_UPLOAD path + Q1c/Q2 integration chain).
+- [x] Mobile VideosCard renders 5-state analysis badge correctly per state. Architect-gate verified findings expansion + cold-relaunch persistence.
+- [x] OpenAPI spec refresh adds `videos` tag + multipart request body shape + binary response media type for file-stream. **48 → 51 paths** in `api-schema/openapi.json`; **3946 → 4327 lines** in `src/api-types.ts` after `npm run generate-api-types`.
+- [x] No regression: full Phase 175-184 backend integration tests + Phase 188-191 mobile tests. **265 backend tests in the regression sweep + 293 mobile tests** all green at Commit 7.
+
+### Bug verification (architect-gate fix-cycle commits, all closed)
+
+- [x] **fix-cycle-1 commit `832579d`** (architect-gate Step 1B): `motodiag serve` now applies pending migrations at startup (was silently running on stale schema). 8 regression tests (`test_phase191b_serve_migrations.py`).
+- [x] **fix-cycle-1 commit `832579d`** (architect-gate sister bug): `video_repo._month_start_iso()` timestamp format normalized to match SQLite's `datetime('now')` space-format (was T-separator + tz; date-boundary latent bug surfaced on May 1 when current-day rows were excluded from monthly quota). 3 video_repo monthly tests flipped green → red → green.
+- [x] **fix-cycle-2 commit `7e9702e`** (architect-gate Step 6): mobile `useSessionVideos.addRecording` now prefixes `file://` to `recording.sourceUri` before FormData multipart construction. RN's networking layer requires the scheme on Android; without it the body construction silently failed before fetch dispatch. F11 (catch-block error logging) shipped in same commit.
+- [x] **fix-cycle-3 commit `0babc55`** (architect-gate Step 5 re-smoke): new `motodiag subscription set --user N --tier T` CLI subcommand for the smoke-runbook tier-upgrade path. F14 (motodiag tier disclaimer accuracy: CLI gating vs API enforcement) shipped in same commit.
+- [x] **fix-cycle-4 commit `c453872`** (architect-gate Step 7 re-smoke): `engine/client.py:MODEL_ALIASES['sonnet']` corrected from fabricated `claude-sonnet-4-5-20241022` (which 404'd against live API) to `claude-sonnet-4-6` per CLAUDE.md system context. 14 hardcoded test references to the bogus ID scrubbed (the tests were pinning the bug into place — exactly what F15's regression guard now prevents). MOTODIAG_VISION_MODEL env var override added.
+- [x] **Commit 7 fix (this finalize)**: `_parse_probe_stderr` width/height regex tightened against ffmpeg 8.1's stream line shape — original `(\d+)x(\d+)` was matching the AVC1 codec tag (`0x31637661`) before reaching the actual resolution. Discovered when un-skipping the 5 gated TestRealFFmpeg tests. 20/20 ffmpeg tests now pass with zero skips.
+- [x] **Architect full-gate PASS on 22 / 22 steps (2026-05-04)**: complete Vision pipeline ran end-to-end against live Anthropic API; cost $0.0354 for a 5-frame test recording; findings expansion renders correctly in mobile + persists across cold-relaunch.
+
+## Deviations from Plan
+
+1. **Plan v1.0.1's Correction 1 was wrong about anthropic dep status.** Plan v1.0.1 claimed `anthropic >= 0.40` was already in `[project].dependencies`; actually it was in `[project.optional-dependencies].ai`. Plan v1.0's original "add anthropic to required deps" intent re-applies. Resolved at Commit 7 by leaving anthropic in `[ai]` extras (matches the rest of the project's modular install posture) but adding `python-multipart>=0.0.20` to `[api]` extras so future architect-gate environments don't need a manual `pip install python-multipart` step. Documented in pyproject.toml inline comment.
+
+2. **5 fix-cycles instead of the planned 1 round of architect-gate.** Plan v1.0 anticipated "fix commits 8+ on same branch (Phase 188 / 190 / 191 precedent)" — 4 fix-cycle commits actually landed across 4 architect-gate halts. Each surfaced a bug in the F9 "snapshot/assumption doesn't match runtime" failure family; cumulative verdict is that pattern is robust enough to merit a Phase 192 lead-ticket: an architectural-pattern doc + lint rule (filed as Phase 192 anchor task in the architect's PASS handoff).
+
+3. **6 instances of the F9 failure family on Track I (3 in Phase 191B alone).** Phase 188 HVE shape mock + Phase 190 substring-match + Phase 191 closure-state capture (3 baseline) + Phase 191B serve.py deploy-path + Phase 191B Commit 1 timestamp-format + Phase 191B Commit 6 file:// prefix + Phase 191B Commit 2 model-string. Counter-intuitive observation: the more tests we wrote, the more bugs surfaced — because tests were mocking exactly the seam where reality diverged. Phase 192's lint rule should target this pattern at the test-author level.
+
+4. **Phase 191B Commit 1's `_parse_probe_stderr` had a latent ffmpeg 8.1+ regex bug.** The original regex worked against ffmpeg 4.x stream lines (which don't include the AVC1 codec tag's hex literal in the same line as the resolution) but broke against ffmpeg 8.1's stream line shape. Discovered at Commit 7 finalize when un-skipping the 5 previously-gated TestRealFFmpeg tests against the freshly-generated fixture. Fixed in the same Commit 7 with a tighter regex that anchors WxH to a comma-space prefix + constrains both dimensions to 1-5 digits (ffmpeg's hex codec tags are 8 hex chars, so they don't match `\d{1,5}`).
+
+5. **`tests/fixtures/videos/sample_3sec.mp4` regenerated at Commit 7** with both video AND audio tracks (original generation used video-only `lavfi:testsrc`; `extract_audio` test failed because the source had no audio stream to extract). Updated the fixture README's regeneration command to include the `sine=frequency=440` audio source.
+
+6. **F15-strict (real-API contract test) deferred.** The structural F15 (`KNOWN_GOOD_MODEL_IDS` + alias resolution check) catches the same class of bug at zero cost; the per-run cost of hitting Anthropic with each configured model isn't worth it for the catch rate. F15-strict is a Phase 192+ ticket if we ever want continuous-deployment confidence.
+
+7. **F13 deferred to Phase 192 polish.** Mobile error-mapping should distinguish 402 (quota) from 403 (tier) — currently both surface as quota_exceeded UI with the per-session-limit copy as the headline. Once user 1 was on shop tier (via the new `subscription set` CLI), the 403 didn't surface again in the smoke happy-path, so F13 didn't block. Filed in mobile FOLLOWUPS.md.
+
+8. **F18 (NEW) — `image_quality_note` field not rendered in mobile findings expansion.** Backend's `VisualAnalysisResult` includes `image_quality_note` but mobile's `VideoFinding` schema mapping doesn't propagate it to the findings expansion UI. Architect noted at re-smoke; filed in mobile FOLLOWUPS.md for Phase 192 polish.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Backend feature branch | `phase-191B-video-upload-ai-analysis` (LOCAL — not pushed; rebase-merged to master at finalize) |
+| Backend commits | 7 (`5970aff` migration+models+repo+ffmpeg+ask_with_images / `16512a4` Vision pipeline+worker / `c1a6fb3` 5-endpoint API surface / `832579d` fix-cycle-1 serve+timestamp / `7e9702e` fix-cycle-2 file:// prefix [MOBILE] / `0babc55` fix-cycle-3 subscription set+F14 / `c453872` fix-cycle-4 model-string+F15) + Commit 7 finalize |
+| Mobile feature branch | `phase-191B-video-upload-ai-analysis` (LOCAL — not pushed; rebase-merged to main at finalize) |
+| Mobile commits | 2 (`c2b912c` hook swap+uploading state+5-state badge / `7e9702e` file:// prefix+F11) + Commit 7 finalize |
+| Backend Phase 191B test files | 7 (migration_039 / video_repo / ffmpeg / diagnostic_client_images / video_analysis_pipeline / videos_api / serve_migrations / subscription_set_cli / vision_model_validation) |
+| Backend Phase 191B tests | **151 passed, 0 skipped** (sample_3sec.mp4 fixture + parser fix at Commit 7 closed the 5 previously-gated TestRealFFmpeg skips) |
+| Backend full regression sweep | **265 passed, 0 skipped** across phases 79 + 100 + 101 + 102 + 103 + 191B (model-touching tests) |
+| Mobile Jest tests | **293 passed, 0 skipped** across 21 suites |
+| `tsc --noEmit` | clean every commit |
+| Backend pyproject.toml | `0.1.0 → 0.2.0` (Track I major-feature bump per plan v1.0.1) |
+| Backend implementation.md | `0.13.7 → 0.13.8` |
+| Schema | `38 → 39` (videos table + cascade FK) |
+| Mobile package.json | `0.0.6 → 0.0.7` |
+| Mobile implementation.md | `0.0.8 → 0.0.9` |
+| Architect gate | round 1 BLOCKED at Step 1B (fix-cycle-1) → round 2 BLOCKED at Step 6 (fix-cycle-2) → round 3 BLOCKED at Step 5 (fix-cycle-3) → round 4 BLOCKED at Step 7 (fix-cycle-4) → **round 5 PASS on 22/22 steps** with full Vision pipeline running end-to-end against live Anthropic API |
+| Track I scorecard | **8 of 21 phases complete** (185 / 186 / 187 / 188 / 189 / 190 / 191 / 191B) |
+
+**Key finding: the F9 "snapshot/assumption doesn't match runtime" failure family is now robust enough to merit architectural intervention.** Phase 191B alone surfaced 3 new instances on top of the 3 pre-existing ones from Phases 188 / 190 / 191. The pattern is: tests pass against assumptions baked into mocks; production fails when reality diverges from the mock. Specific shapes: API mock vs real backend (188), error-text-shape mock vs real wire format (190), state-snapshot capture in callbacks (191), config-file deploy-path assumption (191B C1 serve.py), wire-format mock vs real fetch transport (191B C6), and (the one most architecturally interesting) **tests hardcoding values that assert the bug into place** (191B C2 model-string — 14 test references pinning the wrong model ID across Phase 79 + Phase 191B test files). Phase 192's lead ticket should be: a contributing.md doc on the pattern + an ESLint/ruff rule that flags suspicious patterns (e.g., test files containing literal model IDs that aren't centralized in a single source-of-truth set; mocks that don't reference the actual production schema/contract). The cost of this intervention is one phase's worth of work; the cost of NOT doing it is another 3-4 fix-cycles per phase that introduces a new external integration.
 
 ## Risks
 

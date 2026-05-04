@@ -343,15 +343,28 @@ def _parse_probe_stderr(stderr: str) -> dict:
         duration = int(h) * 3600 + int(mn) * 60 + float(s)
 
     # Video stream line:
-    #   "Stream #0:0: Video: h264 (Constrained Baseline) ..., 320x240, ..., 30 fps, 30 tbr, ..."
+    #   "Stream #0:0[0x1](und): Video: h264 (High 4:4:4 Predictive)
+    #    (avc1 / 0x31637661), yuv444p(progressive), 320x240 [SAR 1:1
+    #    DAR 4:3], 41 kb/s, 30 fps, ..."
+    #
+    # Phase 191B Commit 7 (2026-05-04): tightened the WxH regex.
+    # Original `(\d+)x(\d+)` matched the AVC1 codec tag `0x31637661`
+    # (parsed as `0` x `31637661`) before reaching the actual `320x240`,
+    # because ffmpeg 8.1+ embeds the parenthesized hex codec tag right
+    # before the resolution. Fix: require the WxH pattern to be preceded
+    # by a comma+space (the actual resolution always is) and constrain
+    # both dimensions to 1-5 digits (real-world pixel counts; hex tags
+    # in this format have 8 hex chars which won't match \d+).
     m = re.search(
-        r"Stream\s*#\d+[:\.]\d+[^:]*:\s*Video:\s*([^\s,]+).*?(\d+)x(\d+)",
+        r"Stream\s*#\d+[:\.]\d+[^:]*:\s*Video:\s*([^\s,]+)",
         stderr,
     )
     if m:
         codec = m.group(1)
-        width = int(m.group(2))
-        height = int(m.group(3))
+    res_match = re.search(r",\s*(\d{1,5})x(\d{1,5})\b", stderr)
+    if res_match:
+        width = int(res_match.group(1))
+        height = int(res_match.group(2))
 
     m = re.search(r"(\d+(?:\.\d+)?)\s*fps", stderr)
     if m:
