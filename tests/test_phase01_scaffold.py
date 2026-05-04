@@ -2,6 +2,8 @@
 
 import pytest
 
+from motodiag.engine.client import MODEL_ALIASES
+
 
 class TestPackageImports:
     """All subpackages should be importable."""
@@ -41,7 +43,7 @@ class TestConfig:
         assert s.app_name == "motodiag"
         assert s.version == "0.1.0"
         assert s.debug is False
-        assert s.ai_model == "claude-haiku-4-5-20251001"
+        assert s.ai_model == MODEL_ALIASES["haiku"]
 
     def test_project_root(self):
         from motodiag.core.config import PROJECT_ROOT

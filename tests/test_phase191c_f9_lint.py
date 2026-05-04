@@ -286,7 +286,12 @@ class TestCheckDeployPathInitDb:
         assert findings == []
 
     def test_exempts_via_f9_noqa_comment(self, tmp_path: Path):
-        """Explicit ``# f9-noqa: deploy-path-init-db <reason>`` opts out."""
+        """Explicit ``# f9-noqa: deploy-path-init-db <reason>`` opts out
+        WHEN reason is >= MIN_OPTOUT_REASON_CHARS chars long. Phase
+        191C Commit 5a refinement enforces a length floor so opt-outs
+        teach (rather than drive-by-allow). Drive-by short reasons get
+        treated as no opt-out + a malformed-optout finding gets
+        emitted (covered in test_rejects_too_short_reason below)."""
         cli_file = tmp_path / "noqa_cmd.py"
         cli_file.write_text(
             'import click\n'
@@ -299,7 +304,8 @@ class TestCheckDeployPathInitDb:
             '@cli_group.command("test-only-serve")\n'
             'def test_only_serve_cmd():\n'
             '    uvicorn.run("app:create", factory=True)  '
-            '# f9-noqa: deploy-path-init-db tests-only CLI\n',
+            '# f9-noqa: deploy-path-init-db tests-only CLI; never serves '
+            'real traffic, init_db handled by test fixture\n',
             encoding="utf-8",
         )
         findings = check_deploy_path_init_db(tmp_path)

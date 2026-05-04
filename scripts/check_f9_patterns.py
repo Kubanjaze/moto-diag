@@ -50,6 +50,38 @@ EXEMPT_CONTAINER_NAMES = {
 SERVE_CALLS = {"uvicorn.run", "app.run", "serve"}
 
 
+# === Opt-out comment enforcement (Phase 191C Commit 5a refinement) ===
+#
+# File-level: ``# f9-allow-{kind}: <reason>`` near the top of a file
+# opts the entire file out of the named check. ``{kind}`` is one of
+# ``model-ids`` or ``deploy-path-init-db``.
+#
+# Per-line: ``# f9-noqa: {kind} <reason>`` opts a single occurrence
+# out (used inside Click-command function bodies for subspecies (iv)).
+#
+# Both forms require a <reason> at least MIN_OPTOUT_REASON_CHARS long
+# so opt-outs can't be drive-by comments. Recommended reason categories
+# (not enforced; soft guidance for future audits to bucket by):
+#   - SSOT-pin:           file pins canonical model IDs (e.g.,
+#                         test_phase79_engine_client validates
+#                         MODEL_ALIASES values directly)
+#   - meta-test:          file IS a test of the lint/pattern rules
+#                         themselves (e.g., test_phase191c_f9_lint
+#                         contains synthetic opt-out fixtures)
+#   - contract-assertion: line asserts on a backend-controlled
+#                         contract value (e.g., the resolved Vision
+#                         model used in a captured response)
+MIN_OPTOUT_REASON_CHARS = 20
+# How many lines from top to scan for the file-level opt-out comment.
+# Bumped from 30 to 100 in the Commit 5a sanity-check pass: real Python
+# test files put the opt-out below the module docstring, which can run
+# 30-50 lines for thoroughly-documented files (e.g.,
+# test_phase191b_vision_model_validation.py is 38 lines of docstring).
+# 100 covers all realistic cases without becoming a scanning-cost
+# concern (test files are typically <500 LoC).
+FILE_OPTOUT_SCAN_LINES = 100
+
+
 @dataclass
 class F9Finding:
     """Diagnostic record produced by an F9 check.
@@ -107,6 +139,26 @@ def check_model_ids(roots: Iterable[Path]) -> list[F9Finding]:
                 tree = ast.parse(source, filename=str(path))
             except (SyntaxError, OSError):
                 continue
+            # File-level opt-out: top-of-file `# f9-allow-model-ids:
+            # <reason>` (reason length >= MIN_OPTOUT_REASON_CHARS).
+            # Phase 191C v1.0.1 + Commit 5a refinement: SSOT-pin test
+            # files (test_phase79_engine_client, test_phase162_5_ai_
+            # client, test_phase191b_vision_model_validation) opt out
+            # entirely because their literals ARE the source of truth
+            # — refactoring them through MODEL_ALIASES would make them
+            # tautological. Malformed opt-outs (missing reason / too
+            # short) emit a finding so the comment can't be a drive-by.
+            allow_optout, allow_err = _file_level_optout(
+                source, kind="model-ids",
+            )
+            if allow_optout:
+                continue
+            if allow_err is not None:
+                # Fill in the real path; helper used a placeholder.
+                allow_err.file = path
+                findings.append(allow_err)
+                # Fall through to also report any literal findings —
+                # malformed opt-out means it doesn't apply.
             findings.extend(_walk_for_model_ids(tree, path, source))
     return findings
 
@@ -291,14 +343,79 @@ def _has_init_db_call(func: ast.FunctionDef) -> bool:
 def _opt_out_present(
     func: ast.FunctionDef, source_lines: list[str]
 ) -> bool:
-    """True if a ``# f9-noqa: deploy-path-init-db ...`` comment is in ``func``."""
+    """True if a valid ``# f9-noqa: deploy-path-init-db <reason>`` comment
+    is in ``func`` body. Reason must be >= MIN_OPTOUT_REASON_CHARS chars.
+    Drive-by ``# f9-noqa: deploy-path-init-db`` (no/short reason) does
+    NOT count as an opt-out — keeps the opt-out as a documentation tax,
+    not a free escape hatch.
+    """
+    import re
+    pattern = re.compile(
+        r"#\s*f9-noqa:\s*deploy-path-init-db\b\s*(.*)$"
+    )
     end_line = func.end_lineno or func.lineno
     start = max(0, func.lineno - 1)
     stop = min(end_line, len(source_lines))
     for ln in range(start, stop):
-        if "f9-noqa: deploy-path-init-db" in source_lines[ln]:
+        m = pattern.search(source_lines[ln])
+        if m is None:
+            continue
+        reason = m.group(1).strip()
+        if len(reason) >= MIN_OPTOUT_REASON_CHARS:
             return True
+        # Comment present but reason too short — don't honor the opt-out.
+        # Caller treats this as no opt-out + reports the underlying finding.
     return False
+
+
+def _file_level_optout(
+    source: str, kind: str,
+) -> tuple[bool, F9Finding | None]:
+    """Scan the first ``FILE_OPTOUT_SCAN_LINES`` lines of ``source`` for
+    a ``# f9-allow-{kind}: <reason>`` comment.
+
+    Returns:
+        ``(True, None)`` — valid opt-out; the file is exempt from the
+            ``{kind}`` check.
+        ``(False, finding)`` — comment is present but malformed (missing
+            reason or reason shorter than MIN_OPTOUT_REASON_CHARS). The
+            returned finding is appended to the rule's output so the
+            architect notices the bad comment + can either fix it or
+            remove it. The rule continues to report any underlying
+            violations.
+        ``(False, None)`` — no opt-out comment present; the rule runs
+            normally.
+
+    Reason categories (soft guidance, not enforced): SSOT-pin /
+    meta-test / contract-assertion.
+    """
+    import re
+    pattern = re.compile(
+        rf"#\s*f9-allow-{re.escape(kind)}:\s*(.*)$"
+    )
+    lines = source.splitlines()
+    for idx, line in enumerate(lines[:FILE_OPTOUT_SCAN_LINES]):
+        m = pattern.search(line)
+        if m is None:
+            continue
+        reason = m.group(1).strip()
+        if len(reason) >= MIN_OPTOUT_REASON_CHARS:
+            return True, None
+        # Malformed: emit a finding so the comment can't be a drive-by.
+        return False, F9Finding(
+            file=Path("<source>"),  # caller fills in the real path
+            line=idx + 1,
+            rule=f"{kind}-malformed-optout",
+            message=(
+                f"Malformed f9-allow-{kind} opt-out: reason is "
+                f"{len(reason)} chars (need >= {MIN_OPTOUT_REASON_CHARS}). "
+                f"Opt-outs must teach: state WHY this file/line is exempt "
+                f"(e.g., SSOT-pin / meta-test / contract-assertion + "
+                f"specifics). Drive-by opt-outs defeat the rule's purpose."
+            ),
+            snippet=line.strip(),
+        )
+    return False, None
 
 
 # ---------------------------------------------------------------------

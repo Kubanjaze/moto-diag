@@ -28,7 +28,7 @@ from motodiag.core.database import get_connection, init_db
 from motodiag.crm import customer_repo
 from motodiag.crm.models import Customer
 from motodiag.shop import (
-    AIResponse, PriorityBudgetExhausted, PriorityScore,
+    AIResponse, MODEL_ALIASES, PriorityBudgetExhausted, PriorityScore,
     PriorityScoreResponse, PriorityScorerError, TokenUsage,
     create_intake, create_shop, create_work_order, get_work_order,
     open_work_order, complete_work_order, start_work,
@@ -99,7 +99,7 @@ def _seed_open_wo(db_path, priority=3):
 
 def make_fake_scorer(
     priority=2, confidence=0.9, safety=False,
-    ridability="high", cost_cents=2, model="claude-haiku-4-5-20251001",
+    ridability="high", cost_cents=2, model=MODEL_ALIASES["haiku"],
     tokens_in=120, tokens_out=40,
 ):
     """Drop-in for the _default_scorer_fn seam."""
@@ -113,7 +113,7 @@ def make_fake_scorer(
         )
         ai_resp = AIResponse(
             text="fake",
-            model=model or "claude-haiku-4-5-20251001",
+            model=model or MODEL_ALIASES["haiku"],
             usage=TokenUsage(input_tokens=tokens_in, output_tokens=tokens_out),
             cost_cents=cost_cents,
             cache_hit=False,
@@ -376,7 +376,7 @@ class TestPriorityCLI:
                 wo_id=wo_id, priority_before=3, priority_after=1,
                 rationale="mock", confidence=0.95, safety_risk=True,
                 ridability_impact="high",
-                ai_model="claude-haiku-4-5-20251001",
+                ai_model=MODEL_ALIASES["haiku"],
                 cost_cents=2, tokens_in=100, tokens_out=30,
                 cache_hit=False,
                 generated_at=datetime.now(timezone.utc),
@@ -400,7 +400,7 @@ class TestPriorityCLI:
             wo_id=wo_id, priority_before=3, priority_after=2,
             rationale="mock", confidence=0.85, safety_risk=False,
             ridability_impact="med",
-            ai_model="claude-haiku-4-5-20251001",
+            ai_model=MODEL_ALIASES["haiku"],
             cost_cents=1, tokens_in=80, tokens_out=20,
             cache_hit=False,
             generated_at=datetime.now(timezone.utc),

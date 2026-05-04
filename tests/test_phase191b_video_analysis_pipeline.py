@@ -24,6 +24,7 @@ from types import SimpleNamespace
 
 import pytest
 
+from motodiag.engine.client import MODEL_ALIASES
 from motodiag.engine.models import TokenUsage
 from motodiag.media.vision_analysis import (
     FindingType,
@@ -75,7 +76,7 @@ def _make_fake_message(blocks: list):
         type="message",
         role="assistant",
         content=blocks,
-        model="claude-sonnet-4-6",
+        model=MODEL_ALIASES["sonnet"],
         stop_reason="tool_use",
     )
 
@@ -127,10 +128,12 @@ def _valid_findings_input(extra: dict | None = None) -> dict:
 def _make_mock_client_with_response(
     tool_use_input: dict | None = None,
     cost_estimate: float = 0.075,
-    model_resolved: str = "claude-sonnet-4-6",
+    model_resolved: str | None = None,
     extra_blocks: list | None = None,
 ) -> MagicMock:
     """Build a mock DiagnosticClient whose ask_with_images returns a synthetic Message."""
+    if model_resolved is None:
+        model_resolved = MODEL_ALIASES["sonnet"]
     client = MagicMock()
     blocks: list = []
     if extra_blocks:
@@ -180,17 +183,17 @@ class TestVisualAnalysisResultExtension:
             ],
             overall_assessment="Likely worn rings.",
             frames_analyzed=42,
-            model_used="claude-sonnet-4-6",
+            model_used=MODEL_ALIASES["sonnet"],
             cost_estimate_usd=0.0823,
         )
         dumped = result.model_dump()
         assert dumped["frames_analyzed"] == 42
-        assert dumped["model_used"] == "claude-sonnet-4-6"
+        assert dumped["model_used"] == MODEL_ALIASES["sonnet"]
         assert dumped["cost_estimate_usd"] == 0.0823
 
         reloaded = VisualAnalysisResult.model_validate(dumped)
         assert reloaded.frames_analyzed == 42
-        assert reloaded.model_used == "claude-sonnet-4-6"
+        assert reloaded.model_used == MODEL_ALIASES["sonnet"]
         assert reloaded.cost_estimate_usd == 0.0823
         assert len(reloaded.findings) == 1
 
@@ -214,7 +217,7 @@ class TestAnalyzeVideoFrames:
         assert result.findings[0].severity == Severity.HIGH
         assert result.frames_analyzed == 5
         # model_used is the resolved full model ID, not the alias.
-        assert result.model_used == "claude-sonnet-4-6"
+        assert result.model_used == MODEL_ALIASES["sonnet"]
         assert result.cost_estimate_usd == pytest.approx(0.075)
 
     def test_analyze_video_frames_empty_frames_raises_ValueError(self):
@@ -275,7 +278,7 @@ class TestAnalyzeVideoFrames:
         fake_usage = TokenUsage(
             input_tokens=100,
             output_tokens=20,
-            model="claude-sonnet-4-6",
+            model=MODEL_ALIASES["sonnet"],
             cost_estimate=0.001,
         )
         client.ask_with_images.return_value = (fake_message, fake_usage)
@@ -348,7 +351,7 @@ class TestAnalyzeVideoFrames:
         """Instantiating VisionAnalyzer(model='haiku') propagates to the SDK call + resolved model."""
         client = _make_mock_client_with_response(
             tool_use_input=_valid_findings_input(),
-            model_resolved="claude-haiku-4-5-20251001",
+            model_resolved=MODEL_ALIASES["haiku"],
             cost_estimate=0.012,
         )
         analyzer = VisionAnalyzer(client=client, model="haiku")
@@ -357,7 +360,7 @@ class TestAnalyzeVideoFrames:
 
         kwargs = client.ask_with_images.call_args.kwargs
         assert kwargs["model"] == "haiku"
-        assert result.model_used == "claude-haiku-4-5-20251001"
+        assert result.model_used == MODEL_ALIASES["haiku"]
         assert result.cost_estimate_usd == pytest.approx(0.012)
 
     def test_analyze_video_frames_uses_VISION_ANALYSIS_PROMPT_as_system(self):

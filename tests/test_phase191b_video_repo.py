@@ -13,6 +13,7 @@ from unittest import mock
 import pytest
 
 from motodiag.core.database import get_connection, init_db
+from motodiag.engine.client import MODEL_ALIASES
 from motodiag.core.video_repo import (
     VideoOwnershipError,
     count_bytes_in_session,
@@ -168,7 +169,7 @@ class TestSoftDeleteAndState:
         }
         assert set_analysis_findings(
             vid, findings,
-            model_used="claude-sonnet-4-6",
+            model_used=MODEL_ALIASES["sonnet"],
             cost_usd=0.085,
             db_path=db,
         ) is True
@@ -179,7 +180,7 @@ class TestSoftDeleteAndState:
         assert row["analysis_findings"]["overall_assessment"] == "looks fine"
         # model_used + cost_estimate_usd were folded in.
         assert row["analysis_findings"]["model_used"] == \
-            "claude-sonnet-4-6"
+            MODEL_ALIASES["sonnet"]
         assert row["analysis_findings"]["cost_estimate_usd"] == 0.085
 
 

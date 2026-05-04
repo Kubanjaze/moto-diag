@@ -3,6 +3,14 @@
 All tests use mocked API calls — no live API key required.
 """
 
+# f9-allow-model-ids: SSOT-pin — this file IS the source-of-truth test
+# for engine/client.py:MODEL_ALIASES + MODEL_PRICING. The literal model
+# IDs in assertions are NOT drift; they are the canonical assertion
+# (if MODEL_ALIASES["sonnet"] is changed to a bogus ID, this file's
+# tests fail loudly). Refactoring the literals through the SSOT module
+# would make them tautological. See docs/patterns/f9-mock-vs-runtime-
+# drift.md subspecies (ii).
+
 import json
 from unittest.mock import MagicMock, patch
 

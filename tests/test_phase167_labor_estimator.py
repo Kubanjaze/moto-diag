@@ -32,7 +32,7 @@ from motodiag.crm import customer_repo
 from motodiag.crm.models import Customer
 from motodiag.shop import (
     AIResponse, LaborEstimate, LaborEstimateMathError, LaborEstimatorError,
-    ReconcileMissingDataError, TokenUsage,
+    MODEL_ALIASES, ReconcileMissingDataError, TokenUsage,
     bulk_estimate_open_wos, complete_work_order, create_shop,
     create_work_order, estimate_labor, get_work_order, labor_budget,
     list_labor_estimates, open_work_order, reconcile_with_actual,
@@ -97,7 +97,7 @@ def make_fake_scorer(
     base=0.5, skill=0.0, mileage=0.0, confidence=0.9,
     rationale="oil change is a standard half-hour bench job",
     skill_tier="journeyman", cost_cents=2,
-    tokens_in=150, tokens_out=80, model="claude-haiku-4-5-20251001",
+    tokens_in=150, tokens_out=80, model=MODEL_ALIASES["haiku"],
     prompt_cache_hit=False,
     breakdown=None, alternatives=None, environment_notes=None,
 ):
@@ -290,7 +290,7 @@ class TestEstimateLabor:
             }
             ai_resp = AIResponse(
                 text="bad",
-                model="claude-haiku-4-5-20251001",
+                model=MODEL_ALIASES["haiku"],
                 usage=TokenUsage(),
                 cost_cents=0, cache_hit=False,
             )
@@ -317,7 +317,7 @@ class TestEstimateLabor:
             wo_id, db_path=db,
             _default_scorer_fn=make_fake_scorer(
                 cost_cents=7, tokens_in=200, tokens_out=50,
-                model="claude-sonnet-4-6",
+                model=MODEL_ALIASES["sonnet"],
             ),
         )
         rows = list_labor_estimates(wo_id=wo_id, db_path=db)
@@ -325,7 +325,7 @@ class TestEstimateLabor:
         assert r["cost_cents"] == 7
         assert r["tokens_in"] == 200
         assert r["tokens_out"] == 50
-        assert r["ai_model"] == "claude-sonnet-4-6"
+        assert r["ai_model"] == MODEL_ALIASES["sonnet"]
 
     def test_prompt_cache_hit_flag(self, db):
         wo_id, _ = _seed_open_wo(db)
@@ -470,7 +470,7 @@ class TestLaborCLI:
             wo_id=wo_id, base_hours=0.5, adjusted_hours=0.5,
             skill_adjustment=0.0, mileage_adjustment=0.0,
             confidence=0.9, rationale="quick job",
-            ai_model="claude-haiku-4-5-20251001",
+            ai_model=MODEL_ALIASES["haiku"],
             tokens_in=100, tokens_out=30, cost_cents=2,
             prompt_cache_hit=False,
             generated_at=datetime.now(timezone.utc),

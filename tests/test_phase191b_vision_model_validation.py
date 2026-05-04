@@ -37,6 +37,14 @@ When Anthropic ships a new generation:
      needs to support both for a window
 """
 
+# f9-allow-model-ids: SSOT-pin — this file IS the F15 anti-regression
+# pin specifically against the architect-gate-step-7 bogus model ID.
+# Literal IDs in KNOWN_GOOD_MODEL_IDS / KNOWN_BOGUS_IDS / inline asserts
+# are NOT drift; they are the canonical guard. Refactoring through the
+# SSOT module would defeat the rule's purpose (a regression that
+# replaces the bogus ID with a different bogus ID would slip through).
+# See docs/patterns/f9-mock-vs-runtime-drift.md subspecies (ii).
+
 from __future__ import annotations
 
 import os
