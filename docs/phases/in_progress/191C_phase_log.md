@@ -72,3 +72,25 @@ Doc-only (no lint rule): Phase 191B C1's timestamp-format mismatch.
 **Single-stage architect gate after Commit 5** (~6-8 steps; no native-module integration; no feature surface — purely tooling + docs). Gate verifies: docs render correctly, both lint scripts run cleanly on `main`, regression tests fire on synthetic anti-examples, pre-commit + husky hooks block deliberately-bad commits, no test regression. If gate fails → fix-cycle on same branch (failure modes narrower than a feature phase).
 
 **Next:** plan commit on backend `master` (this file + `191C_implementation.md` v1.0), then create `phase-191C-f9-architectural-intervention` branch in both repos and start Commit 1 (pattern guide doc — single Builder dispatch since both copies share content).
+
+---
+
+### 2026-05-04 — Plan v1.0 → v1.0.1: pre-Commit-1 architect-review corrections
+
+Plan v1.0 was reviewed by Kerwyn before Builder dispatch. Five corrections folded in before any Builder runs (same pattern as Phase 191B's v1.0.1 amendment). Doc + lint scope unchanged; framing + one rule's exempt clause + commit cadence detail get sharpened.
+
+**The five corrections:**
+
+1. **Total F9 instances: 7, not 6.** Plan v1.0's catalog table was correctly 7 rows but the surrounding prose said "6 instances per phase-numbering" via a hand-merge of #4 and #5 (which share fix commit `832579d` but are different subspecies with different lessons — deploy-path-missing-wiring vs format-coincidence-latent / self-validating-test-setup). Headline standardizes on 7 going forward.
+
+2. **Instance #5 renamed: subspecies (v) "self-validating-test-setup".** The "format-coincidence-latent" label was accurate but undersold the lesson. The deeper pattern: the test exercised the function against itself instead of against the system the function integrates with (Python helper produced ISO-T, test fixtures used the same helper to set up data, test never invoked SQLite's `datetime('now')` which is what production integrated with). Closely related to subspecies (iii) mock-fidelity but with test fixtures built via function-under-test instead of via a mock. **High-leverage** — same pattern bites at every cross-language / cross-runtime boundary (Python ↔ SQLite, JS ↔ Android native, JSON ↔ Date round-trip, OpenAPI spec ↔ FastAPI route handlers). Lint coverage stays DOC-ONLY but the doc now earns its DOC-ONLY status by teaching the recognition pattern + enumerating the cross-boundary categories so future readers recognize it at the next boundary.
+
+3. **Closure-state rule's exempt clause replaced** with the cleaner alternative: "skip the rule entirely if the callback doesn't reference any non-ref state binding, where 'non-ref state binding' is scoped narrowly to bindings declared via `useState` or `useReducer` only — not external store subscriptions (Redux / Zustand / Jotai / TanStack Query)." The "useState setters not getters" subtlety from v1.0 is dropped.
+
+4. **Wave 2 (Commits 2 + 3) parallelized.** Pre-flight cross-reference scan confirmed file-disjoint AND import-disjoint between Commit 2 (backend Python) and Commit 3 (mobile JS). Both consume Commit 1's pattern guide doc; neither produces output the other consumes. Builder-A backend + Builder-B mobile dispatched simultaneously after Commit 1 lands.
+
+5. **Reconciliation sentence in pattern-doc intro** preserves the audit trail of the 6→7 instance-count change without backfilling sealed Phase 191B closure docs. Builder-A lands the sentence verbatim in Commit 1.
+
+**Plus one operational ask** baked into Correction 6 (architect-side, not Builder-side): **paired review of subspecies (ii) implementations across both stacks** after Wave 2 returns + before Commit 4 ships. Mobile ESLint rule `motodiag/no-hardcoded-model-ids-in-tests` and backend `scripts/check_f9_patterns.py --check-model-ids` target the same conceptual pattern; heuristic drift between them = consistency bug. Architect verifies: both rules fire on the canonical anti-example, both rules exempt the same set of patterns (KNOWN_GOOD_MODEL_IDS / KNOWN_BOGUS_IDS / MODEL_ALIASES / MODEL_PRICING), diagnostic output shape matches, regexes match the same input set on a fixture run. If drift → paired fix-commit before Commit 4 ships.
+
+**Next:** push v1.0.1 to backend master + dispatch Builder-A for Commit 1 (pattern guide doc, both repos).

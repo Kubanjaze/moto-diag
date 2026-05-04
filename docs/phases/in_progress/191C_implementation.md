@@ -1,6 +1,98 @@
 # Phase 191C — F9 Failure-Family Architectural Intervention
 
-**Version:** 1.0 | **Tier:** Standard (small) | **Date:** 2026-05-04
+**Version:** 1.0.1 | **Tier:** Standard (small) | **Date:** 2026-05-04 (v1.0 written 2026-05-04; v1.0.1 corrects pre-Commit-1 architect-review nits)
+
+## Plan v1.0.1 — pre-Commit-1 corrections from architect review
+
+Plan v1.0 was reviewed by Kerwyn before Builder dispatch. Five corrections land here on the plan-of-record before any Builder runs, otherwise the divergence multiplies. Doc + lint scope unchanged; framing + one rule's exempt clause + commit cadence detail get sharpened.
+
+### Correction 1 — Total F9 instances: 7, not 6
+
+Plan v1.0's catalog table was correctly 7 rows but the surrounding prose said "6 instances per phase-numbering — instance #4 was discovered alongside instance #5 in fix-cycle-1; counted as one for the '6 instances' headline." That hand-merge was wrong. Instances #4 and #5 share fix commit `832579d` but they're **different subspecies with different lessons**:
+
+- **#4 — deploy-path-missing-wiring**: `motodiag serve` never called `init_db` → schema stale at runtime
+- **#5 — self-validating-test-setup** (renamed; see Correction 2): timestamp-format mismatch where Python helper wrote ISO-T but production stored SQLite `datetime('now')` space-format → lex comparison broke on same-day-prefix boundaries
+
+Plan v1.0.1 stops merging them. Headline count standardizes on **7 instances** going forward. Phase 191B's already-shipped closure docs keep "6" as sealed history; Phase 191C's pattern-doc intro will include a reconciliation sentence (per Correction 5).
+
+### Correction 2 — Instance #5 renamed: subspecies (v) "self-validating-test-setup"
+
+Plan v1.0 labeled instance #5 as "format-coincidence-latent" with DOC-ONLY lint coverage. The label is accurate but undersells the lesson and gives the doc nothing to teach beyond "watch for date boundaries."
+
+**Renamed to subspecies (v) "self-validating-test-setup"**. The deeper pattern: **the test exercised the function against itself instead of against the system the function integrates with**. Specifically for Phase 191B C1:
+
+- Helper function `_month_start_iso()` produced format X (Python isoformat, T-separator)
+- Test fixtures used that same helper to build comparison data → all in format X
+- Production code stored `created_at` via SQLite's `datetime('now')` → format Y (space-separator)
+- Production read path compared format-Y data against helper-generated format-X month_start
+- **Test setup never crossed the language boundary that production crosses.** SQLite was never invoked in the test setup; only in production runtime.
+
+Closely related to subspecies (iii) mock-fidelity, except instead of a mock, the test setup uses the function-under-test to build fixtures. **High-leverage because the same pattern bites at every cross-language / cross-runtime boundary**: Python ↔ SQLite, JS ↔ Android native, JSON serialize ↔ Date parse round-trip, OpenAPI spec ↔ FastAPI route handlers. Any time a value crosses a boundary where the OTHER side stamps/transforms/parses, and the test setup stays on the function-side rather than reaching across.
+
+**Lint coverage stays DOC-ONLY — that's correct.** Static analysis can't tell whether a test fixture was set up "from the right side" of an integration boundary. But the doc earns its DOC-ONLY status by teaching the recognition pattern, not just the fix:
+
+- **Recognition heuristic** (in the case-study prose): "Did the test setup invoke the same code path that production WRITES through? Or did the test setup invoke the function-under-test to build the data the function-under-test will then consume?"
+- **Mitigation by category**:
+  - SQLite ↔ Python: test fixtures should `INSERT` via raw SQL using `datetime('now')`, not via Python helpers that produce different formats
+  - JS ↔ native: jest tests should invoke the native module's actual signature OR the test-setup builder should be co-located with the production write path
+  - JSON ↔ Date: serialize with the same library production uses, not `JSON.stringify(new Date())` shortcuts in tests
+
+The doc must explicitly enumerate the cross-boundary categories so future readers recognize the pattern at the next boundary, not just the SQLite one.
+
+### Correction 3 — Closure-state rule's exempt clause
+
+Plan v1.0's exempt clause for `motodiag/no-closure-state-capture-in-native-callback` had three escape hatches:
+
+> Exempt: the function body references ONLY `*Ref.current.*` reads, OR uses `useState` setters (not getters), OR explicitly opts out via `// eslint-disable-next-line motodiag/no-closure-state-capture-in-native-callback`.
+
+The "useState setters not getters" clause is real but subtle — it'll confuse contributors six months out. Replaced with the cleaner alternative:
+
+**Updated exempt clause**: skip the rule entirely if the callback doesn't reference any non-ref state binding. **"Non-ref state binding" is scoped narrowly to bindings declared via `useState` or `useReducer` only** — not external store subscriptions (Redux / Zustand / Jotai / TanStack Query / etc.). External store subscriptions aren't the F9 subspecies this rule targets; their reactivity model is fundamentally different from local React state and they don't suffer the registration-time-capture bug shape.
+
+Concretely, the rule fires when:
+1. Callback function literal is passed as a property value to a `*.current.*` member call (loose AST match for `*Ref.current.method({key: fn})` shape)
+2. The function body references at least one identifier that resolves to a `useState` / `useReducer` getter binding in an enclosing scope
+3. AND the identifier isn't a `.current` ref access on a `useRef`-declared binding
+4. AND no `// eslint-disable-next-line motodiag/no-closure-state-capture-in-native-callback` opt-out is present
+
+If the callback only reads from refs, useStore subscriptions, props, or top-level constants — clean.
+
+### Correction 4 — Wave 2 (Commits 2 + 3) parallelized; bake into commit cadence
+
+Plan v1.0's commit-cadence section listed Commits 2 and 3 sequentially. Pre-flight on cross-references confirmed they are file-disjoint AND import-disjoint:
+
+- Commit 2 outputs: `scripts/check_f9_patterns.py` (Python), `tests/test_phase191c_f9_lint.py` (pytest), `.pre-commit-config.yaml`, `pyproject.toml`, backend `README.md`. Backend-only.
+- Commit 3 outputs: `eslint-plugin-motodiag/` (JS ES module), RuleTester tests, `eslint.config.js`, mobile `README.md` (lint hooks section). Mobile-only.
+
+Both consume the SAME source-of-truth (the pattern guide doc from Commit 1) but neither produces output the other consumes. Subspecies (ii) is implemented in BOTH stacks but as independent rule implementations sharing only the conceptual contract.
+
+**Wave 2 = parallel Builder dispatch (Builder-A backend Commit 2 + Builder-B mobile Commit 3 simultaneously)** after Commit 1 lands. Architect runs both pytest + jest+lint independently; commits in any order.
+
+### Correction 5 — Reconciliation sentence in pattern-doc intro
+
+Per architect: preserve the audit trail of the instance-count change without backfilling sealed-history docs. The pattern guide intro must include this sentence verbatim:
+
+> "Earlier closure docs from Phase 191B refer to '6 instances' of this family. That count merged the two distinct bugs fixed in commit 832579d (deploy-path-missing-wiring and format-coincidence-latent / self-validating-test-setup) into a single instance. Going forward, this catalog tracks them as separate subspecies. Total instances: 7."
+
+This goes in the doc, not the plan. Builder-A (Commit 1) lands it verbatim; Architect verifies at gate.
+
+### Correction 6 — Operational ask: paired review of subspecies (ii) across both stacks before Commit 4 ships
+
+Subspecies (ii) "hardcoded source-of-truth values" is implemented in BOTH stacks: mobile ESLint rule `motodiag/no-hardcoded-model-ids-in-tests` (Commit 3) AND backend `scripts/check_f9_patterns.py --check-model-ids` (Commit 2). Both heuristics target the same conceptual pattern. **If their heuristics drift, that's a consistency bug** — e.g., mobile flags `claude-(haiku|sonnet|opus)-\d` shape but backend flags only `claude-sonnet-` prefix; or one stack exempts `KNOWN_BOGUS_IDS` and the other doesn't.
+
+**Architect-side paired review of the subspecies (ii) implementations after Wave 2 returns + before Commit 4 ships.** Architect (me) checks:
+1. Both rules fire on the same canonical anti-example (the 14-references Phase 191B C2 scenario)
+2. Both rules exempt the same set of patterns (KNOWN_GOOD_MODEL_IDS / KNOWN_BOGUS_IDS / MODEL_ALIASES / MODEL_PRICING — both stacks need the same exempt list)
+3. The diagnostic-formatted output from each rule says the same thing in the same shape (file + line + offending literal + rule name)
+4. If heuristic regex differs (it likely will — JS regex syntax vs Python `re`), confirm the regexes match the same input set on a small fixture run
+
+If drift detected → fix in a paired commit before Commit 4 ships. Documented as a Commit 3.5 fix-cycle if needed.
+
+---
+
+(End of v1.0.1 corrections. Original v1.0 plan continues below — content remains accurate for everything except the 6→7 prose, the subspecies #5 label, the closure-state rule's exempt clause, the Commit 2/3 parallel-dispatch decision, and the reconciliation sentence requirement. Re-reading the original sections is OK as long as the v1.0.1 corrections override those specific points.)
+
+---
 
 ## Goal
 
