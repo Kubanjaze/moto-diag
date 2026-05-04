@@ -1941,3 +1941,39 @@ Mobile package version 0.0.6 → 0.0.7. Mobile project `implementation.md` 0.0.8
 2. **The F9 failure family is now robust enough to merit dedicated mitigation infrastructure.** 6 instances on Track I across 4 phases. The Phase 191B variants surface a critical subspecies: tests that ASSERT THE BUG INTO PLACE by hardcoding the wrong value (the model-string fix scrubbed 14 such references). Phase 192's lead ticket: a contributing.md doc on the pattern + an ESLint/ruff rule that flags suspicious patterns. Cost of intervention: one phase. Cost of NOT doing it: another 3-4 fix-cycles per phase that introduces a new external integration.
 
 Next: **Phase 192 — Diagnostic report viewer** per ROADMAP — view/share diagnosis, PDF export, AirDrop/Share Sheet (was 180). Phase 192 lead ticket per architect's PASS-handoff: F9-failure-family architectural intervention.
+
+---
+
+### 2026-05-04 — Phase 191C complete (F9 failure-family architectural intervention)
+
+**Doc bump:** project `implementation.md` 0.13.8 → 0.13.9. **Package bump:** `pyproject.toml` 0.2.0 → 0.3.0 (Track I tooling-phase bump per Phase 191C plan v1.0.1; F9 intervention is meaningful enough to merit a minor). Schema unchanged at v39 (no migrations).
+
+Phase 191C is option (a) from the Phase 192 scope-pinning round: a small, focused tooling-and-docs phase inserted before Phase 192's diagnostic report viewer. Mirrors the substrate-then-feature pattern as feature-then-meta-tooling-fix-from-lessons-learned.
+
+**Branch `phase-191C-f9-architectural-intervention` on BOTH repos**; **6 commits** total (Commit 1 both repos × 1 + Commit 2 backend + Commit 3 mobile + Commit 4 mobile + Commit 5a both + Commit 5b both). Plan v1.0 + v1.0.1 corrections (5 corrections including 6→7 instance count standardization, subspecies (v) "self-validating-test-setup" rename, Wave 2 parallel-dispatch decision).
+
+**Key technical deliverables:**
+
+- New backend (4 files): `docs/patterns/f9-mock-vs-runtime-drift.md` (634 lines / 6,126 words / 15 code samples) + `scripts/check_f9_patterns.py` (376+ lines, two checks: `--check-model-ids` + `--check-deploy-path-init-db`) + `tests/test_phase191c_f9_lint.py` (17 tests, all PASS at 5b after un-xfail) + `.pre-commit-config.yaml`.
+- New mobile (3 paths): `docs/patterns/f9-mock-vs-runtime-drift.md` (686 lines / 6,462 words / 17 code samples — extra 2 = dual Python+TS for subspecies (ii)) + `eslint-plugin-motodiag/` directory (3 rules + RuleTester unit tests) + `.husky/pre-commit`.
+- Modified backend (2): `pyproject.toml` (0.2.0 → 0.3.0 + `pre-commit>=3.5` to `[dev]`) + `README.md` (Pre-commit hooks section).
+- Modified mobile (3): `package.json` (0.0.7 → 0.0.8 + `husky` + `lint-staged` + `eslint-plugin-motodiag` file: dep) + `.eslintrc.js` (3 motodiag/* rules at error severity post-5b) + `README.md` (Lint hooks section).
+
+**Lint coverage:** 5 of 7 F9 instances catchable by lint (subspecies i mobile + ii both stacks + iii mobile + iv backend); 2 doc-only (subspecies v self-validating-test-setup + iii's date-boundary cousin).
+
+**Three operational asks accepted before 5a started**:
+1. Mandatory `<reason>` on opt-out syntax with 20-char floor (drive-by reasons defeat the doc purpose).
+2. Per-line bucketing for the 14 ambiguous findings BEFORE editing (discipline: "does the test break if SSOT changes? If yes, opt-out. If no, refactor"). All 14 bucketed as REFACTOR.
+3. Sanity-check predicted count drop (50→25 backend, 2→0 mobile) BEFORE 8-file refactor — caught the FILE_OPTOUT_SCAN_LINES 30→100 bug.
+
+**5a/5b split** (mid-build, user-directed): 5a clean-baseline cleanup ONLY (rule refinement + 4 file-level opt-outs + 8-file refactor pass; backend 50 → 0; mobile 2 → 0); 5b severity bump warn → error + un-xfail backend gate tests + finalize docs (this commit).
+
+**Verification at 5b**: `pytest tests/test_phase191c_f9_lint.py` → 17/17 PASS at error severity. `python scripts/check_f9_patterns.py --check-model-ids` → "F9 lint: clean". `npx eslint` mobile → 0 motodiag/* findings; 30 pre-existing unrelated warnings/errors are out of Phase 191C scope. 233 backend tests across the 8 refactored test files PASS at 5a; full backend regression to come at 5b commit-time.
+
+**Architect gate**: Phase 191C's gate is the smoke (per plan: 6-8-step single-stage; no native-module integration; no feature surface). After 5b lands clean → gate is implicit / self-passing because the gate's pre-conditions ARE the 5b commit. No separate architect-gate round needed for a docs+tooling phase.
+
+**FOLLOWUPS movement** (mobile): F9 closed with 5b commit hash; F12 (FormData URI-prefix spec test) explicitly preserved in Open per plan v1.0.1; new entry: future mobile SSOT module (`src/lib/modelAliases.ts`) when AI-call code lands in mobile `src/` (~Phase 196+).
+
+**Key finding**: the discipline of "does the test break if the SSOT changes?" is the load-bearing principle of this entire intervention, and it's transferable. The lint rules catch the symptom; the discipline determines the FIX (opt-out vs refactor). The mental model generalizes across all 5 subspecies — for closure-state, "does my callback still work if state changes after registration?"; for mock-fidelity, "does my mock still match if the real contract changes?"; for self-validating-test-setup, "does my fixture still build if I crossed the boundary I'm testing across?" The rule + lint enforcement scales the discipline; without the discipline, the rule just produces noise.
+
+Next: **Phase 192 — Diagnostic report viewer** per ROADMAP (was 180 in original numbering). The Phase 192 brief now carries the F9 mitigation infrastructure as a now-active architectural guarantee on every commit going forward.
