@@ -86,28 +86,18 @@ KNOWN_GOOD_MODEL_IDS = {
 class TestCheckModelIds:
     """Positive, negative, and exemption guards for ``check_model_ids``."""
 
-    @pytest.mark.xfail(
-        reason=(
-            "Pre-Commit-5 clean-baseline pass not yet done. Many test files "
-            "from Phases 01/79/84/85/162.5/163/166/167/191b have hardcoded "
-            "model ID literals that pre-date the centralized source-of-truth "
-            "pattern. Per plan v1.0.1 B3 severity rollout: rules ship at "
-            "warn for Commits 3-4; in Commit 5 finalize, run rules against "
-            "main, fix all violations, then bump to error AND un-xfail this "
-            "test. UN-XFAIL THIS TEST AT COMMIT 5 — it's the gate that "
-            "guarantees the clean baseline holds going forward."
-        ),
-        strict=True,  # if it starts passing, surface that loudly so we
-                      # remember to remove the xfail
-    )
     def test_clean_main_has_zero_findings(self):
         """Anti-regression for Phase 191B C2 fix-cycle-4 model-string scrub.
 
         Running ``check_model_ids`` against THIS repo's ``tests/`` directory
         must return zero findings — every model ID should already live in
         an exempt source-of-truth container (``KNOWN_GOOD_MODEL_IDS`` etc.).
-        If this test fails after Commit 5's clean-baseline pass, a new
-        hardcoded literal slipped in and needs to be moved into a set.
+        If this test fails, a new hardcoded literal slipped in and needs to
+        be moved into a set OR the file needs a documented file-level
+        ``# f9-allow-model-ids: <reason>`` opt-out (20-char reason floor).
+
+        Un-xfailed at Commit 5b (2026-05-04) after 5a's clean-baseline scrub
+        landed 0 findings on master.
         """
         findings = check_model_ids([REPO_ROOT / "tests"])
         assert findings == [], (
@@ -379,18 +369,12 @@ class TestRunAllChecks:
 class TestMainCli:
     """End-to-end CLI invocation via subprocess, using ``sys.executable``."""
 
-    @pytest.mark.xfail(
-        reason=(
-            "Pre-Commit-5 clean-baseline pass not yet done — see sibling "
-            "TestCheckModelIds.test_clean_main_has_zero_findings xfail "
-            "reason. The CLI exits 1 because --all surfaces the same "
-            "53+ pre-existing model-id literals. UN-XFAIL THIS TEST AT "
-            "COMMIT 5 alongside the sibling."
-        ),
-        strict=True,
-    )
     def test_main_cli_clean_exits_zero(self):
-        """Run the script's ``--all`` mode against THIS repo → exit 0."""
+        """Run the script's ``--all`` mode against THIS repo → exit 0.
+
+        Un-xfailed at Commit 5b (2026-05-04) alongside the sibling
+        ``TestCheckModelIds.test_clean_main_has_zero_findings``.
+        """
         result = subprocess.run(
             [
                 sys.executable,
