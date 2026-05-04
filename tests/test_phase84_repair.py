@@ -10,6 +10,7 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+from motodiag.engine.client import MODEL_ALIASES
 from motodiag.engine.repair import (
     SkillLevel,
     RepairStep,
@@ -235,7 +236,7 @@ def _make_mock_client(response_text: str) -> MagicMock:
     mock_usage = TokenUsage(
         input_tokens=500,
         output_tokens=800,
-        model="claude-haiku-4-5-20251001",
+        model=MODEL_ALIASES["haiku"],
         cost_estimate=0.0036,
         latency_ms=1200,
     )

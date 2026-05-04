@@ -10,6 +10,13 @@ Two test classes across ~16 tests:
 All tests mock the Anthropic SDK; zero live tokens.
 """
 
+# f9-allow-model-ids: SSOT-pin — mirror of Phase 79's engine/client.py
+# test pattern but for the shop ai_client module's resolve_model +
+# calculate_cost. Literal model IDs ARE the canonical assertion (if
+# MODEL_ALIASES["sonnet"] drifts, these tests fail loudly). Refactoring
+# through SSOT import would make them tautological. See
+# docs/patterns/f9-mock-vs-runtime-drift.md subspecies (ii).
+
 from __future__ import annotations
 
 from unittest.mock import MagicMock, patch

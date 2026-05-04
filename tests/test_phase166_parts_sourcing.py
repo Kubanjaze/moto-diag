@@ -31,7 +31,7 @@ from motodiag.core.database import (
 )
 from motodiag.core.migrations import rollback_to_version
 from motodiag.shop import (
-    AIResponse, InvalidTierPreferenceError, PartNotFoundError,
+    AIResponse, InvalidTierPreferenceError, MODEL_ALIASES, PartNotFoundError,
     SourcingRecommendation, TokenUsage, VendorSuggestion,
     get_recommendation, recommend_source, sourcing_budget,
 )
@@ -90,7 +90,7 @@ def make_fake_scorer(
     source_tier="aftermarket", confidence=0.9, cost_cents=2,
     rationale="standard mechanic recommendation",
     estimated_cost_cents=599,
-    tokens_in=200, tokens_out=80, model="claude-haiku-4-5-20251001",
+    tokens_in=200, tokens_out=80, model=MODEL_ALIASES["haiku"],
     cache_hit=False,
 ):
     """_default_scorer_fn drop-in returning (payload_dict, AIResponse)."""
@@ -349,7 +349,7 @@ class TestSourcingCLI:
             source_tier="aftermarket", confidence=0.9,
             rationale="test recommendation",
             estimated_cost_cents=599,
-            ai_model="claude-haiku-4-5-20251001",
+            ai_model=MODEL_ALIASES["haiku"],
             tokens_in=200, tokens_out=50, cost_cents=2,
             cache_hit=False,
             generated_at=datetime.now(timezone.utc),
