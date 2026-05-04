@@ -1,0 +1,23 @@
+# Pre-commit hooks for moto-diag.
+#
+# Phase 191C (2026-05-04): F9 mock-vs-runtime-drift pattern checks
+# wired as a local hook. Architect-side opt-in via `pre-commit install`.
+# Real CI integration deferred to Phase 204 / Gate 10 (no GitHub Actions
+# infrastructure on this repo currently).
+#
+# Pattern doc: docs/patterns/f9-mock-vs-runtime-drift.md
+
+repos:
+  - repo: local
+    hooks:
+      - id: f9-pattern-check
+        name: F9 mock-vs-runtime-drift pattern check
+        entry: python scripts/check_f9_patterns.py --all
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        description: >
+          Lint for F9 failure family. Subspecies (ii) hardcoded model IDs
+          + (iv) deploy-path missing init_db. See
+          docs/patterns/f9-mock-vs-runtime-drift.md.
