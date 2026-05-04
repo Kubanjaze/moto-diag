@@ -140,10 +140,27 @@ def tier(compare: bool) -> None:
     # Tier header panel. The color comes from the shared theme map
     # (Phase 129) so a future theme swap is a one-dict edit.
     color = tier_style(user_tier.value)
-    mode_note = (
-        "[dim](dev mode — paywall not enforced)[/dim]"
-        if mode == "soft" else "[red](paywall enforced)[/red]"
-    )
+
+    # F14 (Phase 191B fix-cycle 2026-05-03): the original disclaimer
+    # ("dev mode — paywall not enforced") read as a global guarantee
+    # but only applies to CLI-side gating. HTTP API endpoints (e.g.,
+    # POST /v1/sessions/{id}/videos's require_tier('shop') gate) enforce
+    # per-endpoint regardless of MOTODIAG_ENFORCEMENT_MODE. Architect
+    # spent diagnosis time at the smoke gate before realizing the dev-
+    # mode flag didn't bypass the API enforcement. Disambiguate the
+    # scope here so future readers don't repeat the surprise.
+    if mode == "soft":
+        mode_note = (
+            "[dim]CLI gating: dev mode (bypassed). "
+            "HTTP API endpoints: enforced per-endpoint regardless — "
+            "use `motodiag subscription set --user N --tier T` to "
+            "stand up an active subscription for API tier gates.[/dim]"
+        )
+    else:
+        mode_note = (
+            "[red]CLI gating: enforced. "
+            "HTTP API endpoints: enforced per-endpoint.[/red]"
+        )
 
     console.print()
     console.print(Panel(

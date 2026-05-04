@@ -180,6 +180,101 @@ def register_subscription(cli_group: click.Group) -> None:
                 f"({sub.current_period_end or 'unknown'}).[/yellow]"
             )
 
+    @sub_group.command("set")
+    @click.option("--user", "user_id", type=int, required=True,
+                  help="Numeric user id whose subscription to set.")
+    @click.option("--tier",
+                  type=click.Choice(list(SUBSCRIPTION_TIERS)),
+                  required=True,
+                  help="Tier to set for the user (individual/shop/company).")
+    @click.option("--days", type=int, default=30, show_default=True,
+                  help="Period length in days for the new active "
+                       "subscription. Default 30 (matches Stripe monthly).")
+    def sub_set_cmd(user_id: int, tier: str, days: int):
+        """**DEV/TEST ONLY** — directly create an active subscription
+        row for a user, bypassing the Stripe checkout flow.
+
+        Phase 191B fix-cycle (2026-05-03): added so the architect-gate
+        smoke runbook can upgrade user 1 to shop tier without going
+        through Stripe checkout (which requires real-payment-completion
+        round-trips). The Stripe path (`motodiag subscription
+        checkout-url`) remains the only production path; this command
+        is for dev/test workflows + the architect-gate smoke runbook
+        only.
+
+        Behavior:
+          1. Cancel any existing active subscription for the user
+             (status -> canceled, canceled_at = now)
+          2. Insert a new active subscription row with tier=T,
+             status=active, current_period_start=now,
+             current_period_end=now+days, ends_at=now+days
+          3. Print confirmation with the new row's id
+
+        The new subscription has stripe_subscription_id=NULL so future
+        `motodiag subscription cancel` / `sync` commands skip the
+        Stripe round-trip cleanly.
+        """
+        from datetime import datetime, timedelta, timezone
+
+        from motodiag.billing.subscription_repo import (
+            create_subscription as _create_sub,
+        )
+        from motodiag.billing.models import (
+            Subscription, SubscriptionStatus, SubscriptionTier,
+        )
+
+        console = get_console()
+        init_db()
+
+        # 1. Cancel any existing active subscription
+        existing = get_active_subscription(user_id)
+        now = datetime.now(timezone.utc)
+        now_iso = now.isoformat()
+        if existing is not None:
+            update_subscription(
+                existing.id,
+                status="canceled",
+                canceled_at=now_iso,
+                updated_at=now_iso,
+            )
+            console.print(
+                f"[dim]Canceled existing subscription #{existing.id} "
+                f"(was tier={existing.tier}, status={existing.status}).[/dim]"
+            )
+
+        # 2. Insert new active subscription row + backfill period fields
+        period_end = now + timedelta(days=days)
+        new_sub = Subscription(
+            user_id=user_id,
+            tier=SubscriptionTier(tier),
+            status=SubscriptionStatus.ACTIVE,
+            ends_at=period_end,
+        )
+        new_id = _create_sub(new_sub)
+
+        # `create_subscription` only writes the columns its INSERT
+        # statement covers (the original Phase 109 set). Period fields
+        # added by Phase 176's migration 035 need a follow-up UPDATE.
+        update_subscription(
+            new_id,
+            current_period_start=now_iso,
+            current_period_end=period_end.isoformat(),
+            updated_at=now_iso,
+        )
+
+        # 3. Confirmation
+        console.print(
+            f"[green]Created active subscription #{new_id}: "
+            f"user={user_id}, tier={tier}, "
+            f"period_end={period_end.date().isoformat()} "
+            f"({days} days).[/green]"
+        )
+        console.print(
+            "[dim]DEV/TEST PATH — bypasses Stripe checkout. "
+            "Use `motodiag subscription checkout-url` for the "
+            "production flow.[/dim]"
+        )
+
     @sub_group.command("sync")
     @click.option("--user", "user_id", type=int, required=True)
     def sub_sync_cmd(user_id: int):
