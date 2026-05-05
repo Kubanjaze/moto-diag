@@ -1,8 +1,127 @@
 # Phase 192 — Diagnostic Report Viewer (substrate)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-05-05
+**Version:** 1.0 (plan) + 1.0.1 (pre-Commit-1 reshape) | **Tier:** Standard | **Date:** 2026-05-05
 
-## Goal
+## Plan v1.0.1 — pre-Commit-1 reshape: Phase 182 IS the substrate
+
+This amendment lands BEFORE any architect-side schema-design work or Builder dispatch. The amendment is the pre-build deep-survey discipline catching what plan v1.0 didn't see: **Phase 182 already shipped the report-route surface that plan v1.0 specified building from scratch.** Discovering this NOW vs at Commit 1 verification is exactly when the substrate-extension work should pivot — same lesson as Phase 191B's HVE-shape bug (F9 catalog #1), but caught at pre-architect-deliverable time instead of fix-cycle time.
+
+Plan v1.0 sealed history preserved verbatim per the audit-trail-preservation principle established at Phase 191C v1.0.1.
+
+### What plan v1.0 unknowingly re-specified
+
+| Plan v1.0 specified (NEW) | Phase 182 already shipped |
+|---|---|
+| `src/motodiag/api/routes/reports.py` | Already exists. 163 lines. 6 endpoints (session/work-order/invoice × json/pdf). |
+| `src/motodiag/api/report_composer.py` | `motodiag.reporting.builders.build_session_report_doc()` is the existing composer. 126 lines. |
+| `GET /v1/sessions/{id}/report` (sessions/ prefix) | `GET /v1/reports/session/{id}` already exists (reports/ prefix). |
+| `models/report.py` Pydantic `ReportPayload` | `ReportDocument = dict[str, Any]` — Phase 182 chose freeform dict over Pydantic. |
+| 192B's `/v1/sessions/{id}/report.pdf` | `GET /v1/reports/session/{id}/pdf` already exists. PDF rendering already shipped. |
+| Auth: session-owner-or-shop-tier-member | Phase 182: `get_session_for_owner(session_id, user_id)` — owner-only; cross-user → `SessionOwnershipError` → **404, not 403**. Subtly stricter; existence-disclosure-prevention. |
+| Vision findings + video integration | **Entirely absent from Phase 182's builder.** Predates Phase 191B's videos table. |
+
+### Reshape (a) accepted: Phase 182 IS the substrate
+
+Substrate-then-feature isn't a clock-time pattern; it's a logical-dependency pattern. Plan v1.0 not knowing about Phase 182 was the bug; the reshape corrects it:
+
+- **Phase 182** was always the substrate (report builders + PDF renderer + 6 routes).
+- **Phase 192** is the FEATURE half — mobile viewer + section-toggle preset system + Vision findings extension to the existing builder.
+- **Phase 192B's scope collapses** to mobile Share Sheet wiring + (maybe) section-toggle query param on the existing PDF route + (maybe) PDF template extension for the videos/Vision sections. Probably 2-3 commits, not 5.
+
+Two surfaces returning the same logical data is the F9 family pattern this chain has been hardening against — drift-prone-by-design. Reject (b) on principle; defer (c) to F32.
+
+### Specific scope changes in 192's plan-of-record
+
+**Backend (Commit 1) — substantially reduced from plan v1.0:**
+
+DROPPED from plan v1.0:
+- ❌ `src/motodiag/api/routes/reports.py` (NEW) — already exists from Phase 182.
+- ❌ `src/motodiag/api/report_composer.py` (NEW) — `build_session_report_doc()` IS the composer.
+- ❌ `models/report.py` Pydantic `ReportPayload` (NEW) — back-compat preserved with dict surface; Pydantic migration deferred to F32.
+- ❌ `GET /v1/sessions/{id}/report` route (NEW) — mobile uses existing `/v1/reports/session/{id}`.
+- ❌ Composer pytest suite as a new file — extension tests fold into existing Phase 182 test surface.
+
+ADDED in 192's reshape:
+- ✅ EXTEND `motodiag.reporting.builders.build_session_report_doc()` to include videos + Vision findings sections (per Phase 191B's videos table + analysis_findings).
+- ✅ NEW `docs/architecture/auth-policy.md` (F29 ADR, re-derived around Phase 182's owner-only-with-404 pattern; explicit existence-disclosure-prevention rationale in WHY narrative).
+- ✅ NEW `docs/architecture/report-document-shape.md` (free byproduct of architect understanding the existing dict shape well enough to extend it; future contributors extending further don't re-derive conventions; audit-trail-preservation discipline).
+- ✅ NEW pytest extensions covering the videos/Vision findings section integration against Phase 191B seeded video fixtures.
+
+**Mobile (Commits 2-4) — mostly unchanged from plan v1.0:**
+
+- `ReportViewerScreen` + `SectionToggle` + `ReportCard` + `useReport` hook: still NEW.
+- `useReport` fetches from existing `GET /v1/reports/session/{sessionId}` (the prefix differs from plan v1.0's spec — `/reports/session/N` not `/sessions/N/report`).
+- Viewer renders the dict-based ReportDocument shape via runtime parsing rather than typed Pydantic — slight quality loss in TypeScript narrowing but acceptable for a single-surface consumer; F32 escalation handles the typed-migration path.
+- All Section I empty/error-state policy decisions still apply.
+- All cross-cutting placeholder copy register strings still apply (only the field-shape mapping changes; placeholder copy is independent).
+
+**Auth posture refinement (Section E):**
+
+Phase 182's owner-only-with-404 pattern is **stricter** than plan v1.0's session-owner-or-shop-tier-member spec. The 404-not-403 choice prevents existence-disclosure on cross-user lookups (a non-owner can't distinguish "session doesn't exist" from "session exists but isn't yours" — both return 404). This is a security-meaningful improvement, not just a naming difference. F29 ADR documents the WHY explicitly.
+
+**Smoke gate Section G refinement:**
+
+Plan v1.0 step 7 (free-tier-user-can-read-own-report-but-not-other-users) becomes:
+- Free-tier user fetches own session's report via `/v1/reports/session/{their_id}` → 200 OK ✓
+- Free-tier user fetches OTHER user's session report via `/v1/reports/session/{other_id}` → **404** (not 403) — verifies existence-disclosure-prevention pattern.
+
+Plan v1.0 step 9 (composition layer regression sweep BEFORE UI testing) becomes:
+- `pytest tests/test_phase182_reports.py tests/test_phase192_videos_extension.py` against fixtures covering full / empty / incomplete-Vision / mixed-analysis sessions.
+
+### F-ticket changes
+
+- **F29 (auth-policy ADR)** — content reshape: precedent body now explicitly includes Phase 182's `SessionOwnershipError → 404` pattern (the strictest of all Track-I read endpoints). WHY narrative: "owner-only-on-read prevents existence-disclosure on cross-user lookups; tier gating is for scarce resources (vehicle/session creation), not for read access to your own data." ADR explains trade-offs (why 404-not-403 was chosen for sessions specifically, vs vehicles' explicit 403 cross-owner; the difference is information-disclosure sensitivity — vehicle existence is non-sensitive in a multi-tenant garage; session existence MAY be sensitive in cases where the session itself is private).
+- **F32 (NEW)** — eventually migrate dict-based `ReportDocument` to typed Pydantic. Promotion trigger: when a third report-consuming surface lands. Phase 182's PDF route is consumer #1; Phase 192's mobile viewer is consumer #2; the third triggers F32 to its own dedicated typing-modernization phase. Rationale for not migrating in 192: couples 192's delivery risk to refactor of unrelated upstream code; wrong shape for substrate-extension work.
+
+### 192B forward-looking flag
+
+192B's plan-of-record needs its own pre-plan Q&A pass AFTER 192 finalizes. The substrate changed underneath 192B; the feature half should re-derive its scope against the actual substrate state, not the originally-planned substrate state. Probably 2-3 commits, not 5. Don't write 192B's plan from plan v1.0's framing; rewrite from post-192-finalize state.
+
+Specific 192B scope candidates that emerge from the reshape:
+- Mobile Share Sheet integration (existing PDF route is the share target; mobile wires `Share` API to download + re-share the PDF binary).
+- Section-toggle query param on the existing PDF route (e.g., `?sections=vehicle,symptoms,...`) — backend renderer filters before PDF generation.
+- PDF template extension for the videos/Vision findings sections (Phase 182's renderer may need new template blocks for the new section shapes).
+- Section-toggle UX in the share flow — does the user pick preset before tap-share, or after?
+
+### Architect-side deliverables BEFORE Builder dispatch
+
+Three artifacts to produce architect-side; Builder gets a tight brief once these land:
+
+1. **`docs/architecture/auth-policy.md` (F29 ADR)** — narrative-quality writing about the policy decision + existence-disclosure rationale + alternatives considered + consequences for future contributors. ~80-120 lines.
+2. **Videos/Vision findings nesting design** — specific decision: top-level section vs nested-under-videos for Vision findings (mobile viewer's per-video-expansion UX from Phase 191B suggests nested; PDF's "Vision findings" cross-video summary suggests peer-section — pick one and document why); empty-state conventions matching Phase 182's existing patterns (audit before introducing new). Lands as inline design notes in `docs/architecture/report-document-shape.md`.
+3. **`docs/architecture/report-document-shape.md`** — documents Phase 182's existing dict shape conventions inline with this phase. Free byproduct of architect understanding the shape well enough to extend it. Future contributors extending further don't re-derive conventions. Sections covered: top-level fields (title, subtitle, issued_at, sections list, footer); section types (rows, bullets, table, body); empty-state conventions (omit section vs render with placeholder vs always-present); naming patterns; relationship to Phase 192's videos/Vision findings extension.
+
+Builder dispatch is MORE attractive under reshape (a) than under plan v1.0 — mechanical work against documented shape conventions + clear architectural target. Architect produces the three artifacts above; Builder extends `build_session_report_doc()` + adds tests against Phase 191B seeded video fixtures.
+
+### Updated commit plan (4 commits, was 5)
+
+**Commit 1** — Architect lands the three architecture artifacts (F29 ADR + report-document-shape.md + videos nesting design embedded in report-document-shape.md). Backend extends `build_session_report_doc()` per the design. Pytest extension tests cover videos/Vision findings sections against Phase 191B seeded fixtures. pyproject 0.3.1 → 0.3.2.
+
+**Commit 2** — Mobile `useReport` hook + types (against existing `/v1/reports/session/{id}` endpoint; openapi-typescript regenerates types from existing OpenAPI snapshot, NOT from new schema).
+
+**Commit 3** — Mobile `ReportViewerScreen` + `SectionToggle` + `ReportCard` (all 6 cards, all I1-I9 placeholder/empty-state policy, section-toggle preset, 30s focus-debounce, pull-to-refresh, stuck-in-analyzing surface).
+
+**Commit 4** — Mobile cross-link from SessionDetailScreen + nav registration + finalize (collapsed from plan v1.0's separate Commits 4 + 5 since reshape eliminated enough work to merge them).
+
+### Updated versioning targets at v1.1 finalize
+
+Unchanged from plan v1.0:
+- Backend `pyproject.toml`: 0.3.1 → 0.3.2.
+- Backend `implementation.md`: 0.13.10 → 0.13.11.
+- Mobile `package.json`: 0.0.9 → 0.0.10.
+- Mobile `implementation.md`: 0.0.11 → 0.0.12.
+- Schema unchanged at v39.
+
+### Why this amendment lands BEFORE Commit 1 (not as a v1.0.1 post-finalize amendment like 191D's was)
+
+191D's v1.0.1 amendment was lessons-learned recording AFTER finalize — fresh-recall discipline. 192's v1.0.1 amendment is a pre-build reshape — discovered architectural mismatch between plan and reality at architect-side-survey time. Different timing because different purpose:
+
+- 191D's amendment: corrections + reusable methodology after the work is done.
+- 192's amendment: scope reshape after pre-build deep-survey but BEFORE the work starts.
+
+Both are "v1.0.1" by convention but the difference matters: 192's reshape would be a much more expensive correction if applied mid-Commit-1 (would mean reverting work, re-dispatching) or post-finalize (would mean fixing the calcified parallel surface). Pre-Commit-1 is the cheapest correction point; pre-build deep-survey is what makes the cost asymmetry visible early.
+
+---
 
 Build the mobile-side substrate viewer for diagnostic session reports — comprehensive read-only surface combining vehicle context + symptoms + fault codes + AI diagnosis + Vision findings + lifecycle audit. Lay the composition layer + section-toggle preset system with PDF/share as known downstream consumers (Phase 192B). First user-facing read-and-share surface in the app, after a long substrate-then-feature-then-meta-tooling stretch through Phases 191/191B/191C/191D.
 

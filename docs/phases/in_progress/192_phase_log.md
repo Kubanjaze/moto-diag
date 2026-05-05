@@ -79,3 +79,51 @@ Phase 192 opens as the first pure-feature-work phase after the long substrate-th
 3. Composition layer tight-coupling smell — composer pytest suite tests `compose(session_id)` directly without HTTP; if a test requires HTTP-layer concerns to set up, that's a coupling smell to fix at Commit 1.
 
 **Next:** plan commit on backend `master` (this file + `192_implementation.md` v1.0), mobile branch tracks the same plan via centralized phase-doc ledger; then Commit 1 (backend composer + route + tests + F29 ADR — Architect-side build OR Builder dispatch, TBD by user pacing).
+
+---
+
+### 2026-05-05 — Plan v1.0 → v1.0.1: pre-Commit-1 reshape (Phase 182 IS the substrate)
+
+Architect-side pre-build deep-survey before drafting any architect deliverables (ReportPayload schema + F29 ADR + Builder brief) caught a major architectural mismatch: **Phase 182 already shipped the report-route surface plan v1.0 specified building from scratch.** Six routes (session/work-order/invoice × json/pdf) + a `motodiag.reporting` module (builders + renderer) + dict-based `ReportDocument` shape + owner-only auth with `SessionOwnershipError → 404` (cross-user existence-disclosure-prevention pattern). 163 + 473 + 326 lines of pre-existing code.
+
+**Halt-and-flag was the correct move** vs working architect-side ReportPayload design + F29 ADR before knowing about Phase 182. Same lesson as F9 catalog #1 (Phase 191B HVE-shape bug) but caught at pre-architect-deliverable time instead of fix-cycle time. Discovering NOW vs at Commit 1 verification is exactly when substrate-extension work should pivot.
+
+**Three reshape paths surfaced; (a) accepted with full architectural reasoning logged:**
+
+- **(a) Phase 182 IS the substrate. Extend build_session_report_doc() to include videos + Vision findings; mobile viewer reads existing route. 192B scope collapses to mobile Share Sheet wiring + maybe section-toggle query param.**
+- (b) Build typed Pydantic surface alongside dict surface — REJECTED on principle (F9-family pattern: two surfaces returning same logical data).
+- (c) Migrate dict-to-Pydantic — DEFERRED to F32 (right long-term, wrong Phase 192 commitment).
+
+**Specific scope changes in v1.0.1:**
+
+DROPPED from plan v1.0:
+- New `report_composer.py` (Phase 182's `build_session_report_doc` IS the composer)
+- New `routes/reports.py` (already exists)
+- New `models/report.py` Pydantic (back-compat preserved with dict; F32 deferred)
+- New `GET /v1/sessions/{id}/report` route (mobile uses existing `/v1/reports/session/{id}`)
+
+ADDED in reshape:
+- Extend `build_session_report_doc()` for videos + Vision findings
+- F29 ADR `docs/architecture/auth-policy.md` (re-derived around Phase 182's existence-disclosure-prevention pattern)
+- F32 (NEW) — eventually migrate dict to Pydantic; trigger = third report-consuming surface
+- `docs/architecture/report-document-shape.md` documenting Phase 182's existing dict shape conventions inline (free byproduct of architect understanding the shape well enough to extend it)
+
+**Auth posture refinement** (Section E): Phase 182's owner-only-with-404 is **stricter** than plan v1.0's session-owner-or-shop-tier-member spec. The 404-not-403 choice prevents existence-disclosure on cross-user lookups. Security improvement, not just naming difference. F29 ADR documents the WHY explicitly: "owner-only-on-read prevents existence-disclosure on cross-user lookups; tier gating is for scarce resources (vehicle/session creation), not for read access to your own data."
+
+**Smoke gate Section G refinement**: smoke step 7 verifies free-tier user fetching OTHER user's session report returns **404** (not 403) — verifies existence-disclosure-prevention pattern.
+
+**192B forward-looking flag** logged in v1.0.1: 192B needs its own pre-plan Q&A pass AFTER 192 finalizes. Substrate changed underneath 192B; feature half should re-derive scope against actual substrate state, not originally-planned substrate state. Probably 2-3 commits, not 5.
+
+**Updated commit plan (4 commits, was 5)** — Commit 4 + Commit 5 collapse since reshape eliminated enough work.
+
+**Architect-side deliverables BEFORE Builder dispatch:**
+
+1. F29 ADR `docs/architecture/auth-policy.md` (~80-120 lines, narrative-quality)
+2. Videos/Vision findings nesting design (top-level section vs nested-under-videos decision + WHY)
+3. `docs/architecture/report-document-shape.md` documenting existing dict conventions
+
+Then Builder gets the design + extends `build_session_report_doc()` + adds tests against Phase 191B seeded video fixtures. Builder dispatch is MORE attractive under reshape (a) than plan v1.0 — mechanical work against documented shape conventions + clear architectural target.
+
+**Why this amendment lands BEFORE Commit 1, not post-finalize like 191D's was**: 191D's amendment was lessons-learned recording AFTER finalize (fresh-recall discipline). 192's amendment is pre-build reshape — discovered architectural mismatch between plan and reality at architect-side-survey time. Pre-Commit-1 is the cheapest correction point; pre-build deep-survey is what makes the cost asymmetry visible early. Mid-Commit-1 correction or post-finalize correction would be substantially more expensive.
+
+**Next:** commit v1.0.1 amendment to backend master (this file + 192_implementation.md v1.0.1), then architect-side artifacts (F29 ADR + nesting design + shape-conventions doc), then Builder dispatch for the implementation.
