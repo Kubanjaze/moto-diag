@@ -6,12 +6,12 @@
 
 ## Decision
 
+**This ADR documents an emergent pattern, not a new policy.** Track I has independently implemented these rules in four read-endpoint phases (Phase 182 reports, Phase 188 vehicles, Phase 189 sessions, Phase 191B videos) without an explicit cross-cutting policy document; the ADR canonicalizes the convention so future contributors making auth decisions in Phase 193+ inherit the policy by reference rather than re-deriving it from precedent. Existing-pattern ADRs are easier for future contributors to defend than novel-policy ADRs because the precedent body proves the policy was implementable + survivable in practice across multiple independent phases.
+
 Two coupled rules, articulated together because they reinforce each other:
 
 1. **Read access doesn't gate on tier.** Reading your own data is a base-tier capability; tier gating is for scarce or expensive resources — creation (vehicle/session quotas), writes (work-order edits, invoicing), and compute-intensive operations (Vision analysis, AI diagnosis generation). A free-tier user reading their own session's report, their own vehicle list, their own video metadata pays nothing but gets read access.
 2. **Cross-user read attempts on owned resources return 404, not 403.** When user A requests user B's session/vehicle/video/report, the response is `404 Not Found` — indistinguishable from "this resource doesn't exist." This is *enumeration-prevention*: a non-owner can't distinguish "session N exists but isn't yours" from "session N doesn't exist," so they can't enumerate the namespace by probing.
-
-These rules are not new — Track I has implemented them uniformly across vehicles (Phase 188), sessions (Phase 189), videos (Phase 191B), and reports (Phase 182). The ADR canonicalizes the existing convention so future contributors making auth decisions in Phase 193+ inherit the policy by reference rather than re-deriving it from precedent.
 
 ## Context
 
@@ -80,9 +80,14 @@ Note the asymmetry: a user can be at their tier's vehicle quota (creation gated)
 
 **A1 — Status quo (no formal policy).** Each phase chooses ad hoc. **Rejected**: drift is the predictable outcome; future contributors implementing Phase 193+ read endpoints would re-derive auth posture from precedent (which works while precedent is consistent) or make ad hoc choices (which breaks consistency once the precedent body is large enough that a new contributor doesn't read all of it).
 
-**A2 — Uniform 403 cross-owner across all read endpoints.** Traditional REST-correct. **Rejected**: leaks enumeration information. The trade-off (troubleshooting clarity vs enumeration-prevention) was decided in favor of enumeration-prevention at every Track-I phase that implemented a read endpoint; ADR formalizes the existing choice rather than overturning it.
+**A2 — Uniform 403 cross-owner across all read endpoints.** Traditional REST-correct. **Rejected** for the enumeration-prevention reasons enumerated in the Decision section's worked example (sequential-ID probing exposes platform user activity, growth curve, churn signals, specific-user activity timelines, and phishing target identification). Standard REST guidance assumes a threat model where existence-disclosure is acceptable; Track I's resource-sensitivity profile (billing tier tags, customer information, Vision-analyzed video frames, AI-generated diagnoses with cost data) makes that assumption inappropriate. The 403-vs-404 question is not a REST-correctness question; it's a threat-model question, and the threat models disagree.
 
-**A3 — Per-resource sensitivity classification (404 for sensitive, 403 for non-sensitive).** More nuanced; would let vehicle reads return 403 ("vehicle existence in a multi-tenant garage isn't sensitive") while session reads return 404. **Rejected**: classification-overhead. Every new endpoint needs a sensitivity-classification decision; reviewers need to verify each new endpoint's classification matches the resource's actual sensitivity profile; the wrong classification gets shipped + creates an enumeration vector. Uniform-404-everywhere has no per-endpoint review burden + no misclassification risk. The marginal troubleshooting-clarity cost on non-sensitive resources is acceptable.
+**A3 — Per-resource sensitivity classification (404 for sensitive, 403 for non-sensitive).** More nuanced; would let vehicle reads return 403 ("vehicle existence in a multi-tenant garage isn't sensitive") while session reads return 404. **Rejected** for two compounding reasons:
+
+1. **Classification overhead** (operational cost). Every new endpoint needs a sensitivity-classification decision; reviewers need to verify each new endpoint's classification matches the resource's actual sensitivity profile; the wrong classification gets shipped + creates an enumeration vector. Uniform-404-everywhere has no per-endpoint review burden + no misclassification risk.
+2. **Heterogeneous classification creates a covert channel** (security cost — the more concerning argument). If vehicles return 403 and sessions return 404, response-status patterns across heterogeneously-classified resources leak existence information that uniform-404 closes. A caller probing `GET /v1/vehicles/{id}` (403 response) followed by `GET /v1/sessions/{id}` (404 response) for the same `{id}` learns that vehicle N exists but session N doesn't — even though the caller has no legitimate access to either. The cross-resource pattern reconstructs the existence information the per-resource-404 was designed to hide. Uniform-404 closes the covert channel by making every cross-owner read response indistinguishable; mixed-classification re-opens it by the back door.
+
+The marginal troubleshooting-clarity cost on non-sensitive resources is acceptable; the security cost of mixed classification is not.
 
 **A4 — Magic-link-style share URLs for cross-user read.** Token-scoped read URLs let users explicitly grant cross-user access (e.g., for sharing a report with an insurance adjuster). **Deferred**, not rejected: this is a feature, not an alternative to the auth-on-default-route policy. Phase 192B's Share Sheet integration is the closest current surface; if a future phase adds magic-link sharing, the default-route auth policy is unchanged + the magic-link URL is a separate auth path.
 

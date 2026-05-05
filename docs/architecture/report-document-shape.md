@@ -172,7 +172,7 @@ Reasons:
 1. **Single canonical representation; consumers project differently** is the right shape for substrate-extension work. Two parallel representations of the same logical data is the F9 family pattern (per `docs/patterns/f9-mock-vs-runtime-drift.md` subspecies (ii) generalized) — every Track-I phase since Phase 191B has been hardening against this drift class.
 2. **Per-video-relationship is intrinsic to the data**, not an artifact of presentation. A finding without its video is contextless ("blue smoke" — from which recording?); a video with findings detached needs cross-referencing to reattach. Encoding the relationship structurally avoids the cross-reference re-derivation work at every consumer.
 3. **PDF aggregation logic is a one-time renderer cost** (write once in `renderers.py`); Option (a)'s detached-findings-section would require composer work (build the aggregated section) PLUS consumer work (mobile would need to walk the aggregated section to re-attach findings to videos for the per-card UX). Composer + multiple consumers > single renderer.
-4. **Future analysis types extend cleanly.** When Phase 195+ adds per-video audio analysis, OBD-time-series-correlated-with-video, or any other per-video derived analysis, those nest as sibling keys under each video card (`audio_analysis`, `obd_correlation`) — no new top-level section needed per analysis type. Option (a) would require a new top-level section per new analysis type, accumulating section sprawl.
+4. **Future per-video derived analyses extend cleanly.** Any analysis type whose result is naturally per-video (audio analysis, sensor-correlation, frame-level annotations, etc.) nests as a sibling key under each video card — no new top-level section needed per analysis type. Option (a) would require a new top-level section per new analysis type, accumulating section sprawl.
 
 The trade-off (PDF renderer needs aggregation logic vs composer needs to build the aggregated section) was decided in favor of Option (b)'s single canonical shape. PDF renderer extension is 192B's scope; the design choice doesn't block 192's substrate extension.
 
@@ -237,6 +237,16 @@ Phase 182 ships two renderers in `motodiag.reporting.renderers`:
 **This is a significant correction to Phase 192 plan v1.0's locked decision** which specified WeasyPrint. The plan's framing ("WeasyPrint over wkhtmltopdf as the lib choice") was made without knowing Phase 182 had already chosen reportlab. Phase 192 v1.0.1 reshape preserves Phase 182's existing choice (back-compat with PDF rendering already in production). 192B's PDF template extension work uses reportlab Platypus shapes — no Jinja2 templates, no CSS, no `@page` rules.
 
 The reportlab vs WeasyPrint decision is settled by Phase 182's existing investment (renderer is 326 lines of working code). Future PDF format work uses reportlab. WeasyPrint considerations from plan v1.0 are moot.
+
+### Customer-facing vs Insurance-facing presets — implementation note for 192B
+
+Plan v1.0's Section F sketched preset-templating via Jinja2 inheritance: a base template + Jinja blocks that the Customer-facing or Insurance-facing preset overrides. **That pattern doesn't translate to reportlab Platypus.** Reportlab is flowable-based, not template-based — a PDF is composed by appending `Paragraph` / `Table` / `Spacer` / `Image` flowables to a `story` list, then calling `SimpleDocTemplate.build(story)`. There are no template files, no inheritance, no block overrides.
+
+The preset implementation 192B will use is **flowable composition in Python code**: a `compose_story_for_preset(doc, preset)` function that walks the `ReportDocument`'s sections list and selectively appends flowables based on the preset's section-visibility map. Customer-facing preset skips the timeline section (lifecycle audit not relevant to customer); Insurance-facing preset includes it. The override map (per Phase 192 plan C1's accepted (γ) data shape) maps cleanly to a Python dict of `{section_heading: bool}` that the composer consults per section.
+
+This shape change affects 192B's pre-plan Q&A — specifically, any "template inheritance" or "Jinja block override" assumptions from plan v1.0's Section F should be replaced with "flowable composition in Python." The override map data shape (already designed for per-card override per C1 (γ)) survives the renderer-change unchanged; only the rendering-side implementation differs.
+
+192's phase log carries an explicit forward-looking note about this so 192B's pre-plan Q&A doesn't accidentally inherit the Jinja2 assumption from plan v1.0's sealed-history Section F.
 
 ### Renderer shape contract
 
