@@ -1,6 +1,119 @@
 # Phase 192 — Diagnostic Report Viewer (substrate)
 
-**Version:** 1.0 (plan) + 1.0.1 (pre-Commit-1 reshape) | **Tier:** Standard | **Date:** 2026-05-05
+**Version:** 1.0 (plan) + 1.0.1 (pre-Commit-1 reshape) + 1.0.2 (post-architect-review rigor refinements) + 1.0.3 (Builder-D Flag scope-add: migration 040 + atomic worker update) + 1.0.4 (Commit-1 verify: F9 int-typed heuristic refinement folded in) | **Tier:** Standard | **Date:** 2026-05-05
+
+## Plan v1.0.4 — F9 int-typed heuristic refinement folded into Commit 1
+
+This amendment lands during Commit 1's final verify cycle. The SCHEMA_VERSION 39→40 bump (from migration 040) surfaced **22 false positives** in `scripts/check_f9_patterns.py --check-ssot-constants` where the literal `40` (or `40.0`) coincidentally matched the new `SCHEMA_VERSION` value across 8 unrelated test files (Phase 06 / 115 / 122 / 140 / 141 / 143 / 158 / 163) where the test imported some sibling module of `motodiag.core.database` for unrelated reasons.
+
+### Root cause: Phase 191D's import-match heuristic too loose for ints
+
+Phase 191D's per-type heuristic at `scripts/check_f9_patterns.py:867-895` had different posture per `value_type`:
+
+- **dict / tuple**: require identifier-nearby (proximity match against the registry name OR a dict key within ±3 lines).
+- **int / str**: identifier-nearby OR source-module imported.
+
+The two-path branch for ints was too loose: integer values like `40` are *commonly* coincident with unrelated test literals (counts, percentages, durations, timeouts). A test file importing `motodiag.core.database` for `init_db` and asserting `assert response['count'] == 40` would fire as a false-positive `SCHEMA_VERSION` literal-pin.
+
+This is structurally the same false-positive shape Phase 191D itself had to fix when 82 hits surfaced from `from motodiag.api import create_app` matching every `motodiag.api.*` SSOT entry — except the prior fix only tightened import-direction matching, not the per-type heuristic for inherently-coincidence-prone types.
+
+### Fix: int joins dict/tuple in the require-identifier-nearby tier
+
+`scripts/check_f9_patterns.py:870` changed from `if entry.value_type in ("dict", "tuple"):` to `if entry.value_type in ("dict", "tuple", "int"):`. The else-branch (import-match OR identifier-nearby) now applies only to `str`-typed entries. String literals are far less coincidence-prone than integers — `"v1"`, `"sonnet-3-5"`, etc. are domain-specific enough that import-match alone is meaningful signal.
+
+Comment block at lines 844-880 expanded to document the per-type rationale + the Phase 192 surfacing context. The Phase 191D existing comment for dict/tuple is preserved verbatim; the new int paragraph cites the 22-finding surfacing + the 8 unrelated test files.
+
+### Why folded into Commit 1 vs deferred to its own phase
+
+Per Phase 191D's own discipline (the "fold heuristic refinements into the same commit when surgical and contract-preserving" precedent established during 191D's fix-cycle): refinements that strictly *narrow* the rule (fewer false positives, no new false negatives) and that are surgical (one-line conditional change + comment update) belong in the commit that surfaced them. Deferring would leave Commit 1's regression artifact noisy with 22 false positives for an unknown number of days, training future readers to ignore the lint output — exactly the F9 anti-pattern this whole rigor stream was designed to prevent.
+
+Contract preservation: the refinement only narrows. Every previously-flagged finding under the new posture is still flagged (proven by re-running `--check-ssot-constants` post-refinement: clean, no losses to the existing-flagged set). The 22 false positives at value `40` simply stop firing because none of those 8 test files have `SCHEMA_VERSION` (or `database`) as an identifier within ±3 lines of the literal — which is the correct outcome.
+
+### What's NOT in v1.0.4
+
+The `test_phase191b_serve_migrations.py:98` SCHEMA_VERSION 39→40 ripple was a separate trivial fix (literal swap + docstring update + output-match string update) — it's bundled in the same Commit 1 commit but doesn't need amendment-level documentation. It's a mechanical version-bump consequence, not an architectural decision.
+
+### Updated commit plan (revised from v1.0.3)
+
+Commit 1 now bundles:
+- Builder-D's composer + renderer extensions + tests + `pyproject.toml` bump.
+- Builder-E's migration 040 + worker update + new tests.
+- Architect's shape doc Flag 2 fix.
+- v1.0.3 amendment commit text (already in `docs/phases/in_progress/192_implementation.md`).
+- v1.0.4 amendment commit text (this section).
+- F9 heuristic refinement (`scripts/check_f9_patterns.py`).
+- `test_phase191b_serve_migrations.py:98` ripple fix.
+
+Single Commit 1 commit lands all seven streams together. Architect runs full regression + F9 lint + targeted Phase 192 + Phase 191D test suites before committing.
+
+---
+
+## Plan v1.0.3 — Builder-D Flag scope-add: migration 040 + atomic worker update
+
+This amendment lands during Commit 1's implementation cycle. Builder-D's report (post-implementation, pre-commit) surfaced two architectural concerns; this amendment captures the v1.0.3 scope-add for Flag 1 (the load-bearing one) + the unilateral docs fix for Flag 2 (clarity bug, no architect decision needed).
+
+Per Kerwyn's bundling discipline: "don't fragment v1.0.2 + v1.0.3 by surfacing-time" — but v1.0.2 was already shipped (commit `e29e70c`) at the time Builder-D's report arrived. v1.0.3 lands the new items as a separate amendment per the audit-trail-preservation principle (sealed-history amendments don't get retroactively rewritten). The bundling discipline applies forward: don't fragment Flag 1 + Flag 2 across separate amendments by surface time, even though they surfaced at the same moment from the same Builder report.
+
+### Item 1: Flag 1 — `analyzing_started_at` schema-vs-doc gap → migration 040 added to Commit 1 scope
+
+**Discovery context**: Builder-D's report (after composer + renderer extension + tests landed clean) flagged that `analyzing_started_at` does NOT exist as a column on the `videos` table. Migration 039 (`src/motodiag/core/migrations.py:2790`) defines the videos table with `analyzed_at TEXT` only. Shape doc Variant 5 + plan v1.0.1 Section D both depend on the column for the 5-min stuck-in-analyzing detection. Builder-D stubbed the field as `None` to satisfy the shape contract, surfaced the gap, and invited the architect's decision.
+
+**Three options surfaced; (a) accepted with full F9-discipline reasoning:**
+
+- **(a) Add migration 040 in this commit + worker update for atomic state-transition write.** Scope expansion but small; aligns with F9 discipline (schema-vs-doc drift IS the F9 family pattern; 191D's `--check-ssot-constants` lint would catch the stub-as-None-forever drift on next audit; shipping known schema-vs-doc drift in Commit 1 of the next phase would be architecturally embarrassing — 191C+191D's whole intervention was to convert silent drift into noisy lint findings).
+- (b) Defer column + keep None-stub; mobile drops stuck-detection in Commit 3 OR substitutes with `analyzed_at`-derived heuristic. **REJECTED** — unwinds Section D's pre-defined feature for wrong reason. Section D specifically rejected "deferring predictable surface to F-ticket-only"; production traffic will surface stuck-analyzing states. Discovery makes the case for stuck-detection stronger, not weaker.
+- (c) Repoint shape doc to use `analyzed_at` instead, drop stuck-detection feature. **REJECTED** — `analyzed_at` is completion-timestamp, can't semantically replace start-timestamp for stuck-while-analyzing. Worst kind of scope-preservation: ships less and pretends it didn't.
+
+**Two architect-baked contracts for Builder-E's brief**:
+
+**Contract A — Migration nullability is load-bearing for back-compat.** Existing video rows from Phase 191B smoke predate the column. Migration adds `analyzing_started_at` as nullable, no default, no backfill. Existing rows stay with `analyzing_started_at IS NULL`. Mobile stuck-detection (Commit 3 scope) must handle `analysis_state = "analyzing" AND analyzing_started_at IS NULL` as **pre-migration indeterminate** — surface as stuck immediately rather than waiting 5 minutes from now. Edge case in Builder-E's brief + test plan; forward-looking flag for Commit 3's mobile work.
+
+**Contract B — Worker update needs atomic state-transition guarantee.** Current `pending → analyzing` transition is a single UPDATE. New column MUST be set in the SAME UPDATE atomically. Two-statement implementation (UPDATE state THEN UPDATE timestamp) creates a race window where the row sits in `analyzing` with `analyzing_started_at = NULL` and triggers the pre-migration stuck path inappropriately. **Single SQL statement, not two**; tests verify atomicity. Per F9 subspecies (v) "self-validating-test-setup" prevention — the format of the timestamp also matters: if existing column writes use SQLite's `datetime('now')` directly in SQL, USE THE SAME PATTERN to avoid the F9 instance #5 bug shape (Phase 191B fix-cycle-1's date-boundary latent bug).
+
+**Builder-E dispatch**: ran in parallel with this amendment per Kerwyn's "don't serialize the dispatch behind the amendment" direction. Builder-E reads the migration spec + atomicity guarantee + nullability contract; doesn't depend on amendment-prose. Architect commits Builder-D's existing Commit 1 work + Builder-E's migration extension as a single Commit 1 once both report.
+
+**Scope expansion accounting**:
+- New migration entry in `src/motodiag/core/migrations.py` (migration 040; `ALTER TABLE videos ADD COLUMN analyzing_started_at TEXT`).
+- `SCHEMA_VERSION 39 → 40` in `src/motodiag/core/database.py`.
+- ~10-line worker update at the existing `pending → analyzing` state-transition site (single UPDATE atomicity).
+- New `tests/test_phase192_migration_040.py` (~5 tests mirroring `test_phase191b_migration_039.py` pattern).
+- New `tests/test_phase192_analyzing_started_at_atomicity.py` (~3 tests: timestamp-set + atomic-single-update + analyzed-doesn't-clear).
+
+### Item 2: Flag 2 — `findings_list` vs `findings` shape-doc bug → unilateral docs fix
+
+**Discovery context**: Builder-D's report flagged that `motodiag.media.vision_analysis.VisualAnalysisResult.findings` is literally the field name (`vision_analysis.py:61`) — `model_dump()` produces `{"findings": [...]}`, NOT `{"findings_list": [...]}`. Shape doc was wrong on TWO places (Variant 5 inline example used `findings_list`; Naming consistency notes claimed `findings_list` IS the convention). Both wrong vs Pydantic source. Builder-D used `model_dump()` verbatim per brief mandate; tests assert `findings["findings"]` is the list (correct).
+
+**Disposition**: architect fixes shape doc unilaterally (no architectural decision needed; clarification only). Two-spot edit:
+- Line 109 (Variant 5 example): `"findings_list":` → `"findings":` + inline comment annotating the Pydantic source.
+- Line 275 (Naming consistency notes): claim corrected + Pydantic source annotation added per Kerwyn's refinement (`field name verified against vision_analysis.py:61`). Annotation makes source-of-truth legible so next drift gets caught at write-time. Same audit-trail-preservation discipline that's been load-bearing throughout the chain.
+
+**Builder-D's existing implementation is correct** — used `model_dump()` per brief; tests pass against the actual Pydantic shape. No code change needed for Flag 2.
+
+### Item 3: Shape doc Variant 5 references migration 040 as schema substrate
+
+Shape doc Variant 5's `analyzing_started_at` field documentation now includes a "Schema substrate" subsection that explicitly references migration 040 + the nullability contract + the pre-migration-indeterminate handling for mobile + Contract B's atomicity guarantee. Future contributors reading the shape doc see the schema-substrate dependency without having to grep migrations.py.
+
+### What's NOT in v1.0.3 (already covered by v1.0.2)
+
+The four ADR/shape-doc rigor refinements + reportlab/Jinja2 ergonomics gap + 192B-no-Jinja-assumption phase log note already landed at v1.0.2 (`e29e70c`). v1.0.3 doesn't repeat them. Future readers walking the amendment chain see v1.0.1 (pre-Commit-1 reshape) + v1.0.2 (post-architect-review rigor refinements) + v1.0.3 (Builder-D Flag scope-add) in chronological order.
+
+### Updated commit plan
+
+Commit 1 now bundles:
+- Builder-D's composer + renderer extensions + tests + `pyproject.toml` bump (already implemented; trust-but-verified PASS at 14/14 + 58/58 regression).
+- Builder-E's migration 040 + worker update + new tests (in flight).
+- Architect's shape doc Flag 2 fix (Items 2 + 3 of this amendment).
+- This v1.0.3 amendment commit.
+
+Single Commit 1 commit lands all four streams together once Builder-E reports. Architect runs full trust-but-verify across Builder-D's existing work + Builder-E's new work + the regression sample + the manual schema check before committing. Commit message frames Commit 1 as the bundled substrate-extension + schema-substrate + docs-fix + amendment landing.
+
+### Architect's reasoning for the path-(α) acceptance (verbatim from review pass)
+
+> Schema-vs-doc drift IS the F9 pattern. Stubbing as None-forever is silent drift; 191D's `--check-ssot-constants` lint would catch it on next audit. Shipping known schema-vs-doc drift in Commit 1 of the next phase would be architecturally embarrassing — 191C+191D's whole intervention was to convert silent drift into noisy lint findings. The discipline requires not shipping the pattern those phases targeted. Scope expansion is real but small: nullable column add (no default, no backfill, no constraint), ~10 line worker update at existing state-transition point, mechanical against existing patterns.
+
+The reasoning is logged here as the load-bearing precedent for future Builder-flag scope-decisions: when implementation surfaces architectural drift between docs and reality, the discipline established by 191C+191D is to fix the drift rather than ship around it. Future contributors walking this amendment see the precedent.
+
+---
 
 ## Plan v1.0.1 — pre-Commit-1 reshape: Phase 182 IS the substrate
 

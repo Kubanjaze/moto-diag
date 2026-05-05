@@ -155,3 +155,96 @@ Architect single-pass review of the three substrate-decision artifacts (F29 ADR 
 **Builder-D dispatch ran in parallel with this amendment** per architect's "don't serialize the dispatch behind the amendment if the dev team would otherwise gate it" direction. Builder-D acknowledged, reading the brief + architecture docs + plan; v1.0.2 amendment landed concurrent with Builder's reading-and-implementing window.
 
 **Next:** v1.0.2 amendment commit (this entry + the F29 ADR + shape doc edits) → trust-but-verify Builder-D's report when it arrives → Commit 1 commits with Builder's work.
+
+---
+
+### 2026-05-05 — Builder-D returned + path (α) accepted: Plan v1.0.3 amendment + Builder-E dispatch
+
+Builder-D reported Commit 1 implementation complete (composer + renderer extensions + 14 tests + pyproject.toml bump 0.3.1 → 0.3.2). Trust-but-verify ran: 14/14 new tests + 58/58 Phase 182 + Phase 106 regression PASS. Builder-D's code path is sound.
+
+Builder-D's report surfaced **two architectural concerns** per the brief's invite-the-flag instruction:
+
+**Flag 1** (load-bearing): `analyzing_started_at` column does NOT exist on the `videos` table. Migration 039 defines `analyzed_at TEXT` only. Shape doc Variant 5 + plan v1.0.1 Section D both depend on the column for 5-min stuck-in-analyzing detection. Builder-D stubbed the field as None to satisfy the shape contract; surfaced the gap. Three options identified (add migration in this commit / defer + None-stub / drop feature + repoint doc).
+
+**Flag 2** (clarification): shape doc claimed the inner findings list was named `findings_list`; actual Pydantic source `VisualAnalysisResult.findings` (vision_analysis.py:61) uses `findings`. Builder used `model_dump()` per brief mandate; tests assert correct shape. Doc bug, not code bug.
+
+**Architect path acceptance: (α)** = path (a) for Flag 1 + unilateral docs fix for Flag 2 + bundle into v1.0.3 amendment.
+
+Architect reasoning for path (a) acceptance:
+
+> Schema-vs-doc drift IS the F9 pattern. Stubbing as None-forever is silent drift; 191D's --check-ssot-constants lint would catch it on next audit. Shipping known schema-vs-doc drift in Commit 1 of the next phase would be architecturally embarrassing — 191C+191D's whole intervention was to convert silent drift into noisy lint findings. The discipline requires not shipping the pattern those phases targeted.
+
+Path (b) explicitly rejected: "unwinds Section D's pre-defined feature for wrong reason; Section D specifically rejected deferring predictable surface to F-ticket-only; production traffic will surface stuck-analyzing states; discovery makes the case for stuck-detection stronger, not weaker."
+
+Path (c) explicitly rejected: "loses feature entirely under documentation fig-leaf; analyzed_at is completion-timestamp, can't semantically replace start-timestamp for stuck-while-analyzing; worst kind of scope-preservation — ships less and pretends it didn't."
+
+**Two architect-baked Builder-E contracts** (full text in v1.0.3 amendment):
+
+- Contract A: migration nullability is load-bearing for back-compat. Existing rows stay NULL; mobile Commit 3 stuck-detection treats NULL as pre-migration indeterminate (surface as stuck immediately).
+- Contract B: worker update needs atomic state-transition guarantee. Single SQL UPDATE that sets analysis_state + analyzing_started_at together; not two statements; F9 subspecies (v) "self-validating-test-setup" prevention applied to the SQL timestamp format choice.
+
+**Builder-E dispatched in parallel** with this v1.0.3 amendment per Kerwyn's "don't serialize the dispatch behind the amendment" direction. Builder-E reads the migration spec + atomicity guarantee + nullability contract; doesn't depend on amendment-prose. Architect commits Builder-D's existing Commit 1 work + Builder-E's migration extension as a single Commit 1 once both report.
+
+**Architect-side Flag 2 fix** also folds into the same Commit 1: shape doc edits at line 109 (Variant 5 example) + line 275 (Naming consistency notes) + new "Schema substrate" subsection in Variant 5 referencing migration 040 + Pydantic source-of-truth annotation per Kerwyn's refinement.
+
+**Commit 1 final shape**: bundles Builder-D's composer + renderer + tests + pyproject bump + Builder-E's migration 040 + worker update + new migration tests + atomicity tests + Architect's shape doc fix + this v1.0.3 amendment commit. Single Commit 1 commit lands all four streams together once Builder-E reports.
+
+**Forward-looking flag for Commit 3 mobile work**: Mobile stuck-detection MUST handle `analysis_state == "analyzing" AND analyzing_started_at IS NULL` as pre-migration indeterminate (per Contract A). Surface as stuck immediately rather than waiting 5 minutes from now. Existing video rows from Phase 191B smoke + earlier predate the column. Builder-E's migration adds the column nullable, no backfill — Commit 3's mobile code is the consumer that handles the indeterminate case gracefully.
+
+**Pattern repeats**: same shape as Phase 191D Builder-B's three trust-but-verify catches. Inviting the flag is cheaper than reviewing for unflagged friction at verify time. Builder-D's flags caught what would have been a Phase 192 Commit 3 bug (mobile stuck-detection silently failing because column doesn't exist) — caught at Commit 1 Builder-report time vs at Commit 3 smoke gate. Cheap correction point.
+
+**Next**: trust-but-verify Builder-E's report when it arrives → commit Commit 1 with all four streams bundled.
+
+---
+
+### 2026-05-05 16:11 — Builder-E technical note (migration 040 + worker atomicity landed; pre-commit)
+
+Builder-E completed migration-extension scope-add per the v1.0.3 brief; reporting back to Architect for trust-but-verify before Commit 1 lands. Recorded here as the technical surface of Commit 1's migration stream so that Commit 3's mobile-side work (still ahead) inherits the contract without re-deriving it from code.
+
+**What landed (no commit yet — Architect commits all four streams together):**
+
+- **Migration 040** added to `src/motodiag/core/migrations.py` (version=40, name=`videos_analyzing_started_at`). Single ALTER TABLE — `videos.analyzing_started_at TEXT` nullable, no default, no backfill. Rollback uses the rename-recreate pattern (SQLite pre-3.35 can't DROP COLUMN reliably) restoring the migration-039-shape exactly + recreating the three Phase 191B indexes.
+- **`SCHEMA_VERSION` bumped 39 → 40** in `src/motodiag/core/database.py` with inline comment citing Phase 192 Section D + the stuck-detection feature reason.
+- **`update_analysis_state` extended** in `src/motodiag/core/video_repo.py` per Contract B: when `new_state == "analyzing"`, a SINGLE UPDATE writes BOTH `analysis_state` AND `analyzing_started_at` (Python `_now_iso()` value) atomically. All other transitions remain single-column UPDATEs that do NOT touch `analyzing_started_at` — preserving the column across `analyzing → analyzed` / `analyzing → analysis_failed` / `analyzing → unsupported` for post-completion debugging. Timestamp format chosen to match `analyzed_at`'s existing `_now_iso()` write (NOT SQLite's `datetime('now')`) per F9 subspecies (v) self-validating-test-setup discipline — keeping the two timestamp columns in the same format avoids the format-mismatch bug Phase 191B fix-cycle-1 hit.
+- **Two new test files** (`tests/test_phase192_migration_040.py`, `tests/test_phase192_analyzing_started_at_atomicity.py`). Migration tests cover schema bump + column shape (nullable, no default) + rollback (drops column, preserves other data + indexes) + idempotency + the explicit nullability contract (re-applying migration to a DB with existing rows leaves their `analyzing_started_at IS NULL`). Atomicity tests cover post-transition value asserts + SQL-tracing-based single-UPDATE proof + non-clearing across subsequent transitions + re-entry refresh (analyzing → failed → analyzing produces a new timestamp).
+
+**Forward-looking flags for Commit 3 (mobile stuck-detection consumer; reiterated for durability):**
+
+- Pre-migration rows from Phase 191B (smoke run + any production rows that landed before migration 040) have `analyzing_started_at IS NULL`. These rows MAY be in `analysis_state == 'analyzing'` if the worker started them before the migration ran. Per Contract A: mobile stuck-detection MUST treat this as PRE-MIGRATION INDETERMINATE and surface as stuck IMMEDIATELY rather than waiting 5 minutes from now (the row may have been stuck for hours/days before the migration landed; the 5-min threshold doesn't apply when we have no anchor timestamp).
+- Post-migration rows that transition through `pending → analyzing` after migration 040 lands will always have `analyzing_started_at IS NOT NULL` (Contract B's atomic UPDATE guarantees it). The stuck-detection logic for these is the standard "now - analyzing_started_at > 5 minutes → stuck" comparison.
+- The two-class distinction (NULL = pre-migration-indeterminate vs IS NOT NULL = post-migration-anchored) is the API surface Commit 3's mobile code consumes; the backend doesn't expose a "is-pre-migration" flag — mobile derives it from the NULL check.
+
+**Architect-side cosmetic flag (deferred, NOT addressed by Builder-E)**: Builder-D's `build_session_report_doc()` extension in `src/motodiag/reporting/builders.py` (line 224-233) carries a now-stale comment block that says "Phase 191B does not currently persist the `analyzing → analyzed` transition timestamp (no `analyzing_started_at` column on the videos table)..." After migration 040, the column DOES exist and the `v.get("analyzing_started_at")` call returns the actual stored value (NULL for pre-migration rows; ISO timestamp for post-migration rows). The functional code is correct — the comment is the only thing stale. Per the brief's "Do NOT change Builder-D's `build_session_report_doc()` extension or renderer extension" constraint, Builder-E left the code untouched. Architect may consider a small comment-only edit as part of Commit 1 finalize, or defer to Commit 4's documentation pass — the surface behavior is correct either way.
+
+**Trust-but-verify scope confirmed for Architect**: pytest suite to run in this order — `test_phase192_migration_040.py` (~12 tests) + `test_phase192_analyzing_started_at_atomicity.py` (~10 tests) + Builder-D's `test_phase192_videos_extension.py` + `test_phase192_route_videos_extension.py` (regression — should remain green; see Architect-side cosmetic flag above for why) + Phase 191B regression sweep (`test_phase191b_migration_039.py`, `test_phase191b_video_repo.py`, `test_phase191b_video_analysis_pipeline.py`, `test_phase191b_videos_api.py`) + Phase 182 regression (`test_phase182_reports.py`). Manual SQL check: `sqlite3 motodiag.db ".schema videos"` should show the new `analyzing_started_at TEXT` line.
+
+**Builder-E did NOT commit or push.** Architect commits all four streams (Builder-D + Builder-E + shape doc fix + v1.0.3 + this 16:11 entry) as a single Commit 1.
+
+---
+
+### 2026-05-05 17:42 — Commit 1 final verify: F9 int-typed heuristic refinement folded in (v1.0.4)
+
+Trust-but-verify cycle on Builder-D + Builder-E's combined work surfaced a real heuristic bug in `scripts/check_f9_patterns.py` — the same kind of follow-up surfacing Phase 191D's own fix-cycle had to handle. SCHEMA_VERSION 39→40 bump (from migration 040) caused **22 false positives** where literal `40` (or `40.0`) coincidentally matched the new `SCHEMA_VERSION` value across 8 unrelated test files (Phase 06 / 115 / 122 / 140 / 141 / 143 / 158 / 163) that import some sibling module of `motodiag.core.database` for unrelated reasons. The Phase 191D heuristic at `check_f9_patterns.py:867-895` was firing on int-typed entries when import-match OR identifier-nearby — but value 40 is a common int literal (counts, percentages, durations, timeouts), so import-match alone is too loose for ints.
+
+**Fix**: tightened int-typed entries to require identifier-nearby (joined dict/tuple in the strict tier at `check_f9_patterns.py:870`). String-typed entries keep the existing two-path heuristic (import OR nearby) since string literals are far less coincidence-prone. Comment block at lines 844-880 expanded to document the per-type rationale + the Phase 192 surfacing context.
+
+**Why folded into Commit 1**: per Phase 191D's own discipline (the "fold heuristic refinements into the same commit when surgical and contract-preserving" precedent established during 191D's fix-cycle): refinements that strictly *narrow* the rule (fewer false positives, no new false negatives) and that are surgical (one-line conditional change + comment update) belong in the commit that surfaced them. Deferring would leave Commit 1's regression artifact noisy with 22 false positives.
+
+**Contract preservation verified**: re-ran `--check-ssot-constants` post-refinement → clean. The 22 false positives at value `40` simply stop firing because none of those 8 test files have `SCHEMA_VERSION` (or `database`) as an identifier within ±3 lines of the literal — which is the correct outcome.
+
+**Companion ripple fix** (NOT amendment-grade — mechanical version-bump consequence): `tests/test_phase191b_serve_migrations.py:98` had `assert get_current_version(db_path) == 39` (the migration-boundary literal-pin from Phase 191B fix-cycle-1's contract-pin design). Updated to `== 40` + updated docstring + updated f-string output match (`f"Applied migrations: schema_version 38 → {SCHEMA_VERSION}"`) since serving at v38 now applies BOTH 039 + 040 in one shot. Contract-pin opt-out comment refreshed to cite Phase 192's migration 040.
+
+**Verification (final, pre-commit)**:
+- F9 lint: `python scripts/check_f9_patterns.py --check-ssot-constants` → `F9 lint: clean`.
+- 78/78 in targeted regression slice: `test_phase191d_ssot_constants_lint.py` (12) + `test_phase192_videos_extension.py` (14) + `test_phase192_migration_040.py` (12) + `test_phase192_analyzing_started_at_atomicity.py` (10) + `test_phase184_gate9.py` (16) + `test_phase191c_f9_lint.py` (14). Runtime: 61.73s.
+- 8/8 in `test_phase191b_serve_migrations.py` (the 39→40 ripple fix). Runtime: 11.59s.
+- Full regression sweep: in flight at log-write time; results bundled into Commit 1 commit message after green confirmation.
+
+**Commit 1 final scope** (seven streams, single commit):
+1. Builder-D's composer + renderer extensions + tests + `pyproject.toml` bump.
+2. Builder-E's migration 040 + worker update + new tests.
+3. Architect's shape doc Flag 2 fix.
+4. v1.0.3 amendment text.
+5. v1.0.4 amendment text (this entry's amendment).
+6. F9 heuristic refinement (`scripts/check_f9_patterns.py`).
+7. `test_phase191b_serve_migrations.py:98` ripple fix.

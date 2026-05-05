@@ -136,6 +136,89 @@ class TextReportRenderer(ReportRenderer):
                     lines.append(
                         "  " + " | ".join(str(cell) for cell in r)
                     )
+            elif "videos" in section:
+                # Phase 192 — variant 5. Each video card renders
+                # as an indented metadata block; when
+                # ``findings`` is present (analysis_state ==
+                # 'analyzed') a further-indented findings block
+                # follows. Renderers check ``if "findings" in
+                # video`` per the shape doc, NOT
+                # ``video.get("findings") is not None``.
+                videos = section.get("videos") or []
+                for idx, video in enumerate(videos, start=1):
+                    fname = video.get("filename") or "—"
+                    lines.append(f"  Recording {idx} ({fname})")
+                    lines.append(
+                        f"    Video ID: {video.get('video_id', '—')}"
+                    )
+                    lines.append(
+                        f"    Captured: "
+                        f"{video.get('captured_at', '—')}"
+                    )
+                    lines.append(
+                        f"    Duration (ms): "
+                        f"{video.get('duration_ms', 0)}"
+                    )
+                    lines.append(
+                        f"    Size (bytes): "
+                        f"{video.get('size_bytes', 0)}"
+                    )
+                    lines.append(
+                        f"    Interrupted: "
+                        f"{video.get('interrupted', False)}"
+                    )
+                    lines.append(
+                        f"    Analysis state: "
+                        f"{video.get('analysis_state', 'pending')}"
+                    )
+                    lines.append(
+                        f"    Analyzing started at: "
+                        f"{video.get('analyzing_started_at')}"
+                    )
+                    if "findings" in video:
+                        findings = video["findings"] or {}
+                        lines.append("    Findings:")
+                        overall = findings.get(
+                            "overall_assessment"
+                        ) or ""
+                        if overall:
+                            lines.append(
+                                f"      Overall: {overall}"
+                            )
+                        for f in findings.get("findings") or []:
+                            ftype = f.get("finding_type") or "—"
+                            desc = f.get("description") or ""
+                            sev = f.get("severity") or "—"
+                            conf = f.get("confidence")
+                            conf_str = (
+                                f"{float(conf):.2f}"
+                                if conf is not None else "—"
+                            )
+                            lines.append(
+                                f"      - [{ftype} / {sev} / "
+                                f"conf {conf_str}] {desc}"
+                            )
+                        if findings.get("image_quality_note"):
+                            lines.append(
+                                f"      Image quality: "
+                                f"{findings['image_quality_note']}"
+                            )
+                        if findings.get("frames_analyzed"):
+                            lines.append(
+                                f"      Frames analyzed: "
+                                f"{findings['frames_analyzed']}"
+                            )
+                        if findings.get("model_used"):
+                            lines.append(
+                                f"      Model: "
+                                f"{findings['model_used']}"
+                            )
+                        if findings.get("cost_estimate_usd"):
+                            lines.append(
+                                f"      Cost (USD): "
+                                f"{findings['cost_estimate_usd']}"
+                            )
+                    lines.append("")
             lines.append("")
         footer = doc.get("footer")
         if footer:
@@ -245,6 +328,96 @@ class PdfReportRenderer(ReportRenderer):
                 rows = table.get("rows") or []
                 if cols and rows:
                     story.append(_grid_table(cols, rows))
+            elif "videos" in section:
+                # Phase 192 — variant 5. Each video card renders
+                # as a metadata key/value sub-table; when
+                # ``findings`` is present, a nested findings
+                # paragraph block follows. Conservative reportlab
+                # Platypus shapes (no new flowable types) — reuses
+                # ``_kv_table``, ``Paragraph``, ``Spacer``.
+                videos = section.get("videos") or []
+                for idx, video in enumerate(videos, start=1):
+                    fname = video.get("filename") or "—"
+                    story.append(Paragraph(
+                        f"Recording {idx} ({_escape(fname)})",
+                        self._body_style,
+                    ))
+                    meta_data = [
+                        [_escape("Video ID"),
+                         _escape(str(video.get("video_id", "—")))],
+                        [_escape("Captured"),
+                         _escape(str(video.get("captured_at", "—")))],
+                        [_escape("Duration (ms)"),
+                         _escape(str(video.get("duration_ms", 0)))],
+                        [_escape("Size (bytes)"),
+                         _escape(str(video.get("size_bytes", 0)))],
+                        [_escape("Interrupted"),
+                         _escape(str(video.get("interrupted", False)))],
+                        [_escape("Analysis state"),
+                         _escape(str(
+                             video.get("analysis_state", "pending")
+                         ))],
+                        [_escape("Analyzing started at"),
+                         _escape(str(
+                             video.get("analyzing_started_at")
+                         ))],
+                    ]
+                    story.append(_kv_table(meta_data))
+                    if "findings" in video:
+                        findings = video["findings"] or {}
+                        story.append(Spacer(1, 1 * mm))
+                        story.append(Paragraph(
+                            "Findings:", self._body_style,
+                        ))
+                        overall = findings.get(
+                            "overall_assessment"
+                        ) or ""
+                        if overall:
+                            story.append(Paragraph(
+                                f"Overall: {_escape(overall)}",
+                                self._body_style,
+                            ))
+                        for f in findings.get("findings") or []:
+                            ftype = f.get("finding_type") or "—"
+                            desc = f.get("description") or ""
+                            sev = f.get("severity") or "—"
+                            conf = f.get("confidence")
+                            conf_str = (
+                                f"{float(conf):.2f}"
+                                if conf is not None else "—"
+                            )
+                            story.append(Paragraph(
+                                f"• [{_escape(str(ftype))} / "
+                                f"{_escape(str(sev))} / conf "
+                                f"{_escape(conf_str)}] "
+                                f"{_escape(str(desc))}",
+                                self._body_style,
+                            ))
+                        if findings.get("image_quality_note"):
+                            story.append(Paragraph(
+                                f"Image quality: "
+                                f"{_escape(str(findings['image_quality_note']))}",
+                                self._body_style,
+                            ))
+                        if findings.get("frames_analyzed"):
+                            story.append(Paragraph(
+                                f"Frames analyzed: "
+                                f"{_escape(str(findings['frames_analyzed']))}",
+                                self._body_style,
+                            ))
+                        if findings.get("model_used"):
+                            story.append(Paragraph(
+                                f"Model: "
+                                f"{_escape(str(findings['model_used']))}",
+                                self._body_style,
+                            ))
+                        if findings.get("cost_estimate_usd"):
+                            story.append(Paragraph(
+                                f"Cost (USD): "
+                                f"{_escape(str(findings['cost_estimate_usd']))}",
+                                self._body_style,
+                            ))
+                    story.append(Spacer(1, 2 * mm))
             story.append(Spacer(1, 2 * mm))
 
         if doc.get("footer"):

@@ -106,7 +106,7 @@ When a value is missing, builders use the em-dash sentinel `"—"` (not "N/A", n
             "analyzing_started_at": "2026-05-05T14:32:30+00:00",  # ISO; None if never started
             "findings": {                  # only present when analysis_state == "analyzed"
                 "overall_assessment": "Likely worn piston rings or valve seals.",
-                "findings_list": [
+                "findings": [              # inner key is `findings` per VisualAnalysisResult.findings (vision_analysis.py:61)
                     {
                         "finding_type": "smoke",
                         "description": "Blue smoke from exhaust during throttle blip",
@@ -132,6 +132,8 @@ When a value is missing, builders use the em-dash sentinel `"—"` (not "N/A", n
 **The `findings` sub-shape mirrors Phase 191B's `VisualAnalysisResult` Pydantic model** verbatim (see `motodiag.media.vision_analysis.VisualAnalysisResult`). The nesting choice + design rationale is documented in the next section.
 
 **Required fields per video card**: `video_id`, `filename`, `captured_at`, `duration_ms`, `size_bytes`, `interrupted`, `analysis_state`, `analyzing_started_at`. These are the metadata fields surfaced to viewers regardless of analysis status.
+
+**Schema substrate**: `analyzing_started_at` is added by **migration 040** (Phase 192 Commit 1; SCHEMA_VERSION 39 → 40). Existing video rows from Phase 191B smoke + earlier predate the column and stay with `analyzing_started_at IS NULL`. Mobile-side stuck-detection (Commit 3) treats `analysis_state == "analyzing" AND analyzing_started_at IS NULL` as **pre-migration indeterminate** — surface as stuck immediately rather than waiting 5 minutes from now. The worker that transitions videos `pending → analyzing` writes the column atomically in the same UPDATE that sets the state (per Contract B in Builder-E's brief; F9 subspecies (v) "self-validating-test-setup" prevention — single statement, not two, to avoid the race window where the row sits in `analyzing` with `analyzing_started_at IS NULL` and triggers the pre-migration stuck path inappropriately).
 
 **Optional `findings`**: present only when `analysis_state == "analyzed"`. When `analysis_state` is `pending` / `analyzing` / `analysis_failed` / `unsupported`, the `findings` key is **absent from the dict** (not present-with-None). Renderers check `if "findings" in video` rather than `if video.get("findings") is not None`. The absent-vs-None distinction matches Phase 182's existing convention for the top-level `subtitle` field.
 
@@ -272,7 +274,7 @@ Phase 182's existing fields use these conventions; Phase 192 extension preserves
 - `_ms` / `_bytes` / `_usd` suffixes for unit-bearing scalars (`duration_ms`, `size_bytes`, `cost_estimate_usd`).
 - `_state` suffix for enum-typed status fields (`analysis_state`).
 - Booleans without `is_` prefix where the field name is naturally a predicate (`interrupted`).
-- `findings_list` (Phase 191B `VisualAnalysisResult` convention) NOT `findings` for the inner list-of-findings — `findings` is the container object.
+- `findings` (the container object) wraps an inner `findings: list[VisualFinding]` list. **Pydantic source of truth: `motodiag.media.vision_analysis.VisualAnalysisResult.findings` at `vision_analysis.py:61`.** The shape doc previously claimed the inner key was `findings_list` per "Phase 191B convention"; that was wrong — `model_dump()` produces `findings` because the Pydantic field is literally named `findings`. Corrected at v1.0.3 amendment per Builder-D Flag 2. **When updating this document for a future schema-extension, verify field names against the Pydantic source rather than copying from prior doc revisions** — same audit-trail-preservation discipline that's been load-bearing throughout the chain.
 
 When in doubt, look at the existing builder + Pydantic models first.
 

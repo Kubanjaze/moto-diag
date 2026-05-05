@@ -2839,6 +2839,98 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS videos;
         """,
     ),
+    # Migration 040 — Phase 192 (Commit 1 scope-add): videos.analyzing_started_at
+    Migration(
+        version=40,
+        name="videos_analyzing_started_at",
+        description=(
+            "Phase 192 Section D (stuck-in-analyzing detection — 5-min "
+            "threshold per plan v1.0.1): add nullable "
+            "`analyzing_started_at TEXT` column to the `videos` table "
+            "so the mobile diagnostic-report viewer can compute stuck-"
+            "duration for each video whose `analysis_state == 'analyzing'`. "
+            "\n\n"
+            "Nullability contract (Phase 192 Contract A): the column is "
+            "added NULL with NO DEFAULT. Existing rows from Phase 191B "
+            "(including the 191B smoke-test row + any production rows) "
+            "stay with `analyzing_started_at IS NULL`. NO BACKFILL — "
+            "we cannot reconstruct a true `analyzing` start time for "
+            "rows that transitioned before this migration existed, and "
+            "fabricating one (e.g., copying `created_at`) would "
+            "mis-classify pre-migration rows in the stuck-detection "
+            "logic. Mobile-side stuck-detection (Commit 3 scope) MUST "
+            "treat `analysis_state == 'analyzing' AND "
+            "analyzing_started_at IS NULL` as PRE-MIGRATION INDETERMINATE "
+            "and surface those rows as STUCK IMMEDIATELY rather than "
+            "waiting 5 minutes from now (the row may have been stuck "
+            "for hours or days before the migration landed)."
+            "\n\n"
+            "Atomicity contract (Phase 192 Contract B): the "
+            "`pending → analyzing` transition is performed by a SINGLE "
+            "atomic UPDATE in `motodiag.core.video_repo."
+            "update_analysis_state`. Both `analysis_state = 'analyzing'` "
+            "AND `analyzing_started_at = <iso-now>` are set in the SAME "
+            "SQL statement to eliminate the race window where a row "
+            "could sit in `analyzing` with `analyzing_started_at IS "
+            "NULL` and trip the pre-migration-indeterminate path "
+            "inappropriately. Two-statement implementations are "
+            "FORBIDDEN by Contract B; tests in "
+            "`tests/test_phase192_analyzing_started_at_atomicity.py` "
+            "verify single-UPDATE behavior."
+        ),
+        upgrade_sql="""
+            ALTER TABLE videos ADD COLUMN analyzing_started_at TEXT;
+        """,
+        rollback_sql="""
+            -- SQLite pre-3.35 can't DROP COLUMN; use rename-recreate
+            -- to restore the post-migration-039 / pre-migration-040
+            -- shape exactly. Mirrors the recreate pattern used in
+            -- migrations 003 / 038.
+            CREATE TABLE videos_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id INTEGER NOT NULL,
+                started_at TEXT NOT NULL,
+                duration_ms INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                file_size_bytes INTEGER NOT NULL,
+                format TEXT NOT NULL DEFAULT 'mp4',
+                codec TEXT NOT NULL DEFAULT 'h264',
+                interrupted INTEGER NOT NULL DEFAULT 0,
+                file_path TEXT NOT NULL,
+                sha256 TEXT NOT NULL,
+                upload_state TEXT NOT NULL DEFAULT 'uploaded',
+                analysis_state TEXT NOT NULL DEFAULT 'pending',
+                analysis_findings TEXT,
+                analyzed_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                deleted_at TEXT,
+                FOREIGN KEY (session_id) REFERENCES diagnostic_sessions(id) ON DELETE CASCADE
+            );
+            INSERT INTO videos_rollback
+                (id, session_id, started_at, duration_ms,
+                 width, height, file_size_bytes, format, codec,
+                 interrupted, file_path, sha256,
+                 upload_state, analysis_state, analysis_findings,
+                 analyzed_at, created_at, deleted_at)
+            SELECT
+                id, session_id, started_at, duration_ms,
+                width, height, file_size_bytes, format, codec,
+                interrupted, file_path, sha256,
+                upload_state, analysis_state, analysis_findings,
+                analyzed_at, created_at, deleted_at
+            FROM videos;
+            DROP TABLE videos;
+            ALTER TABLE videos_rollback RENAME TO videos;
+            CREATE INDEX IF NOT EXISTS idx_videos_session
+                ON videos(session_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_videos_analysis_state
+                ON videos(analysis_state)
+                WHERE analysis_state IN ('pending', 'analyzing');
+            CREATE INDEX IF NOT EXISTS idx_videos_sha256
+                ON videos(sha256);
+        """,
+    ),
 ]
 
 
