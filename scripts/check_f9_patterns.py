@@ -1,13 +1,28 @@
-"""F9 mock-vs-runtime-drift pattern checks (Phase 191C).
+"""F9 mock-vs-runtime-drift pattern checks (Phase 191C + 191D).
 
 Standalone CLI invoked from .pre-commit-config.yaml + manually.
-Two checks:
-  --check-model-ids: subspecies (ii) — hardcoded model IDs in test files
+
+Phase 191C checks:
+  --check-model-ids: subspecies (ii) narrow — hardcoded model IDs in
+      test files. **DEPRECATED at Phase 191D**; stub-redirects to
+      ``--check-ssot-constants`` filtered to the model-ID-relevant
+      registry entries. Removal targeted Phase 200+.
   --check-deploy-path-init-db: subspecies (iv) — CLI commands launching
-      uvicorn/serve without init_db() call
+      uvicorn/serve without init_db() call.
+
+Phase 191D additions (F20 + F21 mitigations):
+  --check-ssot-constants: subspecies (ii) generalized — TOML-driven scan
+      of ``tests/**`` for literal pins of any constant declared in
+      ``f9_ssot_constants.toml``. Recognizes a new ``contract-pin``
+      opt-out subcategory for intentional two-source assertion design.
+  --check-tag-catalog-coverage: F21 — diff routes' ``APIRouter(tags=...)``
+      strings against ``motodiag.api.openapi.TAG_CATALOG`` and flag
+      tags-in-routes-not-in-catalog (error) / tags-in-catalog-not-in-routes
+      (warn).
 
 Importable as a module: ``from check_f9_patterns import (
-    check_model_ids, check_deploy_path_init_db, F9Finding, run_all_checks
+    check_model_ids, check_deploy_path_init_db, check_ssot_constants,
+    check_tag_catalog_coverage, F9Finding, run_all_checks, load_registry
 )``
 
 Pattern doc: ``docs/patterns/f9-mock-vs-runtime-drift.md``
@@ -17,11 +32,18 @@ from __future__ import annotations
 
 import argparse
 import ast
+import importlib
 import re
 import sys
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Iterable
+from typing import Any, Iterable
+
+# Python 3.11+ has tomllib in stdlib; fall back to tomli on older runtimes.
+try:  # pragma: no cover — runtime branch
+    import tomllib as _tomllib  # type: ignore[import-not-found]
+except ModuleNotFoundError:  # pragma: no cover — Py<3.11 path
+    import tomli as _tomllib  # type: ignore[no-redef]
 
 # Match the model-ID shape ``claude-(haiku|sonnet|opus)-N...`` permissively
 # enough to catch every variant the project has produced AND the historical
@@ -419,26 +441,715 @@ def _file_level_optout(
 
 
 # ---------------------------------------------------------------------
+# Subspecies (ii) generalized — Phase 191D --check-ssot-constants
+# ---------------------------------------------------------------------
+
+
+# Default registry path (relative to repo root).
+DEFAULT_SSOT_REGISTRY_PATH = "f9_ssot_constants.toml"
+
+# How many tokens to scan around an offending literal when looking for
+# the SSOT identifier / matching import (false-positive heuristic). The
+# rule narrows literal-matches to those where either:
+#   (a) the registry name (or a key from a dict-typed entry) appears
+#       textually nearby (within IDENTIFIER_PROXIMITY_LINES of the
+#       offending line), OR
+#   (b) the source module is imported anywhere in the file.
+# Without this narrowing the scan would flag spurious coincidences
+# (e.g. ``assert response.status_code == 5`` matching
+# ``TIER_VEHICLE_LIMITS["individual"] == 5``).
+IDENTIFIER_PROXIMITY_LINES = 3
+
+
+@dataclass
+class SsotRegistryEntry:
+    """One ``[[constants]]`` array-of-tables entry from the registry TOML."""
+
+    name: str
+    source_module: str
+    description: str
+    value_type: str
+    exempt_keys: list[str] = field(default_factory=list)
+    # Live production value (resolved at registry-load time via dynamic
+    # import). May be ``None`` if the source module fails to import —
+    # in which case the rule emits a registry-error finding rather than
+    # silently skipping.
+    live_value: Any = None
+    load_error: str | None = None
+
+
+def load_registry(
+    registry_path: Path,
+    name_filter: set[str] | None = None,
+) -> tuple[list[SsotRegistryEntry], list[F9Finding]]:
+    """Parse ``registry_path`` + dynamically import each ``source_module``.
+
+    Args:
+        registry_path: Path to the TOML registry file.
+        name_filter: Optional set of constant names to include — used by
+            the deprecated ``--check-model-ids`` stub-redirect to filter
+            the registry down to ``MODEL_ALIASES`` + ``MODEL_PRICING``.
+
+    Returns:
+        ``(entries, registry_errors)`` — entries is the list of valid
+        registry rows (``live_value`` populated); registry_errors is a
+        list of ``F9Finding`` for parse failures or import errors so
+        the caller can surface them in the standard finding shape.
+    """
+    findings: list[F9Finding] = []
+    if not registry_path.exists():
+        findings.append(
+            F9Finding(
+                file=registry_path,
+                line=0,
+                rule="ssot-registry-error",
+                message=(
+                    f"SSOT-constants registry not found at "
+                    f"{registry_path}. Either pass --ssot-registry to "
+                    f"point at the right path or create the registry "
+                    f"file (see docs/patterns/f9-mock-vs-runtime-drift"
+                    f".md)."
+                ),
+                snippet="(file not found)",
+            )
+        )
+        return [], findings
+    try:
+        with registry_path.open("rb") as f:
+            data = _tomllib.load(f)
+    except Exception as exc:
+        findings.append(
+            F9Finding(
+                file=registry_path,
+                line=0,
+                rule="ssot-registry-error",
+                message=(
+                    f"SSOT-constants registry parse failure: {exc}. "
+                    f"Check TOML syntax."
+                ),
+                snippet="(parse failed)",
+            )
+        )
+        return [], findings
+
+    raw_entries = data.get("constants", []) or []
+    entries: list[SsotRegistryEntry] = []
+    for raw in raw_entries:
+        name = raw.get("name", "")
+        source_module = raw.get("source_module", "")
+        if name_filter is not None and name not in name_filter:
+            continue
+        entry = SsotRegistryEntry(
+            name=name,
+            source_module=source_module,
+            description=raw.get("description", ""),
+            value_type=raw.get("value_type", "str"),
+            exempt_keys=list(raw.get("exempt_keys", []) or []),
+        )
+        # Validate description floor (>=30 chars) — a soft lint on the
+        # registry itself, mirrors Phase 191C's opt-out reason floor.
+        if len(entry.description) < 30:
+            findings.append(
+                F9Finding(
+                    file=registry_path,
+                    line=0,
+                    rule="ssot-registry-error",
+                    message=(
+                        f"Registry entry {name!r} from "
+                        f"{source_module!r} has description "
+                        f"{len(entry.description)} chars (need >= 30). "
+                        f"Document WHY this constant is SSOT-managed."
+                    ),
+                    snippet=entry.description,
+                )
+            )
+            continue
+        # Dynamically import + read the live production value.
+        try:
+            module = importlib.import_module(source_module)
+            entry.live_value = getattr(module, name)
+        except Exception as exc:
+            entry.load_error = str(exc)
+            findings.append(
+                F9Finding(
+                    file=registry_path,
+                    line=0,
+                    rule="ssot-registry-error",
+                    message=(
+                        f"Could not load {name!r} from "
+                        f"{source_module!r}: {exc}. The lint cannot "
+                        f"verify literal-pin drift for this entry."
+                    ),
+                    snippet=f"{source_module}.{name}",
+                )
+            )
+            continue
+        entries.append(entry)
+    return entries, findings
+
+
+# Values that are too universally common in test code to reliably
+# attribute to a specific SSOT-managed dict entry. Filtered out for
+# dict/tuple-typed entries to keep the false-positive rate sane —
+# `assert q.used_this_month == 0` shouldn't flag because 0 happens to
+# be `TIER_MONTHLY_VIDEO_LIMITS["individual"]`. Phase 191D fix-cycle:
+# initial Builder-B run produced 311 false-positive findings dominated
+# by `None` and `0` matches; this list narrows that. Scalar entries
+# (int/str typed) keep ALL values since the entry IS the canonical
+# pin — `SCHEMA_VERSION == 39` literal-pin is exactly what we want to
+# catch even though `39` is itself just an int.
+NOISE_LITERALS = (None, True, False, 0, "")
+
+
+def _expected_literals_for_entry(
+    entry: SsotRegistryEntry,
+) -> list[Any]:
+    """Flatten an entry's ``live_value`` into the literals to scan for.
+
+    For int / str: ``[live_value]``.
+    For dict: every value-position literal in the dict (skipping any
+        sub-key listed in ``exempt_keys`` AND skipping NOISE_LITERALS
+        like None/0/True/False/"" that are too common to attribute).
+    For tuple: every element of the tuple (NOISE_LITERALS filtered).
+    """
+    if entry.live_value is None:
+        return []
+    vt = entry.value_type
+    if vt in ("int", "str"):
+        return [entry.live_value]
+    if vt == "dict":
+        if not isinstance(entry.live_value, dict):
+            return []
+        out: list[Any] = []
+        for k, v in entry.live_value.items():
+            if k in entry.exempt_keys:
+                continue
+            # Recurse one level into nested values (handles tuple/list
+            # values like motodiag.shop.ai_client.MODEL_PRICING).
+            if isinstance(v, (list, tuple)):
+                out.extend(item for item in v if item not in NOISE_LITERALS)
+            elif isinstance(v, dict):
+                out.extend(
+                    val for val in v.values() if val not in NOISE_LITERALS
+                )
+            else:
+                if v not in NOISE_LITERALS:
+                    out.append(v)
+        return out
+    if vt == "tuple":
+        if isinstance(entry.live_value, (list, tuple)):
+            return [v for v in entry.live_value if v not in NOISE_LITERALS]
+        return []
+    return []
+
+
+def _ssot_per_line_optout(
+    source_lines: list[str], lineno: int,
+) -> tuple[bool, F9Finding | None]:
+    """Honor ``# f9-noqa: ssot-pin <reason>`` opt-out on a given line.
+
+    Returns ``(True, None)`` when a valid opt-out (>=20 char reason) is
+    present; ``(False, finding)`` when the comment is malformed (the
+    caller appends the finding so the comment can't be a drive-by);
+    ``(False, None)`` when no opt-out is present.
+
+    Recognizes the ``contract-pin`` subcategory introduced in Phase 191D
+    — both ``# f9-noqa: ssot-pin <reason>`` and
+    ``# f9-noqa: ssot-pin contract-pin: <reason>`` are honored. The
+    20-char floor applies to the trailing reason in both shapes.
+    """
+    if lineno < 1 or lineno > len(source_lines):
+        return False, None
+    line = source_lines[lineno - 1]
+    pattern = re.compile(r"#\s*f9-noqa:\s*ssot-pin\b\s*(.*)$")
+    m = pattern.search(line)
+    if m is None:
+        return False, None
+    reason = m.group(1).strip()
+    # Accept the "contract-pin: <reason>" subcategory by stripping the
+    # prefix before length-check (so the user's reason after the colon
+    # is what's measured). This keeps the 20-char floor honest — the
+    # subcategory keyword shouldn't pad out a too-short reason.
+    if reason.lower().startswith("contract-pin:"):
+        reason = reason.split(":", 1)[1].strip()
+    if len(reason) >= MIN_OPTOUT_REASON_CHARS:
+        return True, None
+    return False, F9Finding(
+        file=Path("<source>"),  # caller fills in the real path
+        line=lineno,
+        rule="ssot-pin-malformed-optout",
+        message=(
+            f"Malformed f9-noqa: ssot-pin opt-out: reason is "
+            f"{len(reason)} chars (need >= {MIN_OPTOUT_REASON_CHARS}). "
+            f"Recognized subcategories: ssot-pin <reason> / ssot-pin "
+            f"contract-pin: <reason>. Opt-outs must teach: state WHY "
+            f"the literal is intentional."
+        ),
+        snippet=line.strip(),
+    )
+
+
+def _identifier_nearby(
+    source_lines: list[str], lineno: int, identifiers: set[str],
+) -> bool:
+    """True if any of ``identifiers`` appears textually near ``lineno``.
+
+    Scans IDENTIFIER_PROXIMITY_LINES lines on each side of ``lineno``
+    using simple substring + word-boundary matching. Cheap and
+    sufficient for the heuristic — false-positive narrowing doesn't
+    need to be airtight, just enough to drop trivially-coincident
+    literals like ``assert response.status_code == 5``.
+    """
+    start = max(0, lineno - 1 - IDENTIFIER_PROXIMITY_LINES)
+    stop = min(len(source_lines), lineno + IDENTIFIER_PROXIMITY_LINES)
+    haystack = "\n".join(source_lines[start:stop])
+    for ident in identifiers:
+        if not ident:
+            continue
+        if re.search(rf"\b{re.escape(ident)}\b", haystack):
+            return True
+    return False
+
+
+def _imported_modules(tree: ast.AST) -> set[str]:
+    """Return the set of dotted-name modules imported by ``tree``."""
+    modules: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            for alias in node.names:
+                modules.add(alias.name)
+        elif isinstance(node, ast.ImportFrom):
+            if node.module:
+                modules.add(node.module)
+    return modules
+
+
+def check_ssot_constants(
+    roots: Iterable[Path],
+    registry_path: Path | None = None,
+    name_filter: set[str] | None = None,
+) -> list[F9Finding]:
+    """Scan ``test_*.py`` under each root for SSOT-managed literal pins.
+
+    Loads the TOML registry, dynamically imports each entry's source
+    module to read the live production value, then AST-walks every
+    test file looking for matching literals. Honors file-level
+    ``# f9-allow-ssot-constants: <reason>`` opt-outs (full file
+    exemption) AND ``# f9-allow-not-ssot: <reason>`` opt-outs (declares
+    "this constant is intentionally not SSOT-managed in this file").
+    Per-line opt-outs use ``# f9-noqa: ssot-pin <reason>`` or the new
+    ``# f9-noqa: ssot-pin contract-pin: <reason>`` subcategory.
+
+    Args:
+        roots: Directories to scan recursively (typically
+            ``[Path("tests")]``).
+        registry_path: Path to ``f9_ssot_constants.toml``. Defaults to
+            ``<roots[0].parent>/f9_ssot_constants.toml``; falls back
+            to ``Path.cwd() / DEFAULT_SSOT_REGISTRY_PATH`` if no roots.
+        name_filter: Optional set of constant names to include — used
+            by the ``--check-model-ids`` stub-redirect to constrain
+            scope to ``{MODEL_ALIASES, MODEL_PRICING}``.
+
+    Returns:
+        List of findings; empty if clean.
+    """
+    if registry_path is None:
+        roots_list = list(roots)
+        if roots_list:
+            registry_path = (
+                roots_list[0].parent / DEFAULT_SSOT_REGISTRY_PATH
+            )
+        else:
+            registry_path = Path.cwd() / DEFAULT_SSOT_REGISTRY_PATH
+
+    entries, registry_findings = load_registry(
+        registry_path, name_filter=name_filter,
+    )
+    findings: list[F9Finding] = list(registry_findings)
+    if not entries:
+        return findings
+
+    # Pre-compute the set of expected literals per entry, plus the
+    # identifier-set for the proximity heuristic. The identifiers
+    # include the registry name itself + (for dict-typed entries) the
+    # top-level keys, since ``TIER_VEHICLE_LIMITS["individual"]`` would
+    # naturally appear textually near a literal-pin of the value.
+    by_literal: dict[Any, list[tuple[SsotRegistryEntry, set[str]]]] = {}
+    for entry in entries:
+        # Identifier set is the registry name ONLY. Dict keys would be
+        # tempting to include (TIER_VEHICLE_LIMITS["individual"] reads
+        # naturally as "individual" near the literal `5`) but in
+        # practice tier-related dict keys like "individual" / "shop" /
+        # "company" appear in many test files for unrelated tier-themed
+        # tests, swamping the signal. The legitimate signal cases all
+        # have the registry name itself nearby, so dropping dict keys
+        # cuts the false-positive rate without losing real findings.
+        # Phase 191D fix-cycle observation: 142 dropped to ~5-7 after
+        # removing dict-key identifiers.
+        identifiers: set[str] = {entry.name}
+        for lit in _expected_literals_for_entry(entry):
+            by_literal.setdefault(lit, []).append((entry, identifiers))
+
+    if not by_literal:
+        return findings
+
+    for root in roots:
+        if not root.exists():
+            continue
+        for path in sorted(root.rglob("test_*.py")):
+            try:
+                source = path.read_text(encoding="utf-8")
+                tree = ast.parse(source, filename=str(path))
+            except (SyntaxError, OSError):
+                continue
+            source_lines = source.splitlines()
+            # File-level opt-out: same shape as Phase 191C's
+            # _file_level_optout, recognizes both
+            # ``f9-allow-ssot-constants`` (the rule's own kind) +
+            # ``f9-allow-not-ssot`` (intentional non-SSOT escape hatch).
+            allow_optout = False
+            for kind in ("ssot-constants", "not-ssot"):
+                ok, err = _file_level_optout(source, kind=kind)
+                if ok:
+                    allow_optout = True
+                    break
+                if err is not None:
+                    err.file = path
+                    findings.append(err)
+            if allow_optout:
+                continue
+
+            # Get imported modules for the file (used by the heuristic
+            # to allow "import-implies-relevance" matches).
+            imported = _imported_modules(tree)
+
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.Constant):
+                    continue
+                value = node.value
+                # Skip values not in our literal map.
+                if value not in by_literal:
+                    continue
+                # Skip booleans (Python bools are ints; would match
+                # int-typed entries with values 0/1 spuriously).
+                if isinstance(value, bool):
+                    continue
+                candidates = by_literal[value]
+                # Try each registry entry that owns this literal value.
+                for entry, identifiers in candidates:
+                    # Heuristic narrowing — different rules per shape:
+                    #
+                    #   * dict-typed entries: scanning value-position
+                    #     literals is inherently lossy because dict
+                    #     values are often common magic numbers (3, 4,
+                    #     5, 0.8) that coincide with completely
+                    #     unrelated test assertions. We REQUIRE an
+                    #     identifier-nearby match (the registry name OR
+                    #     one of the dict keys) to fire. Import-
+                    #     presence alone is too weak — many test files
+                    #     import a module for one of its symbols and
+                    #     never touch the dict.
+                    #
+                    #   * int/str-typed entries: top-level scalar
+                    #     constants. Either identifier-nearby OR
+                    #     source-module imported is sufficient — a
+                    #     test that imports `motodiag.api.app` and
+                    #     asserts `response['version'] == 'v1'` is
+                    #     plausibly literal-pinning APP_VERSION.
+                    #
+                    #   * tuple-typed entries: same posture as dict
+                    #     (require identifier-nearby) since tuples
+                    #     also commonly hold magic-number elements.
+                    nearby = _identifier_nearby(
+                        source_lines, node.lineno, identifiers,
+                    )
+                    if entry.value_type in ("dict", "tuple"):
+                        if not nearby:
+                            continue
+                    else:
+                        # Match exact source module OR any module
+                        # that itself starts with `source_module + "."`
+                        # (i.e., a sub-module of the source). DO NOT
+                        # match the reverse direction (`source_module
+                        # starts with imported + "."`) — that treats
+                        # parent-package imports as matching every
+                        # child-module entry, which is the false-
+                        # positive shape that produced 82 hits where
+                        # `from motodiag.api import create_app` was
+                        # interpreted as importing every motodiag.api.*
+                        # SSOT entry. Phase 191D fix-cycle observation.
+                        has_import = (
+                            entry.source_module in imported
+                            or any(
+                                mod.startswith(
+                                    entry.source_module + "."
+                                )
+                                for mod in imported
+                            )
+                        )
+                        if not (has_import or nearby):
+                            continue
+                    # Honor per-line opt-outs.
+                    ok, err = _ssot_per_line_optout(
+                        source_lines, node.lineno,
+                    )
+                    if ok:
+                        # Valid opt-out — skip this finding entirely.
+                        break
+                    if err is not None:
+                        err.file = path
+                        findings.append(err)
+                        # Fall through to also report the underlying
+                        # literal-pin: the malformed comment doesn't
+                        # exempt the line. Same posture as Phase 191C
+                        # file-level opt-out malformed-handling.
+                    snippet = (
+                        source_lines[node.lineno - 1].strip()
+                        if 0 <= node.lineno - 1 < len(source_lines)
+                        else ""
+                    )
+                    findings.append(
+                        F9Finding(
+                            file=path,
+                            line=node.lineno,
+                            rule="ssot-pin",
+                            message=(
+                                f"Literal {value!r} matches the live "
+                                f"production value of "
+                                f"{entry.source_module}.{entry.name} "
+                                f"({entry.value_type}). Import the "
+                                f"constant from its source module or "
+                                f"opt out with "
+                                f"`# f9-noqa: ssot-pin <reason>` (or "
+                                f"`# f9-noqa: ssot-pin contract-pin: "
+                                f"<reason>` for intentional "
+                                f"two-source assertion design)."
+                            ),
+                            snippet=snippet,
+                        )
+                    )
+                    # One finding per literal per registry entry — but
+                    # break here so a literal that matches multiple
+                    # entries doesn't fire N times. The first match
+                    # that survives the heuristic + opt-out filter
+                    # wins; the message names the entry causing the
+                    # diagnostic.
+                    break
+    return findings
+
+
+# ---------------------------------------------------------------------
+# F21 — Phase 191D --check-tag-catalog-coverage
+# ---------------------------------------------------------------------
+
+
+def check_tag_catalog_coverage(
+    routes_dir: Path, openapi_path: Path,
+) -> list[F9Finding]:
+    """Diff route ``APIRouter(tags=...)`` strings vs ``TAG_CATALOG``.
+
+    Two diff directions:
+      1. Tags used by routes but missing from TAG_CATALOG -> rule
+         ``tag-catalog-coverage`` at error severity. Routes will
+         render in OpenAPI without a tag description.
+      2. Tags listed in TAG_CATALOG but used by no route -> rule
+         ``tag-catalog-orphan`` at warn severity. Could be a future-
+         route placeholder or stale entry.
+
+    Args:
+        routes_dir: typically ``Path("src/motodiag/api/routes")``.
+        openapi_path: typically
+            ``Path("src/motodiag/api/openapi.py")``.
+
+    Returns:
+        List of findings; empty if clean or files missing.
+    """
+    findings: list[F9Finding] = []
+    if not routes_dir.exists() or not openapi_path.exists():
+        return findings
+
+    # --- Step 1: collect every tag used by an APIRouter(...) call. ---
+    routes_tags: dict[str, list[tuple[Path, int]]] = {}
+    for path in sorted(routes_dir.rglob("*.py")):
+        try:
+            source = path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(path))
+        except (SyntaxError, OSError):
+            continue
+        for node in ast.walk(tree):
+            if not isinstance(node, ast.Call):
+                continue
+            func_name = _call_dotted_name(node.func)
+            if func_name != "APIRouter" and not func_name.endswith(
+                ".APIRouter"
+            ):
+                continue
+            for kw in node.keywords:
+                if kw.arg != "tags":
+                    continue
+                if not isinstance(kw.value, (ast.List, ast.Tuple)):
+                    continue
+                for elt in kw.value.elts:
+                    if (
+                        isinstance(elt, ast.Constant)
+                        and isinstance(elt.value, str)
+                    ):
+                        routes_tags.setdefault(elt.value, []).append(
+                            (path, elt.lineno),
+                        )
+
+    # --- Step 2: extract TAG_CATALOG names from openapi.py. ---
+    catalog_names: dict[str, int] = {}
+    try:
+        openapi_source = openapi_path.read_text(encoding="utf-8")
+        openapi_tree = ast.parse(
+            openapi_source, filename=str(openapi_path),
+        )
+    except (SyntaxError, OSError):
+        return findings
+    for node in ast.walk(openapi_tree):
+        # Look for ``TAG_CATALOG: ... = [ {...}, ... ]`` (AnnAssign)
+        # or ``TAG_CATALOG = [...]`` (Assign).
+        target_name = None
+        value_node = None
+        if isinstance(node, ast.AnnAssign):
+            if (
+                isinstance(node.target, ast.Name)
+                and node.target.id == "TAG_CATALOG"
+            ):
+                target_name = "TAG_CATALOG"
+                value_node = node.value
+        elif isinstance(node, ast.Assign):
+            for tgt in node.targets:
+                if isinstance(tgt, ast.Name) and tgt.id == "TAG_CATALOG":
+                    target_name = "TAG_CATALOG"
+                    value_node = node.value
+                    break
+        if target_name is None or not isinstance(
+            value_node, (ast.List, ast.Tuple)
+        ):
+            continue
+        for elt in value_node.elts:
+            if not isinstance(elt, ast.Dict):
+                continue
+            for k, v in zip(elt.keys, elt.values):
+                if (
+                    isinstance(k, ast.Constant)
+                    and k.value == "name"
+                    and isinstance(v, ast.Constant)
+                    and isinstance(v.value, str)
+                ):
+                    catalog_names[v.value] = elt.lineno
+
+    # --- Step 3: diff (route-only -> error; catalog-only -> warn). ---
+    for tag, hits in routes_tags.items():
+        if tag in catalog_names:
+            continue
+        for path, lineno in hits:
+            findings.append(
+                F9Finding(
+                    file=path,
+                    line=lineno,
+                    rule="tag-catalog-coverage",
+                    message=(
+                        f"Route uses tag {tag!r} but it is not "
+                        f"declared in TAG_CATALOG at "
+                        f"{openapi_path}. Add an entry: "
+                        f"{{'name': {tag!r}, 'description': '...'}}. "
+                        f"Without a catalog entry the tag will render "
+                        f"in OpenAPI without a description."
+                    ),
+                    snippet=f"tags=[..., {tag!r}, ...]",
+                )
+            )
+    for tag, lineno in catalog_names.items():
+        if tag in routes_tags:
+            continue
+        findings.append(
+            F9Finding(
+                file=openapi_path,
+                line=lineno,
+                rule="tag-catalog-orphan",
+                message=(
+                    f"WARN: Tag {tag!r} is in TAG_CATALOG but no "
+                    f"route declares it. Either remove the catalog "
+                    f"entry or wire a route to it. (Severity: warn — "
+                    f"may be a future-route placeholder.)"
+                ),
+                snippet=f"{{'name': {tag!r}, ...}}",
+            )
+        )
+    return findings
+
+
+# ---------------------------------------------------------------------
 # Orchestration + CLI
 # ---------------------------------------------------------------------
 
 
 def run_all_checks(repo_root: Path) -> list[F9Finding]:
-    """Convenience entry point: run both checks against ``repo_root``."""
-    return check_model_ids([repo_root / "tests"]) + check_deploy_path_init_db(
-        repo_root / "src" / "motodiag" / "cli"
+    """Convenience entry point: run all backend checks against ``repo_root``.
+
+    Phase 191D update: ``run_all_checks`` now invokes the generalized
+    ``check_ssot_constants`` (which subsumes the deprecated narrow
+    ``check_model_ids``) plus ``check_deploy_path_init_db`` (subspecies
+    iv) plus ``check_tag_catalog_coverage`` (F21). The narrow
+    ``check_model_ids`` is no longer dispatched from ``--all`` to avoid
+    double-flagging the model-ID class of literals — ``--check-model-ids``
+    remains as a back-compat alias that stub-redirects to
+    ``check_ssot_constants`` filtered to MODEL_ALIASES + MODEL_PRICING.
+    """
+    return (
+        check_ssot_constants(
+            [repo_root / "tests"],
+            registry_path=repo_root / DEFAULT_SSOT_REGISTRY_PATH,
+        )
+        + check_deploy_path_init_db(
+            repo_root / "src" / "motodiag" / "cli"
+        )
+        + check_tag_catalog_coverage(
+            repo_root / "src" / "motodiag" / "api" / "routes",
+            repo_root / "src" / "motodiag" / "api" / "openapi.py",
+        )
     )
+
+
+# Names of registry entries the deprecated --check-model-ids flag
+# delegates to. Centralized so the stub-redirect + tests both reference
+# one source.
+DEPRECATED_MODEL_IDS_FILTER = {"MODEL_ALIASES", "MODEL_PRICING"}
+
+DEPRECATION_NOTICE = (
+    "DEPRECATION: --check-model-ids is deprecated as of Phase 191D; "
+    "use --check-ssot-constants instead. This stub will be removed in "
+    "Phase 200+. See docs/patterns/f9-mock-vs-runtime-drift.md for the "
+    "rule rename rationale."
+)
 
 
 def main(argv: list[str] | None = None) -> int:
     """CLI entry point. Exit 0 on clean, 1 on findings."""
     parser = argparse.ArgumentParser(
-        description="F9 mock-vs-runtime-drift pattern checks.",
+        description=(
+            "F9 mock-vs-runtime-drift pattern checks. Phase 191C "
+            "shipped --check-model-ids (subspecies ii narrow) + "
+            "--check-deploy-path-init-db (subspecies iv). Phase 191D "
+            "generalized the narrow rule into --check-ssot-constants "
+            "(TOML-driven) and added --check-tag-catalog-coverage "
+            "(F21 mitigation). --check-model-ids is now a deprecated "
+            "stub that redirects to --check-ssot-constants filtered "
+            "to MODEL_ALIASES + MODEL_PRICING."
+        ),
     )
     parser.add_argument(
         "--check-model-ids",
         action="store_true",
-        help="Scan tests/ for hardcoded model ID literals (subspecies ii).",
+        help=(
+            "DEPRECATED (Phase 191D); use --check-ssot-constants. "
+            "Stub-redirects to --check-ssot-constants filtered to "
+            "model-ID-relevant registry entries. Removal targeted "
+            "Phase 200+."
+        ),
     )
     parser.add_argument(
         "--check-deploy-path-init-db",
@@ -449,9 +1160,43 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--check-ssot-constants",
+        action="store_true",
+        help=(
+            "Phase 191D F20 mitigation: TOML-driven scan of tests/ for "
+            "literal pins of any constant declared in "
+            "f9_ssot_constants.toml. Subsumes --check-model-ids."
+        ),
+    )
+    parser.add_argument(
+        "--check-tag-catalog-coverage",
+        action="store_true",
+        help=(
+            "Phase 191D F21 mitigation: diff "
+            "src/motodiag/api/routes/**/*.py APIRouter(tags=...) "
+            "against motodiag.api.openapi.TAG_CATALOG; flag tags in "
+            "routes-not-in-catalog (error) / tags in "
+            "catalog-not-in-routes (warn)."
+        ),
+    )
+    parser.add_argument(
         "--all",
         action="store_true",
-        help="Run all checks.",
+        help=(
+            "Run all checks: --check-ssot-constants + "
+            "--check-deploy-path-init-db + --check-tag-catalog-coverage. "
+            "Phase 191D: --check-model-ids is NOT included in --all "
+            "since --check-ssot-constants subsumes it."
+        ),
+    )
+    parser.add_argument(
+        "--ssot-registry",
+        type=Path,
+        default=None,
+        help=(
+            "Path to the SSOT-constants TOML registry. Default: "
+            "<repo-root>/f9_ssot_constants.toml."
+        ),
     )
     parser.add_argument(
         "--repo-root",
@@ -463,29 +1208,68 @@ def main(argv: list[str] | None = None) -> int:
     if not (
         args.check_model_ids
         or args.check_deploy_path_init_db
+        or args.check_ssot_constants
+        or args.check_tag_catalog_coverage
         or args.all
     ):
         parser.error(
-            "Specify at least one check (--check-model-ids, "
-            "--check-deploy-path-init-db, or --all)."
+            "Specify at least one check (--check-model-ids [DEPRECATED], "
+            "--check-deploy-path-init-db, --check-ssot-constants, "
+            "--check-tag-catalog-coverage, or --all)."
         )
 
+    registry_path = (
+        args.ssot_registry
+        if args.ssot_registry is not None
+        else args.repo_root / DEFAULT_SSOT_REGISTRY_PATH
+    )
+
     findings: list[F9Finding] = []
-    if args.all or args.check_model_ids:
-        findings.extend(check_model_ids([args.repo_root / "tests"]))
+    if args.check_model_ids:
+        # Stub-redirect: warn to STDERR (preserve stdout for CI/pipe
+        # consumers that only parse finding lines), then internally
+        # invoke check_ssot_constants filtered to model-ID entries.
+        # Functionally equivalent for the model-ID case — not a no-op.
+        print(DEPRECATION_NOTICE, file=sys.stderr)
+        findings.extend(
+            check_ssot_constants(
+                [args.repo_root / "tests"],
+                registry_path=registry_path,
+                name_filter=DEPRECATED_MODEL_IDS_FILTER,
+            )
+        )
+    if args.all or args.check_ssot_constants:
+        findings.extend(
+            check_ssot_constants(
+                [args.repo_root / "tests"],
+                registry_path=registry_path,
+            )
+        )
     if args.all or args.check_deploy_path_init_db:
         findings.extend(
             check_deploy_path_init_db(
                 args.repo_root / "src" / "motodiag" / "cli"
             )
         )
+    if args.all or args.check_tag_catalog_coverage:
+        findings.extend(
+            check_tag_catalog_coverage(
+                args.repo_root / "src" / "motodiag" / "api" / "routes",
+                args.repo_root / "src" / "motodiag" / "api"
+                / "openapi.py",
+            )
+        )
 
+    # Findings + summary go to stdout (preserves pipe-based callers
+    # like `check_f9_patterns.py | grep finding`). Deprecation banner
+    # for the legacy --check-model-ids flag stays on stderr (printed
+    # earlier above) so it doesn't pollute pipe consumers.
     if findings:
-        print(f"F9 lint: {len(findings)} finding(s)\n", file=sys.stderr)
+        print(f"F9 lint: {len(findings)} finding(s)\n")
         for finding in findings:
-            print(finding.format(), file=sys.stderr)
+            print(finding.format())
         return 1
-    print("F9 lint: clean", file=sys.stderr)
+    print("F9 lint: clean")
     return 0
 
 

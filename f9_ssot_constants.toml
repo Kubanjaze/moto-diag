@@ -1,0 +1,161 @@
+# f9_ssot_constants.toml — Phase 191D SSOT-managed constants registry.
+#
+# This file is the canonical registry consumed by
+# ``scripts/check_f9_patterns.py --check-ssot-constants`` (the F20-mitigation
+# lint mode that generalizes Phase 191C's narrow ``--check-model-ids`` rule).
+#
+# Format
+# ======
+# Each ``[[constants]]`` array-of-tables entry declares one production-side
+# Source-Of-Truth constant. The lint mode dynamically imports the
+# ``source_module`` at lint-init time, reads the live production value of
+# ``name`` from that module, then AST-walks ``tests/**/*.py`` looking for
+# literal pins that match the production value.
+#
+# Required keys
+# -------------
+#   name            : The constant's identifier as exported by the source
+#                     module (e.g. ``SCHEMA_VERSION``).
+#   source_module   : Dotted Python path to the module that owns the
+#                     canonical value (e.g. ``motodiag.core.database``).
+#                     The same ``name`` may appear in multiple entries
+#                     keyed by different ``source_module`` values — for
+#                     example, ``MODEL_ALIASES`` lives in BOTH
+#                     ``motodiag.engine.client`` AND
+#                     ``motodiag.shop.ai_client`` and both copies must
+#                     stay SSOT-pinned. The registry tolerates this
+#                     duplication because the rule heuristic checks
+#                     identifier-proximity / import-presence per finding.
+#   description     : >= 30-character explanation of WHY this constant is
+#                     SSOT-managed and what tests should do instead of
+#                     literal-pinning. Doubles as the diagnostic message
+#                     hint shown in lint findings.
+#   value_type      : One of ``"int"``, ``"str"``, ``"dict"``, ``"tuple"``.
+#                     Drives the AST scan strategy:
+#                       * int / str: top-level Constant nodes whose
+#                         ``.value`` equals the live production value.
+#                       * dict: each value-position literal in the live
+#                         dict is a candidate match (so e.g. flagging
+#                         ``5`` because it equals
+#                         ``TIER_VEHICLE_LIMITS["individual"]``).
+#                       * tuple: each tuple-element literal in the live
+#                         tuple is a candidate match.
+#
+# Optional keys
+# -------------
+#   exempt_keys     : (dict-typed only) sub-keys whose values should NOT
+#                     be SSOT-pinned. Empty list = full enforcement.
+#
+# Relationship to opt-out comments
+# --------------------------------
+# The same ``MIN_OPTOUT_REASON_CHARS = 20`` floor from Phase 191C 5a applies
+# to BOTH file-level (``# f9-allow-ssot-constants: <reason>`` /
+# ``# f9-allow-not-ssot: <reason>``) and per-line opt-outs
+# (``# f9-noqa: ssot-pin <reason>`` and the new
+# ``# f9-noqa: ssot-pin contract-pin: <reason>`` subcategory). A
+# ``contract-pin`` opt-out documents an INTENTIONAL two-source assertion
+# (test imports the SSOT AND pins the literal) for contractual values like
+# tier limits → billing math.
+#
+# Pattern doc: ``docs/patterns/f9-mock-vs-runtime-drift.md`` (subsection
+# "Subspecies (ii) generalized: when the test pins a literal that
+# production code derives from an SSOT").
+
+[[constants]]
+name = "SCHEMA_VERSION"
+source_module = "motodiag.core.database"
+description = "Database schema version pin; bumped in production by every migration. Tests must import from source, not literal-pin (unless contract-pin opt-out documents the why)."
+value_type = "int"
+
+[[constants]]
+name = "MODEL_ALIASES"
+source_module = "motodiag.engine.client"
+description = "Engine-side Anthropic model alias -> full ID map. Bump on Anthropic model releases. F15 / F20 anti-regression critical (see Phase 191B C2 fix-cycle-4 fabricated-ID incident)."
+value_type = "dict"
+
+[[constants]]
+name = "MODEL_ALIASES"
+source_module = "motodiag.shop.ai_client"
+description = "Shop-side Anthropic model alias -> full ID map. Kept in lockstep with motodiag.engine.client.MODEL_ALIASES. Same SSOT rule applies; either copy moving without the other is itself a drift bug."
+value_type = "dict"
+
+[[constants]]
+name = "MODEL_PRICING"
+source_module = "motodiag.engine.client"
+description = "Engine-side per-model pricing table (USD per million tokens). Bumped when Anthropic re-prices a model. Tests asserting on cost calculations must derive expected values from this table, not pin literal pricing."
+value_type = "dict"
+
+[[constants]]
+name = "MODEL_PRICING"
+source_module = "motodiag.shop.ai_client"
+description = "Shop-side per-model pricing table (cents per million tokens, tuple-shape). Distinct from engine/client.py's USD-floats — both are SSOTs for their respective callers and must stay aligned semantically."
+value_type = "dict"
+
+[[constants]]
+name = "APP_VERSION"
+source_module = "motodiag.api.app"
+description = "FastAPI app version string returned in /v1/meta and OpenAPI info.version. Bumped on major API contract changes; tests asserting on the version string should derive from this module, not literal-pin."
+value_type = "str"
+
+# DEFAULT_VISION_MODEL deliberately NOT registered. Phase 191D fix-cycle
+# observation: the constant's live value is the alias name "sonnet"
+# (or "haiku" via MOTODIAG_VISION_MODEL env override), but those alias
+# names ARE the dict keys into MODEL_ALIASES. So every test that
+# legitimately calls a model-aliased function with `"sonnet"` as a
+# parameter (e.g., `model=MODEL_ALIASES["sonnet"]`, `kwargs["model"] ==
+# "sonnet"`) would false-positive against this entry. The actual SSOT
+# anti-regression for the alias name is covered by the MODEL_ALIASES
+# registry entry above (which scans for the alias VALUES, not the keys).
+# DEFAULT_VISION_MODEL the constant itself is genuinely a "default"
+# (env-var-overridable) rather than a "contract value" — its drift
+# semantics differ from the other registry entries. Filed as F25-
+# candidate if a future audit shows DEFAULT_VISION_MODEL drift in the
+# wild.
+
+[[constants]]
+name = "TIER_VEHICLE_LIMITS"
+source_module = "motodiag.vehicles.registry"
+description = "Per-tier max vehicles in caller's garage (-1 = unlimited). Bumped when product tweaks subscription bundles. Tests asserting on tier limits should import; contract-pin opt-out is acceptable for billing-math regression coverage."
+value_type = "dict"
+
+[[constants]]
+name = "TIER_SESSION_MONTHLY_LIMITS"
+source_module = "motodiag.core.session_repo"
+description = "Per-tier monthly diagnostic session quota (-1 = unlimited). Same contract-pin posture as TIER_VEHICLE_LIMITS — drift either way breaks billing/UX expectations."
+value_type = "dict"
+
+[[constants]]
+name = "TIER_MONTHLY_VIDEO_LIMITS"
+source_module = "motodiag.api.routes.videos"
+description = "Per-tier monthly video diagnostic upload quota (None = unlimited). Phase 191B-introduced; tests asserting on the per-tier numbers should derive from source not literal-pin."
+value_type = "dict"
+
+[[constants]]
+name = "PER_SESSION_COUNT_CAP"
+source_module = "motodiag.api.routes.videos"
+description = "Per-session max number of video uploads (10). Tightly product-controlled value; tests should derive from source so a quota bump doesn't require test churn."
+value_type = "int"
+
+[[constants]]
+name = "PER_SESSION_BYTES_CAP"
+source_module = "motodiag.api.routes.videos"
+description = "Per-session aggregate upload byte cap (1 GB). Tests asserting on the cap (e.g. quota-exceeded path coverage) must derive from source not literal-pin."
+value_type = "int"
+
+[[constants]]
+name = "DEFAULT_INTERVAL_MS"
+source_module = "motodiag.api.routes.live"
+description = "Default WebSocket sensor-stream poll interval (500ms). Pinned for UX guarantees; tests asserting on the default interval should derive from source so a UX-driven bump propagates."
+value_type = "int"
+
+[[constants]]
+name = "MIN_INTERVAL_MS"
+source_module = "motodiag.api.routes.live"
+description = "Minimum allowable WebSocket sensor-stream poll interval (50ms). Hardware/throughput-bound floor; bump only with platform validation. Tests asserting on the floor must import."
+value_type = "int"
+
+[[constants]]
+name = "MAX_INTERVAL_MS"
+source_module = "motodiag.api.routes.live"
+description = "Maximum allowable WebSocket sensor-stream poll interval (10000ms). UX-bound ceiling so streams stay 'live'-feeling. Tests asserting on the ceiling must import."
+value_type = "int"

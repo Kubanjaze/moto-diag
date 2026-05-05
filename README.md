@@ -60,11 +60,13 @@ After install, every `git commit` runs `scripts/check_f9_patterns.py --all`. To 
 .venv\Scripts\python.exe scripts/check_f9_patterns.py --all
 ```
 
-The two checks are:
+The checks are:
 
-- `--check-model-ids` (subspecies ii) — flags hardcoded `claude-(haiku|sonnet|opus)-N...` literals in `tests/` outside the source-of-truth containers `KNOWN_GOOD_MODEL_IDS` / `KNOWN_BOGUS_IDS` / `MODEL_ALIASES` / `MODEL_PRICING`.
+- `--check-ssot-constants` (Phase 191D, F20 mitigation) — TOML-driven scan of `tests/**` for literal pins of any constant declared in `f9_ssot_constants.toml`. Generalizes the original narrow model-ID rule. Opt out per-line with `# f9-noqa: ssot-pin <reason>` or `# f9-noqa: ssot-pin contract-pin: <reason>` (intentional two-source assertion design); file-level with `# f9-allow-ssot-constants: <reason>` (>=20 chars).
+- `--check-tag-catalog-coverage` (Phase 191D, F21 mitigation) — diffs `src/motodiag/api/routes/**/*.py` `APIRouter(tags=...)` strings against `motodiag.api.openapi.TAG_CATALOG`; flags tags-in-routes-not-in-catalog (error) / tags-in-catalog-not-in-routes (warn).
 - `--check-deploy-path-init-db` (subspecies iv) — flags Click commands under `src/motodiag/cli/` that call `uvicorn.run` (or similar serve patterns) without first calling `init_db()`. Opt out per-call with `# f9-noqa: deploy-path-init-db <reason>`.
+- `--check-model-ids` (subspecies ii narrow) — **DEPRECATED at Phase 191D**; stub-redirects to `--check-ssot-constants` filtered to `MODEL_ALIASES` + `MODEL_PRICING`. Removal targeted Phase 200+. New code should call `--check-ssot-constants` directly.
 
-See `docs/patterns/f9-mock-vs-runtime-drift.md` for the pattern catalog + per-subspecies mitigation strategy.
+See `docs/patterns/f9-mock-vs-runtime-drift.md` for the pattern catalog + per-subspecies mitigation strategy (the "Subspecies (ii) generalized" subsection covers the F20/F21 scope extension).
 
 Real CI integration is deferred to Phase 204 / Gate 10 per the existing CI-deferred posture.

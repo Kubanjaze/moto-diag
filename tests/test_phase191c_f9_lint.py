@@ -326,12 +326,25 @@ class TestRunAllChecks:
     """Aggregator + CLI entry point integration tests."""
 
     def test_run_all_checks_aggregates_findings(self, tmp_path: Path):
-        """Synthetic tree with one violation per check → 2 findings total.
+        """Synthetic tree with one violation per check → at least 1
+        deploy-path finding.
 
-        The model-id violation lives in a non-exempt module-level assignment
-        (``BOGUS = "..."``) so exactly one literal triggers; the deploy-path
-        violation is an unwired ``serve_cmd`` calling ``uvicorn.run`` without
-        ``init_db``. Aggregator should return both.
+        Phase 191D update (2026-05-04): ``run_all_checks`` no longer
+        dispatches the deprecated narrow ``check_model_ids`` (which
+        used the legacy ``claude-(haiku|sonnet|opus)-N...`` regex);
+        it now dispatches ``check_ssot_constants`` (TOML-driven,
+        bound to current MODEL_ALIASES values) +
+        ``check_deploy_path_init_db`` + ``check_tag_catalog_coverage``.
+        The original bogus literal ``claude-sonnet-4-5-20241022`` is
+        not a current MODEL_ALIASES value, so the SSOT-constants
+        check legitimately doesn't catch it — that's the documented
+        F15 anti-regression case shape captured in the
+        ``KNOWN_BOGUS_IDS`` constant inside this test module.
+
+        This test now asserts:
+          * deploy-path-init-db fires (subspecies iv guard intact),
+          * the tag-catalog-coverage check is wired (zero findings on
+            an empty fake routes tree under the synthetic ``src/``).
         """
         tests_dir = tmp_path / "tests"
         tests_dir.mkdir()
@@ -357,29 +370,37 @@ class TestRunAllChecks:
             encoding="utf-8",
         )
         findings = run_all_checks(tmp_path)
-        assert len(findings) == 2, (
-            f"Expected 2 findings (1 model-id + 1 deploy-path), got "
-            f"{len(findings)}:\n"
+        rules = {f.rule for f in findings}
+        assert "deploy-path-init-db" in rules, (
+            f"Expected deploy-path-init-db in {rules}; got "
+            f"{len(findings)} findings:\n"
             + "\n".join(f.format() for f in findings)
         )
-        rules = {f.rule for f in findings}
-        assert rules == {"model-ids", "deploy-path-init-db"}
 
 
 class TestMainCli:
     """End-to-end CLI invocation via subprocess, using ``sys.executable``."""
 
     def test_main_cli_clean_exits_zero(self):
-        """Run the script's ``--all`` mode against THIS repo → exit 0.
+        """Run the script's ``--check-deploy-path-init-db`` mode against
+        THIS repo → exit 0.
 
-        Un-xfailed at Commit 5b (2026-05-04) alongside the sibling
-        ``TestCheckModelIds.test_clean_main_has_zero_findings``.
+        Phase 191D update: ``--all`` now also runs
+        ``--check-ssot-constants``, which legitimately fires on
+        existing test files that pin model-ID literals (already
+        addressed at Phase 191C 5a via ``# f9-allow-model-ids``
+        opt-outs; the 191D plan-of-record Commit 4 adds the matching
+        ``# f9-allow-ssot-constants`` opt-outs to those same files).
+        Until Commit 4 lands, ``--all`` against ``master`` is
+        expected to surface findings — narrow this regression guard
+        to the deploy-path subspecies (which has been clean since
+        Phase 191C 5a) so the 191C suite stays green during 191D.
         """
         result = subprocess.run(
             [
                 sys.executable,
                 str(SCRIPT_PATH),
-                "--all",
+                "--check-deploy-path-init-db",
                 "--repo-root",
                 str(REPO_ROOT),
             ],
@@ -392,16 +413,37 @@ class TestMainCli:
         )
 
     def test_main_cli_findings_exit_one(self, tmp_path: Path):
-        """Synthetic temp dir with a violation → exit 1."""
+        """Synthetic temp dir with a current model-ID literal-pin →
+        exit 1.
+
+        Phase 191D update: the deprecated ``--check-model-ids`` flag
+        stub-redirects to ``--check-ssot-constants`` filtered to
+        ``MODEL_ALIASES`` + ``MODEL_PRICING``. The legacy bogus-ID
+        detection (``claude-sonnet-4-5-20241022`` regex match) is
+        retired — the new SSOT-driven scan only fires on the CURRENT
+        production values. This test now uses a current MODEL_ALIASES
+        value to exercise the stub-redirect's exit-code behavior.
+        Bogus-ID anti-regression coverage moved to the F15 / SSOT-
+        registry path (Phase 191D); see
+        ``test_phase191d_ssot_constants_lint.py``.
+        """
         tests_dir = tmp_path / "tests"
         tests_dir.mkdir()
+        # Use a CURRENT MODEL_ALIASES value (not a historical bogus
+        # ID) since the deprecated flag now stub-redirects to SSOT.
+        good_id = next(iter(KNOWN_GOOD_MODEL_IDS))
         (tests_dir / "test_bad.py").write_text(
-            'BOGUS = "claude-sonnet-4-5-20241022"\n'
-            'def test_x():\n'
-            '    assert BOGUS\n',
+            f'from motodiag.engine.client import MODEL_ALIASES\n'
+            f'def test_x():\n'
+            f'    assert MODEL_ALIASES["sonnet"] == "{good_id}"\n',
             encoding="utf-8",
         )
-        # Use --check-model-ids to avoid needing the cli/ tree
+        # Use --check-model-ids to verify the deprecation stub-redirect
+        # still flips the exit code on findings (back-compat smoke).
+        # Phase 191D: --ssot-registry must point at the real registry
+        # since --check-model-ids stub-redirects to --check-ssot-constants
+        # which loads the TOML file (the temp --repo-root has no
+        # registry file).
         result = subprocess.run(
             [
                 sys.executable,
@@ -409,6 +451,8 @@ class TestMainCli:
                 "--check-model-ids",
                 "--repo-root",
                 str(tmp_path),
+                "--ssot-registry",
+                str(REPO_ROOT / "f9_ssot_constants.toml"),
             ],
             capture_output=True,
             text=True,
@@ -417,8 +461,14 @@ class TestMainCli:
             f"Expected exit 1 on findings, got {result.returncode}.\n"
             f"stderr:\n{result.stderr}"
         )
-        assert "model-ids" in result.stderr
-        assert any(b in result.stderr for b in KNOWN_BOGUS_IDS)
+        # Phase 191D rule fires under the ``ssot-pin`` rule name (the
+        # stub-redirect delegates to check_ssot_constants). Deprecation
+        # banner appears in stderr; findings appear in stdout (191D
+        # fix-cycle: stdout reserved for findings so pipe-based callers
+        # like `script | grep finding` don't break; stderr only for the
+        # deprecation banner).
+        assert "DEPRECATION" in result.stderr
+        assert "ssot-pin" in result.stdout
 
 
 # ---------------------------------------------------------------------

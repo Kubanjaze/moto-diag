@@ -20,6 +20,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from motodiag.core.database import get_connection
+from motodiag.engine.client import MODEL_ALIASES
 from motodiag.intake.models import (
     IdentifyKind,
     IntakeError,
@@ -31,8 +32,13 @@ from motodiag.intake.models import (
 
 # --- Constants (easily tuned; future Track T 343 moves to DB config) ---
 
-HAIKU_MODEL_ID = "claude-haiku-4-5-20251001"
-SONNET_MODEL_ID = "claude-sonnet-4-6"
+# Phase 191D: import-from-SSOT instead of literal pin (F9 subspecies (ii)
+# generalized; F20 mitigation; same family as Phase 191B C2 fix-cycle-4).
+# This file is data point 1 toward the F24 promotion criterion (extend
+# rule scope from tests/** to src/**); a second production-side hit
+# triggers F24 escalation to its own phase.
+HAIKU_MODEL_ID = MODEL_ALIASES["haiku"]
+SONNET_MODEL_ID = MODEL_ALIASES["sonnet"]
 
 MONTHLY_CAPS: dict[str, Optional[int]] = {
     "individual": 20,

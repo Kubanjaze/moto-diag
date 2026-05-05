@@ -5,6 +5,11 @@
 # Real CI integration deferred to Phase 204 / Gate 10 (no GitHub Actions
 # infrastructure on this repo currently).
 #
+# Phase 191D (2026-05-04): F20 / F21 generalization. The `--all` flag
+# below now also runs `--check-ssot-constants` (TOML-driven SSOT
+# literal-pin scan, subsumes the deprecated `--check-model-ids`) +
+# `--check-tag-catalog-coverage` (route tags vs TAG_CATALOG diff).
+#
 # Pattern doc: docs/patterns/f9-mock-vs-runtime-drift.md
 
 repos:
@@ -18,6 +23,9 @@ repos:
         always_run: true
         stages: [pre-commit]
         description: >
-          Lint for F9 failure family. Subspecies (ii) hardcoded model IDs
-          + (iv) deploy-path missing init_db. See
+          Lint for F9 failure family. Phase 191C: subspecies (ii)
+          hardcoded model IDs + (iv) deploy-path missing init_db.
+          Phase 191D F20/F21 generalization: --check-ssot-constants
+          (TOML-driven, subsumes --check-model-ids) +
+          --check-tag-catalog-coverage. See
           docs/patterns/f9-mock-vs-runtime-drift.md.
