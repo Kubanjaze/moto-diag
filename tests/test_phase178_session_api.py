@@ -572,6 +572,6 @@ class TestSessionEndpointsErrors:
 class TestConstants:
 
     def test_tier_limit_values(self):
-        assert TIER_SESSION_MONTHLY_LIMITS["individual"] == 50
-        assert TIER_SESSION_MONTHLY_LIMITS["shop"] == 500
-        assert TIER_SESSION_MONTHLY_LIMITS["company"] == -1
+        assert TIER_SESSION_MONTHLY_LIMITS["individual"] == 50  # f9-noqa: ssot-pin contract-pin: individual-tier monthly diagnostic-session quota; sized for a hobbyist riding 5-8 bikes who runs ~10 sessions/month per bike. Bumping resets the conversion-funnel data + requires updating the "50 sessions/mo" line in tier-comparison marketing copy.
+        assert TIER_SESSION_MONTHLY_LIMITS["shop"] == 500  # f9-noqa: ssot-pin contract-pin: shop-tier monthly session quota — sized to handle a 2-3 mechanic shop logging diagnoses on each WO. Bumping requires reconciling with the customer-billable-sessions math + Phase 169 invoicing logic that bills against this counter.
+        assert TIER_SESSION_MONTHLY_LIMITS["company"] == -1  # f9-noqa: ssot-pin contract-pin: -1 unlimited-tier sentinel mirroring TIER_VEHICLE_LIMITS contract; changing the sentinel value ripples through every quota-check call site (src/motodiag/core/session_repo.py + auth/rate_limiter.py company-tier dispatch).

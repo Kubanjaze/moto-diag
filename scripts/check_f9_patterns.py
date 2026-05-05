@@ -804,11 +804,15 @@ def check_ssot_constants(
                 continue
             source_lines = source.splitlines()
             # File-level opt-out: same shape as Phase 191C's
-            # _file_level_optout, recognizes both
-            # ``f9-allow-ssot-constants`` (the rule's own kind) +
-            # ``f9-allow-not-ssot`` (intentional non-SSOT escape hatch).
+            # _file_level_optout, recognizes:
+            #   * ``f9-allow-ssot-constants`` (the rule's own kind)
+            #   * ``f9-allow-not-ssot`` (intentional non-SSOT escape)
+            #   * ``f9-allow-model-ids`` (legacy 191C back-compat —
+            #     mirrors the mobile rule's same back-compat path so
+            #     files opted out at 191C 5a continue to work without
+            #     a duplicate opt-out comment for the new rule's name)
             allow_optout = False
-            for kind in ("ssot-constants", "not-ssot"):
+            for kind in ("ssot-constants", "not-ssot", "model-ids"):
                 ok, err = _file_level_optout(source, kind=kind)
                 if ok:
                     allow_optout = True

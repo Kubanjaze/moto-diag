@@ -159,7 +159,7 @@ class TestFakeProvider:
         assert asyncio.run(run()) == 3
 
     def test_set_interval_clamps(self):
-        p = FakeLiveProvider(interval_ms=500, max_frames=1, seed=0)
+        p = FakeLiveProvider(interval_ms=500, max_frames=1, seed=0)  # f9-noqa: ssot-pin fixture-data: interval_ms=500 is a fixture-data starting value (any in-range value works for the clamp-behavior test); coincidentally matches DEFAULT_INTERVAL_MS but isn't pinning the contract.
         asyncio.run(p.set_interval_ms(1))  # below MIN → clamps up
         assert p._interval_ms == MIN_INTERVAL_MS
         asyncio.run(p.set_interval_ms(99_999))  # above MAX → clamps down
@@ -190,10 +190,10 @@ class TestModuleHelpers:
     def test_clamp_interval(self):
         assert _clamp_interval(0) == MIN_INTERVAL_MS
         assert _clamp_interval(1_000_000) == MAX_INTERVAL_MS
-        assert _clamp_interval(500) == 500
+        assert _clamp_interval(500) == 500  # f9-noqa: ssot-pin fixture-data: 500 here is a representative in-range value for the no-clamp-needed identity test (any value in [MIN_INTERVAL_MS, MAX_INTERVAL_MS] would prove the same clamp-behavior contract); coincidentally matches DEFAULT_INTERVAL_MS but isn't pinning that constant.
 
     def test_default_interval_is_500ms(self):
-        assert DEFAULT_INTERVAL_MS == 500
+        assert DEFAULT_INTERVAL_MS == 500  # f9-noqa: ssot-pin contract-pin: live WebSocket sensor-stream cadence default — 500ms = 2Hz, sized to balance UI smoothness vs WS bandwidth on slow shop wifi. Bumping requires UX-validation on dashboard rendering performance + reconciling with the api/routes/live.py docstring that quotes "500ms / 2Hz default" to API consumers.
 
     def test_connection_manager_register_unregister(self):
         m = ConnectionManager()

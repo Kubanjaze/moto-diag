@@ -1977,3 +1977,27 @@ Phase 191C is option (a) from the Phase 192 scope-pinning round: a small, focuse
 **Key finding**: the discipline of "does the test break if the SSOT changes?" is the load-bearing principle of this entire intervention, and it's transferable. The lint rules catch the symptom; the discipline determines the FIX (opt-out vs refactor). The mental model generalizes across all 5 subspecies — for closure-state, "does my callback still work if state changes after registration?"; for mock-fidelity, "does my mock still match if the real contract changes?"; for self-validating-test-setup, "does my fixture still build if I crossed the boundary I'm testing across?" The rule + lint enforcement scales the discipline; without the discipline, the rule just produces noise.
 
 Next: **Phase 192 — Diagnostic report viewer** per ROADMAP (was 180 in original numbering). The Phase 192 brief now carries the F9 mitigation infrastructure as a now-active architectural guarantee on every commit going forward.
+
+---
+
+### 2026-05-05 — Phase 191D complete (F9 SSOT-constants lint generalization)
+
+**Doc bump:** project `implementation.md` 0.13.9 → 0.13.10. **Package bump:** `pyproject.toml` 0.3.0 → 0.3.1 (patch — extends 191C tooling). Schema unchanged at v39 (no migrations).
+
+Phase 191D is the second F9-family architectural intervention (191C was the first). Branch `phase-191D-f9-ssot-constants-lint` on BOTH repos; **4 commits** total executed cleanly per plan v1.0 (no 5a/5b split needed despite mobile threshold-cross from 2 predicted to 13 actual findings — documented for v1.0.1 amendment).
+
+**Key technical deliverables:**
+
+- New backend (2 files): `f9_ssot_constants.toml` (registry, 14 entries) + `tests/test_phase191d_ssot_constants_lint.py` (17 tests across 4 classes).
+- Modified backend (3): `scripts/check_f9_patterns.py` (added `--check-ssot-constants` + `--check-tag-catalog-coverage` modes; deprecated `--check-model-ids` as stub-redirect with stderr banner) + `src/motodiag/intake/vehicle_identifier.py` (production cleanup: HAIKU/SONNET_MODEL_ID literals → MODEL_ALIASES references; F24 data point 1) + `src/motodiag/api/openapi.py` (auth tag orphan removed; 378-day-latent Phase 183 forward-looking placeholder → case study #10).
+- New mobile (3): `eslint-plugin-motodiag/ssot-constants.json` (registry with explicit `role` field) + `eslint-plugin-motodiag/rules/no-hardcoded-ssot-constants-in-tests.js` + RuleTester suite (13 cases).
+- Modified mobile (4): existing rule converted to no-op stub-redirect + `package.json` 0.0.8 → 0.0.9 + `.eslintrc.js` registers new rule at error-from-day-one + `src/types/video.ts` gains MAX_VIDEOS_PER_SESSION SSOT (consolidated from 2 screens that duplicated the constant) + `src/hooks/useSessionVideos.ts` exports 3 const-locals that registry referenced (PER_SESSION_COUNT_CAP, PER_SESSION_BYTES_CAP, POLL_INTERVAL_MS).
+- Pattern doc extended in BOTH repos: layered-history note at top + Instance #8 (SCHEMA_VERSION) + Instance #9 (TAG_CATALOG forward-direction) + Instance #10 (TAG_CATALOG reverse-direction auth-orphan, 378-day latency narrative) + new `contract-pin` opt-out category + recognition pattern (literal-pin WITH vs WITHOUT import) + reconciliation note for `--check-model-ids → --check-ssot-constants` rename + forward-looking F-ticket signposts.
+
+**Trust-but-verify caught 7 deviations** (3 Commit 2 fix-cycle refinements + 1 Commit 3 stub-redirect double-fire + 1 pre-existing unused-var + 1 backend missing legacy back-compat + 1 PER_SESSION_COUNT_CAP not exported) — all folded into source commits to preserve linear history.
+
+**Key finding: the value of a lint rule is most visible on its first run against an existing codebase, when latent drift gets surfaced all at once.** Phase 191D's inaugural runs surfaced 311 backend findings (narrowed via heuristic refinement to 17 legitimate Bucket-1 hits + opt-out'd to 0) + 13 mobile findings + 1 TAG_CATALOG orphan latent for 378 days (Phase 183 → Phase 191D). The rule didn't introduce the drift — it surfaced drift that had been silently accumulating across multiple phases. Future SSOT-class rule additions should pre-budget the architect cleanup work for the inaugural run.
+
+**F-tickets at finalize**: F20 + F21 closed; F22 (TAG_CATALOG full FastAPI introspection refactor) filed for future escalation; F23 (credential-hygiene lint) filed forward-looking; F24 (extend rule scope `tests/**` → `src/**`) filed with vehicle_identifier.py as data point 1; **F25 explicitly filed-as-NOT-filed** (MAX_VIDEOS_PER_SESSION resolved inline at Commit 3); F26 (formal API versioning ADR + imported-names heuristic improvement) filed for governance + rule coverage gap.
+
+Next: **Phase 192 — Diagnostic report viewer** per ROADMAP. The F9 mitigation infrastructure is now further hardened with the generalized SSOT-constants rule covering any registry-managed constant + the TAG_CATALOG drift-coverage gate active on every commit going forward.

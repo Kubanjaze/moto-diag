@@ -59,14 +59,17 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "probes."
         ),
     },
-    {
-        "name": "auth",
-        "description": (
-            "API keys, subscriptions, and Stripe webhooks. This is "
-            "the entry point for the paywall — every non-meta "
-            "endpoint requires an active API key."
-        ),
-    },
+    # Phase 191D Commit 4: removed orphan "auth" entry (was Phase 183
+    # forward-looking placeholder for API-key + subscription + Stripe-
+    # webhook routes that never materialized as a separate `tags=
+    # ["auth"]` router). Auth/billing surface lives in `billing.py`
+    # (tags=["billing"]) + `meta.py` (tags=["meta"]); subscription
+    # tier management is CLI-only via `motodiag subscription set`
+    # (Phase 191B fix-cycle-3). When/if HTTP routes for API-key
+    # management land, re-add this entry with the route declaration
+    # in the same commit. F21 lint --check-tag-catalog-coverage
+    # surfaced this orphan in its inaugural Phase 191D run — case
+    # study #10 in docs/patterns/f9-mock-vs-runtime-drift.md.
     {
         "name": "shops",
         "description": (

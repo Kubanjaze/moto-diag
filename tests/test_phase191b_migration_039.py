@@ -9,6 +9,18 @@ table in this codebase). Plan v1.0.1 documents this — the v1.0 plan's
 ``sessions`` shorthand maps to the actual table name.
 """
 
+# f9-allow-ssot-constants: fixture-data — this file IS the migration-039
+# test file, so the literal `39` (and adjacent boundary literals like 38,
+# 40 if they appeared) are deliberately fixture-meaningful. The whole
+# file's purpose is "verify migration 039 applies / rolls back / behaves
+# at the v38↔v39 boundary"; replacing those literals with imports from
+# motodiag.core.database.SCHEMA_VERSION would be tautological (the test
+# would assert the SSOT against itself, which is exactly the F9 anti-
+# pattern in reverse). Phase 191D 5b: the rule's contract-pin opt-out
+# would also work here, but file-level fixture-data opt-out is more
+# accurate for the file's nature — every literal `39` here is "pin the
+# specific version this file tests" not "anti-regression on schema bumps."
+
 from __future__ import annotations
 
 import pytest

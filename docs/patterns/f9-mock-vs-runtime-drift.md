@@ -1,6 +1,8 @@
 # F9 — Mock-vs-Runtime Drift Failure Family
 
-> Earlier closure docs from Phase 191B refer to "6 instances" of this family. That count merged the two distinct bugs fixed in commit 832579d (deploy-path-missing-wiring and format-coincidence-latent / self-validating-test-setup) into a single instance. Going forward, this catalog tracks them as separate subspecies. **Total instances: 7.**
+> **This doc is layered.** Early sections (Problem statement, Why this matters, the original 7-instance catalog) snapshot the state at Phase 191C closure (2026-05-04). Later sections (Subspecies (ii) generalized + Instances #8/#9/#10) extend the catalog at Phase 191D Commit 1 + Commit 4 (2026-05-04 → 2026-05-05). When the doc says "this catalog has N instances," check which section you're reading: the early summary uses the 191C-era count of 7; the post-191D-extension subspecies summary updates to 10. Sealed-history numbers in the early sections are NOT bumped backward — the 191C-era narrative is preserved verbatim per the audit-trail-preservation principle established at Phase 191C v1.0.1.
+
+> Earlier closure docs from Phase 191B refer to "6 instances" of this family. That count merged the two distinct bugs fixed in commit 832579d (deploy-path-missing-wiring and format-coincidence-latent / self-validating-test-setup) into a single instance. Going forward, this catalog tracks them as separate subspecies. **Total instances: 7 at Phase 191C closure; 10 after Phase 191D extends Subspecies (ii) generalized.**
 
 ## Problem statement
 
@@ -612,6 +614,30 @@ TAG_CATALOG = [
 
 ---
 
+### Instance #10 — Phase 191D Commit 4 [2026-05-05]
+
+**Subspecies**: (ii) hardcoded source-of-truth values in tests — SSOT-drift generalization, *forward-direction inverse* (TAG_CATALOG orphan)
+
+**The bug**: at Phase 191D Commit 4 finalize, the inaugural run of the `--check-tag-catalog-coverage` rule against `master` surfaced ONE warn-severity finding: `src/motodiag/api/openapi.py:62` declared a `{"name": "auth", ...}` entry in `TAG_CATALOG` that NO route file consumed. Grep of `src/motodiag/api/routes/**/*.py` for `tags=["auth"]` returned zero hits. The `auth` entry described "API keys, subscriptions, and Stripe webhooks" as forward-looking groupings, but the actual API surfaces for those concerns lived under `tags=["billing"]` (`billing.py`) and `tags=["meta"]` (`meta.py`); subscription tier management never materialized as an HTTP route at all (Phase 191B fix-cycle-3 added it as a CLI: `motodiag subscription set --user N --tier T`). The orphan had been latent since Phase 183 (`ceee9338`, 2026-04-23).
+
+**How it got that way (5-min git blame)**: `git log --diff-filter=A --follow -- src/motodiag/api/openapi.py` shows the file was created by `ceee9338 Phase 183: OpenAPI enrichment + spec polish`. `git blame -L 62,70` confirms the auth entry was added in that same originating commit. The Phase 183 plan was an OpenAPI doc-quality sweep — spec polish, tag catalog, security schemes, error responses, and so on — and the author (correctly, at the time) wrote the catalog with the scope envelope that the project intended to ship: API-key management was already on the roadmap but not yet routed; subscription/billing was being scaffolded by Phase 176 but not all routes had landed; Stripe webhooks were a near-term plan. Catalogs written ahead of routes is a reasonable forward-looking practice IF the catalog is reconciled at every subsequent route addition. It wasn't.
+
+**Why it stayed latent**: the Phase 183 test suite shipped two TAG_CATALOG checks. The forward-direction check (`test_tag_catalog_covers_used_tags` — every tag a route uses must be in the catalog) IS the gate that caught Phase 191B's `videos` tag drift at fix-cycle-5. The reverse-direction check (every catalog entry must have a route consumer) was *intentionally* not enforced at error-severity, because the forward-looking placeholder pattern was a known design choice. Without enforcement, the `auth` entry sat dormant for **378 days** (2026-04-23 → 2026-05-05) until Phase 191D's `--check-tag-catalog-coverage` rule turned the forward-looking-placeholder pattern from "silent technical debt" into a noisy warn-severity finding visible at every CI run.
+
+**The mock-vs-runtime gap**: production code shipped routes; the catalog declared a tag those routes never used. Two parallel sources of truth (route declarations + catalog entries) drifted apart over 378 days because nothing actively reconciled them. Same shape as Instance #9 (the `videos` tag missing from the catalog) but in the inverse direction: catalog had MORE than routes, instead of routes having MORE than catalog. Both are F21's drift class.
+
+**Fix**: removed the `auth` entry from `TAG_CATALOG` at `src/motodiag/api/openapi.py:62` with an inline comment documenting (a) why it was removed and (b) the protocol for re-adding when actual auth routes materialize: "When/if HTTP routes for API-key management land, re-add this entry with the route declaration in the same commit." The protocol matters more than the deletion — the lesson is *catalog updates ride with route updates, in the same commit*.
+
+**Recognition heuristic**: any forward-looking placeholder in a registry — TAG_CATALOG entries, CLI command stubs, route placeholder modules, schema entries for not-yet-implemented endpoints. The pattern: an engineer writing a registry at scope-envelope time anticipates the full surface; the actual routes land incrementally; the registry-vs-routes coverage stays incomplete because no enforcement gate fires until the catalog is "complete." Phase 191D's `--check-tag-catalog-coverage --reverse-diff` warning IS that gate.
+
+**Lesson**: silent drift converts to noisy lint findings on the first run of a new rule. F21 earned its keep on its inaugural Phase 191D scan by surfacing 378 days of dormant catalog drift — drift that 191B's videos-tag miss was the visible symptom of, but the auth-tag placeholder was the unsurfaced sibling. Architectural takeaway: **the value of a lint rule is most visible on its first run against an existing codebase, when latent drift gets surfaced all at once.** Phase 191D's run surfaced 17 backend SSOT findings + 13 mobile SSOT findings + 1 TAG_CATALOG orphan — most of those literals had been in the codebase for months. The rule didn't introduce the drift; it surfaced it. Future rule additions in this family should expect the same shape: large-on-first-run, near-zero ongoing.
+
+**Lint coverage**: caught by `scripts/check_f9_patterns.py --check-tag-catalog-coverage --reverse-diff` (the same Phase 191D mode that catches Instance #9, but in the warn-severity reverse direction).
+
+**Fix commit**: `<TBD-Commit-4>` (Phase 191D Commit 4 finalize)
+
+---
+
 ### The new `contract-pin` opt-out category
 
 Phase 191C 5a established three opt-out reason categories the lint accepts on a per-line `f9-noqa` comment: `SSOT-pin`, `meta-test`, and `contract-assertion`. Phase 191D adds a fourth — `contract-pin` — to handle the legitimate two-source assertion design that the SSOT-constants generalization surfaces in well-written tests.
@@ -680,7 +706,7 @@ The full F22 / F23 / F24 descriptions live in mobile FOLLOWUPS.md (the cross-cut
 
 ## The 5 subspecies + their mitigations
 
-The nine instances above partition into five subspecies by mechanism. Lint coverage exists for four; the fifth is doc-only. Subspecies (ii) carries the bulk of the family weight — three of nine instances (#7 Phase 191B C2 model-string, #8 Phase 191B fix-cycle-5 SCHEMA_VERSION, #9 Phase 191B fix-cycle-5 TAG_CATALOG) — which is why Phase 191D generalized the narrow Phase 191C rule to cover any SSOT-managed constant rather than model IDs only.
+The ten instances above partition into five subspecies by mechanism. Lint coverage exists for four; the fifth is doc-only. Subspecies (ii) carries the bulk of the family weight — four of ten instances (#7 Phase 191B C2 model-string, #8 Phase 191B fix-cycle-5 SCHEMA_VERSION, #9 Phase 191B fix-cycle-5 TAG_CATALOG forward-direction, #10 Phase 191D Commit 4 TAG_CATALOG reverse-direction auth-orphan) — which is why Phase 191D generalized the narrow Phase 191C rule to cover any SSOT-managed constant rather than model IDs only AND added the `--check-tag-catalog-coverage` mode covering both directions of route↔catalog drift.
 
 ### Subspecies (i) — Closure-state capture in native callbacks
 

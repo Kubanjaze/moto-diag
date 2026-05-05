@@ -235,9 +235,9 @@ class TestQuota:
         assert exc.value.tier == "individual"
 
     def test_tier_limits_map(self):
-        assert TIER_VEHICLE_LIMITS["individual"] == 5
-        assert TIER_VEHICLE_LIMITS["shop"] == 50
-        assert TIER_VEHICLE_LIMITS["company"] == -1
+        assert TIER_VEHICLE_LIMITS["individual"] == 5  # f9-noqa: ssot-pin contract-pin: individual tier vehicle cap is the entry-tier conversion lever; bumping it changes the effective free-tier value and triggers a Stripe price-tier review per Phase 176 billing wire-up.
+        assert TIER_VEHICLE_LIMITS["shop"] == 50  # f9-noqa: ssot-pin contract-pin: shop-tier vehicle cap is sized for a 2-3 mechanic small shop's working garage; bumping requires re-validating quota gate behavior in test_phase177 + reconciling with shop-tier billing collateral that quotes "up to 50 bikes."
+        assert TIER_VEHICLE_LIMITS["company"] == -1  # f9-noqa: ssot-pin contract-pin: -1 is the unlimited-tier sentinel; changing it (e.g., to None or to a hard cap) breaks the check_vehicle_quota dispatch in src/motodiag/vehicles/registry.py and the company-tier UI badge that renders "Unlimited" when seeing -1.
 
 
 # ===========================================================================
