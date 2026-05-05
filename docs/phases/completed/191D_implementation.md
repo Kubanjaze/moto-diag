@@ -1,8 +1,98 @@
 # Phase 191D — F9 SSOT-Constants Lint Generalization
 
-**Version:** 1.1 | **Tier:** Standard (small) | **Date:** 2026-05-04 (plan v1.0) → 2026-05-05 (v1.1 finalize after Commit 4 lands)
+**Version:** 1.1 (build) + 1.0.1 (plan amendment) | **Tier:** Standard (small) | **Date:** 2026-05-04 (plan v1.0) → 2026-05-05 (v1.1 finalize) → 2026-05-05 (v1.0.1 amendment landed post-finalize)
 
-## Goal
+## Plan v1.0.1 — Post-finalize amendment (corrections + lessons learned during execution)
+
+This amendment is the bundled lessons-learned recording for Phase 191D. Per Kerwyn's discipline ("v1.0.1 amendment AFTER Commit 4 finalize, framed as corrections and lessons learned during execution"), it consolidates seven deviations / fix-cycles surfaced during the build + adds two architectural-reusable pieces (heuristic-shape durable reference + threshold-cross methodology). Land all of this *before* Phase 192 pre-plan kickoff to flush the recall while context is fresh.
+
+The amendment adds three new sections to this doc (this one + the two below) without modifying earlier v1.0 / v1.1 content. Sealed-history sections preserved verbatim per the audit-trail-preservation principle established at Phase 191C v1.0.1.
+
+### Section 1: Heuristic-shape durable reference (the four refinements)
+
+Phase 191D's lint rule heuristic landed via four refinements, three of which fired as Commit 2 trust-but-verify fix-cycles + one as a Commit 3 design choice. TOML inline comments + commit messages capture them per-fix, but future architects extending this lint family need a single durable reference. Records here.
+
+**Refinement 1 — noise-literal exclusion (dict-typed entries only).**
+
+For dict-typed registry entries, the `_expected_literals_for_entry` helper flattens the dict's value-position literals into the scan set. Initial Builder-B implementation included EVERY value, which produced 311 false-positive findings dominated by `assert exit_code == 0` matching `TIER_MONTHLY_VIDEO_LIMITS["individual"] = 0`. Filter: exclude `None`, `True`, `False`, `0`, `""` from match consideration on dict/tuple-typed entries. **Rationale**: these values are too universally common in test code to reliably attribute to a specific SSOT-managed dict's value. Filter narrowed 311 → 142 findings (Commit 2 fix-cycle). Mobile-equivalent set: `null`, `undefined`, `true`, `false`, `0`, `""` (mobile rule baked this in from day one per the Builder-C dispatch brief).
+
+Scalar-typed entries (int, str) keep ALL values — `SCHEMA_VERSION = 39` is exactly the kind of pin we want to catch. The discipline: filter for dict/tuple where every value is a candidate; trust scalar entries because the literal IS the canonical pin.
+
+**Refinement 2 — reverse-direction has_import drop.**
+
+For int/str-typed entries, the `has_import` check tests whether the test file imports the registry entry's source module. Initial Builder-B implementation matched both directions — exact match OR `mod.startswith(entry.source_module + ".")` (sub-module imported) OR **`entry.source_module.startswith(mod + ".")` (parent-package imported)**. The reverse-direction match treated `from motodiag.api import create_app` as importing every `motodiag.api.*` SSOT entry, swamping the signal. Tightening narrowed 142 → 82 findings (Commit 2 fix-cycle). **Rationale**: importing a parent package doesn't imply the test exercises every child module's constants; the reverse-direction match was too generous. Mobile rule applied the same tightening from day one.
+
+Coverage gap surfaced by this tightening: when a test imports a constant from a parent-package re-export (e.g., `from motodiag.api import APP_VERSION` instead of `from motodiag.api.app import APP_VERSION`), the rule doesn't fire because the source module the registry registered (`motodiag.api.app`) isn't in the imported set. **F26** filed for the imported-names heuristic improvement (extend `_imported_modules` to also track imported names via `from X import name1, name2` so the check can fire on `entry.name in imported_names`).
+
+**Refinement 3 — DEFAULT_VISION_MODEL exclusion (contract-vs-default distinction).**
+
+`DEFAULT_VISION_MODEL` was registered in the initial 15-entry TOML registry. Its live value at Phase 191D Commit 2 build time was `"sonnet"` (the default alias for the env-var-overridable `MOTODIAG_VISION_MODEL`). The string `"sonnet"` is ALSO a key in `MODEL_ALIASES` — so any test calling `model="sonnet"` as a parameter or `MODEL_ALIASES["sonnet"]` was firing the str-typed scan against `DEFAULT_VISION_MODEL`. 23 false positives across 7+ test files in the Commit 2 initial run.
+
+Drop narrowed 82 → 17 findings. Backend TOML registry documents the drop with an inline comment + scope-decision narrative. **Rationale**: `DEFAULT_VISION_MODEL` is semantically a **default** (env-var-overridable; behavioral knob), not a **contract** (fixed agreement consumed by tests). The drift profile is fundamentally different: bumping a default doesn't break callers (they get the new default; if they cared, they'd override via env var); bumping a contract DOES break callers (the test asserting on the contract is the gate that catches the breakage). The narrow rule scope of "contract pins, not default values" is what the rule should target.
+
+**Refinement 4 — schema-level role field (mobile) vs inline-comment exclusion (backend).**
+
+Backend TOML registry handled the contract-vs-default distinction via inline-comment exclusion (DEFAULT_VISION_MODEL deliberately not registered, with rationale documented as a TOML comment block where the entry would have lived). Mobile JSON registry handled the same distinction via an explicit schema field: `"role": "contract"` vs `"role": "default"` per entry, with the rule's loader filtering at registry-init time to `role === "contract"` entries only.
+
+This is the four refinements' most significant inconsistency: **the same architectural distinction is encoded differently between the two registries**. Mobile's schema-level approach is more durable (future entries inherit the classification vocabulary; new architects don't need tribal knowledge to know to add a comment-out block); backend's inline-comment approach is lower-friction (no schema migration; trivial to add new entries). Each has merits for its respective stack but the inconsistency is real.
+
+**F27 (NEW) candidate — SSOT registry schema harmonization between backend TOML and mobile JSON.**
+
+Two harmonization paths:
+- **(a) Backend adopts schema-level role field**: add `role = "contract"` / `role = "default"` to every TOML entry (default to `"contract"` for back-compat); parse + filter at lint-init time. Documented role for `default` entries: registered for documentation/audit but skipped at scan-time. DEFAULT_VISION_MODEL gets re-registered as `role = "default"`.
+- **(b) Mobile adopts inline-comment exclusion**: drop the `role` field from JSON; entries that should be excluded from scan-time get listed in a top-level `_meta.documented_only` array or commented out via JSONC parser.
+
+**Recommended path (a)** — schema-level encoding is more durable across maintainers + survives schema-version bumps better than comment conventions. **NOT load-bearing for Phase 192**; file as **F27** with promotion criterion: harmonize at the next phase that adds a registry entry to either side, OR at any phase where a registry entry would naturally fit `role = "default"` (Phase 192's diagnostic report viewer + Phase 192B's PDF/share might surface defaults — debounce timing, retry caps, page-size defaults).
+
+### Section 2: Threshold-cross methodology (reusable across architectural-intervention phases)
+
+Phase 191D crossed Phase 191C's `5a/5b split` threshold (mobile: 13 actual findings vs ≤5 predicted in plan v1.0 checkpoint F) without triggering a 5a/5b split. The reason wasn't "the threshold was wrong" — it was that **5a/5b split thresholds are derived from phase shape, not universal constants**. Phase 191C's shape (new-rule introduction with severity rollout warn → error) had different cost curves than Phase 191D's shape (rule extension at error-from-day-one). The amendment documents the methodology so future architectural-intervention phases re-derive their thresholds rather than inheriting 191C's.
+
+**Cost-curve factors that drive 5a/5b vs single-Commit-finalize decision:**
+
+| Factor | High-cost (favors 5a/5b) | Low-cost (favors single-finalize) |
+|---|---|---|
+| **Rule novelty** | Rule shape never existed before; all heuristic refinements first-discovered during build | Rule extends a proven shape; refinements applicable from day one |
+| **Severity at landing** | Rule lands at `warn` initially → 5a clean-baseline scrub → 5b severity bump (mandatory two-phase) | Rule lands at `error` from day one → no severity-bump phase exists; finalize folds into Commit N |
+| **Finding count** | Hundreds of findings across many files; opt-out audit takes hours | Tens of findings; single architect-day's work |
+| **Judgment-density of opt-outs** | High — each opt-out requires deep project context (subspecies categorization, opt-out reason crafting); architect bottleneck | Low — opt-outs are mechanical or refactorable to imports; bottleneck is editing speed |
+| **Test xfail dependencies** | xfail-strict tests gating on baseline → un-xfail is its own commit step | No xfail dependencies; tests pass at error severity from build-time |
+| **Production-code surface area** | Rule scope includes `src/**` → production cleanup interacts with feature work | Rule scope `tests/**` only → independent of feature surfaces |
+
+**Phase 191C scoring on these factors**: rule novelty HIGH (first F9-family lint rule; subspecies (i) ESLint heuristic + subspecies (ii) regex match + subspecies (iii) `as any` detection + subspecies (iv) AST walk for serve.py — four distinct heuristics first-discovered) + severity at landing WARN (per 191C plan v1.0.1 B3) + finding count HIGH (50 backend + 2 mobile) + judgment-density HIGH (each subspecies's opt-out reason needed teaching narrative) + xfail dependencies YES (the strict-xfail clean-baseline gate tests) + production-code surface NO (tests/** only). **Verdict**: 5a/5b split was correct.
+
+**Phase 191D scoring**: rule novelty LOW (extends 191C's proven shape with TOML/JSON registry as the new variable) + severity at landing ERROR-FROM-DAY-ONE (per 191D plan checkpoint F) + finding count MEDIUM (17 backend + 13 mobile post-heuristic-narrowing) + judgment-density HIGH for opt-out reasons (per Kerwyn's discipline, 8-DTC_SEARCH_LIMIT-occurrence differentiation IS Commit 4's load-bearing teaching artifact) + xfail dependencies NO + production-code surface MOSTLY-NO (one cleanup at vehicle_identifier.py + auth tag orphan removal, both small). **Verdict**: single Commit 4 finalize was correct, despite the threshold-cross on finding count.
+
+The lesson: single-axis threshold checks miss the multi-factor reality. Future architectural-intervention phases should score themselves against this 6-factor rubric and re-derive their commit cadence.
+
+**Methodology baked in for the rest of Track I**: when the next architectural-intervention phase lands (likely a future iteration of F22 / F24 / F26 if any of those promotion triggers fire), score against the rubric in plan v1.0 + document the cadence decision based on the factor scoring rather than copying 191C's or 191D's shape directly.
+
+### Section 3: Plan-doc concerns surfaced by Builders B + C (now resolved or filed forward)
+
+Builder-B (Commit 2) flagged 4 concerns; Builder-C (Commit 3) flagged 4 concerns. All are reconciled here:
+
+1. **Heuristic shape needs durable documentation** (Builder-B) → resolved in Section 1 above.
+2. **DEFAULT_VISION_MODEL deliberately-not-registered should be documented in the plan, not just the TOML** (Builder-B) → resolved in Section 1 above.
+3. **Phase 191C test adaptations (3 tests) should be in plan's "Modified files" list** (Builder-B) → noted in v1.1 Deviations section #5; the plan's "Modified files" list omitted this because Builder-B's adaptations were a Commit 2 fix-cycle rather than a planned change. Future plans should reserve a "Files modified by trust-but-verify fix-cycles" placeholder line.
+4. **`auth` tag in TAG_CATALOG had no route consumer** (Builder-B as observation; Architect at Commit 4 as case study) → fully resolved at Commit 4 + documented as case study #10 in pattern doc.
+5. **`MODEL_PRICING` shop-side tuple shape vs engine-side dict shape might confuse future rule** (Builder-B) → not load-bearing; the registry handles both via `_expected_literals_for_entry` recursion. Re-flag if a future entry mixes tuple+dict semantics.
+6. **Initial registry count 14 instead of 15 (DEFAULT_VISION_MODEL drop)** (Builder-B → Architect at Commit 2 fix-cycle) → resolved by updating `test_registry_loads_all_entries` floor from 15 to 14 with rationale comment.
+7. **Mobile rule scope deliberately differs from backend's planned scope (no MODEL_ALIASES entry mobile-side)** (Builder-C deviation #2) → resolved at Commit 3 fix-cycle (no-op stub-redirect) + documented in case study material.
+8. **`MAX_VIDEOS_PER_SESSION` consolidation source-module is `src/types/video` post-cleanup, not the original two screens** (Builder-C → Architect at Commit 3) → JSON registry registers the post-consolidation location.
+
+### Section 4: Other Commit 2-3-4 lessons-learned (durable findings)
+
+- **Registry-driven rules surface SSOT export gaps as side effects.** Mobile Commit 4's boundary-test refactor needed `PER_SESSION_COUNT_CAP`, `PER_SESSION_BYTES_CAP`, `POLL_INTERVAL_MS` as importable; all three were const-local in `src/hooks/useSessionVideos.ts`. The act of registering an SSOT in a registry implies the source module exports the symbol — but the rule didn't catch the missing export (it's a runtime ImportError, not a static lint finding). **Recommendation for v1.0.1**: future entries should be export-verified at registration time. Add a registry-load-time check: "for each `role: contract` entry, attempt to import the named symbol from the source module; warn if import fails." Registers as part of `loadRegistry()` rather than as a separate lint mode.
+- **Self-referential opt-out is a real pattern.** `__tests__/hooks/useDTCSearch.test.ts:54` introduced `const KEYSTROKE_INTERVAL_MS = 50;` to ELIMINATE 5 ambiguous timing-fixture literal-50s. The new constant's value coincidentally matches `DTC_SEARCH_LIMIT`, so it itself fires the rule. Per-line opt-out documents the self-referential nature ("the constant exists specifically to ELIMINATE 5 confusing literals; opting out 1 finding to enable that cleanup is a fair trade"). **The recognition pattern**: when introducing a named constant whose value coincidentally matches an SSOT entry, expect a self-referential opt-out at the declaration site. Pattern doc subspecies (ii) generalized subsection should mention this in a future revision.
+- **Backend rule's missing legacy `f9-allow-model-ids` back-compat** (Commit 4 fix-up) was a Builder-B brief gap. The dispatch brief specified `f9-allow-ssot-constants` + `f9-allow-not-ssot` kinds for file-level opt-outs; mobile rule had legacy back-compat in its brief; backend's omission required a Commit 4 fix. **Recommendation for v1.0.1**: when generalizing a deprecated rule's behavior, the deprecation cutover MUST include legacy opt-out back-compat in BOTH stacks symmetrically. Brief template for future generalizations: "honor file-level opt-outs for { new-kind, generalized-not-applicable, OLD-kind-legacy-back-compat }".
+- **Pre-existing dead-code surfaces during pre-commit-hook fires.** Two pre-existing unused-vars (`atCap` Commit 3 + `sourceUri` Commit 4) surfaced because lint-staged catches errors on ANY staged file. Per CLAUDE.md "investigate the underlying issue, not --no-verify", both were fixed inline. **Pattern**: every commit on a branch with lint-staged is implicitly a "fix any pre-existing dead code in touched files" commit. Future branches with many touched files should expect this overhead + budget for it.
+- **8-occurrence differentiation as anti-pattern detector.** Per Kerwyn's principle ("identical opt-out reasons across multiple sites is its own anti-pattern"), the 8 DTC_SEARCH_LIMIT occurrences received differentiated treatment: 1 contract-pin + 5 timing-fixture-refactors-via-named-constant + 2 boundary-test-refactors. **The deeper principle**: when 5+ identical opt-outs would be needed at the same constant value, the right move is usually a refactor (named constant for fixture data; import from SSOT for boundary tests), NOT differentiated opt-out reasons. Differentiated reasons work for 2-3 occurrences at most; beyond that, refactor.
+
+### Section 5: F-tickets filed during v1.0.1 amendment
+
+**F27 (NEW)** — SSOT registry schema harmonization between backend TOML and mobile JSON. See Section 1, Refinement 4. Promotion trigger: harmonize at the next phase that adds a registry entry to either side OR at any phase where a registry entry would naturally fit `role = "default"`.
+
+---
 
 Generalize Phase 191C's narrow `motodiag/no-hardcoded-model-ids-in-tests` (mobile) + `scripts/check_f9_patterns.py --check-model-ids` (backend) lint rules to "no hardcoded SSOT-managed constants in tests" — the same F9 subspecies (ii) pattern, but covering any constant that lives canonically in a single source-of-truth module rather than only model IDs. Carries forward F20 (the SSOT-constants generalization) and F21 (TAG_CATALOG-coverage check) — both filed at Phase 191B fix-cycle-5 from the same root cause: tests pinning a literal value of an SSOT-managed constant where the production-side constant moved underneath them.
 
