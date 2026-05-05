@@ -1,8 +1,8 @@
 # Phase 192 — Phase Log
 
-**Status:** 🚧 In Progress | **Started:** 2026-05-05
+**Status:** ✅ Complete | **Started:** 2026-05-05 | **Completed:** 2026-05-05
 **Repo:** https://github.com/Kubanjaze/moto-diag (backend) + https://github.com/Kubanjaze/moto-diag-mobile (mobile)
-**Branch:** `phase-192-diagnostic-report-viewer` (created in BOTH repos at plan v1.0; 5 commits planned with file overlap split per Outputs section)
+**Branch:** `phase-192-diagnostic-report-viewer` (created in BOTH repos at plan v1.0; 4 commits shipped: backend Commit 1 + mobile Commits 2-4)
 
 ---
 
@@ -248,3 +248,86 @@ Trust-but-verify cycle on Builder-D + Builder-E's combined work surfaced a real 
 5. v1.0.4 amendment text (this entry's amendment).
 6. F9 heuristic refinement (`scripts/check_f9_patterns.py`).
 7. `test_phase191b_serve_migrations.py:98` ripple fix.
+
+---
+
+### 2026-05-05 18:14 — Backend Commit 1 landed
+
+Commit hash: `5a12195`. 17 files changed, +1886/-28 LoC. Single bundled commit per the v1.0.4 fold-when-surgical discipline. Pushed to `phase-192-diagnostic-report-viewer` branch on `Kubanjaze/moto-diag`.
+
+**Verification at commit time:**
+- F9 lint: clean.
+- 78/78 in targeted slice.
+- 8/8 in `test_phase191b_serve_migrations.py`.
+- 4395 passed, 5 skipped, 0 failed in 49:54s full regression.
+
+Trust-but-verify confirmed: commit hash exists on master, file count matches Builder-D (10 files) + Builder-E (5 files) + Architect docs (2 files modifications) split, no template stubs in v1.0.3/v1.0.4 amendment text.
+
+---
+
+### 2026-05-05 18:42 — Mobile Commit 2 landed
+
+Commit hash: `8c14413` (`Kubanjaze/moto-diag-mobile`). 6 files, +851/-4 LoC.
+
+**What landed:**
+- `src/types/report.ts` (198 lines): `ReportDocument` top-level shape + 5 section variants modeled as a TypeScript discriminated union (`ReportRowsSection` / `ReportBulletsSection` / `ReportTableSection` / `ReportBodySection` / `ReportVideosSection`) + nested `ReportVideoCard` + `ReportVideoFindings` types matching backend Pydantic `VisualAnalysisResult` verbatim. 5 type-guard predicates for the viewer to discriminate without unsafe casts.
+- `src/hooks/useReport.ts` (88 lines): `useReport(sessionId)` hook returning `{report, isLoading, error, refetch}`. Mirrors `useSession`'s shape + fetch lifecycle (mount-effect, alive-ref cleanup, referentially-stable refetch). Hits Phase 182's existing `GET /v1/reports/session/{session_id}` route that backend Commit 1 extended with the videos section variant.
+- 2 new test files (27 tests): `__tests__/hooks/useReport.test.ts` (9 tests covering happy path, 404, 401, empty body, refetch stability, empty sections, pre-migration NULL `analyzing_started_at` Contract A consumer-readiness) + `__tests__/types/report.test.ts` (18 tests across 5 type-guards covering positive/negative match + malformed-input safety + discriminated-union narrowing exercise).
+
+**Verification:**
+- 9/9 + 18/18 = 27/27 new tests pass.
+- 320/320 mobile suite green (293 → 320, +27).
+- TypeScript `tsc --noEmit` clean.
+- ESLint: 1 new `no-void` warning (matches the existing `useSession.ts:67` precedent — parity-preserved).
+
+Mobile package 0.0.9 → 0.1.0 (X-rolled per CLAUDE.md versioning); mobile impl.md 0.0.11 → 0.1.0.
+
+---
+
+### 2026-05-05 19:18 — Mobile Commit 3 landed
+
+Commit hash: `9adefb5`. 12 files, +1738/-4 LoC.
+
+**Source modules:**
+- `src/screens/reportPresets.ts` — Customer/Insurance/Full preset definitions + override-map resolution. Customer hides `Notes` by default; Insurance + Full hide nothing. Override-map data shape supports per-card UI (F28) without architectural migration.
+- `src/screens/reportStuckDetection.ts` — Contract A consumer. `classifyAnalyzing` returns `'stuck-pre-migration'` when `analyzing_started_at IS NULL`, `'stuck-timeout'` when elapsed > 5min, `'in-flight'` otherwise. Defensive malformed-ISO → stuck-pre-migration. `countVideoStates` aggregates across mixed-state lists; `formatStateSummary` emits the "(N of M analyzed, K stuck)" string per plan Section D.
+- `src/screens/reportFormatters.ts` — pure formatters extracted for testability (matches `Field.test.ts` precedent of pure-logic-only component testing).
+- `src/components/SectionToggle.tsx` — 3-chip preset selector with active/idle visual states + accessibility roles + stable testIDs.
+- `src/components/ReportSectionCard.tsx` — discriminated-union renderer covering all 5 variants. Videos branch handles per-card stuck classification + state chips (color-coded by analysis_state + stuck override) + nested findings with severity chips + cost line + advisory copy for stuck/failed/unsupported states. Pre-migration vs timeout copy differentiated.
+- `src/screens/ReportViewerScreen.tsx` — orchestration. `useReport` + preset state + override-map state + focus-effect refetch + loading/error/empty branches. Stuck-detection re-evaluates on focus + preset change (live tick deferred to F29).
+- `src/navigation/types.ts` — `ReportViewer` route entry added to `SessionsStackParamList` (navigator registration deferred to Commit 4).
+
+**Tests:** 3 new files, 43 new tests (16 preset + 13 stuck-detection + 14 formatter). 363/363 mobile suite green.
+
+Mobile package 0.1.0 → 0.1.1; mobile impl.md 0.1.0 → 0.1.1.
+
+---
+
+### 2026-05-05 19:52 — Mobile Commit 4 landed (PHASE 192 COMPLETE)
+
+**Mobile-side finalize.** Two source-touching changes + extensive doc finalization:
+
+**Source:**
+- `src/navigation/SessionsStack.tsx`: `<Stack.Screen name="ReportViewer" component={ReportViewerScreen} options={{title: 'Diagnostic report'}} />` added below VideoPlayback registration. Lives in SessionsStack only (no cross-stack same-route pattern; a report is always rooted at a specific session — unlike DTCDetail which has cross-link semantics from Home + Sessions tabs).
+- `src/screens/SessionDetailScreen.tsx`: "View report" Button added below the Lifecycle card via `navigation.navigate('ReportViewer', {sessionId: session.id})`. Available on open + closed sessions alike since the backend route doesn't gate on lifecycle state. `styles.actions` added (was missing — caught by typecheck before commit).
+- `src/screens/ReportViewerScreen.tsx`: F30 candidate comment updated to reference F29 (now filed in FOLLOWUPS).
+
+**Doc finalization:**
+- `docs/FOLLOWUPS.md`: F28 (NEW — Section-visibility persistence + per-card toggle UI) + F29 (NEW — Live-tick refresh for stuck-state in ReportViewer) filed. Both deferred to Phase 192B alongside PDF export work.
+- `docs/ROADMAP.md`: Phase 192 row marked ✅ with full scope summary.
+- `implementation.md`: Phase History row updated to ✅ status with cross-commit summary. Mobile package 0.1.1 → 0.1.2; mobile impl.md 0.1.1 → 0.1.2.
+
+**Backend-side finalize** (this entry):
+- `implementation.md`: backend Phase 192 row added to Phase History (between Phase 158 and Phase 191D). Doc/package-version split note updated (`pyproject.toml` 0.3.1 → 0.3.2 from Commit 1). Doc version 0.13.10 → 0.13.11.
+- `docs/ROADMAP.md`: Phase 192 row marked ✅ (backend side).
+- `docs/phases/in_progress/192_*.md` → `docs/phases/completed/192_*.md` (this finalize move).
+
+**Verification at finalize:**
+- Backend: 4395 tests + 5 skipped + 0 failed (from Commit 1).
+- Mobile: 363/363 tests across 26 suites; TypeScript clean; ESLint 0 new errors.
+- F-tickets: F28 + F29 filed in mobile FOLLOWUPS.md (Open).
+- Branch state: 4 commits across both repos all pushed.
+
+**Architect gate**: smoke-rhythm session per plan v1.0.1 Section G. The composition-layer regression (4395 backend + 363 mobile tests) substitutes for a per-screen integration smoke since Phase 192 is data-shape + viewer-substrate work, not a new native-module integration. Visual smoke remains valid as a pre-Phase 192B prerequisite — when 192B starts, architect renders the viewer against a real session with the full 5-section spread + a stuck video to confirm visual parity with the shape doc + advisory copy.
+
+**Phase 192 status**: ✅ Complete. Substrate ready for 192B (PDF export + Share Sheet/AirDrop) to extend without architectural migration.

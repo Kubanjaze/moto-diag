@@ -1,6 +1,67 @@
 # Phase 192 — Diagnostic Report Viewer (substrate)
 
-**Version:** 1.0 (plan) + 1.0.1 (pre-Commit-1 reshape) + 1.0.2 (post-architect-review rigor refinements) + 1.0.3 (Builder-D Flag scope-add: migration 040 + atomic worker update) + 1.0.4 (Commit-1 verify: F9 int-typed heuristic refinement folded in) | **Tier:** Standard | **Date:** 2026-05-05
+**Version:** 1.0 (plan) + 1.0.1 (pre-Commit-1 reshape) + 1.0.2 (post-architect-review rigor refinements) + 1.0.3 (Builder-D Flag scope-add: migration 040 + atomic worker update) + 1.0.4 (Commit-1 verify: F9 int-typed heuristic refinement folded in) + 1.1 (final: as-built Results + Verification Checklist marked) | **Tier:** Standard | **Date:** 2026-05-05
+
+## Plan v1.1 — Final: as-built Results + Verification Checklist marked
+
+Phase 192 closed at Mobile Commit 4 (`9adefb5` parent + Commit 4 finalize) on 2026-05-05. The substrate-half of the substrate-then-feature pair (Phase 192 viewer / Phase 192B PDF + Share Sheet) shipped across 4 commits with zero fix-cycles after the v1.0.3 path-(α) decision absorbed Builder-D's schema-vs-doc-gap flag.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| Total commits | 4 (1 backend bundled + 3 mobile) |
+| Backend tests | 4395 passed, 5 skipped, 0 failed (full regression at Commit 1) |
+| Mobile tests at finalize | 363/363 across 26 suites (293 → 363, +70 across the phase) |
+| New mobile test files | 5 (useReport hook + report types + reportPresets + reportStuckDetection + reportFormatters) |
+| New backend test files | 4 (videos extension + route videos extension + migration 040 + analyzing_started_at atomicity) |
+| Schema | 39 → 40 (migration 040 adds `videos.analyzing_started_at TEXT` nullable) |
+| F-tickets at finalize | F28 + F29 filed in mobile FOLLOWUPS (both deferred to Phase 192B) |
+| Pre-plan amendments | 4 (v1.0.1 reshape + v1.0.2 rigor refinements + v1.0.3 schema scope-add + v1.0.4 heuristic refinement) |
+| Architect-side artifacts | 3 (auth-policy ADR + report-document-shape doc + Builder brief) |
+| Doc/package versions | backend impl.md 0.13.10 → 0.13.11; pyproject 0.3.1 → 0.3.2; mobile impl.md 0.0.11 → 0.1.2; mobile pkg 0.0.9 → 0.1.2 |
+
+**Key finding**: The substrate-decision-then-Builder pattern unblocked parallel Builder dispatch when substrate decisions spanned multiple files. Phase 192's three architect-side artifacts (auth-policy ADR + shape doc + Builder brief, ~600 lines combined) consumed architect time but enabled Builder-D + Builder-E to dispatch in parallel with zero cross-coordination conflict. Compared against Phase 191B's 5-fix-cycle path where each Builder discovered substrate ambiguity after dispatch, the architect-side-design phase converts implementation-time ambiguity into design-time ambiguity (which is much cheaper to resolve).
+
+**Secondary finding**: F9 discipline persists through architectural decisions. Builder-D's `analyzing_started_at` schema-vs-doc gap surfaced at the right moment (after composer build, before commit) is exactly the pattern 191C+191D's lint rules were designed to catch. Choosing path (α) — add the migration rather than ship the drift — applied the discipline at architect-decision time, before lint had a chance to surface it.
+
+**Tertiary finding**: Heuristic refinements that strictly narrow rules are commit-foldable. The int-typed tightening eliminated 22 false positives without losing any true positives, and folding into Commit 1 preserved the regression artifact's signal-to-noise instead of leaving it noisy until a v1.0.4 amendment.
+
+### Verification Checklist (final)
+
+- [x] Backend videos section variant 5 lands per shape doc Variant 5 (composer + renderer extensions in `builders.py` + `renderers.py`).
+- [x] Migration 040 lands with nullable `analyzing_started_at TEXT` column (no default, no backfill, rename-recreate rollback).
+- [x] SCHEMA_VERSION 39 → 40 with inline citation; 4 ripple-fix tests updated cleanly.
+- [x] Atomic worker update writes both `analysis_state` AND `analyzing_started_at` in single UPDATE when transitioning to analyzing (Contract B).
+- [x] Mobile `useReport` hook fetches `GET /v1/reports/session/{session_id}` with proper loading/error/refetch semantics.
+- [x] `ReportDocument` discriminated-union types model all 5 variants accurately.
+- [x] 5 type-guard predicates discriminate variants at runtime + narrow at compile-time.
+- [x] `ReportViewerScreen` renders all 5 variants; preset toggle changes section visibility correctly.
+- [x] Stuck-detection: pre-migration NULL → stuck immediately (Contract A); post-migration > 5min → stuck-timeout; ≤ 5min → in-flight; malformed-ISO → stuck-pre-migration.
+- [x] F29 ADR posture preserved (cross-owner returns 404; free-tier reads own report).
+- [x] SessionsStack registration + SessionDetail "View report" cross-link wired.
+- [x] F28 + F29 filed in mobile FOLLOWUPS for Phase 192B pickup.
+- [x] All doc + package version bumps recorded.
+- [x] Backend phase docs moved in_progress/ → completed/.
+- [x] Backend ROADMAP marked ✅; mobile ROADMAP marked ✅; both Phase History rows updated.
+
+### Risks (final — resolution notes)
+
+- **Builder dispatch parallel work surfacing schema-vs-doc gap mid-flight**: did materialize (Builder-D's Flag 1 on `analyzing_started_at`). Resolved via path-(α) bundled v1.0.3 amendment + parallel Builder-E dispatch + final trust-but-verify before bundling Commit 1.
+- **SCHEMA_VERSION ripple breakage across 4+ test files**: did materialize. Resolved cleanly via mechanical literal swaps + 1 contract-pin opt-out reason update.
+- **F9 false positives at value 40 (post-bump)**: did materialize (22 findings across 8 unrelated tests). Resolved via int-typed heuristic refinement (joined dict/tuple's strict identifier-nearby tier).
+- **Visual smoke deferred to Phase 192B prerequisite**: by design per plan Section G — the composition-layer regression covers structural correctness; visual rendering smoke validates against real session data when Phase 192B starts. Documented in phase log.
+
+### Deviations from Plan
+
+- **v1.0 → v1.0.1 reshape**: Plan v1.0 specified building `/v1/reports/session/{session_id}` from scratch. Phase 182 had already shipped it. Reshape pivoted to extension (videos section variant 5) rather than greenfield.
+- **v1.0 WeasyPrint assumption → reportlab actual**: caught during shape-doc writing. Phase 182 uses reportlab Platypus, not WeasyPrint. Plan v1.0 Section F's Jinja2 template-inheritance approach was replaced with flowable composition in Python (documented in shape doc for Phase 192B's pre-plan Q&A).
+- **v1.0.3 scope-add for migration 040**: Builder-D's mid-build flag on schema-vs-doc gap absorbed via path-(α) bundled amendment + parallel Builder-E dispatch.
+- **v1.0.4 F9 heuristic refinement**: SCHEMA_VERSION 39 → 40 surfaced 22 false positives at value 40. Folded into Commit 1 per 191D's surgical-and-contract-preserving precedent.
+- **Per-card toggle UI deferred to F28**: plan v1.0.1 Section C1 promised (γ) data shape with (β) UX. Data shape shipped (override map); per-card toggle UI did not (filed as F28 follow-up).
+- **Live-tick refresh deferred to F29**: plan Section D didn't explicitly commit to live-tick. ReportViewerScreen re-evaluates stuck-state on focus + preset change; live-tick filed as F29 for Phase 192B.
+
+---
 
 ## Plan v1.0.4 — F9 int-typed heuristic refinement folded into Commit 1
 
