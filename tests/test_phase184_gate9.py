@@ -579,9 +579,15 @@ class TestGate9OpenAPIContract:
 class TestGate9AntiRegression:
 
     def test_schema_version_unchanged(self):
-        # Gate 9 must not bump the schema. Last migration was 038
-        # (Phase 177 vehicles owner_user_id retrofit).
-        assert SCHEMA_VERSION == 38
+        # Gate 9 anti-regression pin. Last migration was 039 (Phase
+        # 191B videos table for video diagnostic capture). Bump this
+        # pin alongside any deliberate SCHEMA_VERSION change AND the
+        # corresponding migration; an unintended bump must fail loud.
+        # F-ticket F20 (filed 2026-05-04 with Phase 191B fix-cycle-5):
+        # generalize Phase 191C's no-hardcoded-model-ids lint rule to
+        # "no hardcoded SSOT-managed constants in tests" — would have
+        # caught this missed-pin-update at Phase 191B finalize.
+        assert SCHEMA_VERSION == 39
 
     def test_track_h_summary_doc_exists(self):
         path = (

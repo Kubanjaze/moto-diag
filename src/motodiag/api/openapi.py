@@ -128,6 +128,19 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "diagnostic session. Paid-tier required."
         ),
     },
+    {
+        "name": "videos",
+        "description": (
+            "Video diagnostic uploads + Claude Vision AI analysis "
+            "nested under a session. POST upload (shop-tier + "
+            "multipart) / GET list / GET single / DELETE soft-delete "
+            "/ GET binary file-stream. Per-session caps: 10 videos / "
+            "1 GB. Per-tier monthly: 0/200/unlimited for individual/"
+            "shop/company. ffmpeg subprocess + Vision pipeline drive "
+            "the analysis worker through pending → analyzing → "
+            "analyzed | analysis_failed | unsupported. Phase 191B."
+        ),
+    },
 ]
 
 
