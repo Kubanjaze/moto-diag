@@ -125,6 +125,14 @@ def _exc_class_chain():
     from motodiag.media.photo_pipeline import (
         ImageDecodeError, UnsupportedImageFormatError,
     )
+    # Phase 195 — voice transcript domain
+    from motodiag.shop.transcript_repo import (
+        VoiceTranscriptOwnershipError,
+        VoiceTranscriptQuotaExceededError,
+    )
+    from motodiag.media.audio_pipeline import (
+        AudioDecodeError, UnsupportedAudioFormatError,
+    )
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -234,6 +242,15 @@ def _exc_class_chain():
          "Photo format not supported by this server"),
         (ImageDecodeError, 422, "wo-photo-decode-failed",
          "Photo could not be decoded"),
+        # Phase 195 — voice transcript domain
+        (VoiceTranscriptOwnershipError, 404, "voice-transcript-not-found",
+         "Voice transcript not found"),
+        (VoiceTranscriptQuotaExceededError, 402, "voice-transcript-quota-exceeded",
+         "Voice transcript quota exceeded"),
+        (UnsupportedAudioFormatError, 415, "voice-transcript-unsupported-format",
+         "Audio format not supported by this server"),
+        (AudioDecodeError, 422, "voice-transcript-decode-failed",
+         "Audio could not be decoded"),
     ]
 
 
