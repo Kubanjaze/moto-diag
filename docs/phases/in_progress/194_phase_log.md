@@ -62,3 +62,42 @@ Phase 194 opens as the **substrate half** of a substrate-then-feature pair (194 
 8. Section D "decide later" ergonomics — undecided banner discoverability.
 
 **Next step**: create `phase-194-camera-photo-integration` branch on both repos, push plan v1.0 (this commit), then begin Backend Commit 0 (migration + route + repo + image pipeline + tests).
+
+---
+
+### 2026-05-06 07:35 — Backend Commit 0 build complete
+
+Backend sliver landed in commit `71658ac` (10 files, 2033 insertions). Mobile Commits 1, 2 pending.
+
+**What shipped:**
+
+- **Migration 041** (`src/motodiag/core/migrations.py`): `work_order_photos` table — 17 functional columns + `deleted_at` for soft-delete + 4 indexes (wo, issue, pair, sha256). FK posture: `work_orders` CASCADE / `issues` SET NULL / `pair_id` self-FK SET NULL / `users` SET DEFAULT. SCHEMA_VERSION 40 → 41.
+- **Image pipeline** (`src/motodiag/media/photo_pipeline.py`): `normalize_photo()` pure function — HEIC decode (pillow-heif registered at module-import; graceful fallback if uninstalled) → `ImageOps.exif_transpose` to upright pixels → strip EXIF → resize to 2048px long-edge bound (LANCZOS, no upscaling) → JPEG quality 85, `optimize=True`. Typed errors `UnsupportedImageFormatError` (415) + `ImageDecodeError` (422).
+- **Repo** (`src/motodiag/shop/wo_photo_repo.py`, ~310 LoC): mirrors `video_repo` shape — create/get/list/list_issue/update_pairing/soft_delete + 3 quota helpers (`count_wo_photos`, `count_issue_photos`, `count_wo_photos_this_month_for_uploader`) + `get_wo_photo_for_pairing(photo_id, expected_wo_id)` for partner validation. `_month_start_iso` uses SQLite-compatible space-separator (matches the 2026-05-01 boundary-bug fix from `video_repo`).
+- **Route** (`src/motodiag/api/routes/photos.py`, ~440 LoC): 6 endpoints under `/v1/shop/{shop_id}/work-orders/{wo_id}/photos` — POST (upload+normalize, 201), GET (list), GET /{id}, PATCH /{id} (re-classification surface), DELETE /{id} (204 idempotent), GET /{id}/file (stream JPEG). All endpoints layer `require_shop_access` (basic membership check) on top of the tier gate; cross-shop returns 403, cross-WO returns 404. POST mirrors `pair_id` symmetrically (caller specifies from new photo's perspective; route updates partner to point back).
+- **Errors mapping** (`src/motodiag/api/errors.py`): 5 new mappings — `WorkOrderPhotoOwnershipError` (404), `WorkOrderPhotoQuotaExceededError` (402), `WorkOrderPhotoPairingError` (422), `UnsupportedImageFormatError` (415), `ImageDecodeError` (422).
+- **App wiring** (`src/motodiag/api/app.py`): `photos_router` mounted under `/v1` after `videos_router`.
+- **Dependency** (`pyproject.toml`): `pillow-heif>=1.3.0` added to `[vision]` extras (Risk #1 from plan v1.0 cleared at build time — `pillow-heif==1.3.0` installed and verified).
+- **Tests** (`tests/test_phase194_commit0_photo_upload.py`, ~700 LoC): 44 tests across 8 classes — TestMigration041 (6) / TestPhotoPipeline (9) / TestWorkOrderPhotoRepo (10) / TestUploadHappyPath (6) / TestUploadAuth (4) / TestUploadQuotas (3) / TestPairingAndErrors (4) / TestQuotaHelperUnit (2). All 44 pass in 43s.
+
+**F9-discipline fixes (cross-test SSOT-pin maintenance):**
+- `tests/test_phase192_migration_040.py:104` — relaxed `assert SCHEMA_VERSION == 40` to `>= 40` (matches the next assertion's shape; Phase 192's bump landed and stays as a floor regardless of downstream bumps). This is the F9-family "literal-equality SSOT pin breaks at downstream phase bump" pattern documented in Phase 191C's pattern guide; future phase 195+ won't trip.
+- `tests/test_phase194_commit0_photo_upload.py:172` — `assert SCHEMA_VERSION >= 41` with `# f9-noqa: ssot-pin contract-pin: phase-194 floor — verifies migration 041 landed and stays`. Required opt-out per Phase 191D's `--check-ssot-constants` lint rule (one literal is needed for the assertion to be meaningful; opting in via the contract-pin category is the right disposition).
+
+**Versions:**
+- `src/motodiag/core/database.py`: `SCHEMA_VERSION` 40 → 41
+- `pyproject.toml`: 0.3.6 → 0.4.0 (minor bump — feature addition, new module + new route + new dep)
+
+**Verification:**
+- 44/44 Phase 194 Commit 0 tests pass (43s wall time)
+- 14/14 Phase 192 migration 040 tests pass after SSOT-pin fix
+- 142/142 adjacent-regression (Phase 191B + 192 + 193) green
+- F9 lint clean (`scripts/check_f9_patterns.py --check-ssot-constants`)
+- All 6 photo routes registered (`{POST, GET, GET, PATCH, DELETE, GET}` over `/v1/shop/{shop_id}/work-orders/{wo_id}/photos[/{photo_id}[/file]]`)
+- All 5 photo error mappings registered in errors.py exception chain (52 total mappings)
+
+**F-ticket dispositions during execution:**
+- F37 (extend F33 to enum-value verification) — watching during build; **no instance #3 surfaced**. Backend `role` enum `{before, after, general, undecided}` matches the mobile typed-union spec from plan v1.0 verbatim; no drift introduced. Stays filed-and-watching for Mobile Commits 1, 2 + future phases.
+- F38 candidate (ShopAccessError `quota_exceeded` distinctness) — not yet filed; awaits smoke gate signal during Mobile Commit 2.
+
+**Next step**: Mobile Commit 1 (types + builder + `WorkOrderPhotosSection` variant + `WorkOrderSectionCard` photos branch + `photoStorageCache` + `photoCaptureMachine` reducer + `PhotoCaptureScreen` + `useWorkOrderPhotos` hook + tests). Then Mobile Commit 2 (entry button on WO detail + classify-later surface + nav wiring + 8-step smoke gate + finalize).
