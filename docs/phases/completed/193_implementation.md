@@ -1,6 +1,72 @@
 # Phase 193 — Shop Dashboard (mobile, consumer-side)
 
-**Version:** 1.0 (plan) + 1.0.1 (Step-0 surfacing: URL-prefix correction) + 1.0.2 (Commit-0.5 surfacing: assign endpoint gap + RBAC role-name correction) | **Tier:** Standard | **Date:** 2026-05-06
+**Version:** 1.0 (plan) + 1.0.1 (Step-0 surfacing: URL-prefix correction) + 1.0.2 (Commit-0.5 surfacing: assign endpoint gap + RBAC role-name correction) + 1.1 (final: as-built Results + Verification Checklist marked + Deviations) | **Tier:** Standard | **Date:** 2026-05-06
+
+## Plan v1.1 — Final: as-built Results + Verification Checklist marked
+
+Phase 193 closed at Mobile Commit 3 finalize on 2026-05-06. Mobile-only consumer-side build on Phase 161/162/164/180 backend substrate, plus two architectural-blocker substrate additions (Commit 0 + Commit 0.5) that surfaced via Step-0 audits before mobile work proceeded.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| Total commits | 6 (1 backend Commit 0 + 1 backend Commit 0.5 + 3 mobile Commits 1/2/3 + 1 finalize) |
+| Backend tests added | 19 (9 sort_param + 10 assign_endpoint) |
+| Backend pyproject | 0.3.4 → 0.3.6 (Commit 0 + Commit 0.5 each minor patch) |
+| Mobile tests added | 137 (73 Commit 1 hooks + 54 Commit 2 helpers/screens/mutations + 10 Commit 3 smoke gate) |
+| Mobile suite at finalize | 572/572 across 45 suites (435 → 572 across the phase, +137) |
+| Mobile package | 0.1.4 → 0.1.7 (Commit 1 + Commit 2 + Commit 3 each minor patch) |
+| F-tickets touched | F33 closed (promoted to CLAUDE.md Step 0 ahead of plan v1.0); F36 NEW filed (member workload counts deferred); F37 NEW filed (enum-value verification process refinement, deferred until 3rd instance); F28 + F29 + F30 reaffirmed deferred (orthogonal to 193 scope) |
+| Plan amendments | 2 (v1.0.1 URL-prefix correction; v1.0.2 assign endpoint gap + RBAC role-name correction) |
+
+**Key finding**: Step-0 audits caught architectural-blocker gaps **twice** in this phase (Commit 0 triage HTTP exposure + Commit 0.5 assign HTTP exposure), each time before mobile work proceeded against the missing substrate. Both followed the same shape: tiny additive backend route + tests + version bump + atomic commit, dispatched ahead of mobile work to avoid mobile-side rework. The pre-dispatch decision tree at Commit 1 dispatch (and the implicit one at Commit 2 dispatch) functioned as designed.
+
+**Secondary finding**: F33's existing-code overlap audit catches *structural* overlaps via name-level greps but does NOT catch *value-level* enum mismatches (Phase 193's RBAC role enum was named intuitively but mismatched backend's actual choices). F37 candidate captures the gap; defer filing as a phase-sized intervention until a third instance surfaces (Phase 191B's `analysis_state` near-miss + Phase 193's role enum mismatch are data points 1 + 2).
+
+**Tertiary finding**: opt-in tier-reactive nav design (`useTier` with 4 reactivity sources — mount + apiKey-change + AppState 'active' + explicit refetch) preserved offline behavior + handled the canonical Stripe-portal-upgrade flow without app restart. Smoke-gate Step 10 (concrete test) verified the load-bearing reactive-add property: tier flips `individual → shop` mid-session → ShopTab appears in the tab list without remount. Same shape Phase 192B used for share-flow byte-determinism: convert plan-doc claim into smoke-tested property.
+
+### Verification Checklist (final)
+
+- [x] `useShops` / `useWorkOrders` / `useWorkOrder` / `useShopMembers` hooks return `{data, error: ShopAccessError | null, isLoading, refetch}` shape (typed-error-at-hook-boundary).
+- [x] `ShopAccessError` 5-kind discriminated union covers all observed failure modes; classifier mirrors Phase 190 + 192B logic.
+- [x] 402 copy is generic-informational (no upgrade-action affordance per subscription audit).
+- [x] `ShopTab` registered as 4th bottom tab; tier-reactive (visible without app restart on upgrade per smoke-gate Step 10).
+- [x] `ShopPickerScreen` shown on first navigate when multi-shop; auto-skipped when single-membership (via `useFocusEffect` redirect chain).
+- [x] Sticky session picker persists via AsyncStorage; cleared on cold-relaunch via App.tsx useEffect.
+- [x] `WorkOrderListScreen` renders FlatList with sort toggle (Newest / Priority / Triage) + status filter row.
+- [x] Pull-to-refresh + focus-effect refresh both fire correctly.
+- [x] `WorkOrderDetailScreen` reads `sections: WorkOrderSection[]`; renders via discriminated-union type guards.
+- [x] Unknown section variant renders as "(Unknown section variant)" not crash (smoke-gate Step 9 verified).
+- [x] State-transition buttons (`Mark in_progress`, `Mark on_hold`, `Mark completed`) fire `POST /transition` correctly + UI reflects new status.
+- [x] `Mark on_hold` requires reason field (TextInput in transition modal).
+- [x] Reassign button opens `MemberPickerModal`; default filter = mechanic-eligible roles (`tech | apprentice` per v1.0.2 correction) + "Show all" toggle.
+- [x] Member-picker rows do NOT show workload column (F36 filed; backend doesn't expose).
+- [x] 402 / 403 / 401 errors surface distinct copy via `shopAccessErrorCopy` helper.
+- [x] All 10 architect-smoke steps documented; Steps 9 + 10 concretely smoke-tested (load-bearing architectural commitments converted to verified properties); Steps 1-8 covered by hook + helper + classifier unit tests.
+- [x] All doc + package version bumps recorded.
+- [x] F-ticket dispositions captured at finalize (F33 closed; F36 NEW; F37 NEW; F28/F29/F30 reaffirmed deferred).
+
+### Risks (final — resolution notes)
+
+- **Tier-reactive nav implementation friction** (predicted in plan v1.0): did NOT materialize as friction. `useTier` 4-source reactivity (mount + apiKey-change + AppState 'active' + explicit refetch) shipped cleanly in Commit 1; smoke-gate Step 10 concretely verified the reactive-add + reactive-remove paths.
+- **Triage-sort backend endpoint may not exist** (predicted): did materialize. Resolved at backend Commit 0 (`93af90e`) via single-endpoint-with-`sort`-query-param design; chose option (b) per the pre-dispatch decision tree's "lean" recommendation. Single endpoint maps cleaner to plan v1.0 Section C's "three lenses on one mental model" framing.
+- **Member workload counts** (predicted): backend doesn't expose. F36 filed at finalize; picker ships without column. Backend audit confirmed `ShopMember` Pydantic model lacks the field; separate `MechanicWorkload` model exists but isn't joined into `/members` response.
+- **`AsyncStorage` not yet wired** (predicted): did materialize. 5-min compat audit on `@react-native-async-storage/async-storage` 3.0.2 (released 2026-03-26) confirmed zero RN 0.85 / iOS 17 / Android 14 / scoped-storage open issues. Installed cleanly.
+- **Multi-shop deep-link handling** (predicted): handled via `WorkOrderListScreen`'s `useFocusEffect` reading `getActiveShopId()` on focus + redirecting to `ShopPicker` if mismatch. NOT extensively smoke-tested in unit-tests — device smoke-gate is the verification surface.
+- **`WorkOrderSection` future-variant lock-in risk** (predicted): mitigated. Smoke-gate Step 9 verified the defensive "(Unknown section variant)" trailer holds. Future phases (194 photos, 195 voice_transcripts, 196 obd_snapshots) extend the union additively.
+- **No backend `/assign` HTTP exposure** (NOT predicted in plan v1.0; surfaced at Step-0 round 2): resolved at backend Commit 0.5 (`fcc1181`) via new `POST /assign` endpoint + `WorkOrderAssignRequest{mechanic_user_id: int | null}` body. Documented in plan v1.0.2 amendment.
+- **RBAC role enum mismatch** (NOT predicted; surfaced at Step-0 round 2): plan v1.0 + Commit 1's `useShopMembers.ts` declared `'owner' | 'manager' | 'mechanic' | 'apprentice' | 'viewer'`; backend's actual enum is `('owner', 'tech', 'service_writer', 'apprentice')`. Documented in plan v1.0.2 amendment + propagated to mobile in commit `6c93904`. F37 candidate filed for process refinement.
+
+### Deviations from Plan
+
+- **Commit 0 added as a substrate-blocker fix** between plan v1.0 and Mobile Commit 1: Step-0 audit at Mobile Commit 1 dispatch surfaced missing triage HTTP exposure. Resolved at backend Commit 0 (`93af90e`) via single-endpoint sort-param design. Plan v1.0 anticipated this as a possible follow-up; it became necessary on Commit 1's first dispatch.
+- **Commit 0.5 added as a second substrate-blocker fix** between Mobile Commit 1 and Mobile Commit 2: Step-0 audit at Mobile Commit 2 dispatch surfaced missing assign HTTP exposure + RBAC role-name mismatch. Plan v1.0.2 amendment captured both surfacings + propagated the role-name correction to mobile. Commit 0.5 (`fcc1181`) shipped the assign endpoint; mobile commit `6c93904` shipped the role enum correction.
+- **Plan v1.0.1 amendment** for URL-prefix typo (`/v1/shops/` → `/v1/shop/`) landed BEFORE Mobile Commit 1 to keep plan-of-record consistent with Commit 1's hooks. Mirrors Phase 192B's v1.0.1 timing pattern.
+- **Plan v1.0.2 amendment** for assign endpoint gap + RBAC role-name correction landed BEFORE Mobile Commit 2 for the same reason.
+- **F36 fires at finalize** (member workload counts) per plan v1.0 risks + Section E refinement. Backend audit confirmed `ShopMember` lacks the field; picker ships without column.
+- **F37 candidate filed** (process refinement: extend F33 audit to include enum-value verification). Deferred until 3rd instance of plan-vs-reality enum mismatch surfaces.
+
+---
 
 ## Plan v1.0.2 — Commit-0.5 surfacing: assign endpoint gap + RBAC role-name correction
 

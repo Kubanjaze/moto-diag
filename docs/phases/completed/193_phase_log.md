@@ -207,3 +207,40 @@ Substantial UI commit: 3 screens + 2 components + 2 mutation hooks + 1 service +
 **Mobile package.json**: 0.1.5 → 0.1.6.
 
 **Next step**: commit + push Mobile Commit 2. Then Mobile Commit 3 (10-step smoke gate + plan v1.1 finalize + F36 ticket file + ROADMAP marks ✅).
+
+---
+
+### 2026-05-06 06:18 — Mobile Commit 3 + finalize (PHASE 193 COMPLETE)
+
+10-step smoke gate executed per plan v1.0 Section I. Steps 9 + 10 are the load-bearing concrete tests per Kerwyn's pre-dispatch reminder ("convert plan-doc claims into smoke-tested properties"); Steps 1-8 are covered by hook + helper + classifier unit tests already in place from Commits 1-2.
+
+**Smoke gate Step 9 — data-driven section rendering** (load-bearing): file `__tests__/components/WorkOrderSectionCard.smoke.test.tsx`. 4 tests. Pinned: known variants render without crashing; unknown discriminator renders "(Unknown section variant)" trailer; bare `{kind}` with no payload renders gracefully; defensive fallback heading-derivation switch doesn't render stale headings for unknown variants. **4/4 PASS.** Forward-look architecture commitment from plan v1.0 intro is now smoke-tested. Future variants (194 photos, 195 voice_transcripts, 196 obd_snapshots) extend additively; if a future phase ships a section variant the mobile build hasn't picked up yet, the screen renders the defensive trailer rather than crashing.
+
+**Smoke gate Step 10 — tier-reactive ShopTab visibility** (load-bearing): file `__tests__/navigation/RootNavigator.smoke.test.tsx`. 6 tests. Pinned: ShopTab hidden for `individual` + null tier; visible for `shop` + `company`; **REACTIVELY adds ShopTab when tier flips `individual → shop` without remount** (the canonical Stripe-portal-upgrade flow); REACTIVELY removes when flips `shop → individual` (subscription expired/cancelled). **6/6 PASS.** Plan v1.0 Section A's tier-reactive commitment now smoke-tested. Test required mocking `@react-navigation/bottom-tabs` (Jest preset doesn't transform its ESM); mock replaces `Navigator` + `Screen` with View-based stubs that expose `tabBarLabel` props as Text nodes for scraping. Bounded mock — doesn't escape the test file.
+
+**Smoke gate Steps 1-8 coverage map** (already verified via prior commits' tests, no new test files needed):
+- Step 1 (single-membership → WO list): `useShops` + `useWorkOrders` tests pin fetch shape. Auto-skip orchestration deferred to device smoke.
+- Step 2 (WO detail 5 sections): `buildWorkOrderSections.test.ts` pins section order + presence; component-render verified via Step 9.
+- Step 3 (sort toggle cycles): `useWorkOrders.test.ts` pins `sortBy` query param dispatch for all 3 modes.
+- Step 4 (state transition fires): `useTransitionWorkOrder.test.ts` pins POST + body shape + error classification.
+- Step 5 (reassign reflected): `useReassignWorkOrder.test.ts` pins POST assign + null-for-unassign + 400-nonexistent-mechanic + 404-cross-shop.
+- Step 6 (multi-shop swap): `useShops` + `activeShopStorage.test.ts` pin fetch + persistence; orchestration deferred to device smoke.
+- Step 7 (free-tier 402 copy): `shopAccessErrors.test.ts` + `shopAccessErrorCopy.test.ts` pin generic-informational copy without upgrade-action affordance.
+- Step 8 (cross-shop 403): `shopAccessErrors.test.ts` pins 403 → `not_member` classification with shopId preserved.
+
+**Device smoke-gate** (per Phase 192/192B precedent): deferred until next available device session. Unit-test coverage for the load-bearing logic is in place; visual verification of the full nav + screen flows happens on hardware.
+
+**F-ticket dispositions at finalize**:
+- F33 closed (promoted to CLAUDE.md Step 0 ahead of plan v1.0; no further action).
+- F36 NEW filed: backend `ShopMember` workload counts + member-picker workload column. Backend audit confirmed `ShopMember` Pydantic model in `rbac.py:72` lacks `active_wo_count`. Picker ships without column for 193. Recommended target: Phase 193+ follow-up.
+- F37 NEW filed: extend F33 audit step to include enum-value verification. Phase 191B's `analysis_state` near-miss + Phase 193's role enum mismatch = data points 1 + 2; defer filing as phase-sized intervention until 3rd instance.
+- F28 + F29 + F30 reaffirmed deferred (orthogonal to 193 scope).
+
+**Doc finalize**:
+- `docs/phases/in_progress/193_*.md` → `docs/phases/completed/193_*.md`.
+- Implementation.md v1.0.2 → v1.1 with as-built Results + Verification Checklist + Deviations.
+- Backend `implementation.md`: Phase 193 row added to Phase History. Doc/pkg version split note updated for pyproject 0.3.4 → 0.3.6. Doc version 0.13.12 → 0.13.13.
+- ROADMAP marks ✅ on both repos.
+- Mobile package + impl.md: 0.1.4 → 0.1.7 across the phase (Commits 1, 2, 3 each minor patch).
+
+**Phase 193 status**: ✅ Complete. Mobile shop dashboard surface on top of Phase 161/162/164/180 backend substrate. End-to-end flow: shop-tier user taps `ShopTab` → optionally picks shop (if multi-membership) → sees WO list with sort toggle + status filter → taps WO → sees data-driven section detail → marks transitions OR reassigns mechanic via picker → list refreshes on focus. Forward-look held: `WorkOrderSection` discriminated union mirrors Phase 192's `ReportSection` shape exactly; Phases 194/195/196 will extend additively.
