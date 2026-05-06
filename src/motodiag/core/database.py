@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 40  # Phase 192 (Commit 1 scope-add): videos.analyzing_started_at column for stuck-detection (migration 040)
+SCHEMA_VERSION = 41  # Phase 194 (Commit 0): work_order_photos table for camera/photo integration substrate (migration 041)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

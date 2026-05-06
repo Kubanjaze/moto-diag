@@ -100,8 +100,16 @@ def _insert_video_at_v39_shape(db_path, session_id: int) -> int:
 class TestSchemaVersionAndRegistry:
 
     def test_schema_version_bumped_to_40(self, db):
-        """SCHEMA_VERSION constant matches migration 040's version."""
-        assert SCHEMA_VERSION == 40
+        """SCHEMA_VERSION reached migration 040's version.
+
+        Phase 192 bumped 39 → 40; later phases may bump further (Phase
+        194 bumped to 41 for the work_order_photos table, etc.). This
+        test pins the floor — that 040's bump landed and stayed —
+        rather than equality, to avoid drift when downstream phases
+        ship migrations of their own. Matches the next assertion's
+        ``>= 40`` shape (test_get_current_version_at_least_40).
+        """
+        assert SCHEMA_VERSION >= 40
 
     def test_get_current_version_at_least_40(self, db):
         assert get_current_version(db) >= 40

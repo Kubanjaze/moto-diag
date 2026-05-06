@@ -2931,6 +2931,97 @@ MIGRATIONS: list[Migration] = [
                 ON videos(sha256);
         """,
     ),
+    # Migration 041 — Phase 194 (Commit 0): work_order_photos substrate
+    Migration(
+        version=41,
+        name="work_order_photos",
+        description=(
+            "Phase 194 (Commit 0): Add `work_order_photos` table for the "
+            "camera/photo integration substrate. Substrate-half of the "
+            "194/194B substrate-then-feature pair (194 capture/attach/"
+            "display + 194B AI photo analysis). Mechanics tap 'Take "
+            "photo' inside a work order, capture, classify, upload — "
+            "the photo appears in the WO detail screen as a new section "
+            "variant. Paired before/after photos render side-by-side; "
+            "general photos in a grid; un-classified photos surface a "
+            "'classify later' affordance.\n\n"
+            "Schema choices (per Phase 194 v1.0 Section A flexibility): "
+            "`work_order_id NOT NULL` + `issue_id` nullable. Mechanic "
+            "can photograph WO-overall (intake baseline / insurance "
+            "documentation) OR photograph specific issue. UX classifies; "
+            "data model accommodates.\n\n"
+            "Pairing model (per Section D): `role` enum {before, after, "
+            "general, undecided} + `pair_id` self-FK. `undecided` is the "
+            "fast-path 'decide later' affordance from the capture-time "
+            "4-button picker. `pair_id` ON DELETE SET NULL: deleting one "
+            "side of a pair leaves the other standalone (less destructive "
+            "than CASCADE).\n\n"
+            "Substrate-anticipates-feature (per Section C): "
+            "`analysis_state TEXT NULL` + `analysis_findings TEXT (JSON) "
+            "NULL` columns ship from this migration even though Phase "
+            "194 never writes them. Phase 194B's AI analysis pipeline "
+            "fills them. Mirrors Phase 191's videos table preparing for "
+            "191B.\n\n"
+            "Source provenance forward-look (per Section's source-"
+            "agnostic UI commitment): `source TEXT NULL` for future "
+            "phases (196 OBD-triggered, 195 voice-narrated) to populate "
+            "without schema migration. Phase 194 leaves NULL.\n\n"
+            "Image-pipeline normalization (Section K): backend decodes "
+            "HEIC → JPEG, normalizes EXIF orientation upright, resizes "
+            "to 2048px long-edge, JPEG quality 85. `width` + `height` "
+            "stored as the post-normalization pixel dimensions (not "
+            "raw camera output) so consumers don't need to re-read "
+            "the file to render layout. `file_size_bytes` is the "
+            "post-normalization JPEG byte count.\n\n"
+            "FK posture: ON DELETE CASCADE for work_order_id (deleting "
+            "a WO removes its photos), ON DELETE SET NULL for issue_id "
+            "(deleting an issue keeps the photo at WO scope), ON DELETE "
+            "SET DEFAULT for uploaded_by_user_id (preserves the photo "
+            "if the uploader is removed; default is sentinel)."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS work_order_photos (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                issue_id INTEGER,
+                role TEXT NOT NULL DEFAULT 'general'
+                    CHECK (role IN ('before', 'after', 'general', 'undecided')),
+                pair_id INTEGER,
+                file_path TEXT NOT NULL,
+                file_size_bytes INTEGER NOT NULL,
+                width INTEGER NOT NULL,
+                height INTEGER NOT NULL,
+                sha256 TEXT NOT NULL,
+                captured_at TEXT NOT NULL,
+                uploaded_by_user_id INTEGER NOT NULL,
+                analysis_state TEXT,
+                analysis_findings TEXT,
+                source TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                deleted_at TEXT,
+                FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE SET NULL,
+                FOREIGN KEY (pair_id) REFERENCES work_order_photos(id) ON DELETE SET NULL,
+                FOREIGN KEY (uploaded_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE INDEX IF NOT EXISTS idx_wo_photos_wo
+                ON work_order_photos(work_order_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_wo_photos_issue
+                ON work_order_photos(issue_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_wo_photos_pair
+                ON work_order_photos(pair_id);
+            CREATE INDEX IF NOT EXISTS idx_wo_photos_sha256
+                ON work_order_photos(sha256);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_wo_photos_sha256;
+            DROP INDEX IF EXISTS idx_wo_photos_pair;
+            DROP INDEX IF EXISTS idx_wo_photos_issue;
+            DROP INDEX IF EXISTS idx_wo_photos_wo;
+            DROP TABLE IF EXISTS work_order_photos;
+        """,
+    ),
 ]
 
 
