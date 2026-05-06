@@ -1,12 +1,43 @@
 # Phase 193 — Shop Dashboard (mobile, consumer-side)
 
-**Version:** 1.0 (plan) | **Tier:** Standard | **Date:** 2026-05-06
+**Version:** 1.0 (plan) + 1.0.1 (Step-0 surfacing: URL-prefix correction) | **Tier:** Standard | **Date:** 2026-05-06
+
+## Plan v1.0.1 — URL-prefix correction (singular `/v1/shop/`, not plural `/v1/shops/`)
+
+This amendment lands BEFORE Mobile Commit 1 begins. Every Commit 1 hook references the URL prefix; plan-doc drift between v1.0 and the Commit 1 implementation would create "which is canonical?" friction for anyone reviewing Commit 1 against plan-of-record.
+
+### Surfacing source
+
+Phase 193 Commit 0's Step 0 audit (`93af90e`, 2026-05-06 03:48). The grep on `triage / priority_scorer / sort` in `src/motodiag/api/routes/` surfaced (a) the missing triage HTTP exposure (handled in Commit 0) and (b) a bonus discovery of the URL-prefix typo:
+
+```python
+# src/motodiag/api/routes/shop_mgmt.py:66
+router = APIRouter(prefix="/shop", tags=["shop-management"])
+```
+
+Plan v1.0 Goal section + Logic section + multiple inline references all cited `/v1/shops/{shop_id}/...` (plural). Actual prefix is **singular** `/v1/shop/{shop_id}/...`. Phase 180's existing `test_phase180_shop_api.py` consistently uses `/v1/shop/...` (singular), and Phase 193 Commit 0's `test_phase193_commit0_sort_param.py` follows the same singular convention.
+
+### Why this amendment lands NOW (not bundled at finalize)
+
+The bundle-amendments-at-finalize discipline applies to corrections that aren't load-bearing for downstream commits. This correction IS load-bearing:
+
+- Mobile Commit 1's hooks (`useShops` / `useWorkOrders` / `useWorkOrder` / `useShopMembers`) all hit URLs that the openapi-fetch client resolves via `api-types.ts`. After Commit 1's OpenAPI regen, the typed paths will be singular (matching the running app's actual routes).
+- A reviewer comparing Commit 1's hook URL targets against plan v1.0 would find apparent drift (plan says `/v1/shops/`, code says `/v1/shop/`) and have to dig to learn the plan was wrong, not the code.
+- Mid-flight surface corrections that affect downstream commits ship as their own amendment — same posture as Phase 191D's v1.0.1 corrections that surfaced during execution. Cheaper to land the one-line correction now than create plan-vs-code reading friction across all of Commit 1's review surface.
+
+### What changes in plan v1.0 prose
+
+All occurrences of `/v1/shops/` → `/v1/shop/`. Inline corrections applied below in the "Goal" + "Logic" + "Outputs" sections of the original v1.0 prose. Documented here at the v1.0.1 amendment for the audit-trail-preservation discipline; the inline corrections in the v1.0 sections below are NOT silent rewrites.
+
+**No other v1.0.1 scope changes** — this amendment is purely the URL-prefix correction. Phase 193's architectural commitments (uniform display, source-agnostic UI; data-driven `WorkOrderSection` discriminated union; tier-reactive `ShopTab`; etc.) all hold unchanged.
+
+---
 
 ## Goal
 
 Ship the **shop-tier mechanic's primary mobile surface**: a 4th bottom-tab `ShopTab` that surfaces the existing Phase 161/162/164/180 backend substrate (work orders + issues + triage queue + RBAC) as native UI. Mechanics get a viewable, sortable, lightly-mutable list of work orders with detail screens for state transitions + reassignment.
 
-Consumer-side phase. **Backend untouched** (Phase 180 already shipped 25 endpoints under `/v1/shops/{shop_id}/*`). Mobile-side is greenfield: no shop screens exist, no shop hooks exist, only typed routes via openapi-typescript codegen.
+Consumer-side phase. **Backend untouched** in default scope (Phase 180 already shipped 25 endpoints under `/v1/shop/{shop_id}/*` — singular per plan v1.0.1 amendment correction; Phase 193 Commit 0 `93af90e` extended `GET /work-orders` with the sort param). Mobile-side is greenfield: no shop screens exist, no shop hooks exist, only typed routes via openapi-typescript codegen.
 
 CLI: no new CLI surface (mobile-only feature).
 
@@ -44,7 +75,7 @@ Audit ran 2026-05-06 BEFORE plan v1.0 was written. Greps across `src/motodiag/` 
 - `src/motodiag/shop/priority_scorer.py` (539 LoC, Phase 163): AI-driven priority override.
 - `src/motodiag/shop/bay_scheduler.py` (779 LoC, Phase 165): bay assignment + scheduling. NOT in 193 scope.
 - `src/motodiag/shop/analytics.py` (644 LoC, Phase 167): snapshot/revenue/top-issues. NOT in 193 scope.
-- `src/motodiag/api/routes/shop_mgmt.py` (804 LoC, Phase 180): 25 HTTP endpoints under `/v1/shops/{shop_id}/*` covering profile/members/customers/intakes/work-orders/issues/invoices/notifications/analytics. **All required routes for 193 already exist**.
+- `src/motodiag/api/routes/shop_mgmt.py` (804 LoC, Phase 180; extended at Phase 193 Commit 0): 25 HTTP endpoints under `/v1/shop/{shop_id}/*` (singular — corrected at v1.0.1; `APIRouter(prefix="/shop")` per `shop_mgmt.py:66`) covering profile/members/customers/intakes/work-orders/issues/invoices/notifications/analytics. Phase 193 Commit 0 added `sort` query param to `GET /work-orders` per Section C's `Newest/Priority/Triage` toggle. **All required routes for 193 now exist**.
 
 **Mobile substrate**: greenfield. `src/api-types.ts` has the 25 endpoints typed via openapi-typescript codegen (122 hits). Zero shop screens, zero shop hooks. Three false-positive matches in `NewSessionScreen.tsx` / `Button.tsx` / `ApiKeyModal.tsx` (the word "shop" appears in tier names + "shop-glove touch target" comments — not actual shop UI).
 
@@ -62,10 +93,10 @@ Audit ran 2026-05-06 BEFORE plan v1.0 was written. Greps across `src/motodiag/` 
    - `classifyShopAccessError({apiError, response, thrown, shopId?})` reads HTTP status from openapi-fetch response + body shape from apiError. Mirrors Phase 190 + 192B pattern.
 
 2. **Hooks** under `src/hooks/`:
-   - `useShops()` — calls `GET /v1/shops/profile/list` (existing endpoint). Returns shop-membership list for the picker.
-   - `useWorkOrders(shopId, sortBy)` — calls `GET /v1/shops/{shop_id}/work-orders`. `sortBy: 'newest' | 'priority' | 'triage'`. The triage variant fetches from a separate endpoint OR uses client-side sort over the WO list with the priority field; will pin in Q&A-follow-up at Builder dispatch.
-   - `useWorkOrder(shopId, woId)` — calls `GET /v1/shops/{shop_id}/work-orders/{wo_id}`.
-   - `useShopMembers(shopId)` — calls `GET /v1/shops/{shop_id}/members`. Used by the assignment picker.
+   - `useShops()` — calls `GET /v1/shop/profile/list` (existing endpoint). Returns shop-membership list for the picker.
+   - `useWorkOrders(shopId, sortBy)` — calls `GET /v1/shop/{shop_id}/work-orders?sort={sortBy}`. `sortBy: 'newest' | 'priority' | 'triage'`. Pinned at Phase 193 Commit 0 (`93af90e`) — single endpoint with query-param dispatch (NOT separate route) per Section C's "three lenses on one mental model" framing. Backend strips triage rank/score from the response; mobile gets a uniform `{items, total}` shape regardless of sort.
+   - `useWorkOrder(shopId, woId)` — calls `GET /v1/shop/{shop_id}/work-orders/{wo_id}`.
+   - `useShopMembers(shopId)` — calls `GET /v1/shop/{shop_id}/members`. Used by the assignment picker.
    - All hooks return `{data, error: ShopAccessError | null, isLoading, refetch}` shape. Typed-error-at-hook-boundary commitment per Section J.
 
 3. **Nav scaffolding**:
@@ -173,7 +204,7 @@ Audit ran 2026-05-06 BEFORE plan v1.0 was written. Greps across `src/motodiag/` 
 ## Risks
 
 - **Tier-reactive nav implementation friction**: `RootNavigator`'s tab-list re-render on tier change requires reading tier state reactively. Existing `ApiKeyProvider` may or may not surface tier; verify at Commit 1 build time. Mitigation: if tier state isn't reactive today, file mini-F-ticket + implement minimal reactive subscription (likely 1–2 hours of work absorbed into Commit 1 scope).
-- **Triage-sort backend surface unclear**: backend `triage_queue.py` exposes `build_triage_queue()` Python function but the corresponding HTTP endpoint may not exist in Phase 180's surface. Mitigation: verify at Commit 1 build time. If endpoint doesn't exist, two options: (a) client-side sort over the WO list using priority field (lossy approximation of triage); (b) add `GET /v1/shops/{shop_id}/triage` backend endpoint as a small additive Commit 0 (matches the substrate-then-feature discipline). Lean (b) if endpoint genuinely missing.
+- **Triage-sort backend surface unclear** (RESOLVED at Commit 0): backend `triage_queue.py` exposed `build_triage_queue()` Python function but no HTTP route called it. Step 0 audit at Commit 1 dispatch confirmed the gap. Resolved at Commit 0 (`93af90e`) via single-endpoint-with-query-param: `sort=triage` on existing `GET /v1/shop/{shop_id}/work-orders` calls `build_triage_queue` and unwraps `TriageItem` to plain WO dicts. Response shape uniform across all sort modes (option (b) of plan v1.0 considered + rejected — single-endpoint design maps cleaner to Section C's "three lenses on one mental model").
 - **Member workload counts**: per Section E refinement, picker should show workload counts. Backend `useShopMembers` payload shape unverified. Mitigation: F-ticket if absent (F36) + ship without column for 193.
 - **`AsyncStorage` not yet wired**: mobile codebase may or may not have `AsyncStorage` set up. Mitigation: verify at Commit 2 build time; install `@react-native-async-storage/async-storage` if needed, with 5-min compat audit per F33-style discipline.
 - **Multi-shop deep-link handling**: if user has shop A active but receives a deep-link to a shop B WO, mid-session shop-switch must work without breaking nav state. Mitigation: handle in `useFocusEffect` of `WorkOrderListScreen` — if active shop differs from URL-param shop, prompt user to switch.
