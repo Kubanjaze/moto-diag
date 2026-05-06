@@ -64,3 +64,47 @@ Phase 195 opens as the **substrate half** of a substrate-then-feature pair (195 
 10. Audio normalization library availability — `pydub` (already requires ffmpeg, Phase 191B dep) is cleanest; pure-Python fallback exists; document as Backend Commit 0 deviation if neither path works.
 
 **Next step**: create `phase-195-voice-input` branch on both repos, push plan v1.0 (this commit), then begin Backend Commit 0 (migration v42 + voice_transcripts/extracted_symptoms tables + repos + audio_pipeline + transcripts route + 60-day audio_sweep substrate + tests).
+
+---
+
+### 2026-05-06 13:05 — Backend Commit 0 build complete
+
+Backend sliver landed in commit `2657a5b` (14 files: 5 modified + 9 created). Mobile Commits 1, 2 pending.
+
+**What shipped:**
+
+- **Migration 042** (`src/motodiag/core/migrations.py`): two new tables — `voice_transcripts` (25 cols incl. 4 substrate-anticipates-feature columns for 195B Whisper + `source TEXT NULL` forward-invest narrow + `audio_deleted_at` distinct from `deleted_at`) and `extracted_symptoms` (14 cols, relational shape — Phase 178's `diagnostic_sessions.symptoms` stays JSON-list per Section 6 + F38 NEW). 7 indexes total. SCHEMA_VERSION 41 → 42.
+- **Audio pipeline** (`src/motodiag/media/audio_pipeline.py`, NEW, ~150 LoC): `inspect_audio()` pure function that detects WAV / M4A / Ogg via magic-byte header + parses WAV duration via stdlib `wave` module. **Risk #10 deviation acknowledged in code + commit**: pydub + ffmpeg NOT installed in dev env, and Phase 195 doesn't actually consume normalized audio (keyword extraction reads `preview_text`; audio file endpoint pass-through). Phase 195 stores bytes verbatim; true 16 kHz PCM normalization deferred to 195B (where Whisper requires it). Typed errors `UnsupportedAudioFormatError` (415) + `AudioDecodeError` (422).
+- **Repos** (`src/motodiag/shop/transcript_repo.py` + `extracted_symptom_repo.py`, NEW, ~280 LoC + ~150 LoC): mirror video_repo / wo_photo_repo shape. CRUD + quota helpers + `update_extraction_state` (stamps `extracted_at` when transitioning into 'extracted') + `confirm_extracted_symptom` (flips `extraction_method` to 'manual_edit' iff text or linked_symptom_id changes; preserves 'keyword' on confirmation-only). `_month_start_iso` uses SQLite-compatible space-separator (matches the 2026-05-01 boundary-bug fix).
+- **Keyword extraction** (`src/motodiag/media/transcript_extraction.py`, NEW, ~110 LoC): `split_into_phrases()` regex-based phrase parser + `extract_symptoms_from_transcript()` wrapping `engine/symptoms.categorize_symptoms`. **Backend Commit 0 deviation from plan v1.0 Section 2**: dropped 0.5 threshold-gating step. Keep ALL keyword matches as rows; throwing away a single legitimate match for signal-to-noise reasons loses information. Threshold UI hint can be computed at render-time from match count vs phrase count without storing a per-transcript score column. Documented in module docstring.
+- **Audio sweep** (`src/motodiag/media/audio_sweep.py` + `src/motodiag/cli/transcripts.py`, NEW): `prune_old_audio(now, retention_days=60, db_path)` walks transcripts older than retention; unlinks audio file; stamps `audio_deleted_at`. Idempotent. Per-row try/except so one bad row doesn't abort. Risk #8 cost-monitoring: every prune logs at INFO. Risk #9 sweep-correctness: exact-threshold cases tested (61-day pruned, 6-day preserved, missing-file no-op, idempotent second call). CLI: `motodiag transcripts sweep [--retention-days N] [--dry-run]`.
+- **Route** (`src/motodiag/api/routes/transcripts.py`, NEW, ~430 LoC): 6 endpoints under `/v1/shop/{shop_id}/work-orders/{wo_id}/transcripts` — POST (upload+detect+keyword-extract+201), GET (list), GET /{id}, PATCH /{id}/extracted-symptoms/{eid} (mechanic confirm/edit), DELETE /{id} (204 idempotent), GET /{id}/audio (returns 410 Gone when `audio_deleted_at` set by sweep). All endpoints layer `require_shop_access` on `require_tier('shop')`. Quotas: per-WO 30, monthly shop=200/company=unlimited.
+- **Errors mapping** (`src/motodiag/api/errors.py`): 4 new mappings — `VoiceTranscriptOwnershipError` (404), `VoiceTranscriptQuotaExceededError` (402), `UnsupportedAudioFormatError` (415), `AudioDecodeError` (422).
+- **App wiring** (`src/motodiag/api/app.py`): `transcripts_router` mounted under `/v1` after `photos_router`.
+- **CLI wiring** (`src/motodiag/cli/main.py`): `register_transcripts(cli)` adds the `transcripts` subgroup.
+- **Tests** (`tests/test_phase195_commit0_voice_transcripts.py`, ~700 LoC): 45 tests across 11 classes covering migration shape, audio pipeline, transcript extraction, repos, sweep correctness, route happy path, auth boundary, quotas, format errors, PATCH confirm flow, 410 after sweep. All 45 pass in 36s.
+
+**F9-discipline:** `tests/test_phase195_commit0_voice_transcripts.py:176` uses `assert SCHEMA_VERSION >= 42  # f9-noqa: ssot-pin contract-pin` — same opt-out posture as Phase 194's contract-pin. F9 lint clean.
+
+**Versions:**
+- `src/motodiag/core/database.py`: `SCHEMA_VERSION` 41 → 42
+- `pyproject.toml`: 0.4.0 → 0.5.0 (minor bump — feature addition, 3 new modules + new route + new CLI subgroup; NO new backend dep in 195. Phase 195B will add `openai>=1.0` for Whisper).
+
+**Verification:**
+- 45/45 Phase 195 Commit 0 tests pass (36s)
+- 98/98 adjacent regression green (Phase 191B videos + 192 migrations + 193 assign + 194 photos)
+- F9 SSOT lint clean
+- All 6 transcripts routes registered + 4 voice/audio error mappings registered
+- `motodiag transcripts sweep --help` works
+
+**F-tickets:**
+- **F37 watching during execution**: 4 new enums in 195 (`language` ISO 639-1+region, `preview_engine`, `extraction_state`, `extraction_method`). **NO instance #3 surfaced**. All enums match plan v1.0 verbatim; backend↔mobile contract will validate during Mobile Commit 1.
+- **F38 NEW filed at plan-write**: unify symptom storage across `diagnostic_sessions.symptoms` (JSON list, Phase 178) + `voice_transcripts.extracted_symptoms` (relational, Phase 195) + future OBD-captured symptoms (Phase 196). Promotion trigger documented.
+
+**Backend Commit 0 deviations from plan v1.0:**
+1. **Risk #10 triggered**: pydub + ffmpeg NOT installed; audio pipeline reduced to format-detection + metadata extraction. Phase 195 stores bytes verbatim. True 16 kHz PCM normalization deferred to 195B. Documented in `audio_pipeline.py` module docstring + this log entry.
+2. **Section 2 threshold-gating dropped**: keep ALL keyword matches as rows rather than gating below a 0.5 score. Reasoning in `transcript_extraction.py` docstring.
+
+Both deviations are within the trust-but-verify discipline — surface as planned-deviation rather than silent drift.
+
+**Next step**: Mobile Commit 1 — `useMicrophonePermissions` factor-out from `useCameraPermissions` + `audioStorageCache` (mirroring `photoStorageCache`) + `audioCaptureMachine` 4-state reducer + `VoiceCaptureScreen` (button-tap-to-start-and-stop + on-device STT preview parallel with raw audio capture) + `useWorkOrderTranscripts` hook + `WorkOrderTranscriptsSection` discriminated-union variant addition (**Section E load-bearing test #2**) + types + builder + section card extension + tests. Then Mobile Commit 2 (entry button + `TranscriptReviewScreen` + nav + 8-step smoke gate + finalize).
