@@ -1,6 +1,70 @@
 # Phase 192B — Diagnostic Report PDF Export + Share Sheet (feature)
 
-**Version:** 1.0 (plan) | **Tier:** Standard | **Date:** 2026-05-05
+**Version:** 1.0 (plan) + 1.1 (final: as-built Results + Verification Checklist marked + Deviations) | **Tier:** Standard | **Date:** 2026-05-06
+
+## Plan v1.1 — Final: as-built Results + Verification Checklist marked
+
+Phase 192B closed at Mobile Commit 3 finalize on 2026-05-06. The feature half of the substrate-then-feature pair (Phase 192 viewer / Phase 192B PDF + Share Sheet) shipped across 4 commits with one architectural-blocker fix-cycle (Commit 1.5 F34 deterministic rendering) caught BEFORE mobile Commit 2 started.
+
+### Results
+
+| Metric | Value |
+|--------|-------|
+| Total commits | 4 (1 backend Commit 1 + 1 backend Commit 1.5 + 2 mobile + 1 finalize across both repos) |
+| Backend tests added | 34 (16 preset_filter + 3 deterministic_pdf_render + 15 post_pdf_route — 0 xfailed after Commit 1.5) |
+| Backend pyproject | 0.3.2 → 0.3.4 (Commit 1 + Commit 1.5 each minor patch) |
+| Mobile tests added | 72 (16 pdfDownloadErrors + 18 shareTempCleanup + 12 usePdfDownload + 11 useReportShare + 16 reportShareErrorCopy minus 1 from useReportShare refactor consolidation = 72 net new) |
+| Mobile suite at finalize | 435/435 across 31 suites (363 → 435, +72 across the phase) |
+| Mobile package | 0.1.2 → 0.1.4 (Commit 2 + Commit 3 each minor patch) |
+| F-tickets touched | F28 + F29 reaffirmed; F30 status updated; F33 validated on first use; F34 closed at Commit 1.5 |
+| Plan amendments | 1 (v1.0 → v1.1; F33 audit caught substrate state at plan time so no v1.0.1 reshape needed) |
+
+**Key finding**: F33's "existing-code overlap audit BEFORE plan" step earned its keep on first use. The audit (greps for `pdf|PDF`, `preset|hidden|visibility`, `Share|UIActivityView|ACTION_SEND`) caught Phase 182's existing `/v1/reports/session/{id}/pdf` route + Phase 192 Commit 1's renderer extension, so plan v1.0 was honestly framed as extension/orchestration from the start. No v1.0.1 reshape amendment needed (compare: Phase 192 needed one). Process refinement validated; F33 promoted from candidate to standing CLAUDE.md addition is the natural next step.
+
+**Secondary finding**: opt-in `deterministic` mode preserved revision-tracking callers' contract while letting share-flow callers depend on byte-stable bytes. Single-line-fix world (reportlab 4.4.10's `BaseDocTemplate(invariant=True)` propagation) made the architectural correction cheap to ship — total Commit 1.5 surface was 6 files, +233/-93. The opt-in shape (rather than always-on) is the load-bearing API design choice; it scales to future callers without re-litigating the determinism question.
+
+**Tertiary finding**: pre-dispatch 5-min compat audits work. The `react-native-share@12.3.1` audit caught open issue #1683 (Android null-Uri error from Aug 2025) BEFORE installing the dep. Defensive URI validation + a dedicated test pinning the guard fires were added at Commit 2 build time, not as a fix-cycle after a smoke-gate failure. Same discipline that's load-bearing for substrate-decision audits applies to dependency-install audits.
+
+### Verification Checklist (final)
+
+- [x] Backend `compose_story_for_preset` (or equivalent — `_is_section_hidden` + filter at composer return point) filters sections per preset + overrides; matches mobile `isSectionHidden` semantics exactly.
+- [x] Backend `POST /v1/reports/session/{id}/pdf` accepts `PdfRenderRequest` body, returns 200 with `application/pdf` bytes, returns 404 for cross-owner (F29 ADR), returns 422 when preset absent.
+- [x] Backend GET sibling unchanged at handler level (summary line tweaked only).
+- [x] Backend deterministic-rendering pytest: passes with `deterministic=True` (Commit 1.5 fix); default-mode preserved as non-deterministic for revision-tracking callers.
+- [x] Mobile `react-native-share@12.3.1` installed + 5-min compat check completed (#1683 mitigated via defensive URI guard).
+- [x] Mobile `usePdfDownload(sessionId, preset?)` writes PDF to `<tmp>/motodiag-shares/session-{N}-{ts}-{rand}.pdf`, returns file URI.
+- [x] Mobile `useReportShare()` accepts `share(filePath)` at call-time (Commit 3 refactor for ergonomics) → orchestrates `Share.open` → unlinks on success only (dismiss + error paths leave file for sweep per Commit 3 refinement).
+- [x] Mobile `cleanupOldShares(now)` runs on cold-start via App.tsx useEffect + nukes files > 24hr old in `<tmp>/motodiag-shares/`. Strict greater-than threshold pinned in tests.
+- [x] Mobile `ReportViewerScreen` "Share PDF" button placed in `headerStrip` adjacent to `SectionToggle` (NOT nav-bar overflow) per the user's mental-model reminder.
+- [x] Mobile button respects current screen-state preset (WYSIWYG mobile/PDF symmetry).
+- [x] Mobile error handling: `PdfDownloadError` discriminated union → `shareErrorCopy()` helper → Alert with retryable + non-retryable variants. 5 error kinds covered (not_found / unauthorized / server / network / unknown).
+- [x] Mobile error copy: voice/tone consistent with Phase 192's cross-cutting placeholder pass (informative > apologetic, action-oriented when recovery exists, terminology-consistent — "API key" / "Home" / "session" canonical).
+- [x] OpenAPI types regenerated to pick up POST route.
+- [x] Smoke gate Step 8 verifications (per pre-dispatch reminder): unit-tested via `useReportShare` per-share-unlink-only-on-success tests + `cleanupOldShares` boundary tests. Architect smoke-gate against real device deferred per Phase 192's plan v1.0.1 Section G (visual smoke = pre-Phase 192B prerequisite that 192B itself satisfies).
+- [x] Smoke gate Step 9 verifications (deterministic byte-compare): unit-tested via `test_phase192b_deterministic_pdf_render`. End-to-end mobile-flow byte-compare deferred to architect smoke-gate when device available.
+- [x] All doc + package version bumps recorded.
+- [x] Backend phase docs moved in_progress/ → completed/.
+- [x] Backend ROADMAP marked ✅; mobile ROADMAP marked ✅; both Phase History rows updated.
+- [x] FOLLOWUPS reflects audit-trail of architectural decisions: F28 reaffirmed (deferred to next phase), F29 reaffirmed (deferred), F30 status updated (deferred to dedicated observability phase), F33 validated on first use (promote-to-CLAUDE.md candidate), F34 closed at Commit 1.5 with full resolution path.
+
+### Risks (final — resolution notes)
+
+- **Reportlab non-deterministic rendering** (predicted in plan v1.0): did materialize. F34 filed at Commit 1 with concrete reproduction (first diff at byte index ~2310 in trailer `/ID` block). Resolved at Commit 1.5 via opt-in `deterministic=True` parameter (single-line `SimpleDocTemplate(invariant=True)` fix). 3 previously-xfailed tests un-xfailed clean.
+- **`react-native-share` version drift against RN 0.85** (predicted): did NOT materialize. 5-min compat audit on `12.3.1` (released yesterday) confirmed zero open RN 0.85 / iOS 17 / Android 14 / scoped-storage issues. Stale Aug 2025 issue #1683 (Android null-Uri) mitigated proactively via defensive URI validation in `useReportShare` + dedicated test.
+- **Temp-file accumulation on non-happy-path exits** (predicted): handled per design. Per-share unlink covers happy path; 24hr startup sweep covers all non-happy-path exits including the deliberate Commit 3 refinement to NOT unlink on dismiss/error (lets user retry via Files-app surface without re-downloading).
+- **POST /pdf RESTful awkwardness** (predicted): accepted as design trade-off. POST that returns binary stream is documented in OpenAPI; pinned in route tests.
+- **Preset semantic drift backend-vs-mobile** (predicted): two-source design accepted (backend Python + mobile TS). Mitigation: `test_phase192b_preset_filter` includes constants pin + matrix coverage so backend-side regression catches drift early; mobile side has its own preset-filter tests. F35 candidate (SSOT preset rules harmonization) deferred — not load-bearing for 192B.
+- **F33 audit applied at plan-write time**: prevented v1.0.1 reshape entirely (compare: Phase 192's reshape after substrate-state mismatch surfaced post-plan). First validated use of the F33 process refinement.
+
+### Deviations from Plan
+
+- **Commit 1.5 added as a substrate-blocker fix** between backend Commit 1 and mobile Commit 2: F34 deterministic-rendering fix landed as its own atomic commit before mobile work continued. Plan v1.0 anticipated this as a possible follow-up commit; it became necessary on Commit 1's first test run. Step-zero source audit (5-min reportlab grep) confirmed single-line-fix world before the fix was written.
+- **`useReportShare` API refactor** between Commit 2 and Commit 3: hook signature changed from `useReportShare(filePath)` (URI bound at hook init) to `useReportShare()` returning `share(filePath)` (URI passed at call time). Better ergonomics for the dynamic download → share composition flow. Tests updated accordingly. Composition-not-internal-call shape preserved (`useReportShare` still doesn't call `usePdfDownload`).
+- **Per-share unlink semantics refined**: Commit 2 unlinked on ALL outcomes (success + dismiss + error); Commit 3 narrowed to unlink on SUCCESS only. Dismiss + error paths leave file for the 24hr startup sweep — some share targets present cancellation UX that user perception treats as "not done yet", and unlinking on dismiss prevents quick retry. Pinned in `useReportShare` tests.
+- **`overrides` API surface NOT exposed in 192B route** despite being accepted by the composer: per plan Section D decision (β) "ship preset-only in 192B; build_session_report_doc accepts overrides parameter for forward-compat but the POST schema doesn't yet". Designed minimal-but-extensible for F28 follow-up.
+- **No screen-render tests for `ReportViewerScreen`** despite the new Share PDF button: matches the existing codebase convention (Phase 192 Commit 3 also skipped screen-render tests; pure-logic helpers extracted instead). Error-copy register tested at the `reportShareErrorCopy` module level; share-flow orchestration tested via the underlying `usePdfDownload` + `useReportShare` hook tests. Architect smoke-gate covers UI integration.
+
+---
 
 ## Goal
 
