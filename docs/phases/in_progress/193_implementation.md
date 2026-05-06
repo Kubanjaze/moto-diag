@@ -1,6 +1,52 @@
 # Phase 193 — Shop Dashboard (mobile, consumer-side)
 
-**Version:** 1.0 (plan) + 1.0.1 (Step-0 surfacing: URL-prefix correction) | **Tier:** Standard | **Date:** 2026-05-06
+**Version:** 1.0 (plan) + 1.0.1 (Step-0 surfacing: URL-prefix correction) + 1.0.2 (Commit-0.5 surfacing: assign endpoint gap + RBAC role-name correction) | **Tier:** Standard | **Date:** 2026-05-06
+
+## Plan v1.0.2 — Commit-0.5 surfacing: assign endpoint gap + RBAC role-name correction
+
+This amendment lands BEFORE Mobile Commit 2 begins, mirroring the v1.0.1 timing decision: surface corrections that affect downstream commits ship as their own amendment.
+
+### Surfacing source
+
+Phase 193 Commit 0.5 build cycle (2026-05-06). Two architectural assumptions in plan v1.0 + Commit 1 surfaced as wrong when the assign-endpoint test fixtures hit the real backend:
+
+**(A) No assign HTTP endpoint existed.** Plan v1.0 Section E + Commit 1's `useShopMembers` hook assumed a reassign endpoint existed for the MemberPickerModal flow. Audit found `assign_mechanic()` + `unassign_mechanic()` repo functions in `src/motodiag/shop/work_order_repo.py:516+538` (Phase 161) but ZERO HTTP route called them. Same Step-0 pattern as Commit 0's triage HTTP gap. Resolved at Commit 0.5: new `POST /v1/shop/{shop_id}/work-orders/{wo_id}/assign` endpoint with `WorkOrderAssignRequest{mechanic_user_id: int | None}` body. Same auth posture as transition endpoint (basic membership check). RBAC tightening (manager/owner-only reassign of others' WOs) deferred as F-ticket candidate.
+
+**(B) RBAC role enum was wrong.** Plan v1.0 Section E + Commit 1's `useShopMembers.ts` declared `ShopMember.role` as `'owner' | 'manager' | 'mechanic' | 'apprentice' | 'viewer'`. **Backend's actual role enum is `('owner', 'tech', 'service_writer', 'apprentice')`** per `src/motodiag/shop/rbac.py:111` `_validate_role`. Test fixture `add_shop_member(role="mechanic")` raised `InvalidRoleError`. Mobile-side hook's typed role union must mirror the real enum or TypeScript narrowing breaks for any consumer that switches on role.
+
+### Why the Commit 1 audit didn't catch (B)
+
+Commit 1's audit greps were on functionality keywords (`dashboard / work_order / triage / assign`) not on role names. Role enum was an architectural assumption from plan v1.0's mental model of "shop UI → mechanics get assigned" — the word "mechanic" is intuitive for the role but doesn't match backend's actual choice of "tech" + "service_writer" + "apprentice". F33's process refinement caught the structural overlaps; this miss is a per-symbol grep that was never run.
+
+**F-ticket candidate (F37)**: extend the F33 audit step to include enum-value verification when the plan references specific enum names. Trigger: third instance where plan v1.0's enum-naming assumption mismatches backend reality (Phase 191B's analysis_state name was a near-miss; Phase 193's role enum is data point 1 explicitly catching a mismatch). Defer filing until a third instance surfaces.
+
+### What changes
+
+**(B)** is the load-bearing correction for downstream Commit 2:
+- `src/hooks/useShopMembers.ts` `ShopMember.role` updated to backend enum `'owner' | 'tech' | 'service_writer' | 'apprentice'`. Comment block expanded with the role-mapping rationale ("tech + apprentice are mechanic-eligible for assignment picker's default filter; owner + service_writer are admin-eligible"). Existing `useShopMembers` tests' fixtures updated `mechanic` → `tech`, `manager` → `service_writer`.
+- Plan v1.0 Section E's "RBAC-aware filtering" still holds — just with the corrected role names. Commit 2's `MemberPickerModal` default filter targets `tech | apprentice`; "show all" affordance unchanged.
+
+**(A)** is fully resolved at Commit 0.5 — the new assign endpoint + 10 tests land in commit `<TBD>`. Mobile Commit 2 consumes it via `useTransitionWorkOrder` (transitions) + `useReassignWorkOrder` (assignment). No further plan changes for (A).
+
+### Backward compatibility
+
+- No mobile-API contract change: `useShopMembers` was Commit 1's only consumer; the hook isn't exported beyond the package + Commit 1 didn't export `ShopMember.role` outside the hook file. Type narrowing for `role` works as soon as `useShopMembers.ts` is updated; no other call sites need updating.
+- 8 existing `useShopMembers` tests' fixtures updated alongside the role enum change. No assertion changes.
+
+### Architectural commitments unchanged
+
+- Tier-reactive `ShopTab` (Section A)
+- Read + light mutation scope (Section B locked transitions: `start | resume | pause | complete`)
+- Sort toggle on WO list (Section C)
+- Sticky session shop picker (Section D)
+- Member-picker default filter (Section E — semantics preserved, role names corrected)
+- Pull + focus refresh (Section F)
+- Source-agnostic UI (Section G)
+- 5-kind `ShopAccessError` (Section H)
+- 10 architect-smoke steps (Section I)
+- 3-commit cadence (Section J — plus Commit 0 + 0.5 backend additives)
+
+---
 
 ## Plan v1.0.1 — URL-prefix correction (singular `/v1/shop/`, not plural `/v1/shops/`)
 

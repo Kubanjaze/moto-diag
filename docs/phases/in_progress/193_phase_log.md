@@ -125,3 +125,34 @@ Three logical paragraphs per pre-dispatch commit-message-structure.
 **Mobile package.json**: 0.1.4 → 0.1.5.
 
 **Next step**: commit + push Mobile Commit 1. Then begin Mobile Commit 2 (screens).
+
+---
+
+### 2026-05-06 04:42 — Commit 0.5 + plan v1.0.2 (Step-0 pattern fired again)
+
+Mobile Commit 2's first step (verify reassign endpoint surface BEFORE writing the MemberPickerModal hook) surfaced two more substrate gaps:
+
+**(A) No `/assign` HTTP endpoint existed.** `assign_mechanic()` + `unassign_mechanic()` repo functions in `work_order_repo.py:516+538` (Phase 161) had ZERO HTTP route calling them. Same Step-0 pattern as Commit 0's triage HTTP gap.
+
+**(B) RBAC role enum was wrong in plan v1.0 + Commit 1.** Plan v1.0 Section E + `useShopMembers.ts` declared roles as `'owner' | 'manager' | 'mechanic' | 'apprentice' | 'viewer'`. Backend's actual enum is `('owner', 'tech', 'service_writer', 'apprentice')` per `rbac.py:111`. Surfaced when test fixture's `add_shop_member(role="mechanic")` raised `InvalidRoleError`.
+
+**Why Commit 1's F33 audit didn't catch (B)**: audit greps were on functionality keywords (`dashboard / work_order / triage / assign`), not enum-value verification. F37 candidate filed (extend F33 to include enum-name checks when plan references specific values; trigger = third instance).
+
+**Commit 0.5 backend addition**:
+- `POST /v1/shop/{shop_id}/work-orders/{wo_id}/assign` endpoint added.
+- `WorkOrderAssignRequest{mechanic_user_id: int | None}` Pydantic body model. `null` (explicit) unassigns; required field (omitting → 422).
+- Same auth posture as transition endpoint (`require_shop_access` basic membership check). Cross-shop WOs return 404. RBAC tightening deferred.
+- Imports: `assign_mechanic` + `unassign_mechanic` from `motodiag.shop`.
+- Tests: `tests/test_phase193_commit0_5_assign_endpoint.py` — 10 tests across 3 classes (happy: assign / reassign / unassign-via-null; validation: omitting required field 422; auth: 401 unauth + 402 individual-tier + 403 non-member + 404 cross-shop + 404 nonexistent-WO).
+- 10/10 tests pass. 41/41 in regression sample (Commit 0 9 + Commit 0.5 10 + Phase 180 22).
+
+**Plan v1.0.2 amendment** (lands BEFORE Mobile Commit 2 begins, mirroring v1.0.1 timing): documents both surfacings + the RBAC role-correction propagation to `useShopMembers.ts`. Backward compatibility: `ShopMember.role` was Commit 1-only; type-narrowing fix is local to the hook + 8 test fixtures.
+
+**Mobile-side correction** (rides Commit 0.5 commit since it's tightly coupled):
+- `src/hooks/useShopMembers.ts` `ShopMember.role` enum updated `'owner' | 'manager' | 'mechanic' | 'apprentice' | 'viewer'` → `'owner' | 'tech' | 'service_writer' | 'apprentice'`.
+- `__tests__/hooks/useShopMembers.test.ts` fixtures `mechanic` → `tech`, `manager` → `service_writer`.
+- Mobile suite re-verified post-correction.
+
+**pyproject.toml**: 0.3.5 → 0.3.6.
+
+**Next step** (resumed after the Commit 0.5 detour): regen mobile OpenAPI types to pick up the new `/assign` endpoint, then begin Mobile Commit 2 (screens + activeShop service + AsyncStorage install + mutation hooks).
