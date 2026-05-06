@@ -95,3 +95,33 @@ Per Kerwyn's pre-dispatch instruction ("Step 0 (literal first step, before any i
 - 54/54 in cross-phase regression sample (`test_phase180_shop_api.py` 49 tests + `test_phase164_triage_queue.py` 5 tests). Zero ripple from the route extension.
 
 **Next step**: commit + push Commit 0. Then regenerate mobile OpenAPI types from the running app (per Phase 192B Commit 1 precedent), and resume Mobile Commit 1 (hooks + typed errors + nav scaffolding) against the new sort-aware substrate.
+
+---
+
+### 2026-05-06 04:14 — Mobile Commit 1 build complete
+
+Three logical paragraphs per pre-dispatch commit-message-structure.
+
+**Hooks + typed-error union (data layer)**. Five new hooks all return `{data, error: ShopAccessError | null, isLoading, refetch}` shape per Section J's typed-error-at-hook-boundary commitment:
+- `useTier()` — fetches `/v1/billing/subscription`. Reactive across (1) mount, (2) apiKey changes (Context-driven via `useApiKey()`), (3) AppState 'active' transitions (covers external-Stripe-portal-upgrade path), (4) explicit `refetch()` for caller-driven re-fetch. Narrows `string | null` from api-types to `SubscriptionTier` union (`anonymous | individual | shop | company`). `hasShopAccess()` predicate exported for `RootNavigator` + future shop-scope-gating screens. 402 + 404 from billing endpoint resolve to `'individual'` baseline (free-tier user with no Stripe sub on file) rather than surfacing as error.
+- `useShops()` — fetches `/v1/shop/profile/list`. Returns `ShopMembership[]`. Powers `ShopPickerScreen` (Commit 2) + auto-skip-when-single-membership behavior.
+- `useWorkOrders(shopId, options)` — fetches `/v1/shop/{shop_id}/work-orders?sort={sortBy}&status={filter}&limit={N}`. Single endpoint, query-param dispatch (Section C lock). Phase 193 Commit 0's `sort` param consumed via the `sortBy` option.
+- `useWorkOrder(shopId, woId)` — fetches `/v1/shop/{shop_id}/work-orders/{wo_id}`. Powers `WorkOrderDetailScreen` (Commit 2).
+- `useShopMembers(shopId)` — fetches `/v1/shop/{shop_id}/members`. Powers `MemberPickerModal` (Commit 2). Pure helper `formatMemberName()` exported for picker-row rendering: prefers `display_name` → `username` → `User #{user_id}`.
+
+**ShopAccessError + copy helper (error semantics)**. `src/hooks/shopAccessErrors.ts` ships the discriminated union with 5 kinds (per plan v1.0 Section H): `unauthorized` (401) / `subscription_required` (402, generic-informational copy per subscription-audit precedent — NO upgrade-action affordance until upgrade flow ships) / `not_member` (403, with `shopId` preserved for screen copy) / `network` (transport failure) / `unknown` (5xx + other 4xx). `classifyShopAccessError()` mirrors Phase 190 + 192B classification logic. `src/screens/shopAccessErrorCopy.ts` ships `shopAccessErrorCopy()` mapping each kind to `{title, message, retryable}` triples. Copy register voice/tone: informative > apologetic, action-oriented when recovery exists, terminology-consistent ("API key" / "Home" / "shop" / "member"). Commit 2's screens consume the helper for Alert + inline-error surfaces.
+
+**ShopTab nav scaffolding + tier-reactivity (nav layer)**. `RootTabParamList.ShopTab` added to `src/navigation/types.ts`. `ShopStackParamList` introduced with three routes (`ShopPicker` modal / `WorkOrderList` / `WorkOrderDetail` with `shopId + woId` params). `src/navigation/ShopStack.tsx` ships the stack scaffold + a placeholder root screen ("Shop dashboard — Phase 193 Commit 2 lands work orders, triage, and reassign here") so Step 10 of architect-gate can verify tab visibility WITHOUT waiting for Commit 2's screens. `RootNavigator` reads `useTier()` reactively + conditionally renders `ShopTab` via `hasShopAccess(tier)`. Free-tier user upgrading mid-session → AppState 'active' on app foreground → `useTier` refetches → tier flips → `RootNavigator` re-renders → `ShopTab` appears. Smoke-gate Step 10 verifies the no-restart property.
+
+**Verification**:
+- 73 new tests across 7 test files (16 typed-error + 16 copy register + 8 useShops + 8 useWorkOrders + 4 useWorkOrder + 8 useShopMembers + formatMemberName + 13 useTier + hasShopAccess).
+- 508/508 mobile suite green across 38 suites (435 → 508, +73 across this commit).
+- TypeScript: `tsc --noEmit` clean.
+- ESLint: 6 new `no-void` warnings (parity-preserved with `useSession.ts:67` / `useReport.ts:81` / `useSessionVideos.ts` / etc.). Zero errors.
+- OpenAPI types regenerated. Diff bounded to Commit 0's `sort` param surface (api-schema/openapi.json +24 lines, src/api-types.ts +17/-1). Spot-check confirmed zero unrelated drift.
+
+**Section E Builder-flag (workload counts)**: `useShopMembers` accepts `active_wo_count` field on `ShopMember` shape but doesn't yet verify backend exposes it. Will verify at Commit 2 build time when MemberPickerModal renders the picker rows; if absent, F36 ticket fires + ship without the workload column for 193.
+
+**Mobile package.json**: 0.1.4 → 0.1.5.
+
+**Next step**: commit + push Mobile Commit 1. Then begin Mobile Commit 2 (screens).
