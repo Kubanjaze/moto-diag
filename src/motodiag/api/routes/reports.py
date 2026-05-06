@@ -1,4 +1,4 @@
-"""PDF report endpoints (Phase 182).
+"""PDF report endpoints (Phase 182, extended Phase 192B).
 
 Six endpoints across three report kinds, each with a JSON preview
 and a PDF download variant:
@@ -10,6 +10,14 @@ and a PDF download variant:
 JSON-preview endpoints return the normalized ``ReportDocument``
 dict. PDF endpoints stream ``application/pdf`` bytes with a
 ``Content-Disposition: attachment; filename=...`` header.
+
+Phase 192B adds a sibling **POST** ``/v1/reports/session/{id}/pdf``
+route for preset-filtered session PDFs (Customer hides Notes;
+Insurance + Full hide nothing). The existing GET sibling stays
+unchanged and continues to render the full document. The POST
+body's ``preset`` field is required (FastAPI 422 if absent); the
+``overrides`` field is reserved for future per-card UI (F28) and
+not yet exposed in this phase.
 
 Auth / scoping:
 
@@ -23,9 +31,10 @@ Auth / scoping:
 from __future__ import annotations
 
 import logging
-from typing import Any
+from typing import Any, Literal, Optional
 
 from fastapi import APIRouter, Depends, Response
+from pydantic import BaseModel, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user, require_tier
@@ -59,6 +68,35 @@ def _pdf_response(doc: dict, filename: str) -> Response:
 
 
 # ---------------------------------------------------------------------------
+# Phase 192B request models
+# ---------------------------------------------------------------------------
+
+
+class PdfRenderRequest(BaseModel):
+    """Body for POST ``/v1/reports/session/{id}/pdf`` (Phase 192B).
+
+    ``preset`` is required (FastAPI returns 422 if absent); the
+    sibling GET route is kept for the unfiltered "full PDF" case.
+    ``overrides`` is reserved for the future per-card-toggle UI
+    (filed as F28 in mobile FOLLOWUPS) — accepted by the composer
+    but NOT yet exposed by this route. Adding it to the schema now
+    would build unused API surface; it'll land alongside the
+    matching mobile UI when F28 ships.
+    """
+
+    preset: Literal["full", "customer", "insurance"] = Field(
+        ...,
+        description=(
+            "Section-visibility preset. 'customer' hides "
+            "diagnostic-internal sections (currently 'Notes'); "
+            "'insurance' + 'full' hide nothing. Mirrors the "
+            "mobile-side preset semantics in "
+            "src/screens/reportPresets.ts exactly."
+        ),
+    )
+
+
+# ---------------------------------------------------------------------------
 # Session reports (owner-only)
 # ---------------------------------------------------------------------------
 
@@ -79,7 +117,7 @@ def get_session_report(
 
 @router.get(
     "/session/{session_id}/pdf",
-    summary="Download a diagnostic session report (PDF)",
+    summary="Download a diagnostic session report (PDF, full)",
     response_class=Response,
 )
 def get_session_report_pdf(
@@ -89,6 +127,31 @@ def get_session_report_pdf(
 ) -> Response:
     doc = build_session_report_doc(
         session_id, user.id, db_path=db_path,
+    )
+    return _pdf_response(doc, f"session-{session_id}.pdf")
+
+
+@router.post(
+    "/session/{session_id}/pdf",
+    summary="Download a diagnostic session report (PDF, preset-filtered)",
+    response_class=Response,
+)
+def post_session_report_pdf(
+    session_id: int,
+    body: PdfRenderRequest,
+    user: AuthedUser = Depends(get_current_user),
+    db_path: str = Depends(get_db_path),
+) -> Response:
+    """Phase 192B: preset-filtered session PDF.
+
+    Same auth posture as the GET sibling (owner-only with 404 for
+    cross-owner). The composer applies the section-visibility
+    filter BEFORE handing the document to the PDF renderer, so PDF
+    output is exactly what the in-app viewer shows under the same
+    preset (WYSIWYG mobile/PDF symmetry).
+    """
+    doc = build_session_report_doc(
+        session_id, user.id, db_path=db_path, preset=body.preset,
     )
     return _pdf_response(doc, f"session-{session_id}.pdf")
 

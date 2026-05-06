@@ -50,3 +50,42 @@ Phase 192B opens as the **feature half** of the substrate-then-feature pair star
 5. Preset semantic drift backend-vs-mobile — F35 candidate (SSOT preset rules harmonization) deferred for now.
 
 **Next step**: create `phase-192B-pdf-export-share-sheet` branch on both repos, push plan v1.0 (this commit), then begin Backend Commit 1.
+
+---
+
+### 2026-05-05 23:48 — Backend Commit 1 build complete
+
+Three logical changes per plan v1.0 + commit-discipline reminder:
+
+**Change 1: Composer extension** — `src/motodiag/reporting/builders.py`:
+- New `ReportPreset = Literal["full", "customer", "insurance"]` type alias.
+- New private constants `_CUSTOMER_HIDDEN_HEADINGS = ("Notes",)`, `_INSURANCE_HIDDEN_HEADINGS = ()`, `_FULL_HIDDEN_HEADINGS = ()` mirroring mobile `src/screens/reportPresets.ts` semantics exactly.
+- New private helpers `_preset_hidden_headings(preset)` + `_is_section_hidden(heading, preset, overrides)` with explicit-override-beats-preset semantics. `preset=None` returns False for all headings (back-compat with Phase 182 GET path).
+- `build_session_report_doc()` signature extended with `*, preset=None, overrides=None` keyword-only params. Filter applied AFTER all sections built so omit-when-empty logic for individual variants stays independent of visibility filter. Preserves section order.
+- Stale Phase 191B comment about missing `analyzing_started_at` column refreshed to reflect Phase 192 Commit 1's migration 040 (Architect-side cosmetic flag from Phase 192 Commit 1's phase log resolved inline since this file is being edited anyway).
+
+**Change 2: New POST route** — `src/motodiag/api/routes/reports.py`:
+- New `PdfRenderRequest` Pydantic model with required `preset: Literal["full", "customer", "insurance"]` field. `overrides` field NOT included this phase (F28 surfaces it when per-card UI ships); Pydantic default `extra='ignore'` means clients passing it get a 200 silently — pinned in tests as the F28-evolution baseline.
+- New `POST /v1/reports/session/{session_id}/pdf` route accepting `PdfRenderRequest` body. Same auth posture as GET sibling (owner-only with 404 cross-owner per F29 ADR). Streams `application/pdf` via existing `_pdf_response` helper.
+- Existing `GET /v1/reports/session/{session_id}/pdf` UNCHANGED — summary line tweaked to clarify it's the "full" PDF path, but route handler body identical.
+- Module docstring updated to call out Phase 192B's POST extension + the F28 deferral rationale.
+
+**Change 3: Regression-guard test (deterministic-rendering pytest)** — `tests/test_phase192b_deterministic_pdf_render.py`:
+- 3 tests covering: same-renderer determinism, fresh-renderer determinism, content-sensitivity sanity check.
+- Failed on first run as plan v1.0 risks anticipated. F34 filed in mobile FOLLOWUPS with concrete reproduction (CreationDate / ModDate / trailer-/ID embedding non-determinism; first diff at byte index ~2310).
+- 2 of 3 marked `@pytest.mark.xfail(strict=True)` pending F34 fix; sanity-check test (different titles → different bytes) NOT marked xfail since content-sensitivity is independent of time-sensitivity. Sister downstream consumer test in `test_phase192b_post_pdf_route::test_get_pdf_still_returns_full_document` also marked xfail (depends on byte-equality between GET and POST(preset='full')).
+- Per pre-dispatch discipline: Commit 1 ships with xfailed tests + filed F-ticket; F34 fix lands in Commit 1.5 as own atomic commit BEFORE mobile Commit 2 starts (share-flow byte-compare smoke gate depends on deterministic bytes).
+
+**Test files added** (3, 34 tests total):
+- `tests/test_phase192b_preset_filter.py` (16 tests across 3 classes — preset constants pin + `_is_section_hidden` resolution semantics + end-to-end composer integration)
+- `tests/test_phase192b_deterministic_pdf_render.py` (3 tests: 2 xfailed pending F34, 1 sanity-check passes)
+- `tests/test_phase192b_post_pdf_route.py` (15 tests across 4 classes — happy path + validation + auth + GET-sibling regression guard with 1 xfailed pending F34)
+
+**Verification**:
+- 31 passed + 3 xfailed across the 3 new test files.
+- 47 passed in cross-phase regression sample (Phase 182 reports + Phase 192 videos extension + Phase 192 route extension) — ZERO ripple from composer change.
+- Pyproject 0.3.2 → 0.3.3 (additive feature minor patch).
+
+**F34 disposition**: filed in mobile FOLLOWUPS with concrete reproduction + 3-path scope estimate (`SimpleDocTemplate(invariant=True)` preferred). Phase 192B Commit 1.5 is the recommended target — atomic fix-only commit before mobile Commit 2 starts, since share-flow correctness depends on deterministic bytes.
+
+**Next step**: commit (3-paragraph commit message per pre-dispatch discipline: composer extension / route wiring / regression-guard test) + push. Then Commit 1.5 to address F34 before pivoting to mobile Commit 2.
