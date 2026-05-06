@@ -101,3 +101,45 @@ Backend sliver landed in commit `71658ac` (10 files, 2033 insertions). Mobile Co
 - F38 candidate (ShopAccessError `quota_exceeded` distinctness) — not yet filed; awaits smoke gate signal during Mobile Commit 2.
 
 **Next step**: Mobile Commit 1 (types + builder + `WorkOrderPhotosSection` variant + `WorkOrderSectionCard` photos branch + `photoStorageCache` + `photoCaptureMachine` reducer + `PhotoCaptureScreen` + `useWorkOrderPhotos` hook + tests). Then Mobile Commit 2 (entry button on WO detail + classify-later surface + nav wiring + 8-step smoke gate + finalize).
+
+---
+
+### 2026-05-06 09:10 — Mobile Commit 1 build complete
+
+Mobile substrate landed in commit `c3c6c41` (16 files, 4267 insertions / 577 deletions). Mobile Commit 2 (entry-points + smoke gate + finalize) pending.
+
+**What shipped (mobile):**
+
+- **`src/types/workOrder.ts`**: extended `WorkOrderSection` discriminated union 5 → 6 variants (added `WorkOrderPhotosSection {photos, undecided_count}` + `WorkOrderPhoto` interface) + `isPhotosSection` type guard. F9-discipline-clean.
+- **`src/screens/buildWorkOrderSections.ts`**: 4th parameter `photos: WorkOrderPhoto[] = []` added (omit-when-empty; placed BEFORE Lifecycle in section order — UX call: "documentation media first, bookkeeping last"). Computes `undecided_count` for the sticky banner.
+- **`src/components/WorkOrderSectionCard.tsx`**: added `_renderPhotos` branch + Photos heading. Pairs render side-by-side with Before/After labels (regrouping logic via `_collectPairs`); standalones render in a wrap grid; undecided photos surface a sticky banner ("X photos waiting to be classified — tap to review"). Defensive fallback now uses an exhaustive `never` cast to encode the exhaustive-switch guarantee for future maintainers. Optional `onPhotoPress` + `onUndecidedBannerPress` callbacks (Mobile Commit 2 wires them).
+- **`src/services/photoStorageCache.ts`** (NEW): mirrors `videoStorageCache` shape (lookup / adopt / evict / cleanupOrphaned) + 7-day cold-start sweep `cleanupOldPhotos(now)` per Section F refinement. Canonical path `${DocumentDirectoryPath}/photos/p-{photoId}.jpg`. Lazy hydrate from RNFS.readDir on first lookup.
+- **`src/screens/photoCaptureMachine.ts`** (NEW): pure reducer — 4-state machine per Section G (idle | previewing | uploading | uploaded | upload-failed). Simpler than videos' 5-state; no recording state because takePhoto is single-shot. Classification preserved across `uploading → upload-failed → uploading` retry (Phase 191B Q2 pattern).
+- **`src/screens/PhotoCaptureScreen.tsx`** (NEW): wires reducer to vision-camera `<Camera>` + `Camera.takePhoto({flash:'off'})` + 4-button capture-time classification affordance (Before/After/General/Decide later → backend `role='undecided'`). Hooks declared above the permission early-returns per `react-hooks/rules-of-hooks` (lint enforcement). On `uploaded` → `useEffect` → `navigation.goBack()`.
+- **`src/hooks/useWorkOrderPhotos.ts`** (NEW): backend-backed CRUD hook — surface mirrors `useSessionVideos` `{photos, isLoading, error, refresh, addPhoto, repair, deletePhoto, atCap}`. Multipart POST to `/v1/shop/{id}/work-orders/{id}/photos` with FormData (RN-style `{uri, name, type}` file field; Phase 191B `file://` prefix workaround reused). PATCH for re-classification surface; DELETE evicts cache. Typed errors via `ShopAccessError` 5-kind union (Section H reuse). Exports `PER_WO_PHOTO_COUNT_CAP=30` and `PER_ISSUE_PHOTO_COUNT_CAP=10` per F9 SSOT discipline.
+- **`src/navigation/types.ts`**: `ShopStackParamList += {PhotoCapture, ClassifyPhotos}` routes with typed params `{shopId, woId, issueId?, pairId?}`.
+- **`api-schema/openapi.json`** + **`src/api-types.ts`**: regenerated against the running backend (Backend Commit 0's photos route at `/v1/shop/{shop_id}/work-orders/{wo_id}/photos[/{photo_id}[/file]]`). `useWorkOrderPhotos` calls `api.GET/POST/PATCH/DELETE` fully typed end-to-end.
+
+**Tests (5 new + 2 extended, 76 net new test cases, all 620 mobile tests pass in 5.4s):**
+- `__tests__/screens/photoCaptureMachine.test.ts` (NEW, ~20 tests): initial state + every valid transition + 4 classification roles + classification-preservation across uploading → failed → retry + invalid-event-from-wrong-state no-ops via parameterized `it.each`.
+- `__tests__/services/photoStorageCache.test.ts` (NEW, ~13 tests): adopt move + cross-volume copy fallback + lookup + evict idempotency + cleanupOrphaned (live-set + empty-set) + Section F `cleanupOldPhotos` with 7-day boundary (older unlinked, newer preserved, threshold export).
+- `__tests__/screens/buildWorkOrderSections.test.ts` (extended +6): photos variant — omit-when-empty, presence-when-populated, before-lifecycle order, verbatim photo array, undecided_count math.
+- `__tests__/types/workOrder.test.ts` (extended +3): `isPhotosSection` type guard + discriminated-union narrowing exercise covers all 6 variants.
+- `__tests__/components/WorkOrderSectionCard.smoke.test.tsx` (extended +3 + 1 fix): photos variant heading test, undecided banner test, empty-state copy test. Existing future-variant test updated to use `voice_transcripts` (Phase 195 anticipation) since `photos` is now a real variant. RNFS `jest.mock()` added at module level so the photoStorageCache transitive import resolves cleanly under babel-jest.
+
+**Verification:**
+- 620/620 mobile Jest tests pass (47 suites, 5.4s) — no regressions across Phase 191B/192/193 suites.
+- TypeScript: `tsc --noEmit` clean.
+- ESLint: 0 errors (2 errors fixed at lint time: `react-hooks/rules-of-hooks` violations in PhotoCaptureScreen — both `useCallback` hooks moved ABOVE permission early-returns).
+- F9 SSOT lint clean.
+
+**F-tickets during execution:**
+- F37 watching: backend `role` enum vs mobile typed union — verified end-to-end via the typed-tests; no instance #3 surfaced. Stays filed-and-watching for future phases.
+- F38 candidate (`quota_exceeded` distinctness in ShopAccessError) — not promoted; awaits Mobile Commit 2 smoke gate signal.
+
+**Versions (mobile):**
+- `package.json`: 0.1.7 → 0.2.0 (minor bump — feature addition; 5 new files + 6 modified)
+
+**Section E load-bearing test verdict: PASSED.** Phase 193's forward-look commitment held up under the first variant addition. The discriminated-union extension required NO deformation of photo data into text-row shape — F9-discipline preserved. The builder's signature widened (4th param) cleanly; the renderer's exhaustive switch added one branch + one heading case + a `never`-cast defensive fallback. No plan v1.1 amendment needed. Forward-look architecture verified by the first variant addition.
+
+**Next step**: Mobile Commit 2 — entry button "Take photo" on `WorkOrderDetailScreen` (in the issues section + a per-WO action card) + classify-later surface (modal walking undecided photos one-at-a-time + pair picker for after-photos) + nav wiring (registering `PhotoCaptureScreen` + `ClassifyPhotosScreen` in `ShopStack`) + 8-step smoke gate (Section J) + finalize.
