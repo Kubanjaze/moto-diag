@@ -58,3 +58,40 @@ Phase 193 opens as **mobile-only consumer-side build** on top of existing Phase 
 6. `WorkOrderSection` future-variant lock-in risk (mitigated by documented forward-look)
 
 **Next step**: push plan v1.0 commit on both repos. Then begin Mobile Commit 1 (hooks + typed errors + nav scaffolding).
+
+---
+
+### 2026-05-06 03:48 — Step 0 (literal first step of Mobile Commit 1) surfaced missing triage HTTP exposure → Commit 0 dispatched
+
+Per Kerwyn's pre-dispatch instruction ("Step 0 (literal first step, before any implementation): verify triage-sort backend endpoint exists. ... If no triage HTTP exposure exists at all: halt Commit 1, dispatch tiny Commit 0 backend addition first").
+
+**5-min grep on triage / priority_scorer / sort in src/motodiag/api/routes/**:
+- `GET /v1/shop/{shop_id}/work-orders` accepts `status` + `limit` only. NO `sort` param. NO `?sort=triage` surface.
+- `triage_queue.py` module's `build_triage_queue()` function exists (Phase 164, 416 LoC) but is NEVER called from any HTTP route.
+- Zero triage HTTP exposure across the entire shop_mgmt route file.
+
+**Verdict**: third branch of the user's pre-dispatch decision tree. Halt Commit 1. Dispatch tiny Commit 0 backend addition first. Resume Commit 1 against the new substrate.
+
+**Bonus discovery**: plan v1.0 incorrectly cited the URL prefix as `/v1/shops/...` (plural). Actual prefix is `/v1/shop/...` (singular — `APIRouter(prefix="/shop")` at `shop_mgmt.py:66`). To be corrected at finalize.
+
+**Commit 0 design**:
+- Add `sort: Literal["newest", "priority", "triage"] | None = None` query param to existing `GET /v1/shop/{shop_id}/work-orders`.
+- `None` (omitted) or `"priority"` → existing behavior (priority ASC, created_at DESC) — backward compatible.
+- `"newest"` → re-sort by `created_at DESC, id DESC` in route handler (`list_work_orders` result re-sorted in Python; no `list_work_orders` repo function changes).
+- `"triage"` → call `build_triage_queue(shop_id, db_path)` and unwrap each `TriageItem` to its plain `work_order` dict. Triage rank/score/parts_ready stay server-side this phase per F35 candidate (mobile explainability deferred). Honor `status` filter post-triage. Honor `limit` post-triage.
+- Response shape `{items, total}` UNIFORM across all sort modes (clients get plain WO dicts regardless of sort — no polymorphic shape).
+
+**Why this design** (over the alternative dedicated `GET /v1/shop/{shop_id}/triage` route):
+- Plan v1.0 Section C locked `Sort toggle Newest/Priority/Triage` as the UX shape — three lenses on one mental model. Single-endpoint-with-query-param maps directly. Two-endpoint-swap-hooks would require the mobile UI to swap hook calls when the toggle changes, breaking the "one list, three lenses" abstraction.
+- F35 (triage explainability) is the natural follow-up that exposes rank/score; that's its own phase, not 193's concern. Stripping the rich `TriageItem` shape this phase keeps the wire surface minimal — what F35 wants is additive (new fields + maybe a separate detail endpoint), not a redesign.
+
+**Code changes** (3 files):
+- `src/motodiag/api/routes/shop_mgmt.py`: `build_triage_queue` import + extended `list_work_orders_endpoint` with `sort` query param + dispatch logic. ~50 LoC.
+- `tests/test_phase193_commit0_sort_param.py`: NEW. 9 tests across 5 classes — backward-compat regression (omit sort = priority default), explicit priority matches default, newest re-sorts by created_at DESC, response shape uniform across sort modes, triage unwraps to plain WO dicts (rank/score absent), triage excludes terminal states, invalid sort = 422, sort + status filter compose correctly.
+- `pyproject.toml`: 0.3.4 → 0.3.5 (additive feature minor patch).
+
+**Verification**:
+- 9/9 new tests pass.
+- 54/54 in cross-phase regression sample (`test_phase180_shop_api.py` 49 tests + `test_phase164_triage_queue.py` 5 tests). Zero ripple from the route extension.
+
+**Next step**: commit + push Commit 0. Then regenerate mobile OpenAPI types from the running app (per Phase 192B Commit 1 precedent), and resume Mobile Commit 1 (hooks + typed errors + nav scaffolding) against the new sort-aware substrate.

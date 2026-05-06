@@ -26,6 +26,7 @@ from motodiag.auth.deps import (
 )
 from motodiag.shop import (
     add_shop_member,
+    build_triage_queue,
     create_intake,
     create_issue,
     create_shop,
@@ -489,13 +490,59 @@ def list_work_orders_endpoint(
     shop_id: int,
     status: Optional[str] = None,
     limit: int = Query(50, ge=1, le=500),
+    sort: Optional[Literal["newest", "priority", "triage"]] = Query(
+        None,
+        description=(
+            "Order: 'newest' (created_at DESC), 'priority' (priority "
+            "ASC then created_at DESC — same as omitting), or "
+            "'triage' (build_triage_queue scoring; rich score / rank / "
+            "parts-ready context computed server-side, response shape "
+            "stays uniform — see Phase 193 plan v1.0 + F35 candidate)."
+        ),
+    ),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
 ) -> dict:
+    """List shop work orders with optional sort dispatch.
+
+    Phase 193 Commit 0: ``sort`` query param added for the mobile
+    Shop Dashboard's `Newest / Priority / Triage` toggle. Default
+    behavior preserved (omitting `sort` matches existing
+    `list_work_orders` ordering — backward compatible).
+
+    Triage sort calls :func:`build_triage_queue` server-side and
+    unwraps each :class:`TriageItem` to its plain ``work_order``
+    dict — clients get a uniform response shape regardless of sort.
+    Triage rank / score / parts-ready context stay server-side this
+    phase; explainability surface is filed as F35 (mobile FOLLOWUPS).
+    """
     require_shop_access(shop_id, user, db_path)
-    rows = list_work_orders(
-        shop_id=shop_id, status=status, limit=limit, db_path=db_path,
-    )
+    if sort == "triage":
+        items = build_triage_queue(shop_id=shop_id, db_path=db_path)
+        # Unwrap to plain WO dicts in triage-rank order.
+        rows = [item.work_order for item in items]
+        # Honor `status` filter post-triage so the UI's status filter
+        # still applies. build_triage_queue's include_terminal default
+        # already excludes completed/cancelled.
+        if status is not None:
+            rows = [r for r in rows if r.get("status") == status]
+        # Honor `limit` post-triage.
+        if limit and limit > 0:
+            rows = rows[:limit]
+    else:
+        rows = list_work_orders(
+            shop_id=shop_id, status=status, limit=limit, db_path=db_path,
+        )
+        if sort == "newest":
+            # Re-sort the priority-default ordering by created_at DESC.
+            # Stable secondary by id DESC matches list_work_orders'
+            # tiebreaker pattern.
+            rows = sorted(
+                rows,
+                key=lambda r: (r.get("created_at") or "", r.get("id") or 0),
+                reverse=True,
+            )
+        # sort == "priority" or sort is None → existing ordering.
     return {"items": rows, "total": len(rows)}
 
 
