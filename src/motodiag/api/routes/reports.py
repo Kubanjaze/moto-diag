@@ -55,8 +55,18 @@ router = APIRouter(prefix="/reports", tags=["reports"])
 # ---------------------------------------------------------------------------
 
 
-def _pdf_response(doc: dict, filename: str) -> Response:
-    renderer = get_renderer("pdf")
+def _pdf_response(
+    doc: dict, filename: str, *, deterministic: bool = False,
+) -> Response:
+    """Render ``doc`` as a PDF response with the given filename.
+
+    Phase 192B Commit 1.5 added the ``deterministic`` opt-in. POST
+    routes (preset-filtered share-flow callers) pass ``True`` so
+    two shares of the same session+preset hash identically.
+    Existing GET routes keep the default ``False`` to preserve
+    revision-tracking semantics.
+    """
+    renderer = get_renderer("pdf", deterministic=deterministic)
     body = renderer.render(doc)
     return Response(
         content=body,
@@ -153,7 +163,9 @@ def post_session_report_pdf(
     doc = build_session_report_doc(
         session_id, user.id, db_path=db_path, preset=body.preset,
     )
-    return _pdf_response(doc, f"session-{session_id}.pdf")
+    return _pdf_response(
+        doc, f"session-{session_id}.pdf", deterministic=True,
+    )
 
 
 # ---------------------------------------------------------------------------

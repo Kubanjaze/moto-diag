@@ -233,18 +233,37 @@ class TextReportRenderer(ReportRenderer):
 
 
 class PdfReportRenderer(ReportRenderer):
-    """reportlab Platypus-based PDF renderer."""
+    """reportlab Platypus-based PDF renderer.
+
+    Phase 192B Commit 1.5: opt-in ``deterministic`` mode disables
+    reportlab's default non-deterministic metadata embedding
+    (``CreationDate`` / ``ModDate`` wall-clock timestamps + random
+    trailer ``/ID``). Required for share-flow correctness — two
+    shares of the same session+preset must hash identically so
+    recipients' deduplication / tampering-detection systems don't
+    flag legitimate re-shares as tampering. Default ``False``
+    preserves reportlab's spec-compliant default for revision-
+    tracking callers (where unique ``/ID`` per render is the spec's
+    intent).
+
+    When ``deterministic=True``, ``SimpleDocTemplate(invariant=True)``
+    propagates through to ``Canvas(invariant=True)`` →
+    ``PDFDocument(invariant=True)`` which zeroes the wall-clock
+    timestamps + seeds the trailer ``/ID`` deterministically (via
+    ``rl_config.invariant`` global toggle's per-document override).
+    """
 
     content_type = "application/pdf"
     file_extension = "pdf"
 
-    def __init__(self) -> None:
+    def __init__(self, *, deterministic: bool = False) -> None:
         if not PDF_AVAILABLE:
             raise RuntimeError(
                 "reportlab is not installed — PdfReportRenderer is "
                 "unavailable. Install reportlab or use "
                 "TextReportRenderer."
             )
+        self._deterministic = deterministic
         styles = getSampleStyleSheet()
         self._title_style = styles["Title"]
         self._heading_style = ParagraphStyle(
@@ -281,6 +300,17 @@ class PdfReportRenderer(ReportRenderer):
             title=str(doc.get("title") or "Report"),
             leftMargin=18 * mm, rightMargin=18 * mm,
             topMargin=18 * mm, bottomMargin=18 * mm,
+            # Phase 192B Commit 1.5 — opt-in deterministic rendering
+            # for share-flow callers. ``invariant=True`` propagates
+            # through BaseDocTemplate's _initArgs dict (line ~494
+            # in reportlab 4.4.10's doctemplate.py) → Canvas's
+            # invariant param (line ~280 in canvas.py) → PDFDocument
+            # (line ~118 in pdfdoc.py), which zeroes the
+            # CreationDate/ModDate wall-clock timestamps + seeds
+            # the trailer /ID deterministically. Default False
+            # preserves the spec-compliant non-deterministic
+            # default for revision-tracking callers.
+            invariant=self._deterministic,
         )
         story: list = []
         story.append(Paragraph(
@@ -482,15 +512,22 @@ def _grid_table(columns, rows):
 # ---------------------------------------------------------------------------
 
 
-def get_renderer(kind: str) -> ReportRenderer:
+def get_renderer(
+    kind: str, *, deterministic: bool = False,
+) -> ReportRenderer:
     """Pick a renderer by short name.
 
     - ``"pdf"`` → :class:`PdfReportRenderer`. Raises ``RuntimeError``
-      if reportlab isn't installed.
+      if reportlab isn't installed. Phase 192B Commit 1.5 added
+      the ``deterministic`` opt-in for share-flow callers; default
+      ``False`` preserves the historical (spec-compliant non-
+      deterministic) behavior.
     - ``"text"`` → :class:`TextReportRenderer`. Always works.
+      ``deterministic`` is silently ignored (text renderer is
+      already deterministic by construction).
     """
     if kind == "pdf":
-        return PdfReportRenderer()
+        return PdfReportRenderer(deterministic=deterministic)
     if kind == "text":
         return TextReportRenderer()
     raise ValueError(

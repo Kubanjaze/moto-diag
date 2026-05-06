@@ -115,103 +115,130 @@ def _sample_doc(title: str = "Diagnostic session report #42") -> dict:
 
 
 # ---------------------------------------------------------------------------
-# F34 xfail marker
+# F34 closed at Commit 1.5 (un-xfailed)
 # ---------------------------------------------------------------------------
 #
 # First-run finding (Phase 192B Commit 1, 2026-05-05): reportlab's
 # default render embeds non-deterministic metadata — `CreationDate`,
 # `ModDate`, and a random PDF trailer `/ID` pair. Concrete diff
-# captured at index ~2310 of a representative session render: the
-# `/ID` hex pair varies per render even for byte-identical inputs.
-# F34 filed in mobile FOLLOWUPS with reproduction.
+# captured at index ~2310 of a representative session render.
 #
-# Per Phase 192B plan v1.0 + commit-discipline: do NOT expand
-# Commit 1's scope to fix the non-determinism. The test is the
-# load-bearing addition; the fix lands as a separate atomic commit
-# (Commit 1.5 or similar) before mobile work continues — share-flow
-# correctness depends on this property, so the fix is a hard
-# prerequisite for Commit 2.
+# F34 fix landed at Commit 1.5: ``PdfReportRenderer`` gains opt-in
+# ``deterministic=True`` constructor parameter that propagates
+# ``invariant=True`` through SimpleDocTemplate → Canvas →
+# PDFDocument, zeroing the wall-clock timestamps + seeding the
+# trailer ``/ID`` deterministically. POST route (preset-filtered
+# share-flow callers) opts in; GET route preserves the default
+# non-deterministic behavior for revision-tracking callers.
 #
-# `strict=True`: when F34 fix lands and these tests start passing,
-# pytest will FAIL the suite to signal "remove this xfail marker"
-# — exactly the un-xfailing pattern Phase 191C 5b used for clean-
-# baseline gate tests.
-
-_F34_XFAIL = pytest.mark.xfail(
-    strict=True,
-    reason=(
-        "F34: reportlab embeds non-deterministic CreationDate / "
-        "ModDate / trailer-/ID by default. Fix lands in Phase 192B "
-        "Commit 1.5 (follow-up, before mobile Commit 2) — likely "
-        "via SimpleDocTemplate(invariant=True) or explicit "
-        "canvas.setCreator()/setProducer() + zeroed metadata. "
-        "When fix lands, this test un-xfails to PASS and the "
-        "marker should be removed."
-    ),
-)
+# These tests now pass ``deterministic=True`` explicitly and serve
+# as the regression guard for the new opt-in mode. The xfail
+# markers were removed at Commit 1.5 per the un-xfailing pattern
+# Phase 191C 5b established for clean-baseline gate tests.
 
 
 @pytest.mark.skipif(not PDF_AVAILABLE, reason="reportlab not installed")
 class TestDeterministicPdfRender:
-    """If any of these tests fail, file F34 with the failure message.
-    Expected fix paths (in order of preference):
-    1. ``SimpleDocTemplate(invariant=True)`` — reportlab's documented
-       deterministic-output flag (verify it exists in the installed
-       version).
-    2. Override creation timestamp via ``canvas.setProducer()`` /
-       ``canvas.setCreator()`` + zeroing the creation-date metadata.
-    3. Seed PDF trailer ID deterministically.
+    """Pin the deterministic-mode contract for share-flow callers.
+
+    Every test in this class uses ``PdfReportRenderer(deterministic=True)``
+    — the share-flow consumer's choice. Default-mode rendering
+    (``deterministic=False``, the GET-route consumer's choice) is
+    spec-compliant non-deterministic and intentionally NOT covered
+    here; ``TestDefaultModeStillNonDeterministic`` below verifies
+    the default-mode contract stays preserved.
     """
 
-    @_F34_XFAIL
     def test_same_doc_same_renderer_produces_identical_bytes(self):
-        """Two renders of the same document via the same renderer
-        instance produce byte-identical PDFs."""
-        renderer = PdfReportRenderer()
+        """Two renders of the same document via the same
+        deterministic renderer instance produce byte-identical PDFs."""
+        renderer = PdfReportRenderer(deterministic=True)
         doc = _sample_doc()
 
         bytes_a = renderer.render(doc)
         bytes_b = renderer.render(doc)
 
         assert bytes_a == bytes_b, (
-            f"PDF render is non-deterministic with same renderer "
-            f"instance. Diff at first byte: "
-            f"{_first_diff_byte(bytes_a, bytes_b)}. "
-            f"File F34 if this is the first failure."
+            f"PDF render is non-deterministic with deterministic=True "
+            f"+ same renderer instance. Diff at first byte: "
+            f"{_first_diff_byte(bytes_a, bytes_b)}."
         )
 
-    @_F34_XFAIL
     def test_same_doc_fresh_renderer_each_call_produces_identical_bytes(self):
-        """Two renders of the same document via FRESH renderer
-        instances produce byte-identical PDFs. Guards against
-        renderer-instance state mattering for output (it shouldn't)."""
+        """Two renders of the same document via FRESH deterministic
+        renderer instances produce byte-identical PDFs. Guards against
+        renderer-instance state mattering for output."""
         doc = _sample_doc()
 
-        bytes_a = PdfReportRenderer().render(doc)
-        bytes_b = PdfReportRenderer().render(doc)
+        bytes_a = PdfReportRenderer(deterministic=True).render(doc)
+        bytes_b = PdfReportRenderer(deterministic=True).render(doc)
 
         assert bytes_a == bytes_b, (
-            f"PDF render is non-deterministic across renderer "
-            f"instances. Diff at first byte: "
-            f"{_first_diff_byte(bytes_a, bytes_b)}. "
-            f"File F34 if this is the first failure."
+            f"PDF render is non-deterministic with deterministic=True "
+            f"+ across renderer instances. Diff at first byte: "
+            f"{_first_diff_byte(bytes_a, bytes_b)}."
         )
 
     def test_different_titles_produce_different_bytes(self):
-        """Sanity check: actual content differences DO produce
-        different bytes. If this fails, the determinism guarantee
-        is meaningless (renderer ignored the input change). NOT
-        marked xfail — this MUST pass even with non-determinism
-        because content-sensitivity is a separate property from
-        time-sensitivity."""
-        renderer = PdfReportRenderer()
+        """Sanity check: deterministic mode still respects content
+        differences. If this fails, the determinism contract has
+        collapsed to "always emit identical bytes" which is wrong."""
+        renderer = PdfReportRenderer(deterministic=True)
         bytes_a = renderer.render(_sample_doc(title="Report A"))
         bytes_b = renderer.render(_sample_doc(title="Report B"))
 
         assert bytes_a != bytes_b, (
-            "Renderer produced identical bytes for documents with "
-            "different titles. The determinism check is meaningless "
-            "without input-sensitivity verification."
+            "Deterministic renderer produced identical bytes for "
+            "documents with different titles. Content-sensitivity "
+            "is independent of time-sensitivity; this MUST hold "
+            "even in deterministic mode."
+        )
+
+    def test_get_renderer_factory_passes_deterministic_through(self):
+        """Pin the factory contract: ``get_renderer('pdf',
+        deterministic=True)`` returns a renderer that produces the
+        same byte-identical output as ``PdfReportRenderer(
+        deterministic=True)`` directly. Guards against the factory
+        forgetting to plumb the kwarg."""
+        from motodiag.reporting.renderers import get_renderer
+
+        doc = _sample_doc()
+        bytes_via_factory = get_renderer(
+            "pdf", deterministic=True,
+        ).render(doc)
+        bytes_via_constructor = PdfReportRenderer(
+            deterministic=True,
+        ).render(doc)
+
+        assert bytes_via_factory == bytes_via_constructor
+
+
+@pytest.mark.skipif(not PDF_AVAILABLE, reason="reportlab not installed")
+class TestDefaultModeStillNonDeterministic:
+    """Pin the contract that ``deterministic=False`` (the default)
+    preserves reportlab's spec-compliant non-deterministic
+    behavior. Revision-tracking callers (existing GET ``/pdf``
+    consumers, future audit-log consumers) rely on each render
+    producing a unique trailer ``/ID`` per the PDF spec's "assist
+    in identifying revisions" intent.
+
+    If a future change accidentally flips the default to
+    deterministic, this test catches it.
+    """
+
+    def test_default_mode_two_renders_diverge(self):
+        """Two renders via the default-mode renderer should NOT be
+        byte-identical. If they are, the default has drifted from
+        spec-compliant non-determinism."""
+        renderer = PdfReportRenderer()  # default: deterministic=False
+        doc = _sample_doc()
+        bytes_a = renderer.render(doc)
+        bytes_b = renderer.render(doc)
+        assert bytes_a != bytes_b, (
+            "Default-mode PdfReportRenderer produced byte-identical "
+            "output. If this is intentional (default flipped to "
+            "deterministic=True), update this test + audit GET "
+            "/pdf consumers for revision-tracking impact."
         )
 
 

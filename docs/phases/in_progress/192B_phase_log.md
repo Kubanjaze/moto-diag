@@ -89,3 +89,57 @@ Three logical changes per plan v1.0 + commit-discipline reminder:
 **F34 disposition**: filed in mobile FOLLOWUPS with concrete reproduction + 3-path scope estimate (`SimpleDocTemplate(invariant=True)` preferred). Phase 192B Commit 1.5 is the recommended target — atomic fix-only commit before mobile Commit 2 starts, since share-flow correctness depends on deterministic bytes.
 
 **Next step**: commit (3-paragraph commit message per pre-dispatch discipline: composer extension / route wiring / regression-guard test) + push. Then Commit 1.5 to address F34 before pivoting to mobile Commit 2.
+
+---
+
+### 2026-05-06 00:35 — Backend Commit 1.5 build complete (F34 fix, opt-in)
+
+**Step zero per pre-dispatch discipline**: 5-min source audit of reportlab 4.4.10's `/ID` generation path BEFORE writing the fix.
+
+- `python -c "import reportlab; print(reportlab.__version__)"` → `4.4.10`.
+- `inspect.signature(SimpleDocTemplate.__init__)` shows only `(self, filename, **kw)` — no direct `invariant` param.
+- Grep `invariant` across `.venv/Lib/site-packages/reportlab/` surfaced the propagation chain:
+  - `reportlab/platypus/doctemplate.py:494` — `BaseDocTemplate._initArgs` dict default `'invariant': None` (kwarg-accepted).
+  - `reportlab/platypus/doctemplate.py:994` — `_makeCanvas` passes `invariant=self.invariant` to the canvas factory.
+  - `reportlab/pdfgen/canvas.py:280` — `Canvas.__init__(filename, ..., invariant=None, ...)`.
+  - `reportlab/pdfgen/canvas.py:312` — falls back to `rl_config.invariant` if not specified.
+  - `reportlab/pdfgen/canvas.py:320` — instantiates `pdfdoc.PDFDocument(invariant=invariant)`.
+  - `reportlab/pdfbase/pdfdoc.py:118-139` — `PDFDocument` zeroes `_timeStamp` + seeds the trailer `/ID` deterministically when `invariant=True`.
+
+**Verdict: single-line-fix world.** Pass `invariant=True` to `SimpleDocTemplate` in the renderer's `render()` method. ~10 min implementation. F34 closes at this commit.
+
+**Implementation per the user's operational refinement** (opt-in, not always-on):
+
+The deterministic-PDF mode has subtle implications most callers don't want by default — `/ID` being deterministic violates the PDF spec's "assist in identifying revisions" intent for revision-tracking callers. So the fix is opt-in:
+
+- `PdfReportRenderer.__init__(*, deterministic: bool = False)` accepts the opt-in (keyword-only to avoid positional-arg confusion).
+- `render()` passes `invariant=self._deterministic` to `SimpleDocTemplate`.
+- `get_renderer("pdf", *, deterministic: bool = False)` factory plumbs the kwarg through (matches the constructor signature).
+- `_pdf_response(doc, filename, *, deterministic: bool = False)` route helper plumbs through.
+- `POST /v1/reports/session/{id}/pdf` (share-flow consumer) opts into `deterministic=True`.
+- `GET /v1/reports/session/{id}/pdf` (revision-tracking default consumer) preserves `deterministic=False` — UNCHANGED.
+
+Same minimal-but-extensible API design as F28 preset-only-now-overrides-later — future callers opt in as needed; existing callers' contract preserved.
+
+**Tests un-xfailed**:
+- `test_phase192b_deterministic_pdf_render::test_same_doc_same_renderer_produces_identical_bytes` (now uses `deterministic=True`).
+- `test_phase192b_deterministic_pdf_render::test_same_doc_fresh_renderer_each_call_produces_identical_bytes` (now uses `deterministic=True`).
+- `test_phase192b_post_pdf_route::test_get_pdf_still_returns_full_document` — original byte-equal assertion no longer applicable (GET non-deterministic + POST deterministic). Converted to byte-count similarity assertion (< 5% diff for metadata-only divergence). Same intent (semantic equivalence pin); honest implementation under split-determinism-mode reality.
+
+**New regression guards added at Commit 1.5**:
+- `test_get_renderer_factory_passes_deterministic_through` — pins the factory plumbs the kwarg correctly.
+- `TestDefaultModeStillNonDeterministic::test_default_mode_two_renders_diverge` — pins that the default opt-OUT preserves spec-compliant non-determinism. Catches future accidental default-flip.
+
+**Verification**:
+- 83 passed across 192B + Phase 182 + Phase 192 ripple sample (no xfailed tests; 5 previously-xfailed un-xfailed clean).
+- Default-mode contract preserved: `TestDefaultModeStillNonDeterministic` confirms two `PdfReportRenderer()` renders still diverge.
+- Pyproject 0.3.3 → 0.3.4.
+
+**F34 closed in mobile FOLLOWUPS** with concrete resolution path + test-coverage summary. Historical surfacing context preserved per audit-trail discipline.
+
+**Commit message shape** per the user's pre-dispatch refinement: 3 logical paragraphs.
+1. Why determinism matters for share-flow (the load-bearing trust-shaped failure surface — recipients hashing for dedup, mismatched hashes read as tampering).
+2. Implementation approach based on step-zero finding (reportlab 4.4.10 single-line-fix world via `SimpleDocTemplate(invariant=True)` propagation).
+3. Opt-in design rationale (revision-tracking callers' contract preservation; F28-style minimal-but-extensible).
+
+**Next step**: commit + push, F34 closure follow-up commit on mobile, then Mobile Commit 2 unblocked.
