@@ -1,6 +1,6 @@
 # Phase 194 — Phase Log
 
-**Status:** 🚧 In Progress | **Started:** 2026-05-06
+**Status:** ✅ Complete | **Started:** 2026-05-06 | **Completed:** 2026-05-06
 **Repo:** https://github.com/Kubanjaze/moto-diag (backend) + https://github.com/Kubanjaze/moto-diag-mobile (mobile)
 **Branch:** `phase-194-camera-photo-integration` (will be created BOTH repos at plan-push)
 
@@ -143,3 +143,42 @@ Mobile substrate landed in commit `c3c6c41` (16 files, 4267 insertions / 577 del
 **Section E load-bearing test verdict: PASSED.** Phase 193's forward-look commitment held up under the first variant addition. The discriminated-union extension required NO deformation of photo data into text-row shape — F9-discipline preserved. The builder's signature widened (4th param) cleanly; the renderer's exhaustive switch added one branch + one heading case + a `never`-cast defensive fallback. No plan v1.1 amendment needed. Forward-look architecture verified by the first variant addition.
 
 **Next step**: Mobile Commit 2 — entry button "Take photo" on `WorkOrderDetailScreen` (in the issues section + a per-WO action card) + classify-later surface (modal walking undecided photos one-at-a-time + pair picker for after-photos) + nav wiring (registering `PhotoCaptureScreen` + `ClassifyPhotosScreen` in `ShopStack`) + 8-step smoke gate (Section J) + finalize.
+
+---
+
+### 2026-05-06 10:30 — Mobile Commit 2 + finalize complete
+
+**Status: ✅ Complete | Phase 194 substrate ships.**
+
+Mobile Commit 2 landed in commit `6d55f81` (5 files, 723 insertions). Implementation.md bumped to v1.1 in this commit.
+
+**What shipped (Mobile Commit 2 — user-facing wiring):**
+
+- **`src/screens/WorkOrderDetailScreen.tsx`**: integrated `useWorkOrderPhotos` (parallel to `useWorkOrder`); passed `photos` as the 4th arg to `buildWorkOrderSections`; wired `refreshPhotos` into `useFocusEffect` so return-from-PhotoCapture updates the section list immediately; added "Take photo" entry-point card between section list and actions card; wired `onUndecidedBannerPress` callback to navigate to `ClassifyPhotos` when `section.kind === 'photos'` and `undecided_count > 0`.
+- **`src/screens/ClassifyPhotosScreen.tsx`** (NEW): classify-later surface. Walks the undecided queue one-at-a-time; 3-button affordance (Before/After/General) calls `useWorkOrderPhotos.repair` with the selected role + optional `pair_id`. Pair picker visible only when role='after' AND ≥1 before-photo exists on the same WO. Empty before-list is the well-formed empty state. Auto-back-out when `undecided_count == 0` (800ms delay shows "All clear" state).
+- **`src/navigation/ShopStack.tsx`**: registered both new screens — `PhotoCapture` with title 'Take photo', `ClassifyPhotos` with title 'Classify photos'. Header shown for both.
+- **`App.tsx`**: cold-start `photoStorageCache.cleanupOldPhotos` sweep added alongside existing `cleanupOldShares` + `clearActiveShopId` effects. 7-day threshold per Section F refinement; best-effort catch.
+- **`__tests__/screens/PhotoCapture.smoke.test.tsx`** (NEW): 8-step smoke gate per plan Section J — full state-machine round-trip, before+after pair classify-time, standalone general, undecided banner discoverability, free-tier 402, cross-shop 403, permanently-denied permission gate, and variant integration coexistence with all 5 prior variants. 11 tests, all pass.
+
+**Final verification:**
+- Backend: 44/44 Phase 194 Commit 0 tests + 14/14 Phase 192 migration 040 tests + 142/142 adjacent regression (Phase 191B/192/193) all green.
+- Mobile: 631/631 Jest tests pass (48 suites, 5.5s); +87 net from Phase 194 (76 from Mobile 1 + 11 from Mobile 2).
+- TypeScript: `tsc --noEmit` clean.
+- ESLint: 0 errors; F9 SSOT lint clean.
+
+**F-ticket dispositions at finalize:**
+- **F33 audit ran first** per CLAUDE.md Step 0 (canonical-process invocation #2 post-Phase 192B promotion). Substantial reuse confirmed across both stacks; no surprises during execution.
+- **F36 (member workload counts)**: orthogonal to 194; reaffirm deferred.
+- **F37 (extend F33 to enum-value verification)**: tracked during execution per Section I. Backend `role` enum `{before, after, general, undecided}` matched the mobile typed-union spec exactly (verified via the typed tests). **NO instance #3 surfaced.** Stays filed-and-watching for future phases.
+- **F38 candidate (ShopAccessError `quota_exceeded` distinctness)**: **NOT promoted.** Smoke gate Step 5/6 confirmed the existing 5-kind union (`subscription_required + not_member + unauthorized + network + unknown`) covers the surface UI cares about. The `quota_exceeded` case lands as `unknown` with status=402; no UI signal that distinctness is load-bearing yet. Re-evaluate at instance #2.
+
+**Section E load-bearing test final verdict: PASSED.** Phase 193's forward-look commitment held up empirically under the first variant addition. The discriminated-union extension required NO plan amendment, NO photo-data deformation into text-row shape, NO renderer architecture rewrite. The pattern transfers: future phases (195 voice_transcripts, 196 obd_snapshots) can extend the same way Phase 194 did.
+
+**Versions (final):**
+- Backend `pyproject.toml`: 0.3.6 → 0.4.0; `SCHEMA_VERSION` 40 → 41; `pillow-heif>=1.3.0` added to `[vision]` extras.
+- Mobile `package.json`: 0.1.7 → 0.2.0; no new dependency (vision-camera 4.7.3 reused from Phase 191).
+
+**Phase 194B readiness**: AI photo analysis can ship on top of `work_order_photos.analysis_state` + `analysis_findings` columns without schema migration — substrate-anticipates-feature columns already in place.
+
+**Phase 194 closes here.** Substrate + UI complete; ROADMAPs marked ✅; docs moved to `docs/phases/completed/`.
+
