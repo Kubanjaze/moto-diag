@@ -156,3 +156,54 @@ Mobile Commit 2's first step (verify reassign endpoint surface BEFORE writing th
 **pyproject.toml**: 0.3.5 → 0.3.6.
 
 **Next step** (resumed after the Commit 0.5 detour): regen mobile OpenAPI types to pick up the new `/assign` endpoint, then begin Mobile Commit 2 (screens + activeShop service + AsyncStorage install + mutation hooks).
+
+---
+
+### 2026-05-06 05:32 — Mobile Commit 2 build complete
+
+Substantial UI commit: 3 screens + 2 components + 2 mutation hooks + 1 service + 1 type module + 1 helper + AsyncStorage install + App.tsx wiring. Built atop Commit 1's hooks + Commit 0/0.5's backend substrate.
+
+**5-min compat audit on `@react-native-async-storage/async-storage`** (per F33-style discipline for new dep installs): latest `3.0.2` (released 2026-03-26). Zero RN 0.85 / iOS 17 / Android 14 / scoped-storage open issues. Two open issues are v3 migration Q&As + Mac Catalyst feature request — irrelevant to our greenfield install. Decision: install `3.0.2`.
+
+**Section E backend audit verified F36 fires.** `ShopMember` Pydantic model in `rbac.py:72` exposes `user_id / shop_id / role / joined_at / is_active / username / full_name`. NO `active_wo_count` field. Separate `MechanicWorkload` model exists (`rbac.py:95`) with `total_open` but isn't joined into the `/members` endpoint response. F36 fires at finalize per plan v1.0 risks; MemberPickerModal ships without workload column.
+
+**Pure-logic + service modules** (5 files, 54 tests):
+- `src/types/workOrder.ts` — `WorkOrderSection` discriminated union with 5 variants + 5 type guards. Mirrors Phase 192's `ReportSection` shape exactly.
+- `src/screens/buildWorkOrderSections.ts` — pure helper builds `WorkOrderSection[]` from `(WorkOrderListRow, WorkOrderIssue[], joined?)`. Section order: vehicle → customer → issues → notes (omit-when-empty) → lifecycle. Always-present semantics for vehicle/customer/issues/lifecycle (matches Phase 182 convention; em-dash sentinel for missing fields).
+- `src/services/activeShopStorage.ts` — sticky-shop persistence via AsyncStorage. Single key `motodiag:shop:active`. `get/set/clear` helpers + defensive null on parse errors / missing keys / invalid values. Cold-relaunch reset wired into App.tsx via `clearActiveShopId()` in the cold-mount useEffect.
+- `src/hooks/useTransitionWorkOrder.ts` — POST to `/transition` with `{action, reason?, actual_hours?}`. Returns `{transition, isTransitioning, error}`. Action-agnostic (caller derives from current status — "Mark in_progress" → start when open, resume when on_hold).
+- `src/hooks/useReassignWorkOrder.ts` — POST to `/assign` (Commit 0.5 substrate). Returns `{reassign, isReassigning, error}`. Pass `null` mechanicUserId for explicit unassign.
+
+**Components** (2 files, no render tests per codebase convention; smoke-gated at Commit 3):
+- `src/components/WorkOrderSectionCard.tsx` — discriminated-union renderer. Branches via type guards (5 variants today; defensive "(Unknown section variant)" trailer for forward-look). Issue rendering includes severity chip + linked DTC code + category/status meta line. Mirrors Phase 192's `ReportSectionCard` architecture.
+- `src/components/MemberPickerModal.tsx` — RBAC-aware picker with default filter on `tech | apprentice` (corrected role enum per plan v1.0.2) + "Show all" toggle. Empty state copy adapts to filter mode. Workload column deferred (F36).
+
+**Screens** (3 files):
+- `src/screens/ShopPickerScreen.tsx` — modal shop picker. `onShopPicked` callback prop; ShopStack wraps to navigation.goBack() after pick (WorkOrderList re-reads activeShopId on focus).
+- `src/screens/WorkOrderListScreen.tsx` — sort toggle (Newest/Priority/Triage) + status filter row + FlatList with pull-to-refresh + focus-effect refresh. Reads activeShopId on focus; redirects to ShopPicker if null.
+- `src/screens/WorkOrderDetailScreen.tsx` — data-driven section rendering via `buildWorkOrderSections` + `WorkOrderSectionCard`. State-transition buttons (Mark in_progress / Mark on_hold with reason modal / Mark completed). Reassign opens MemberPickerModal. Action-availability gated by current status.
+
+**Nav wiring**:
+- `src/navigation/ShopStack.tsx` — registers WorkOrderList (initial), WorkOrderDetail, ShopPicker (modal). Render-prop-style children for ShopPicker to inject the goBack callback.
+- `App.tsx` — `clearActiveShopId()` added to cold-mount useEffect. Belt-and-suspenders: shareTempCleanup sweep + activeShop reset both fire on cold-mount.
+
+**Tests added at Commit 2** (5 files, 54 tests):
+- `__tests__/types/workOrder.test.ts` (10): type-guard discrimination + union-narrowing exercise.
+- `__tests__/screens/buildWorkOrderSections.test.ts` (14): section order + omit-when-empty + always-present semantics + missing-value em-dash + lifecycle timestamp surfacing + issues passthrough.
+- `__tests__/services/activeShopStorage.test.ts` (15): get/set/clear cycle + defensive null handling for parse errors / 0 / negative / non-numeric / read failures + cold-relaunch round-trip.
+- `__tests__/hooks/useTransitionWorkOrder.test.ts` (8): hit POST endpoint + path params + body shape (action / reason / actual_hours) + 4xx/5xx error classification + isTransitioning lifecycle.
+- `__tests__/hooks/useReassignWorkOrder.test.ts` (7): hit POST assign endpoint + null-for-unassign body + 400-nonexistent-mechanic + 404-cross-shop + isReassigning lifecycle.
+
+**Mid-build tooling fix**: useTier tests had cross-test bleed (renderHook didn't unmount, AppState listeners + fetchTier closures persisted). Added `trackedRenderHook` helper + `afterEach` cleanup pattern; "narrows known tier strings" test loop got per-iteration `unmount()` calls. Fix backfills cleanly into existing 12 useTier tests; all pass.
+
+**Verification**:
+- 54 new tests across 5 files.
+- 562/562 mobile suite green across 43 suites (508 → 562, +54).
+- TypeScript: `tsc --noEmit` clean.
+- ESLint: 13 warnings (9 no-void parity-preserved with useSession.ts:67 pattern; 4 react/no-unstable-nested-components parity-preserved with VehiclesScreen.tsx:37 since Phase 188). Zero errors.
+
+**F36 fires at finalize** (per Section E plan v1.0 + audit verified): backend `ShopMember` doesn't expose workload counts; MemberPickerModal ships without the column for 193.
+
+**Mobile package.json**: 0.1.5 → 0.1.6.
+
+**Next step**: commit + push Mobile Commit 2. Then Mobile Commit 3 (10-step smoke gate + plan v1.1 finalize + F36 ticket file + ROADMAP marks ✅).
