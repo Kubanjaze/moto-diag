@@ -1,6 +1,6 @@
 # Phase 195 — Voice Input for Symptom Description (substrate)
 
-**Version:** 1.0.1 (architect-side review amendment) | **Tier:** Standard | **Date:** 2026-05-07
+**Version:** 1.0.2 (Mobile Commit 1.5 + 8→10-step smoke gate amendment) | **Tier:** Standard | **Date:** 2026-05-07
 
 ## v1.0.1 amendment (Backend Commit 0.5)
 
@@ -13,6 +13,19 @@ Architect-side review of Backend Commit 0's two "planned deviations" surfaced th
 **F37 instance #3 surfaced + escalation logged**: Backend Commit 0's `transcripts.py` response models used `str` for `extraction_state`, `extraction_method`, `audio_format`, and `preview_engine` instead of `Literal[...]`. Phase 194's `photos.py` (`PhotoRole = Literal[...]`) had this right; the regression confirms F37's "value-set drift between backend CHECK constraints and contract surface" pattern. **Backend Commit 0.5 fixes the regression** (correctness-now): `transcripts.py` upgraded to use `ExtractionState`, `ExtractionMethod`, `AudioFormat`, `PreviewEngine` Literal aliases matching DB CHECK constraints + the `react-native-audio-recorder-player` mobile output formats. **F37 promoted to dedicated phase post-Phase-195-finalize** (correctness-systematically) — same shape as Phase 191D ($191B → 191C → 191D pattern): lint rule enforcing "Pydantic response models for fields with DB CHECK constraints must use Literal[...] matching constraint values" + retroactive validation against 191B/192/193/194/195 backend code + F9 pattern-guide subspecies addition. Likely numbered 195C or equivalent post-195/195B.
 
 **No scope changes from v1.0**; all amendments are clarifications of existing decisions. Verification Checklist + Risks + Outputs unchanged.
+
+## v1.0.2 amendment (Mobile Commit 1.5 + smoke gate expansion)
+
+Architect-side review pre-Mobile-Commit-2 dispatch caught two gaps:
+
+**Mobile Commit 1.5**: `audioStorageCache.cleanupOldAudio` was implemented + tested in isolation in Mobile Commit 1, but the `App.tsx` cold-mount useEffect wiring was never landed. Function-tests-pass-but-integration-absent regression risk — same family as Phase 191B's "tests pass because setup compensated for production gap" pattern (the original F33 promotion driver). Mobile Commit 1.5 ships the App.tsx wiring + a `__tests__/App.coldStart.smoke.test.tsx` smoke test that pins all four cold-mount sweeps fire together (cleanupOldShares + cleanupOldPhotos + cleanupOldAudio + clearActiveShopId). Same-shape smoke test is the regression guard so this kind of integration gap doesn't recur on future cache-sweep additions.
+
+**8→10-step smoke gate** (Mobile Commit 2 expansion): two new smoke-gate steps converting architectural claims into smoke-tested properties (Phase 193 Step 9/10 precedent — data-driven section unknown-variant + tier-reactive nav).
+
+- **Step 9 (NEW): F37 instance #3 Track 1 contract enforcement.** Simulate adding a new backend `extraction_state` value (e.g., `'reviewing'`) to the OpenAPI schema; confirm mobile TypeScript breaks at the consumer (e.g., the `_renderExtractionBadge` exhaustive switch, which has a `never` cast in its default branch); revert. Converts the F37 Track 1 architectural claim into smoke-tested property. Same discipline as Phase 193's Step 9 (data-driven section unknown-variant) and Step 10 (tier-reactive nav).
+- **Step 10 (NEW): On-device STT degraded performance in shop-environment noise.** Per pre-plan Section K, on-device STT struggles in shop noise. Smoke gate captures one transcript in non-quiet environment (TV + fan running, simulating shop-floor compressors / power tools). Threshold: ≥80% accurate against a known phrase passes; <50% surfaces as F-ticket candidate accelerating Phase 195B cloud Whisper case (the (c) hybrid Section 1 lock anticipated this — Whisper handles noise materially better; Phase 195B's calibration data starts here). Specific known phrases tested in smoke gate documented in Mobile Commit 2's phase-log entry.
+
+Smoke gate goes from 8 steps to 10 with these additions. Verification Checklist appended below to reflect.
 
 ---
 
@@ -200,15 +213,17 @@ Audit ran 2026-05-06 BEFORE plan v1.0 was written. Findings folded inline below.
 
 2. **Nav wiring**: `ShopStackParamList += {VoiceCapture, TranscriptReview}` with typed params `{shopId: number, woId: number, issueId?: number}` and `{shopId: number, woId: number, transcriptId: number}` respectively. `ShopStack.tsx` registers both new screens.
 
-3. **8-step smoke gate** (Section 9 + Section J cadence):
+3. **10-step smoke gate** (Section 9 + Section J cadence; Steps 9 + 10 added in v1.0.2 amendment):
    1. Tap "Record voice memo" → mic permission flow → button-tap-to-start → recording (live preview text appears) → button-tap-to-stop → upload → transcript with extracted_symptoms appears in WorkOrderTranscriptsSection.
-   2. Capture "I noticed a clunk in the front end at low speed" → keyword extraction yields a 'suspension' or 'noise'-category row → chip renders in section.
+   2. Capture "I noticed a clunk in the front end at low speed" → keyword extraction yields a 'mechanical' or 'noise'-category row → chip renders in section.
    3. Capture nonsensical-noise → no extracted symptoms → transcript renders with preview_text + "no symptoms extracted" empty-state.
    4. Free-tier user → 402 with informational copy.
    5. Cross-shop deep-link → 403.
    6. Permanently-denied permission → settings link affordance (audio-only flow).
    7. Tap an extracted-symptom chip → TranscriptReviewScreen → edit/confirm → backend PATCH → chip re-renders confirmed.
    8. WorkOrderSection variant integration smoke — transcripts variant renders alongside vehicle / customer / issues / notes / photos / lifecycle without breaking. **Section E load-bearing test #2**.
+   9. **F37 instance #3 Track 1 contract enforcement (NEW v1.0.2)**: locally add a hypothetical `'reviewing'` value to backend `extraction_state` CHECK constraint OR to the response Pydantic Literal; regen mobile OpenAPI types; verify mobile TypeScript breaks at the consumer (`_renderExtractionBadge` exhaustive switch — the `never` cast in its default branch will fail compilation when the Literal union widens without a matching switch case); revert the simulated value. Pin in Mobile Commit 2's phase-log entry that the test was performed + the specific TS error message captured. Same discipline as Phase 193 Step 9 + 10 — architectural commitments smoke-tested, not just claimed.
+   10. **On-device STT degraded-noise performance (NEW v1.0.2, per Section K)**: capture one transcript in non-quiet environment (TV + fan running, simulating shop-floor compressors / power tools). Test phrase: "the bike has hard starting in the morning and rough idle when warm" (selected because both phrases are in the keyword dict + structurally distinct enough to detect partial-recognition failures). Threshold: ≥80% word accuracy passes; <50% surfaces as F-ticket candidate accelerating Phase 195B cloud Whisper case. Document phrase + recognition output + computed accuracy in Mobile Commit 2 phase-log entry. **The (c) hybrid Section 1 lock anticipated this** — Whisper handles noise materially better; Phase 195B's calibration data starts here.
 
 4. **F-ticket dispositions at finalize**:
    - F33 audit ran first per CLAUDE.md Step 0 — substantial reuse confirmed; on-device-STT-coexists-with-Phase-96-audio-infrastructure narrative locked.
@@ -256,7 +271,7 @@ Pre-plan-time decisions for shop-floor realities:
 - [ ] Mobile `WorkOrderTranscriptsSection` variant added to discriminated union; `isTranscriptsSection` + builder branch + renderer branch all wired.
 - [ ] Mobile renderer: timeline-with-extracted-symptom-chips layout; "refining…" indicator while extraction_state pending; tap-chip-to-edit nav.
 - [ ] Mobile `TranscriptReviewScreen` lets mechanic edit / confirm extracted_symptoms + select `linked_symptom_id` from KB catalog.
-- [ ] All 8 architect-smoke steps documented; Steps 1-7 hook + helper unit tests; Step 8 (variant integration) concretely tested via WorkOrderSectionCard smoke test.
+- [ ] All 10 architect-smoke steps documented; Steps 1-7 hook + helper unit tests; Step 8 (variant integration) concretely tested via WorkOrderSectionCard smoke test; Step 9 (F37 Track 1 contract enforcement — simulated extraction_state value addition breaks mobile TS) verified at Mobile Commit 2; Step 10 (on-device STT degraded-noise performance threshold ≥80%) executed at smoke-gate run.
 - [ ] All doc + package version bumps recorded.
 - [ ] F-ticket dispositions: F37 watched during execution; F38 NEW filed at plan-write; F-ticket "cloud Whisper as Phase 195C" reserved (or just "Phase 195B is the next ROADMAP entry" as the disposition).
 
