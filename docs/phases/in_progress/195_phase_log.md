@@ -139,3 +139,49 @@ Backend Commit 0.5 lands as a single atomic commit on the backend repo. **No new
 3. Dispatch Mobile Commit 2 — entry button + TranscriptReviewScreen + nav + 8-step smoke gate + finalize.
 4. Phase 195 closes per plan.
 5. F37 dedicated phase opens (likely 195C) — same shape as 191D.
+
+---
+
+### 2026-05-07 11:45 — Mobile Commit 1 build complete
+
+Mobile substrate landed in commit `8e1b7b6` (17 files: 5 modified + 12 created including api-schema regen + 2 new deps in package.json/lock).
+
+**What shipped (mobile):**
+
+- **`src/hooks/useMicrophonePermissions.ts`** (NEW) — factor-out from `useCameraPermissions`. Mic-only permission gate; shared underlying calls (vision-camera static API), no fork.
+- **`src/services/audioStorageCache.ts`** (NEW) — mirrors `photoStorageCache` shape; `lookup` / `adopt(format)` / `evict` / `cleanupOrphaned` / `cleanupOldAudio(now)` 7-day cold-start sweep. **Mobile-side sweep distinct from backend's 60-day server-side retention** — pre-upload orphans are different concern than post-upload retention.
+- **`src/screens/audioCaptureMachine.ts`** (NEW) — pure 4-state reducer (`idle | recording | uploading | uploaded | upload-failed`). Audio capture has duration so adds explicit `recording` state vs Phase 194 photo's instantaneous shape. STT_PARTIAL events stream live preview into `recording.previewSoFar`. APP_BACKGROUNDED → upload-failed with `path: ''` (no retry; user re-records).
+- **`src/screens/VoiceCaptureScreen.tsx`** (NEW) — wires reducer to `react-native-audio-recorder-player` (raw audio capture for upload) + `@react-native-voice/voice` (on-device STT preview running in parallel) + `useWorkOrderTranscripts` (multipart upload with `preview_text` bundled). Section K button-tap-to-start-and-stop UI. Hooks declared above permission early-returns per `react-hooks/rules-of-hooks` (Phase 194 PhotoCaptureScreen pattern).
+- **`src/hooks/useWorkOrderTranscripts.ts`** (NEW) — backend-backed CRUD. `{transcripts, isLoading, error, refresh, addTranscript, confirmExtractedSymptom, deleteTranscript, atCap}`. Multipart POST + adopt to audioStorageCache + evict on delete + cleanupOrphaned on refresh. Typed errors via `ShopAccessError` 5-kind union (Phase 193 reuse). `_mimeForFormat` exhaustive switch with `never` cast over `AudioCacheExt`.
+- **`src/types/workOrder.ts`** — discriminated union 6 → 7 variants. Added `WorkOrderTranscriptsSection` + `WorkOrderTranscript` + `ExtractedSymptom` + `isTranscriptsSection` guard + Literal re-exports (`TranscriptAudioFormat`, `TranscriptPreviewEngine`, `TranscriptExtractionState`, `ExtractedSymptomMethod`) matching backend Phase 195 Backend Commit 0.5.
+- **`src/screens/buildWorkOrderSections.ts`** — 5th positional param `transcripts: WorkOrderTranscript[] = []`. Section placement: AFTER photos and BEFORE lifecycle (so all "documentation media" cluster together). Omit-when-empty.
+- **`src/components/WorkOrderSectionCard.tsx`** — added `_renderTranscripts` branch + 'Voice memos' heading. Timeline-with-extracted-symptom-chips layout (3rd layout idiom on the renderer; component-level additive, NOT architectural refactor). Each transcript card shows duration + captured_at + extraction-state badge + preview_text body + extracted-symptom chip row. `_renderExtractionBadge` + `_symptomChipStyle` + `_symptomChipTextStyle` all exhaustive switches with `never` cast over Literal unions. `onTranscriptPress` + `onExtractedSymptomPress` optional callbacks (Mobile Commit 2 wires).
+- **`src/navigation/types.ts`** — `ShopStackParamList += {VoiceCapture, TranscriptReview}` with typed params.
+- **`api-schema/openapi.json` + `src/api-types.ts`** — regenerated against Phase 195 Backend Commit 0.5; Literal unions reach mobile codegen end-to-end. F37 instance #3 Track 1 fix verified.
+- **`package.json` + `package-lock.json`** — version 0.2.0 → 0.3.0; added `@react-native-voice/voice@3.2.4` + `react-native-audio-recorder-player@4.5.0`.
+
+**Tests (5 new + 3 extended, 83 net new test cases pass):**
+- `__tests__/screens/audioCaptureMachine.test.ts` (NEW, ~30)
+- `__tests__/services/audioStorageCache.test.ts` (NEW, ~14)
+- `__tests__/screens/buildWorkOrderSections.test.ts` (extended +5)
+- `__tests__/types/workOrder.test.ts` (extended +3)
+- `__tests__/components/WorkOrderSectionCard.smoke.test.tsx` (extended +3 + 1 update — future-variant test now uses `obd_snapshots`)
+
+**Verification:**
+- 674/674 mobile Jest tests pass (50 suites, 5.8s); +43 net from Phase 194 baseline (was 631).
+- TypeScript: `tsc --noEmit` clean across whole workspace.
+- ESLint: 0 errors (1 fixed: `react-hooks/exhaustive-deps` redundant `state.kind` removed).
+- F9 SSOT lint clean.
+
+**F-tickets during execution:**
+- **F37 (instance #3) Track 1 verified**: backend Literal unions reach mobile codegen as `"keyword" | "claude" | "manual_edit"` / `"wav" | "m4a" | "ogg"` / `"ios-speech" | "android-speech-recognizer" | "none"` / `"pending" | "extracting" | "extracted" | "extraction_failed"`. End-to-end type-safety achieved. Track 2 (dedicated phase post-Phase-195-finalize, likely 195C) on schedule per locked sequence.
+- **F38 / F39**: NOT load-bearing in Phase 195. Documented in FOLLOWUPS.
+
+**Section E load-bearing test #2 verdict: PASSED.** Forward-look commitment held empirically across two structurally different variant additions (Phase 194 media-references-with-relationships → Phase 195 time-series-with-extracted-output). The discriminated-union extension required NO data deformation into existing variant shapes; renderer added a 3rd layout idiom as component-level additive code; builder grew from 4-positional-params to 5-positional-params (felt fine). The pattern transfers — future phases (196 obd_snapshots, 197+) extend the same way.
+
+**Versions (mobile):**
+- `package.json`: 0.2.0 → 0.3.0 (minor bump; 10 new files + 5 modified + 2 new deps).
+
+**Type-safety discipline confirmed**: exhaustive switches over Literal unions with `never` assertions in default branches. Same shape as Phase 192B `shareErrorCopy` + Phase 193 `shopAccessErrorCopy`. Applies to `audioCaptureMachine` reducer + `WorkOrderSectionCard` renderer + `_renderExtractionBadge` + `_symptomChipStyle` + `_mimeForFormat`. Architect-side review's Thread 1 ask honored.
+
+**Next step**: Mobile Commit 2 — entry button on `WorkOrderDetailScreen` ("Take voice memo") + `TranscriptReviewScreen` (mechanic confirm/edit extracted symptoms; KB-catalog `linked_symptom_id` picker) + nav wiring + 8-step smoke gate (Section J) + finalize. F37 dedicated phase (likely Phase 195C) opens post-Phase-195-finalize per locked sequence.
