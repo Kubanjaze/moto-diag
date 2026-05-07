@@ -1,36 +1,58 @@
 """Audio metadata + format detection — Phase 195 (Commit 0).
 
-**Risk #10 deviation from plan v1.0**: pydub + ffmpeg are not present in the
-Phase 195 dev environment, and the canonical 16 kHz mono 16-bit PCM
-normalization pipeline is only valuable when feeding cloud Whisper —
-which is Phase 195B's job. Phase 195 stores audio bytes verbatim; the
-"normalization" reduces to format detection + metadata extraction, which
-is sufficient for Phase 195's use cases:
+**Architectural choice (Section 5 + Section K — verbatim storage with
+explicit format tracking)**: Phase 195 stores mobile-uploaded audio
+bytes VERBATIM and tracks the source format in
+``voice_transcripts.audio_format`` (DB column from migration 042).
+True 16 kHz mono PCM normalization is NOT shipped in Phase 195. This
+is path (c) from Backend Commit 0.5's architect-side review: verbatim
++ format-tracking, NOT path (a) "verify-and-F-ticket" or path (b)
+"reverse + ship pydub normalization."
 
-1. Backend stores audio at canonical disk path (format-agnostic).
-2. Backend serves audio back via the file-stream endpoint
-   (pass-through; the mobile player handles playback whatever the
-   format is).
-3. Backend keyword extraction (Section 2 γ) operates on
-   ``preview_text`` from on-device STT, NOT on the audio bytes.
+**Why verbatim is the architecturally correct choice (not a workaround)**:
 
-True normalization (resample to 16 kHz, transcode to PCM) is deferred
-to Phase 195B, which will install ``pydub>=0.25`` + ``ffmpeg>=4`` as
-required deps and use them to normalize audio for Whisper input.
+1. **Whisper accepts mobile output natively.** OpenAI Whisper API
+   officially supports {mp3, mp4, mpeg, mpga, m4a, wav, webm}. iOS +
+   Android (via ``react-native-audio-recorder-player`` defaults)
+   produce M4A/AAC, which Whisper consumes directly. Phase 195B's
+   cloud transcription does NOT need a transcoding step.
+2. **Verbatim M4A is ~4× SMALLER than 16 kHz PCM.** A 90-second voice
+   memo at 64 kbps M4A/AAC is ~720 KB; the same clip in normalized
+   16 kHz mono 16-bit PCM is ~2.88 MB. Storing verbatim REDUCES
+   storage cost vs the original plan-v1.0 projection, not increases
+   it. Section 5's 60-day retention projection at 100-mechanic scale
+   redoes to ~130 GB peak (was ~520 GB on PCM assumption) — bounded.
+3. **Format heterogeneity tracked at the schema level.**
+   ``voice_transcripts.audio_format`` (TEXT NOT NULL DEFAULT 'm4a',
+   CHECK-equivalent enforcement at the Pydantic
+   :class:`AudioFormat` Literal layer) means every consumer
+   (mechanic-replay UI, 195B Whisper integration, Phase 96 acoustic-
+   analysis cross-pollination) can dispatch on format. No silent
+   assumptions baked in.
+4. **The one consumer that genuinely needs PCM is speculative.** Phase
+   96 acoustic-analysis cross-pollination (sound-signature analysis
+   on the same recording) wants 16 kHz PCM input. That integration
+   does not exist today. F39 NEW filed at Backend Commit 0.5: install
+   ffmpeg + ship pydub transcoding when that integration's plan opens
+   — NOT before.
 
-Phase 195's ``inspect_audio`` returns:
-- ``audio_format``: detected format (`'wav' | 'm4a' | 'ogg' | 'unknown'`).
+**Phase 195's ``inspect_audio`` returns**:
+
+- ``audio_format``: detected format (``'wav' | 'm4a' | 'ogg' | 'unknown'``).
+  WAV / M4A / Ogg are recognized via magic-byte header detection;
+  ``'unknown'`` raises :class:`UnsupportedAudioFormatError` (HTTP 415).
 - ``size_bytes``: raw byte length.
 - ``sha256``: content hash for dedup.
-- ``duration_ms``: parsed from format header when possible (WAV via
-  ``wave`` module; M4A/Ogg fall back to mobile-supplied metadata).
+- ``duration_ms``: parsed from WAV header via stdlib :mod:`wave`;
+  M4A / Ogg fall back to mobile-supplied ``duration_ms`` from the
+  multipart metadata (``react-native-audio-recorder-player`` reports
+  it authoritatively from its own framing).
 - ``sample_rate_hz``: parsed from WAV header; 16000 default for M4A
-  (Whisper canonical, what mobile is configured to capture at) /
-  48000 default for Ogg.
+  (matches what mobile is configured to capture at) / 48000 default
+  for Ogg.
 
-The route layer trusts mobile-supplied ``duration_ms`` if header parsing
-returns None, since the mobile audio recorder library reports it
-authoritatively from its own framing.
+The route layer trusts mobile-supplied ``duration_ms`` when header
+parsing returns ``None``, which is the M4A and Ogg case.
 """
 
 from __future__ import annotations

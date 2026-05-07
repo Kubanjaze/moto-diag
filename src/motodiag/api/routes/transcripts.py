@@ -107,6 +107,19 @@ PreviewEngine = Literal[
     "none",
 ]
 
+# Phase 195 Backend Commit 0.5 — Literal aliases for the DB CHECK
+# constraints in migration 042. Pydantic responses use these so the
+# OpenAPI surface emits the strict value-set as enums; mobile codegen
+# consumes Literal unions instead of freeform `string`. Mirrors
+# Phase 194 ``photos.py``'s ``PhotoRole`` pattern (regression from
+# which surfaced as F37 instance #3 — escalation to dedicated phase
+# tracked in FOLLOWUPS).
+ExtractionState = Literal[
+    "pending", "extracting", "extracted", "extraction_failed",
+]
+ExtractionMethod = Literal["keyword", "claude", "manual_edit"]
+AudioFormat = Literal["wav", "m4a", "ogg"]
+
 
 # ---------------------------------------------------------------------------
 # Wire shapes
@@ -151,7 +164,7 @@ class ExtractedSymptomResponse(BaseModel):
     category: Optional[str]
     linked_symptom_id: Optional[int]
     confidence: float
-    extraction_method: str
+    extraction_method: ExtractionMethod
     segment_start_ms: Optional[int]
     segment_end_ms: Optional[int]
     confirmed_by_user_id: Optional[int]
@@ -165,7 +178,7 @@ class VoiceTranscriptResponse(BaseModel):
     id: int
     work_order_id: int
     issue_id: Optional[int]
-    audio_format: str
+    audio_format: AudioFormat
     audio_size_bytes: int
     duration_ms: int
     sample_rate_hz: int
@@ -173,8 +186,8 @@ class VoiceTranscriptResponse(BaseModel):
     captured_at: str
     uploaded_by_user_id: int
     preview_text: Optional[str]
-    preview_engine: Optional[str]
-    extraction_state: str
+    preview_engine: Optional[PreviewEngine]
+    extraction_state: ExtractionState
     extracted_at: Optional[str]
     audio_deleted_at: Optional[str]
     source: Optional[str]

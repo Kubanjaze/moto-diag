@@ -1,6 +1,20 @@
 # Phase 195 — Voice Input for Symptom Description (substrate)
 
-**Version:** 1.0 (plan) | **Tier:** Standard | **Date:** 2026-05-06
+**Version:** 1.0.1 (architect-side review amendment) | **Tier:** Standard | **Date:** 2026-05-07
+
+## v1.0.1 amendment (Backend Commit 0.5)
+
+Architect-side review of Backend Commit 0's two "planned deviations" surfaced that both were framed inaccurately in the plan-write phase log:
+
+**Deviation 1 (pydub/ffmpeg absent → verbatim storage) reframed as path (c) — verbatim with format tracking, the architecturally correct choice.** Section 5's PCM-based storage projection was incorrect — verbatim M4A is ~4× SMALLER than 16 kHz mono PCM. Whisper accepts mobile's M4A natively; 195B does NOT need a transcoding step. The one consumer that genuinely needs PCM is Phase 96 acoustic-analysis cross-pollination, which is speculative — `F39 NEW` filed at Backend Commit 0.5 with promotion trigger ("Phase 96 integration phase or any consumer requiring PCM input"). Section 5 storage projection redoes to ~130 GB peak at 100-mechanic-scale (was ~520 GB on PCM assumption); 60-day retention policy unchanged. The original plan-write framing as "Risk #10 deviation" was environment-friction framed as architecture; the actual choice is deliberate format-tracking matching what Phase 194's `audio_format` precedent already established at the schema level.
+
+**Deviation 2 (Section 2 0.5 threshold-gating dropped) reframed as 195B-spec leak.** The 0.5 keyword-coverage threshold from plan v1.0 was specified to control WHEN 195B's Claude-fallback fires (low coverage → ambiguous → run Claude); it has nothing to gate in Phase 195 in isolation since Section 3's substrate-feature split established Phase 195 as keyword-only. The threshold's calibration plan rightfully belongs in 195B's plan with real transcript fixtures. Mobile Commit 1 contract unchanged: backend creates one `extracted_symptoms` row per keyword match (`extraction_method='keyword'`); UI renders all matches; "low confidence" indicator client-derivable from match-count vs phrase-count if useful. No backend signal needed in 195. The original "deviation" framing was bad phase-log writing — there's nothing to deviate FROM in 195 because the threshold was never 195's concern.
+
+**F37 instance #3 surfaced + escalation logged**: Backend Commit 0's `transcripts.py` response models used `str` for `extraction_state`, `extraction_method`, `audio_format`, and `preview_engine` instead of `Literal[...]`. Phase 194's `photos.py` (`PhotoRole = Literal[...]`) had this right; the regression confirms F37's "value-set drift between backend CHECK constraints and contract surface" pattern. **Backend Commit 0.5 fixes the regression** (correctness-now): `transcripts.py` upgraded to use `ExtractionState`, `ExtractionMethod`, `AudioFormat`, `PreviewEngine` Literal aliases matching DB CHECK constraints + the `react-native-audio-recorder-player` mobile output formats. **F37 promoted to dedicated phase post-Phase-195-finalize** (correctness-systematically) — same shape as Phase 191D ($191B → 191C → 191D pattern): lint rule enforcing "Pydantic response models for fields with DB CHECK constraints must use Literal[...] matching constraint values" + retroactive validation against 191B/192/193/194/195 backend code + F9 pattern-guide subspecies addition. Likely numbered 195C or equivalent post-195/195B.
+
+**No scope changes from v1.0**; all amendments are clarifications of existing decisions. Verification Checklist + Risks + Outputs unchanged.
+
+---
 
 ## Goal
 

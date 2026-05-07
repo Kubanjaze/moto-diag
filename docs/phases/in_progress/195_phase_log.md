@@ -108,3 +108,34 @@ Backend sliver landed in commit `2657a5b` (14 files: 5 modified + 9 created). Mo
 Both deviations are within the trust-but-verify discipline — surface as planned-deviation rather than silent drift.
 
 **Next step**: Mobile Commit 1 — `useMicrophonePermissions` factor-out from `useCameraPermissions` + `audioStorageCache` (mirroring `photoStorageCache`) + `audioCaptureMachine` 4-state reducer + `VoiceCaptureScreen` (button-tap-to-start-and-stop + on-device STT preview parallel with raw audio capture) + `useWorkOrderTranscripts` hook + `WorkOrderTranscriptsSection` discriminated-union variant addition (**Section E load-bearing test #2**) + types + builder + section card extension + tests. Then Mobile Commit 2 (entry button + `TranscriptReviewScreen` + nav + 8-step smoke gate + finalize).
+
+---
+
+### 2026-05-07 09:30 — Backend Commit 0.5: architect-review reframes + F37 instance #3 type-tightening
+
+Backend Commit 0.5 lands as a single atomic commit on the backend repo. **No new behavior**; corrections + framing fixes + contract-surface tightening that Mobile Commit 1 inherits via OpenAPI regen.
+
+**What landed:**
+
+1. **`audio_pipeline.py` docstring rewrite** — reframed from "Risk #10 deviation" to **path (c) deliberate verbatim-with-format-tracking**. Numbers support the choice: M4A is ~4× smaller than 16 kHz PCM; Whisper accepts M4A natively; format-tracking column already in migration 042. The original framing was environment-friction described as architecture; the actual choice is correct architecture. Section 5 storage projection redoes to ~130 GB peak at 100-mechanic scale (was ~520 GB on PCM assumption); 60-day retention policy unchanged.
+2. **`transcript_extraction.py` docstring rewrite** — reframed from "Section 2 deviation: threshold dropped" to **Section 2 (γ) is the substrate-feature-pair posture, NOT Phase 195's solo posture**. The 0.5 keyword-coverage threshold was a 195B specification (controls when Claude-fallback fires) that leaked into 195's plan. Phase 195 is keyword-only by Section 3 split; the threshold has nothing to gate in 195 in isolation. Phase 195B's plan re-litigates the threshold with calibration data.
+3. **`transcripts.py` response models tightened** — added `ExtractionState`, `ExtractionMethod`, `AudioFormat` Literal aliases matching migration 042 CHECK constraints. Upgraded `VoiceTranscriptResponse` (was 4 fields as `str` / `Optional[str]`) and `ExtractedSymptomResponse` (was `extraction_method: str`) to use the Literal types. OpenAPI now emits enum constraints; mobile codegen will produce typed Literal unions.
+4. **Plan v1.0 → v1.0.1 amendment** at the top of `195_implementation.md` documenting the Deviation 1 + Deviation 2 reframes + the F37 instance #3 type-tightening.
+5. **F37 / F38 / F39 in `docs/FOLLOWUPS.md`** (mobile repo, single canonical FOLLOWUPS):
+   - **F37 instance #3 surfaced** with full root-cause (regression from Phase 194's `PhotoRole` Literal pattern), Track 1 fix done in Backend Commit 0.5, Track 2 promotion to dedicated phase post-Phase-195-finalize (likely Phase 195C, same shape as 191D — lint rule + retroactive validation + F9 subspecies addition).
+   - **F38 NEW** filed: unify symptom storage across `diagnostic_sessions.symptoms` (JSON list) + `voice_transcripts.extracted_symptoms` (relational) + future OBD-captured symptoms. Promotion trigger: Phase 196 surfaces source-tracking demand OR query patterns require cross-source.
+   - **F39 NEW** filed: Phase 96 acoustic-analysis cross-pollination requires PCM transcode. Promotion trigger: Phase 96 integration phase opens OR any consumer requires PCM input from voice-transcript audio.
+
+**Verification:**
+- 45/45 Phase 195 backend tests pass after Literal tightening (Pydantic accepts the same valid values; types are now strict in the OpenAPI surface).
+- Adjacent regression unaffected (no schema migration; no behavior change).
+- F9 SSOT lint clean (no new opt-outs needed).
+
+**No version bumps**: Backend Commit 0.5 is a clarification + type-tightening commit, not a feature addition. `pyproject.toml` stays at 0.5.0; `SCHEMA_VERSION` stays at 42.
+
+**Sequence after Backend Commit 0.5 push:**
+1. Mobile OpenAPI regen — confirm Literal unions reach mobile cleanly (Phase 192B precedent shape).
+2. Dispatch Mobile Commit 1 — substrate (hooks + cache + machine + screen + WorkOrderTranscriptsSection variant + tests).
+3. Dispatch Mobile Commit 2 — entry button + TranscriptReviewScreen + nav + 8-step smoke gate + finalize.
+4. Phase 195 closes per plan.
+5. F37 dedicated phase opens (likely 195C) — same shape as 191D.

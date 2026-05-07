@@ -7,17 +7,36 @@ list[ExtractedPhrase]`` runs the existing
 against phrases parsed from the transcript text. Output rows feed
 ``extracted_symptom_repo.create_extracted_symptom``.
 
-**Threshold note (Phase 195 Backend Commit 0 deviation from plan v1.0
-Section 2)**: the plan locked a 0.5 keyword-coverage threshold with
-calibration plan; in implementation we kept ALL keyword matches as
-rows + dropped the threshold-gating step. Rationale: throwing away a
-single legitimate match because the noise-to-signal ratio is high
-loses information mechanics need. The "low confidence" UI signal can
-be computed at render time from match count vs phrase count without
-storing a per-transcript score column. Phase 195B's Claude-fallback
-will add ``extraction_method='claude'`` rows on top of the keyword
-rows for cases where the keyword pass found nothing OR the score
-indicates ambiguity.
+**Section 2 (γ) hybrid is the substrate-feature-pair posture, NOT
+Phase 195's solo posture** (clarified at Backend Commit 0.5 architect-
+side review, was bad framing in the original plan v1.0 phase-log
+entry):
+
+* **Phase 195** = keyword-only + on-device preview + audio storage.
+  All keyword matches become ``extracted_symptoms`` rows with
+  ``extraction_method='keyword'``, ``confidence=1.0``. No threshold
+  gates row creation.
+* **Phase 195B** = adds Claude-fallback as a deferred background
+  task. The 0.5 keyword-coverage threshold from plan v1.0 was
+  specified to control WHEN 195B's Claude-fallback fires (low keyword
+  coverage → ambiguous → run Claude); it has nothing to gate in
+  Phase 195 in isolation. Phase 195B's plan re-litigates the
+  threshold with calibration data from real transcript fixtures.
+
+**Mechanic confirmation flow (Phase 195 today)**: keyword-extracted
+rows render in the mobile UI; the mechanic taps a chip to confirm
+or edit; on text/linked_symptom_id change the row's
+``extraction_method`` flips to ``'manual_edit'``. A "low confidence"
+UI indicator can be computed client-side from
+``extracted_symptoms.length / split_into_phrases(preview_text).length``
+if/when that signal proves useful — no backend support needed in
+Phase 195.
+
+**Phase 195's contract for Mobile Commit 1**: backend creates one
+``extracted_symptoms`` row per keyword match; mobile renders all of
+them; Phase 195's section variant is keyword-only + manual_edit;
+Phase 195B will deliver Claude rows alongside the existing keyword
+rows (both visible together; ``extraction_method`` discriminates).
 """
 
 from __future__ import annotations
