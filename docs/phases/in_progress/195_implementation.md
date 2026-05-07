@@ -1,6 +1,6 @@
 # Phase 195 — Voice Input for Symptom Description (substrate)
 
-**Version:** 1.0.2 (Mobile Commit 1.5 + 8→10-step smoke gate amendment) | **Tier:** Standard | **Date:** 2026-05-07
+**Version:** 1.0.3 (TranscriptReviewScreen UX picks A-E + Backend 0.6 verification) | **Tier:** Standard | **Date:** 2026-05-07
 
 ## v1.0.1 amendment (Backend Commit 0.5)
 
@@ -26,6 +26,22 @@ Architect-side review pre-Mobile-Commit-2 dispatch caught two gaps:
 - **Step 10 (NEW): On-device STT degraded performance in shop-environment noise.** Per pre-plan Section K, on-device STT struggles in shop noise. Smoke gate captures one transcript in non-quiet environment (TV + fan running, simulating shop-floor compressors / power tools). Threshold: ≥80% accurate against a known phrase passes; <50% surfaces as F-ticket candidate accelerating Phase 195B cloud Whisper case (the (c) hybrid Section 1 lock anticipated this — Whisper handles noise materially better; Phase 195B's calibration data starts here). Specific known phrases tested in smoke gate documented in Mobile Commit 2's phase-log entry.
 
 Smoke gate goes from 8 steps to 10 with these additions. Verification Checklist appended below to reflect.
+
+## v1.0.3 amendment (TranscriptReviewScreen UX picks + Backend 0.6 verification)
+
+Architect-side review pre-Mobile-Commit-2 dispatch surfaced 5 UX picks that plan v1.0 sketched loosely; v1.0.3 locks them so Builder doesn't ship discretionary UX that surfaces at smoke gate.
+
+**Pick A — Per-symptom edit affordance: MODAL SHEET (not inline expand-row).** The original lean toward inline-expand was design-aesthetic reasoning (visual continuity with chips). Architect-side pushback was workflow reasoning: editing an extracted symptom is text input + typeahead-with-dropdown + category-picker-with-dropdown + confirm — substantial UI that on phone screen either pushes other chips off-screen (defeating context-preservation), renders over other chips (visual overlap), or renders cramped (mechanic-glove-unfriendly). Modal sheet handles all three concerns: full-screen modal gives typeahead room, text input full width, category picker space. Editing extracted symptoms IS deliberate, low-frequency, focused action — modal-shape matches that focus. Don't deform chip into form; keep chip as display surface, use separate edit surface.
+
+Implementation: `WorkOrderTranscriptsSection` chips remain display-only on the WO detail card; tap-chip nav goes to `TranscriptReviewScreen`; tap-chip-on-review-screen opens a modal sheet (full-screen on mobile via `Modal animationType="slide"`) with text input + linked-symptom-id typeahead picker + category picker + Save/Cancel. Modal dismisses on Save; chip updates inline on `TranscriptReviewScreen` with confirmed visual state.
+
+**Pick B — Save-per-symptom WITH OPTIMISTIC UPDATE + ROLLBACK.** Save-per-symptom matches PATCH endpoint shape (one extracted_id per request); commit-as-you-go feel; no draft buffer. Refinement: each Confirm fires network round-trip; on shop wifi (Phase 188 HVE territory) mechanic might experience lag. **Show optimistic-update visual state on tap (chip immediately shows confirmed appearance) with rollback on PATCH failure.** Standard pattern; explicit lock so Builder doesn't ship "tap → wait 2s → see confirmation" flow. On 4xx/5xx PATCH response: revert the chip's optimistic state + surface error toast/banner with retry affordance.
+
+**Pick C — Linked-symptom-id picker: typeahead via existing `GET /v1/kb/symptoms` endpoint.** Verification step ran 2026-05-07 11:55: endpoint EXISTS at `src/motodiag/api/routes/kb.py:248` (verified pre-amendment), exposes `?q=&category=&limit=` query params, wraps `motodiag.knowledge.symptom_repo.search_symptoms` directly. Mobile `api-types.ts` has the path typed at line 362 (regen at Mobile Commit 1 picked it up). **No Backend Commit 0.6 needed** — substrate already in place. Phase 195 typeahead picker consumes the endpoint directly. Default category filter pre-populated from the extracted symptom's `category` field with toggle to "all categories" available.
+
+**Pick D — In-app player WITH cache-then-stream-fallback + typed-error UI for double-failure.** `react-native-audio-recorder-player`'s `startPlayer(uri)` consumes either cached `file://` URI (from `audioStorageCache.lookup`) or remote `https://` URI (backend `/audio` stream). Cache-miss falls back to remote; if BOTH fail (cache-miss + network-unreachable double-failure), show "Audio unavailable offline" error state with retry affordance. **Typed-error-at-hook-boundary discipline applies**: define `AudioPlaybackError` 3-kind union (`cache_miss_offline | stream_failed | playback_engine_error`) mirroring Phase 192B's `PdfDownloadError` pattern. UI consumer renders distinct copy per kind; `never` cast on default branch.
+
+**Pick E — Stay-on-screen, NO auto-dismiss after last symptom confirmed.** Mechanic explicitly back-navs when done. Predictable behavior beats clever auto-dismissal regardless of confirm-state. Same posture as Phase 194's classify-later flow which stayed on screen until queue empties — except here the chip transitions to confirmed visual state and the user can re-edit if needed. No "all done — back to WO detail" auto-nav; no banner suggesting back-nav.
 
 ---
 
@@ -271,7 +287,8 @@ Pre-plan-time decisions for shop-floor realities:
 - [ ] Mobile `WorkOrderTranscriptsSection` variant added to discriminated union; `isTranscriptsSection` + builder branch + renderer branch all wired.
 - [ ] Mobile renderer: timeline-with-extracted-symptom-chips layout; "refining…" indicator while extraction_state pending; tap-chip-to-edit nav.
 - [ ] Mobile `TranscriptReviewScreen` lets mechanic edit / confirm extracted_symptoms + select `linked_symptom_id` from KB catalog.
-- [ ] All 10 architect-smoke steps documented; Steps 1-7 hook + helper unit tests; Step 8 (variant integration) concretely tested via WorkOrderSectionCard smoke test; Step 9 (F37 Track 1 contract enforcement — simulated extraction_state value addition breaks mobile TS) verified at Mobile Commit 2; Step 10 (on-device STT degraded-noise performance threshold ≥80%) executed at smoke-gate run.
+- [ ] All 10 architect-smoke steps documented; Steps 1-7 hook + helper unit tests; Step 8 (variant integration) concretely tested via WorkOrderSectionCard smoke test; Step 9 (F37 Track 1 contract enforcement — simulated extraction_state value addition breaks mobile TS) verified at Mobile Commit 2 with verbatim TS error captured (file:line + message); Step 10 (on-device STT degraded-noise performance threshold ≥80%) executed at smoke-gate run with BOTH STT-output AND keyword-extraction-output recorded and four-tier response curve disposition (≥80% pass / 60-79% pass-with-concern + F-ticket data point / <60% F-ticket accelerates 195B / <50% F-ticket urgent).
+- [ ] TranscriptReviewScreen UX (v1.0.3 picks): chip-tap opens modal sheet (Pick A; NOT inline expand-row); save-per-symptom with optimistic UI + rollback on PATCH failure (Pick B); linked-symptom-id typeahead via `GET /v1/kb/symptoms?q=&category=` (Pick C; endpoint verified pre-dispatch, no Backend 0.6 needed); in-app audio playback via `audioStorageCache.lookup` → fallback `/audio` stream → `AudioPlaybackError` 3-kind typed union for double-failure (Pick D); no auto-dismiss after last-symptom confirm (Pick E).
 - [ ] All doc + package version bumps recorded.
 - [ ] F-ticket dispositions: F37 watched during execution; F38 NEW filed at plan-write; F-ticket "cloud Whisper as Phase 195C" reserved (or just "Phase 195B is the next ROADMAP entry" as the disposition).
 
