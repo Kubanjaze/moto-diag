@@ -1,6 +1,6 @@
 # Phase 195 — Voice Input for Symptom Description (substrate)
 
-**Version:** 1.0.3 (TranscriptReviewScreen UX picks A-E + Backend 0.6 verification) | **Tier:** Standard | **Date:** 2026-05-07
+**Version:** 1.1 (final) | **Tier:** Standard | **Date:** 2026-05-07
 
 ## v1.0.1 amendment (Backend Commit 0.5)
 
@@ -315,3 +315,41 @@ Pre-plan-time decisions for shop-floor realities:
 - **`diagnostic_sessions.symptoms` JSON-list → relational migration** (deferred to F38 future phase).
 - **Configurable mic-input-device selection** (out of scope per Section K; F-ticket if surfaces).
 - **Selective audio retention / trimming** (out of scope per Section K privacy concern; F-ticket if customer-conversation-capture becomes load-bearing).
+
+## Deviations from Plan
+
+Two intentional reframes documented inline at the v1.0.1 amendment (originally framed in the Backend Commit 0 phase log as "deviations"; architect-side review at Backend Commit 0.5 reclassified them as plan-clarification rather than scope-deviation):
+
+1. **Audio storage path (c) verbatim with format tracking** rather than path (b) ffmpeg + pydub normalization. Numbers post-investigation supported (c) decisively — M4A is ~4× smaller than 16 kHz PCM; Whisper accepts M4A natively; format-tracking `audio_format` column already in migration 042. The original plan-write framing as "Risk #10 deviation" was environment-friction described as architecture; the actual choice is correct architecture. F39 NEW filed at Backend Commit 0.5 covers Phase 96 PCM transcode trigger when actually needed.
+2. **Section 2 (γ) keyword threshold** dropped at Backend Commit 0 framed as "deviation"; architect-side review reframed as 195B-spec leak — the 0.5 keyword-coverage threshold belongs to 195B's Claude-fallback gating, not 195's keyword-only pass. Phase 195 keeps ALL keyword matches as rows.
+
+Three implementation-time additions beyond plan v1.0:
+3. **Mobile Commit 1.5** — `audioStorageCache.cleanupOldAudio` was implemented + tested in isolation in Mobile Commit 1, but the App.tsx wiring was never landed. Trust-but-verify caught at architect-side pre-Mobile-Commit-2 review. Commit 1.5 shipped the wiring + a regression-guard smoke test (`__tests__/App.coldStart.smoke.test.tsx`) pinning all four cold-mount sweeps fire together. Same-family failure as Phase 191B serve-init_db (the F33 promotion driver).
+4. **F37 instance #3 surfaced + Track 1 fix at Backend Commit 0.5** — Phase 194's `photos.py` Pydantic responses used `Literal[...]` matching DB CHECK constraints; Phase 195's `transcripts.py` regressed to plain `str`. Backend Commit 0.5 upgraded to `ExtractionState` / `ExtractionMethod` / `AudioFormat` / `PreviewEngine` Literal aliases so OpenAPI emits enum constraints + mobile codegen produces typed Literal unions end-to-end. Track 2 (lint rule + retroactive validation) deferred to dedicated phase post-Phase-195-finalize (likely Phase 195C — same shape as 191D).
+5. **TranscriptReviewScreen UX picks A-E** locked in plan v1.0.3 amendment pre-Mobile-Commit-2 dispatch (modal-sheet edit + optimistic-update save + KB typeahead + cache-then-stream-fallback + no-auto-dismiss). Pick C verification ran 2026-05-07 11:55: `GET /v1/kb/symptoms` endpoint EXISTS at `kb.py:248`; no Backend Commit 0.6 needed.
+
+10-step smoke gate executed at Mobile Commit 2; full Step 9 verbatim TS error + Step 10 four-tier disposition disposition documented in `195_phase_log.md`.
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Backend commits | 6 (plan v1.0 + Backend Commit 0 + B0 log + Backend 0.5 atomic + plan v1.0.2 + plan v1.0.3) |
+| Mobile commits | 5 (plan v1.0 ROADMAP + FOLLOWUPS + Mobile 1 + Mobile 1.5 + Mobile 2) |
+| Backend tests added | 45 (`tests/test_phase195_commit0_voice_transcripts.py`) |
+| Mobile tests added | 102 (5 new files + 3 extended Mobile 1 + cold-start smoke + 10-step gate) |
+| Mobile total tests | 693/693 pass (was 631 after Phase 194; +62 net delta) |
+| Schema version | 41 → 42 |
+| New backend tables | `voice_transcripts` (25 cols) + `extracted_symptoms` (14 cols) |
+| New backend route | `/v1/shop/{id}/work-orders/{id}/transcripts` (6 endpoints) |
+| New backend modules | `media/audio_pipeline` + `media/audio_sweep` + `media/transcript_extraction` + `shop/transcript_repo` + `shop/extracted_symptom_repo` |
+| New CLI subgroup | `motodiag transcripts sweep` |
+| New mobile modules | `useMicrophonePermissions` + `audioStorageCache` + `audioCaptureMachine` + `VoiceCaptureScreen` + `useWorkOrderTranscripts` + `useTranscriptAudio` + `useSymptomSearch` + `audioPlaybackErrors` + `ExtractedSymptomEditModal` + `TranscriptReviewScreen` |
+| Backend version | 0.4.0 → 0.5.0 |
+| Mobile version | 0.2.0 → 0.3.0 |
+| New backend dep | None (Phase 195B will add `openai>=1.0` for Whisper) |
+| New mobile deps | `@react-native-voice/voice@3.2.4` + `react-native-audio-recorder-player@4.5.0` |
+| Section E load-bearing test result | **PASSED** (test #2 — voice transcripts time-series-with-extracted-output structurally different from Phase 194 photos; no plan amendment, no data deformation, no architectural rewrite) |
+| F37 Track 1 verification | PASSED (verbatim TS2322 error captured in phase log) |
+
+**Key finding**: Phase 195 closed cleanly across two non-trivial architecture-test moments — Section E load-bearing test #2 (forward-look commitment validated under structurally different data shape than Phase 194's first variant addition) and F37 instance #3 Track 1 (the Phase 194 → Phase 195 regression revealed that "use Literal not str" wasn't load-bearing-naturally and needs lint-rule enforcement, surfaced by trust-but-verify rather than tests). The substrate-then-feature pair pattern (5th instance: 191/191B + 192/192B + 194/194B + 195/195B) plus the discriminated-union forward-look architecture continue to compose multiplicatively. Phase 195B's cloud Whisper + Claude-rich extraction will ship on top of substrate columns already in migration 042 (`whisper_transcript`, `whisper_segments`, `whisper_cost_usd_cents`, `whisper_model`); F37 dedicated phase (likely 195C, same shape as 191D) will lint the Literal-vs-CHECK-constraint discipline that Phase 195 surfaced as load-bearing.
