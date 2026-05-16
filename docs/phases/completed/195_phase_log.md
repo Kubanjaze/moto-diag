@@ -245,3 +245,40 @@ Mobile Commit 2 landed in commit `8268139` (8 files: 5 new + 2 modified + 1 new 
 **Phase 195B readiness**: cloud Whisper + Claude-rich extraction + cost monitoring + VAD ship on top of `voice_transcripts.whisper_*` substrate-anticipates-feature columns already present in migration 042 — no schema migration needed.
 
 **Phase 195 closes here.** Substrate + UI complete; ROADMAPs marked ✅; docs moved to `docs/phases/completed/`. Next phase: F37 dedicated phase (Phase 195C — lint rule + retroactive validation + F9 subspecies addition) per locked sequence.
+
+---
+
+### 2026-05-16 — Step 10 acoustic capture ADDENDUM (deferred device-side artifact, now captured)
+
+This addendum closes the Step 10 item the Phase 195 finalize entry explicitly deferred ("Step 10 PARTIAL — disposition logic pinned in jest; device-side phrase capture deferred ... real-device run"). The capture ran during the iOS first-deploy session on cousin's Mac (physical iPhone 16 Pro, iOS 26.4.2). **This artifact formally unblocks Phase 195B pre-plan Q&A.**
+
+**Locked phrase (13 words, verbatim):** "the bike has hard starting in the morning and rough idle when warm"
+Expected on perfect transcription: 2 extracted symptoms, both `category='fuel'`.
+
+| # | Condition | Phone pos | STT score | Extraction | Tier |
+|---|---|---|---|---|---|
+| 1 | Quiet baseline (control) | ~6" | 1.00 | 2x fuel OK | — (excluded) |
+| 2 | Moderate noise (TV + speaker) | ~6" | 1.00 | 2x fuel OK | PASS |
+| 3 | Shop-realistic (compressor/fan + stereo) | ~6" | 0.96* | correct OK | PASS |
+| 4a | Arm's length, normal volume | ~24" | 0.96* | correct OK | PASS |
+| 4b | Across-bay, normal volume | ~6 ft | 1.00 | 2x fuel OK | PASS |
+
+\* One phonetically-close substitution ("when" -> "one"). Scored 0.96 (0.5 partial credit per rubric) or 0.92 (hard-miss worst case). Either way >= 0.80.
+
+**Overall disposition = worst tier of conditions 2/3/4a/4b = PASS.** Absolute worst-case score across the four counting conditions is 0.92, comfortably above the 0.80 pass threshold. Condition 1 excluded as control per runbook.
+
+**Qualitative findings:**
+- **Systematic, not stochastic, STT error.** The "when" -> "one" substitution occurred in both shop-noise conditions (3, 4a) and in neither clean condition (1, 2). On-device STT under shop noise has a narrow, predictable failure mode on this phoneme cluster — not broad-spectrum degradation.
+- **Extraction is robust to non-keyword STT noise.** The substituted word ("when") is not a symptom keyword; the keyword extractor produced correct `category='fuel'` symptoms in all five conditions, including both with STT substitutions.
+- **4b variance caveat.** 4b scored 1.00 despite greater distance than 3/4a (which scored 0.96). Single-take variance — the substitution is probabilistic under shop noise, not distance-deterministic. 4b's clean score is one sample, not evidence distance is irrelevant. Flagged for the Phase 195B Section 1 Whisper-emphasis decision.
+
+**Phase 195B pre-plan implications** (the reason Step 10 existed — all three gated sections resolve in the favorable direction):
+- **Section 1 (Whisper emphasis):** on-device STT held up under shop-realistic noise + distance. Per the runbook's own framing — on-device held up -> cloud Whisper is **extraction-richness substrate, not canonicalization-priority.** Meaningfully de-risks 195B scope.
+- **Section 3 (threshold calibration):** keyword extractor resilient to peripheral STT noise. The Claude-fallback threshold can be **less aggressive** than worst-case planning assumed.
+- **Section 5 (VAD):** push-to-talk performed adequately across all distance variants at normal volume. **No data-driven accuracy mandate for VAD.** (UX/ergonomic argument for VAD remains open for pre-plan to weigh separately — this finding is accuracy-scoped only.)
+
+**Net:** Step 10 broke favorably. Phase 195B is likely lighter than worst-case assumptions required — the scope-inversion risk the handoff doc warned about, resolved in the good direction.
+
+**Provenance caveat (audit-trail honesty — recorded per discipline):** STT scores for conditions 3 and 4a reflect a single, consistent phonetically-close substitution ("when" -> "one"), operator-observed during the live session. **`preview_text` / extraction-chip screenshots for conditions 3, 4a, 4b were NOT captured at the time.** The recorded scores + PASS disposition are **operator-attested, not artifact-verified.** If a Phase 195B pre-plan decision (esp. Section 1 Whisper-emphasis) hinges on the margin between 0.92 and 0.96, a confirmatory re-capture with screenshots is cheap and advisable; if decisions only hinge on ">=0.80 PASS," the attested record is sufficient. The pre-plan Q&A should treat the PASS as solid and the exact 0.92-vs-0.96 margin as soft.
+
+**Step 10 closed.** Phase 195B pre-plan Q&A unblocked.
