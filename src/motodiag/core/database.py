@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 42  # Phase 195 (Commit 0): voice_transcripts + extracted_symptoms tables for voice-input substrate (migration 042)
+SCHEMA_VERSION = 43  # Phase 195B (Commit 0): cost_events ledger table for cloud-API cost monitoring (migration 043)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

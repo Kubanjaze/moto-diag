@@ -144,6 +144,39 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "analyzed | analysis_failed | unsupported. Phase 191B."
         ),
     },
+    # Phase 195B Backend Commit 0 — TAG_CATALOG coverage backfill.
+    # Phases 194 + 195 added routers with new tags but never updated
+    # this catalog; `test_phase183_openapi.py::test_tag_catalog_covers_
+    # used_tags` caught it once a full-suite run finally exercised it
+    # (the 194/195 finalize regressions ran targeted subsets). Pre-
+    # existing gap, folded into 195B Commit 0 — same shape as Phase
+    # 194 Commit 0 folding the F9 SCHEMA_VERSION fix on Phase 192's
+    # test.
+    {
+        "name": "work-order-photos",
+        "description": (
+            "Work-order photo capture: attach photos to work orders "
+            "+ optionally to specific issues, classify before/after/"
+            "general/undecided, pair before+after. POST upload "
+            "(shop-tier + multipart; HEIC→JPEG + EXIF-normalize + "
+            "2048px resize) / GET list / GET single / PATCH "
+            "re-classify / DELETE soft-delete / GET binary file-"
+            "stream. Per-WO cap 30, per-issue cap 10. Phase 194."
+        ),
+    },
+    {
+        "name": "voice-transcripts",
+        "description": (
+            "Voice symptom capture: upload a voice memo to a work "
+            "order, on-device STT preview + keyword symptom "
+            "extraction. POST upload (shop-tier + multipart) / GET "
+            "list / GET single / PATCH extracted-symptom confirm-"
+            "edit / DELETE soft-delete / GET binary audio-stream. "
+            "60-day audio retention sweep; transcripts permanent. "
+            "Phase 195 (cloud Whisper + Claude-rich extraction: "
+            "Phase 195B)."
+        ),
+    },
 ]
 
 
@@ -355,7 +388,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
         from motodiag.core.config import get_settings
         servers = get_settings().api_servers_list
     except Exception:  # pragma: no cover — config must exist in prod
-        servers = [{"url": "http://localhost:8080",
+        servers = [{"url": "http://localhost:8000",
                     "description": "Local dev"}]
     if servers:
         schema["servers"] = servers

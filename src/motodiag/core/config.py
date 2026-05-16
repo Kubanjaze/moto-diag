@@ -61,7 +61,16 @@ class Settings(BaseSettings):
 
     # API (Phase 175+)
     api_host: str = "127.0.0.1"
-    api_port: int = 8080
+    # Phase 195B (Commit 0) F44 fold-in: default moved 8080 -> 8000.
+    # uvicorn community norm + the value mobile's `.env.example`
+    # documents (`API_BASE_URL` examples are all :8000) + what every
+    # fresh-dev workflow assumes. Pre-195B, `motodiag serve` with no
+    # flags bound 8080 while the mobile app expected 8000 -> fresh
+    # setups got connection-refused. The hardcoded-8080 audit (F44)
+    # came back shallow (6 refs, all defaults/help-text/one test pin),
+    # so the fix folded into this commit per the architect's
+    # conditional approval.
+    api_port: int = 8000
     api_cors_origins: str = (
         "http://localhost:3000,http://localhost:5173"
     )
@@ -70,9 +79,22 @@ class Settings(BaseSettings):
     # "url|description" pairs; parsed to list[dict] by the
     # `api_servers_list` property. Default includes only the local
     # dev server; deployments override via MOTODIAG_API_SERVERS.
+    # Phase 195B F44 fold-in: 8080 -> 8000 to match `api_port`.
     api_servers: str = (
-        "http://localhost:8080|Local dev"
+        "http://localhost:8000|Local dev"
     )
+
+    # Phase 195B (Commit 0) — cloud-API config for the voice-symptom
+    # feature half. OpenAI Whisper transcription + Claude-rich
+    # extraction. `openai_api_key` is empty by default; the Whisper
+    # client raises a typed error when a transcription is attempted
+    # without it (degrades gracefully — keyword extraction still runs).
+    openai_api_key: str = ""
+    whisper_model: str = "whisper-1"
+    # Soft monthly cost cap per shop, in USD cents. Exceeding it logs
+    # + alerts; it does NOT block (hard enforcement is a Track H
+    # billing concern). 0 disables the cap check entirely.
+    cost_cap_monthly_usd_cents: int = 0
 
     @property
     def api_servers_list(self) -> list[dict]:

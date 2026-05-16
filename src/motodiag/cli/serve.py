@@ -36,7 +36,7 @@ def register_serve(cli_group: click.Group) -> None:
     )
     @click.option(
         "--port", type=int, default=None,
-        help="Bind port (default from MOTODIAG_API_PORT / 8080).",
+        help="Bind port (default from MOTODIAG_API_PORT / 8000).",
     )
     @click.option(
         "--reload", is_flag=True, default=False,
@@ -71,7 +71,7 @@ def register_serve(cli_group: click.Group) -> None:
 
         Zero-config startup: ``motodiag serve`` reads MOTODIAG_API_*
         env vars or falls back to Settings defaults
-        (127.0.0.1:8080 with dev CORS origins).
+        (127.0.0.1:8000 with dev CORS origins).
 
         Applies pending schema migrations at startup (Phase 191B
         fix-cycle). Pass ``--skip-migrations`` to opt out (e.g., for
