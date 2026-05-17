@@ -282,3 +282,34 @@ Expected on perfect transcription: 2 extracted symptoms, both `category='fuel'`.
 **Provenance caveat (audit-trail honesty — recorded per discipline):** STT scores for conditions 3 and 4a reflect a single, consistent phonetically-close substitution ("when" -> "one"), operator-observed during the live session. **`preview_text` / extraction-chip screenshots for conditions 3, 4a, 4b were NOT captured at the time.** The recorded scores + PASS disposition are **operator-attested, not artifact-verified.** If a Phase 195B pre-plan decision (esp. Section 1 Whisper-emphasis) hinges on the margin between 0.92 and 0.96, a confirmatory re-capture with screenshots is cheap and advisable; if decisions only hinge on ">=0.80 PASS," the attested record is sufficient. The pre-plan Q&A should treat the PASS as solid and the exact 0.92-vs-0.96 margin as soft.
 
 **Step 10 closed.** Phase 195B pre-plan Q&A unblocked.
+
+---
+
+### 2026-05-17 10:05 — Bug fix #1: SCHEMA_VERSION-bump fallout + tag-catalog gap
+
+Surfaced during the Phase 195B PR-review full-suite run (first run of the
+whole 4587-test suite across the stacked 192→195B chain). Same cross-phase
+guard-test family as Phase 194's fix #1 — migration 042 bumped
+`SCHEMA_VERSION` 41→42 without updating the test-side artifacts that pin it,
+plus the `voice-transcripts` router tag was never cataloged. Latent because
+Phase 195's build ran only 195-specific tests. Per the architect's PR-review
+decision (2026-05-17), the fix lands on the originating branch — Phase 195's
+migration 042 is what moved the schema to 42.
+
+- **`test_phase184_gate9::test_schema_version_unchanged`:** Gate 9
+  anti-regression pin 41 → 42 (+ block/inline narrative → migration 042).
+- **`test_phase191b_serve_migrations::...match_schema_version`:** fixture
+  cross-check pin 41 → 42.
+- **`test_phase191d_ssot_constants_lint::TestCheckTagCatalogCoverage`:** added
+  the `voice-transcripts` `TAG_CATALOG` entry in `api/openapi.py` (Phase 195's
+  `routes/transcripts.py` router tag). Phase 195B Commit 0 had backfilled this
+  forward; reattributed here to its originating branch — the merge-forward
+  into 195B resolves the duplication (195B's entry, enriched with the
+  Phase 195B cloud-Whisper note, supersedes on conflict).
+- **SSOT-lint positive/opt-out self-tests:** no change needed here — Phase
+  194's fix #1 made the synthetic fixtures interpolate the live
+  `SCHEMA_VERSION`, so they auto-track 41→42; verified passing on this branch.
+- **Files:** `tests/test_phase184_gate9.py`, `tests/test_phase191b_serve_migrations.py`,
+  `src/motodiag/api/openapi.py`.
+- **Verified:** the four guard-test files + `test_phase183_openapi` → 86/86
+  pass on `phase-195-voice-input`.

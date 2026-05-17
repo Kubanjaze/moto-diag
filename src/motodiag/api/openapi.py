@@ -144,14 +144,6 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "analyzed | analysis_failed | unsupported. Phase 191B."
         ),
     },
-    # Phase 195B Backend Commit 0 — TAG_CATALOG coverage backfill.
-    # Phases 194 + 195 added routers with new tags but never updated
-    # this catalog; `test_phase183_openapi.py::test_tag_catalog_covers_
-    # used_tags` caught it once a full-suite run finally exercised it
-    # (the 194/195 finalize regressions ran targeted subsets). Pre-
-    # existing gap, folded into 195B Commit 0 — same shape as Phase
-    # 194 Commit 0 folding the F9 SCHEMA_VERSION fix on Phase 192's
-    # test.
     {
         "name": "work-order-photos",
         "description": (
