@@ -579,15 +579,16 @@ class TestGate9OpenAPIContract:
 class TestGate9AntiRegression:
 
     def test_schema_version_unchanged(self):
-        # Gate 9 anti-regression pin. Last migration was 039 (Phase
-        # 191B videos table for video diagnostic capture). Bump this
-        # pin alongside any deliberate SCHEMA_VERSION change AND the
-        # corresponding migration; an unintended bump must fail loud.
+        # Gate 9 anti-regression pin. Last migration was 041 (Phase
+        # 194 work_order_photos table for camera/photo integration).
+        # Bump this pin alongside any deliberate SCHEMA_VERSION change
+        # AND the corresponding migration; an unintended bump must
+        # fail loud.
         # F-ticket F20 (filed 2026-05-04 with Phase 191B fix-cycle-5):
         # generalize Phase 191C's no-hardcoded-model-ids lint rule to
         # "no hardcoded SSOT-managed constants in tests" — would have
         # caught this missed-pin-update at Phase 191B finalize.
-        assert SCHEMA_VERSION == 40  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 39→40 at Phase 192 Commit 1 (migration 040 added videos.analyzing_started_at column for stuck-detection). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
+        assert SCHEMA_VERSION == 41  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 40→41 at Phase 194 Commit 0 (migration 041 added the work_order_photos table for camera/photo integration). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
 
     def test_track_h_summary_doc_exists(self):
         path = (

@@ -40,6 +40,8 @@ from pathlib import Path
 
 import pytest
 
+from motodiag.core.database import SCHEMA_VERSION
+
 # ---------------------------------------------------------------------
 # Module loader: scripts/ is not a Python package, so we load the module
 # via importlib.util to avoid sys.path munging or adding an __init__.py.
@@ -113,20 +115,26 @@ class TestCheckSsotConstants:
     def test_positive_schema_version_literal_pin_in_test(
         self, tmp_path: Path,
     ):
-        """Test asserting ``SCHEMA_VERSION == 40`` (the current live
-        value as of Phase 192 migration 040) without an opt-out comment
-        must trigger one finding.
+        """A test asserting ``SCHEMA_VERSION == <live value>`` without
+        an opt-out comment must trigger one finding.
 
         This is the F20 case shape: the test imports the SSOT but ALSO
         literal-pins the value, so a future migration bump silently
         breaks the assertion (Phase 191B C2 fix-cycle-5 anti-regression).
+
+        The synthetic fixture interpolates the live ``SCHEMA_VERSION``
+        so the pinned literal always matches the current value — the
+        lint flags a pin only when literal == live value, so a
+        hardcoded literal here goes silently vacuous after a migration
+        bump (the exact failure this fix-cycle repaired — see
+        194_phase_log.md fix #1).
         """
         tests_dir = tmp_path / "tests"
         tests_dir.mkdir()
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 40\n",
+            f"    assert SCHEMA_VERSION == {SCHEMA_VERSION}\n",
             encoding="utf-8",
         )
         findings = check_ssot_constants(
@@ -148,14 +156,14 @@ class TestCheckSsotConstants:
     def test_negative_membership_check_does_not_trigger(
         self, tmp_path: Path,
     ):
-        """``assert SCHEMA_VERSION in {39, 40}`` is membership-checking
-        (not literal-pinning) and ALSO doesn't appear next to the
-        identifier `SCHEMA_VERSION` close enough to trigger... actually
-        BOTH 39 and 40 are within proximity here. This test guards the
-        case where the literal IS within proximity but the assertion
-        shape is membership / range / inequality (the rule scans for
-        any matching literal regardless of operator — by design — so
-        BOTH literals fire here UNLESS the user adds an opt-out).
+        """``assert SCHEMA_VERSION in {N-1, N}`` (live value N + its
+        predecessor) is membership-checking, not literal-pinning — but
+        BOTH set members are within proximity of the `SCHEMA_VERSION`
+        identifier. This test guards the case where the literal IS
+        within proximity but the assertion shape is membership / range
+        / inequality (the rule scans for any matching literal
+        regardless of operator — by design — so the live-value literal
+        fires here UNLESS the user adds an opt-out).
 
         Phase 191D scope: the rule is intentionally noisy on this
         case — membership checks against a SSOT value are still
@@ -166,11 +174,15 @@ class TestCheckSsotConstants:
         tests_dir = tmp_path / "tests"
         tests_dir.mkdir()
         # SSOT-pin literal but with a 25-char opt-out reason — must
-        # NOT trigger.
+        # NOT trigger. The membership set interpolates the live
+        # SCHEMA_VERSION (+ the prior version) so the live value is
+        # always inside the set — the rule WOULD fire here absent the
+        # opt-out, keeping the opt-out's suppression genuinely tested.
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_membership():\n"
-            "    assert SCHEMA_VERSION in {39, 40}  "
+            f"    assert SCHEMA_VERSION in {{{SCHEMA_VERSION - 1}, "
+            f"{SCHEMA_VERSION}}}  "
             "# f9-noqa: ssot-pin acceptable membership against current "
             "schema + next anticipated migration version\n",
             encoding="utf-8",
@@ -193,7 +205,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 40  "
+            f"    assert SCHEMA_VERSION == {SCHEMA_VERSION}  "
             "# f9-noqa: ssot-pin migration-boundary contract assertion "
             "for billing-cycle alignment\n",
             encoding="utf-8",
@@ -223,7 +235,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 40  "
+            f"    assert SCHEMA_VERSION == {SCHEMA_VERSION}  "
             "# f9-noqa: ssot-pin contract-pin: tier-billing-math "
             "regression coverage; bump requires Stripe re-verification\n",
             encoding="utf-8",
@@ -251,7 +263,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 40  "
+            f"    assert SCHEMA_VERSION == {SCHEMA_VERSION}  "
             "# f9-noqa: ssot-pin ok\n",
             encoding="utf-8",
         )
