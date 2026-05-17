@@ -1,6 +1,6 @@
 # Phase 196 — Bluetooth OBD adapter connection
 
-**Version:** 1.0.1 (plan — amended pre-code per architect review; see "v1.0.1 amendment") | **Tier:** Standard | **Date:** 2026-05-17
+**Version:** 1.0.2 (plan — amended pre-code twice; see "v1.0.1 amendment" + "v1.0.2 amendment") | **Tier:** Standard | **Date:** 2026-05-17
 
 > **Track I phase.** Phase 196 is the next phase in the locked sequence (195B → 195C → 196). Per `ROADMAP_AUTHORITY.md`, 196 is in the 185–204 range — a Track I phase — so its per-phase status is recorded in `Kubanjaze/moto-diag-mobile/docs/ROADMAP.md`; this per-phase doc lives in the backend ledger (`Kubanjaze/moto-diag/docs/phases/`) per the same contract. The work itself is **mobile-only** (see Logic + the F33 audit).
 
@@ -77,7 +77,7 @@ Ran the Step-0 audit across both repos before this plan was written. **Phase 196
 - **Q1 — ADR-002 flip — RULED: do NOT flip + designate the 196 smoke as ADR-002 reversal-trigger evidence.** New Architecture stays disabled; ADR-002's reversal trigger (ble-plx New-Arch release **and** a passing real-dongle smoke) is unmet, so flipping now acts on speculation the trigger exists to forbid. 196 builds on the Old-Arch status quo. **Two-action ruling** — the second action is load-bearing: ADR-002 is amended (mobile repo) to record that the **Phase 196 real-dongle smoke is the designated evidence-gathering event for reversal-trigger condition #2**. Without that, the smoke passes and the architecture data point is never harvested back to ADR-002 — forfeiting a scarce device session's dual yield (a 196 gate pass *and* a logged ADR-002 evidence point). Do NOT flip speculatively; do NOT defer 196 to "resolve ADR-002 first" (circular — ADR-002 is resolved by evidence 196 produces).
 - **Q2 — scope boundary — RULED: confirmed as written.** 196 is mobile-only and terminates at "live identified OBD link." DTC/PID reading + backend integration are later phases — the substrate-then-feature split (196 = link substrate; reading = separate feature/gate). Do NOT pull in "read one DTC to prove it works" — that makes the smoke gate test two layers and defeats failure isolation.
 - **Q3 — build now / smoke gate held — RULED: confirmed.** "iOS-blocked" = gate-only, not build-blocked. The full build + unit verification run to completion now; only the real-dongle smoke is device-held. **Required mitigation, named now:** the `FakeObdProvider` test double MUST model the real ELM327 handshake byte sequence (`ATZ` → `ATE0` → `ATL0` → `ATSP0`, with the expected response shapes + the `>` prompt terminator) — **not a trivial stub**. A weak fake gives false confidence; faithfully modeling the byte sequence is how the device-independent build genuinely covers the handshake. The phase reaches an explicit, legitimate intermediate state: "build complete, unit-verified, smoke gate held."
-- **Q4 — transport target — RULED: ELM327-BLE only + transport-agnostic seam folded in.** Build + smoke target ELM327-family-over-BLE exclusively; Wi-Fi and classic-Bluetooth adapters are out of scope (different transport stacks). **Folded-in design discipline:** the `ObdConnection` seam is designed transport-agnostic — a future Wi-Fi / classic-BT provider must be an additive new provider behind the same seam, not a rewrite (the ADR-001 provider-seam pattern; same shape as the `ReportSection` / `WorkOrderSection` discriminated-union forward-look). This widens neither the build nor the smoke scope — it only avoids foreclosing the seam into a BLE-only corner.
+- **Q4 — transport target — RULED (v1.0.1: BLE-only) → SUPERSEDED by v1.0.2.** The v1.0.1 ruling scoped 196 to ELM327-BLE only with Wi-Fi/classic-BT out of scope. The v1.0.2 amendment **reverses the exclusion**: the product must support the popular dongles, and the most popular dongle of all — the ~$13 generic ELM327 v1.5 clone — is **classic Bluetooth 2.x (SPP)**, a different radio protocol that `react-native-ble-plx` physically cannot reach. The plan therefore now **commits to full transport coverage** across a sequenced provider roadmap (see "Transport-provider roadmap" below). Phase 196 itself still ships **only the BLE provider** + the device-smoke is BLE-only — but it is now explicitly *the first of three committed transport providers*, not the whole of transport support. The transport-agnostic `ObdConnection` seam (a v1.0.1 folded-in nicety) is **promoted to a load-bearing requirement** — 196B and 196C depend on it. See the v1.0.2 amendment.
 
 ## Verification Checklist
 
@@ -88,7 +88,7 @@ Ran the Step-0 audit across both repos before this plan was written. **Phase 196
 - [ ] `ObdConnectScreen` — scan → device list → connect → live status → disconnect; OBD-adapter filtering on the scan list.
 - [ ] `ObdConnectionError` typed union (7 kinds) + user-facing copy for each.
 - [ ] `OBD_SUPPORT` feature flag gates the screen's nav entry; default on-in-dev / off-in-release.
-- [ ] **`ObdConnection` seam is transport-agnostic** (Q4): the BLE provider is one implementation behind the seam; a future Wi-Fi / classic-BT provider would be additive, not a reshape.
+- [ ] **`ObdConnection` seam is transport-agnostic — LOAD-BEARING closure check (v1.0.2):** `ObdConnection` is defined as a transport-neutral interface; `BleObdProvider` is one implementation behind it (named as a provider, not "the connection"). Closure check: a stub non-BLE provider (e.g. a no-op `ClassicBtObdProvider` shell) can be admitted behind the seam without editing `BleObdProvider`, the state machine, the screen, the handshake, or the typed errors. 196B/196C are committed phases (transport-provider roadmap) — the seam carrying them is verified, not assumed.
 - [ ] **`FakeObdProvider` models the real ELM327 handshake byte sequence** (Q3): `ATZ`/`ATE0`/`ATL0`/`ATSP0` with expected response shapes + the `>` prompt terminator — not a trivial stub. The handshake + state-machine unit tests run against it.
 - [ ] **iOS BLE permission — named artifact (BLOCKING, F40):** `ios/MotoDiag/Info.plist` carries `NSBluetoothAlwaysUsageDescription` with **non-empty descriptive copy** (the F-B failure mode was the key present with an empty string value — verify the *value*, not just the key).
 - [ ] **Android BLE permissions:** `AndroidManifest.xml` carries `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` (+ `ACCESS_FINE_LOCATION` where required) — landed in the **same PR** as the iOS Info.plist key (F40 cross-platform-parity).
@@ -114,6 +114,26 @@ Plan v1.0 reviewed by the architect; v1.0 was sound (F33 audit correctly framed 
 **Build authorization:** with this v1.0.1 amendment landed, the plan is ready for architect sign-off. On "build 196": the device-independent build + unit verification run to completion (the `FakeObdProvider` models the real handshake); the real-dongle smoke gate is held for a coordinated device session. Phase reaches the explicit intermediate state "build complete, unit-verified, smoke gate held."
 
 **Parallel, not gated on this plan:** sourcing a known-good ELM327-BLE dongle (Track E Phase 145 compat-DB ranked list) + confirming the mechanic's adapter model — an architect/owner real-world action that de-risks the scarce device session; runs independently of plan sign-off.
+
+## v1.0.2 amendment — full transport coverage, sequenced (pre-code, 2026-05-17)
+
+**Trigger.** Architect directive after the v1.0.1 review: *"build support for all available dongles, at least the most popular."* This reverses v1.0.1's Q4 (BLE-only). **Why it had to give:** the single most popular OBD-II dongle — the generic ELM327 v1.5 clone, sold under 50+ brand names at ~$13 — is **classic Bluetooth 2.x (SPP)**, a radio protocol `react-native-ble-plx` cannot reach. A BLE-only product would not support the dongle most mechanics already own. "Most popular dongles" genuinely spans three transport stacks: BLE (ble-plx), classic-BT (a separate RN library), Wi-Fi (TCP sockets).
+
+**Ruling (architect, "sequenced — plan commits to all 3"):** the plan commits to full transport coverage, delivered across **gate-sized sequenced phases** behind the transport-agnostic `ObdConnection` seam — *not* crammed into one phase. Phase 196 ships the BLE provider; classic-BT and Wi-Fi are their own committed follow-on phases. This honors both the product requirement (all popular dongles supported) and the substrate-then-feature gate-discipline (each transport is its own build + its own device smoke).
+
+### Transport-provider roadmap (committed)
+
+| Phase | Provider | Transport / library | Covers |
+|-------|----------|---------------------|--------|
+| **196** | `BleObdProvider` | BLE — `react-native-ble-plx` (installed) | OBDLink CX, Vgate iCar Pro BT4.0, newer BLE clones |
+| **196B** | `ClassicBtObdProvider` | Classic Bluetooth 2.x SPP — new RN dep (`react-native-bluetooth-classic` or equiv.) | the ~$13 generic ELM327 v1.5 clone (50+ brands) — *the* most popular dongle |
+| **196C** | `WifiObdProvider` | Wi-Fi — TCP sockets to the adapter's AP | ELM327 Wi-Fi clones |
+
+Each phase: an **additive new provider behind the same `ObdConnection` seam** — no rewrite of 196's work; the `ObdConnectScreen` / state machine / `elm327.ts` handshake / typed errors are transport-shared and built once in 196. Each phase carries its own device smoke (its own dongle type). 196B/196C are added to the Track I roadmap (mobile `docs/ROADMAP.md`) as committed reserved phases.
+
+**Consequences for Phase 196 itself:** unchanged in scope — 196 still builds + smokes BLE only. The single hardening: the transport-agnostic seam moves from "folded-in nicety" (v1.0.1) to a **load-bearing requirement with its own closure check** — `ObdConnection` must cleanly admit a non-BLE provider, because 196B/196C are now committed, not hypothetical. The `BleObdProvider` is named as one provider implementation, not "the connection."
+
+**Build authorization unchanged:** with v1.0.2 landed the plan is ready for sign-off; "build 196" authorizes the BLE-provider build to completion, device smoke held. 196B/196C plans are written when 196 closes (their own plan-v1.0 cycles).
 
 ## Risks / Assumptions / Next step
 

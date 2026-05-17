@@ -96,3 +96,40 @@ the mechanic's adapter model — runs this week, independent of plan review.
 
 **Next:** architect sign-off of plan v1.0.1 → "build 196" authorizes the
 device-independent build to completion; device smoke gate held for a session.
+
+---
+
+### 2026-05-17 — Plan v1.0.1 → v1.0.2 amendment (full transport coverage, sequenced — pre-code)
+
+Architect directive after the v1.0.1 review: *"build support for all available
+dongles, at least the most popular."* This **reverses v1.0.1's Q4** (BLE-only).
+
+**Why Q4 had to give:** the single most popular OBD-II dongle — the generic
+ELM327 v1.5 clone (~$13, 50+ brand names) — is **classic Bluetooth 2.x (SPP)**,
+which `react-native-ble-plx` physically cannot reach. "Most popular dongles"
+spans three transport stacks: BLE / classic-BT / Wi-Fi.
+
+**Architect ruling — "sequenced, plan commits to all 3":** the plan commits to
+full transport coverage delivered across gate-sized sequenced phases behind the
+transport-agnostic `ObdConnection` seam — not crammed into one phase. Committed
+transport-provider roadmap:
+- **196** — `BleObdProvider` (BLE / `react-native-ble-plx`) — this phase.
+- **196B** — `ClassicBtObdProvider` (classic Bluetooth 2.x SPP; new RN dep) —
+  covers the ~$13 generic clone, *the* most popular dongle.
+- **196C** — `WifiObdProvider` (Wi-Fi / TCP sockets) — ELM327 Wi-Fi clones.
+
+Each is an additive provider behind the same seam (the shared
+`ObdConnectScreen` / state machine / `elm327.ts` handshake / typed errors are
+built once in 196); each carries its own device smoke.
+
+**Effect on Phase 196:** scope unchanged — 196 still builds + smokes BLE only.
+The one hardening: the transport-agnostic `ObdConnection` seam is promoted from
+a v1.0.1 "folded-in nicety" to a **load-bearing requirement with its own
+closure check** (a stub non-BLE provider must be admissible behind the seam
+without touching `BleObdProvider`) — because 196B/196C are now committed.
+
+196B + 196C added to the Track I roadmap (mobile `docs/ROADMAP.md`) as
+committed reserved phases.
+
+**Next:** architect sign-off of plan v1.0.2 → "build 196" authorizes the
+BLE-provider build; 196B/196C get their own plan-v1.0 cycles when 196 closes.
