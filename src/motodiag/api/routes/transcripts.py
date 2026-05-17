@@ -152,6 +152,7 @@ class ExtractedSymptomConfirmRequest(BaseModel):
     category: Optional[str] = None
 
 
+# f9-table: extracted_symptoms  (Phase 195C — F37 Track 2 model→table marker)
 class ExtractedSymptomResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -169,6 +170,7 @@ class ExtractedSymptomResponse(BaseModel):
     created_at: str
 
 
+# f9-table: voice_transcripts  (Phase 195C — F37 Track 2 model→table marker)
 class VoiceTranscriptResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
 

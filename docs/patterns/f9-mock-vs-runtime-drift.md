@@ -1,8 +1,8 @@
 # F9 — Mock-vs-Runtime Drift Failure Family
 
-> **This doc is layered.** Early sections (Problem statement, Why this matters, the original 7-instance catalog) snapshot the state at Phase 191C closure (2026-05-04). Later sections (Subspecies (ii) generalized + Instances #8/#9/#10) extend the catalog at Phase 191D Commit 1 + Commit 4 (2026-05-04 → 2026-05-05). When the doc says "this catalog has N instances," check which section you're reading: the early summary uses the 191C-era count of 7; the post-191D-extension subspecies summary updates to 10. Sealed-history numbers in the early sections are NOT bumped backward — the 191C-era narrative is preserved verbatim per the audit-trail-preservation principle established at Phase 191C v1.0.1.
+> **This doc is layered.** Early sections (Problem statement, Why this matters, the original 7-instance catalog) snapshot the state at Phase 191C closure (2026-05-04). Later sections (Subspecies (ii) generalized + Instances #8/#9/#10) extend the catalog at Phase 191D Commit 1 + Commit 4 (2026-05-04 → 2026-05-05). The "contract-surface-drift" subspecies + Instance #11 extend it again at Phase 195C (2026-05-17). When the doc says "this catalog has N instances," check which section you're reading: the early summary uses the 191C-era count of 7; the post-191D-extension subspecies summary updates to 10; the post-195C summary updates to 11. Sealed-history numbers in the early sections are NOT bumped backward — the 191C-era narrative is preserved verbatim per the audit-trail-preservation principle established at Phase 191C v1.0.1.
 
-> Earlier closure docs from Phase 191B refer to "6 instances" of this family. That count merged the two distinct bugs fixed in commit 832579d (deploy-path-missing-wiring and format-coincidence-latent / self-validating-test-setup) into a single instance. Going forward, this catalog tracks them as separate subspecies. **Total instances: 7 at Phase 191C closure; 10 after Phase 191D extends Subspecies (ii) generalized.**
+> Earlier closure docs from Phase 191B refer to "6 instances" of this family. That count merged the two distinct bugs fixed in commit 832579d (deploy-path-missing-wiring and format-coincidence-latent / self-validating-test-setup) into a single instance. Going forward, this catalog tracks them as separate subspecies. **Total instances: 7 at Phase 191C closure; 10 after Phase 191D extends Subspecies (ii) generalized; 11 after Phase 195C adds the contract-surface-drift subspecies.**
 
 ## Problem statement
 
@@ -638,6 +638,64 @@ TAG_CATALOG = [
 
 ---
 
+## Subspecies (vi): contract-surface-drift — when the DB CHECK and the API contract advertise different value-sets
+
+Phase 195C adds a sixth subspecies. Subspecies (ii) generalized covers a *test* pinning a literal that *production* derives from an SSOT — a test-vs-runtime drift. Contract-surface-drift is a sibling shape one layer up: it is a *schema-vs-contract* drift between two production sources of truth, neither of which is a test.
+
+**The mechanism.** A DB column carries a `CHECK (<col> IN ('a', 'b', 'c'))` constraint — the *schema* enforces a closed value-set. A Pydantic response-model field maps to that column — the *API contract* (and, downstream, the generated OpenAPI spec + the mobile codegen) advertises a value-set. When the field is typed `Literal["a", "b", "c"]`, the two value-sets are kept honest by being written out in both places; a reviewer (or this lint rule) can diff them. When the field is typed plain `str`, the contract advertises *no* value-set at all — the OpenAPI surface emits a freeform `string`, and mobile codegen produces a freeform `string` instead of a typed union. The schema still enforces the closed set at write time, but the contract no longer tells any client what that set is. The two have drifted: the schema knows four states, the contract knows "any string."
+
+**The telling signal.** A backend CHECK-constraint bump that does not surface as a mobile type error. When the schema's closed set is mirrored into a Pydantic `Literal`, adding a fifth state to the migration's CHECK *and* the `Literal` makes the OpenAPI enum grow, the mobile codegen regenerate, and any exhaustive `switch` over the union fail to compile until the new case is handled — the type system carries the schema change across the boundary. When the field is `str`, the same CHECK bump is invisible to every client: nothing regenerates, nothing fails to compile, and a mobile screen that special-cases the four known states silently falls through to its default branch for the fifth. The drift is *latent* — it costs nothing until the day a real value of the new state reaches a client that wasn't told about it.
+
+**Why discipline alone failed.** This is the failure mode F37 instance #3 documented directly: Phase 194's `photos.py` had `PhotoRole = Literal["before", "after", "general", "undecided"]` — correct, a typed alias mirroring the `work_order_photos.role` CHECK. One phase later, Phase 195's `transcripts.py` shipped `voice_transcripts.extraction_state` (a column with a four-value CHECK in migration 042) typed as plain `str` on `VoiceTranscriptResponse`. The discipline that produced the correct `photos.py` did not carry forward to `transcripts.py` — the same per-phase-discipline decay that motivated every lint rule in this doc. Phase 195 Backend Commit 0.5 corrected the `transcripts.py` regression by hand; Phase 195C automates the catch so the *next* regression is caught by CI, not by a reviewer who happens to remember the `photos.py` precedent.
+
+### Instance #11 — Phase 195 Backend Commit 0.5 [2026-05-16]
+
+**Subspecies**: (vi) contract-surface-drift
+
+**The bug**: migration 042 (Phase 195 — voice-transcript intake) created `voice_transcripts` with `extraction_state TEXT NOT NULL DEFAULT 'pending' CHECK (extraction_state IN ('pending', 'extracting', 'extracted', 'extraction_failed'))` — a four-value closed set enforced by the schema. The Phase 195 route module `src/motodiag/api/routes/transcripts.py` declared `VoiceTranscriptResponse.extraction_state: str`. The OpenAPI spec therefore advertised `extraction_state` as a freeform `string`, and the mobile codegen produced `extraction_state: string` rather than the four-member union the schema actually enforces. A mobile screen rendering transcript state would receive a value the type system claimed could be anything.
+
+**The mock-vs-runtime gap**: the gap is between two production sources of truth — the DB schema's CHECK (`extraction_state` is one of exactly four strings) and the API contract's Pydantic annotation (`extraction_state` is any string). Phase 194's `photos.py` had closed the same gap correctly one phase earlier (`PhotoRole = Literal[...]` mirroring `work_order_photos.role`'s CHECK); the `photos.py` correctness did not propagate to `transcripts.py`. The contract under-advertised what the schema enforces, and nothing — no test, no type error — surfaced the divergence, because a `str` annotation is perfectly valid Python and a perfectly valid Pydantic field; it just throws away information the schema has.
+
+**Anti-example code**:
+
+```py
+# src/motodiag/api/routes/transcripts.py — Phase 195 pre-Commit-0.5
+class VoiceTranscriptResponse(BaseModel):
+    id: int
+    extraction_state: str  # BUG: maps to voice_transcripts.extraction_state,
+                           # a column with a 4-value CHECK; str throws the
+                           # value-set away — OpenAPI emits freeform `string`
+```
+
+```py
+# Contrast: src/motodiag/api/routes/photos.py — Phase 194, correct
+PhotoRole = Literal["before", "after", "general", "undecided"]
+
+class WorkOrderPhotoResponse(BaseModel):
+    role: PhotoRole  # mirrors work_order_photos.role's CHECK exactly
+```
+
+**Fix pattern** (Phase 195 Backend Commit 0.5):
+
+```py
+# src/motodiag/api/routes/transcripts.py — Phase 195 Commit 0.5
+ExtractionState = Literal[
+    "pending", "extracting", "extracted", "extraction_failed"
+]
+
+class VoiceTranscriptResponse(BaseModel):
+    id: int
+    extraction_state: ExtractionState  # mirrors the migration-042 CHECK
+```
+
+**Recognition heuristic**: any Pydantic response field whose name matches a DB column carrying a string-enum `CHECK` constraint. Ask: does the field's annotation tell a client the *same* closed set the schema enforces? A `str` annotation answers "no — the contract advertises nothing." A `Literal[...]` (or a `Literal` alias) answers "yes — and a reviewer/lint can diff the two value-sets." A `str`/`Enum` annotation also answers "yes" (FastAPI emits a typed OpenAPI `enum` for `str`/`Enum` fields) — it is contract-correct, though house style prefers a `Literal` alias for consistency. The shape to catch: a field that *could* mirror a known closed set but doesn't.
+
+**Lint coverage**: caught by `scripts/check_f9_patterns.py --check-pydantic-literal-vs-check-constraint` (Phase 195C, F37 Track 2). The rule parses every `Migration(upgrade_sql=...)` string in `src/motodiag/core/migrations.py` for `CHECK (<col> IN ('a', ...))` constraints, keyed by `(table, column)` (so the three real same-named `role` columns on `fleet_bikes` / `shop_members` / `work_order_photos` don't cross-wire — a column-name-only join would re-commit this very family of error inside the lint tool); AST-walks every `BaseModel` subclass under `src/motodiag/api/routes/` plus `src/motodiag/core/models.py`; resolves each model to its table (explicit `# f9-table:` marker, authoritative; class-name convention, fallback); and — per the **v1.0.2 positive-resolution-required** rule — validates a field **only when its model positively resolves to a table that actually carries a CHECK on that column.** A `str`-typed field on such a field fires `pydantic-literal-vs-check` at error severity (Instance #11's exact shape); a `Literal` whose value-set ≠ the CHECK set fires the same rule (the contract-surface-drift mismatch); a `str`/`Enum` field fires `pydantic-literal-vs-check-warn` at warn severity. A field whose model does **not** resolve to a CHECK-bearing table for that column produces **no finding** — the rule never guesses and never false-flags a mere name-coincidence (the v1.0.2 fix for the over-firing the Phase 195C retroactive sweep surfaced: `HealthStatus.status`, a health-check model with no DB table, was flagged against seven unrelated DB `status` tables under the pre-v1.0.2 join). Opt-outs mirror the F9 machinery: file-level `# f9-allow-pydantic-literal-vs-check: <reason>` and per-line `# f9-noqa: pydantic-literal-vs-check <reason>`, both with the 20-char reason floor.
+
+**Fix commit**: `<Phase 195 Backend Commit 0.5>` (the by-hand correction); `--check-pydantic-literal-vs-check-constraint` ships in Phase 195C to automate the catch.
+
+---
+
 ### The new `contract-pin` opt-out category
 
 Phase 191C 5a established three opt-out reason categories the lint accepts on a per-line `f9-noqa` comment: `SSOT-pin`, `meta-test`, and `contract-assertion`. Phase 191D adds a fourth — `contract-pin` — to handle the legitimate two-source assertion design that the SSOT-constants generalization surfaces in well-written tests.
@@ -704,9 +762,9 @@ The full F22 / F23 / F24 descriptions live in mobile FOLLOWUPS.md (the cross-cut
 
 ---
 
-## The 5 subspecies + their mitigations
+## The 6 subspecies + their mitigations
 
-The ten instances above partition into five subspecies by mechanism. Lint coverage exists for four; the fifth is doc-only. Subspecies (ii) carries the bulk of the family weight — four of ten instances (#7 Phase 191B C2 model-string, #8 Phase 191B fix-cycle-5 SCHEMA_VERSION, #9 Phase 191B fix-cycle-5 TAG_CATALOG forward-direction, #10 Phase 191D Commit 4 TAG_CATALOG reverse-direction auth-orphan) — which is why Phase 191D generalized the narrow Phase 191C rule to cover any SSOT-managed constant rather than model IDs only AND added the `--check-tag-catalog-coverage` mode covering both directions of route↔catalog drift.
+The eleven instances above partition into six subspecies by mechanism. Lint coverage exists for five; the sixth (subspecies (v) self-validating-test-setup) is doc-only. Subspecies (ii) carries the bulk of the family weight — four of eleven instances (#7 Phase 191B C2 model-string, #8 Phase 191B fix-cycle-5 SCHEMA_VERSION, #9 Phase 191B fix-cycle-5 TAG_CATALOG forward-direction, #10 Phase 191D Commit 4 TAG_CATALOG reverse-direction auth-orphan) — which is why Phase 191D generalized the narrow Phase 191C rule to cover any SSOT-managed constant rather than model IDs only AND added the `--check-tag-catalog-coverage` mode covering both directions of route↔catalog drift. Subspecies (vi) contract-surface-drift (Instance #11, Phase 195C) is the newest member: a schema-vs-contract drift between two *production* sources of truth, lint-covered by `--check-pydantic-literal-vs-check-constraint`.
 
 ### Subspecies (i) — Closure-state capture in native callbacks
 
@@ -795,6 +853,18 @@ cameraRef.current?.startRecording({
 
 **Lint coverage**: DOC-ONLY. Static analysis can't tell whether a test fixture was set up "from the right side" of an integration boundary — the bug shape is a runtime semantic mismatch between two valid code paths, neither of which is "wrong" in isolation. The mitigation is reviewer attention + the recognition heuristic above.
 
+### Subspecies (vi) — Contract-surface-drift
+
+**Pattern**: a DB column carries a string-enum `CHECK (<col> IN ('a', 'b', ...))` constraint (the *schema* enforces a closed value-set); the Pydantic response field mapping to that column is typed plain `str` (or a `Literal` whose value-set has drifted from the CHECK). The API contract — and the OpenAPI spec + mobile codegen downstream — then advertises a freeform `string` (or a stale enum) instead of the closed set the schema actually enforces. A backend CHECK bump becomes invisible to every client: nothing regenerates, nothing fails to compile.
+
+**Lint rule (backend)**: `scripts/check_f9_patterns.py --check-pydantic-literal-vs-check-constraint`
+
+**Heuristic**: parse `src/motodiag/core/migrations.py` for every `Migration(upgrade_sql=...)` string; regex-scan for `CHECK (<col> IN ('a', ...))` constraints keyed by `(table, column)` (tracking the enclosing `CREATE TABLE` / `ALTER TABLE`); numeric/boolean CHECKs (`IN (0, 1)`) and `rollback_sql` are skipped. AST-walk every `BaseModel` subclass (incl. transitive) under `src/motodiag/api/routes/**/*.py` plus `src/motodiag/core/models.py`; resolve each model to its table (`# f9-table:` marker authoritative, class-name convention fallback); then — **v1.0.2 positive-resolution-required matching** — validate a field ONLY when its model resolves to a table that actually carries a CHECK on that column. `str`-typed -> error; `Literal` value-set mismatch -> error; `str`/`Enum` -> warn (FastAPI emits a typed OpenAPI enum, so it is contract-correct — house style prefers a `Literal` alias); a field whose model resolves to no CHECK-bearing table for that column -> no finding (the rule never guesses and never false-flags a name-coincidence — the v1.0.2 fix for the over-firing the 195C retroactive sweep surfaced).
+
+**Exempt**: file-level `# f9-allow-pydantic-literal-vs-check: <reason>` (full-file exemption) or per-line `# f9-noqa: pydantic-literal-vs-check <reason>`, both with the 20-char reason floor; malformed opt-outs emit a `*-malformed-optout` finding and do not exempt.
+
+**Fix pattern**: type the field `Literal[...]` (or a module-level `Literal` alias) whose value-set matches the column's CHECK constraint exactly — so the OpenAPI surface emits a strict enum and the schema change carries across the boundary as a mobile type error.
+
 ## When you suspect F9 in your code
 
 A decision tree for new-code review. Walk it on every PR that touches a test file or a network/native/database boundary.
@@ -808,6 +878,8 @@ A decision tree for new-code review. Walk it on every PR that touches a test fil
 4. **Is the code a CLI command launching a long-running process?** uvicorn, gunicorn, hypercorn, a custom worker loop, a scheduler, a websocket server, a daemon. → Check **subspecies (iv) deploy-path missing wiring**. Audit by asking: what setup functions does *every other CLI subcommand* call before doing real work? Are they all called from this long-running entry point too?
 
 5. **Did the test setup write data via the function-under-test?** Did the test build its fixtures by calling the helper that the test then asserts against? Did the test mock the boundary the production code is supposed to integrate with, then assert that the mock returned what the mock was set up to return? → Check **subspecies (v) self-validating test setup**. Where does production WRITE that data, and is the test exercising THAT write path?
+
+6. **Is the code a Pydantic response field mapping to a DB column with a `CHECK (... IN (...))` constraint?** A status / state / role / kind / method field on a response model whose name matches a column that the schema constrains to a closed string set. → Check **subspecies (vi) contract-surface-drift**. Is the field typed `Literal[...]` (or a `Literal` alias) whose value-set matches the CHECK exactly? A plain `str` annotation throws the value-set away — the OpenAPI surface emits a freeform `string` and a future CHECK bump becomes invisible to every client.
 
 If you can't answer any of the above with confidence: pause and read the case study for that subspecies above. The mock-vs-runtime gap that bites you is almost always one you've seen before — the catalog exists so you don't have to rediscover it.
 

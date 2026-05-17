@@ -10,6 +10,11 @@
 # literal-pin scan, subsumes the deprecated `--check-model-ids`) +
 # `--check-tag-catalog-coverage` (route tags vs TAG_CATALOG diff).
 #
+# Phase 195C (2026-05-17): F37 contract-surface-drift. The `--all` flag
+# below now also runs `--check-pydantic-literal-vs-check-constraint`
+# (Pydantic response fields vs DB CHECK constraints). The dedicated
+# hook below invokes the same check standalone for fast targeted runs.
+#
 # Pattern doc: docs/patterns/f9-mock-vs-runtime-drift.md
 
 repos:
@@ -27,5 +32,22 @@ repos:
           hardcoded model IDs + (iv) deploy-path missing init_db.
           Phase 191D F20/F21 generalization: --check-ssot-constants
           (TOML-driven, subsumes --check-model-ids) +
-          --check-tag-catalog-coverage. See
+          --check-tag-catalog-coverage. Phase 195C F37:
+          --check-pydantic-literal-vs-check-constraint. See
+          docs/patterns/f9-mock-vs-runtime-drift.md.
+      - id: f9-pydantic-literal-vs-check-constraint
+        name: F9 Pydantic-Literal-vs-DB-CHECK constraint check
+        entry: >
+          python scripts/check_f9_patterns.py
+          --check-pydantic-literal-vs-check-constraint
+        language: system
+        pass_filenames: false
+        always_run: true
+        stages: [pre-commit]
+        description: >
+          Phase 195C F37 (contract-surface-drift): scan Pydantic
+          response fields under src/motodiag/api/routes/ +
+          core/models.py for fields mapping to a DB CHECK constraint
+          (parsed from core/migrations.py) that aren't a
+          value-set-matching Literal. See
           docs/patterns/f9-mock-vs-runtime-drift.md.
