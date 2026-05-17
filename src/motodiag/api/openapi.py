@@ -156,6 +156,18 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "stream. Per-WO cap 30, per-issue cap 10. Phase 194."
         ),
     },
+    {
+        "name": "voice-transcripts",
+        "description": (
+            "Voice symptom capture: upload a voice memo to a work "
+            "order, on-device STT preview + keyword symptom "
+            "extraction. POST upload (shop-tier + multipart) / GET "
+            "list / GET single / PATCH extracted-symptom confirm-"
+            "edit / DELETE soft-delete / GET binary audio-stream. "
+            "60-day audio retention sweep; transcripts permanent. "
+            "Phase 195."
+        ),
+    },
 ]
 
 
