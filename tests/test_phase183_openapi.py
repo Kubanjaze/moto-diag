@@ -74,10 +74,12 @@ class TestServers:
         assert any("localhost" in u for u in urls)
 
     def test_api_servers_list_default(self):
+        # Phase 195B F44 fold-in: default port moved 8080 -> 8000 to
+        # match uvicorn norm + mobile's expectation. See config.py.
         s = Settings()
         servers = s.api_servers_list
         assert servers == [
-            {"url": "http://localhost:8080", "description": "Local dev"},
+            {"url": "http://localhost:8000", "description": "Local dev"},
         ]
 
     def test_api_servers_list_parses_pipe_separated(self):

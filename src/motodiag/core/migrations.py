@@ -3162,6 +3162,62 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS voice_transcripts;
         """,
     ),
+    # Migration 043 — Phase 195B (Commit 0): cost_events ledger
+    Migration(
+        version=43,
+        name="cost_events",
+        description=(
+            "Phase 195B (Commit 0): Add `cost_events` table — a granular "
+            "per-call ledger for cloud-API cost monitoring (Risk 8 from "
+            "the Phase 195 pre-plan). One row per OpenAI Whisper "
+            "transcription call and per Claude-rich symptom-extraction "
+            "call. The `voice_transcripts.whisper_cost_usd_cents` column "
+            "(migration 042) holds the per-transcript denormalized "
+            "Whisper total; `cost_events` is the itemized ledger that "
+            "backs the `motodiag costs report` rollup CLI + the soft "
+            "per-shop monthly cap.\n\n"
+            "`kind` CHECK enum {whisper, claude_extraction} — Phase 195B "
+            "ships both; future cloud-API kinds extend the enum (+ the "
+            "matching Pydantic Literal, per F37 Track 1 discipline).\n\n"
+            "`transcript_id` FK ON DELETE SET NULL — the ledger row "
+            "outlives the transcript it billed for (cost history must "
+            "survive transcript deletion for accurate monthly rollups). "
+            "`shop_id` denormalized onto the row (not joined through "
+            "the transcript) for the same reason + fast per-shop "
+            "aggregation. `units_label` / `units_value` are a "
+            "kind-polymorphic measure: 'duration_ms' for Whisper "
+            "(billed per audio-minute), 'tokens' for Claude (billed "
+            "per token). `cost_usd_cents` is the computed charge."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS cost_events (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('whisper', 'claude_extraction')),
+                model TEXT NOT NULL,
+                transcript_id INTEGER,
+                shop_id INTEGER,
+                units_label TEXT,
+                units_value INTEGER,
+                cost_usd_cents INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (transcript_id)
+                    REFERENCES voice_transcripts(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_cost_events_created
+                ON cost_events(created_at);
+            CREATE INDEX IF NOT EXISTS idx_cost_events_shop
+                ON cost_events(shop_id);
+            CREATE INDEX IF NOT EXISTS idx_cost_events_kind
+                ON cost_events(kind);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_cost_events_kind;
+            DROP INDEX IF EXISTS idx_cost_events_shop;
+            DROP INDEX IF EXISTS idx_cost_events_created;
+            DROP TABLE IF EXISTS cost_events;
+        """,
+    ),
 ]
 
 

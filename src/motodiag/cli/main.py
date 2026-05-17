@@ -25,6 +25,7 @@ from motodiag.cli.serve import register_serve
 from motodiag.cli.shop import register_shop
 from motodiag.cli.theme import get_console, status, tier_style
 from motodiag.cli.transcripts import register_transcripts
+from motodiag.cli.costs import register_costs
 
 console = get_console()
 
@@ -779,6 +780,10 @@ register_subscription(cli)
 # Phase 195: register `transcripts` subgroup (voice memo admin —
 # `motodiag transcripts sweep` runs the 60-day audio retention sweep).
 register_transcripts(cli)
+
+# Phase 195B: register `costs` subgroup (cloud-API cost monitoring —
+# `motodiag costs report` rolls up the cost_events ledger).
+register_costs(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

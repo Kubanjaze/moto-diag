@@ -137,3 +137,91 @@ def categories() -> list[str]:
     Useful for UI category-picker rendering + test fixtures.
     """
     return list(SYMPTOM_CATEGORIES.keys())
+
+
+# ---------------------------------------------------------------------------
+# Phase 195B — Claude-fallback threshold (plan v1.0 §3)
+# ---------------------------------------------------------------------------
+#
+# CALIBRATION (derived Phase 195B Backend Commit 1, documented here +
+# in the Commit 1 phase-log per the F47 audit-trail obligation):
+#
+# The threshold gates whether the Claude-rich extraction pass runs
+# after the keyword pass. "Coverage" = fraction of candidate phrases
+# in the transcript that the keyword matcher assigned to a real
+# (non-'other') category.
+#
+# Hybrid calibration corpus: Step 10's 5 device transcripts (all
+# clean — all phrases matched, coverage 1.0; used ALONE they push the
+# threshold to "never fire Claude") + 18 synthesized edge-case
+# fixtures covering keyword-extraction failure modes (informal
+# phrasing — "won't kick over"; jargon outside SYMPTOM_CATEGORIES;
+# run-on multi-symptom sentences). Running the keyword pass over the
+# synthetic set: transcripts a human reads as "has symptoms the
+# keyword dict missed" cluster at coverage <= 0.5; transcripts the
+# keyword pass handled well cluster at coverage >= 0.6.
+#
+# Threshold = 0.5 — moderate, NOT aggressive. Step 10's finding that
+# on-device keyword extraction is resilient to peripheral STT noise
+# (correct fuel-category rows in all 5 conditions) means Claude does
+# not need to fire defensively; 0.5 lets keyword handle the clear
+# cases + reserves Claude for genuinely ambiguous transcripts. A
+# zero-row keyword result on a non-empty transcript ALWAYS fires
+# Claude (coverage 0.0 is below any positive threshold; made explicit
+# below for clarity).
+#
+# F47 tickets the post-launch re-derivation against >=50 real
+# production transcripts — the synthetic-fixture realism is the
+# acknowledged exposure (plan v1.0 Risk #2). Overridable here as a
+# single constant when F47's revisit lands.
+CLAUDE_FALLBACK_COVERAGE_THRESHOLD = 0.5
+
+
+def keyword_coverage(
+    phrases: list[str],
+    extracted: list[ExtractedPhrase],
+) -> float:
+    """Fraction of candidate phrases the keyword pass categorized.
+
+    ``phrases`` is the :func:`split_into_phrases` output;
+    ``extracted`` is the :func:`extract_symptoms_from_transcript`
+    output. Coverage = distinct phrases that produced >=1 extracted
+    symptom / total candidate phrases. Returns 0.0 for an empty
+    phrase list (no transcript content → no coverage; the caller's
+    ``should_run_claude_fallback`` treats empty transcripts as
+    "nothing to extract", NOT "run Claude").
+    """
+    if not phrases:
+        return 0.0
+    matched = {e.text for e in extracted}
+    # An ExtractedPhrase.text is the canonical (lowercased/stripped)
+    # phrase — the same form split_into_phrases emits, so set
+    # membership lines up.
+    covered = sum(1 for p in phrases if p in matched)
+    return covered / len(phrases)
+
+
+def should_run_claude_fallback(
+    preview_text: Optional[str],
+    extracted: list[ExtractedPhrase],
+    threshold: float = CLAUDE_FALLBACK_COVERAGE_THRESHOLD,
+) -> bool:
+    """Decide whether to run the Claude-rich extraction pass.
+
+    Phase 195B plan v1.0 §3 gate. Returns True when the keyword pass
+    left enough uncovered that a Claude pass is worth its cost:
+
+    * empty / whitespace transcript → False (nothing to extract).
+    * non-empty transcript, keyword produced ZERO rows → True
+      (keyword found nothing; the transcript clearly has content).
+    * keyword coverage < ``threshold`` → True.
+    * else → False (keyword sufficient).
+    """
+    if preview_text is None or not preview_text.strip():
+        return False
+    phrases = split_into_phrases(preview_text)
+    if not phrases:
+        return False
+    if not extracted:
+        return True
+    return keyword_coverage(phrases, extracted) < threshold

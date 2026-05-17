@@ -165,7 +165,8 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "list / GET single / PATCH extracted-symptom confirm-"
             "edit / DELETE soft-delete / GET binary audio-stream. "
             "60-day audio retention sweep; transcripts permanent. "
-            "Phase 195."
+            "Phase 195 (cloud Whisper + Claude-rich extraction: "
+            "Phase 195B)."
         ),
     },
 ]
@@ -379,7 +380,7 @@ def build_openapi(app: FastAPI) -> dict[str, Any]:
         from motodiag.core.config import get_settings
         servers = get_settings().api_servers_list
     except Exception:  # pragma: no cover — config must exist in prod
-        servers = [{"url": "http://localhost:8080",
+        servers = [{"url": "http://localhost:8000",
                     "description": "Local dev"}]
     if servers:
         schema["servers"] = servers

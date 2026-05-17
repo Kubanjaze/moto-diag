@@ -654,18 +654,39 @@ def _post_transcript(client, key, shop_id, wo_id, raw=None, **meta_overrides):
 
 class TestUploadHappyPath:
 
-    def test_upload_returns_201_with_extracted_symptoms(
+    def test_upload_returns_201_then_async_pipeline_extracts(
         self, client, authed,
     ):
+        # Phase 195B: the route is now ASYNC. The POST returns 201
+        # immediately with extraction_state='extracting' + zero
+        # extracted_symptoms; the BackgroundTask pipeline (Whisper →
+        # keyword → threshold → Claude → atomic finalize) populates
+        # them out-of-band. FastAPI's TestClient runs BackgroundTasks
+        # after the response, so a follow-up GET sees the finalized
+        # state. (Whisper is unavailable in the test env — no API key
+        # — so the pipeline degrades to preview_text + keyword, which
+        # is the path under test here.)
         _, key, shop_id, wo_id = authed
         r = _post_transcript(client, key, shop_id, wo_id)
         assert r.status_code == 201, r.text
         body = r.json()
         assert body["work_order_id"] == wo_id
         assert body["audio_format"] == "wav"
-        assert body["extraction_state"] == "extracted"
-        assert len(body["extracted_symptoms"]) >= 2
-        cats = {e["category"] for e in body["extracted_symptoms"]}
+        # POST response: async — 'extracting', no rows yet.
+        assert body["extraction_state"] == "extracting"
+        assert body["extracted_symptoms"] == []
+        # Follow-up GET: the bg pipeline has run (keyword over
+        # preview_text) → finalized 'extracted' with the symptoms.
+        tid = body["id"]
+        get_r = client.get(
+            f"/v1/shop/{shop_id}/work-orders/{wo_id}/transcripts/{tid}",
+            headers={"X-API-Key": key},
+        )
+        assert get_r.status_code == 200
+        got = get_r.json()
+        assert got["extraction_state"] == "extracted"
+        assert len(got["extracted_symptoms"]) >= 2
+        cats = {e["category"] for e in got["extracted_symptoms"]}
         assert "fuel" in cats  # rough idle
         assert "braking" in cats  # brake squeal
 
@@ -686,11 +707,26 @@ class TestUploadHappyPath:
     def test_upload_with_no_preview_text_extracts_zero_symptoms(
         self, client, authed,
     ):
+        # Phase 195B async: POST returns 201 'extracting'; the bg
+        # pipeline with no preview_text + no Whisper has nothing to
+        # extract → finalizes 'extracted' (or 'extraction_failed') with
+        # zero rows. Either terminal state is acceptable — the
+        # contract is "never stuck in 'extracting' + zero rows".
         _, key, shop_id, wo_id = authed
         r = _post_transcript(client, key, shop_id, wo_id, preview_text=None)
         assert r.status_code == 201
-        assert r.json()["extracted_symptoms"] == []
-        assert r.json()["extraction_state"] == "extracted"
+        body = r.json()
+        assert body["extraction_state"] == "extracting"
+        assert body["extracted_symptoms"] == []
+        tid = body["id"]
+        get_r = client.get(
+            f"/v1/shop/{shop_id}/work-orders/{wo_id}/transcripts/{tid}",
+            headers={"X-API-Key": key},
+        )
+        assert get_r.status_code == 200
+        got = get_r.json()
+        assert got["extraction_state"] in ("extracted", "extraction_failed")
+        assert got["extracted_symptoms"] == []
 
     def test_list_then_get_round_trip(self, client, authed):
         _, key, shop_id, wo_id = authed
@@ -819,9 +855,14 @@ class TestPatchConfirmFlow:
     def test_patch_extracted_symptom_round_trip(self, client, authed):
         _, key, shop_id, wo_id = authed
         r = _post_transcript(client, key, shop_id, wo_id)
-        body = r.json()
-        tid = body["id"]
-        eid = body["extracted_symptoms"][0]["id"]
+        tid = r.json()["id"]
+        # Phase 195B async: the POST response has no symptoms yet —
+        # GET after the bg pipeline finalizes to obtain a row to PATCH.
+        get_r = client.get(
+            f"/v1/shop/{shop_id}/work-orders/{wo_id}/transcripts/{tid}",
+            headers={"X-API-Key": key},
+        )
+        eid = get_r.json()["extracted_symptoms"][0]["id"]
         patch_r = client.patch(
             f"/v1/shop/{shop_id}/work-orders/{wo_id}/transcripts/{tid}"
             f"/extracted-symptoms/{eid}",

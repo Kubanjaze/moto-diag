@@ -579,16 +579,16 @@ class TestGate9OpenAPIContract:
 class TestGate9AntiRegression:
 
     def test_schema_version_unchanged(self):
-        # Gate 9 anti-regression pin. Last migration was 042 (Phase
-        # 195 voice_transcripts + extracted_symptoms tables for the
-        # voice-input substrate). Bump this pin alongside any
-        # deliberate SCHEMA_VERSION change AND the corresponding
-        # migration; an unintended bump must fail loud.
+        # Gate 9 anti-regression pin. Last migration was 043 (Phase
+        # 195B cost_events ledger table for cloud-API cost
+        # monitoring). Bump this pin alongside any deliberate
+        # SCHEMA_VERSION change AND the corresponding migration; an
+        # unintended bump must fail loud.
         # F-ticket F20 (filed 2026-05-04 with Phase 191B fix-cycle-5):
         # generalize Phase 191C's no-hardcoded-model-ids lint rule to
         # "no hardcoded SSOT-managed constants in tests" — would have
         # caught this missed-pin-update at Phase 191B finalize.
-        assert SCHEMA_VERSION == 42  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 41→42 at Phase 195 Commit 0 (migration 042 added the voice_transcripts + extracted_symptoms tables for the voice-input substrate). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
+        assert SCHEMA_VERSION == 43  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 42→43 at Phase 195B Commit 0 (migration 043 added the cost_events ledger table for cloud-API cost monitoring). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
 
     def test_track_h_summary_doc_exists(self):
         path = (

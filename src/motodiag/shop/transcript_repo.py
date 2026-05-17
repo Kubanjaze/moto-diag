@@ -124,6 +124,39 @@ def _update_audio_path(
         return cursor.rowcount > 0
 
 
+def update_whisper_result(
+    transcript_id: int,
+    *,
+    whisper_transcript: str,
+    whisper_segments_json: Optional[str],
+    whisper_cost_usd_cents: int,
+    whisper_model: str,
+    db_path: Optional[str] = None,
+) -> bool:
+    """Write the cloud-Whisper transcription result onto the row.
+
+    Phase 195B (Commit 1). Populates the four substrate-anticipates-
+    feature columns migration 042 reserved. Called by the async
+    extraction pipeline after a successful Whisper transcription;
+    a Whisper failure skips this (the columns stay NULL + the
+    pipeline degrades to ``preview_text``).
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "UPDATE voice_transcripts SET "
+            "    whisper_transcript = ?, whisper_segments = ?, "
+            "    whisper_cost_usd_cents = ?, whisper_model = ?, "
+            "    updated_at = ? "
+            "WHERE id = ? AND deleted_at IS NULL",
+            (
+                whisper_transcript, whisper_segments_json,
+                whisper_cost_usd_cents, whisper_model,
+                _now_iso(), transcript_id,
+            ),
+        )
+        return cursor.rowcount > 0
+
+
 # ---------------------------------------------------------------------------
 # Core CRUD
 # ---------------------------------------------------------------------------

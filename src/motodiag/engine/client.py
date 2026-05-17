@@ -31,6 +31,14 @@ from motodiag.engine.prompts import (
 
 _log = logging.getLogger(__name__)
 
+
+class ClaudeExtractionMalformedError(RuntimeError):
+    """Raised when Claude's symptom-extraction tool-use output is
+    absent or wrongly shaped (Phase 195B). The async extraction
+    pipeline catches this, keeps the keyword-extracted rows, and
+    flips ``extraction_state`` to ``extraction_failed`` — graceful
+    degradation per Phase 195B plan v1.0 §2."""
+
 # Model pricing per million tokens (USD) as of 2026-05.
 #
 # Phase 191B fix-cycle-4 (2026-05-04): the prior "sonnet" entry pointed
@@ -327,6 +335,155 @@ class DiagnosticClient:
         self.session.add_usage(usage)
 
         return response, usage
+
+    def extract_symptoms(
+        self,
+        transcript_text: str,
+        categories: list[str],
+        model: Optional[str] = None,
+    ) -> tuple[list[dict], TokenUsage]:
+        """Extract structured symptoms from a voice-memo transcript.
+
+        Phase 195B (Commit 1). The Claude-rich extraction half of the
+        voice-symptom feature. Runs a tool-use structured-output call
+        — the model is forced (via ``tool_choice``) to emit a
+        ``record_symptoms`` ``tool_use`` block whose input is a list
+        of ``{text, category}`` symptom objects. Tool-use is the most
+        reliable structured-output mechanism (Phase 191B
+        ``ask_with_images`` Vision precedent uses the same trick).
+
+        Model: Haiku by default (per Phase 195B plan v1.0 §2 — short-
+        transcript extraction is not a deep-reasoning task; Haiku is
+        ~10× cheaper + fast enough for the background pipeline). The
+        ``model`` override exists for the redirect-to-Sonnet path:
+        promote IF Commit-0/1 calibration shows extraction-quality
+        misses that are *model-capability-bound* rather than
+        *prompt-bound*.
+
+        ``categories`` constrains the ``category`` field to the
+        caller's canonical set (``SYMPTOM_CATEGORIES`` keys) — passed
+        in rather than imported to keep ``engine`` free of a
+        ``media`` import.
+
+        Returns ``(symptom_dicts, TokenUsage)``. Each dict is
+        ``{"text": str, "category": str}``. The caller (the async
+        extraction pipeline) records the ``TokenUsage`` as a
+        ``cost_events`` ledger row. Raises ``RuntimeError`` when the
+        client is not configured; the pipeline catches it + degrades
+        to keyword-only results.
+
+        Malformed-output handling: if the model returns no
+        ``tool_use`` block, or the block's input isn't shaped as
+        expected, this raises :class:`ClaudeExtractionMalformedError`
+        — the pipeline catches it, keeps the keyword rows, and flips
+        ``extraction_state`` to ``extraction_failed`` (Phase 195B
+        plan v1.0 §2 graceful-degradation contract).
+        """
+        client = self._get_client()
+        resolved_model = _resolve_model(model) if model else self.model
+
+        tool_def = {
+            "name": "record_symptoms",
+            "description": (
+                "Record the motorcycle symptoms a mechanic described "
+                "in a voice memo. Extract each distinct symptom as a "
+                "short canonical phrase. Only record genuine vehicle "
+                "symptoms — ignore filler, greetings, and non-symptom "
+                "speech."
+            ),
+            "input_schema": {
+                "type": "object",
+                "properties": {
+                    "symptoms": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "text": {
+                                    "type": "string",
+                                    "description": (
+                                        "Short canonical symptom "
+                                        "phrase, e.g. 'rough idle when "
+                                        "warm'."
+                                    ),
+                                },
+                                "category": {
+                                    "type": "string",
+                                    "enum": categories,
+                                    "description": (
+                                        "Best-fit system category."
+                                    ),
+                                },
+                            },
+                            "required": ["text", "category"],
+                        },
+                    },
+                },
+                "required": ["symptoms"],
+            },
+        }
+
+        prompt = (
+            "A motorcycle mechanic recorded this voice memo describing "
+            "what's wrong with a bike. Extract the distinct symptoms.\n\n"
+            f"Transcript:\n{transcript_text}\n\n"
+            "Call record_symptoms with every genuine symptom you find. "
+            "If there are no real symptoms, call it with an empty list."
+        )
+
+        start_ms = int(time.time() * 1000)
+        response = client.messages.create(
+            model=resolved_model,
+            max_tokens=self.max_tokens,
+            temperature=0.0,  # extraction is parsing, not generation
+            messages=[{"role": "user", "content": prompt}],
+            tools=[tool_def],
+            tool_choice={"type": "tool", "name": "record_symptoms"},
+        )
+        latency = int(time.time() * 1000) - start_ms
+
+        usage = TokenUsage(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            model=resolved_model,
+            cost_estimate=_calculate_cost(
+                resolved_model,
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+            ),
+            latency_ms=latency,
+        )
+        self.session.add_usage(usage)
+
+        # Parse the forced tool_use block.
+        tool_block = next(
+            (b for b in response.content if getattr(b, "type", None) == "tool_use"),
+            None,
+        )
+        if tool_block is None:
+            raise ClaudeExtractionMalformedError(
+                "Claude returned no tool_use block for symptom extraction",
+            )
+        raw_input = getattr(tool_block, "input", None)
+        if not isinstance(raw_input, dict) or "symptoms" not in raw_input:
+            raise ClaudeExtractionMalformedError(
+                f"Claude tool_use input malformed: {raw_input!r}",
+            )
+        raw_symptoms = raw_input["symptoms"]
+        if not isinstance(raw_symptoms, list):
+            raise ClaudeExtractionMalformedError(
+                f"Claude 'symptoms' not a list: {raw_symptoms!r}",
+            )
+
+        out: list[dict] = []
+        for item in raw_symptoms:
+            if not isinstance(item, dict):
+                continue
+            text = str(item.get("text", "")).strip()
+            category = str(item.get("category", "")).strip()
+            if text and category:
+                out.append({"text": text, "category": category})
+        return out, usage
 
     def diagnose(
         self,
