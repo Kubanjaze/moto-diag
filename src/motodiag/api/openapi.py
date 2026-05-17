@@ -144,6 +144,18 @@ TAG_CATALOG: list[dict[str, Any]] = [
             "analyzed | analysis_failed | unsupported. Phase 191B."
         ),
     },
+    {
+        "name": "work-order-photos",
+        "description": (
+            "Work-order photo capture: attach photos to work orders "
+            "+ optionally to specific issues, classify before/after/"
+            "general/undecided, pair before+after. POST upload "
+            "(shop-tier + multipart; HEIC→JPEG + EXIF-normalize + "
+            "2048px resize) / GET list / GET single / PATCH "
+            "re-classify / DELETE soft-delete / GET binary file-"
+            "stream. Per-WO cap 30, per-issue cap 10. Phase 194."
+        ),
+    },
 ]
 
 

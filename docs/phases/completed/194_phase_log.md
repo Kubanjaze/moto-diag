@@ -182,3 +182,46 @@ Mobile Commit 2 landed in commit `6d55f81` (5 files, 723 insertions). Implementa
 
 **Phase 194 closes here.** Substrate + UI complete; ROADMAPs marked ✅; docs moved to `docs/phases/completed/`.
 
+---
+
+### 2026-05-17 09:50 — Bug fix #1: SCHEMA_VERSION-bump fallout + tag-catalog gap
+
+Surfaced during the Phase 195B PR-review full-suite run — the first time the
+whole 4587-test suite was run across the stacked 192→195B branch chain. Four
+cross-phase guard-test failures trace to Phase 194's migration 041 bumping
+`SCHEMA_VERSION` 40→41 without updating the test-side artifacts that pin 40,
+plus one tag-catalog gap. All were latent because Phase 194's build ran only
+194-specific tests, never the cross-phase guard suite. Per the architect's
+PR-review decision (2026-05-17), the fixes land on the originating branch —
+Phase 194 is where migration 041 first moved the schema past 40.
+
+- **Issue 1 — `test_phase184_gate9::test_schema_version_unchanged`:** the Gate 9
+  anti-regression pin `assert SCHEMA_VERSION == 40` was never bumped when
+  migration 041 landed. **Fix:** pin → 41; inline + block-comment narrative
+  updated to the 40→41 / migration-041 bump.
+- **Issue 2 — `test_phase191b_serve_migrations::...match_schema_version`:** the
+  fixture cross-check `assert get_current_version(db_path) == 40` likewise
+  stale. **Fix:** → 41; narrative updated.
+- **Issues 3+4 — `test_phase191d_ssot_constants_lint` positive-detection
+  self-tests:** the synthetic-fixture files hardcoded `SCHEMA_VERSION == 40`.
+  The SSOT lint flags a pin only when the literal matches the *live* value, so
+  with live=41 the hardcoded `40` no longer read as a pin → the two positive
+  tests got 0 findings where they expected 1. **Fix:** made the synthetic
+  fixtures interpolate the live `SCHEMA_VERSION` (f-strings) so they always
+  pin the current value. Also made the three opt-out self-tests' fixtures
+  dynamic — they had gone *silently vacuous* (literal 40 ≠ live 41 → lint
+  never fired → opt-out suppression untested) — same root cause, one coherent
+  fix. Added `from motodiag.core.database import SCHEMA_VERSION` import.
+- **Issue 5 — `test_phase191d_ssot_constants_lint::TestCheckTagCatalogCoverage`:**
+  Phase 194's `work-order-photos` router tag (`routes/photos.py:155`) was never
+  added to `TAG_CATALOG` in `api/openapi.py`. **Fix:** added the
+  `work-order-photos` catalog entry. (Phase 195B Commit 0 had backfilled this
+  forward as a fold-in; this commit reattributes it to its originating branch
+  per the PR-review decision — the merge-forward into 195/195B resolves the
+  duplication.)
+- **Files:** `tests/test_phase184_gate9.py`, `tests/test_phase191b_serve_migrations.py`,
+  `tests/test_phase191d_ssot_constants_lint.py`, `src/motodiag/api/openapi.py`.
+- **Verified:** `pytest test_phase184_gate9 test_phase191b_serve_migrations
+  test_phase191c_f9_lint test_phase191d_ssot_constants_lint test_phase183_openapi`
+  → 86/86 pass on `phase-194-camera-photo-integration`.
+
