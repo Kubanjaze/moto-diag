@@ -1,3 +1,6 @@
+# f9-allow-model-ids: fixture-data — the model-ID literal in this file is
+# fake-API-response payload data for the deterministic-PDF-render guard, not
+# production model selection; SSOT is src/motodiag/engine/client.py:MODEL_ALIASES.
 """Phase 192B Commit 1 — deterministic PDF rendering regression guard.
 
 Rendering the same ``ReportDocument`` twice should produce
