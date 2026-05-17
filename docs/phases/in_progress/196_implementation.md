@@ -1,6 +1,6 @@
 # Phase 196 — Bluetooth OBD adapter connection
 
-**Version:** 1.0 (plan — written before any code) | **Tier:** Standard | **Date:** 2026-05-17
+**Version:** 1.0.1 (plan — amended pre-code per architect review; see "v1.0.1 amendment") | **Tier:** Standard | **Date:** 2026-05-17
 
 > **Track I phase.** Phase 196 is the next phase in the locked sequence (195B → 195C → 196). Per `ROADMAP_AUTHORITY.md`, 196 is in the 185–204 range — a Track I phase — so its per-phase status is recorded in `Kubanjaze/moto-diag-mobile/docs/ROADMAP.md`; this per-phase doc lives in the backend ledger (`Kubanjaze/moto-diag/docs/phases/`) per the same contract. The work itself is **mobile-only** (see Logic + the F33 audit).
 
@@ -18,7 +18,7 @@ Phase 196 ships the Bluetooth OBD-II adapter connection layer for the mobile app
 - `src/hooks/useObdConnection.ts` — React hook surfacing connection state to screens.
 - `src/screens/ObdConnectScreen.tsx` — scan list + connect + connection-status UX.
 - `src/config/features.ts` (or equivalent) — `OBD_SUPPORT` feature flag.
-- iOS `Info.plist` + Android `AndroidManifest.xml` — BLE permission/usage-description keys (cross-platform parity — see Risks).
+- iOS `ios/MotoDiag/Info.plist` — `NSBluetoothAlwaysUsageDescription` key with **non-empty descriptive copy**; Android `AndroidManifest.xml` — `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` (+ `ACCESS_FINE_LOCATION` where required). Both in the **same PR** (F40 cross-platform-parity — named-artifact discipline; see "v1.0.1 amendment").
 - `__tests__/` coverage for all of the above (BLE mocked).
 
 ## Logic
@@ -72,12 +72,12 @@ Ran the Step-0 audit across both repos before this plan was written. **Phase 196
 
 **Conclusion:** extension of `BleService`; new `ObdConnection`/handshake/screen/flag layer on top; zero new dependency; zero backend change. No reshape — plan written as extension from line one.
 
-## Pre-plan Q&A (for architect review)
+## Pre-plan Q&A — architect-ruled (2026-05-17)
 
-- **Q1 — ADR-002 "flip" (raised at 196 kickoff).** *Resolved, not open.* ADR-002 defines its own reversal trigger: flip New Architecture ON only when (1) `react-native-ble-plx` ships New-Arch support **and** (2) a real-dongle scan+connect smoke passes. Neither holds today. **Recommendation: Phase 196 does NOT flip ADR-002** — it builds on the status-quo Old-Arch + `ble-plx@3.5.1` setup. The flip is a separate future event when the ADR's trigger fires; 196's own device smoke (Step 6) will be the first half of that trigger's evidence, but flipping is out of 196 scope. Architect to confirm.
-- **Q2 — backend integration scope.** 196 is proposed as **mobile-only**: scan/pair/connect/handshake, ending at "a live identified OBD link." Reading DTCs/PIDs over that link, and shipping them to a diagnostic session / the backend, is deferred (Phase 197+ territory). Confirm 196 stops at the connection layer.
-- **Q3 — device-gated gate.** The build is device-independent (BLE mocked); only the architect smoke gate needs a physical device + dongle. Confirm the phase may **build + unit-verify to completion now**, with the real-dongle smoke gate held as the one device-blocked step (run when a device session is available — and counted toward ADR-002's reversal evidence).
-- **Q4 — adapter scope.** ELM327 (+ common clones) over BLE is the target. Wi-Fi OBD adapters and classic-Bluetooth (non-BLE) adapters are explicitly out of scope. Confirm.
+- **Q1 — ADR-002 flip — RULED: do NOT flip + designate the 196 smoke as ADR-002 reversal-trigger evidence.** New Architecture stays disabled; ADR-002's reversal trigger (ble-plx New-Arch release **and** a passing real-dongle smoke) is unmet, so flipping now acts on speculation the trigger exists to forbid. 196 builds on the Old-Arch status quo. **Two-action ruling** — the second action is load-bearing: ADR-002 is amended (mobile repo) to record that the **Phase 196 real-dongle smoke is the designated evidence-gathering event for reversal-trigger condition #2**. Without that, the smoke passes and the architecture data point is never harvested back to ADR-002 — forfeiting a scarce device session's dual yield (a 196 gate pass *and* a logged ADR-002 evidence point). Do NOT flip speculatively; do NOT defer 196 to "resolve ADR-002 first" (circular — ADR-002 is resolved by evidence 196 produces).
+- **Q2 — scope boundary — RULED: confirmed as written.** 196 is mobile-only and terminates at "live identified OBD link." DTC/PID reading + backend integration are later phases — the substrate-then-feature split (196 = link substrate; reading = separate feature/gate). Do NOT pull in "read one DTC to prove it works" — that makes the smoke gate test two layers and defeats failure isolation.
+- **Q3 — build now / smoke gate held — RULED: confirmed.** "iOS-blocked" = gate-only, not build-blocked. The full build + unit verification run to completion now; only the real-dongle smoke is device-held. **Required mitigation, named now:** the `FakeObdProvider` test double MUST model the real ELM327 handshake byte sequence (`ATZ` → `ATE0` → `ATL0` → `ATSP0`, with the expected response shapes + the `>` prompt terminator) — **not a trivial stub**. A weak fake gives false confidence; faithfully modeling the byte sequence is how the device-independent build genuinely covers the handshake. The phase reaches an explicit, legitimate intermediate state: "build complete, unit-verified, smoke gate held."
+- **Q4 — transport target — RULED: ELM327-BLE only + transport-agnostic seam folded in.** Build + smoke target ELM327-family-over-BLE exclusively; Wi-Fi and classic-Bluetooth adapters are out of scope (different transport stacks). **Folded-in design discipline:** the `ObdConnection` seam is designed transport-agnostic — a future Wi-Fi / classic-BT provider must be an additive new provider behind the same seam, not a rewrite (the ADR-001 provider-seam pattern; same shape as the `ReportSection` / `WorkOrderSection` discriminated-union forward-look). This widens neither the build nor the smoke scope — it only avoids foreclosing the seam into a BLE-only corner.
 
 ## Verification Checklist
 
@@ -88,7 +88,10 @@ Ran the Step-0 audit across both repos before this plan was written. **Phase 196
 - [ ] `ObdConnectScreen` — scan → device list → connect → live status → disconnect; OBD-adapter filtering on the scan list.
 - [ ] `ObdConnectionError` typed union (7 kinds) + user-facing copy for each.
 - [ ] `OBD_SUPPORT` feature flag gates the screen's nav entry; default on-in-dev / off-in-release.
-- [ ] BLE permissions present + cross-platform parity: Android `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT` (+ `ACCESS_FINE_LOCATION` where required) in `AndroidManifest.xml`; iOS `NSBluetoothAlwaysUsageDescription` in `Info.plist` — both in the same PR (F40 cross-platform-parity discipline).
+- [ ] **`ObdConnection` seam is transport-agnostic** (Q4): the BLE provider is one implementation behind the seam; a future Wi-Fi / classic-BT provider would be additive, not a reshape.
+- [ ] **`FakeObdProvider` models the real ELM327 handshake byte sequence** (Q3): `ATZ`/`ATE0`/`ATL0`/`ATSP0` with expected response shapes + the `>` prompt terminator — not a trivial stub. The handshake + state-machine unit tests run against it.
+- [ ] **iOS BLE permission — named artifact (BLOCKING, F40):** `ios/MotoDiag/Info.plist` carries `NSBluetoothAlwaysUsageDescription` with **non-empty descriptive copy** (the F-B failure mode was the key present with an empty string value — verify the *value*, not just the key).
+- [ ] **Android BLE permissions:** `AndroidManifest.xml` carries `BLUETOOTH_SCAN` + `BLUETOOTH_CONNECT` (+ `ACCESS_FINE_LOCATION` where required) — landed in the **same PR** as the iOS Info.plist key (F40 cross-platform-parity).
 - [ ] Full mobile Jest suite green; BLE fully mocked — no test requires hardware.
 - [ ] Device smoke gate (scan + connect + handshake against a real OBD-II dongle) — **held for a device session**; result appended to `196_phase_log.md` when run.
 
@@ -100,8 +103,21 @@ Ran the Step-0 audit across both repos before this plan was written. **Phase 196
 4. **BLE permission UX** — Android 12+ split `BLUETOOTH_SCAN`/`CONNECT` runtime permissions; iOS Bluetooth permission prompt. Mitigation: explicit permission-request flow before scan; the cross-platform-parity checklist item (F40) is in the Verification Checklist.
 5. **iOS background BLE** — out of scope for 196 (foreground scan/connect only); noted so a later phase owns background-mode entitlements.
 
+## v1.0.1 amendment — architect review rulings (pre-code, 2026-05-17)
+
+Plan v1.0 reviewed by the architect; v1.0 was sound (F33 audit correctly framed 196 as extension territory). Four pre-plan questions ruled — all reflected inline in the "Pre-plan Q&A — architect-ruled" section above — plus one **blocking plan correction**:
+
+- **Q1** — do NOT flip ADR-002; **additionally**, ADR-002 is amended (mobile repo) to record that 196's real-dongle smoke is the designated reversal-trigger-condition-#2 evidence event. Two actions, not one.
+- **Q2 / Q3 / Q4** — confirmed as written, with two named requirements folded in: the `FakeObdProvider` must model the real ELM327 handshake byte sequence (Q3), and the `ObdConnection` seam must be transport-agnostic so a future non-BLE provider is additive (Q4).
+- **Blocking correction — iOS BLE permission as a named artifact.** Plan v1.0 listed the BLE permission as a general "iOS Info.plist + Android manifest, same PR" note. This session has already produced **F-A** (VisionCamera black-screen) and **F-B** (an *empty-string* `NSLocationWhenInUseUsageDescription` value that fails App Store review) from iOS permission keys treated as general notes rather than named, verified artifacts. v1.0.1 makes the BLE permission a **named checklist artifact with its own verification line**: `ios/MotoDiag/Info.plist` key `NSBluetoothAlwaysUsageDescription`, **non-empty descriptive copy** (verify the *value*, not just key presence), same PR as the Android `BLUETOOTH_SCAN`/`BLUETOOTH_CONNECT` permissions. This blocked v1.0 sign-off; it is now in the Outputs list + as two dedicated Verification Checklist lines.
+
+**Build authorization:** with this v1.0.1 amendment landed, the plan is ready for architect sign-off. On "build 196": the device-independent build + unit verification run to completion (the `FakeObdProvider` models the real handshake); the real-dongle smoke gate is held for a coordinated device session. Phase reaches the explicit intermediate state "build complete, unit-verified, smoke gate held."
+
+**Parallel, not gated on this plan:** sourcing a known-good ELM327-BLE dongle (Track E Phase 145 compat-DB ranked list) + confirming the mechanic's adapter model — an architect/owner real-world action that de-risks the scarce device session; runs independently of plan sign-off.
+
 ## Risks / Assumptions / Next step
 
-- **Assumption:** ELM327-family BLE adapters are the sole target (Q4); the connection layer ends at "live identified link" (Q2).
-- **Risk:** the real-dongle smoke is the genuine unknown — clone behavior is only fully knowable on hardware.
-- **Next step:** architect review of this plan v1.0 (esp. Q1–Q4). On approval, build the mobile `ObdConnection`/handshake/screen/flag layer + mocked tests to completion; hold the device smoke gate for a device session.
+- **Assumption:** ELM327-family BLE adapters are the sole target (Q4); the connection layer ends at "live identified link" (Q2). `react-native-ble-plx` is faithfully mockable — the `FakeObdProvider`-models-real-byte-sequence requirement (Q3) is the guard; if the mock cannot represent the handshake, that surfaces at build time, not at the device session.
+- **Risk:** the real-dongle smoke is the genuine unknown — clone behavior is only fully knowable on hardware. Mitigation: the parallel dongle-sourcing action makes the dongle a known quantity before the session.
+- **Risk:** the ADR-002 evidence designation is skipped → the smoke passes but the architecture data point is never harvested. Mitigation: Q1's required ADR-002 amendment, made now.
+- **Next step:** architect sign-off of plan **v1.0.1**. On approval, "build 196" authorizes the device-independent build to completion; the device smoke gate is held for a device session.
