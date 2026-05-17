@@ -30,3 +30,18 @@ Explicitly OUT of scope (confirmed): F37 Track 1 enforcement (already done — P
 **Architect-review hold.** Plan v1.0 stops here. No production code written, no lint rule implemented, no schema or route changes made, no drift fixed. The plan holds for architect review before any implementation begins.
 
 **Next:** architect review of plan v1.0 → on approval, build the `--check-pydantic-literal-vs-check-constraint` sub-check + `test_phase195c_pydantic_literal_lint.py` + run the retroactive sweep + append the F9 subspecies → finalize to v1.1.
+
+---
+
+### 2026-05-17 — Plan v1.0 → v1.0.1 amendment (architect PR-review, pre-code)
+
+Architect PR-review of plan v1.0 (2026-05-17). Three decisions:
+- **Sub-check in `check_f9_patterns.py`, not a separate script** — accepted as proposed (191D precedent).
+- **Open Questions Q1 / Q2 / Q3** — accepted as proposed: Q1 (shop_mgmt raw-dict rows) → F-ticket; Q2 (inverse `Literal`-without-CHECK drift) → F-ticket; Q3 (`VideoResponse` `str,Enum`) → WARN-only. No scope change.
+- **NOT a clean accept — conditional on a v1.0.1 amendment.** The architect's independent spot-check confirmed the empty-hit-list audit claim but surfaced the load-bearing nuance: **three real tables — `fleet_bikes`, `shop_members`, `work_order_photos` — carry a same-named `role` column with three different CHECK value-sets.** Plan v1.0 keyed CHECK sets by column name and joined on name equality; against that collision it would cross-wire (false-flag a correct field, or pass a drifted one matching a different table's set) — the F9 name-vs-semantic-match failure reproduced inside the F9 tool.
+
+**v1.0.1 amendment made (plan-only, pre-code):** CHECK sets keyed by `(table, column)` (Step 1); model→table resolution added via `# f9-table:` marker + class-name-convention fallback (Step 2); name-equality join rewritten to a table-scoped join with a `pydantic-literal-vs-check-ambiguous` never-guess fallback (Step 3); Risk 4 promoted from watched-risk to a **hard requirement + fixture-backed acceptance test**; Verification Checklist gains the three-`role`-column disambiguation test as a phase-closure gate. Full rationale in `195C_implementation.md` → "v1.0.1 amendment" section.
+
+This is the CLAUDE.md Step-0 discipline working as designed — a documented-assumption mismatch caught at plan-review time, resolved as a pre-code v1.0.1 amendment rather than surfacing as an implementation-time reshape.
+
+**Next:** architect sign-off of plan **v1.0.1** → on approval, build per the table-scoped spec → finalize to v1.1.
