@@ -16,13 +16,22 @@ from DB rows:
 Builders raise domain exceptions (``SessionOwnershipError``,
 ``WorkOrderNotFoundError``, ``InvoiceNotFoundError``,
 ``PermissionDenied``) which the API error handler maps to HTTP.
+
+Phase 192B extends :func:`build_session_report_doc` with optional
+``preset`` + ``overrides`` parameters for composer-side section-
+visibility filtering. Renderer stays pure (``ReportDocument →
+flowables``) so PDF + JSON-preview both consume the same pre-
+filtered document. The mobile-side semantics in
+``moto-diag-mobile/src/screens/reportPresets.ts`` are mirrored
+exactly (Customer hides ``Notes``; Insurance + Full hide nothing;
+explicit override beats preset default).
 """
 
 from __future__ import annotations
 
 import os
 from datetime import datetime, timezone
-from typing import Any, Optional
+from typing import Any, Literal, Optional
 
 from motodiag.core.session_repo import (
     SessionOwnershipError, get_session_for_owner,
@@ -85,6 +94,69 @@ def _footer(extra: Optional[str] = None) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Section-visibility presets (Phase 192B)
+# ---------------------------------------------------------------------------
+#
+# Composer-side filtering: ``build_session_report_doc`` accepts an
+# optional ``preset`` + ``overrides`` and drops hidden sections
+# BEFORE returning. The renderer stays pure (``ReportDocument →
+# flowables``) so PDF + JSON-preview consume the same pre-filtered
+# document. The mobile semantics in
+# ``src/screens/reportPresets.ts`` are mirrored exactly here so the
+# two codebases can't drift on which sections each preset hides
+# (drift catchable via Phase 192B Commit 1's
+# ``test_phase192b_preset_semantics_match_mobile`` cross-source pin).
+
+ReportPreset = Literal["full", "customer", "insurance"]
+
+# Customer-facing posture: hide diagnostic-internal sections that
+# may carry mechanic-only commentary. Mirrors mobile
+# ``CUSTOMER_HIDDEN_HEADINGS``. Heading match is case-sensitive +
+# exact (matches the backend builder's section-iteration shape).
+_CUSTOMER_HIDDEN_HEADINGS: tuple[str, ...] = ("Notes",)
+
+# Insurance posture: full disclosure (claims docs need everything).
+_INSURANCE_HIDDEN_HEADINGS: tuple[str, ...] = ()
+
+# Full posture: show everything.
+_FULL_HIDDEN_HEADINGS: tuple[str, ...] = ()
+
+
+def _preset_hidden_headings(preset: ReportPreset) -> tuple[str, ...]:
+    if preset == "customer":
+        return _CUSTOMER_HIDDEN_HEADINGS
+    if preset == "insurance":
+        return _INSURANCE_HIDDEN_HEADINGS
+    return _FULL_HIDDEN_HEADINGS
+
+
+def _is_section_hidden(
+    heading: str,
+    preset: Optional[ReportPreset],
+    overrides: Optional[dict[str, bool]],
+) -> bool:
+    """True iff the section is hidden under (preset + overrides).
+
+    ``preset is None`` → no preset filter (full document, the
+    Phase 182 default). Used by the unchanged GET ``/pdf`` route.
+
+    Override semantics: an explicit ``True`` / ``False`` in the
+    ``overrides`` dict ALWAYS wins over the preset default. Absence
+    means "fall through to preset". Mirrors the mobile
+    ``isSectionHidden(heading, preset, overrides)`` resolution.
+    """
+    if overrides is not None:
+        explicit = overrides.get(heading)
+        if explicit is True:
+            return False  # explicit visible
+        if explicit is False:
+            return True   # explicit hidden
+    if preset is None:
+        return False
+    return heading in _preset_hidden_headings(preset)
+
+
+# ---------------------------------------------------------------------------
 # Session report
 # ---------------------------------------------------------------------------
 
@@ -93,12 +165,22 @@ def build_session_report_doc(
     session_id: int,
     user_id: int,
     db_path: Optional[str] = None,
+    *,
+    preset: Optional[ReportPreset] = None,
+    overrides: Optional[dict[str, bool]] = None,
 ) -> ReportDocument:
     """Build a diagnostic-session report document.
 
     Owner-scoped: ``user_id`` must match the session's ``user_id``
     column (Phase 178 retrofit); otherwise
     :class:`SessionOwnershipError` is raised (maps to 404).
+
+    Phase 192B: optional ``preset`` + ``overrides`` filter sections
+    before returning. ``preset=None`` (default) returns the full
+    document — back-compat with the Phase 182 GET ``/pdf`` route.
+    The new POST ``/pdf`` route requires ``preset`` in the request
+    body (FastAPI 422 if absent). ``overrides`` is reserved for
+    future per-card UI (F28); the route does NOT yet expose it.
     """
     row = get_session_for_owner(session_id, user_id, db_path=db_path)
     if row is None:
@@ -221,13 +303,14 @@ def build_session_report_doc(
                 "analysis_state": str(
                     v.get("analysis_state") or "pending"
                 ),
-                # Phase 191B does not currently persist the
-                # ``analyzing → analyzed`` transition timestamp
-                # (no ``analyzing_started_at`` column on the
-                # videos table; the table tracks ``analyzed_at``
-                # only). Surface as None per the shape doc's
-                # contract ("ISO; None if never started"); a
-                # future migration may add the column.
+                # Phase 192 Commit 1 added migration 040 which
+                # introduces the ``analyzing_started_at`` column
+                # (nullable, no default, no backfill per Contract
+                # A). Pre-migration rows return ``None``; post-
+                # migration ``pending → analyzing`` transitions
+                # write the timestamp atomically with the state
+                # via Contract B. Mobile stuck-detection branches
+                # on the NULL check.
                 "analyzing_started_at": v.get(
                     "analyzing_started_at"
                 ),
@@ -255,6 +338,20 @@ def build_session_report_doc(
             ("Closed", str(row.get("closed_at") or "—")),
         ],
     })
+
+    # Phase 192B: composer-side preset filter. ``preset=None``
+    # (default) bypasses entirely → full document for the GET
+    # ``/pdf`` route. The new POST ``/pdf`` route always passes
+    # an explicit preset. Filter applied AFTER all sections are
+    # built so the omit-when-empty logic for individual variants
+    # is independent of the visibility filter.
+    if preset is not None or overrides is not None:
+        sections = [
+            s for s in sections
+            if not _is_section_hidden(
+                str(s.get("heading", "")), preset, overrides,
+            )
+        ]
 
     return {
         "title": f"Diagnostic session report #{int(row['id'])}",
