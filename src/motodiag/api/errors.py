@@ -116,6 +116,15 @@ def _exc_class_chain():
         VideoOwnershipError, VideoQuotaExceededError,
     )
     from motodiag.api.routes.videos import VideoFileTooLargeError
+    # Phase 194 — work-order photo domain
+    from motodiag.shop.wo_photo_repo import (
+        WorkOrderPhotoOwnershipError,
+        WorkOrderPhotoQuotaExceededError,
+        WorkOrderPhotoPairingError,
+    )
+    from motodiag.media.photo_pipeline import (
+        ImageDecodeError, UnsupportedImageFormatError,
+    )
 
     # tuple of (exception_class, http_status, slug, title)
     return [
@@ -214,6 +223,17 @@ def _exc_class_chain():
          "Video quota exceeded"),
         (VideoFileTooLargeError, 413, "video-too-large",
          "Video file too large"),
+        # Phase 194 — work-order photo domain
+        (WorkOrderPhotoOwnershipError, 404, "wo-photo-not-found",
+         "Work-order photo not found"),
+        (WorkOrderPhotoQuotaExceededError, 402, "wo-photo-quota-exceeded",
+         "Work-order photo quota exceeded"),
+        (WorkOrderPhotoPairingError, 422, "wo-photo-pairing-error",
+         "Work-order photo pairing references an invalid partner"),
+        (UnsupportedImageFormatError, 415, "wo-photo-unsupported-format",
+         "Photo format not supported by this server"),
+        (ImageDecodeError, 422, "wo-photo-decode-failed",
+         "Photo could not be decoded"),
     ]
 
 
