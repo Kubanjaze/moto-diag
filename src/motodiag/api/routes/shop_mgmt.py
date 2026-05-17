@@ -146,6 +146,7 @@ class ShopUpdateRequest(BaseModel):
     tax_id: Optional[str] = None
 
 
+# f9-table: shop_members  (Phase 195C — F37 Track 2 model→table marker)
 class MemberAddRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     user_id: int
@@ -207,12 +208,21 @@ class WorkOrderAssignRequest(BaseModel):
     )
 
 
+# f9-table: issues  (Phase 195C — F37 Track 2 model→table marker)
 class IssueCreateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     work_order_id: int
     title: str = Field(..., min_length=1, max_length=200)
     description: Optional[str] = None
-    category: str = "other"
+    # Phase 195C F37 Track 2 fix: str -> Literal mirroring the
+    # issues.category DB CHECK constraint (migration ~1957) so the
+    # OpenAPI surface emits a strict enum + an out-of-set value is a
+    # clean 422 instead of a downstream CHECK-violation 500.
+    category: Literal[
+        "accessories", "brakes", "cooling", "drivetrain", "electrical",
+        "engine", "exhaust", "fuel_system", "other", "rider_complaint",
+        "suspension", "tires_wheels", "transmission",
+    ] = "other"
     severity: Literal["low", "medium", "high", "critical"] = "medium"
 
 
@@ -227,9 +237,17 @@ class InvoiceGenerateRequest(BaseModel):
     notes: Optional[str] = None
 
 
+# f9-table: customer_notifications  (Phase 195C — F37 Track 2 model→table marker)
 class NotificationTriggerRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
-    event: str
+    # Phase 195C F37 Track 2 fix: str -> Literal mirroring the
+    # customer_notifications.event DB CHECK constraint so the OpenAPI
+    # surface emits a strict enum (was a freeform `string`).
+    event: Literal[
+        "approval_requested", "estimate_ready", "invoice_issued",
+        "invoice_paid", "parts_arrived", "wo_cancelled", "wo_completed",
+        "wo_in_progress", "wo_on_hold", "wo_opened",
+    ]
     wo_id: Optional[int] = None
     invoice_id: Optional[int] = None
     customer_id: Optional[int] = None

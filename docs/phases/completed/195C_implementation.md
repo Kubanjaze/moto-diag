@@ -1,6 +1,6 @@
 # Phase 195C — F37 Track 2: Pydantic-Literal-vs-DB-CHECK Lint Rule + Retroactive Sweep
 
-**Version:** 1.0.1 (plan — amended pre-code; see "v1.0.1 amendment" section) | **Tier:** Standard | **Date:** 2026-05-17
+**Version:** 1.1 (built — as-built; plan history in the "v1.0.1 amendment" / "v1.0.2 amendment" / "Deviations from Plan" sections) | **Tier:** Standard | **Date:** 2026-05-17
 
 > **Locked-sequence slot.** Phase 195C is the meta-tooling slot reserved between Phase 195B and Phase 196 in Phase 195B's plan v1.0 ("Phase 195C slot" section). It implements **F37 Track 2** — the systematic-correctness response to the contract-surface-drift pattern that surfaced as F37 instance #3 during Phase 195. Same precedent as 191B → 191C → 191D: a feature ships, then meta-tooling responds to the discovered drift after the feature phase closes cleanly.
 
@@ -140,19 +140,20 @@ The only argument *for* a separate script — that F37 retroactively scans `src/
 
 ## Verification Checklist
 
-- [ ] `check_pydantic_literal_vs_check_constraint(...)` added to `scripts/check_f9_patterns.py`; importable as a module function alongside the existing checks.
-- [ ] `--check-pydantic-literal-vs-check-constraint` CLI flag registered; `parser.error` updated to list it; `--all` and `run_all_checks` invoke it.
-- [ ] CHECK-constraint parser extracts string-enum value-sets from `Migration.upgrade_sql` for both inline and multi-line CHECK shapes; **keys every set by `(table, column)`** (tracks the enclosing `CREATE TABLE` / `ALTER TABLE`); skips `BETWEEN` / `IN (0,1)` / `IS NOT NULL`; ignores `rollback_sql`.
-- [ ] Pydantic-model AST walk finds `BaseModel` subclasses (incl. transitive, e.g. `VideoResponse(VideoBase)`) under `src/motodiag/api/routes/` + `src/motodiag/core/models.py`; resolves module-level `Literal` aliases; resolves each model to its DB table via `# f9-table:` marker (authoritative) or class-name convention (fallback).
-- [ ] **Table-scoped join (v1.0.1 hard requirement):** the rule validates a field against *its model's table's* `(table, column)` CHECK set. Non-colliding column names match unambiguously; colliding names require model→table resolution; an unresolved colliding case emits `pydantic-literal-vs-check-ambiguous` (never guesses). Fires `pydantic-literal-vs-check` error on a `str`-typed field with a name-matching CHECK; fires a contract-surface-drift finding on a `Literal`-value-set ≠ that-table's-CHECK mismatch.
-- [ ] **Three-`role`-column disambiguation acceptance test (v1.0.1):** a synthetic fixture defines ≥3 tables each with a same-named `role` column carrying a *different* CHECK value-set — modelled on the three real ones (`fleet_bikes` `{rental,demo,race,customer}` / `shop_members` `{owner,tech,service_writer,apprentice}` / `work_order_photos` `{before,after,general,undecided}`) — plus a Pydantic response model per table. The test asserts the rule (a) validates each model's `role` field against **its own** table's CHECK set and (b) does **not** cross-report (no model is flagged against another table's `role` set). A correct field on table A and a drifted field on table B in the same fixture run must produce exactly one finding, on B. This test is a phase-closure gate, not optional coverage.
-- [ ] `str, Enum` fields with a name-matching CHECK produce a WARN (not error); `VideoResponse` does not produce a false regression verdict.
-- [ ] File-level `# f9-allow-pydantic-literal-vs-check: <reason>` and per-line `# f9-noqa: pydantic-literal-vs-check <reason>` opt-outs honored; malformed opt-outs emit `*-malformed-optout` and still report the underlying finding.
-- [ ] Retroactive run (`--check-pydantic-literal-vs-check-constraint` against live `src/`) completes; result matches the F33 audit (expected: clean / WARN-only on `VideoResponse`). Any unpredicted finding fixed + folded into the build commit + logged in `195C_phase_log.md`.
-- [ ] `tests/test_phase195c_pydantic_literal_lint.py` exists, RuleTester-style, mirrors `test_phase191d_ssot_constants_lint.py`; covers positive (`str`-instead-of-`Literal`), value-set-mismatch, `str,Enum`-WARN, clean, opt-out (valid + malformed), the three-`role`-column disambiguation case (above), and the `pydantic-literal-vs-check-ambiguous` unresolved-collision case — all on synthetic `tmp_path` fixtures.
-- [ ] "contract-surface-drift" subspecies + F37-instance-#3 case study appended to `docs/patterns/f9-mock-vs-runtime-drift.md`; instance counter + subspecies enumeration updated consistently.
-- [ ] `.pre-commit-config.yaml` invokes the new check (mirrors the `--check-tag-catalog-coverage` hook entry).
-- [ ] Full backend regression green; no pre-existing test broken by the route-module edits (if any retroactive fixes land).
+- [x] `check_pydantic_literal_vs_check_constraint(...)` added to `scripts/check_f9_patterns.py`; importable as a module function alongside the existing checks.
+- [x] `--check-pydantic-literal-vs-check-constraint` CLI flag registered; `parser.error` lists it; `--all` + `run_all_checks` invoke it.
+- [x] CHECK-constraint parser extracts string-enum value-sets from `Migration(upgrade_sql=...)` for inline + multi-line CHECK shapes; **keys every set by `(table, column)`** (tracks the enclosing `CREATE TABLE` / `ALTER TABLE`); skips numeric/boolean `IN (0,1)`; ignores `rollback_sql`.
+- [x] Pydantic-model AST walk finds `BaseModel` subclasses (incl. transitive) under `src/motodiag/api/routes/` + `src/motodiag/core/models.py`; resolves module-level `Literal` aliases; resolves each model→table via `# f9-table:` marker (authoritative) or class-name convention (fallback).
+- [x] **v1.0.2 positive-resolution-required join:** a field is flagged ONLY when its model resolves to a table that actually carries a CHECK on that column. No resolution / resolved-table-has-no-CHECK-on-column → no finding. `str`-typed resolved field → `pydantic-literal-vs-check` error; `Literal` value-set ≠ that table's CHECK → same rule (contract-surface-drift). The `pydantic-literal-vs-check-ambiguous` finding type was **removed** in v1.0.2.
+- [x] **Three-`role`-column disambiguation closure gate:** synthetic fixture, 3 tables each with a same-named `role` column / different CHECK set (modelled on the real `fleet_bikes` / `shop_members` / `work_order_photos`); asserts each model validates against its own table + zero cross-report (correct-on-A + drifted-on-B → exactly one finding, on B). Green.
+- [x] **v1.0.2 negative-fixture closure gate:** the `HealthStatus`-shaped test — a field name-coinciding with a CHECK column on a model that resolves to no CHECK-bearing table → **zero findings**; plus a counter-check confirming a `# f9-table:` marker re-enables flagging. Green.
+- [x] `str, Enum` fields with a name-matching CHECK produce a WARN, not an error.
+- [x] File-level `# f9-allow-pydantic-literal-vs-check: <reason>` + per-line `# f9-noqa: pydantic-literal-vs-check <reason>` opt-outs honored; malformed opt-outs emit `*-malformed-optout` and still report the underlying finding.
+- [x] Retroactive sweep run against live `src/`: surfaced **24 raw findings** → v1.0.2 positive-resolution dissolved every false positive → **2 genuine `str`-instead-of-`Literal` regressions** (`IssueCreateRequest.category`, `NotificationTriggerRequest.event`) fixed in-phase + folded into the build → **clean re-sweep (0 findings)**.
+- [x] `tests/test_phase195c_pydantic_literal_lint.py` exists, RuleTester-style, mirrors `test_phase191d_ssot_constants_lint.py` — **25 tests** (positive / value-set-mismatch / `str,Enum`-WARN / clean / opt-outs valid+malformed / three-`role`-column gate / negative-fixture gate / direct CHECK-parser coverage). 25/25 green.
+- [x] "contract-surface-drift" subspecies (vi) + Instance #11 case study appended to `docs/patterns/f9-mock-vs-runtime-drift.md`; instance counter 10→11, subspecies 5→6, decision tree updated; sealed 191C-era sections preserved verbatim.
+- [x] `.pre-commit-config.yaml` invokes the new check (dedicated `f9-pydantic-literal-vs-check-constraint` hook + `--all` fold-in).
+- [x] Full backend regression green: **4612 passed, 0 failed** (1:22:09) — zero regressions from the rule, the 8 `# f9-table:` markers, or the 2 `str`→`Literal` route-model fixes.
 
 ## Risks
 
@@ -188,6 +189,56 @@ In all three cases the guardrail holds: 195C ships the rule + retroactive sweep 
 
 This amendment was made pre-code, which is exactly the cadence the CLAUDE.md Step-0 discipline is designed to produce — a documented-assumption mismatch caught at plan-review time, not at implementation time.
 
+## v1.0.2 amendment — positive-resolution-required matching (pre-code, architect-directed)
+
+**Trigger.** The Builder built faithfully to v1.0.1; the Architect's trust-but-verify **retroactive sweep** against live `src/` then returned **24 findings** — not the v1.0.1 audit's predicted empty hit-list. Triage surfaced two distinct problems, both plan-side:
+
+1. **The rule over-fires.** v1.0.1's table-scoped join fixed *colliding CHECK columns* (`role` on three tables) but still flagged a field **purely because its name coincides with a CHECK column on some table** — with no positive evidence the model corresponds to that table. Proof: `meta.py HealthStatus.status` — a health-check response model that maps to **no DB table at all** — was flagged against seven DB `status` tables. `SessionResponse.status`/`severity` were flagged though `diagnostic_sessions` carries no CHECK on those columns (it is not even in the rule's own collision set). This is the F9 name-vs-semantic-match failure reproduced *inside the F9 tool*.
+2. **The v1.0.1 audit's "empty hit-list" was wrong** — incomplete. It enumerated `role`/`severity`/`extraction_*` but not `category`/`event`. Real `str`-instead-of-`Literal` regressions exist: `IssueCreateRequest.category`, `NotificationTriggerRequest.event`.
+
+**The empty-hit-list premise is hereby retired.** 195C has genuine retroactive cleanup; "purely forward-looking" (v1.0/v1.0.1 framing) no longer holds.
+
+**What changes v1.0 → v1.0.2** (plan-only; still no production code shipped):
+
+1. **Positive-resolution-required matching.** A field is flagged **only when its model positively resolves to a table that carries a CHECK on that column.** No table resolution → no finding. Table resolves but carries no CHECK on that column → no finding. This **replaces both** v1.0.1's "non-colliding name → auto-match" *and* "colliding + unresolved → ambiguous finding" with a single rule: *no positive CHECK-bearing-table resolution → no finding.* The `pydantic-literal-vs-check-ambiguous` finding type is **removed** — an unresolved model is silently skipped, not flagged. (Trade accepted: a should-be-checked model that fails both marker and convention resolution is missed rather than false-flagged; markers — item 4 — close that for every real case.)
+2. **Negative fixture as a phase-closure gate.** The test suite gains a `HealthStatus`-shaped negative fixture (a `BaseModel` with a field whose name coincides with a CHECK column, but the model maps to no table / a table with no such CHECK → **expect zero findings**). Same closure-gate status as v1.0.1's three-`role`-column fixture. The v1.0.1 tests passed only because they never exercised this case.
+3. **Genuine findings fixed in-phase.** Bucket 2 — `IssueCreateRequest.category` (`issues.category` CHECK; field is `str`) and `NotificationTriggerRequest.event` (`customer_notifications.event` CHECK; field is `str`) — become **in-phase retroactive `str`→`Literal` fixes**, each its own documented change folded into the build commit + logged in `195C_phase_log.md`.
+4. **Bucket 3 markers added.** Models that legitimately map to a colliding-name table get an authoritative `# f9-table: <table>` marker — `WorkOrderPhotoResponse`/`PhotoUploadMetadata`/`PhotoPatchRequest` → `work_order_photos`, `MemberAddRequest` → `shop_members`, plus markers on the Bucket 2 models so they resolve. This is authoritative resolution, **not** suppression.
+5. **symptoms-category ruling (resolved pre-code).** `symptoms.category` and `extracted_symptoms.category` were checked: **both are `TEXT` with no CHECK constraint.** Therefore `SymptomResponse.category`, `ExtractedSymptomConfirmRequest.category`, `ExtractedSymptomResponse.category` are **Bucket 1** — false positives **dissolved by item 1** (their tables carry no `category` CHECK), not fixes. Only `issues.category` carries a CHECK, so only `IssueCreateRequest.category` is a Bucket 2 fix.
+
+**Phase-closure criteria (v1.0.2):** the negative fixture green **and** the two Bucket-2 `str`→`Literal` fixes landed **and** a clean re-sweep — zero false positives, the only remaining findings (if any) being genuine and fixed.
+
+The Builder built v1.0.1 faithfully; this defect is in the plan, surfaced exactly where the retroactive-sweep step is designed to surface it, and fixed by amendment **before** finalize — not tracked as a post-finalize follow-up. A phase does not close on a dirty result.
+
+> **Step 3 (above) is superseded by this v1.0.2 amendment** — the table-scoped join now additionally requires positive model→table resolution for every field, and emits no `ambiguous` finding. The v1.1 finalize reconciles all sections to as-built.
+
 ---
 
-*Plan v1.0.1 — written before any code, amended before any code. Architect-review hold: no production code, no lint-rule implementation, no schema or route changes until plan v1.0.1 is signed off.*
+## Deviations from Plan
+
+The plan was amended twice pre-code (v1.0 → v1.0.1 → v1.0.2); the build then matched v1.0.2 exactly. Both amendments have full sections above — summarized here as the plan-to-as-built arc:
+
+- **v1.0 → v1.0.1** (architect PR-review): the name-equality join would cross-wire three real same-named `role` columns. Amended to a table-scoped `(table, column)` join + the three-`role`-column closure-gate fixture.
+- **v1.0.1 → v1.0.2** (architect trust-but-verify of the retroactive sweep): the table-scoped join still over-fired on name-coincidence against unrelated tables — `HealthStatus.status` (a health-check model with no DB table) flagged against 7 DB `status` tables. Amended to **positive-resolution-required matching** (flag only when the model resolves to a table carrying that CHECK); the `pydantic-literal-vs-check-ambiguous` finding type was removed; a `HealthStatus`-shaped negative fixture added as a second closure gate.
+- **The "empty hit-list" premise was retired** (v1.0.2): the v1.0.1 audit under-enumerated (`role`/`severity`/`extraction_*` but not `category`/`event`). The retroactive sweep found 2 genuine regressions — `IssueCreateRequest.category` (`issues.category` CHECK) and `NotificationTriggerRequest.event` (`customer_notifications.event` CHECK) — each fixed in-phase as its own documented `str`→`Literal` change folded into the build commit.
+- **Build-phase fix:** an `UnboundLocalError` in the Builder's first-pass join (the colliding-column resolved-success path never bound `table`) — caught by the phase tests, fixed before the v1.0.2 rework.
+- **8 `# f9-table:` markers** added to the CHECK-bearing route models (`work_order_photos` ×3, `shop_members`, `issues`, `customer_notifications`, `voice_transcripts`, `extracted_symptoms`) — authoritative model→table resolution per v1.0.2 item 4.
+- **`str,Enum` WARN, as-built:** the rule's `str,Enum` WARN branch never fires in the live codebase — `VideoResponse`'s `upload_state`/`analysis_state` map to `videos`, which carries no CHECK, so the model is correctly never examined for them. The WARN branch is exercised by a synthetic fixture only.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| New sub-check | `check_pydantic_literal_vs_check_constraint` + `--check-pydantic-literal-vs-check-constraint` flag |
+| Phase test file | `tests/test_phase195c_pydantic_literal_lint.py` — 25 tests, 25/25 green |
+| Retroactive sweep | 24 raw findings → all false positives dissolved by v1.0.2 positive-resolution → 2 genuine fixes folded in → clean |
+| Genuine regressions fixed in-phase | 2 — `IssueCreateRequest.category`, `NotificationTriggerRequest.event` (`str`→`Literal`) |
+| `# f9-table:` markers added | 8 |
+| Full backend regression | 4612 passed, 0 failed (1:22:09) |
+| F9 pattern guide | subspecies 5→6, instances 10→11 (Subspecies (vi) contract-surface-drift, Instance #11) |
+
+**Key finding:** the retroactive-sweep step earned its keep twice over. The v1.0.1 plan's audit predicted an empty hit-list; the actual sweep returned 24 findings — and triaging them exposed not one but two plan-side defects: the rule over-firing on name-coincidence, *and* the audit itself being incomplete. Both were fixed by pre-code amendment, never tracked as a post-finalize follow-up. The deeper lesson: a static rule that matches by name is itself susceptible to the F9 name-vs-semantic-match failure it exists to catch — positive-resolution-required matching (flag only with proof the model corresponds to the table) is the discipline that closes that loop.
+
+---
+
+*v1.1 — as-built. Phase 195C complete: built against plan v1.0.2 (amended twice pre-code), all phase-closure criteria met — negative fixture + three-`role`-column gate green, both Bucket-2 `str`→`Literal` fixes landed, clean re-sweep, full regression 4612/0.*

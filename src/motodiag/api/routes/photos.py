@@ -102,6 +102,7 @@ PhotoRole = Literal["before", "after", "general", "undecided"]
 # ---------------------------------------------------------------------------
 
 
+# f9-table: work_order_photos  (Phase 195C — F37 Track 2 model→table marker)
 class PhotoUploadMetadata(BaseModel):
     """JSON body field accompanying the multipart upload.
 
@@ -118,6 +119,7 @@ class PhotoUploadMetadata(BaseModel):
     pair_id: Optional[int] = Field(None, ge=1, description="Optional sibling photo for before/after pairing")
 
 
+# f9-table: work_order_photos  (Phase 195C — F37 Track 2 model→table marker)
 class PhotoPatchRequest(BaseModel):
     """PATCH body for post-capture re-classification + pairing updates."""
     model_config = ConfigDict(extra="ignore")
@@ -127,6 +129,7 @@ class PhotoPatchRequest(BaseModel):
     issue_id: Optional[int] = Field(None, ge=1)
 
 
+# f9-table: work_order_photos  (Phase 195C — F37 Track 2 model→table marker)
 class WorkOrderPhotoResponse(BaseModel):
     """Wire response — internal storage details (sha256, file_path) omitted."""
     model_config = ConfigDict(extra="ignore")

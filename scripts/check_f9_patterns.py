@@ -20,9 +20,24 @@ Phase 191D additions (F20 + F21 mitigations):
       tags-in-routes-not-in-catalog (error) / tags-in-catalog-not-in-routes
       (warn).
 
+Phase 195C addition (F37 — contract-surface-drift subspecies):
+  --check-pydantic-literal-vs-check-constraint: scan
+      ``src/motodiag/api/routes/**`` + ``core/models.py`` for Pydantic
+      response fields that map to a DB ``CHECK (... IN (...))``
+      constraint (parsed from ``core/migrations.py``) but aren't a
+      value-set-matching ``Literal``. CHECK sets are keyed by
+      ``(table, column)`` so same-named columns across tables (the
+      three real ``role`` columns) don't cross-wire. A ``str``-typed
+      field or a ``Literal`` value-set mismatch is an error; a
+      ``str``/``Enum`` field is a warn. v1.0.2 positive-resolution-
+      required matching: a field is flagged only when its model
+      resolves to a table that carries a CHECK on that column — a
+      mere name-coincidence (no resolution / no CHECK) is no finding.
+
 Importable as a module: ``from check_f9_patterns import (
     check_model_ids, check_deploy_path_init_db, check_ssot_constants,
-    check_tag_catalog_coverage, F9Finding, run_all_checks, load_registry
+    check_tag_catalog_coverage, check_pydantic_literal_vs_check_constraint,
+    F9Finding, run_all_checks, load_registry
 )``
 
 Pattern doc: ``docs/patterns/f9-mock-vs-runtime-drift.md``
@@ -1101,6 +1116,653 @@ def check_tag_catalog_coverage(
 
 
 # ---------------------------------------------------------------------
+# F37 (contract-surface-drift) — Phase 195C
+#   --check-pydantic-literal-vs-check-constraint
+# ---------------------------------------------------------------------
+#
+# A Pydantic response-model field that maps to a DB column carrying a
+# ``CHECK (<col> IN ('a', 'b', ...))`` constraint must be typed
+# ``Literal[...]`` (or a ``Literal`` alias) whose value-set matches the
+# constraint exactly — so the OpenAPI surface emits a strict enum and
+# mobile codegen produces a typed union, not a freeform ``string``.
+#
+# The match is **table-scoped**: CHECK value-sets are keyed by
+# ``(table, column)`` because three real tables (``fleet_bikes``,
+# ``shop_members``, ``work_order_photos``) carry a same-named ``role``
+# column with three *different* CHECK value-sets. A column-name-only
+# join would re-commit the F9 family error — a name-level match that is
+# not a semantic match — inside the F9 tool itself. See plan 195C
+# v1.0.1 amendment.
+
+
+def check_pydantic_literal_vs_check_constraint(
+    routes_dir: Path,
+    models_path: Path,
+    migrations_path: Path,
+) -> list[F9Finding]:
+    """Flag Pydantic response fields mapping to a DB CHECK that aren't
+    a value-set-matching ``Literal``.
+
+    Steps:
+      1. Parse ``migrations_path`` for every ``Migration(upgrade_sql=...)``
+         string; regex-scan each for ``CHECK (<col> IN ('a', 'b'))``
+         constraints, keyed by ``(table, column)`` (tracking the
+         enclosing ``CREATE TABLE`` / ``ALTER TABLE``). Numeric/boolean
+         CHECKs (``IN (0, 1)``) are skipped — not a string-Literal
+         surface. ``rollback_sql`` is ignored.
+      2. AST-walk every ``*.py`` under ``routes_dir`` plus
+         ``models_path``; find ``BaseModel`` subclasses (incl.
+         transitive); classify each annotated field as
+         ``literal`` / ``str`` / ``str_enum`` / ``other``.
+      3. Table-scoped, positive-resolution-required join (v1.0.2): a
+         field is validated ONLY when its model resolves to a table
+         (``# f9-table:`` marker, else class-name convention) that
+         actually carries a CHECK on that column. No resolution, or a
+         resolved table with no CHECK on the column -> no finding (a
+         name-coincidence is never flagged). A ``str``-typed resolved
+         field -> ``pydantic-literal-vs-check`` ERROR; a ``Literal``
+         value-set mismatch -> ``pydantic-literal-vs-check`` ERROR
+         (contract-surface-drift); a ``str``/``Enum`` field ->
+         ``pydantic-literal-vs-check-warn`` WARN.
+
+    Args:
+        routes_dir: typically ``src/motodiag/api/routes``.
+        models_path: typically ``src/motodiag/core/models.py``.
+        migrations_path: typically ``src/motodiag/core/migrations.py``.
+
+    Returns:
+        List of findings; empty if clean or inputs missing.
+    """
+    findings: list[F9Finding] = []
+
+    # --- Step 1: parse CHECK constraints, keyed by (table, column). ---
+    check_map = _parse_check_constraints(migrations_path)
+    if not check_map:
+        # No string-enum CHECKs found — nothing the rule can validate.
+        # (Still scan models below would yield nothing; return early.)
+        return findings
+
+    # column-name -> set of tables carrying that column with a CHECK.
+    column_to_tables: dict[str, set[str]] = {}
+    for (table, column) in check_map:
+        column_to_tables.setdefault(column, set()).add(table)
+
+    # --- Step 2: collect Pydantic model files. ---
+    model_files: list[Path] = []
+    if models_path.exists():
+        model_files.append(models_path)
+    if routes_dir.exists():
+        model_files.extend(sorted(routes_dir.rglob("*.py")))
+
+    for path in model_files:
+        try:
+            source = path.read_text(encoding="utf-8")
+            tree = ast.parse(source, filename=str(path))
+        except (SyntaxError, OSError):
+            continue
+        source_lines = source.splitlines()
+
+        # File-level opt-out: `# f9-allow-pydantic-literal-vs-check:
+        # <reason>` near the top of the file. Malformed -> emit a
+        # *-malformed-optout finding and keep scanning.
+        allow_optout, allow_err = _file_level_optout(
+            source, kind="pydantic-literal-vs-check",
+        )
+        if allow_optout:
+            continue
+        if allow_err is not None:
+            allow_err.file = path
+            findings.append(allow_err)
+            # Fall through — malformed opt-out doesn't exempt the file.
+
+        findings.extend(
+            _scan_models_for_check_drift(
+                tree,
+                path,
+                source_lines,
+                check_map,
+                column_to_tables,
+            )
+        )
+    return findings
+
+
+# Regex bank for the CHECK-constraint parser (Step 1).
+# Track the enclosing table: CREATE TABLE [IF NOT EXISTS] <name> /
+# ALTER TABLE <name>.
+_TABLE_TOKEN_RE = re.compile(
+    r"\b(?:CREATE\s+TABLE(?:\s+IF\s+NOT\s+EXISTS)?|ALTER\s+TABLE)\s+(\w+)",
+    re.IGNORECASE,
+)
+# A CHECK (col IN (...)) constraint. DOTALL so multi-line CHECK bodies
+# match; the inner list is captured for quoted-string extraction.
+_CHECK_IN_RE = re.compile(
+    r"\bCHECK\s*\(\s*(\w+)\s+IN\s*\((.*?)\)\s*\)",
+    re.IGNORECASE | re.DOTALL,
+)
+# Single-quoted string literals inside a CHECK ... IN (...) body.
+_QUOTED_STR_RE = re.compile(r"'([^']*)'")
+
+
+def _parse_check_constraints(
+    migrations_path: Path,
+) -> dict[tuple[str, str], frozenset[str]]:
+    """Parse ``migrations_path`` into ``{(table, column): frozenset(values)}``.
+
+    AST-parses the migrations module, collects every ``Migration(...)``
+    call's ``upgrade_sql`` keyword string literal (``rollback_sql`` is
+    ignored entirely), sorts by lineno so a later migration's
+    redefinition of the same ``(table, column)`` overrides an earlier
+    one, then regex-scans each SQL string. Each CHECK's table is the
+    nearest preceding ``CREATE TABLE`` / ``ALTER TABLE``. A CHECK whose
+    ``IN (...)`` body has no single-quoted strings (numeric/boolean,
+    e.g. ``IN (0, 1)``) is skipped — it is not a Pydantic-``Literal``-
+    of-``str`` surface.
+    """
+    result: dict[tuple[str, str], frozenset[str]] = {}
+    if not migrations_path.exists():
+        return result
+    try:
+        source = migrations_path.read_text(encoding="utf-8")
+        tree = ast.parse(source, filename=str(migrations_path))
+    except (SyntaxError, OSError):
+        return result
+
+    # Collect (lineno, upgrade_sql) for every Migration(...) call.
+    sql_blocks: list[tuple[int, str]] = []
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Call):
+            continue
+        func_name = _call_dotted_name(node.func)
+        if func_name != "Migration" and not func_name.endswith(
+            ".Migration"
+        ):
+            continue
+        for kw in node.keywords:
+            if kw.arg != "upgrade_sql":
+                continue
+            if isinstance(kw.value, ast.Constant) and isinstance(
+                kw.value.value, str
+            ):
+                sql_blocks.append((node.lineno, kw.value.value))
+
+    # Sort by lineno so later migrations override earlier ones.
+    sql_blocks.sort(key=lambda pair: pair[0])
+
+    for _, sql in sql_blocks:
+        # Build a list of (position, table) so each CHECK can be keyed
+        # to its nearest preceding CREATE/ALTER TABLE.
+        table_spans: list[tuple[int, str]] = [
+            (m.start(), m.group(1).lower())
+            for m in _TABLE_TOKEN_RE.finditer(sql)
+        ]
+        for cm in _CHECK_IN_RE.finditer(sql):
+            column = cm.group(1).lower()
+            body = cm.group(2)
+            values = _QUOTED_STR_RE.findall(body)
+            if not values:
+                # Numeric/boolean CHECK (IN (0, 1)) — not a string
+                # Literal surface; skip.
+                continue
+            # Nearest preceding CREATE/ALTER TABLE.
+            table = ""
+            for pos, tname in table_spans:
+                if pos <= cm.start():
+                    table = tname
+                else:
+                    break
+            if not table:
+                continue
+            result[(table, column)] = frozenset(values)
+    return result
+
+
+def _pydantic_per_line_optout(
+    source_lines: list[str], lineno: int,
+) -> tuple[bool, F9Finding | None]:
+    """Honor ``# f9-noqa: pydantic-literal-vs-check <reason>`` on a line.
+
+    Returns ``(True, None)`` for a valid opt-out (reason >= 20 chars);
+    ``(False, finding)`` for a malformed one (caller appends the
+    ``pydantic-literal-vs-check-malformed-optout`` finding so the
+    comment can't be a drive-by); ``(False, None)`` when no opt-out is
+    present. Modelled on :func:`_ssot_per_line_optout`.
+    """
+    if lineno < 1 or lineno > len(source_lines):
+        return False, None
+    line = source_lines[lineno - 1]
+    pattern = re.compile(
+        r"#\s*f9-noqa:\s*pydantic-literal-vs-check\b\s*(.*)$"
+    )
+    m = pattern.search(line)
+    if m is None:
+        return False, None
+    reason = m.group(1).strip()
+    if len(reason) >= MIN_OPTOUT_REASON_CHARS:
+        return True, None
+    return False, F9Finding(
+        file=Path("<source>"),  # caller fills in the real path
+        line=lineno,
+        rule="pydantic-literal-vs-check-malformed-optout",
+        message=(
+            f"Malformed f9-noqa: pydantic-literal-vs-check opt-out: "
+            f"reason is {len(reason)} chars (need >= "
+            f"{MIN_OPTOUT_REASON_CHARS}). Opt-outs must teach: state "
+            f"WHY this field intentionally diverges from the DB CHECK "
+            f"(e.g., legacy-column / migration-pending + specifics)."
+        ),
+        snippet=line.strip(),
+    )
+
+
+# Suffixes stripped from a response-model class name before the
+# class-name-convention table fallback (Step 2 tier 2).
+_TABLE_NAME_SUFFIXES = ("Response", "Read", "Out", "Base", "Model")
+# Marker recognized on (or up to 3 lines above) a class line that names
+# the model's owning DB table authoritatively.
+_TABLE_MARKER_RE = re.compile(r"#\s*f9-table:\s*(\w+)")
+
+
+def _camel_to_snake(name: str) -> str:
+    """CamelCase -> snake_case (best-effort, for the table fallback)."""
+    s = re.sub(r"(.)([A-Z][a-z]+)", r"\1_\2", name)
+    s = re.sub(r"([a-z0-9])([A-Z])", r"\1_\2", s)
+    return s.lower()
+
+
+def _naive_pluralize(word: str) -> str:
+    """Naive English pluralization for the class-name table fallback."""
+    if word.endswith("y") and not word.endswith(
+        ("ay", "ey", "iy", "oy", "uy")
+    ):
+        return word[:-1] + "ies"
+    if word.endswith(("s", "x", "z", "ch", "sh")):
+        return word + "es"
+    return word + "s"
+
+
+def _resolve_model_table(
+    class_name: str,
+    class_lineno: int,
+    source_lines: list[str],
+) -> str | None:
+    """Resolve a Pydantic model to its DB table (v1.0.2 amendment).
+
+    Tier 1 — explicit ``# f9-table: <table>`` marker on the class line
+    or up to 3 lines above (authoritative).
+    Tier 2 — class-name convention: strip a trailing
+    ``Response``/``Read``/``Out``/``Base``/``Model`` suffix,
+    CamelCase->snake_case, naive-pluralize.
+
+    v1.0.2 positive-resolution-required matching: the convention
+    candidate is returned UNrestricted — the caller flags a field only
+    when ``(resolved_table, column)`` is an actual CHECK constraint, so
+    a candidate that names no CHECK-bearing table simply yields no
+    finding. This is the fix for the over-firing the retroactive sweep
+    surfaced (a field name coinciding with a CHECK column on a table
+    the model has nothing to do with — e.g. ``HealthStatus.status``).
+    Returns ``None`` only when the class name is empty.
+    """
+    # Tier 1 — explicit marker (class line or up to 3 lines above).
+    start = max(0, class_lineno - 1 - 3)
+    stop = min(len(source_lines), class_lineno)
+    for idx in range(start, stop):
+        m = _TABLE_MARKER_RE.search(source_lines[idx])
+        if m is not None:
+            return m.group(1).lower()
+
+    # Tier 2 — class-name convention (unrestricted; the caller's
+    # (table, column)-in-CHECK-map test is the gate).
+    stem = class_name
+    for suffix in _TABLE_NAME_SUFFIXES:
+        if stem.endswith(suffix) and len(stem) > len(suffix):
+            stem = stem[: -len(suffix)]
+            break
+    if not stem:
+        return None
+    return _naive_pluralize(_camel_to_snake(stem))
+
+
+def _literal_values_from_subscript(
+    node: ast.Subscript,
+) -> frozenset[str] | None:
+    """Extract a ``Literal["a", "b"]`` subscript's string value-set.
+
+    Returns the frozenset of string values, or ``None`` if the
+    subscript is not a string-only ``Literal[...]`` (any non-str member
+    -> not a string Literal surface).
+    """
+    sl = node.slice
+    elts: list[ast.expr]
+    if isinstance(sl, ast.Tuple):
+        elts = list(sl.elts)
+    else:
+        elts = [sl]
+    values: list[str] = []
+    for elt in elts:
+        if isinstance(elt, ast.Constant) and isinstance(elt.value, str):
+            values.append(elt.value)
+        else:
+            # Non-str member (int / None / etc.) — not a string Literal.
+            return None
+    if not values:
+        return None
+    return frozenset(values)
+
+
+def _is_literal_subscript(node: ast.expr) -> bool:
+    """True if ``node`` is a ``Literal[...]`` subscript."""
+    return (
+        isinstance(node, ast.Subscript)
+        and isinstance(node.value, ast.Name)
+        and node.value.id == "Literal"
+    )
+
+
+def _collect_literal_aliases(
+    tree: ast.AST,
+) -> dict[str, frozenset[str]]:
+    """Resolve module-level ``X = Literal["a", "b"]`` assignments.
+
+    Returns ``{alias_name: frozenset(values)}``. A ``Literal`` with any
+    non-str member is treated as not-a-string-Literal and dropped.
+    """
+    aliases: dict[str, frozenset[str]] = {}
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.Assign):
+            continue
+        if not _is_literal_subscript(node.value):
+            continue
+        values = _literal_values_from_subscript(node.value)  # type: ignore[arg-type]
+        if values is None:
+            continue
+        for target in node.targets:
+            if isinstance(target, ast.Name):
+                aliases[target.id] = values
+    return aliases
+
+
+def _collect_basemodel_classes(
+    tree: ast.AST,
+) -> set[str]:
+    """Return the names of in-file ``BaseModel`` subclasses (transitive).
+
+    A class is a BaseModel subclass if a direct base is named
+    ``BaseModel`` OR a direct base is another in-file class already
+    known to be a BaseModel subclass (handles
+    ``VideoResponse(VideoBase)`` where ``VideoBase(BaseModel)``).
+    """
+    classdefs = [
+        n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)
+    ]
+    is_basemodel: set[str] = set()
+    changed = True
+    while changed:
+        changed = False
+        for cls in classdefs:
+            if cls.name in is_basemodel:
+                continue
+            for base in cls.bases:
+                base_name = ""
+                if isinstance(base, ast.Name):
+                    base_name = base.id
+                elif isinstance(base, ast.Attribute):
+                    base_name = base.attr
+                if base_name == "BaseModel" or base_name in is_basemodel:
+                    is_basemodel.add(cls.name)
+                    changed = True
+                    break
+    return is_basemodel
+
+
+def _collect_enum_classes(
+    tree: ast.AST,
+) -> set[str]:
+    """Return the names of in-file ``Enum`` / ``StrEnum`` / ``IntEnum``
+    subclasses (direct-base check — enough for the str_enum classify)."""
+    enum_bases = {"Enum", "StrEnum", "IntEnum"}
+    names: set[str] = set()
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        for base in node.bases:
+            base_name = ""
+            if isinstance(base, ast.Name):
+                base_name = base.id
+            elif isinstance(base, ast.Attribute):
+                base_name = base.attr
+            if base_name in enum_bases:
+                names.add(node.name)
+                break
+    return names
+
+
+def _unwrap_optional(node: ast.expr) -> ast.expr:
+    """Unwrap ``Optional[X]`` and ``X | None`` down to ``X``.
+
+    ``Optional[X]`` is a ``Subscript`` of a ``Name``/``Attribute``
+    named ``Optional``. ``X | None`` is a ``BinOp`` with ``BitOr`` and
+    a ``None`` constant on one side.
+    """
+    # Optional[X]
+    if (
+        isinstance(node, ast.Subscript)
+        and (
+            (isinstance(node.value, ast.Name)
+             and node.value.id == "Optional")
+            or (isinstance(node.value, ast.Attribute)
+                and node.value.attr == "Optional")
+        )
+    ):
+        return _unwrap_optional(node.slice)
+    # X | None
+    if isinstance(node, ast.BinOp) and isinstance(node.op, ast.BitOr):
+        left, right = node.left, node.right
+        left_is_none = (
+            isinstance(left, ast.Constant) and left.value is None
+        )
+        right_is_none = (
+            isinstance(right, ast.Constant) and right.value is None
+        )
+        if right_is_none and not left_is_none:
+            return _unwrap_optional(left)
+        if left_is_none and not right_is_none:
+            return _unwrap_optional(right)
+    return node
+
+
+def _classify_annotation(
+    annotation: ast.expr,
+    literal_aliases: dict[str, frozenset[str]],
+    enum_classes: set[str],
+) -> tuple[str, frozenset[str] | None]:
+    """Classify a field annotation.
+
+    Returns ``(kind, value_set)`` where kind is one of:
+      * ``"literal"`` — inline ``Literal[...]`` of strs, or a Name that
+        is a known module-level ``Literal`` alias. ``value_set`` is the
+        frozenset of values.
+      * ``"str"`` — annotation is plain ``str``.
+      * ``"str_enum"`` — a Name referring to an in-file ``Enum`` /
+        ``StrEnum`` / ``IntEnum`` subclass. ``value_set`` is ``None``
+        (Enum members are not statically value-set-checked here).
+      * ``"other"`` — anything else (ignored by the rule).
+    """
+    node = _unwrap_optional(annotation)
+    # Inline Literal[...] of strings.
+    if _is_literal_subscript(node):
+        values = _literal_values_from_subscript(node)  # type: ignore[arg-type]
+        if values is not None:
+            return "literal", values
+        return "other", None
+    # A bare Name.
+    if isinstance(node, ast.Name):
+        if node.id in literal_aliases:
+            return "literal", literal_aliases[node.id]
+        if node.id == "str":
+            return "str", None
+        if node.id in enum_classes:
+            return "str_enum", None
+        return "other", None
+    return "other", None
+
+
+def _scan_models_for_check_drift(
+    tree: ast.AST,
+    path: Path,
+    source_lines: list[str],
+    check_map: dict[tuple[str, str], frozenset[str]],
+    column_to_tables: dict[str, set[str]],
+) -> list[F9Finding]:
+    """AST-walk one module: emit findings for fields drifting from a
+    DB CHECK constraint. Implements the Step-3 table-scoped join."""
+    findings: list[F9Finding] = []
+
+    literal_aliases = _collect_literal_aliases(tree)
+    basemodel_classes = _collect_basemodel_classes(tree)
+    enum_classes = _collect_enum_classes(tree)
+
+    check_columns = set(column_to_tables)
+
+    for node in ast.walk(tree):
+        if not isinstance(node, ast.ClassDef):
+            continue
+        if node.name not in basemodel_classes:
+            continue
+        # v1.0.2: resolve the model -> table ONCE per model. A field is
+        # flagged only when this resolved table actually carries a
+        # CHECK on that column (positive-resolution-required matching).
+        model_table = _resolve_model_table(
+            node.name, node.lineno, source_lines,
+        )
+        for stmt in node.body:
+            if not isinstance(stmt, ast.AnnAssign):
+                continue
+            if not isinstance(stmt.target, ast.Name):
+                continue
+            field_name = stmt.target.id
+            if field_name not in check_columns:
+                continue
+
+            # v1.0.2 positive-resolution-required matching: flag ONLY
+            # when the model's resolved table actually carries a CHECK
+            # on this column. No resolution, or a resolved table that
+            # carries no CHECK on this column -> no finding. (The
+            # `pydantic-literal-vs-check-ambiguous` finding type is
+            # removed in v1.0.2 — see the v1.0.2 amendment: an
+            # unresolved / non-CHECK-bearing model is silently skipped,
+            # never false-flagged.)
+            if model_table is None:
+                continue
+            check_key = (model_table, field_name)
+            if check_key not in check_map:
+                continue
+            table = model_table
+            check_values = check_map[check_key]
+
+            kind, value_set = _classify_annotation(
+                stmt.annotation, literal_aliases, enum_classes,
+            )
+            snippet = (
+                source_lines[stmt.lineno - 1].strip()
+                if 0 <= stmt.lineno - 1 < len(source_lines)
+                else ""
+            )
+
+            if kind == "other":
+                continue
+
+            if kind == "str_enum":
+                # str/Enum emits a typed OpenAPI enum -> contract-
+                # correct. House style prefers a Literal alias. WARN,
+                # not error; per-line opt-out NOT honored for WARN.
+                findings.append(
+                    F9Finding(
+                        file=path,
+                        line=stmt.lineno,
+                        rule="pydantic-literal-vs-check-warn",
+                        message=(
+                            f"WARN: Field {field_name!r} on model "
+                            f"{node.name!r} maps to the DB CHECK "
+                            f"column {table}.{field_name} and is typed "
+                            f"as a str/Enum. A str/Enum DOES emit a "
+                            f"typed OpenAPI enum so it is contract-"
+                            f"correct; house style prefers a "
+                            f"`Literal[...]` alias for consistency. "
+                            f"(Severity: warn — not a regression.)"
+                        ),
+                        snippet=snippet,
+                    )
+                )
+                continue
+
+            # kind is "str" or "literal" — both ERROR-eligible; honor
+            # the per-line opt-out.
+            ok, err = _pydantic_per_line_optout(
+                source_lines, stmt.lineno,
+            )
+            if ok:
+                continue
+            if err is not None:
+                err.file = path
+                findings.append(err)
+                # Fall through — malformed opt-out doesn't exempt.
+
+            if kind == "str":
+                findings.append(
+                    F9Finding(
+                        file=path,
+                        line=stmt.lineno,
+                        rule="pydantic-literal-vs-check",
+                        message=(
+                            f"Field {field_name!r} on model "
+                            f"{node.name!r} maps to the DB CHECK "
+                            f"column {table}.{field_name} (allowed "
+                            f"values {sorted(check_values)}) but is "
+                            f"typed `str`. Type it "
+                            f"`Literal[{', '.join(repr(v) for v in sorted(check_values))}]` "
+                            f"(or a module-level `Literal` alias) so "
+                            f"the OpenAPI surface emits a strict enum "
+                            f"and mobile codegen produces a typed "
+                            f"union instead of a freeform `string`. "
+                            f"Opt out with `# f9-noqa: "
+                            f"pydantic-literal-vs-check <reason>` if "
+                            f"intentional."
+                        ),
+                        snippet=snippet,
+                    )
+                )
+            elif kind == "literal":
+                if value_set != check_values:
+                    findings.append(
+                        F9Finding(
+                            file=path,
+                            line=stmt.lineno,
+                            rule="pydantic-literal-vs-check",
+                            message=(
+                                f"Contract-surface drift: field "
+                                f"{field_name!r} on model "
+                                f"{node.name!r} is typed `Literal` "
+                                f"with value-set "
+                                f"{sorted(value_set or [])} but the "
+                                f"DB CHECK on {table}.{field_name} "
+                                f"allows {sorted(check_values)}. The "
+                                f"schema and the API contract have "
+                                f"drifted; align the `Literal` to the "
+                                f"CHECK value-set exactly (or update "
+                                f"the migration if the CHECK is "
+                                f"stale). Opt out with `# f9-noqa: "
+                                f"pydantic-literal-vs-check <reason>` "
+                                f"if intentional."
+                            ),
+                            snippet=snippet,
+                        )
+                    )
+            # literal with a matching value-set -> pass (no finding).
+    return findings
+
+
+# ---------------------------------------------------------------------
 # Orchestration + CLI
 # ---------------------------------------------------------------------
 
@@ -1116,6 +1778,11 @@ def run_all_checks(repo_root: Path) -> list[F9Finding]:
     double-flagging the model-ID class of literals — ``--check-model-ids``
     remains as a back-compat alias that stub-redirects to
     ``check_ssot_constants`` filtered to MODEL_ALIASES + MODEL_PRICING.
+
+    Phase 195C update: ``run_all_checks`` also invokes
+    ``check_pydantic_literal_vs_check_constraint`` (F37 — contract-
+    surface-drift): Pydantic response fields mapping to a DB CHECK
+    constraint must be a value-set-matching ``Literal``.
     """
     return (
         check_ssot_constants(
@@ -1128,6 +1795,11 @@ def run_all_checks(repo_root: Path) -> list[F9Finding]:
         + check_tag_catalog_coverage(
             repo_root / "src" / "motodiag" / "api" / "routes",
             repo_root / "src" / "motodiag" / "api" / "openapi.py",
+        )
+        + check_pydantic_literal_vs_check_constraint(
+            repo_root / "src" / "motodiag" / "api" / "routes",
+            repo_root / "src" / "motodiag" / "core" / "models.py",
+            repo_root / "src" / "motodiag" / "core" / "migrations.py",
         )
     )
 
@@ -1198,11 +1870,24 @@ def main(argv: list[str] | None = None) -> int:
         ),
     )
     parser.add_argument(
+        "--check-pydantic-literal-vs-check-constraint",
+        action="store_true",
+        help=(
+            "Phase 195C F37 mitigation (contract-surface-drift): scan "
+            "src/motodiag/api/routes/**/*.py + core/models.py for "
+            "Pydantic response fields mapping to a DB CHECK "
+            "constraint (parsed from core/migrations.py) that aren't a "
+            "value-set-matching Literal. str-typed -> error; Literal "
+            "value-set mismatch -> error; str/Enum -> warn."
+        ),
+    )
+    parser.add_argument(
         "--all",
         action="store_true",
         help=(
             "Run all checks: --check-ssot-constants + "
-            "--check-deploy-path-init-db + --check-tag-catalog-coverage. "
+            "--check-deploy-path-init-db + --check-tag-catalog-coverage "
+            "+ --check-pydantic-literal-vs-check-constraint. "
             "Phase 191D: --check-model-ids is NOT included in --all "
             "since --check-ssot-constants subsumes it."
         ),
@@ -1228,12 +1913,14 @@ def main(argv: list[str] | None = None) -> int:
         or args.check_deploy_path_init_db
         or args.check_ssot_constants
         or args.check_tag_catalog_coverage
+        or args.check_pydantic_literal_vs_check_constraint
         or args.all
     ):
         parser.error(
             "Specify at least one check (--check-model-ids [DEPRECATED], "
             "--check-deploy-path-init-db, --check-ssot-constants, "
-            "--check-tag-catalog-coverage, or --all)."
+            "--check-tag-catalog-coverage, "
+            "--check-pydantic-literal-vs-check-constraint, or --all)."
         )
 
     registry_path = (
@@ -1275,6 +1962,16 @@ def main(argv: list[str] | None = None) -> int:
                 args.repo_root / "src" / "motodiag" / "api" / "routes",
                 args.repo_root / "src" / "motodiag" / "api"
                 / "openapi.py",
+            )
+        )
+    if args.all or args.check_pydantic_literal_vs_check_constraint:
+        findings.extend(
+            check_pydantic_literal_vs_check_constraint(
+                args.repo_root / "src" / "motodiag" / "api" / "routes",
+                args.repo_root / "src" / "motodiag" / "core"
+                / "models.py",
+                args.repo_root / "src" / "motodiag" / "core"
+                / "migrations.py",
             )
         )
 

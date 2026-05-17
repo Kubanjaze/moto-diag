@@ -1,6 +1,6 @@
 # Phase 195C — Phase Log
 
-**Status:** Planned | **Started:** 2026-05-17 | **Completed:** —
+**Status:** ✅ Complete | **Started:** 2026-05-17 | **Completed:** 2026-05-17
 **Repo:** https://github.com/Kubanjaze/moto-diag (backend)
 **Branch:** `phase-195C-f37-track2-lint` (based on `phase-195B-cloud-whisper`)
 
@@ -45,3 +45,93 @@ Architect PR-review of plan v1.0 (2026-05-17). Three decisions:
 This is the CLAUDE.md Step-0 discipline working as designed — a documented-assumption mismatch caught at plan-review time, resolved as a pre-code v1.0.1 amendment rather than surfacing as an implementation-time reshape.
 
 **Next:** architect sign-off of plan **v1.0.1** → on approval, build per the table-scoped spec → finalize to v1.1.
+
+---
+
+### 2026-05-17 — Plan v1.0.1 → v1.0.2 amendment (retroactive-sweep trust-but-verify, pre-code)
+
+The Builder built faithfully to v1.0.1. The Architect's trust-but-verify retroactive
+sweep against live `src/` then returned **24 findings**, not the v1.0.1 audit's
+predicted empty hit-list. Two plan-side problems:
+
+- **The rule over-fires.** v1.0.1's table-scoped join fixed colliding CHECK
+  *columns* but still flagged a field purely because its name coincides with a
+  CHECK column on some table — `meta.py HealthStatus.status` (a health-check
+  model, no DB table) flagged against 7 DB `status` tables; `SessionResponse`
+  `status`/`severity` flagged though `diagnostic_sessions` carries no CHECK on
+  them. The F9 name-vs-semantic-match failure, inside the F9 tool.
+- **The "empty hit-list" was wrong** — the v1.0.1 audit under-enumerated
+  (`role`/`severity`/`extraction_*` but not `category`/`event`). Genuine
+  `str`-instead-of-`Literal` regressions exist: `IssueCreateRequest.category`,
+  `NotificationTriggerRequest.event`.
+
+**symptoms-category ruling (pre-code, per architect):** `symptoms.category` and
+`extracted_symptoms.category` both checked — `TEXT`, no CHECK. So all three
+`*.category` findings on those tables are Bucket 1 (dissolved by the semantic
+fix); only `issues.category` has a CHECK → `IssueCreateRequest.category` is the
+sole category Bucket-2 fix.
+
+**v1.0.2 amendment authorized + written pre-code** (architect 2026-05-17,
+5-item scope): (1) positive-resolution-required matching — flag only when the
+model resolves to a table carrying a CHECK on that column; `ambiguous` finding
+type removed; (2) `HealthStatus`-shaped negative fixture as a phase-closure
+gate; (3) empty-hit-list premise retired — Bucket-2 findings become in-phase
+`str`→`Literal` fixes; (4) Bucket-3 `# f9-table:` markers as authoritative
+resolution; (5) symptoms-category ruled. Full detail: `195C_implementation.md`
+→ "v1.0.2 amendment" section.
+
+Build proceeds against v1.0.2. Phase-closure gated on: negative fixture green +
+the two Bucket-2 fixes landed + a clean re-sweep (zero false positives). A
+phase does not close on a dirty result; the amendment is pre-code, not a
+finalize-then-patch.
+
+**Next:** build the rule-tightening + negative fixture + markers + Bucket-2
+fixes against v1.0.2 → re-sweep clean → finalize to v1.1.
+
+---
+
+### 2026-05-17 — Build complete (v1.1) — Phase 195C ✅
+
+Built against plan v1.0.2 via the Builder/Architect split: a Builder agent
+wrote the v1.0.1 first pass; the Architect's trust-but-verify surfaced the
+defects that drove the v1.0.1→v1.0.2 amendment, then reworked the rule to
+v1.0.2 and finalized.
+
+**Delivered:**
+- `scripts/check_f9_patterns.py` — new `check_pydantic_literal_vs_check_constraint`
+  sub-check + `--check-pydantic-literal-vs-check-constraint` flag, folded into
+  `--all` / `run_all_checks`. Table-scoped, positive-resolution-required join.
+- `tests/test_phase195c_pydantic_literal_lint.py` — 25 RuleTester-style tests,
+  incl. the two closure gates (three-`role`-column disambiguation;
+  `HealthStatus`-shaped negative fixture). 25/25 green.
+- `docs/patterns/f9-mock-vs-runtime-drift.md` — Subspecies (vi)
+  contract-surface-drift + Instance #11; counters 10→11 / 5→6 subspecies.
+- `.pre-commit-config.yaml` — dedicated hook + `--all` fold-in.
+- 8 `# f9-table:` model→table markers across `photos.py` / `shop_mgmt.py` /
+  `transcripts.py`.
+
+**Bug fix #1 — Builder first-pass `UnboundLocalError`.** Issue: the
+colliding-column resolved-success path in `_scan_models_for_check_drift` never
+bound `table`. Root cause: only the single-table branch + the (removed)
+ambiguous branch bound it. Fix: bind `table = resolved` on the success path
+(later subsumed by the v1.0.2 rework). Verified: phase tests 25/25.
+
+**Bug fix #2 — retroactive `str`→`Literal` regressions (Bucket 2).** The
+v1.0.2 retroactive sweep surfaced 2 genuine contract-surface-drift regressions
+the v1.0.1 audit missed: `IssueCreateRequest.category` (`str` → `Literal` of
+the `issues.category` CHECK, 13 values) and `NotificationTriggerRequest.event`
+(`str` → `Literal` of the `customer_notifications.event` CHECK, 10 values).
+Both in `src/motodiag/api/routes/shop_mgmt.py`. Verified: clean re-sweep +
+156-test targeted regression (issue/notification/shop/gate) green — the
+request-validation tightening broke no existing test.
+
+**Verification:** retroactive sweep clean (0 findings); full backend
+regression **4612 passed, 0 failed** (1:22:09); F9-lint test suites
+(191c/191d/195c) 59/59 green.
+
+**F-tickets:** Q1 (shop_mgmt raw-dict rows), Q2 (inverse Literal-without-CHECK
+drift), Q3 (`VideoResponse` `str,Enum` / missing `videos` CHECKs) — recorded
+in the plan as architect-accepted F-ticket dispositions; not 195C scope.
+
+Phase 195C closes. Next per the locked sequence: Phase 196 (Bluetooth OBD),
+iOS-blocked pending device — sequencing not opened here.
