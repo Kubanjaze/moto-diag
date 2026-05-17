@@ -93,3 +93,46 @@ Backend-heavy / mobile-light per plan §8 — the `refining…` badge, the `extr
 **Phase 195C slot** — reserved between 195B and 196. F37 Track 2 lint rule + retroactive validation. Opens next per the locked sequence.
 
 **Phase 195B closes here.** Substrate-then-feature pair (195/195B) complete; ROADMAPs ✅; docs moved to `docs/phases/completed/`.
+
+---
+
+### 2026-05-17 10:25 — Bug fix #1: SCHEMA_VERSION-bump fallout + 195B model-ID literals
+
+The architect's PR-review of Phase 195B asked for a full 4587-test suite run
+from a clean checkout before requesting review — the first time the whole
+suite ran across the stacked 192→195B branch chain (each phase's build had run
+only its phase-specific tests). It surfaced 5 failures: 4 SCHEMA_VERSION-bump
+guard-test failures inherited from Phases 194/195, and 5 hardcoded model-ID
+literals genuinely introduced by Phase 195B's own test files. Per the
+architect's PR-review decision (2026-05-17), the SCHEMA_VERSION fixes land on
+their originating branches (194/195) and propagate here via merge-forward;
+this commit carries 195B's share.
+
+- **`test_phase184_gate9::test_schema_version_unchanged`:** Gate 9
+  anti-regression pin 42 → 43 (migration 043 / cost_events). Phase 195B's
+  migration 043 is the final bump in the 40→43 chain; the pin obligation
+  recurs at every schema-bumping phase.
+- **`test_phase191b_serve_migrations::...match_schema_version`:** fixture
+  cross-check pin 42 → 43.
+- **`test_phase195b_commit0.py` + `test_phase195b_commit1.py` — 5 model-ID
+  literals:** `test_phase191c_f9_lint::test_clean_main_has_zero_findings`
+  flagged hardcoded `claude-haiku-4-5*` literals in 195B's own test files
+  (cost-ledger row fixtures, cost-rollup assertions, the `extract_symptoms`
+  Haiku model arg). These are genuinely 195B's — 195B's build reported
+  "F9 lint clean" but never ran the cross-cutting `test_clean_main_has_zero_findings`
+  gate. **Fix:** top-of-file `# f9-allow-model-ids: fixture-data` opt-out on
+  both files (the lint's sanctioned mechanism for test files whose model-ID
+  literals are incidental fixture data).
+- **`api/openapi.py` TAG_CATALOG:** the merge-forward from phase-195 collided
+  with 195B Commit 0's own backfill (which had added work-order-photos +
+  voice-transcripts forward). Resolved by dropping the now-redundant 195B
+  Commit-0 backfill comment block and keeping 195B's cloud-Whisper-enriched
+  voice-transcripts description — the entries now originate on phases 194/195
+  per the reattribution decision; net openapi.py content unchanged.
+- **SSOT-lint synthetic-fixture self-tests:** no change here — Phase 194's
+  fix #1 made them interpolate the live `SCHEMA_VERSION`; they auto-track to 43.
+- **Files:** `tests/test_phase184_gate9.py`, `tests/test_phase191b_serve_migrations.py`,
+  `tests/test_phase195b_commit0.py`, `tests/test_phase195b_commit1.py`,
+  `src/motodiag/api/openapi.py` (merge resolution).
+- **Verified:** the four guard-test files + `test_phase183_openapi` → 86/86
+  pass on `phase-195B-cloud-whisper`; full 4587-test suite run follows.

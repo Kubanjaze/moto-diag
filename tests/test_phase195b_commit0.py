@@ -1,3 +1,6 @@
+# f9-allow-model-ids: fixture-data — the model-ID literals here are
+# cost-ledger row fixtures + cost-rollup assertion data, not production
+# model selection; SSOT is src/motodiag/engine/client.py:MODEL_ALIASES.
 """Phase 195B (Commit 0) — Whisper client + cost ledger + F44 fold-in.
 
 Covers:

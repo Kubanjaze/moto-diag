@@ -1,3 +1,6 @@
+# f9-allow-model-ids: fixture-data — the model-ID literal here is
+# extract_symptoms test fixture data (the Haiku model arg), not
+# production model selection; SSOT is src/motodiag/engine/client.py:MODEL_ALIASES.
 """Phase 195B (Commit 1) — Claude extraction + threshold + async pipeline.
 
 Covers:
