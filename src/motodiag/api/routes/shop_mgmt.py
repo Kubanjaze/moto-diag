@@ -26,6 +26,8 @@ from motodiag.auth.deps import (
 )
 from motodiag.shop import (
     add_shop_member,
+    assign_mechanic,
+    build_triage_queue,
     create_intake,
     create_issue,
     create_shop,
@@ -44,6 +46,7 @@ from motodiag.shop import (
     list_shops,
     list_work_orders,
     get_work_order,
+    unassign_mechanic,
     require_shop_permission,
     revenue_rollup,
     seed_first_owner,
@@ -182,6 +185,26 @@ class WorkOrderTransitionRequest(BaseModel):
     action: TransitionAction
     reason: Optional[str] = None
     actual_hours: Optional[float] = Field(None, ge=0)
+
+
+class WorkOrderAssignRequest(BaseModel):
+    """Phase 193 Commit 0.5 — assign / unassign a mechanic on a WO.
+
+    ``mechanic_user_id`` is required (None means explicit unassign).
+    Same auth posture as the transition endpoint: caller must be a
+    member of the shop. RBAC tightening (e.g., manager/owner-only
+    reassignment of OTHER mechanics' WOs) is its own follow-up;
+    Phase 193 keeps parity with transition's basic membership check.
+    """
+    model_config = ConfigDict(extra="ignore")
+    mechanic_user_id: Optional[int] = Field(
+        ...,
+        description=(
+            "User id of the mechanic to assign. ``null`` (explicit) "
+            "unassigns the WO. Required field — pass ``null`` rather "
+            "than omitting to unassign."
+        ),
+    )
 
 
 class IssueCreateRequest(BaseModel):
@@ -489,13 +512,59 @@ def list_work_orders_endpoint(
     shop_id: int,
     status: Optional[str] = None,
     limit: int = Query(50, ge=1, le=500),
+    sort: Optional[Literal["newest", "priority", "triage"]] = Query(
+        None,
+        description=(
+            "Order: 'newest' (created_at DESC), 'priority' (priority "
+            "ASC then created_at DESC — same as omitting), or "
+            "'triage' (build_triage_queue scoring; rich score / rank / "
+            "parts-ready context computed server-side, response shape "
+            "stays uniform — see Phase 193 plan v1.0 + F35 candidate)."
+        ),
+    ),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
 ) -> dict:
+    """List shop work orders with optional sort dispatch.
+
+    Phase 193 Commit 0: ``sort`` query param added for the mobile
+    Shop Dashboard's `Newest / Priority / Triage` toggle. Default
+    behavior preserved (omitting `sort` matches existing
+    `list_work_orders` ordering — backward compatible).
+
+    Triage sort calls :func:`build_triage_queue` server-side and
+    unwraps each :class:`TriageItem` to its plain ``work_order``
+    dict — clients get a uniform response shape regardless of sort.
+    Triage rank / score / parts-ready context stay server-side this
+    phase; explainability surface is filed as F35 (mobile FOLLOWUPS).
+    """
     require_shop_access(shop_id, user, db_path)
-    rows = list_work_orders(
-        shop_id=shop_id, status=status, limit=limit, db_path=db_path,
-    )
+    if sort == "triage":
+        items = build_triage_queue(shop_id=shop_id, db_path=db_path)
+        # Unwrap to plain WO dicts in triage-rank order.
+        rows = [item.work_order for item in items]
+        # Honor `status` filter post-triage so the UI's status filter
+        # still applies. build_triage_queue's include_terminal default
+        # already excludes completed/cancelled.
+        if status is not None:
+            rows = [r for r in rows if r.get("status") == status]
+        # Honor `limit` post-triage.
+        if limit and limit > 0:
+            rows = rows[:limit]
+    else:
+        rows = list_work_orders(
+            shop_id=shop_id, status=status, limit=limit, db_path=db_path,
+        )
+        if sort == "newest":
+            # Re-sort the priority-default ordering by created_at DESC.
+            # Stable secondary by id DESC matches list_work_orders'
+            # tiebreaker pattern.
+            rows = sorted(
+                rows,
+                key=lambda r: (r.get("created_at") or "", r.get("id") or 0),
+                reverse=True,
+            )
+        # sort == "priority" or sort is None → existing ordering.
     return {"items": rows, "total": len(rows)}
 
 
@@ -581,6 +650,44 @@ def transition_work_order(
         )
     elif action == "reopen":
         reopen_work_order(wo_id, db_path=db_path)
+    return get_work_order(wo_id, db_path=db_path)
+
+
+@router.post(
+    "/{shop_id}/work-orders/{wo_id}/assign",
+    summary="Assign or unassign a mechanic on a work order",
+    dependencies=[Depends(require_tier("shop"))],
+)
+def assign_work_order_mechanic(
+    shop_id: int,
+    wo_id: int,
+    req: WorkOrderAssignRequest,
+    user: AuthedUser = Depends(get_current_user),
+    db_path: str = Depends(get_db_path),
+) -> dict:
+    """Phase 193 Commit 0.5 — assign / unassign a mechanic on a WO.
+
+    Mirrors the transition endpoint's auth posture (basic shop
+    membership check via ``require_shop_access``). Backend's
+    ``assign_mechanic`` validates the target user exists; cross-shop
+    WOs return 404 (matches transition endpoint's posture).
+
+    Body shape: ``{mechanic_user_id: int | null}`` — ``null`` is
+    explicit unassign (required field; can't omit). Returns the
+    updated WO dict on success.
+    """
+    require_shop_access(shop_id, user, db_path)
+    wo = get_work_order(wo_id, db_path=db_path)
+    if wo is None or wo.get("shop_id") != shop_id:
+        raise HTTPException(
+            status_code=404, detail=f"work order id={wo_id} not found",
+        )
+    if req.mechanic_user_id is None:
+        unassign_mechanic(wo_id, db_path=db_path)
+    else:
+        assign_mechanic(
+            wo_id, user_id=req.mechanic_user_id, db_path=db_path,
+        )
     return get_work_order(wo_id, db_path=db_path)
 
 
