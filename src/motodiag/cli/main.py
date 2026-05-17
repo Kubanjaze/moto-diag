@@ -24,6 +24,7 @@ from motodiag.cli.billing import register_subscription
 from motodiag.cli.serve import register_serve
 from motodiag.cli.shop import register_shop
 from motodiag.cli.theme import get_console, status, tier_style
+from motodiag.cli.transcripts import register_transcripts
 
 console = get_console()
 
@@ -774,6 +775,10 @@ register_serve(cli)
 # Must come before completion so shell-completion sees them.
 register_apikey(cli)
 register_subscription(cli)
+
+# Phase 195: register `transcripts` subgroup (voice memo admin —
+# `motodiag transcripts sweep` runs the 60-day audio retention sweep).
+register_transcripts(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

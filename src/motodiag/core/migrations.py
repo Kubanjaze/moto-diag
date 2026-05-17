@@ -3022,6 +3022,146 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS work_order_photos;
         """,
     ),
+    # Migration 042 — Phase 195 (Commit 0): voice_transcripts + extracted_symptoms substrate
+    Migration(
+        version=42,
+        name="voice_transcripts_and_extracted_symptoms",
+        description=(
+            "Phase 195 (Commit 0): Add `voice_transcripts` + "
+            "`extracted_symptoms` tables for the voice-input substrate. "
+            "Substrate-half of the 195/195B substrate-then-feature pair "
+            "(195 capture + on-device preview + audio upload + keyword "
+            "extraction; 195B cloud Whisper + Claude-rich extraction + "
+            "cost monitoring + VAD).\n\n"
+            "Schema choices (per Phase 195 v1.0 Section 1 hybrid + "
+            "Section 5 60-day audio retention + Section 6 forward-invest "
+            "narrow + Section 7 ISO 639-1 with region):\n"
+            "- voice_transcripts.work_order_id NOT NULL + issue_id "
+            "  nullable (Phase 194 A-flexibility precedent).\n"
+            "- audio_path stored canonically; audio bytes pruned by the "
+            "  60-day sweep (audio_sweep.prune_old_audio); audio_deleted_at "
+            "  TIMESTAMP set when sweep runs (transcripts permanent, audio "
+            "  bytes ephemeral).\n"
+            "- preview_text + preview_engine populated by mobile from "
+            "  on-device STT (iOS Speech / Android SpeechRecognizer).\n"
+            "- extraction_state CHECK enum {pending, extracting, "
+            "  extracted, extraction_failed}.\n"
+            "- language ISO 639-1 with optional region (en-US, es-MX, "
+            "  fr-CA) per Section 7 — Whisper + iOS Speech both use "
+            "  locale-with-region; storing without region loses "
+            "  information.\n"
+            "- whisper_transcript / whisper_segments (JSON) / "
+            "  whisper_cost_usd_cents / whisper_model — substrate-"
+            "  anticipates-feature for Phase 195B (cloud Whisper); "
+            "  Phase 195 leaves NULL.\n"
+            "- source TEXT NULL forward-invest narrow (Phase 196 OBD "
+            "  populates 'obd'; F38 future unify).\n\n"
+            "extracted_symptoms is NEW relational shape (Phase 178's "
+            "diagnostic_sessions.symptoms is JSON-list and stays JSON-list "
+            "in Phase 195; F38 NEW filed at plan-write for future "
+            "unification): one row per extracted symptom phrase with "
+            "linked_symptom_id FK to symptoms catalog (Phase 178 KB), "
+            "category from engine/symptoms.SYMPTOM_CATEGORIES, "
+            "extraction_method enum {keyword, claude, manual_edit}, "
+            "confidence 0.0-1.0 (keyword=1.0; future Claude=model-"
+            "reported), segment_start_ms/end_ms NULL until Phase 195B "
+            "Whisper segments populate. confirmed_by_user_id + "
+            "confirmed_at track mechanic confirmation via PATCH UI.\n\n"
+            "FK posture: voice_transcripts.work_order_id CASCADE "
+            "(deleting WO removes transcripts); voice_transcripts.issue_id "
+            "SET NULL (deleting issue keeps transcript at WO scope); "
+            "voice_transcripts.uploaded_by_user_id SET DEFAULT (preserve "
+            "if uploader removed); extracted_symptoms.transcript_id "
+            "CASCADE (deleting transcript removes its extracted symptoms); "
+            "extracted_symptoms.linked_symptom_id SET NULL (deleting KB "
+            "symptom unlinks but keeps the row); "
+            "extracted_symptoms.confirmed_by_user_id SET NULL."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS voice_transcripts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                issue_id INTEGER,
+                audio_path TEXT NOT NULL,
+                audio_size_bytes INTEGER NOT NULL,
+                audio_format TEXT NOT NULL DEFAULT 'm4a',
+                audio_sha256 TEXT NOT NULL,
+                duration_ms INTEGER NOT NULL,
+                sample_rate_hz INTEGER NOT NULL DEFAULT 16000,
+                language TEXT NOT NULL DEFAULT 'en-US',
+                captured_at TEXT NOT NULL,
+                uploaded_by_user_id INTEGER NOT NULL,
+                preview_text TEXT,
+                preview_engine TEXT,
+                extraction_state TEXT NOT NULL DEFAULT 'pending'
+                    CHECK (extraction_state IN
+                        ('pending', 'extracting', 'extracted',
+                         'extraction_failed')),
+                extracted_at TEXT,
+                whisper_transcript TEXT,
+                whisper_segments TEXT,
+                whisper_cost_usd_cents INTEGER,
+                whisper_model TEXT,
+                source TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                updated_at TEXT NOT NULL DEFAULT (datetime('now')),
+                audio_deleted_at TEXT,
+                deleted_at TEXT,
+                FOREIGN KEY (work_order_id) REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (issue_id) REFERENCES issues(id) ON DELETE SET NULL,
+                FOREIGN KEY (uploaded_by_user_id) REFERENCES users(id) ON DELETE SET DEFAULT
+            );
+            CREATE INDEX IF NOT EXISTS idx_voice_transcripts_wo
+                ON voice_transcripts(work_order_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_voice_transcripts_issue
+                ON voice_transcripts(issue_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_voice_transcripts_audio_age
+                ON voice_transcripts(created_at)
+                WHERE audio_deleted_at IS NULL AND deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_voice_transcripts_extraction_state
+                ON voice_transcripts(extraction_state)
+                WHERE extraction_state IN ('pending', 'extracting');
+
+            CREATE TABLE IF NOT EXISTS extracted_symptoms (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                transcript_id INTEGER NOT NULL,
+                text TEXT NOT NULL,
+                category TEXT,
+                linked_symptom_id INTEGER,
+                confidence REAL NOT NULL DEFAULT 1.0,
+                extraction_method TEXT NOT NULL DEFAULT 'keyword'
+                    CHECK (extraction_method IN
+                        ('keyword', 'claude', 'manual_edit')),
+                segment_start_ms INTEGER,
+                segment_end_ms INTEGER,
+                confirmed_by_user_id INTEGER,
+                confirmed_at TEXT,
+                source TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                deleted_at TEXT,
+                FOREIGN KEY (transcript_id) REFERENCES voice_transcripts(id) ON DELETE CASCADE,
+                FOREIGN KEY (linked_symptom_id) REFERENCES symptoms(id) ON DELETE SET NULL,
+                FOREIGN KEY (confirmed_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_extracted_symptoms_transcript
+                ON extracted_symptoms(transcript_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_extracted_symptoms_linked
+                ON extracted_symptoms(linked_symptom_id) WHERE deleted_at IS NULL;
+            CREATE INDEX IF NOT EXISTS idx_extracted_symptoms_method
+                ON extracted_symptoms(extraction_method);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_extracted_symptoms_method;
+            DROP INDEX IF EXISTS idx_extracted_symptoms_linked;
+            DROP INDEX IF EXISTS idx_extracted_symptoms_transcript;
+            DROP TABLE IF EXISTS extracted_symptoms;
+            DROP INDEX IF EXISTS idx_voice_transcripts_extraction_state;
+            DROP INDEX IF EXISTS idx_voice_transcripts_audio_age;
+            DROP INDEX IF EXISTS idx_voice_transcripts_issue;
+            DROP INDEX IF EXISTS idx_voice_transcripts_wo;
+            DROP TABLE IF EXISTS voice_transcripts;
+        """,
+    ),
 ]
 
 
