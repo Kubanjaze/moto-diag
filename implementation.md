@@ -296,6 +296,12 @@ moto-diag/
 
 ## Phase History
 
+> **Track I (Phases 185–204) status is authoritative in the mobile repo** per
+> `ROADMAP_AUTHORITY.md` (root of both repos). This Phase History table does
+> not carry per-phase Track I rows; current Track I status lives in
+> `Kubanjaze/moto-diag-mobile`. Any Track I rows that may appear below are
+> frozen historical entries — not the live status.
+
 | Phase | Title | Date | Key Changes |
 |-------|-------|------|-------------|
 | 01 | Project scaffold + monorepo setup | 2026-04-15 | Initial monorepo, 8 subpackages, CLI, base models, 24 tests |
