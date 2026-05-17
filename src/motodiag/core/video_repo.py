@@ -272,13 +272,41 @@ def update_analysis_state(
     accepted but will fail the route response validator on the next
     GET (which round-trips through the Pydantic enum). Callers that
     care about validity should pass `VideoAnalysisState.X.value`.
+
+    Phase 192 Contract B (atomicity, migration 040): when
+    transitioning INTO ``'analyzing'`` the SAME UPDATE statement also
+    sets ``analyzing_started_at`` to the current UTC ISO timestamp.
+    Two-statement implementations (UPDATE state; THEN UPDATE
+    timestamp) are FORBIDDEN — they create a race window where the
+    row sits in ``analyzing`` with ``analyzing_started_at IS NULL``,
+    indistinguishable from a pre-migration row that should be
+    surfaced as stuck IMMEDIATELY by mobile-side stuck-detection
+    (Phase 192 Commit 3 scope). Single-UPDATE behavior is verified
+    by ``tests/test_phase192_analyzing_started_at_atomicity.py``.
+
+    All non-``'analyzing'`` transitions remain a single-column UPDATE
+    that never touches ``analyzing_started_at`` — preserving the
+    column's value across ``analyzing → analyzed`` /
+    ``analyzing → analysis_failed`` / ``analyzing → unsupported``
+    transitions for post-completion debugging (e.g., diagnosing why
+    a video took unexpectedly long to analyze).
     """
     with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            "UPDATE videos SET analysis_state = ? "
-            "WHERE id = ? AND deleted_at IS NULL",
-            (new_state, video_id),
-        )
+        if new_state == "analyzing":
+            # Contract B: single atomic UPDATE writes BOTH
+            # analysis_state and analyzing_started_at.
+            cursor = conn.execute(
+                "UPDATE videos SET analysis_state = ?, "
+                "analyzing_started_at = ? "
+                "WHERE id = ? AND deleted_at IS NULL",
+                (new_state, _now_iso(), video_id),
+            )
+        else:
+            cursor = conn.execute(
+                "UPDATE videos SET analysis_state = ? "
+                "WHERE id = ? AND deleted_at IS NULL",
+                (new_state, video_id),
+            )
         return cursor.rowcount > 0
 
 

@@ -854,12 +854,26 @@ def check_ssot_constants(
                     #     import a module for one of its symbols and
                     #     never touch the dict.
                     #
-                    #   * int/str-typed entries: top-level scalar
-                    #     constants. Either identifier-nearby OR
-                    #     source-module imported is sufficient — a
-                    #     test that imports `motodiag.api.app` and
-                    #     asserts `response['version'] == 'v1'` is
-                    #     plausibly literal-pinning APP_VERSION.
+                    #   * int-typed entries: top-level scalar integers
+                    #     are also commonly coincident with unrelated
+                    #     test literals (counts, percentages, durations,
+                    #     timeouts). Phase 192 surfaced 22 false
+                    #     positives where ``40`` matched ``SCHEMA_VERSION``
+                    #     across 8 unrelated test files (Phase 06 / 115
+                    #     / 122 / 140 / 141 / 143 / 158 / 163) where the
+                    #     test imports a sibling of the source module
+                    #     for unrelated reasons. We tighten int-typed
+                    #     to require identifier-nearby — same posture
+                    #     as dict/tuple. Import-match alone is too
+                    #     loose for ints.
+                    #
+                    #   * str-typed entries: keep the two-path
+                    #     heuristic (identifier-nearby OR source-module
+                    #     imported). String literals are far less
+                    #     coincidence-prone than integers — a test
+                    #     that imports `motodiag.api.app` and asserts
+                    #     `response['version'] == 'v1'` is plausibly
+                    #     literal-pinning APP_VERSION.
                     #
                     #   * tuple-typed entries: same posture as dict
                     #     (require identifier-nearby) since tuples
@@ -867,7 +881,7 @@ def check_ssot_constants(
                     nearby = _identifier_nearby(
                         source_lines, node.lineno, identifiers,
                     )
-                    if entry.value_type in ("dict", "tuple"):
+                    if entry.value_type in ("dict", "tuple", "int"):
                         if not nearby:
                             continue
                     else:

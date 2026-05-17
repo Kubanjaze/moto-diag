@@ -84,7 +84,7 @@ class TestServeAppliesMigrationsByDefault:
     def test_serve_applies_pending_migration_to_match_schema_version(
         self, cli_with_serve,
     ):
-        """v38 DB + Phase 191B SCHEMA_VERSION=39 → serve advances to 39."""
+        """v38 DB + current SCHEMA_VERSION → serve advances to current."""
         root, db_path = cli_with_serve
         _make_db_at_version(db_path, target_version=38)
         assert get_current_version(db_path) == 38
@@ -95,12 +95,13 @@ class TestServeAppliesMigrationsByDefault:
 
         assert result.exit_code == 0, result.output
         assert get_current_version(db_path) == SCHEMA_VERSION
-        assert get_current_version(db_path) == 39  # f9-noqa: ssot-pin fixture-data: literal `39` here is the migration boundary the test exercises (38 → 39 via fix-cycle-1's startup migration apply); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is").
+        assert get_current_version(db_path) == 40  # f9-noqa: ssot-pin fixture-data: literal `40` here is the live SCHEMA_VERSION the migrations land at (Phase 192 bumped 39→40 via migration 040); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is").
         # uvicorn was called (we mocked it; it didn't actually launch)
         assert mock_uvicorn.called
-        # Output mentions the migration apply
+        # Output mentions the migration apply (38 → current SCHEMA_VERSION)
         assert (
-            "Applied migrations: schema_version 38 → 39" in result.output
+            f"Applied migrations: schema_version 38 → {SCHEMA_VERSION}"
+            in result.output
             or "schema_version 38" in result.output
         )
 

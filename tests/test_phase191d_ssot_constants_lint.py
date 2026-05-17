@@ -113,8 +113,9 @@ class TestCheckSsotConstants:
     def test_positive_schema_version_literal_pin_in_test(
         self, tmp_path: Path,
     ):
-        """Test asserting ``SCHEMA_VERSION == 39`` (the current live
-        value) without an opt-out comment must trigger one finding.
+        """Test asserting ``SCHEMA_VERSION == 40`` (the current live
+        value as of Phase 192 migration 040) without an opt-out comment
+        must trigger one finding.
 
         This is the F20 case shape: the test imports the SSOT but ALSO
         literal-pins the value, so a future migration bump silently
@@ -125,7 +126,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 39\n",
+            "    assert SCHEMA_VERSION == 40\n",
             encoding="utf-8",
         )
         findings = check_ssot_constants(
@@ -192,7 +193,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 39  "
+            "    assert SCHEMA_VERSION == 40  "
             "# f9-noqa: ssot-pin migration-boundary contract assertion "
             "for billing-cycle alignment\n",
             encoding="utf-8",
@@ -222,7 +223,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 39  "
+            "    assert SCHEMA_VERSION == 40  "
             "# f9-noqa: ssot-pin contract-pin: tier-billing-math "
             "regression coverage; bump requires Stripe re-verification\n",
             encoding="utf-8",
@@ -250,7 +251,7 @@ class TestCheckSsotConstants:
         (tests_dir / "test_synthetic.py").write_text(
             "from motodiag.core.database import SCHEMA_VERSION\n"
             "def test_pin():\n"
-            "    assert SCHEMA_VERSION == 39  "
+            "    assert SCHEMA_VERSION == 40  "
             "# f9-noqa: ssot-pin ok\n",
             encoding="utf-8",
         )

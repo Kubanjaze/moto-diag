@@ -20,12 +20,14 @@ Builders raise domain exceptions (``SessionOwnershipError``,
 
 from __future__ import annotations
 
+import os
 from datetime import datetime, timezone
 from typing import Any, Optional
 
 from motodiag.core.session_repo import (
     SessionOwnershipError, get_session_for_owner,
 )
+from motodiag.core.video_repo import list_session_videos
 from motodiag.knowledge.dtc_repo import get_dtc
 from motodiag.shop.invoicing import (
     InvoiceNotFoundError, get_invoice_with_items,
@@ -186,6 +188,61 @@ def build_session_report_doc(
         sections.append({
             "heading": "Notes",
             "body": str(row["notes"]),
+        })
+
+    # Videos (Phase 192) — variant 5 in
+    # docs/architecture/report-document-shape.md. Omit-when-empty
+    # per Pattern 1 (mirrors symptoms / fault_codes). For each
+    # video card we surface required metadata + (only when
+    # ``analysis_state == 'analyzed'``) a nested ``findings`` key
+    # containing the verbatim ``VisualAnalysisResult.model_dump()``
+    # shape persisted by Phase 191B's set_analysis_findings.
+    videos = list_session_videos(int(row["id"]), db_path=db_path)
+    if videos:
+        video_cards: list[dict] = []
+        for v in videos:
+            file_path_value = v.get("file_path") or ""
+            filename = (
+                os.path.basename(str(file_path_value))
+                if file_path_value
+                else "—"
+            )
+            card: dict[str, Any] = {
+                "video_id": int(v["id"]),
+                "filename": filename,
+                # Phase 191B videos table stores the capture
+                # start time in ``started_at``; ``created_at`` is
+                # the row-insert timestamp. ``started_at`` is the
+                # right surface for ``captured_at``.
+                "captured_at": str(v.get("started_at") or "—"),
+                "duration_ms": int(v.get("duration_ms") or 0),
+                "size_bytes": int(v.get("file_size_bytes") or 0),
+                "interrupted": bool(v.get("interrupted")),
+                "analysis_state": str(
+                    v.get("analysis_state") or "pending"
+                ),
+                # Phase 191B does not currently persist the
+                # ``analyzing → analyzed`` transition timestamp
+                # (no ``analyzing_started_at`` column on the
+                # videos table; the table tracks ``analyzed_at``
+                # only). Surface as None per the shape doc's
+                # contract ("ISO; None if never started"); a
+                # future migration may add the column.
+                "analyzing_started_at": v.get(
+                    "analyzing_started_at"
+                ),
+            }
+            # Findings key is OMITTED entirely (not present-with-
+            # None) for any non-analyzed state. Renderers check
+            # ``if "findings" in video`` per the shape doc.
+            if card["analysis_state"] == "analyzed":
+                findings_payload = v.get("analysis_findings")
+                if findings_payload:
+                    card["findings"] = findings_payload
+            video_cards.append(card)
+        sections.append({
+            "heading": "Videos",
+            "videos": video_cards,
         })
 
     # Timestamps
