@@ -230,3 +230,33 @@ Wait — recounting: pre-Commit-3 was 419/419. Commit 3 added 16 (reportShareErr
 **Architect gate**: per plan v1.0 Section E — 9-step smoke-gate (7 base + 2 from this phase). Architect smoke-gate against real device deferred until next available device session; the 9 steps are documented + the unit-test coverage for the load-bearing logic (deterministic rendering byte-compare, temp-cleanup boundary cases, defensive URI validation, error-copy register) is in place. Smoke-gate result will be appended here when run.
 
 **Phase 192B status**: ✅ Complete. Substrate-then-feature pair (Phase 192 viewer + Phase 192B PDF + Share Sheet) closed. Diagnostic report flow end-to-end: mechanic taps "View report" → sees report → toggles preset → taps "Share PDF" → OS share sheet → AirDrop / Mail / Messages / Files / Drive recipient → byte-stable PDF arrives.
+
+---
+
+### 2026-05-17 09:30 — Bug fix #1: F9 model-ids lint finding in fixture data
+
+Surfaced during the Phase 195B PR-review full-suite run — the first time the
+whole 4587-test suite was run across the stacked 192→195B branch chain (no
+single phase's build had run the full suite; each ran only its phase-specific
+tests). `test_phase191c_f9_lint.py::TestCheckModelIds::test_clean_main_has_zero_findings`
+flagged this file.
+
+- **Issue:** the F9 model-ids lint test scans the whole `tests/` tree for
+  hardcoded model-ID literals and expects zero findings. It found one in
+  this file.
+- **Root cause:** `test_phase192b_deterministic_pdf_render.py:101` embeds
+  `"model_used": "claude-sonnet-4-6"` inside a fake-API-response dict fixture
+  for the deterministic-PDF-render guard. The F9 model-ids rule flags any
+  model-ID literal in a `test_*.py` file unless it lives in an exempt
+  source-of-truth container OR the file carries a top-of-file
+  `# f9-allow-model-ids: <reason>` opt-out. Latent since 192B shipped —
+  192B's build ran only 192B-specific tests, never the cross-cutting F9 lint.
+- **Fix:** added a top-of-file `# f9-allow-model-ids: fixture-data` opt-out
+  (reason well over the 20-char floor) — the lint's own sanctioned mechanism
+  for test files whose model-ID literals are incidental fixture data, not
+  production model selection.
+- **Files:** `tests/test_phase192b_deterministic_pdf_render.py` (+3 lines, top).
+- **Verified:** `pytest tests/test_phase191c_f9_lint.py` → 17/17 pass on
+  `phase-192B-pdf-export-share-sheet`. The other 4 full-suite failures do not
+  occur on this branch — SCHEMA_VERSION is still 40 here; those break at
+  Phase 194's migration 041.
