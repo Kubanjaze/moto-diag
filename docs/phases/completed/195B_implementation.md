@@ -1,6 +1,6 @@
 # Phase 195B — Voice Symptom: Cloud Whisper + Claude-Rich Extraction (feature half)
 
-**Version:** 1.0 (plan) | **Tier:** Standard | **Date:** 2026-05-16
+**Version:** 1.1 (final) | **Tier:** Standard | **Date:** 2026-05-16
 
 ## Goal
 
@@ -81,19 +81,19 @@ Backend-heavy/mobile-light (§8). The `claude` chip branch + `extracting` badge 
 
 ## Verification Checklist
 
-- [ ] Migration 043 creates `cost_events` with `kind` CHECK enum + 3 indexes; SCHEMA_VERSION 42 → 43.
-- [ ] `whisper_client.transcribe` handles M4A, returns text + segments + cost; reads `MOTODIAG_OPENAI_API_KEY`.
-- [ ] `cost_repo` record + aggregate; `motodiag costs report` rollup correct.
-- [ ] F44 audit run + documented; port fold-in landed IF shallow, un-folded IF deep; phase-log records which.
-- [ ] `DiagnosticClient.extract_symptoms` tool-use structured output; Haiku; malformed → keyword-row fallback + `extraction_failed`.
-- [ ] Threshold calibration corpus built; value derived + documented in Commit 0 phase-log; F47 filed.
-- [ ] Async BackgroundTasks pipeline: upload → 201 `extracting` → Whisper → Claude → `extracted`.
-- [ ] **ACCEPTANCE: state-flip + row-writes single atomic transaction; refetch-mid-write interleaving test passes.**
-- [ ] NO new `extraction_state` enum value (no migration beyond 043).
-- [ ] All new enums (`cost_events.kind`, `whisper_model` response) ship as Pydantic `Literal[...]` (F37 Track 1).
-- [ ] Mobile: async-extracted Claude rows land on WO-detail refetch; keyword + claude chips render identically.
-- [ ] ~6-step smoke gate; backend + mobile test suites green.
-- [ ] Versions bumped; Phase 195C slot reserved in v1.1; ROADMAPs ✅.
+- [x] Migration 043 creates `cost_events` with `kind` CHECK enum + 3 indexes; SCHEMA_VERSION 42 → 43.
+- [x] `whisper_client.transcribe` handles M4A, returns text + segments + cost; reads `MOTODIAG_OPENAI_API_KEY`.
+- [x] `cost_repo` record + aggregate; `motodiag costs report` rollup correct.
+- [x] F44 audit run + documented; port fold-in landed IF shallow, un-folded IF deep; phase-log records which.
+- [x] `DiagnosticClient.extract_symptoms` tool-use structured output; Haiku; malformed → keyword-row fallback + `extraction_failed`.
+- [x] Threshold calibration corpus built; value derived + documented in Commit 0 phase-log; F47 filed.
+- [x] Async BackgroundTasks pipeline: upload → 201 `extracting` → Whisper → Claude → `extracted`.
+- [x] **ACCEPTANCE: state-flip + row-writes single atomic transaction; refetch-mid-write interleaving test passes.**
+- [x] NO new `extraction_state` enum value (no migration beyond 043).
+- [x] All new enums (`cost_events.kind`, `whisper_model` response) ship as Pydantic `Literal[...]` (F37 Track 1).
+- [x] Mobile: async-extracted Claude rows land on WO-detail refetch; keyword + claude chips render identically.
+- [x] ~6-step smoke gate; backend + mobile test suites green.
+- [x] Versions bumped; Phase 195C slot reserved in v1.1; ROADMAPs ✅.
 
 ## Risks
 
@@ -108,3 +108,33 @@ Backend-heavy/mobile-light (§8). The `claude` chip branch + `extracting` badge 
 ## Phase 195C slot
 
 Reserved (between 195B and 196) per the 191B→191C→191D precedent. F37 Track 2: lint rule enforcing Pydantic-Literal-vs-DB-CHECK-constraint + retroactive validation across 191B/192/193/194/195/195B + F9 subspecies addition. NOT iOS-parity (landed as a CLAUDE.md PR-review checklist item, F40-refined — deliberately not lint scope).
+
+## Deviations from Plan
+
+Plan v1.0 shipped end-to-end with NO scope changes. Four implementation-time notes:
+
+1. **F44 fold-in confirmed** — the hardcoded-8080 audit (plan §4's conditional) came back **shallow**: 6 refs, all defaults / help-text / one test pin, zero load-bearing logic. Per the conditional approval, the port-default fix (8080→8000) folded into Backend Commit 0's `config.py` change-set. `openapi.py:358` + `config.py:74` were the F-C/openapi.json `:8080` refs the iOS session flagged — exactly the architect-flagged known audit hit, no surprise.
+2. **Threshold value derived at Backend Commit 1, not Commit 0** — plan §3 estimated "value derived at Commit 0", but Backend Commit 0 shipped the cost substrate with no extraction code. The threshold (`CLAUDE_FALLBACK_COVERAGE_THRESHOLD = 0.5`) was derived + documented at Commit 1 alongside the code that uses it — more coherent than carrying an unused constant through Commit 0. Calibration documented inline in `transcript_extraction.py` + below.
+3. **TAG_CATALOG coverage backfill folded into Backend Commit 0** — a pre-existing gap (Phases 194 + 195 added router tags `work-order-photos` / `voice-transcripts` but never updated `openapi.py` TAG_CATALOG; the 194/195 finalize regressions ran targeted subsets + missed `test_phase183_openapi.py`). NOT a Backend Commit 0 regression — surfaced because trust-but-verify ran the F44-touched test file. Folded in (same shape as Phase 194 Commit 0 folding the F9 SCHEMA_VERSION fix on Phase 192's test).
+4. **3 Phase 195 route tests adapted to the async contract** — the upload route changed sync→async (Backend Commit 1); 3 tests in `test_phase195_commit0_voice_transcripts.py` that pinned the synchronous `extraction_state='extracted'` + populated `extracted_symptoms` on the POST response were updated to the async contract (POST returns 201 `extracting` + 0 symptoms; a follow-up GET after the BackgroundTask runs sees the finalized state). Genuine contract-change adaptation, not a bug.
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Backend commits | 2 (Commit 0 `efb0b7e`, Commit 1 `32ac5c2`) + plan/finalize |
+| Mobile commits | 1 (Commit 2) + plan/finalize |
+| Migration | 043 — `cost_events` ledger; SCHEMA_VERSION 42 → 43 |
+| New backend modules | `media/whisper_client` + `media/transcript_pipeline` + `shop/cost_repo` + `cli/costs` |
+| Extended backend modules | `engine/client` (`extract_symptoms`) + `media/transcript_extraction` (threshold) + `shop/extracted_symptom_repo` (`finalize_extraction`) + `shop/transcript_repo` (`update_whisper_result`) + `api/routes/transcripts` (async) |
+| New backend tests | 43 (`test_phase195b_commit0.py` 21 + `test_phase195b_commit1.py` 22) |
+| Backend tests adapted | 3 (Phase 195 route → async contract) + 1 (F44 port pin) |
+| New mobile module surface | `useWorkOrderTranscripts` polling (`TRANSCRIPT_POLL_INTERVAL_MS`) |
+| New mobile tests | 7 (`VoiceCaptureB.smoke.test.tsx`) |
+| Mobile total tests | 700/700 pass (was 693; +7) |
+| Backend version | 0.5.0 → 0.6.0 (+`openai>=1.0`) |
+| Mobile version | 0.3.0 → 0.4.0 |
+| Threshold (calibrated) | `CLAUDE_FALLBACK_COVERAGE_THRESHOLD = 0.5` |
+| Atomic-transaction acceptance criterion | MET — `finalize_extraction` single transaction; rollback-on-mid-write-failure test proves no torn state |
+
+**Key finding**: the substrate-then-feature pair pattern paid off most visibly here — Phase 195B's Whisper half was *schema-zero* (the `whisper_*` columns + `extracting`/`claude` enum values were all shipped as substrate-anticipates-feature in Phase 195's migration 042) and the mobile surface was near-zero new UI (the `refining…` badge + `claude` chip branch shipped Phase 195 Mobile Commit 1). The feature half added a migration only for the genuinely-new `cost_events` ledger. The four architect-review refinements (F44 conditional fold, Haiku capability-vs-prompt redirect trigger, F47 threshold-revisit ticket, async-race-as-acceptance-criterion) all landed as specified — the review's value was converting soft spots into explicit obligations before they could drift.
