@@ -48,7 +48,7 @@ from pathlib import Path
 from typing import Literal, Optional
 
 from fastapi import (
-    APIRouter, Depends, File, Form, HTTPException,
+    APIRouter, BackgroundTasks, Depends, File, Form, HTTPException,
     Path as PathParam, UploadFile, status,
 )
 from fastapi.responses import FileResponse
@@ -61,13 +61,10 @@ from motodiag.auth.deps import (
 )
 from motodiag.core.config import Settings
 from motodiag.media.audio_pipeline import inspect_audio
-from motodiag.media.transcript_extraction import (
-    extract_symptoms_from_transcript,
-)
+from motodiag.media.transcript_pipeline import run_extraction_pipeline
 from motodiag.shop import get_work_order
 from motodiag.shop.extracted_symptom_repo import (
     confirm_extracted_symptom,
-    create_extracted_symptom,
     get_extracted_symptom,
     list_for_transcript,
 )
@@ -333,6 +330,7 @@ def _row_to_response(
     summary="Upload a voice memo + run keyword extraction",
 )
 async def upload_voice_transcript(
+    background_tasks: BackgroundTasks,
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     file: UploadFile = File(...),
@@ -351,9 +349,16 @@ async def upload_voice_transcript(
     4. Enforce quotas (402 on cap).
     5. Insert DB row with placeholder audio_path; resolve canonical
        disk path; write bytes; update DB row.
-    6. Run keyword extraction over preview_text; create
-       extracted_symptoms rows; flip extraction_state to 'extracted'.
-    7. Return 201 with full transcript + extracted_symptoms.
+    6. Phase 195B: leave extraction_state at 'extracting' + hand the
+       async pipeline (Whisper → keyword → threshold → Claude →
+       atomic finalize) to BackgroundTasks. The route does NOT run
+       extraction synchronously anymore — the pipeline runs keyword +
+       Claude on the best-available (Whisper-canonical) transcript
+       out-of-band, then atomically flips to 'extracted' /
+       'extraction_failed'.
+    7. Return 201 immediately with the transcript in 'extracting'
+       state + zero extracted_symptoms (the mobile UI shows the
+       'refining…' badge until a refetch sees 'extracted').
     """
     require_shop_access(shop_id, user, db_path)
     _verify_wo_in_shop(shop_id, wo_id, db_path)
@@ -410,22 +415,18 @@ async def upload_voice_transcript(
     audio_path.write_bytes(raw_bytes)
     _update_audio_path(transcript_id, str(audio_path), db_path=db_path)
 
-    # Keyword extraction over the on-device preview text. If
-    # preview_text is None / empty, mark 'extracted' with zero rows
-    # (the mobile UI can still show the transcript with empty-state
-    # copy).
-    extracted_phrases = extract_symptoms_from_transcript(meta.preview_text)
-    for phrase in extracted_phrases:
-        create_extracted_symptom(
-            transcript_id=transcript_id,
-            text=phrase.text,
-            category=phrase.category,
-            linked_symptom_id=None,
-            confidence=phrase.confidence,
-            extraction_method="keyword",
-            db_path=db_path,
-        )
-    update_extraction_state(transcript_id, "extracted", db_path=db_path)
+    # Phase 195B: hand extraction to the async pipeline. Flip to
+    # 'extracting' (the honest "pipeline running" state — the mobile
+    # _renderExtractionBadge shows 'refining…' for it), then queue the
+    # BackgroundTask: Whisper → keyword → threshold → Claude → atomic
+    # finalize (transcript_pipeline.run_extraction_pipeline), which
+    # flips to 'extracted' / 'extraction_failed' when done. The route
+    # returns 201 immediately. Mirrors Phase 191B's Vision
+    # analysis_worker BackgroundTask pattern.
+    update_extraction_state(transcript_id, "extracting", db_path=db_path)
+    background_tasks.add_task(
+        run_extraction_pipeline, transcript_id, shop_id, db_path,
+    )
 
     row = get_voice_transcript(transcript_id, db_path=db_path)
     if row is None:

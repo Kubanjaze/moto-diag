@@ -161,3 +161,103 @@ def soft_delete_extracted_symptom(
             (now, extracted_id),
         )
         return cursor.rowcount > 0
+
+
+# ---------------------------------------------------------------------------
+# Phase 195B (Commit 1) — atomic extraction finalize
+# ---------------------------------------------------------------------------
+
+
+def finalize_extraction(
+    transcript_id: int,
+    symptoms: list[dict],
+    final_state: str,
+    *,
+    replace_existing: bool = False,
+    db_path: Optional[str] = None,
+) -> int:
+    """Atomically write extracted-symptom rows + flip extraction_state.
+
+    Phase 195B Backend Commit 1 ACCEPTANCE CRITERION (architect-
+    elevated from a risk-register line): the async extraction
+    pipeline's final write — the ``extracted_symptoms`` row INSERTs
+    AND the ``voice_transcripts.extraction_state`` flip — MUST be a
+    single atomic DB transaction. A mobile refetch landing mid-
+    pipeline must see EITHER ``(extracting, no new rows)`` OR
+    ``(<final_state>, all new rows)`` — never a torn state where the
+    badge says one thing and the chips say another.
+
+    ``get_connection`` commits once on clean ``with``-block exit and
+    rolls back on any exception (verified: ``core/database.py``), so
+    doing every INSERT + the UPDATE inside ONE ``with`` block IS the
+    single transaction. This function is the only finalize path —
+    callers MUST NOT interleave ``create_extracted_symptom`` +
+    ``update_extraction_state`` separately (that is two transactions
+    = the torn-state window).
+
+    ``symptoms`` — list of dicts; each needs ``text``, optionally
+    ``category`` / ``extraction_method`` (default 'keyword') /
+    ``linked_symptom_id`` / ``confidence`` (default 1.0) /
+    ``segment_start_ms`` / ``segment_end_ms``.
+
+    ``replace_existing`` — when True, soft-deletes the transcript's
+    current live extracted_symptoms before inserting the new set
+    (used when the async pipeline re-extracts from the Whisper-
+    canonical transcript + supersedes the sync keyword pass). All
+    inside the same transaction.
+
+    ``final_state`` — 'extracted' or 'extraction_failed'. Stamps
+    ``extracted_at`` when 'extracted'.
+
+    Returns the count of extracted_symptoms rows inserted.
+    """
+    now = _now_iso()
+    with get_connection(db_path) as conn:
+        if replace_existing:
+            conn.execute(
+                "UPDATE extracted_symptoms SET deleted_at = ? "
+                "WHERE transcript_id = ? AND deleted_at IS NULL",
+                (now, transcript_id),
+            )
+        inserted = 0
+        for s in symptoms:
+            text = s.get("text")
+            if not text:
+                continue
+            conn.execute(
+                """INSERT INTO extracted_symptoms (
+                       transcript_id, text, category,
+                       linked_symptom_id, confidence,
+                       extraction_method,
+                       segment_start_ms, segment_end_ms
+                   )
+                   VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+                (
+                    transcript_id,
+                    text,
+                    s.get("category"),
+                    s.get("linked_symptom_id"),
+                    s.get("confidence", 1.0),
+                    s.get("extraction_method", "keyword"),
+                    s.get("segment_start_ms"),
+                    s.get("segment_end_ms"),
+                ),
+            )
+            inserted += 1
+        # The state flip — same connection, same transaction.
+        if final_state == "extracted":
+            conn.execute(
+                "UPDATE voice_transcripts "
+                "SET extraction_state = ?, extracted_at = ?, "
+                "    updated_at = ? "
+                "WHERE id = ? AND deleted_at IS NULL",
+                (final_state, now, now, transcript_id),
+            )
+        else:
+            conn.execute(
+                "UPDATE voice_transcripts "
+                "SET extraction_state = ?, updated_at = ? "
+                "WHERE id = ? AND deleted_at IS NULL",
+                (final_state, now, transcript_id),
+            )
+        return inserted
