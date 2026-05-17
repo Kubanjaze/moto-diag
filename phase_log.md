@@ -2001,3 +2001,14 @@ Phase 191D is the second F9-family architectural intervention (191C was the firs
 **F-tickets at finalize**: F20 + F21 closed; F22 (TAG_CATALOG full FastAPI introspection refactor) filed for future escalation; F23 (credential-hygiene lint) filed forward-looking; F24 (extend rule scope `tests/**` → `src/**`) filed with vehicle_identifier.py as data point 1; **F25 explicitly filed-as-NOT-filed** (MAX_VIDEOS_PER_SESSION resolved inline at Commit 3); F26 (formal API versioning ADR + imported-names heuristic improvement) filed for governance + rule coverage gap.
 
 Next: **Phase 192 — Diagnostic report viewer** per ROADMAP. The F9 mitigation infrastructure is now further hardened with the generalized SSOT-constants rule covering any registry-managed constant + the TAG_CATALOG drift-coverage gate active on every commit going forward.
+
+---
+
+### 2026-05-17 — Track I status ownership moved to mobile repo
+
+ROADMAP_AUTHORITY.md committed to both repos. Backend aggregate surfaces
+(ROADMAP / phase_log / implementation.md Phase History) no longer mirror
+per-phase Track I status. Existing Track I rows above are frozen as
+historical and accurate-as-written. Track I (185–204) status is henceforth
+authoritative in Kubanjaze/moto-diag-mobile. No new Track I rows added to
+backend aggregate surfaces after this entry.
