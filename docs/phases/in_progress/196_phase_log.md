@@ -1,6 +1,6 @@
 # Phase 196 — Phase Log
 
-**Status:** Planned | **Started:** 2026-05-17 | **Completed:** —
+**Status:** 🚧 Build complete + unit-verified — device smoke gate HELD | **Started:** 2026-05-17 | **Completed:** —
 **Repo:** code in `Kubanjaze/moto-diag-mobile` (mobile-only phase); per-phase docs in `Kubanjaze/moto-diag/docs/phases/` per `ROADMAP_AUTHORITY.md`.
 **Branch:** `phase-196-bluetooth-obd`
 
@@ -133,3 +133,54 @@ committed reserved phases.
 
 **Next:** architect sign-off of plan v1.0.2 → "build 196" authorizes the
 BLE-provider build; 196B/196C get their own plan-v1.0 cycles when 196 closes.
+
+---
+
+### 2026-05-17 — Build complete + unit-verified (v1.1) — device smoke gate HELD
+
+Plan v1.0.2 signed; "build 196" authorized. Built via the Builder/Architect
+split (as for 195C): a Builder agent wrote the BLE-provider build against
+v1.0.2; the Architect ran the suite/tsc/lint (Builder sandbox blocks them),
+fixed what surfaced, and finalized.
+
+**Delivered** (mobile repo `moto-diag-mobile`, branch `phase-196-bluetooth-obd`):
+`src/obd/{ObdConnection,elm327,obdConnectionMachine,obdErrors}.ts` +
+`useObdConnection` hook + `ObdConnectScreen` + `src/config/features.ts`
+(`OBD_SUPPORT`) + nav registration (HomeStack/HomeScreen, flag-gated) + iOS
+`Info.plist` `NSBluetoothAlwaysUsageDescription` (non-empty copy) + Android
+`AndroidManifest` BLE-permission hardening; 7 test suites / 78 tests. No new
+dependency; mobile `package.json` 0.4.0 → 0.5.0. Build commit on the mobile
+branch.
+
+**Architect trust-but-verify fixes** (Builder built v1.0.2 faithfully; these
+are harness/strict-mode gaps the Builder's sandbox couldn't catch — none a
+production-logic bug):
+- *Bug fix #1 — 3 test-harness issues.* `FakeObdProvider.ts` is a test double,
+  not a suite → added to `jest.config.js testPathIgnorePatterns`.
+  `seamClosure.test.ts` missing the `jest.mock('react-native-ble-plx', …)`
+  block → added. `ObdConnect.smoke.test.tsx` happy-path pressed via the
+  `toJSON()` host tree (where `TouchableOpacity.onPress` is absent) → switched
+  to a `pressByTestId` helper using `renderer.root`. Verified: 7/7 obd suites.
+- *Bug fix #2 — 4 strict-`tsc` errors + 1 eslint error.* `ObdConnection.ts`
+  `globalThis.atob/btoa` → typed `base64Globals` view; smoke-test nav-props
+  `as never` → `as unknown as React.ComponentProps<…>` (a `never` is not
+  spreadable); removed an unused `ELM_PROMPT` import. Verified: `tsc` clean,
+  eslint 0 errors.
+
+**Verification:** full mobile Jest **778 passed / 60 suites / 0 fail** (+78
+from 196, no regression); `tsc --noEmit` clean; eslint 0 errors (12 tolerated
+`no-void`/`no-bitwise` warnings, codebase-parity). Closure gates both green —
+the seam closure-check (`seamClosure.test.ts`, stub non-BLE provider
+admissible) and the `FakeObdProvider` real-ELM327-byte-sequence requirement.
+
+**Status: build complete, unit-verified, device smoke gate HELD** — the
+explicit intermediate state plan v1.0.2 named. The real-dongle smoke (scan +
+connect + handshake against a real ELM327-BLE dongle) is the one device-gated
+step; it runs at a coordinated device session and its result (a) closes the
+phase (doc → v1.2, this log → ✅, mobile ROADMAP 196 → ✅) and (b) is recorded
+as ADR-002 reversal-trigger condition-#2 evidence. Phase doc stays in
+`in_progress/` until then.
+
+**Next:** architect's call on merging `phase-196-bluetooth-obd` (mobile code +
+backend docs); device smoke at a device session; then 196B (classic-BT) plan
+v1.0.
