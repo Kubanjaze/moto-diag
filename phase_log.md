@@ -2012,3 +2012,15 @@ per-phase Track I status. Existing Track I rows above are frozen as
 historical and accurate-as-written. Track I (185–204) status is henceforth
 authoritative in Kubanjaze/moto-diag-mobile. No new Track I rows added to
 backend aggregate surfaces after this entry.
+
+### 2026-07-01 — F48: placeholder video/frame sims retired from prod namespace (F9 Instance #12)
+
+Media package structural change (no logic changes, no migration, no API surface change):
+- `media/vision_analysis.py` **split**: 8 live shared contract symbols → new `media/vision_types.py`; dead `VisualAnalyzer` text-sim → new `media/sim/vision_analyzer_textsim.py`. Old module removed.
+- `media/video_frames.py` (placeholder frame sim) **relocated** wholesale → `media/sim/video_frames.py`. Old module removed.
+- New loudly-labeled test-only subpackage `media/sim/` — quarantines simulators out of prod-looking namespace.
+- New F9 integration-gap regression-guard `tests/test_media_pipeline_wiring_guard.py` pins real wiring by object identity (`ffmpeg.extract_frames` frame list → `VisionAnalyzer.analyze_video_frames`).
+- 8 importers repointed (2 prod: `analysis_worker.py`, `vision_analysis_pipeline.py`; 5 tests; 1 fixtures regen script). Imports-only, +28/−86.
+- Step 0 audit verdict recorded for the external reviewer: **no production path ever touched a placeholder** — live video path real end-to-end; photo endpoint does no vision analysis at all.
+- Verification: 134/134 affected tests (sandbox) + 132 passed/2 skipped (Mac); full regression 4465 passed with all 35F/22E attributed to missing venv extras (`export`, `hardware`) + the pre-existing `tests.`-import pair (129/125) — zero to this change. Mac venv remediation: `pip install -e ".[all]"`.
+- Docs: `docs/phases/completed/F48_implementation.md` + `F48_phase_log.md`; pattern doc Instance #12; project `implementation.md` 0.13.13 → 0.13.14 (media package row).

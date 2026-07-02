@@ -15,7 +15,7 @@ from motodiag.media.audio_capture import (
 from motodiag.media.spectrogram import SpectrogramAnalyzer
 from motodiag.media.sound_signatures import SoundSignatureDB, EngineType
 from motodiag.media.anomaly_detection import AudioAnomalyDetector
-from motodiag.media.video_frames import VideoFrameExtractor, VideoMetadata, FrameExtractionConfig
+from motodiag.media.sim.video_frames import VideoFrameExtractor, VideoMetadata, FrameExtractionConfig
 from motodiag.media.fusion import MultimodalFusion, ModalityInput
 from motodiag.media.comparative import ComparativeAnalyzer
 from motodiag.media.realtime import RealtimeMonitor

@@ -26,7 +26,7 @@ import pytest
 
 from motodiag.engine.client import MODEL_ALIASES
 from motodiag.engine.models import TokenUsage
-from motodiag.media.vision_analysis import (
+from motodiag.media.vision_types import (
     FindingType,
     Severity,
     VehicleContext,

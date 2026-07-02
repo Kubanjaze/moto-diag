@@ -1,6 +1,6 @@
 # MotoDiag — Project Implementation
 
-**Version:** 0.13.13 | **Date:** 2026-05-06
+**Version:** 0.13.14 | **Date:** 2026-07-01 (F48 — media sims retired to `media/sim/`, `vision_analysis.py` split into `vision_types.py` + sim; see `docs/phases/completed/F48_implementation.md`)
 **Doc/package version split:** This `implementation.md` Version tracks track-completion milestones. `pyproject.toml` `version = "0.3.6"` tracks package releases — bumped at Phase 191B (Track I major-feature, 0.1.0→0.2.0), Phase 191C (F9 architectural intervention tooling, 0.2.0→0.3.0), Phase 191D (F9 SSOT-constants lint generalization, 0.3.0→0.3.1 patch), Phase 192 (Diagnostic report viewer substrate, 0.3.1→0.3.2 minor patch), Phase 192B Commit 1 (composer-side preset filter + POST /pdf route, 0.3.2→0.3.3), Phase 192B Commit 1.5 (F34 deterministic PDF rendering opt-in fix, 0.3.3→0.3.4), Phase 193 Commit 0 (sort param on work-orders endpoint, 0.3.4→0.3.5), and Phase 193 Commit 0.5 (POST /assign endpoint, 0.3.5→0.3.6).
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
@@ -97,7 +97,7 @@ moto-diag/
 | `knowledge` | B | Active | DTC repo (40 codes), symptom repo (40 symptoms), issues repo (10 Harley known issues), JSON loaders |
 | `pricing` | G | Active | Labor rates (regional/national), repair plan builder (CRUD), cost estimation, prep labor catalog |
 | `engine` | C | Active | AI diagnostic engine — client, models, prompts, symptoms, fault codes, workflows, confidence, cost estimation, parts recommendation |
-| `media` | C2 | Active | Audio/video diagnostic analysis — 12 modules: capture, spectrogram, signatures, anomaly, video frames, vision, fusion, comparative, realtime, annotation, reports, coaching |
+| `media` | C2 | Active | Audio/video diagnostic analysis — capture, spectrogram, signatures, anomaly, vision (real pipeline: `vision_analysis_pipeline` + `analysis_worker` + shared types in `vision_types`), fusion, comparative, realtime, annotation, reports, coaching, photo pipeline/annotation, transcripts, whisper client, ffmpeg. Test-only simulators quarantined in `media/sim/` (F48, 2026-07-01 — `video_frames` + `vision_analyzer_textsim`; retired from prod namespace) |
 | `cli` | D | Active | Click CLI + subscription tier system ($19/$99/$299), command registry, tier command |
 | `auth` | Retrofit 112 | Complete | Users, roles, permissions — users/roles/permissions tables, FK retrofit onto sessions/plans/issues |
 | `crm` | Retrofit 113 | Complete | Customers + customer-bikes join — customer_id FK retrofit onto vehicles |

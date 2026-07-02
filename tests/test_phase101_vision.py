@@ -12,17 +12,17 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
-from motodiag.media.vision_analysis import (
+from motodiag.media.vision_types import (
     FindingType,
     Severity,
     VisualFinding,
     VisualAnalysisResult,
     VehicleContext,
-    VisualAnalyzer,
     SMOKE_COLOR_GUIDE,
     FLUID_COLOR_GUIDE,
     VISION_ANALYSIS_PROMPT,
 )
+from motodiag.media.sim.vision_analyzer_textsim import VisualAnalyzer
 from motodiag.engine.models import TokenUsage
 
 

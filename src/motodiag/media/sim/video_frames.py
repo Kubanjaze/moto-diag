@@ -1,4 +1,6 @@
-"""Video frame extraction for media diagnostics.
+"""SIMULATION / TEST-ONLY — superseded by motodiag.media.ffmpeg for the live video path; not imported by any production module (audit-verified). Retained for Phase 100/108 tests.
+
+Video frame extraction for media diagnostics.
 
 Phase 100: Simulated video frame extraction — models video metadata, generates
 frame extraction plans based on intervals or keyframe detection, and returns

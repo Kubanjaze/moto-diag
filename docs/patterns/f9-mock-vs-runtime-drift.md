@@ -696,6 +696,31 @@ class VoiceTranscriptResponse(BaseModel):
 
 ---
 
+### Instance #12 — F48 sim retirement [2026-07-01]
+
+**Subspecies**: (vii) dead-sim-path in prod namespace (placeholder-vs-real drift)
+
+**The bug** (structural, caught before it fired): two early-phase simulators lived in the shipped package indistinguishable from production modules — `media/video_frames.py` (`_generate_placeholder_description/_tags`) and `media/vision_analysis.py`'s `VisualAnalyzer.analyze_image(image_description: str)`, a text-sim that "analyzes" a *description string* instead of image bytes. An external reviewer reasonably asked whether uploaded media actually reaches Claude or a placeholder. The Step 0 audit answered: the live path was fully real (`videos.py` → `run_analysis_pipeline` → `ffmpeg.extract_frames` → `VisionAnalyzer.analyze_video_frames` → `ask_with_images`), and the sims had zero production importers. But the hazard was real and latent in two forms: (a) `vision_analysis.py` was a **mixed module** — the live pipeline imported 8 shared contract types from the same file that housed the dead sim, so the sim sat one careless import away from prod; (b) nothing pinned the pipeline's wiring, so a future refactor could reroute frames through a placeholder without any test noticing.
+
+**The mock-vs-runtime gap**: same family as Instance #4's deploy-path wiring, inverted — not "real function exists but isn't wired," rather "fake function exists and nothing structurally prevents it being wired." The namespace itself carried the assumption ("everything under `motodiag.media` is real"); reality was a live/dead interleave inside one module.
+
+**Fix pattern** (F48, single commit):
+
+```
+media/vision_analysis.py   → split:  media/vision_types.py          (8 live shared symbols)
+                                     media/sim/vision_analyzer_textsim.py  (dead text-sim)
+media/video_frames.py      → moved:  media/sim/video_frames.py      (wholesale, test-only)
++ tests/test_media_pipeline_wiring_guard.py   (the guard)
+```
+
+The guard mocks both boundaries (`ffmpeg.extract_frames`, `VisionAnalyzer`), invokes `run_analysis_pipeline`, and asserts the **exact frame list ffmpeg returns — by object identity — is what reaches `analyze_video_frames`**. Any placeholder inserted mid-pipeline breaks identity and fails the guard. Sim destination deliberately stayed in-package (`motodiag.media.sim`, loudly labeled) rather than `tests/sim/` — the repo's tests import only `motodiag.*`, and the two files that ever used `from tests.…` imports are the known-fragile pair (`test_phase125_quick`, `test_phase129_theme`).
+
+**Recognition heuristic**: grep the shipped package for simulator/placeholder vocabulary (`placeholder`, `sim`, `fake`, `_generate_.*_description`, params typed as *descriptions of* things rather than the things). For each hit, partition the module symbol-by-symbol into live vs dead using importer analysis — module-level "is it referenced?" audits miss mixed modules. Anything dead-but-shipped gets quarantined into an explicit `sim/` namespace; anything live gets a wiring guard pinning real data flow by identity.
+
+**Fix commit**: F48 finish commit (`F48: retire placeholder video/frame sims from prod namespace`), moto-diag backend, 2026-07-01. Full detail: `docs/phases/completed/F48_implementation.md`.
+
+---
+
 ### The new `contract-pin` opt-out category
 
 Phase 191C 5a established three opt-out reason categories the lint accepts on a per-line `f9-noqa` comment: `SSOT-pin`, `meta-test`, and `contract-assertion`. Phase 191D adds a fourth — `contract-pin` — to handle the legitimate two-source assertion design that the SSOT-constants generalization surfaces in well-written tests.

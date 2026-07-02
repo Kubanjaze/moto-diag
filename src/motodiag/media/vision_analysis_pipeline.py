@@ -1,23 +1,24 @@
 """Real image-bytes Claude Vision pipeline for Phase 191B video diagnostic analysis.
 
-Phase 101's media/vision_analysis.py is text-only (analyze_image takes
-image_description: str + calls DiagnosticClient.ask() with text completion).
-This module is the real image-bytes implementation that fulfills Phase 191's
-video analysis requirement: takes a list of frame file paths (extracted by
-media/ffmpeg.py per Phase 191B Commit 1), base64-encodes them as content
-blocks, calls DiagnosticClient.ask_with_images() with tool-use structured
-output, and parses the response into a VisualAnalysisResult populated with
-frames_analyzed + model_used + cost_estimate_usd (Phase 191B fields on the
-existing Phase 101 schema).
+The Phase 101 text-only analyzer (now motodiag.media.sim.vision_analyzer_textsim;
+its analyze_image takes image_description: str + calls DiagnosticClient.ask()
+with text completion) is superseded by this module — the real image-bytes
+implementation that fulfills Phase 191's video analysis requirement: takes a
+list of frame file paths (extracted by media/ffmpeg.py per Phase 191B Commit 1),
+base64-encodes them as content blocks, calls DiagnosticClient.ask_with_images()
+with tool-use structured output, and parses the response into a
+VisualAnalysisResult populated with frames_analyzed + model_used +
+cost_estimate_usd (Phase 191B fields on the shared schema).
 
-Reuses Phase 101's prompt + finding types unchanged:
+Reuses the shared Phase 101 prompt + finding types (now in
+motodiag.media.vision_types) unchanged:
   - VISION_ANALYSIS_PROMPT (the system prompt)
   - FindingType / Severity / VisualFinding / VisualAnalysisResult / VehicleContext
   - SMOKE_COLOR_GUIDE / FLUID_COLOR_GUIDE (constants)
 
-Fulfills the contract that Phase 100's media/video_frames.py established
-(metadata-only types: VideoMetadata, VideoFrame, FrameExtractionConfig) by
-providing the real-bytes Vision call that consumes ffmpeg-extracted frames.
+Fulfills the metadata-only contract that Phase 100 established (VideoMetadata,
+VideoFrame, FrameExtractionConfig — simulated in motodiag.media.sim.video_frames)
+by providing the real-bytes Vision call that consumes ffmpeg-extracted frames.
 """
 
 from __future__ import annotations
@@ -27,7 +28,7 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from motodiag.media.vision_analysis import (
+from motodiag.media.vision_types import (
     VISION_ANALYSIS_PROMPT,
     VehicleContext,
     VisualAnalysisResult,
@@ -99,9 +100,10 @@ class VisionPipelineError(RuntimeError):
 class VisionAnalyzer:
     """Real image-bytes Vision analyzer for Phase 191B video diagnostic pipeline.
 
-    Distinct from Phase 101's text-only ``VisualAnalyzer`` (in
-    ``motodiag.media.vision_analysis``) which takes ``image_description: str``
-    and calls ``DiagnosticClient.ask()``. This class takes real frame file
+    Distinct from Phase 101's text-only ``VisualAnalyzer`` (now in
+    ``motodiag.media.sim.vision_analyzer_textsim``) which takes
+    ``image_description: str`` and calls ``DiagnosticClient.ask()``. This class
+    takes real frame file
     paths (JPEG), base64-encodes them as image content blocks, and calls
     the new ``DiagnosticClient.ask_with_images()`` method (Phase 191B
     Commit 1).

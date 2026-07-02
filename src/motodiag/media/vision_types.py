@@ -1,12 +1,20 @@
-"""Visual symptom analysis using Claude Vision for motorcycle diagnostics.
+"""Shared visual-diagnostic data types, prompt, and color guides for the live Vision pipeline.
 
-Phase 101: Analyzes motorcycle images/frames for visual diagnostic symptoms —
-smoke color and density, fluid leaks (location + color), physical damage,
-gauge readings, wear indicators (chain, tires, brake pads). Uses Claude Vision
-API (mocked in tests) with a motorcycle-specific system prompt.
+These are the REAL, production Vision schemas consumed by
+``motodiag.media.vision_analysis_pipeline`` (the image-bytes Claude Vision
+analyzer, Phase 191B). This module is pure data/schemas — no analyzer logic:
 
-Designed to process frames from VideoFrameExtractor (Phase 100) or standalone
-images captured by the mechanic's phone.
+  - ``FindingType`` / ``Severity`` / ``VisualFinding`` / ``VisualAnalysisResult``
+    — the structured-output schema the pipeline validates Claude's tool-use
+    response against.
+  - ``VehicleContext`` — vehicle info injected into the prompt.
+  - ``VISION_ANALYSIS_PROMPT`` — the motorcycle-specific system prompt.
+  - ``SMOKE_COLOR_GUIDE`` / ``FLUID_COLOR_GUIDE`` — diagnostic reference tables.
+
+The text-only simulation analyzer that historically lived alongside these types
+has moved to ``motodiag.media.sim.vision_analyzer_textsim`` (superseded, tests
+only). Keep this module analyzer-free so both the live pipeline and the retained
+sim can import the shared types without pulling in any analysis behavior.
 """
 
 from __future__ import annotations
@@ -272,178 +280,3 @@ class VehicleContext(BaseModel):
         if self.reported_symptoms:
             parts.append(f"Reported symptoms: {', '.join(self.reported_symptoms)}")
         return "\n".join(parts) if parts else "No vehicle context provided."
-
-
-class VisualAnalyzer:
-    """Analyzes motorcycle images for visual diagnostic symptoms using Claude Vision.
-
-    In production, calls Claude Vision API with the motorcycle-specific prompt.
-    In tests, the API call is mocked and the analyzer processes the mock response.
-
-    Usage:
-        analyzer = VisualAnalyzer(client=mock_client)
-        result = analyzer.analyze_image(
-            image_description="Photo of motorcycle exhaust with blue smoke",
-            vehicle_context=VehicleContext(make="Honda", model="CBR600RR", year=2005),
-        )
-    """
-
-    def __init__(
-        self,
-        client: Optional[object] = None,
-        model: str = "haiku",
-        max_tokens: int = 2048,
-    ):
-        """Initialize the visual analyzer.
-
-        Args:
-            client: DiagnosticClient instance (or mock). If None, creates one lazily.
-            model: Claude model to use ("haiku" or "sonnet").
-            max_tokens: Max response tokens for vision analysis.
-        """
-        self._client = client
-        self._model = model
-        self._max_tokens = max_tokens
-
-    def _get_client(self):
-        """Lazy-initialize the DiagnosticClient if not provided."""
-        if self._client is None:
-            from motodiag.engine.client import DiagnosticClient
-            self._client = DiagnosticClient(model=self._model)
-        return self._client
-
-    def analyze_image(
-        self,
-        image_description: str,
-        vehicle_context: Optional[VehicleContext] = None,
-    ) -> VisualAnalysisResult:
-        """Analyze a motorcycle image for visual diagnostic symptoms.
-
-        In the simulated pipeline, image_description is a text description
-        of the image content (e.g., "Photo showing blue smoke from exhaust").
-        In production, this would accept actual image data (base64 or URL).
-
-        Args:
-            image_description: Text description of the image content.
-            vehicle_context: Optional vehicle information for context.
-
-        Returns:
-            VisualAnalysisResult with findings and recommendations.
-        """
-        if not image_description or not image_description.strip():
-            return VisualAnalysisResult(
-                findings=[],
-                overall_assessment="No image description provided — cannot analyze.",
-                suggested_diagnostics=[],
-                image_quality_note="Empty or blank image description received.",
-            )
-
-        prompt = self._build_analysis_prompt(image_description, vehicle_context)
-        client = self._get_client()
-
-        # Call the AI — in tests, client.ask() is mocked
-        response_text, token_usage = client.ask(
-            prompt=prompt,
-            system=VISION_ANALYSIS_PROMPT,
-            model=self._model,
-            max_tokens=self._max_tokens,
-        )
-
-        result = self._parse_response(response_text)
-        return result
-
-    def analyze_smoke(self, smoke_color: str) -> dict:
-        """Look up diagnostic info for a specific smoke color.
-
-        Provides immediate guidance without an API call — uses the built-in
-        SMOKE_COLOR_GUIDE.
-
-        Args:
-            smoke_color: Color of the smoke (white, blue, black, gray).
-
-        Returns:
-            Dict with cause, common_sources, severity, and notes.
-            Returns unknown entry if color is not in the guide.
-        """
-        color_lower = smoke_color.lower().strip()
-        if color_lower in SMOKE_COLOR_GUIDE:
-            return {
-                "color": color_lower,
-                **SMOKE_COLOR_GUIDE[color_lower],
-            }
-        return {
-            "color": color_lower,
-            "cause": "Unknown smoke color",
-            "common_sources": [],
-            "severity": Severity.MEDIUM,
-            "notes": f"Smoke color '{color_lower}' not in diagnostic guide. "
-                     f"Known colors: {', '.join(SMOKE_COLOR_GUIDE.keys())}.",
-        }
-
-    def analyze_fluid_leak(self, fluid_color: str) -> dict:
-        """Look up diagnostic info for a fluid leak by color.
-
-        Args:
-            fluid_color: Color of the leaked fluid.
-
-        Returns:
-            Dict with fluid type, severity, and recommended action.
-        """
-        color_lower = fluid_color.lower().strip()
-        if color_lower in FLUID_COLOR_GUIDE:
-            return {
-                "color": color_lower,
-                **FLUID_COLOR_GUIDE[color_lower],
-            }
-        return {
-            "color": color_lower,
-            "fluid": "Unknown fluid",
-            "severity": Severity.MEDIUM,
-            "action": f"Fluid color '{color_lower}' not in guide. "
-                      f"Collect sample for analysis.",
-        }
-
-    def _build_analysis_prompt(
-        self,
-        image_description: str,
-        vehicle_context: Optional[VehicleContext] = None,
-    ) -> str:
-        """Build the full analysis prompt from image description and vehicle context."""
-        parts = []
-        if vehicle_context:
-            ctx = vehicle_context.to_context_string()
-            parts.append(f"VEHICLE CONTEXT:\n{ctx}\n")
-
-        parts.append(f"IMAGE DESCRIPTION:\n{image_description}\n")
-        parts.append(
-            "Analyze this image for motorcycle diagnostic symptoms. "
-            "Return structured findings as JSON matching the VisualAnalysisResult schema."
-        )
-        return "\n".join(parts)
-
-    def _parse_response(self, response_text: str) -> VisualAnalysisResult:
-        """Parse AI response text into a VisualAnalysisResult.
-
-        Attempts JSON parsing first, falls back to text-based extraction.
-        """
-        import json
-
-        text = response_text.strip()
-
-        # Strip markdown code fences if present
-        if "```json" in text:
-            text = text.split("```json")[1].split("```")[0].strip()
-        elif "```" in text:
-            text = text.split("```")[1].split("```")[0].strip()
-
-        try:
-            data = json.loads(text)
-            return VisualAnalysisResult(**data)
-        except (json.JSONDecodeError, KeyError, ValueError, TypeError):
-            # Fallback: return the raw text as the overall assessment
-            return VisualAnalysisResult(
-                findings=[],
-                overall_assessment=response_text[:1000],
-                suggested_diagnostics=["Review raw AI response for details"],
-                image_quality_note="Response could not be parsed as structured JSON.",
-            )

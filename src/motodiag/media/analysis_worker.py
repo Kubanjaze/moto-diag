@@ -32,7 +32,7 @@ from typing import Optional
 from motodiag.core import video_repo
 from motodiag.core.models import VideoAnalysisState
 from motodiag.media import ffmpeg as ffmpeg_module
-from motodiag.media.vision_analysis import VehicleContext
+from motodiag.media.vision_types import VehicleContext
 from motodiag.media.vision_analysis_pipeline import (
     VisionAnalyzer,
     VisionPipelineError,

@@ -65,7 +65,7 @@ def _call_real_api(prompt_kind: str, frame_paths: list[Path]) -> dict:
     """
     import anthropic  # noqa: F401  (deferred — only run at architect-side)
 
-    from motodiag.media.vision_analysis import (
+    from motodiag.media.vision_types import (
         VISION_ANALYSIS_PROMPT,
         VehicleContext,
         VisualAnalysisResult,

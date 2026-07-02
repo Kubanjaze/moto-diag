@@ -34,7 +34,7 @@ from motodiag.core.session_repo import create_session_for_owner
 from motodiag.core.video_repo import (
     create_video, set_analysis_findings, update_analysis_state,
 )
-from motodiag.media.vision_analysis import VisualAnalysisResult
+from motodiag.media.vision_types import VisualAnalysisResult
 from motodiag.reporting.builders import build_session_report_doc
 from motodiag.reporting.renderers import (
     PDF_AVAILABLE, PdfReportRenderer, TextReportRenderer,

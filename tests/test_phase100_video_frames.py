@@ -9,7 +9,7 @@ All tests are simulated — no actual video files or processing required.
 
 import pytest
 
-from motodiag.media.video_frames import (
+from motodiag.media.sim.video_frames import (
     VideoFormat,
     VideoResolution,
     VideoMetadata,
