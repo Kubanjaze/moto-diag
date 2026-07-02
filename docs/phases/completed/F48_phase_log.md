@@ -1,6 +1,6 @@
 # F48 — Retire the Placeholder Video/Frame Path — Phase Log
 
-**Status:** ✅ Complete (code + docs; finish commit executed on host — hash recorded below when pushed)
+**Status:** ✅ Complete | **Finish commit:** `cc973ab` on `master`, pushed 2026-07-01 22:02 (18 files, +564/−213)
 **Started:** 2026-07-01 | **Completed:** 2026-07-01
 **Repo:** https://github.com/Kubanjaze/moto-diag
 **Family:** F9 (assumption-vs-reality drift) — dead-sim-path in prod namespace / placeholder-vs-real drift. Pattern doc: `docs/patterns/f9-mock-vs-runtime-drift.md` Instance #12.
@@ -53,3 +53,7 @@
 - The two reds are exactly the pre-existing `tests.`-import pair: `test_phase129_theme::TestIntegration::test_diagnose_quick_renders` (F) + `test_phase125_quick.py` (collection E). Zero F48-attributable reds — end-to-end confirmation nothing rippled.
 - vs pre-fix run: +108 net newly-passing; skipped 13→5 (8 conditional skips now execute with full extras). Stale 5-day-old `.git/index.lock` (dated 2026-06-26 11:16) removed — it had atomically blocked the first finish-block attempt (HEAD verified unchanged at `d1dfd6a`, tree intact, block re-run cleanly).
 - Follow-up candidate (separate ticket, out of F48 scope): fix the `from tests.…` fragility in `test_phase125_quick.py` + `test_phase129_theme.py`.
+
+### 2026-07-01 22:02 — Finish commit landed
+- `cc973ab` — "F48: retire placeholder video/frame sims from prod namespace (F9 Instance #12)" — pushed to `origin/master`. 18 files changed, +564/−213; git detected both retirements as renames (`media/video_frames.py → media/sim/video_frames.py`; `media/vision_analysis.py → media/vision_types.py` with the sim extracted).
+- Trust-but-verify (per CLAUDE.md): commit hash confirmed on `master` and `origin/master`; orphan paths absent from index and worktree; stray `docs/interview_prep.md` staging resolved and excluded; diff stat matches claimed scope; F48 docs + pattern Instance #12 + project logs all inside the commit. **F48 closed.**

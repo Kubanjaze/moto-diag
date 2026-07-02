@@ -717,7 +717,7 @@ The guard mocks both boundaries (`ffmpeg.extract_frames`, `VisionAnalyzer`), inv
 
 **Recognition heuristic**: grep the shipped package for simulator/placeholder vocabulary (`placeholder`, `sim`, `fake`, `_generate_.*_description`, params typed as *descriptions of* things rather than the things). For each hit, partition the module symbol-by-symbol into live vs dead using importer analysis — module-level "is it referenced?" audits miss mixed modules. Anything dead-but-shipped gets quarantined into an explicit `sim/` namespace; anything live gets a wiring guard pinning real data flow by identity.
 
-**Fix commit**: F48 finish commit (`F48: retire placeholder video/frame sims from prod namespace`), moto-diag backend, 2026-07-01. Full detail: `docs/phases/completed/F48_implementation.md`.
+**Fix commit**: `cc973ab` (`F48: retire placeholder video/frame sims from prod namespace`), moto-diag backend master, 2026-07-01. Full detail: `docs/phases/completed/F48_implementation.md`.
 
 ---
 
