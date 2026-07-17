@@ -32,6 +32,12 @@ output/
 data/videos/*
 !data/videos/.gitkeep
 
+# Phase 194 uploaded work-order photos + Phase 195 captured audio recordings.
+# Runtime-created per shop/work-order (mkdir parents=True); never commit
+# actual uploaded media.
+data/audio/*
+data/photos/*
+
 # OS
 .DS_Store
 Thumbs.db

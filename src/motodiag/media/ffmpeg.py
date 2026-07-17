@@ -1,6 +1,6 @@
 """Real ffmpeg subprocess wrapper for Phase 191B video diagnostic pipeline.
 
-Phase 100's ``media/video_frames.py`` provides the metadata-only contract
+Phase 100's ``media/sim/video_frames.py`` provides the metadata-only contract
 (VideoMetadata + VideoFrame + FrameExtractionConfig + VideoFrameExtractor
 class with placeholder descriptions). This module is the real backend
 that fulfills the contract — actual ffmpeg subprocess calls for frame
