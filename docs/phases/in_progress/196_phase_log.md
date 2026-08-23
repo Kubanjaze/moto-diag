@@ -80,3 +80,24 @@ fake v1.1). Unit layer re-verified in-session: 32/32 pure-TS tests
    is `https://kerwyns-macbook-air.taila45995.ts.net`.
 7. Remember: Debug-config evidence does NOT cover the known Release-mode
    crash profile — a Release smoke is a separate, later gate (Track J).
+
+---
+
+### 2026-08-23 12:55 — Resume session: scan datapoint PASS; hardware pivot to 196B; BLE gate deferred
+
+- **Hardware validated first via vendor app** (per isolate-variables protocol):
+  adapter + vehicle ECU + Bluetooth all proven working in the OBDLink app.
+- **Adapter identified: OBDLink MX+ (model MX201)** — classic Bluetooth 3.0 +
+  MFi, NOT BLE. Undiscoverable by `react-native-ble-plx` by design; the
+  vendor app talks ExternalAccessory/MFi.
+- **MotoDiag observed scan (dongle unplugged): PASS.** `new BleManager()` +
+  live discovery under mandatory New Arch (Debug) — no crash, large device
+  list rendered. Recorded in ADR-002's condition-#2 running record.
+- **Disposition:** Phase 196 build + init/scan evidence complete;
+  connect/handshake half of the smoke gate DEFERRED pending a BLE adapter
+  (OBDLink CX / Vgate iCar Pro BT4.0 class). Impl doc stays v1.0 until the
+  gate resolves or 196B's plan formally re-scopes it.
+- **Next: Phase 196B plan cycle** — `ClassicBtObdProvider` (Android SPP +
+  iOS ExternalAccessory/MFi; candidate dep `react-native-bluetooth-classic`,
+  to be verified in Step 0 audit), reference device = the MX+. Step 0
+  substrate audit of 196's locked seam surfaces before plan v1.0.
