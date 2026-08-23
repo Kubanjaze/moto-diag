@@ -1,6 +1,11 @@
 # Phase 196B — OBD Classic-Bluetooth / MFi Provider (ClassicBtObdProvider)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-08-23
+**Version:** 1.0.1 | **Tier:** Standard | **Date:** 2026-08-23
+*(v1.0.1: Spike Gate PASSED same day — dep New-Arch compat confirmed
+on-device, MFi protocol string pinned to `com.obdlink` from vendor-app plist
++ live accessory, CB-state race bounded at ~1 s. Full evidence in
+`196B_phase_log.md` 15:45 entry. Scope unchanged; fallback TurboModule path
+no longer needed.)*
 
 ## Existing-code audit (Step 0 — run 2026-08-23, before this plan)
 

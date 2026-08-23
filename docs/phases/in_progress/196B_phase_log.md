@@ -24,3 +24,64 @@
   via `EAAccessoryManager.connectedAccessories[].protocolStrings` probe on
   the paired MX+.
 - **Next milestone:** plan commit + push, then Spike Gate.
+
+---
+
+### 2026-08-23 15:45 — SPIKE GATE: PASSED (all build unknowns resolved on-device)
+
+**Verdict evidence (Debug build on iPhone 16 Pro, mandatory New Arch):**
+```
+attempt 1: isBluetoothEnabled = false → retry
+attempt 2: isBluetoothEnabled = true → getBondedDevices OK
+device count: 1
+{ name: "OBDLink MX+", id: "225530513625", address: "225530513625",
+  bonded: true, deviceClass: "MX201", type: "CLASSIC",
+  protocolStrings: ["com.obdlink"], extra: {} }
+VERDICT: module responds under New Arch — PASS
+```
+
+**Answers banked for the build:**
+1. `react-native-bluetooth-classic@1.73.0-rc.17` loads, initializes, and
+   round-trips native calls under RN 0.85's mandatory New Arch (interop) —
+   the plan's top risk is CLEARED; no fallback TurboModule needed.
+2. **MFi protocol string = `com.obdlink`** (single string). Pinned two ways:
+   extracted from the vendor app's own Info.plist (OBDLink 7.4.0 .ipa via
+   Apple Configurator download-cache; bundle `com.obdsol.obdlink`) AND
+   confirmed by the live accessory's `protocolStrings`. Now declared in
+   `ios/MotoDiag/Info.plist` (with provenance comment).
+3. **CBCentralManager state race is real and bounded** — the lib's lazy
+   `CBCentralManager` reports not-enabled on first touch, settles by ~1 s.
+   Provider MUST gate first EA call on state readiness (mirror
+   `BleService.waitForPoweredOn`); retry evidence above.
+4. **Lib crash pinned:** `RNBluetoothClassic.swift:69` force-unwraps
+   `UISupportedExternalAccessoryProtocols` — key absent = init crash. Key is
+   now permanent in Info.plist with a never-remove warning comment.
+5. **Enumeration requires the accessory EA-active**, not merely paired:
+   Settings-"Connected" with an idle/asleep adapter still yields count 0.
+   Provider UX must surface "wake the adapter / reconnect in Settings"
+   guidance on empty enumeration (device_not_found copy).
+6. **Device shape** for `ObdDevice` mapping: `id`/`address` (stable numeric),
+   `name`, `bonded`, `deviceClass` ("MX201"), `type` ("CLASSIC"),
+   `protocolStrings`, `extra`.
+
+**Session engineering notes (cross-machine/env, same day):**
+- Xcode CoreDevice "tunnel connection failed" attach-loop root-caused to the
+  **VPN network extension being Active** (System Settings ▸ Network showed
+  VPN Active despite the Tailscale app being quit). Disabling the VPN
+  profiles restored the device tunnel instantly. Finder/usbmuxd seeing the
+  phone while Xcode/devicectl reports `unavailable` is the diagnostic
+  signature (candidate CLAUDE.md addition — pending user approval).
+- iAP logging profile route was a dead end for the protocol string (payloads
+  stay `<private>`); the **Configurator .ipa cache extraction**
+  (`~/Library/Group Containers/K36BKF7T3D.group.com.apple.configurator/
+  Library/Caches/Assets/TemporaryItems/MobileApps/<uuid>/<id>/*.ipa`,
+  file exists only during download; nested one level below the obvious glob)
+  is the reusable method of record.
+- Spike artifacts currently on branch `phase-196B-classic-bt-obd`:
+  `src/obd/classicBtSpike.SPIKE.ts` + labeled wiring in
+  `ObdConnectScreen.tsx` — DELETE in the provider build commit per plan.
+- `implementation.md` bumped v1.0 → v1.0.1 (Spike Gate result noted; scope
+  unchanged).
+
+**Next milestone:** build `ClassicBtObdProvider` per plan (dep verified, all
+constants known). Device smoke follows immediately after — same adapter.
