@@ -85,3 +85,25 @@ VERDICT: module responds under New Arch — PASS
 
 **Next milestone:** build `ClassicBtObdProvider` per plan (dep verified, all
 constants known). Device smoke follows immediately after — same adapter.
+
+---
+
+### 2026-08-23 16:10 — Build complete: provider + wiring + tests, full regression green
+
+- **Shipped:** `src/obd/ClassicBtObdProvider.ts` (delimiter-framed transport,
+  poll-based radio wait, single-slot sequential command channel,
+  unexpected-disconnect bridge with other-accessory filtering);
+  `src/obd/providerFactory.ts` (transport → provider SSOT +
+  SELECTABLE_TRANSPORTS/TRANSPORT_LABELS); ObdConnectScreen idle-state
+  transport picker (BLE default, Classic selectable, per-transport pairing
+  copy). Spike artifacts DELETED as planned.
+- **Tests:** +26 (16 provider / 6 factory+seam-admission / 4 wiring guard —
+  including THE guard: chooser → ClassicBtObdProvider injected into the
+  hook). obd suite 83/83; **full mobile regression 62 suites / 804 tests,
+  0 failures**; `tsc --noEmit` clean.
+- **Deviations** (recorded in impl doc v1.1): appendChunk unnecessary at
+  this layer (delimiter framing), poll-based radio wait (spike-proven
+  envelope), picker via existing Button component.
+- **Remaining gate:** device smoke — Classic transport → MX+ enumerated →
+  connect → 4-command handshake → banner. One Xcode Run away; recorded into
+  ADR-002 + this ledger when it lands, then docs move to `completed/`.

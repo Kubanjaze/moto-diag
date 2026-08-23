@@ -1,6 +1,9 @@
 # Phase 196B — OBD Classic-Bluetooth / MFi Provider (ClassicBtObdProvider)
 
-**Version:** 1.0.1 | **Tier:** Standard | **Date:** 2026-08-23
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-08-23
+*(v1.1: build complete + unit-verified same day — Results, Deviations, and
+checklist below. Device smoke is the remaining unticked gate; doc moves to
+`completed/` when it lands.)*
 *(v1.0.1: Spike Gate PASSED same day — dep New-Arch compat confirmed
 on-device, MFi protocol string pinned to `com.obdlink` from vendor-app plist
 + live accessory, CB-state race bounded at ~1 s. Full evidence in
@@ -103,17 +106,55 @@ Outputs (mobile repo, branch `phase-196B-classic-bt-obd`):
 
 ## Verification Checklist
 
-- [ ] Spike Gate: dep compiles + one native call succeeds under New Arch
-      interop on-device (or documented FAIL → fallback amendment)
-- [ ] Unit: ClassicBtObdProvider suite green (Fake EA/SPP layer injected,
-      mirroring `BleServiceLike` pattern); full `__tests__/obd/` green
-- [ ] Seam closure extended: classic provider admitted with zero edits to
-      machine/screen-logic/handshake/errors/BleObdProvider
-- [ ] Provider-wiring regression guard green (chooser → ClassicBtObdProvider)
-- [ ] Info.plist protocol string present; F40 parity items checked
-- [ ] Device smoke (MX+, Debug): paired accessory enumerated → connect →
-      ATZ→ATE0→ATL0→ATSP0 → banner displayed; result recorded in ADR-002
-      running record + this doc v1.1
+- [x] Spike Gate: dep compiles + native calls succeed under New Arch interop
+      on-device (2026-08-23, ledger phase_log 15:45 — PASS, no fallback needed)
+- [x] Unit: ClassicBtObdProvider suite green (16 tests, fake module/device
+      injected through `ClassicBtModuleLike` — mirror of `BleServiceLike`);
+      full `__tests__/obd/`: 7 suites / 83 tests green
+- [x] Seam closure extended: REAL `ClassicBtObdProvider` admitted as
+      `ObdProvider` (compile-level assignment in providerFactory.test.ts)
+      with zero edits to machine/handshake/errors/BleObdProvider
+- [x] Provider-wiring regression guard green: ObdConnect.smoke.test.tsx
+      "choosing Classic injects a ClassicBtObdProvider into the hook"
+- [x] Info.plist protocol string present (`com.obdlink`, pinned + committed
+      `06adf16`); F40 parity: Android classic covered by existing
+      BLUETOOTH_CONNECT (enumeration is bonded-list, no discovery scan)
+- [x] Full mobile regression: 62 suites / 804 tests, zero failures; tsc clean
+- [ ] Device smoke (MX+, Debug): Classic transport selected → enumeration
+      shows MX+ → connect → ATZ→ATE0→ATL0→ATSP0 → banner displayed; result
+      recorded in ADR-002 running record + this doc
+
+## Deviations from Plan
+
+- **`appendChunk` not needed at the provider layer:** the lib's delimited
+  DeviceConnection frames responses natively once connected with
+  `delimiter: ELM_PROMPT` ('>') — each data event carries one complete
+  prompt-stripped response, passed through `normalizeResponse`. The BLE
+  provider keeps `appendChunk` for notify-chunk reassembly; the classic
+  path gets equivalent framing from the transport. Handshake unchanged.
+- **Radio-wait implemented as poll, not event subscription:** 10 × 500 ms
+  polling of `isBluetoothEnabled` (the exact envelope the Spike Gate proved
+  on-device) instead of `onBluetoothEnabled` listeners — simpler, and the
+  hardware-verified pattern.
+- **Transport picker shipped as idle-state Buttons** (● / ○ selection using
+  the existing Button component) rather than a new segmented control — zero
+  new UI primitives.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| New provider LoC | ~300 (`ClassicBtObdProvider.ts`) + 50 (`providerFactory.ts`) |
+| New tests | 16 (provider) + 6 (factory/seam) + 4 (wiring guard) = 26 |
+| obd suite | 7 suites / 83 tests green |
+| Full mobile regression | 62 suites / 804 tests, 0 failures |
+| Type check | `tsc --noEmit` clean |
+| Spike artifacts | deleted (`classicBtSpike.SPIKE.ts` + screen wiring) |
+
+Key finding: the delimiter-as-ELM-prompt trick makes the classic transport
+*simpler* than BLE at the provider layer — the transport does the framing,
+and the 196-built handshake/machine/error layers ran unchanged, exactly as
+the seam promised.
 
 ## Risks
 
