@@ -24,3 +24,20 @@
   branch base.
 - **Next milestone:** plan commit + push, then build (pids.ts → poller →
   hook → screen → wiring guard), then device smoke with the MX+.
+
+---
+
+### 2026-08-25 12:40 — Build complete (`48d2fbc`): catalog + poller + dashboard, 837 green
+
+- **Shipped:** backend-mirrored PID catalog with tolerant framing;
+  sequential round-robin poller (adaptive cadence, per-reading error
+  tolerance, never-overlaps guard); `activeObdConnection` cross-screen
+  holder (deviation — instances can't ride nav params); useLiveSensorData
+  (0100 probe → filtered polling → staleness); SensorGauge tiles +
+  LiveDataScreen (2/3-col grid, swipe pages, link-error banner);
+  connected-pane "Live data" button + OBD_SUPPORT-gated route.
+- **Tests:** +33; **65 suites / 837 tests green**; tsc clean. One
+  build-phase framing fix (SEARCHING residue vs parity guard) caught by
+  the phase's own tests pre-commit.
+- **Remaining gate:** device smoke — engine on → gauges move; n/a for
+  unexposed PIDs. Same Xcode-Run + MX+ procedure as 196B's smoke.
