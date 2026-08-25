@@ -1,7 +1,7 @@
 # Phase 196B — OBD Classic-Bluetooth / MFi Provider — Phase Log
 
-**Status:** 📋 Planned
-**Started:** 2026-08-23 | **Completed:** —
+**Status:** ✅ Complete
+**Started:** 2026-08-23 | **Completed:** 2026-08-25
 **Repos:** `Kubanjaze/moto-diag-mobile` branch `phase-196B-classic-bt-obd`
 (code, to be created); `Kubanjaze/moto-diag` (this ledger doc)
 
@@ -107,3 +107,22 @@ constants known). Device smoke follows immediately after — same adapter.
 - **Remaining gate:** device smoke — Classic transport → MX+ enumerated →
   connect → 4-command handshake → banner. One Xcode Run away; recorded into
   ADR-002 + this ledger when it lands, then docs move to `completed/`.
+
+---
+
+### 2026-08-25 11:35 — DEVICE SMOKE: PASS — Phase 196B ✅ Complete
+
+- **Run (Debug, mandatory New Arch, iPhone 16 Pro):** Classic transport
+  selected in the idle picker → Scan → **OBDLink MX+ enumerated** over
+  ExternalAccessory → tap-connect → `connecting → handshaking → connected` →
+  **banner "ELM327 v1.4b"** (the STN chip's ELM-compat identity) rendered on
+  the connected screen. Full `ATZ→ATE0→ATL0→ATSP0` conversation over the
+  MFi session — the 196-built handshake/machine layers untouched.
+- Datapoint recorded in mobile `docs/adr/002` running record; mobile project
+  docs updated (`implementation.md` 0.1.8 w/ Phase History row + F9-#9
+  header correction, ROADMAP 196B ✅, root `phase_log.md` completion entry).
+- Docs moved `in_progress/` → `completed/` in this commit. Verification
+  checklist fully ticked in `196B_implementation.md` (final).
+- **Follow-ons already on the roadmap:** 196 BLE half (pending BLE adapter),
+  196C Wi-Fi provider, Release-config smoke + OBD Solutions MFi whitelist
+  before Track J ships.

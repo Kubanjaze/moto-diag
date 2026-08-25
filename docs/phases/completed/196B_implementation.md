@@ -120,9 +120,10 @@ Outputs (mobile repo, branch `phase-196B-classic-bt-obd`):
       `06adf16`); F40 parity: Android classic covered by existing
       BLUETOOTH_CONNECT (enumeration is bonded-list, no discovery scan)
 - [x] Full mobile regression: 62 suites / 804 tests, zero failures; tsc clean
-- [ ] Device smoke (MX+, Debug): Classic transport selected → enumeration
-      shows MX+ → connect → ATZ→ATE0→ATL0→ATSP0 → banner displayed; result
-      recorded in ADR-002 running record + this doc
+- [x] Device smoke (MX+, Debug, 2026-08-25): Classic transport selected →
+      MX+ enumerated → connect → ATZ→ATE0→ATL0→ATSP0 → banner
+      **"ELM327 v1.4b"** displayed on the connected screen; recorded in
+      ADR-002 running record + phase log
 
 ## Deviations from Plan
 
