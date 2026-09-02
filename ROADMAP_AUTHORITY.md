@@ -80,3 +80,23 @@ mechanism to maintain because there is nothing to sync.
 This file is a contract. Amending the ownership boundary requires an explicit
 decision recorded in both repos' phase logs and a matched commit to both copies.
 Do not edit one copy without the other.
+
+---
+
+## Inventories are not status (added 2026-09-02, F54)
+
+The boundary above governs **phase status**. It does NOT exempt the backend's
+architecture inventories from staying accurate.
+
+The backend `implementation.md` **Package Inventory**, **Database Tables**, **CLI
+Commands** and **Dependencies** sections describe what the backend IS, not how far
+a track has got. A Track I phase that adds a backend package, table, migration or
+route MUST update them in the same close-out, even though its status row lives in
+the mobile repo.
+
+**Why this line exists:** between Phases 194 and 200 the backend gained the
+`reporting` and `push` packages and five tables while `implementation.md` still
+described `api` as "empty, awaiting Phase 175". Every one of those phases was
+Track I, and each close-out correctly skipped the backend status surfaces — and
+then skipped the inventories with them. Repaired under F54; this rule is the
+structural fix so the same drift cannot recur by the same reasoning.

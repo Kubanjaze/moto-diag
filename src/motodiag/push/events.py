@@ -51,6 +51,13 @@ def _send_to_user(
             logger.info("pruned unregistered token for user %s", user_id)
         elif result.ok:
             sent += 1
+            # F52 — log successes, not just failures. Phase 199's device
+            # smoke had to prove delivery by the ABSENCE of warnings plus
+            # a hand-rolled sender call, because a working push left no
+            # trace at all. One INFO line makes the happy path legible.
+            logger.info(
+                "push sent to user %s (%s)", user_id, title,
+            )
     return sent
 
 

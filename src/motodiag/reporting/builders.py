@@ -29,10 +29,12 @@ explicit override beats preset default).
 
 from __future__ import annotations
 
+import logging
 import os
 from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
+from motodiag.core.database import get_connection
 from motodiag.core.session_repo import (
     SessionOwnershipError, get_session_for_owner,
 )
@@ -107,6 +109,8 @@ def _footer(extra: Optional[str] = None) -> str:
 # (drift catchable via Phase 192B Commit 1's
 # ``test_phase192b_preset_semantics_match_mobile`` cross-source pin).
 
+logger = logging.getLogger(__name__)
+
 ReportPreset = Literal["full", "customer", "insurance"]
 
 # Customer-facing posture: hide diagnostic-internal sections that
@@ -159,6 +163,51 @@ def _is_section_hidden(
 # ---------------------------------------------------------------------------
 # Session report
 # ---------------------------------------------------------------------------
+
+
+def resolve_session_customer_name(
+    row: dict,
+    db_path: Optional[str] = None,
+) -> Optional[str]:
+    """Best-effort customer name for a session, or None.
+
+    F55. Two sources, in order: the session's own ``customer_id``
+    (migration 046), then the vehicle's. The vehicle fallback matters
+    because migration 046 backfilled history but nothing WRITES the
+    session column yet — a session created today still learns its
+    customer through its bike.
+
+    The id-1 "Unassigned" sentinel from the Phase 006 retrofit is
+    treated as no-customer in both paths. Naming a report "prepared for
+    Unassigned" would be worse than saying nothing.
+    """
+    customer_id = row.get("customer_id")
+    try:
+        with get_connection(db_path) as conn:
+            if not customer_id or int(customer_id) == 1:
+                vehicle_id = row.get("vehicle_id")
+                if not vehicle_id:
+                    return None
+                vrow = conn.execute(
+                    "SELECT customer_id FROM vehicles WHERE id = ?",
+                    (vehicle_id,),
+                ).fetchone()
+                if vrow is None or not vrow[0] or int(vrow[0]) == 1:
+                    return None
+                customer_id = vrow[0]
+            crow = conn.execute(
+                "SELECT name FROM customers WHERE id = ?",
+                (int(customer_id),),
+            ).fetchone()
+    except Exception:  # noqa: BLE001 — a missing name never fails a report
+        logger.warning(
+            "could not resolve customer for session %s", row.get("id"),
+        )
+        return None
+    if crow is None:
+        return None
+    name = str(crow[0] or "").strip()
+    return name or None
 
 
 def build_session_report_doc(
@@ -356,6 +405,9 @@ def build_session_report_doc(
     return {
         "title": f"Diagnostic session report #{int(row['id'])}",
         "subtitle": vehicle_line or None,
+        # F55 — optional, and explicitly None rather than omitted when
+        # unknown, matching the `subtitle` convention in the shape doc.
+        "prepared_for": resolve_session_customer_name(row, db_path=db_path),
         "issued_at": _now_iso(),
         "sections": sections,
         "footer": _footer(f"Session {row['id']}"),

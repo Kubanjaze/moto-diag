@@ -1,7 +1,7 @@
 # Phase 196 — Bluetooth OBD Adapter Connection — Phase Log
 
-**Status:** 🔄 In progress — build complete (unit layer green); real-dongle
-smoke gate pending
+**Status:** ✅ Complete — BLE connect/handshake verification re-scoped to F56
+(hardware-dependent; see the 2026-09-02 closing entry)
 **Started:** 2026-05-17 (plan review referenced in ADR-002) | **Completed:** —
 **Repos:** `Kubanjaze/moto-diag-mobile` branch `phase-196-bluetooth-obd`
 (code); `Kubanjaze/moto-diag` (this ledger doc)
@@ -101,3 +101,32 @@ fake v1.1). Unit layer re-verified in-session: 32/32 pure-TS tests
   iOS ExternalAccessory/MFi; candidate dep `react-native-bluetooth-classic`,
   to be verified in Step 0 audit), reference device = the MX+. Step 0
   substrate audit of 196's locked seam surfaces before plan v1.0.
+
+---
+
+### 2026-09-02 17:54 — CLOSED: BLE-hardware half re-scoped to F56
+
+Reviewed during the pre-Gate-10 cleanup, which surfaced this phase as the
+only Track I row still unchecked while its sibling 196B was long done.
+
+- **Everything this phase set out to build is built and green:**
+  `BleObdProvider` behind the `ObdConnection` seam, 54 unit tests, the
+  New-Arch Podfile fix (`8a1f8ee`), and a device-verified BLE **scan**
+  (2026-08-23, `new BleManager()` + live discovery, no crash).
+- **The one open item cannot be closed with the hardware on hand.** The
+  reference dongle is an OBDLink MX+ (MX201): classic Bluetooth 3.0 +
+  MFi, invisible to `react-native-ble-plx` by design. Connect and
+  handshake need a BLE-class adapter. Filed as **F56** with the specific
+  candidates named, so it reads as a shopping item rather than a bug.
+- **The product is not waiting on it.** Phase 196B's
+  `ClassicBtObdProvider` device-smoked PASS against that exact adapter
+  ("ELM327 v1.4b", 2026-08-25) — the app talks to the user's real dongle
+  through the same seam this phase established.
+- **Why close rather than leave open:** the phase sat at 🔄 for ten days
+  with finished code, which made every roadmap view misleading and made
+  the Track I completion picture look worse than reality. Closing with an
+  explicit, tracked gap is more honest than an unchecked box that reads
+  as "unfinished work".
+- Impl doc → v1.1 (checklist marked with the honest `[~]` on the
+  hardware item, deviations, results, key finding); docs → `completed/`;
+  mobile ROADMAP row 196 marked with the same caveat.

@@ -542,6 +542,7 @@ header { margin-bottom: 28px; }
 h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 6px; }
 .subtitle { font-size: 1.05rem; color: #4a5160; margin: 0 0 4px; }
 .issued { font-size: .85rem; color: #6b7280; margin: 0; }
+.prepared { font-size: .95rem; color: #4a5160; margin: 2px 0 0; }
 section {
   background: #fff; border: 1px solid #e3e6eb; border-radius: 10px;
   padding: 16px 18px; margin: 0 0 14px;
@@ -567,6 +568,7 @@ footer { margin-top: 26px; font-size: .82rem; color: #6b7280; text-align: center
   section { background: #1c1f25; border-color: #2b2f37; }
   .subtitle { color: #a9b1bf; }
   .issued, dt, th, footer { color: #8d95a3; }
+  .prepared { color: #a9b1bf; }
   th, td { border-bottom-color: #2b2f37; }
   .video { border-top-color: #2b2f37; }
 }
@@ -609,6 +611,15 @@ class HtmlReportRenderer(ReportRenderer):
         subtitle = doc.get("subtitle")
         if subtitle:
             parts.append(f'<p class="subtitle">{_e(subtitle)}</p>')
+        # F55 — name the customer this was prepared for, when known.
+        # HTML only by design: this is the customer-facing surface, and
+        # adding a line to the PDF would move bytes that Phase 192B's
+        # deterministic-render tests pin.
+        prepared_for = doc.get("prepared_for")
+        if prepared_for:
+            parts.append(
+                f'<p class="prepared">Prepared for {_e(prepared_for)}</p>'
+            )
         issued_at = doc.get("issued_at")
         if issued_at:
             parts.append(f'<p class="issued">Issued {_e(issued_at)}</p>')

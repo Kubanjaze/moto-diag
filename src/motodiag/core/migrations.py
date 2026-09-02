@@ -3284,6 +3284,46 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS report_shares;
         """,
     ),
+    # Migration 046 — F55: link diagnostic sessions to a customer
+    Migration(
+        version=46,
+        name="session_customer_id",
+        description=(
+            "F55: Add nullable `diagnostic_sessions.customer_id`. Work "
+            "orders, invoices and appointments all carried a customer "
+            "since Phase 118/006, but sessions only ever got `user_id` "
+            "(the Phase 178 owner retrofit), so the customer-facing "
+            "share page (Phase 200) could not name the person it was "
+            "prepared for. Backfilled from `vehicles.customer_id`, "
+            "SKIPPING the id-1 'Unassigned' sentinel that the Phase 006 "
+            "retrofit used as its DEFAULT — backfilling that blindly "
+            "would claim every orphan session belongs to a placeholder "
+            "customer. Nullable on purpose: a session with no known "
+            "customer is a legitimate state (walk-in diagnostics)."
+        ),
+        upgrade_sql="""
+            ALTER TABLE diagnostic_sessions
+                ADD COLUMN customer_id INTEGER
+                REFERENCES customers(id) ON DELETE SET NULL;
+
+            UPDATE diagnostic_sessions
+               SET customer_id = (
+                     SELECT v.customer_id FROM vehicles v
+                      WHERE v.id = diagnostic_sessions.vehicle_id
+                        AND v.customer_id IS NOT NULL
+                        AND v.customer_id != 1
+                   )
+             WHERE vehicle_id IS NOT NULL
+               AND customer_id IS NULL;
+
+            CREATE INDEX IF NOT EXISTS idx_sessions_customer
+                ON diagnostic_sessions(customer_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_sessions_customer;
+            ALTER TABLE diagnostic_sessions DROP COLUMN customer_id;
+        """,
+    ),
 ]
 
 

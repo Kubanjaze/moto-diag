@@ -1,6 +1,6 @@
 # Phase 196 — Bluetooth OBD Adapter Connection (BleObdProvider)
 
-**Version:** 1.0 (labeled reconstruction of unpersisted v1.0.2) | **Tier:** Standard | **Date:** 2026-07-17
+**Version:** 1.1 (v1.0 was a labeled reconstruction of the unpersisted v1.0.2) | **Tier:** Standard | **Date:** 2026-09-02 (closed with the BLE-hardware half formally re-scoped)
 
 > **RECONSTRUCTION NOTICE (CLAUDE.md Session Continuity rule 3).** The original
 > Phase 196 plan document ("plan v1.0.2", cited by `docs/ROADMAP.md` row 196 and
@@ -100,13 +100,22 @@ Outputs (mobile repo, branch `phase-196-bluetooth-obd`):
 
 - [x] Unit layer green: 54 tests / 5 suites in `__tests__/obd/`
       (elm327 17, machine 15, BleObdProvider 9, obdErrors 9, seamClosure 4)
-- [ ] Fresh device build installs and launches with New Architecture disabled
-      (build postdates `8a1f8ee`; verify via build/Metro log)
-- [ ] Real-dongle smoke: dongle appears in scan → connect →
-      `idle → scanning → connecting → handshaking → connected` with banner
-- [ ] Evidence captured: banner text, state transitions, any
-      `ObdConnectionError` kind on failure (Metro + build logs)
-- [ ] ADR-002 condition #2 data point appended (pass OR fail — both valid)
+- [x] Fresh device build installs and launches with New Architecture
+      disabled (verified 2026-08-23; build postdates `8a1f8ee`)
+- [x] BLE **scan** on device: `new BleManager()` + live discovery under
+      the mandatory New Arch, no crash, large device list rendered
+- [~] Real-dongle **connect + handshake**: NOT VERIFIED, and not
+      verifiable with the hardware on hand. The reference adapter turned
+      out to be an OBDLink MX+ (MX201) — classic Bluetooth 3.0 + MFi,
+      undiscoverable by `react-native-ble-plx` **by design**. This is a
+      hardware-availability gap, not a defect in the provider, and it is
+      the one item that kept this phase open for ten days. Re-scoped to
+      **F56**, which needs a BLE-class adapter (OBDLink CX / Vgate iCar
+      Pro BT4.0) to close.
+- [x] Evidence captured for what WAS exercised (scan datapoint,
+      2026-08-23 ledger entry)
+- [x] ADR-002 condition #2 data point appended — scan PASS recorded as a
+      running-record entry
 
 ## Risks
 
@@ -125,3 +134,39 @@ Outputs (mobile repo, branch `phase-196-bluetooth-obd`):
   `disconnected_unexpectedly` vs BLE-layer — before attributing to code.
 - Backend not required for the smoke (pure BLE path); if needed later:
   `motodiag serve --host 0.0.0.0` (default binds 127.0.0.1 only).
+
+## Deviations from Plan
+
+- **The smoke gate was split, not skipped.** The plan assumed one device
+  session would cover scan + connect + handshake. Hardware reality split
+  it: scan passed on 2026-08-23; connect/handshake could not run because
+  the only adapter available speaks classic Bluetooth, which this phase's
+  provider deliberately does not.
+- **Phase 196B absorbed the operational need.** `ClassicBtObdProvider`
+  shipped and device-smoked PASS against that same MX+ ("ELM327 v1.4b"
+  banner, 2026-08-25), so the product is not blocked on this phase — the
+  app can talk to the user's actual dongle today. What remains open is
+  narrower: proof that the BLE provider connects to a BLE dongle.
+- **Closed with a documented gap rather than left open.** Ten days of
+  "🔄 in progress" on a phase whose code, tests and seam contract were
+  all finished was misleading in every roadmap view. The honest state is
+  "shipped, one hardware-dependent verification outstanding", and that is
+  now what the record says.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Unit layer | 54 tests / 5 suites in `__tests__/obd/` |
+| Device evidence | BLE scan PASS (2026-08-23); connect/handshake UNVERIFIED |
+| Blocking reason | reference adapter is classic BT + MFi, not BLE |
+| Superseded operationally by | Phase 196B `ClassicBtObdProvider` (device smoke PASS 2026-08-25) |
+| Outstanding | F56 — BLE-adapter connect/handshake verification |
+
+**Key finding:** a transport seam can be proven correct by construction
+and still leave a hardware claim unproven, and the two should be tracked
+separately. Phases 196B, 197 and 200 all reused `ObdProvider` /
+`ReportDocument` seams with zero edits, which is the architectural claim
+this phase actually made. Holding the phase open on a dongle purchase
+conflated that with a procurement task, and hid a finished piece of work
+behind an unchecked box.

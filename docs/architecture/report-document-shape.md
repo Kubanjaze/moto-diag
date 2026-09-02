@@ -17,6 +17,7 @@ Every `ReportDocument` is a dict with these top-level keys:
 {
     "title": str,                      # Required. e.g., "Diagnostic session report #N"
     "subtitle": Optional[str],         # Vehicle line, shop+customer, etc.; None when missing
+    "prepared_for": Optional[str],     # F55. Customer name for session reports; None when unknown
     "issued_at": str (ISO 8601 UTC),   # Required. Generation timestamp; NOT session timestamp.
     "sections": list[dict],            # Required. Ordered list of section dicts; may be empty.
     "footer": str,                     # Required. One-line attribution; e.g., "Session N · MotoDiag".
@@ -25,7 +26,7 @@ Every `ReportDocument` is a dict with these top-level keys:
 
 **Required fields**: `title`, `issued_at`, `sections`, `footer`. Builders always populate these (even with placeholder values when source data is missing).
 
-**Optional fields**: `subtitle`. When the resource lacks a natural subtitle (e.g., session with no vehicle metadata), set explicitly to `None` — don't omit the key. Renderers check `if doc.get("subtitle")`; missing key vs explicit `None` both render the same way, but explicit `None` documents intent.
+**Optional fields**: `subtitle`, `prepared_for`. When the resource lacks a natural subtitle (e.g., session with no vehicle metadata), set explicitly to `None` — don't omit the key. Renderers check `if doc.get("subtitle")`; missing key vs explicit `None` both render the same way, but explicit `None` documents intent.
 
 **Naming**: snake_case throughout. No `camelCase`. Phase 182 established this convention; Phase 192 extension preserves it.
 
@@ -282,7 +283,9 @@ When in doubt, look at the existing builder + Pydantic models first.
 
 For quick reference:
 
-**Top-level keys:** `title`, `subtitle`, `issued_at`, `sections`, `footer`.
+**Top-level keys:** `title`, `subtitle`, `prepared_for`, `issued_at`, `sections`, `footer`.
+
+`prepared_for` (F55) is populated by the session builder only, and rendered by `HtmlReportRenderer` only. The asymmetry is deliberate: it exists for the customer-facing share page, and adding the line to the PDF would move bytes that Phase 192B's deterministic-render tests pin. A future phase that wants it in the PDF should update those goldens in the same commit.
 
 **Section shape variants:**
 - `rows` (Phase 182): `list[(label, value)]`
