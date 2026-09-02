@@ -75,6 +75,13 @@ class Settings(BaseSettings):
         "http://localhost:3000,http://localhost:5173"
     )
     api_log_level: str = "INFO"
+
+    #: Absolute origin used to build customer-facing share links
+    #: (Phase 200), e.g. "https://shop.example.com". Empty (default)
+    #: falls back to the incoming request's own base URL, which is
+    #: right for dev/tailnet and wrong behind a proxy that rewrites
+    #: Host — set it explicitly in any real deployment.
+    public_base_url: str = ""
     # Phase 183 — OpenAPI servers list. Comma-separated
     # "url|description" pairs; parsed to list[dict] by the
     # `api_servers_list` property. Default includes only the local

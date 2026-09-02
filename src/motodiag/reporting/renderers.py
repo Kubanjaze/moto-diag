@@ -508,6 +508,184 @@ def _grid_table(columns, rows):
 
 
 # ---------------------------------------------------------------------------
+# HTML renderer (Phase 200 — customer-facing share view)
+# ---------------------------------------------------------------------------
+
+from html import escape as _escape  # noqa: E402  (kept beside its user)
+
+
+def _e(value: object) -> str:
+    """Escape any value for HTML text content.
+
+    EVERY interpolation in this renderer goes through here. The page is
+    served to an unauthenticated browser and the document carries
+    mechanic-authored free text (symptoms, notes, vehicle strings), so
+    escaping is a correctness requirement, not a nicety.
+    """
+    return _escape(str(value), quote=True)
+
+
+#: Inline, dependency-free stylesheet. No external assets by design:
+#: the page must render on a customer's phone on shop wifi, offline
+#: caches, or a forwarded email preview, with nothing to block.
+_SHARE_CSS = """
+:root { color-scheme: light dark; }
+* { box-sizing: border-box; }
+body {
+  margin: 0; padding: 24px 16px 64px;
+  font: 16px/1.55 -apple-system, BlinkMacSystemFont, "Segoe UI",
+        Roboto, Helvetica, Arial, sans-serif;
+  color: #16181d; background: #f7f8fa;
+}
+main { max-width: 46rem; margin: 0 auto; }
+header { margin-bottom: 28px; }
+h1 { font-size: 1.5rem; line-height: 1.25; margin: 0 0 6px; }
+.subtitle { font-size: 1.05rem; color: #4a5160; margin: 0 0 4px; }
+.issued { font-size: .85rem; color: #6b7280; margin: 0; }
+section {
+  background: #fff; border: 1px solid #e3e6eb; border-radius: 10px;
+  padding: 16px 18px; margin: 0 0 14px;
+}
+h2 { font-size: 1.05rem; margin: 0 0 10px; letter-spacing: .01em; }
+dl { margin: 0; display: grid; grid-template-columns: minmax(8rem, 34%) 1fr; gap: 6px 14px; }
+dt { color: #6b7280; }
+dd { margin: 0; }
+ul { margin: 0; padding-left: 1.15rem; }
+li { margin-bottom: 4px; }
+p { margin: 0 0 8px; }
+p:last-child { margin-bottom: 0; }
+.tablewrap { overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; font-size: .95rem; }
+th, td { text-align: left; padding: 7px 10px; border-bottom: 1px solid #eceff3; }
+th { color: #4a5160; font-weight: 600; }
+.video { border-top: 1px solid #eceff3; padding-top: 10px; margin-top: 10px; }
+.video:first-child { border-top: 0; padding-top: 0; margin-top: 0; }
+.video h3 { font-size: .95rem; margin: 0 0 6px; }
+footer { margin-top: 26px; font-size: .82rem; color: #6b7280; text-align: center; }
+@media (prefers-color-scheme: dark) {
+  body { color: #e6e8ec; background: #14161a; }
+  section { background: #1c1f25; border-color: #2b2f37; }
+  .subtitle { color: #a9b1bf; }
+  .issued, dt, th, footer { color: #8d95a3; }
+  th, td { border-bottom-color: #2b2f37; }
+  .video { border-top-color: #2b2f37; }
+}
+@media print {
+  body { background: #fff; padding: 0; }
+  section { border-color: #ccc; break-inside: avoid; }
+}
+"""
+
+
+class HtmlReportRenderer(ReportRenderer):
+    """Standalone HTML page for the Phase 200 customer share view.
+
+    Renders the same :class:`ReportDocument` the PDF and text renderers
+    consume, so the five section variants stay switched in one place
+    across every output kind. A template engine (jinja2) would be
+    over-architecture for one document and a new dependency for a route
+    that must never fail to render.
+    """
+
+    content_type = "text/html; charset=utf-8"
+    file_extension = "html"
+
+    def render(self, doc: ReportDocument) -> bytes:
+        title = doc.get("title") or "Report"
+        parts: list[str] = [
+            "<!doctype html>",
+            '<html lang="en"><head><meta charset="utf-8">',
+            '<meta name="viewport" content="width=device-width, '
+            'initial-scale=1">',
+            # Customer reports are private documents reached by an
+            # unguessable link; keep them out of search indexes.
+            '<meta name="robots" content="noindex, nofollow">',
+            f"<title>{_e(title)}</title>",
+            f"<style>{_SHARE_CSS}</style>",
+            "</head><body><main>",
+            "<header>",
+            f"<h1>{_e(title)}</h1>",
+        ]
+        subtitle = doc.get("subtitle")
+        if subtitle:
+            parts.append(f'<p class="subtitle">{_e(subtitle)}</p>')
+        issued_at = doc.get("issued_at")
+        if issued_at:
+            parts.append(f'<p class="issued">Issued {_e(issued_at)}</p>')
+        parts.append("</header>")
+
+        for section in doc.get("sections") or []:
+            parts.append("<section>")
+            heading = section.get("heading")
+            if heading:
+                parts.append(f"<h2>{_e(heading)}</h2>")
+            parts.append(self._render_section(section))
+            parts.append("</section>")
+
+        footer = doc.get("footer")
+        if footer:
+            parts.append(f"<footer>{_e(footer)}</footer>")
+        parts.append("</main></body></html>")
+        return "\n".join(parts).encode("utf-8")
+
+    def _render_section(self, section: dict) -> str:
+        # Variant order mirrors TextReportRenderer.render so the two
+        # cannot drift on which key wins when a section carries more
+        # than one (it should not, per the shape doc).
+        if "body" in section:
+            body = str(section.get("body") or "")
+            paragraphs = [p for p in body.split("\n") if p.strip()]
+            return "".join(f"<p>{_e(p)}</p>" for p in paragraphs)
+        if "rows" in section:
+            cells: list[str] = []
+            for pair in section.get("rows") or []:
+                key, value = pair[0], pair[1]
+                cells.append(f"<dt>{_e(key)}</dt><dd>{_e(value)}</dd>")
+            return f"<dl>{''.join(cells)}</dl>" if cells else ""
+        if "bullets" in section:
+            items = "".join(
+                f"<li>{_e(b)}</li>" for b in section.get("bullets") or []
+            )
+            return f"<ul>{items}</ul>" if items else ""
+        if "table" in section:
+            table = section.get("table") or {}
+            columns = table.get("columns") or []
+            rows = table.get("rows") or []
+            head = "".join(f"<th>{_e(c)}</th>" for c in columns)
+            body = "".join(
+                "<tr>" + "".join(f"<td>{_e(cell)}</td>" for cell in row)
+                + "</tr>"
+                for row in rows
+            )
+            return (
+                '<div class="tablewrap"><table>'
+                + (f"<thead><tr>{head}</tr></thead>" if head else "")
+                + f"<tbody>{body}</tbody></table></div>"
+            )
+        if "videos" in section:
+            # Customer-facing: recording metadata only. Video BYTES are
+            # never exposed through the public share route — the token
+            # grants the report, not the media.
+            blocks: list[str] = []
+            for idx, video in enumerate(section.get("videos") or [], 1):
+                rows = [
+                    ("Captured", video.get("captured_at", "—")),
+                    ("Duration (ms)", video.get("duration_ms", 0)),
+                    ("Analysis", video.get("analysis_state", "pending")),
+                ]
+                cells = "".join(
+                    f"<dt>{_e(k)}</dt><dd>{_e(v)}</dd>" for k, v in rows
+                )
+                fname = video.get("filename") or "—"
+                blocks.append(
+                    f'<div class="video"><h3>Recording {idx} '
+                    f"({_e(fname)})</h3><dl>{cells}</dl></div>"
+                )
+            return "".join(blocks)
+        return ""
+
+
+# ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
 
@@ -522,6 +700,8 @@ def get_renderer(
       the ``deterministic`` opt-in for share-flow callers; default
       ``False`` preserves the historical (spec-compliant non-
       deterministic) behavior.
+    - ``"html"`` → :class:`HtmlReportRenderer`. Always works;
+      standalone page for the Phase 200 customer share view.
     - ``"text"`` → :class:`TextReportRenderer`. Always works.
       ``deterministic`` is silently ignored (text renderer is
       already deterministic by construction).
@@ -530,7 +710,12 @@ def get_renderer(
         return PdfReportRenderer(deterministic=deterministic)
     if kind == "text":
         return TextReportRenderer()
+    if kind == "html":
+        # Phase 200 — customer share view. Dependency-free, so like
+        # ``text`` it always works; ``deterministic`` is meaningless
+        # here (no embedded timestamps beyond the document's own).
+        return HtmlReportRenderer()
     raise ValueError(
         f"unknown renderer kind: {kind!r} "
-        "(expected 'pdf' or 'text')"
+        "(expected 'pdf', 'text' or 'html')"
     )

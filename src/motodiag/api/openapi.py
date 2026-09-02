@@ -168,6 +168,18 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "share",
+        "description": (
+            "Phase 200 — customer-facing report share links. Mechanics "
+            "mint an expiring, revocable capability URL for a session "
+            "report (authed); bike owners open it in a browser with no "
+            "account via the PUBLIC `GET /v1/share/{token}`, which "
+            "returns a server-rendered customer-preset HTML page. "
+            "Links expire after 30 days by default and can be revoked "
+            "at any time."
+        ),
+    },
+    {
         "name": "voice-transcripts",
         "description": (
             "Voice symptom capture: upload a voice memo to a work "
@@ -190,6 +202,9 @@ PUBLIC_TAGS = {"meta"}
 # Paths that are explicitly public even if their tag isn't in PUBLIC_TAGS.
 PUBLIC_PATH_PREFIXES = (
     "/v1/billing/webhooks",
+    # Phase 200 — customer share links. The token in the path IS the
+    # authorization; a bike owner has no account to authenticate with.
+    "/v1/share",
 )
 
 

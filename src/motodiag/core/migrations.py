@@ -3247,6 +3247,43 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS device_tokens;
         """,
     ),
+    # Migration 045 — Phase 200: customer-facing report share links
+    Migration(
+        version=45,
+        name="report_shares",
+        description=(
+            "Phase 200: Add `report_shares` — capability links that let a "
+            "bike owner read a customer-preset session report with no "
+            "account and no API key. The token IS the authorization, so "
+            "the security model is entropy + hard expiry + revocation. "
+            "`created_by_user_id` is load-bearing, not audit trim: the "
+            "report builder is owner-scoped, so rebuilding the document "
+            "for an anonymous viewer requires the user the share was "
+            "minted for."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS report_shares (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                token TEXT NOT NULL UNIQUE,
+                session_id INTEGER NOT NULL
+                    REFERENCES diagnostic_sessions(id) ON DELETE CASCADE,
+                created_by_user_id INTEGER NOT NULL
+                    REFERENCES users(id) ON DELETE CASCADE,
+                preset TEXT NOT NULL DEFAULT 'customer',
+                created_at TEXT NOT NULL,
+                expires_at TEXT NOT NULL,
+                revoked_at TEXT,
+                view_count INTEGER NOT NULL DEFAULT 0,
+                last_viewed_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_report_shares_session
+                ON report_shares(session_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_report_shares_session;
+            DROP TABLE IF EXISTS report_shares;
+        """,
+    ),
 ]
 
 

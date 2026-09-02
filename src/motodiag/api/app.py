@@ -105,6 +105,7 @@ def create_app(
     from motodiag.api.routes.photos import router as photos_router
     from motodiag.api.routes.transcripts import router as transcripts_router
     from motodiag.api.routes.push import router as push_router
+    from motodiag.api.routes.share import router as share_router
 
     app.include_router(meta_router)             # /healthz, /v1/version
     app.include_router(shops_router, prefix="/v1")
@@ -118,6 +119,7 @@ def create_app(
     app.include_router(photos_router, prefix="/v1")  # Phase 194 — WO photos
     app.include_router(transcripts_router, prefix="/v1")  # Phase 195 — voice transcripts
     app.include_router(push_router, prefix="/v1")  # Phase 199 — push tokens
+    app.include_router(share_router, prefix="/v1")  # Phase 200 — share links
     app.include_router(live_router)             # WS route declares full /v1/live/... path
 
     # --- Phase 183: OpenAPI enrichment (after routers are mounted) ---
