@@ -1,6 +1,14 @@
 # Phase 198 — Offline Mode + Local Database (Mobile)
 
-**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-02
+**Version:** 1.2 | **Tier:** Standard | **Date:** 2026-09-02
+*(v1.2: device-smoke fix cycle changed the approach — schema v2 (DTC
+identity is (code, make), not bare code; sequential migrations), explicit
+BEGIN/COMMIT transactions, badge relocated to the Sessions list. Fixes
+#1–#3 + the >2-bugs cluster analysis in the phase log. **DEVICE SMOKE:
+FULL PASS 2026-09-02** — boot sync, cached lookups incl. the P0562
+duplicate pair, offline create + visible badge, server-witnessed replay
+(`POST /v1/sessions 201`), badge cleared. 853 tests green. Follow-up
+F50 filed: local pending-session rows in the list.)*
 *(v1.1: backend Commit 0 (`a2c3614`, 4 tests canonical-green) + Spike Gate
 PASS (op-sqlite round trip + netinfo on-device under New Arch) + mobile
 build (`e652197`, 68 suites / 851 tests green) same day. Device smoke =
@@ -119,8 +127,12 @@ Outputs:
 - [ ] Hooks fallback + screens: offline chip, pending badge, NewSession
       offline path — smoke + wiring guards green
 - [ ] Full mobile regression + backend suite green; tsc clean
-- [ ] Device smoke: airplane-mode DTC lookup + offline session create →
-      radio on → replay lands server-side; recorded here + phase log
+- [x] Device smoke (2026-09-02, FULL PASS after 3-fix cycle): airplane-mode
+      DTC lookup from cache (incl. P0562 duplicate pair) + offline session
+      create → "Saved offline" + Sessions-list pending badge → radio on →
+      `POST /v1/sessions 201` server-witnessed → badge cleared, row
+      appeared. Recorded in phase log with per-fix entries + cluster
+      analysis.
 
 ## Risks
 
