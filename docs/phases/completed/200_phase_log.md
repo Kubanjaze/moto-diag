@@ -90,3 +90,18 @@ branch `phase-200-customer-share-view`
   (`diagnostic_sessions` has no `customer_id` — the Step 0 gap this
   phase deliberately did not fix in passing).
 - Branches fast-forwarded into `master` / `main`, pushed.
+
+### 2026-09-02 17:40 — User confirmation: in-app share actions verified on device
+
+- User verdict after tapping through the report viewer on the physical
+  iPhone: **"link and pdf work great"** — the new Phase 200 *Share link*
+  action AND the pre-existing Phase 192B *Share PDF* action both behave
+  on device.
+- This closes the one checklist item this session could not verify
+  itself (no remote view of the phone). Worth recording that the PDF
+  half was confirmed too: the two affordances share a row and a set of
+  busy flags in `ReportViewerScreen`, so "the new button works" and "the
+  old button still works" are separate claims, and both now hold.
+- Phase 200 needs nothing further. The equivalent open item on Phase 199
+  (lock-screen banner rendering) remains unconfirmed and is tracked in
+  that phase's own ledger.

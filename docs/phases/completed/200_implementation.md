@@ -184,10 +184,12 @@ Outputs:
 - [x] Mobile: 10 hook tests green; 70 suites / 874 tests; tsc clean;
       eslint 0 errors
 - [x] Smoke: mint → public fetch with no credentials → 200 HTML →
-      revoke → same link 410. **In-app tap of the new Share link button
-      is the user's confirmation** (no remote view of the physical
-      phone from this session); the app was relaunched against the new
-      bundle so the affordance is live.
+      revoke → same link 410. **In-app tap CONFIRMED by the user
+      (2026-09-02): both the new Share link action and the existing
+      Share PDF action work on the device.** The PDF path mattering here
+      is not incidental — the two share affordances sit side by side in
+      the viewer, so the check that the new one did not disturb the old
+      one is part of the gate.
 
 ## Risks
 
