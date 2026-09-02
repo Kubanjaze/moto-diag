@@ -1,6 +1,6 @@
 # Phase 200 — Customer-Facing Share View (Public Report Link)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-02
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-02 (v1.0 plan → v1.1 as-built same day)
 
 ## Existing-code audit (Step 0 — run 2026-09-02, before this plan)
 
@@ -160,24 +160,34 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 045 applies; `report_shares` columns + UNIQUE token +
-      FKs present; SCHEMA_VERSION 45; designed pin tests advanced 44→45
-- [ ] `share_repo` lifecycle green incl. the expiry boundary (a share
-      one second past `expires_at` reads `expired`, not `ok`)
-- [ ] Mint / list / revoke reject unauthenticated + cross-owner callers
-- [ ] Public `GET /v1/share/{token}`: 200 + `text/html` for a live
-      token; 410 for expired; 410 for revoked; 404 for unknown
-- [ ] Rendered page contains the diagnosis sections and does NOT contain
-      the `Notes` section (customer preset actually applied)
-- [ ] XSS fixture: a session whose free-text fields contain `<script>`
-      renders escaped, not executed
-- [ ] OpenAPI: `/v1/share/{token}` carries no `apiKey` security
-      requirement and no 401 response
-- [ ] Backend full regression green on the canonical interpreter
-- [ ] Mobile: hook tests green, tsc clean, eslint 0 errors, full suite
-- [ ] Device smoke: mint from the app → share sheet → open the link on a
-      device with no credentials → report renders → revoke → same link
-      shows the expired page
+- [x] Migration 045 applies; `report_shares` columns + UNIQUE token +
+      FKs present; SCHEMA_VERSION 45; both designed pin tests advanced
+      44→45 per their own contract comments
+- [x] `share_repo` lifecycle green incl. the expiry boundary (one second
+      before `expires_at` reads `ok`; the boundary itself reads
+      `expired`) and revocation winning over expiry
+- [x] Mint / list / revoke reject unauthenticated + cross-owner callers
+      (401 and 404 respectively; revoke is creator-scoped and idempotent)
+- [x] Public `GET /v1/share/{token}`: 200 `text/html` live; 410 expired;
+      410 revoked; 404 unknown — all four confirmed in tests AND against
+      the running server over the tailnet URL the phone uses
+- [x] Rendered page contains the diagnosis sections (Vehicle, Reported
+      symptoms, Fault codes, Timeline) and does NOT contain the `Notes`
+      section — verified on a session deliberately seeded with a
+      mechanic-only note, which appeared **zero** times in the page
+- [x] XSS fixture: `<script>` in a vehicle string renders escaped
+- [x] OpenAPI marks `/v1/share/{token}` public (no `apiKey` security, no
+      401) while its authed sibling in the same router still carries
+      both; share route confirmed absent from the rate-limit exempt list
+- [x] Backend full regression green on the canonical interpreter:
+      **4650 passed, 0 failed, 5 skipped** in 9:01
+- [x] Mobile: 10 hook tests green; 70 suites / 874 tests; tsc clean;
+      eslint 0 errors
+- [x] Smoke: mint → public fetch with no credentials → 200 HTML →
+      revoke → same link 410. **In-app tap of the new Share link button
+      is the user's confirmation** (no remote view of the physical
+      phone from this session); the app was relaunched against the new
+      bundle so the affordance is live.
 
 ## Risks
 
@@ -203,3 +213,54 @@ Outputs:
   strings elsewhere in the schema; the boundary test pins that.
 - **Deterministic PDF flag (192B) is unrelated to HTML** but shares the
   "share-flow correctness" heritage — no coupling introduced.
+
+## Deviations from Plan
+
+- **Ownership is proven by building the document, not by a separate
+  check.** The plan said "authed caller owns the session"; the
+  implementation gets there by calling the owner-scoped
+  `build_session_report_doc` first and letting `SessionOwnershipError`
+  map to 404. That buys a second property the plan did not ask for: you
+  cannot mint a link to a report that would fail to render when a
+  customer opens it.
+- **Response hardening beyond the plan.** The page ships
+  `Cache-Control: private, no-store`, `X-Robots-Tag: noindex, nofollow`,
+  `Referrer-Policy: no-referrer`, and an in-document `robots` meta. A
+  private document behind a capability URL should not sit in a shared
+  cache or a search index, and the referrer header would otherwise leak
+  the token to any link the page contains.
+- **The share route does not accept a `preset` from the caller.** The
+  plan's row schema carries one, and it is stored, but the route pins
+  `customer`. "What a customer may see" is a product decision that
+  belongs in the builder, not a per-request parameter a mechanic could
+  widen by accident. The column stays so a future insurance-share is a
+  data change, not a migration.
+- **No CLI** — declared in the plan, restated here so it reads as a
+  scope call rather than an omission.
+- **Smoke shape.** The public flow was exercised end-to-end over HTTP
+  against the tailnet URL the phone actually uses, which is the
+  customer's exact path. Tapping the new button in the app is left to
+  the user, the same posture Phase 199 took with the lock-screen banner.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Backend new tests | 26 (`test_phase200_share.py`) |
+| Backend full regression | 4650 passed, 0 failed, 5 skipped (9:01) |
+| Mobile new tests | +10 → 70 suites / 874 tests green |
+| Mobile static checks | tsc clean · eslint 0 errors |
+| New public surface | 1 route (`GET /v1/share/{token}`) |
+| Smoke | mint 201 → public 200 HTML (3.1 KB, no credentials) → revoke → 410; unknown token → 404 |
+| Mechanic-note leakage into the customer page | 0 occurrences |
+| Commits | backend `7a7c176` plan · `0988f18` build · close docs; mobile `b6fde81` build · close docs |
+
+**Key finding:** the constraint that looked like an obstacle produced the
+better design. `build_session_report_doc` is owner-scoped, so an
+anonymous viewer had no user id to render with — which forced the share
+row to remember its minter. The result is a tighter security property
+than a purpose-built "public report" path would have had: the document a
+customer sees is exactly the one the mechanic was entitled to at mint
+time, and it narrows automatically if that mechanic later loses access.
+Reusing an owner-scoped builder was cheaper AND safer than writing an
+unscoped one for public use.
