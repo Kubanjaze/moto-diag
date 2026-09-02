@@ -9,6 +9,8 @@ No new repo code, no migration, no schema change.
 
 from __future__ import annotations
 
+import hashlib
+import json
 import logging
 from typing import Optional
 
@@ -56,6 +58,31 @@ class DTCListResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
     items: list[DTCResponse]
     total: int
+
+
+class KBExportCategory(BaseModel):
+    """Phase 198 — one dtc_category_meta row in the offline export."""
+
+    model_config = ConfigDict(extra="ignore")
+    category: str
+    description: Optional[str] = None
+    applicable_powertrains: list[str] = Field(default_factory=list)
+    severity_default: Optional[str] = None
+
+
+class KBExportResponse(BaseModel):
+    """Phase 198 — full KB snapshot for the mobile offline cache.
+
+    `kb_version` is a content hash (sha256 over the canonical JSON of
+    the payload) — no `updated_at` column exists, and at KB scale
+    (~55 DTC rows) hashing per request is cheap. Clients store the
+    stamp and refetch the whole snapshot when it changes.
+    """
+
+    model_config = ConfigDict(extra="ignore")
+    kb_version: str
+    dtcs: list[DTCResponse]
+    categories: list[KBExportCategory]
 
 
 class DTCCategoryResponse(BaseModel):
@@ -196,6 +223,51 @@ def list_categories_endpoint(
         )
         for r in rows
     ]
+
+
+@router.get(
+    "/export",
+    response_model=KBExportResponse,
+    summary="Full KB snapshot for offline caching (Phase 198)",
+)
+def kb_export_endpoint(
+    _api_key: ApiKey = Depends(require_api_key),
+    db_path: str = Depends(get_db_path),
+) -> KBExportResponse:
+    """Return every DTC + category-meta row plus a content-hash stamp.
+
+    Mobile offline cache (Phase 198): the client compares `kb_version`
+    to its stored stamp and replaces its local snapshot atomically when
+    they differ. Full-snapshot by design — see the Phase 198 plan's
+    scale finding (delta machinery would outweigh ~55 rows).
+    """
+    dtc_rows = search_dtcs(db_path=db_path)  # no filters = all, code-ordered
+    category_rows = list_all_categories(db_path=db_path)
+
+    dtcs = [_dtc_row_to_response(r) for r in dtc_rows]
+    categories = [
+        KBExportCategory(
+            category=str(r.get("category") or ""),
+            description=r.get("description"),
+            applicable_powertrains=_as_list(r.get("applicable_powertrains")),
+            severity_default=r.get("severity_default"),
+        )
+        for r in category_rows
+    ]
+
+    canonical = json.dumps(
+        {
+            "dtcs": [d.model_dump() for d in dtcs],
+            "categories": [c.model_dump() for c in categories],
+        },
+        sort_keys=True,
+        separators=(",", ":"),
+    )
+    kb_version = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    return KBExportResponse(
+        kb_version=kb_version, dtcs=dtcs, categories=categories,
+    )
 
 
 @router.get(
