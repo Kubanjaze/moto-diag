@@ -157,6 +157,16 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
             db_path=db_path,
         )
 
+        # Phase 199 — best-effort push to the session owner (suppressed
+        # exceptions inside; the analysis result is already persisted).
+        from motodiag.push.events import notify_analysis_complete
+
+        notify_analysis_complete(
+            session_id=int(video.get("session_id", 0)),
+            video_id=video_id,
+            db_path=db_path,
+        )
+
     finally:
         # Cleanup temp frame dir. Tolerant of partial cleanup — frames may
         # have been deleted already by the Vision pipeline if it streamed

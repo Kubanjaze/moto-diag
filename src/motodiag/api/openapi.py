@@ -157,6 +157,17 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "push",
+        "description": (
+            "Phase 199 — mechanic-facing push notifications: device-"
+            "token registration (POST /push/register, upsert/rebind by "
+            "UNIQUE token) and deregistration (DELETE, sign-out "
+            "hygiene). Delivery is APNs-direct behind a PushSender "
+            "seam; triggers are WO transitions/assignment and video-"
+            "analysis completion. Tokens prune on APNs 410."
+        ),
+    },
+    {
         "name": "voice-transcripts",
         "description": (
             "Voice symptom capture: upload a voice memo to a work "

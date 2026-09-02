@@ -3218,6 +3218,35 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS cost_events;
         """,
     ),
+    # Migration 044 — Phase 199: push device-token registry
+    Migration(
+        version=44,
+        name="device_tokens",
+        description=(
+            "Phase 199: Add `device_tokens` — mechanic-facing push "
+            "notification token registry. Invariant: one row per TOKEN "
+            "(UNIQUE); re-registration by a different user REBINDS the "
+            "row (shared-device reality) rather than duplicating. "
+            "Pruned on APNs 410/Unregistered."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS device_tokens (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL REFERENCES users(id)
+                    ON DELETE CASCADE,
+                token TEXT NOT NULL UNIQUE,
+                platform TEXT NOT NULL DEFAULT 'ios',
+                created_at TEXT NOT NULL,
+                last_seen_at TEXT NOT NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_device_tokens_user
+                ON device_tokens(user_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_device_tokens_user;
+            DROP TABLE IF EXISTS device_tokens;
+        """,
+    ),
 ]
 
 

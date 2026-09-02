@@ -95,7 +95,7 @@ class TestServeAppliesMigrationsByDefault:
 
         assert result.exit_code == 0, result.output
         assert get_current_version(db_path) == SCHEMA_VERSION
-        assert get_current_version(db_path) == 43  # f9-noqa: ssot-pin fixture-data: literal `43` here is the live SCHEMA_VERSION the migrations land at (Phase 195B bumped 42→43 via migration 043); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is").
+        assert get_current_version(db_path) == 44  # f9-noqa: ssot-pin fixture-data: literal `44` here is the live SCHEMA_VERSION the migrations land at (Phase 199 bumped 43→44 via migration 044, device_tokens); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is").
         # uvicorn was called (we mocked it; it didn't actually launch)
         assert mock_uvicorn.called
         # Output mentions the migration apply (38 → current SCHEMA_VERSION)

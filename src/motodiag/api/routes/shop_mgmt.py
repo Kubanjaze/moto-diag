@@ -21,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
+from motodiag.push.events import notify_wo_assigned, notify_wo_transition
 from motodiag.auth.deps import (
     AuthedUser, SUBSCRIPTION_TIERS, get_current_user, require_tier,
 )
@@ -668,7 +669,11 @@ def transition_work_order(
         )
     elif action == "reopen":
         reopen_work_order(wo_id, db_path=db_path)
-    return get_work_order(wo_id, db_path=db_path)
+    updated = get_work_order(wo_id, db_path=db_path)
+    # Phase 199 — best-effort push to the assigned mechanic (self-
+    # suppressed inside; never raises into the response path).
+    notify_wo_transition(updated, action, user.id, db_path=db_path)
+    return updated
 
 
 @router.post(
@@ -706,7 +711,11 @@ def assign_work_order_mechanic(
         assign_mechanic(
             wo_id, user_id=req.mechanic_user_id, db_path=db_path,
         )
-    return get_work_order(wo_id, db_path=db_path)
+    updated = get_work_order(wo_id, db_path=db_path)
+    # Phase 199 — tell the newly assigned mechanic (best-effort,
+    # self-suppressed inside).
+    notify_wo_assigned(updated, req.mechanic_user_id, user.id, db_path=db_path)
+    return updated
 
 
 # ---------------------------------------------------------------------------
