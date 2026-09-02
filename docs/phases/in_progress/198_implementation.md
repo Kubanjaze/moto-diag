@@ -1,6 +1,15 @@
 # Phase 198 — Offline Mode + Local Database (Mobile)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-02
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-02
+*(v1.1: backend Commit 0 (`a2c3614`, 4 tests canonical-green) + Spike Gate
+PASS (op-sqlite round trip + netinfo on-device under New Arch) + mobile
+build (`e652197`, 68 suites / 851 tests green) same day. Device smoke =
+remaining gate. Deviations: notes ride `update_session` (PATCH) — no
+dedicated notes endpoint exists; SQL adapters covered by device smoke
+with logic layers unit-tested against store fakes; pending badge polls
+(no event bus, noted MVP plumbing); jest.setup.js global native mocks
+added. Ops UX: offline create shows "Saved offline" + goBack, queued
+sessions surface via badge count, not in the server-backed list.)*
 
 ## Existing-code audit (Step 0 — run 2026-09-02, before this plan)
 
