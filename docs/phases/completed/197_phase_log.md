@@ -1,7 +1,7 @@
 # Phase 197 — Live Sensor Data Dashboard — Phase Log
 
-**Status:** 📋 Planned
-**Started:** 2026-08-25 | **Completed:** —
+**Status:** ✅ Complete
+**Started:** 2026-08-25 | **Completed:** 2026-09-02
 **Repos:** `Kubanjaze/moto-diag-mobile` branch `phase-197-live-sensor-dashboard`
 (code); `Kubanjaze/moto-diag` (this ledger doc)
 
@@ -41,3 +41,24 @@
   the phase's own tests pre-commit.
 - **Remaining gate:** device smoke — engine on → gauges move; n/a for
   unexposed PIDs. Same Xcode-Run + MX+ procedure as 196B's smoke.
+
+---
+
+### 2026-09-02 10:20 — DEVICE SMOKE: PASS — Phase 197 ✅ Complete
+
+- **Run (Debug, car ECU over MX+/classic — J1979-identical, all six
+  channels exercised live):** coolant temp correct ("chilling"), vehicle
+  speed moved with the vehicle, throttle position tracking, intake air
+  temp correct, battery voltage and engine RPM responding properly. Full
+  core-six support on this vehicle — every gauge live, none n/a.
+- **Provenance note:** car, not motorcycle — protocol-identical and the
+  stronger functional exercise; the motorcycle-specific subset/n-a path
+  is unit-covered and filed as **F49** in mobile `docs/FOLLOWUPS.md` with
+  an F47-style deterministic Step-0 watcher (any future phase touching
+  pids/poller/LiveData folds it in; or first bike on the bench runs it).
+- Docs moved `in_progress/` → `completed/` in this commit; mobile project
+  docs updated (implementation.md 0.1.9 w/ 197 row, ROADMAP ✅, root
+  phase_log completion entry).
+- **Milestone:** three consecutive phases (196 → 196B → 197) took the
+  product from zero OBD connectivity to a smoked live-data dashboard over
+  a proven two-transport seam.

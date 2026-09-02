@@ -113,8 +113,12 @@ Outputs (mobile repo, branch `phase-197-live-sensor-dashboard`):
 - [x] Wiring guard: connected-pane "Live data" button → navigate('LiveData')
       + holder populated/cleared (ObdConnect.smoke)
 - [x] Full mobile regression: 65 suites / 837 tests green; tsc clean
-- [ ] Device smoke: real adapter, engine running — gauges move; unsupported
-      PIDs show n/a; recorded here + phase log
+- [x] Device smoke (2026-09-02, car ECU — protocol-identical J1979; the
+      stronger functional check since all six channels exercise): engine
+      running — RPM and voltage responding, coolant + intake temps correct,
+      throttle tracking, vehicle speed moved while driving. No n/a on this
+      vehicle (full core-six support). Motorcycle subset/n-a-path
+      verification filed as **F49** (deterministic Step-0 watcher).
 
 ## Deviations from Plan
 
