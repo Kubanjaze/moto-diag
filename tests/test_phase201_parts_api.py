@@ -450,6 +450,36 @@ class TestPartsArrivedProducer:
         _transition(shop_ctx, wop, action)
         assert calls == []
 
+    def test_a_customer_with_no_email_is_not_an_error(
+        self, shop_ctx, monkeypatch,
+    ):
+        """The commonest real case: a walk-in with no contact on file.
+        The queue refuses, the part is still received, the push still
+        goes, and the log says why in one line without a traceback."""
+        calls = self._wire_spy(monkeypatch)
+        with get_connection(shop_ctx["db"]) as conn:
+            conn.execute("UPDATE customers SET email = NULL WHERE id = ?", (
+                conn.execute(
+                    "SELECT customer_id FROM work_orders WHERE id = ?",
+                    (shop_ctx["wo_id"],),
+                ).fetchone()[0],
+            ))
+        wop = _add(shop_ctx, shop_ctx["part_a"]).json()["id"]
+        _transition(shop_ctx, wop, "ordered")
+        r = _transition(shop_ctx, wop, "received")
+
+        assert r.status_code == 200
+        assert r.json()["status"] == "received"
+        # The mechanic push is independent of the customer's contact
+        # details and must still fire.
+        assert len(calls) == 1
+        with get_connection(shop_ctx["db"]) as conn:
+            rows = conn.execute(
+                "SELECT event FROM customer_notifications "
+                "WHERE work_order_id = ?", (shop_ctx["wo_id"],),
+            ).fetchall()
+        assert rows == []
+
     def test_a_queue_failure_does_not_break_receiving(
         self, shop_ctx, monkeypatch,
     ):

@@ -23,6 +23,8 @@ from __future__ import annotations
 
 from typing import Optional
 
+import logging
+
 import click
 
 
@@ -129,6 +131,28 @@ def register_serve(cli_group: click.Group) -> None:
                     f"DB schema up to date at version {after} "
                     f"(code SCHEMA_VERSION={SCHEMA_VERSION})"
                 )
+
+        # === F57 fix: make the app's own logs actually reach the log ===
+        # `uvicorn.run(log_level=...)` configures uvicorn's loggers ONLY.
+        # Every `motodiag.*` logger inherits the root logger, which
+        # defaults to WARNING with no handler — so `logger.info(...)`
+        # was silently dropped in the running server while
+        # `logger.exception(...)` still surfaced via logging's
+        # last-resort handler. That made F52's "log successful pushes"
+        # false in production even though its test passed, because
+        # `caplog.at_level` forces the level the server never set.
+        # Caveat: this runs in the CLI process, so it covers the
+        # default single-worker, no-reload deployment. Under
+        # `--workers N` or `--reload` uvicorn re-imports in
+        # subprocesses and this does not follow; see F57.
+        motodiag_logger = logging.getLogger("motodiag")
+        motodiag_logger.setLevel(effective_level.upper())
+        if not motodiag_logger.handlers:
+            handler = logging.StreamHandler()
+            handler.setFormatter(
+                logging.Formatter("%(levelname)s:     %(name)s - %(message)s"),
+            )
+            motodiag_logger.addHandler(handler)
 
         click.echo(
             f"MotoDiag API starting on "

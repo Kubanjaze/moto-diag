@@ -48,7 +48,10 @@ from motodiag.api.routes.shop_mgmt import require_shop_access
 from motodiag.auth.deps import AuthedUser, get_current_user, require_tier
 from motodiag.core.database import get_connection
 from motodiag.push.events import notify_parts_arrived
-from motodiag.shop.notifications import trigger_notification
+from motodiag.shop.notifications import (
+    NotificationContextError,
+    trigger_notification,
+)
 from motodiag.shop.parts_needs import (
     ConsolidatedPartNeed,
     Requisition,
@@ -219,7 +222,17 @@ def _fire_parts_arrived(
             triggered_by_user_id=user.id,
             db_path=db_path,
         )
+    except NotificationContextError as exc:
+        # EXPECTED and common: the work order's customer has no email
+        # (or is the id-1 "Unassigned" sentinel). Not a defect — plenty
+        # of real jobs are walk-ins with no contact on file. One
+        # readable line, no traceback: a stack trace here would train
+        # everyone to ignore this log.
+        logger.info(
+            "parts_arrived not queued for wo=%s: %s", wo.get("id"), exc,
+        )
     except Exception:  # noqa: BLE001 — a queue hiccup never blocks receiving parts
+        # UNEXPECTED: keep the traceback, this one deserves attention.
         logger.exception(
             "parts_arrived queue trigger failed for wo=%s (suppressed)",
             wo.get("id"),

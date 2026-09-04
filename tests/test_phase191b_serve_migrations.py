@@ -27,6 +27,8 @@ Tests guard the contract:
 
 from __future__ import annotations
 
+import io
+import logging
 from unittest.mock import patch
 
 import click
@@ -235,3 +237,73 @@ class TestUvicornLaunchSurface:
         # First positional arg or 'app' kwarg is the import string
         assert args[0] == "motodiag.api:create_app"
         assert kwargs.get("factory") is True
+
+
+# ---------------------------------------------------------------------
+# F57 — the app's own logs must actually reach the running server's log
+# ---------------------------------------------------------------------
+
+
+class TestServeConfiguresApplicationLogging:
+    """`uvicorn.run(log_level=...)` configures uvicorn's loggers ONLY.
+
+    Every `motodiag.*` logger inherits root, which defaults to WARNING
+    with no handler, so `logger.info(...)` was dropped in the running
+    server while `logger.exception(...)` still surfaced via logging's
+    last-resort handler. The visible cost: Phase 199/F52 shipped "a
+    successful push leaves a trace" and it was false in production —
+    the test passed only because `caplog.at_level` forces the level the
+    server never set. Found by smoking Phase 201's parts_arrived push.
+    """
+
+    def _reset(self):
+        logger = logging.getLogger("motodiag")
+        for handler in list(logger.handlers):
+            logger.removeHandler(handler)
+        logger.setLevel(logging.NOTSET)
+        return logger
+
+    def test_serve_sets_the_motodiag_logger_to_the_requested_level(
+        self, cli_with_serve,
+    ):
+        root, _ = cli_with_serve
+        logger = self._reset()
+        assert logger.level == logging.NOTSET
+
+        runner = CliRunner()
+        with patch("uvicorn.run"):
+            result = runner.invoke(root, ["serve", "--log-level", "info"])
+
+        assert result.exit_code == 0, result.output
+        assert logger.level == logging.INFO
+        assert logger.handlers, (
+            "a level without a handler still discards the record"
+        )
+        self._reset()
+
+    def test_an_info_record_survives_the_configuration(
+        self, cli_with_serve,
+    ):
+        """The property that actually matters — not that a level was
+        set, but that an INFO record from a real app module is emitted."""
+        root, _ = cli_with_serve
+        logger = self._reset()
+        runner = CliRunner()
+        with patch("uvicorn.run"):
+            runner.invoke(root, ["serve", "--log-level", "info"])
+
+        stream = io.StringIO()
+        handler = logging.StreamHandler(stream)
+        logger.addHandler(handler)
+        logging.getLogger("motodiag.push.events").info("push sent to user 1")
+        assert "push sent to user 1" in stream.getvalue()
+        self._reset()
+
+    def test_a_quieter_level_still_suppresses_info(self, cli_with_serve):
+        root, _ = cli_with_serve
+        logger = self._reset()
+        runner = CliRunner()
+        with patch("uvicorn.run"):
+            runner.invoke(root, ["serve", "--log-level", "warning"])
+        assert logger.level == logging.WARNING
+        self._reset()
