@@ -245,7 +245,7 @@ Outputs:
   object** rather than three more positional parameters. Phase 195's own
   docstring predicted this exact moment and asked the phase that crossed
   the line to surface it rather than refactor preemptively — so the
-  finding is filed (**F59**) and the stopgap is documented in place.
+  finding is filed (**F60**) and the stopgap is documented in place.
 - **The plan said "no CLI".** Held. `mark_part_installed` and the time
   entries both lack CLI parity now; filed together rather than
   half-adding one.

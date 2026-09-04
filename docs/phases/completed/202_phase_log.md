@@ -104,5 +104,5 @@ recompute on real hardware.
 - `202_implementation.md` → v1.1 (checklist with an honest `[~]` on the
   device row, deviations, results, key finding). Docs → `completed/`.
 - Mobile project docs: `implementation.md` 0.2.3 → 0.2.4 + Phase History
-  row, root `phase_log.md` entry, ROADMAP 202 ✅, **F59/F60/F61** filed.
+  row, root `phase_log.md` entry, ROADMAP 202 ✅, **F60/F61/F62** filed.
 - Branches fast-forwarded into `master` / `main`, pushed.
