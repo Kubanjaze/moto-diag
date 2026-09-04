@@ -3324,6 +3324,58 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE diagnostic_sessions DROP COLUMN customer_id;
         """,
     ),
+    # Migration 047 — Phase 202: per-mechanic labor time entries
+    Migration(
+        version=47,
+        name="work_order_time_entries",
+        description=(
+            "Phase 202: Add `work_order_time_entries` — the per-mechanic "
+            "labor ledger. Time worked was previously UNRECONSTRUCTIBLE: "
+            "`start_work` overwrites `work_orders.started_at` on every "
+            "start and `pause_work` stamps nothing, so a started/paused/ "
+            "resumed job kept one timestamp and no record of the gap. "
+            "Closed entries sum into the existing `work_orders."
+            "actual_hours` sink that invoicing, reconciliation and "
+            "analytics already consume. The partial UNIQUE index "
+            "enforces one OPEN entry per mechanic in the database rather "
+            "than by convention — an application-level check would race "
+            "a double-tap or a second device."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS work_order_time_entries (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                started_at TEXT NOT NULL,
+                ended_at TEXT,
+                duration_seconds INTEGER,
+                source TEXT NOT NULL DEFAULT 'timer'
+                    CHECK (source IN ('timer', 'manual')),
+                needs_review INTEGER NOT NULL DEFAULT 0,
+                note TEXT,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_time_entries_wo
+                ON work_order_time_entries(work_order_id);
+            CREATE INDEX IF NOT EXISTS idx_time_entries_user
+                ON work_order_time_entries(user_id, started_at);
+            -- One OPEN entry per mechanic, enforced by the database.
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_time_entries_one_open
+                ON work_order_time_entries(user_id)
+                WHERE ended_at IS NULL;
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_time_entries_one_open;
+            DROP INDEX IF EXISTS idx_time_entries_user;
+            DROP INDEX IF EXISTS idx_time_entries_wo;
+            DROP TABLE IF EXISTS work_order_time_entries;
+        """,
+    ),
 ]
 
 

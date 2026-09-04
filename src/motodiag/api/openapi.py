@@ -171,6 +171,20 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "time-tracking",
+        "description": (
+            "Phase 202 — mechanic labor time tracking. Clock in/out per "
+            "work order; closed entries sum into the existing "
+            "`work_orders.actual_hours` sink that invoicing and analytics "
+            "consume. One OPEN entry per mechanic (database-enforced): "
+            "clocking in elsewhere auto-closes the previous one and the "
+            "response says which. Entries are attributed to the CALLER, "
+            "never to a user id in the body. An entry left running past "
+            "the configured cap is auto-closed AT the cap and flagged "
+            "`needs_review` rather than silently billing the gap."
+        ),
+    },
+    {
         "name": "push",
         "description": (
             "Phase 199 — mechanic-facing push notifications: device-"

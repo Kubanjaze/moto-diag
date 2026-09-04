@@ -588,7 +588,7 @@ class TestGate9AntiRegression:
         # generalize Phase 191C's no-hardcoded-model-ids lint rule to
         # "no hardcoded SSOT-managed constants in tests" — would have
         # caught this missed-pin-update at Phase 191B finalize.
-        assert SCHEMA_VERSION == 46  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 45→46 at F55 (migration 046 added diagnostic_sessions.customer_id). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
+        assert SCHEMA_VERSION == 47  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 46→47 at Phase 202 (migration 047 added work_order_time_entries, the per-mechanic labor ledger). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
 
     def test_track_h_summary_doc_exists(self):
         path = (

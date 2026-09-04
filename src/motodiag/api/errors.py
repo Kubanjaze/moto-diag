@@ -69,6 +69,9 @@ def _exc_class_chain():
         InvalidPartNeedTransition, PartNotInCatalogError,
         WorkOrderPartNotFoundError,
     )
+    from motodiag.shop.time_entries import (
+        NoOpenTimeEntryError, TimeEntryNotFoundError,
+    )
     from motodiag.shop.rbac import (
         InvalidRoleError, MechanicNotInShopError, PermissionDenied,
         ShopMembershipNotFoundError,
@@ -143,6 +146,10 @@ def _exc_class_chain():
         (WorkOrderNotFoundError, 404, "work-order-not-found",
          "Work order not found"),
         (IssueNotFoundError, 404, "issue-not-found", "Issue not found"),
+        (TimeEntryNotFoundError, 404, "time-entry-not-found",
+         "Time entry not found."),
+        (NoOpenTimeEntryError, 409, "no-open-time-entry",
+         "No labor timer is running for you on this work order."),
         (WorkOrderPartNotFoundError, 404, "work-order-part-not-found",
          "Work-order parts line not found"),
         (PartNotInCatalogError, 404, "part-not-in-catalog",

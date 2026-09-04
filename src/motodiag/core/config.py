@@ -82,6 +82,13 @@ class Settings(BaseSettings):
     #: right for dev/tailnet and wrong behind a proxy that rewrites
     #: Host — set it explicitly in any real deployment.
     public_base_url: str = ""
+
+    #: Phase 202 — a labor timer left running longer than this is
+    #: auto-closed AT `started_at + this` (not at discovery time) and
+    #: flagged `needs_review`. Long enough not to trip a double shift,
+    #: short enough to catch an overnight. Settings-backed so a shop can
+    #: change it without a deploy.
+    max_open_time_entry_hours: float = 12.0
     # Phase 183 — OpenAPI servers list. Comma-separated
     # "url|description" pairs; parsed to list[dict] by the
     # `api_servers_list` property. Default includes only the local

@@ -22,6 +22,10 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.push.events import notify_wo_assigned, notify_wo_transition
+from motodiag.shop.time_entries import (
+    close_open_entries_for_wo,
+    total_seconds_for_wo,
+)
 from motodiag.auth.deps import (
     AuthedUser, SUBSCRIPTION_TIERS, get_current_user, require_tier,
 )
@@ -659,8 +663,28 @@ def transition_work_order(
     elif action == "resume":
         resume_work(wo_id, db_path=db_path)
     elif action == "complete":
+        # Phase 202 — a job that is done has nobody working on it, so
+        # close any running timers first; their seconds must be in the
+        # total before it is billed.
+        close_open_entries_for_wo(wo_id, db_path=db_path)
+        hours = req.actual_hours
+        if hours is None:
+            # Auto-fill from the labor ledger. MANUAL ALWAYS WINS: this
+            # branch only runs when the caller supplied nothing, which
+            # is what keeps the Gate 9 invoice contract and the
+            # estimated_hours fallback byte-identical. A WO with no
+            # entries still yields None here and falls through to the
+            # pre-202 behaviour.
+            tracked = total_seconds_for_wo(wo_id, db_path=db_path)
+            if tracked > 0:
+                hours = round(tracked / 3600.0, 2)
+                logger.info(
+                    "wo=%s completed with no actual_hours supplied; "
+                    "filled %.2fh from %ss of tracked labor",
+                    wo_id, hours, tracked,
+                )
         complete_work_order(
-            wo_id, actual_hours=req.actual_hours, db_path=db_path,
+            wo_id, actual_hours=hours, db_path=db_path,
         )
     elif action == "cancel":
         cancel_work_order(
