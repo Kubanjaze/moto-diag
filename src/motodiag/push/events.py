@@ -105,6 +105,35 @@ def notify_wo_assigned(
         logger.exception("notify_wo_assigned failed (suppressed)")
 
 
+def notify_parts_arrived(
+    wo: dict,
+    line: dict,
+    acting_user_id: int,
+    db_path: Optional[str] = None,
+) -> None:
+    """Phase 201 — push the assigned mechanic when a part line is
+    marked received. The `parts_arrived` producer Phase 170's enum
+    waited for; this is the mechanic half, the customer half is the
+    170 queue row the route writes alongside."""
+    try:
+        assignee = wo.get("assigned_mechanic_user_id")
+        if not assignee or assignee == acting_user_id:
+            return
+        qty = int(line.get("quantity") or 1)
+        what = (
+            str(line.get("description") or line.get("part_description")
+                or line.get("slug") or line.get("part_slug") or "part")
+        ).strip()
+        title = f"Parts arrived for work order #{wo.get('id')}"
+        body = f"{qty}× {what}" if qty > 1 else what
+        _send_to_user(
+            int(assignee), title, body,
+            thread_id=f"wo-{wo.get('id')}", db_path=db_path,
+        )
+    except Exception:  # noqa: BLE001 — best-effort by design
+        logger.exception("notify_parts_arrived failed (suppressed)")
+
+
 def notify_analysis_complete(
     session_id: int,
     video_id: int,

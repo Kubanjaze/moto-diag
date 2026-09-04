@@ -157,6 +157,20 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "parts",
+        "description": (
+            "Phase 201 — parts ordering from mobile. Catalog browse "
+            "(free text or by bike), a work order's part lines (its "
+            "open lines ARE the cart), per-line lifecycle "
+            "open → ordered → received → installed (+ cancel), the "
+            "Order action (every open line → ordered), consolidated "
+            "shop-wide needs, and requisition snapshots. Marking a "
+            "line received produces the `parts_arrived` customer-queue "
+            "event and a push to the assigned mechanic. Internal "
+            "lifecycle only — no supplier purchase orders (Track O)."
+        ),
+    },
+    {
         "name": "push",
         "description": (
             "Phase 199 — mechanic-facing push notifications: device-"
