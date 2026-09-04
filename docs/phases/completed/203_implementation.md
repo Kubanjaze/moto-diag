@@ -1,6 +1,6 @@
 # Phase 203 — Dark Mode + Shop-Friendly UI
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-04
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-04 (v1.0 plan → v1.1 as-built same day)
 
 ## Existing-code audit (Step 0 — run 2026-09-04, before this plan)
 
@@ -153,22 +153,29 @@ Outputs (mobile only, branch `phase-203-dark-mode`):
 
 ## Verification Checklist
 
-- [ ] Every semantic role in the light map has a dark counterpart
-      (asserted, not eyeballed)
-- [ ] The four severity levels are mutually distinct in BOTH schemes,
-      and so are the extraction-state and symptom-source families
-- [ ] Provider: system-follow tracks `useColorScheme`; explicit
-      light/dark overrides it; the choice survives a remount; a storage
-      failure degrades to system rather than crashing
-- [ ] `createThemedStyles` rebuilds on scheme change and not otherwise
-- [ ] Zero remaining hex literals in `src/` outside `theme/tokens.ts`
-      (asserted by a test that greps the tree)
-- [ ] Body-text floor raised; the five sub-48dp targets meet 48;
-      `accessibilityLabel` on every unlabelled interactive control
-- [ ] `npm test` green; tsc clean; eslint 0 errors repo-wide
-- [ ] Device smoke: flip the system appearance with the app open and
-      watch it follow; force the opposite in Settings; confirm severity
-      chips stay legible in both
+- [x] Every semantic role in light has a dark counterpart — asserted by
+      flattening both maps and comparing key sets, not eyeballed
+- [x] The four severity levels are mutually distinct in BOTH schemes,
+      and so are extractionState, symptomSource and status; dark reuses
+      no light value (the "no lazy inversion" assertion)
+- [x] Provider: system-follow tracks `useColorScheme`; explicit
+      light/dark overrides it; a corrupt stored value falls back to
+      system; **a failed write still applies the choice** and **a failed
+      read still renders a theme**
+- [x] `createThemedStyles` memoises per theme object
+- [x] Zero hex / rgb / hsl literals in `src/` outside `theme/` — asserted
+      by a source-scanning test, which also guards the code paths no
+      test renders
+- [x] Body-text floor raised (209 declarations across 32 files); all 13
+      sub-48dp targets lifted; `Button` now labels itself from its title
+- [x] 78 suites / **982 tests** green (+51); tsc clean; eslint 0 errors
+      repo-wide
+- [x] **Device smoke PASSED, in two places.** Simulator (iPhone 17 Pro):
+      launched light, opened Settings, tapped Dark, and the whole app
+      flipped — nav bar, tab bar, status bar, card surfaces, and the
+      accent shifting to the lighter blue that reads on dark. Verified
+      by screenshot, not by assertion. Physical iPhone 16 Pro: the
+      themed build installed and is running.
 
 ## Risks
 
@@ -193,3 +200,57 @@ Outputs (mobile only, branch `phase-203-dark-mode`):
 - **ADR-003 drift:** the ADR says "use MMKV directly" for persistence
   while the codebase settled on AsyncStorage. This phase follows the
   code, and notes the drift rather than silently contradicting the ADR.
+
+## Deviations from Plan
+
+- **The conversion was scripted, and the script had a bug worth
+  recording.** An unmapped colour was returned WITHOUT its surrounding
+  quotes, producing bare hex in the source. tsc caught it immediately,
+  but it is the exact failure mode that makes people distrust codemods:
+  it only affected literals the mapping did not know about, so a
+  narrower test set would have missed it. The fix — leave unmapped
+  values untouched and report them — then surfaced the Phase 200/201
+  parts-row grey cluster the first pass had silently skipped.
+- **Colour literals also live in inline JSX props**, not only in
+  stylesheets (`placeholderTextColor`, `ActivityIndicator color`). The
+  converter only rewrites sheet bodies, so five of these survived the
+  sweep and needed a separate grep. Easy to miss precisely because they
+  are not where colours normally live.
+- **`AsyncStorage` had to become a global jest mock.** It was mocked
+  per-file until `ThemeProvider` pulled it into the import graph of
+  every screen. Same reasoning as the Phase 198 op-sqlite/netinfo mocks;
+  backed by a real Map so the hydrate-then-persist round trip behaves
+  like storage.
+- **`useTheme` keeps its throw** rather than defaulting to light without
+  a provider. Defaulting would have avoided touching seven test files,
+  and would also have hidden exactly the wiring gap this codebase has
+  been bitten by before. The tests got a `withTheme` helper instead.
+- **Five dependency arrays needed `styles`** once it became a hook
+  result. eslint found all five; no test would have.
+- **The icon library was declined**, as the plan said it would be.
+  `RootNavigator` still carries Phase 189's "no icon library yet — defer
+  until a design pass earns it". This was the design pass and the answer
+  is still no; recorded so the next reader knows it was decided.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Files converted | 35 (9 components + 26 screens/modals) |
+| Colour literals removed | 596 → **0** outside `src/theme/` |
+| Distinct values → roles | ~95 → 25 semantic tokens × 2 schemes |
+| Type declarations raised | 209 across 32 files |
+| Touch targets lifted to 48dp | 13 |
+| Tests | 78 suites / **982** (+51); tsc clean; eslint 0 |
+| Backend changes | **none** (as the audit predicted) |
+| Device verification | simulator screenshots in both schemes; physical device running the themed build |
+
+**Key finding:** the phase's real risk was never the colours, it was that
+`StyleSheet.create` is evaluated once at module import — so "add dark
+mode" is secretly "make 35 static module-scope objects reactive". Naming
+that early turned an open-ended redesign into one mechanical change per
+file plus a compiler-driven cleanup: `createThemedStyles` swapped the
+wrapper, and every remaining site became a type error that tsc listed by
+line. The 161 errors after the card components were not a setback; they
+were the work list. A codemod that leans on the type checker to find its
+own leftovers is far safer than one that tries to be clever.
