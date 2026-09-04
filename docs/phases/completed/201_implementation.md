@@ -1,6 +1,6 @@
 # Phase 201 — Parts Ordering from Mobile
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-03
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-04 (v1.0 plan 2026-09-03)
 
 ## Existing-code audit (Step 0 — run 2026-09-03, before this plan)
 
@@ -156,25 +156,35 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Every parts route rejects: no key (401), individual tier (402),
-      non-member (403), other shop's WO (404)
-- [ ] Cart round-trip: add → list shows line `open` → PATCH quantity →
-      DELETE removes; add same part twice bumps quantity
-- [ ] Transitions: `open→ordered→received→installed` each 200;
-      `open→received` and `installed→ordered` → 409 with the mapped
-      ProblemDetail; `cancel` from `open`/`ordered` → 200
-- [ ] Bulk order marks only `open` lines and returns the count; a second
-      call returns 0
-- [ ] `received` creates exactly one `customer_notifications` row with
-      `event='parts_arrived'` and one push to the assignee; actor ==
-      assignee → no push; unassigned → no push
-- [ ] Requisition create → list → show round-trip over HTTP
-- [ ] OpenAPI: all parts paths carry the `parts` tag and `apiKey` security
-- [ ] Backend full regression green on the canonical interpreter
-- [ ] Mobile: hooks + builder + screen tests green; tsc clean; eslint 0
-- [ ] No new client store (`src/store*` absent) — the ADR-003 guard
-- [ ] Device smoke: browse → add → Order → second member marks received →
-      push on the phone → WO section shows `received`
+- [x] Every parts route rejects: no key (401), individual tier (402),
+      non-member (403), other shop's WO (404) — and a part LINE from a
+      different WO is 404 too, so a line id cannot be edited across WOs
+- [x] Cart round-trip: add → list → PATCH quantity → DELETE; adding the
+      same part twice bumps quantity and returns 200 + `merged: true`
+- [x] Transitions: `open→ordered→received→installed` each 200; skipping
+      a step and going backwards each 409 through the existing
+      ProblemDetail mapping; `cancel` from open/ordered 200
+- [x] Bulk order marks only `open` lines and returns the count; the
+      second press returns 0
+- [x] `received` creates exactly one `parts_arrived` queue row and one
+      push to the assignee; actor == assignee → no push; unassigned →
+      no push; a customer with no email is NOT an error
+- [x] Requisition create → list → show over HTTP; another shop's
+      requisition is 404
+- [x] OpenAPI: every parts path carries the `parts` tag and `apiKey`
+      security; `/parts/requisitions` is not swallowed by
+      `/parts/{part_id}`
+- [x] Backend full regression green on the canonical interpreter
+- [x] Mobile: hooks + builder + screen tests green; tsc clean; **eslint
+      0 errors repo-wide** (which required fixing a pre-existing Phase
+      187 error `eslint .` had been carrying — see Deviations)
+- [x] No new client store — the cart is server state, ADR-003 untripped
+- [~] Device smoke: **the parts_arrived push was verified landing on the
+      real phone through live APNs.** The in-app browse → add → Order
+      journey could NOT be exercised: the tailnet the app's baked
+      `API_BASE_URL` points at stopped routing partway through the
+      session (see Deviations). Everything behind that URL was verified
+      over HTTP instead.
 
 ## Risks
 
@@ -198,3 +208,74 @@ Outputs:
   reserved there. This phase touches none of `vendors` /
   `inventory_items`, and the ledger should say so to keep the boundary
   visible.
+
+## Deviations from Plan
+
+- **No migration, as predicted — but also no new domain logic at all.**
+  The plan called this "composition"; it turned out to be stricter than
+  that. Every branch calls a Track G function. The only new backend
+  behaviour is the `parts_arrived` producer and two compositions the
+  domain layer does not do: add-dedupe (bump an existing open line
+  rather than grow a second) and delete-vs-cancel by status.
+- **The plan's "AI sourcing out of MVP" held**, and `vendors` /
+  `inventory_items` were not touched, keeping the Track O 279 boundary
+  intact.
+- **A latent bug in existing code was found and NOT fixed** (filed as
+  F58): `list_parts_for_shop_open_wos` calls
+  `get_xrefs(part_id)` where the function takes an *OEM part number*,
+  then reads `role` / `part` keys it never returns — inside a bare
+  `except: pass`. So `oem_cost_cents` / `aftermarket_cost_cents` on
+  every `ConsolidatedPartNeed` have always been `None`. Out of this
+  phase's scope, and changing those values could move things other
+  tests pin.
+- **F57, found by smoking this phase, was fixed in its own commit.**
+  The serve log had no application log lines at all, ever:
+  `uvicorn.run(log_level=...)` configures uvicorn's own loggers, and
+  every `motodiag.*` logger inherits root (WARNING, no handler), so
+  INFO was discarded while `logger.exception` still surfaced via the
+  last-resort handler. That made **F52's "a successful push leaves a
+  trace" false in production** while its test passed, because
+  `caplog.at_level` forces the level the server never set.
+- **An unrelated pre-existing lint error was fixed in its own commit.**
+  `eslint .` had been red since Phase 187 (`Buffer` undefined in a Node
+  build script linted with the RN config) while every commit passed,
+  because `lint-staged` only lints STAGED files. Worth knowing: the
+  repo's lint gate has never covered unstaged or untouched files.
+- **Two first-run test failures were fixture bugs worth recording**, not
+  route bugs: catalog `make` is stored lowercased by `add_part`, so
+  seeding "Honda" makes fitment search silently return nothing; and
+  `create_work_order` lands in `draft`, which the shop-wide
+  consolidation excludes, so a draft WO contributes nothing to needs or
+  requisitions.
+- **Device smoke was split by an environment failure.** The push half
+  was verified on the real phone (APNs does not use the tailnet). The
+  in-app half could not run: the Mac's tailnet stopped routing mid-
+  session — `tailscale status` reports Running and online, `tailscale
+  serve` still shows the proxy config, the backend listens on `*:8000`
+  and answers on loopback, but both the `ts.net` name and the raw
+  tailnet IP time out. The documented remedy
+  (`dev_loop_wireless_parked.md`) is a System Settings VPN toggle or a
+  reboot, which is the user's call.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Backend new tests | 37 (`test_phase201_parts_api.py`) + 3 (F57) |
+| Backend full regression | **4702 passed, 0 failed, 5 skipped** (8:36) |
+| Mobile new tests | +20 → 73 suites / 896 green |
+| Mobile static checks | tsc clean · eslint 0 errors repo-wide |
+| New HTTP surface | 12 routes, 0 migrations |
+| Domain functions newly reachable from the app | 18 (all of `parts_needs`) + 4 catalog readers |
+| Smoke | browse-by-bike 5 parts · dedupe `merged: true` · cart $155.96 · Order 2 then 0 · illegal skip 409 · `parts_arrived` queued to the right recipient · **push landed on the phone via live APNs** |
+| Follow-ups filed | F57 (residual), F58, F59 |
+
+**Key finding:** the phase's own smoke is what caught the more serious
+bug, and it was not in this phase's code. Chasing a missing
+`parts_arrived` log line exposed that the server had never emitted a
+single application log line — which meant a fix shipped two phases ago
+(F52's "log successful pushes") had been inert in production while its
+test passed. A test that forces the log level cannot see a server that
+never sets one. That is the same verify-the-artifact-not-the-settings
+lesson Phase 199 wrote down, arriving a third time, and it argues for
+smoking the observability, not just the behaviour.
