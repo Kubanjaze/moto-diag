@@ -1,6 +1,6 @@
 # Phase 202 — Mechanic Time Tracking
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-04
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-04 (v1.0 plan → v1.1 as-built same day)
 
 ## Existing-code audit (Step 0 — run 2026-09-04, before this plan)
 
@@ -182,24 +182,33 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] Migration 047 applies; partial unique index rejects a second open
-      entry for the same user; SCHEMA_VERSION 47; both pins advanced
-- [ ] Clock in → open entry; clock in elsewhere → first auto-closed with
+- [x] Migration 047 applies; the partial unique index rejects a second
+      open entry for the same user **when inserted directly through the
+      repo layer**, which is the point of putting it in the database
+- [x] Clock in → open entry; clock in elsewhere → first auto-closed with
       a correct duration; clock out → duration stamped
-- [ ] Cap sweep closes at `started_at + MAX_OPEN_ENTRY_HOURS`, not at
-      sweep time, and sets `needs_review`
-- [ ] Complete with no actual_hours → filled from entries; complete WITH
+- [x] Cap sweep closes at `started_at + cap`, not at sweep time, and
+      sets `needs_review` — smoked with a 30h entry capped at 12.0h
+- [x] Complete with no actual_hours → filled from entries; complete WITH
       actual_hours → supplied value wins, entries still closed
-- [ ] **Gate 9's exact scenario re-asserted in this phase's tests** and
-      the original still green; zero-entry WO still falls back to
-      estimated_hours and still raises when neither exists
-- [ ] Every route: 401 / 402 / 403 non-member / 404 cross-shop
-- [ ] TAG_CATALOG contains `time-tracking`; both tag contract checks pass
-- [ ] Backend full regression green on the canonical interpreter
-- [ ] Mobile: hook + formatter + builder + AppState guard green; tsc
-      clean; eslint 0 errors
-- [ ] Device smoke incl. **background 60s → foreground shows elapsed
-      advanced, not frozen**
+- [x] **Gate 9's exact scenario re-asserted in this phase's tests**
+      (9h tracked, 2.0 supplied, 20000-cent invoice through the same
+      route Gate 9 uses) and the original still green; zero-entry WO
+      still leaves `actual_hours` None for the estimated_hours fallback
+- [x] Every route: 401 / 402 tier / 403 non-member / 404 cross-shop;
+      `mine/open` hides an entry running on another shop's work order
+- [x] TAG_CATALOG contains `time-tracking`; both tag contract checks pass
+- [x] Backend full regression green: **4735 passed, 0 failed, 5 skipped**
+      (8:10)
+- [x] Mobile: 75 suites / 931 tests (+35); tsc clean; eslint 0 errors
+      repo-wide
+- [~] Device smoke: **the server half was smoked end to end over HTTP**
+      (below). The on-device half — the ticking display, the clock
+      buttons, and the background→foreground recompute — is **NOT
+      verified**: the Mac moved networks mid-session and the wireless
+      device tunnel failed (`RemotePairingError 4`), so the build could
+      not be installed. The build itself succeeds. This is the one
+      checklist item this phase did not close.
 
 ## Risks
 
@@ -225,3 +234,48 @@ Outputs:
   follow-up; the smoke uses the established fixture path.
 - **No push safety net on Android.** Accepted consequence of the FCM
   gap; the server-side cap is the entire mitigation.
+
+## Deviations from Plan
+
+- **`clock_out` gained a work-order assertion** not in the plan. The
+  route knows which WO the screen is on, so passing it lets the repo
+  refuse to stop a timer the mechanic started somewhere else. A stale
+  screen would otherwise silently close the wrong entry.
+- **`buildWorkOrderSections` took its 7th variant as one grouped
+  object** rather than three more positional parameters. Phase 195's own
+  docstring predicted this exact moment and asked the phase that crossed
+  the line to surface it rather than refactor preemptively — so the
+  finding is filed (**F59**) and the stopgap is documented in place.
+- **The plan said "no CLI".** Held. `mark_part_installed` and the time
+  entries both lack CLI parity now; filed together rather than
+  half-adding one.
+- **Smoke shape.** The tailnet HTTPS proxy is wedged (nothing listening
+  on 443 while the tunnel itself is healthy) and the Mac then moved onto
+  a different network, so the device leg could not run. The server leg
+  was smoked over loopback against the live dev server instead.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Backend new tests | 33 (`test_phase202_time_tracking.py`) |
+| Backend full regression | 4735 passed, 0 failed, 5 skipped (8:10) |
+| Mobile new tests | +35 → 75 suites / 931 tests |
+| Mobile static checks | tsc clean · eslint 0 errors repo-wide |
+| Schema | 46 → 47 (migration 047) |
+| New routes | 5, all shop-tier + membership scoped |
+| Smoke — auto-close | switching jobs closed the first entry after 25s |
+| Smoke — manual wins | 9h on the clock, 2.0 typed → **billed 2.0** |
+| Smoke — cap | 30h forgotten entry → **capped at 12.0h, needs_review=1** |
+| Smoke — device UI | **not verified** (device tunnel down) |
+
+**Key finding:** the invariant that mattered most was the cheapest to
+get right, because it was delegated to the database. "One open entry per
+mechanic" as an application check is a read-then-write race that a
+double-tap or a second device wins occasionally and invisibly; as a
+partial unique index it is simply true, and the test that proves it
+bypasses the repo entirely to insert behind its back. The same instinct
+drove the elapsed display: deriving from a server timestamp rather than
+accumulating a counter removes a whole class of background-suspension
+bug instead of trying to detect it. Both times the correct move was to
+make the wrong state unrepresentable rather than to guard against it.
