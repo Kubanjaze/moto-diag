@@ -1,6 +1,6 @@
 # Phase 216 — Ducati Monster / Streetfighter (V-twin)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -146,23 +146,22 @@ LIKE-searchable phrases, count guard), with `make == "Ducati"` and a
 
 ## Verification Checklist
 
-- [ ] Workflow ran 3 refuters per candidate; drafted / survived / kept
-      and every drop reason recorded; zero undecided or all reported
-- [ ] Every entry: `make == "Ducati"`, explicit model + generation,
-      `source == "model-generated"`, "general knowledge" in description,
-      `dtc_codes == []`
-- [ ] No entry restates a BMW dry-clutch title; any Ducati dry-clutch
-      entry describes the multi-plate exposed stack, not seal
-      contamination or spline wear — asserted on title and text
-- [ ] No Desmoquattro-era S4/S4R entry says "Testastretta"; no entry
-      puts a trellis on a 2021+ Monster; no Streetfighter V4 — asserted
-- [ ] No valve-service (219) or ECU/DDS/reg-rec (220) entry — asserted
-      on titles
-- [ ] Symptoms are short searchable phrases; real needles from the
-      shipped data hit
-- [ ] Roadmap row 216 corrected; row 217 annotated for the SF V4
-- [ ] Count guard fires; four docs updated
-- [ ] Backend regression green; F9 lint clean
+- [x] **24 drafted → 21 after dedup → 15 survived → 12 kept**, 0
+      undecided, 71 agents, 0 errors
+- [x] Every entry: `make == "Ducati"`, explicit model + generation,
+      `source == "model-generated"`, "general knowledge" in the
+      description, `dtc_codes == []`
+- [x] No entry *claims* boxer clutch hardware (bellhousing, gearbox
+      split, spline greasing, rear main seal) or a cam chain — asserted
+      on claims, not mentions, with a counter-assertion that the
+      denials are actually present and that the BMW file still owns the
+      seam terms
+- [x] No Streetfighter V4/V2; no bare "Monster"; the 937 entry states
+      it has no trellis; clutch entries name dry or wet in the model
+- [x] No Phase 219 valve-service or Phase 220 ECU/DDS content —
+      asserted; cam belts present and in scope
+- [x] Symptom needles quoted from the shipped data
+- [x] 24 phase tests; F9 lint clean; regression **5080 / 0**
 
 ## Risks
 
@@ -177,3 +176,58 @@ LIKE-searchable phrases, count guard), with `make == "Ducati"` and a
   generations rather than pad.
 - **Three model-generated refuters are not a service manual.** Every
   entry stays tagged and the CLI warns on each.
+
+
+## Deviations from Plan
+
+**The split-lens design worked: not one entry was refuted for naming a
+dry clutch, desmo gear, belts or a trellis.** Six drops, and the two
+that matter most were caught by the lens built for them — a carburettor
+fuel-starvation entry killed as a generic storage failure that "reads
+identically on a Bandit 600, GS500, XJ600 or Hornet", and an oil-cooler
+entry killed as two already-covered cross-platform topics fused. Both
+had clean generation handling; they were rejected for being true of
+motorcycles rather than of Ducatis, the same pattern as Phase 213.
+
+**The dry-vs-wet trap fired exactly where the audit predicted.** A
+basket-notching entry was dropped after a refuter caught it claiming
+"the S2R 1000 is dry while the S2R 800 is wet" — the air-cooled
+Monsters kept dry clutches until the 696 arrived in 2008. That is the
+year-boundary error the plan named, and it would have pointed a reader
+at the wrong procedure.
+
+**My validator was wrong before the content was — again.** The first
+pass raised eight failures; all were false positives, and two were the
+very sentences that prove correctness: "there is no bellhousing, no
+flywheel face and no engine/gearbox split" and "no cam chain and no
+cam-chain tensioner". A third demanded parts on a triage entry whose
+whole conclusion is *this is normal, do not quote a clutch job*. The
+rules now test **claims** via a negation-aware check, allow a no-fault
+entry to list no parts, and require the 937 entry to *state* the
+trellis's absence rather than avoid the word. This is the second phase
+running (214 was the first) where my own check was the thing at fault,
+and the pattern is now explicit in the test file's docstring.
+
+**I invented three search needles again**, one of which missed — the
+same slip as 214. They are now quoted from the shipped data and the
+test says so.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Known issues | 704 → 716 |
+| Ducati entries | 12 across six generations |
+| Drafted → deduped → survived → kept | 24 → 21 → 15 → 12 |
+| Refuted for naming legitimate Ducati hardware | **0** |
+| Undecided | 0 |
+| Phase tests | 24 |
+| Backend regression | 5080 passed / 0 failed |
+
+**Key finding: the guardrail inverts against the *block*, not the
+previous phase.** Phase 214 relaxed "Paralever is an error" because the
+K genuinely has one. Here the collision was subtler — Ducati's dry
+clutch is *different hardware with the same name*, so the fix was not
+to relax the rule but to **split it**: attribution permits the
+component, duplication polices the mechanism. Naming a shared component
+is fine; retelling another platform's failure story is not.
