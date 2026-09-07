@@ -584,8 +584,21 @@ class TestShopCLI:
         assert get_shop(shop_id, db_path=cli_db) is None
 
     def test_customer_add_and_list(self, cli_db):
+        """Phase 208: a customer belongs to a shop.
+
+        `customers.shop_id` (migration 050) is what the API scopes on,
+        and it serves a NULL-shop_id row to no shop — so adding a
+        customer with no shop registered creates a record the API can
+        never read. `shop customer add` now resolves the sole shop or
+        refuses, which means this test has to register one first. The
+        assertion below is unchanged; only the precondition is.
+        """
         runner = CliRunner()
         root = _make_cli()
+        shop = runner.invoke(
+            root, ["shop", "profile", "init", "--name", "Test Shop"],
+        )
+        assert shop.exit_code == 0, shop.output
         add = runner.invoke(
             root, [
                 "shop", "customer", "add",

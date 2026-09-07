@@ -28,8 +28,20 @@ class TestPackageImports:
 
 class TestVersion:
     def test_version_exists(self):
+        """Phase 208: assert the version is REAL, not a specific literal.
+
+        This used to pin "0.1.0". pyproject.toml moved to 0.6.0 and the
+        literal in `motodiag/__init__.py` did not, so the pin passed
+        while `motodiag --version` reported a version five minors stale.
+        A pin that agrees with the bug is worse than no pin, so the
+        assertion is now that the package version matches its own
+        installed metadata.
+        """
+        from importlib.metadata import version as pkg_version
+
         from motodiag import __version__
-        assert __version__ == "0.1.0"
+        assert __version__ == pkg_version("motodiag")
+        assert __version__ != "0.0.0+unknown", "package not installed"
 
     def test_app_name(self):
         from motodiag import __app_name__
@@ -41,7 +53,8 @@ class TestConfig:
         from motodiag.core.config import Settings
         s = Settings()
         assert s.app_name == "motodiag"
-        assert s.version == "0.1.0"
+        from motodiag import __version__
+        assert s.version == __version__
         assert s.debug is False
         assert s.ai_model == MODEL_ALIASES["haiku"]
 
@@ -99,7 +112,8 @@ class TestCLI:
         runner = CliRunner()
         result = runner.invoke(cli, ["--version"])
         assert result.exit_code == 0
-        assert "0.1.0" in result.output
+        from motodiag import __version__
+        assert __version__ in result.output
 
     def test_cli_info(self):
         from click.testing import CliRunner
