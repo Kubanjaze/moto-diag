@@ -102,7 +102,7 @@ def search_known_issues(
 
     Phase 206: ``limit``/``offset`` push pagination into SQL. The API
     route previously fetched EVERY row and sliced in Python
-    (``rows[:limit]``), so asking for 50 issues materialised all 6,600.
+    (``rows[:limit]``), so asking for 50 issues materialised all 660.
     ``limit=None`` preserves the original unbounded behaviour for
     callers that genuinely want everything.
     """
