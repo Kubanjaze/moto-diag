@@ -45,6 +45,7 @@ BACKEND_DOCS = [
     # Phase 209
     REPO_ROOT / "docs" / "guide" / "install.md",
     REPO_ROOT / "docs" / "releasing.md",
+    REPO_ROOT / "docs" / "launch-checklist.md",
 ]
 
 MOBILE_DOCS = [
@@ -135,7 +136,7 @@ class TestDocumentedCommandsExist:
         """Guards the guard: a path typo here would silently pass
         everything below by iterating an empty list."""
         docs = _user_docs()
-        assert len(docs) >= 7, f"only found {[d.name for d in docs]}"
+        assert len(docs) >= 8, f"only found {[d.name for d in docs]}"
 
     def test_commands_resolve(self):
         failures: list[str] = []
