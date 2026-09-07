@@ -318,6 +318,38 @@ async def _rate_limit_handler(request: Request, exc: Exception):
     return response
 
 
+async def _validation_handler(request: Request, exc: Exception):
+    """422 request-validation failures, as RFC 7807 + a WARNING log.
+
+    Added Phase 204 (Gate 10). FastAPI's default handler returns the
+    field errors in the body but logs NOTHING, and the mobile client
+    reads only `response.status` — so a malformed multipart upload
+    surfaced as a bare "upload failed" on the phone with no way to learn
+    which field the server could not see. Debugging it required guessing.
+
+    Logging the fields is the whole point: for a multipart request the
+    Content-Type (and its boundary) is logged too, because the common
+    failure is a boundary that does not match the body, which makes
+    every field read as absent rather than malformed.
+    """
+    rid = getattr(request.state, "request_id", None)
+    try:
+        errors = exc.errors()  # type: ignore[attr-defined]
+    except Exception:  # noqa: BLE001 — never fail inside a handler
+        errors = [{"msg": str(exc)}]
+    content_type = request.headers.get("content-type", "(none)")
+    logger.warning(
+        "422 validation failure on %s %s (request_id=%s) "
+        "content-type=%r errors=%s",
+        request.method, request.url.path, rid, content_type, errors,
+    )
+    return _problem_response(
+        request, status=422, type_slug="validation-error",
+        title="Request validation failed",
+        detail=str(errors),
+    )
+
+
 async def _unhandled_handler(request: Request, exc: Exception):
     """Last-resort handler. Logs the stack trace; returns a safe
     500 body (no server internals exposed to clients)."""
@@ -350,5 +382,12 @@ def register_exception_handlers(app: FastAPI) -> None:
     from motodiag.auth.rate_limiter import RateLimitExceededError
     app.add_exception_handler(
         RateLimitExceededError, _rate_limit_handler,
+    )
+    # Phase 204 — log 422s. FastAPI's default swallows them silently,
+    # which made the Gate 10 multipart failure far harder to diagnose
+    # than it needed to be.
+    from fastapi.exceptions import RequestValidationError
+    app.add_exception_handler(
+        RequestValidationError, _validation_handler,
     )
     app.add_exception_handler(Exception, _unhandled_handler)

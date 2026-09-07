@@ -90,6 +90,8 @@ class VideoFileTooLargeError(Exception):
 
 router = APIRouter(prefix="/sessions", tags=["videos"])
 
+logger = logging.getLogger(__name__)
+
 
 # ---------------------------------------------------------------------------
 # Helpers
@@ -234,6 +236,17 @@ async def upload_video(
     try:
         meta_obj = VideoBase.model_validate_json(metadata)
     except ValidationError as e:
+        # Phase 204 (Gate 10) — LOG the rejection, with the raw sidecar.
+        # This 422 is an HTTPException raised here, NOT a
+        # RequestValidationError, so the app-wide validation handler
+        # never sees it and nothing was logged at all. The mobile client
+        # reads only `response.status`, so a rejected upload surfaced as
+        # a bare "upload failed" on the phone with the reason existing
+        # only in a response body nobody read.
+        logger.warning(
+            "video metadata rejected for session %s: errors=%s raw=%r",
+            session_id, e.errors(), metadata[:400],
+        )
         raise HTTPException(status_code=422, detail=e.errors())
 
     # 2. Read multipart payload
