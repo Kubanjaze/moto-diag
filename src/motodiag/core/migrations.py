@@ -3416,6 +3416,34 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS obd_failure_reports;
         """,
     ),
+    # Migration 049 — Phase 206: bring known_issues under migration
+    # control and index the sort its own query path uses.
+    Migration(
+        version=49,
+        name="known_issues_sort_index",
+        description=(
+            "Phase 206: `known_issues` is the only large table in the "
+            "product (6,600 rows) and was the only one NOT under "
+            "migration control — it is created by SCHEMA_SQL with a "
+            "single (make, model) index that its primary query path "
+            "cannot use, because that path filters `make LIKE '%x%'` "
+            "(leading wildcard, unusable by any B-tree) and then sorts "
+            "`ORDER BY severity DESC, title` on unindexed columns. "
+            "EXPLAIN QUERY PLAN showed `SCAN` + `USE TEMP B-TREE FOR "
+            "ORDER BY`: every listing sorted all 6,600 rows to return "
+            "50. With this index the plan becomes an ordered walk that "
+            "stops at the LIMIT. Additive only — the table and its rows "
+            "already exist from SCHEMA_SQL, so this adds indexes and "
+            "touches no data."
+        ),
+        upgrade_sql="""
+            CREATE INDEX IF NOT EXISTS idx_known_issues_sort
+                ON known_issues(severity DESC, title);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issues_sort;
+        """,
+    ),
 ]
 
 

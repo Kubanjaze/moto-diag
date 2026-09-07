@@ -482,7 +482,7 @@ class TestRegression:
         )
 
     def test_schema_version_pin(self):
-        assert SCHEMA_VERSION == 48, (
+        assert SCHEMA_VERSION == 49, (
             "SCHEMA_VERSION moved — confirm a migration accompanies it "
             "and update this pin."
         )
