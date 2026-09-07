@@ -1,0 +1,454 @@
+[
+  {
+    "title": "Cam belt degradation by age on air-cooled 2V Desmodue Monsters that sit unused",
+    "description": "Drafted from general knowledge of the air/oil-cooled 2-valve Desmodue Monster family. Ducati camshafts are driven by toothed rubber belts - these engines have no cam chain and no cam-chain tensioner, so the belts and their rollers are the timing drive and the service item - and the belts are replaced on elapsed time as well as distance because the rubber and its cords harden, craze and lose tooth-root strength while the bike stands. Low-mileage M900s, and the same applies to M600/M750 and the later 620/695/800/1000/S2R Desmodue Monsters, are the classic victims: a bike showing 8,000 miles can be sitting on fifteen-year-old belts. The Desmodue is an interference engine, so a belt that strips its teeth bends valves. A rough or seized tensioner/idler roller will shred a fresh belt within a few hundred miles, so the rollers are part of the same job.",
+    "make": "Ducati",
+    "model": "Monster 900 (M900, air-cooled 2V Desmodue, 1993-2002)",
+    "year_start": 1993,
+    "year_end": 2002,
+    "severity": "critical",
+    "symptoms": [
+      "unknown cam belt history",
+      "bike sat unused for years",
+      "cracked cam belt teeth",
+      "frayed cam belt edges",
+      "whirring noise from belt covers",
+      "rough tensioner roller bearing",
+      "engine stopped dead while riding",
+      "low mileage but old belts"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Toothed cam belts aged out on a low-mileage or long-stored bike, with cracking at the tooth roots and loss of cord strength",
+      "Belt replacement interval tracked by mileage only, ignoring the elapsed-time limit",
+      "Worn or dry tensioner/idler roller bearings chewing or mistracking the belt",
+      "Belt contaminated and softened by oil weeping from a rocker cover or head gasket behind the belt covers",
+      "Belt tension set by feel rather than with the correct tension gauge - over-tight destroys rollers, slack allows tooth jump"
+    ],
+    "fix_procedure": "1. Before touching anything, establish the history: build date, last documented belt change and the date, not just the odometer. Any belt of unknown age on a bike that has stood is condemned on age alone.\n2. SAFETY: work with the engine cold and the ignition off, key out and battery negative disconnected, bike level and properly supported on a paddock stand. Never rotate the engine with fingers near the belts or rollers, and never spin it on the starter with the belt covers off.\n3. Remove the belt covers and inspect both belts with a torch and mirror: transverse cracks in the tooth roots, glazing or shiny polished tooth faces, frayed or feathered edges, missing tooth material, and any oil contamination. Note where oil is coming from if present - a leaking rocker cover must be fixed or it will destroy the new belt.\n4. With the plugs removed to reduce effort, rotate the engine slowly by hand in the normal direction with a socket on the crank so the entire length of both belts passes under inspection.\n5. Spin each tensioner and idler roller by hand. Roughness, notchiness, audible grumble or lateral play means replace that roller - a failing roller is the usual reason a new belt fails early.\n6. SAFETY - INTERFERENCE ENGINE. Before slackening or removing either belt, bring the engine to the timing reference position and lock it there: crank at the timing mark and both camshafts held at their marks, using the Ducati cam-locking/timing tools or a positive index on each cam pulley. With the belts off or slack, do NOT rotate the crank or either camshaft independently, and do not turn the engine at all until both new belts are fitted and tensioned - independent rotation drives pistons into open valves.\n7. Replace both belts as a pair with the correct parts for the model year, and set tension using the Ducati belt tension tool or gauge to the manual specification. Do not judge tension by thumb-twist.\n8. Verify the timing marks align on both horizontal and vertical cylinders, then rotate the engine two full turns by hand only, in the normal direction, feeling for any interference - stop immediately if resistance is felt - and re-check both the marks and the tension before refitting the covers.\n9. If a belt has already stripped or snapped, inspect before cranking anything: borescope both bores and check valve lift and free rotation of each camshaft by hand. Do not spin the engine on the starter until the cam drive is restored. Only then compression and leakdown test both cylinders, and expect bent valves on a Desmodue.\n10. Record the date as well as the mileage of the service, and tell the owner the next change is due by whichever comes first - the elapsed-time limit or the mileage limit in the manual for that model year.",
+    "parts_needed": [
+      "Cam belts (pair, correct part for model year)",
+      "Tensioner and idler rollers/bearings as required",
+      "Belt cover gaskets/seals as required",
+      "Rocker cover gaskets if oil contamination found"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Cam belt age-out and tensioner/idler bearing failure on the liquid-cooled 4V Monster S4R",
+    "description": "General knowledge entry for the liquid-cooled 4-valve Monster family. The Desmoquattro and Testastretta S4/S4R/S4RS drive both camshafts by toothed rubber belts - these twins have no cam chain and no cam-chain tensioner, so the belts and their rollers are the timing drive and they are the service item. Each cylinder has its own belt running over a fixed idler roller and an adjustable tensioner roller. The belts are a calendar-life item: they harden, craze and lose tooth adhesion with age and heat whether or not the bike is ridden, and low-mileage garage-kept S4Rs are the classic case of a bike with perfect compression and ten-year-old belts. Just as often the belt is killed by its roller - the tensioner or idler bearing loses grease, rumbles, then seizes and shreds the belt. The engine is an interference design with desmodromic valve gear, so a shed or jumped belt means bent valves and often piston and head damage. On the liquid-cooled bikes the horizontal (front) belt cover sits behind the radiator and oil cooler, so the job carries cooling-system disturbance that an air-cooled 2V Monster does not. Belt and roller part numbers differ between the 996 Desmoquattro (S4R 2003-2006, and the 916 S4 2001-2003) and the 998 Testastretta (S4R 2007-2008 and S4RS 2006-2008) - order by engine number and engine type, never by the S4R badge, because both engines wear the same badge.",
+    "make": "Ducati",
+    "model": "Monster S4R (996 Desmoquattro, dry clutch, 2003-2006)",
+    "year_start": 2003,
+    "year_end": 2006,
+    "severity": "critical",
+    "symptoms": [
+      "cracked or glazed cam belts",
+      "whirring noise from belt covers",
+      "rumble from cam belt roller",
+      "cam belt overdue by age",
+      "ticking from timing belt cover",
+      "engine will not turn over",
+      "unknown belt service history"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Cam belts left in service beyond their calendar replacement interval on a low-mileage bike, hardening and losing tooth strength with age rather than miles",
+      "Tensioner or idler roller bearing losing grease and running dry, then rumbling or seizing and destroying the belt",
+      "Belt contamination by oil from a leaking camshaft seal or horizontal head cover, softening the belt",
+      "Belt tension set by feel rather than to the manual specification - over-tight loads the roller bearings, slack allows tooth jump",
+      "Roller bearings reused at a belt change instead of being replaced as a set",
+      "Water or road debris ingress into an ageing belt cover on a naked liquid-cooled bike"
+    ],
+    "fix_procedure": "SAFETY: work on a cold engine only. The horizontal cylinder cam belt sits behind the radiator on the liquid-cooled S4/S4R/S4RS - the radiator, hoses and coolant stay scalding long after a ride, and the exhaust headers pass close to the front of the engine. Support the bike securely on a stand or under the frame before removing anything, and disconnect the battery negative before draining coolant near the starter and loom. This is a dry-clutch model - do not run the engine with the clutch cover off or fingers near the plate stack, and never blow clutch dust out with compressed air; wipe or vacuum it.\n1. Cheapest check first: read the service record and look for a dated belt sticker or invoice. If the belts cannot be proven to be within the manual's calendar interval, treat them as due regardless of odometer reading and do not road test the bike hard until they are replaced.\n2. With the engine cold, remove the outer cam belt covers and inspect both belts with a torch: surface crazing, hairline cracks in the tooth roots, glazing, fraying edges, missing or rounded teeth, and any oil or coolant wetting. Note the manufacture date code moulded on the belt - a belt can be old on the shelf as well as old on the bike.\n3. Trace any oil found in the belt cavity to its source, typically a camshaft seal or a head cover joint. Do not fit new belts over a live oil leak.\n4. Spin each tensioner and idler roller by hand and feel for roughness, notchiness, drag or radial play, and listen for a dry rasp. Any roller that is not glass-smooth and silent condemns itself. Rollers are consumables and should be replaced with the belts as a set.\n5. SAFETY: if the complaint is a running noise, refit the cam belt covers before starting the engine. Never run the engine with a belt cover removed - the belts, cam pulleys and rollers are exposed and will catch a hand, sleeve, tie or stethoscope lead. Listen from outside the closed covers with a stethoscope or length of hose, run only briefly, and keep clear of the hot rear cylinder head and exhaust. A dry roller bearing gives a steady whirr or rumble that rises with engine speed and is loudest at one cover.\n6. To replace: set the engine to the manual's timing reference marks, lock the camshaft pulleys and crankshaft with the specified tools so nothing can move, then release the tensioners and remove the belts. SAFETY: with the belts removed, do not rotate the crankshaft or either camshaft at all - any independent movement gives piston-to-valve contact on this interference engine.\n7. Fit new belts of the correct part number for the engine actually in the frame - 996 Desmoquattro and 998 Testastretta belts are not interchangeable even though both bikes wear an S4R badge. Verify against the engine number and engine type, not a model-year assumption.\n8. Set belt tension to the manual specification using the Ducati tensioning tool or a calibrated belt-tension gauge. Do not set tension by thumb deflection or by ear.\n9. Only after both belts are fitted, tensioned and the timing marks verified, remove the locking tools and rotate the engine through several full turns by hand in the normal direction of rotation, stopping at once if resistance is felt. Re-check the timing marks and re-check tension, then refit the covers with sound gaskets and seals so oil, water and road debris stay out.\n10. Refit and refill the cooling system if it was disturbed, bleed it per the manual, and check for leaks before and after a heat cycle. Record the belt fitment date on the bike so the next calendar interval is traceable.",
+    "parts_needed": [
+      "Cam belt set - two belts, correct part numbers for the specific engine (996 Desmoquattro vs 998 Testastretta)",
+      "Tensioner rollers and idler rollers or their bearings, replaced as a set with the belts",
+      "Cam belt cover gaskets, grommets and fasteners",
+      "Camshaft seals if oil contamination is found",
+      "Coolant and any radiator hose clamps or O-rings disturbed during access",
+      "Belt tensioning tool or calibrated belt-tension gauge (workshop tooling)"
+    ],
+    "estimated_hours": 4.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Single-sided swingarm eccentric chain adjuster seized or slipping on Monster S4R/S4RS",
+    "description": "General knowledge entry for the single-sided swingarm fitted to the Monster S4R and S4RS. The earlier S4 (2001-2003) has a conventional double-sided swingarm with normal axle adjuster blocks, so this entry does not apply to it. Chain slack on the single-sided bike is not set with axle blocks and snail cams: the rear axle is carried in an eccentric hub that rotates inside the end of the swingarm, and rotating that hub swings the axle in an arc to take up slack. Two things go wrong. First, the eccentric corrodes into the swingarm bore - dissimilar metals plus winter salt and years without an adjustment - and will not turn at all, so the chain cannot be set. Second, the clamp arrangement that locks the eccentric is under-torqued or its faces are contaminated, and the eccentric creeps under drive load, so chain slack changes on its own between checks and the bike develops a clunk on drive take-up. Both are frequently misread as chain, cush drive or wheel bearing faults. Rotating the eccentric also moves the axle slightly in height, so wheelbase, ride height and the brake caliper carrier position all move with the chain slack - it is a chassis adjustment, not just a chain adjustment.",
+    "make": "Ducati",
+    "model": "Monster S4R / S4RS (996 Desmoquattro and 998 Testastretta, single-sided swingarm, dry clutch, 2003-2008)",
+    "year_start": 2003,
+    "year_end": 2008,
+    "severity": "high",
+    "symptoms": [
+      "cannot adjust chain slack",
+      "eccentric hub will not turn",
+      "chain tension changes on its own",
+      "clunk on drive take up",
+      "rear axle moves under load",
+      "chain goes slack then tight",
+      "seized single sided adjuster"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Corrosion between the eccentric hub and the swingarm bore after long service without adjustment, seizing the hub in place",
+      "Clamp or pinch fasteners on the swingarm eccentric under-torqued or reused with contaminated threads, letting the eccentric creep under chain load",
+      "Grease or anti-seize applied to clamping faces that must be clean and dry, reducing clamp friction",
+      "Eccentric hub rotated in the wrong direction so the adjustment runs out of travel and the hub sits at the end of its range",
+      "Worn eccentric hub bearings and seals allowing play that is mistaken for a loose chain or worn wheel bearings",
+      "Chain and sprockets worn out and unevenly elongated, so no eccentric position gives correct slack through a full wheel rotation"
+    ],
+    "fix_procedure": "SAFETY: a single-sided swingarm cannot be supported by a conventional two-sided paddock stand. Lift and support the bike under the frame or engine, or on a single-sided stand using a proper axle spool - never load the eccentric hub while it is unclamped, and never work under a bike held only by the sidestand. The rear silencers on the S4R/S4RS are high-mounted and sit right beside the working area: let them cool fully before reaching past them. Never run the engine in gear to spin the rear wheel while the bike is raised - turn the wheel by hand only, in neutral, with the ignition off and the key out, keeping fingers clear of the chain run and of the point where the chain meets either sprocket; grip a spoke or the tyre, not the chain. Before applying any force to the hub with a pin wrench or C-spanner, re-check that the bike is stable and secured - strap or brace it, use a second support, and have a helper steady it.\n1. Cheapest checks first. Measure chain slack at the manual's specified point with the bike unladen and on the ground, and rotate the wheel BY HAND to find the tight spot before condemning the adjuster - a chain with tight and slack spots is worn out and no adjuster position will fix it.\n2. Confirm the complaint. If slack was set correctly and has changed by itself, suspect a creeping eccentric. If slack cannot be altered at all, suspect a seized eccentric. If there is play at the wheel with the chain correctly tensioned, check wheel and eccentric hub bearings and the cush drive separately.\n3. Before disturbing anything, mark the current eccentric position against the swingarm with paint so you have a reference and can see how far it moves.\n4. Clean the eccentric-to-swingarm joint and the clamp fasteners of road salt and grime, then inspect for the white powdery aluminium corrosion that signals a seized hub.\n5. Loosen the eccentric clamp fasteners exactly as the manual describes. Re-confirm the bike is braced and your body is clear of the fall line, then use the correct pin wrench or C-spanner in the hub's drive features, pushing and pulling in a controlled direction. Do not lever on the chain, sprocket, brake carrier or a screwdriver in the holes - the hub features are easily damaged and the parts are expensive.\n6. If it will not move, do not escalate force. SAFETY: mask or shield the rear brake rotor, pads and tyre before applying penetrating fluid, and keep it off the chain - any penetrant that reaches the rotor, pads or tyre is a braking and traction hazard. Apply penetrating fluid to the joint and leave it to work. Heat will destroy the eccentric hub's bearings and seals, so heat the swingarm bore only, briefly, and as a last resort, keeping it away from the tyre, brake line and wiring, then work the hub back and forth in small increments.\n7. With the hub free, set chain slack to the manual specification, checking at the chain's tight spot. Remember the eccentric alters wheelbase and rear ride height slightly - re-check that the brake caliper and carrier sit correctly and that the brake hose and any sensor lead are not stretched or fouling in the new position.\n8. Clean and dry the clamping faces and fastener threads, then torque the eccentric clamp fasteners to the manual specification with a calibrated wrench. Do not grease clamping faces; apply the specified anti-seize or grease only where the manual calls for it on the hub bore. Clean any penetrant, anti-seize or grease off the rotor with brake cleaner, replace contaminated pads, and re-lubricate the chain if penetrant reached it.\n9. Verify the rear wheel nut and its retention are correct and torqued to the manual specification before the bike goes down.\n10. Road test, then re-check chain slack - wheel turned by hand, engine off - and clamp torque after a short shakedown ride and again at the next service. If slack has moved from the paint mark, the clamp faces or fasteners need attention, not more tension.\n11. If the hub bearings or seals were rough, or the hub was damaged while freeing it, replace them and the seals as a set and repack per the manual before reassembly.",
+    "parts_needed": [
+      "Eccentric hub clamp fasteners (replace if stretched, corroded or of unknown history)",
+      "Eccentric hub bearings and seals if play or roughness is found",
+      "Anti-seize or grease of the type specified by the manual, for the hub bore only",
+      "Penetrating fluid",
+      "Rear brake pads if contaminated by penetrant or grease",
+      "Chain and sprocket set if the chain has tight spots or measures beyond the wear limit",
+      "Pin wrench / C-spanner for the eccentric hub and a single-sided axle-spool stand (workshop tooling)"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Nylon fuel tank swelling and distortion on ethanol-blended fuel",
+    "description": "General knowledge entry for the 696-generation air-cooled Monster. The moulded polyamide (nylon) fuel tank fitted to this generation absorbs ethanol from pump fuel and grows permanently in volume, so the tank distorts: it fouls the frame rails, will not line up on its mounts, opens uneven gaps to the seat and side panels, and can dish the in-tank pump flange sealing face. The same tank was used on the contemporary Streetfighter. Ducati ran extended-warranty / tank-replacement programmes in several markets, so the VIN should always be checked with the importer before quoting the customer for a tank. This is a materials problem, not a crash or handling problem: a swollen tank cannot be reshaped, heated or clamped back into shape.",
+    "make": "Ducati",
+    "model": "Monster 696 / 796 / 1100 / 1100S (air-cooled 2V Desmodue, nylon fuel tank, hybrid trellis frame with cast aluminium rear subframe, 2008-2012)",
+    "year_start": 2008,
+    "year_end": 2012,
+    "severity": "high",
+    "symptoms": [
+      "fuel tank swollen and distorted",
+      "tank rubbing against frame",
+      "tank will not sit flat",
+      "gap between tank and seat",
+      "fuel cap hard to close",
+      "petrol smell after filling",
+      "tank bolts do not line up",
+      "plastic tank bulging at sides"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Polyamide (nylon) tank material absorbing ethanol from E5/E10 pump fuel, producing permanent volumetric swelling of the moulding",
+      "Bike stored for long periods with fuel standing in the tank, increasing absorption time",
+      "Higher-ethanol fuel used routinely in some markets",
+      "Heat soak from the rear (vertical) cylinder and the exhaust accelerating deformation of the loaded moulding",
+      "Swollen tank forcing itself onto the frame rails and its own mounting bosses, cracking mounts and distorting the pump flange seat",
+      "Previous attempt to force, clamp or heat the tank back to shape, adding stress cracks"
+    ],
+    "fix_procedure": "SAFETY: petrol and petrol vapour. Work in a well-ventilated area with no ignition sources and an extinguisher to hand, let the engine, exhaust and oil cooler cool completely before working over them, and disconnect the battery negative before disturbing the pump flange, its connector or the fuel couplings. Relieve fuel system pressure before disconnecting any fuel coupling - stop the engine, pull the fuel pump fuse or unplug the pump connector, crank or run until it stalls, then switch off and disconnect the battery negative. Expect residual pressure at the quick-disconnects; catch fuel in a rag and tray, and wear nitrile gloves and eye protection.\n\n1. Confirm the bike actually has the moulded plastic tank of this generation and record the VIN. Check with Ducati or the national importer whether an extended-warranty or tank-replacement campaign covers that VIN in this market before quoting the customer - in several markets it did.\n2. Cheapest checks first, no dismantling: on level ground, look for tank-to-frame contact and chafed paint or rub marks at the frame rails, uneven tank-to-seat and tank-to-side-panel gaps, and whether the rear tank fixing enters without forcing.\n3. Check the filler cap latches and seals correctly and that the cap drain and tank breather hoses are connected, routed and unkinked - a blocked breather also causes fuel smell and can be mistaken for swelling.\n4. Verify distortion objectively rather than by eye: compare front mount and rear fixing alignment with the frame, and use the Ducati measurement template if one was supplied with the campaign in this market.\n5. Inspect the in-tank pump flange sealing face for dishing and the flange screws for even seating, and look for fuel staining or weep around the flange - a swollen tank commonly distorts this face and turns a cosmetic fitment complaint into a fuel leak.\n6. SAFETY: drain the tank to as near empty as practicable into a sealed, earthed, approved fuel container before removing it - siphon or pump out through the filler, never by mouth, and do not tip a full tank off its mounts. Cap or plug the tank openings and store the removed tank and the drained fuel away from any ignition source; never leave a vapour-filled tank open on the bench.\n7. Do not attempt to reshape, heat, clamp or strap a swollen tank. The growth is absorbed fuel in the polymer, not a bent panel; clamping cracks the mounting bosses and the flange seat.\n8. If the distortion prevents correct fitment, correct cap sealing or correct flange sealing, replace the tank per the manual, transferring pump, level sender, cap and hardware and fitting a new flange seal, new quick-disconnect O-rings and new coupling clips. Confirm each coupling audibly locks home - a partly seated coupling on a pressurised line is the classic post-repair fire risk.\n9. Tighten the flange fasteners in the manual's crossing sequence to the manual specification - over-tightening dishes the flange on a plastic tank.\n10. With the tank refitted and every coupling latched, reconnect the battery and leak-check cold with key-on prime cycles and the engine NOT running, checking the flange, quick-disconnects and cap seal. Only start the engine once everything is dry, then re-check the tank top and flange hot after a road test.\n11. Advise the owner: use the lowest-ethanol fuel available, avoid leaving the bike standing part-full for months, and expect a replacement tank on the same fuel to be a consumable in this respect.",
+    "parts_needed": [
+      "replacement fuel tank (per market campaign or current Ducati part catalogue)",
+      "fuel pump flange seal / gasket",
+      "fuel filler cap seal",
+      "tank mounting rubbers, spacers and fasteners",
+      "fuel line quick-disconnect O-rings and coupling clips",
+      "tank breather / cap drain hoses"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Fuel weep and erratic fuel gauge at the in-tank pump flange",
+    "description": "General knowledge entry for the 696-generation air-cooled Monster, whose fuel pump, filter and level sender sit on a single flange bolted into the top of the moulded plastic tank with quick-disconnect fuel couplings. Two related complaints come from this flange: a petrol smell and fuel staining on the tank top from a flattened, re-used or distorted flange seal, and an erratic, sticking or permanently low/full fuel gauge from the level sender on the same flange. On this generation the flange seat is often dished by tank swelling on ethanol fuel, so a leak that keeps returning after a new seal usually means the tank itself is distorted rather than the seal being at fault. Scope here is the mechanical seal and sender; pump pressure, relay and prime diagnostics are separate work.",
+    "make": "Ducati",
+    "model": "Monster 696 / 796 / 1100 / 1100S / 1100 EVO (air-cooled 2V Desmodue, in-tank pump flange, hybrid trellis frame generation, 2008-2014)",
+    "year_start": 2008,
+    "year_end": 2014,
+    "severity": "high",
+    "symptoms": [
+      "petrol smell from under tank",
+      "fuel staining around pump flange",
+      "wet patch on top of tank",
+      "fuel gauge reads erratically",
+      "low fuel light stays on",
+      "fuel gauge stuck on full",
+      "leak after fuel pump replacement"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Flange seal hardened, flattened or re-used after a previous pump or filter job",
+      "Flange sealing face on the plastic tank dished or distorted by ethanol-driven tank swelling on this generation",
+      "Flange fasteners tightened unevenly, out of sequence, or over-tightened, dishing the flange against soft tank material",
+      "Level sender float arm fouling on the tank wall or on hoses, or a saturated / sunk float",
+      "Worn or dirty sender track giving jumpy, sticking or dead-spot gauge readings",
+      "Perished quick-disconnect coupling O-rings weeping fuel that runs back along the flange and looks like a flange leak",
+      "Blocked or kinked tank breather / cap drain hose pressurising the tank and pushing fuel past the seal"
+    ],
+    "fix_procedure": "SAFETY: petrol and petrol vapour, and a leak sitting directly above a hot air-cooled engine. Let the engine, exhaust and oil cooler cool fully, work in a well-ventilated area with no ignition sources and an extinguisher to hand, relieve fuel system pressure per the manual, and disconnect the battery negative before undoing couplings, the flange or the flange connector. Drain by pump or approved siphon into a bonded metal or fuel-rated container - never by mouth. Remove fuel-soaked rags, seat padding and absorbent material from the workshop before any prime cycle or start. Wear nitrile gloves and eye protection.\n\n1. Cheapest checks first. Clean and dry the whole tank top. With the engine COLD and NOT running, locate the source using repeated key-on prime cycles (the pump pressurises the system without starting the engine), inspecting the flange, quick-disconnect couplings and cap drain / breather after each cycle. Do NOT run the engine to find an active fuel leak - petrol reaching the rear cylinder head or exhaust will ignite. Heat-cycle and road-test only at the end of the job, once the tank top has stayed dry through several cold prime cycles.\n2. Check the tank breather and cap drain hoses for blockage, kinking or wrong routing before condemning any part - a pressurised tank pushes fuel past a serviceable seal.\n3. For a gauge complaint, check the flange connector for corrosion, backed-out pins and a wet or fuel-contaminated boot before condemning the sender.\n4. With the bike on level ground on a stable stand, drain the tank to below flange level into an approved container, then remove the flange squarely without levering on the sender arm.\n5. Renew the flange seal every time - never re-use it. Inspect the sealing face on both flange and tank for dishing, ridging or crazing, and check whether the tank is swollen; if it is, the leak will return until the tank is replaced.\n6. Inspect the level sender: sweep the float arm through its full travel checking for fouling and free movement, check the float for fuel saturation, and verify sender output through the sweep against the manual's values before replacing it.\n7. Refit with a new seal, tightening the flange fasteners in the manual's crossing sequence to the manual specification. Over-tightening on a plastic tank dishes the flange and causes the next leak.\n8. Renew the fuel line quick-disconnect O-rings and confirm each coupling clicks fully home.\n9. Leak-check cold first: repeated key-on prime cycles with the engine not running and a dry tank top. Only once it stays dry through several cycles, start the engine, then road test and re-check the tank top hot, and confirm the gauge sweeps sensibly from full to reserve over the following tankfuls.",
+    "parts_needed": [
+      "fuel pump flange seal / gasket",
+      "fuel level sender",
+      "fuel pump support / flange assembly",
+      "fuel line quick-disconnect O-rings",
+      "tank breather and cap drain hoses",
+      "in-tank fuel filter / strainer as fitted"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Cam belt age-based replacement and tensioner/idler bearing check on the air-cooled 2V",
+    "description": "General knowledge entry. These engines drive both camshafts by toothed rubber belts - there is no cam chain and no cam chain tensioner on this family, so nothing here is a CCT job. The belts are replaced on a fixed interval by time as well as distance, whichever falls first, because the rubber and its cords degrade with age and heat regardless of how little the bike has been ridden; low-mileage garage-kept Monsters of this generation are the usual offenders. The tensioner and idler rollers run on bearings that are themselves a wear item and are checked, and normally renewed, with the belts. A belt or roller failure on a desmodromic engine is not a roadside inconvenience: valve and piston contact follows. Valve clearance work itself is separate from this entry.",
+    "make": "Ducati",
+    "model": "Monster 696 / 796 / 1100 / 1100S / 1100 EVO (air-cooled 2V Desmodue, belt-driven cams, 2008-2014)",
+    "year_start": 2008,
+    "year_end": 2014,
+    "severity": "critical",
+    "symptoms": [
+      "cam belt age unknown",
+      "cracked or glazed cam belts",
+      "whine from cam belt covers",
+      "rough running after belt slip",
+      "belt teeth missing or frayed",
+      "no belt service history",
+      "rough cam belt tensioner bearing"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Belts aged out: rubber and reinforcing cords degrade with time and under-cover heat regardless of mileage",
+      "Bike stored for years with belts tensioned against the pulleys, leaving flat spots and set",
+      "Dry, rough or notchy tensioner / idler bearings letting the belt run off-true, shed teeth or lose tension",
+      "Belt tension set incorrectly at the last service - over-tight destroys the roller bearings, slack lets the belt jump a tooth",
+      "Oil contamination from a leaking cam or crank seal softening the belt",
+      "Debris or a damaged cover letting dirt into the belt run"
+    ],
+    "fix_procedure": "SAFETY: CAM BELT WORK ON A DESMODROMIC ENGINE. Valves and pistons occupy the same space if timing is lost - rotate the engine by hand only, in the normal direction of rotation, with the spark plugs removed, and never turn the engine with the belts removed or slack. Let the engine, exhaust and oil cooler cool completely before working around the horizontal cylinder. Support the bike on level ground with the correct stand for the model - the single-sided swingarm 1100 / 1100S / 1100 EVO needs a single-sided (spindle/pin) rear stand or support under the engine, because a conventional two-leg paddock stand will not locate on it; do not rely on the sidestand while pulling on covers or a tension tool. Before removing the belt covers, switch off, remove the key and disconnect the battery negative so the engine cannot be cranked while hands are in the belt run. Turn the engine only with the correct tool on the crankshaft/alternator nut - never on the starter, and never by turning the rear wheel in gear.\n\n1. Cheapest step first: establish belt age from service records, a dated service sticker, or the date code on the belts themselves. If the age cannot be established, treat the belts as due - this is the common outcome on a used bike.\n2. Remove the belt covers and inspect both belts for cracking between the teeth, glazing, frayed edges, missing or rounded teeth, and oil contamination. Check inside the covers for shed rubber dust, which indicates a belt running off-true.\n3. Turn each tensioner and idler roller by hand: roughness, notchiness, drag, radial play or noise means renew. Renewing belts onto tired rollers wastes the job.\n4. If a belt is oil-soaked, trace and fix the cam or crank seal leak first - a new belt on a contaminated pulley fails again.\n5. Note for diagnosis: there is no cam chain and no cam chain tensioner on this engine. Any top-end rattle or whine traces to the belts, their rollers, the desmo valve gear or the clutch, not to a chain tensioner.\n6. Access on this generation: the oil cooler and its exposed lines sit ahead of the horizontal cylinder. Reposition or protect them per the manual rather than levering against them or straining a line, and route them back exactly as found.\n7. Fit the belts against the manual's timing marks and locking procedure, then set tension by the manual's specified method and tool - never by thumb-twist feel. Over-tensioning is the usual cause of a repeat roller failure.\n8. Only with both belts fitted and tensioned, rotate the engine by hand through at least two full turns in the direction of rotation, stopping at once if resistance is felt, re-check timing marks and re-check tension, then refit the covers with sound seals.\n9. Replace the belts at the manual's stated time and distance interval, whichever comes first, regardless of how good the old belts look. Record the fitting date on a service sticker under the cover and in the book so the next mechanic is not guessing.",
+    "parts_needed": [
+      "cam belt set (horizontal and vertical cylinder)",
+      "tensioner and idler rollers / bearings",
+      "belt cover seals and fasteners",
+      "cam and crank seals if contamination is found",
+      "service sticker for belt fitting date"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Cam belt age-out and condition inspection on the liquid-cooled Testastretta 11 degree Monster 821/1200",
+    "description": "General knowledge entry. The Testastretta 11-degree engine in the 2014-2021 Monster 821 and 1200 family drives its desmodromic camshafts by toothed rubber belts - there is no cam chain and no cam-chain tensioner on this family. Ducati specifies belt replacement on a TIME basis as well as a mileage basis, so a low-mileage bike that has sat for several years is due regardless of how good the belts look. Belts on this generation live under plastic covers on the right side of the engine and are reached without splitting or removing the engine, but the liquid-cooled layout means coolant hoses, the radiator/oil-cooler mounting and bodywork sit in the access path, which is what separates this job from the older air-cooled 2V Monsters. A belt that fails or jumps teeth on a desmo engine causes immediate and expensive valve-to-piston contact, so age is treated as a hard limit, not a judgement call.",
+    "make": "Ducati",
+    "model": "Monster 821 / 1200 / 1200S / 1200R (Testastretta 11-degree liquid-cooled, wet slipper clutch, 2014-2021)",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "high",
+    "symptoms": [
+      "cam belt service overdue by age",
+      "cracked cam belt teeth",
+      "rubber dust inside belt cover",
+      "belt frayed along edge",
+      "bike sat unused for years",
+      "glazed shiny cam belt surface",
+      "no service history for belts"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Belts left in service past the time-based replacement limit on a low-mileage or stored bike",
+      "Rubber ageing, hardening and micro-cracking between the teeth from heat cycling next to the liquid-cooled heads",
+      "Contamination of a belt by coolant, engine oil or chain lube softening the rubber",
+      "Belt run at incorrect tension at the last service, causing tooth-root cracking (over-tight) or tracking and tooth skip (slack)",
+      "Worn or dry tensioner and idler roller bearings destroying an otherwise sound belt",
+      "Previous service that reused belts or fitted non-specification belts"
+    ],
+    "fix_procedure": "1. Establish the age and history of the fitted belts first - check the service book, any dated marking on the belt itself, and the mileage. Age alone can condemn them before anything is removed, which is the cheapest possible outcome of this inspection.\n2. SAFETY: the engine must be stone cold before any belt work. The rear cylinder head and the exhaust headers on this L-twin retain heat long after shutdown, and the cooling system is pressurised - do not open the coolant circuit or work around the heads on a warm bike.\n3. SAFETY: support the motorcycle on a proper stand rated for its weight before removing bodywork or turning the engine. The frame on this generation is bolted to the cylinder heads, so a paddock stand and a side jack are not interchangeable - do not lift on the engine casings.\n4. Remove the right-hand bodywork and belt covers per the manual. On the liquid-cooled bikes note the routing of coolant hoses and any wiring clipped to the covers before disturbing them, and take care not to strain hose unions.\n5. Inspect both belts with a strong light: cracking at the tooth roots, missing or rounded tooth profiles, fraying or a polished edge where the belt has been running against a flange, and any oil, coolant or grease contamination. Also inspect the inside of the covers for black rubber dust, which indicates the belt has been shedding material. Spin each tensioner and idler roller by hand for roughness, drag or lateral play, and replace them with the belts per the manual's interval.\n6. Any cracking, contamination, tooth damage or an over-age belt means replacement of BOTH belts as a pair. Never fit one new belt against one used belt.\n7. SAFETY - LOCK THE TIMING BEFORE REMOVAL. Rotate the engine by hand, in the normal direction only, to the manual's timing/reference position with the belts still fitted and tensioned. Mark the existing belt-to-pulley and pulley-to-head relationship. Then fit the cam locking/timing tools specified for this engine to both heads and lock the crankshaft at its reference position before releasing tensioners or removing either belt. Do not rely on painted marks alone.\n8. SAFETY - INTERFERENCE ENGINE. With either belt removed, slack or un-tensioned, NEVER turn the crankshaft, and never turn a camshaft independently. Desmo cam lobe and closing-rocker load will spring an unlocked camshaft round on its own the instant belt tension is released; either event causes valve-to-piston contact and bends valves. Keep both cams and the crank locked for the whole time the belts are off.\n9. Replace belts with genuine or equivalent-specification belts, fitting them by releasing the tensioner and walking them on - never lever or pry a belt over a pulley flange. Set the belt tension to the manual specification using the tensioning method the manual specifies for this engine - do not use a rule-of-thumb deflection or a generic belt frequency figure from another Ducati model.\n10. Only after BOTH belts are fitted and tensioned to specification, remove the locking tools, confirm the camshaft and crankshaft timing marks align per the manual, then turn the engine by hand through several full turns in the normal direction of rotation only, never on the starter. If resistance is felt at any point, STOP and re-check timing - do not force it. Keep hands, tools and rags clear of the belt runs and pulleys while turning. Re-check tension and timing afterwards.\n11. Refit covers and bodywork, check coolant level and any hoses disturbed, then run the engine and re-check for leaks and for noise from the belt area.\n12. Record the date of the belt change, not only the mileage, since the next replacement is driven by time.",
+    "parts_needed": [
+      "Timing belt set (pair) to model specification",
+      "Tensioner and idler rollers or bearings per the manual's interval",
+      "Belt cover gaskets or seals as required",
+      "Belt cover fasteners if corroded",
+      "Coolant to specification if the circuit is disturbed",
+      "Bodywork fasteners and clips",
+      "Cam and crank locking/timing tools for this engine (workshop tooling)"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "Trellis frame bolted to the cylinder heads - fastener inspection and service planning on Monster 821/1200",
+    "description": "General knowledge entry, and an awareness item as much as a fault. On the 2014-2021 Monster 821 and 1200 family the short tubular steel trellis is bolted directly to the cylinder heads instead of surrounding the engine, so the engine is a fully stressed chassis member and the head fasteners are structural. Two practical consequences follow. First, the chassis cannot be separated from the engine, or a head disturbed, without independently supporting both - a paddock stand alone is not adequate, and taking the bike's weight on the engine casings is not an option. Second, when investigating a creak, a knock over bumps or a vague feeling under load on one of these bikes, the frame-to-head fastener joint belongs on the list, particularly on a machine that has had previous engine or head work, has been down the road, or has corrosion at the steel-to-alloy interface. This arrangement is specific to the trellis generation: it does not describe the 2021-on Monster 937, which uses a cast-aluminium Front Frame.",
+    "make": "Ducati",
+    "model": "Monster 821 / 1200 / 1200S / 1200R (Testastretta 11-degree, steel trellis bolted to cylinder heads, wet slipper clutch, 2014-2021)",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "medium",
+    "symptoms": [
+      "creak from frame under load",
+      "knock over bumps from midframe",
+      "frame to head bolts loose",
+      "corrosion at frame head joint",
+      "vague feel under hard drive",
+      "noise after previous engine work",
+      "frame fasteners never re-torqued"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Frame-to-cylinder-head fasteners not re-torqued to specification after previous head, belt or engine work",
+      "Galvanic corrosion at the steel frame to aluminium head interface on a bike used in winter or stored outdoors",
+      "Impact damage from a low-speed drop or crash transmitted into the head mounting lugs and frame ends",
+      "Fasteners reused where the manual calls for replacement, or fitted without the specified thread treatment",
+      "Mounting hardware, spacers or bushes omitted or mis-stacked at a previous reassembly"
+    ],
+    "fix_procedure": "1. Reproduce and localise the noise first before dismantling anything. Load the chassis with the bike on the ground and the brakes applied, and try to provoke the creak by rocking fore and aft - this costs nothing and often rules the frame joint in or out.\n2. Rule out the cheap and common sources before touching structural fasteners: loose bodywork, tank mounts, seat and subframe hardware, engine covers, exhaust hangers, and the rear suspension linkage hardware all creak convincingly.\n3. SAFETY: support the motorcycle on a stand rated for its weight, positioned so that no load is being carried by the engine casings. Because the frame hangs off the heads on this generation, an improvised lift point can put load straight through the joint being inspected.\n4. SAFETY: allow the engine to cool. The frame-to-head area sits directly against the cylinder heads, and the rear vertical cylinder and its header retain heat long after shutdown.\n5. SAFETY - FUEL. If access to the frame-to-head fasteners requires raising or removing the fuel tank, treat this as fuel work. Work outdoors or with forced ventilation, no smoking, no grinding, no droplights or other ignition sources, fire extinguisher to hand. Depressurise the fuel system per the manual before disconnecting any fuel line, disconnect the battery negative before unplugging the pump connector, and cap the open line. On reassembly, cycle the ignition to re-pressurise the system and inspect every disturbed fuel joint for weeping before starting the engine, and again with the engine running.\n6. Remove only the bodywork needed to see every frame-to-head fastener. Inspect visually for backed-out fasteners, witness marks or fretting around the joint faces, white corrosion product at the steel-to-alloy interface, and any cracking in the head mounting lugs or the frame tube ends.\n7. Establish from the manual whether these mountings are single-use, torque-plus-angle, or thread-locked BEFORE applying any tool. Where the manual specifies single-use fasteners or a thread-locking treatment, follow it exactly; these are structural and are not a place for substitutions.\n8. Verify the fasteners according to what the manual says they are. If single-use or torque-to-yield, do NOT apply a torque wrench to a fastener in place as a check - inspect visually and by paint/witness mark only; if the joint must be verified, replace the fastener and tighten fresh to specification in the manual's sequence. If reusable, verify by marking each fastener head and its seat, backing it off a fraction of a turn, and re-tightening to the specified torque in the manual's sequence with a calibrated wrench - never by pulling on an already-seated bolt and calling the reading a pass.\n9. Decision rule: if any frame-to-head fastener is found backed out, loose, or turns before reaching specified torque, do not simply re-tighten it and ride. Treat the joint as having moved - remove the affected fasteners, inspect the head lug and frame-end faces and the spacers/bushes for fretting, elongation or cracking, replace the fasteners, and re-tighten the complete joint to specification in the manual's sequence. The machine should not be ridden until that is done.\n10. Clean and treat corroded joint faces per the manual's recommendation before reassembly, and replace any fastener that is corroded, stretched or damaged.\n11. If a head mounting lug or frame end is cracked, stop. This is a structural repair and the machine should not be ridden until it has been assessed properly.\n12. When planning any job that removes a cylinder head on these bikes, note that head removal is also cam-belt work on an interference engine - the cams and crank must be locked to the manual's timing marks, the engine must never be turned with the belts removed or slack, and the belts must be correctly re-tensioned, or valve-to-piston contact will occur on the first turn. Budget for supporting the chassis independently of the engine from the outset, and check the manual's sequence before loosening the first frame fastener.",
+    "parts_needed": [
+      "Frame-to-cylinder-head fasteners to specification (replace if single-use, corroded or stretched)",
+      "Thread-locking compound or anti-corrosion treatment as specified",
+      "Bodywork fasteners and clips",
+      "Fuel line seals or clips if the tank is removed"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Monster 937 crash-damage assessment - cast-aluminium Front Frame and GFRP subframe, no trellis to straighten",
+    "description": "Drafted from general knowledge of the 2021+ Monster generation. The 937 broke with every Monster before it: there is no tubular steel trellis. A cast-aluminium Front Frame bolts directly to the two cylinder heads and carries the steering head, the engine is a fully stressed chassis member, and the rear subframe is moulded GFRP (glass-fibre reinforced polymer). A workshop that assesses crash damage the way it always has on a Monster - sighting down trellis tubes for a kink, or planning a tube repair - will both miss damage and propose a repair that cannot legitimately be done on this bike. Cast aluminium cracks rather than bending visibly, and neither the Front Frame nor the GFRP subframe can be welded, heat-straightened or cold-set back into shape. This entry is about the assessment and the repair decision, not about setting specifications, which are referred to the manual throughout.",
+    "make": "Ducati",
+    "model": "Monster 937 / Monster+ / Monster SP (Testastretta 11-degree, cast-aluminium Front Frame, wet slipper clutch, 2021-2024)",
+    "year_start": 2021,
+    "year_end": 2024,
+    "severity": "high",
+    "symptoms": [
+      "no trellis frame to inspect",
+      "front frame cracked after crash",
+      "frame damage assessment after crash",
+      "steering off after low side",
+      "cracked gfrp rear subframe",
+      "cannot straighten aluminium frame",
+      "paint crazing near head mounts"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Cast-aluminium Front Frame bolted to the cylinder heads replaced the tubular steel trellis used on every Monster up to 2020, so there are no frame tubes to inspect or straighten",
+      "Cast aluminium absorbs impact by cracking or by local deformation at the castings rather than by the obvious tube bend a steel trellis shows, so damage is easy to miss on a visual sweep",
+      "The engine is a stressed chassis member, so impact loads are fed into the cylinder head mounting bosses and their fasteners rather than into a frame structure that surrounds the engine",
+      "The GFRP rear subframe is a moulded composite: it fails by cracking, delamination and stress whitening, and cannot be welded, heated straight or filled and made structural again",
+      "Workshop habit - assessing a crashed Monster by eye down the trellis, and quoting a tube repair that does not exist on this generation"
+    ],
+    "fix_procedure": "1. SAFETY - MAKE THE MACHINE SAFE FIRST. With the engine and exhaust cold, check for fuel leakage - damaged tank, filler, breather/vent lines, split or pulled fuel hose - and for spilled fuel, oil or coolant on the floor, tyres or brake rotors. Work in a ventilated area with no ignition sources and a suitable extinguisher to hand; clean any spilled fuel or hydraulic fluid off the rear tyre, chain and brake rotors before moving the bike. If the fuel system is disturbed at any point, depressurise it to the manual procedure and leak-check on completion. Disconnect the battery negative before disturbing loom or Front Frame fasteners.\n2. Confirm the generation before anything else, because it changes the whole repair path: a 2021-on 937 has no trellis. If you can see the cast-aluminium Front Frame spanning between the cylinder heads and the steering head, trellis-era Monster crash-repair procedures do not apply.\n3. Do the cheap and likely checks first. The overwhelming majority of low-side damage lives in bar ends, levers, mirrors, footpeg hangers, engine covers, bodywork and fork legs. Establish that list and its cost before you go near the frame.\n4. SAFETY - the bike has no centre stand and no frame tubes to jack against. Support it on a stand rated for the machine's weight, taking load under the engine at the manual's designated support points - not on the sump/oil pan, bodywork or the GFRP subframe - and, where the front end is to be checked, at the headstock or forks. Confirm the exhaust and rear cylinder are cold before reaching past them.\n5. Check the front end geometry before condemning any casting: fork tube straightness and equal protrusion through the yokes, steering head bearing feel through full lock (notchiness or a detent straight ahead), and front-to-rear wheel alignment. Bent forks and twisted yokes mimic frame damage and are far more common.\n6. Inspect the Front Frame itself with a bright light and magnification. Look for hairline cracks radiating from the cylinder-head mounting bosses, around the steering head, and at the corners and webs of the castings. Look for paint crazing, flaking or lifted paint over a casting - on aluminium that is a crack indicator, not cosmetic. Clean and re-inspect anywhere the paint has moved.\n7. Where a casting is suspect and the answer is not obvious, use dye-penetrant crack testing on the cleaned area rather than guessing. SAFETY: dye-penetrant cleaner and developer are flammable solvent aerosols - engine and exhaust cold, ventilated area, no ignition sources, gloves and eye protection, and mask off brake rotors and pads.\n8. Inspect the cylinder-head mounting faces and their fasteners: fretting, bright rub marks, elongated holes, or any hint of movement between head and frame. Movement at that joint is a condemning finding, because that joint is the chassis.\n9. Inspect the GFRP rear subframe for cracks, stress whitening, delamination and damage around its mounting points and the seat and pillion peg loads. A composite that has whitened along a line has already failed there.\n10. Make the repair decision honestly. A cracked or deformed cast-aluminium Front Frame is a replacement item - do not weld, heat-straighten or cold-set it, and treat any offer to do so as unsafe. The same applies to the GFRP subframe: replace it, do not repair it.\n11. On replacement, follow the manual for the head-to-frame fastener specification, tightening sequence and any single-use fastener requirement. Do not carry over a torque figure from another Ducati.\n12. Before the machine moves under its own power, verify brake hoses, banjos and calipers for damage or leakage, clutch hydraulics dry and leak-free, tyres and wheels free of crash damage (sidewall cuts, bulges, rim flat spots), fluid levels correct and no fluid on rotors or tyres. Pump the brakes to a firm lever and pedal and do a low-speed brake check in the yard. Then re-check steering head bearing preload, wheel alignment and rider controls, and road test at low speed for straight-line tracking and hands-light stability before returning the bike.",
+    "parts_needed": [
+      "Front Frame (cast-aluminium) assembly, if condemned",
+      "cylinder-head-to-frame mounting fasteners, renewed to manual specification",
+      "GFRP rear subframe, if cracked or delaminated",
+      "steering head bearing set, if notchy or impact-loaded",
+      "fork tubes / triple clamps as found",
+      "brake pads if contaminated by spilled fluid",
+      "dye-penetrant crack detection kit (consumable)"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "Dry slipper clutch plate-ear and basket-finger hammering with worn back-torque ramps on Streetfighter 1098/S",
+    "description": "Drafted from general knowledge of the Ducati dry multi-plate slipper clutch fitted to the Streetfighter 1098 and 1098 S. The stack is an exposed friction/steel plate set in an aluminium basket behind a vented cover on the right-hand side of the engine, with back-torque (slipper) ramps between the clutch hub and the pressure plate. A dry-clutch idle rattle that disappears the moment the lever is pulled is NORMAL Ducati behaviour and is not on its own a fault. What is a fault is that rattle combined with drive-take-up judder, drag at a standstill, slip under power, or the loss of back-torque limiting on downshifts, which points to hammered plate ears, notched basket fingers, warped or blued steels, and worn slipper ramps. A dragging or non-returning external slave cylinder produces the same symptoms and will also cook a brand new stack, so rule the hydraulic side out first. This entry applies ONLY to the 1099cc Streetfighter 1098/S with the DRY clutch; the Streetfighter 848 (849cc, 2012-2015) uses a WET clutch running in engine oil and neither this diagnosis nor these parts transfer to it. The repair is done through the clutch cover on the assembled engine: there is no bellhousing, no flywheel face and no engine/gearbox split involved.",
+    "make": "Ducati",
+    "model": "Streetfighter 1098 / 1098 S (1099cc Testastretta Evoluzione, DRY slipper clutch, 2009-2013)",
+    "year_start": 2009,
+    "year_end": 2013,
+    "severity": "medium",
+    "symptoms": [
+      "clutch judder pulling away",
+      "dry clutch rattle with drag",
+      "clutch drags at standstill",
+      "clutch slips under hard acceleration",
+      "rear wheel hops on downshifts",
+      "grabby clutch take up",
+      "blued or warped steel plates"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Plate ears hammered oval and basket fingers notched by the drive pulses of the 90-degree L-twin, so plates bind in the notches instead of sliding freely - the classic cause of both drag and judder on the exposed dry stack",
+      "Warped, blued or heat-glazed steel plates and worn friction plates after repeated slipping or clutch-abused launches",
+      "Worn back-torque (slipper) ramps on the clutch hub and pressure plate, allowing the pressure plate to lift too readily so the clutch feels vague under drive and no longer limits back-torque predictably on downshifts",
+      "Weak, unevenly seated or previously shimmed clutch springs and spring caps giving uneven clamp across the pressure plate",
+      "Aftermarket or mixed plate stack built to the wrong total stack height or in the wrong plate order, which changes both engagement and slipper behaviour",
+      "Worn pressure plate pushrod/bearing interface making the lift uneven",
+      "External slave or master cylinder not allowing full pushrod return, holding the pressure plate partly disengaged so the stack is never fully clamped and burns itself out"
+    ],
+    "fix_procedure": "1. SAFETY: the engine, headers and the vertical (rear) cylinder on a naked Streetfighter reach burn temperatures within a minute of running. Let the bike cool fully before any work near the clutch cover or exhaust. Support the bike on the correct single-sided-swingarm rear stand (axle-pin type) and/or a front stand - the Streetfighter 1098/S has no swingarm spools for a conventional paddock stand.\n2. Cheapest check first: confirm the noise complaint. Run the engine at idle in neutral, with the clutch cover fitted, and pull the lever. If the rattle stops with the lever in, that rattle alone is normal dry-clutch behaviour - do not sell a clutch on the noise by itself. Look for a second symptom (drag, judder, slip) before going further.\n3. Rule out the hydraulic side before opening anything. Check lever free play, that the lever returns fully to its stop, the master cylinder reservoir level, and inspect the external slave cylinder on the left (front sprocket) case for a DOT4 weep - a fluid film on the case, chain and swingarm here is brake/clutch fluid, not engine oil. A slave that is not returning full pushrod travel will make a healthy clutch drag and will destroy a new stack. If a DOT4 weep is found, do NOT road test: rectify the slave seal or line, bleed the system, then thoroughly clean all fluid from the case, chain, swingarm, rear tyre and rear brake rotor with a suitable cleaner - fluid on a tyre or rotor is a riding hazard and it lifts paint - replace any contaminated brake pads, and confirm no leak with the lever held under pressure before the bike is ridden.\n4. Drag and slip tests. For the drag test with the bike on the stand, restrain the bike or have the front brake held firmly, feet clear, nobody standing in front of or behind the bike: engine warm and idling, pull the lever fully, select first gear and note any lurch or whether the bike tries to drive. Then, only with the covers fitted and the hydraulics dry, road test for judder on take-up, slip in a high gear under wide-open throttle, and back-torque behaviour on a firm downshift.\n5. SAFETY: NEVER start or crank the engine with the clutch cover removed - the friction/steel stack, basket and pressure plate are fully exposed and rotate with the engine. All running tests are performed with the cover fitted. Kill the ignition and remove the key before reaching into the clutch area, and keep loose sleeves, rags and cable ties clear of the stack. SAFETY - CLUTCH DUST: the debris in the cover is shed friction material, not oil sludge. Do NOT blow it out with compressed air - wipe it out with a damp lint-free rag or use a HEPA-filtered vacuum, or flood the parts with a non-oily brake/clutch cleaner into a catch tray. Wear gloves, a dust mask and eye protection, and bag the waste as workshop waste.\n6. Remove the clutch cover and inspect, in this order: the basket finger contact faces for step notching, the plate ears for hammered/rounded edges, the steel plates for warp, bluing and heat glaze, the friction plates for thickness, and the pressure plate face and spring caps for wear.\n7. Check the plate stack flatness and the friction plate thickness against the manual specification, and check spring free length to specification. Do not file basket fingers on a dry Ducati basket as a repair - stepped fingers are a replacement item because the notch depth is what re-traps the plate ears.\n8. Inspect the slipper ramps on the hub and pressure plate for rounded, pitted or unevenly worn ramp faces, and check the ramp springs/plungers if the assembly is serviceable. Worn ramps explain a clutch that feels fine on drive but no longer controls back-torque.\n9. Replace what is out of specification as a set: friction and steel plates, pressure plate and springs, and the basket if the fingers are notched. Deburr new plate ears before fitting. Build the stack in the plate order and to the total stack height given in the manual - this dimension is a specification, not a judgement call.\n10. Torque the pressure plate/spring cap fasteners and the clutch hub nut to the manual specification, using new locking hardware where the manual calls for it.\n11. Refit the cover, re-check lever free play, and confirm on the stand that the lever returns fully to its stop and the clutch fully engages and disengages. Road test starting with low-speed brake and clutch function checks before any high-gear roll-on or hard downshift. Expect the normal dry rattle to return - a rebuilt Ducati dry clutch is not a silent clutch.",
+    "parts_needed": [
+      "dry clutch friction plate and steel plate set",
+      "clutch basket (drum) if the fingers are notched",
+      "clutch pressure plate",
+      "clutch springs and spring caps",
+      "slipper (back-torque) ramp assembly components where serviceable",
+      "clutch hub nut / locking hardware as specified",
+      "clutch cover gasket or O-ring where fitted",
+      "slave cylinder seal kit or slave assembly if it is not returning fully",
+      "DOT4 fluid and brake/clutch cleaner",
+      "rear brake pads if contaminated by fluid"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "External hydraulic clutch slave cylinder weeping DOT4 onto the sprocket-side case and chain",
+    "description": "Drafted from general knowledge of the Ducati hydraulic clutch. The slave cylinder is bolted externally to the left, sprocket-side case and pushes a rod that runs through the gearbox mainshaft to the pressure plate on the opposite side of the engine. Its piston seal is a known weep point: fluid escapes past the pushrod, runs down the outside of the case and drips straight onto the front sprocket area, the chain run and the swingarm, where it is then flung along the chain. Because the leak is external and above the chain, mechanics sometimes call it a countershaft seal - the discriminator is the fluid itself. DOT4 is thin, pale amber, water-washable and strips paint, and the clutch master cylinder reservoir level falls; engine oil from a countershaft seal is dark, does not thin out with water, and leaves the clutch reservoir level unchanged. The same slave is also the usual suspect when lever effort climbs or the clutch starts to drag on a hot bike sitting in traffic. Replacement is external - the slave unbolts from the outside of the case, nothing is split.",
+    "make": "Ducati",
+    "model": "Monster 1100 / 1100S (1078cc air-cooled 2V Desmodue, dry clutch, single-sided swingarm, 2009-2010)",
+    "year_start": 2009,
+    "year_end": 2010,
+    "severity": "high",
+    "symptoms": [
+      "fluid dripping onto chain and swingarm",
+      "wet film around front sprocket cover",
+      "clutch reservoir level keeps dropping",
+      "clutch lever pulls to the bar",
+      "lever effort rises when hot",
+      "clutch drags when engine is hot",
+      "cannot find neutral when hot",
+      "clutch fluid smell near sprocket"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "worn or hardened slave cylinder piston seal weeping DOT4 past the pushrod",
+      "scored or corroded slave bore chewing the seal, often after old moisture-laden fluid was left in the system",
+      "weeping hose banjo or perished crush washers at the slave, mimicking a failed slave",
+      "old degraded DOT4 with a lowered boiling point expanding and softening the lever on a hot air-cooled engine",
+      "clutch hose routed close to the rear cylinder header so fluid heat-soaks in traffic",
+      "air trapped at the high point of the clutch line after a previous poor bleed, worsened by heat"
+    ],
+    "fix_procedure": "1. Identify the fluid before ordering anything. Degrease the sprocket-side case and chain, idle the bike briefly, then re-inspect. Thin pale amber fluid that washes off with water, together with a falling clutch master cylinder reservoir level, is DOT4 from the clutch hydraulics. Dark, clingy oil with a steady reservoir level points at the countershaft seal instead and is a different job. SAFETY: do NOT road test the bike while a clutch fluid leak is live - fluid reaching the rear tyre or rear brake rotor is a crash hazard.\n2. SAFETY: DOT4 strips paint and irritates skin and eyes, and it is hygroscopic, so use only fresh fluid from a sealed container. Wear gloves and eye protection, mask the tank, frame and swingarm, and flush any spill immediately with plenty of water.\n3. Cheapest check first: inspect the hose banjo at the slave and the hose itself. Renew the crush washers and torque the banjo bolt to the manual specification, then clean and re-test before condemning the slave - a weeping banjo looks exactly like a leaking slave once fluid has run down the case.\n4. SAFETY: this model has a SINGLE-SIDED swingarm - use the correct single-sided rear stand, or an appropriate front stand plus side support. A conventional spool/axle-fork paddock stand will not fit. Level ground, gearbox in neutral, engine off, key out, engine and exhaust fully cool. You will be working directly above the chain run - never spin the rear wheel by hand with fingers near the front sprocket, and never run the engine while working there.\n5. SAFETY: the clutch line stays connected and pressurised. Once the slave is unbolted, do NOT touch the clutch lever - the piston will be ejected under pressure and spray DOT4. Tie or clamp the lever out of use, catch the fluid in a tray or rag, and support or bag the slave rather than letting it hang on the hose. Remove the front sprocket cover as required and unbolt the slave, capturing the pushrod and any thrust washer or bearing as it comes away, and note orientation for reassembly.\n6. Inspect the slave bore for scoring, pitting and corrosion. A scored bore will destroy a new seal - fit a complete slave in that case rather than a seal kit.\n7. Refit the slave with the pushrod correctly seated, torque the fasteners to the manual specification, and bleed the clutch per the manual. The slave sits below the master, so bleeding upward from the slave nipple works well; make sure no bubble is left at the high point of the hose.\n8. Confirm operation: full lever return, full pushrod retraction with the lever released, clean neutral selection, and no creep with the lever pulled.\n9. Decontaminate the whole fluid path. Wash with plenty of water and detergent: sprocket cover, case, chain, swingarm, and critically the REAR TYRE, rear brake rotor and caliper. DOT4 on a tyre or rotor is a crash hazard, and brake pads that have been contaminated must be REPLACED, not cleaned. Do not ride the bike until the leak is fixed and every contaminated surface is cleaned or replaced. Then degrease and re-lube the chain and check painted or coated surfaces the fluid reached.\n10. For a hot-bike lever-effort or drag complaint with a healthy, dry slave, address heat and fluid: flush the system with fresh DOT4 to the manual specification, confirm the hose is routed and secured clear of the rear cylinder header, and re-check pressure plate and spring condition through the clutch cover. SAFETY: engine OFF, key out, engine cold for any clutch inspection - this is an exposed DRY clutch and the plate stack rotates whenever the engine runs, so never run the engine or put fingers near the open clutch, and never blow dry-clutch friction dust out with compressed air; vacuum it or wipe it with a damp cloth.\n11. Re-check the reservoir level and inspect for weeping after the first ride and again after a week.",
+    "parts_needed": [
+      "clutch slave cylinder assembly, or slave seal kit if the bore is clean",
+      "banjo crush washers",
+      "DOT4 brake and clutch fluid to the manual specification, fresh sealed container",
+      "clutch hose if perished or heat damaged",
+      "rear brake pads if contaminated",
+      "chain cleaner and chain lubricant",
+      "sprocket cover fasteners if corroded"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Normal dry clutch idle rattle mistaken for a fault - triage before quoting a clutch job",
+    "description": "Drafted from general knowledge of Ducati dry-clutch behaviour. The loud metallic rattle from the right-hand clutch cover at idle in neutral is a design characteristic of the dry multi-plate clutch, not a defect: with no oil film between the plates, the ears knock against the basket fingers as the big L-twin's torque pulses shake the stack, and an open or vented cover simply lets the noise out. Pull the lever and the rattle should quiet or change markedly as the stack is clamped and unloaded. This entry exists because the noise is routinely misdiagnosed on bikes that are mechanically fine, leading to unnecessary clutch sales; it also gives the two conditions that turn a normal rattle into a real fault. Most of the triage is done with the bike stationary and, at most, a look through the cover openings; the drag check is done with the bike upright on the ground and the slip check on the road, and both come after the hydraulic side has been confirmed dry.",
+    "make": "Ducati",
+    "model": "Monster 900 (M900, air-cooled 2V Desmodue, dry clutch, 1993-2002)",
+    "year_start": 1993,
+    "year_end": 2002,
+    "severity": "low",
+    "symptoms": [
+      "loud rattle at idle in neutral",
+      "rattle from right side clutch cover",
+      "rattle quiets when lever is pulled",
+      "clutch noise worse when hot",
+      "noisy dry clutch after cover change",
+      "dry clutch noise at idle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "normal dry-clutch design behaviour - no oil film to damp plate ears against basket fingers",
+      "open or vented clutch cover radiating the noise that a closed cover would muffle",
+      "low idle speed increasing crank torque pulses and stack movement",
+      "light aftermarket plates or basket ringing more loudly than OEM parts",
+      "owner unfamiliar with the model comparing it to a wet-clutch bike"
+    ],
+    "fix_procedure": "1. Warm the engine and let it idle in neutral. Pull the clutch lever slowly and listen: if the rattle quiets or clearly changes character and returns when the lever is released, the noise source is the dry clutch stack behaving normally. SAFETY: with an open or vented cover the clutch is spinning and exposed - keep hands, tools, sleeves and cable ties well clear, and mind the hot cover and exhaust.\n2. Check idle speed against the manual specification. An idle set below spec exaggerates the rattle noticeably and is a free fix.\n3. Check the hydraulic side before any in-gear or road test: lever free play, full lever return, and that the external slave cylinder on the sprocket-side case is dry and its pushrod fully retracts. If any fluid is present, clean it off, degrease the rear tyre and brake rotor, inspect and re-lube the chain, replace contaminated brake pads, rectify the leak and re-check before the bike is ridden.\n4. Drag test. With the bike on level ground and upright, rider astride with both feet down and the front brake held - NOT on a paddock stand - engine warm and the lever pulled fully in, select first gear and check the bike does not creep, and that neutral can be found at a standstill. If this must be done on a stand instead, note that the rear wheel will spin: strap or block the bike, keep everyone clear of the rear, and never stand behind it before selecting a gear.\n5. Slip test, only after steps 2 and 3 pass and with no leak anywhere in the clutch or brake hydraulics: on a quiet road in full riding gear, warm the bike and do a top-gear roll-on, watching for rpm rising without a matching increase in road speed.\n6. If the cover is open or vented, inspect the visible basket fingers and plate ears through the openings with the engine OFF, key out and the engine cold. Look for stepped notches in the fingers and mushroomed plate ears. Do not blow clutch dust out with compressed air - wipe it with a damp cloth or vacuum it, wearing gloves and a dust mask.\n7. If drag, slip and visible notching are all absent, this is a healthy clutch. Document the lever test result and explain to the customer that the rattle is normal for the model - do not sell a clutch on noise alone.\n8. If the owner wants the noise reduced, the honest options are limited: correct idle speed, OEM-weight plates rather than light aftermarket parts, and a closed cover. Advise that a closed cover traps heat around a stack that relies on airflow, which shortens plate life on a bike ridden hard or slipped a lot in traffic.\n9. If any of the fault conditions in steps 4 or 5 were present, stop here and move to a full stack and basket inspection through the cover.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  }
+]
