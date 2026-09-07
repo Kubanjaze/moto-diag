@@ -1,0 +1,400 @@
+[
+  {
+    "title": "Dry-sump oil overfill: oil in airbox from wrong level-check procedure",
+    "description": "The Rotax 652 single (F650GS single 2000-2007, G650GS 2009-2016; note the model-year gap between the end of F650GS single production and the start of the G650GS) is a dry-sump engine whose oil reservoir is the frame, checked via the dipstick at the frame-tank filler (right side of the frame). Because much of the oil drains back into the engine when the bike sits, a cold check reads low and owners or inexperienced shops top up until it looks right — the engine is then overfilled, and the surplus is pumped out through the crankcase breather into the airbox. The bike comes in for 'burning oil', smoke, oil dripping from the airbox drain, or a fouled air filter, and the real fault is the check procedure. Written from general knowledge of owner reports and shop practice — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F650GS (single, 2000-2007) / G650GS (652cc single, 2009-2016)",
+    "year_start": 2000,
+    "year_end": 2016,
+    "severity": "medium",
+    "symptoms": [
+      "oil in airbox",
+      "wet air filter",
+      "blue smoke on startup",
+      "high oil consumption",
+      "rough running",
+      "oil level reads low when cold"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Oil level checked cold instead of using the manual's hot-idle check procedure",
+      "Repeated top-ups after the oil drained back into the crankcase during storage",
+      "Excess oil expelled through the crankcase breather into the airbox",
+      "Breather hose or airbox drain blocked, holding expelled oil in the airbox",
+      "Genuine breather or ring/valve-guide problems (much less common; rule out overfill first)"
+    ],
+    "fix_procedure": "1. Ask the owner how and when the oil level was checked and how much has been added; a recent top-up after a cold check is the usual history.\n2. Inspect the airbox: remove the air filter and look for pooled oil, an oil-soaked filter, and oil in the breather hose from the engine. Check that the airbox drain is not blocked.\n3. CAUTION: the hot-level check requires the engine at operating temperature. Oil and the exhaust header will be hot enough to burn on contact — wear gloves, keep clear of the header, and allow the bike to settle for the manual's specified period before opening any drain point.\n4. Bring the engine to operating temperature, then perform the oil-level check exactly as the manual describes for this dry-sump engine (engine run and idled, stopped, and read within the manual's time window). The bike must be upright and vertical on a centre or paddock stand (NOT on the sidestand) on level ground — a reading taken on the sidestand is meaningless on a frame-tank system. Note the level.\n5. If the level is above the upper mark, remove the excess by suction through the frame-tank filler using a fluid extractor, taking out a measured amount and re-checking. Do not crack the engine drain plug to bleed off a small overfill — on a dry sump the crankcase is not the reservoir being measured, and a loosened plug will normally dump the full charge. If a drain plug is opened for any reason, fit a NEW sealing/crush washer and torque to the manual's specification; do not reuse the washer or overtighten into the alloy case.\n6. Clean the airbox and breather hose, and replace the air filter if it is oil-soaked; clean or replace intake-tract components downstream if oil has reached the throttle body.\n7. Run the engine, re-check the hot level, and confirm no fresh oil appears in the airbox after a short road test. Check for leaks at any fastener disturbed before releasing the bike.\n8. If oil still accumulates in the airbox with a correct level, investigate the breather system and engine condition (compression/leak-down per the manual) as a separate fault.\n9. Show the owner the hot-check procedure and note it on the invoice; this is the most effective fix for repeat visits.",
+    "parts_needed": [
+      "Air filter",
+      "Engine oil (for any correction/top-up)",
+      "Drain plug sealing washer (if any drain plug is disturbed)",
+      "Airbox drain hose or breather hose if degraded"
+    ],
+    "estimated_hours": 1,
+    "source": "model-generated"
+  },
+  {
+    "title": "Starter freewheel (sprag) replacement on the Rotax 652 single",
+    "description": "The failure mechanism of a starter one-way clutch is described in a separate entry; this entry covers only what is specific to the 652cc Rotax single (F650GS single 2000-2007, G650GS 2009-2016). On this engine the starter drives through an intermediate (idler) gear into a freewheel bolted to the back of the generator rotor on the left side of the crankshaft, so the repair is a left-cover job requiring rotor removal with the correct puller, and the idler gear and its shaft should be inspected at the same time. Written from general knowledge of owner reports and shop practice — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F650GS (single, 2000-2007) / G650GS (652cc single, 2009-2016)",
+    "year_start": 2000,
+    "year_end": 2016,
+    "severity": "medium",
+    "symptoms": [
+      "starter spins but engine doesn't crank",
+      "starter whirs",
+      "grinding during cranking",
+      "ratcheting noise after start",
+      "intermittent cranking"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Worn or damaged sprag elements in the freewheel (mechanism covered elsewhere)",
+      "Freewheel-to-rotor bolts loosening, letting the freewheel body shift",
+      "Scored or worn freewheel gear running surface",
+      "Worn starter idler gear teeth or idler shaft/bushing",
+      "Oil contamination or wrong oil viscosity aggravating slip"
+    ],
+    "fix_procedure": "1. Work on a cold engine. Support the bike securely on a centre stand or lift before applying any pulling force to the left side. Ignition off, then disconnect the battery negative lead before removing the cover or disturbing any wiring; reconnect the negative last.\n2. Confirm the starter motor itself runs strongly (listen, and check current draw if needed) and that the battery is good, so a weak starter is not mistaken for a slipping freewheel.\n3. Drain the engine oil AND the frame oil tank per the manual (dry sump; the left cover is a wet cover on this engine). If the engine has been run, allow it to cool — hot oil will scald.\n4. Remove the left-side generator cover with a new gasket ready, noting the position of any dowels and the generator wiring.\n5. Turn the freewheel gear by hand: it should lock in one direction and freewheel in the other. Any slip in the locking direction, or roughness, confirms the fault.\n6. Hold the crankshaft with the manual's flywheel holding tool — do not jam the gear train, use the starter, or shock the nut with an impact gun. Confirm the thread direction of the rotor nut and of the puller thread in the rotor before applying force. Remove the rotor nut and pull the rotor from its taper with the correct puller for this engine; do not lever or hammer on the rotor.\n7. Remove the freewheel from the back of the rotor, noting bolt pattern and orientation. Inspect the sprag cage, the freewheel gear's running surface, and the rotor hub for scoring.\n8. Inspect the starter idler gear and its shaft/bushings for wear and replace as needed.\n9. Fit the new freewheel using new bolts with thread-locking compound and the manual's torque specification, orientation exactly as marked in the manual (reversed fitment will lock the wrong way).\n10. Clean the crank taper and rotor bore, check the woodruff key / rotor-to-crank alignment and the ignition trigger position, then refit the rotor and nut to the manual's torque specification and refit the cover with a new gasket.\n11. Reconnect the generator wiring and the battery (negative last), refill with the specified oil and a new filter, then set the level by the manual's dry-sump warm-and-running procedure before test-cranking several times hot and cold.",
+    "parts_needed": [
+      "Starter freewheel (sprag) assembly and freewheel gear",
+      "Freewheel mounting bolts (new, with thread-locker)",
+      "Starter idler gear and shaft if worn",
+      "Left-hand generator cover gasket",
+      "Engine oil and oil filter",
+      "Rotor puller (special tool)",
+      "Flywheel holding tool and calibrated torque wrench (special tools)"
+    ],
+    "estimated_hours": 5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Notchy / indexed steering-head bearings on the 21-inch F800GS",
+    "description": "The F800GS (including the Adventure) is widely reported to develop indexed, notchy steering-head bearings at relatively low mileage. The long-travel forks and 21-inch front wheel put high leverage through the head bearings, off-road impacts brinell the caged ball races, and factory preload is often marginal, so a detent develops at straight-ahead. The result is a bike that wants to fall into the centre detent, feels vague at low speed and weaves on gentle bends. Tapered-roller replacement kits are the usual cure. Treat the fault as high severity where free play is also present, because a loose head can promote weave at speed. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "steering notchy",
+      "bars click into straight ahead",
+      "weave at low speed",
+      "clunk from front under braking",
+      "vague front end"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Brinelling of the caged ball bearing races from off-road impacts and the leverage of the long fork/21-inch wheel",
+      "Insufficient factory preload allowing the balls to hammer the races",
+      "Water ingress and washed-out grease in the lower race (pressure washing, river crossings)",
+      "Over-tightened head bearings after a previous adjustment, accelerating race wear"
+    ],
+    "fix_procedure": "1. Rule out other causes of vagueness first: front tyre pressure and wear, fork alignment in the clamps, wheel bearings, brake calipers and spoke tension.\n2. Support the bike under the frame/engine — bench, headstock support or engine jack with a rear stand — NOT through the forks or a front-wheel stand, because the entire front end will be removed; the F800GS has no standard centre stand. With the front wheel clear of the ground, grasp the fork lowers and rock fore-aft to check for play, then swing the bars slowly lock to lock feeling for a detent at centre or roughness anywhere in the arc. A distinct centre notch confirms damaged races; adjustment alone will not cure it.\n3. If the bearings are only loose (play but no notch), reset preload to the manual's procedure and recheck; if a notch is present, plan replacement.\n4. Isolate the battery (negative terminal off, ignition off) before disconnecting the ABS sensor, switchgear or instrument-cluster connectors.\n5. Remove both front brake calipers and hang them from the frame with no load on the hoses or ABS lines; fit pad spacers and do NOT operate the front brake lever while the wheel is out.\n6. Remove the front wheel and fender, release the ABS sensor lead and brake line clamps from the fork, note the fork height in the clamps, and remove the fork legs.\n7. Remove the handlebar assembly (support the instrument cluster and switchgear without stressing the harness), then the top triple clamp and adjuster nut per the manual.\n8. Drop the lower triple clamp/stem and remove the old races from the head tube and the lower bearing from the stem. Wear eye protection when driving the old outer races out; use a proper race driver, and chill the new races / warm the head tube rather than forcing them in askew.\n9. Fit a tapered-roller bearing kit (OEM or a widely used aftermarket kit for this model) with fresh grease, seating the outer races fully square in the head tube.\n10. Reassemble, set bearing preload to the manual's procedure, and torque the stem and triple-clamp pinch bolts to the manual's specification. Set fork height back to the noted position.\n11. Reinstall wheel and fender, torque axle and pinch bolts per the manual, and route the ABS lead exactly as before.\n12. Before the road test: pump the front lever until firm, confirm zero head-bearing free play, swing lock to lock checking no cable, hose or harness is pulled tight, re-torque axle, pinch and stem fasteners, and confirm the ABS lamp completes its self-test.\n13. Road-test, then recheck preload after a short settling period since tapered bearings bed in. SAFETY: Do not ride with detectable steering-head free play — it causes weave and can become instability at speed.",
+    "parts_needed": [
+      "Tapered-roller steering-head bearing kit (OEM or aftermarket for F800GS)",
+      "Waterproof bearing grease",
+      "Brake pad spacers",
+      "Fork seals only if leaking is found during disassembly"
+    ],
+    "estimated_hours": 3.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Rapid rear brake pad wear and dragging rear brake on the F800GS",
+    "description": "F800GS owners very commonly report rear pads lasting a fraction of the distance the fronts do, along with a blued rear disc and a hot, dragging rear caliper. The pattern comes from a rear master cylinder pushrod set with no free play (so the piston never fully returns and residual pressure builds as the fluid heats), dry or corroded caliper slide pins, and riders standing on the pegs off-road resting on the pedal. The small rear pad area on this bike accelerates the wear once any drag exists. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "rear brake dragging",
+      "rapid rear pad wear",
+      "rear disc blued",
+      "rear wheel does not spin freely",
+      "hot brake smell",
+      "spongy rear brake when hot"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Rear master cylinder pushrod adjusted with no free play so the compensating port stays covered and pressure builds with heat",
+      "Caliper slide pins dry, corroded or with torn boots, so the caliper cannot float and one pad drags",
+      "Caliper piston sticking from corrosion or old fluid; boot damaged by off-road debris",
+      "Rider standing on the pegs off-road with a foot resting on the pedal",
+      "Pads worn unevenly and jammed on the pad pin, or wrong-compound pads fitted"
+    ],
+    "fix_procedure": "1. Secure the bike on a proper lift or paddock stand (the F800GS has no standard centre stand — check for spools before using a rear stand) and keep fingers clear of the chain and sprocket. Spin the rear wheel and note drag; after a short road test with minimal rear braking, check caliper and disc temperature with an infrared thermometer, not by hand — a dragging caliper and disc can burn. Drag confirms the fault before any parts are ordered.\n2. Check for free play at the rear brake pedal before the master cylinder piston begins to move; adjust the pushrod so there is measurable free play per the manual's procedure. If the pedal height was previously raised, this is the usual cause. Confirm the rear brake light switch still operates correctly after the pushrod is readjusted.\n3. Remove the caliper and inspect pad thickness and even wear; uneven wear between the pads points at seized slide pins. Clean brake dust with brake cleaner, never compressed air.\n4. Withdraw the slide pins, clean, inspect the rubber boots and replace if torn, and relubricate with a rubber-safe silicone or PTFE slide-pin grease — explicitly not copper anti-seize or a petroleum-based grease.\n5. Check the piston retracts freely. Crack the bleed nipple before pushing the piston back so degraded fluid is expelled rather than forced back into the ABS modulator, and watch the reservoir for overflow. Never operate the pedal with the caliper off or the pads out. If the piston sticks, clean it or rebuild/replace the caliper.\n6. Fit new pads, clean the pad pin and anti-rattle hardware, and inspect the disc against the manual's minimum thickness — replace if under limit or heavily blued/warped.\n7. Replace the rear circuit fluid with fresh fluid of the manual's specified type; this is not optional once the brake has been overheated.\n8. Reassemble and torque caliper bolts to the manual's specification.\n9. Pump the rear brake pedal until firm to seat the pads against the disc BEFORE moving the bike; re-check and top up the reservoir to the mark, then confirm the wheel spins freely cold.\n10. Road-test and recheck for drag and temperature when hot, again using an infrared thermometer.\n11. Advise the owner about pedal position and foot placement when standing off-road.",
+    "parts_needed": [
+      "Rear brake pads",
+      "Caliper slide pin boots and rubber-safe (silicone/PTFE) slide-pin grease",
+      "Brake fluid (manual's specified type)",
+      "Rear brake disc (only if under minimum thickness or damaged)",
+      "Caliper seal kit (only if piston sticks)"
+    ],
+    "estimated_hours": 2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Gear Shift Assist Pro stops working - shift-lever sensor wiring failure",
+    "description": "On F750GS/F850GS fitted with the optional Gear Shift Assist Pro (clutchless up/down shifting), owners report the quickshifter going intermittent and then dead while normal clutch shifting still works fine. The shift-rod sensor's four-wire pigtail flexes with every shift where it is anchored near the sensor, and the conductors fatigue and break inside the sleeve; connector faults and a failed sensor are the other causes. The ECU logs shift-lever-sensor voltage-plausibility faults and disables the function. Loss of the function itself is a low-severity convenience issue, but the intermittent stage can produce a missed shift or false neutral under acceleration. Written from general knowledge of owner reports on public BMW owner forums - confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F850GS (853cc, 2018-2023)",
+    "year_start": 2018,
+    "year_end": 2023,
+    "severity": "low",
+    "symptoms": [
+      "quickshifter stops working",
+      "clutchless shift refused",
+      "shift assist intermittent",
+      "shift lever sensor fault"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Sensor pigtail conductors fatigue-broken where the loom is anchored and bent sharply at the shift-rod sensor (most commonly reported)",
+      "Chafed or water-damaged sensor connector giving an open or high-resistance circuit",
+      "Shift-rod sensor itself out of range or failed",
+      "Shift rod / lever adjustment leaving the sensor outside its expected rest window"
+    ],
+    "fix_procedure": "1. Confirm the complaint: with the bike warm and rolling in a safe, low-traffic area, attempt clutchless shifts in both directions and verify that clutch shifting is normal so the gearbox itself is not suspected. Be aware that a failing sensor can refuse a clutchless shift under load and produce a missed shift or false neutral.\n2. Retrieve stored faults with the shop diagnostic tool and note any shift-lever-sensor voltage or plausibility entries (code specifics are covered in the diagnostic-code section).\n3. Support the bike on a centre stand or paddock stand before working on the shift linkage — do not work off the side stand while pushing on the shift rod. Let the exhaust and engine cases cool after the test ride. Switch the ignition off and remove the key; disconnect the battery negative lead before opening the loom or making any splice, and reconnect only for the live output check.\n4. Locate the sensor in the shift linkage rod and follow its pigtail to the connector; unplug and inspect both halves for corrosion, pushed-back pins and water ingress.\n5. Open the sleeve/loom for the first short section from the sensor body and inspect the wires where the loom is tied down — flex each wire gently; broken conductors typically show up here, often two wires at the same spot.\n6. With the connector unplugged, check continuity of each of the four conductors from sensor to plug while flexing the loom; any intermittent reading confirms the wiring fault.\n7. If wiring is at fault, repair with sealed adhesive-lined heat-shrink butt crimps in same-gauge flexible stranded wire, splices staggered rather than side by side. Do NOT solder a splice in this flexing section — solder wicks into the strands and creates a stress riser that will fatigue again. Re-route with a larger service loop and reposition the tie so the loom no longer bends sharply at the sensor anchor. On a repeat failure, the preferred fix is replacement of the sensor with its factory pigtail.\n8. If wiring and connector are sound, check the sensor's output against the manual's specification; back-probe from the rear of the connector with proper probes — do not insert probes into terminal faces or spread the pins. Replace the sensor if out of range.\n9. Verify the shift rod length and lever position per the manual so the sensor sits in its rest window.\n10. Reconnect the battery, allow the ECU to re-initialise, then clear faults and road test with several clutchless up- and down-shifts, confirming no faults return.",
+    "parts_needed": [
+      "Shift-lever (quickshifter) sensor assembly with pigtail, if wiring repair is not viable",
+      "Sealed adhesive-lined heat-shrink butt crimps and flexible stranded wire",
+      "Flexible braided loom and cable ties"
+    ],
+    "estimated_hours": 2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Steering head clunk over bumps - bearing adjuster loose from new / early notchiness",
+    "description": "A common complaint on F750GS and F850GS: a clunk felt through the bars over speed bumps, potholes and under braking, traced to the steering-head bearing adjuster not having been set at the run-in service so the bearings are running loose. If left, the loose stack and marginal factory grease lead to a notchy, self-centring feel in the straight-ahead position and the bearings need replacing; treat the notchy case as high severity. Written from general knowledge of owner reports on public BMW owner forums - confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F750GS (853cc, 2018-2023)",
+    "year_start": 2018,
+    "year_end": 2023,
+    "severity": "medium",
+    "symptoms": [
+      "clunk over bumps",
+      "knock through handlebars",
+      "vague front end",
+      "forks rock fore-aft",
+      "steering notchy"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Steering-head bearing adjuster left at the factory setting and not re-set at the run-in service, so the bearings run with play",
+      "Bearings settle into their races during the first miles and the preload drops off",
+      "Marginal factory grease in the lower bearing, accelerating brinelling once play is present",
+      "Excess play tolerated for a long time, indenting the races (notchy feel)"
+    ],
+    "fix_procedure": "0. On a 2018-2023 machine showing this at or shortly after the run-in service, check warranty status and raise a warranty claim before carrying out chargeable work.\n1. Confirm the source: support the bike securely under the frame/engine with the rear weighted so the front end carries no load. A rear paddock stand alone will not raise the front wheel, and the F750/F850GS has no standard centre stand. Never support the machine through the fork legs or front axle when the yoke clamping is to be slackened, and check the bike cannot topple before starting. With the front wheel raised, grip the lower fork legs and rock fore-aft; a knock at the headstock confirms bearing play — rule out fork-leg clamp bolts, wheel bearings and brake calipers first.\n2. Sweep the bars slowly lock-to-lock and feel for a detent at straight-ahead; a notch means the races are already indented and the bearings should be replaced rather than just adjusted. If a detent is felt, advise the rider not to ride at speed until rectified — an indented steering head can promote weave or headshake and is a roadworthiness failure.\n3. To adjust: remove the cover between the handlebar clamps and mark the adjuster position. Support or tie back the handlebars so they cannot drop onto the tank or instrument cluster and strain the brake, clutch and switchgear lines, then loosen the steering-stem clamp and the upper triple-clamp pinch bolts per the manual so the adjuster can move.\n4. Back the adjuster off slightly, then set preload to the manual's specification, with the bearings seated and the front end unloaded, following the manual's tightening sequence; re-tighten the stem clamp and the triple-clamp pinch bolts to the manual's specification and re-check all stem and pinch-bolt torques before the bike is lowered.\n5. Re-check: no fore-aft play, bars fall smoothly to either lock from centre with no notch.\n6. If notchy: support the brake calipers — do not hang them by the hoses — and do not operate the front brake lever while they are off the discs. Unclip and protect the ABS wheel-speed sensor lead before withdrawing the forks. Remove the front wheel, forks and lower triple clamp, replace both tapered bearings and races (fit new races with a press or the correct drift set, not a hammer and screwdriver), pack with quality high-temperature grease, then set preload per the manual and re-check after a short settling ride. Allow roughly 3-5 hours for the replacement job against about 1 hour for adjustment only.\n7. Road test over a rough surface and confirm the clunk is gone; note on the job card that the head bearing was set, since many bikes miss this at the run-in service.",
+    "parts_needed": [
+      "None for adjustment only",
+      "Steering-head tapered bearing set (upper and lower, with races and seals) if notchy",
+      "High-temperature bearing grease"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Accessory spliced into a ZFE-switched circuit trips the electronic fuse (no fuse box to check)",
+    "description": "The F800GS twin (and the same-architecture F650GS twin 2008-2012, F700GS 2012-2017 and F800GS Adventure 2013-2018) uses BMW's single-wire CAN system with a central chassis electronics module (ZFE). There is no conventional fuse box: the ZFE drives and current-monitors each output (headlight, tail/brake, indicators, socket, grips) and acts as an electronic fuse. When an owner splices aux lights, a horn, or a USB feed into one of these switched outputs, the ZFE sees out-of-range current, shuts that output down (taking the factory lamp with it), and typically lights the general warning and a bulb symbol. The output only comes back after an ignition cycle, so the fault looks intermittent, and a mechanic hunting for a blown fuse will not find one. Written from general knowledge of owner reports and BMW accessory wiring conventions — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "lights go dark after accessory fitted",
+      "bulb failure warning",
+      "accessory works only briefly",
+      "no fuse box to check",
+      "aux lights misbehave"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Accessory wired into a ZFE-monitored output (commonly the headlight, tail light or licence-plate light) so the ZFE's electronic fuse trips on overcurrent",
+      "Non-CAN heated grips or aux lights wired to a switched circuit rather than to the battery via a relay",
+      "Accessory current pushes the ZFE output past its limit only when the factory lamp and accessory are on together, producing an intermittent shutdown",
+      "Scotch-lock or vampire taps on the harness damaging the CAN or output wiring, causing implausible signals at the ZFE",
+      "Owner reset the 'fuse' by cycling the ignition, so the fault is hidden until the accessory is loaded again"
+    ],
+    "fix_procedure": "1. Interview the owner: list every accessory added and, if possible, get the installer's wiring description. Photograph the harness before touching it.\n2. Cycle the ignition and confirm the affected factory lamp returns — this is the signature of a ZFE electronic-fuse trip rather than a hardware failure.\n3. Key off, allow the CAN bus to go to sleep, then disconnect the battery negative terminal before any tracing, cutting or splicing; reconnect negative last. Expect clock and settings to reset.\n4. Trace the accessory feed. Any accessory taking its power from a ZFE output (headlight, tail/licence light, indicator, grip or socket wiring) is the fault regardless of how neat the install looks.\n5. Inspect every tap point for insulation damage or vampire taps and repair using sealed crimp repair terminals as BMW specifies (solder only where the manual permits — solder joints crack under vibration). Before applying heat, note that the fuel tank sits under the seat: shield it, use no open flame, and disconnect the fuel pump connector if working adjacent to it. Do not leave taps on CAN wiring.\n6. Rewire the accessory correctly: fused feed direct from the battery through a relay, with the fuse as close to the battery positive terminal as practical, and the relay coil triggered from a low-current switched source. Use a relay with an integral flyback diode or coil-suppression resistor so inductive kickback does not present an implausible signal to the ZFE, and confirm total load on the trigger output (relay coil plus anything the owner plugs in) stays inside its monitored current window.\n7. Alternatively, fit a CAN-aware accessory controller designed for BMW (Hex ezCAN or equivalent) which plugs into the bike's CAN/diagnostic connection and the battery and provides its own protected, switched outputs without touching ZFE circuits. Follow that product's model-specific fitting guide.\n8. Reconnect the battery, then read and clear ZFE fault memory with GS-911 or BMW diagnostics before road test.\n9. With the bike on a centre or paddock stand, rear wheel secured, gearbox in neutral, in a ventilated bay, and test leads clear of the hot exhaust and radiator fan, run the engine with the accessory at full load and confirm all factory lamps stay lit, no warning lamps appear, and system voltage at idle and at cruising rpm meets the manual's specification.\n10. Note in the job card that the ZFE resets on ignition cycle and that the bike has no fuse to replace, so the customer understands why the previous 'fix' kept coming back.",
+    "parts_needed": [
+      "Automotive relay with flyback diode or coil suppression, and inline fuse holder with fuse rated per the accessory",
+      "Sealed crimp harness repair terminals, heat-shrink and loom tape",
+      "Optional: BMW-specific CAN accessory controller (Hex ezCAN or equivalent) with F800GS harness"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Heated grips inoperative: engine-running lockout, ZFE low-voltage shedding, or retrofit not enabled",
+    "description": "Factory heated grips on the F800GS twin are switched by the ZFE over the CAN bus, not by a simple switch-and-relay circuit. Three BMW-specific behaviours generate repeat 'grips don't work' complaints: the ZFE only allows the grips on with the engine running (not merely ignition on); the ZFE reduces or cuts grip heating when system voltage sags, which happens at idle with aux lights and other loads on because the permanent-magnet generator's output is rpm-dependent; and factory grips retrofitted to a bike built without them stay dead until the function is enabled in the ZFE with the BMW diagnostic system or an equivalent tool. Aftermarket grips wired into the factory grip circuit also trip the ZFE. The F650GS twin (2008-2012), F700GS and F800GS Adventure share this arrangement. Written from general knowledge of the BMW rider's manual and owner reports — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "low",
+    "symptoms": [
+      "heated grips not working",
+      "grips cold at idle",
+      "grips stop heating",
+      "only one grip heats",
+      "general warning lamp"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Normal ZFE behaviour: heated grips are only released when the engine is running",
+      "ZFE load management reduces or switches off grip heating when on-board voltage falls below its threshold — charging output at idle is low on this PM-generator bike, so added loads make this common",
+      "Heated-grip function not enabled in the ZFE after a retrofit (coding is part of the BMW retrofit instructions)",
+      "Open or high-resistance heating element or damaged grip wiring where it passes the throttle tube, causing the ZFE to detect an implausible load",
+      "Aftermarket grips with a different element load connected to the ZFE's grip output, tripping the electronic fuse",
+      "Corroded or unseated grip connector under the handlebar cover"
+    ],
+    "fix_procedure": "1. Connect the diagnostic tool and read ZFE fault memory before any disassembly.\n2. Start the engine before testing: confirm the grips respond to the handlebar switch with the engine running. Run the engine only in a well-ventilated area, with the bike secure on its stand and in neutral, keeping hands and test leads clear of the hot exhaust and front wheel. If the grips now work, explain the lockout to the customer.\n3. If the grips drop out on the road, measure system voltage at idle and at cruising rpm with every accessory the owner normally runs switched on, observing the same running precautions. Compare with the manual's specification; if idle voltage sags with loads on, the ZFE shedding is doing its job and the answer is reducing idle load (relay-fed aux lights that switch off at idle, or removing the extra draw), not replacing grips.\n4. For a retrofit that has never worked, check whether the heated-grip function was enabled in the ZFE. If not, enable it per the BMW retrofit instructions using the BMW diagnostic system or an equivalent tool, then retest.\n5. If one grip is cold or the warning lamp appears: switch the ignition off and allow the ZFE to shut down before disconnecting any grip connector. Remove the handlebar switch cover/grip connectors and measure each element's resistance only with the grip unplugged from the ZFE output, never with the circuit live, comparing against the manual's specification; check the wiring to the throttle-side grip. Replace a failed grip and repair chafed wiring at the throttle tube.\n6. If aftermarket grips have been spliced into the factory grip output, remove them from that circuit and feed them from a relay-controlled supply with an ignition-switched relay trigger and an inline fuse sized to the grips' rated current fitted at the battery end of the supply (or use a CAN accessory controller), leaving the ZFE grip output unloaded. Note to the customer that this reintroduces the same idle load.\n7. Refit the grip and switchgear, then verify the throttle rotates freely through full travel at both steering locks and snaps shut under spring load with no wiring trapped or stretched.\n8. Cycle the ignition to clear the ZFE's electronic-fuse state, run the engine, and confirm both heat levels work and no warning lamp is shown, before road test.",
+    "parts_needed": [
+      "Replacement heated grip(s) as required",
+      "Grip wiring repair materials",
+      "Optional: relay, inline fuse and holder for aftermarket grips"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Non-CAN accessories on the F750GS/F850GS ZFE platform: tripped outputs and BMW aux lights that need enabling",
+    "description": "The F750GS/F850GS (853cc, 2018-2023) carries the same single-wire CAN architecture as the F800GS, with a ZFE that current-monitors its outputs and acts as an electronic fuse, plus TFT-integrated control of factory options. Two accessory situations recur: non-BMW aux lights or heated grips wired into ZFE-switched circuits (headlight, tail light, socket) shut the factory lamp down until the ignition is cycled; and BMW's own LED auxiliary headlight or heated-grip kits, which are CAN-controlled, stay dead after a retrofit until the vehicle is coded per the fitting instructions. The socket limit and low-voltage cut-out behave as on the F800GS. The 2024+ F900GS and 895cc F800GS are built on the same architecture but verify model-specific details before applying this. Written from general knowledge of BMW fitting instructions and owner reports — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F850GS (853cc, 2018-2023)",
+    "year_start": 2018,
+    "year_end": 2023,
+    "severity": "medium",
+    "symptoms": [
+      "headlight drops out with aux lights",
+      "warning symbol on display",
+      "retrofit accessory not responding",
+      "accessory socket dead",
+      "aux lights flicker at idle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Accessory fed from a ZFE-monitored output, tripping the electronic fuse",
+      "BMW CAN-controlled option (LED aux lights, heated grips) fitted but not enabled in the vehicle electronics",
+      "Socket load above the manual's rating, or the ZFE's key-off/low-voltage cut-out",
+      "Harness taps damaging CAN wiring near the headstock or under the tank"
+    ],
+    "fix_procedure": "1. Identify every added accessory and its feed point. Check the rider's manual for any conventional fuse fitted to this model before assuming none exists.\n2. Before rewiring anything, cycle the ignition with each accessory isolated in turn to confirm which circuit trips — a free test that avoids unnecessary rewiring.\n3. Disconnect the battery negative lead before any harness work, tapping, cutting or new-feed installation; reconnect negative last. Do not probe or cut CAN wiring with the battery connected.\n4. For any accessory fed from a ZFE output, remove it from that circuit and rewire via a fused battery feed and relay, with the inline fuse at the battery-positive end as close to the terminal as practical and sized to the accessory, and the positive lead routed and secured clear of steering lock-to-lock movement, hot exhaust and suspension travel. Trigger the relay from a low-current switched source that does not load a ZFE-monitored output — preferably a BMW-specific CAN accessory controller's own trigger input (Hex ezCAN or equivalent for the F750/F850GS), fitted per its guide.\n5. For a BMW-branded retrofit kit that is dead, confirm the kit's fitting instructions were followed to the end, including the vehicle coding step. Connect an approved battery charger/support unit and confirm battery voltage meets the diagnostic tool's minimum before starting coding; do not interrupt the session, as an aborted write can leave the ZFE incorrectly coded. Enable the option with the BMW diagnostic system or an equivalent tool and retest from the handlebar controls and TFT menu.\n6. Inspect harness tap points for damage and repair to the manual's standard. If tank removal is required, allow the engine to cool, depressurise and plug the fuel lines per the manual, and support the bike securely (paddock or centre stand, not side stand alone). Repair CAN wiring with soldered-and-sealed or manufacturer-specified crimp joints, preserving twist and routing — no Scotchlok or vampire taps on CAN lines.\n7. Cycle the ignition to reset the ZFE, refit or secure bodywork, then run the engine in a well-ventilated area with hands clear of the cooling fan and exhaust. Operate all accessories at full load and confirm factory lamps stay lit, no TFT warning appears, and charging voltage measured at the battery with a meter (not read from the TFT) meets the manual's specification.",
+    "parts_needed": [
+      "Relay, inline fuse and holder",
+      "Sealed harness repair materials",
+      "Optional: CAN accessory controller for F750/F850GS"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "F800GS 21-inch tubed spoked front wheel: spoke loosening, nipple seizure and rim dents after off-road use",
+    "description": "The F800GS (798cc twin, 2008-2018, including the Adventure) uses a conventional tube-type 21-inch spoked front wheel with nipples at the rim. Hard off-road use, rocky trails and low tyre pressures work the spokes loose, and once a few slacken the wheel goes out of true and rim dents and pinch flats follow. Grit and corrosion also seize the nipples so they cannot be retensioned without breaking spokes. Not applicable to the 2008-2012 F650GS twin or F700GS, which have a 19-inch cast front wheel. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "pinging from front wheel",
+      "front wheel out of true",
+      "loose spokes",
+      "front end vibration after off-road",
+      "repeated pinch flats",
+      "dented rim"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Spokes settling and loosening under off-road impact loads, especially early in the wheel's life and after rock strikes",
+      "Low tyre pressures used off-road allowing the rim to hit the ground through the tyre",
+      "Grit and water corroding nipples so they seize in the rim, preventing retensioning",
+      "Previous owner or tyre shop truing by cranking a few spokes tight rather than tensioning evenly",
+      "Rim tape damaged by loose spoke ends, allowing spoke ends to chafe the inner tube"
+    ],
+    "fix_procedure": "1. With the front wheel raised clear of the ground on a headstock/fork stand or a jack under the engine, bike secured against tipping (the centre stand lifts only the rear wheel and is an accessory on this model), spin the front wheel and check lateral and radial runout against the manual's limit using a dial indicator or a fixed pointer.\n2. Tap each spoke with a spoke wrench or small spanner; loose spokes give a dull thud instead of a ring. Mark loose and dead spokes.\n3. Inspect the rim edge for dents and flat spots, and inspect spoke heads at the hub for cracks or corrosion. Do not release the bike for road use with broken spokes, out-of-limit runout, or a rim dent that pinches the tube.\n4. Confirm the wheel is the 21-inch tube-type spoked front (spokes entering at the rim centre, inner tube fitted) and identify the correct spoke and nipple sizes before ordering parts.\n5. If only a few spokes are loose and the nipples turn freely, tension them evenly with the correct spoke-wrench size, working around the wheel in small increments and rechecking runout, per the manual's tension and truing procedure. Do not over-tension chasing truth — it pulls nipples through the rim and can crack it.\n6. If the wheel must come out: remove the front brake calipers and support them so no load is on the hoses (do not operate the front brake lever while they are off), protect the ABS wheel-speed sensor and pulse ring, note spacer and fork positions, and withdraw the axle per the manual.\n7. If nipples are seized, mask or remove the brake discs before applying penetrating oil, work the nipples gently, then degrease any overspray and replace contaminated pads. If they will not move or spokes are broken, deflate the tyre fully and remove the valve core before breaking the bead, remove tyre and tube, and fit a new spoke set or nipples, then lace and true the wheel — or send the rim and hub to a wheel builder.\n8. After truing, inspect the rim tape and replace it if spoke ends have worn through; inspect the tube for chafe marks. Replace rather than weld or straighten a cracked or badly deformed rim.\n9. Refit tyre and tube and balance the wheel. On refit, torque the front axle and fork pinch bolts to the manual's specification with the forks settled, check the ABS sensor air gap, and pump the front brake lever to seat the pads before the bike is moved.\n10. Recheck spoke tension after the first ride and again at the next service. Allow roughly 1.5 hours for inspection and retensioning of a few free-turning nipples, and 3-5 hours (or subcontract to a wheel builder) for a full re-lace and true.\n11. Advise the customer that spoke tension should be checked after any hard off-road ride and that a small dent in the rim edge will pinch tubes until the rim is repaired or replaced.",
+    "parts_needed": [
+      "Front spoke and nipple set (or individual spokes) for the 21-inch F800GS wheel",
+      "Rim tape",
+      "Inner tube (21-inch front)",
+      "New rim only if dented or cracked beyond safe repair"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "F800GS rear wheel and cush-drive (sprocket carrier) bearing failure on off-road and washed bikes",
+    "description": "The chain-driven F800GS twin carries its rear sprocket on a separate cush-drive carrier with its own bearing, plus two hub bearings in the wheel. On bikes used off-road, through water crossings or regularly pressure-washed, the carrier bearing and the sprocket-side hub bearing are common failures, and a failed carrier bearing lets the sprocket wobble so chain tension varies as the wheel turns and the chain and sprocket wear unevenly. The same wheel arrangement is shared by the 2008-2012 F650GS twin and F700GS. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "rumbling from rear wheel",
+      "play at rear wheel",
+      "rear sprocket wobbles",
+      "chain tension varies with wheel rotation",
+      "grinding from rear wheel",
+      "intermittent ABS fault"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Water ingress past the bearing seals from water crossings and pressure washing aimed at the hub",
+      "Off-road impact loads and dried mud degrading the seal lips",
+      "Over-tight chain adjustment loading the sprocket carrier bearing",
+      "Old grease washed out of the cush-drive carrier bearing, which runs partly exposed behind the sprocket",
+      "Cush-drive rubbers worn hard or missing, allowing the carrier to hammer the bearing"
+    ],
+    "fix_procedure": "1. With the bike secured on a centre stand (not standard on all F800GS) or a paddock/rear-wheel stand, front wheel chocked or held so it cannot be rocked off the stand, grip the rear tyre at top and bottom and rock it; then grip the sprocket and rock it independently of the wheel. Play at the sprocket but not the tyre points to the carrier bearing; play at both points to the hub bearings.\n2. With the chain removed or slack and hands clear of the chain run, rotate the wheel slowly by the tyre and listen at the hub; roughness or a dry grinding note confirms bearing failure. Never hold or lift the chain while the wheel is turning — there is a nip point at the sprocket.\n3. Rotate the wheel and watch the chain slack — a carrier bearing failure shows as chain tension cycling once per revolution.\n4. Remove the rear wheel per the manual, keeping the spacers in order. Support or hang the rear caliper without stressing the hose, and do not press the rear brake pedal while the wheel and disc are out — fit a pad spacer. Take care not to strike, distort or contaminate the ABS pulse ring or sensor. Separate the sprocket carrier from the hub and inspect the cush-drive rubbers for hardening, cracking or free play.\n5. Turn each bearing by hand: any notchiness, roughness, side play or seal damage means replacing all rear bearings as a set, not just the failed one.\n6. Support the hub squarely on a bearing plate and drive the old bearings out with a suitable drift or blind bearing puller without damaging the hub bores; never drive against an inner race and do not use an impact drift near the ABS ring. Drive new bearings in squarely using a driver on the outer race only, fitting the sprocket-side bearing first, recovering and refitting the internal spacer and any circlip, and following the manual's order and any spacer preload notes.\n7. Fit new seals and lightly grease the seal lips and spacer faces only; do not attempt to repack sealed cartridge bearings. Replace cush-drive rubbers if worn.\n8. Inspect the rear sprocket and chain; if the sprocket is hooked from running wobbled, replace chain and sprockets together.\n9. Refit the wheel, set chain slack per the manual's specification with the suspension at the specified position, torque the axle to the manual's specification, verify the ABS sensor gap and sensor seating, and recheck for play.\n10. Clear any stored ABS fault, confirm on a low-speed test that it does not return, then road test and check for noise. Advise the customer to keep pressure washers away from the hub and to inspect the carrier for play and seal weeping at chain-adjustment time, keeping grease away from the ABS sensor and brake disc.",
+    "parts_needed": [
+      "Rear wheel bearing set (hub bearings and seals)",
+      "Sprocket carrier / cush-drive bearing and seal",
+      "Cush-drive rubber set if worn",
+      "Rear sprocket and chain if worn from wobble",
+      "Brake pad spacer",
+      "Waterproof bearing grease"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "F800GS swingarm chain slider wear allowing the chain to cut into the aluminium swingarm",
+    "description": "On the chain-driven F800GS twin the drive chain runs over a plastic slider on the top of the swingarm and through a guide near the rear sprocket. On bikes used off-road or with the chain run slack, the slider wears through faster than the service schedule anticipates, and once it is gone the chain saws into the soft aluminium swingarm beam and the lower guide, which is often not noticed until the metal is grooved. Escalate to high severity once the swingarm beam itself is grooved — that is a structural defect, not a wear item. The 2008-2012 F650GS twin and F700GS use the same basic swingarm and slider arrangement. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "F800GS (798cc, 2008-2018)",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "chain slap",
+      "rattling over bumps",
+      "rubber shavings near swingarm",
+      "chain cutting into swingarm",
+      "chain guide cracked"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Slider material worn away by grit and mud carried by the chain off-road",
+      "Chain adjusted too slack, increasing slap against the slider on rough ground",
+      "Worn or stretched chain with tight spots hammering the slider",
+      "Slider mounting clips or screws failing so the slider shifts and exposes the swingarm",
+      "Lower chain guide lost or broken by rock or debris strikes and not replaced"
+    ],
+    "fix_procedure": "1. Work on level ground with the bike on a rated rear or workshop stand and secured against toppling (the F800GS has no standard centre stand); ignition off, engine off, gearbox in neutral. Never run fingers along the chain or near the sprocket mesh while turning the rear wheel — turn the wheel, not the chain. Inspect the top slider along the swingarm from the countershaft rearward; check the remaining thickness against the manual's wear limit and look for chain rollers touching metal.\n2. Inspect the lower chain guide near the rear sprocket for cracks, missing sections and loose fasteners.\n3. Look for grooves in the swingarm beam under and behind the slider and measure the depth of any groove. Minor surface marks are cosmetic, but a groove into the swingarm beam wall is a structural defect — do not weld, fill or dress the swingarm; replace it, and treat the bike as not roadworthy until assessed.\n4. Check chain slack per the manual with the suspension at the specified position, and check the chain for stretch, kinks and tight spots; a worn chain will destroy a new slider quickly.\n5. Remove the old slider (and lower guide if worn), noting how the clips or screws locate it, and clean the mounting area.\n6. Fit the new slider and guide, confirming they seat fully and cannot rotate or slide toward the sprocket.\n7. Replace the chain and sprockets if worn. Loosen the rear axle nut and adjusters, set chain slack to the manual's specification with the suspension at the manual's specified position (not with the wheel hanging at full droop), set the adjusters equally using the swingarm alignment marks, then torque the rear axle nut to the manual's specification. Confirm the chain runs centred on the slider through full suspension travel by compressing the rear end.\n8. Road test and listen for chain slap; re-check chain slack and rear axle torque after the road test, and recheck slider seating after the first off-road ride. Advise the customer to inspect the slider at every chain adjustment on an off-road-used bike.",
+    "parts_needed": [
+      "Swingarm chain slider (upper) for the F800GS",
+      "Lower chain guide if worn or missing",
+      "Slider fixings or clips as required",
+      "Chain and sprocket set if worn",
+      "Replacement swingarm only if the beam is grooved"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  }
+]
