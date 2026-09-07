@@ -84,7 +84,12 @@ MAX_FRAMES = 60
 
 #: ffmpeg ``-vf`` filter expression that yields ~2 fps for the first 30s
 #: and ~1 fps after that. The expression assumes the source is 30 fps;
-#: ``-vsync vfr`` lets the timing be variable so we don't force-pad.
+#: ``-fps_mode vfr`` lets the timing be variable so we don't force-pad.
+#: (Was ``-vsync vfr`` until Phase 204: ffmpeg 9 REMOVED ``-vsync``
+#: outright — not deprecated-but-tolerated, removed. It fails with
+#: "Unrecognized option 'vsync'" before decoding starts, so every
+#: video landed in ``unsupported``. ``-fps_mode`` is the supported
+#: spelling and has existed since ffmpeg 5.0, which is a safe floor.)
 #: Specifically: ``not(mod(n,15))`` keeps every 15th frame in the first
 #: 30s window (≈2 fps at 30 fps source); ``not(mod(n,30))`` keeps every
 #: 30th frame after (≈1 fps at 30 fps source). The ``+`` is logical OR
@@ -166,7 +171,7 @@ def extract_frames(
         "-i", str(video_path),
         "-vf", FRAME_FILTER,
         "-vframes", str(max_frames),
-        "-vsync", "vfr",
+        "-fps_mode", "vfr",
         str(output_dir / "frame_%03d.jpg"),
     ]
 
