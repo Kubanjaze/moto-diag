@@ -1,0 +1,116 @@
+[
+  {
+    "title": "BMW proprietary fault codes are invisible to a generic ELM327 scanner — \"no codes found\" does not mean no fault",
+    "description": "General knowledge entry on the read-access problem when diagnosing BMW motorcycles. A generic ELM327/OBD-II clone speaks only the legislated emissions diagnostic layer. Motorcycles carry that layer only from Euro 5 (roughly 2021 model year onward), so on a Euro 5 BMW a generic reader returns standard P-codes from the engine ECU and nothing else, while on earlier CAN-era BMWs with the round diagnostic connector it usually will not establish a session at all — \"no communication\" there is expected behaviour, not evidence of a network fault. Nearly everything a BMW motorcycle actually reports — ZFE/central electronics, ABS and stability control, instrument cluster, immobiliser/EWS, and, depending on model and equipment, TPMS, ESA suspension and keyless ride — lives in BMW proprietary diagnostic sessions on non-legislated addresses that the clone cannot request. The clone is not broken; it is asking a different question. The failure mode is a shop plugging in a cheap scanner, seeing an empty or near-empty code list, and telling the customer nothing is wrong while a customer-visible warning triangle is lit.",
+    "make": "BMW",
+    "model": "R1200/R1250, F650/F700/F750/F800/F850/F900, S1000, K1200/K1300/K1600 (CAN-bus era; round 10-pin connector on earlier bikes, OBD-II 16-pin on later ones)",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "scanner shows no fault codes",
+      "generic obd2 reader finds nothing",
+      "warning light but no codes",
+      "elm327 will not connect bmw",
+      "bluetooth dongle no codes bmw",
+      "dash warning triangle no dtc",
+      "abs light but scan tool clean",
+      "obd reader cannot see zfe",
+      "code reader says system ok",
+      "no communication with control module"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Generic ELM327 and OBD-II readers only implement legislated emissions services, so at best they see engine/emissions P-codes and nothing else",
+      "Motorcycles carry no legislated OBD emissions layer before Euro 5, so on earlier BMWs a generic reader commonly gets no session at all even with a physical adapter fitted",
+      "BMW motorcycle body, chassis and network faults are stored in proprietary diagnostic sessions on modules the generic tool never addresses",
+      "Several BMW modules require a proprietary session initialisation the clone cannot perform, so the tool reports 'no communication' or skips the module silently",
+      "Cheap clone dongles often support only one CAN protocol variant and drop off entirely on some BMW motorcycle networks",
+      "Codes stored as history or soft faults in a proprietary module are not mirrored into the emissions layer, so a real fault genuinely produces an empty P-code list",
+      "Shop assumes an empty scan equals a healthy vehicle and stops diagnosing"
+    ],
+    "fix_procedure": "0) Set the bike up before reading anything: upright and secured on a stand, out of gear, in a ventilated bay, with a battery support unit or charger connected. Extended multi-module reads with the ignition on will flatten a motorcycle battery, and a sagging supply throws spurious voltage-related faults across every module — which then get diagnosed as real.\n1) Establish which tool tier is in hand before trusting any scan result. Tier 1, a generic ELM327/OBD-II reader: on a Euro 5 (roughly 2021+) machine it reads and clears emissions P-codes from the engine ECU only, plus a limited live data stream; on earlier CAN-era BMWs, particularly round-connector bikes, it will often not connect at all. In neither case can it read ZFE, ABS, cluster, immobiliser, TPMS or ESA faults, run actuator tests, or perform service resets and adaptations. Tier 2, an enthusiast or independent-grade BMW motorcycle tool such as GS-911: reads and clears BMW proprietary fault codes across the motorcycle's modules, shows live values, runs many actuator and bleed routines, and performs common service functions and resets; some functions are gated by licence level and by how many VINs the unit is registered to. Tier 3, dealer ISTA/Rheingold with the appropriate interface: full module coverage plus coding, programming and software updates the independent tools deliberately do not offer.\n2) Never report 'no codes' from a Tier 1 tool as 'no fault'. Report it accurately: 'no emissions codes; BMW proprietary modules were not read'. Write that on the ticket so the next tech does not repeat the scan.\n3) When a dash warning or a customer-visible symptom exists and the generic scan is clean, escalate to a Tier 2 or Tier 3 tool before condemning any part. Do not sell a sensor or a module on an empty generic scan.\n4) With the proper tool, read every module, not just the one that seems implicated. Record fault status as well as the code text: BMW modules distinguish currently-present faults from historic or intermittent ones, and a healed fault with a high occurrence count is the fingerprint of a connector or wiring problem rather than a dead component.\n5) Do not clear codes before writing down the full list with status and any freeze-frame or environmental data. Clearing is free; the information you clear is not recoverable. Take particular care with immobiliser/EWS and keyless-ride faults — clearing one without understanding it can leave a bike that will not restart away from the workshop.\n6) After a repair, clear, then re-read. Reproduce the fault under the safest condition that will trigger it: stationary with ignition on first, then on a stand or in a closed area, and only then on the road. Do NOT road-test to reproduce a fault affecting ABS, stability control, wheel-speed sensing or ride-by-wire throttle — reproduce those on a stand or in a controlled low-speed area, and treat a bike with a live braking or stability fault as not roadworthy until it clears and stays clear.\n7) Once a tool that can actually address the modules is connected, a tool that reaches some modules but not others is a network or supply finding, not a tool failure — see the CAN-bus diagnosis entry. Partial or failed connection with a Tier 1 tool on a pre-Euro 5 bike means nothing at all.\n8) Shops that see BMW motorcycles regularly should own a Tier 2 tool. The alternative is subcontracting every electrical job to a dealer, and the tool pays for itself on avoided parts-cannon repairs. Follow the manual specification for any procedure the tool exposes.",
+    "parts_needed": [
+      "BMW-capable motorcycle diagnostic tool (GS-911 or equivalent)",
+      "dealer ISTA access for coding and programming-level work",
+      "OBD-II 16-pin cable or round-connector adapter matching the model",
+      "battery support unit or charger for extended diagnostic sessions"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "ZFE central vehicle electronics as the failed module: splitting a ZFE-side fault from a dead load",
+    "description": "General knowledge entry on the ZFE (Zentrale Fahrzeug Elektronik, central vehicle electronics) as the module you are diagnosing, rather than as the accessory-wiring concern covered by the existing F-series ZFE entries. On CAN-bus era BMW motorcycles the ZFE is the body-electrics brain: it gates and switches most non-engine loads electronically and reports its own faults only into BMW proprietary diagnostic sessions, so a generic reader sees none of them. Because it sits between the switch the rider presses and the load that should respond, a ZFE-side fault mimics a dead component almost perfectly, which is how good parts get replaced for nothing. The purpose of this entry is the split: is the request reaching the module, is the module commanding the output, and is the output reaching the load. Written from general knowledge — confirm details against the service manual for the specific model before quoting.",
+    "make": "BMW",
+    "model": "R1200/R1250 (2004-2023), F650/F700/F750/F800/F850/F900, S1000 series, K1200S/R/GT (2005 on) and K1600 (2011 on) — CAN-bus era machines with central body electronics; module name, location and diagnostic access vary by family and year",
+    "year_start": 2004,
+    "year_end": 2023,
+    "severity": "high",
+    "symptoms": [
+      "multiple electrical items dead at once",
+      "lights and horn dead together",
+      "zfe fault code stored",
+      "body electrics intermittent bmw",
+      "switch works but load does nothing",
+      "function returns after ignition cycle",
+      "cannot read zfe with cheap scanner",
+      "electronic fuse tripped no blown fuse"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Corroded or backed-out pin in a ZFE connector, giving intermittent loss of one or several outputs",
+      "Poor ground or degraded main supply to the ZFE, which can drop several unrelated functions simultaneously",
+      "Water ingress at the module's mounting location or at its harness entry on the model concerned",
+      "Failed ZFE output driver for one circuit while the rest of the module works normally",
+      "Switch or bus input to the ZFE lost, so the ZFE never commands the output even though the load and its wiring are fine",
+      "Accessory-related electronic-fuse and low-voltage load-shedding behaviour — covered by the existing F-series ZFE accessory entries, check those first before treating the module as faulty"
+    ],
+    "fix_procedure": "PRECAUTIONS before any connector work: ignition OFF and battery disconnected (negative lead first) before unplugging or re-mating any ZFE connector — breaking or mating module connectors live can destroy output drivers and set spurious faults across the bus; reconnect only after every connector is fully latched. Never use a test lamp or a piercing probe on CAN lines or module outputs; use a high-impedance DMM with proper back-probe pins on the wire side of the seal, because piercing insulation creates the corrosion path that becomes the next intermittent fault. Never back-feed or jumper a ZFE output to battery positive to 'test' a load — these are electronically fused solid-state drivers and back-feeding is a common way to kill an otherwise good module. Never bypass or over-rate a physical fuse to see whether a circuit works. Fit a battery support unit for extended diagnostic or coding sessions: low system voltage both provokes load-shedding behaviour that produces false leads and can corrupt a coding write on a replacement module. Observe fuel-system and hot-surface caution where the module or its harness sits under the tank or seat on the model concerned.\n1) Read fault memory with a tool that can actually address the module — dealer ISTA/ISTA+, or an independent tool such as GS-911 or Motorscan. A generic OBD reader cannot see these faults at all, so an empty generic scan tells you nothing here.\n2) Characterise the failure before touching wiring. Note whether one function or several are affected, whether the loss is permanent or clears on an ignition cycle, and whether it correlates with battery state or with a particular accessory being connected. Several unrelated functions failing together points to supply, ground or bus — not to several failed components. If an accessory is involved, this is the accessory-wiring case already covered elsewhere, not a module fault.\n3) Verify supply and ground at the module connector itself, loaded, per the manual specification and the method in the cross-platform ground and voltage-drop entry. A drop that only appears under load is the common finding and is easy to miss on a static check.\n4) Inspect the module connectors for green corrosion, spread terminals, backed-out pins and moisture, per the connector-corrosion entry; repair the terminal rather than the module where a terminal is loose.\n5) Use the tool's actuator or output test to command the suspect load directly. This is the step that decides the job: if the module commands it and nothing happens, the fault is downstream in wiring or load. If the module refuses the command or reports a fault on that output, the fault is at or inside the module.\n6) Check the input side before blaming an output. A function that requires a bus message or a switch input will never actuate if that input is missing, and that looks identical to a failed output. Confirm the module is seeing the request.\n7) Replace the module only after supply, ground, connectors, inputs and downstream wiring are proven good. A replacement generally requires coding to the vehicle with a dealer-level tool, so confirm that path is available before ordering the part.\n8) After any work, clear faults, cycle the ignition, verify function on the stand, then re-read to confirm nothing returns.",
+    "parts_needed": [
+      "ZFE central electronics module (only after full supply, ground, connector and input diagnosis)",
+      "connector terminals and seals as required",
+      "dielectric grease",
+      "BMW-capable diagnostic tool with actuator test (GS-911, Motorscan or dealer ISTA)",
+      "battery support unit or charger"
+    ],
+    "estimated_hours": 2,
+    "source": "model-generated"
+  },
+  {
+    "title": "BMW motorcycle diagnostic connectors: round 10-pin proprietary plug on older bikes versus 16-pin OBD-II port on later ones",
+    "description": "General knowledge entry on physically getting a tool onto a BMW motorcycle. Older BMW motorcycles use a round 10-pin proprietary diagnostic connector, frequently located under the seat or a side panel, that no standard OBD-II cable will fit. BMW kept that round connector well into the CAN-bus era and moved to the 16-pin OBD-II socket only around the 2016-2017 model years with the Euro 4 on-board-diagnostics requirement, so the presence of a CAN bus does not predict which plug a bike has — check the specific model and year. On later bikes the plug is standard but the data behind it is still substantially BMW-proprietary. Knowing which connector a bike has determines which cable or adapter you need before the customer is standing in the shop, and stops a tech concluding the bike 'has no diagnostic port'.",
+    "make": "BMW",
+    "model": "R-series, K-series, F-series and S-series (round 10-pin connector era through the 16-pin OBD-II era, changeover around 2016-2017)",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "cannot find diagnostic port bmw",
+      "round diagnostic connector under seat",
+      "obd cable will not fit bmw",
+      "which adapter for old bmw bike",
+      "no obd2 port on motorcycle",
+      "diagnostic plug behind side panel",
+      "10 pin round connector bmw",
+      "scan tool cable does not fit"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Older BMW motorcycles predate the 16-pin standard and use a round 10-pin proprietary diagnostic connector requiring a model-specific adapter cable",
+      "BMW retained the round connector on many CAN-bus era bikes, so a modern-looking machine can still need the round adapter — bus type does not predict the plug",
+      "Connector is hidden under the seat, under a side panel or behind a fairing panel, so it is assumed absent",
+      "Later motorcycles use a 16-pin OBD-II style socket, which invites the assumption that any OBD-II tool will work — the plug fits, the proprietary data still does not come out",
+      "Corroded or bent pins in the diagnostic socket, often after the protective cap was left off, causing intermittent or failed tool connection"
+    ],
+    "fix_procedure": "1) Identify the connector type for the specific model and year before booking the job, and do not infer it from the presence of a CAN bus. Consult the model's manual for the connector location — commonly under the seat, under a side panel, or near the steering head depending on model.\n2) Round-connector motorcycles: you need the correct BMW round 10-pin adapter cable for your diagnostic tool. Tool vendors — HEX Innovate, whose tool is the GS-911, among others — supply the round-connector cable as a separate item from the 16-pin cable, so a shop covering both eras needs both.\n3) 16-pin motorcycles: a standard OBD-II style cable plugs in physically, but do not conclude the bike is fully readable with a generic tool. The socket shape is standard; the proprietary diagnostic content behind it is not — see the tool-tier entry on read access. Do not leave a generic OBD-II tool transmitting on a proprietary BMW bus, as unsolicited traffic can wake modules or set spurious faults.\n4) Before blaming the tool for 'no communication', inspect the socket with the ignition OFF and the key out — poking a live socket risks bridging pins, and on a CAN-bus bike a momentary short between a CAN line and battery positive or ground can damage a control module. Look for corroded, pushed-back or bent pins and for moisture in the connector body; use an electronics-safe, plastic-safe contact cleaner (no chlorinated or aggressive solvents that attack the connector body and pin seals) and a non-metallic pick for straightening, let it dry fully before reconnecting, and refit any protective cap when done.\n5) Confirm the ignition is in the state the tool's procedure requires before assuming a hardware problem; some functions need ignition on, some need the engine running, per the manual specification.\n6) If the tool will not power up or link, check power and ground at the diagnostic connector per that model's pinout. This is a passive measurement at the connector face only: meter probes on the specified pins, no backprobing through the seal, no piercing insulation, no test light, and no jumpering between pins on a CAN-equipped bike.\n7) Note the connector type on the customer record so the correct cable is on the bench next time.",
+    "parts_needed": [
+      "round 10-pin BMW diagnostic adapter cable (older models)",
+      "16-pin OBD-II cable (later models)",
+      "electronics-safe contact cleaner",
+      "replacement connector cap or cover if missing"
+    ],
+    "estimated_hours": 0.3,
+    "source": "model-generated"
+  }
+]

@@ -358,5 +358,20 @@
     "reliability_1to5": 5,
     "known_issues": "Authorized Kawasaki dealers only. Windows laptop with KDS software required; proprietary cable bundle ships with the kit.",
     "notes": "Factory Kawasaki dealer diagnostic. Full ZX / Ninja / Versys service menu including ECU update + immobilizer pairing. Reference-only for independent shops."
+  },
+  {
+    "slug": "hex-gs-911-wifi",
+    "brand": "HEX Microsystems",
+    "model": "GS-911wifi (Enthusiast, OBD-II)",
+    "chipset": "proprietary",
+    "transport": "wifi",
+    "price_usd_cents": 43999,
+    "purchase_url": "https://www.hexgs911.com/",
+    "supported_protocols_csv": "ISO 15765,ISO 14230,ISO 9141,BMW proprietary single-wire",
+    "supports_bidirectional": true,
+    "supports_mode22": false,
+    "reliability_1to5": 5,
+    "known_issues": "BMW-only (plus a few Husqvarna models built on BMW platforms) - useless on any other make. Consumer/Enthusiast tier is VIN-limited: service functions are unlocked for 10 stored VINs, after which HEX wants the Professional upgrade or the ProUnlimited annual subscription (~$99/yr). Two incompatible physical connectors: round 10-pin for pre-2017 bikes, OBD-II for 2017+ EU4 bikes - buying the wrong one means an adapter cable. WiFi mode drives a cloud-hosted app from phone/tablet, so a dead internet connection in the shop degrades you to the USB/PC path. Newest model-year coverage tracks HEX firmware/software releases and can lag the bike's release.",
+    "notes": "The de facto independent-shop BMW Motorrad tool. Reads BMW proprietary ECU/ABS/ESA/immobiliser fault codes that generic ELM327 hardware cannot see at all, and runs real service routines: service reminder reset, ABS/integral-brake bleed, throttle/idle adaptation reset, actuator activation, live sensor data. Sold as GS-911wifi (WiFi + USB, PC/Mac/iOS/Android) and a cheaper USB-only Gen 2 (PC only, ~$330). Recommend it over any BimmerCode/OBDLink combination when the job needs BMW service functions rather than coding - the OBDLink path covers coding and generic CAN, the GS-911 covers the dealer-style service menu. For a shop touching more than 10 BMWs, budget for Professional/ProUnlimited from the start."
   }
 ]
