@@ -3444,6 +3444,54 @@ MIGRATIONS: list[Migration] = [
             DROP INDEX IF EXISTS idx_known_issues_sort;
         """,
     ),
+    # Migration 050 — Phase 207: give `customers` a real tenancy column.
+    Migration(
+        version=50,
+        name="customers_shop_scope",
+        description=(
+            "Phase 207 security audit: the customers table carried an "
+            "`owner_user_id` column whose docstring claimed it "
+            "'prevents customer data leakage in multi-tenant "
+            "deployments' — but nothing in the codebase ever set it, "
+            "so every row held the DEFAULT 1 (the system user) and the "
+            "column was inert. Meanwhile GET /v1/shop/{shop_id}/"
+            "customers listed the table unfiltered, so any shop-tier "
+            "member of any one shop received every customer row in the "
+            "database: name, email, phone, address and shop-private "
+            "notes. `owner_user_id` is the wrong key regardless — a "
+            "shop has many members, and customers belong to the shop, "
+            "not to whichever mechanic typed them in. This adds the "
+            "`shop_id` column the rest of the schema already uses "
+            "(work_orders.shop_id, intake_visits.shop_id) so the API "
+            "can scope by shop the way every other shop route does. "
+            "Additive and nullable: pre-existing rows are backfilled "
+            "to the only shop when a deployment has exactly one "
+            "(the single-shop case, which is every install today), "
+            "and otherwise left NULL rather than guessed at. NULL "
+            "means unclaimed — the API never serves such a row to a "
+            "shop, so the failure mode is an invisible customer, not "
+            "a leaked one. Customer id=1 is the seeded 'unassigned' "
+            "placeholder that owns pre-retrofit vehicles; it is global "
+            "and deliberately stays NULL."
+        ),
+        upgrade_sql="""
+            ALTER TABLE customers ADD COLUMN shop_id INTEGER
+                REFERENCES shops(id) ON DELETE SET NULL;
+
+            CREATE INDEX IF NOT EXISTS idx_customers_shop
+                ON customers(shop_id);
+
+            UPDATE customers
+               SET shop_id = (SELECT id FROM shops LIMIT 1)
+             WHERE shop_id IS NULL
+               AND id != 1
+               AND (SELECT COUNT(*) FROM shops) = 1;
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_customers_shop;
+            ALTER TABLE customers DROP COLUMN shop_id;
+        """,
+    ),
 ]
 
 

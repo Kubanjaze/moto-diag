@@ -26,14 +26,27 @@ class CustomerRelationship(str, Enum):
 class Customer(BaseModel):
     """A customer of a shop.
 
-    Customers are scoped to a shop/user via owner_user_id — a solo mechanic
-    sees only their customers, a shop sees the shop's customers. This
-    prevents customer data leakage in multi-tenant deployments (Track H).
+    Customers are scoped to a shop via `shop_id` (Phase 207). That is
+    the field the API filters on; a shop has many members, so scoping
+    to the individual who typed the record in would hide it from that
+    person's own colleagues.
+
+    `owner_user_id` predates this and was never set by any caller, so
+    every row held its DEFAULT of 1 and the column scoped nothing. It
+    is retained for the fleet/solo-mechanic paths that do use it, but
+    it is NOT the multi-tenant boundary — `shop_id` is.
     """
     id: Optional[int] = Field(None, description="Primary key")
     owner_user_id: int = Field(
         default=1,
         description="User (shop owner) who owns this customer relationship. Defaults to system user for placeholder.",
+    )
+    shop_id: Optional[int] = Field(
+        None,
+        description=(
+            "Shop this customer belongs to. NULL means unclaimed — the "
+            "API serves such a row to no shop."
+        ),
     )
     name: str = Field(..., description="Customer's full name")
     email: Optional[str] = Field(None, description="Email address")

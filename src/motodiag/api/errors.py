@@ -119,6 +119,7 @@ def _exc_class_chain():
         VideoOwnershipError, VideoQuotaExceededError,
     )
     from motodiag.api.routes.videos import VideoFileTooLargeError
+    from motodiag.api.uploads import UploadTooLargeError
     # Phase 194 — work-order photo domain
     from motodiag.shop.wo_photo_repo import (
         WorkOrderPhotoOwnershipError,
@@ -238,6 +239,9 @@ def _exc_class_chain():
          "Video quota exceeded"),
         (VideoFileTooLargeError, 413, "video-too-large",
          "Video file too large"),
+        # Phase 207 — per-request upload ceiling, any media route
+        (UploadTooLargeError, 413, "upload-too-large",
+         "Uploaded file too large"),
         # Phase 194 — work-order photo domain
         (WorkOrderPhotoOwnershipError, 404, "wo-photo-not-found",
          "Work-order photo not found"),
@@ -334,7 +338,16 @@ async def _validation_handler(request: Request, exc: Exception):
     """
     rid = getattr(request.state, "request_id", None)
     try:
-        errors = exc.errors()  # type: ignore[attr-defined]
+        raw = exc.errors()  # type: ignore[attr-defined]
+        # pydantic v2 puts the REJECTED VALUE in `input`, and on a
+        # model-level failure that is the entire request body. Logging
+        # it writes user data — a short device token, a customer's
+        # phone number — into the log verbatim. Keep the diagnostic
+        # part (where it failed and why), drop the payload.
+        errors = [
+            {k: v for k, v in e.items() if k not in ("input", "ctx")}
+            for e in raw
+        ]
     except Exception:  # noqa: BLE001 — never fail inside a handler
         errors = [{"msg": str(exc)}]
     content_type = request.headers.get("content-type", "(none)")
@@ -352,6 +365,44 @@ async def _validation_handler(request: Request, exc: Exception):
         request_validation_exception_handler,
     )
     return await request_validation_exception_handler(request, exc)
+
+
+async def _overflow_handler(request: Request, exc: Exception):
+    """An id too large for SQLite is invalid input, not a server fault.
+
+    Phase 207. SQLite stores 64-bit signed integers, so binding a larger
+    Python int raises ``OverflowError`` deep in the repo layer — the
+    request reached the database before anything rejected it. That
+    surfaced as a **500 with a full stack trace in the log** on every
+    route family with an integer id (sessions, reports, videos, shop).
+
+    Nothing leaked to the client (the 500 body is deliberately bare),
+    but it let anyone holding a key fill the error log with tracebacks,
+    and it broke the pattern its neighbours already follow: a
+    non-numeric id is a 422 and a negative one a 404. Only the
+    oversized case answered 500.
+
+    ``OverflowError`` derives from ``ArithmeticError``, NOT
+    ``ValueError``, which is why the existing ValueError handler never
+    caught it.
+
+    Handled centrally rather than by bounding all 148 integer path
+    parameters: a per-parameter bound is the more precise fix but would
+    be a large error-prone diff that every future route must remember,
+    and forgetting it would silently restore the 500.
+    """
+    rid = getattr(request.state, "request_id", None)
+    logger.info(
+        "rejected out-of-range id on %s %s (request_id=%s)",
+        request.method, request.url.path, rid,
+    )
+    return _problem_response(
+        request, status=422, type_slug="validation-error",
+        title="Request validation failed",
+        detail=(
+            "An identifier in the path is outside the supported range."
+        ),
+    )
 
 
 async def _unhandled_handler(request: Request, exc: Exception):
@@ -394,4 +445,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(
         RequestValidationError, _validation_handler,
     )
+    # Phase 207 — an oversized id is invalid input, not a server fault.
+    # Registered before the catch-all so it wins.
+    app.add_exception_handler(OverflowError, _overflow_handler)
     app.add_exception_handler(Exception, _unhandled_handler)

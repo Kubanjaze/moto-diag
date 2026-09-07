@@ -44,6 +44,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from pydantic import ValidationError
 
+from motodiag.api.uploads import UploadTooLargeError, read_bounded
 from motodiag.api.deps import get_db_path, get_settings as get_api_settings
 from motodiag.auth.deps import (
     AuthedUser, get_current_user, require_tier,
@@ -63,6 +64,9 @@ _log = logging.getLogger(__name__)
 
 PER_SESSION_COUNT_CAP = 10
 PER_SESSION_BYTES_CAP = 1 * 1024 * 1024 * 1024  # 1 GB
+# Per-REQUEST ceiling. The session cap above is an aggregate across
+# up to 10 files and cannot bound a single body (Phase 207).
+PER_FILE_BYTES_CAP = 512 * 1024 * 1024  # 512 MB
 TIER_MONTHLY_VIDEO_LIMITS: dict[str, Optional[int]] = {
     "individual": 0,
     "shop": 200,
@@ -249,8 +253,14 @@ async def upload_video(
         )
         raise HTTPException(status_code=422, detail=e.errors())
 
-    # 2. Read multipart payload
-    body = await file.read()
+    # 2. Read multipart payload under a hard per-request ceiling, so an
+    #    oversized body is refused mid-stream rather than after it has
+    #    already been held in memory in full.
+    body = await read_bounded(
+        file,
+        PER_FILE_BYTES_CAP,
+        kind="video",
+    )
     sha256 = _hash_file_bytes(body)
     incoming_bytes = len(body)
 

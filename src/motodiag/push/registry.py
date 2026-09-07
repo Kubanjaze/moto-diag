@@ -37,12 +37,25 @@ def register_token(
         )
 
 
-def delete_token(token: str, db_path: Optional[str] = None) -> bool:
-    """Remove a token (sign-out hygiene or APNs 410 prune)."""
+def delete_token(
+    token: str,
+    db_path: Optional[str] = None,
+    user_id: Optional[int] = None,
+) -> bool:
+    """Remove a token (sign-out hygiene or APNs 410 prune).
+
+    Pass `user_id` when a request is deregistering its OWN device, so
+    one authenticated user cannot silence another's notifications by
+    posting a token they happened to learn. The APNs 410 prune path
+    has no caller identity and deliberately omits it (Phase 207).
+    """
+    sql = "DELETE FROM device_tokens WHERE token = ?"
+    params: list = [token]
+    if user_id is not None:
+        sql += " AND user_id = ?"
+        params.append(user_id)
     with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            "DELETE FROM device_tokens WHERE token = ?", (token,),
-        )
+        cursor = conn.execute(sql, params)
         return cursor.rowcount > 0
 
 
