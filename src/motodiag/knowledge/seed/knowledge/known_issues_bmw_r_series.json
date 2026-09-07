@@ -181,11 +181,11 @@
     "source": "model-generated"
   },
   {
-    "title": "Fuel-level strip sensor failure — hexhead R1200 (2007–2012)",
-    "description": "The hexhead R1200 range uses a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. Written from general knowledge — verify against the manual.",
+    "title": "Fuel-level strip sensor failure — hexhead R1200 and F800-family (2007–2012)",
+    "description": "The hexhead R1200 range and the 798cc F-series twins (F800GS, F650GS twin, F800S/ST) of the same era use a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. Phase 212 widened this entry from R1200GS-only after an audit found the same part fails the same way on the F800 family — on the F800GS the tank is under the seat and the sensor is reached from the pump plate above. Written from general knowledge — verify against the manual.",
     "make": "BMW",
-    "model": "R1200GS",
-    "year_start": 2007,
+    "model": "R1200GS / F800GS / F650GS twin (strip sensor)",
+    "year_start": 2006,
     "year_end": 2012,
     "severity": "low",
     "symptoms": [
