@@ -157,6 +157,9 @@ def load_known_issues_file(file_path: str | Path, db_path: str | None = None) ->
             parts_needed=item.get("parts_needed", []),
             estimated_hours=item.get("estimated_hours"),
             db_path=db_path,
+            # Phase 211: files that predate provenance carry no key and
+            # load as `unverified` — a true statement about their origin.
+            source=item.get("source", "unverified"),
         )
         count += 1
 

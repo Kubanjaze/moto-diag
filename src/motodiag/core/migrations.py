@@ -3492,6 +3492,37 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE customers DROP COLUMN shop_id;
         """,
     ),
+    # Migration 051 — Phase 211: record where each known issue came from.
+    Migration(
+        version=51,
+        name="known_issues_source",
+        description=(
+            "Phase 211 (Track K opener): `known_issues` carried 660 rows of "
+            "specific repair claims — test voltages, torque figures, fix "
+            "procedures — with no record of where any of them came from. "
+            "A mechanic could not tell a service-manual figure from a "
+            "model-generated one. Track K adds thirty phases of content "
+            "authored from training data rather than a manual on the "
+            "bench, so before any of it is written the table gains a "
+            "`source` column, CHECK-constrained to a fixed vocabulary that "
+            "mirrors `parts.verified_by` and adds `unverified` (origin "
+            "never recorded — the honest value for every existing row) "
+            "and `model-generated` (what Track K writes). NOT NULL with a "
+            "constant default, which is the only form SQLite allows on an "
+            "added column and also what makes the backfill implicit."
+        ),
+        upgrade_sql="""
+            ALTER TABLE known_issues ADD COLUMN source TEXT NOT NULL
+                DEFAULT 'unverified'
+                CHECK (source IN (
+                    'unverified', 'model-generated', 'forum',
+                    'service-manual', 'mechanic-verified'
+                ));
+        """,
+        rollback_sql="""
+            ALTER TABLE known_issues DROP COLUMN source;
+        """,
+    ),
 ]
 
 

@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 50  # Phase 207: customers.shop_id tenancy column (migration 050)
+SCHEMA_VERSION = 51  # Phase 211: known_issues.source provenance (migration 051)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

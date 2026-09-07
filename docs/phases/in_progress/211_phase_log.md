@@ -1,7 +1,7 @@
 # Phase 211 — BMW R-series boxer twin — Phase Log
 
-**Status:** 🔨 In progress
-**Started:** 2026-09-07
+**Status:** ✅ Complete
+**Started:** 2026-09-07 | **Completed:** 2026-09-07
 **Repos:** `Kubanjaze/moto-diag` + mobile, branch `phase-211-bmw-r-series`
 
 ---
@@ -29,3 +29,38 @@
   each `model-generated`, each written to be checked by someone who
   knows the bike. Figures I am not confident in are left out rather
   than invented.
+
+### 2026-09-07 — Built. Provenance first, then twelve boxer entries.
+
+- **Migration 051** adds `known_issues.source`, CHECK-constrained to
+  `unverified · model-generated · forum · service-manual ·
+  mechanic-verified`. Verified on a fresh DB and on a DB built to 50
+  with a pre-existing row — that row reads `unverified` after, which is
+  the true statement about its origin. The CHECK rejects
+  `model_generated` with an underscore; a typo cannot become a fourth
+  silent category.
+- **The CLI says it out loud.** `kb show` prints `Source:` under the
+  fix procedure and, for anything short of a manual or a mechanic, a
+  one-line warning — captured from a real run, not described. For
+  `service-manual` content the warning is absent, which is what makes
+  it mean something. `kb list` gains a `Source` column.
+- **The F9 lint fired in the direction it was built for.** I typed the
+  API field `str`; `--check-pydantic-literal-vs-check` flagged it
+  against the migration's CHECK before anything was regenerated.
+  Retyped as a `Literal` alias, so OpenAPI emits a strict enum and the
+  mobile codegen produced `"unverified" | "model-generated" | …` — the
+  F37 discipline enforced *before* the drift, not after.
+- **The knowledge-base count guard fired too.** 660 → 672 failed four
+  docs that still said 660. That is the guard working; corrected.
+- **Twelve entries, each tagged `model-generated` and each admitting
+  it in its own description text**, so a reader of the raw JSON with no
+  schema in front of them is still told. Entries I could not write
+  without inventing a figure — wethead starter sprag, R nineT fork
+  specifics — were dropped, and the plan's Logic section was corrected
+  to say what was actually built.
+- **Regression 4930 / 0. F9 lint clean. Mobile `tsc` clean.**
+- **Key finding: the honest label cost one migration, one parameter and
+  a render function**, and it is what lets the remaining 29 Track K
+  phases proceed without pretending. A mechanic who knows the bike can
+  promote an entry to `mechanic-verified` and the warning goes away —
+  which is the review loop the table never had.

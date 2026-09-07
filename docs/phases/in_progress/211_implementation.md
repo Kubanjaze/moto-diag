@@ -1,6 +1,6 @@
 # Phase 211 — BMW R-series boxer twin (1969+)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -62,14 +62,18 @@ before adding to it is the only reason that was caught.
    it. `kb list` gains a `Source` column.
 4. **API** `KnownIssueResponse.source`; the KB export carries it, so a
    client can render its own warning.
-5. **Content.** Twelve entries across the boxer generations — the
-   things a shop actually sees: final-drive bearing failure (2005–2011
-   hexhead GS), the R1200 paralever pivot, oilhead surging (Motronic
-   MA2.4, 1994–2004), hexhead stator/alternator, wethead cam-chain
-   tensioner and shift-assist, ABS pump failures (Integral ABS 2002–
-   2006), R nineT fork seals and the alternator belt, airhead diode
-   board and clutch splines, gearbox input-shaft spline wear, and the
-   fuel-strip sensor (2007–2012). Each tagged `model-generated`.
+5. **Content.** Twelve entries across the boxer generations, as built:
+   final-drive crown-wheel bearing (hexhead 2005–2011) · oilhead
+   surging (Motronic MA2.4, 1994–2004) · rear-main/input-seal leak
+   contaminating the dry clutch · gearbox input-shaft spline wear ·
+   Hall-effect sensor wiring (oilhead) · Integral ABS servo-pump failure
+   (2001–2006) · fuel-level strip sensor (hexhead 2007–2012) · alternator
+   drive belt (oilhead/hexhead/R nineT) · water-pump seal weep (wethead
+   2013+) · diode board (airhead) · alternator rotor and brushes
+   (airhead) · Paralever pivot bearings. Each tagged `model-generated`.
+   The v1.0 list also named a wethead cam-chain tensioner, shift-assist
+   and R nineT fork entries; those were dropped rather than padded — see
+   Deviations.
 6. **Test** loads the file, asserts count and year coverage, asserts
    every entry carries `source == "model-generated"`, asserts the
    `unverified` default on a legacy file, asserts the CHECK rejects a
@@ -99,17 +103,28 @@ row with `source` → `SELECT *` → CLI panel / API response / KB export.
 
 ## Verification Checklist
 
-- [ ] Migration 051 applies on a fresh DB and on a DB already at 50;
-      the 660 existing rows read `unverified` after
-- [ ] The CHECK rejects an unknown `source`
-- [ ] Every BMW entry loads with `source == "model-generated"`
-- [ ] A legacy seed file (no `source` key) still loads, as `unverified`
-- [ ] `motodiag kb show <bmw id>` prints the provenance and the warning
-- [ ] `motodiag kb list --make bmw` returns the twelve
-- [ ] `/v1/kb/issues/{id}` includes `source`
-- [ ] Mobile `api-types.ts` regenerated; `tsc` clean
-- [ ] The documented known-issue count guard still passes (660 → 672)
-- [ ] Backend regression green; F9 lint clean
+- [x] Migration 051 applies on a fresh DB (schema 51) and on a DB built
+      to 50 with a pre-existing row — that row reads `unverified` after
+- [x] The CHECK rejects `model_generated` (underscore) with
+      `IntegrityError`; all five vocabulary values are accepted
+- [x] Every BMW entry loads with `source == "model-generated"`, and the
+      tag is in the JSON itself, not only the loader default
+- [x] Every BMW description states "general knowledge" in its own text,
+      so a reader with no schema in front of them is still told
+- [x] A legacy seed file (no `source` key) loads as `unverified`
+- [x] `motodiag kb show <bmw id>` prints `Source: model-generated` and
+      the warning under the fix procedure — captured from a real run
+- [x] `service-manual` content renders its source with **no** warning,
+      so the warning can be absent and therefore means something
+- [x] `motodiag kb list --make bmw` returns twelve with a `Source` column
+- [x] `/v1/kb/issues/{id}` includes `source`; OpenAPI emits a strict
+      five-value enum; mobile `api-types.ts` regenerated as a typed
+      union; `tsc` clean
+- [x] The documented known-issue count guard fired on 660 → 672 exactly
+      as designed, and the four docs were corrected
+- [x] F9 lint clean — after it correctly flagged `source: str` and the
+      field was retyped as a `Literal`
+- [x] Backend regression 4930 passed / 0 failed
 
 ## Risks
 
@@ -127,3 +142,54 @@ row with `source` → `SELECT *` → CLI panel / API response / KB export.
   suppressed for `service-manual` and `mechanic-verified`, so it means
   something; if nothing ever reaches those tiers the warning is
   permanent, and that would itself be worth knowing.
+
+
+## Deviations from Plan
+
+**The F9 lint caught me typing the field as `str`.** The plan said
+`KnownIssueResponse.source`; the first cut typed it `str`, and
+`--check-pydantic-literal-vs-check` flagged it against the migration's
+CHECK constraint before anything was regenerated. Retyped as a
+module-level `Literal` alias so the OpenAPI schema emits an enum and the
+mobile codegen produces a typed union. This is the F37 discipline —
+Literal-vs-CHECK drift — enforced by the lint *before* the types were
+generated, which is the first time that guard has fired in the
+direction it was built for.
+
+**The knowledge-base count guard fired.** Adding twelve entries moved
+the seed from 660 to 672, and the Phase 208 guard failed on four docs
+that still said 660. That is the guard working: the number in the docs
+is now tied to the seed files, and a content phase cannot silently drift
+it. Updated to 672.
+
+**One test of mine assumed a raw JSON column.** `search_known_issues`
+already deserialises `parts_needed`; the assertion now accepts either
+shape, since it is a content check and not a serialisation one.
+
+**Content scope held at twelve.** Entries where I could not state a
+procedure without inventing a figure — wethead starter sprag, R nineT
+fork specifics — were left out rather than padded. The file says what it
+knows and no more.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Known issues | 660 → 672 |
+| BMW entries | 12, spanning airhead (1970) → wethead (2023) |
+| Entries tagged `model-generated` | 12 of 12 |
+| Existing entries now `unverified` | 660 |
+| Schema | 50 → 51 |
+| Phase tests | 26 |
+| Backend regression | 4930 passed / 0 failed |
+| F9 lint | clean (1 finding, fixed) |
+| Mobile | types regenerated, `tsc` clean |
+
+**Key finding: the honest label cost nothing and changes everything
+downstream.** Adding `source` was one migration, one parameter and a
+render function. What it buys is that Track K's remaining 29 phases can
+proceed without pretending — every entry says what it is, the CLI says
+it out loud, the API types it, and a mechanic who knows the bike can
+promote an entry to `mechanic-verified` and make the warning go away.
+The alternative was 300 more entries indistinguishable from the 660
+whose origin nobody recorded.
