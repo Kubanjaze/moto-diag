@@ -94,3 +94,59 @@ class TestSchemeAndShape:
         assert not check_public_base_url(
             "https://app.motodiag.com/", Environment.PROD,
         )
+
+
+class TestFallbackWarns:
+    """Prod refuses to boot with an empty setting, so the fallback should
+    never run there — but dev and staging DO run it, and that is exactly
+    where a silently wrong link reaches a customer."""
+
+    def test_minting_without_a_configured_origin_warns(self, tmp_path, monkeypatch, caplog):
+        import logging
+
+        from fastapi.testclient import TestClient
+
+        from motodiag.api.app import create_app
+        from motodiag.auth.api_key_repo import create_api_key
+        from motodiag.core.config import reset_settings
+        from motodiag.core.database import get_connection, init_db
+
+        db = str(tmp_path / "f64.db")
+        init_db(db)
+        monkeypatch.setenv("MOTODIAG_DB_PATH", db)
+        monkeypatch.setenv("MOTODIAG_PUBLIC_BASE_URL", "")
+        for tier in ("anonymous", "individual", "shop", "company"):
+            monkeypatch.setenv(
+                f"MOTODIAG_RATE_LIMIT_{tier.upper()}_PER_MINUTE", "9999",
+            )
+        reset_settings()
+        try:
+            with get_connection(db) as conn:
+                uid = conn.execute(
+                    "INSERT INTO users (username, email, tier, is_active) "
+                    "VALUES ('f64', 'f64@ex.com', 'individual', 1)",
+                ).lastrowid
+                sid = conn.execute(
+                    "INSERT INTO diagnostic_sessions "
+                    "(vehicle_make, vehicle_model, vehicle_year, status, "
+                    " user_id) "
+                    "VALUES ('Honda', 'CB', 2020, 'open', ?)", (uid,),
+                ).lastrowid
+            _, key = create_api_key(uid, db_path=db)
+            client = TestClient(
+                create_app(db_path_override=db), raise_server_exceptions=False,
+            )
+            with caplog.at_level(
+                logging.WARNING, logger="motodiag.api.routes.share",
+            ):
+                r = client.post(
+                    f"/v1/reports/session/{sid}/share", json={},
+                    headers={"X-API-Key": key},
+                )
+            assert r.status_code == 201, r.text
+            assert any(
+                "MOTODIAG_PUBLIC_BASE_URL is unset" in rec.message
+                for rec in caplog.records
+            ), "minting from the request Host must leave a trace"
+        finally:
+            reset_settings()

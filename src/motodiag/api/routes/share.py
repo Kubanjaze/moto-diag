@@ -83,11 +83,23 @@ def _share_url(request: Request, token: str) -> str:
     """Absolute URL for a token.
 
     Prefers the configured ``MOTODIAG_PUBLIC_BASE_URL``. The request's
-    own base URL is the fallback — correct for dev and tailnet use,
-    wrong behind a proxy that rewrites Host, which is exactly why the
-    setting exists.
+    own base URL is the fallback — correct for dev, wrong behind a proxy
+    that rewrites Host, which is exactly why the setting exists.
+
+    F64: the fallback now says so out loud. Production refuses to START
+    with an empty setting, but dev and staging happily mint links built
+    from whatever Host the caller sent, and that is where a silently
+    wrong link gets discovered by a customer rather than by us.
     """
     configured = (get_settings().public_base_url or "").rstrip("/")
+    if not configured:
+        logger.warning(
+            "MOTODIAG_PUBLIC_BASE_URL is unset — minting a share link "
+            "from the request Host (%s). This is wrong behind any proxy "
+            "that rewrites Host, and the customer is the one who finds "
+            "out. Set the public origin explicitly.",
+            request.base_url,
+        )
     base = configured or str(request.base_url).rstrip("/")
     return f"{base}/v1/share/{token}"
 
