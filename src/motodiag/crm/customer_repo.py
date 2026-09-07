@@ -21,18 +21,46 @@ def create_customer(customer: Customer, db_path: str | None = None) -> int:
         now = datetime.now().isoformat()
         cursor = conn.execute(
             """INSERT INTO customers
-               (owner_user_id, name, email, phone, address, notes, is_active, created_at, updated_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               (owner_user_id, shop_id, name, email, phone, address, notes,
+                is_active, created_at, updated_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                customer.owner_user_id, customer.name, customer.email,
-                customer.phone, customer.address, customer.notes,
-                1 if customer.is_active else 0, now, now,
+                customer.owner_user_id, customer.shop_id, customer.name,
+                customer.email, customer.phone, customer.address,
+                customer.notes, 1 if customer.is_active else 0, now, now,
             ),
         )
         return cursor.lastrowid
 
 
+def get_customer_for_shop(
+    customer_id: int, shop_id: int, db_path: str | None = None,
+) -> dict | None:
+    """Return the customer iff it belongs to `shop_id`; else None.
+
+    The scope is applied in the query rather than checked on the row
+    afterwards, so there is no window in which an out-of-shop record
+    exists in memory to be leaked by a later edit. A NULL `shop_id`
+    (unclaimed legacy row, or the seeded 'unassigned' placeholder)
+    matches no shop — `= ?` is never true for NULL in SQL, which is
+    the failure-closed direction.
+    """
+    with get_connection(db_path) as conn:
+        cursor = conn.execute(
+            "SELECT * FROM customers WHERE id = ? AND shop_id = ?",
+            (customer_id, shop_id),
+        )
+        row = cursor.fetchone()
+        return dict(row) if row else None
+
+
 def get_customer(customer_id: int, db_path: str | None = None) -> dict | None:
+    """Fetch a customer by id with NO tenancy scoping.
+
+    Callers that serve a multi-tenant API must use
+    :func:`get_customer_for_shop` instead. This unscoped form is for
+    the local CLI, which operates on the operator's own database.
+    """
     with get_connection(db_path) as conn:
         cursor = conn.execute("SELECT * FROM customers WHERE id = ?", (customer_id,))
         row = cursor.fetchone()
@@ -48,10 +76,19 @@ def list_customers(
     db_path: str | None = None,
     owner_user_id: int | None = None,
     is_active: bool | None = None,
+    shop_id: int | None = None,
 ) -> list[dict]:
-    """List customers, optionally scoped by owner (shop) or activity state."""
+    """List customers, optionally scoped by shop, owner or activity state.
+
+    `shop_id` is the tenancy scope the API uses. Passing neither scope
+    returns every customer in the database and is only appropriate for
+    the local CLI.
+    """
     query = "SELECT * FROM customers WHERE 1=1"
     params: list = []
+    if shop_id is not None:
+        query += " AND shop_id = ?"
+        params.append(shop_id)
     if owner_user_id is not None:
         query += " AND owner_user_id = ?"
         params.append(owner_user_id)
@@ -69,15 +106,19 @@ def search_customers(
     query: str,
     db_path: str | None = None,
     owner_user_id: int | None = None,
+    shop_id: int | None = None,
 ) -> list[dict]:
     """Search customers by name, email, or phone (LIKE match).
 
-    Optionally scope to a single shop's customers via owner_user_id.
+    Optionally scope to a single shop's customers via `shop_id`.
     """
     pattern = f"%{query}%"
     sql = """SELECT * FROM customers
              WHERE (name LIKE ? OR email LIKE ? OR phone LIKE ?)"""
     params: list = [pattern, pattern, pattern]
+    if shop_id is not None:
+        sql += " AND shop_id = ?"
+        params.append(shop_id)
     if owner_user_id is not None:
         sql += " AND owner_user_id = ?"
         params.append(owner_user_id)
@@ -93,7 +134,7 @@ def update_customer(customer_id: int, updates: dict, db_path: str | None = None)
 
     Protects the unassigned customer (id=1) from name changes.
     """
-    allowed = {"owner_user_id", "name", "email", "phone", "address", "notes", "is_active"}
+    allowed = {"owner_user_id", "shop_id", "name", "email", "phone", "address", "notes", "is_active"}
     filtered = {k: v for k, v in updates.items() if k in allowed}
     if not filtered:
         return False

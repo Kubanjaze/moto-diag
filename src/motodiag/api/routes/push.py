@@ -62,5 +62,5 @@ def deregister_push_token(
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
 ) -> PushRegisterResponse:
-    removed = delete_token(req.token, db_path=db_path)
+    removed = delete_token(req.token, user_id=user.id, db_path=db_path)
     return PushRegisterResponse(registered=not removed)

@@ -21,7 +21,7 @@ from motodiag.api.middleware import (
     RequestIdMiddleware,
 )
 from motodiag.api.openapi import install_openapi
-from motodiag.core.config import Settings
+from motodiag.core.config import Environment, Settings
 
 
 APP_VERSION = "v1"
@@ -48,6 +48,30 @@ def create_app(
         v1 routers mounted.
     """
     app_settings = settings or get_settings()
+
+    # --- Fail fast on a fake billing provider in production ---
+    # `billing_provider` defaults to "fake", whose webhook signature
+    # check is a comparison against a hardcoded literal, and whose
+    # webhook route is both unauthenticated and rate-limit exempt.
+    # A deploy that forgets MOTODIAG_BILLING_PROVIDER=stripe therefore
+    # accepts a forged checkout.session.completed and grants any tier
+    # to anyone who posts one. That is a config mistake, so it is
+    # caught at startup where a config mistake is still cheap, rather
+    # than trusted to a runbook (Phase 207).
+    if (
+        app_settings.env == Environment.PROD
+        and app_settings.billing_provider != "stripe"
+    ):
+        raise RuntimeError(
+            "Refusing to start in env=prod with "
+            f"billing_provider={app_settings.billing_provider!r}: the "
+            "fake provider accepts a hardcoded webhook signature, so "
+            "anyone could grant themselves a paid tier. Set "
+            "MOTODIAG_BILLING_PROVIDER=stripe (with "
+            "MOTODIAG_STRIPE_WEBHOOK_SECRET), or run with "
+            "MOTODIAG_ENV=dev if this is a local session."
+        )
+
     app = FastAPI(
         title="MotoDiag API",
         description=(

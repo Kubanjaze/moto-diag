@@ -52,6 +52,7 @@ from fastapi import (
 from fastapi.responses import FileResponse
 from pydantic import BaseModel, ConfigDict, Field, ValidationError
 
+from motodiag.api.uploads import UploadTooLargeError, read_bounded
 from motodiag.api.deps import get_db_path, get_settings as get_api_settings
 from motodiag.api.routes.shop_mgmt import require_shop_access
 from motodiag.auth.deps import (
@@ -85,6 +86,9 @@ _log = logging.getLogger(__name__)
 # ---------------------------------------------------------------------------
 
 
+# Per-REQUEST byte ceiling — the count caps below bound how MANY
+# photos may be stored, not how large any one of them is (Phase 207).
+PER_PHOTO_BYTES_CAP = 25 * 1024 * 1024  # 25 MB
 PER_WO_COUNT_CAP = 30
 PER_ISSUE_COUNT_CAP = 10
 TIER_MONTHLY_PHOTO_LIMITS: dict[str, Optional[int]] = {
@@ -315,7 +319,11 @@ async def upload_wo_photo(
     except ValidationError as e:
         raise HTTPException(status_code=422, detail=e.errors())
 
-    raw_bytes = await file.read()
+    raw_bytes = await read_bounded(
+        file,
+        PER_PHOTO_BYTES_CAP,
+        kind="photo",
+    )
     incoming_size = len(raw_bytes)
     sha256 = _hash_bytes(raw_bytes)
 

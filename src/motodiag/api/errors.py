@@ -119,6 +119,7 @@ def _exc_class_chain():
         VideoOwnershipError, VideoQuotaExceededError,
     )
     from motodiag.api.routes.videos import VideoFileTooLargeError
+    from motodiag.api.uploads import UploadTooLargeError
     # Phase 194 — work-order photo domain
     from motodiag.shop.wo_photo_repo import (
         WorkOrderPhotoOwnershipError,
@@ -238,6 +239,9 @@ def _exc_class_chain():
          "Video quota exceeded"),
         (VideoFileTooLargeError, 413, "video-too-large",
          "Video file too large"),
+        # Phase 207 — per-request upload ceiling, any media route
+        (UploadTooLargeError, 413, "upload-too-large",
+         "Uploaded file too large"),
         # Phase 194 — work-order photo domain
         (WorkOrderPhotoOwnershipError, 404, "wo-photo-not-found",
          "Work-order photo not found"),
@@ -334,7 +338,16 @@ async def _validation_handler(request: Request, exc: Exception):
     """
     rid = getattr(request.state, "request_id", None)
     try:
-        errors = exc.errors()  # type: ignore[attr-defined]
+        raw = exc.errors()  # type: ignore[attr-defined]
+        # pydantic v2 puts the REJECTED VALUE in `input`, and on a
+        # model-level failure that is the entire request body. Logging
+        # it writes user data — a short device token, a customer's
+        # phone number — into the log verbatim. Keep the diagnostic
+        # part (where it failed and why), drop the payload.
+        errors = [
+            {k: v for k, v in e.items() if k not in ("input", "ctx")}
+            for e in raw
+        ]
     except Exception:  # noqa: BLE001 — never fail inside a handler
         errors = [{"msg": str(exc)}]
     content_type = request.headers.get("content-type", "(none)")

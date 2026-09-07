@@ -428,7 +428,9 @@ def list_customers_endpoint(
     db_path: str = Depends(get_db_path),
 ) -> dict:
     require_shop_access(shop_id, user, db_path)
-    rows = customer_repo.list_customers(db_path=db_path)
+    # Scope to the shop in the QUERY. Membership in one shop is not
+    # entitlement to every customer in the database (Phase 207).
+    rows = customer_repo.list_customers(shop_id=shop_id, db_path=db_path)
     return {"items": rows, "total": len(rows)}
 
 
@@ -446,6 +448,7 @@ def create_customer_endpoint(
 ) -> dict:
     require_shop_access(shop_id, user, db_path)
     customer = Customer(
+        shop_id=shop_id,
         name=req.name, email=req.email, phone=req.phone,
         address=req.address, notes=req.notes,
     )
@@ -465,8 +468,12 @@ def get_customer_endpoint(
     db_path: str = Depends(get_db_path),
 ) -> dict:
     require_shop_access(shop_id, user, db_path)
-    row = customer_repo.get_customer(customer_id, db_path=db_path)
+    row = customer_repo.get_customer_for_shop(
+        customer_id, shop_id, db_path=db_path,
+    )
     if row is None:
+        # Same 404 whether the id is unknown or belongs to another
+        # shop — the response must not confirm that it exists.
         raise HTTPException(
             status_code=404, detail=f"customer id={customer_id} not found",
         )
@@ -510,6 +517,16 @@ def create_intake_endpoint(
     db_path: str = Depends(get_db_path),
 ) -> dict:
     require_shop_access(shop_id, user, db_path)
+    # A caller may name any customer_id in the body; confirm it is one
+    # of THIS shop's customers before binding it to an intake, or an
+    # intake becomes an oracle for other shops' customer ids.
+    if customer_repo.get_customer_for_shop(
+        req.customer_id, shop_id, db_path=db_path,
+    ) is None:
+        raise HTTPException(
+            status_code=404,
+            detail=f"customer id={req.customer_id} not found",
+        )
     intake_id = create_intake(
         shop_id=shop_id, customer_id=req.customer_id,
         vehicle_id=req.vehicle_id,

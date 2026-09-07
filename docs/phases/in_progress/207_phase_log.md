@@ -43,3 +43,54 @@
   this once the backend has a home. No dependency CVE scan was run
   either; "looks modern" is not a scan.
 - **23 tests** pin the findings so they cannot regress silently.
+
+### 2026-09-07 16:40 — Second pass: the first audit's verdict was wrong
+
+- **A deeper sweep of the shop and billing route families found a
+  critical cross-tenant leak the first pass missed.**
+  `GET /v1/shop/{shop_id}/customers` returned every customer in the
+  database — name, email, phone, address, shop-private notes — to any
+  shop-tier member of any one shop. One paid account, one request.
+- **Why the first pass missed it.** It checked whether each route called
+  `require_shop_access`. The customer routes do call it. The query on
+  the next line then ignored the shop entirely. Confirming that an
+  access-control helper is *present* is not confirming that the data
+  access underneath it is *scoped* — and "all 18 shop_mgmt routes call
+  require_shop_access" was recorded as reassurance when it was only a
+  statement about line coverage.
+- **The column that was supposed to prevent this had never been set.**
+  `customers.owner_user_id` defaulted to `1` on every row in the table
+  while its docstring claimed it "prevents customer data leakage in
+  multi-tenant deployments". It was also the wrong key — a shop has
+  many members. **Migration 050** adds `customers.shop_id`, matching
+  `work_orders.shop_id`, and the routes scope in-query. NULL matches no
+  shop, so an unclaimed row goes invisible rather than public.
+- **Four more real defects, all fixed:** a forged webhook could grant a
+  paid tier because `billing_provider` defaults to `"fake"` and nothing
+  stopped that default reaching prod (`create_app` now refuses to
+  start) · the 422 handler logged rejected input values, which under
+  pydantic v2 is the whole request body on a model-level failure · both
+  upload routes buffered the entire body before consulting caps that
+  are per-session aggregates and cannot bound one request · push
+  deregistration deleted by token alone, so any user could silence
+  another's notifications.
+- **Every fix was proven against the pre-fix code**, not assumed: the
+  seven tenancy tests and the log-redaction test were run with the fix
+  reverted and confirmed to fail. Test count 23 → 40.
+- **Caught in passing: the committed OpenAPI schema and the generated
+  mobile `api-types.ts` still carried the pre-F56 `"classic"` transport
+  enum** while the backend had moved to `"classic-bt"`. That is the
+  same F37-class drift as before, left behind by fixing the backend
+  without refreshing the generated artefacts. Both refreshed; mobile
+  typecheck clean.
+- **Filed F71–F75:** proxy-collapsed anonymous rate limiting (a launch
+  item — behind a load balancer one client burns the shared 100/day
+  budget and every customer share link 429s) · per-process limiter
+  state multiplying limits by worker count · API keys in the WebSocket
+  query string · the prefix-collision docstring claiming 96 bits where
+  the prefix carries ~18 · two dynamic UPDATE builders without column
+  allowlists (not reachable today, cheap to harden).
+- **The honest summary:** an audit that reports "one defect, otherwise
+  clean" after a single pass should be read as a report on the pass,
+  not on the system. This one needed a second look to find the thing
+  that actually mattered.
