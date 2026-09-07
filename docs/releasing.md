@@ -86,7 +86,10 @@ The runbook is [`docs/testflight.md`](../../moto-diag-mobile/docs/testflight.md)
 in the mobile repo; store metadata is
 [`docs/app-store-listing.md`](../../moto-diag-mobile/docs/app-store-listing.md).
 
-Real blockers, as of Phase 209:
+The full ordered list of what remains — host, privacy policy, demo
+instance, screenshots, upload — is in
+[`launch-checklist.md`](launch-checklist.md). Real blockers, as of
+Phase 209:
 
 1. **No privacy policy URL.** Required for submission; does not exist.
 2. **No demo server for App Review.** The app is a client and cannot be

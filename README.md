@@ -87,6 +87,7 @@ bike from garage to finished diagnosis in about ten minutes.
 | [Install](docs/guide/install.md) | Getting it onto a machine |
 | [Contributing](docs/contributing.md) | Working on MotoDiag itself |
 | [Releasing](docs/releasing.md) | Cutting a release |
+| [Launch checklist](docs/launch-checklist.md) | What's left before real users |
 
 ## What's in the box
 
