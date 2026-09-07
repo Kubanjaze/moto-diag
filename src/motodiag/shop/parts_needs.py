@@ -28,7 +28,6 @@ from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
-from motodiag.advanced.parts_repo import get_xrefs
 from motodiag.core.database import get_connection
 from motodiag.shop.work_order_repo import (
     WorkOrderNotFoundError, require_work_order, update_work_order,
@@ -525,7 +524,9 @@ def list_parts_for_shop_open_wos(
     Active part line = work_order_parts.status IN only_statuses.
 
     Returns one ConsolidatedPartNeed per distinct part_id.
-    OEM/aftermarket cost columns populated via parts_repo.get_xrefs.
+    OEM/aftermarket cost columns are always None — the Phase 153
+    enrichment they were meant to carry never worked (F58) and its
+    dead per-part query was removed in Phase 206.
     """
     placeholders = ",".join("?" for _ in only_statuses)
     query = f"""
@@ -570,26 +571,30 @@ def list_parts_for_shop_open_wos(
         by_part[pid]["estimated_cost_cents"] += line_cost
 
     results: list[ConsolidatedPartNeed] = []
+    # Phase 153 xref enrichment REMOVED here (Phase 206).
+    #
+    # This loop called get_xrefs(pid) once per part — an N+1 — for a
+    # value it could never produce. Two independent bugs, both confirmed
+    # empirically against a seeded parts_xref rather than by reading:
+    #
+    #   1. it passed a part ID where get_xrefs expects an OEM part
+    #      NUMBER. With a real xref seeded, get_xrefs('44082-08')
+    #      returns 1 row and get_xrefs(1) returns 0.
+    #   2. it read xr['role'] and xr['part'], neither of which exists.
+    #      The real keys are oem_* / aftermarket_* (aftermarket_cost_cents
+    #      and so on).
+    #
+    # A bare `except: pass` swallowed the consequences, so oem_cost and
+    # aftermarket_cost have been None on every shopping list and
+    # requisition since the feature shipped. Removing the call preserves
+    # that behaviour EXACTLY while dropping a query per part.
+    #
+    # Filed as F58 — making the enrichment actually work is a behaviour
+    # change (real numbers where callers have only ever seen None) and
+    # belongs in its own fix, not a performance phase.
     for pid, agg in by_part.items():
-        # Phase 153 xref enrichment for OEM/aftermarket cost surfacing
         oem_cost = None
         aftermarket_cost = None
-        try:
-            xrefs = get_xrefs(pid, db_path=db_path) or []
-            for xr in xrefs:
-                # xrefs returns {role, part: {...}, equivalence_rating, ...}
-                role = xr.get("role")
-                part = xr.get("part") or {}
-                cost = part.get("typical_cost_cents")
-                if cost is None:
-                    continue
-                if role == "oem" and oem_cost is None:
-                    oem_cost = int(cost)
-                elif role == "aftermarket":
-                    if aftermarket_cost is None or int(cost) < aftermarket_cost:
-                        aftermarket_cost = int(cost)
-        except Exception:
-            pass
         results.append(ConsolidatedPartNeed(
             part_id=pid,
             part_slug=agg["part_slug"],
