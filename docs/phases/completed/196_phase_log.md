@@ -130,3 +130,23 @@ only Track I row still unchecked while its sibling 196B was long done.
 - Impl doc → v1.1 (checklist marked with the honest `[~]` on the
   hardware item, deviations, results, key finding); docs → `completed/`;
   mobile ROADMAP row 196 marked with the same caveat.
+
+### 2026-09-07 — F56 re-scoped (this phase's open item, restated)
+
+The outstanding `[~]` item — BLE connect/handshake on real hardware —
+was blocking on an adapter purchase. Re-scoped after review, because
+that gated a code path **no user can reach**: `OBD_SUPPORT` is
+`__DEV__`, so OBD is absent from release builds, and the transport real
+mechanics use is 196B's classic-Bluetooth provider, already
+device-verified against the MX+.
+
+F56 now covers making a BLE failure legible — the seven typed error
+kinds in `obdErrors.ts` have never run on hardware — rather than proving
+BLE works. The distinction is deliberate and recorded in the ticket:
+degrading well is not the same as working.
+
+**This phase's `[~]` item remains open.** The hard gate is unchanged and
+is now stated at the decision point itself, in `features.ts` beside the
+flag: flipping `OBD_SUPPORT` on for release still requires scan →
+connect → handshaking → connected against a real BLE dongle, appended to
+ADR-002's condition-#2 running record.

@@ -112,6 +112,14 @@ Outputs (mobile repo, branch `phase-196-bluetooth-obd`):
       the one item that kept this phase open for ten days. Re-scoped to
       **F56**, which needs a BLE-class adapter (OBDLink CX / Vgate iCar
       Pro BT4.0) to close.
+
+      **Update 2026-09-07 — F56 re-scoped.** It no longer blocks on
+      buying hardware. `OBD_SUPPORT` is `__DEV__`, so OBD ships dark and
+      no user can reach this path; the transport real mechanics use
+      (classic Bluetooth, via the MX+) is verified by 196B. F56 now
+      covers making a BLE failure LEGIBLE instead. **This `[~]` item
+      stays open**, and flipping `OBD_SUPPORT` on for release still
+      requires the real device smoke described below.
 - [x] Evidence captured for what WAS exercised (scan datapoint,
       2026-08-23 ledger entry)
 - [x] ADR-002 condition #2 data point appended — scan PASS recorded as a
