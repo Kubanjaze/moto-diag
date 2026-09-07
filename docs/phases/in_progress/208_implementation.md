@@ -1,6 +1,6 @@
 # Phase 208 — Documentation + user guide
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -112,21 +112,42 @@ assertion. Nothing is sent to any API; this phase is entirely local.
 
 ## Verification Checklist
 
-- [ ] Every `motodiag` command appearing in any doc exists in the live
+- [x] Every `motodiag` command appearing in any doc exists in the live
       CLI — asserted by test, not by reading
-- [ ] Every `/v1/...` path appearing in any doc exists in the live
+- [x] The guard was proven to FAIL on a bad doc: a fabricated
+      `motodiag garrage list` and `/v1/sessions/{session_id}/bogus` were
+      injected into the quickstart and both were caught, by file and by
+      offender
+- [x] Every `/v1/...` path appearing in any doc exists in the live
       OpenAPI schema
-- [ ] No Windows-only path (`\Scripts\`, `PowerShell`) survives in
-      either README
-- [ ] The quickstart was executed start to finish on this machine and
-      its pasted output is real
-- [ ] The shop workflow was executed against a live server, not
-      described from the route list
-- [ ] App Store listing fields are within Apple's character limits
-      (asserted)
-- [ ] `ios/Podfile` no longer claims to disable New Architecture
-- [ ] iOS build still succeeds after the Podfile edit
-- [ ] Backend regression green; F9 lint clean; mobile `tsc` clean
+- [x] No Windows-only path (`\Scripts\`, `PowerShell`) survives in
+      either README — asserted
+- [x] The quickstart was executed on this machine and its pasted output
+      is real — **except** `motodiag quick` and `motodiag diagnose
+      start`, which call a paid API and are documented from their
+      `--help` contract instead. The quickstart says so where they appear
+- [x] The shop workflow was executed end to end — shop, customer,
+      bike link, intake, work order, parts search and seed, part line
+      through ordered and received, completion, invoice, void and
+      regenerate. **Not executed:** the share-link `curl` calls in step
+      7, which are documented from the route contract and the Phase 200
+      implementation, not from a live mint
+- [x] The workflow run surfaced two real defects (CLI/API tenancy split;
+      `list_shops` owner default) and one correct-behaviour-that-reads-
+      as-breakage (parts must be `received` before an invoice bills
+      them), now documented as the precondition it is
+- [x] App Store listing fields are within Apple's character limits, and
+      the doc's own stated counts are asserted to equal the real ones —
+      all three were wrong when written
+- [x] Every permission the Info.plist declares is documented in the
+      listing, and no location permission is declared — asserted
+- [x] `ios/Podfile` no longer claims to disable New Architecture
+- [x] `pod install` succeeds after the Podfile edit, and the generated
+      `Pods-MotoDiag.{debug,release}.xcconfig` still carry
+      `-DRCT_NEW_ARCH_ENABLED=1` — which is the evidence that the removed
+      line was inert. A full Xcode app build was **not** re-run
+- [x] Backend regression green; F9 lint clean; mobile `tsc` clean, lint
+      0 errors
 
 ## Risks
 
@@ -146,3 +167,98 @@ assertion. Nothing is sent to any API; this phase is entirely local.
 - **Removing the Podfile line touches the build.** It should be inert —
   RN 0.85 ignores it — but "should be inert" is exactly the kind of
   claim this project has been burned by. It gets a real build.
+
+
+## Deviations from Plan
+
+**The phase found five code defects it did not plan to find.** All were
+surfaced by the plan's own anti-theatre commitment — executing the
+commands rather than describing them — and all are fixed here rather
+than filed, because each one falsified something the docs would
+otherwise have asserted.
+
+1. **`motodiag --version` reported 0.1.0 against a 0.6.0 package.** The
+   version was a literal in `src/motodiag/__init__.py` *and* a second
+   literal in `Settings.version`, neither of which tracked
+   `pyproject.toml`. `/v1/version` and the OpenAPI `version` field were
+   equally stale. A version number that lies routes a bug report to the
+   wrong release. Both literals now derive from installed package
+   metadata; `pyproject.toml` is the single source. The Phase 01 pin
+   that asserted `== "0.1.0"` had been *agreeing with the bug*, so it
+   now asserts internal consistency instead of a specific number.
+
+2. **The CLI wrote customers the API could never read.** Phase 207 gave
+   `customers` a `shop_id` and taught the API to scope on it, but
+   `motodiag shop customer add` kept inserting NULL — and the API serves
+   a NULL-`shop_id` row to no shop. Every customer added from the
+   terminal was invisible in the mobile app, silently, with both sides
+   passing their own tests. Found by writing the shop workflow guide,
+   which required running it. `tests/test_phase208_cli_api_parity.py`
+   now holds the seam.
+
+3. **`list_shops()` defaults to `owner_user_id=1`.** The helper written
+   for defect 2 called it bare and so saw no shops whenever the operator
+   was any other user, turning "which of your shops?" into "you have no
+   shop". Caught by the parity test failing on a fixture whose owner was
+   user 2. Now passes `owner_user_id=None` explicitly, with a comment
+   saying why.
+
+4. **The iOS Info.plist declared a location permission for a feature
+   that does not exist.** `NSLocationWhenInUseUsageDescription`
+   described tagging work orders with a bay location; there is no
+   location dependency and no location API call anywhere in the app. A
+   declared-but-unused permission is a review question with no good
+   answer. Removed.
+
+5. **The App Store listing's own stated character counts were all three
+   wrong** on first writing — stated from estimate rather than computed.
+   The guard now asserts the printed counts equal the real ones, which
+   is the only reason this is a footnote rather than a rejected upload.
+
+**Scope added:** `docs/contributing.md` was not in the plan. The F9
+pre-commit material occupied over half the old README and is
+contributor-only; moving it was the difference between a README that
+describes the product and one that describes its git hooks.
+
+**Scope reduced:** the plan said "every command in the guides is
+executed and its real output pasted." True except for the two AI
+commands (`motodiag quick`, `motodiag diagnose start`), which call a
+paid API. They are documented from their `--help` contract and flagged
+in the quickstart as costing money. Saying so here rather than letting
+the claim stand unqualified.
+
+**Android New-Arch flag annotated, not flipped.** The plan called for
+removing the misleading `RCT_NEW_ARCH_ENABLED=0`; that was done on iOS
+and verified by `pod install` (the generated Pods still carry
+`-DRCT_NEW_ARCH_ENABLED=1`, which is what proves the line was inert).
+The Android `newArchEnabled=false` got a comment instead of a flip:
+nobody has run an Android build since iOS became the shipped target,
+and changing a build flag you cannot test is not an improvement.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| CLI commands enumerated | 255 leaf commands, 24 groups |
+| HTTP surface enumerated | 80 paths, 103 operations, 17 tags |
+| Commands the old README documented | 3 |
+| User-facing docs before | 2 READMEs, both describing a Windows-hosted CLI |
+| User-facing docs after | 2 READMEs + 3 guides + contributing + App Store listing |
+| Code defects found and fixed | 5 |
+| Drift-guard tests | 18 (docs) + 7 (CLI/API parity) |
+| Backend regression | 4879 passed / 0 failed |
+| F9 lint | clean |
+| Mobile `tsc` | clean; lint 0 errors |
+
+**Key finding: writing the documentation was a better test than the test
+suite.** Two of the five defects — the CLI/API tenancy split and the
+`list_shops` owner default — were invisible to 4,854 passing tests
+because every test exercised one side of a seam. Documenting the shop
+workflow meant *walking* it, and walking it crossed the seam on the
+first step. The suite asserted that each half worked; only the guide
+asked whether they worked together.
+
+The corollary is uncomfortable and worth writing down: a docs phase
+scheduled near launch is not a formality. It is the first time anyone
+uses the product the way a stranger would, and that is a different act
+from testing it.

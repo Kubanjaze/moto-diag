@@ -16,6 +16,9 @@ DATA_DIR = PROJECT_ROOT / "data"
 OUTPUT_DIR = PROJECT_ROOT / "output"
 
 
+from motodiag import __version__
+
+
 class Environment(str, Enum):
     """Application environment profiles."""
     DEV = "dev"
@@ -35,7 +38,10 @@ class Settings(BaseSettings):
 
     # General
     app_name: str = "motodiag"
-    version: str = "0.1.0"
+    # Defaults to the installed package version rather than a second
+    # literal — two hand-maintained version strings is how the first
+    # one drifted (Phase 208).
+    version: str = __version__
     debug: bool = False
     env: Environment = Environment.DEV
 

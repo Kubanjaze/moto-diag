@@ -210,6 +210,39 @@ from motodiag.shop import (
 )
 
 
+def _sole_shop_id_or_fail() -> int:
+    """Return the only registered shop's id, or fail with instructions.
+
+    Customers carry `shop_id` since migration 050, and the API serves a
+    row whose `shop_id` is NULL to no shop at all. Guessing would be
+    worse than asking: picking the wrong shop files a customer under
+    someone else's business. So this resolves the unambiguous case and
+    refuses the ambiguous one.
+    """
+    from motodiag.shop import list_shops
+
+    # owner_user_id=None deliberately: `list_shops()` DEFAULTS to
+    # owner 1, which would silently see no shops whenever the operator
+    # is any other user and turn "which of your shops?" into "you have
+    # no shop". The question here is how many shops exist in this local
+    # database at all.
+    shops = list_shops(owner_user_id=None)
+    if not shops:
+        raise click.ClickException(
+            "No shop registered yet. Run `motodiag shop profile init "
+            "--name \"Your Shop\"` first, or pass --shop-id."
+        )
+    if len(shops) > 1:
+        names = ", ".join(
+            f"{s['id']}={s['name']}" for s in shops[:6]
+        )
+        raise click.ClickException(
+            f"More than one shop is registered ({names}). Pass "
+            "--shop-id to say which one this customer belongs to."
+        )
+    return int(shops[0]["id"])
+
+
 # ---------------------------------------------------------------------------
 # Internal helpers
 # ---------------------------------------------------------------------------
@@ -751,20 +784,31 @@ def register_shop(cli_group: click.Group) -> None:
     @click.option("--phone", default=None)
     @click.option("--address", default=None)
     @click.option("--notes", default=None)
+    @click.option("--shop-id", type=int, default=None,
+                  help="Shop this customer belongs to. Defaults to the "
+                       "only registered shop; required once there is "
+                       "more than one.")
     def customer_add(
         name: str,
         email: Optional[str],
         phone: Optional[str],
         address: Optional[str],
         notes: Optional[str],
+        shop_id: Optional[int],
     ) -> None:
         """Add a new customer."""
         console = get_console()
         init_db()
+        # Phase 208: customers carry `shop_id` (migration 050) and the
+        # API serves a row to no shop when it is NULL. A CLI that wrote
+        # NULL here would create customers the mobile app and API can
+        # never see — the bug this defaulting exists to prevent.
+        if shop_id is None:
+            shop_id = _sole_shop_id_or_fail()
         try:
             customer = Customer(
                 name=name, email=email, phone=phone,
-                address=address, notes=notes,
+                address=address, notes=notes, shop_id=shop_id,
             )
         except Exception as e:
             raise click.ClickException(f"Invalid customer data: {e}") from e
@@ -777,16 +821,21 @@ def register_shop(cli_group: click.Group) -> None:
     @customer_group.command("list")
     @click.option("--inactive", is_flag=True, default=False,
                   help="Include deactivated customers.")
+    @click.option("--shop-id", type=int, default=None,
+                  help="Scope to one shop. Omit to list every customer "
+                       "in the local database, including unclaimed ones.")
     @click.option("--limit", type=int, default=50)
     @click.option("--json", "as_json", is_flag=True, default=False)
     def customer_list(
-        inactive: bool, limit: int, as_json: bool,
+        inactive: bool, shop_id: Optional[int], limit: int, as_json: bool,
     ) -> None:
         """List customers."""
         console = get_console()
         init_db()
         is_active = None if inactive else True
-        rows = customer_repo.list_customers(is_active=is_active)
+        rows = customer_repo.list_customers(
+            is_active=is_active, shop_id=shop_id,
+        )
         rows = rows[: max(0, int(limit))] if limit else rows
         if as_json:
             click.echo(_json.dumps(rows, default=str, indent=2))
