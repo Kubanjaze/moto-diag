@@ -154,6 +154,29 @@ def register_serve(cli_group: click.Group) -> None:
             )
             motodiag_logger.addHandler(handler)
 
+        # === F64: refuse to ship share links nobody can open ===
+        # MOTODIAG_PUBLIC_BASE_URL is baked into every customer share
+        # link. A wrong value fails INVISIBLY to the shop: minting
+        # succeeds, the mechanic sends the link, and only the customer
+        # finds it does not resolve. So it is checked at startup, and in
+        # prod it is fatal rather than advisory.
+        from motodiag.core.public_url import (
+            check_public_base_url, has_blocking_problem,
+        )
+
+        url_problems = check_public_base_url(
+            settings.public_base_url, settings.env,
+        )
+        for problem in url_problems:
+            click.echo(problem.render(), err=True)
+        if has_blocking_problem(url_problems):
+            raise click.ClickException(
+                "Refusing to start in "
+                f"env={settings.env.value}: customer share links would "
+                "be unreachable. Fix MOTODIAG_PUBLIC_BASE_URL, or run "
+                "with MOTODIAG_ENV=dev if this is a local session."
+            )
+
         click.echo(
             f"MotoDiag API starting on "
             f"http://{effective_host}:{effective_port} "
