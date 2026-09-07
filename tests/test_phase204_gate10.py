@@ -12,6 +12,8 @@ from __future__ import annotations
 
 import subprocess
 
+from pydantic import BaseModel
+
 from motodiag.media import ffmpeg as ffmpeg_mod
 
 
@@ -51,6 +53,19 @@ class TestFfmpegArgsSurviveModernFfmpeg:
         )
 
 
+class _PresetBody(BaseModel):
+    """Module-level on purpose.
+
+    Defined inside the test function, FastAPI cannot resolve the
+    annotation via get_type_hints and falls back to treating the
+    parameter as a QUERY field — the error then reads
+    ``loc: ('query', 'body')`` and never names ``preset``, which makes
+    the test look like a code failure when it is a fixture bug.
+    """
+
+    preset: str
+
+
 class TestValidationFailuresAreLogged:
     """The 422 logging must not change the RESPONSE shape.
 
@@ -68,18 +83,14 @@ class TestValidationFailuresAreLogged:
 
         from fastapi import FastAPI
         from fastapi.testclient import TestClient
-        from pydantic import BaseModel
 
         from motodiag.api.errors import register_exception_handlers
-
-        class Body(BaseModel):
-            preset: str
 
         app = FastAPI()
         register_exception_handlers(app)
 
         @app.post("/echo")
-        def echo(body: Body) -> dict:  # pragma: no cover - never reached
+        def echo(body: _PresetBody) -> dict:  # pragma: no cover
             return {"ok": True}
 
         client = TestClient(app, raise_server_exceptions=False)
@@ -92,7 +103,7 @@ class TestValidationFailuresAreLogged:
         ), "a rejected request must leave a trace server-side"
 
         # ...and the body is still FastAPI's structured shape, so the
-        # field that failed is machine-readable by the caller.
+        # field that failed stays machine-readable by the caller.
         detail = response.json()["detail"]
         assert isinstance(detail, list)
         assert any("preset" in str(err.get("loc", [])) for err in detail)
