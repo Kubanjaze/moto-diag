@@ -12,7 +12,7 @@ from __future__ import annotations
 import hashlib
 import json
 import logging
-from typing import Optional
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
@@ -109,6 +109,15 @@ class SymptomListResponse(BaseModel):
     total: int
 
 
+#: Phase 211 — mirrors the CHECK constraint on `known_issues.source`
+#: (migration 051) so the OpenAPI schema emits a strict enum and the
+#: mobile codegen gets a typed union rather than a freeform string.
+IssueSource = Literal[
+    "unverified", "model-generated", "forum",
+    "service-manual", "mechanic-verified",
+]
+
+
 class KnownIssueResponse(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
@@ -126,6 +135,9 @@ class KnownIssueResponse(BaseModel):
     fix_procedure: Optional[str] = None
     parts_needed: list[str] = Field(default_factory=list)
     estimated_hours: Optional[float] = None
+    #: Phase 211 — provenance. Clients should surface anything other
+    #: than `service-manual` / `mechanic-verified` as unreviewed.
+    source: IssueSource = "unverified"
 
 
 class KnownIssueListResponse(BaseModel):
@@ -200,6 +212,7 @@ def _issue_row_to_response(row: dict) -> KnownIssueResponse:
         fix_procedure=row.get("fix_procedure"),
         parts_needed=_as_list(row.get("parts_needed")),
         estimated_hours=row.get("estimated_hours"),
+        source=row.get("source") or "unverified",
     )
 
 

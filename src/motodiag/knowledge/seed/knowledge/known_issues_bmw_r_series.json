@@ -1,0 +1,356 @@
+[
+  {
+    "title": "Final drive crown-wheel bearing failure — hexhead R1200GS/RT/R",
+    "description": "The 2005–2011 R1200 hexhead final drive uses a single large crown-wheel bearing that is widely reported to fail well before the life of the bike. Early signs are a weep of gear oil at the final-drive seal and a faint rumble on a trailing throttle; left alone it progresses to lateral play at the rear wheel and, eventually, a seized or destroyed drive. Later units and revised replacement parts appear to have improved the failure rate, but any hexhead with unknown history should be checked. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
+    "make": "BMW",
+    "model": "R1200GS",
+    "year_start": 2005,
+    "year_end": 2011,
+    "severity": "critical",
+    "symptoms": [
+      "oil weep at final drive",
+      "rumble or whine from rear wheel on deceleration",
+      "play at rear wheel when rocked side to side",
+      "grinding from final drive"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Crown-wheel bearing wear (single-bearing design)",
+      "Lubricant breakdown from heat and extended change intervals",
+      "Seal failure allowing oil loss and contamination"
+    ],
+    "fix_procedure": "1. With the bike on the centre stand, grip the rear wheel at 3 and 9 o'clock and rock it; any perceptible play with the wheel bearing and swingarm ruled out points at the crown-wheel bearing. 2. Inspect the final-drive seal area for a wet ring or dripping gear oil. 3. Drain the final drive and inspect the oil for metallic glitter; a magnetic drain plug will show it directly. 4. If play or debris is present, the final drive must be disassembled for bearing and seal replacement — this is a press job and most shops send the unit out or fit an exchange unit. 5. On reassembly, refill with the manual-specified hypoid gear oil and reset the change interval; many owners shorten it from the factory schedule.",
+    "parts_needed": [
+      "Final drive crown-wheel bearing",
+      "Final drive output seal",
+      "Hypoid gear oil",
+      "Magnetic drain plug (recommended)"
+    ],
+    "estimated_hours": 4.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Surging at steady throttle — oilhead R1100/R1150 (Motronic MA2.4)",
+    "description": "The R1100 and R1150 oilheads with the Motronic MA2.4 injection are notorious for a hunting or surging sensation at light, steady throttle in the 3,000–4,000 rpm range, most obvious in town. The root cause is a lean-biased fuel map for emissions, made worse by anything that upsets the mixture: throttle bodies out of balance, throttle-position sensor drift, tight valve clearances, or a corroded coding plug. Aftermarket fuelling boosters became a common fix precisely because the underlying map cannot be changed on this generation. Written from general knowledge — verify procedure against the manual.",
+    "make": "BMW",
+    "model": "R1150",
+    "year_start": 1994,
+    "year_end": 2004,
+    "severity": "medium",
+    "symptoms": [
+      "surging at steady throttle",
+      "hunting at low speed",
+      "rough running in town",
+      "hesitation on light throttle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Lean factory fuel map (emissions calibration)",
+      "Throttle bodies out of synchronisation",
+      "Throttle-position sensor zero point drifted",
+      "Tight valve clearances",
+      "Corroded or wrong coding plug (CCP)"
+    ],
+    "fix_procedure": "1. Do the basics first — check and set valve clearances, then synchronise the throttle bodies with vacuum gauges or a manometer at idle and at a fast idle; most surging complaints improve markedly here. 2. Check the throttle-position sensor zero setting per the manual; a drifted TPS gives the ECU a wrong idle reference. 3. Inspect the coding plug under the seat for corrosion and confirm it is the correct one for the market and cat fitment. 4. If surging persists after the above, an aftermarket fuel-enrichment module or a professional remap on later units is the usual next step. 5. Do not chase this with a richer plug or an air-filter change alone — it rarely moves the needle.",
+    "parts_needed": [
+      "Valve-adjustment shims or feeler gauges",
+      "Coding plug (if corroded)",
+      "Aftermarket fuel-enrichment module (optional)"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Rear main / gearbox input seal leak contaminating the dry clutch — oilhead and hexhead",
+    "description": "Boxer twins run a single-plate dry clutch between the engine and gearbox. When the engine rear main seal or the gearbox input-shaft seal starts to weep, the oil has nowhere to go but onto the clutch plate. The first symptom is clutch slip under load in the higher gears, often mistaken for a worn clutch; by the time it is obvious the plate is ruined. Repair means separating the gearbox from the engine, which on these bikes is a major strip. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R-series (oilhead/hexhead)",
+    "year_start": 1994,
+    "year_end": 2012,
+    "severity": "high",
+    "symptoms": [
+      "clutch slipping under load",
+      "engine rpm rises without speed increase",
+      "burning smell",
+      "oil smell from bellhousing area",
+      "clutch judder"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Engine rear main seal weeping",
+      "Gearbox input-shaft seal weeping",
+      "Overfilled engine or gearbox forcing oil past seals"
+    ],
+    "fix_procedure": "1. Confirm slip: in top gear at moderate speed, roll the throttle open — rpm climbing faster than road speed is slip. 2. Check engine and gearbox oil levels; an overfill can push oil past a good seal and is worth ruling out first. 3. Look for an oil film at the bellhousing drain or weep hole. 4. Repair requires removing the rear subframe, swingarm and gearbox to expose the clutch. Replace the clutch plate and whichever seal is leaking — replace both if in doubt, since access is the whole cost. 5. Degrease the flywheel and pressure plate thoroughly before fitting the new plate. 6. Lubricate the gearbox input splines on reassembly (see the spline-wear entry).",
+    "parts_needed": [
+      "Clutch friction plate",
+      "Engine rear main seal",
+      "Gearbox input-shaft seal",
+      "Clutch spline grease"
+    ],
+    "estimated_hours": 8.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Gearbox input-shaft spline wear — dry clutch hub",
+    "description": "The clutch hub slides on the gearbox input-shaft splines, and on the boxer twins those splines run dry unless someone greases them at clutch service. Worn splines announce themselves as increasingly notchy or clunky gear engagement and, in the end, a hub that spins on the shaft with no drive at all. It is far cheaper to lubricate the splines every time the clutch is exposed than to replace a gearbox input shaft. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R-series (oilhead/hexhead)",
+    "year_start": 1994,
+    "year_end": 2012,
+    "severity": "high",
+    "symptoms": [
+      "clunky gear engagement",
+      "notchy gearchange",
+      "loss of drive with engine running",
+      "rattle from clutch area at idle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Dry input-shaft splines (no lubrication at clutch service)",
+      "High mileage without spline inspection",
+      "Water ingress through bellhousing"
+    ],
+    "fix_procedure": "1. Splines can only be inspected with the gearbox separated, so this is usually found during a clutch job — make it a habit to inspect and grease them whenever the clutch is out. 2. Clean the shaft and hub splines and look for a wear step, rounding of the spline crests, or red rust dust. 3. Light wear: clean and apply a spline-specific grease per the manual. 4. Heavy wear or rounded splines: replace the clutch hub and, if the shaft is also worn, the gearbox input shaft — a gearbox-out job. 5. Record the lubrication in the service history so the next mechanic knows when it was done.",
+    "parts_needed": [
+      "Clutch spline grease",
+      "Clutch hub (if worn)",
+      "Gearbox input shaft (if worn)"
+    ],
+    "estimated_hours": 6.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Hall-effect sensor wiring breakdown — oilhead R1100/R1150",
+    "description": "The Hall-effect sensor that gives the Motronic its crank position lives behind the front engine cover, and its wiring insulation is a well-documented weak point: heat cycles harden and crack it until the wires short or open. The classic presentation is a bike that runs fine cold, then misfires, stalls or refuses to start once hot, and behaves again after it cools. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R1100",
+    "year_start": 1994,
+    "year_end": 2004,
+    "severity": "high",
+    "symptoms": [
+      "misfire when hot",
+      "stalls when hot",
+      "no start when hot",
+      "intermittent cutting out",
+      "runs fine when cold"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Heat-embrittled insulation on Hall sensor wiring",
+      "Chafed wiring behind the front cover",
+      "Sensor failure"
+    ],
+    "fix_procedure": "1. Remove the front engine cover and inspect the Hall sensor loom where it exits the sensor plate — cracked, flaking insulation confirms it. 2. If the sensor itself tests good, the loom can be re-wired with heat-resistant wire by a competent shop; otherwise replace the sensor assembly. 3. Refit with the sensor plate at its timing mark and check timing per the manual. 4. Road-test to full operating temperature, since the fault only shows hot.",
+    "parts_needed": [
+      "Hall-effect sensor assembly (or heat-resistant wire and heat-shrink for re-wire)",
+      "Front cover gasket"
+    ],
+    "estimated_hours": 2.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Integral ABS (servo-assisted) pump failure — 2001–2006 oilhead/hexhead",
+    "description": "BMW's servo-assisted 'Integral ABS' of the early 2000s uses an electric pump to boost braking effort, and pump failure is widely reported. The rider gets a brake-failure warning, a loud pump whine, or the brakes drop into 'residual' mode where the lever goes long and needs far more effort. Genuine pump failure is expensive; a good proportion of warnings turn out to be low fluid, a weak battery, or an overdue flush, so rule those out first. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R1150/R1200 (Integral ABS)",
+    "year_start": 2001,
+    "year_end": 2006,
+    "severity": "critical",
+    "symptoms": [
+      "ABS warning light",
+      "brake failure warning",
+      "loud whine from ABS unit",
+      "hard or long brake lever",
+      "brakes feel unassisted"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "ABS servo pump motor failure",
+      "Low brake-fluid level in the control circuit",
+      "Weak battery dropping voltage below the ABS threshold",
+      "Contaminated fluid from missed flush intervals"
+    ],
+    "fix_procedure": "1. Check battery voltage and charging first — the ABS unit is voltage-sensitive and a weak battery mimics a failed pump. 2. Check both control-circuit and wheel-circuit fluid levels per the manual; these systems have separate circuits and must be bled in the correct sequence. 3. Read stored faults with a BMW-capable tool (see the Phase 215 dealer-mode entry) to distinguish a pressure fault from an electrical one. 4. If the pump is confirmed dead, options are a replacement or rebuilt unit, or — as many owners have done — conversion to a conventional non-servo system. Both are significant jobs; quote accordingly.",
+    "parts_needed": [
+      "Brake fluid (DOT 4)",
+      "ABS servo pump unit (or conversion kit)",
+      "Battery (if weak)"
+    ],
+    "estimated_hours": 3.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Fuel-level strip sensor failure — hexhead R1200 (2007–2012)",
+    "description": "The hexhead R1200 range uses a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R1200GS",
+    "year_start": 2007,
+    "year_end": 2012,
+    "severity": "low",
+    "symptoms": [
+      "fuel gauge erratic",
+      "fuel gauge reads empty with fuel in tank",
+      "fuel level warning light on",
+      "range-to-empty jumps"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Corrosion on the resistive fuel-level strip",
+      "Poor connector contact at the tank"
+    ],
+    "fix_procedure": "1. Confirm the complaint by comparing the gauge against a known fill. 2. Check the fuel-sensor connector for corrosion before condemning the strip. 3. Replace the fuel-level sensor; access is through the fuel-pump plate in the tank, so the tank must be low. 4. Check with the dealer whether a warranty extension still applies for the VIN — worth a phone call before the customer pays.",
+    "parts_needed": [
+      "Fuel-level strip sensor",
+      "Fuel-pump plate seal"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Alternator drive-belt wear — belt-driven alternator (oilhead, hexhead, R nineT)",
+    "description": "Unlike most motorcycles, the belt-driven boxers use a poly-V belt from the crank to a car-style alternator, and it is a scheduled replacement item that is easy to forget. A tired belt squeals cold, slips under electrical load, and eventually strands the bike with a flat battery and a charging warning. Replacement is straightforward but tension must be set correctly — an over-tight belt loads the alternator bearing. Written from general knowledge — verify the interval and tension against the manual.",
+    "make": "BMW",
+    "model": "R-series (belt alternator)",
+    "year_start": 1994,
+    "year_end": 2023,
+    "severity": "medium",
+    "symptoms": [
+      "squeal on cold start",
+      "charging warning light",
+      "battery not charging",
+      "battery drains overnight",
+      "dim lights at idle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Alternator belt worn or glazed",
+      "Belt tension incorrect",
+      "Alternator bearing wear from over-tight belt"
+    ],
+    "fix_procedure": "1. Check charging voltage at the battery with the engine running at a fast idle; a low or fluctuating reading with a squeal points at the belt. 2. Remove the front belt cover and inspect for cracking, glazing or missing ribs. 3. Replace the belt and set tension per the manual — do not guess it; both slack and over-tight cause failures. 4. Reset the service reminder if the bike tracks belt replacement. 5. If charging remains low with a new belt, test the alternator and regulator.",
+    "parts_needed": [
+      "Alternator poly-V belt",
+      "Belt cover gasket (if fitted)"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Water-pump seal weep — wethead R1200/R1250 liquid-cooled (2013+)",
+    "description": "The liquid-cooled 'wethead' boxer introduced a water pump driven off the engine, and its shaft seal has a tell-tale weep hole: a small amount of coolant or oil at that hole means the seal is on its way out. Owners report it across the 2013-on range at varying mileages. Caught early it is a seal job; ignored, coolant and oil can mix. Written from general knowledge — confirm the current part revision and procedure against the manual.",
+    "make": "BMW",
+    "model": "R1200GS LC",
+    "year_start": 2013,
+    "year_end": 2023,
+    "severity": "medium",
+    "symptoms": [
+      "coolant weep at water pump",
+      "coolant level dropping",
+      "crusty residue at weep hole",
+      "oil in coolant",
+      "coolant in oil"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Water-pump shaft seal wear",
+      "Coolant never changed — additive breakdown attacking the seal"
+    ],
+    "fix_procedure": "1. Inspect the weep hole on the pump housing for wet or crusty deposits; a dry hole is fine, a wet one is not. 2. Check the coolant level and look for oil sheen in the expansion tank, and for a milky tint on the oil sight glass. 3. Replace the pump seal (or the pump assembly, per BMW's current parts approach) and refill with the specified coolant. 4. Bleed the cooling system per the manual — air pockets in the boxer layout cause overheating if skipped. 5. If oil and coolant have mixed, change the engine oil and filter as well.",
+    "parts_needed": [
+      "Water-pump seal or pump assembly",
+      "Coolant",
+      "Engine oil and filter (if contaminated)"
+    ],
+    "estimated_hours": 3.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Diode board failure — airhead /5, /6, /7 and R-series (1970–1995)",
+    "description": "Airhead charging runs through a diode board mounted on rubber bushes inside the front engine cover, and both the board and its mounts are classic failure points: the rubber mounts perish and the board loses its ground, or a diode fails outright. Either way the battery stops charging. It is one of the first things to check on any airhead with a charging complaint, and solid replacement mounts are a common permanent fix. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R-series (airhead)",
+    "year_start": 1970,
+    "year_end": 1995,
+    "severity": "high",
+    "symptoms": [
+      "battery not charging",
+      "charge warning light stays on",
+      "battery drains overnight",
+      "dim lights at idle",
+      "intermittent charging"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Perished rubber diode-board mounts breaking the ground path",
+      "Failed diode on the board",
+      "Corroded connections at the board"
+    ],
+    "fix_procedure": "1. Check charging voltage across the battery at a fast idle; no rise over resting voltage points at the charging system. 2. Remove the front cover and inspect the diode board mounts — cracked or sagging rubber is the usual find. 3. Test the board's diodes with a multimeter per the manual's procedure; replace the board if any fail. 4. Replace the mounts with the solid aftermarket type if the customer wants to stop doing this job. 5. Clean and tighten every connection at the board; many 'failed' boards are just a bad ground.",
+    "parts_needed": [
+      "Diode board",
+      "Diode-board mounts (solid type recommended)",
+      "Front cover gasket"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Alternator rotor open-circuit and brush wear — airhead",
+    "description": "The airhead alternator's rotor winding is a known failure — the winding goes open-circuit, often after heat, and charging stops entirely — and the brushes that feed it wear to the point of losing contact. Both present the same way as a diode-board fault, so a quick rotor resistance check saves replacing the wrong part. Written from general knowledge — verify the resistance figure against the manual.",
+    "make": "BMW",
+    "model": "R-series (airhead)",
+    "year_start": 1970,
+    "year_end": 1995,
+    "severity": "high",
+    "symptoms": [
+      "battery not charging",
+      "charge warning light stays on",
+      "charging fails when hot",
+      "no output from alternator"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Alternator rotor winding open-circuit",
+      "Worn alternator brushes",
+      "Slip-ring contamination"
+    ],
+    "fix_procedure": "1. With the front cover off, measure rotor resistance across the slip rings against the manual's specification; an open circuit or a value far outside the range condemns the rotor. 2. Check brush length and free movement in the holder; replace if short or sticking. 3. Clean the slip rings. 4. Replace the rotor if open — it is a puller job off the crank taper. 5. Re-check charging voltage after reassembly.",
+    "parts_needed": [
+      "Alternator rotor (if open-circuit)",
+      "Alternator brushes",
+      "Front cover gasket"
+    ],
+    "estimated_hours": 2.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Paralever pivot bearing wear — oilhead and hexhead swingarm",
+    "description": "The Paralever rear suspension pivots on bearings at the swingarm and at the final-drive link, and those bearings wear and dry out, giving a clunk over bumps and play that is easy to blame on the shock or the final drive. Checking and repacking them is a routine service item that gets skipped; adjustment and preload on the pivot pins matter and the manual's procedure should be followed. Written from general knowledge — verify against the manual.",
+    "make": "BMW",
+    "model": "R-series (Paralever)",
+    "year_start": 1994,
+    "year_end": 2012,
+    "severity": "medium",
+    "symptoms": [
+      "clunk from rear over bumps",
+      "play at rear wheel when rocked",
+      "vague rear-end feel",
+      "knock on throttle transitions"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Dry or worn swingarm pivot bearings",
+      "Worn final-drive link bearings",
+      "Pivot pin preload lost"
+    ],
+    "fix_procedure": "1. On the centre stand with the rear wheel off the ground, rock the wheel fore-and-aft and side-to-side and feel for a knock at the pivots rather than at the wheel or drive. 2. Rule out the final-drive crown-wheel bearing (separate entry) — the symptoms overlap. 3. Strip the pivots, inspect the bearings and races for wear or corrosion, and repack or replace. 4. Reassemble setting pivot pin preload and lock-nut torque per the manual — this is not a 'tighten until it stops' adjustment. 5. Road-test for the clunk.",
+    "parts_needed": [
+      "Swingarm pivot bearings",
+      "Final-drive link bearings",
+      "Bearing grease"
+    ],
+    "estimated_hours": 3.0,
+    "source": "model-generated"
+  }
+]

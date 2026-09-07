@@ -99,6 +99,7 @@ def _render_issue_table(
     table.add_column("Severity")
     table.add_column("Title", overflow="fold")
     table.add_column("# fixes", justify="right", style="dim")
+    table.add_column("Source", style="dim")
 
     for row in rows:
         parts = row.get("parts_needed") or []
@@ -115,6 +116,7 @@ def _render_issue_table(
             f"[{sev_style}]{sev_text}[/{sev_style}]",
             _truncate(row.get("title")),
             str(len(parts)),
+            row.get("source") or "unverified",
         )
     console.print(table)
 
@@ -207,6 +209,34 @@ def _render_issue_detail(row: dict, console: Console) -> None:
         console.print(f"[bold]Estimated labor:[/bold] {hours} hours")
     else:
         console.print("[bold]Estimated labor:[/bold] [dim](not recorded)[/dim]")
+
+    _render_provenance(console, row.get("source"))
+
+
+#: Sources a mechanic can act on without a second opinion.
+VERIFIED_SOURCES = frozenset({"service-manual", "mechanic-verified"})
+
+
+def _render_provenance(console, source: str | None) -> None:
+    """Phase 211: say where an entry came from, and warn when that is
+    not a manual or a mechanic. Placed last, under the fix procedure,
+    because that is where the eye is when deciding whether to trust it.
+    """
+    source = source or "unverified"
+    console.print(f"[bold]Source:[/bold] {source}")
+    if source in VERIFIED_SOURCES:
+        return
+    if source == "model-generated":
+        console.print(
+            "[yellow]⚠ Written from general knowledge, not a service "
+            "manual. Confirm figures and procedure against the manual "
+            "for this bike before relying on them.[/yellow]"
+        )
+    else:
+        console.print(
+            "[yellow]⚠ Origin not recorded. Treat figures as a starting "
+            "point, not a specification.[/yellow]"
+        )
 
 
 # --- Phase 132: Issue formatters (pure dict → str) ------------------------

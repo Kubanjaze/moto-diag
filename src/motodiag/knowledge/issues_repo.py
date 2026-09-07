@@ -21,15 +21,22 @@ def add_known_issue(
     parts_needed: list[str] | None = None,
     estimated_hours: float | None = None,
     db_path: str | None = None,
+    source: str = "unverified",
 ) -> int:
-    """Add a known issue to the database. Returns issue ID."""
+    """Add a known issue to the database. Returns issue ID.
+
+    `source` (Phase 211) records provenance and is CHECK-constrained by
+    migration 051: `unverified` · `model-generated` · `forum` ·
+    `service-manual` · `mechanic-verified`. It is last and defaulted so
+    every existing caller — 31 of them — is unaffected.
+    """
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """INSERT INTO known_issues
                (title, description, make, model, year_start, year_end, severity,
                 symptoms, dtc_codes, causes, fix_procedure, parts_needed,
-                estimated_hours, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                estimated_hours, source, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 title, description, make, model, year_start, year_end, severity,
                 json.dumps(symptoms or []),
@@ -38,6 +45,7 @@ def add_known_issue(
                 fix_procedure,
                 json.dumps(parts_needed or []),
                 estimated_hours,
+                source,
                 datetime.now().isoformat(),
             ),
         )
