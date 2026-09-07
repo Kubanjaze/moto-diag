@@ -1,0 +1,233 @@
+[
+  {
+    "title": "Cold-start timing chain rattle on S1000RR (K46) - tensioner screw plug update",
+    "description": "Written from general knowledge of owner reports and dealer practice — confirm against the service manual and current parts information before quoting. First- and second-generation S1000RR engines commonly develop a short, loud chain rattle in the first seconds after a cold start as the hydraulic timing chain tensioner bleeds down when parked and is slow to re-pressurise. BMW made a longer timing chain tensioner screw plug available, which preloads the tensioner further and is fitted to bikes that genuinely exhibit the rattle. Note the later timing chain tensioner technical campaign covers the K66/K67 platform, not the K46 — do not quote it against this bike.",
+    "make": "BMW",
+    "model": "S1000RR (K46, 2009-2014)",
+    "year_start": 2009,
+    "year_end": 2014,
+    "severity": "medium",
+    "symptoms": [
+      "rattle on cold start",
+      "loud chain rattle when starting",
+      "clatter from cam cover area",
+      "noise worse after bike sits",
+      "rattle from front of engine",
+      "chain noise at idle when hot"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Hydraulic timing chain tensioner bleeding down while the bike is parked, leaving the chain slack until oil pressure builds",
+      "Original shorter tensioner screw plug giving insufficient tensioner preload as the chain wears in",
+      "Stretched timing chain and worn chain guides or rails on high-mileage or track-used engines",
+      "Low oil level or an oil grade outside the manual's specification slowing tensioner pressurisation",
+      "Anti-hopping clutch backlash rattle at idle being mistaken for a timing chain noise"
+    ],
+    "fix_procedure": "1. Establish the noise pattern before touching anything: note whether it occurs only in the first seconds of a cold start, whether it persists at idle when hot, and how it changes with revs.\n2. Pull the clutch lever in while the engine idles hot — if the rattle largely disappears, it is the anti-hopping clutch, which is a normal characteristic of this engine and needs no repair.\n3. Check the oil level using the manual's sight-glass procedure with the bike upright and at the specified temperature, and confirm the oil grade matches the manual. Caution: hot oil, hot engine and hot exhaust; let the bike cool before working alongside the head.\n4. With a stethoscope on a cold start, compare the cam cover and chain tunnel at the front of the engine against the clutch cover to localise the source. Caution: engine running with bodywork removed. Secure the bike on a paddock or centre stand with the transmission in neutral; keep the stethoscope probe and hands clear of the cam chain area, alternator and hot exhaust headers; restrain loose clothing, sleeves and hair; ensure ventilation (CO).\n5. Check the VIN with a dealer for the current tensioner and screw plug part information, and note that dealers generally only fit the longer screw plug where the rattle is demonstrated and the machine has accumulated meaningful mileage.\n6. Fit the updated longer timing chain tensioner screw plug with a new sealing ring, torqued per the manual. Caution: fully cold engine only. The tensioner is spring-loaded and oil-charged — restrain the plug as the last threads disengage, expect an oil release, catch it with a tray and rags, keep oil off the exhaust and header wrap (fire risk), and have an extinguisher to hand. Always fit a new sealing ring, never reuse the old one, and torque with a calibrated wrench to the manual figure. Do not crank or rotate the engine with the tensioner removed or unloaded — the chain can jump timing.\n7. Ignition off, kill switch set. With the tensioner refitted and torqued, rotate the crankshaft by hand in the normal direction through at least two complete revolutions using the crankshaft bolt — never the camshafts — confirming no binding or hard spot, then re-check the timing marks per the manual before cranking on the starter. If anything binds, stop and re-inspect; never use the starter to free it.\n8. Run the engine briefly and check for oil leaks at the plug, cam cover and spark plug wells, re-check the oil level, and re-torque per the manual. Then re-test from a genuine overnight cold start, not a warm restart. Keep the first road ride short and gentle, then stop and re-inspect for leaks and for any change in the noise before returning the bike.\n9. If the rattle persists with the updated plug, remove the tensioner and inspect plunger extension against the manual's wear limit, then inspect the chain, guides and tensioner rail and verify timing marks per the manual before quoting a top-end strip.\nTime guide: the estimate covers steps 1-8 only. Step 9 — tensioner removal, chain, guide and rail inspection and timing verification — is quoted separately.",
+    "parts_needed": [
+      "Updated timing chain tensioner screw plug and sealing ring",
+      "Timing chain tensioner assembly",
+      "Timing chain, chain guide and tensioner rail (only if wear limits are exceeded)",
+      "Cam cover gasket and spark plug well seals",
+      "Engine oil and filter to manual specification"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Race ABS partly-integral braking on S1000RR (K46) mistaken for a rear brake fault",
+    "description": "Written from general knowledge of the original Race ABS behaviour and owner reports — confirm against the rider's and service manual before quoting. On the K46 Race ABS the front lever also applies the rear brake in Rain and Sport modes (partly integral), and rear-wheel-lift detection is active in those modes; in Race and Slick the system behaves differently. Customers report the rear brake dragging, the rear pads wearing quickly, or the brakes feeling different after a mode change, and the bike is stripped for a fault that is designed behaviour. This entry is about the BMW Race ABS hydraulic unit and its mode logic, not generic pad wear or fluid service.",
+    "make": "BMW",
+    "model": "S1000RR (K46, 2009-2014)",
+    "year_start": 2009,
+    "year_end": 2014,
+    "severity": "medium",
+    "symptoms": [
+      "rear brake applies with front lever",
+      "rear pads wearing much faster",
+      "brake feel changes with ride mode",
+      "rear brake hot after a ride",
+      "front brake releases under hard braking",
+      "spongy front lever after fluid change",
+      "abs light stays on until riding"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Partly-integral Race ABS design applying rear brake from the hand lever in Rain and Sport modes",
+      "Rear-wheel-lift detection releasing front pressure under hard braking, felt by the rider as the front brake letting go",
+      "Ride mode changed by the customer without them realising the brake logic changes with it",
+      "Air trapped in the integral circuit through the ABS hydraulic unit after a conventional DIY bleed",
+      "Sticking rear caliper piston or seized pad pins adding real drag on top of the integral function",
+      "Contaminated or old brake fluid degrading pedal and lever feel"
+    ],
+    "fix_procedure": "1. Interview the customer: establish which ride mode they use and exactly what they feel. Caution: do not road-test until the static brake inspection below is complete. Do not attempt to reproduce hard-braking or rear-wheel-lift behaviour on a public road — use a closed circuit or other appropriate controlled area.\n2. Confirm against the rider's manual which functions are active in each mode on this machine before telling the customer anything.\n3. With the bike safely on a stand, spin the rear wheel and check for genuine drag: caliper piston movement, pad pin and pad free movement, disc runout and carrier condition. Caution: brake components are hot after a ride and brake dust should not be blown out.\n4. Check rear pedal free play and master cylinder pushrod adjustment per the manual so the rear master is fully returning and not holding pressure.\n5. Inspect fluid condition and level in both reservoirs, and check hoses and unions at the hydraulic unit for weeping. Caution: brake fluid is corrosive, attacks paint and plastics, and the system holds pressure — wear eye protection and cover bodywork.\n6. Only if the static inspection shows pads, discs, fluid level and hoses within limits and no leak, reproduce the complaint in the customer's mode and then repeat it in Race or Slick — if the behaviour changes with the mode, it is the Race ABS logic working as designed and should be explained, not repaired. Otherwise rectify the fault found first.\n7. If the complaint is a soft lever appearing after a fluid change, be aware the integral circuit routes through the ABS hydraulic unit and a conventional lever-and-nipple bleed can leave air trapped inside it; the correct fluid change on this system needs the manufacturer's bleeding routine and dealer equipment. Do not release the bike until lever firmness is restored.\n8. Rectify only what is genuinely faulty — caliper service, pad or disc renewal, or a correct system bleed. After any caliper, pad or hydraulic work, operate the lever and pedal until firm and confirm full pad retraction and free wheel rotation before moving the bike, then bed new pads in progressively. Re-test in the mode where the complaint started.\n9. Record for the customer that the ABS self-check completes only once the bike is ridden above walking pace, so a warning lamp on the stand is expected.\nTime guide: the estimate covers inspection and diagnosis only, not a dealer-equipment bleed or a caliper rebuild. The parts list is contingent on what the inspection finds and should not be ordered up front.",
+    "parts_needed": [
+      "Brake fluid to the specification in the manual",
+      "Rear brake pads and pad pins",
+      "Rear caliper seal and piston kit",
+      "Rear brake disc (only if outside the manual's wear limit)",
+      "Bleed nipple caps and copper sealing washers"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "ShiftCam cold-start rattle on 2019+ S1000RR - separating normal mechanism noise from a real valve-train fault",
+    "description": "Written from general knowledge of owner reports and shop experience with BMW's ShiftCam intake valve train - confirm every specification and any camshaft work against the service manual before quoting the customer. The 2019-on S1000RR engine uses ShiftCam on the intake camshaft: each intake valve pair is served by two different cam profiles machined side by side on a sliding cam piece, and an actuator engaging a shift gate slides that piece axially along the camshaft to swap between the partial-load profile (lower lift, offset timing, asymmetric lift between the two intake valves to generate charge motion) and the full-load profile at the rpm/load threshold BMW specifies. Because the cam pieces are splined and must be free to slide, they carry deliberate axial and rotational clearance, and that clearance produces an audible light metallic tick or rattle from the top of the cylinder head, loudest on cold start and quieting as oil warms. Riders coming from the pre-2019 engine frequently report this to a shop as a fault. The diagnostic job is not to silence it but to decide whether the shop is hearing the mechanism working, a cam-chain or clutch noise being mistaken for it, or a genuine defect in the cam pieces, shift gate or actuator.",
+    "make": "BMW",
+    "model": "S1000RR (2019+, ShiftCam)",
+    "year_start": 2019,
+    "year_end": 2025,
+    "severity": "medium",
+    "symptoms": [
+      "rattle on cold start",
+      "ticking noise from cylinder head",
+      "diesel like noise at idle",
+      "metallic rattle top end",
+      "noise quiets as engine warms",
+      "tapping from valve cover area",
+      "shiftcam noise complaint"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Normal axial and rotational clearance in the ShiftCam sliding cam pieces, most audible cold before oil film builds",
+      "Low oil level or an oil grade outside the manual's specification, amplifying valve-train and chain-tensioner noise",
+      "Timing chain tensioner slow to pressurise on cold start, producing a chain-slap note mistaken for ShiftCam noise",
+      "Wet clutch basket and anti-hop assembly rattle at idle, misheard as top-end noise",
+      "Genuine defect: worn or scored shift gate groove, damaged detent, seized or partially seized sliding cam piece",
+      "Actuator pin damage or incorrect reassembly after previous cylinder head work",
+      "Cam chain guide or tensioner wear on a high-mileage or track-used engine"
+    ],
+    "fix_procedure": "1. Interview first, no tools. Establish whether the noise is present only on cold start and fades with warm-up, whether it is rpm-linked or road-speed-linked, whether it changes when the clutch lever is pulled in, and whether it has got worse over time or has always been there. A noise that has been constant since delivery and fades when warm points strongly to the mechanism, not a fault.\n2. Check engine oil level and condition on level ground with the machine upright, following the manual's level-check procedure. Caution: exhaust headers and oil are hot after running - allow cooling or wear gloves. Low level or sheared, fuel-diluted oil exaggerates every valve-train noise.\n3. Confirm the oil grade and specification in the bike matches the manual's requirement, and confirm service history. An out-of-spec or overdue oil is the cheapest cure for a noise complaint and must be eliminated before any teardown is quoted.\n4. Reproduce the noise from genuinely cold. Support the bike on a paddock stand. Caution: fit the stand with the engine off and the bike stable, and keep hands, cables and clothing clear of the chain and hot pipes before starting. Run the engine only with exhaust extraction or outdoors - carbon monoxide. Transmission in neutral, bike stable on the stand, nobody behind the rear wheel.\n5. Localise with a mechanic's stethoscope or a length of hose. ShiftCam cam-piece noise comes from the top of the head over the intake camshaft and is an even, fine, high-frequency tick or rattle. Cam chain noise comes from the chain run side of the engine and typically settles within seconds as the tensioner takes up. Clutch rattle comes from the clutch cover and changes or disappears when the clutch lever is pulled.\n6. Baseline against a known-good same-generation machine if the shop has one, or against a recording. On this engine a light cold rattle that is even in intensity, does not deepen with rpm, and reduces as oil warms is characteristic and is not by itself grounds for repair.\n7. Treat the following as fault indicators worth pursuing: a knock or heavy rattle that gets louder rather than quieter as the engine warms, a beat that recurs once per two crankshaft revolutions, a noise that appeared suddenly or after previous cylinder head work, any misfire, rough running or loss of pull in the upper rpm range accompanying the noise.\n8. Drop the oil and inspect the drain plug magnet and cut the filter open. Caution: hot oil scalds - let the engine cool to a safe handling temperature and wear gloves and eye protection. Fine glitter is normal-ish on a run-in engine; hard flakes or chips of hardened steel are not, and change the job from a noise investigation into an engine strip.\n9. Only if steps 1-8 point to a fault, remove the valve cover per the manual. Caution: disconnect the battery negative lead first before unplugging any actuator or sensor connector, and observe stored electrical energy in the bike's control units. Reaching the valve cover requires lifting the tank and airbox. If a fuel quick-connect must be parted, depressurise the fuel system per the manual first, catch residual fuel, work ventilated with no ignition sources or hot headers nearby, and cap the line; on reassembly cycle the ignition and perform a key-on pressure and leak check before starting.\n10. Caution before inspecting: do NOT release, remove or reset the cam-chain tensioner during inspection. If the engine must be rotated to inspect the cam pieces or check valve clearances, rotate forward only at the crankshaft bolt - never by the camshafts or sliding cam pieces - and confirm the cam timing marks align before and after; a disturbed tensioner or backwards rotation can let the chain jump a tooth and cause valve-to-piston contact. With the cover off, check each intake sliding cam piece for free, smooth axial travel with no binding, inspect the shift gate groove and detent for scoring, wear or debris, inspect the actuator pin for wear or bending, and inspect the timing chain guides and tensioner for grooving and the chain for lateral slack, comparing against the manual's wear limits.\n11. If a cam piece, shift gate, detent or actuator pin is damaged, this is a camshaft and cylinder head repair per the manual, not an adjustment - quote it as such, and check valve clearances to the manual's specification while the head is accessible.\n12. If nothing out of specification is found, reassemble with a new valve cover gasket to the manual's torque specification, run the engine and check for oil and fuel leaks before returning the bike, document the inspection for the customer, and record that the residual noise is the ShiftCam mechanism so the same bike is not stripped twice.",
+    "parts_needed": [
+      "engine oil to the manual's specification",
+      "oil filter",
+      "sealing washer for drain plug",
+      "valve cover gasket (only if the cover is removed)",
+      "spark plug seals or cover seals as required by the manual",
+      "ShiftCam camshaft or actuator components (only if a defect is confirmed)"
+    ],
+    "estimated_hours": 2,
+    "source": "model-generated"
+  },
+  {
+    "title": "ShiftCam fails to switch to the full-load cam profile - S1000RR 2019+ flat above the changeover point",
+    "description": "Written from general knowledge of how BMW's ShiftCam intake valve train is built and how a shop would work the complaint - confirm all specifications, torque values and component procedures against the service manual before repair. On the 2019-on S1000RR the intake camshaft carries sliding cam pieces with a partial-load and a full-load lobe profile; an actuator drops a pin into a shift gate on the cam piece and the rotating groove slides it axially to select the profile at the rpm and load threshold BMW specifies. If that switch does not happen - electrical fault at the actuator, a contaminated or damaged shift gate, or a cam piece that will not slide freely - the engine keeps the low-lift, low-duration profile everywhere. The bike still starts, idles cleanly and pulls normally at low and mid rpm, then goes flat exactly where it should come alive, which is why it is often misdiagnosed as a fuelling, exhaust flap or quickshifter complaint. This entry is about the ShiftCam actuation itself, not about noise.",
+    "make": "BMW",
+    "model": "S1000RR (2019+, ShiftCam)",
+    "year_start": 2019,
+    "year_end": 2025,
+    "severity": "medium",
+    "symptoms": [
+      "flat top end power",
+      "no power above switch point",
+      "power drops off at high rpm",
+      "engine feels detuned above midrange",
+      "hesitation high rpm under load",
+      "engine warning light on",
+      "shiftcam not switching"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Electrical failure or intermittent connection at the ShiftCam actuator - corroded or fretted connector pins, chafed harness under the tank",
+      "Actuator pin worn, bent or seized so it no longer engages the shift gate",
+      "Shift gate groove or detent damaged, worn or packed with debris from a previous failure",
+      "Sliding cam piece binding on its splines through oil sludging, wrong oil specification or an overdue service",
+      "Engine never reaching the oil temperature at which the control unit permits switching, because of a cooling or temperature-sensing fault",
+      "Incorrect reassembly of the intake camshaft assembly after previous cylinder head work",
+      "Unrelated top-end restriction masquerading as a ShiftCam fault - blocked air filter, stuck exhaust flap, restricted intake ducting"
+    ],
+    "fix_procedure": "1. Characterise the complaint precisely before touching anything. Confirm with the rider that the bike is normal at low and mid rpm and only goes flat above a fairly repeatable point, and confirm whether the engine warning lamp is on and whether the fault is constant or intermittent. A gradual soft feel everywhere is not this fault.\n2. Do the cheap intake and exhaust checks first. Inspect the air filter and airbox for restriction or a badly fitted element, check the intake ducts and airbox seal, and check that the exhaust flap actuator and its cables move freely through full travel - a stuck exhaust flap gives almost the same flat top end and costs nothing to rule out. Caution: exhaust components stay hot long after shutdown.\n3. Verify fuel and cooling basics: correct fuel, no restriction complaint, coolant level correct and the engine reaching and holding normal operating temperature. Caution: do not open the cooling system while hot - the system is pressurised and will scald. If the engine runs cold, switching may legitimately be inhibited and the cooling fault is the repair.\n4. Check engine oil level, grade and service history against the manual's specification. A binding cam piece from sludged or wrong-specification oil is a real cause and an oil and filter change plus a road test is a legitimate first repair step.\n5. Check the battery state of charge and the engine and chassis ground connections, and confirm charging is healthy, before condemning an electrically actuated component.\n6. Read the fault memory with a BMW-capable diagnostic tool (ISTA / GS-911) and record all stored and pending codes, freeze-frame and adaptation data before any disassembly. Where the tool supports it, run the ShiftCam actuator activation test and watch live data (oil temperature, actuator command versus feedback) while commanding a changeover.\n7. Inspect the ShiftCam actuator connector and its harness. Caution: switch the ignition off and disconnect the battery negative lead before unplugging the connector, and allow for stored energy in the control units. Look for green corrosion, spread or fretted terminals, moisture, and chafe or heat damage where the harness runs near the head and under the tank. Reseat, clean and secure any suspect connection, then retest. With the connector unplugged and the ignition off, measure actuator coil resistance and check supply and ground at the harness side against the manual's values. Do not renew the actuator on visual inspection alone.\n8. Road test or dyno test after each change, from a properly warmed engine, and confirm whether the flat spot is still present at the same point. Caution: high-speed testing on the road is a two-person job at minimum - prefer a dyno or a closed course.\n9. If the fault survives steps 2-8, remove the valve cover per the manual to inspect the mechanism. Caution: engine cool and battery negative disconnected. Reaching the valve cover requires lifting the fuel tank and airbox. Depressurise the fuel system per the manual before releasing the quick-disconnect, catch and cap the fitting, work in a well-ventilated area with no ignition sources or hot exhaust nearby, keep an extinguisher to hand, and use no heat, flame or heat gun near the fuel line, tank or plastic ducting. Support the bike securely upright on a paddock or centre stand, positively located front and rear, before working on the top end.\n10. Inspect the actuator pin for wear, bending or sticking in its bore, inspect the shift gate groove and detent on each sliding cam piece for scoring, debris or damage, and check that each cam piece slides freely and fully through its travel by hand, in the manner and to the limits the manual describes.\n11. Renew the actuator or the affected camshaft components per the manual, using the specified seals and torque values, and check valve clearances to the manual's specification while the top end is open. Do not reuse a damaged shift gate or a cam piece that has been running against a worn pin.\n12. Refit with a new valve cover gasket, restore the harness routing exactly as found, and reconnect the battery. On first restart, run the engine at idle and inspect every disturbed fuel connection for weeping or seepage under pressure, and re-check after a short heat cycle, before any road or dyno test. Let the engine idle to normal temperature so adaptations relearn after the battery disconnect, then repeat the warm road or dyno test to confirm the changeover is felt at the expected point.\n13. If debris was found in the shift gate, change the oil and filter and inspect both the drain plug magnet and the old filter media before returning the bike, and advise the customer why the mechanism was contaminated.",
+    "parts_needed": [
+      "ShiftCam actuator (if confirmed faulty)",
+      "actuator seal or O-ring per the manual",
+      "valve cover gasket",
+      "intake camshaft sliding cam components (only if damaged)",
+      "engine oil to the manual's specification",
+      "oil filter",
+      "air filter element (if restricted)",
+      "connector terminals or repair pigtail (if corroded)"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "S1000XR (2015-2019) first-generation high-frequency vibration through bars, pegs and mirrors",
+    "description": "Written from general knowledge of owner reports and BMW service-campaign history - confirm against the service manual and current BMW technical bulletins before quoting a customer. The first-generation S1000XR (2015-2019) is widely reported to transmit a coarse, high-frequency buzz into the handlebars, footpegs and mirrors over a broad mid-range rev band, worst at sustained motorway cruising speeds. It is a real and characteristic complaint of THIS generation only, arising from how the detuned RR inline-four is mounted in the XR chassis and from the bar/peg mounting hardware, not from a single broken part. BMW addressed it in stages: revised handlebar weights and bar-end masses, revised handlebar clamp rubber mounts, revised footpeg rubbers and revised mirror stems were released as running changes and retrofit remedies during the 2015-2019 run, and the substantially revised model introduced for 2020 changed the engine mounting and chassis and is NOT subject to this complaint. Do not diagnose a 2020-on XR against this entry, and do not tell a first-generation owner the buzz can be eliminated entirely - the remedies reduce it, they do not remove it. Before attributing anything to the known characteristic, rule out ordinary causes of new or worsening vibration, because an owner who says it got worse usually has a separate fault.",
+    "make": "BMW",
+    "model": "S1000XR (2015-2019)",
+    "year_start": 2015,
+    "year_end": 2019,
+    "severity": "medium",
+    "symptoms": [
+      "vibration through handlebars",
+      "buzzing in the bars",
+      "numb hands after motorway riding",
+      "tingling fingers on long rides",
+      "vibration through pegs",
+      "footpeg buzz at cruising speed",
+      "blurred mirrors at speed",
+      "mirrors vibrate cannot see behind",
+      "bar end weights loose",
+      "vibration worse in mid range"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Known characteristic of the first-generation XR chassis and engine mounting - a broad-band mid-range buzz transmitted to the rider contact points, present to some degree on every 2015-2019 example",
+      "Missing, loose or incorrect handlebar bar-end weights and internal bar-end damper masses",
+      "Worn, collapsed or previously replaced-with-solid handlebar clamp rubber mounts (isolators) in the top yoke",
+      "Hardened, torn or missing footpeg rubbers, or aftermarket solid rearsets fitted in place of the rubber-isolated originals",
+      "Worn or loose mirror stem joints and mirror mounting hardware, which amplify an otherwise tolerable buzz into unusable mirrors",
+      "Superimposed genuine faults that make an established buzz suddenly worse: out-of-balance or cupped tyre, bent or damaged wheel, loose engine mounting fasteners, worn chain and sprockets with tight spots, loose accessory or luggage-rack hardware resonating"
+    ],
+    "fix_procedure": "1. Establish the baseline first: ask the owner whether the vibration has always been there or recently appeared or worsened. Always been there on a 2015-2019 bike points to the known characteristic; recently worse points to a separate fault and should be chased before any remedy parts are quoted.\n2. Confirm the model year and generation from the VIN. This entry applies only to the 2015-2019 first-generation XR. Do not apply it to the revised 2020-on model.\n3. Road test with the rider's own report in mind - note the rev band and road speed where the buzz peaks, and which contact points are affected (bars only, pegs only, or all three). Record it so the effect of any remedy can be judged against it.\n4. Cheapest checks first, bike on a paddock stand or level ground. SAFETY - support the bike securely before lifting either wheel, and never work under a bike held only by a side stand. Check wheel balance and tyre condition front and rear. A cupped, scalloped or out-of-balance tyre is the single most common cause of a new vibration complaint on this bike and is far cheaper to correct than anything else here.\n5. Check the chain: tension per the manual's specification, run the wheel slowly and feel for tight spots, and inspect the sprockets. SAFETY - engine off, ignition off, gearbox in neutral, rear wheel securely supported. Rotate the wheel by hand from the tyre only - keep fingers clear of the chain run and of the chain/sprocket mesh point. A worn chain and sprocket set gives a load-dependent vibration that owners frequently confuse with the known buzz.\n6. Inspect the handlebar hardware. Confirm both bar-end weights are present, that the internal damper masses are intact, and that the fasteners are secure. Missing or loose bar-end weights transform the buzz. Assemble bar-end and clamp fasteners clean and to the manual's thread-locking specification, and retorque to the manual's specification.\n7. Inspect the handlebar clamp rubber isolators in the top yoke for collapse, cracking or previous replacement with solid mounts. Replace with the current BMW part if degraded - a bike that has had solid mounts fitted by a previous owner will always buzz badly.\n8. Inspect the footpeg rubbers for hardening, tearing or absence, and check whether aftermarket solid rearsets have been fitted. Replace hardened or missing rubbers with current parts; explain to the owner that solid rearsets will keep the buzz.\n9. Inspect the mirror stems and mounting joints for wear and looseness, and retorque to the manual's specification. Where the complaint is specifically blurred mirrors, check whether the current revised mirror stem is fitted; earlier stems are the worse of the two.\n10. SAFETY - engine and exhaust hot after road testing. Allow cooling before working near the exhaust or radiator. With the engine cold, check engine mounting and engine-to-frame fasteners for security. Do not casually slacken load-bearing mounts - the engine is a stressed member of the chassis. If a fastener is found loose, support the engine on a suitable jack or cradle before disturbing it, work one fastener at a time, and follow the manual's tightening sequence and torque/angle values. Replace any bolt the manual specifies as single-use or angle-tightened rather than re-torquing it.\n11. Check all accessory hardware: luggage racks, pannier mounts, crash bars, screen brackets, GPS mounts and auxiliary lights. Loose or resonant accessory brackets are a very common contributor on a touring-loaded XR and cost nothing to find.\n12. Recheck for outstanding BMW technical measures against the VIN through the dealer network. Several bar, peg and mirror remedies were issued during the first-generation run and may not have been applied to a given bike.\n13. Before road testing, verify all disturbed rider-control hardware: handlebar clamp and bar-end fasteners torqued to specification, bars free lock to lock with no cable, brake hose or wiring bind or stretch, mirrors locked, footpegs and any rearset hardware secure.\n14. Road test at low speed first, then repeat the baseline route over the same rev band and compare against the baseline from step 3.\n15. Set expectations honestly with the owner. If steps 4-12 found nothing wrong and the current remedy parts are fitted, the remaining buzz is the known characteristic of the 2015-2019 XR. It can be reduced - heavier aftermarket bar-end weights, gel or damping grips, and thicker peg rubbers all help - but it cannot be engineered out of this generation. The 2020-on revision is the fix, and that is a new-bike conversation, not a repair.",
+    "parts_needed": [
+      "Handlebar bar-end weights / damper masses (current specification)",
+      "Handlebar clamp rubber isolators / mounts",
+      "Footpeg rubbers",
+      "Mirror stems (revised specification, where the complaint is blurred mirrors)",
+      "Chain and sprocket set (only if worn - separate fault)",
+      "Tyre (only if cupped or damaged - separate fault)",
+      "Wheel balance weights"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "DDC / Dynamic ESA rear shock fails to a fixed damping state on S1000XR (2015-2019)",
+    "description": "On S1000XR models built with electronic damping (BMW's DDC / Dynamic ESA semi-active rear shock), the damper can fail electrically while still holding oil and gas, so it does not behave like a worn conventional shock. Written from general knowledge of owner and workshop reports - confirm against the service manual before quoting. The key diagnostic difference: a tired conventional shock fades progressively and gets soft and hot after a few miles, while a failed DDC unit usually parks its solenoid valve at one end of its range and stays there, so the bike feels either permanently plank-hard or permanently wallowy from the first mile and shows no change at all between damping settings, normally with a suspension warning on the dash. The damper is supplied as a sealed assembly, so confirming the fault is electrical before ordering is worth real money to the customer - a complete electronic shock is one of the most expensive single parts on the bike, and specialist suspension shops offer rebuild or conversion as an alternative to a BMW replacement unit.",
+    "make": "BMW",
+    "model": "S1000XR (2015-2019)",
+    "year_start": 2015,
+    "year_end": 2019,
+    "severity": "high",
+    "symptoms": [
+      "suspension warning light on dash",
+      "rear damping stuck firm",
+      "no change between ride modes",
+      "rear end wallows over bumps",
+      "electronic suspension not adjusting",
+      "oil weeping from rear shock",
+      "suspension fault after pressure washing"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "open-circuit or shorted damping solenoid coil inside the sealed DDC shock body",
+      "damper oil migrating past an internal seal and contaminating the solenoid",
+      "water ingress and corrosion in the shock's electrical connector, which sits low and in the rear wheel's spray path",
+      "chafed or stretched section of the electronic suspension harness where it runs along the subframe and across to the swingarm area",
+      "connector not fully latched or seal displaced after a rear shock, linkage or rear wheel job",
+      "low battery state of charge causing the actuator to be reported faulty rather than the actuator itself being bad"
+    ],
+    "fix_procedure": "1. Before any physical work, read and record the stored suspension fault codes with a BMW-capable diagnostic tool (ISTA / GS-911), including freeze-frame data.\n2. Road test and record the actual behaviour: with the bike warm, run through the damping settings over a known bump and note whether the rear is stuck firm, stuck soft, or simply degraded. Progressive fade with a hot, weeping damper points at a mechanically worn shock; zero change between settings from cold points at the electronics.\n3. Cheapest check of all: with the bike stationary and in neutral, switch the ignition on in a quiet workshop and listen at the shock. The electronic damping valves normally cycle audibly during their self-test. Silence at the rear while the front valve clicks isolates the failure to the rear actuator or its supply.\n4. Check and charge the battery, and confirm charging output, before condemning any actuator - BMW electronic suspension will report actuator faults when supply voltage sags.\n5. Ignition off. Inspect the shock body, shaft and reservoir for oil film, and inspect the electrical connector at the shock for green or white corrosion, spread pins, a displaced seal or trapped water. Caution: the exhaust and the shock reservoir sit close together, so let the bike cool before working in this area.\n6. Clean and dry the connector, re-grease with dielectric grease, latch it fully, then clear the stored fault - on this system clearing a suspension fault normally requires the diagnostic tool rather than an ignition cycle - and retest. A fault that does not return here was a connector fault, not a shock fault.\n7. With the fault present, wiggle-test the electronic suspension harness from the shock forward along the subframe and at every clip and tie-down point, watching for the warning to flicker. Unwrap and inspect any section that shows a witness mark or hard bend.\n8. Caution: ignition off and battery negative disconnected before disconnecting the shock connector or measuring the coil, and unplug the control-side connector so the reading is not taken through the control unit. Back-probe only with proper probes to avoid spreading pins or displacing the connector seal. Measure the damping solenoid coil per the manual's specification, and compare the reading against the front fork valve on the same bike as a sanity check. An open or shorted coil condemns the shock.\n9. If the coil is good and the harness is good, the fault is upstream in the control side - recheck grounds and the connector at the control unit end before ordering parts.\n10. To replace: support the bike securely on a rear stand or lift with the frame supported, and support the swingarm and rear wheel independently with a jack or strap so the swingarm cannot drop as the shock comes out. Keep hands clear of the linkage pinch points and check that the brake hose and ABS sensor lead are not strained as the swingarm travels. Caution: the DDC damper is gas charged - never open, drill, heat or scrap it in a fire, and dispose of it through the proper channel.\n11. Torque all shock and linkage fasteners to the manual's specification and re-check them after torquing, route the harness exactly as it came off with the original clips, then cycle the ignition, confirm the valve self-test clicks, clear the fault with the diagnostic tool, and road test progressively in a safe area through every damping setting to confirm the rear actually changes character - expect the damping character to change mid-test.\n12. Before quoting a new BMW unit, tell the customer that specialist suspension houses will rebuild or convert these dampers - it is often a fraction of the price of the sealed assembly.",
+    "parts_needed": [
+      "DDC / Dynamic ESA electronic rear shock absorber assembly",
+      "shock and linkage fasteners as specified for reuse or replacement",
+      "electronic suspension connector repair pigtail or terminals if corroded",
+      "dielectric grease",
+      "harness protective sleeving and cable ties"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  }
+]
