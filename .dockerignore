@@ -1,0 +1,43 @@
+# Keep the build context small and free of anything that would end up
+# in an image by accident (Phase 209).
+
+# The local database, uploaded media, and generated output — the single
+# most important exclusion here.
+data/
+output/
+*.db
+*.db-journal
+*.db-wal
+
+# Secrets
+.env
+*.p8
+*.pem
+*.key
+
+# Development history: implementation.md and phase_log.md are ~530 KB
+# together and docs/phases/ is larger still.
+implementation.md
+phase_log.md
+docs/
+*.md
+!README.md
+
+# Tests, tooling, VCS
+tests/
+scripts/
+.git/
+.github/
+.venv/
+venv/
+.pytest_cache/
+.ruff_cache/
+__pycache__/
+*.pyc
+.pre-commit-config.yaml
+f9_ssot_constants.toml
+
+# Build leftovers
+dist/
+build/
+*.egg-info/

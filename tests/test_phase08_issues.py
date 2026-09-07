@@ -102,16 +102,16 @@ class TestCount:
 
 class TestLoader:
     def test_load_harley_issues(self, db_path):
-        from motodiag.core.config import DATA_DIR
-        f = DATA_DIR / "knowledge" / "known_issues_harley.json"
+        from motodiag.core.config import SEED_DATA_DIR
+        f = SEED_DATA_DIR / "knowledge" / "known_issues_harley.json"
         if f.exists():
             count = load_known_issues_file(f, db_path)
             assert count == 10
             assert count_known_issues(db_path=db_path) == 10
 
     def test_stator_searchable_after_load(self, db_path):
-        from motodiag.core.config import DATA_DIR
-        f = DATA_DIR / "knowledge" / "known_issues_harley.json"
+        from motodiag.core.config import SEED_DATA_DIR
+        f = SEED_DATA_DIR / "knowledge" / "known_issues_harley.json"
         if f.exists():
             load_known_issues_file(f, db_path)
             results = find_issues_by_dtc("P0562", db_path)

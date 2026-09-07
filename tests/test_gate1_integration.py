@@ -21,7 +21,7 @@ from motodiag.core.search import search_all
 from motodiag.knowledge.loader import (
     load_dtc_file, load_symptom_file, load_known_issues_file,
 )
-from motodiag.core.config import DATA_DIR
+from motodiag.core.config import SEED_DATA_DIR
 from motodiag.core.models import DTCCode, SymptomCategory, Severity
 
 
@@ -48,14 +48,14 @@ class TestGate1FullWorkflow:
         assert vehicle["make"] == "Harley-Davidson"
 
         # Step 2: Load knowledge base data
-        dtc_dir = DATA_DIR / "dtc_codes"
+        dtc_dir = SEED_DATA_DIR / "dtc_codes"
         if dtc_dir.is_dir():
             load_dtc_file(dtc_dir / "generic.json", db)
             load_dtc_file(dtc_dir / "harley_davidson.json", db)
-        symptoms_file = DATA_DIR / "knowledge" / "symptoms.json"
+        symptoms_file = SEED_DATA_DIR / "knowledge" / "symptoms.json"
         if symptoms_file.exists():
             load_symptom_file(symptoms_file, db)
-        issues_file = DATA_DIR / "knowledge" / "known_issues_harley.json"
+        issues_file = SEED_DATA_DIR / "knowledge" / "known_issues_harley.json"
         if issues_file.exists():
             load_known_issues_file(issues_file, db)
 

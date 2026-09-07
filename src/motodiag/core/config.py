@@ -10,10 +10,63 @@ from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
-# Project root is 3 levels up from this file: src/motodiag/core/config.py → moto-diag/
+# Four levels up from src/motodiag/core/config.py is the repo root — in a
+# SOURCE CHECKOUT. In an installed package the same arithmetic lands on
+# `<venv>/lib/python3.x`, because site-packages sits one level shallower
+# than `src/`. Until Phase 209 that was the only calculation, so a
+# `pip install`ed MotoDiag put the user's database at
+# `<venv>/lib/python3.14/data/motodiag.db`: destroyed by a venv rebuild,
+# absent after an upgrade, and unwritable in a system-wide install.
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
-DATA_DIR = PROJECT_ROOT / "data"
-OUTPUT_DIR = PROJECT_ROOT / "output"
+
+
+#: Curated seed data — DTC definitions, symptoms and ~6,600 known
+#: issues — that `motodiag db init` loads. Phase 209 moved this INSIDE
+#: the package. It used to live in the repo's `data/` directory, which
+#: is not shipped, so on an installed copy every load guard in `db init`
+#: silently found nothing and the command still printed "Database
+#: ready." The knowledge base IS the product; shipping without it and
+#: reporting success was the worst of the packaging defects.
+SEED_DATA_DIR = Path(__file__).resolve().parent.parent / "knowledge" / "seed"
+
+
+def _running_from_source_checkout() -> bool:
+    """True when PROJECT_ROOT is a real checkout of this repository.
+
+    Tested by a marker that only the repo has and no install layout
+    reproduces. `pyproject.toml` alone is not enough — a venv could sit
+    inside someone's project — so the `src/motodiag` layout is checked
+    too.
+    """
+    return (
+        (PROJECT_ROOT / "pyproject.toml").is_file()
+        and (PROJECT_ROOT / "src" / "motodiag").is_dir()
+    )
+
+
+def _user_data_dir() -> Path:
+    """Per-platform application data directory for an installed copy.
+
+    Deliberately not a new dependency: the two rules that matter are
+    `~/Library/Application Support` on macOS and `$XDG_DATA_HOME`
+    (default `~/.local/share`) elsewhere.
+    """
+    import sys
+
+    if sys.platform == "darwin":
+        return Path.home() / "Library" / "Application Support" / "motodiag"
+    xdg = os.environ.get("XDG_DATA_HOME", "").strip()
+    base = Path(xdg) if xdg else Path.home() / ".local" / "share"
+    return base / "motodiag"
+
+
+if _running_from_source_checkout():
+    # Unchanged for developers — existing databases do not move.
+    DATA_DIR = PROJECT_ROOT / "data"
+    OUTPUT_DIR = PROJECT_ROOT / "output"
+else:
+    DATA_DIR = _user_data_dir()
+    OUTPUT_DIR = _user_data_dir() / "output"
 
 
 from motodiag import __version__

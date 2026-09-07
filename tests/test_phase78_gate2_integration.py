@@ -13,7 +13,7 @@ from motodiag.knowledge.loader import load_known_issues_file
 from motodiag.knowledge.issues_repo import (
     search_known_issues, find_issues_by_symptom, find_issues_by_dtc, count_known_issues,
 )
-from motodiag.core.config import DATA_DIR
+from motodiag.core.config import SEED_DATA_DIR
 
 
 @pytest.fixture
@@ -21,7 +21,7 @@ def full_db(tmp_path):
     """Load ALL knowledge base JSON files into a single test database."""
     path = str(tmp_path / "gate2.db")
     init_db(path)
-    knowledge_dir = DATA_DIR / "knowledge"
+    knowledge_dir = SEED_DATA_DIR / "knowledge"
     loaded = 0
     for f in sorted(knowledge_dir.glob("known_issues_*.json")):
         load_known_issues_file(f, path)

@@ -355,7 +355,7 @@ def db() -> None:
 def db_init() -> None:
     """Initialize database and load all starter data (DTCs, symptoms, known issues)."""
     from motodiag.core.database import init_db
-    from motodiag.core.config import get_settings, DATA_DIR
+    from motodiag.core.config import get_settings, SEED_DATA_DIR
     from motodiag.knowledge.loader import (
         load_dtc_directory, load_symptom_file, load_known_issues_file,
     )
@@ -368,23 +368,38 @@ def db_init() -> None:
     console.print("  [green]✓[/green] Database created")
 
     # Load DTCs
-    dtc_dir = DATA_DIR / "dtc_codes"
+    dtc_dir = SEED_DATA_DIR / "dtc_codes"
     if dtc_dir.is_dir():
         results = load_dtc_directory(dtc_dir)
         total = sum(results.values())
         console.print(f"  [green]✓[/green] Loaded {total} DTC codes from {len(results)} files")
 
     # Load symptoms
-    symptoms_file = DATA_DIR / "knowledge" / "symptoms.json"
+    symptoms_file = SEED_DATA_DIR / "knowledge" / "symptoms.json"
     if symptoms_file.exists():
         count = load_symptom_file(symptoms_file)
         console.print(f"  [green]✓[/green] Loaded {count} symptoms")
 
     # Load known issues
-    for issue_file in sorted((DATA_DIR / "knowledge").glob("known_issues_*.json")):
+    for issue_file in sorted(
+        (SEED_DATA_DIR / "knowledge").glob("known_issues_*.json")
+    ):
         count = load_known_issues_file(issue_file)
         name = issue_file.stem.replace("known_issues_", "").replace("_", " ").title()
         console.print(f"  [green]✓[/green] Loaded {count} known issues ({name})")
+
+    # Phase 209: an install that shipped without its seed data used to
+    # reach here and report success over an empty knowledge base. Say
+    # so instead — a silent empty KB looks identical to a working one
+    # until someone searches for a fault code.
+    if not (SEED_DATA_DIR / "knowledge").is_dir():
+        console.print(
+            "\n[bold red]Seed data missing.[/bold red] The database was "
+            "created but no DTCs, symptoms or known issues were loaded — "
+            f"nothing found at {SEED_DATA_DIR}. This build is incomplete; "
+            "reinstall from a released wheel."
+        )
+        raise SystemExit(1)
 
     console.print("\n[bold green]Database ready.[/bold green]")
     console.print(f"  Path: {settings.db_path}")

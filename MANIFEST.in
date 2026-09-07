@@ -1,0 +1,21 @@
+# Source distribution contents (Phase 209).
+#
+# The wheel takes its data files from [tool.setuptools.package-data] in
+# pyproject.toml; this governs the sdist, which should also carry what
+# is needed to build and verify from source.
+include README.md
+include LICENSE
+include pyproject.toml
+include f9_ssot_constants.toml
+
+recursive-include src/motodiag *.json *.yaml
+
+# Development history is large (implementation.md and phase_log.md are
+# ~530 KB together) and of no use to someone building from an sdist.
+exclude implementation.md
+exclude phase_log.md
+exclude ROADMAP_AUTHORITY.md
+prune docs/phases
+prune data
+prune output
+prune tests

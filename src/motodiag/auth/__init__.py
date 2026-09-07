@@ -47,19 +47,45 @@ from motodiag.auth.rate_limiter import (
     get_rate_limiter,
     reset_rate_limiter,
 )
-from motodiag.auth.deps import (
-    API_KEY_HEADER,
-    AuthedUser,
-    SUBSCRIPTION_TIERS,
-    SubscriptionRequiredError,
-    SubscriptionTier,
-    SubscriptionTierInsufficientError,
-    get_api_key,
-    get_current_user,
-    require_api_key,
-    require_tier,
-    tier_meets,
-)
+# Phase 209: `motodiag.auth.deps` imports FastAPI, which lives in the
+# `api` extra — deliberately, because the CLI is meant to install
+# without a web framework. Importing it here made that impossible:
+# `motodiag.cli.main` imports `cli.apikey`, which imports
+# `motodiag.auth.api_key_repo`, and importing any submodule runs this
+# __init__ first. One eager import made `pip install motodiag` produce
+# a CLI that could not start AT ALL — `motodiag --version` raised
+# ModuleNotFoundError before printing anything.
+#
+# PEP 562 module-level __getattr__ defers it: `from motodiag.auth
+# import get_current_user` still works for the API, and the CLI never
+# touches FastAPI. Anything imported from here at runtime is in a
+# process that already has FastAPI, because it is serving HTTP.
+_DEPS_EXPORTS = frozenset({
+    "API_KEY_HEADER",
+    "AuthedUser",
+    "SUBSCRIPTION_TIERS",
+    "SubscriptionRequiredError",
+    "SubscriptionTier",
+    "SubscriptionTierInsufficientError",
+    "get_api_key",
+    "get_current_user",
+    "require_api_key",
+    "require_tier",
+    "tier_meets",
+})
+
+
+def __getattr__(name: str):
+    """Resolve the FastAPI-dependent names on first access."""
+    if name in _DEPS_EXPORTS:
+        from motodiag.auth import deps
+
+        return getattr(deps, name)
+    raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
+
+
+def __dir__() -> list[str]:
+    return sorted(set(globals()) | _DEPS_EXPORTS)
 
 __all__ = [
     # Models

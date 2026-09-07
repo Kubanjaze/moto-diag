@@ -28,9 +28,39 @@ from __future__ import annotations
 import io
 import logging
 from dataclasses import dataclass
-from typing import Optional
+from typing import TYPE_CHECKING, Optional
 
-from PIL import Image, ImageOps
+# Phase 209: Pillow is in the `vision` extra, and this module-level
+# import meant `motodiag serve` could not START on an `[api]` install —
+# the whole API died on `ModuleNotFoundError: No module named 'PIL'`
+# before binding a port, because api/errors.py and routes/photos.py
+# both import this module at load time.
+#
+# Deferred to first use so a deployment without `vision` serves every
+# other route and fails only where photos are actually processed, with
+# a message that names the missing extra instead of a bare ImportError.
+if TYPE_CHECKING:  # pragma: no cover — typing only
+    from PIL import Image as _PILImage  # noqa: F401
+
+
+class PillowUnavailableError(RuntimeError):
+    """Raised when photo processing is attempted without Pillow.
+
+    Mirrors `WhisperUnavailableError` — an optional dependency that
+    degrades the feature rather than the process.
+    """
+
+
+def _pillow():
+    """Return `(Image, ImageOps)`, or explain which extra is missing."""
+    try:
+        from PIL import Image, ImageOps
+    except ModuleNotFoundError as exc:  # pragma: no cover — env-dependent
+        raise PillowUnavailableError(
+            "photo processing requires Pillow, which ships in the "
+            "`vision` extra: pip install 'motodiag[api,vision]'"
+        ) from exc
+    return Image, ImageOps
 
 
 _log = logging.getLogger(__name__)
@@ -92,6 +122,8 @@ def normalize_photo(raw_bytes: bytes) -> NormalizedPhoto:
     """
     if not raw_bytes:
         raise ImageDecodeError("empty payload")
+
+    Image, ImageOps = _pillow()
 
     try:
         img = Image.open(io.BytesIO(raw_bytes))

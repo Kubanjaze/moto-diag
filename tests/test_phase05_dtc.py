@@ -124,8 +124,8 @@ class TestLoader:
         # GET /v1/kb/dtc/P0171 → 404. Floor at >= 35 lets future
         # phases extend without churning this assertion; ceiling
         # implicit via the seed file as source of truth.
-        from motodiag.core.config import DATA_DIR
-        generic = DATA_DIR / "dtc_codes" / "generic.json"
+        from motodiag.core.config import SEED_DATA_DIR
+        generic = SEED_DATA_DIR / "dtc_codes" / "generic.json"
         if generic.exists():
             count = load_dtc_file(generic, db_path)
             assert count >= 35
@@ -139,8 +139,8 @@ class TestLoader:
                 )
 
     def test_load_real_harley(self, db_path):
-        from motodiag.core.config import DATA_DIR
-        harley = DATA_DIR / "dtc_codes" / "harley_davidson.json"
+        from motodiag.core.config import SEED_DATA_DIR
+        harley = SEED_DATA_DIR / "dtc_codes" / "harley_davidson.json"
         if harley.exists():
             count = load_dtc_file(harley, db_path)
             assert count == 20

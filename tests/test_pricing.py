@@ -2,7 +2,7 @@
 
 import pytest
 from motodiag.core.database import init_db
-from motodiag.core.config import DATA_DIR
+from motodiag.core.config import DATA_DIR, SEED_DATA_DIR
 from motodiag.knowledge.loader import load_known_issues_file
 from motodiag.pricing.labor_rates import (
     add_labor_rate, get_labor_rate, get_rate_comparison,
@@ -36,7 +36,7 @@ def db_path(tmp_path):
         load_prep_labor_file(prep_file, path)
 
     # Load some known issues for plan-from-issues tests
-    issues_file = DATA_DIR / "knowledge" / "known_issues_harley_cross_era.json"
+    issues_file = SEED_DATA_DIR / "knowledge" / "known_issues_harley_cross_era.json"
     if issues_file.exists():
         load_known_issues_file(issues_file, path)
 
