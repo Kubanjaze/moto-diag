@@ -1098,5 +1098,55 @@
     "status": "partial",
     "notes": "Tiger 800/900/1200.",
     "verified_by": "https://www.triumph-tiger.com/"
+  },
+  {
+    "adapter_slug": "hex-gs-911-wifi",
+    "make": "bmw",
+    "model_pattern": "R1200GS%",
+    "year_min": 2004,
+    "year_max": 2018,
+    "status": "full",
+    "notes": "Covers both the air/oil-cooled generation (2004-2012, round 10-pin connector) and the water-cooled LC (2013-2018). Full BMW fault code read/clear across engine, ABS, ESA and immobiliser, plus service reminder reset, ABS bleed routine and throttle adaptation reset. 2017+ EU4 bikes take the OBD-II connector variant; earlier bikes need the round 10-pin.",
+    "verified_by": "https://www.hexgs911.com/ (vendor product description); capability list cross-checked against retailer listing https://twistedthrottle.com/shop/electronics/canbus-diagnostic-tools/hexcode-gs911-wifi-enthusiast-with-obd-ii-connector/"
+  },
+  {
+    "adapter_slug": "hex-gs-911-wifi",
+    "make": "bmw",
+    "model_pattern": "R1150%",
+    "year_min": 1999,
+    "year_max": 2005,
+    "status": "full",
+    "notes": "Pre-CAN oilhead boxers (R1150GS/GS Adventure/RT/R/RS, Motronic MA2.2/2.4, single and twin-spark). Round 10-pin connector only. This is the strongest argument for the tool on older inventory: generic ELM327 hardware cannot establish a session with these bikes at all, so it is GS-911 or a dealer visit.",
+    "verified_by": "https://www.gs911usa.com/GS-911_USB_Models_Supported.html (vendor-affiliated model list surfaced in search; page not opened directly)"
+  },
+  {
+    "adapter_slug": "hex-gs-911-wifi",
+    "make": "bmw",
+    "model_pattern": "F%",
+    "year_min": 2000,
+    "year_max": 2019,
+    "status": "full",
+    "notes": "F650GS single-cylinder and 2008+ twin, F650CS, F700GS, F800GS/GT/R/S/ST, F850GS. Full fault codes and service functions including service reset and ABS bleed on so-equipped models. Caution: this LIKE pattern also matches pre-2000 carburetted F650 Funduro variants, which have no supported diagnostic connector - treat those as incompatible.",
+    "verified_by": "https://www.ilexa.co.uk/diagnostic-tools/gs-911/122-gs-911-model-coverage.html (reseller coverage page surfaced in search; page not opened directly)"
+  },
+  {
+    "adapter_slug": "hex-gs-911-wifi",
+    "make": "bmw",
+    "model_pattern": "S1000%",
+    "year_min": 2009,
+    "year_max": 2019,
+    "status": "full",
+    "notes": "S1000RR (all years from launch), S1000R, S1000XR. Full BMW-side fault code access plus service functions; DTC/ABS module diagnostics and adaptation resets on bikes fitted with Race ABS / DTC. 2017+ EU4 S1000R and S1000XR use the OBD-II connector.",
+    "verified_by": "https://www.hexgs911.com/ (vendor lists K001-chassis S1000R/RR/XR as supported)"
+  },
+  {
+    "adapter_slug": "hex-gs-911-wifi",
+    "make": "bmw",
+    "model_pattern": "K1%",
+    "year_min": 2004,
+    "year_max": 2019,
+    "status": "full",
+    "notes": "K1200S/R/R Sport/GT/LT/RS, K1300S/R/GT, and the K1600GT/GTL six. Full diagnostic and service menu including service reminder reset and integral-brake bleed on the LT/K1600. Caution: this LIKE pattern also matches 1980s-90s K100/K75 flying bricks, which predate the supported diagnostic port - treat those as incompatible.",
+    "verified_by": "general-knowledge claim based on vendor and reseller model lists; not confirmed line-by-line against HEX's published coverage matrix"
   }
 ]

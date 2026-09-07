@@ -1,6 +1,6 @@
 # Phase 215 — BMW electrical + FI dealer mode
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -109,24 +109,28 @@ P1xxx range or transcribe proprietary BMW codes I cannot vouch for.
 
 ## Verification Checklist
 
-- [ ] Every DTC code in `bmw.json` uses a valid OBD-II prefix and a
-      real, defensible number; no invented P1xxx
-- [ ] Each BMW DTC adds BMW-specific causes/fixes rather than
-      restating the generic row it shadows — asserted against
-      `generic.json`
-- [ ] No duplicate `code` within the file; `(code, make)` unique
-- [ ] `motodiag code <dtc>` resolves the BMW row for a BMW bike and
-      still resolves generic for others
-- [ ] GS-911 present in adapters.json with the full schema, and in
-      compat_matrix with per-family rows and a `verified_by` value
-- [ ] `motodiag hardware compat seed --yes` then `compat list` shows 25
-      adapters
-- [ ] ZFE/dealer-mode entries do not restate Phase 212's F-series ZFE
-      accessory entries — asserted
-- [ ] Known-issue entries carry `source: model-generated` and the
-      "general knowledge" admission
-- [ ] Count guard fires; four docs updated
-- [ ] Backend regression green; F9 lint clean
+- [x] **11 DTC rows drafted, 10 kept, 1 dropped**; 5 issue entries
+      drafted, 4 verified, 3 in the final file. 41 agents, 0 errors
+- [x] Every code is standard-format; **no P1xxx invented**; no BMW
+      proprietary code smuggled in as a P-code — asserted
+- [x] No duplicate code in the file; every row `make == "BMW"`
+- [x] Seven rows shadow a generic code, and each is asserted to differ
+      from the generic causes *and* fix — with a counter-assertion that
+      at least one row genuinely shadows, so the check is not vacuous
+- [x] `get_dtcs("P0335", make="BMW")` returns the BMW row;
+      `make="Honda"` still returns the generic row — verified live
+- [x] GS-911 in `adapters.json` with a schema identical to a peer row;
+      5 compat rows, all `make: bmw`, each with a `verified_by` value
+- [x] `hardware compat seed --yes` then `compat list` shows **25
+      adapters**
+- [x] The dealer-mode entries cover the read-access problem (ELM327 vs
+      GS-911) and do not restate Phase 212's three ZFE accessory
+      entries — asserted on titles
+- [x] All five BMW files load together to **44 BMW entries**, no title
+      collision
+- [x] DTC seed 55 → 65; known issues 701 → 704; count guard fired,
+      four docs updated
+- [x] 24 phase tests; F9 lint clean; backend regression green
 
 ## Risks
 
@@ -140,3 +144,71 @@ P1xxx range or transcribe proprietary BMW codes I cannot vouch for.
 - **GS-911 pricing and capability change.** The adapter row states
   capability qualitatively and defers pricing to the vendor rather
   than freezing a figure that will rot.
+
+
+## Deviations from Plan
+
+**The fabricated-code lens found nothing fabricated — the shadowing
+lens is what did the work.** Only one DTC row was dropped, and not for
+being invented: **P0135** was killed because the corpus's existing
+generic O2 coverage in `cross_platform_fi.json` already gives a
+heater-resistance range, the heat-damaged-routing cause and the
+aftermarket-exhaust eliminator path *with make-specific detail for four
+other manufacturers*, while the BMW row offered only generic O2-heater
+causes. The verdict's phrase is the one worth keeping: the row was
+"strictly weaker than the generic row it would shadow — a BMW owner
+hitting P0135 would lose the resistance spec and gain nothing." That is
+a failure mode I had not anticipated when writing the plan. I framed
+shadowing as "must add value"; the real hazard is that a make-specific
+row can *subtract* value by hiding better generic content.
+
+**One issue entry was dropped for triple duplication.** The CAN-bus
+entry was refuted as a generic CAN playbook, as a restatement of
+`harley_electrical`'s "CAN bus communication fault — 2011+ models"
+(which does it better, with real U0100/U0121 codes and 60/120/0-ohm
+interpretation), *and* as a diluted version of Phase 212's ZFE trio.
+The verdict also caught a model-scope error I would have missed: its
+"F-series, K-series … 2004–2026" span sweeps in the pre-CAN F650GS
+single and the longitudinal K1200RS, neither of which is a CAN-bus
+bike.
+
+**A fourth verified issue was cut at synthesis**, leaving three.
+
+**I acted on the GS-911 draft's own uncertainty list rather than
+shipping it whole.** The agent was required to declare what it was
+unsure of and produced fifteen items, two of which were consequential
+enough to change the data:
+- `supports_mode22` was flipped **true → false**. The drafter wrote
+  "arguably wrong … the GS-911 reads live data via BMW proprietary
+  service requests, NOT generic OBD Mode 22", and that flag feeds the
+  adapter recommender.
+- The **R1300GS compat row was dropped** — self-described as "the most
+  speculative item here … inferred, not sourced … NOT verified".
+
+The remaining `verified_by` strings are honest about their own limits
+("surfaced in search; page not opened"), which is the right state for a
+provenance field to be in.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| DTC codes | 55 → 65 (10 BMW) |
+| Known issues | 701 → 704 |
+| Adapters | 24 → 25 |
+| Compat rows | 110 → 115 |
+| BMW entries across five files | 44 |
+| DTC drafted → kept | 11 → 10 (1 dropped on shadowing) |
+| Issues drafted → verified → kept | 5 → 4 → 3 |
+| Agents / errors | 41 / 0 |
+| Phase tests | 24 |
+| Backend regression | 5056 passed / 0 failed |
+
+**Key finding: a make-specific row can be worse than no row at all.**
+The plan's stated risk was fabrication — inventing a code number that
+sends a mechanic to the wrong component. That risk did not materialise;
+what did was subtler and more interesting. Because make-specific rows
+resolve *before* generic ones, a mediocre BMW row does not merely fail
+to help — it **hides** the better generic row that would otherwise have
+answered the question. Precedence turns "adds nothing" into "actively
+subtracts", and any lookup with make→generic fallback has this property.

@@ -1,0 +1,151 @@
+[
+  {
+    "code": "P0171",
+    "description": "System Too Lean (Bank 1)",
+    "category": "fuel",
+    "severity": "medium",
+    "make": "BMW",
+    "common_causes": [
+      "Cracked or perished rubber intake boot between throttle body and cylinder head (hardens with age and heat on boxer twins)",
+      "Secondary air injection system (BMW SLS) valve leaking or stuck open, letting fresh air into the exhaust and skewing the lambda reading",
+      "Exhaust leak at the header-to-head joint or at the collector, upstream of the lambda sensor",
+      "Fuel pump or in-tank filter losing pressure (in-tank pump assemblies on R1200 and F800 series)",
+      "Lean factory Euro fuelling map amplifying any of the above, presenting as surging"
+    ],
+    "fix_summary": "Smoke-test or spray-test the intake rubbers between throttle body and head first — cracking there is the single most common cause on air/oil-cooled boxers. Then verify the secondary air system: block or disconnect the secondary air feed and see if the fuel trim shifts, because SLS air reaching the lambda sensor produces a false lean signal with no actual intake leak. Check exhaust joints upstream of the sensor before condemning the sensor or the fuel pump."
+  },
+  {
+    "code": "P0410",
+    "description": "Secondary Air Injection System Malfunction",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "BMW",
+    "common_causes": [
+      "Carbon-fouled or stuck secondary air reed valves in the cylinder head covers",
+      "Failed or disconnected secondary air solenoid / changeover valve",
+      "Split or heat-damaged secondary air hose from the airbox to the head",
+      "SLS system removed or blanked off with an aftermarket delete kit without the ECU being coded for it",
+      "Airbox-side filter for the secondary air feed blocked"
+    ],
+    "fix_summary": "Check whether the bike still has an intact secondary air (SLS) system — an owner-fitted delete or blanking kit sets this code permanently and there is nothing to repair. If the system is present, inspect the hose from the airbox to the head covers for splits, then pull the reed valves and check for carbon fouling or a stuck reed. Test the solenoid electrically before replacing it. Where P0171 is also stored, a leaking SLS valve can be the common cause of both."
+  },
+  {
+    "code": "P0301",
+    "description": "Cylinder 1 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "BMW",
+    "common_causes": [
+      "Failed stick coil on cylinder 1",
+      "One of the two spark plugs dead on twin-spark boxer heads (2007-on R1200 has two plugs per cylinder)",
+      "Water in the plug well or coil boot after washing or heavy rain",
+      "Injector fouled or connector loose under the tank",
+      "Low compression on that cylinder, including valve clearance gone tight on a boxer that has missed its shim service"
+    ],
+    "fix_summary": "Identify the cylinder physically before touching anything: on a BMW boxer, cylinder 1 is the LEFT cylinder; on the inline K-series and S1000-series fours it is the leftmost cylinder viewed from the rider's seat. On a twin-spark R1200 check BOTH plugs and BOTH coils for that cylinder — a single dead plug of the pair gives a rough, partial misfire rather than a dead cylinder. Swap the coil with the other cylinder and see whether the code follows."
+  },
+  {
+    "code": "P0302",
+    "description": "Cylinder 2 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "BMW",
+    "common_causes": [
+      "Failed stick coil on cylinder 2",
+      "One of the two spark plugs dead on twin-spark boxer heads",
+      "Water intrusion into the plug well or coil boot",
+      "Injector or injector connector fault on that cylinder",
+      "Valve clearance out of spec on that cylinder"
+    ],
+    "fix_summary": "On a BMW boxer, cylinder 2 is the RIGHT cylinder; on the inline fours it is second from the left. Same procedure as P0301 — check both plugs and both coil feeds on twin-spark R1200 heads, then swap the coil to the other cylinder to see if the misfire moves. If both P0301 and P0302 are stored, stop chasing individual cylinders and look at fuel pressure, the crank sensor, or a common ground."
+  },
+  {
+    "code": "P0562",
+    "description": "System Voltage Low",
+    "category": "electrical",
+    "severity": "high",
+    "make": "BMW",
+    "common_causes": [
+      "Weak or sulphated battery — BMW CAN-bus bikes are very intolerant of low battery voltage",
+      "Alternator drive belt snapped or slipping (R1100/R1150 oilhead belt-driven alternator)",
+      "Failed alternator or regulator",
+      "Corroded main ground strap at the gearbox or engine case",
+      "Parasitic drain from an accessory socket or alarm on a bike left standing"
+    ],
+    "fix_summary": "On a CAN-bus BMW, fix the voltage before chasing anything else in the fault memory: low system voltage makes the modules drop off the bus and throw a cascade of unrelated ABS, ASC, instrument-cluster and engine faults that all clear once the battery is healthy. Load-test the battery, then check charging voltage at raised rpm per the manual specification. On oilhead R1100/R1150 models inspect the alternator drive belt — a snapped belt gives no charge at all and is a scheduled-replacement item people forget."
+  },
+  {
+    "code": "P0500",
+    "description": "Vehicle Speed Sensor A Malfunction",
+    "category": "electrical",
+    "severity": "medium",
+    "make": "BMW",
+    "common_causes": [
+      "Rear wheel speed sensor or its tone ring on the final drive damaged or contaminated with metal debris",
+      "ABS/ASC control unit not transmitting road speed on the CAN bus (module fault or bus fault)",
+      "Sensor gap wrong or sensor left loose after a final drive or wheel bearing job",
+      "Corroded connector on the sensor lead at the swingarm, where it is exposed to road spray",
+      "Failing final drive shedding swarf onto the sensor tip"
+    ],
+    "fix_summary": "On most modern BMW motorcycles the engine ECU does not have its own speed sensor — road speed arrives over the CAN bus from the ABS control unit. So read the ABS fault memory as well: a P0500 with ABS wheel-speed faults means the fault is at the wheel sensor or the ABS module, not at the engine ECU. Inspect the rear sensor and tone ring for debris; metal particles on the sensor tip can indicate a failing final drive, which is a separate and more serious finding."
+  },
+  {
+    "code": "P0335",
+    "description": "Crankshaft Position Sensor A Circuit Malfunction",
+    "category": "engine",
+    "severity": "critical",
+    "make": "BMW",
+    "common_causes": [
+      "Crank sensor contaminated by oil weeping past the front crankshaft seal into the sensor cavity — an R-series oilhead/hexhead boxer trait (R1100/R1150/R1200)",
+      "Sensor connector corroded, or the lead chafed where it runs from under the front engine cover to the engine harness connector",
+      "Damaged or loose trigger wheel after alternator or front cover work",
+      "Sensor air gap disturbed during reassembly",
+      "Genuine sensor failure, often heat-related and appearing only once the engine is hot"
+    ],
+    "fix_summary": "Symptom is typically a hot-start failure or a bike that cuts out and then restarts once cool, so test with the engine at temperature rather than cold. On R1100/R1150/R1200 oilhead and hexhead boxers the sensor sits at the front of the engine behind the front cover, and a weeping crankshaft seal contaminating the sensor is the classic cause — if the sensor is oily, replacing it alone will not last, the seal has to be addressed. On non-boxer BMWs (K-series inline fours and sixes, F and G singles and parallel twins, S1000 series) the sensor is elsewhere on the engine, so confirm its location in the model manual before dismantling. In all cases do the basic electrical checks before condemning the part: test sensor resistance and its AC or Hall output while cranking, per the manual specification, and inspect the connector and lead routing."
+  },
+  {
+    "code": "P0122",
+    "description": "Throttle/Pedal Position Sensor/Switch A Circuit Low Input",
+    "category": "fuel",
+    "severity": "high",
+    "make": "BMW",
+    "common_causes": [
+      "Throttle position sensor or throttle valve actuator potentiometer out of range on ride-by-wire models",
+      "Twist-grip (rider demand) sensor fault on E-gas bikes",
+      "Chafed or water-ingressed throttle body connector",
+      "Corroded pins after pressure washing around the throttle bodies",
+      "Sensor supply or ground fault shared with other sensors on the same 5V rail"
+    ],
+    "fix_summary": "Establish first whether the bike is cable-throttle or ride-by-wire. On E-gas BMWs (liquid-cooled R1200/R1250, S1000 series, K1600 and later F models) the throttle position sensors are redundant pairs and a single-channel fault normally drops the bike into reduced-power limp mode rather than stopping it, so a typical presentation is a bike that starts and idles but will not rev past a capped rpm. Check the 5V supply and ground at the throttle body connector before replacing an actuator — the actuator is not separately serviceable on many models and is an expensive part to guess at."
+  },
+  {
+    "code": "P0505",
+    "description": "Idle Control System Malfunction",
+    "category": "idle",
+    "severity": "medium",
+    "make": "BMW",
+    "common_causes": [
+      "Throttle body bypass / idle actuator sticking with carbon on cable-throttle models",
+      "Throttle bodies out of sync after a service (twin throttle bodies on boxer engines)",
+      "Intake air leak at the throttle body rubber boots raising idle",
+      "Throttle valve actuator or its adaptation lost on ride-by-wire models",
+      "Idle adaptation values not reset after throttle body cleaning"
+    ],
+    "fix_summary": "Check the model first: on ride-by-wire BMWs (liquid-cooled R1200/R1250, S1000 series) there is no separate idle air control valve to clean — idle is held by the throttle actuator itself, and the usual fix is repairing the underlying air leak or actuator and letting the ECU relearn idle adaptation. On older cable-throttle boxers, clean the idle bypass passages and then re-sync the two throttle bodies; an out-of-sync pair on a boxer produces an unstable idle that looks like an actuator fault."
+  },
+  {
+    "code": "P0131",
+    "description": "O2 Sensor Circuit Low Voltage (Bank 1, Sensor 1)",
+    "category": "exhaust",
+    "severity": "medium",
+    "make": "BMW",
+    "common_causes": [
+      "SLS (Sekundaerluftsystem, secondary air) changeover or cut-off valve stuck open, or its diaphragm perished, admitting fresh air upstream of the sensor and reading lean",
+      "Lambda connector corroded — on oilhead and hexhead R1200GS and similar models it is mounted low under the gearbox, where it takes road spray and winter salt",
+      "Sensor lead chafed or melted where it runs against the header or the centre stand",
+      "Air entering upstream of the sensor from an exhaust joint leak or a perished intake boot (the generic lean paths — check these after ruling out the SLS)"
+    ],
+    "fix_summary": "Identify the sensor before unplugging anything. On the boxer twins (R1150/R1200/R1250 GS, RT, R, RS) each cylinder has its own lambda sensor and bank 1 is the LEFT cylinder; on inline BMWs (S1000RR/XR, K1600, F900, G310) bank 1 sensor 1 is the single upstream sensor in the collector. Rule out the secondary air system (BMW calls it SLS) before condemning the sensor: a changeover or cut-off valve stuck open, or a perished diaphragm, admits fresh air past the sensor and reads lean, and the standard field test is to blank or disconnect the SLS feed and see whether the signal shifts. Then pressure- or smoke-check the exhaust upstream of the sensor, and inspect the lambda connector for corrosion where it is mounted low on the machine."
+  }
+]
