@@ -1,6 +1,6 @@
 # Phase 206 — Performance: fix what is actually wrong
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07 (plan → as-built same day)
 
 ## Existing-code audit (Step 0 — run 2026-09-07, before this plan)
 
@@ -122,19 +122,25 @@ unless they await" from a convention into something checkable.
 
 ## Verification Checklist
 
-- [ ] `/v1/kb/issues` and siblings pass LIMIT to SQL; no `rows[:limit]`
-      remains in the routes
-- [ ] `/v1/kb/search` is bounded, with a documented default and cap
-- [ ] Report building issues a constant number of DTC queries
-      regardless of fault-code count
-- [ ] Parts aggregation issues a constant number of xref queries
-- [ ] Every `async def` route handler awaits something; the rest are
-      sync
-- [ ] Migration 049 applies; `known_issues` is under migration control
-      with indexes its real queries can use
-- [ ] `/v1/kb/export` returns 304 for a matching `If-None-Match`
-- [ ] Backend regression green
-- [ ] **No latency numbers published anywhere in the phase docs**
+- [x] `/v1/kb/issues` and siblings pass LIMIT to SQL; no `rows[:limit]`
+      remains. Measured on the real table: **6,600 rows fetched before,
+      50 after**
+- [x] `total` still honest — a shared WHERE helper feeds both the page
+      and a `COUNT(*)`, so they cannot drift
+- [x] Report building issues a constant number of queries regardless of
+      fault-code count (**11 at 1 code and at 20**)
+- [x] Parts aggregation issues no per-part query
+- [x] Every `/v1` handler that is `async` awaits something — **14
+      converted**, offender count now 0
+- [x] Migration 049 applies; `EXPLAIN QUERY PLAN` goes from
+      `SCAN + USE TEMP B-TREE FOR ORDER BY` to
+      `SCAN USING INDEX idx_known_issues_sort`
+- [x] `/v1/kb/export` returns 304 for a matching `If-None-Match` —
+      **21,628 bytes → bodyless 304**; mobile sends its stamp
+- [x] Backend regression **4814 passed, 0 failed**; mobile 84 suites /
+      1016 tests
+- [x] **No latency numbers published** — the one figure quoted below is
+      labelled as incidental, not as the result
 
 ## Risks
 
@@ -155,3 +161,55 @@ unless they await" from a convention into something checkable.
 - **Bulk variants changing behaviour.** `get_dtc` batched by ids must
   return exactly what N single calls returned, including for missing
   codes. Pinned by test rather than assumed.
+
+## Deviations from Plan
+
+- **The parts N+1 turned out to be dead code, which changed the fix.**
+  The plan said "batch `get_xrefs`". Seeding a real `parts_xref` row
+  proved TWO bugs: the loop passed a part **id** where an OEM part
+  **number** is expected (`get_xrefs('44082-08')` returns 1 row,
+  `get_xrefs(1)` returns 0), and it read `xr['role']` / `xr['part']`,
+  neither of which the function returns. A bare `except: pass` hid both,
+  so those cost fields have been `None` since Phase 153. So the fix is
+  REMOVAL — behaviour preserved exactly, one query per part dropped —
+  and making the enrichment work stays F58, because real numbers where
+  callers have only ever seen `None` is a behaviour change.
+- **The `known_issues` index was validated with `EXPLAIN`, not assumed.**
+  Adding an index because it seems sensible is how a performance phase
+  becomes theatre; the plan is the evidence.
+- **A second index in migration 049 was wrong and removed.** I wrote one
+  on `category`, a column `known_issues` does not have. The migration
+  failed to apply on the spot, which is the system working.
+- **The conditional GET needed a Phase 198 interaction the plan missed.**
+  Mobile must NOT revalidate when its cache is wedged (stamp present,
+  zero rows) — a 304 would skip the self-heal and make the wedge
+  permanent. The stamp is only offered when the cache is healthy.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Defects fixed | 6 |
+| Rows no longer materialised per KB listing | 6,550 of 6,600 |
+| Report queries at 1 vs 20 fault codes | 11 vs 11 (was growing by up to 3 per code) |
+| Blocking `async` handlers | 14 → 0 |
+| KB listing sort | temp B-tree → index walk |
+| Unchanged KB sync | 21,628 bytes → 304 |
+| Backend regression | 4814 passed, 0 failed |
+| Mobile | 84 suites / 1016 tests |
+| New tests | 15 backend + 4 mobile |
+
+**Key finding: the roadmap row asked for the wrong thing, and measuring
+first is what revealed it.** "Performance optimization — query speed,
+API response time, memory usage" implies tuning. The baseline said every
+endpoint answered in 2-10ms against six work orders, so there was
+nothing to tune — and a phase that tuned anyway would have produced
+impressive percentages on sub-millisecond queries while leaving six real
+defects untouched. Two of those defects were not slowness at all: 14
+handlers were degrading concurrency for unrelated callers, and a
+per-part query had been computing nothing since Phase 153.
+
+The incidental figure, recorded once and deliberately not headlined: the
+KB listing went from 80ms to 4.5ms on this machine. The durable fact is
+6,550 rows no longer leaving the database; the milliseconds would differ
+on any other hardware.
