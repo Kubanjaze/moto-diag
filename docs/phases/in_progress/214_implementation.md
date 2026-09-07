@@ -1,6 +1,6 @@
 # Phase 214 — BMW K-series touring
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -109,21 +109,25 @@ its reason stated.
 
 ## Verification Checklist
 
-- [ ] Workflow ran 3 refuters per candidate; drafted / survived / kept
-      and every drop reason recorded
-- [ ] Zero undecided, or any reported
-- [ ] Every entry: `make == "BMW"`, explicit K model with generation,
+- [x] Workflow ran 3 refuters per candidate: **20 drafted → 20 after
+      dedup → 14 survived → 11 kept**, **0 undecided**, 67 agents, 0
+      errors. Drop reasons recorded below
+- [x] **The inversion worked: not one entry was refuted for mentioning
+      Paralever, shaft drive or Integral ABS.** All six fatal drops were
+      attribution-for-genericness
+- [x] Every entry: `make == "BMW"`, explicit K model with generation,
       `source == "model-generated"`, "general knowledge" in description
-- [ ] No entry places Duolever on a longitudinal K1200RS/GT, or
-      Telelever on a K1200S/K1300/K1600 — asserted
-- [ ] No entry restates the R-series Paralever, Integral ABS or
-      final-drive entries; any genuinely shared entry is widened on the
-      R-series file instead — asserted
-- [ ] `dtc_codes` empty (Phase 215 owns BMW fault codes)
-- [ ] Symptoms are short searchable phrases; real queries hit
-- [ ] All four BMW files load together without title collision
-- [ ] Count guard fires; four docs updated
-- [ ] Backend regression green; F9 lint clean
+- [x] No Duolever title on a non-transverse model; no Telelever title
+      on a non-longitudinal model — asserted on the *claim*, not on
+      word presence (see Deviations)
+- [x] No entry restates an R-series title; "Paralever pivot bearing
+      wear" and "Integral ABS" absent from K titles — asserted
+- [x] `dtc_codes` empty on every entry
+- [x] Symptoms arrived contract-clean (mean 28 chars, max 39), no
+      manual normalisation
+- [x] All four BMW files load together to 41 with no title collision
+- [x] Count guard fired on 690 → 701; four docs updated
+- [x] 32 phase tests; F9 lint clean; backend regression green
 
 ## Risks
 
@@ -137,3 +141,81 @@ its reason stated.
   record empty generations openly as Phase 213 did rather than padding.
 - **Three model-generated refuters are not a service manual.** Every
   entry stays tagged and the CLI warns on each.
+
+
+## Deviations from Plan
+
+**The inverted briefing worked, and that is the phase's main result.**
+Six candidates were dropped, all fatal on attribution, and **none for
+mentioning Paralever, shaft drive or Integral ABS** — the references a
+Phase 212-style refuter would have killed on sight. Every fatal verdict
+was for genericness instead: an in-tank fuel-plumbing entry rejected
+because "a Gold Wing, an FJR1300 and a Concours all have it"; a
+transverse-K1200 gearbox entry rejected because its procedure "reads
+identically on any wet-clutch bike with hydraulic actuation" and the
+corpus already covers it three times in `cross_platform_drivetrain`; an
+electric-windshield entry; a weak-battery-presenting-as-many-faults
+entry; a K1600 heat entry; and a rear-hub-play entry. The refuters also
+noticed real cross-references — one verdict cites the R-series
+dry-clutch spline entry by file path to argue the candidate's
+cross-reference was accurate.
+
+**`widen_existing_instead` produced 40 opinions and no action, which is
+itself the finding.** The field was added so a refuter could say "this
+is the R-series entry — widen it" rather than only rejecting, following
+the Phase 212 fuel-strip precedent. Twelve suggestions were
+non-empty, but **every one concerning a BMW entry said do *not* widen**,
+with reasoning: Paralever pivot wear "must NOT be widened to cover
+[Duolever] — Paralever is the rear suspension"; the Telelever ball-joint
+entry has "no existing entry [that] can absorb it"; ESA II diagnosis
+"has no generic-suspension entry to widen". The only affirmative
+suggestions pointed at *generic cross-platform* entries owned by other
+phases (fuel pump, clutch drag, charging, cooling), which would be scope
+creep, and they attached to candidates that were dropped anyway. So the
+mechanism ran, concluded the K's front ends and driveline are genuinely
+distinct, and correctly recommended nothing.
+
+**Three survivors were cut at synthesis as duplicates of stronger
+siblings**, not for quality — chiefly a narrow K1200RS dry-clutch entry
+folded into the wider longitudinal one, whose distinguishing content
+(bellhousing-drain oil identification, breather-driven contamination)
+was merged rather than discarded.
+
+**My validator was wrong before the content was.** The first pass
+flagged nine "failures" — Duolever mentioned on a Telelever bike,
+"boxer" appearing at all. Every one was a false positive: the entries
+name the other front end in explicit scope notes ("this does NOT apply
+to the 2006-onward transverse K1200GT, which uses Duolever") and cite
+the boxer to *contrast* driveshaft wear with boxer clutch-hub spline
+wear. That is precisely the disambiguation the phase wanted. The check
+was rewritten to test what an entry **claims about its own bike** —
+a Duolever *title* must name a transverse model — rather than which
+words appear anywhere in it.
+
+**And my first test needles were invented.** Three of five symptom
+queries missed because I guessed the phrases instead of reading the
+shipped data; they were replaced with needles taken from the file, and
+the test now says so.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Known issues | 690 → 701 |
+| K-series entries | 11 (2 longitudinal, 2 transverse K1200, 2 K1300, 3 K1600, plus driveline/clutch) |
+| Drafted → survived → kept | 20 → 14 → 11 |
+| Fatal drops, all attribution-for-genericness | 6 |
+| Entries refuted for shared R-series hardware | **0** |
+| `widen_existing_instead` suggestions / acted on | 40 / 0 |
+| Undecided | 0 |
+| Agents / errors | 67 / 0 |
+| Phase tests | 32 |
+| Backend regression | 5032 passed / 0 failed |
+
+**Key finding: a guardrail that is right for one platform is a liability
+on the next.** The rule "Paralever on this bike is an error" caught a
+real defect in Phase 212 and would have destroyed Phase 214, because the
+K-series genuinely has one. Inverting it required naming the shared
+hardware explicitly in the refuter prompt and moving the scepticism to
+duplication and generation — and the six drops show the replacement
+lens was doing real work, not just permitting everything.
