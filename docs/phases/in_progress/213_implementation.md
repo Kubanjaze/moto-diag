@@ -1,6 +1,6 @@
 # Phase 213 — BMW S1000RR / S1000R / S1000XR
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -117,21 +117,27 @@ count guard, which will fail four docs the moment entries land.
 
 ## Verification Checklist
 
-- [ ] The workflow ran 3 refuters per candidate; drafted / survived /
-      kept and every drop reason recorded in the phase log
-- [ ] Zero candidates left `undecided`, or any that were are reported
-- [ ] Every entry: `make == "BMW"`, an explicit S1000RR/R/XR model
-      string with generation, `source == "model-generated"`, "general
-      knowledge" in the description
-- [ ] No F-series or boxer component (Paralever, final drive housing,
-      dry clutch, diode board, Rotax, ZFE, boxer) appears in the S1000
-      file — asserted per term
-- [ ] No fourth generic quickshifter entry unless it is demonstrably
-      S1000-specific
-- [ ] Symptoms are short phrases; real mechanic queries hit
-- [ ] All three BMW files load together without collision
-- [ ] Count guard fires on 684 → 684 + N; four docs updated
-- [ ] Backend regression green; F9 lint clean
+- [x] The workflow ran 3 refuters per candidate: **18 drafted → 18
+      after dedup → 6 survived → 6 kept**, **0 undecided**, 61 agents,
+      0 errors. Every drop reason is recorded below
+- [x] All 12 drops were **fatal on attribution** — no other lens cast a
+      fatal verdict on any candidate
+- [x] Every entry: `make == "BMW"`, explicit model string with
+      generation, `source == "model-generated"`, "general knowledge" in
+      the description
+- [x] No foreign-platform component (Paralever, Telelever, final drive
+      housing, crown wheel, dry clutch, diode board, Rotax, ZFE, boxer,
+      cardan) appears — asserted per term, with a counter-assertion
+      that the R-series and F-series files still own those terms
+- [x] No fourth quickshifter entry — asserted on titles
+- [x] `dtc_codes` empty on every entry; BMW fault codes stay Phase 215's
+- [x] ShiftCam never attributed before 2019; XR vibration never
+      attributed to the revised 2020+ bike — both asserted
+- [x] Symptoms arrived contract-clean (mean 28 chars, max 39) with **no
+      manual normalisation needed**, unlike Phase 212
+- [x] All three BMW files load together to 30 with no title collision
+- [x] Count guard fired on 684 → 690; four docs updated
+- [x] 36 phase tests; F9 lint clean; backend regression green
 
 ## Risks
 
@@ -146,3 +152,74 @@ count guard, which will fail four docs the moment entries land.
 - **Three model-generated refuters do not make a service manual.** The
   process removes the obviously wrong and enforces consistency. Every
   entry stays tagged `model-generated`, and the CLI warns on each.
+
+
+## Deviations from Plan
+
+**Six entries, not the ~12 the plan projected — and that is the
+result, not a shortfall.** 18 candidates were drafted and 12 were
+killed, every one of them **fatal on attribution**. No other lens cast
+a single fatal verdict. The plan named duplication as this phase's
+default failure mode; the refuter agreed, twelve times.
+
+The drops divide into two kinds:
+
+1. **Generic superbike failures wearing a BMW badge (the majority).**
+   The clearest is *"Second gear jumps out under load on early
+   S1000RR (K46)"* — the refuter's verdict was that worn engagement
+   dogs, worn selector forks and a tired detent spring are "the
+   archetypal sport-bike transmission complaint — equally true of a
+   ZX-10R, R1 or GSX-R1000", with no BMW part nomenclature, no
+   K46-specific detail, and a diagnostic sequence that is generic
+   workflow rather than model knowledge. Four separate DDC
+   semi-active-suspension entries died the same way: attribution
+   mechanics *clean* — right generation, right option availability, no
+   ported hardware — but "strip the BMW badge and the entry is the
+   standard semi-active-suspension failure story."
+2. **Unverifiable recall claims.** Two entries rested on specific NHTSA
+   campaign identifiers asserted rather than confirmed for this model,
+   one of which also ported a cracked fuel-pump-flange story from the
+   boxer and big-tourer families onto the K67 sportbike tank. An entry
+   whose entire diagnostic value is a recall number has to have the
+   number right.
+
+**Two whole lenses produced no survivor.** The RR 2015–2018 and S1000R
+drafts were entirely refuted, so those generations are simply **absent
+from the file rather than invented**. The synthesizer said so
+explicitly instead of padding to the cap, which is the correct
+behaviour: it cut nothing, because there was nothing above the bar.
+
+**The symptom contract worked.** Phase 212's drafters returned full
+sentences and I normalised ~60 strings by hand. Moving the rule into
+the JSON schema field description — with the reason stated ("matched
+with SQL LIKE against a mechanic's typed query, so a sentence never
+matches") — produced compliant output first time: mean 28 characters,
+max 39, zero manual edits.
+
+**The undecided state was carried forward and never fired.** 61 agents,
+0 errors, 0 undecided — so no candidate's fate was decided by an
+outage, which was the defect that made Phase 212's first run
+meaningless.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Known issues | 684 → 690 |
+| S1000 entries | 6 (2 K46, 2 ShiftCam, 2 S1000XR first-gen) |
+| Drafted → survived → kept | 18 → 6 → 6 |
+| Fatal drops, all on attribution | 12 |
+| Generations with no survivor | RR 2015–2018, S1000R |
+| Undecided | 0 |
+| Agents / errors | 61 / 0 |
+| Phase tests | 36 |
+| Backend regression | 5000 passed / 0 failed |
+
+**Key finding: a saturated corpus makes "specific enough to be worth
+adding" a much harder bar than "true".** Every one of the twelve
+rejected entries was plausibly *correct*; they were rejected for being
+correct about motorcycles in general rather than about these
+motorcycles. With four litre-class peers already in the seed, the
+marginal value of a generic litre-bike entry is zero and its cost is a
+mechanic's trust — so the honest output of this phase is six entries
+and two openly empty generations, not twelve padded ones.
