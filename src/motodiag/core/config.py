@@ -83,6 +83,12 @@ class Settings(BaseSettings):
     #: Host — set it explicitly in any real deployment.
     public_base_url: str = ""
 
+    #: User id that receives OBD field-failure alerts. 0 disables them.
+    #: This is the MAINTAINER, not a shop owner — the alerts exist so an
+    #: unverified transport's first real-world failure reaches whoever
+    #: can fix it (F56), not so shops police their own hardware.
+    admin_user_id: int = 0
+
     #: Phase 202 — a labor timer left running longer than this is
     #: auto-closed AT `started_at + this` (not at discovery time) and
     #: flagged `needs_review`. Long enough not to trip a double shift,

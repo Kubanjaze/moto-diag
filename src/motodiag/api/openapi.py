@@ -196,6 +196,18 @@ TAG_CATALOG: list[dict[str, Any]] = [
         ),
     },
     {
+        "name": "diagnostics",
+        "description": (
+            "Field telemetry from the mobile app. Currently one route: "
+            "`POST /diagnostics/obd-failure`, reporting that a mechanic "
+            "could not connect an OBD adapter. Exists because the BLE "
+            "transport ships unverified against real hardware — the "
+            "first real-world failure is made loud rather than leaving "
+            "a mechanic to conclude the app does not work with their "
+            "dongle. Authed; repeat alerts are suppressed."
+        ),
+    },
+    {
         "name": "share",
         "description": (
             "Phase 200 — customer-facing report share links. Mechanics "

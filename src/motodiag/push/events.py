@@ -161,3 +161,61 @@ def notify_analysis_complete(
         )
     except Exception:  # noqa: BLE001
         logger.exception("notify_analysis_complete failed (suppressed)")
+
+
+def notify_obd_failure(
+    report_id: int,
+    error_kind: str,
+    transport: Optional[str],
+    device_id: Optional[str],
+    message: Optional[str],
+    db_path: Optional[str] = None,
+) -> bool:
+    """Alert the MAINTAINER that a mechanic could not connect an adapter.
+
+    Deliberately not shop-scoped: the audience is whoever can fix the
+    app, not the shop. Configured via ``MOTODIAG_ADMIN_USER_ID``; 0 (the
+    default) disables alerts entirely, which is the right default for
+    anyone running their own instance.
+
+    Best-effort like every other push path — a telemetry alert must never
+    propagate into the endpoint that recorded the failure. Returns True
+    when an alert was actually sent.
+    """
+    try:
+        from motodiag.core.config import get_settings
+        from motodiag.obd_reports import (
+            mark_notified, should_alert,
+        )
+
+        admin_id = int(getattr(get_settings(), "admin_user_id", 0) or 0)
+        if admin_id <= 0:
+            return False
+        if not should_alert(error_kind, transport, db_path=db_path):
+            # A dongle that will not connect gets retried, not tried once.
+            # Twelve identical pushes would get the alerts muted, which
+            # would hide the NEXT real signal.
+            logger.info(
+                "OBD failure %s suppressed (recent alert for %s/%s)",
+                report_id, error_kind, transport,
+            )
+            return False
+
+        where = f" on {device_id}" if device_id else ""
+        detail = (message or "").strip()
+        sent = _send_to_user(
+            admin_id,
+            f"OBD connect failed ({transport or 'unknown'})",
+            f"{error_kind}{where}"
+            + (f" — {detail[:120]}" if detail else "")
+            + ". A mechanic could not connect an adapter.",
+            thread_id="obd-failure",
+            db_path=db_path,
+        )
+        if sent:
+            mark_notified(report_id, db_path=db_path)
+            return True
+        return False
+    except Exception:  # noqa: BLE001 — telemetry never breaks the caller
+        logger.exception("notify_obd_failure failed (suppressed)")
+        return False

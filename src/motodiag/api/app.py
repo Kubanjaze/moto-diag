@@ -106,6 +106,7 @@ def create_app(
     from motodiag.api.routes.transcripts import router as transcripts_router
     from motodiag.api.routes.push import router as push_router
     from motodiag.api.routes.share import router as share_router
+    from motodiag.api.routes.diagnostics import router as diagnostics_router
     from motodiag.api.routes.parts import router as parts_router
     from motodiag.api.routes.time_tracking import router as time_tracking_router
 
@@ -122,6 +123,7 @@ def create_app(
     app.include_router(transcripts_router, prefix="/v1")  # Phase 195 — voice transcripts
     app.include_router(push_router, prefix="/v1")  # Phase 199 — push tokens
     app.include_router(share_router, prefix="/v1")  # Phase 200 — share links
+    app.include_router(diagnostics_router, prefix="/v1")  # field telemetry
     app.include_router(parts_router, prefix="/v1")  # Phase 201 — parts ordering
     app.include_router(time_tracking_router, prefix="/v1")  # Phase 202 — labor timer
     app.include_router(live_router)             # WS route declares full /v1/live/... path

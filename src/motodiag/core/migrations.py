@@ -3376,6 +3376,46 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS work_order_time_entries;
         """,
     ),
+    # Migration 048 — field reports for OBD connection failures
+    Migration(
+        version=48,
+        name="obd_failure_reports",
+        description=(
+            "Owner-facing field telemetry: when a mechanic cannot connect "
+            "an OBD adapter, record it and alert the maintainer. Exists "
+            "because the BLE transport ships UNVERIFIED against real "
+            "hardware (F56) — rather than buy an adapter to test a path "
+            "no user can currently reach, the first real failure is made "
+            "to reach the maintainer with enough context to reproduce it. "
+            "`notified_at` is stamped when the alert goes out so a retry "
+            "storm does not become a push storm."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS obd_failure_reports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL
+                    REFERENCES users(id) ON DELETE CASCADE,
+                error_kind TEXT NOT NULL,
+                transport TEXT,
+                device_id TEXT,
+                message TEXT,
+                app_version TEXT,
+                platform TEXT,
+                os_version TEXT,
+                created_at TEXT NOT NULL,
+                notified_at TEXT
+            );
+            CREATE INDEX IF NOT EXISTS idx_obd_failures_created
+                ON obd_failure_reports(created_at);
+            CREATE INDEX IF NOT EXISTS idx_obd_failures_kind
+                ON obd_failure_reports(error_kind, transport);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_obd_failures_kind;
+            DROP INDEX IF EXISTS idx_obd_failures_created;
+            DROP TABLE IF EXISTS obd_failure_reports;
+        """,
+    ),
 ]
 
 
