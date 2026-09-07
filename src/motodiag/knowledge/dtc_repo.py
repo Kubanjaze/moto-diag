@@ -68,6 +68,63 @@ def get_dtc(code: str, make: str | None = None, db_path: str | None = None) -> d
         return _row_to_dict(row) if row else None
 
 
+def get_dtcs(
+    codes: list[str],
+    make: str | None = None,
+    db_path: str | None = None,
+) -> dict[str, dict]:
+    """Resolve many DTCs in ONE query. Keys are upper-cased codes.
+
+    Phase 206: ``reporting/builders.py`` called :func:`get_dtc` once per
+    fault code inside a loop — a textbook N+1, and up to THREE queries
+    per code because of the fallback chain below.
+
+    The resolution order is reproduced exactly, because the report's
+    content depends on it:
+      1. manufacturer-specific row (``make`` matches), when ``make`` given
+      2. generic row (``make IS NULL``)
+      3. any row for that code
+
+    Codes with no row at all are simply absent from the result, so
+    callers keep using ``.get(code)`` and the None-branch they already
+    have.
+    """
+    wanted = [str(c).upper() for c in codes]
+    if not wanted:
+        return {}
+
+    placeholders = ",".join("?" for _ in wanted)
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            f"SELECT * FROM dtc_codes WHERE UPPER(code) IN ({placeholders})",
+            wanted,
+        ).fetchall()
+
+    by_code: dict[str, list[dict]] = {}
+    for row in rows:
+        d = _row_to_dict(row)
+        by_code.setdefault(str(d.get("code", "")).upper(), []).append(d)
+
+    resolved: dict[str, dict] = {}
+    for code in wanted:
+        candidates = by_code.get(code)
+        if not candidates:
+            continue
+        chosen = None
+        if make:
+            chosen = next(
+                (c for c in candidates if c.get("make") == make), None,
+            )
+        if chosen is None:
+            chosen = next(
+                (c for c in candidates if c.get("make") is None), None,
+            )
+        if chosen is None:
+            chosen = candidates[0]
+        resolved[code] = chosen
+    return resolved
+
+
 def _dtc_filters(
     query: str | None = None,
     category: str | None = None,

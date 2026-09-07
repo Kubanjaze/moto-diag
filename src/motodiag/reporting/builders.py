@@ -39,7 +39,7 @@ from motodiag.core.session_repo import (
     SessionOwnershipError, get_session_for_owner,
 )
 from motodiag.core.video_repo import list_session_videos
-from motodiag.knowledge.dtc_repo import get_dtc
+from motodiag.knowledge.dtc_repo import get_dtc, get_dtcs
 from motodiag.shop.invoicing import (
     InvoiceNotFoundError, get_invoice_with_items,
 )
@@ -268,9 +268,14 @@ def build_session_report_doc(
     # Fault codes
     fault_codes = row.get("fault_codes") or []
     if fault_codes:
+        # Phase 206: ONE query for all codes, not one per code — and the
+        # old path could cost up to THREE per code, because get_dtc walks
+        # a make-specific → generic → any fallback chain. get_dtcs
+        # reproduces that resolution order exactly.
+        dtc_info = get_dtcs([str(c) for c in fault_codes], db_path=db_path)
         dtc_rows: list[list[str]] = []
         for code in fault_codes:
-            info = get_dtc(str(code), db_path=db_path)
+            info = dtc_info.get(str(code).upper())
             if info is not None:
                 description = str(info.get("description") or "")
                 severity = str(info.get("severity") or "—")
