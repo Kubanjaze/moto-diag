@@ -14,7 +14,7 @@ import json
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Request, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
@@ -233,9 +233,11 @@ def list_categories_endpoint(
     summary="Full KB snapshot for offline caching (Phase 198)",
 )
 def kb_export_endpoint(
+    request: Request,
+    response: Response,
     _api_key: ApiKey = Depends(require_api_key),
     db_path: str = Depends(get_db_path),
-) -> KBExportResponse:
+):
     """Return every DTC + category-meta row plus a content-hash stamp.
 
     Mobile offline cache (Phase 198): the client compares `kb_version`
@@ -266,6 +268,31 @@ def kb_export_endpoint(
         separators=(",", ":"),
     )
     kb_version = hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+    # Phase 206 — conditional GET.
+    #
+    # `kb_version` is already a content hash, which makes it a correct
+    # ETag by construction. Mobile's kbSync downloads the ENTIRE body
+    # and only then compares stamps, so the overwhelmingly common
+    # cold-start case — nothing changed — paid a full transfer to learn
+    # nothing. With If-None-Match the same check costs a 304.
+    #
+    # The body is still built to derive the hash; that is the honest
+    # limit of this fix. Caching the stamp itself needs an invalidation
+    # story tied to KB writes, which is a bigger change than a
+    # performance phase should smuggle in.
+    etag = f'"{kb_version}"'
+    response.headers["ETag"] = etag
+    response.headers["Cache-Control"] = "private, must-revalidate"
+
+    if_none_match = request.headers.get("if-none-match", "")
+    # A client may send a list, and may or may not quote the value.
+    presented = {t.strip().strip('"') for t in if_none_match.split(",") if t.strip()}
+    if kb_version in presented:
+        return Response(status_code=304, headers={
+            "ETag": etag,
+            "Cache-Control": "private, must-revalidate",
+        })
 
     return KBExportResponse(
         kb_version=kb_version, dtcs=dtcs, categories=categories,
