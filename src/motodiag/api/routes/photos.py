@@ -389,7 +389,7 @@ async def upload_wo_photo(
     response_model=list[WorkOrderPhotoResponse],
     summary="List photos attached to a work order",
 )
-async def list_wo_photos_endpoint(
+def list_wo_photos_endpoint(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
@@ -406,7 +406,7 @@ async def list_wo_photos_endpoint(
     response_model=WorkOrderPhotoResponse,
     summary="Get one photo by id",
 )
-async def get_wo_photo_endpoint(
+def get_wo_photo_endpoint(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     photo_id: int = PathParam(..., gt=0),
@@ -428,7 +428,7 @@ async def get_wo_photo_endpoint(
     response_model=WorkOrderPhotoResponse,
     summary="Re-classify a photo (post-capture role / pair / issue updates)",
 )
-async def patch_wo_photo(
+def patch_wo_photo(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     photo_id: int = PathParam(..., gt=0),
@@ -485,7 +485,7 @@ async def patch_wo_photo(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft-delete a photo",
 )
-async def delete_wo_photo(
+def delete_wo_photo(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     photo_id: int = PathParam(..., gt=0),
@@ -508,7 +508,7 @@ async def delete_wo_photo(
     summary="Stream the binary JPEG file",
     responses={200: {"content": {"image/jpeg": {}}}},
 )
-async def get_wo_photo_file(
+def get_wo_photo_file(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     photo_id: int = PathParam(..., gt=0),

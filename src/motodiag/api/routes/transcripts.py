@@ -444,7 +444,7 @@ async def upload_voice_transcript(
     response_model=list[VoiceTranscriptResponse],
     summary="List voice transcripts attached to a work order",
 )
-async def list_voice_transcripts_endpoint(
+def list_voice_transcripts_endpoint(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
@@ -465,7 +465,7 @@ async def list_voice_transcripts_endpoint(
     response_model=VoiceTranscriptResponse,
     summary="Get one voice transcript by id",
 )
-async def get_voice_transcript_endpoint(
+def get_voice_transcript_endpoint(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     transcript_id: int = PathParam(..., gt=0),
@@ -489,7 +489,7 @@ async def get_voice_transcript_endpoint(
     response_model=ExtractedSymptomResponse,
     summary="Mechanic-confirm / edit an extracted symptom",
 )
-async def confirm_extracted_symptom_endpoint(
+def confirm_extracted_symptom_endpoint(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     transcript_id: int = PathParam(..., gt=0),
@@ -556,7 +556,7 @@ async def confirm_extracted_symptom_endpoint(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft-delete a voice transcript",
 )
-async def delete_voice_transcript(
+def delete_voice_transcript(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     transcript_id: int = PathParam(..., gt=0),
@@ -583,7 +583,7 @@ async def delete_voice_transcript(
         410: {"description": "Audio bytes pruned by 60-day retention sweep"},
     },
 )
-async def stream_voice_transcript_audio(
+def stream_voice_transcript_audio(
     shop_id: int = PathParam(..., gt=0),
     wo_id: int = PathParam(..., gt=0),
     transcript_id: int = PathParam(..., gt=0),

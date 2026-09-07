@@ -314,7 +314,7 @@ async def upload_video(
     response_model=list[VideoResponse],
     summary="List videos for a session",
 )
-async def list_videos(
+def list_videos(
     session_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
@@ -336,7 +336,7 @@ async def list_videos(
     response_model=VideoResponse,
     summary="Get one video by id",
 )
-async def get_one_video(
+def get_one_video(
     session_id: int = PathParam(..., gt=0),
     video_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
@@ -357,7 +357,7 @@ async def get_one_video(
     status_code=status.HTTP_204_NO_CONTENT,
     summary="Soft-delete a video",
 )
-async def delete_video(
+def delete_video(
     session_id: int = PathParam(..., gt=0),
     video_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
@@ -375,7 +375,7 @@ async def delete_video(
     summary="Stream the binary mp4 file",
     responses={200: {"content": {"video/mp4": {}}}},
 )
-async def get_video_file(
+def get_video_file(
     session_id: int = PathParam(..., gt=0),
     video_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
