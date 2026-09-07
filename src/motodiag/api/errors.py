@@ -343,11 +343,15 @@ async def _validation_handler(request: Request, exc: Exception):
         "content-type=%r errors=%s",
         request.method, request.url.path, rid, content_type, errors,
     )
-    return _problem_response(
-        request, status=422, type_slug="validation-error",
-        title="Request validation failed",
-        detail=str(errors),
+    # Delegate to FastAPI's own handler for the RESPONSE. The goal here
+    # is logging; changing the body was overreach and broke Phase 192B's
+    # test, which correctly asserts `detail` is the structured list of
+    # field errors (loc/msg/type), not a stringified blob. Clients
+    # already parse that shape.
+    from fastapi.exception_handlers import (
+        request_validation_exception_handler,
     )
+    return await request_validation_exception_handler(request, exc)
 
 
 async def _unhandled_handler(request: Request, exc: Exception):

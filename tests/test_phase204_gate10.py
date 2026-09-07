@@ -49,3 +49,50 @@ class TestFfmpegArgsSurviveModernFfmpeg:
             f"{binary} does not document -fps_mode; frame extraction "
             "will fail at argument-parse time"
         )
+
+
+class TestValidationFailuresAreLogged:
+    """The 422 logging must not change the RESPONSE shape.
+
+    Phase 204 added a RequestValidationError handler so malformed
+    requests stop being invisible server-side. The first version also
+    replaced the body with an RFC 7807 envelope carrying a stringified
+    detail — which broke Phase 192B's contract test, because clients
+    parse `detail` as the structured list of field errors. The handler
+    now logs and delegates to FastAPI's own handler; this pins both
+    halves so a future edit cannot quietly trade one for the other.
+    """
+
+    def test_logs_the_field_errors(self, caplog):
+        import logging
+
+        from fastapi import FastAPI
+        from fastapi.testclient import TestClient
+        from pydantic import BaseModel
+
+        from motodiag.api.errors import register_exception_handlers
+
+        class Body(BaseModel):
+            preset: str
+
+        app = FastAPI()
+        register_exception_handlers(app)
+
+        @app.post("/echo")
+        def echo(body: Body) -> dict:  # pragma: no cover - never reached
+            return {"ok": True}
+
+        client = TestClient(app, raise_server_exceptions=False)
+        with caplog.at_level(logging.WARNING, logger="motodiag.api.errors"):
+            response = client.post("/echo", json={})
+
+        assert response.status_code == 422
+        assert any(
+            "422 validation failure" in r.message for r in caplog.records
+        ), "a rejected request must leave a trace server-side"
+
+        # ...and the body is still FastAPI's structured shape, so the
+        # field that failed is machine-readable by the caller.
+        detail = response.json()["detail"]
+        assert isinstance(detail, list)
+        assert any("preset" in str(err.get("loc", [])) for err in detail)
