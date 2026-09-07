@@ -1,6 +1,6 @@
 # Phase 204 — Gate 10: Mobile Integration Test + TestFlight
 
-**Version:** 1.0 | **Tier:** Gate | **Date:** 2026-09-04
+**Version:** 1.1 | **Tier:** Gate | **Date:** 2026-09-07 (v1.0 plan 09-04 -> v1.1 as-built)
 
 ## Existing-code audit (Step 0 — run 2026-09-04, before this plan)
 
@@ -160,20 +160,37 @@ Sequenced so the cheapest disqualifier comes first:
 
 ## Verification Checklist
 
-- [ ] ffmpeg present and the analysis pipeline reaches the vision call
-- [ ] F46: video capture opens the camera on a physical iPhone, or the
-      failure is root-caused and ticketed with evidence
-- [ ] Upload tested BEFORE the stash is adopted; stash disposition
-      recorded either way
-- [ ] Analysis completes and findings land on the session
-- [ ] Report renders; PDF share and link share both work
-- [ ] The share link opens in a browser with no credentials
-- [ ] Sweep: 199 push, 200 customer view, 201 parts, 202 timer, 203
-      theme on hardware
-- [ ] Backend regression + mobile suite green
-- [ ] Release entitlements carry `aps-environment: production`
-- [ ] `xcodebuild archive` + `-exportArchive` produce a validated `.ipa`
-- [ ] Gate verdict recorded per step with tickets for every failure
+- [x] ffmpeg present and the analysis pipeline reaches the vision call
+      — installed during the audit, then found BROKEN anyway (see fix #2)
+- [x] F46: video capture opens the camera on a physical iPhone.
+      Root-caused as a permission deadlock in our own code, NOT a
+      VisionCamera failure. Prompt appears and was granted on device.
+- [x] Upload tested BEFORE the stash was adopted. It failed, the stash's
+      diagnosis was read, and the stash turned out to be WRONG — see
+      Deviations. Stash left parked at `stash@{0}`, untouched.
+- [x] Analysis completes and findings land on the session — a real
+      7.3s device recording, 15 frames, live Claude Sonnet vision call
+- [x] Report renders; both share paths work
+- [x] The share link opens in a browser with no credentials — minted
+      FROM THE PHONE (`10.0.0.89`, 201), sent over Messages, opened in
+      Safari, 4 credential-free fetches all 200
+- [~] Sweep of outstanding device claims — PARTIAL:
+      - [x] **199** analysis-complete push FIRED
+            (`push sent to user 1 (Diagnostic analysis ready)`) — the
+            item Phase 199 deferred for want of a video. Server-side
+            send confirmed; **the banner itself was not watched for**,
+            so the visual half stays unverified.
+      - [x] **200** share link opened as a customer — done above
+      - [ ] **201** parts browse/order screens — NOT RUN (battery)
+      - [ ] **202** clock in/out screens — NOT RUN (battery)
+      - [ ] **196** BLE connect/handshake — still needs hardware (F56)
+- [x] Backend full regression: **4743 passed, 0 failed** (7:40)
+- [x] Mobile: 79 suites / 985 tests; tsc clean; eslint 0 errors
+- [x] Release entitlements carry `aps-environment: production` —
+      verified on the exported `.ipa`, not inferred from config
+- [x] `xcodebuild archive` + `-exportArchive` produce a validated
+      `.ipa` (13.4 MB, Apple Distribution, Team Store profile)
+- [x] Gate verdict recorded per step with tickets for every failure
 
 ## Risks
 
@@ -191,3 +208,56 @@ Sequenced so the cheapest disqualifier comes first:
 - **A two-month-old stash over eight phases of change** may conflict on
   the Xcode project file. Testing first is what avoids resolving those
   conflicts for no reason.
+
+## Deviations from Plan
+
+- **The leading F46 hypothesis was wrong, and so was the stash.** The
+  plan named an architecture mismatch (`Podfile` forcing
+  `RCT_NEW_ARCH_ENABLED=0` against a Fabric runtime) as the likely F46
+  cause. The Pods xcconfig carries `-DRCT_NEW_ARCH_ENABLED=1` because RN
+  0.85 ignores the opt-out, so pods, Info.plist and runtime are all
+  consistently New Architecture. That Podfile line is vestigial. F46 was
+  a permission deadlock in our own screen code.
+- **The parked stash was tested and rejected on the evidence.** Its
+  diagnosis — a stale multipart boundary — was applied, did not fix the
+  422, and was then REVERTED when the traceback showed the multipart
+  parsed fine and only the field VALUES were rejected. Testing before
+  adopting is what kept a wrong fix out of the tree; the stash remains
+  parked and untouched.
+- **Android descoped** to its own phase (user decision, recorded in the
+  plan).
+- **Two items of the sweep did not run** — the phone reached 4% battery.
+  Recorded as unverified rather than folded into the gate's pass.
+- **Share links now point at a LAN address**, because the Tailscale
+  HTTPS listener wedged after a NordVPN conflict. Filed as **F64, a
+  release blocker**, and cross-referenced into `docs/testflight.md` so
+  it is read at release time.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Gate verdict | **PASS** on the headline flow; PARTIAL on the sweep |
+| Bugs found and fixed | 5 (F46, ffmpeg 9, upload 422, silent 422s, my own handler regression) |
+| Backend regression | 4743 passed, 0 failed (7:40) |
+| Mobile suite | 79 suites / 985 tests; tsc + eslint clean |
+| Device evidence | mint 201 from `10.0.0.89`; 4 credential-free 200s; push sent |
+| TestFlight artefact | `ios/build/export/MotoDiag.ipa`, 13.4 MB, production entitlement |
+| New tickets | F63 (playback freeze), F64 (share-link release blocker) |
+| Still blocked on hardware | F56 (BLE adapter) |
+
+**Key finding: every one of the five bugs was found by running the
+thing, and none of them would have been found by reading the code.**
+Two had been sitting in the tree for months behind green test suites.
+F46 was filed in May with a confident, untested diagnosis naming the
+wrong subsystem, and that diagnosis is precisely why nobody fixed it —
+it made the bug look like someone else's dependency problem rather than
+ten lines of our own logic. The upload bug hid behind a `??` that reads
+as defensive but only guards null and undefined, never a real zero.
+ffmpeg 9 removed a flag and turned every analysis into a silent
+`unsupported`. The corrective that actually broke the logjam was not
+cleverness but **logging**: the 422 reason existed only in a response
+body the client discarded, and adding one WARNING line converted four
+blind device round-trips into a single traceback naming the field.
+A gate is worth the effort precisely because it runs what the tests
+cannot.
