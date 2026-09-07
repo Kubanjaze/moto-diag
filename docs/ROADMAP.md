@@ -312,7 +312,7 @@ Polish, package, launch the core product (pre-expansion). Shifted from 193-198 d
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 205 | End-to-end integration testing | 🔲 | All tracks working together (desktop + mobile) (was 193) |
+| 205 | End-to-end integration testing | ✅ | All tracks working together (desktop + mobile) (was 193). **CLOSED 2026-09-07 — Gate 11, zero production code.** Targeted the DESKTOP half, since Gate 10 had just verified the mobile path on hardware. **Finding: the desktop and the phone are not the same product** — a desktop-only shop cannot log labour, print a report, or send a customer a link, and can only *assert* hours at completion. Five asymmetries pinned as tests that FAIL when each gap closes (F59, F65-F68). Also found that **Gate 8 did not gate what its row claims**: 3 `runner.invoke` calls against 54 direct repo calls, so Track G's ~96 shop subcommands were verified through the layer beneath the surface they were meant to prove. Gate 11 drives the real `cli` root. Contract snapshot (mobile `openapi.json` vs live spec) checked both directions for the first time — in sync. 16 tests; regression 4799/0; Gates 5/6/7/8/9 re-run as subprocesses. |
 | 206 | Performance optimization | 🔲 | Query speed, API response time, memory usage (was 194) |
 | 207 | Security audit | 🔲 | API keys, input validation, SQL injection prevention (was 195) |
 | 208 | Documentation + user guide | 🔲 | README, usage guide, mechanic quickstart, app store listing (was 196) |

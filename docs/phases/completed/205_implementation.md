@@ -1,6 +1,6 @@
 # Phase 205 — Gate 11: End-to-End Integration (Desktop + Mobile)
 
-**Version:** 1.0 | **Tier:** Gate | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Gate | **Date:** 2026-09-07 (plan → as-built same day)
 
 ## Existing-code audit (Step 0 — run 2026-09-07, before this plan)
 
@@ -126,14 +126,22 @@ Outputs:
 
 ## Verification Checklist
 
-- [ ] `db init` through the CLI produces a schema-48 database
-- [ ] The full shop-owner walk completes through `runner.invoke` only
-- [ ] Cross-surface: CLI-created records read identically via the API
-- [ ] The four missing verbs are asserted absent, each citing its ticket
-- [ ] Committed `openapi.json` matches the live spec structurally
-- [ ] Gates 5/6/7/9/10 still pass as subprocesses
-- [ ] Backend regression green; **zero production files changed**
-- [ ] Findings recorded; new tickets filed only for unfiled gaps
+- [x] `db init` through the CLI produces a schema-48 database
+- [x] The full shop-owner walk completes through `runner.invoke` only —
+      shop → customer → bike → work order → parts add/order/receive →
+      start → complete → invoice → paid → analytics
+- [x] Cross-surface: a CLI-created work order reads identically over
+      HTTP (id, title, customer_id, shop_id, status)
+- [x] The missing verbs are asserted absent — **five, not four**: the
+      walk turned up one the audit had not predicted (`open`)
+- [x] Committed `openapi.json` matches the live spec structurally, in
+      BOTH directions. **Currently in sync** — a true negative worth
+      recording, since this seam had never been checked at all
+- [x] Gates 5/6/7/8/9 still pass as subprocesses (21s)
+- [x] Backend regression **4799 passed, 0 failed** (8:40)
+- [x] **Zero production files changed** — `git status --short src/`
+      returned nothing, the constraint that defines a gate here
+- [x] Findings recorded; tickets filed for the unfiled gaps
 
 ## Risks
 
@@ -150,3 +158,55 @@ Outputs:
 - **Snapshot staleness at authoring time.** If `openapi.json` is already
   stale, the contract test fails on arrival. That is a true positive and
   gets recorded, not worked around by regenerating first.
+
+## Deviations from Plan
+
+- **Five asymmetries, not four.** The plan listed install-part, labour,
+  PDF and share link. Walking the CLI turned up a fifth: the API's work
+  order transition accepts an `open` action while the CLI has only
+  `start`. Harmless today, but two vocabularies for one lifecycle is
+  how the F37 enum-drift family starts, so it is pinned.
+- **The contract test passed on arrival.** The plan anticipated that a
+  stale snapshot would be a true positive and get recorded. It was
+  already in sync. Recorded anyway, because "we checked and it was
+  fine" is a different claim from "nobody has ever checked", and this
+  seam was the latter until now.
+- **Two authoring corrections, both about testing behaviour rather than
+  wording.** Ids are read from the database rather than parsed out of
+  CLI output — `Added vehicle #1` is a sentence, not a contract, and a
+  copy edit should not fail a gate. Absence tests interrogate click's
+  command registry rather than grepping `--help`, after the first
+  version failed because "time" appears inside "AI labor time
+  estimation". Both were my errors, and both would have made the gate
+  fragile in a way that eventually gets it muted.
+- **The gate drives the REAL cli root.** Gate 8 built a partial root
+  from `register_shop`, which structurally cannot catch a command that
+  fails to register on the real one.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| New tests | 16 (`test_phase205_gate11.py`) |
+| Production files changed | **0** |
+| Backend regression | 4799 passed, 0 failed (8:40) |
+| Earlier gates re-run | 5 (Gates 5/6/7/8/9) in 21s |
+| Asymmetries pinned | 5 |
+| Contract snapshot | in sync, both directions |
+| New tickets | F65 (labour CLI), F66 (report/PDF CLI), F67 (share CLI), F68 (`open` verb vocabulary) |
+
+**Key finding: the desktop and the phone are not the same product.** A
+phone-equipped shop can measure labour, print a report and text a
+customer a link. A desktop-only shop can do none of those — it can only
+*assert* hours, and hand over nothing. Every individual gap was known or
+knowable, but nobody had walked the job end to end and seen that they
+compose into a coherent hole rather than four scattered TODOs. That is
+what an integration gate is for, and it is the same lesson Gate 10
+taught from the other direction: the value is in running the whole thing
+as a user would, not in testing the parts more thoroughly.
+
+A secondary finding worth its own line: **Gate 8 did not gate what its
+roadmap row claims.** Three CLI invocations against fifty-four repo
+calls means Track G's shop commands were verified through the layer
+underneath the surface they were supposed to prove. This gate is the
+first time those commands have been driven as a user drives them.
