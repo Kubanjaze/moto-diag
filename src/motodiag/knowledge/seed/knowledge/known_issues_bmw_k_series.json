@@ -1,0 +1,420 @@
+[
+  {
+    "title": "Dry single-plate clutch contaminated by oil — slip and judder (longitudinal K)",
+    "description": "Written from general knowledge of the single-plate dry clutch used in the longitudinal \"flying brick\" K layout, where engine, clutch and gearbox sit in line like a car. The clutch runs in a dry bellhousing between the crankshaft rear main seal and the gearbox input shaft seal, so any leak from either seal — or oil pushed past them by a blocked crankcase breather — lands directly on the friction surfaces. The result is slip under load and a grabbing, juddering take-up, often preceded by oil dripping from the bellhousing drain point, and it appears long before the friction material is actually worn out. Mechanically this is a different fault from dry-clutch hub spline fretting, which concerns spline wear rather than contamination, and the access route on the longitudinal K is its own job: the gearbox must be separated from the engine to reach the clutch, which is why the labour cost is disproportionate to the price of the parts. Replacing the plate without curing the leak guarantees a repeat failure. This entry does not apply to the transverse K1200S/R/GT, K1300S/R/GT or K1600 inline six, which use a wet multiplate clutch running in oil where a trace of oil on the plates is normal.",
+    "make": "BMW",
+    "model": "K75/K100/K1100/K1200RS/K1200GT/K1200LT (longitudinal, 1983-2009)",
+    "year_start": 1983,
+    "year_end": 2009,
+    "severity": "high",
+    "symptoms": [
+      "clutch slips under hard acceleration",
+      "revs rise without speed increase",
+      "judder when pulling away",
+      "clutch bite point has changed",
+      "oil drip from bellhousing",
+      "oil weeping from bellhousing drain",
+      "burning smell after motorway run",
+      "clutch grabs then releases",
+      "slip worst in top gear"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Crankshaft rear main seal leaking engine oil onto the dry friction plate",
+      "Gearbox input shaft seal leaking gearbox oil forward into the dry bellhousing",
+      "Blocked or restricted crankcase breather raising case pressure and forcing oil past the seals",
+      "Overfilled engine oil pressurising the crankcase",
+      "Friction plate worn to the limit at high mileage, which must be distinguished from contamination before the bike is stripped",
+      "Clutch hub or input shaft spline wear causing incomplete engagement",
+      "Clutch hydraulic or cable actuation not fully releasing or engaging, mimicking slip",
+      "Long storage allowing seals to harden and the plate to pick up surface contamination"
+    ],
+    "fix_procedure": "1. SAFETY: work on a cold engine on level ground, support the bike on a centre stand or proper lift secured against tipping, and disconnect the battery negative lead before disturbing the starter or gearbox area. Where fuel lines must be disturbed for access, depressurise the fuel system per the manual, work in a well-ventilated area away from ignition sources with an extinguisher to hand, catch any spillage and cap the lines.\n2. Confirm the slip on a road test, rider in the normal riding position — in a high gear at moderate revs roll the throttle on and watch for engine speed rising out of proportion to road speed. NEVER load the clutch in gear with the bike on a centre stand, paddock stand or tie-downs: a shaft-drive K can jump off its stand or off the lift under drive. Do not diagnose from lever feel alone.\n3. Check the engine oil level by the manual's procedure. An overfilled engine can pressurise the crankcase and force oil past the rear main seal; correct the level and re-test before condemning the clutch.\n4. Inspect the crankcase breather path for blockage or oil logging and clear or renew it as the manual directs. This is the cheapest cause and it will re-contaminate a new clutch if left unaddressed.\n5. Inspect the bellhousing drain point beneath the engine/gearbox joint. Clean it, run the bike, and re-inspect. Clean engine oil there points to the crankshaft rear main seal; gearbox oil points to the input shaft seal — identify which before ordering parts, as they are different seals reached from different sides. Run the engine only in neutral, in a well-ventilated bay or with exhaust extraction, keep hands and clothing clear of the hot exhaust and driveline, and let everything cool before working underneath.\n6. Check clutch actuation for correct free play to the manual's specification and, on hydraulically actuated models, for a leaking master or slave cylinder and air in the line. A dragging or partly disengaged clutch mimics some of the same complaints.\n7. If contamination is confirmed, prepare for the split: drain the gearbox oil (and the final drive where the manual requires it) BEFORE separating the assemblies, and remove the rear wheel, final drive and swingarm per the manual.\n8. Separate the gearbox from the engine per the manual. Take the weight of the gearbox on a transmission jack or with a second person — it is heavy and awkward once the fasteners are out. Support both assemblies independently and never let the gearbox hang on the input shaft, wiring or hoses.\n9. With the clutch exposed, inspect the friction plate for oil soaking, glazing and remaining material, the pressure plate and flywheel face for scoring and heat cracking, the diaphragm for even finger height, and the clutch hub and input shaft splines for stepping or fretting paste. Do NOT blow clutch dust out with compressed air — wipe or vacuum it, and wear eye protection.\n10. Renew whichever leaking seal was identified. Do not reassemble over a known leak, and do not reuse an oil-soaked friction plate — degreasing it is not a durable repair.\n11. Fit the clutch components as a matched set where the manual calls for it. Clean the flywheel face, pressure plate and bellhousing of oil and fingerprints with a suitable brake/clutch cleaner in a ventilated area, well away from any ignition source and from the fuel system disturbed at step 1, and let the solvent flash off fully before assembly. Lubricate the hub splines only with the small quantity and type of lubricant the manual specifies — excess grease migrates onto the friction plate.\n12. Reassemble with the clutch centred using the correct alignment tool and tighten all fasteners to the torque values and sequence in the manual.\n13. Refill the gearbox and engine with the grades and quantities given in the manual, bleed the clutch hydraulics if fitted, reconnect the battery and road test under load in a high gear. Re-inspect the bellhousing drain after the first few heat cycles to confirm the leak is cured.",
+    "parts_needed": [
+      "Clutch friction plate (dry single-plate)",
+      "Clutch pressure plate / diaphragm assembly as specified",
+      "Crankshaft rear main seal or gearbox input shaft seal (whichever is leaking)",
+      "Gearbox-to-engine gasket and any disturbed O-rings",
+      "Crankcase breather hose if blocked or perished",
+      "Clutch alignment tool",
+      "Clutch hydraulic fluid for bleeding where hydraulically actuated",
+      "Gearbox oil and engine oil of the grades specified in the manual"
+    ],
+    "estimated_hours": 12,
+    "source": "model-generated"
+  },
+  {
+    "title": "Telelever A-arm ball joint wear — knock under braking (longitudinal K)",
+    "description": "Model-generated from general knowledge of BMW Telelever front suspension. On the longitudinal \"flying brick\" K bikes the front end is a Telelever: a single A-arm (wishbone) pivots on the engine/frame and connects to the lower fork bridge through a single large ball joint, while a separate central spring strut carries springing and damping. The telescopic legs only guide the wheel — they are not damper units, so conventional fork-seal and stanchion-pitting diagnostics do not transfer here. The usual wear item is that A-arm-to-bridge ball joint. As it wears the mechanic feels a distinct fore-and-aft knock or clunk through the bars on brake application and release, and over sharp square-edged bumps, with vague or wandering steering on trailing throttle. This is frequently misdiagnosed as steering-head bearing wear; the two feel different and are isolated differently, and the differentiation test is given in the procedure below. Because Telelever geometry unloads the steering head compared with a telescopic fork, on these bikes the ball joint is the more common source of front-end play and the head bearings the less common one — the opposite of the usual assumption. Scope note: this does NOT apply to the 2006-onward transverse K1200GT/K1200S/K1200R or to the K1300 and K1600, which use Duolever and have no A-arm-to-bridge ball joint. The same joint and the same fore-and-aft knock test also appear on the Telelever boxers, but this entry is written to the longitudinal K.",
+    "make": "BMW",
+    "model": "K1200RS (1997-2005) / K1200GT (2003-2005) / K1200LT (1999-2009) — longitudinal Telelever",
+    "year_start": 1997,
+    "year_end": 2009,
+    "severity": "high",
+    "symptoms": [
+      "knock through bars under braking",
+      "clunk when releasing front brake",
+      "vague steering on telelever bike",
+      "front end play no fork seals",
+      "fore and aft play front end",
+      "telelever ball joint play",
+      "front clunk over sharp bumps",
+      "wandering steering bmw k1200rs"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Wear of the Telelever A-arm to lower fork bridge ball joint from age, mileage and high-load braking",
+      "Torn or perished ball joint rubber boot admitting water and grit, accelerating wear",
+      "Worn or dry A-arm (wishbone) pivot bearings at the engine/frame mounts, giving similar fore-and-aft movement",
+      "Loose or under-torqued A-arm pivot pins or fork bridge fasteners after previous service",
+      "Steering-head bearing wear at the top of the steering tube, which coexists with and mimics ball joint knock",
+      "Impact damage from a pothole strike or minor front-end collision",
+      "Water ingress into the joint after pressure washing"
+    ],
+    "fix_procedure": "1. SAFETY: this job requires the front wheel off the ground. Work on level ground, use the centre stand where fitted plus a proper front-end support or engine/frame jack under the sump rail, chock or strap the machine, and check stability by pushing it laterally before working under it. The bike is nose-heavy with the front unloaded — never rely on the side stand alone. Disconnect the battery negative lead before any dismantling. On models fitted with BMW Integral (servo) ABS the brake system holds stored hydraulic pressure: follow the manual's depressurisation procedure before removing calipers or disturbing any brake line, and do not attempt this job without the manual and, where required, BMW diagnostic equipment for the post-repair bleed.\n2. Cheapest first: road-test or roll the bike and characterise the noise. Then, with the bike on both wheels on level ground and held upright by an assistant, apply the front brake firmly and rock the bike fore and aft. A worn Telelever ball joint gives an audible and felt knock at the front that repeats with each direction change. Do not perform this rocking test with the bike raised on a stand or jack.\n3. Repeat step 2 with a flat hand spanning the joint between the A-arm and the lower fork bridge, fingers kept flat and clear of the pivot and any closing gap. Ball joint play is felt as movement AT that joint. If the movement is felt instead at the steering head between frame and upper bridge, suspect head bearings.\n4. Differentiate from steering-head bearings: with the front wheel off the ground, rotate the bars slowly lock to lock. Steering-head bearing wear shows as notchiness, indexing or a detent at straight-ahead and as rotational roughness or drag. A worn Telelever ball joint feels normal on this test — smooth to rotate but knocking under fore-and-aft load — and its play is present with the bars held dead straight and does not change with bar angle.\n5. Isolate the wishbone pivots: with the front unloaded, grip the A-arm itself and try to move it vertically and laterally at its frame/engine pivots. Any perceptible play or a dry, gritty feel there indicates the pivot bearings rather than the ball joint.\n6. Inspect the ball joint boot for splits, displacement or trapped water and grit. A failed boot is the common precursor to a worn joint.\n7. Rule out simple causes before condemning parts: check all A-arm pivot and fork bridge fasteners for correct tightness to the manual's specification, and check the front axle and axle pinch bolts.\n8. SUPPORT THE FRONT ASSEMBLY BEFORE DISASSEMBLY. Separating the ball joint releases the entire front assembly — wheel, fork legs, bridges, calipers and mudguard. Sling or jack-support that assembly independently, and support the A-arm, before applying any separating force; never separate the joint with the assembly hanging free. Unbolt and hang the calipers from a strap or hook without straining the hoses — never let a caliper dangle on its line — and unplug or route clear the front wheel-speed sensor and its lead.\n9. If play is confirmed at the ball joint, renew it per the manual. On most of these models the joint is an interference fit in the lower fork bridge and needs pressing, or replacement of the lower fork bridge as an assembly where the joint is not supplied separately — follow the manual for the correct puller/installer, for the specified torque and for any thread-locking requirement. SAFETY: this is a load-bearing steering component; do not repair, shim or stake a worn joint.\n10. Replace the boot and any circlip or retainer with new parts, and set the A-arm pivot preload and torque to the manual's specification.\n11. Reassemble to the manual's torque specifications. If any brake line or caliper was disturbed, bleed the system by the manual's procedure for that ABS type — servo Integral ABS requires its own routine covering both the wheel circuit and the control circuit — and confirm a firm lever with no ABS fault light before the bike moves.\n12. Re-check for play: lower the bike onto its wheels for steps 2-3, then raise the front again for steps 4-5. Road test in a safe area at low speed with progressive braking, then re-torque all disturbed fasteners and re-check for play before returning the bike.",
+    "parts_needed": [
+      "Telelever A-arm to fork bridge ball joint (or lower fork bridge assembly, per model)",
+      "Ball joint rubber boot and retaining clip",
+      "A-arm pivot bearings and seals if play found at the wishbone pivots",
+      "Steering-head bearing set if notchy",
+      "Ball joint press/extraction tooling",
+      "Circlips, retainers and any single-use fasteners specified by the manual"
+    ],
+    "estimated_hours": 6,
+    "source": "model-generated"
+  },
+  {
+    "title": "Telelever front spring strut worn or leaking — mistaken for a fork oil/seal job",
+    "description": "Model-generated from general knowledge of the Telelever layout. On a Telelever K bike the springing and damping happen in one central spring strut mounted between the A-arm and the frame; the telescopic legs are guides only and contain no damper cartridge, so there is no fork oil change, no damper rod service and no fork seal replacement to perform, and a workshop quote for a \"fork rebuild\" on these bikes is a category error. A tired or leaking strut gives excessive brake dive relative to the model's normally dive-resistant character, a pogoing or under-damped front end over undulations, wallowing in fast corners, harsh bottoming on big hits, and sometimes an oil film or dust-caked oil trail down the strut body. Riders often report it as \"the forks are shot\", and because Telelever masks dive so well the loss is gradual and easy to normalise. Where the front is topping out or bottoming rather than under-damped, check preload adjustment and any electronic suspension setting first. Sudden loss of front-end damping is a handling and safety concern and should be treated as such. Scope note: the 2006-onward transverse K1200GT/K1200S/K1200R, the K1300 and the K1600 use Duolever and are out of scope for this procedure.",
+    "make": "BMW",
+    "model": "K1200RS (1997-2005) / K1200GT (2003-2005) / K1200LT (1999-2009) — longitudinal Telelever",
+    "year_start": 1997,
+    "year_end": 2009,
+    "severity": "medium",
+    "symptoms": [
+      "excessive front dive under braking",
+      "front end pogoing over bumps",
+      "oil film on front strut",
+      "wallowing front end in corners",
+      "front bottoming out hard hits",
+      "no fork oil to change telelever",
+      "forks leaking on telelever bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Worn-out damping in the front spring strut from age and mileage",
+      "Failed strut damper seal, shown by an oil film or oil-caked dirt on the strut body",
+      "Sagged or fatigued main spring giving low static ride height and easy bottoming",
+      "Incorrect spring preload setting, or a preload adjuster or electronic suspension adjustment not functioning",
+      "Worn or perished strut upper and lower mounting bushes or bearings, giving a knock that mimics damper failure",
+      "Binding in the telescopic guide legs from a bent leg, corrosion or a seized slider after impact"
+    ],
+    "fix_procedure": "1. Start with the free checks. Confirm tyre pressures and condition, and confirm the preload and suspension setting match the rider load — many \"worn strut\" complaints are a preload or setting issue on a two-up loaded bike.\n2. Measure static and rider sag at the front by the manual's method and compare with the manual's specification. A ride height well below specification points at a sagged spring; correct sag with poor rebound control points at the damper.\n3. Bounce test: with the bike upright and both wheels on the ground on level ground, apply the front brake and push down firmly on the bars. The front should return and settle without a second free oscillation. Repeated bouncing indicates lost rebound damping.\n4. Inspect the strut body and shaft visually for an oil film, an oil-and-dust trail or a wet band. SAFETY: the strut is a stored-energy assembly containing a compressed spring and, on many designs, pressurised gas. Do not puncture, cut, heat or attempt to disassemble it, and do not attempt to release the spring without the correct spring compressor and eye protection.\n5. Distinguish damper wear from joint knock: apply the front brake hard and rock the bike fore and aft, wheels on the ground, while feeling the A-arm-to-bridge ball joint and the strut mountings with a flat hand. A metallic knock localised at a mounting is a bush or bearing fault, not a damper fault.\n6. Check the strut upper and lower mounting bushes, bearings and fasteners for wear and correct tightness to the manual's specification.\n7. Check the telescopic guide legs for straightness, corrosion and free sliding movement. They carry no damping function; consult the manual for whether the legs take a lubricating oil fill on the model in hand, and do not attempt a conventional damper-rod fork service on them.\n8. Before any dismantling, disconnect the battery, negative lead first, and wait for the CAN-bus and any electronic suspension control units to power down before unplugging any suspension or engine connector.\n9. Where tank or bodywork removal is required for access: depressurise the fuel system to the manual's procedure before disconnecting any fuel line, work in a well-ventilated area away from ignition sources with an extinguisher to hand, and cap the lines. After reassembly cycle the ignition to re-pressurise and inspect every disturbed joint for leaks with the engine off, then again at idle, BEFORE any road test.\n10. Where damping loss or leakage is confirmed, replace or professionally rebuild the strut as a unit. SAFETY: support the bike on its centre stand plus a frame or engine support and secure it against tipping — the K1200LT is very heavy and the centre stand alone is not sufficient once the front is unloaded. Raise the front wheel clear of the ground and support the A-arm and lower fork bridge separately BEFORE undoing either strut mounting bolt, because the strut carries the front end and the A-arm will drop when the bolt clears. Do not use the telescopic guide legs as a jacking or support point; they are guides, not load-bearing legs. Support the front wheel so brake hoses and ABS sensor leads take no strain.\n11. Fit the replacement to the manual's specified torques with new fasteners where the manual requires them, and set preload for the rider and load.\n12. Confirm brake lines and ABS wiring are correctly routed and unstrained, check for full unobstructed steering lock to lock and full suspension travel without fouling, then begin the road test at low speed in a safe area before evaluating over a known bumpy section, and re-check fastener security afterwards.",
+    "parts_needed": [
+      "Front spring strut (Telelever central shock) assembly",
+      "Strut upper and lower mounting bushes/bearings",
+      "Single-use mounting fasteners specified by the manual"
+    ],
+    "estimated_hours": 5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Driveshaft spline wear at gearbox output and final drive input (longitudinal K)",
+    "description": "Written from general knowledge of the longitudinal \"flying brick\" K driveline: the driveshaft runs inside the swingarm tube and is coupled by splines at the gearbox output at the front and at the final drive pinion at the rear. Those splines rely on a grease charge applied at assembly and are not lubricated by either the gearbox or the final drive oil. Once the grease hardens, is washed out by a weeping gearbox output shaft seal, or is diluted by water ingress past a perished swingarm gaiter, the splines fret and step, producing driveline lash that grows until the coupling strips and drive is lost. This is distinct from generic shaft-drive servicing (hypoid oil and universal-joint checks) in that the K wear point is the splined coupling itself, and distinct from boxer clutch-hub spline wear, which concerns the gearbox input side. Not applicable to the transverse K1200S/R/GT, K1300 or K1600, which use a different driveline layout.",
+    "make": "BMW",
+    "model": "K75/K100/K1100/K1200RS/K1200GT/K1200LT (longitudinal, 1983-2009)",
+    "year_start": 1983,
+    "year_end": 2009,
+    "severity": "high",
+    "symptoms": [
+      "clunk on throttle take-up",
+      "driveline lash from rear",
+      "metallic knock pulling away",
+      "shudder under load low speed",
+      "sudden loss of drive",
+      "grease residue inside swingarm",
+      "rust coloured paste at coupling"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Original spline grease hardened or dried out with age and mileage",
+      "Gearbox output shaft seal weeping and washing lubricant off the front splines",
+      "Water ingress past a perished swingarm gaiter or breather causing fretting corrosion",
+      "Reassembly without regreasing the splines after a previous clutch or final drive job",
+      "Fretting accelerated by hard on/off throttle use and high mileage"
+    ],
+    "fix_procedure": "1. SAFETY: support the machine on a proper motorcycle lift or rear stand with the rear wheel off the ground. A centre stand alone is NOT adequate once the rear wheel and final drive are removed — losing that mass shifts the balance point and the bike can come off the stand. Add a support under the frame or engine, strap the machine down, and support the swingarm before the final drive is unbolted. The K1200LT and K1200GT are very heavy; use two people or a lift with a frame support. Allow the exhaust, final drive and gearbox to cool before touching them.\n2. Cheapest check first: with the bike in neutral and the rear wheel raised, hold the rear wheel and rock it back and forth against the driveline. Compare the free play felt against a known-good machine of the same generation; excessive rotational lash not accounted for by normal gear backlash points at the splines.\n3. Rule out the cheaper noises first — a loose rear wheel fastener, worn swingarm and final-drive bearings, and, on Paralever-equipped models (K1200RS/GT/LT), the torque-arm joints. Earlier K75/K100/K1100 machines use the single-sided Monolever and have no torque arm. Then listen on a road test for a metallic knock on throttle take-up and on trailing throttle. CAUTION: if rock-test lash is gross, or grease and rust-coloured fretting paste is already visible at the swingarm or coupling, do NOT road test — a coupling in that condition can strip without warning and drive is lost at speed. Go straight to disassembly. Where a road test is justified, keep it short, at low speed and off fast or busy roads.\n4. Inspect the swingarm gaiter/boot and the area around the gearbox output for oil or grease tracks. Oil at the front of the swingarm points to a leaking gearbox output shaft seal, which must be renewed or the new spline grease will simply be washed out again.\n5. Drain the final drive oil into a clean tray and inspect it for metallic glitter or paste-like debris, which indicates wear elsewhere in the unit; refill later with the grade and quantity given in the manual.\n6. Remove the rear wheel and final drive unit per the manual and withdraw the driveshaft. Examine both splined ends: healthy splines have full square-topped teeth; worn splines show pointed, stepped or knife-edged teeth and a dark red-brown fretting paste.\n7. Check the mating splines on the gearbox output shaft and the final drive pinion at the same time. If either mating part is worn, replacing only the driveshaft will not fix the fault.\n8. If the splines are serviceable, clean all traces of old grease and corrosion off both sets and repack with the lubricant type the manual specifies for that coupling. Do not substitute ordinary chassis grease.\n9. Renew the swingarm gaiter, any O-rings and the final drive gasket disturbed during removal.\n10. Reassemble, tightening all driveline, Paralever and rear wheel fasteners to the torque values in the manual, in the sequence given. Refill the final drive and check for leaks.\n11. Road test at low speed for the original noise. After the first heat cycle re-check for oil or grease weeps AND re-check the torque of all Paralever, torque-arm, final drive and rear wheel fasteners to the manual's values. Record the mileage so the spline lubrication interval in the manual can be tracked from here.",
+    "parts_needed": [
+      "Driveshaft assembly (if splines are worn)",
+      "Spline lubricant of the type specified in the manual",
+      "Swingarm gaiter/boot",
+      "Gearbox output shaft seal (if leaking)",
+      "Final drive gasket and O-rings",
+      "Hypoid gear oil of the grade specified in the manual"
+    ],
+    "estimated_hours": 5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Duolever front-end ball joint and wishbone wear — transverse K1200",
+    "description": "Compiled from general knowledge of the transverse K1200S/R/GT, which uses BMW's Duolever double-wishbone front end rather than telescopic forks or the Telelever of the longitudinal K1200RS/K1200GT. Steering geometry is carried by an upper and a lower wishbone, each located by ball joints, with a single strut providing spring and damping. Scope note: the K1200GT is in scope only from 2006 — the earlier K1200GT is the longitudinal Telelever machine, and confusing the two is exactly the misattribution to avoid. As mileage accumulates — and much sooner on bikes ridden in salt, pressure-washed frequently, or run after a pothole or low-side impact — play develops in the wishbone ball joints and in the mounting bushings. The result is a knocking or clunking felt through the bars, a vague or wandering steering feel, and shimmy under braking. The failure mode is commonly misdiagnosed as steering-head bearings, wheel bearings, or (wrongly, since the bike has none) fork wear: there are no fork seals, stanchions or fork oil on this machine. The same Duolever layout carries over to the K1300 and K1600. Ball joints are generally not supplied loose on this generation; a worn joint usually means replacing the wishbone assembly it belongs to — confirm current parts availability against the manual and parts catalogue before quoting the job.",
+    "make": "BMW",
+    "model": "K1200S/K1200R (transverse, 2005-2008) and K1200GT (transverse, 2006-2008)",
+    "year_start": 2005,
+    "year_end": 2008,
+    "severity": "high",
+    "symptoms": [
+      "knocking from front end",
+      "front end clunk over bumps",
+      "vague steering feel",
+      "front shimmy under braking",
+      "creaking when turning bars",
+      "play felt at front wheel",
+      "steering feels imprecise at speed"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Worn or dry Duolever upper/lower wishbone ball joints",
+      "Water ingress and corrosion in ball joints after pressure washing or winter use",
+      "Worn wishbone-to-frame or wishbone-to-knuckle bushings",
+      "Impact damage from a pothole strike or low-side, bending a wishbone",
+      "Loose or under-torqued wishbone/strut pivot fasteners",
+      "Worn strut lower mount bushing mimicking ball-joint play",
+      "Steering-head or wheel bearing wear presenting with similar symptoms and needing to be ruled out"
+    ],
+    "fix_procedure": "1. Interview the rider: note whether the knock appears over sharp bumps, under braking, or only when turning, and whether the bike has been dropped or pressure-washed regularly.\n2. SAFETY: support the motorcycle on level ground on a suitable centre or workshop stand rated for it and secure it against tipping before lifting the front wheel — the Duolever front end offers no fork tubes to jack against, so use the manufacturer's specified lifting points only.\n3. With the front wheel off the ground, check the cheap and common items first: front wheel bearing play (rock the wheel at 12 and 6 o'clock), brake disc-to-caliper contact, and loose brake caliper or mudguard fasteners.\n4. Check all Duolever pivot and strut fasteners for looseness. Retorque only to the manual's specification, using new fasteners wherever the manual calls for single-use bolts.\n5. Isolate ball-joint play: have an assistant apply the front brake and rock the bike fore and aft while you span each wishbone ball joint in turn with a flat hand — a distinct tap felt at the joint indicates wear. Keep hands clear of pivot and wheel pinch points while the assistant rocks the bike, and ensure the stand is secured against tipping under fore-and-aft loading. Repeat with the wheel lifted, levering gently at each joint.\n6. Sweep the bars lock to lock with the wheel off the ground and feel for notchiness, creaking or roughness that would instead point at the steering knuckle bearings or the steering link.\n7. Inspect wishbones for corrosion, torn ball-joint boots, and any bending or paint cracking that would suggest impact damage. A bent wishbone is a replacement, not a straightening job.\n8. Only if the play found is slight and no ball joint is separated, seized or has a torn boot, confirm the finding by a brief low-speed road test over a known bump before committing to parts. If any joint shows gross play, a torn or displaced boot, or the wheel can be deflected relative to the wishbones, DO NOT ride the bike — a Duolever ball joint failure is a loss-of-steering event. Confirm on the stand and proceed to repair.\n9. These models are commonly fitted with BMW servo-assisted Integral ABS, which holds stored hydraulic pressure. If any brake union must be opened or the ABS modulator disturbed, follow the manual's depressurisation procedure first and use the BMW diagnostic tool for the required bleed and pressure-build afterwards. Prefer to unbolt and strap up the calipers with hoses intact rather than open the hydraulic circuit.\n10. Before releasing any wishbone pivot, support the steering knuckle and front wheel assembly independently on a jack or stand and relieve the strut load per the manual — the wishbones carry the entire front assembly and it will drop when a pivot is released. Do not let the assembly hang on the brake hoses or the ABS sensor lead, and keep fingers clear of pivot pinch points. The Duolever strut is a spring-over-damper containing stored spring energy; do not separate spring from damper without the manual's procedure and a proper spring compressor.\n11. Replace the worn wishbone assembly (or ball joint, if supplied separately for this bike), following the manual for disassembly order, alignment and torque specification. Use new single-use fasteners where specified.\n12. Reassemble and retorque to the manual's specification. Before riding, check brake lever and pedal firmness with the engine running and the servo active, bleed and re-pressurise per the manual if the circuit was opened, and begin the road test at walking pace in a closed area, testing the brakes gently before building speed. Check straight-line stability and absence of knock before returning the bike.",
+    "parts_needed": [
+      "Duolever upper wishbone assembly",
+      "Duolever lower wishbone assembly",
+      "Ball joints and boots where supplied separately",
+      "Single-use pivot fasteners as specified by the manual",
+      "Front strut lower mount bushing if worn",
+      "Front wheel bearings if play is found"
+    ],
+    "estimated_hours": 3.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "First-generation ESA electronic suspension actuator failure — transverse K1200",
+    "description": "Compiled from general knowledge of the transverse K1200S/R/GT, the generation on which BMW's first-generation Electronic Suspension Adjustment was introduced as an option (commonly fitted to the transverse K1200GT of 2006-2008, optional on K1200S and K1200R). Note the K1200GT is in scope only from 2006; the earlier K1200GT is the longitudinal Telelever machine. This is the earlier, motor-driven system that mechanically steps damping and rear preload on command — not a later semi-active system that varies damping continuously, so generic semi-active advice does not apply. Typical presentation is a suspension warning on the dash, damping stuck in one setting, or one or more modes refusing to select while the display shows a change that the bike does not actually make. The common root causes are the damper's adjuster actuator motor and the rear preload motor, plus water ingress and chafe in their connectors and looms, and low system voltage aborting an adjustment cycle. On this generation the actuators are integral to the damper units and are generally not serviceable separately, so a confirmed actuator failure means a shock replacement — confirm current parts supply and any supersession against the parts catalogue before quoting, as these units have long been out of production. Because the symptom overlaps with a flat battery or a poor ground, always clear the electrical basics before condemning a shock.",
+    "make": "BMW",
+    "model": "K1200S/K1200R (transverse, 2005-2008) and K1200GT (transverse, 2006-2008)",
+    "year_start": 2005,
+    "year_end": 2008,
+    "severity": "medium",
+    "symptoms": [
+      "esa warning light on dash",
+      "suspension damping stuck hard",
+      "no change between esa modes",
+      "esa mode will not select",
+      "rear preload not adjusting",
+      "clicking from rear shock area",
+      "ride height stays low with pillion"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Failed damping adjuster actuator motor on front or rear damper",
+      "Failed rear preload adjuster motor",
+      "Water ingress and corrosion in the actuator connector",
+      "Chafed or broken wiring in the loom run to the rear shock",
+      "Low battery voltage or poor charging aborting the adjustment cycle",
+      "Corroded or loose chassis ground for the ESA circuit",
+      "Failed mode switch on the handlebar or its wiring",
+      "Seized adjuster mechanism inside a damper stored wet or unused for long periods"
+    ],
+    "fix_procedure": "1. Confirm the complaint with the rider: which modes fail, whether the dash shows the change, and whether it is intermittent or permanent.\n2. Check the cheap items first — battery state of charge and charging output per the manual's specification, and the condition and tightness of the chassis grounds. A weak battery will abort ESA adjustment and set a warning without any suspension fault existing.\n3. SAFETY: allow hot exhaust and engine components to cool before reaching down to the rear shock area, and support the motorcycle on level ground on a suitable stand secured against tipping before working underneath.\n4. With the ignition on and the bike stationary, cycle the ESA modes while listening at each damper — a healthy actuator makes an audible stepping or whirring sound, and silence at one unit localises the fault. Keep hands and face clear of the adjuster and spring collar while cycling modes; the actuators move under power.\n5. Switch the ignition off and disconnect the battery negative lead before unplugging any actuator or module connector — never disconnect or reconnect a connector with the ignition live on this CAN-bus system. Unplug, inspect and clean the actuator connectors, looking for green corrosion, water in the shell, spread terminals and pushed-back pins. Reseat, apply the manual's specified contact treatment, then reconnect the battery and retest.\n6. Wiggle-test the loom to the rear shock through its full suspension travel path, checking for chafe at frame rails and swingarm-adjacent routing. Repair any damaged wiring before replacing components.\n7. Verify the handlebar mode switch operates by observing dash response to each press; a dash that never acknowledges the press points at the switch or its wiring, not the damper.\n8. Only after the electrical path is proven good should the damper be condemned. CAUTION: the damper is a pressurised gas unit with stored energy — never puncture, heat, cut or attempt to disassemble it, never release its preload, and dispose of it per the manual's instructions and local regulations.\n9. Replace the affected damper assembly per the manual. Support the machine on a purpose-made lift or chassis stand secured against tipping. The front end is a Duolever with no fork tubes, so a fork-tube stand cannot be used — support the front frame or lower wishbone per the manual. Before removing the rear unit, support the swingarm independently: it drops under its own weight when the lower mount is released. Replace the unit complete; observe torque specifications and any single-use fasteners.\n10. Reset and recalibrate the system if the manual requires it, then begin the road test at low speed in a safe area, confirm damping and preload behave predictably in each mode before road speed, and re-check fasteners to torque after the first ride.",
+    "parts_needed": [
+      "Rear damper assembly with integral ESA actuator",
+      "Front damper assembly with integral ESA actuator",
+      "Connector repair terminals and seals",
+      "Loom repair materials and protective sleeving",
+      "ESA handlebar mode switch if faulty"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Duolever ball-joint and wishbone wear — K1300 front-end play with no steering head to blame",
+    "description": "The transverse K1300 carries the Duolever (double-wishbone / Hossack) front end, not telescopic forks and not a Telelever. Steering and wheel location run through ball joints at the ends of the two wishbones and at the steering knuckle and link, so front-end knock and vague steering on these bikes usually come from worn ball joints — there is no conventional steering-head bearing to adjust and no fork stanchions or seals to blame, which is where mechanics used to telescopic front ends lose time. The front spring/damper is a Duolever strut, not a fork leg. This layout carried over largely unchanged from the transverse K1200S/R/GT, so a high-mileage or frequently pressure-washed K1300 is a strong candidate. Note the K1300S and K1300R ran to 2016 while the K1300GT left production in 2011. Written from general knowledge — verify against the manual for the specific model and year.",
+    "make": "BMW",
+    "model": "K1300S/K1300R (2009-2016) and K1300GT (2009-2011), transverse four",
+    "year_start": 2009,
+    "year_end": 2016,
+    "severity": "high",
+    "symptoms": [
+      "vague steering at speed",
+      "knock through bars over bumps",
+      "front end clunk under braking",
+      "front wheel play when rocked",
+      "steering notchy off centre",
+      "wandering front end",
+      "front end feels imprecise"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Worn ball joints at the upper or lower wishbone ends",
+      "Worn ball joint at the steering knuckle or steering link",
+      "Water and grit ingress past the joint boots, often after pressure washing",
+      "Corrosion inside a joint on a bike used or stored in salt or wet conditions",
+      "Impact damage to a wishbone from a kerb strike or minor front-end accident"
+    ],
+    "fix_procedure": "1. Before dismantling anything, rule out the cheap and common causes of the same feel: front wheel bearings, loose front axle or pinch bolts, brake caliper or disc looseness, and tyre condition or pressure.\n2. SAFETY: the bike must be supported under the engine or on a proper lift with a stand — a Duolever bike cannot be jacked by the fork legs because it has none, and it becomes unstable once the front is unloaded or removed. Work on level ground and secure it against tipping before you unweight the front wheel.\n3. With the front wheel just off the ground, rock the wheel fore and aft and side to side while a second person keeps a flat hand on each wishbone joint housing in turn; a worn ball joint gives a distinct localised knock that a wheel bearing does not. Keep fingers clear of the wishbone and knuckle pinch points, and do not kneel or lie where the bike could fall on you.\n4. Repeat with the front wheel on the ground, the front brake applied and the bike rocked on its suspension by an assistant — brake-on knock that disappears brake-off points at the joints and linkage rather than the wheel.\n5. Inspect all ball-joint boots for splits, water tracks or a rusty smear; a split boot on a bike with play is effectively a confirmed joint.\n6. Check the front spring/damper strut and its mounts separately so a tired strut is not mistaken for joint play. The Duolever strut is a preloaded unit — inspect and replace as an assembly; never attempt to disassemble it.\n7. The joints are not serviceable individually on these bikes — the affected wishbone or link assembly is replaced as a unit. Remove the front wheel and, where required, unbolt and support the calipers on a strap or hook; never let a caliper hang on its brake hose, and do not operate the front brake lever while the calipers are off or the pads out, or the pistons will extend past the seals. Release and support the ABS wheel-speed sensor lead and brake hoses so nothing is stretched, kinked or trapped during removal and refitting, and disconnect the battery negative first if any sensor or wiring connector must be unplugged. Support the steering knuckle and front wheel assembly independently before releasing any pivot, since the wishbones carry the whole front end. Follow the manual's dismantling order, fastener replacement policy and tightening specifications; do not reuse fasteners the manual calls single-use. If any hydraulic line or the Integral ABS modulator is opened, the manual's full bleeding procedure — BMW diagnostic tool required for the modulator circuits — must be completed before the bike is moved.\n8. Recheck front-end geometry and all torques per the manual, confirm a firm front brake lever at standstill with correct pad-to-disc contact, check free steering lock to lock with no hose or cable interference, then a walking-pace brake test, then a low-speed ride, then re-check the new fasteners after a short shakedown before any high-speed run.",
+    "parts_needed": [
+      "Upper wishbone assembly",
+      "Lower wishbone assembly",
+      "Steering link / knuckle assembly",
+      "Ball joint boots where separately supplied",
+      "Single-use fasteners as specified by the manual"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "ESA II on the K1300 — telling a dead adjuster from a worn-out shock",
+    "description": "Where the optional ESA II is fitted, the K1300 rider selects load and damping settings electrically and small actuator motors on the suspension units make the change; ESA II differs from the earlier ESA in also altering rear spring rate rather than damping and preload alone. Unlike continuously-variable semi-active damping, ESA II steps discrete actuator motors between fixed settings, which is what makes the audible-run test below a valid diagnostic. Two quite different failures look identical from the saddle: an actuator or its wiring stops responding so the setting never changes, or the damper itself is worn out or leaking and the settings change but nothing improves. The units are not rebuildable and are replaced complete, so the diagnosis has to be right before parts are ordered. The front unit referred to below is a Duolever strut, not a telescopic fork. Note the K1300S and K1300R ran to 2016 while the K1300GT left production in 2011. Written from general knowledge — verify against the manual for the specific model and year.",
+    "make": "BMW",
+    "model": "K1300S/K1300R (2009-2016) and K1300GT (2009-2011), transverse four",
+    "year_start": 2009,
+    "year_end": 2016,
+    "severity": "medium",
+    "symptoms": [
+      "esa mode will not change",
+      "no difference between comfort and sport",
+      "suspension harsh in every setting",
+      "rear shock leaking oil",
+      "rear end wallows over bumps",
+      "suspension warning on dash",
+      "esa setting reverts on its own"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Failed damping or spring-rate adjuster motor on the rear unit",
+      "Corroded or water-damaged connector at the suspension unit",
+      "Chafed or broken wiring in the loom run to the shock",
+      "Damper worn out or leaking, so the adjustment works but has no effect",
+      "Handlebar switch or display module fault",
+      "Low system voltage from a tired battery or charging fault preventing adjustment"
+    ],
+    "fix_procedure": "1. Check the battery and charging system first — a weak battery alone can stop the adjustment running, and it is the cheapest thing to eliminate.\n2. With the ignition on and the engine off, stand beside the bike and step through the settings while listening at the rear unit: a healthy actuator makes an audible short run each time it moves. Silence at one unit with normal sound at another narrows it immediately.\n3. Switch the ignition off and disconnect the battery, negative lead first, before unplugging, back-probing or reseating any suspension-unit connector; on a CAN-bus machine, disconnecting a live actuator can set spurious faults and risks shorting the loom. Restore power only when connector work is finished.\n4. Inspect the connector at the suspension unit for corrosion, green pins or a partly backed-out terminal, and wiggle-test the loom while stepping the settings once power is restored. Clean and reseat before condemning anything.\n5. Inspect the damper body and shaft for an oil film or a wet dust seal. Oil on the body means the damper is finished regardless of whether the electronics work.\n6. SAFETY, before any removal: support the machine on level ground under the engine or frame with the rear wheel unloaded, and support the swingarm independently so it cannot drop when the lower shock mounting bolt is withdrawn — a sidestand or centre stand alone is not adequate. The suspension unit is a pressurised gas damper with a preloaded spring: do not heat, puncture, cut or grind the body, do not attempt to release the spring, and dispose of the old unit per local regulations and the manual.\n7. With the loom reconnected and the battery restored, bounce-test the bike upright on level ground with a helper and compare rebound behaviour in the softest and firmest settings; no measurable change in behaviour with the actuator confirmed running points to the damper, not the electronics.\n8. On models with front damping adjustment, repeat the listening and inspection at the front unit before assuming the fault is at the rear.\n9. Replace the failed unit complete, following the manual's specified fasteners and tightening values. Note that fitting a conventional non-ESA shock leaves the system reporting a missing unit — discuss that with the customer before quoting a non-original replacement.\n10. Reconnect the battery, torque all suspension fasteners to the manual's values, clear stored faults and run the ESA function check or initialisation with a BMW-capable diagnostic tool, confirm every setting actuates at both units, then road-test cautiously at low speed and re-check fastener security before returning the bike.",
+    "parts_needed": [
+      "ESA rear suspension unit",
+      "ESA front suspension unit where fitted",
+      "Suspension unit connector or pigtail repair parts",
+      "Dielectric grease"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Reverse assist inoperative or drops out — K1600 models with electric reverse",
+    "description": "Model-generated from general knowledge of the K1600 inline six. On K1600GTL, K1600B and Grand America (and any GT so equipped), the reverse assist is not a gearbox reverse gear: it uses the starter motor driving the drivetrain through a separately engaged reduction path, commanded electrically and gated by the interlock conditions the manual lists (transmission in neutral, sidestand, clutch and engine-running conditions). This is not the generic starting-circuit fault: reverse works the starter under a sustained low-speed, high-current duty far longer than a crank event, so a battery, earth strap or brush set that still starts the engine acceptably can be marginal for reverse — which is why supply faults present first, and sometimes only, as \"reverse does not work\". Because the same starter, battery, main earth and control logic serve normal starting, a reverse that will not engage is far more often a supply, earth, switch or interlock problem than a failed reverse mechanism. The bike is very heavy and is usually parked nose-down when the complaint appears, so treat the customer's account of \"it worked yesterday\" as a clue about battery state of charge rather than proof of an intermittent actuator.",
+    "make": "BMW",
+    "model": "K1600GT/GTL/B/Grand America (inline six, 2011+)",
+    "year_start": 2011,
+    "year_end": 2025,
+    "severity": "medium",
+    "symptoms": [
+      "reverse assist does not engage",
+      "electric reverse not working",
+      "reverse button does nothing",
+      "reverse clicks but no movement",
+      "reverse drops out immediately",
+      "cannot back bike out of parking",
+      "reverse only works when warm"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Battery low in state of charge or ageing — reverse draws starter-level current and is the first function to fail as capacity drops",
+      "Corroded or loose main earth strap or starter positive cable, giving voltage drop only under high load",
+      "Interlock condition not actually being met — not truly in neutral, sidestand switch, clutch switch or engine-running condition per the manual",
+      "Handlebar reverse button or its harness connector contacts corroded or intermittent",
+      "Reverse engagement actuator or its solenoid/wiring faulty, so the drive path never latches",
+      "Worn starter motor brushes — cranks acceptably but cannot sustain the longer, lower-speed reverse duty",
+      "Water ingress in a connector on the reverse control circuit after pressure washing"
+    ],
+    "fix_procedure": "1. SAFETY: the K1600 is very heavy. Work on level ground, keep it on the centre stand or a proper lift with the machine strapped, and never stand downhill of it. Exhaust and engine cases stay hot long after shutdown. Reverse drives the rear wheel: on the centre stand the rear wheel will spin and the machine can move or come off the stand under drive — strap it, chock the front wheel, and keep hands, tools and clothing clear of the rotating wheel and final drive. Do the final functional test with the machine on the ground on level tarmac, rider astride, both feet down, bystanders clear and ready on the front brake. Disconnect the battery (negative first, then positive; reconnect positive first) before touching the starter positive cable, the main earth strap, any high-current terminal or any control-circuit connector: these cables are unfused and battery-direct, and a shorted tool causes an arc flash, burns and possible battery rupture. Insulate the disconnected positive lead. On this CAN-bus machine, expect stored faults and any re-learn steps the manual specifies after reconnection.\n2. Confirm the complaint and the conditions. With the machine safely supported, verify neutral is genuinely selected (rock the rear wheel), the sidestand is up, and every other precondition the manual states for reverse is met. Many \"failures\" are an unmet interlock.\n3. Charge and test the battery before anything else. Use a proper battery support or charging unit, or fit a known-good fully charged battery — do not jump from a running donor vehicle — and retry reverse. If reverse now works, the fault is the battery or the charging system, not the reverse hardware. Check the battery terminals for corrosion and correct tightness per the manual's specification.\n4. With the battery disconnected, inspect and clean the main earth strap, the starter positive cable and the battery-to-frame earth points, looking for green corrosion, chafing and loose fasteners. Reconnect the battery, then retest reverse.\n5. Check the handlebar reverse switch. Operate it in short bursts only, with cool-down between attempts, as the manual specifies — reverse is the starter motor under high current, and repeated or sustained operation overheats the starter and drains the battery, creating the fault you are chasing. Listen for the engagement actuator responding. With the battery disconnected, unplug, inspect and clean the switch connector, looking for water tracking especially on a bike that is regularly pressure-washed.\n6. With the battery disconnected, if the switch commands correctly but the drive never engages, inspect the reverse engagement actuator/solenoid and its harness for damage, corrosion and secure mounting, and check that the connector is fully latched with no pushed-back pins. Reconnect the battery, then retest.\n7. With the battery disconnected, if reverse engages but the motor turns weakly or stalls, evaluate the starter motor itself — brush wear and commutator condition — remembering it is shared with the normal starting function. A starter that cranks a warm engine adequately can still be too tired for reverse duty. Reconnect the battery, then retest.\n8. Access note for the six: the reverse hardware and starter sit in a very tightly packaged bay. Expect substantial bodywork removal, and support any panel you remove so its mounting tabs are not loaded.\n9. Torque all electrical and mounting fasteners to the manual's specification with the battery disconnected, then reconnect, read and clear stored fault codes and confirm no new faults before road test. Test parking manoeuvres on level ground first, then on a mild gradient only, with a spotter, given the machine's weight.",
+    "parts_needed": [
+      "Battery (replacement if capacity test fails)",
+      "Battery cable / main earth strap and terminal hardware",
+      "Handlebar reverse switch assembly",
+      "Reverse engagement actuator or solenoid",
+      "Starter motor or brush set",
+      "Connector seals, dielectric grease, replacement fasteners as the manual specifies"
+    ],
+    "estimated_hours": 2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Duolever wishbone ball-joint wear — K1600 front-end knock with no steering-head play",
+    "description": "Model-generated from general knowledge of the K1600's front end. The K1600 uses a Duolever double-wishbone front end, not telescopic forks and not a Telelever, so the usual front-end diagnostic reflexes do not apply: there are no stanchions to pit, no fork seals to weep, and no conventional steering-head bearing to blame for a knock. Steering motion is carried by ball joints at the wishbone ends and the steering link, and it is those joints that wear. On the six the loads are higher than on the lighter Duolever fours — it is one of the heaviest touring motorcycles made, often ridden two-up with luggage — so joint wear tends to show up earlier and is worth checking specifically when a K1600 comes in with a front-end noise. The failure is progressive rather than sudden, but a badly worn joint is a steering-precision and safety issue and should not be ridden on indefinitely.",
+    "make": "BMW",
+    "model": "K1600GT/GTL/B/Grand America (inline six, 2011+)",
+    "year_start": 2011,
+    "year_end": 2025,
+    "severity": "high",
+    "symptoms": [
+      "knocking from front end",
+      "clunk over bumps at front",
+      "vague steering at speed",
+      "front end feels loose",
+      "knock when braking hard",
+      "steering notchy off centre",
+      "front noise but no fork play"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Ball-joint wear at the upper or lower wishbone ends from high sustained load, heavy touring use and two-up riding",
+      "Steering-link or knuckle joint wear producing free play felt as vagueness rather than noise",
+      "Loose or under-torqued wishbone or shock mounting fasteners, or fasteners reused where the manual specifies single-use",
+      "Ingress past a split or perished joint boot letting water and grit into the joint",
+      "Impact damage from a pothole or a drop, deforming a wishbone",
+      "Front shock lower mount or its bush worn, mimicking a wishbone joint knock",
+      "Misdiagnosis after previous work — steering-head or wheel-bearing symptoms wrongly assumed on a chassis that has neither in the conventional sense"
+    ],
+    "fix_procedure": "1. SAFETY: this is a very heavy machine. Work on level ground and use a proper lift or paddock support that takes the weight at a designed lifting point; strap the bike and never rely on the sidestand or on the front end you are about to dismantle. Have a second person present whenever the front is unloaded.\n2. Ride or roll-test first to characterise the noise: note whether it appears over sharp bumps, under braking, on turn-in, or at a constant speed. Duolever joint wear typically knocks over sharp inputs and under braking load.\n3. Confirm the basics before touching the front end — wheel bearings, brake disc and caliper mounting, mudguard and fairing fasteners, and anything in the luggage or panel area that could rattle. Rule out loose bodywork before condemning a joint.\n4. Verify that all wishbone, knuckle and shock fasteners are present and correctly torqued to the manual's specification. Do this before any hands-on play check — it is free, and a knock from an under-torqued mounting is common and costs nothing to fix.\n5. Load test with the front wheel ON THE GROUND, or with the front only just unloaded and the machine supported so it cannot be pushed off the lift. With an assistant steadying the bike, apply the front brake and rock it fore and aft in a controlled manner while you span each ball joint in turn with a flat hand, fingers clear of the pivot line. Any perceptible free play at a ball joint is a defect. Never rock a bike balanced on a lift by the front-end lifting point alone.\n6. With the front properly supported and unloaded, check each ball joint for free play by hand: grip the wishbone near the joint and try to move it in the directions the joint should not allow.\n7. Inspect every joint boot for splits, perishing and trapped grit, and inspect the wishbones for bending, cracking or paint distress near the joints — evidence of a past impact.\n8. Check the front shock lower mount and its bush for play, since it produces a very similar knock and is cheaper to address.\n9. CAUTION before disassembly: the front shock and spring are carried by the lower wishbone, so the assembly is under spring load. Support the front wheel, knuckle and shock independently before releasing any wishbone or shock fastener, follow the manual's release sequence, and keep hands clear of the pivot line because the assembly will drop when the last mount is freed. Do not separate the spring from the damper.\n10. Replace any joint or wishbone found worn, following the manual's procedure and sequence. The Duolever ball joints are supplied as part of the wishbone assembly — do not press or lever a joint out of a wishbone. Use new single-use fasteners wherever the manual calls for them and torque everything to the manual's specification; this is a load-bearing steering assembly and guessed torques are not acceptable.\n11. After reassembly, recheck all play by hand, verify the steering moves freely lock to lock with no notchiness or binding, and check front wheel alignment and brake hose and cable routing so nothing is strained at full lock.\n12. Road-test progressively, starting at low speed, and re-check fastener torque afterwards. Do not return the bike to the customer or ride it at speed if any perceptible free play remains.",
+    "parts_needed": [
+      "Upper and/or lower wishbone assembly with ball joints",
+      "Steering link or knuckle joint",
+      "Ball-joint boots where separately available",
+      "Front shock lower mount bush",
+      "Single-use fasteners as specified by the manual"
+    ],
+    "estimated_hours": 4,
+    "source": "model-generated"
+  },
+  {
+    "title": "Duolever steering link and steering pivot play — vague steering on the K1600 six",
+    "description": "Model-generated from general knowledge of the Duolever front end as fitted to the K1600 inline six. Because a Duolever's front leg assembly is located by two wishbones and cannot carry the handlebars directly, the bars sit on their own steering pivot and drive the front leg through a steering link with its own joints. That link and its pivot are a wear point unique to this front-end layout and have no analogue on a telescopic-fork or Telelever machine. Wear shows up as free play at the bars that does not turn the wheel, a small dead spot around straight-ahead, imprecise steering, and sometimes a light tick or knock when the bars are moved side to side with the bike stationary. It is easily confused with steering-head bearing wear; the isolating test is that head-bearing-style wear gives roughness or indexing through the whole rotation, while link wear gives lost motion between bar movement and wheel movement. The K1600 also loads its front strut and wishbone joints harder than the lighter transverse fours because of the machine's weight and touring loads, so front-end play checks are worth performing at every major service. Wishbone ball joint diagnosis itself is covered under the K1600 wishbone entry and the same technique applies here.",
+    "make": "BMW",
+    "model": "K1600GT/GTL/B/Grand America (inline six, 2011+)",
+    "year_start": 2011,
+    "year_end": 2025,
+    "severity": "medium",
+    "symptoms": [
+      "free play at bars k1600",
+      "bars move wheel does not",
+      "dead spot straight ahead steering",
+      "vague steering k1600gt",
+      "tick when moving bars stationary",
+      "duolever steering link play",
+      "imprecise steering heavy tourer"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Wear in the steering link joints between the handlebar assembly and the front leg",
+      "Worn or dry steering pivot bearings on the handlebar assembly",
+      "Loose steering link fasteners or a loose handlebar clamp",
+      "Water ingress past a damaged link joint boot, often after high-pressure washing of the front end",
+      "Wear in the wishbone ball joints presenting alongside link play on a heavily loaded touring machine"
+    ],
+    "fix_procedure": "1. SAFETY: support the machine on its centre stand where fitted plus a rated frame or under-engine support, on level ground, and positively secure it against tipping with tie-downs or a side support before applying any side load at the bars — a K1600 is very heavy and will not tolerate being pushed sideways on a jack. Do not support it on the wishbones or the front leg.\n2. Cheapest first: check the handlebar clamp bolts and all visible steering link fasteners for correct tightness to the manual's specification. A loose fastener reproduces most of these symptoms. SAFETY: before disturbing the handlebar assembly or its switchgear loom, switch off the ignition and disconnect the battery negative lead first — this is a CAN-bus machine and shorting the bar loom can damage control units and set stored faults.\n3. Lost-motion test: with the front wheel on the ground and the front brake held firmly, or with the raised machine positively secured, move the handlebars gently left and right. Any bar movement that does not immediately move the wheel is lost motion in the steering link or its joints. Do not brace the wheel between your knees on a raised K1600.\n4. Rotational feel test: with the front wheel raised and the machine secure, turn the bars slowly lock to lock. Notchiness, indexing at straight-ahead, or gritty drag indicates the steering pivot bearings rather than link joint wear. Smooth rotation combined with lost motion in step 3 points at the link joints.\n5. Watch the link while an assistant works the bars through the dead spot; a worn joint usually shows visible articulation at the joint before the leg starts to move.\n6. Inspect link joint boots for splits, displacement or trapped water, and inspect the link for bending or corrosion.\n7. Complete the front-end check by testing the wishbone ball joints and pivot bearings with the brake-on rock test, wheels on the ground, and inspect the spring strut body for an oil film. There are no fork seals or stanchions to inspect on this front end, and the strut is a preloaded unit that must not be disassembled.\n8. Renew any worn link joint, link, or steering pivot bearing per the manual, observing the specified assembly order, greasing and torque values, with the battery disconnected while any loom or switchgear connector is disturbed. SAFETY: these are steering components; do not attempt to remove play by over-tightening a pivot.\n9. Reconnect the battery, check for and clear any stored faults, re-check bar-to-wheel lost motion and rotational feel, and verify full steering lock in both directions without cable, hose or wiring loom strain. Road test at low speed in a traffic-free area, abort immediately if any lost motion, binding or knock remains, and re-check all steering-link and steering-pivot fastener torques after the first road test before releasing the machine for higher-speed use.",
+    "parts_needed": [
+      "Duolever steering link joints or complete steering link",
+      "Steering pivot bearings and seals",
+      "Link joint boots and clips",
+      "Single-use fasteners specified by the manual"
+    ],
+    "estimated_hours": 3,
+    "source": "model-generated"
+  }
+]
