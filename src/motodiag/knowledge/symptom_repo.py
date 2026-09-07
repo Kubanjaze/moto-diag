@@ -31,23 +31,39 @@ def get_symptom(name: str, db_path: str | None = None) -> dict | None:
         return _row_to_dict(row) if row else None
 
 
-def search_symptoms(
+def _symptom_filters(
     query: str | None = None,
     category: str | None = None,
-    db_path: str | None = None,
-) -> list[dict]:
-    """Search symptoms by keyword and/or category."""
-    sql = "SELECT * FROM symptoms WHERE 1=1"
+) -> tuple[str, list]:
+    """Shared WHERE clause for search + count (Phase 206)."""
+    sql = " WHERE 1=1"
     params: list = []
-
     if query:
         sql += " AND (name LIKE ? OR description LIKE ?)"
         params.extend([f"%{query}%", f"%{query}%"])
     if category:
         sql += " AND category = ?"
         params.append(category)
+    return sql, params
 
-    sql += " ORDER BY category, name"
+
+def search_symptoms(
+    query: str | None = None,
+    category: str | None = None,
+    db_path: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[dict]:
+    """Search symptoms by keyword and/or category.
+
+    Phase 206: pagination pushed into SQL. ``limit=None`` preserves the
+    original unbounded behaviour.
+    """
+    where, params = _symptom_filters(query, category)
+    sql = "SELECT * FROM symptoms" + where + " ORDER BY category, name"
+    if limit is not None:
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([int(limit), int(offset)])
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
@@ -62,6 +78,20 @@ def list_symptoms_by_category(category: str, db_path: str | None = None) -> list
             (category,),
         )
         return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
+def count_symptoms_matching(
+    query: str | None = None,
+    category: str | None = None,
+    db_path: str | None = None,
+) -> int:
+    """Total rows matching the same filters ``search_symptoms`` uses."""
+    where, params = _symptom_filters(query, category)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM symptoms" + where, params,
+        ).fetchone()
+    return int(row[0])
 
 
 def count_symptoms(db_path: str | None = None) -> int:

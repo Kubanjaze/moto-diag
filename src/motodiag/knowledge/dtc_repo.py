@@ -68,15 +68,17 @@ def get_dtc(code: str, make: str | None = None, db_path: str | None = None) -> d
         return _row_to_dict(row) if row else None
 
 
-def search_dtcs(
+def _dtc_filters(
     query: str | None = None,
     category: str | None = None,
     severity: str | None = None,
     make: str | None = None,
-    db_path: str | None = None,
-) -> list[dict]:
-    """Search DTCs with optional filters."""
-    sql = "SELECT * FROM dtc_codes WHERE 1=1"
+) -> tuple[str, list]:
+    """Shared WHERE clause for search + count (Phase 206).
+
+    One definition so a bounded page and its total can never disagree.
+    """
+    sql = " WHERE 1=1"
     params: list = []
 
     if query:
@@ -92,11 +94,49 @@ def search_dtcs(
         sql += " AND (make = ? OR make IS NULL)"
         params.append(make)
 
-    sql += " ORDER BY code"
+    return sql, params
+
+
+def search_dtcs(
+    query: str | None = None,
+    category: str | None = None,
+    severity: str | None = None,
+    make: str | None = None,
+    db_path: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[dict]:
+    """Search DTCs with optional filters.
+
+    Phase 206: ``limit``/``offset`` push pagination into SQL; the route
+    used to fetch everything and slice in Python. ``limit=None`` keeps
+    the original unbounded behaviour for callers that want it.
+    """
+    where, params = _dtc_filters(query, category, severity, make)
+    sql = "SELECT * FROM dtc_codes" + where + " ORDER BY code"
+    if limit is not None:
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([int(limit), int(offset)])
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
         return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
+def count_dtcs_matching(
+    query: str | None = None,
+    category: str | None = None,
+    severity: str | None = None,
+    make: str | None = None,
+    db_path: str | None = None,
+) -> int:
+    """Total rows matching the same filters ``search_dtcs`` uses."""
+    where, params = _dtc_filters(query, category, severity, make)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM dtc_codes" + where, params,
+        ).fetchone()
+    return int(row[0])
 
 
 def list_dtcs_by_make(make: str, db_path: str | None = None) -> list[dict]:

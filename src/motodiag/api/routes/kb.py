@@ -21,12 +21,14 @@ from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import ApiKey, require_api_key
 from motodiag.core.search import search_all
 from motodiag.knowledge.dtc_repo import (
-    get_dtc, list_all_categories, search_dtcs,
+    count_dtcs_matching, get_dtc, list_all_categories, search_dtcs,
 )
 from motodiag.knowledge.issues_repo import (
-    get_known_issue, search_known_issues,
+    count_known_issues_matching, get_known_issue, search_known_issues,
 )
-from motodiag.knowledge.symptom_repo import search_symptoms
+from motodiag.knowledge.symptom_repo import (
+    count_symptoms_matching, search_symptoms,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -284,12 +286,19 @@ def search_dtcs_endpoint(
     _api_key: ApiKey = Depends(require_api_key),
     db_path: str = Depends(get_db_path),
 ) -> DTCListResponse:
+    # Phase 206: LIMIT in SQL, and the total from a COUNT. This used to
+    # fetch EVERY row and slice in Python, so asking for 50 materialised
+    # the whole table just to discard it.
     rows = search_dtcs(
+        query=q, category=category, severity=severity, make=make,
+        db_path=db_path, limit=limit,
+    )
+    total = count_dtcs_matching(
         query=q, category=category, severity=severity, make=make,
         db_path=db_path,
     )
-    items = [_dtc_row_to_response(r) for r in rows[:limit]]
-    return DTCListResponse(items=items, total=len(rows))
+    items = [_dtc_row_to_response(r) for r in rows]
+    return DTCListResponse(items=items, total=total)
 
 
 @router.get(
@@ -330,10 +339,13 @@ def search_symptoms_endpoint(
     db_path: str = Depends(get_db_path),
 ) -> SymptomListResponse:
     rows = search_symptoms(
+        query=q, category=category, db_path=db_path, limit=limit,
+    )
+    total = count_symptoms_matching(
         query=q, category=category, db_path=db_path,
     )
-    items = [_symptom_row_to_response(r) for r in rows[:limit]]
-    return SymptomListResponse(items=items, total=len(rows))
+    items = [_symptom_row_to_response(r) for r in rows]
+    return SymptomListResponse(items=items, total=total)
 
 
 # ---------------------------------------------------------------------------
@@ -355,11 +367,16 @@ def search_issues_endpoint(
     _api_key: ApiKey = Depends(require_api_key),
     db_path: str = Depends(get_db_path),
 ) -> KnownIssueListResponse:
+    # The one that mattered: 6,600 rows materialised to return 50.
     rows = search_known_issues(
         query=q, make=make, model=model, year=year, db_path=db_path,
+        limit=limit,
     )
-    items = [_issue_row_to_response(r) for r in rows[:limit]]
-    return KnownIssueListResponse(items=items, total=len(rows))
+    total = count_known_issues_matching(
+        query=q, make=make, model=model, year=year, db_path=db_path,
+    )
+    items = [_issue_row_to_response(r) for r in rows]
+    return KnownIssueListResponse(items=items, total=total)
 
 
 @router.get(

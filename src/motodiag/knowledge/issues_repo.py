@@ -52,16 +52,21 @@ def get_known_issue(issue_id: int, db_path: str | None = None) -> dict | None:
         return _row_to_dict(row) if row else None
 
 
-def search_known_issues(
+def _known_issue_filters(
     query: str | None = None,
     make: str | None = None,
     model: str | None = None,
     year: int | None = None,
     severity: str | None = None,
-    db_path: str | None = None,
-) -> list[dict]:
-    """Search known issues with optional filters."""
-    sql = "SELECT * FROM known_issues WHERE 1=1"
+) -> tuple[str, list]:
+    """Build the shared WHERE clause for search + count.
+
+    Phase 206: extracted so the count and the page cannot drift. The
+    route needs both a bounded page AND an honest total, and computing
+    the total by len()-ing an unbounded fetch is what this phase is
+    fixing — so the clause has exactly one definition.
+    """
+    sql = " WHERE 1=1"
     params: list = []
 
     if query:
@@ -80,11 +85,57 @@ def search_known_issues(
         sql += " AND severity = ?"
         params.append(severity)
 
-    sql += " ORDER BY severity DESC, title"
+    return sql, params
+
+
+def search_known_issues(
+    query: str | None = None,
+    make: str | None = None,
+    model: str | None = None,
+    year: int | None = None,
+    severity: str | None = None,
+    db_path: str | None = None,
+    limit: int | None = None,
+    offset: int = 0,
+) -> list[dict]:
+    """Search known issues with optional filters.
+
+    Phase 206: ``limit``/``offset`` push pagination into SQL. The API
+    route previously fetched EVERY row and sliced in Python
+    (``rows[:limit]``), so asking for 50 issues materialised all 6,600.
+    ``limit=None`` preserves the original unbounded behaviour for
+    callers that genuinely want everything.
+    """
+    where, params = _known_issue_filters(query, make, model, year, severity)
+    sql = "SELECT * FROM known_issues" + where + " ORDER BY severity DESC, title"
+    if limit is not None:
+        sql += " LIMIT ? OFFSET ?"
+        params.extend([int(limit), int(offset)])
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
         return [_row_to_dict(row) for row in cursor.fetchall()]
+
+
+def count_known_issues_matching(
+    query: str | None = None,
+    make: str | None = None,
+    model: str | None = None,
+    year: int | None = None,
+    severity: str | None = None,
+    db_path: str | None = None,
+) -> int:
+    """Total rows matching the same filters ``search_known_issues`` uses.
+
+    Phase 206: lets a route report an honest ``total`` alongside a
+    bounded page, without fetching the rows to count them.
+    """
+    where, params = _known_issue_filters(query, make, model, year, severity)
+    with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT COUNT(*) FROM known_issues" + where, params,
+        ).fetchone()
+    return int(row[0])
 
 
 def find_issues_by_symptom(symptom: str, db_path: str | None = None) -> list[dict]:
