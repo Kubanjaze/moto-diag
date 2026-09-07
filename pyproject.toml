@@ -93,9 +93,18 @@ motodiag = "motodiag.cli.main:cli"
 where = ["src"]
 
 [tool.setuptools.package-data]
+# Phase 209: this list is hand-maintained and drifted — `compat_data`
+# was missing, so the built wheel carried 16 of the source tree's 19
+# data files and `motodiag hardware compat` was broken on every
+# installed copy. tests/test_phase209_packaging.py now walks the source
+# tree and asserts every non-.py file reaches the wheel, so the next
+# omission fails a test instead of shipping.
 "motodiag.hardware.scenarios" = ["*.yaml"]
+"motodiag.hardware.compat_data" = ["*.json"]
 "motodiag.advanced" = ["*.json"]
 "motodiag.advanced.data" = ["*.json"]
+"motodiag.knowledge.seed.dtc_codes" = ["*.json"]
+"motodiag.knowledge.seed.knowledge" = ["*.json"]
 
 [tool.ruff]
 line-length = 100
@@ -107,3 +116,10 @@ select = ["E", "F", "I", "W"]
 [tool.pytest.ini_options]
 testpaths = ["tests"]
 addopts = "-v --tb=short"
+markers = [
+    # Phase 209: builds a wheel and installs it into a throwaway venv.
+    # Deselect with `-m "not slow"` — but note that this is the only
+    # coverage of the artefact we actually distribute, so skipping it
+    # routinely reopens the gap it exists to close.
+    "slow: builds and installs a real wheel (~10s)",
+]

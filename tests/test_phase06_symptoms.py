@@ -75,8 +75,8 @@ class TestSymptomLoader:
         assert count_symptoms(db_path) == 2
 
     def test_load_real_symptoms(self, db_path):
-        from motodiag.core.config import DATA_DIR
-        symptoms_file = DATA_DIR / "knowledge" / "symptoms.json"
+        from motodiag.core.config import SEED_DATA_DIR
+        symptoms_file = SEED_DATA_DIR / "knowledge" / "symptoms.json"
         if symptoms_file.exists():
             count = load_symptom_file(symptoms_file, db_path)
             assert count == 40

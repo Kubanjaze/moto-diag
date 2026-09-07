@@ -1,0 +1,47 @@
+# MotoDiag API (Phase 209).
+#
+# UNVERIFIED: Docker was unavailable on the machine this was written on,
+# so neither this file nor the Dockerfile has ever been built or run.
+# See F76 before trusting it.
+#
+#   docker compose up --build
+#   curl localhost:8000/healthz
+
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    volumes:
+      # The database and uploaded media. Without this the shop's data
+      # dies with the container.
+      - motodiag-data:/var/lib/motodiag
+    environment:
+      # dev is the default and keeps this file runnable as-is. Setting
+      # prod turns on the Phase 207 startup guards, which will REFUSE to
+      # start unless the billing provider and public URL below are real.
+      MOTODIAG_ENV: dev
+
+      # In prod this must be `stripe`. The `fake` provider verifies
+      # webhooks against a hardcoded string on an unauthenticated,
+      # rate-limit-exempt route, so anyone could grant themselves a paid
+      # tier; `create_app` refuses to start on prod+fake for that reason.
+      MOTODIAG_BILLING_PROVIDER: fake
+      # MOTODIAG_STRIPE_API_KEY: ${MOTODIAG_STRIPE_API_KEY}
+      # MOTODIAG_STRIPE_WEBHOOK_SECRET: ${MOTODIAG_STRIPE_WEBHOOK_SECRET}
+
+      # Customer share links are rendered against this origin. The
+      # default is localhost, which works on your machine and nowhere
+      # else — a link built from it resolves to the customer's OWN
+      # phone. Set it to a host they can actually reach.
+      # MOTODIAG_PUBLIC_BASE_URL: https://motodiag.example.com
+
+      # Default is a localhost dev allowlist (see F69).
+      # MOTODIAG_API_CORS_ORIGINS: https://app.example.com
+
+      # AI-assisted diagnosis only; every other route works without it.
+      # ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY}
+    restart: unless-stopped
+
+volumes:
+  motodiag-data:

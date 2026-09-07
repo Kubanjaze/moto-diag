@@ -6,14 +6,14 @@ from motodiag.knowledge.loader import load_known_issues_file
 from motodiag.knowledge.issues_repo import (
     search_known_issues, find_issues_by_symptom, find_issues_by_dtc, count_known_issues,
 )
-from motodiag.core.config import DATA_DIR
+from motodiag.core.config import SEED_DATA_DIR
 
 
 @pytest.fixture
 def db_path(tmp_path):
     path = str(tmp_path / "test.db")
     init_db(path)
-    f = DATA_DIR / "knowledge" / "known_issues_honda_dualsport.json"
+    f = SEED_DATA_DIR / "knowledge" / "known_issues_honda_dualsport.json"
     if f.exists():
         load_known_issues_file(f, path)
     return path

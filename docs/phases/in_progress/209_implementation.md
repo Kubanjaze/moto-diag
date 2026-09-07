@@ -1,6 +1,6 @@
 # Phase 209 — Packaging + distribution
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-07
 
 ## Goal
 
@@ -139,21 +139,40 @@ we hand people work."
 
 ## Verification Checklist
 
-- [ ] `pip install dist/*.whl` into a venv with **no extras**, then
-      `motodiag --version`, `motodiag --help`, `motodiag db init`,
-      `motodiag code P0115` all succeed
-- [ ] `motodiag hardware compat list` works on the installed copy
-      (the missing-data-files case)
-- [ ] Default `db_path` on an installed copy is a user data directory,
-      not inside the venv
-- [ ] A source checkout still uses the repo-root `data/` — no existing
-      development database moves
-- [ ] Every non-`.py` file under `src/motodiag/` appears in the wheel —
-      asserted, not counted by hand
-- [ ] The guard fails when the fix is reverted
-- [ ] `docker build` succeeds and the container answers `/healthz`
-- [ ] The image does not contain the local database or the phase docs
-- [ ] Backend regression green; F9 lint clean
+- [x] `pip install dist/*.whl` into a venv with **no extras**, then
+      `motodiag --version`, `--help`, `db init`, `code P0115` all
+      succeed — run by hand and asserted by test
+- [x] The no-extras venv provably lacks FastAPI, so the passing CLI is
+      not passing by accident
+- [x] `motodiag hardware compat seed --yes` then `compat list` shows 24
+      adapters on the installed copy
+- [x] `db init` on an installed copy prints `Loaded ...` lines; a build
+      without seed data now **fails loudly** instead of reporting
+      "Database ready" over an empty knowledge base
+- [x] Default `db_path` on an installed copy is under the user's home,
+      with `site-packages` and `/lib/python` asserted absent
+- [x] A source checkout still uses the repo-root `data/` — asserted, so
+      no development database moved
+- [x] `MOTODIAG_DB_PATH` still overrides both
+- [x] Every non-`.py` file under `src/motodiag/` appears in the wheel —
+      walked and asserted, not counted by hand (19 → 88 files after the
+      seed data moved in)
+- [x] The guard fails when the fix is reverted: restoring the eager
+      `auth.deps` import broke `test_version_runs_without_any_extra` and
+      `test_help_lists_the_command_groups`
+- [x] `motodiag serve` starts from a wheel installed with `[api]` alone
+      and answers `/healthz` and `/v1/version` — verified by curl
+      against a real process, then pinned by test
+- [x] Backend regression green; F9 lint clean
+- [ ] **`docker build` — NOT RUN.** Docker is not installed on this
+      machine. The Dockerfile, `.dockerignore` and compose file are
+      written and carry that warning in their own headers; filed as F76.
+      What was verified instead is everything the image *does*, outside
+      a container: wheel + `api` extra installs, `motodiag serve`
+      starts, `/healthz` returns 200
+- [ ] **The image does not contain the local database or phase docs —
+      NOT VERIFIED**, same reason. `.dockerignore` excludes them; nobody
+      has inspected a built image to confirm
 
 ## Risks
 
@@ -176,3 +195,88 @@ we hand people work."
   became the shipped target and is documented as unverified. Claiming a
   Play Store path would be inventing one; the roadmap row is answered
   honestly instead.
+
+
+## Deviations from Plan
+
+**The plan named three defects; there were five.** Two more surfaced
+only by running the artefact further than the audit had.
+
+4. **The seed knowledge base was not in the package at all.** `db init`
+   loads DTCs, symptoms and ~6,600 known issues from
+   `DATA_DIR / "knowledge"` — the repo's `data/` directory, which no
+   wheel has ever contained. On an installed copy every `is_dir()` /
+   `exists()` guard silently found nothing, and the command still
+   printed **"Database ready."** The knowledge base *is* the product;
+   shipping without it and reporting success was the worst defect in
+   the phase, and the one the audit's three findings would have left in
+   place. 69 JSON files (1.5 MB) moved into
+   `src/motodiag/knowledge/seed/`, exposed as `SEED_DATA_DIR`, and
+   `db init` now exits non-zero with a plain message when the seed
+   directory is absent rather than claiming success.
+
+5. **`motodiag serve` could not start on an `[api]` install.**
+   `media/photo_pipeline.py` imported Pillow at module level, and both
+   `api/errors.py` and `routes/photos.py` import that module at load
+   time — so the API died on `ModuleNotFoundError: No module named
+   'PIL'` before binding a port. Pillow is in the `vision` extra. Same
+   shape as defect 1, found the same way: by running the thing. Pillow
+   is now resolved at call time behind `PillowUnavailableError`, which
+   names the extra to install, so an `[api]` deployment serves
+   everything except photo processing.
+
+**Scope added:** `docs/guide/install.md` and `docs/releasing.md` were
+in the plan as one line each; both are full documents, and both were
+added to Phase 208's docs-drift guard so they cannot rot unnoticed.
+
+**Scope not taken:** the roadmap's "standalone binary" row is answered
+with `pipx`, not PyInstaller, with the reasoning written into the
+install guide rather than left as a silent omission. Play Store is
+answered honestly as unscoped — Android has not been built since iOS
+became the shipped target.
+
+**A test of mine was wrong in an instructive way.** The first version of
+`test_the_app_object_builds_without_pillow` asserted
+`len(app.routes) > 50`. It failed at 21 on the clean install, which
+looked like catastrophic router loss. It was not: FastAPI 0.141 stopped
+flattening included routers into `app.routes` and stores an
+`_IncludedRouter` per call, while `openapi()["paths"]` still returned
+all 80. The dev venv pins 0.136; a fresh install resolves 0.141,
+because `pyproject.toml` says `fastapi>=0.110`. The assertion now tests
+the OpenAPI contract instead of an internal list, and the version
+spread it exposed is filed as F77.
+
+**Collateral:** moving the seed data required updating 71 test files
+that referenced `DATA_DIR / "knowledge"`. A mechanical rewrite missed
+one case — `tests/test_pricing.py` also used `DATA_DIR / "pricing"`
+(test fixtures, not shipped data), so the rewritten import left a
+`NameError` in 24 tests. Caught by the regression, fixed, and the same
+pattern scanned for across every touched file.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Defects found | 5 (plan predicted 3) |
+| State of `pip install motodiag` before | CLI could not start — every command |
+| Data files in the wheel | 16 → 88 |
+| Wheel size | 998 KB → 1.5 MB (the knowledge base) |
+| Packaging guard tests | 23 |
+| Test files updated for the seed move | 71 |
+| Backend regression | 4902 passed / 0 failed |
+| F9 lint | clean |
+| Docker | written, **never built** (F76) |
+
+**Key finding: the test suite proved the code worked and said nothing
+about the product.** 4,879 tests passed against a distribution that
+could not start, could not find its own knowledge base, and would have
+written a shop's database inside a virtualenv. Every one of them ran in
+an environment — source tree, all extras installed — that no user will
+ever have.
+
+That is the same lesson as Phase 208 one phase later, and the pattern is
+now explicit enough to name: **the suite tests the code; it does not
+test the boundary between the code and the world.** Documentation
+crossed one boundary (208) and packaging crossed another (209), and each
+found defects the other could not. The remaining uncrossed boundary is
+deployment, which is F64 and F76.

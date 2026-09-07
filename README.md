@@ -24,11 +24,21 @@ Two pieces ship from two repos:
 ## Install
 
 ```bash
+pipx install motodiag
+motodiag db init
+```
+
+Or from source, to work on it:
+
+```bash
 python3 -m venv .venv
 source .venv/bin/activate
 pip install -e ".[dev]"
 motodiag db init
 ```
+
+Full instructions — extras, Docker, where your data lives — in the
+[install guide](docs/guide/install.md).
 
 `db init` creates the database and loads the starter data: DTC
 definitions, symptom entries, and ~6,600 curated known issues.
@@ -74,7 +84,9 @@ bike from garage to finished diagnosis in about ten minutes.
 | [Quickstart](docs/guide/quickstart.md) | A mechanic diagnosing one bike |
 | [Shop workflow](docs/guide/shop-workflow.md) | Intake → work order → parts → labour → invoice → customer link |
 | [HTTP API](docs/guide/api.md) | Anyone integrating, or running the iOS app |
+| [Install](docs/guide/install.md) | Getting it onto a machine |
 | [Contributing](docs/contributing.md) | Working on MotoDiag itself |
+| [Releasing](docs/releasing.md) | Cutting a release |
 
 ## What's in the box
 
