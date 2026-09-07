@@ -354,6 +354,44 @@ async def _validation_handler(request: Request, exc: Exception):
     return await request_validation_exception_handler(request, exc)
 
 
+async def _overflow_handler(request: Request, exc: Exception):
+    """An id too large for SQLite is invalid input, not a server fault.
+
+    Phase 207. SQLite stores 64-bit signed integers, so binding a larger
+    Python int raises ``OverflowError`` deep in the repo layer — the
+    request reached the database before anything rejected it. That
+    surfaced as a **500 with a full stack trace in the log** on every
+    route family with an integer id (sessions, reports, videos, shop).
+
+    Nothing leaked to the client (the 500 body is deliberately bare),
+    but it let anyone holding a key fill the error log with tracebacks,
+    and it broke the pattern its neighbours already follow: a
+    non-numeric id is a 422 and a negative one a 404. Only the
+    oversized case answered 500.
+
+    ``OverflowError`` derives from ``ArithmeticError``, NOT
+    ``ValueError``, which is why the existing ValueError handler never
+    caught it.
+
+    Handled centrally rather than by bounding all 148 integer path
+    parameters: a per-parameter bound is the more precise fix but would
+    be a large error-prone diff that every future route must remember,
+    and forgetting it would silently restore the 500.
+    """
+    rid = getattr(request.state, "request_id", None)
+    logger.info(
+        "rejected out-of-range id on %s %s (request_id=%s)",
+        request.method, request.url.path, rid,
+    )
+    return _problem_response(
+        request, status=422, type_slug="validation-error",
+        title="Request validation failed",
+        detail=(
+            "An identifier in the path is outside the supported range."
+        ),
+    )
+
+
 async def _unhandled_handler(request: Request, exc: Exception):
     """Last-resort handler. Logs the stack trace; returns a safe
     500 body (no server internals exposed to clients)."""
@@ -394,4 +432,7 @@ def register_exception_handlers(app: FastAPI) -> None:
     app.add_exception_handler(
         RequestValidationError, _validation_handler,
     )
+    # Phase 207 — an oversized id is invalid input, not a server fault.
+    # Registered before the catch-all so it wins.
+    app.add_exception_handler(OverflowError, _overflow_handler)
     app.add_exception_handler(Exception, _unhandled_handler)
