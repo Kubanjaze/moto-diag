@@ -210,7 +210,17 @@ class TestSkipMigrationsFlag:
             result = runner.invoke(root, ["serve", "--skip-migrations"])
 
         assert result.exit_code == 0
-        assert "WARNING" not in (result.stderr or "")
+        # Scoped to the MIGRATION warning, which is what this test is
+        # about (see the docstring). The original blanket
+        # `"WARNING" not in stderr` was accurate while migrations were
+        # the only thing `serve` warned about; F64 added a startup check
+        # on the public share-link origin, which legitimately warns in
+        # dev. Note this runs in-process via CliRunner and therefore
+        # reads the developer's real .env, so unrelated startup warnings
+        # vary by machine — another reason to assert on the specific
+        # warning rather than their absence in general.
+        stderr = result.stderr or ""
+        assert "WARNING: DB schema_version" not in stderr
 
 
 # ---------------------------------------------------------------------
