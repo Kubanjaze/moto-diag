@@ -394,7 +394,7 @@ def search_issues_endpoint(
     _api_key: ApiKey = Depends(require_api_key),
     db_path: str = Depends(get_db_path),
 ) -> KnownIssueListResponse:
-    # The one that mattered: 6,600 rows materialised to return 50.
+    # The one that mattered: every row materialised to return 50.
     rows = search_known_issues(
         query=q, make=make, model=model, year=year, db_path=db_path,
         limit=limit,

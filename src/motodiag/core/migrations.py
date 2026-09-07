@@ -3423,14 +3423,14 @@ MIGRATIONS: list[Migration] = [
         name="known_issues_sort_index",
         description=(
             "Phase 206: `known_issues` is the only large table in the "
-            "product (6,600 rows) and was the only one NOT under "
+            "product and was the only one NOT under "
             "migration control — it is created by SCHEMA_SQL with a "
             "single (make, model) index that its primary query path "
             "cannot use, because that path filters `make LIKE '%x%'` "
             "(leading wildcard, unusable by any B-tree) and then sorts "
             "`ORDER BY severity DESC, title` on unindexed columns. "
             "EXPLAIN QUERY PLAN showed `SCAN` + `USE TEMP B-TREE FOR "
-            "ORDER BY`: every listing sorted all 6,600 rows to return "
+            "ORDER BY`: every listing sorted the whole table to return "
             "50. With this index the plan becomes an ordered walk that "
             "stops at the LIMIT. Additive only — the table and its rows "
             "already exist from SCHEMA_SQL, so this adds indexes and "

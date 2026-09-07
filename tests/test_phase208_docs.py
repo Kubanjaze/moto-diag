@@ -181,6 +181,55 @@ class TestDocumentedRoutesExist:
         assert _normalise("/v1/reports/sessions/1/share") not in schema_paths
 
 
+class TestDocumentedKnowledgeBaseSizeIsTheRealSize:
+    """The docs advertised "~6,600 curated known issues" against a seed
+    set of 660 — a tenfold overstatement of the product's core asset,
+    and it had reached the README, three guides and the launch
+    checklist.
+
+    It started as a row-count claim in a Phase 206 migration comment and
+    was copied forward by everything that cited it, which is exactly how
+    an unchecked number spreads. Counted from the seed files here so the
+    documented figure cannot drift from what actually ships.
+    """
+
+    @staticmethod
+    def _seeded_issue_count() -> int:
+        import json
+
+        from motodiag.core.config import SEED_DATA_DIR
+
+        total = 0
+        for path in (SEED_DATA_DIR / "knowledge").glob("known_issues_*.json"):
+            total += len(json.loads(path.read_text(encoding="utf-8")))
+        return total
+
+    def test_the_seed_files_are_the_source_of_the_number(self):
+        count = self._seeded_issue_count()
+        assert count > 0, "no known-issue seed files found"
+
+    def test_no_doc_overstates_the_knowledge_base(self):
+        """Any figure a doc pairs with 'known issues' must be the real
+        one. Catches both the stale 6,600 and any future drift."""
+        import re
+
+        real = self._seeded_issue_count()
+        pattern = re.compile(
+            r"([\d][\d,]*)\s+(?:curated\s+)?(?:known issues|curated entries)",
+            re.I,
+        )
+        offenders = []
+        for doc in _user_docs():
+            for match in pattern.findall(doc.read_text(encoding="utf-8")):
+                claimed = int(match.replace(",", ""))
+                if claimed != real:
+                    offenders.append(
+                        f"{doc.relative_to(REPO_ROOT.parent)}: claims "
+                        f"{claimed}, seed files hold {real}"
+                    )
+        assert not offenders, "\n  " + "\n  ".join(offenders)
+
+
 class TestNoWindowsOnlyInstructions:
     """Both READMEs shipped `.venv/Scripts/activate` and PowerShell
     windows long after macOS became the only host. A reader following
