@@ -237,7 +237,7 @@ last rather than first.
 So you know what you are *not* on the hook for:
 
 - **The product.** 255 CLI commands, 80 API routes, 25 iOS screens,
-  740 curated known issues shipped inside the package.
+  745 curated known issues shipped inside the package.
 - **Tests.** 4,902 backend, green. Mobile `tsc` and lint clean.
 - **Security.** Phase 207 audited it and fixed six defects including a
   cross-tenant data leak. What remains is configuration, listed above.

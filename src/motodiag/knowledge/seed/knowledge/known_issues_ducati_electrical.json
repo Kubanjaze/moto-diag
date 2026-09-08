@@ -1,0 +1,153 @@
+[
+  {
+    "title": "Ducati proprietary fault codes are invisible to a generic scanner — \"no codes found\" is not \"no fault\"",
+    "description": "A Ducati stores two different kinds of fault information. Emissions-related faults appear as standard OBD-II P-codes that any decent scanner can read. Everything else — the manufacturer's own fault memory covering engine management, immobiliser, ABS, electronic suspension and the rest — is in Ducati's own numbering, reachable only by the factory DDS tool or a Ducati-capable aftermarket tool. A shop that plugs in a generic reader, sees a clean list and tells the customer there are no faults has read one of the two memories. On newer bikes the problem is worse: some CAN implementations reject cheap ELM327 clones outright, so the tool reports nothing because it never established a session at all. Written from general knowledge — confirm which tool reaches which memory on the specific model before reporting a result.",
+    "make": "Ducati",
+    "model": "Ducati models with electronic engine management (CAN-bus era)",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "no codes found on a generic scanner",
+      "warning light with no stored code",
+      "scanner will not connect",
+      "cheap elm327 clone fails to link",
+      "fault persists after a clean scan"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Manufacturer fault memory using Ducati's own numbering rather than the P-code space, so a generic scanner cannot see it",
+      "Generic OBD scan reading only the emissions memory and reporting that as the whole picture",
+      "Counterfeit or low-quality ELM327 hardware failing to establish a session on newer Ducati CAN implementations",
+      "Shop reporting 'no faults' from a tool that never had access to the memory holding the fault"
+    ],
+    "fix_procedure": "1. Establish which tool you actually have and what it can reach. A generic OBD-II reader sees emissions P-codes. Ducati's own fault memory needs the factory DDS or a Ducati-capable aftermarket tool. 2. Never report 'no faults found' from a generic scan alone. Report what was scanned: 'no emissions codes stored; manufacturer memory not read'. That distinction is the difference between a diagnosis and a guess. 3. If the tool will not connect at all, suspect the tool before the bike — counterfeit ELM327 silicon fails on newer Ducati CAN and produces exactly this. Try a known-good adapter before condemning the bike's diagnostic port or ECU. 4. Check the diagnostic connector and its wiring for damage and corrosion before assuming a communication fault. 5. Where a warning light is present with no accessible code, the bike needs a Ducati-capable tool. Say so plainly rather than clearing the light. 6. Do not clear codes you cannot read; clearing an emissions memory does not touch the manufacturer memory and destroys freeze-frame data you may need.",
+    "parts_needed": [
+      "A Ducati-capable diagnostic tool or a referral to a shop with one",
+      "A known-good OBD adapter for the connection test",
+      "Diagnostic connector or wiring repair only if damage is found"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Throttle position reset after throttle-body work is a required step, not an optional one",
+    "description": "Ducati engine management learns a throttle position zero, and that learned value has to be re-established with a Ducati-capable tool after the throttle bodies are removed, cleaned, balanced or replaced. Skip it and the ECU is fuelling against a stale reference: the bike may idle badly, hunt, run rough off closed throttle, or set a throttle-position fault, and every symptom points at parts that are not the problem. This is the most common way a competent mechanical job on a Ducati produces a bike that runs worse than it did before. Written from general knowledge — confirm the exact reset procedure and which tools can perform it for the model against the manual.",
+    "make": "Ducati",
+    "model": "Ducati models with electronic throttle position sensing",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "runs worse after throttle body work",
+      "hunting idle after a service",
+      "rough off closed throttle",
+      "throttle position fault after cleaning",
+      "idle will not settle after balancing"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Throttle position zero not relearned after throttle-body removal, cleaning, balancing or replacement",
+      "Shop without a Ducati-capable tool completing the mechanical work and being unable to finish the procedure",
+      "Assumption that a throttle-body clean is a purely mechanical job, as it is on many other makes",
+      "Reset attempted with a tool that cannot perform Ducati service functions"
+    ],
+    "fix_procedure": "1. Before booking throttle-body work on a Ducati, confirm the shop has a tool that can perform the throttle position reset. If it does not, the job is not complete and should not be started. 2. Do the mechanical work — cleaning, balancing, refitting — per the manual. 3. Perform the throttle position reset with a Ducati-capable tool, following the manual's procedure exactly, including any conditions on engine temperature or ignition state. 4. Re-check idle and off-idle behaviour after the reset, warm. A bike that hunted before the reset and settles after it confirms the diagnosis. 5. If symptoms persist after a correct reset, then investigate mechanically — air leaks at the intake joints, balance, or a genuine sensor fault. 6. Record that the reset was performed in the service history, because the next shop will otherwise repeat the whole diagnosis.",
+    "parts_needed": [
+      "A Ducati-capable diagnostic tool for the reset",
+      "Throttle-body gaskets or seals disturbed during the work"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "The DDA is a data logger, not a fault reader — owners and shops routinely confuse the two",
+    "description": "Ducati's Data Analyser is a logging accessory: it records ride data such as speed, rpm, throttle and lap information for later review, and on some models it is an optional part fitted at purchase. It is not a diagnostic tool, does not read the manufacturer fault memory, and cannot perform service functions such as a throttle position reset. Owners arrive believing a bike 'has the diagnostic system fitted' because it has the logger, and shops occasionally quote against it. Establishing what is actually on the bike, and what it can do, saves an appointment. Written from general knowledge — confirm what is fitted to the specific machine and what the version installed supports.",
+    "make": "Ducati",
+    "model": "Ducati models offered with the Ducati Data Analyser accessory",
+    "year_start": 2007,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "owner says bike has diagnostics fitted",
+      "data logger mistaken for a scan tool",
+      "cannot read faults with the dda",
+      "logger fitted but no fault access",
+      "unsure what the accessory does"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Ducati Data Analyser being a ride-data logging accessory rather than a diagnostic interface",
+      "Name similarity and dealer-fitted status suggesting a diagnostic capability it does not have",
+      "Owner assuming a logged-data readout is the same as a fault-memory readout",
+      "Shop quoting or scheduling on the assumption that the bike carries diagnostic capability"
+    ],
+    "fix_procedure": "1. Establish what is actually fitted before scheduling: a data logger records ride data, a diagnostic tool reads the fault memory and runs service functions. They are different things. 2. If the customer reports a fault, plan for a Ducati-capable diagnostic tool regardless of whether a logger is fitted. 3. Logged ride data can still be useful evidence for an intermittent complaint — throttle position, rpm and speed traces around the moment of a fault can narrow a diagnosis considerably, so ask for it where the owner has it. 4. Do not attempt to clear faults or perform service functions through a logging accessory; it cannot do either. 5. Explain the distinction to the owner once, clearly, so the expectation does not recur at the next visit.",
+    "parts_needed": [
+      "None — identification and expectation setting"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Ducati immobiliser and the coded key — a no-start that is security, not electrical failure",
+    "description": "Ducatis from the early 2000s carry an immobiliser that will not allow the engine to start unless it recognises the key. A failed handshake produces a no-start with a dashboard indication, and the bike behaves as though something electrical has broken: the starter may turn but the fuel pump will not prime and there is no spark. The usual causes are mundane — a worn or damaged transponder, a second key fob or another transponder sitting next to the ignition and interfering, a weak battery dropping voltage below what the system needs, or an aftermarket accessory near the antenna ring. Diagnosing it as a fuel or ignition fault wastes a lot of time on a system that is working exactly as designed. Written from general knowledge — confirm the immobiliser indication and any key-learning procedure for the model against the manual.",
+    "make": "Ducati",
+    "model": "Ducati models with the coded-key immobiliser (2001+)",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "cranks but will not start",
+      "immobiliser light on the dash",
+      "no fuel pump prime",
+      "starts with one key not the other",
+      "no start after a battery change"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Transponder in the key worn, damaged or failing to be recognised by the antenna ring",
+      "A second key or another transponder on the same keyring interfering with the read",
+      "Weak battery dropping system voltage below what the immobiliser handshake needs, common after a bike has stood",
+      "Aftermarket accessory or wiring routed near the ignition antenna ring disturbing the read"
+    ],
+    "fix_procedure": "1. Look at the dash before anything else — an immobiliser indication turns this from an electrical diagnosis into a security one immediately. 2. Try the other key, and try each key with all other keys and transponders removed from the keyring. Interference from a second transponder is common and costs nothing to rule out. 3. Check battery state of charge and terminal condition. A marginal battery will crank an engine while failing the immobiliser handshake, which is exactly the confusing case. 4. Remove or disconnect any accessory fitted near the ignition switch and antenna ring and re-test. 5. Confirm whether the pump primes with the ignition on: no prime plus an immobiliser indication is the signature, and it means the bike is refusing to run rather than failing to. 6. Key learning and immobiliser fault data require a Ducati-capable tool and, depending on the model and market, proof of ownership. Set that expectation with the customer early. 7. Do not begin fuel or ignition diagnosis until the immobiliser is confirmed satisfied.",
+    "parts_needed": [
+      "Replacement coded key if a transponder has failed",
+      "Battery if state of charge is marginal",
+      "A Ducati-capable tool for key learning where required"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Aftermarket exhaust and ECU mapping on a Ducati — what a changed map does to later diagnosis",
+    "description": "A very large share of used Ducatis have an aftermarket exhaust and a changed engine map, often the manufacturer-sanctioned combination sold as a performance kit, sometimes a third-party tune of unknown provenance. Both change what the diagnostic picture means: emissions-related monitors may not behave as the factory expected, a lambda-related code may reflect the map rather than a fault, and a bike may be running a fuelling strategy that no service documentation describes. None of that is a defect, but a mechanic who does not know the map has been changed will chase a fault that the tune created deliberately. Written from general knowledge — establish what map is loaded before interpreting fuelling or emissions symptoms.",
+    "make": "Ducati",
+    "model": "Ducati models with aftermarket exhaust and remapped engine management",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "lambda code on a mapped bike",
+      "emissions monitor never completes",
+      "fuelling does not match documentation",
+      "aftermarket exhaust fitted",
+      "unknown ecu map loaded"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Aftermarket exhaust fitted with a matched performance map, changing fuelling away from the factory calibration",
+      "Third-party tune of unknown provenance loaded by a previous owner with no record in the service history",
+      "Emissions-related monitors and lambda behaviour reflecting the map rather than a component fault",
+      "Catalyst or lambda sensor removed or defeated as part of an exhaust change"
+    ],
+    "fix_procedure": "1. Establish what is fitted and what is loaded before interpreting anything: look at the exhaust, ask the owner, and check the service history for a map change. An unrecorded tune is common on a used bike. 2. Treat fuelling and emissions symptoms on a mapped bike as unexplained until the map is known — a lambda-related code may be the tune working as intended rather than a fault. 3. Where the map is unknown, a Ducati-capable tool can identify what the ECU is running; that is worth doing before any parts are considered. 4. Check physically for a removed or defeated catalyst or lambda sensor, which changes the emissions picture entirely. 5. If a diagnosis depends on factory behaviour, returning the bike to the standard map and exhaust is the only way to get a clean baseline — say so before quoting further work. 6. Record what is fitted and what is loaded in the service history, so the next diagnosis does not start from scratch.",
+    "parts_needed": [
+      "A Ducati-capable tool to identify the loaded map",
+      "Standard exhaust and map only where a clean baseline is required"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  }
+]
