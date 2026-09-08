@@ -1288,5 +1288,175 @@
     "status": "incompatible",
     "notes": "EXC TPI/TBI two-strokes (Continental/Vitesco) and EXC-F four-strokes are not on TuneECU's list; only the 250/350 SX-F motocross models are, and those are not in this corpus.",
     "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2001,
+    "year_max": 2007,
+    "status": "incompatible",
+    "notes": "Carburetted air-cooled Bonneville, T100, America, Speedmaster, Thruxton and Scrambler: no engine control module and no diagnostic connector exist on these machines, so this is a deliberate incompatible row rather than missing coverage. Diagnosis is by measurement and inspection only.",
+    "verified_by": "general-knowledge claim; not confirmed line-by-line"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2008,
+    "year_max": 2016,
+    "status": "full",
+    "notes": "THE GAP PHASE 226 LEFT. Injected air-cooled family — the vendor matrix names the 865cc Bonneville, Thruxton, Scrambler and Speedmaster under Triumph Keihin, with map read/write over USB, actuator tests and reset engine adaption.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2016,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "Liquid-cooled generation across the modern classic range.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "tiger%",
+    "year_min": 2007,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "Tiger 1050, Tiger 800 family, Tiger 900 and Tiger 1200 under the Keihin matrix.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "675",
+    "year_min": 2006,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "Daytona 675 and Street Triple 675 across both frame-number ranges; check the frame number near the generation break rather than the year.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "speed triple%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "Spans both engine-management families: the Sagem-managed T509 and 955i, and the later Keihin 1050 and 1200 machines.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "sprint%",
+    "year_min": 1999,
+    "year_max": 2016,
+    "status": "full",
+    "notes": "Sprint ST and RS 955 on the Sagem ECU, and Sprint 1050 ST/GT on the Keihin.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (vendor's per-model Triumph function matrix, split by Sagem and Keihin ECU)"
+  },
+  {
+    "adapter_slug": "tuneecu-triumph-android",
+    "make": "triumph",
+    "model_pattern": "trophy%",
+    "year_min": 1991,
+    "year_max": 2003,
+    "status": "incompatible",
+    "notes": "The original Hinckley Trophy 900 and 1200 are carburetted, so they fall outside any diagnostic tool's scope.",
+    "verified_by": "general-knowledge claim; not confirmed line-by-line"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2001,
+    "year_max": 2007,
+    "status": "incompatible",
+    "notes": "Carburetted machines are outside the vendor's stated scope, which is fuel-injected Triumphs — and outside any tool's scope, since no engine control module is fitted.",
+    "verified_by": "general-knowledge claim; not confirmed line-by-line"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2008,
+    "year_max": 2016,
+    "status": "full",
+    "notes": "THE GAP PHASE 226 LEFT — the strongest diagnostic answer for the injected air-cooled family. Fault codes with descriptions, code clearing, live values, dealer-level tests, and throttle balance without gauges (available on two-cylinder Keihin machines).",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "bonneville%",
+    "year_min": 2016,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "Liquid-cooled modern classics, with anti-lock fault check and clear in addition to the engine side.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "tiger%",
+    "year_min": 2007,
+    "year_max": 2026,
+    "status": "partial",
+    "notes": "Within scope as fuel-injected Triumphs, but service reset is excluded on several recent models per the vendor's published exclusion list — check it against the specific bike before promising that function.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "675",
+    "year_min": 2006,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "Both 675 generations, Keihin-managed.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "speed triple%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "partial",
+    "notes": "Spans the Sagem T509/955i through the current machines; throttle balance is unavailable on the Sagem-managed bikes, and service reset is excluded on several recent models.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "sprint%",
+    "year_min": 1999,
+    "year_max": 2016,
+    "status": "full",
+    "notes": "Sprint ST/RS 955 (Sagem) and Sprint 1050 (Keihin) both within scope.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "trophy%",
+    "year_min": 2013,
+    "year_max": 2017,
+    "status": "full",
+    "notes": "The liquid-cooled Trophy 1200 and 1200 SE are fuel-injected Keihin machines within scope.",
+    "verified_by": "https://dealertool.co.uk/faq (vendor's coverage statement, function list and connector requirements)"
+  },
+  {
+    "adapter_slug": "dealertool-triumph",
+    "make": "triumph",
+    "model_pattern": "trophy%",
+    "year_min": 1991,
+    "year_max": 2003,
+    "status": "incompatible",
+    "notes": "The carburetted original Trophy falls outside the vendor's fuel-injected scope.",
+    "verified_by": "general-knowledge claim; not confirmed line-by-line"
   }
 ]

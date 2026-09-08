@@ -1,0 +1,100 @@
+[
+  {
+    "code": "P0301",
+    "description": "Cylinder 1 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "Triumph",
+    "common_causes": [
+      "On a Triumph transverse inline triple the cylinders are numbered LEFT TO RIGHT with cylinder 1 at the left — Triumph's own engine specification tables read \"Cylinder Numbering: Left to Right\" and \"Cylinder Sequence: 1 at left\", so a cylinder-1 misfire on a Street Triple, Daytona, Tiger, Trident or Speed Triple is the left-hand cylinder",
+      "The Rocket 3 is the exception and it inverts the answer: its triple is mounted LONGITUDINALLY and Triumph specifies \"Front to back\" with \"Cylinder Sequence: 1 at front\", so a cylinder-1 code there means the FRONT cylinder, not a left-hand one",
+      "Coil, plug or injector on that physical cylinder once it has been correctly identified",
+      "A lean condition on one cylinder after an aftermarket exhaust or intake change"
+    ],
+    "fix_summary": "Resolve the number to a physical cylinder before touching anything, and write it in words on the job card. On a transverse triple, cylinder 1 is the left-hand cylinder. On a Rocket 3 the engine sits longitudinally and cylinder 1 is the FRONT cylinder — the same code means a different cylinder on that model. Then swap the coil and plug with a neighbouring cylinder and re-test; if the misfire follows the part, it is the part. Check for a lean condition if the intake or exhaust has been changed."
+  },
+  {
+    "code": "P0302",
+    "description": "Cylinder 2 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "Triumph",
+    "common_causes": [
+      "On a Triumph transverse inline triple the cylinders are numbered LEFT TO RIGHT with cylinder 1 at the left — Triumph's own engine specification tables read \"Cylinder Numbering: Left to Right\" and \"Cylinder Sequence: 1 at left\", so cylinder 2 is the CENTRE cylinder on a transverse triple",
+      "The Rocket 3 is the exception and it inverts the answer: its triple is mounted LONGITUDINALLY and Triumph specifies \"Front to back\" with \"Cylinder Sequence: 1 at front\", so a cylinder-1 code there means the FRONT cylinder, not a left-hand one and cylinder 2 the middle one along the frame",
+      "The centre cylinder running hottest and being the most awkward to access on most of these engines",
+      "Coil, plug or injector on that cylinder"
+    ],
+    "fix_summary": "On a transverse triple this is the centre cylinder — the hottest and usually the hardest to reach, which is why it is worth confirming before stripping bodywork. On a Rocket 3 the numbering runs front to back instead. Swap the coil and plug with an outer cylinder and re-test."
+  },
+  {
+    "code": "P0303",
+    "description": "Cylinder 3 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "Triumph",
+    "common_causes": [
+      "On a Triumph transverse inline triple the cylinders are numbered LEFT TO RIGHT with cylinder 1 at the left — Triumph's own engine specification tables read \"Cylinder Numbering: Left to Right\" and \"Cylinder Sequence: 1 at left\", so cylinder 3 is the right-hand cylinder on a transverse triple",
+      "The Rocket 3 is the exception and it inverts the answer: its triple is mounted LONGITUDINALLY and Triumph specifies \"Front to back\" with \"Cylinder Sequence: 1 at front\", so a cylinder-1 code there means the FRONT cylinder, not a left-hand one and cylinder 3 the rearmost",
+      "Coil, plug or injector on that cylinder",
+      "Exhaust or intake work having disturbed that cylinder's components"
+    ],
+    "fix_summary": "On a transverse triple this is the right-hand cylinder; on a Rocket 3 it is the rearmost. Confirm which physically before ordering or swapping anything. Swap coil and plug with a neighbouring cylinder to localise, then check injector operation."
+  },
+  {
+    "code": "P0315",
+    "description": "Crankshaft Position System Variation Not Learned",
+    "category": "engine",
+    "severity": "medium",
+    "make": "Triumph",
+    "common_causes": [
+      "On a Euro 5 Triumph this is usually not a fault at all but an adaption that was never performed — Triumph's bulletins state that machines are typically delivered from the factory already adapted, but a small number need the crankshaft position adapted at pre-delivery inspection",
+      "The adaption being missed at PDI, so the code stores and the malfunction lamp lights on a machine with nothing mechanically wrong",
+      "A genuine crankshaft position sensor, reluctor or wiring fault, which is the less common cause and should be excluded after the adaption is ruled in or out",
+      "Applies to Euro 5 markets; the code does not appear on the earlier Euro 4 fault-code lists"
+    ],
+    "fix_summary": "Do not attempt to clear this with the tool's normal erase function — Triumph states plainly that P0315 cannot be erased that way. Run the Crankshaft Position Adaption with the Triumph diagnostic tool, and then allow the machine's electronics to power down fully, ignition off for at least a minute, before expecting the code to clear. Only if it returns after a correctly performed adaption should the sensor, reluctor and wiring be diagnosed as a fault. On a low-mileage or recently delivered Euro 5 machine, treat the missed PDI adaption as the first hypothesis rather than the last."
+  },
+  {
+    "code": "P0120",
+    "description": "Throttle/Pedal Position Sensor/Switch A Circuit",
+    "category": "fuel",
+    "severity": "medium",
+    "make": "Triumph",
+    "common_causes": [
+      "On a ride-by-wire Triumph a throttle-position fault after throttle-body work is often an adaptation that was never redone rather than a failed sensor",
+      "Triumph's own bulletins treat twist-grip and throttle sensor correlation as a distinct fault class with its own pinpoint tests, so a correlation error is not the same finding as a circuit failure",
+      "The throttle position sensor on the liquid-cooled bikes not being separately serviceable on some models, so a confirmed sensor fault is a throttle body assembly",
+      "Genuine circuit faults in the sensor wiring or connector, diagnosed the ordinary way once adaptation has been excluded"
+    ],
+    "fix_summary": "Establish whether the machine has had throttle-body or twist-grip work before diagnosing the sensor. Run the adaptation with a Triumph-capable tool first; on several models that is the whole repair. Distinguish a circuit fault from a correlation error — Triumph documents them separately and the pinpoint tests differ. If a sensor is genuinely at fault, check whether it is separately available on that model before quoting, because on some the part is the throttle body assembly."
+  },
+  {
+    "code": "P2138",
+    "description": "Throttle/Pedal Position Sensor/Switch D/E Voltage Correlation",
+    "category": "fuel",
+    "severity": "high",
+    "make": "Triumph",
+    "common_causes": [
+      "Triumph documents this as a twist-grip position sensor correlation error — the two sensor tracks in the twist grip disagreeing — rather than a generic pedal-position fault, and publishes a pinpoint test with a specific pin map",
+      "Water or corrosion in the twist-grip sensor connector, which disturbs one track's signal relative to the other",
+      "Damaged or chafed wiring between the twist grip and the engine control module",
+      "A failed twist-grip position sensor assembly"
+    ],
+    "fix_summary": "Treat this as a twist-grip sensor correlation fault, not a throttle-body fault — that is how Triumph documents it and it points at the other end of the system. Follow the manufacturer's pinpoint test rather than a generic procedure, since the pin map is published and specific. Inspect the twist-grip connector for water ingress and corrosion before condemning the assembly, and check the harness between the grip and the engine control module for chafing."
+  },
+  {
+    "code": "P0053",
+    "description": "HO2S Heater Resistance (Bank 1 Sensor 1)",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "Triumph",
+    "common_causes": [
+      "Triumph has published a bulletin describing **misdetection** of this code on a listed group of models, where the engine control module reports the fault without one being present, remedied by recalibration rather than by parts",
+      "A genuine oxygen sensor heater circuit fault, which remains possible and is what the code means outside that bulletin's model list",
+      "Wiring or connector damage in the sensor heater circuit near the exhaust",
+      "A sensor removed or emulated after an aftermarket exhaust"
+    ],
+    "fix_summary": "Check whether the machine is on the manufacturer's misdetection bulletin list before buying a sensor — on those models the published remedy is a recalibration, and fitting parts will not resolve it. Off that list, diagnose it as an ordinary heater circuit fault: resistance at the sensor, then the wiring and connector, then the sensor. If the exhaust has been changed, establish whether the sensor is present or emulated before anything else."
+  }
+]
