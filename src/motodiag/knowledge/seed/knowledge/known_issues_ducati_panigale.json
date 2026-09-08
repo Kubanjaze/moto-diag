@@ -1,0 +1,303 @@
+[
+  {
+    "title": "Superquadro cam drive is chain-and-gear — no belt service, and belt-era quotes are wrong",
+    "description": "Every Ducati before the Panigale drove its camshafts by toothed rubber belts with a replacement interval set by age. The Superquadro (1199, 1299, 899, 959) does not: a chain runs from the crank to a gear train between the inlet and exhaust camshafts, so there is no belt, no belt tensioner and no belt interval. Shops carrying belt-era habits quote a Ducati major service that includes belts, or budget belt parts that do not exist for this engine, and owners arrive expecting a belt bill. The diagnostic consequence matters too: a timing-drive noise on a Superquadro is a chain, tensioner or gear-lash question, never a belt question. Written from general knowledge — confirm the service schedule for the exact model year against the manual before quoting.",
+    "make": "Ducati",
+    "model": "Panigale 1199 / 1299 / 899 / 959 (Superquadro, 2012-2019)",
+    "year_start": 2012,
+    "year_end": 2019,
+    "severity": "medium",
+    "symptoms": [
+      "quoted for cam belts on a panigale",
+      "timing noise from cylinder head",
+      "rattle from cam drive area",
+      "owner expects belt service",
+      "no belt part number found"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Shop applying belt-era Ducati service intervals to a chain-and-gear engine",
+      "Cam chain tensioner wear or low oil pressure at the tensioner on a high-mileage engine",
+      "Gear lash at the camshaft drive gears after incorrect cam timing work",
+      "Generic parts lookup returning belt kits for the wrong Ducati family"
+    ],
+    "fix_procedure": "1. SAFETY: work on a cold engine, bike upright on a rear stand — the Panigale has no conventional frame rail to support against, so use the swingarm or a service stand rated for it. 2. Confirm the engine family before quoting anything: a Superquadro has a chain and gear train, not belts. If a parts system offers a belt kit for this VIN, the lookup is wrong. 3. For a timing-drive noise, check oil level and oil condition first — the chain tensioner is oil-fed and a low or degraded oil supply is the cheap cause. 4. Listen with a stethoscope at the cam cover with the engine at idle and warm, and distinguish the chain drive from desmodromic valve-gear noise, which is normal on these engines and louder cold. 5. If the noise is load- or rpm-dependent, inspect the cam chain tensioner and guides per the manual. 6. Do not attempt to re-time the gears without the manual's locking procedure and the correct tools — the drive gears carry a fine timing adjustment and a mis-set gear will not simply be noisy, it will be wrong. 7. Record in the service history that this engine has no belt interval, so the next shop does not re-quote it.",
+    "parts_needed": [
+      "Engine oil and filter if the tensioner supply is suspect",
+      "Cam chain tensioner if worn (per manual)",
+      "Cam cover gaskets"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale monocoque construction — there is no frame to straighten after a crash",
+    "description": "From the 1199 onward the Panigale has no conventional frame. The airbox is the structural member: a cast-aluminium monocoque bolted directly to the cylinder heads, with the engine as a stressed part and a subframe carrying the tail. A workshop assessing crash damage the way it would on a trellis Ducati — sighting down tubes, planning a tube repair — is looking for something that does not exist, and will miss damage that shows as a crack or local deformation in a casting rather than an obvious bend. Replacement rather than repair is the usual answer, which changes the economics of a crashed bike sharply. Written from general knowledge — confirm the current repair guidance and part availability with Ducati before advising a customer.",
+    "make": "Ducati",
+    "model": "Panigale 1199 / 1299 / 899 / 959 and Panigale V4 (monocoque, 2012+)",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "crashed panigale assessment",
+      "no frame tubes to inspect",
+      "monocoque cracked after crash",
+      "bike tracks badly after a drop",
+      "steering head alignment suspect"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Cast-aluminium monocoque bolted to the cylinder heads replaced the tubular frame, so there are no tubes to sight down or straighten",
+      "Cast aluminium absorbs impact by cracking or deforming locally at the casting rather than bending visibly like steel tube",
+      "The engine is a stressed member, so a heavy impact can load engine mounting points as well as the monocoque",
+      "Workshop habit of quoting a frame-tube repair that does not apply to this construction"
+    ],
+    "fix_procedure": "1. SAFETY: support the bike properly before removing bodywork — with no frame rails, a Panigale must be held by the swingarm or a purpose-made stand, never by fairing brackets. 2. Confirm the generation: a 1199-onward Panigale is monocoque. Trellis-era crash procedures do not apply. 3. Strip the bodywork and inspect the monocoque castings under good light, paying attention to the mounting faces at the cylinder heads and around the steering head, where load concentrates. 4. Look for cracks, local deformation, elongated or pulled fastener holes, and paint or coating crazing that follows a casting web — cast aluminium fails locally, so damage is small and easy to miss. 5. Check the engine mounting points and fasteners as part of the same inspection, because the engine carries chassis load on this design. 6. Measure steering geometry against the manual rather than by eye. 7. A cracked or deformed monocoque is replaced, not welded or heated straight — say so in the estimate early, because it usually decides repair versus write-off. 8. Torque all monocoque and engine fasteners to the manual's specification on reassembly.",
+    "parts_needed": [
+      "Monocoque airbox/frame assembly if damaged",
+      "Monocoque and engine mounting fasteners",
+      "Subframe if the tail took the impact"
+    ],
+    "estimated_hours": 3.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale V4 rear-bank deactivation at idle mistaken for a misfire",
+    "description": "The Panigale V4 and Streetfighter V4 shut down the rear cylinder bank at idle and low load to cut heat reaching the rider. The bike runs on two cylinders when stopped, then picks the rear bank up as the throttle opens. To a rider or a mechanic who has not met the strategy it reads as a dead cylinder or an intermittent misfire at idle that clears under load — the classic signature of a coil or injector fault — and a shop can spend an hour chasing ignition on a bike that is behaving exactly as designed. Written from general knowledge of the V4 platform — confirm the behaviour for the specific model year against the manual before diagnosing or dismissing it.",
+    "make": "Ducati",
+    "model": "Panigale V4 / V4 S / V4 R and Streetfighter V4 (Desmosedici Stradale, 2018+)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "misfire at idle only",
+      "runs on two cylinders when stopped",
+      "rear cylinders cold at idle",
+      "roughness disappears under load",
+      "suspected coil or injector fault"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Designed rear-bank deactivation at idle and low load on the Desmosedici Stradale, to reduce heat at a standstill",
+      "Mechanic unfamiliar with the strategy interpreting it as a cylinder-down fault",
+      "Cold-cylinder check by hand or thermal camera at idle appearing to confirm a dead bank"
+    ],
+    "fix_procedure": "1. SAFETY: the exhaust and rear cylinder head are extremely hot on this engine — do not hand-check cylinder temperature on a bike that has been running. 2. Before diagnosing, establish whether the roughness exists ONLY at idle and low load and clears as the throttle opens. If so, suspect the deactivation strategy first, not the ignition. 3. Confirm against the manual that the model year in front of you uses rear-bank deactivation. 4. Road-test or run under load and confirm all four cylinders contribute — a genuine dead cylinder does not come back with throttle. 5. Only if the fault persists under load should ignition and fuelling be investigated, and that path belongs with a Ducati-capable diagnostic tool. 6. Tell the owner what the behaviour is. Most of the value here is preventing a repeat visit and an unnecessary parts bill.",
+    "parts_needed": [
+      "None if the behaviour is the deactivation strategy — diagnosis only"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale V4 counter-rotating crank changes how the bike feels, not what is broken",
+    "description": "The Desmosedici Stradale uses a counter-rotating crankshaft, which cancels some of the gyroscopic effect of the wheels. Riders moving from a conventional superbike report the bike turns in unusually quickly and feels light at the front, and some bring it in convinced the steering geometry is wrong, the head bearings are loose or the tyre is the wrong profile. There is nothing to fix, but the complaint arrives as a handling fault and a shop that starts adjusting geometry to chase it will make the bike worse. Written from general knowledge — confirm the geometry specification for the model against the manual before altering anything.",
+    "make": "Ducati",
+    "model": "Panigale V4 / V4 S and Streetfighter V4 (counter-rotating crank, 2018+)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "bike turns in too quickly",
+      "front feels light on turn in",
+      "suspected loose head bearings",
+      "handling feels wrong to the rider",
+      "geometry suspected after a tyre change"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Counter-rotating crankshaft reducing gyroscopic resistance to steering input, a design characteristic of the Desmosedici Stradale",
+      "Rider transitioning from a conventional-crank superbike and reading the difference as a fault",
+      "A recent tyre change or ride-height adjustment being blamed for a characteristic that was always there"
+    ],
+    "fix_procedure": "1. Establish whether anything actually changed — a tyre, a ride-height setting, a fork position, an accident. If nothing changed and the bike is new to the rider, suspect the characteristic. 2. Check the things that genuinely cause a light or vague front regardless of make: tyre pressures and profile, head bearing free play, fork position in the yokes, ride height and sag against the manual's settings. 3. Confirm geometry against the manual's specification rather than adjusting to taste. 4. If everything measures correct, explain the counter-rotating crank rather than continuing to adjust. Chasing it with geometry changes trades a characteristic for a genuinely misaligned bike. 5. Where the rider still wants a calmer front, a steering damper setting or a small ride-height change is the reversible route — record the baseline before altering it.",
+    "parts_needed": [
+      "None in most cases — measurement and explanation",
+      "Head bearings only if free play is actually measured"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Superquadro heat at a standstill — rear cylinder, coolant and rider comfort complaints",
+    "description": "The Superquadro is a large, highly tuned twin in a very tight fairing, and the rear cylinder sits under the seat area. In traffic or at a standstill the heat reaching the rider is severe enough that owners regularly present it as a fault — coolant smell, a fan that seems to run constantly, discomfort at the right leg and boot. Most of the time nothing is broken, but the same complaint is also how a genuinely failing fan, a low coolant level or a blocked radiator first shows on this bike, so it cannot simply be dismissed. Written from general knowledge — confirm coolant specification and fan operation against the manual.",
+    "make": "Ducati",
+    "model": "Panigale 1199 / 1299 / 899 / 959 (Superquadro, 2012-2019)",
+    "year_start": 2012,
+    "year_end": 2019,
+    "severity": "medium",
+    "symptoms": [
+      "excessive heat in traffic",
+      "hot right leg and boot",
+      "fan runs constantly at idle",
+      "coolant smell at a standstill",
+      "temperature climbs when stopped"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Rear cylinder of the L-twin sitting close under the seat area inside a tight race-derived fairing",
+      "Genuinely low coolant level or an air pocket after a poor bleed making a normal condition worse",
+      "Radiator core blocked with road debris or flattened fins reducing airflow at low speed",
+      "Cooling fan or fan circuit failing, which presents identically to the normal heat complaint"
+    ],
+    "fix_procedure": "1. SAFETY: never open the cooling system on a warm engine — it is pressurised and the coolant is scalding. Let the bike go fully cold. 2. Establish whether this is a change or a characteristic: has the bike always been hot in traffic, or is this new? A change points at a fault, a constant points at the design. 3. Cold, check the coolant level and condition, and look for evidence of a previous poor bleed. 4. Confirm the fan actually runs when it should, and that the fan circuit and its fuse are healthy — a dead fan turns a hot bike into an overheating one only when stopped. 5. Inspect the radiator core for debris packing and flattened fins, and comb or clean it before condemning anything. 6. Only after those, investigate thermostat and coolant circulation per the manual. 7. If everything checks correct, tell the owner plainly that a tightly faired Superquadro is hot at a standstill by design — that is a better outcome than an unnecessary parts sale.",
+    "parts_needed": [
+      "Coolant to the manual's specification if the system is drained",
+      "Cooling fan or fan relay only if tested faulty",
+      "Radiator guard if debris damage is found"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Öhlins Smart EC semi-active suspension on the Panigale S — failed unit versus a mode nobody set",
+    "description": "The S variants carry Öhlins electronically controlled suspension, which adjusts damping continuously and is configured through the bike's menus. Two very different situations present the same way: a genuinely failed strut or controller, and a bike whose suspension is simply in a mode or a manual setting the rider did not choose and does not know how to leave. The second is far more common and costs nothing to resolve, but a shop that skips it can quote an expensive electronic strut against a menu setting. Written from general knowledge — confirm the menu structure and any calibration procedure for the model year against the manual.",
+    "make": "Ducati",
+    "model": "Panigale 1199 S / 1299 S / 959 and Panigale V4 S (Öhlins Smart EC, 2012+)",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "suspension warning on dash",
+      "damping does not change with mode",
+      "suspension feels harsh in every mode",
+      "electronic suspension not adjusting",
+      "settings changed by themselves"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Suspension left in a manual or fixed damping configuration through the rider menus rather than an automatic mode",
+      "Electronic strut actuator or its wiring failing, so damping stops responding to mode selection",
+      "Low system voltage or a weak battery causing the suspension controller to report a fault",
+      "A previous owner's stored settings retained through the rider profiles"
+    ],
+    "fix_procedure": "1. SAFETY: the bike must be supported properly for any suspension work — there is no conventional frame to stand against. 2. Before anything else, go through the rider menus and confirm what mode and what manual settings the suspension is actually in, and reset to the default profile. A large share of these complaints end here at no cost. 3. Check battery state of charge and the charging system — these controllers are voltage sensitive and a weak battery produces suspension warnings that look like a failed unit. 4. With the bike on a stand, select different modes and listen and feel for the actuator responding at each strut; a unit that never moves in any mode is the one to suspect. 5. Inspect the strut wiring and connectors for damage or corrosion, particularly where the loom moves with the suspension. 6. Reading stored suspension faults requires a Ducati-capable diagnostic tool; that path is a separate subject. 7. Only condemn a strut after the settings, the supply and the wiring have been eliminated — these are expensive parts.",
+    "parts_needed": [
+      "None in the common case — menu reset and battery check",
+      "Electronic strut or actuator only if proven failed",
+      "Battery if state of charge is low"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale side-mounted radiators and exposed coolers take debris the rider never sees",
+    "description": "The Panigale's cooling package is packed tightly into the fairing sides and lower fairing rather than sitting in one flat block behind a front wheel guard. Cores are angled and partly hidden, so stone strikes, fin packing and a slow weep can develop without anything being visible from the saddle, and the first sign is often a coolant smell or a level that has quietly dropped. Because the fairing has to come off to see the cores properly, this gets missed at routine services. Written from general knowledge — confirm the cooling layout for the specific model against the manual, since it differs between the twins and the V4.",
+    "make": "Ducati",
+    "model": "Panigale 1199 / 1299 / 899 / 959 and Panigale V4 (2012+)",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "coolant level slowly dropping",
+      "coolant smell after a ride",
+      "residue on lower fairing",
+      "temperature higher than usual",
+      "no visible leak with fairing on"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Angled side-mounted cores catching road debris that a conventional front-mounted radiator would deflect",
+      "Fin packing with insects and grit reducing airflow, hidden by the fairing",
+      "Stone strike piercing a core or damaging a cooler line where it is not visible without stripping bodywork",
+      "Hose or union weeping slowly at a joint concealed inside the fairing"
+    ],
+    "fix_procedure": "1. SAFETY: cold engine only — the system is pressurised and the coolant scalds. 2. Establish the history: a level that drops without a visible puddle points at a slow weep or evaporation at a hot surface. 3. Remove the lower and side fairing panels — this inspection cannot be done with bodywork on, which is why it gets missed. 4. Inspect every core face under good light for pierced tubes, flattened or packed fins, and dried coolant staining that marks a weep. 5. Check hoses and unions along their whole run, especially where they pass close to hot components or move with the steering. 6. Comb packed fins and clean the cores before condemning anything. 7. Pressure-test the system per the manual to find a weep that is not visible cold. 8. Refill and bleed to the manual's procedure and re-check the level after a heat cycle — an air pocket in a tightly routed system reads as a fault later. 9. Fit a radiator guard if debris damage is found and the bike is ridden on open roads.",
+    "parts_needed": [
+      "Coolant to the manual's specification",
+      "Radiator or oil cooler core if pierced",
+      "Hoses, clamps or O-rings at any weeping joint",
+      "Radiator guard where debris damage is confirmed"
+    ],
+    "estimated_hours": 2.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Streetfighter V4 is a Panigale underneath — do not apply Monster or naked-bike procedures",
+    "description": "The Streetfighter V4 looks like a naked bike and is often booked in as one, but mechanically it is a Panigale V4: the same 1103cc Desmosedici Stradale, the same aluminium front-frame construction with the engine as a stressed member, the same electronics package and the same counter-rotating crank. It shares nothing meaningful with a V-twin Monster. A shop that reaches for Monster procedures — trellis frame inspection, belt service, a conventional frame to support against — is working from the wrong machine entirely. Written from general knowledge — confirm the specification for the model year against the manual.",
+    "make": "Ducati",
+    "model": "Streetfighter V4 / V4 S (Desmosedici Stradale, 2020+)",
+    "year_start": 2020,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "booked in as a naked bike",
+      "no frame tubes to inspect",
+      "monster procedures do not fit",
+      "quoted for cam belts in error",
+      "unsure which service schedule applies"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Streetfighter bodywork suggesting a naked-bike platform when the machine is Panigale-derived",
+      "Model name shared with the earlier V-twin Streetfighter 1098 and 848, which were trellis-framed and belt-driven",
+      "Service scheduling by model name rather than by engine family"
+    ],
+    "fix_procedure": "1. Identify the engine before anything else. A Streetfighter V4 carries the 1103cc Desmosedici Stradale V4; the earlier Streetfighter 1098 and 848 are V-twins and are a different machine entirely with different procedures. 2. Use Panigale V4 procedures and schedules, not Monster or V-twin Streetfighter ones. There is no cam belt on this engine and no trellis frame to inspect. 3. SAFETY: support the bike on the swingarm or a purpose-made stand — like the Panigale it has no frame rails. 4. Expect Panigale-level heat management and the rear-bank deactivation behaviour at idle. 5. Where a parts or service system offers V-twin Streetfighter items for this VIN, the lookup is wrong. 6. Record the correct family in the service history so the next visit starts from the right place.",
+    "parts_needed": [
+      "None — identification and correct procedure selection"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale wet slipper clutch judder and drag — not the dry-clutch rattle Ducati is known for",
+    "description": "Owners and mechanics who associate Ducati with an audible dry clutch expect the same open-cover rattle on a Panigale and read its absence, or any clutch noise at all, as significant. The Panigale line runs a wet slipper clutch in oil behind a closed cover, so there is no dry-clutch rattle to hear and no exposed plate stack to inspect through a vent. Its actual complaints are ordinary wet-clutch ones expressed on a very highly tuned engine: judder as it takes up, drag at a standstill when hot, and slip after track use. Written from general knowledge — confirm plate specification and clutch procedure for the model against the manual.",
+    "make": "Ducati",
+    "model": "Panigale 1199 / 1299 / 899 / 959 and Panigale V4 (wet slipper clutch, 2012+)",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "clutch judders taking up",
+      "clutch drags when hot",
+      "no dry clutch rattle expected",
+      "clutch slips after track use",
+      "lever feel changes when hot"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Wet slipper clutch in oil behind a closed cover, so the familiar Ducati dry-clutch rattle is absent by design",
+      "Slipper ramps and plate stack worn after repeated hard downshifts or track use",
+      "Clutch hydraulic system not fully releasing, giving drag at a standstill when hot",
+      "Engine oil not to the manual's specification affecting take-up and slip"
+    ],
+    "fix_procedure": "1. SAFETY: work on a cold engine and support the bike properly; there is no frame rail to stand against. 2. Establish the complaint precisely — judder on take-up, drag at a standstill, or slip under power are three different findings. 3. Check engine oil level and that the oil meets the manual's specification, because the clutch runs in it and the wrong oil produces exactly these symptoms. 4. Check the clutch hydraulic system: fluid condition and level, and whether the lever gives full release when hot. Drag that appears only when hot points here. 5. Do not look for an exposed plate stack or listen for a dry-clutch rattle — this is a wet clutch behind a closed cover, and its absence is not a fault. 6. If slip is confirmed under load after the hydraulics and oil are eliminated, inspect the plate stack and slipper ramps per the manual. 7. On a bike used on track, expect accelerated slipper and plate wear and set the owner's expectation accordingly.",
+    "parts_needed": [
+      "Engine oil and filter to the manual's specification",
+      "Clutch fluid if the hydraulic system is serviced",
+      "Clutch plate set and slipper components if wear is confirmed"
+    ],
+    "estimated_hours": 2.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Panigale 899 and 959 are not small 1199s — subframe, exhaust and chassis differ",
+    "description": "The 899 and 959 are routinely treated as scaled-down 1199s because they share the Panigale name and much of the look, but they differ in ways that matter in the workshop: a different subframe arrangement rather than the 1199's, and on the 959 a bulky side-exit exhaust fitted for emissions compliance that changes what has to come off to reach the rear of the engine. Assuming 1199 procedures on a 959 wastes time and risks damaging bodywork on the way in. Written from general knowledge — confirm the disassembly sequence for the exact model against the manual before quoting labour.",
+    "make": "Ducati",
+    "model": "Panigale 899 (2014-2015) and Panigale 959 (2016-2019)",
+    "year_start": 2014,
+    "year_end": 2019,
+    "severity": "low",
+    "symptoms": [
+      "labour quote too low on a 959",
+      "exhaust in the way of engine access",
+      "panigale procedures do not match",
+      "unexpected strip time on a 899",
+      "parts do not fit from a 1199"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Assuming the 899 and 959 are the 1199 with a smaller engine when subframe and exhaust routing differ",
+      "959 side-exit exhaust adding disassembly steps for access to the rear of the engine",
+      "Parts lookup by Panigale family rather than by exact model and year"
+    ],
+    "fix_procedure": "1. Confirm the exact model and year before quoting labour — 899, 959 and 1199 are not interchangeable for access or parts. 2. Read the manual's disassembly sequence for the model in front of you rather than working from 1199 memory. 3. SAFETY: support the bike on the swingarm or a service stand; the monocoque construction gives nothing conventional to stand against, and the bike is unstable with the exhaust and bodywork removed. 4. On a 959, plan for the side-exit exhaust in any job needing access to the rear of the engine and add that to the estimate. 5. Verify part numbers against the VIN rather than the family name; visually similar Panigale parts differ between models. 6. Note the model-specific steps in the job record so the shop's next estimate for this bike is accurate.",
+    "parts_needed": [
+      "Exhaust gaskets and fasteners where the system is disturbed",
+      "Bodywork fasteners and clips as required"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  }
+]
