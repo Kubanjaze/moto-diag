@@ -1,0 +1,337 @@
+[
+  {
+    "title": "Alternator-to-harness connector overheating on the T100, T120, Street Twin, Street Scrambler, Speed Twin 900 and Scrambler 900 — the 2024 recall's fix failed and was re-issued in 2026 with a Do-Not-Drive advisory",
+    "description": "Drawn from the manufacturer's Part 573 recall reports filed with the US road-safety regulator. This is the most urgent item on a modern-classic Triumph and it is live now. Triumph first addressed overheating at the alternator-to-main-harness connector on 2022–2024 T100, T120, Street Twin, Street Scrambler, Speed Twin 900 and Scrambler 900 machines as a service bulletin in March 2024, then escalated it to a safety recall late that year covering roughly 8,800 machines after two fire reports that September; the remedy was a retaining clip on the connector. Monitoring through the following year showed the clip had not performed as intended on bikes above a particular frame-serial point, and in February 2026 the campaign was superseded by a new recall of essentially the same population — with a **Do Not Drive** instruction and advice to park the machine outside. A shop seeing one of these bikes needs to know that a completed earlier recall is not reassurance: the first remedy is the thing that failed. Check the current campaign status by frame number with the importer before releasing the bike, and treat a burnt-plastic smell or intermittent charging on one of these as urgent rather than routine.",
+    "make": "Triumph",
+    "model": "Triumph liquid-cooled modern classics — T100, T120, Street Twin, Street Scrambler, Speed Twin 900, Scrambler 900 (2022–2024 build)",
+    "year_start": 2022,
+    "year_end": 2024,
+    "severity": "critical",
+    "symptoms": [
+      "burning smell near the alternator",
+      "intermittent charging on a modern classic",
+      "recall already done but fault returned",
+      "melted connector behind the engine",
+      "unsure if the triumph recall applies"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Overheating at the alternator-to-main-harness connector, with fire reports in service",
+      "The first remedy — a retaining clip — not performing as intended above a particular frame-serial point",
+      "A completed earlier recall being read as evidence the machine is safe, when that remedy is the one that failed",
+      "The superseding campaign carrying a Do Not Drive instruction, which a shop unaware of it will not act on"
+    ],
+    "fix_procedure": "1. Before anything else, check the machine's current recall status by frame number with the importer or the national recall database. Do not rely on service history showing the earlier campaign as completed — that remedy was superseded. 2. If the superseding campaign applies, follow its Do Not Drive instruction: do not road-test, do not release the bike to the owner to ride in, and tell the owner why in writing. 3. Inspect the alternator-to-main-harness connector for discoloured or melted housing, distorted terminals and heat marking on adjacent looms. 4. Do not attempt an independent repair of the connector on a machine under an open safety campaign; the work is the importer's to authorise and to pay for. 5. Treat a burning smell, intermittent charging or an unexplained electrical fault on one of these machines as this item until it is excluded.",
+    "parts_needed": [
+      "No independent parts — this is an open manufacturer safety campaign",
+      "Recall status check by frame number before any work"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Clutch cable chafing the main harness at the headstock on the Street Twin, Street Scrambler, T100, T120, Bobber and Thruxton — a recall on nearly thirteen thousand machines",
+    "description": "Drawn from the manufacturer's Part 573 recall report filed with the US road-safety regulator. On the 2016-on liquid-cooled twins — Street Twin, Street Scrambler, T100, T120, Bobber and Thruxton — the clutch cable can rub against the main harness where both pass the headstock, wearing through the insulation. It was first issued as a service bulletin in late 2018 and escalated to a safety recall in 2019 covering more than twelve and a half thousand machines in the United States alone, with equivalent campaigns in the UK and Canada; the remedy fits revised harness tidies at the headstock. The reason it matters beyond the recall itself is diagnostic: a chafed main harness at the steering head produces faults that move when the bars are turned, and a shop chasing an intermittent electrical complaint on one of these bikes should put the headstock loom near the top of the list rather than at the end of it. A machine that has had the recall done still deserves a look at that area if the symptom fits, because a cable can be re-routed badly by later work.",
+    "make": "Triumph",
+    "model": "Triumph liquid-cooled modern classics, 2016 on — Street Twin, Street Scrambler, T100, T120, Bobber, Thruxton",
+    "year_start": 2016,
+    "year_end": 2021,
+    "severity": "high",
+    "symptoms": [
+      "electrical fault changes when bars are turned",
+      "intermittent fault on a bonneville",
+      "chafed wiring at the headstock",
+      "harness rubbed through near the steering head",
+      "fault comes and goes on full lock"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The clutch cable rubbing the main harness where both pass the headstock, wearing insulation",
+      "Faults that vary with steering position, which a shop may not connect to the loom",
+      "A cable re-routed incorrectly during later work, reproducing the problem after the recall remedy",
+      "The intermittent nature masking the cause until a conductor finally shorts or opens"
+    ],
+    "fix_procedure": "1. Check the machine's recall status by frame number first — this campaign has a published remedy and the work is the importer's. 2. On any intermittent electrical complaint on one of these bikes, move the bars lock to lock with the ignition on and watch whether the symptom follows. That single test points at the headstock loom faster than any code reading. 3. Inspect the clutch cable and main harness where they pass the steering head for shiny wear marks, flattened insulation and exposed conductors. 4. Confirm the harness tidies are the revised parts and are correctly routed; a completed recall does not guarantee later work left them right. 5. Repair damaged insulation properly rather than taping it, and re-route so the cable cannot return to contact at full lock.",
+    "parts_needed": [
+      "Revised headstock harness tidies as specified by the campaign",
+      "Harness repair materials if insulation is damaged",
+      "Clutch cable if worn at the contact point"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "Starter cable against the oil cooler return pipe on early carburetted America and Speedmaster — a fire-risk recall that is easy to miss",
+    "description": "Drawn from the road-safety regulator's recall records for the carburetted generation. On 2002–2004 Bonneville America and Speedmaster machines the starter motor's power supply cable can contact the oil cooler return pipe under certain assembly conditions; the insulation degrades and the result is a twelve-volt short with fire risk, or a no-start. Roughly 2,800 machines were recalled in the United States in late 2004, with a UK campaign of around six hundred earlier that year; the remedy was simply to inspect the cable for contact and reposition it. Two things make this worth carrying: it is a twenty-year-old campaign on bikes that now change hands privately with no service history, so completion cannot be assumed; and the symptom set — blown main fuse, no crank, a smell of hot insulation — reads like an ordinary starting fault, so a shop that does not know to look at that specific run of cable can replace a starter or a solenoid and leave the actual hazard in place.",
+    "make": "Triumph",
+    "model": "Triumph Bonneville America and Speedmaster, carburetted 790, 2002–2004",
+    "year_start": 2002,
+    "year_end": 2004,
+    "severity": "high",
+    "symptoms": [
+      "blown main fuse on an early america",
+      "no crank on a carburetted speedmaster",
+      "smell of hot insulation after cranking",
+      "starter cable rubbed near the oil cooler",
+      "repeated fuse failure with no obvious cause"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The starter motor supply cable contacting the oil cooler return pipe where assembly allowed it",
+      "Insulation degrading at the contact point, giving a twelve-volt short",
+      "A twenty-year-old campaign on machines now sold privately with no service record, so completion cannot be assumed",
+      "Symptoms resembling an ordinary starting fault, so the cable run is never inspected"
+    ],
+    "fix_procedure": "1. On any early America or Speedmaster with a blown main fuse, a no-crank, or a smell of hot insulation, inspect the starter power supply cable where it passes the oil cooler return pipe before diagnosing the starter or solenoid. 2. Look for chafe marks, flattened or discoloured insulation and any evidence of arcing at the pipe. 3. Check the recall status by frame number; the published remedy is inspection and repositioning and is straightforward. 4. Reposition and secure the cable clear of the pipe, and confirm clearance with the engine on its mounts rather than on a stand that changes the geometry. 5. Replace the cable rather than taping it if the insulation is compromised at all — this is a fire-risk item, not a cosmetic one.",
+    "parts_needed": [
+      "Starter motor supply cable if insulation is damaged",
+      "Cable ties or clips to secure the routing",
+      "Main fuse"
+    ],
+    "estimated_hours": 0.75,
+    "source": "service-manual"
+  },
+  {
+    "title": "A Bonneville model name spans up to three different engines — T100, Thruxton, Scrambler, Speedmaster and America all mean two or more bikes",
+    "description": "Drawn from Triumph's model history and parts documentation. The Hinckley Bonneville family has reused its model names across three engine generations, and the name alone identifies none of them. T100 has meant a 790 air-cooled twin, an 865 air-cooled twin, and a 900 liquid-cooled twin. Thruxton has meant an 865 air-cooled bike and a 1200 liquid-cooled one. Scrambler has meant an 865, then a 900, then a 1200. Speedmaster has meant a 790, an 865, and a 1200. America has meant a 790 and an 865. Triumph's own recall filings resort to suffixes such as \"T100 865cc\" precisely because the name does not disambiguate. The failure mode is a parts order placed against a model name that returns the wrong generation's component, and it is documented: an owner of a liquid-cooled T100 sourced a wheel rim listed for the air-cooled T100 and found it could not be laced, because the two generations use different spoke counts. How far that extends is disputed even among owners — one forum claim that Triumph advises no parts commonality at all between the air-cooled and liquid-cooled twins was contradicted in the same thread by an owner citing the parts catalogue. What is not disputed is that the model name does not settle it. Order against the frame number, not the name.",
+    "make": "Triumph",
+    "model": "Triumph Bonneville family, all generations — T100, Thruxton, Scrambler, Speedmaster, America, Bonneville",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "wrong generation part ordered for a t100",
+      "thruxton part does not fit",
+      "unsure which engine this bonneville has",
+      "rim will not lace to the hub",
+      "model name does not identify the bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Model names reused across two or three engine generations, with interchange varying part by part and not reliably predictable from the name",
+      "Online parts lookups keyed to a model name rather than a frame number returning another generation's component",
+      "Spoke count, wheel size and mounting differing between generations sharing a name",
+      "A part that arrives looking plausible because the model name matched"
+    ],
+    "fix_procedure": "1. Never order against a model name alone on this family. Take the frame number and order against it — that is the only identifier that settles the generation. 2. Establish the engine before the part: air-cooled 790, air-cooled 865, or liquid-cooled 900 or 1200. The rest of the order follows from that. 3. Treat online \"what this fits\" data with suspicion on these bikes; owners report it being wrong even between adjacent model years within one generation. 4. Be most careful with wheels, brakes and bodywork, where a wrong-generation part is often close enough to accept delivery and not close enough to fit. 5. Put the full designation and the frame number on the work order and the quote, so the next person does not repeat the lookup from the name.",
+    "parts_needed": [
+      "No parts — this is an ordering discipline",
+      "Frame number for a generation-correct parts lookup"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "An air-cooled EFI Bonneville still looks carburetted — the throttle bodies are styled as carburettors and the model year does not settle it",
+    "description": "Drawn from Triumph's model documentation and parts records. When Triumph replaced the twin Keihin carburettors with multipoint sequential injection on the air-cooled twin, the throttle bodies were deliberately styled to look like carburettors so the bike kept its period appearance. The result is that an injected 865 looks carbed from every angle a mechanic would normally check, and the knob that looks like a choke is a fast-idle lever. The model year does not resolve it either, because the changeover was market-dependent: European bikes switched a model year before North American ones, and North American machines from the changeover year already carried the larger injection-style fuel tank while still running carburettors. What does resolve it is hardware the styling cannot hide — there is no fuel tap under the tank on an injected bike, the in-tank pump primes audibly at key-on, there is an oxygen sensor screwed into each header, and the instrument face carries low-fuel and engine-management lamps the carburetted bike does not have.",
+    "make": "Triumph",
+    "model": "Triumph air-cooled Bonneville family, 865 — carburetted and injected",
+    "year_start": 2001,
+    "year_end": 2016,
+    "severity": "medium",
+    "symptoms": [
+      "cannot tell if this bonneville is carbed",
+      "looks carbed but has no fuel tap",
+      "choke knob on an injected bonneville",
+      "wrong year assumed for the efi changeover",
+      "ordering carb parts for an injected bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Injection throttle bodies deliberately styled as carburettors, so appearance is not evidence",
+      "A market-dependent changeover, so the model year does not settle it either",
+      "Changeover-year North American bikes carrying the injection-style tank while still running carburettors",
+      "The fast-idle lever being read as a choke, reinforcing the wrong conclusion"
+    ],
+    "fix_procedure": "1. Look for a fuel tap under the tank. No tap means injection — this is the fastest single check. 2. Switch the ignition on and listen for the in-tank pump priming. A carburetted bike is silent. 3. Look for an oxygen sensor in each header. 4. Check the instrument face for low-fuel and engine-management lamps, which the carburetted bikes do not carry. 5. Do not decide from the model year, and do not decide from the tank — both mislead across the changeover. 6. Having established which it is, order and diagnose against the frame number, because Triumph split some parts by frame serial within the injected run as well.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Frame number for a parts lookup once the fuelling is established"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "Telling a 790 from an 865 by engine number works on the T100 and misleads on the rest of the range",
+    "description": "Drawn from Triumph parts documentation, with a caveat that matters more than the rule. The Bonneville family launched at 790cc and moved to 865cc, but not on one date: the Thruxton went 865 first, then the T100 and Speedmaster, then the Scrambler at its launch, and finally the base Bonneville and America. A widely circulated engine-number breakpoint does separate 790 from 865 — but it is the T100's changeover point, and applying it to the rest of the range gives the wrong answer, because the base Bonneville and America stayed at 790 for two further model years with engine numbers well beyond that figure. The breakpoint for those models is not established in any source consulted here. So the honest procedure is: use the engine number together with the model, never alone; on North American machines the engine code within the frame number also encodes displacement and crank angle; and where neither settles it, measure or inspect rather than assume. A wrong displacement means wrong pistons, and that is an expensive way to discover the rule had an exception.",
+    "make": "Triumph",
+    "model": "Triumph Bonneville family, air-cooled 790 and 865 — Bonneville, T100, America, Speedmaster, Thruxton, Scrambler",
+    "year_start": 2001,
+    "year_end": 2008,
+    "severity": "medium",
+    "symptoms": [
+      "is this a 790 or an 865",
+      "engine number rule gave the wrong answer",
+      "wrong pistons ordered for a bonneville",
+      "displacement not stamped on the engine",
+      "base bonneville still 790 in 2006"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A staggered changeover, with each model moving to 865 in a different year",
+      "An engine-number breakpoint that is the T100's changeover applied to the whole range",
+      "The base Bonneville and America remaining 790 with engine numbers beyond that breakpoint",
+      "No displacement badge, so the engine number and frame number are the only written evidence"
+    ],
+    "fix_procedure": "1. Establish the model first, then the engine number — the number means different things on different models. 2. Apply the published breakpoint only to the model it belongs to. On the base Bonneville and America it does not hold, and no reliable breakpoint for those was found. 3. On a North American machine, read the engine code within the frame number; it encodes displacement and crank angle together. 4. Where the paperwork does not settle it, inspect rather than assume — a wrong-displacement piston order is the expensive outcome. 5. Record what you established and how, on the job card. The next person will otherwise repeat the same lookup and may land on the wrong side of the exception.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Engine number and frame number recorded together"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Crank angle on the Bonneville family is not the air-cooled versus liquid-cooled split it looks like — the America, Speedmaster and Scrambler are already 270 degrees",
+    "description": "Drawn from Triumph model specifications. It is natural to assume the air-cooled Bonnevilles are all 360-degree twins and that the even beat gave way to the offset 270-degree crank when the liquid-cooled engines arrived. That is wrong for three models. The Bonneville, T100 and Thruxton — in both 790 and 865 form — are 360-degree engines. But the air-cooled America, Speedmaster and Scrambler use a **270-degree** crank, and have done since the America introduced it to the family. Every liquid-cooled 900 and 1200 is also 270 degrees. So an uneven, offset beat on an air-cooled Bonneville-family bike is not evidence that it is a liquid-cooled machine, and it is not evidence of a fault; on a Scrambler or a cruiser it is exactly what the engine should sound like. A shop that reads the beat as a diagnostic clue needs the model, not the cooling system, to interpret it.",
+    "make": "Triumph",
+    "model": "Triumph Bonneville family — 360 degrees on Bonneville, T100 and Thruxton; 270 degrees on America, Speedmaster, Scrambler and all liquid-cooled models",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "uneven beat on an air cooled triumph",
+      "scrambler sounds like it is missing",
+      "is this a 360 or 270 crank",
+      "offset firing on a speedmaster",
+      "engine note does not match the model"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Three air-cooled models using a 270-degree crank while the rest of the air-cooled range is 360",
+      "The assumption that offset firing arrived with liquid cooling",
+      "An engine note read as a fault when it is the designed firing interval for that model",
+      "Cooling system used as a proxy for crank angle, which it is not"
+    ],
+    "fix_procedure": "1. Determine crank angle from the model, not from the cooling system. Bonneville, T100 and Thruxton are 360; America, Speedmaster and Scrambler are 270, air-cooled or not; every liquid-cooled model is 270. 2. Do not treat an uneven idle on a Scrambler, America or Speedmaster as a misfire on that basis alone — it is the designed firing interval. 3. Where a genuine misfire is suspected, diagnose it as one: the tell is that a real misfire varies with load, revs or temperature while a firing interval does not. 4. Tell the owner what they are hearing if the complaint is the sound itself; the alternative is replacing healthy parts on a bike that will sound the same afterwards.",
+    "parts_needed": [
+      "No parts unless a genuine misfire is confirmed"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "The Bonneville valve job changed completely in 2016 — cams out on the air-cooled 790/865, rocker shaft out on the liquid-cooled 900/1200",
+    "description": "Drawn from Triumph owner's handbooks and the T120 service manual. These are two different jobs on two different engines, and quoting one for the other is wrong on hours, on parts and on the interval. The air-cooled 790 and 865 twin is a double-overhead-cam engine with shim-under-bucket adjusters: the shim sits under the follower, so changing one means lifting the camshafts. Triumph's air-cooled handbook schedules the valve clearance check at 12,000 miles (20,000 km) with a further check at 24,000, on a 6,000-mile base service. The 2016-on liquid-cooled engine is a single-overhead-cam design with roller rocker arms, and the shim sits **on top of the valve** between the rocker roller and the stem: the clearance is measured there with the lobe pointing away, and changing a shim means removing the rocker shaft and arm — the camshaft stays put. Triumph schedules that check at 20,000 and 40,000 miles on a 10,000-mile base service, and from the 2019 handbooks a camshaft timing check joins it at the same points. Shim sizes run 2.00 to 3.20 mm in 0.025 mm steps.",
+    "make": "Triumph",
+    "model": "Triumph Bonneville family — air-cooled 790/865 DOHC and liquid-cooled 900/1200 SOHC",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "valve check quoted for the wrong engine",
+      "shim under bucket or on top of the valve",
+      "do the cams come out on a bonneville",
+      "valve interval on a liquid cooled triumph",
+      "rocker shaft removal for shims"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Two different valve-gear designs under one model family, with different access and different labour",
+      "Shim-under-bucket on the air-cooled engine requiring camshaft removal",
+      "Shim-on-valve under a roller rocker on the liquid-cooled engine requiring rocker-shaft removal instead",
+      "Different scheduled intervals — 12,000 miles air-cooled, 20,000 miles liquid-cooled — quoted from the wrong generation"
+    ],
+    "fix_procedure": "1. Establish the generation before quoting. Air-cooled means cams out; liquid-cooled means rocker shaft out and cams undisturbed. The labour is not comparable. 2. Take the interval from the handbook for the actual bike: 12,000 miles on the air-cooled twin, 20,000 on the liquid-cooled. Quoting the shorter one on a liquid-cooled bike costs the customer money; quoting the longer one on an air-cooled bike costs them an engine. 3. On the liquid-cooled engine, measure between the rocker roller and the shim with the lobe pointing away from the roller, and work to the handbook's inlet and exhaust ranges rather than a remembered figure. 4. Order shims to the correct series and step for the engine — the two generations do not share them. 5. On 2019-on liquid-cooled bikes, remember the camshaft timing check falls due at the same points as the valve check; do not close the job without it.",
+    "parts_needed": [
+      "Valve shims in the correct series for the generation",
+      "Gaskets and seals disturbed by the access route",
+      "Feeler gauges"
+    ],
+    "estimated_hours": 4.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "Liquid-cooled 1200 throttles cannot be balanced with vacuum gauges — Triumph's manual requires the dealer tool, and the 900 has nothing to balance",
+    "description": "Drawn from the T120 service manual and Triumph owner's handbooks. On the 1200 liquid-cooled twin the service manual states plainly that the throttles cannot be balanced using equipment that measures vacuum; the dealer diagnostic tool must be used, reading each cylinder and adjusting until the tool reports the throttles balanced. The adjuster sits behind an anti-tamper blanking screw in the throttle motor housing that has to be removed and refitted to a specified torque. Two further points catch shops out. The throttle position sensor on these bikes is not adjustable and not separately replaceable — a fault there means the throttle body assembly, and the sensor fixings are paint-marked to show they are not a service adjustment. And idle speed is electronic, so there is no idle screw to turn. The 900 is a different case again: it has a single throttle body, so there is nothing to balance, and Triumph's schedule lists throttle balancing for the 1200 only. On the earlier air-cooled injected 865, balancing is done at the throttle bodies with the engine warm rather than through a tool.",
+    "make": "Triumph",
+    "model": "Triumph liquid-cooled 1200 modern classics — T120, Thruxton, Bobber, Speedmaster, Speed Twin, Scrambler 1200",
+    "year_start": 2016,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "cannot balance throttles with gauges",
+      "vacuum gauges on a t120",
+      "anti tamper screw on the throttle housing",
+      "tps not adjustable on a triumph",
+      "no idle screw on a liquid cooled bonneville"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The manual explicitly excluding vacuum-based balancing on the 1200, requiring the dealer tool",
+      "An anti-tamper blanking screw over the adjuster that must be removed and refitted to torque",
+      "The throttle position sensor being neither adjustable nor separately replaceable, with paint-marked fixings",
+      "Electronic idle control, so there is no idle screw, and a single throttle body on the 900, so nothing to balance"
+    ],
+    "fix_procedure": "1. Establish the engine first. A 900 has one throttle body and no balancing procedure; a 1200 has two and needs the tool. Neither takes vacuum gauges. 2. On a 1200, do the job through the dealer diagnostic tool's balance routine with the airbox removed, and refit the anti-tamper blanking screw to the specified torque afterwards. 3. Do not tee gauges into the sensing hoses to work around the tool — the manual excludes the method, not just the equipment. 4. Treat paint-marked fixings on the throttle position sensor as a statement that it is not a service adjustment. If the sensor is at fault, the throttle body assembly is the part. 5. Do not look for an idle adjustment screw; idle is set electronically. A high or hunting idle on these is a diagnosis, not an adjustment.",
+    "parts_needed": [
+      "Throttle body assembly only if the sensor is confirmed faulty",
+      "Anti-tamper blanking screw",
+      "Dealer diagnostic tool access or a referral"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "The T120 and Street Twin cooling system hides in plain sight — the radiator sits where the oil cooler was, the thermostat is in the cylinder head, and there is no bleed screw",
+    "description": "Drawn from the T120 service manual and Triumph owner's handbooks. The liquid-cooled twin was styled to keep its fins and its air-cooled silhouette, and the radiator is small, blacked out, and mounted at the front almost exactly where the air-cooled bike's oil cooler sat — so a shop working from appearance can genuinely misread which engine is in front of it. Three specifics catch people who have only worked on the air-cooled bikes. The thermostat is not in a hose: it seats in the cylinder head under a bolt-on housing, and it has an orientation — centre bars horizontal, bypass hole uppermost — that must be respected on reassembly, with the coolant temperature sensor beside it at the front of the head. The radiator's lower mounting is on the left engine cradle, so the cradles have to be in place before the radiator goes back. And there is **no bleed screw**: Triumph fills the system with the rear wheel raised so the filler sits above the radiator's top tank, squeezing the bottom hose, then runs and blips the engine and rechecks. The fan comes on around 103 degrees and the cap is a 1.2 bar unit.",
+    "make": "Triumph",
+    "model": "Triumph liquid-cooled modern classics, 2016 on — 900 and 1200",
+    "year_start": 2016,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "cannot find the bleed screw on a t120",
+      "thermostat not in the hose on a triumph",
+      "overheating after a coolant change",
+      "radiator looks like an oil cooler",
+      "air lock after refilling a bonneville"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A radiator mounted where the air-cooled bike's oil cooler sat, so the engine is misread from appearance",
+      "The thermostat seated in the cylinder head under a bolt-on housing rather than in-line, with a required orientation",
+      "No bleed screw, so a shop expecting one improvises and leaves air in the system",
+      "The radiator's lower mount on the left engine cradle, so the cradles must be fitted first"
+    ],
+    "fix_procedure": "1. Confirm the engine before you start: coolant hoses and an expansion tank mean liquid-cooled, whatever the fins and the small front-mounted radiator suggest. 2. Fill the system Triumph's way rather than looking for a bleed screw — rear wheel raised so the filler sits above the radiator's top tank, squeeze the bottom hose to move air, then run and blip the engine and recheck the level. 3. When refitting the thermostat, respect its orientation: centre bars horizontal, bypass hole uppermost, and torque the housing to specification. Getting this wrong produces overheating that looks like a failed thermostat. 4. Fit the engine cradles before the radiator; the lower mount lands on the left cradle. 5. Use the coolant specification in the handbook for the bike's year — Triumph changed both the specification and the renewal interval across the generation. 6. Keep accessories out of the airflow in front of the radiator and clear of the fan behind it.",
+    "parts_needed": [
+      "Coolant to the specification in the handbook for that year",
+      "Thermostat and housing gasket if disturbed",
+      "Expansion tank cap if the seal is suspect"
+    ],
+    "estimated_hours": 1.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Air-cooled Bonneville starter and wheel faults that never got a recall — the idler-gear boss, the sprag clutch and left-hand rear spokes",
+    "description": "Drawn from owner-forum consensus and clusters of owner complaints filed with the road-safety regulator, not from a recall or a Triumph bulletin — and that distinction is the point of the entry. Three patterns recur on the earlier air-cooled bikes and none of them produced a campaign. The starter idler-gear boss can break out of its casting on the non-reinforced crankcases used up to roughly the mid-2000s, after which the casting was strengthened. The starter sprag clutch fails, giving the familiar spin-without-engaging, and it is reported most on bikes started on a weak battery. And on the wire-wheeled bikes of the first few years, rear-wheel spokes break — characteristically the left-hand outer spokes at the bend near the hub — with the hub redesigned later in the run. Because none of this is a campaign, there is no free remedy and no VIN list; a shop should treat these as things worth inspecting on an early bike rather than as documented defects to quote against.",
+    "make": "Triumph",
+    "model": "Triumph air-cooled Bonneville family, earlier build — Bonneville, T100, America, Speedmaster, Thruxton",
+    "year_start": 2001,
+    "year_end": 2010,
+    "severity": "medium",
+    "symptoms": [
+      "starter spins but does not engage",
+      "broken spokes on the rear wheel",
+      "cracked casting behind the starter",
+      "left hand spokes breaking near the hub",
+      "starter idler gear come loose"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The starter idler-gear boss breaking out of a non-reinforced crankcase casting on earlier engines",
+      "Starter sprag clutch failure, reported most where the engine is cranked on a weak battery",
+      "Rear-wheel spoke breakage on early wire wheels, typically left-hand outer spokes at the bend near the hub",
+      "None of these being a recall, so there is no VIN list, no free remedy and no bulletin to quote"
+    ],
+    "fix_procedure": "1. Treat these as inspection items on an early air-cooled bike, not as documented defects — the evidence is owner reports and forum consensus, and the entry says so because a customer conversation should say so too. 2. On a starter that spins without engaging, check the sprag clutch, and check battery condition and charging before refitting: repeated cranking on a weak battery is the reported aggravating factor. 3. Inspect the casting around the starter idler gear on earlier engines for cracking before assuming the gear itself. 4. On early wire wheels, check spoke tension and inspect the left-hand outer spokes at the bend near the hub specifically; a single broken spoke there is a reason to check the rest rather than replace one. 5. Do not quote these as warranty or recall work. There is no campaign, and telling the owner that plainly is better than an implication that Triumph will pay.",
+    "parts_needed": [
+      "Starter sprag clutch assembly if failed",
+      "Spokes and nipples, or a rebuilt wheel, if breakage is found",
+      "Battery if it is contributing to starter load"
+    ],
+    "estimated_hours": 2.0,
+    "source": "forum"
+  }
+]

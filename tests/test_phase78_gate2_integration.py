@@ -126,11 +126,23 @@ class TestGate2KnowledgeBaseIntegration:
         So the assertion now measures the population it was written
         about. That population is still at 100%: the drift was entirely
         the new denominator, not a decline in the seeded corpus.
+
+        Re-scoped again at Phase 226, and the reason is worth recording.
+        The Phase 218 fix named the one population to *exclude*
+        (`!= "model-generated"`), which silently assumed there would
+        only ever be two. Phase 226 added a third — entries drawn from
+        Triumph service manuals, owner's handbooks and government recall
+        databases, marked `service-manual` — and a denylist would have
+        demanded forum tips from them. The assertion now names the
+        population it measures instead: the forum-derived corpus is
+        `unverified` (the legacy seeded rows) plus `forum`. An allowlist
+        survives the next population; a denylist does not.
         """
+        FORUM_DERIVED = {"unverified", "forum"}
         all_issues = search_known_issues(db_path=full_db)
         forum_sourced = [
             i for i in all_issues
-            if (i.get("source") or "unverified") != "model-generated"
+            if (i.get("source") or "unverified") in FORUM_DERIVED
         ]
         assert forum_sourced, "no forum-sourced issues found"
         issues_with_tips = sum(
@@ -142,19 +154,27 @@ class TestGate2KnowledgeBaseIntegration:
             "issues have forum tips"
         )
 
-    def test_model_generated_issues_do_not_claim_forum_tips(self, full_db):
-        """The other half of the rule above. A model-generated entry
-        citing a 'Forum tip' would be asserting a source it does not
-        have — worse than having no tip at all."""
-        generated = [
+    def test_non_forum_issues_do_not_claim_forum_tips(self, full_db):
+        """The other half of the rule above. An entry citing a 'Forum
+        tip' when its recorded source is not forum-derived would be
+        asserting provenance it does not have — worse than having no tip
+        at all.
+
+        Widened at Phase 226 alongside the re-scoping above: this
+        applied only to `model-generated`, so a `service-manual` entry
+        could have claimed a forum tip unchallenged. Both halves of the
+        rule now key off the same forum-derived set."""
+        FORUM_DERIVED = {"unverified", "forum"}
+        non_forum = [
             i for i in search_known_issues(db_path=full_db)
-            if i.get("source") == "model-generated"
+            if (i.get("source") or "unverified") not in FORUM_DERIVED
         ]
+        assert non_forum, "no non-forum-sourced issues found"
         offenders = [
-            i["title"] for i in generated
+            f"{i['title']} [{i.get('source')}]" for i in non_forum
             if "Forum tip" in (i.get("fix_procedure") or "")
         ]
-        assert not offenders, f"model-generated entries claiming forum tips: {offenders}"
+        assert not offenders, f"non-forum entries claiming forum tips: {offenders}"
 
     # --- Cross-platform system queries ---
 
