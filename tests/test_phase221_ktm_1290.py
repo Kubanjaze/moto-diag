@@ -128,13 +128,24 @@ class TestContent:
         assert {e["make"] for e in raw} == {"KTM"}
         assert len(search_known_issues(make="KTM", db_path=db_path)) == 6
 
-    def test_this_is_the_first_ktm_file(self):
-        """KTM had zero entries before this phase — the block opens
-        here, so there is no same-make file to collide with."""
-        others = [
-            f for f in K.glob("known_issues_ktm_*.json") if f.name != KTM_FILE.name
-        ]
-        assert not others, f"another KTM file appeared: {others}"
+    def test_this_file_still_owns_its_titles(self):
+        """This phase opened the KTM block, and the first version of
+        this test asserted that by requiring no sibling KTM file to
+        exist. That was the wrong encoding of a true fact: it made the
+        guard fail the moment the block grew, which Phase 222 duly did.
+        A guard should outlive the deliverable it was written for
+        (Phase 220's finding), so it now asserts what was meant — the
+        1290 file keeps its own entries and does not collide with a
+        sibling's titles."""
+        mine = {e["title"] for e in json.loads(KTM_FILE.read_text(encoding="utf-8"))}
+        assert len(mine) == 6
+        for sibling in K.glob("known_issues_ktm_*.json"):
+            if sibling.name == KTM_FILE.name:
+                continue
+            theirs = {
+                e["title"] for e in json.loads(sibling.read_text(encoding="utf-8"))
+            }
+            assert not (mine & theirs), f"{sibling.name} collides: {mine & theirs}"
 
     def test_severity_years_procedures(self, raw):
         for e in raw:

@@ -1,0 +1,150 @@
+[
+  {
+    "title": "The LC8c in a 790 or 890 Duke is a parallel twin, not a V-twin — the name is the trap",
+    "description": "General knowledge entry on the most expensive assumption in the Duke line. KTM's LC8 is a 75-degree V-twin, the engine in the 1290 and the big adventure bikes. The LC8c in the 790 and 890 Duke is a **parallel twin** — two cylinders side by side, an entirely different architecture that shares a family name and very little else. The name is not the only reason the mistake is convincing: the LC8c uses an offset crankpin so the two cylinders do not fire evenly, which gives it the uneven beat and the throttle feel of a V-twin. Riders describe it as a V-twin because it sounds and behaves like one, and a shop that takes them at their word starts looking up the wrong engine. Anything referenced by engine architecture — cylinder identification, cam and chain layout, cooling routing, exhaust arrangement — is different between the two.",
+    "make": "KTM",
+    "model": "KTM 790 Duke, 890 Duke, 890 Duke R (LC8c parallel twin)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "ordered v-twin parts for a 790 duke",
+      "engine layout does not match the manual",
+      "cylinder numbering confusing on an 890",
+      "customer says it is a v-twin",
+      "lc8 and lc8c parts confused"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The LC8c name reading as a variant of the LC8 V-twin when it is a different architecture",
+      "An offset crankpin giving the parallel twin an uneven firing beat that sounds and feels like a V-twin",
+      "An owner describing the bike as a V-twin in good faith and the description being taken as specification",
+      "Engine-architecture-dependent references — cylinder identification, cam layout, cooling and exhaust routing — differing between the two"
+    ],
+    "fix_procedure": "1. Fix the architecture before looking anything up. A 790 or 890 Duke has two cylinders side by side across the frame. A 1290 has them in a vee. This is visible in ten seconds with the tank in place and settles every downstream question. 2. Do not take the engine name as the architecture. LC8 and LC8c are different engines; the shared prefix is a family name, not a description. 3. Do not take the sound or the feel as evidence either. The offset crankpin is there precisely to produce V-twin character in a parallel twin, so a rider reporting a V-twin beat is reporting the engine working as designed. 4. When cross-referencing a part or a procedure, confirm the source document is for the LC8c and not the LC8. A procedure written around a vee layout will not describe what is in front of you. 5. If a part has already been ordered on the wrong assumption, stop before fitting. Architecture-dependent parts that physically fit are the expensive version of this error.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Model designation and engine number read from the bike",
+      "Service documentation for the LC8c specifically"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "The 125 and 390 Duke are built in India by Bajaj — what that changes is parts sourcing, not quality",
+    "description": "General knowledge entry on a supply-chain fact that is routinely mistaken for a quality claim. The small Dukes are manufactured by Bajaj Auto in India under KTM's engineering, and the same platform underpins the RC models. This is worth knowing for exactly two reasons, both practical. First, parts availability and part numbering can differ by market in a way they do not for a bike built in one place for one region, so a number quoted from a forum post or a parts diagram written for another market may not be the number your supplier stocks. Second, specification varies between markets — emissions equipment, restricted variants for licence classes, and detail changes across model years — so a procedure or a torque figure sourced from a bike in a different market may not describe the bike you have. It is not evidence about how well the bike is made, and treating it that way leads a shop to diagnose from a prejudice instead of from the machine.",
+    "make": "KTM",
+    "model": "KTM 125 Duke, 390 Duke (and platform-shared RC models)",
+    "year_start": 2011,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "part number does not match the parts diagram",
+      "supplier cannot find the part for a 390 duke",
+      "spec differs from the manual i found online",
+      "restricted variant behaves differently"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Part numbering and availability differing by market on a platform sold worldwide",
+      "Market-specific specification including emissions equipment and licence-class restricted variants",
+      "Documentation sourced from another market describing a different specification of the same model",
+      "Model-year detail changes across a long-running platform"
+    ],
+    "fix_procedure": "1. Identify the bike by VIN and market before sourcing anything. On this platform the market matters as much as the model year for what part number applies. 2. Source part numbers from a dealer parts system keyed to that VIN rather than from a forum post or a diagram found by model name. This is where most of these errors start. 3. If a part number does not resolve, check whether the reference came from another market before concluding the part is discontinued. 4. Confirm whether the bike is a restricted variant for a licence class before diagnosing a performance complaint. A restricted bike making restricted power is not a fault. 5. Treat manufacturing origin as information about sourcing and specification only. It says nothing about the condition of the machine in front of you, and diagnosing from an assumption about where a bike was built is diagnosing from a prejudice rather than from evidence.",
+    "parts_needed": [
+      "No parts — this is a sourcing and identification step",
+      "VIN for a market-correct parts lookup"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "A 390 Duke and an RC 390 share an engine but not a chassis — cross-reference carefully",
+    "description": "General knowledge entry on a cross-reference that is right half the time, which is the dangerous kind. The 390 Duke is the naked bike and the RC 390 the faired sportbike on the same platform, and they share the single-cylinder engine and much of its ancillary hardware. They do not share the things that follow from being a naked or a faired sportbike: bodywork obviously, but also riding position hardware, cooling airflow arrangements, and the parts that differ because one bike has a fairing and the other does not. A shop that establishes the engine parts interchange and generalises that to the whole bike orders correctly for a while and then orders wrong, which is worse than never cross-referencing at all because the earlier successes build confidence in the method.",
+    "make": "KTM",
+    "model": "KTM 390 Duke and RC 390",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "rc 390 part does not fit the 390 duke",
+      "cross referenced part is wrong",
+      "bodywork part ordered for the wrong model",
+      "unsure if duke and rc parts interchange"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A shared engine and platform leading to an assumption that the whole bike interchanges",
+      "Successful engine-side cross-references building confidence that then extends too far",
+      "Fairing-dependent hardware differing between a naked and a faired bike on the same platform",
+      "Parts listings keyed to the platform rather than to the individual model"
+    ],
+    "fix_procedure": "1. Split the bike into engine and everything else before cross-referencing. The engine side is where the interchange is reliable; the rest is where it is not. 2. Verify any cross-reference against a parts system keyed to the specific model rather than to the platform, especially for anything mounted to or shaped around the fairing. 3. Be most careful where a part is nearly the same. A part that is obviously wrong gets returned; a part that fits but was designed around different airflow or a different riding position gets fitted. 4. Record on the job which model the part was ordered for. On a shared platform this is the note that prevents the same error next time. 5. If a customer supplies a part cross-referenced themselves, confirm the model it was listed for before fitting it.",
+    "parts_needed": [
+      "No parts — this is a cross-reference discipline",
+      "Model-specific parts lookup rather than a platform-level one"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "A 690 Duke is the road naked sharing the LC4 big single with KTM's enduro models",
+    "description": "General knowledge entry on where the 690 Duke sits, because it is easy to lose between categories. It is a Duke — a road naked — powered by the LC4, KTM's large-displacement single, which is the same engine family used in the marque's road-legal enduro models. That gives a shop two useful things and one trap. The useful things: engine-side parts and procedures cross-reference across body styles more than model names suggest, and a technician who has worked on the enduro version of this engine already knows the architecture. The trap is everything outside the engine. A road naked and an enduro have different chassis, suspension, wheels, gearing, ergonomics and service exposure, and the enduro's off-road service assumptions do not transfer to a bike that spends its life on tarmac. Cross-reference the engine; do not cross-reference the bike.",
+    "make": "KTM",
+    "model": "KTM 690 Duke (LC4 single)",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "unsure which category the 690 duke falls in",
+      "enduro procedure quoted for a road bike",
+      "690 duke parts listed under another model",
+      "big single service question on a naked bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A shared LC4 engine family spanning road naked and enduro body styles",
+      "Engine-side cross-references being generalised to chassis and running gear that do not transfer",
+      "Off-road service assumptions applied to a machine used on tarmac",
+      "The model sitting between a naked-bike listing and an enduro listing in parts and documentation"
+    ],
+    "fix_procedure": "1. Establish the body style first and the engine second. The 690 Duke is a road naked; that determines the chassis, the running gear and the service exposure. 2. Cross-reference engine-side parts and procedures across the LC4 family freely, confirming against the specific model as always. 3. Do not carry the service assumptions across. An enduro's intervals and inspection points are set by off-road exposure — grit, water and impact — which a road bike does not see in the same way, and a road bike's intervals are not conservative for an enduro either. 4. When looking up the bike, search by model designation rather than by category. It falls between categories in a way that produces empty results and wrong results in equal measure. 5. Check gearing and wheel specification against the actual bike rather than a family listing before ordering anything in the drivetrain.",
+    "parts_needed": [
+      "No parts — this is a scoping and cross-reference step",
+      "Model-specific service documentation for the 690 Duke"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "An LC8c idles and pulls with an uneven beat by design — telling that from a misfire on a 790 or 890",
+    "description": "General knowledge entry on a complaint that is usually the engine working correctly. The LC8c parallel twin uses an offset crankpin, so its two cylinders do not fire at even intervals. The result at idle and at low revs is a lope — an audible and felt unevenness that a technician used to an evenly firing parallel twin reads as a misfire, a fuelling fault or a dying cylinder. It is neither; it is the reason the engine has the character it was designed to have. The distinction from a real misfire is doable by ear and by hand without a scan tool: a designed firing interval is regular in its irregularity — the same pattern, cycle after cycle, present when cold and when hot, unchanged by load. A genuine misfire is intermittent, changes with load, revs or temperature, and usually gets worse rather than staying identical. Getting this wrong costs a customer a diagnostic charge and sometimes a set of plugs and coils for a healthy engine.",
+    "make": "KTM",
+    "model": "KTM 790 Duke, 890 Duke, 890 Duke R (LC8c parallel twin)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "engine feels lumpy at idle",
+      "790 duke sounds like it is missing",
+      "uneven beat on an 890",
+      "thinks one cylinder is down",
+      "lope at low revs on a parallel twin"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "An offset crankpin producing unequal firing intervals as a design characteristic of the LC8c",
+      "Expectations set by evenly firing parallel twins, where the same sound would indicate a fault",
+      "A designed lope being reported by an owner as a misfire in good faith",
+      "The character being most obvious at idle and low revs, which is where most complaints are raised"
+    ],
+    "fix_procedure": "1. Listen for regularity before assuming a fault. A designed firing interval repeats identically cycle after cycle; a misfire is intermittent. This alone settles most of these. 2. Check whether it changes with temperature and load. Designed character is present cold and hot, at idle and under load, unchanged. A misfire that is genuine almost always varies with one of those. 3. Compare against another example of the same model if one is available. That is the fastest confirmation and needs no tools. 4. Only if it is intermittent or load-dependent should it be treated as a fault, and then diagnose it as a misfire normally — plugs, coils, injectors and compression — rather than assuming the architecture is at fault. 5. Explain the design to the owner rather than adjusting anything. An owner who understands why the engine sounds as it does stops reporting it, and an engine that has had healthy parts replaced still sounds the same.",
+    "parts_needed": [
+      "No parts unless a genuine misfire is confirmed",
+      "Ignition and fuelling components only if a real fault is found"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  }
+]
