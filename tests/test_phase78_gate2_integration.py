@@ -112,16 +112,49 @@ class TestGate2KnowledgeBaseIntegration:
     # --- Fix procedures contain forum tips ---
 
     def test_forum_tips_present(self, full_db):
-        """Every issue should have a 'Forum tip' in its fix_procedure."""
+        """The forum-derived corpus should carry a 'Forum tip' in its
+        fix_procedure.
+
+        Scoped by provenance at Phase 218. The gate originally measured
+        every row, which was right when the knowledge base had one
+        population. Phase 211 added `known_issues.source`, and Track K
+        then began adding `model-generated` entries — 74 of them by
+        Phase 218 — which are NOT forum-derived and must not pretend to
+        be. Adding "Forum tip" to them would fabricate exactly the
+        provenance the source column exists to record.
+
+        So the assertion now measures the population it was written
+        about. That population is still at 100%: the drift was entirely
+        the new denominator, not a decline in the seeded corpus.
+        """
         all_issues = search_known_issues(db_path=full_db)
+        forum_sourced = [
+            i for i in all_issues
+            if (i.get("source") or "unverified") != "model-generated"
+        ]
+        assert forum_sourced, "no forum-sourced issues found"
         issues_with_tips = sum(
-            1 for issue in all_issues
+            1 for issue in forum_sourced
             if "Forum tip" in issue.get("fix_procedure", "")
         )
-        # At least 90% should have forum tips
-        assert issues_with_tips >= len(all_issues) * 0.9, (
-            f"Only {issues_with_tips}/{len(all_issues)} issues have forum tips"
+        assert issues_with_tips >= len(forum_sourced) * 0.9, (
+            f"Only {issues_with_tips}/{len(forum_sourced)} forum-sourced "
+            "issues have forum tips"
         )
+
+    def test_model_generated_issues_do_not_claim_forum_tips(self, full_db):
+        """The other half of the rule above. A model-generated entry
+        citing a 'Forum tip' would be asserting a source it does not
+        have — worse than having no tip at all."""
+        generated = [
+            i for i in search_known_issues(db_path=full_db)
+            if i.get("source") == "model-generated"
+        ]
+        offenders = [
+            i["title"] for i in generated
+            if "Forum tip" in (i.get("fix_procedure") or "")
+        ]
+        assert not offenders, f"model-generated entries claiming forum tips: {offenders}"
 
     # --- Cross-platform system queries ---
 

@@ -1,0 +1,242 @@
+[
+  {
+    "title": "Multistrada V4 has no desmodromic valves — desmo-era service quotes are wrong for this bike",
+    "description": "The 2021-on Multistrada V4 uses the Granturismo engine, which returns its valves with conventional springs rather than the desmodromic closing gear Ducati is known for. The valve inspection interval is correspondingly long — a figure in the tens of thousands of kilometres rather than the desmo engines' much shorter one. Shops quoting a Ducati major service from desmo habit therefore over-quote this bike badly, and owners who have been told Ducatis need frequent expensive valve work arrive expecting a bill that does not apply. The diagnostic consequence is real too: valve-gear noise on a Granturismo is a spring-valve question, not a desmo closer question. Written from general knowledge — confirm the exact interval for the model year against the manual, because that figure is what the quote turns on.",
+    "make": "Ducati",
+    "model": "Multistrada V4 / V4 S / V4 Rally (Granturismo, spring valves, 2021+)",
+    "year_start": 2021,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "quoted desmo service on a v4",
+      "owner expects expensive valve work",
+      "valve interval seems too long",
+      "service schedule does not match",
+      "top end noise on a granturismo"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Granturismo engine uses conventional spring valve return, unlike every desmodromic Ducati road engine before it",
+      "Shop applying desmo-era Ducati service habits and intervals to a spring-valve engine",
+      "Service scheduling by manufacturer rather than by engine family",
+      "Owner expectation set by earlier Ducati ownership or by reputation"
+    ],
+    "fix_procedure": "1. Identify the engine before quoting anything: a 2021-on Multistrada V4 carries the Granturismo, which has spring valve return. A Multistrada 1200, 1260 or V2 does not — those are desmodromic and follow the desmo schedule. 2. Look up the valve inspection interval for the exact model year in the manual rather than applying a remembered Ducati figure; the Granturismo interval is far longer than the desmo engines'. 3. Quote from that schedule. Over-quoting a service the bike does not need damages trust as much as under-quoting. 4. For a top-end noise complaint, diagnose it as a conventional spring-valve engine — do not go looking for closing-rocker or shim-over-bucket symptoms that this engine does not have. 5. Record the engine family in the service history so the next visit starts from the right schedule.",
+    "parts_needed": [
+      "None — identification and correct schedule selection",
+      "Service items per the manual's schedule for the model year"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada cam drive splits by generation — belts on the 1200/1260/V2, chain on the V4",
+    "description": "One model name covers two different timing drives. The Multistrada 1200, 1260 and V2 use belt-driven Testastretta engines with a belt replacement interval set by age as well as mileage. The Multistrada V4's Granturismo engine is chain driven and has no belt at all. A shop that assumes 'Multistrada' means belts will quote belt parts and labour that do not exist for a V4; one that assumes the whole line moved to chains after the Panigale will miss a genuinely overdue belt on a 1260 that has been sitting. Written from general knowledge — confirm the timing drive and interval for the exact model and year against the manual before quoting.",
+    "make": "Ducati",
+    "model": "Multistrada 1200 / 1260 / V2 (belt) and Multistrada V4 (chain), 2010+",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "unsure if belts apply to this bike",
+      "belt parts not listed for the vin",
+      "timing noise from cylinder head",
+      "belt service overdue by age",
+      "quoted belts on a v4 in error"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Multistrada 1200, 1260 and V2 use belt-driven Testastretta engines with an age-based belt interval",
+      "Multistrada V4 uses the chain-driven Granturismo, so no belt exists to service",
+      "Parts and service lookup performed by model name rather than by engine family",
+      "Belts ageing out on a low-mileage bike that has been stored, where mileage alone suggests nothing is due"
+    ],
+    "fix_procedure": "1. SAFETY: cold engine, bike supported properly before any timing-drive work. On a belt engine, never turn the engine over with the belts removed or slack — these are interference engines and the valves will meet the pistons. Use the manual's locking tools and procedure. 2. Establish the engine family from the VIN and model year, not the badge: 1200, 1260 and V2 are belt driven; V4 is chain driven. 3. On a belt bike, check the belt's age from the service history as well as the odometer — belts age out on stored bikes regardless of miles. Inspect for cracking, fraying at the edges, missing teeth and any glazing, and check the tensioner and idler bearings for roughness while the covers are off. 4. Replace belts to the manual's interval and torque the tensioner per specification. 5. On a V4, do not look for belts. A timing-drive noise there is a chain, tensioner or gear question and is diagnosed accordingly. 6. Record the engine family in the service history so the belt question is settled for the next visit.",
+    "parts_needed": [
+      "Cam belts and tensioner/idler bearings on 1200/1260/V2 (per manual)",
+      "Belt cover gaskets or seals as required",
+      "Engine oil if the timing cover work requires a drain"
+    ],
+    "estimated_hours": 3.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada 1200 DVT variable valve timing — noise and behaviour that is not a fault",
+    "description": "The 2015-2017 Multistrada 1200 introduced Desmodromic Variable Timing, which alters cam phasing continuously and is Ducati's first application of variable timing to a desmodromic engine. It brings its own sounds and behaviours — a change in note as phasing moves, and a distinct character at low rpm compared with the earlier fixed-timing 1200 — and riders coming from the pre-DVT bike present these as faults. It also means the engine is not the same as the 2010-2014 1200 for diagnostic purposes even though the model name and displacement are unchanged. Written from general knowledge — confirm the DVT system's operation and any specific checks for the model year against the manual.",
+    "make": "Ducati",
+    "model": "Multistrada 1200 DVT (Desmodromic Variable Timing, 2015-2017)",
+    "year_start": 2015,
+    "year_end": 2017,
+    "severity": "low",
+    "symptoms": [
+      "engine note changes with rpm",
+      "sounds different from older 1200",
+      "suspected timing fault on a dvt",
+      "low rpm character feels wrong",
+      "noise from cam area at idle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Desmodromic Variable Timing altering cam phasing, producing a change in engine note that is normal operation",
+      "Rider or mechanic comparing against the fixed-timing 2010-2014 Multistrada 1200 and reading the difference as a fault",
+      "Oil condition or level affecting a phasing system that depends on oil supply",
+      "Assuming 2010-2014 diagnostic procedures apply because the displacement and model name did not change"
+    ],
+    "fix_procedure": "1. Establish which 1200 is in front of you. A 2015-2017 bike is DVT; a 2010-2014 bike is not, and they are different engines for diagnosis despite the shared name and capacity. 2. Ask whether the complaint is a change or a comparison — a rider new to a DVT bike comparing it with an earlier 1200 is describing a characteristic, not a fault. 3. Check engine oil level and condition first, because a variable-timing system depends on its oil supply and degraded or low oil is the cheap cause of genuine phasing complaints. 4. Warm the engine fully and listen through the rev range with a stethoscope, distinguishing phasing transitions from a mechanical knock. 5. Ducati-specific fault data for the timing system requires a manufacturer-capable diagnostic tool, which is a separate subject. 6. If oil and condition check out and the behaviour is consistent with normal phasing, explain it rather than continuing to investigate.",
+    "parts_needed": [
+      "Engine oil and filter to the manual's specification if the supply is suspect"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada V4 radar sensors — contamination and alignment, not a cruise-control fault",
+    "description": "The Multistrada V4 carries forward- and rear-facing radar for adaptive cruise control and blind-spot detection. Both sensors sit where road grime, insects, mud and touring luggage end up, and their view can also be obstructed by a non-standard screen, an aftermarket top box or a crash bar. When the system degrades or refuses to engage, the complaint arrives as broken adaptive cruise or a blind-spot warning that fires at nothing, and shops start with the electronics when the answer is usually the sensor face or what is bolted in front of it. Alignment after any front-end impact matters too, because a radar looking slightly off-axis reports plausible but wrong distances. Written from general knowledge — confirm the sensor locations, cleaning guidance and any alignment procedure against the manual.",
+    "make": "Ducati",
+    "model": "Multistrada V4 / V4 S / V4 Rally (front and rear radar, 2021+)",
+    "year_start": 2021,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "adaptive cruise will not engage",
+      "blind spot warning false alarms",
+      "radar unavailable message",
+      "cruise drops out in rain",
+      "fault appeared after fitting luggage"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Road film, insects, mud or ice on the radar sensor face blocking or scattering the signal",
+      "Aftermarket screen, top box, luggage or crash protection sitting in the sensor's field of view",
+      "Sensor knocked out of alignment by a front-end impact or a drop, so distances are read off-axis",
+      "Water ingress or a damaged connector at the sensor after off-road or wet-weather use"
+    ],
+    "fix_procedure": "1. Establish when the fault appeared and what changed — a complaint that starts the week luggage or a new screen was fitted is usually obstruction, not electronics. 2. Clean both sensor faces gently with water and a soft cloth; do not use solvents or a pressure washer close up, and do not scrape a sensor face. 3. Remove or reposition any accessory sitting in the sensor's line of sight and re-test before going further. 4. Inspect the sensor housings and connectors for impact damage, water ingress and corrosion, particularly after off-road use or a drop. 5. Road-test in conditions where the system should work — heavy rain and spray degrade radar for real, and a fault that only appears in a downpour may be behaving as designed. 6. If the system still refuses after cleaning, obstruction removal and a connector check, alignment or fault data requires a manufacturer-capable diagnostic tool and the manual's procedure; that path is a separate subject. 7. Tell the owner what obstructs the sensors, because luggage choices are the most common repeat cause.",
+    "parts_needed": [
+      "Sensor connector seals if water ingress is found",
+      "Radar sensor only if proven damaged",
+      "Correct-fit screen or luggage where an accessory is the obstruction"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Skyhook electronic preload not told about the load — sag and handling on a packed Multistrada",
+    "description": "On Multistrada S models with Ducati Skyhook Suspension the rear preload is set electronically through a load selection — rider alone, rider with passenger, with luggage, and so on — rather than by a hand-turned collar. Riders who load panniers, a top box and a passenger for a trip and never change that selection are riding a bike set for a solo rider: it sits deep in its travel, the geometry changes, ground clearance drops and the damping algorithm is working from an attitude it was not configured for. The complaint arrives as vague handling, wallowing or grounding out on a loaded bike, and it is a settings problem rather than a suspension failure. This is distinct from an electronic suspension unit failing, which is a different diagnosis. Written from general knowledge — confirm the load-setting menu and any calibration step for the model year against the manual.",
+    "make": "Ducati",
+    "model": "Multistrada 1200 S / 1260 S / V4 S (Ducati Skyhook Suspension, 2013+)",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "wallows when loaded with luggage",
+      "rear sits low with a passenger",
+      "grounding out fully loaded",
+      "handling vague on a packed bike",
+      "preload setting never changed"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Electronic preload left on the solo-rider load setting while the bike is carrying a passenger and luggage",
+      "Rider unaware the load selection exists because there is no manual preload collar to turn",
+      "Load setting reset by a rider profile change or not carried across after a battery disconnection",
+      "Genuine rear spring or damper wear on a high-mileage touring bike, which presents the same way and must be ruled out"
+    ],
+    "fix_procedure": "1. Before touching anything, ask how the bike is loaded and what load setting is selected. On a Skyhook bike the preload is a menu choice, not a collar, and riders who came from conventional suspension often do not know it is there. 2. Set the load selection to match how the bike is actually being ridden and re-test. A large share of these complaints end here at no cost. 3. SAFETY: support the bike properly for any measurement — a loaded adventure bike is heavy and top-sided. 4. Measure static and rider sag against the manual's figures with the correct load setting applied, rather than adjusting to feel. 5. If sag is out of specification with the preload at the correct setting, investigate the rear unit itself: spring condition, damper leakage, and whether the electronic adjuster actually responds when the load setting changes. 6. Show the owner how to change the load setting before a trip, and note it in the service record — this is the repeat visit that is easiest to prevent.",
+    "parts_needed": [
+      "None in the common case — load setting and sag measurement",
+      "Rear shock or spring only if sag is out of specification with the correct setting applied"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada V4 rear cylinder deactivation at a standstill read as a misfire",
+    "description": "The Granturismo shuts down the rear cylinder bank when the bike is stopped and idling, to reduce the heat reaching rider and passenger — a real concern on an adventure bike that spends time in traffic fully loaded. To anyone who has not met the strategy it reads as a dead bank: rough idle, cylinders cold to a thermal check, and the roughness clearing the moment the throttle opens, which is exactly what a failing coil or injector looks like. On a Multistrada the complaint often arrives alongside a heat complaint, which makes it more confusing rather than less. Written from general knowledge — confirm the behaviour for the model year against the manual before diagnosing or dismissing it.",
+    "make": "Ducati",
+    "model": "Multistrada V4 / V4 S / V4 Rally (Granturismo, 2021+)",
+    "year_start": 2021,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "rough idle at a standstill",
+      "rear cylinders cold when stopped",
+      "roughness clears with throttle",
+      "suspected dead cylinder",
+      "misfire only when not moving"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Designed rear-bank deactivation at a standstill on the Granturismo, to cut heat reaching rider and passenger",
+      "Mechanic unfamiliar with the strategy reading it as a cylinder-down fault",
+      "A thermal or hand check at idle appearing to confirm a dead bank",
+      "Coinciding heat complaint making the two seem like one fault"
+    ],
+    "fix_procedure": "1. SAFETY: do not hand-check cylinder or exhaust temperature on a bike that has been running — this engine gets very hot and that is the point of the strategy. 2. Establish whether the roughness exists only at a standstill and clears as the bike moves off. If so, suspect the deactivation strategy before the ignition. 3. Confirm against the manual that the model year uses rear-bank deactivation at a standstill. 4. Run under load and confirm all cylinders contribute — a genuinely dead cylinder does not return with throttle. 5. Only if the fault persists under load should fuelling and ignition be investigated, and reading Ducati fault data requires a manufacturer-capable tool, which is a separate subject. 6. Explain the behaviour to the owner, especially where it arrived together with a heat complaint — they are the same design decision, not two faults.",
+    "parts_needed": [
+      "None if the behaviour is the deactivation strategy — diagnosis only"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada 1200 and 1260 are not the same bike for parts or procedure",
+    "description": "The 1260 replaced the 1200 in 2018 with a larger-capacity Testastretta and a range of chassis and bodywork changes, but the two look close enough that parts and procedures get crossed. Within the 1200 itself there is a further split — the 2010-2014 fixed-timing bike and the 2015-2017 DVT bike are different engines under the same name and capacity. Ordering or quoting by 'Multistrada 1200' without pinning the year produces wrong parts and wrong labour estimates, and the mistake usually surfaces halfway through a job. Written from general knowledge — confirm parts and procedures against the VIN rather than the model name.",
+    "make": "Ducati",
+    "model": "Multistrada 1200 (2010-2014), 1200 DVT (2015-2017) and 1260 (2018-2020)",
+    "year_start": 2010,
+    "year_end": 2020,
+    "severity": "low",
+    "symptoms": [
+      "wrong parts supplied for the year",
+      "labour quote does not match the job",
+      "procedure does not fit the bike",
+      "unsure which 1200 this is",
+      "parts lookup by model name only"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "1260 replacing the 1200 in 2018 with a larger Testastretta and chassis changes while looking similar",
+      "The 2015-2017 1200 DVT being a different engine from the 2010-2014 1200 despite identical name and capacity",
+      "Parts and service lookup performed by model name rather than by VIN and year",
+      "Assuming a whole model line shares procedures because the styling carried over"
+    ],
+    "fix_procedure": "1. Take the VIN and the model year before quoting parts or labour on any Multistrada — the name alone is not enough on this line. 2. Establish which engine: 2010-2014 1200 fixed timing, 2015-2017 1200 DVT, 2018-2020 1260, and treat them as three engines rather than one family. 3. Verify part numbers against the VIN, not against a visually similar picture; bodywork and chassis parts changed with the 1260 even where they look the same. 4. Read the manual's procedure for the specific model before estimating labour, particularly for anything requiring engine or bodywork access. 5. Note the exact model designation in the job record so the shop's next quote for this bike starts correct.",
+    "parts_needed": [
+      "Correct-for-VIN service parts",
+      "Bodywork fasteners and clips as required"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Multistrada V4 Rally and loaded touring bikes — checking what the extra tank and luggage changed",
+    "description": "The V4 Rally carries a substantially larger fuel tank than the standard V4, and touring Multistradas routinely run three-box luggage, a passenger and camping gear. That mass sits high and rearward, and it changes tyre loading, suspension attitude, braking distances and the load on luggage mounting points in ways riders under-estimate — particularly on a bike whose electronic suspension will quietly do its best to hide the first symptoms. A pre-trip inspection on a loaded Multistrada is a different job from one on an unloaded bike, and it is worth doing as one. Written from general knowledge — confirm load limits, tyre pressures and mounting torques for the exact model against the manual.",
+    "make": "Ducati",
+    "model": "Multistrada V4 Rally and loaded V4 / 1260 touring bikes (2010+)",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "handling changed when fully loaded",
+      "luggage mounts working loose",
+      "tyre pressures never adjusted for load",
+      "longer stopping distance loaded",
+      "bike feels top heavy on a trip"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Large-capacity fuel tank on the Rally placing significant mass high and forward when full",
+      "Three-box luggage plus passenger and gear approaching or exceeding the bike's load rating",
+      "Tyre pressures left at solo settings while the bike is fully loaded",
+      "Electronic suspension masking the early symptoms of an overloaded or badly balanced bike"
+    ],
+    "fix_procedure": "1. Weigh or estimate the actual load and compare it against the manual's maximum — an adventure bike with three boxes, a passenger and camping gear is closer to its limit than most riders assume. 2. Set tyre pressures to the manual's loaded figures, not the solo ones. This is the single highest-value item and the most frequently skipped. 3. Set the electronic suspension load selection to match the actual load, and measure sag with the bike loaded as it will be ridden. 4. Check luggage mounting points and rack fasteners for looseness, elongated holes and cracking, and torque to the manual's specification — these are fatigue points on a bike ridden loaded over rough surfaces. 5. Distribute weight low and forward where the luggage system allows; a full top box is the worst place for mass on a tall bike. 6. Brief the rider that stopping distances and cross-wind behaviour change when loaded, and re-check fasteners partway through a long trip. 7. SAFETY: a fully loaded adventure bike is heavy and unstable on a side stand on soft ground — support it properly for any of this work.",
+    "parts_needed": [
+      "Replacement rack or mount fasteners where fatigue is found",
+      "Luggage rack components if cracking is present"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  }
+]
