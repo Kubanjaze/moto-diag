@@ -1,0 +1,182 @@
+[
+  {
+    "title": "A TPI two-stroke runs an oil pump, not premix — and both halves of that mistake are expensive",
+    "description": "General knowledge entry on the most costly misunderstanding on a modern KTM two-stroke enduro. TPI models — transfer port injection, fitted to the fuel-injected 250 and 300 EXC — carry a separate oil tank and a pump that meters oil into the engine, exactly as a road two-stroke with oil injection does and unlike the carburetted competition bikes most riders learned on. Two opposite errors follow, and both destroy engines. Mixing oil into the fuel because that is what a two-stroke takes gives an engine oil from two sources at once, fouls plugs and loads the exhaust system. Filling the fuel and never looking at the oil tank, because the last two-stroke the rider owned had no such tank, runs the engine on whatever is left in it. Neither error announces itself on the first ride, which is why both get repeated until something seizes.",
+    "make": "KTM",
+    "model": "KTM 250 EXC TPI, 300 EXC TPI (fuel-injected two-stroke enduro)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "fouling plugs on a tpi two stroke",
+      "customer mixed oil into a tpi bike",
+      "oil tank never filled on an exc",
+      "smoking heavily after a fuel fill",
+      "unsure if this two stroke takes premix"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A rider treating every two-stroke as a premix engine and mixing oil into the tank",
+      "A rider treating the bike as a four-stroke and never checking a separate oil tank that must be kept filled",
+      "Oil arriving from two sources at once when premixed fuel is used in an oil-pump engine",
+      "Neither error producing an immediate symptom, so it is repeated until damage accumulates"
+    ],
+    "fix_procedure": "1. Establish which engine you have before anything else. A TPI model is fuel injected and carries a separate oil tank; a carburetted competition two-stroke does not. If the bike has an oil tank, it does not take premixed fuel. 2. Ask what has gone into the tank, and ask it plainly. Riders coming from carburetted bikes mix by habit, and it is not a question they expect. 3. If premix has been used, drain the fuel and refill with straight fuel of the correct grade, then check plugs and the exhaust for oil loading before running it. 4. If the oil tank has been run low or dry, do not start the engine to see. Fill it, prime the system per the manual, and inspect before running. 5. Check the oil level as part of every service and tell the owner where the tank is and how often to look. A rider who does not know the tank exists cannot be blamed for not filling it. 6. Do not carry premix ratios or oil quantities across from another bike. Use the figures in the manual for this model.",
+    "parts_needed": [
+      "Correct two-stroke oil to the manufacturer's specification",
+      "Fresh fuel if premix has been used",
+      "Spark plugs if fouled",
+      "Top-end components only if damage is confirmed"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "EXC is a two-stroke and EXC-F is a four-stroke — one letter, two different engines",
+    "description": "General knowledge entry on a naming distinction that decides what work a bike needs. KTM's enduro range uses **EXC** for the two-strokes — the 250 and 300 — and **EXC-F** for the four-strokes — the 250, 350, 450 and 500. The suffix is the only thing separating them in a model name, and it disappears constantly: in shorthand on a booking, in a customer's description, in a parts request, and in the way people say the bikes out loud. A request for a top end on a \"450 EXC\" is a request for a machine that does not exist, and the two engines it might mean want entirely different work, different parts and different intervals. This is not pedantry about a badge — it is the difference between a piston and rings on a competition two-stroke and a valve-train job on a four-stroke.",
+    "make": "KTM",
+    "model": "KTM 250/300 EXC (two-stroke) and 250/350/450/500 EXC-F (four-stroke)",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "booking says 450 exc",
+      "unsure if this is a two or four stroke",
+      "wrong parts ordered for an exc",
+      "customer cannot say which exc it is",
+      "exc and exc-f confused on a work order"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A single suffix letter carrying the whole two-stroke versus four-stroke distinction",
+      "The suffix being dropped in speech, in shorthand and on bookings",
+      "Displacement numbers overlapping between the ranges, so the number alone does not settle it",
+      "Parts and service listings keyed to a model name that was written without the suffix"
+    ],
+    "fix_procedure": "1. Settle the engine type by looking at the bike, not at the paperwork. A two-stroke has no valve gear to inspect and a distinctive exhaust; this takes seconds and removes all doubt. 2. Read the full model designation from the frame data plate and use it, with the suffix, on the work order and the quote. 3. Treat a displacement number on its own as insufficient. The ranges overlap at 250, so \"250 EXC\" and \"250 EXC-F\" are both real bikes and different machines. 4. Ask the customer what the last service was rather than what the bike is. A rider who says the top end was done last season is describing a two-stroke's routine; one describing a valve check is describing a four-stroke. 5. Before ordering, confirm the parts listing you are on matches the suffix. Listings written from a customer's description inherit the customer's omission. 6. Take the service schedule from the manual for the confirmed suffix rather than from the displacement. The two engines are on different schedules, and a schedule chosen from the wrong one is wrong from the first service onward.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Model designation read from the frame data plate"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "EXC and EXC-F service is counted in engine hours, not miles — a road interval is meaningless here",
+    "description": "General knowledge entry on why a shop's usual intervals do not apply to these machines. An EXC or EXC-F is a competition bike with lights, and its service schedule is written in **engine hours** rather than distance, because an hour of hard enduro loads an engine in a way an hour of road riding does not and because these bikes cover very little distance for the work they do. A machine that has done a few hundred miles can be far past a service that a road bike would not see for years. The bikes carry or accept an hour meter for exactly this reason. A shop that quotes from the odometer, or from a road bike's habits, will under-service a competition engine — and the failure that follows is not a warranty conversation, it is a rebuild. The specific intervals vary by model, by year and above all by how the bike is used, so read them from the manual for the machine in front of you rather than carrying a number across from another bike.",
+    "make": "KTM",
+    "model": "KTM EXC and EXC-F competition enduro models",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "low mileage but engine sounds tired",
+      "never serviced because mileage is low",
+      "no hour meter fitted to the bike",
+      "service quoted from the odometer",
+      "unsure when this enduro was last serviced"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A service schedule written in engine hours while the shop works from distance",
+      "Competition use loading an engine far harder per hour than road use",
+      "These machines covering little distance for the amount of work done",
+      "An hour meter missing, unread or reset, leaving no record of actual use"
+    ],
+    "fix_procedure": "1. Ask for hours before mileage, and ask how the bike is used — trail riding, racing, hard enduro. Both answers change the schedule. 2. Read the hour meter if one is fitted. If none is, say so on the paperwork and recommend one; without it there is no service history worth the name on a competition machine. 3. Take the intervals from the manual for that exact model and year. They vary too much between models and uses to be carried across, and a remembered figure is how a machine gets under-serviced. 4. If the hours are unknown, treat the machine as due rather than as low-mileage. On a competition engine the cost of assuming otherwise is the engine. 5. Explain the basis to the owner. A rider who bought a low-mileage enduro expecting road-bike intervals needs to hear why the number on the odometer is not the relevant one, and needs to hear it before the quote rather than after.",
+    "parts_needed": [
+      "Hour meter if none is fitted",
+      "Service parts per the manual once the schedule is established"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "A top end on a 250 or 300 EXC is maintenance, not a failure — quoting it as a repair alarms the wrong people",
+    "description": "General knowledge entry on a conversation that goes wrong for reasons of framing rather than mechanics. On a competition two-stroke, piston and ring replacement is a scheduled item that comes round in engine hours, and a rider who races expects it the way a road rider expects tyres. A four-stroke-trained shop meets the same job as evidence that something has gone badly wrong, and describes it to the owner that way: the engine needs stripping, the piston is being replaced. The owner of a road bike hearing that assumes catastrophe; the owner of an EXC hearing it assumes the shop does not know what it is looking at. Both conversations damage trust, and one of them loses a bike that was in perfectly normal condition. The mechanical work is ordinary and the interval belongs to the manual; the thing worth getting right is what it is called.",
+    "make": "KTM",
+    "model": "KTM 250/300 EXC and competition two-stroke enduro models",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "told the engine needs stripping",
+      "quoted a rebuild on a healthy two stroke",
+      "owner alarmed by a top end quote",
+      "shop treating a top end as a failure"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A scheduled top-end item being described in the language of a failure",
+      "Four-stroke service expectations applied to a competition two-stroke",
+      "The same words meaning routine maintenance to a racer and catastrophe to a road rider",
+      "The job arriving on hours rather than on a symptom, so nothing appears to be wrong"
+    ],
+    "fix_procedure": "1. Name the job correctly on the quote. Scheduled top-end service reads differently from engine rebuild, and on a competition two-stroke the first is what it actually is. 2. Establish the hours and the manual's interval before describing it as anything. If it is due, it is maintenance; if it is early and driven by a symptom, that is a different conversation and should be had as one. 3. Say what prompted it. Due on hours, or found on inspection, or diagnosed from a symptom — the owner's reaction depends far more on which of those it is than on the price. 4. Do the work to the manual's specification for that model and use its interval, not one remembered from another bike. 5. If the owner is new to two-strokes, explain the schedule once. A rider who understands that the top end comes round stops treating each one as a crisis, and stops deferring it, which is the outcome that matters.",
+    "parts_needed": [
+      "Piston, rings and gaskets per the model's specification",
+      "Small-end bearing where the manual specifies replacement"
+    ],
+    "estimated_hours": 2.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "The exhaust power valve on a 250 or 300 EXC carbons up and is a service item, not a running fault",
+    "description": "General knowledge entry on a part four-stroke work rarely meets. A KTM 250 or 300 EXC uses a mechanical exhaust power valve to vary the port timing with revs, and combustion deposits build on it and in its bore over time. As they do, the valve becomes slow or sticky and the engine loses the crispness of its power delivery — usually in the middle of the rev range, where the valve does its work. Riders describe it as the bike going flat, or as an engine that no longer pulls the way it used to, and it is easy to chase as a fuelling or ignition complaint because that is what those symptoms mean on a four-stroke. It is a cleaning job on a schedule, and it is missed mostly because a shop that does not work on two-strokes does not think to look. Take the interval and the procedure from the manual for the model rather than from another make's.",
+    "make": "KTM",
+    "model": "KTM 250/300 EXC and other two-stroke enduro models",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "two stroke feels flat in the midrange",
+      "lost the hit on an exc",
+      "power delivery gone soft",
+      "chasing a fuelling fault on a two stroke"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Combustion deposits building on the power valve and in its bore",
+      "The valve becoming slow or sticky, blunting power delivery where it operates",
+      "Symptoms resembling a fuelling or ignition complaint, which is what they would be on a four-stroke",
+      "A part that a shop unfamiliar with two-strokes does not think to inspect, and that has no counterpart on the EXC-F four-strokes"
+    ],
+    "fix_procedure": "1. Consider the power valve before chasing fuelling or ignition on an EXC that has gone flat in the middle of the range. It is the cheapest thing to rule out and the most commonly missed. 2. Inspect it and its bore for deposits and for free movement through its full travel. A valve that moves but not freely produces the same complaint as one that is stuck. 3. Clean it and the bore to the manual's procedure for the model, with the solvents the manual specifies rather than whatever is on the bench. 4. Check the linkage and any actuating mechanism at the same time — a clean valve on a stiff linkage still moves slowly. 5. Put the cleaning on the service schedule rather than waiting for the complaint to come back. The interval belongs to the manual for that model and use. 6. Only if the valve and its mechanism are clean and free should the complaint be pursued as fuelling or ignition.",
+    "parts_needed": [
+      "Gaskets and seals disturbed by removal",
+      "Manufacturer-specified solvent or cleaner",
+      "Power valve components only if wear or damage is found"
+    ],
+    "estimated_hours": 1.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "A 690 Enduro R is a road-legal enduro, not a competition bike — its service expectations sit between both",
+    "description": "General knowledge entry on a machine that gets serviced as the wrong thing in both directions. The 690 Enduro R runs the LC4 large single and is built to be ridden on the road to the trail and back, which puts it between the competition EXC-F machines and KTM's road bikes. Serviced like a competition enduro it gets intervals far shorter than it needs and an owner who resents the bill. Serviced like a road naked it gets intervals set for a machine that does not take grit, water and impact, and it wears out things a road bike never does. The right basis is the manual for this model, adjusted for how the bike is actually used, and the useful question at intake is not what the bike is but what it has been doing — the same model can live entirely on tarmac or spend every weekend in mud.",
+    "make": "KTM",
+    "model": "KTM 690 Enduro R (LC4 single)",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "unsure how to service a 690 enduro r",
+      "quoted competition intervals for a road bike",
+      "road intervals used on an off road bike",
+      "bike used off road but serviced as a road bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A road-legal enduro sitting between competition and road service schedules",
+      "Intake recording the model but not how the machine is used",
+      "Competition intervals applied to a machine ridden mostly on tarmac",
+      "Road intervals applied to a machine seeing grit, water and impact every weekend"
+    ],
+    "fix_procedure": "1. Ask what the bike does, not only what it is. Two examples of this model can need genuinely different attention, and the model name does not distinguish them. 2. Take the schedule from the manual for the 690 Enduro R specifically, then adjust the exposure-driven items — air filtration, chain and sprockets, brakes, bearings, fasteners — for the actual use. 3. Do not carry an EXC-F's competition schedule across because both are enduros. The LC4 in a road-legal machine is not being asked to do what a race engine is. 4. Do not carry a road naked's schedule across either, even though the engine family is shared with the 690 Duke. Cross-reference the engine, not the service exposure. 5. Inspect rather than assume on anything exposure-driven. On a bike that might have done either kind of riding, inspection is the only honest input.",
+    "parts_needed": [
+      "Service parts per the manual for this model",
+      "Air filtration and drivetrain consumables scaled to actual use"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  }
+]
