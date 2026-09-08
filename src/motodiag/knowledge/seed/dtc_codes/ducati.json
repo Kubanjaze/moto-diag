@@ -1,0 +1,86 @@
+[
+  {
+    "code": "P0301",
+    "description": "Cylinder 1 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "Ducati",
+    "common_causes": [
+      "On a Ducati L-twin, cylinder 1 is the HORIZONTAL (front) cylinder — a mechanic reading this as an inline engine's left-hand pot works on the wrong one",
+      "Coil-on-plug or plug lead failure on the horizontal cylinder, which sits low and forward and takes road spray and heat",
+      "Injector fouling or a failing injector on the front cylinder",
+      "Belt-driven engines with cam timing disturbed after a belt service affecting one cylinder only"
+    ],
+    "fix_summary": "Confirm which physical cylinder the code means before touching anything: on a Ducati L-twin, cylinder 1 is the horizontal front cylinder and cylinder 2 the vertical rear. Swap the coil and plug with the other cylinder and re-test — if the misfire follows the part, it is the part. Check injector operation and, on a belt-driven engine serviced recently, verify cam timing on that cylinder per the manual."
+  },
+  {
+    "code": "P0302",
+    "description": "Cylinder 2 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "Ducati",
+    "common_causes": [
+      "On a Ducati L-twin, cylinder 2 is the VERTICAL (rear) cylinder — the one that runs hottest and is hardest to reach",
+      "Coil, plug or lead failure on the rear cylinder, accelerated by the heat it lives in",
+      "Injector fouling on the rear cylinder, which is often overlooked because access is poor",
+      "Heat-soaked components on the rear cylinder failing when hot and recovering when cold"
+    ],
+    "fix_summary": "On a Ducati L-twin, cylinder 2 is the vertical rear cylinder — the hot one, behind the rear head, with the worst access. Expect heat-related failures here that do not appear on the front cylinder. Swap coil and plug with cylinder 1 and re-test to see whether the fault follows the part. Diagnose hot, because a rear-cylinder fault that only appears at temperature will not reproduce cold."
+  },
+  {
+    "code": "P0120",
+    "description": "Throttle/Pedal Position Sensor/Switch A Circuit Malfunction",
+    "category": "fuel",
+    "severity": "high",
+    "make": "Ducati",
+    "common_causes": [
+      "Throttle position sensor out of its learned zero after throttle-body removal, cleaning or a body swap",
+      "Ducati requires a TPS reset / throttle position learn with a Ducati-capable tool after that work — skipping it leaves the ECU referencing a stale zero",
+      "Sensor or connector damaged during throttle-body service",
+      "Genuine sensor failure or a chafed harness at the throttle bodies"
+    ],
+    "fix_summary": "On a Ducati, suspect the learned zero before the sensor. Any throttle-body removal, cleaning or synchronisation normally requires a throttle position reset with a Ducati-capable diagnostic tool, and a bike that ran fine before a service and threw this after almost always needs that reset rather than parts. Inspect the connector and harness at the throttle bodies for service damage, then perform the reset per the manual before condemning the sensor."
+  },
+  {
+    "code": "P0230",
+    "description": "Fuel Pump Primary Circuit Malfunction",
+    "category": "fuel",
+    "severity": "high",
+    "make": "Ducati",
+    "common_causes": [
+      "Fuel pump relay failure — a common and cheap Ducati no-start cause that presents identically to a dead pump",
+      "In-tank pump flange connector corroded, or the wiring at the flange damaged during tank work",
+      "Pump itself failing on a bike that has been run low on fuel repeatedly",
+      "Immobiliser or a security condition preventing the pump priming, which reads as a circuit fault to an owner"
+    ],
+    "fix_summary": "Listen for the pump prime with the ignition on before anything else — no prime narrows it immediately. Swap or bench-test the fuel pump relay early, because it is cheap, common and mimics a dead pump exactly. Inspect the in-tank pump flange connector for corrosion and for damage from previous tank work. Confirm the immobiliser is satisfied, since a security condition can stop the prime and be mistaken for a circuit fault."
+  },
+  {
+    "code": "P0562",
+    "description": "System Voltage Low",
+    "category": "electrical",
+    "severity": "high",
+    "make": "Ducati",
+    "common_causes": [
+      "Regulator/rectifier failure on air-cooled 2-valve models, a well-known weak point on those bikes",
+      "Charging output marginal at idle on older Ducatis, so a bike used for short trips never fully replenishes",
+      "Connector corrosion between the alternator and the regulator, often behind bodywork where it is not seen",
+      "Battery aged or undersized, which on a CAN-bus Ducati produces multiple unrelated warnings at once rather than one clear fault"
+    ],
+    "fix_summary": "Test the battery and the charging voltage at the battery before chasing anything else — on a CAN-bus Ducati a weak supply produces a scatter of unrelated warnings that look like several faults. On air-cooled 2-valve models treat the regulator/rectifier as a prime suspect, and inspect its connectors for heat damage and corrosion. Note that a low reading at idle can be normal on older bikes; take the reading at the manual's specified engine speed."
+  },
+  {
+    "code": "P0505",
+    "description": "Idle Control System Malfunction",
+    "category": "idle",
+    "severity": "medium",
+    "make": "Ducati",
+    "common_causes": [
+      "Idle air actuator or bypass passage fouled with carbon on a bike used for short runs",
+      "Throttle bodies out of balance, which on a big L-twin produces a hunting idle that reads as an idle-control fault",
+      "Throttle position zero not reset after throttle-body work, so the ECU's idle reference is wrong",
+      "Air leak at an intake joint or a perished vacuum hose on an older bike"
+    ],
+    "fix_summary": "On a Ducati, check throttle-body balance and the throttle position zero before condemning the idle actuator — a big L-twin with unbalanced bodies hunts at idle and sets this code without anything being broken. Look for intake air leaks at the joints and hoses. Clean the idle air passage and actuator if fouled. Where throttle-body work has recently been done, perform the throttle position reset with a Ducati-capable tool first and re-test."
+  }
+]
