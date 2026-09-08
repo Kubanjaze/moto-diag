@@ -1,0 +1,334 @@
+[
+  {
+    "title": "The Daytona 675 and Street Triple 675 shared an engine only until 2013 — after that they are different engines, not different tunes",
+    "description": "Drawn from Triumph model specifications. The common belief that the Street Triple is simply a detuned Daytona is true for the first generation and false afterwards, which makes it the worst kind of half-truth. On the 2006–2012 bikes the two genuinely shared one engine, with the Street Triple running a softer state of tune that traded top-end for midrange. From the 2013 model year the Daytona 675 moved to a **bigger bore and shorter stroke with higher compression**, while the Street Triple 675 kept the original bore, stroke and compression. So for 2013–2017 they are not the same engine at all, and a cross-reference that worked on a 2010 pair will be wrong on a 2015 pair. The 765s diverge further still: the Daytona Moto2 765 runs different bore and stroke, higher compression, a higher rev limiter, a higher fuel-grade requirement and shorter final gearing than the contemporary Street Triple RS. Cross-reference by year and frame number, never by the assumption that one is a softer version of the other.",
+    "make": "Triumph",
+    "model": "Triumph Daytona 675 / 675R and Street Triple 675 / R",
+    "year_start": 2006,
+    "year_end": 2017,
+    "severity": "medium",
+    "symptoms": [
+      "daytona part on a street triple",
+      "street triple feels down on top end",
+      "are the 675 engines the same",
+      "cross referenced 675 parts",
+      "tuning difference between daytona and street triple"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A shared engine on the 2006–2012 bikes creating a rule that stopped being true in 2013",
+      "The 2013 Daytona 675 moving to a bigger bore, shorter stroke and higher compression while the Street Triple kept the original",
+      "The 765-generation Daytona and Street Triple differing in bore, stroke, compression, rev limiter, fuel grade and gearing",
+      "Cross-references that succeeded on early bikes being extended to later ones where the engines diverged"
+    ],
+    "fix_procedure": "1. Establish the model year before any engine cross-reference between these two models. Up to 2012 the engines are shared; from 2013 they are not. 2. Do not treat the Street Triple as a detuned Daytona on any 2013-or-later bike — the difference is in the bore, stroke and compression, not the calibration. 3. On the 765 generation, treat the Daytona and the Street Triple as separate engines outright; they differ in enough dimensions that no useful general rule survives. 4. Check the fuel grade requirement before advising an owner on fuel: the Daytona Moto2 765 asks for a higher grade than the Street Triple RS of the same period. 5. Verify every cross-reference against a parts listing for the specific model and year rather than for the platform.",
+    "parts_needed": [
+      "No parts — this is a cross-reference discipline",
+      "Year- and model-specific parts lookup"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "The Daytona is a faired supersport, not a naked — it sits outside the Street and Speed Triple line despite sharing their engine",
+    "description": "General knowledge entry on a scoping question that decides where a shop looks for information. The Street Triple and Speed Triple are naked bikes; the Daytona is a fully faired supersport built around the same triple as the Street Triple of its era. That difference is not cosmetic for a workshop. Bodywork removal and refitting is a different job with different labour and different fastener counts; cooling airflow is managed by the fairing rather than by the bike's shape; the riding position drives different control, cable and hose routing; and the machine's likely history is different, because a faired supersport is more often track-ridden than a naked commuter. A shop that treats the Daytona as \"the Street Triple with plastics\" quotes bodywork jobs short and misses the inspection points that track use implies. Look up the Daytona as its own model, and treat the shared engine as the one thing that genuinely carries across.",
+    "make": "Triumph",
+    "model": "Triumph Daytona 675 / 675R and Daytona Moto2 765",
+    "year_start": 2006,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "is the daytona the same as a street triple",
+      "quoted bodywork on a daytona",
+      "daytona listed under naked bikes",
+      "fairing removal took longer than quoted",
+      "which category does the daytona fall in"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A faired supersport and a naked bike sharing an engine but not a body, chassis focus or use pattern",
+      "Bodywork labour on a fully faired machine being quoted from a naked bike's experience",
+      "Fairing-managed cooling airflow and fairing-routed cables having no analogue on the naked",
+      "Track use being more likely on the faired bike, changing what should be inspected"
+    ],
+    "fix_procedure": "1. Look the Daytona up as its own model rather than under the Street Triple, whatever the engine sharing suggests. 2. Quote bodywork on a faired bike from the faired bike's procedure; fastener counts and access are not comparable to a naked. 3. On any cooling or heat complaint, remember the fairing is part of the airflow path — a panel refitted wrong or a missing duct is a real cause with no naked-bike equivalent. 4. Ask about track use on a used Daytona and inspect accordingly; the answer changes what is worth checking before it changes what is worth quoting. 5. Cross-reference the engine freely and the rest of the motorcycle not at all.",
+    "parts_needed": [
+      "No parts — this is a scoping step",
+      "Model-specific service documentation for the Daytona"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "\"Street Triple\" names a 675 and a 765 — the engine changed in 2017 and the model name did not",
+    "description": "General knowledge entry on the identification step that has to happen before anything else on this model. The Street Triple ran a 675cc triple from its introduction and moved to a 765cc engine for the 2017 model year, keeping the name. Both are Triumph triples, both are naked, and the badge on the side panel does not distinguish them. So a booking, a parts request or a forum answer that says only \"Street Triple\" is ambiguous across an engine change, and the ambiguity is easy to miss because the name sounds like it identifies a specific motorcycle. The suffixes do not settle it either — S, R and RS describe the equipment and chassis ladder rather than the engine — so a request for a part for a \"Street Triple R\" names a trim level on two different engines. Establish the year and the frame number before ordering or quoting, and put both on the work order.",
+    "make": "Triumph",
+    "model": "Triumph Street Triple — 675 (2007–2016) and 765 (2017 on)",
+    "year_start": 2007,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "booking just says street triple",
+      "675 or 765 street triple",
+      "part ordered for the wrong street triple",
+      "street triple r which engine",
+      "model name does not give the displacement"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "One model name covering two displacements across an engine change",
+      "No external badge distinguishing the two on many machines",
+      "Trim suffixes describing chassis and equipment rather than engine, so they do not disambiguate",
+      "Parts and information lookups keyed to the model name returning the wrong generation"
+    ],
+    "fix_procedure": "1. Ask for the year before anything else, and confirm it from the frame number rather than from the owner's recollection. 2. Do not treat the trim suffix as an engine identifier — S, R and RS exist on both displacements and describe suspension, brakes and equipment. 3. Order against the frame number, not the model name, and be most careful with anything in the induction, exhaust or cooling path. 4. When searching for information, include the displacement in the query; an answer about a Street Triple is worth little without it. 5. Put the year, displacement and frame number on the work order so the next person does not repeat the identification.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Frame number for a generation-correct parts lookup"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "The Speed Triple went from 1050 to 1200 and the name carried over — and the 1200 is not the Tiger's T-plane engine",
+    "description": "General knowledge entry covering two traps that arrive together. The Speed Triple ran a 1050cc triple for many years before Triumph replaced it with a 1200-class engine in the RS, later joined by the faired RR. As with the Street Triple, the model name spans the change, so a \"Speed Triple\" without a year identifies neither the engine nor the era. The second trap is the more subtle one and it crosses model lines: the Speed Triple 1200 shares its 1160cc architecture with the Tiger 1200, but **not** the Tiger's T-plane crank. The Tiger 1200 from 2022 fires unevenly by design with a 1-3-2 order; the Speed Triple 1200 is a conventional even-firing triple. So the diagnostic note that an uneven beat on a Tiger 1200 is normal does not transfer, and on a Speed Triple 1200 an uneven idle is a reason to look rather than a reason to reassure. Two bikes sharing a displacement and a good deal of architecture can still be telling you different things through the same symptom.",
+    "make": "Triumph",
+    "model": "Triumph Speed Triple — 1050 and 1200 RS / RR",
+    "year_start": 2005,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "booking just says speed triple",
+      "1050 or 1200 speed triple",
+      "uneven idle on a speed triple 1200",
+      "does the speed triple have a t-plane crank",
+      "tiger 1200 notes applied to a speed triple"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "One model name spanning a change from a 1050cc to a 1200-class engine",
+      "The Speed Triple 1200 sharing architecture with the Tiger 1200 but using a conventional even-firing crank",
+      "The Tiger 1200's designed uneven beat being read as normal on a Speed Triple, where it would not be",
+      "Displacement similarity encouraging a cross-model assumption that does not hold"
+    ],
+    "fix_procedure": "1. Establish the year and displacement before quoting or ordering; the name spans the change. 2. On a Speed Triple 1200 with an uneven beat, do not reassure the owner by analogy with the Tiger 1200 — that bike's firing arrangement is deliberate and this one's is not. Diagnose it as a genuine complaint. 3. Use the ordinary tell for a misfire: a real one varies with load, revs or temperature, while a designed firing interval does not. On this engine there is no designed unevenness to explain it away. 4. Do not carry Tiger 1200 engine notes across on the strength of the shared displacement; confirm against documentation for the Speed Triple. 5. Record the model and year alongside any diagnostic note so a later reader knows which engine it referred to.",
+    "parts_needed": [
+      "No parts at the diagnostic stage",
+      "Ignition and fuelling components only if a genuine misfire is confirmed"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "S, R and RS mostly describe chassis and equipment — but the Street Triple 765 S is a 660, so the trim letter can change the engine",
+    "description": "Drawn from Triumph model specifications, and it corrects a rule that is nearly right. Across the Street Triple and Speed Triple the suffixes generally denote a ladder of chassis and equipment — better suspension, better brakes, more electronics as you climb — and generally do not denote a different engine. There is a significant exception. The **Street Triple S of 2017–2022 is not a 765**: it is a destroked and debored 660cc version of that engine, built to meet A2 licence limits, and it is not the same unit as Triumph's other 660 triples either. So on that generation the trim letter does change the displacement, and a shop applying the general rule will order 765 engine parts for a 660. The safe formulation is that the suffix is where chassis and equipment differ *and* is not safe to ignore for the engine either — confirm the displacement from the machine rather than inferring it from the model name and trim.",
+    "make": "Triumph",
+    "model": "Triumph Street Triple and Speed Triple — S / R / RS and equivalent trims",
+    "year_start": 2007,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "does the r trim have a different engine",
+      "ordered suspension for the wrong trim",
+      "what does rs mean on a street triple",
+      "brake parts do not fit this trim",
+      "trim letter missing from the work order"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Trim suffixes usually describing chassis and equipment, which makes the exception easy to miss",
+      "The 2017–2022 Street Triple S being a 660cc A2-legal version of the 765 rather than a lower-specified 765",
+      "Suspension, brake and electronics parts genuinely differing by trim, so the letter matters there too",
+      "Trim ladders differing between generations and between the Street and Speed Triple lines"
+    ],
+    "fix_procedure": "1. Confirm the displacement from the machine, not from the model name and trim. On a 2017–2022 Street Triple S that means expecting 660cc, not 765. 2. Include the trim letter when ordering suspension, brake or electronics parts — that is where the trims diverge and where a wrong part will fit while behaving differently. 3. Do not apply the general rule that trims share an engine without checking; it holds most of the time and the exception is expensive. 4. Do not assume a letter means the same package across generations or across the two model lines. 5. Read the full designation off the bike and record it, with the displacement, on the work order and the quote.",
+    "parts_needed": [
+      "No parts — this is an ordering discipline",
+      "Full model designation and confirmed displacement, read from the machine"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "Two separate 2013 Speed Triple transmission recalls, and the regulator's own model index hides one of them",
+    "description": "Drawn from the manufacturer's Part 573 defect notices filed with the US road-safety regulator, and included as much for the search problem as for the fault. Two adjacent campaigns were filed in 2013 on the Speed Triple 1050: one for a **neutral switch washer of incorrect thickness**, which lets the neutral light stay lit when a gear is engaged, and one for an **incorrect transmission detent arm spring**, which gives poor shift quality and can let the box jump out of gear. They are separate campaigns with separate frame-number ranges that do not overlap, so a given machine falls in one or the other, never both. The search problem is the part worth carrying: the regulator's **structured model index for the detent-spring campaign lists other Triumph models entirely and omits the Speed Triple**, even though the Part 573 form's own unit table shows the Speed Triple ABS as the whole population and the other models at zero. A shop querying that database by model name will therefore never see the campaign that applies to the bike in front of it. Look it up by frame number, not by model.",
+    "make": "Triumph",
+    "model": "Triumph Speed Triple and Speed Triple ABS (2012–2013)",
+    "year_start": 2012,
+    "year_end": 2013,
+    "severity": "high",
+    "symptoms": [
+      "neutral light on with a gear engaged",
+      "speed triple jumps out of gear",
+      "poor shift quality on a speed triple",
+      "recall search returns nothing for this bike",
+      "two 2013 speed triple recalls"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A neutral switch washer of incorrect thickness on one frame-number range",
+      "An incorrect transmission detent arm spring on a separate, non-overlapping range",
+      "The regulator's structured model index for the detent-spring campaign omitting the model that is actually affected",
+      "A model-name database query therefore returning nothing for a machine that is in scope"
+    ],
+    "fix_procedure": "1. Look up recall applicability by **frame number**, never by model name — on this pair the model index is actively misleading. 2. Establish which of the two campaigns the frame number falls in; the ranges do not overlap, so it is one or the other. 3. Match the symptom to the campaign: a neutral light that stays on with a gear engaged points at the switch washer, while poor shift quality or jumping out of gear points at the detent spring. 4. Do not conclude a machine is clear because a database search by model returned nothing. On this campaign that result is a data defect, not an answer. 5. If the frame number is in range, the work is the importer's; record the campaign reference on the job card.",
+    "parts_needed": [
+      "No independent parts where a campaign remedy applies",
+      "Frame number confirmed against both campaign ranges"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The Speed Triple 1200's second radiator-fan recall exists because the first repair may not have been effective",
+    "description": "Drawn from regulator recall records including a national road-safety authority's own statement of why the follow-up campaign was raised. The Speed Triple 1200 RS and RR were recalled for a **radiator fan motor that can overheat and fail** in high ambient temperature and slow traffic, with the initial remedy centred on a heatshield. A later campaign, delivering an engine software recalibration, was then raised — and the regulator's record states explicitly that it exists because the earlier repair **may not have been effective**. That makes a completed first campaign the wrong thing to be reassured by, exactly as with the alternator-connector campaign on the Bonneville family: the remedy is the thing that was superseded. A machine showing overheating or fan trouble whose history records only the heatshield work is not finished. There is also a separate campaign on rear brake disc bolts that can loosen, which is unrelated but falls on the same models.",
+    "make": "Triumph",
+    "model": "Triumph Speed Triple 1200 RS and 1200 RR",
+    "year_start": 2021,
+    "year_end": 2024,
+    "severity": "high",
+    "symptoms": [
+      "radiator fan failed on a speed triple 1200",
+      "overheating in traffic on a 1200 rs",
+      "heatshield recall already done",
+      "fan recall done but fault returned",
+      "rear disc bolts loose on a speed triple"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A radiator fan motor able to overheat and fail in high ambient temperature and slow traffic",
+      "An initial heatshield remedy that the regulator records as possibly not effective",
+      "A follow-up software recalibration campaign superseding it",
+      "Service history showing the first campaign as completed being read as evidence the machine is sorted"
+    ],
+    "fix_procedure": "1. Check the machine's current campaign status by frame number rather than trusting a service record that shows the earlier recall as done — the first remedy is the one that was superseded. 2. On an overheating or fan complaint, establish which campaigns have actually been applied before diagnosing the fan, the wiring or the thermostat. 3. If only the heatshield work is recorded, treat the machine as outstanding and refer it rather than repairing independently under an open campaign. 4. Check the rear brake disc bolt campaign on the same models while the frame number is in hand; it is separate and easy to miss. 5. Explain to the owner why a completed recall is not the end of the matter here, in writing.",
+    "parts_needed": [
+      "No independent parts under an open safety campaign",
+      "Campaign status check by frame number"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "There is no cam or valve-gear recall on the 675 — what gets blamed on the valve train is usually one of three other things",
+    "description": "Drawn from a keyword scan of a national regulator's complete Triumph recall dataset and from Triumph's own model history, and written as a negative finding because the wrong assumption here is expensive. No recall in any database consulted touches the camshafts, cam chain, tappets or valve gear of the 675 engine. Three separate things get conflated with a valve-train defect. First, a **running design change**: an improved cam chain tensioner was fitted from the 2009 model year, which is a specification revision and not a campaign — the later part is available but there is no free remedy and no frame-number list. Second, **exhaust valve clearances tightening with mileage**, which is ordinary wear on this engine and is what the scheduled clearance check exists to catch. Third, an **exhaust power valve** in the exhaust system seizing or its servo failing, which is an exhaust actuator fault that produces a running complaint and has nothing to do with the valve train at all despite sharing the word. Naming which of the three you are looking at, before quoting, is most of the job.",
+    "make": "Triumph",
+    "model": "Triumph Daytona 675 / 675R and Street Triple 675 / R",
+    "year_start": 2006,
+    "year_end": 2017,
+    "severity": "medium",
+    "symptoms": [
+      "noise from the cam chain on a 675",
+      "is there a recall on the 675 valve train",
+      "exhaust valve stuck on a daytona",
+      "clearances tight on a 675",
+      "power valve servo fault"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A running design change to the cam chain tensioner from the 2009 model year, which is not a campaign",
+      "Exhaust valve clearances tightening with mileage as ordinary wear on this engine",
+      "An exhaust power valve or its servo seizing, which is an exhaust actuator fault rather than valve gear",
+      "All three being described loosely as a valve problem, so the wrong one gets quoted"
+    ],
+    "fix_procedure": "1. Establish which of the three you are dealing with before quoting anything: a cam chain noise, a clearance measurement, or an exhaust power valve complaint are three different jobs. 2. Do not tell an owner there is a recall — none exists on this engine's valve train, and the cam chain tensioner change is a design revision they will have to pay for. 3. On a pre-2009 machine with a cam chain noise, the later tensioner specification is the relevant part, offered as a repair rather than as a campaign. 4. Check exhaust valve clearances at the scheduled interval rather than in response to a symptom; tightening with mileage is what this engine does. 5. Treat an exhaust power valve or servo fault as an exhaust-system diagnosis, and say so plainly, because the shared word is what sends these to the wrong bench.",
+    "parts_needed": [
+      "Cam chain tensioner to the later specification if that is the fault",
+      "Valve shims if clearances are out",
+      "Exhaust power valve components or servo if that is the fault"
+    ],
+    "estimated_hours": 2.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "Triple-sport valve intervals are 12,000 miles across the line — except the Speed Triple 1200, which is 20,000",
+    "description": "Drawn from the scheduled maintenance tables in Triumph's own owner's handbooks. Across this line the valve clearance check falls at **12,000 miles (20,000 km)** — confirmed in the handbooks for the Street Triple 765 in both its generations, for the Daytona Moto2 765, and for the Speed Triple 1050 in S and RS form. The **Speed Triple 1200 RS and RR are the exception at 20,000 miles (32,000 km)**, on a longer base service interval, with the camshaft timing check falling at the same points. That single outlier is where a shop working from habit gets it wrong in the expensive direction: quoting 12,000 on a 1200 costs the customer money they need not spend, and quoting 20,000 on anything else in the line under-services it. One honest gap: for the **675-generation** Street Triple and Daytona, and for the Speed Triple 955i and early 1050, no Triumph handbook was obtained, so the interval for those is not established here — read it from the handbook for the machine rather than assuming the 12,000 figure carries back.",
+    "make": "Triumph",
+    "model": "Triumph Street Triple 765, Daytona Moto2 765, Speed Triple 1050 (S/RS) and Speed Triple 1200",
+    "year_start": 2017,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "valve interval on a street triple",
+      "valve check due on a speed triple 1200",
+      "12000 or 20000 mile valve check",
+      "interval for a 675 street triple",
+      "camshaft timing on a speed triple"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A 12,000-mile valve interval across most of the line with the Speed Triple 1200 alone at 20,000",
+      "The 1200 also sitting on a longer base service interval, so the whole schedule differs",
+      "Camshaft timing falling at the same points as the valve check on the 1200",
+      "No handbook obtained for the 675 generation or the early 1050, so those intervals are not established"
+    ],
+    "fix_procedure": "1. Use 12,000 miles for the Street Triple 765, the Daytona Moto2 765 and the Speed Triple 1050 in S or RS form, and 20,000 for the Speed Triple 1200 RS and RR. 2. Read the base service interval as well as the valve interval; the 1200's whole schedule is longer, not just that one row. 3. On a Speed Triple 1200, check whether camshaft timing falls due alongside the valve check — it does, at the same points. 4. For a 675-generation machine or an early Speed Triple 1050, take the interval from that machine's handbook. It is not established here and the 12,000 figure should not be assumed to carry back. 5. Tell the owner which schedule you are quoting from; on this line the difference between the two is large enough to be worth stating.",
+    "parts_needed": [
+      "Valve shims to the model's specification",
+      "Gaskets and seals disturbed by the access route"
+    ],
+    "estimated_hours": 4.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "A Street Triple can lose anti-lock braking without lighting a warning lamp — a recall, and a reason not to trust the dash",
+    "description": "Drawn from regulator recall records. A campaign on the Street Triple covers the anti-lock braking system losing its function **without the malfunction indicator lamp illuminating**. The mechanical consequence is a machine that brakes like a bike without ABS, which a rider discovers at the moment they need it. The diagnostic consequence is broader and is why this is worth carrying past the campaign: on this model an unlit ABS lamp is not evidence the system is working. A shop checking rider aids by watching the dash — the ordinary and reasonable method — gets a false pass. Where a machine is in scope, or where a rider reports braking that felt unassisted on a wet or loose surface, the system needs checking properly rather than being cleared by a dark warning lamp. A separate campaign on the same family covers a **left-hand switch cube sealed incorrectly**, letting water in and affecting the turn signals and headlight, which is unrelated but falls on nearby machines.",
+    "make": "Triumph",
+    "model": "Triumph Street Triple and Street Triple R",
+    "year_start": 2009,
+    "year_end": 2020,
+    "severity": "critical",
+    "symptoms": [
+      "abs light off but abs not working",
+      "wheel locked with abs fitted",
+      "brakes felt unassisted in the wet",
+      "dash shows no fault but abs is absent",
+      "water in the left switch cube"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "An anti-lock system able to lose function with no malfunction indicator lamp illuminating",
+      "The dash therefore giving a false pass when rider aids are checked visually",
+      "The failure only being apparent to the rider under emergency braking on a poor surface",
+      "A separate switch-cube sealing fault on nearby machines affecting lighting"
+    ],
+    "fix_procedure": "1. Check campaign status by frame number on any Street Triple, and treat this one as a priority because its symptom is silence. 2. Do not accept an unlit ABS lamp as evidence the system is functioning on these machines. Where it matters, verify the system properly rather than visually. 3. Take a rider's report of braking that felt unassisted seriously even with no stored warning and no lamp; on this model that combination is consistent with the defect rather than against it. 4. Inspect the left-hand switch cube for water ingress while the machine is in, particularly if turn signals or the headlight are behaving oddly. 5. Tell the owner plainly that the warning lamp is not a reliable indicator here, because they will otherwise rely on it.",
+    "parts_needed": [
+      "No independent parts where a campaign remedy applies",
+      "Left-hand switch cube if water ingress is confirmed"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "Daytona 675 charging failures: a regulator-rectifier recall on the early bikes, and a wear pattern that outlives it",
+    "description": "Drawn from regulator recall records together with owner-reported patterns, and the distinction between the two is stated because it changes the conversation. A campaign on early Daytona 675 machines covers a **regulator-rectifier that overheats and stops charging**, leaving the battery to flatten and the machine to stop. Beyond that campaign's frame-number range, regulator-rectifier failure is also reported as a general wear pattern across the 675-generation Daytona and Street Triple — that part is owner-forum evidence rather than a campaign, so there is no free remedy and no list, and a shop should say so rather than implying otherwise. The diagnostic shape is the same either way and it is worth knowing because it presents as a battery complaint: a machine that starts fine after a night on a charger and then dies on a ride is describing a charging fault, not a battery. Test the charging system before selling a battery.",
+    "make": "Triumph",
+    "model": "Triumph Daytona 675 and Street Triple 675",
+    "year_start": 2006,
+    "year_end": 2017,
+    "severity": "high",
+    "symptoms": [
+      "battery flat again on a daytona",
+      "bike died on a ride after charging overnight",
+      "new battery did not fix it",
+      "regulator rectifier hot on a 675",
+      "charging fault on a street triple 675"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A regulator-rectifier able to overheat and stop charging on the early machines, covered by a campaign",
+      "Regulator-rectifier failure reported more widely as a wear pattern outside that range, on owner evidence only",
+      "The fault presenting as a battery complaint because an overnight charge masks it for one ride",
+      "A replacement battery appearing to fix it briefly and then failing the same way"
+    ],
+    "fix_procedure": "1. Test the charging system before replacing a battery on any of these machines — a flat battery that recovers on a charger and dies again is a charging complaint. 2. Check campaign status by frame number; the early bikes have a published remedy for exactly this. 3. Outside the campaign range, treat regulator-rectifier failure as a plausible wear item but tell the owner it is an owner-reported pattern rather than a campaign — there is no free remedy to imply. 4. Check the regulator-rectifier's mounting and airflow as part of the diagnosis; overheating is the described mechanism. 5. Record charging voltages at idle and at revs on the job card so a repeat visit starts from data rather than from the previous conversation.",
+    "parts_needed": [
+      "Regulator-rectifier if confirmed faulty",
+      "Battery only if it is genuinely failed rather than discharged",
+      "Connector and wiring repair where heat damage is found"
+    ],
+    "estimated_hours": 1.5,
+    "source": "service-manual"
+  }
+]

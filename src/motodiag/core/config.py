@@ -20,7 +20,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent.parent
 
 
-#: Curated seed data — DTC definitions, symptoms and 795 known
+#: Curated seed data — DTC definitions, symptoms and 806 known
 #: issues — that `motodiag db init` loads. Phase 209 moved this INSIDE
 #: the package. It used to live in the repo's `data/` directory, which
 #: is not shipped, so on an installed copy every load guard in `db init`
