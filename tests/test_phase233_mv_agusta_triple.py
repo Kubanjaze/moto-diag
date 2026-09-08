@@ -210,10 +210,16 @@ class TestDeferralBoundaries:
             assert not re.findall(r"\bP0\d{3}\b|\bPADS\b", _claims(e)), e["title"]
             assert e["dtc_codes"] == [], e["title"]
 
-    def test_mv_still_has_no_adapter_rows(self):
+    def test_235_filled_the_adapter_gap_this_phase_guarded(self):
+        """Inverted at Phase 235, which owns this gap — see the fuller
+        note in Phase 231's copy. Asserts the invariant (gap filled,
+        make slug spelled `mv-agusta`) rather than a slug list that
+        every later Aprilia or MV adapter would have to come back and
+        update: the constant-for-invariant bug from 221, 222 and 230."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         makes = {r["make"] for r in matrix}
-        assert not {"mv", "mv-agusta", "mvagusta", "aprilia"} & makes
+        assert {"aprilia", "mv-agusta"} <= makes, "Phase 235 fills this gap"
+        assert not {"mv", "mvagusta"} & makes, "the make slug is mv-agusta"
         assert "triumph" in makes
 
 
@@ -224,8 +230,16 @@ class TestTheDesignationBarAndSearchability:
             assert _named(e, "both"), f"{e['title']}: body names none"
 
     def test_no_other_makes_entry_scores(self):
+        """MV *model* content belongs in the MV model files, so a search
+        for an MV designation resolves to the phase that owns it.
+
+        Phase 235 is exempted because it owns a different axis: fault
+        codes and diagnostic tooling across both Aprilia and MV, which
+        cannot be written without naming the models it scopes. The
+        boundary is enforced from the other side instead — 235's own
+        test forbids model-specific failure content there."""
         for f in K.glob("known_issues_*.json"):
-            if "mv_agusta" in f.name:
+            if "mv_agusta" in f.name or f.name == "known_issues_aprilia_mv_electrical.json":
                 continue
             for e in json.loads(f.read_text(encoding="utf-8")):
                 hits = [n for n, p in UNAMBIGUOUS.items() if re.search(p, json.dumps(e))]

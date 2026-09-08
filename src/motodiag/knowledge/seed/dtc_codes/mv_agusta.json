@@ -1,0 +1,86 @@
+[
+  {
+    "code": "P0328",
+    "description": "Knock coherence diagnosis cylinder 4 — four-cylinder models only, and impossible on a triple",
+    "category": "engine",
+    "severity": "medium",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: MV Agusta publishes no fault-code list this project could open. This row is drawn from a third-party ECU tuning vendor's published tables for the Eldor control unit, cross-checked between the separate F3 and F4 lists, and is not a manufacturer document",
+      "The cylinder-4 knock coherence channel exists only on the four-cylinder machines. The published three-cylinder table runs P0325, P0326 and P0327 for cylinders 1 to 3 and stops; the four-cylinder table adds P0328",
+      "A knock sensor, its wiring or its mounting torque, since a sensor that is loose reads incoherently rather than not at all",
+      "Genuine detonation on that cylinder after a fuel, mapping or exhaust change"
+    ],
+    "fix_summary": "Establish the cylinder count before working the code. On an F3, Brutale 675/800, Turismo Veloce, Superveloce or Rush there is no cylinder 4 and no P0328 channel, so this code cannot legitimately occur — reading it on a triple means the list being cross-referenced is the four-cylinder one, not that the machine has a fault. The same boundary applies to the other cylinder-4 entries in these tables, so a shop working from a printed MV code list should confirm which engine family the list was written for before chasing anything. On a genuine four, treat it as a knock sensor circuit and mounting check first, then look for a real detonation cause."
+  },
+  {
+    "code": "P0208",
+    "description": "Injector cylinder 4 (upper) — note that the published source mislabels this code's caption",
+    "category": "fuel",
+    "severity": "high",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: third-party vendor tables for the Eldor control unit, not an MV Agusta document",
+      "THE PUBLISHED CAPTION IS WRONG. The four-cylinder list prints this code as 'Injector 3 diagnosis (upper)', which duplicates the caption on the neighbouring code. By position in the sequence — P0205, P0206, P0207, P0208 following cylinders 1 to 4 — this is the cylinder 4 upper injector, and a mechanic who trusts the printed caption works on the wrong cylinder",
+      "These machines carry an upper and a lower injector per cylinder, so the code identifies which of the two as well as which cylinder",
+      "An injector connector disturbed during airbox or throttle body work, since the upper injectors sit where hands go"
+    ],
+    "fix_summary": "Trust the sequence, not the caption. Verify the cylinder against the code's position in the numbered block before removing anything, because at least two captions in the circulating four-cylinder table are transcribed wrongly — the same list also prints a coil code for cylinder 4 captioned as cylinder 3. Confirm which injector is which on the machine in front of you before ordering or swapping. The code exists only on four-cylinder machines; on a triple, the injector block stops one code earlier."
+  },
+  {
+    "code": "P0638",
+    "description": "H-bridge 1 — the ride-by-wire throttle drive stage inside the control unit",
+    "category": "electrical",
+    "severity": "high",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: third-party vendor tables for the Eldor control unit, not an MV Agusta document",
+      "The published caption is 'HBridge1' with the drive-by-wire function attached. An H-bridge is the output stage that drives the throttle actuator in both directions, so this code reports the control unit's own driver rather than the motor or the sensors",
+      "A short or open in the throttle actuator motor circuit reflected back to the drive stage",
+      "Low system voltage during cranking, which can present as a drive-stage fault on a machine with a tired battery"
+    ],
+    "fix_summary": "Separate the drive stage from the throttle body before quoting. This code points at the output stage that moves the throttle, which is not the same component as the throttle position sensors or the twist-grip sensor, and the distinction decides whether the job is a harness, an actuator or a control unit. Check the actuator circuit and system voltage first, since both can present here. Its companion P0639 is captioned 'HBridge2' against the exhaust valve, so the two H-bridge codes point at different actuators and should not be treated as one fault."
+  },
+  {
+    "code": "P0639",
+    "description": "H-bridge 2 — the exhaust valve drive stage inside the control unit",
+    "category": "exhaust",
+    "severity": "medium",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: third-party vendor tables for the Eldor control unit, not an MV Agusta document",
+      "The published caption is 'HBridge2' against the exhaust valve, so this is the second bidirectional drive stage in the control unit, driving the exhaust valve actuator rather than the throttle",
+      "An exhaust valve actuator motor, its cables or its connector — commonly disturbed by aftermarket exhaust fitment",
+      "A valve that is mechanically bound, loading the drive stage beyond its limits"
+    ],
+    "fix_summary": "Check the valve mechanically before condemning any electronics. A bound or obstructed exhaust valve loads the drive stage and can produce a driver fault from a purely mechanical cause. Where an aftermarket exhaust has been fitted, establish whether the valve and its cables are still present and correctly routed, since a valve left disconnected or a servo left driving nothing is a common origin. Do not confuse this with P0638, which is the same class of driver fault on the throttle."
+  },
+  {
+    "code": "P0561",
+    "description": "Voltage regulator diagnosis",
+    "category": "electrical",
+    "severity": "high",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: third-party vendor tables for the Eldor control unit, not an MV Agusta document",
+      "The published caption is 'Voltage regulator diagnosis' — the control unit is reporting on the charging system's regulator rather than on a generic system-voltage band",
+      "A regulator or rectifier failing under heat, which is why the fault often appears late in a ride and not on a cold test",
+      "Connector and earth degradation between stator, regulator and battery, which raises resistance and drives the regulator outside its window"
+    ],
+    "fix_summary": "Test the charging system hot, at the point the fault appears, rather than on a cold bench. Because the code names the regulator specifically, resist replacing it before measuring: a high-resistance connection or a failing earth produces regulator-shaped symptoms with a healthy regulator, and the replacement then fails the same way. Measure charging voltage across the battery at idle and at speed, check the stator and its connectors for heat damage, and confirm the earth path before ordering the part."
+  },
+  {
+    "code": "P0501",
+    "description": "Front vehicle speed sensor diagnosis — present only on ABS-equipped machines",
+    "category": "electrical",
+    "severity": "medium",
+    "make": "MV Agusta",
+    "common_causes": [
+      "PROVENANCE: third-party vendor tables for the Eldor control unit, not an MV Agusta document",
+      "The published caption carries its own scope: 'Front vehicle speed sensor diagnosis (Only for ABS versions)'. On a non-ABS machine there is no front speed sensor for this code to describe",
+      "Sensor-to-ring air gap disturbed by front wheel, disc or fork work, which is the most common origin after a service",
+      "Debris on the sensor face or a damaged tone ring, both of which give an intermittent signal rather than a dead one"
+    ],
+    "fix_summary": "Confirm the machine has ABS before accepting this code at face value, because the sensor it names exists only on those versions. On an ABS machine, check the sensor face, the air gap and the tone ring before the sensor itself — front wheel work is the usual trigger and the fault is mechanical far more often than electrical. Note that the front speed signal is shared with rider aids on these machines, so the presenting complaint may be traction control or ABS behaviour rather than a speedometer fault."
+  }
+]

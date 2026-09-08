@@ -203,10 +203,16 @@ class TestBoundariesAndSearchability:
             assert not re.findall(r"\bP0\d{3}\b|\bPADS\b", _claims(e)), e["title"]
             assert e["dtc_codes"] == [], e["title"]
 
-    def test_mv_still_has_no_adapter_rows(self):
+    def test_235_filled_the_adapter_gap_this_phase_guarded(self):
+        """Inverted at Phase 235, which owns this gap — see the fuller
+        note in Phase 231's copy. Asserts the invariant (gap filled,
+        make slug spelled `mv-agusta`) rather than a slug list that
+        every later Aprilia or MV adapter would have to come back and
+        update: the constant-for-invariant bug from 221, 222 and 230."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         makes = {r["make"] for r in matrix}
-        assert not {"mv", "mv-agusta", "mvagusta", "aprilia"} & makes
+        assert {"aprilia", "mv-agusta"} <= makes, "Phase 235 fills this gap"
+        assert not {"mv", "mvagusta"} & makes, "the make slug is mv-agusta"
 
     def test_every_entry_names_a_designation_in_title_and_body(self, raw):
         for e in raw:

@@ -204,13 +204,28 @@ class TestDeferralBoundaries:
             assert not re.findall(r"\bP0\d{3}\b|\bPADS\b", _claims(e)), e["title"]
             assert e["dtc_codes"] == [], e["title"]
 
-    def test_aprilia_and_mv_still_have_no_adapter_rows(self):
-        """The gap row 235 owns. Guarded at zero here, as 221 and 226
-        guarded theirs, with a counter-assertion that other makes have
-        rows so the zero means something."""
+    def test_235_filled_the_adapter_gap_this_phase_guarded(self):
+        """Inverted at Phase 235, which owns this gap — the Phase 230
+        precedent, where earlier phases were rewritten to assert what
+        they meant rather than a number that had moved on.
+
+        What this phase meant was: the gap stays empty until 235 fills
+        it, and the makes are spelled one particular way. Both halves
+        still hold. The naming variants stay in the assertion because
+        they were the point — a row filed under "mv" or "mvagusta" would
+        have satisfied the old zero-check by spelling rather than by
+        substance, and is still wrong now that rows exist.
+
+        Deliberately NOT pinned to 235's adapter slugs. Listing them
+        would make this a constant that every later Aprilia or MV
+        adapter has to come back and update — the constant-for-invariant
+        bug caught at 221, 222 and 230. The invariant is that the gap is
+        filled and the slug is `mv-agusta`, not which tools filled it.
+        """
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         makes = {r["make"] for r in matrix}
-        assert not {"aprilia", "mv", "mv-agusta", "mvagusta"} & makes
+        assert {"aprilia", "mv-agusta"} <= makes, "Phase 235 fills this gap"
+        assert not {"mv", "mvagusta"} & makes, "the make slug is mv-agusta"
         for other in ("bmw", "ducati", "ktm", "triumph"):
             assert other in makes, other
 

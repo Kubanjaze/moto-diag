@@ -1,0 +1,227 @@
+[
+  {
+    "title": "A generic scan tool is more dangerous on an Aprilia than on an MV Agusta, because Aprilia's codes look standard and are not",
+    "description": "Drawn from Aprilia's own Service Station Manual and from published Eldor fault tables for MV Agusta. These two makes fail in opposite directions under a generic reader, and the one that looks readable is the hazard. **Aprilia's fault table contains no manufacturer P1xxx block at all** — every fault in the manual is numbered in the ordinary P0xxx range — but a large number of those numbers carry proprietary meanings with nothing to do with their SAE definitions. P0510 is not a closed throttle position switch, it is rear wheel radius acquisition. P0462 is not a fuel level sensor, it is the quick-shift sensor. P0217 is not engine over-temperature, it is manifold pressure below the estimated value. A generic reader therefore prints a confident, well-formatted, entirely wrong answer, and nothing about the code's appearance warns anyone. **MV Agusta does the opposite**: alongside standard P0xxx codes it uses a genuine manufacturer block — P1120, P1122, P1220, P1223, the P1300 series, P1602, P1610, P1612, P1655, P1773 — plus network U-codes. A generic reader meets those and returns nothing it can decode. That failure is loud, and a mechanic who gets no answer goes and finds the right tool, which is the correct outcome.",
+    "make": "Aprilia and MV Agusta",
+    "model": "Aprilia RSV4, Tuono V4, Dorsoduro, Shiver, Caponord; MV Agusta F3, F4, Brutale, Turismo Veloce",
+    "year_start": 2000,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "Scan tool names a part that tests healthy",
+      "Reported fault does not match the complaint",
+      "Code reads but its description looks wrong",
+      "Reader returns an unrecognised code number"
+    ],
+    "causes": [
+      "Aprilia reuses SAE-range P0xxx numbers for proprietary functions, so a generic lookup table resolves the number and returns the wrong meaning with full confidence",
+      "The absence of a P1xxx block on Aprilia removes the usual signal that a code is manufacturer-specific — on most makes an unfamiliar P1 number tells a mechanic to stop and find the make's own table",
+      "MV Agusta's manufacturer block is genuinely non-standard, so a generic tool fails to decode it rather than mis-decoding it",
+      "Published MV code lists are third-party and engine-family specific, so cross-referencing a four-cylinder list against a triple produces codes that cannot occur on the machine"
+    ],
+    "fix_procedure": "Treat a decoded code on an Aprilia as unconfirmed until it has been checked against Aprilia's own table. The practical rule is that silence is safer than a confident answer: on an MV the tool tells you it does not know, while on an Aprilia it does not. Before acting on any Aprilia P0xxx reading, confirm the meaning against the make's own fault list, because the SAE definition and the Aprilia definition can point at entirely different systems. Where the two disagree, the machine follows Aprilia. On MV, establish the cylinder count first and confirm which engine family a printed code list was written for. Note that the codes shipped in this project's Aprilia and MV Agusta tables were chosen for exactly this divergence, so a lookup here returns the make's meaning rather than the SAE one.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "dtc_codes": [
+      "P0510",
+      "P0462",
+      "P0217"
+    ],
+    "source": "service-manual"
+  },
+  {
+    "title": "Nineteen Aprilia fault codes never reach the instrument panel, and most of them are ordinary sensor faults rather than exotic ones",
+    "description": "Drawn from Aprilia's Service Station Manual, which attaches the sentence \"The instrument panel does not indicate the presence of this error even in the ATT status\" to nineteen separate codes. ATT is the manual's label for a fault that is currently present, as against MEM for one that is stored — so these codes are invisible on the dashboard **while actively occurring**, not merely after the fact. The significance is the composition of the list. It is easy to assume dash-invisible faults are confined to deep safety-layer events, and this project already documents one such case on the ride-by-wire torque monitor. The full set is much more ordinary than that: it includes the oxygen sensor (P0130) and its heater (P0135), engine temperature (P0116), air temperature (P0110) and its companion (P0115), the starter switch (P0169), secondary air valve control (P0446) and battery voltage (P0560), alongside the throttle self-acquisition and safety codes. In other words a routine emissions or sensor fault on these machines can be present, current and stored with no warning light of any kind.",
+    "make": "Aprilia",
+    "model": "RSV4, Tuono V4 and related Marelli-equipped models",
+    "year_start": 2009,
+    "year_end": 2020,
+    "severity": "high",
+    "symptoms": [
+      "No warning light despite a stored fault",
+      "Emissions or running fault with a clean dash",
+      "Fault found only when the ECU is read",
+      "Owner reports the bike as fault-free"
+    ],
+    "causes": [
+      "Aprilia deliberately excludes nineteen codes from instrument panel indication, and the manual states this per code rather than in one place, so it is easy to miss when reading a single entry",
+      "The exclusion applies to the ATT state, meaning a currently-present fault is hidden and not just a historical one",
+      "The list spans ordinary sensor and emissions circuits — oxygen sensor, oxygen sensor heating, engine and air temperature, starter switch, secondary air, battery voltage — not only the ride-by-wire safety layer",
+      "A rider or a previous shop reasonably concludes there is no fault because the dashboard shows none"
+    ],
+    "fix_procedure": "Never accept an absent warning light as evidence of an absent fault on these machines. Read the control unit before quoting, particularly on a running complaint that the dashboard does not corroborate, and read it after any exhaust, airbox or emissions-equipment work — the secondary air valve code is on the invisible list and is easily created by that work. When reading, distinguish ATT from MEM: ATT means the fault is present now, and a code in ATT that never lit a lamp is normal behaviour for these nineteen, not a dashboard fault. The full list is P0110, P0115, P0116, P0130, P0135, P0160, P0163, P0164, P0169, P0180, P0183, P0184, P0446, P0560, P0601, P0604, P0605, P0608 and P0611. Note that this figure was verified directly against the manual, because the sentence is line-wrapped in the source and a plain text search undercounts it.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "dtc_codes": [
+      "P0446",
+      "P0608"
+    ],
+    "source": "service-manual"
+  },
+  {
+    "title": "Aprilia's hidden service-code menu reports dashboard faults, not engine faults, so it is not a substitute for a dealer tool",
+    "description": "Drawn from the Service Station Manual. These machines carry a concealed diagnostic menu reached through the dashboard, opened with a five-digit service code that the manual describes as \"fixed for each vehicle\" — 12412 on the Tuono V4 R, with other values reported for other models. The menu is widely passed around as a way to avoid dealer diagnosis, and that is a misreading of what it does. On this model it exposes **instrument panel errors only**: the DSB 01 to 08 set, covering immobiliser faults, an internal controller fault and the oil pressure sensor. Engine control unit faults are not in it. The manual is explicit about the boundary, instructing the reader to use the dealer interface to reset ECU errors. So the menu answers a real question — is the dashboard, immobiliser or oil pressure circuit at fault — but not the question most people open it for.",
+    "make": "Aprilia",
+    "model": "RSV4, Tuono V4 and related models with the multifunction dashboard",
+    "year_start": 2009,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "Dash menu shows no faults but the bike runs badly",
+      "Immobiliser or oil pressure warning present",
+      "Service code accepted but menu looks empty",
+      "Owner insists the bike self-diagnosed clean"
+    ],
+    "causes": [
+      "The menu's scope is the instrument panel, not the engine control unit, and the two fault memories are separate",
+      "The five-digit code is fixed per vehicle rather than universal, so a code circulating for one model will not open another",
+      "A clean instrument-panel menu is routinely reported as a clean bike, when the engine control unit has never been interrogated",
+      "The DSB numbering bears no relation to P-codes, so the two sets cannot be cross-referenced"
+    ],
+    "fix_procedure": "Use the menu for what it covers and no further. It is genuinely useful for immobiliser and oil pressure sensor complaints and for confirming an instrument panel fault, and it costs nothing to check. It cannot read or clear engine control unit codes, so a machine with a running fault still needs the control unit read through the diagnostic connector. Where a customer arrives reporting that the bike checked itself and found nothing, establish which memory they read before repeating the work. Treat a DSB number and a P-code as belonging to different systems.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "A Euro 4 Aprilia or MV Agusta is not a locked door — the manufacturer owes you the connector pinout and an adapter, free of charge",
+    "description": "Drawn from Commission Delegated Regulation (EU) No 44/2014 as amended by Regulation (EU) 2018/295, quoted verbatim from the official text. The widespread belief is that anything before Euro 5 on these makes is proprietary and closed. That is true of the earlier machines but wrong for the Euro 4 generation, and wrong by a full model generation. Motorcycles in category L3e became OBD stage I vehicles from 1 January 2016 for new types and 1 January 2017 for all new registrations. For those vehicles the regulation requires that \"Access to the OBD system required for the inspection, diagnosis, servicing or repair of the vehicle shall be unrestricted and standardised\", and requires fault codes to be fully accessible using standardised diagnostic equipment. Crucially, the proprietary plug is addressed directly: an \"alternative connection interface may be installed at the request of the vehicle manufacturer\", and where it is, \"the vehicle manufacturer shall make available to test equipment manufacturers the details of the vehicle connector pin configuration free of charge\" and \"shall provide an adapter enabling connection to a generic scan tool\", to be \"provided upon request to all independent operators in a non-discriminating manner\". Aprilia's 3-pin and MV's 4-pin Euro 4 plugs are exactly that permitted alternative interface — a documented bridge, not a wall.",
+    "make": "Aprilia and MV Agusta",
+    "model": "Euro 4 models, approximately 2016 to 2020",
+    "year_start": 2016,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "Told the bike needs a dealer for any diagnosis",
+      "No 16-pin socket found on the machine",
+      "Quoted for a proprietary tool to read basic codes",
+      "Independent shop declines the job on access"
+    ],
+    "causes": [
+      "The proprietary connector is mistaken for proof of a closed system, when the regulation permits it only as an alternative interface that must be bridged to a generic tool",
+      "Euro 4 machines are commonly lumped in with earlier proprietary ones, though the OBD stage I obligation begins at Euro 4 and not at Euro 5",
+      "The obligation is a type-approval requirement, so it is documented in law rather than in the machine's own literature and is easy to be unaware of",
+      "The genuinely narrow scope of what must be accessible leads people to conclude nothing is accessible"
+    ],
+    "fix_procedure": "For a Euro 4 machine, request the connector pin configuration and the generic-scan-tool adapter from the manufacturer, which the regulation obliges them to supply free of charge and without discriminating against independent operators. Set expectations about scope at the same time, because the entitlement is real but narrow: it covers emission-related fault codes and standard engine data, and nothing else. ABS, traction control, dashboard and immobiliser functions, key programming, service-interval reset, throttle-body and exhaust-valve learning, actuator tests and coding all sit outside it and still require the make's own tooling. Treat this as an entitlement to basic access rather than a route to full diagnosis. One caution: this is what type approval requires, not a bench-verified response from a particular machine, so confirm on the bike in front of you rather than promising a customer a result.",
+    "parts_needed": [
+      "Manufacturer-supplied generic scan tool adapter, or a vendor lead for the make's connector"
+    ],
+    "estimated_hours": 0.5,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Both makes changed diagnostic connectors more than once, and buying the wrong lead is the usual wasted purchase",
+    "description": "Drawn from tool vendors' own published cable listings, cross-checked between independent suppliers. Neither make used the 16-pin SAE J1962 socket in the pre-Euro 5 era, and neither used a single connector across its range, so \"an Aprilia cable\" or \"an MV cable\" is not a specification. On Aprilia there is a 6-pin Sagem-style plug on the early-2000s Futura and Caponord 1000, and a 3-pin plug across the later group — RSV4, Tuono V4, Dorsoduro 750 and 900, Shiver 750 and 900, Caponord 1200 and SRV 850 — with the two sold as separate adaptors by every vendor that stocks them. Euro 5 machines including the RS 660, Tuono 660, Tuareg 660, RS 457 and the 2021-on RSV4 and Tuono V4 need a different lead again, sold specifically for that model list. On MV the equivalent split is by emissions era rather than model family: a 4-pin plug on Euro 4 machines, with 3-pin and 2-pin variants on Euro 3 and Euro 2, which is how the cable vendors describe their MV product; Euro 5 MVs take a separate adapter again.",
+    "make": "Aprilia and MV Agusta",
+    "model": "Aprilia Futura, Caponord, RSV4, Tuono V4, Dorsoduro, Shiver, SRV; MV Agusta all models",
+    "year_start": 1999,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Purchased cable does not fit the socket",
+      "Tool powers up but never connects",
+      "Socket has fewer pins than expected",
+      "Cable fits one bike in the workshop, not another"
+    ],
+    "causes": [
+      "Aprilia splits by model family — 6-pin on the early Futura and Caponord 1000, 3-pin on the later group — so model year alone does not identify the plug",
+      "MV splits by emissions era instead, with 4-pin, 3-pin and 2-pin variants, so an MV cable sold for one era will not serve another",
+      "Euro 5 machines on both makes moved to a different socket again, sold as a separate part by the same vendors",
+      "Neither make used the 16-pin SAE socket before Euro 5, so a standard OBD-II lead fits nothing without an adapter"
+    ],
+    "fix_procedure": "Identify the socket on the machine by pin count before ordering anything, rather than ordering by make and model. Where a workshop expects to see both makes, budget for more than one lead: the Aprilia 6-pin and 3-pin are different parts, the MV 4-, 3- and 2-pin variants are usually sold as one multi-headed cable, and Euro 5 needs its own adapter on both makes. Beware year-based coverage claims from vendors — most published year ranges for these leads are era estimates rather than manufacturer-stated figures, and only a few are genuinely sourced. Check the physical connector, which cannot be wrong.",
+    "parts_needed": [
+      "Aprilia 3-pin or 6-pin diagnostic adapter lead as appropriate",
+      "MV Agusta 4/3/2-pin diagnostic adapter lead",
+      "Euro 5 adapter lead where the machine is Euro 5"
+    ],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "MV Agusta has no diagnostic software of its own — the official dealer tool is a third-party product sold openly",
+    "description": "Drawn from a 2012 manufacturer press release and from the tool vendor's own release documentation. MV Agusta is an unusual case among exotic makes, and the usual assumption about dealer tooling is inverted here. MV did not develop in-house diagnostic software; it appointed TEXA as its official supplier, and the 2012 press release states that all authorised MV Agusta service centres worldwide would adopt the TEXA TXB as the official diagnostic device. TEXA's own IDC5 BIKE release notes list MV AGUSTA among the makes that have chosen its software as their official tool. The contrast with Aprilia is sharp and worth holding onto: Aprilia's factory tool is PADS, the Piaggio Advanced Diagnostic System, which is obtainable only through a Piaggio Group dealer agreement and cannot be bought by an independent workshop at all. The consequence is the useful part: for MV, the dealer tool and the strongest independent tool are the same product family, and it is sold on the open aftermarket as a Navigator TXB-series interface plus an IDC5 or IDC6 BIKE subscription. There is no separate, better, dealer-only application being withheld. A second genuine independent exists in the form of OBDSTAR's dedicated iScan MV AGUSTA handheld covering code read and clear, live data, actuator tests, coding and service reset.",
+    "make": "MV Agusta",
+    "model": "F3, F4, Brutale, Turismo Veloce, Dragster, Rush, Superveloce",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Told only a dealer can diagnose the machine",
+      "No MV-branded software can be found",
+      "Independent shop declines MV work on tooling",
+      "Quoted dealer rates for a basic code read"
+    ],
+    "causes": [
+      "MV appointed TEXA as its external diagnostic supplier rather than developing its own software, so there is no MV-branded application to look for — unlike Aprilia, whose PADS is a genuine factory tool locked behind a dealer agreement",
+      "The absence of a branded dealer tool is misread as the tooling being unavailable, when it is in fact openly sold",
+      "The cost is structured as an interface plus a subscription rather than a one-off purchase, which is unfamiliar and reads as dealer-only",
+      "Published per-model coverage for the independent handheld is distributed as downloadable coverage lists rather than stated on the product page, so buyers cannot easily confirm their model"
+    ],
+    "fix_procedure": "Approach MV tooling as a purchasing decision rather than an access problem, because the official tool is available to an independent workshop on the same terms as to a dealer. Price the TXB interface and the IDC5/IDC6 subscription together, since the subscription is the recurring cost. This is the opposite of the Aprilia position, where PADS is genuinely unavailable to an independent and the accessible routes are TuneECU, GuzziDiag and OBDSTAR instead. Before buying either the official product or the independent handheld, verify coverage for the specific model rather than for the make: MV runs three-cylinder and four-cylinder families with different control unit configurations, and no source consulted here confirms that tool coverage is equal across both. Ask the vendor to confirm the exact model and year before purchase.",
+    "parts_needed": [
+      "TEXA Navigator TXB interface and IDC5/IDC6 BIKE subscription, or an OBDSTAR iScan MV AGUSTA handheld"
+    ],
+    "estimated_hours": 1.0,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "MV Agusta uses a genuine manufacturer fault-code block that this project's table does not decode",
+    "description": "Drawn from published third-party tables for the Eldor control unit, and recorded here as a boundary rather than as an answer. Unlike Aprilia, MV Agusta does use a real manufacturer-specific block: P1120, P1122, P1220, P1223, a P1300 series, P1602, P1610, P1612, P1655 and P1773, together with network U-codes in the U1602 and U1700 range. This project ships MV rows only for codes whose meaning could be established and explained, all of which are in the standard P0xxx range. The manufacturer block is named here so that a mechanic who reads one of those numbers knows immediately that it is a real MV code rather than a tool malfunction, and knows that decoding it requires the make's own tooling. Writing speculative meanings for those codes would produce exactly the failure this project documents on the Aprilia side — a confident, wrong answer — so they are deliberately absent.",
+    "make": "MV Agusta",
+    "model": "F3, F4, Brutale, Turismo Veloce and related Eldor-equipped models",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Code number begins P1 or U1 and will not decode",
+      "Generic reader returns an unknown code",
+      "Code found in no standard lookup table"
+    ],
+    "causes": [
+      "MV genuinely uses a manufacturer-specific code range, which by design is not covered by standard lookup tables",
+      "Network U-codes indicate communication faults between control units rather than a sensor or actuator fault, and are commonly misread as component failures",
+      "The circulating third-party tables are engine-family specific and contain known transcription errors in their captions, so they cannot be trusted blindly even where they cover the code",
+      "No MV Agusta primary fault-code document could be opened for this project, so the block is named but not decoded"
+    ],
+    "fix_procedure": "Record the exact code and take it to the make's own tooling rather than attempting to infer a meaning from the number. A P1 or U1 code on an MV is genuine and specific, not a reading error, so it is worth capturing precisely before the fault memory is cleared. Where a third-party table does cover the code, cross-check it against the machine's cylinder count and treat the caption with suspicion — at least two captions in the circulating four-cylinder list name the wrong cylinder. Do not act on a decoded meaning from those lists without corroborating it against the physical machine.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "TuneECU covers Aprilia but not MV Agusta, and it is a mapping tool rather than a fault-code reader",
+    "description": "Drawn from TuneECU's own published guide. The software is frequently recommended as the cheap route into Italian and Austrian machines, and for Aprilia it genuinely does provide access — its guide names Aprilia among supported marques and lists the Caponord and Futura RST, Caponord and Dorsoduro 1200, Dorsoduro and Shiver 750 and 900, SRV 850, and the RSV4R and Tuono V4 up to model year 2020, which is one of the few genuinely manufacturer-stated coverage limits available anywhere. Two qualifications matter before buying. First, MV Agusta is **not** on the supported list at all, so the tool does not address half of this pairing. Second, on Aprilia the documented functions are mapping and adjustment rather than diagnosis: map reading and writing over USB, fuel pump, injector and coil tests, TPS reset, and handle and throttle self-learning. The guide shows no per-model fault-code read and clear screen for Aprilia, so fault-code capability on this make is unconfirmed rather than established. Note also that an OBD2 adaptor is required in addition to the cable or Bluetooth interface for Aprilia ECUs.",
+    "make": "Aprilia",
+    "model": "Caponord, Futura RST, Dorsoduro, Shiver, SRV 850, RSV4R and Tuono V4 to MY2020",
+    "year_start": 2001,
+    "year_end": 2020,
+    "severity": "low",
+    "symptoms": [
+      "Software connects but shows no fault codes",
+      "Bought as a code reader and cannot read codes",
+      "Tool does not list the machine at all",
+      "Connection fails without the extra adaptor"
+    ],
+    "causes": [
+      "The software is primarily a mapping and adjustment tool, and its Aprilia documentation does not show a fault-code screen",
+      "MV Agusta is absent from the supported marque list, so no MV machine is covered at any age",
+      "Aprilia ECUs need an OBD2 adaptor in addition to the interface cable or Bluetooth module, which is easily missed when ordering",
+      "Coverage stops at model year 2020 for the RSV4 and Tuono V4, so later Euro 5 machines are outside it"
+    ],
+    "fix_procedure": "Buy this for what it does: mapping, throttle and TPS self-learning, and component tests on a supported Aprilia. The self-learning functions are the genuinely valuable part for a workshop, because throttle and handle self-learning are routinely needed after throttle body or sensor work and are otherwise a dealer visit. Do not buy it as a fault-code reader for Aprilia without confirming that capability first, and do not buy it for MV Agusta at all. Order the required OBD2 adaptor alongside the interface. For a machine after model year 2020, check current coverage rather than assuming the published list still applies.",
+    "parts_needed": [
+      "TuneECU interface cable or Bluetooth module",
+      "Aprilia OBD2 adaptor, required in addition to the interface"
+    ],
+    "estimated_hours": 0.5,
+    "dtc_codes": [],
+    "source": "model-generated"
+  }
+]
