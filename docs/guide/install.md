@@ -22,7 +22,7 @@ motodiag db init
 ```
 
 `db init` creates your database and loads the starter data — DTC
-definitions, symptoms, and 756 curated known issues, all shipped
+definitions, symptoms, and 762 curated known issues, all shipped
 inside the package. Check it worked:
 
 ```bash

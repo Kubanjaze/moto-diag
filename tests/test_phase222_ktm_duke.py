@@ -299,12 +299,23 @@ class TestTheSuperDukePrefixTrap:
 
 class TestTheKtmFilesCoexist:
     def test_they_load_together(self, tmp_path):
+        """Counted against the files on disk, not a constant.
+
+        Phase 222 fixed a Phase 221 guard that could not survive the KTM
+        block growing — and then wrote this one, which globbed the KTM
+        files but hardcoded their total. Phase 223 duly broke it. The
+        encoding that survives is the invariant: loading every KTM file
+        yields exactly the sum of their entries, with none lost to a
+        title collision, and this file contributes 5."""
         path = str(tmp_path / "ktm.db")
         init_db(path)
+        expected = 0
         for f in KTM_FILES:
             load_known_issues_file(f, path)
-        assert count_known_issues(db_path=path) == 11
-        assert len(search_known_issues(make="KTM", db_path=path)) == 11
+            expected += len(json.loads(f.read_text(encoding="utf-8")))
+        assert count_known_issues(db_path=path) == expected
+        assert len(search_known_issues(make="KTM", db_path=path)) == expected
+        assert len(json.loads(DUKE_FILE.read_text(encoding="utf-8"))) == 5
 
     def test_no_title_collides(self):
         titles = []
