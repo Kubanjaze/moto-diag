@@ -42,8 +42,13 @@ BMW_R = SEED_DATA_DIR / "knowledge" / "known_issues_bmw_r_series.json"
 
 NEGATION = re.compile(r"\bno\b|\bnot\b|unlike|never|rather than|instead of", re.I)
 
-#: Hardware the Ducati entries may only mention in order to deny it.
-#: "cam chain" — Ducatis are belt driven. The rest are the BMW seam.
+#: Hardware the entries IN THIS FILE may only mention in order to deny it.
+#: "cam chain" — the Monster-line engines covered here (Desmodue,
+#: Desmoquattro, Testastretta) are belt driven. That is NOT true of
+#: Ducati generally: the Panigale's Superquadro and the V4 Desmosedici
+#: Stradale use a chain-and-gear cam drive, so Phase 217 must not
+#: inherit this rule. Corrected during the Phase 217 audit, where the
+#: original blanket comment ("Ducatis are belt driven") was found wrong.
 DENIED_ONLY = ["cam chain", "bellhousing", "gearbox split", "spline greas",
                "rear main seal"]
 
