@@ -1,0 +1,118 @@
+[
+  {
+    "title": "KTM's engine prefixes name three architectures, not one family — LC8, LC8c and LC4",
+    "description": "General knowledge entry on the orientation a shop needs before looking anything up on a KTM. Three prefixes cover the modern range and they are not variations on a theme. **LC8** is the 75-degree V-twin, used across the big Adventure and Super Duke machines. **LC8c** is a parallel twin, used in the 790 and 890 models — one letter apart in the name and a different architecture entirely. **LC4** is the large single, used in the 690 machines and shared between a road naked and a road-legal enduro. Which prefix you are on determines the cylinder count, the layout, the service documentation and most of the parts, and none of that can be inferred from a model's displacement or from its name. The practical rule is that the prefix is the first thing to establish and the last thing anyone writes down.",
+    "make": "KTM",
+    "model": "KTM LC8, LC8c and LC4 engine families",
+    "year_start": 2003,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "unsure which ktm engine family this is",
+      "engine prefix not on the work order",
+      "looked up the wrong engine for a ktm",
+      "displacement does not identify the engine"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Three architectures carried under two similar prefixes across one range",
+      "Displacement and model name identifying neither the architecture nor the family",
+      "Documentation and parts listings keyed to the engine family rather than to the model",
+      "The prefix rarely being recorded at intake, so it is reconstructed later from memory"
+    ],
+    "fix_procedure": "1. Establish the prefix before opening any documentation. Count the cylinders and note the layout: two in a vee is LC8, two side by side is LC8c, one is LC4. This takes seconds and settles what to look up. 2. Write the prefix on the work order alongside the model. It is the piece of information most often missing later and the hardest to reconstruct from a customer's description. 3. Do not infer the family from displacement. The range overlaps enough that the number alone does not decide it. 4. Confirm the documentation you are working from names the same prefix. A procedure written for one architecture will not describe another, and the shared naming makes a wrong document look right for longer than it should. 5. If a part has been ordered against a model name rather than a family, verify before fitting rather than after.",
+    "parts_needed": [
+      "No parts — this is an orientation step",
+      "Model and engine designation read from the machine"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "Within the LC8, the generation matters as much as the family — the name spans 950 to 1290",
+    "description": "General knowledge entry on the error that survives getting the architecture right. Establishing that a bike has an LC8 narrows it to a 75-degree V-twin and very little else: the name has covered displacements from the 950 machines of the early 2000s through 990, 1050, 1090, 1190 and 1290, across two decades of development. Two bikes can both correctly be described as having an LC8 and share almost nothing in the parts bin. This is the mistake that gets past the first check — a shop that has learned the LC8 versus LC8c distinction and now asks the right question about architecture can still order against the wrong generation, and because the architecture matched, the part often looks plausible. The family tells you what shape the engine is; the generation and model year tell you what fits it.",
+    "make": "KTM",
+    "model": "KTM LC8 V-twin — 950 through 1290 generations",
+    "year_start": 2003,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "lc8 part does not fit this generation",
+      "right engine family wrong year",
+      "part looks correct but will not fit",
+      "unsure which lc8 generation this is"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "One engine name covering a wide displacement range across two decades",
+      "Architecture matching, so a wrong-generation part looks plausible on inspection",
+      "Parts sourced against the family name after the architecture question was answered correctly",
+      "Development changes across generations that the shared name does not signal"
+    ],
+    "fix_procedure": "1. Treat the family as the first of two questions, not the whole question. Once you know it is an LC8, establish the generation and the model year before sourcing anything. 2. Source against the VIN rather than against the engine name. On a family with this span, the name narrows the search and does not finish it. 3. Be most careful where a part physically fits. A wrong-generation component that goes on is more expensive than one that obviously does not, because it gets fitted. 4. Confirm the service documentation is for the generation in front of you and not merely for the family. Procedures and specifications changed across the range. 5. Record the generation on the job alongside the family. The next person to work on the bike inherits whichever of those you wrote down.",
+    "parts_needed": [
+      "No parts — this is a sourcing step",
+      "VIN for a generation-correct parts lookup"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "On an LC8 the cylinders are front and rear, not left and right — confirm the numbering before working on one",
+    "description": "General knowledge entry on a step worth taking rather than assuming. An LC8 is a 75-degree V-twin, so its two cylinders sit fore and aft in the frame rather than side by side. A technician whose reflex is set by inline engines reaches for a left-hand or right-hand cylinder that does not exist as such, and a cylinder-specific instruction — a plug, a coil, an injector, a compression figure — has to be resolved to a physical cylinder before it means anything. Which physical cylinder carries which number is a manufacturer's choice and not something to infer from another make's vee, so read it from the service documentation for the engine in front of you rather than from a habit formed on a different bike. The cost of assuming is straightforward: work done correctly on the wrong cylinder, and a fault still present.",
+    "make": "KTM",
+    "model": "KTM LC8 75-degree V-twin",
+    "year_start": 2003,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "unsure which cylinder is which on an lc8",
+      "worked on the wrong cylinder",
+      "cylinder numbering not obvious on a v-twin",
+      "fault still present after replacing a part"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Cylinders arranged fore and aft rather than left and right on a vee",
+      "Reflexes formed on inline engines, where left and right identify a cylinder",
+      "Cylinder numbering being a manufacturer's choice rather than a convention shared between makes",
+      "Cylinder-specific instructions given by number, which has to be resolved to a physical cylinder first"
+    ],
+    "fix_procedure": "1. Resolve the number to a physical cylinder before touching anything, every time. This is a documentation step, not a guess, and it takes less time than the work it protects. 2. Read the numbering from the service documentation for this engine. Do not carry it across from another make's V-twin — the convention is not shared, and a confident wrong answer is worse than no answer. 3. Say which physical cylinder you mean on the job card, in words: front or rear. A number written down is ambiguous to the next person; front and rear are not. 4. When swapping a component to test — a coil, a plug — note which cylinder it came from and which it went to before you start. Swap tests are only informative if the record is right. 5. If a fault persists after a cylinder-specific repair, check that the right cylinder was worked on before assuming the diagnosis was wrong.",
+    "parts_needed": [
+      "No parts — this is a verification step",
+      "Service documentation for the specific engine and generation"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "Cam chain, starter clutch and valve clearance faults on an LC8, LC8c or LC4 are diagnosed like any engine's — what KTM changes is which family and schedule",
+    "description": "General knowledge entry on where these three complaints actually get resolved. A rattle from the cam chain area, a starter that spins without turning the engine, and clearances closing up over time are not KTM phenomena — they are engine phenomena. This corpus already carries the starter procedures as cross-platform entries (relay, motor, and the sprag or one-way starter clutch), and carries cam chain tensioner and valve clearance procedures in other makes' cross-model files, where the method is generic even though the file is not. Nothing about an LC8, an LC8c or an LC4 changes how any of those are tested. What a KTM does change is the input to them: which engine family you are on decides the architecture the procedure has to be applied to — a vee, a parallel twin or a single are inspected differently even when the wear mechanism is the same — and how the machine is used decides the schedule the clearances are measured against. A competition machine and a road machine sharing an engine family are on different schedules, and the same complaint means different things on each. Diagnose the fault generically; scope it by family and by use.",
+    "make": "KTM",
+    "model": "KTM LC8, LC8c and LC4 engines",
+    "year_start": 2003,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "rattle from the cam chain area on a ktm",
+      "starter spins but engine does not turn",
+      "clearances closing up over time",
+      "unsure if this is a ktm specific fault"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Wear mechanisms that are common to engines rather than particular to a make",
+      "Diagnostic procedures for all three already existing in this corpus — starter work as cross-platform entries, cam chain tensioner and valve clearance in other makes' cross-model files",
+      "Engine family determining the architecture a generic procedure has to be applied to",
+      "Use determining the schedule, so the same reading means different things on a competition and a road machine"
+    ],
+    "fix_procedure": "1. Diagnose the fault by its own procedure, not by the badge. The cross-platform starter entries cover relay, motor and starter clutch testing; the cam chain tensioner and valve clearance procedures written for other makes' engines apply in method, and none of it changes because the engine is an LC8, an LC8c or an LC4. 2. Establish the engine family first, because it decides what the procedure is being applied to — a single, a parallel twin and a vee are inspected differently even when the fault mechanism is the same. 3. Establish how the machine is used before judging a clearance or an interval. A competition machine and a road machine on the same family are on different schedules. 4. Take the specifications and the intervals from the manual for that model and generation rather than from the family. 5. Resist the assumption that an unfamiliar make means an unfamiliar fault. Treating a common wear item as a marque-specific mystery is how a straightforward job becomes an expensive one.",
+    "parts_needed": [
+      "No parts at the diagnostic stage",
+      "Components determined by the generic procedure once the fault is identified"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  }
+]
