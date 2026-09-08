@@ -91,7 +91,8 @@ class TestFileShape:
 
     def test_severity_and_source_vocabulary(self, raw):
         assert {e["severity"] for e in raw} <= {"low", "medium", "high", "critical"}
-        assert {e["source"] for e in raw} <= {"service-manual", "model-generated"}
+        assert {e["source"] for e in raw} <= {
+            "service-manual", "model-generated", "regulation"}
 
     def test_no_entry_claims_a_forum_tip(self, raw):
         """Gate 2 requires forum-derived entries to carry a forum tip and
@@ -102,18 +103,25 @@ class TestFileShape:
 
 
 class TestProvenanceIsHonest:
-    def test_service_manual_entries_rest_on_a_primary_document(self, raw):
-        """`service-manual` here means a primary official document —
-        Aprilia's own manual, or the EU regulation quoted verbatim. The
-        provenance vocabulary has no `regulation` value; that gap is
-        recorded in the phase plan rather than papered over by
-        mislabelling the entry `unverified`, which would additionally
-        drag it into Gate 2's forum-tip rule."""
+    def test_service_manual_entries_cite_the_manual(self, raw):
+        """Phase 235 filed its one regulation-sourced entry as
+        `service-manual` because migration 051's vocabulary had no slot
+        for a primary legal document, and `unverified` would have
+        dragged a quoted regulation into Gate 2's forum-tip rule.
+
+        Phase 235B added `regulation` (migration 052), so the two are
+        now separable and each is checked against its own kind of
+        source rather than against one permissive alternation."""
         for e in raw:
             if e["source"] != "service-manual":
                 continue
-            assert re.search(r"Service Station Manual|Regulation \(EU\)",
-                             e["description"]), e["title"]
+            assert "Service Station Manual" in e["description"], e["title"]
+
+    def test_regulation_entries_cite_the_regulation(self, raw):
+        regs = [e for e in raw if e["source"] == "regulation"]
+        assert regs, "the Euro 4 entitlement entry should be `regulation`"
+        for e in regs:
+            assert re.search(r"Regulation \(EU\)", e["description"]), e["title"]
 
     def test_vendor_sourced_entries_are_not_dressed_as_manuals(self, raw):
         for e in raw:

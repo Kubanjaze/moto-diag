@@ -1236,6 +1236,12 @@ _TABLE_TOKEN_RE = re.compile(
 )
 # A CHECK (col IN (...)) constraint. DOTALL so multi-line CHECK bodies
 # match; the inner list is captured for quoted-string extraction.
+#: ``ALTER TABLE <scratch> RENAME TO <real>`` — the tail of a
+#: CREATE-COPY-DROP-RENAME table rebuild (Phase 235B).
+_RENAME_TO_RE = re.compile(
+    r"\bALTER\s+TABLE\s+(\w+)\s+RENAME\s+TO\s+(\w+)",
+    re.IGNORECASE,
+)
 _CHECK_IN_RE = re.compile(
     r"\bCHECK\s*\(\s*(\w+)\s+IN\s*\((.*?)\)\s*\)",
     re.IGNORECASE | re.DOTALL,
@@ -1258,6 +1264,16 @@ def _parse_check_constraints(
     ``IN (...)`` body has no single-quoted strings (numeric/boolean,
     e.g. ``IN (0, 1)``) is skipped — it is not a Pydantic-``Literal``-
     of-``str`` surface.
+
+    Phase 235B: table-rebuild migrations are followed through their
+    rename. SQLite cannot alter a CHECK in place, so the only way to
+    change one is CREATE-COPY-DROP-RENAME into a scratch table — which
+    meant every such migration filed its CHECK under the scratch name
+    and this rule kept reading the superseded constraint off the
+    original ``ALTER TABLE ... ADD COLUMN``. That blinded the guard to
+    precisely the migrations most likely to move an enum. Any
+    ``ALTER TABLE <scratch> RENAME TO <real>`` in the same SQL block now
+    re-keys the scratch table's CHECKs onto the real table.
     """
     result: dict[tuple[str, str], frozenset[str]] = {}
     if not migrations_path.exists():
@@ -1296,6 +1312,14 @@ def _parse_check_constraints(
             (m.start(), m.group(1).lower())
             for m in _TABLE_TOKEN_RE.finditer(sql)
         ]
+        # A CHECK written into a scratch table that is then renamed over
+        # the real one belongs to the real one. Without this the rule
+        # reads a superseded constraint and reports drift that is not
+        # there — see the note in this function's docstring.
+        renames: dict[str, str] = {
+            m.group(1).lower(): m.group(2).lower()
+            for m in _RENAME_TO_RE.finditer(sql)
+        }
         for cm in _CHECK_IN_RE.finditer(sql):
             column = cm.group(1).lower()
             body = cm.group(2)
@@ -1313,6 +1337,7 @@ def _parse_check_constraints(
                     break
             if not table:
                 continue
+            table = renames.get(table, table)
             result[(table, column)] = frozenset(values)
     return result
 
