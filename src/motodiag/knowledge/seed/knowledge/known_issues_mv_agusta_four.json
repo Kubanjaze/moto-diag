@@ -1,0 +1,154 @@
+[
+  {
+    "title": "\"Radial valve\" on an MV Agusta F4 describes where the valves sit, not a different way of adjusting them",
+    "description": "Drawn from MV Agusta's own workshop manual. The F4 head is described as radial-valve, and the name suggests something exotic enough that shops decline the work. What it actually means is **valve placement**: rather than the four stems lying in two parallel planes as on a conventional pent-roof four, each valve is additionally splayed transversely so the heads sit radially around the chamber, which unshrouds them from the cylinder wall. At the bench it changes far less than the name implies. The cam lobes are ground at a compensating angle and **act directly on conventional bucket tappets**, and the manufacturer's own manual describes an ordinary **shim-under-bucket** job — the shim goes in first and the cup on top, which means the camshafts must come out to change one. A claim circulating online that these engines are shim-**over**-bucket is contradicted by MV's own manual and should not be acted on. What is genuinely different is elsewhere: the clearance windows are unusually wide, so there is no single number to chase; a minimum shim thickness applies; and MV names specific special tools, including one used expressly to avoid bending valves when handling the collets.",
+    "make": "MV Agusta",
+    "model": "MV Agusta F4 and four-cylinder Brutale",
+    "year_start": 1999,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "radial valve head on an f4",
+      "is the f4 shim over or under bucket",
+      "do the cams come out to shim an f4",
+      "special tools for mv valve work",
+      "declined the valve job on an mv"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Radial valve describing placement rather than a different adjustment mechanism",
+      "Cam lobes ground at a compensating angle acting on conventional bucket tappets",
+      "An online claim of shim-over-bucket that the manufacturer's own manual contradicts",
+      "Unusually wide clearance windows, a minimum shim thickness, and named special tools including one to avoid bending valves"
+    ],
+    "fix_procedure": "1. Treat the job as shim-under-bucket, per the manufacturer's manual: the shim seats first and the cup goes on top, so the camshafts come out to change one. Do not act on the shim-over-bucket claim circulating online. 2. Work to the manual's clearance **window** rather than a single target figure; the acceptable band on these engines is wide and chasing one number wastes shims. 3. Observe the minimum shim thickness the manual specifies — going thinner is not an option even when the arithmetic suggests it. 4. Obtain the named special tools before starting, particularly the collet tool; the manual specifies it expressly to avoid bending valves. 5. Do not decline the work on the strength of the name. The head geometry is unusual and the procedure is not.",
+    "parts_needed": [
+      "Valve shims to the manual's specification",
+      "Named MV special tools including the collet tool",
+      "Head gaskets and seals disturbed by access"
+    ],
+    "estimated_hours": 8.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "Measure an MV Agusta F4 shim before ordering a kit — the diameter is not established and a Japanese kit may not fit",
+    "description": "Drawn from an explicit gap in the sources consulted, and written because the gap itself is the useful information. Shim kits are sold by diameter, and the common Japanese sizes are what a workshop already has on the shelf. For the MV four the shim diameter **could not be established** from any source that could be opened: the figures in circulation disagree, and none was authoritative. So a shop that orders a kit on the strength of a remembered or assumed diameter risks a box of shims that do not fit the machine on the ramp, discovered at the point where the camshafts are already out. The remedy is simple and costs nothing: **measure an existing shim before ordering**. That is worth doing on any unfamiliar engine and is worth insisting on here, because the usual shortcut — assuming the size that fits most bikes — has no support for this one. This entry deliberately states no figure rather than repeating one of the conflicting numbers.",
+    "make": "MV Agusta",
+    "model": "MV Agusta F4 and four-cylinder Brutale",
+    "year_start": 1999,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "what size shims does an f4 take",
+      "ordered a shim kit that does not fit",
+      "mv shim diameter",
+      "japanese shim kit on an mv",
+      "cams out and the shims are wrong"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Shim diameter for this engine not established from any authoritative source",
+      "Figures in circulation disagreeing with one another",
+      "Workshops defaulting to the common Japanese sizes already on the shelf",
+      "The mismatch being discovered only once the camshafts are out"
+    ],
+    "fix_procedure": "1. Remove and measure an existing shim before ordering anything. It is the only reliable way to size a kit for this engine. 2. Do not assume the common Japanese diameters; there is no support for either of them here. 3. Order the kit before committing to the job where possible, so a mismatch is discovered at the parts counter rather than with the camshafts out. 4. Record the measured diameter on the machine's service record — it is exactly the kind of fact that is expensive to rediscover. 5. Treat any diameter quoted online for this engine as unverified until measured.",
+    "parts_needed": [
+      "Valve shim kit sized from a measured original",
+      "Micrometer or shim gauge"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "MV four-cylinder model numbers are wrong in both directions — 1078 is real, 990 is not",
+    "description": "Drawn from manufacturer and technical specifications. On most makes a model number rounds the capacity downward or upward in one predictable direction. On the MV fours the badges are unreliable **both ways**, which defeats any rule of thumb. Some numbers are genuine — the 1078 really is that capacity. Others are not: the model badged **990** is actually a 998, and the model badged **989** is actually a 982. And two differently badged machines can share one engine, with the 1090 designation carrying the same 1078 unit. The most expensive trap is subtler still: **there are two different 998cc F4 engines**, an earlier long-stroke and a later short-stroke, so \"F4 1000\" does not identify a piston, a bore or a stroke. Ordering top-end parts against that name alone is a coin toss. One published figure in circulation for one of these engines is arithmetically impossible for its stated bore and stroke and should simply be ignored. Establish bore and stroke from the machine or its documentation before ordering anything dimensional.",
+    "make": "MV Agusta",
+    "model": "MV Agusta F4 and four-cylinder Brutale — 750, 910, 982, 998 and 1078",
+    "year_start": 1999,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "is the brutale 990 really 990cc",
+      "which f4 1000 engine is this",
+      "ordered pistons for the wrong f4",
+      "1090 and 1078 same engine",
+      "bore and stroke on an mv four"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Model badges that misstate capacity in both directions rather than rounding predictably",
+      "Two differently badged machines sharing one engine",
+      "Two different engines of the same nominal capacity, differing in bore and stroke",
+      "A published capacity figure in circulation that is arithmetically impossible for its stated bore and stroke"
+    ],
+    "fix_procedure": "1. Establish bore and stroke from the machine or its own documentation before ordering anything dimensional. The badge will not tell you and neither will the nominal capacity. 2. On any machine badged as a thousand, determine which of the two engines it is; they differ in bore and stroke and share a nominal capacity. 3. Do not apply a rounding rule. These badges are wrong in both directions, so no rule of thumb survives. 4. Treat capacity figures found online with suspicion and check them against bore and stroke — at least one in circulation does not survive the arithmetic. 5. Record bore, stroke and actual capacity on the work order; the model name alone is not recoverable into those.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Bore and stroke confirmed before dimensional parts are ordered"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "An MV Agusta F4 valve interval is short by superbike standards — the exotic head does not buy a longer one",
+    "description": "Drawn from the manufacturer's own maintenance table. There is a natural assumption that an expensive, low-volume machine with an unusual cylinder head will carry a long service interval, and on this engine it is wrong: the manufacturer's table specifies a valve clearance check at an interval **short by the standards of contemporary litre-class machines**. That has two consequences worth stating to an owner before the work rather than after. The job itself is substantial — the camshafts come out to change a shim — so a short interval on a long job makes the running cost of these machines meaningfully higher than the purchase price suggests. And a used machine bought on low mileage may still be due or overdue on time, because the interval is not the one a buyer familiar with Japanese superbikes will have assumed. Take the figure from the manual for the specific model rather than from this entry; what is stated here is that the interval is shorter than expected, not what it is.",
+    "make": "MV Agusta",
+    "model": "MV Agusta F4 and four-cylinder Brutale",
+    "year_start": 1999,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "valve interval on an f4",
+      "how often do mv valves need doing",
+      "low mileage mv but overdue service",
+      "running costs on an mv agusta",
+      "exotic bike long service interval"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A valve clearance interval shorter than contemporary litre-class machines rather than longer",
+      "The job being substantial because the camshafts come out to change a shim",
+      "Buyers assuming a Japanese superbike interval on a machine that does not share one",
+      "Low mileage concealing a machine that is due or overdue"
+    ],
+    "fix_procedure": "1. Take the interval from the manual for the specific model and year, and quote from that rather than from an assumption about exotic machines. 2. Check service history against the interval on any used machine before the sale rather than after; low mileage does not clear it. 3. Explain the running cost honestly when quoting — a short interval on a camshafts-out job is a real ownership expense and an owner is better told before the first service than at it. 4. Do not extend the interval on the reasoning that the machine is little used; the manufacturer's table governs. 5. Record the completed service against both mileage and date.",
+    "parts_needed": [
+      "Valve shims to the manual's specification",
+      "Gaskets and seals disturbed by camshaft removal"
+    ],
+    "estimated_hours": 8.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "What an independent shop can and cannot do on an MV Agusta F4, and why the answer is mostly about parts",
+    "description": "Drawn from the manufacturer's own workshop documentation and the campaign record, and written to replace an impression with specifics. The reputation of these machines as untouchable outside a dealer is only partly earned. **Mechanical work is documented**: the manufacturer's workshop manual exists, names its special tools by number, and describes the valve job in ordinary terms — an independent with the tools can do it. What genuinely constrains an independent is the **parts** side. Several campaign remedies are whole-assembly replacements rather than repairs. Named special tools have no generic equivalent, and one is specified expressly to avoid bending valves. Shim sizing cannot be assumed from stock. And the safety campaigns on these machines have included a **front brake master cylinder failure** and, on the wider range, remedies that replace rather than repair — so a machine arriving with a braking complaint is a campaign question before it is a workshop one. The honest position to give a customer is that the work is doable and the parts and campaign status are what set the timescale.",
+    "make": "MV Agusta",
+    "model": "MV Agusta F4 and four-cylinder Brutale",
+    "year_start": 1999,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "can an independent work on an mv agusta",
+      "mv parts lead time",
+      "special tools with no equivalent",
+      "front brake master cylinder on an f4",
+      "dealer only work on an mv"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A documented workshop manual that names its special tools, so mechanical work is not undocumented",
+      "Named special tools with no generic equivalent, one specified to avoid bending valves",
+      "Campaign remedies that replace assemblies rather than repairing components",
+      "A front brake master cylinder failure among the safety campaigns on these machines"
+    ],
+    "fix_procedure": "1. Separate the mechanical question from the parts question when a customer asks whether you can take the work on. The procedures are documented; the constraint is parts and tooling. 2. Obtain the named special tools before committing to a job that needs them, and do not substitute — one is specified expressly to prevent bent valves. 3. Check campaign status by frame number before any braking work; the front brake master cylinder has been the subject of a safety campaign and that changes who does the work and who pays. 4. Establish parts availability and lead time before giving the customer a date, not after. 5. Say plainly what is doable and what is not, rather than declining the machine on reputation or accepting it on optimism.",
+    "parts_needed": [
+      "Named MV special tools as the job requires",
+      "Campaign parts only through the manufacturer's channel",
+      "Frame number checked before braking work"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  }
+]
