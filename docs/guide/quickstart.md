@@ -65,7 +65,7 @@ motodiag kb list --make honda
 motodiag kb by-code P0562
 ```
 
-The knowledge base is 842 curated entries — real failures on real
+The knowledge base is 847 curated entries — real failures on real
 bikes, with the fix. `motodiag kb show <id>` prints the full detail.
 
 ## 3. Add the bike
