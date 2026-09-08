@@ -1,0 +1,100 @@
+[
+  {
+    "code": "P0510",
+    "description": "Rear wheel radius acquisition — CAN error during acquisition, or invalid stored value",
+    "category": "electrical",
+    "severity": "medium",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. In the SAE J2012 list P0510 is 'Closed Throttle Position Switch'; Aprilia's own Service Station Manual heads this code 'Rear wheel radius acquisition', and a generic reader that prints the SAE text sends a mechanic to a throttle switch that is not at fault",
+      "A CAN communication fault interrupting the acquisition procedure — the manual's wording is that the system 'warns that the procedure can not be completed due to a communication problem on the CAN line'",
+      "A transcription error on key-ON when the rear wheel radius value is copied from non-volatile memory (EEPROM) into RAM, in which case the control unit falls back to a default",
+      "The acquisition never having been performed after a wheel, tyre or sprocket change"
+    ],
+    "fix_summary": "Read the heading, not the SAE definition — this code is about the stored rear wheel radius, not a throttle switch. Establish first whether the fault is the CAN line or the stored value, because they are different jobs: a CAN error means the acquisition could not complete and the bus is the target, while an invalid value means the figure did not survive the copy out of EEPROM at key-ON and the acquisition simply needs running again. Re-run the acquisition with the dealer tool after any change of wheel, tyre or sprocket. If the value keeps failing to transcribe across several key cycles, the control unit's memory is the suspect rather than the procedure."
+  },
+  {
+    "code": "P0462",
+    "description": "Quick Shift sensor (electronic transmission) — shorted to negative on key-ON, or signal not valid",
+    "category": "electrical",
+    "severity": "low",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. SAE P0462 is 'Fuel Level Sensor Circuit Low' — a generic reader will send a mechanic to the fuel gauge. Aprilia's manual heads it 'Quick Shift sensor (electronic transmission)', and the circuit is the gearshift lever sensor at PIN 47",
+      "Shorted to negative: the manual's condition is that 'on key-ON a voltage equal to zero has been detected at PIN 47'",
+      "Signal not valid: 'the control unit has detected activation of the lever but not its release within the set time limit' — a sensor or linkage that stays activated rather than one that never activates",
+      "A gearshift linkage adjusted or reassembled so the sensor is preloaded and never returns to its released state"
+    ],
+    "fix_summary": "Do not chase the fuel level sender. The manual's own test is to disconnect the sensor connector with the switch RELEASED and see whether the indication clears — an indication that stays ACTIVATED with the sensor disconnected puts the fault in the harness rather than the sensor. Where the code is 'signal not valid' rather than a short, suspect mechanical preload before electrical failure: check that the shift linkage lets the sensor return to rest, because a lever that is held slightly activated by adjustment produces exactly this code with a healthy sensor."
+  },
+  {
+    "code": "P0461",
+    "description": "Gear sensor — shorted to positive or open circuit, or shorted to negative",
+    "category": "electrical",
+    "severity": "medium",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. SAE P0461 is 'Fuel Level Sensor Circuit Range/Performance'; Aprilia heads it 'Gear sensor' and the circuit is at PIN 72",
+      "Open circuit or shorted to positive: 'excessive voltage has been detected at PIN 72' — and the manual notes this variant 'is detected with gear engaged only', so a bike tested in neutral can read clean with the fault present",
+      "Shorted to negative: 'voltage equal to zero has been detected at PIN 72'",
+      "A gear position sensor or its connector disturbed during clutch, sprocket or engine-case work"
+    ],
+    "fix_summary": "Test with a gear engaged, not in neutral. The open-circuit and short-to-positive variant is only detected with a gear engaged, so the standard stationary check in neutral will miss it and the machine will be handed back unrepaired. Check the sensor connector and the control unit's VEHICLE connector at PIN 72 before condemning the sensor. Because gear position feeds the rider aids on these machines, expect a gear sensor fault to present as traction control or quick-shift misbehaviour rather than as a gear display problem."
+  },
+  {
+    "code": "P0446",
+    "description": "Secondary air valve control — short circuit to positive, short circuit to negative, or open circuit (never shown on the instrument panel)",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. SAE P0446 is an evaporative emission vent control circuit fault; Aprilia heads it 'Secondary air valve control', at PIN 43",
+      "Shorted to positive: 'excessive voltage has been detected at PIN 43'. Shorted to negative or open circuit: 'no voltage has been detected'",
+      "The manual states plainly that 'The instrument panel does not indicate the presence of this error even in the ATT status' — so this fault is stored and current with no warning light of any kind",
+      "A secondary air solenoid disconnected or left off during exhaust, airbox or emissions-equipment work and never noticed, because nothing on the dash reports it"
+    ],
+    "fix_summary": "Expect no warning light. This is one of the codes Aprilia's manual explicitly excludes from the instrument panel even when the fault is currently present, so it is found by reading the control unit and not by riding the machine. Check PIN 43 and the secondary air solenoid's connector. It is worth reading for specifically after any exhaust or airbox work on a machine that 'has no faults' by the dashboard, because the dashboard cannot report this one."
+  },
+  {
+    "code": "P0190",
+    "description": "Exhaust valve position — position indicated by the potentiometer does not match the position commanded",
+    "category": "exhaust",
+    "severity": "medium",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. SAE P0190 is 'Fuel Rail Pressure Sensor Circuit' — a generic reader points at fuel pressure, which on this fault is entirely healthy. Aprilia heads it 'Exhaust valve position'",
+      "The manual's condition is that the 'Position indicated by potentiometer does not correspond with position set by control unit' — a disagreement between commanded and actual, not a failed sensor as such",
+      "Mechanical binding of the exhaust valve itself, a foreign body preventing rotation, or a return spring that no longer completes the stroke",
+      "Cables stretched, misrouted or incorrectly tensioned after exhaust work, so the valve no longer reaches the commanded position even though the actuator moves"
+    ],
+    "fix_summary": "Treat this as mechanical before electrical, which is the reverse of the reflex a fuel-pressure reading would produce. The manual's own procedure is to disconnect the cables from the motor, work the cables by hand and watch for regular movement, full valve stroke and correct return-spring action, plus absence of foreign bodies. Only once the valve is proved free does the potentiometer or the actuator become the suspect. On a machine with an aftermarket exhaust, cable routing and tension are the first thing to check, since the valve can be commanded correctly and still fail to arrive."
+  },
+  {
+    "code": "P0217",
+    "description": "Pressure too low at rear cylinder manifold — measured manifold pressure below the estimated value",
+    "category": "engine",
+    "severity": "medium",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning, and the generic reading is alarming in a way the real fault is not: SAE P0217 is 'Engine Over Temperature Condition', so a generic tool reports overheating on a machine whose cooling system is fine",
+      "The manual's actual cause reads 'A small difference between the estimated pressure and the measured pressure has been detected: the measured pressure is below the estimated one (for example, smeared throttle body)' — a smeared or dirty throttle body is the example Aprilia itself gives",
+      "A leak or blockage in the pneumatic line between the pressure sensor and its take-off point on the throttle body",
+      "An intake manifold in poor condition, or a blocked pressure reading hole"
+    ],
+    "fix_summary": "Do not begin a cooling system investigation. The direction matters and is easy to invert: the MEASURED pressure is below the ESTIMATED one, so the reading is low rather than high. Aprilia's troubleshooting is to check the pneumatic system between the pressure sensor and the throttle body take-off, confirm the intake manifold is in good condition, and confirm the pressure reading hole is clean. Note the bank: P0217 is the REAR cylinder manifold and P0218 is the same fault on the front, so the code identifies which side to open up."
+  },
+  {
+    "code": "P0608",
+    "description": "Level 2 safety reset — the torque-monitoring safety layer has reset the engine (never shown on the instrument panel)",
+    "category": "engine",
+    "severity": "high",
+    "make": "Aprilia",
+    "common_causes": [
+      "This is NOT the SAE meaning. SAE P0608 is a control module VSS output fault; Aprilia heads it 'Level 2 safety reset' and it belongs to the ride-by-wire safety chain, whose three levels the manual describes as sensor correct operation, comparison of requested against estimated torque, and a microprocessor watching the main microprocessor",
+      "The manual's cause reads 'As the level 2 safety system (comparison between requested torque and calculated torque) has detected a fault, the control unit has reset engine (C gravity)' — level 2 is the requested-versus-calculated torque comparison",
+      "The manual adds 'The instrument panel does not indicate the presence of this error even in the ATT status', so the rider sees a reset with no light and reports an inexplicable cut",
+      "P0608 is a consequence rather than a root cause — it records that the safety layer acted, not what made it act"
+    ],
+    "fix_summary": "Read this code as a symptom of something else and keep searching. Aprilia's own troubleshooting is exactly one line — 'Continue fault search for the other errors detected' — because the safety reset reports that the torque comparison failed, not why. Read the whole fault memory rather than clearing on this code alone. Its companions are P0609 'Safety Engine Stop', where the control unit shut the engine off outright, and P0611, a stored data file that the manual says 'appears only if the Level 2 safety has reset the engine'. None of the three is displayed on the dash, so a rider reporting a cut with no warning light is describing normal behaviour for this fault, not ruling it out."
+  }
+]

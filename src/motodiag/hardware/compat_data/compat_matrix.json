@@ -1458,5 +1458,215 @@
     "status": "incompatible",
     "notes": "The carburetted original Trophy falls outside the vendor's fuel-injected scope.",
     "verified_by": "general-knowledge claim; not confirmed line-by-line"
+  },
+  {
+    "adapter_slug": "pads-aprilia",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "Aprilia's factory tool, dealer channel only. The Service Station Manual directs the reader here to reset ECU errors, so this is the documented route for functions with no published alternative. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.aprilia.com/"
+  },
+  {
+    "adapter_slug": "texa-idc5-bike",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "full",
+    "notes": "MV Agusta's OFFICIAL dealer tool — a 2012 MV press release states all authorised service centres worldwide would adopt the TXB. Sold openly, so an independent can buy the same tool the dealer uses. Coverage is make-level; three- and four-cylinder parity is NOT confirmed. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.texa.com/"
+  },
+  {
+    "adapter_slug": "texa-idc5-bike",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "partial",
+    "notes": "TEXA names APRILIA among covered makes but Aprilia is not a TEXA OEM customer the way MV is, so this is aftermarket coverage rather than the factory tool. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.texa.com/"
+  },
+  {
+    "adapter_slug": "guzzidiag-aprilia",
+    "make": "aprilia",
+    "model_pattern": "rsv4%",
+    "year_min": 2009,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "SOURCE-STATED RANGE: cable sets are sold specifically for 2009-2020 RSV4 (all variants). Software is free; only the cable is bought. Coverage follows the Marelli ECU fitted, not the model name.",
+    "verified_by": "https://www.von-der-salierburg.de/download/GuzziDiag/"
+  },
+  {
+    "adapter_slug": "guzzidiag-aprilia",
+    "make": "aprilia",
+    "model_pattern": "tuono%",
+    "year_min": 2011,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "SOURCE-STATED RANGE: cable sets are sold specifically for 2011-2020 Tuono V4 (all variants).",
+    "verified_by": "https://www.von-der-salierburg.de/download/GuzziDiag/"
+  },
+  {
+    "adapter_slug": "obdstar-iscan-aprilia",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 2000,
+    "year_max": 2026,
+    "status": "partial",
+    "notes": "Dedicated Aprilia handheld. Per-model coverage is published only as a downloadable list, so this row is make-level and NOT coverage-verified — confirm the model with the vendor. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.obdstar.com/"
+  },
+  {
+    "adapter_slug": "obdstar-iscan-mv-agusta",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 2010,
+    "year_max": 2026,
+    "status": "partial",
+    "notes": "Dedicated MV handheld. Per-model coverage published only as a downloadable list; three-cylinder vs four-cylinder parity NOT confirmed by any source consulted. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.obdstar.com/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "rsv4%",
+    "year_min": 2009,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "SOURCE-STATED CEILING: TuneECU's guide reads \"RSV4R & Tuono V4 (up to MY 2020)\". Mapping and self-learning, NOT a confirmed fault-code reader. Requires an OBD2 adaptor in addition to the interface.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "tuono%",
+    "year_min": 2011,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "SOURCE-STATED CEILING: \"up to MY 2020\". Mapping, TPS reset, Handle and Throttle Self Learning. DTC read/clear is undocumented for Aprilia and must not be assumed.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "dorsoduro%",
+    "year_min": 2007,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "Named in TuneECU's supported list (Dorsoduro 750/900 and Dorsoduro 1200). Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "shiver%",
+    "year_min": 2007,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "Named in TuneECU's supported list (Shiver 750/900). Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "caponord%",
+    "year_min": 2001,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "Named in TuneECU's supported list (Caponord 1000 and 1200). NOTE the connector differs across these: 6-pin on the Caponord 1000, 3-pin on the 1200. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "futura%",
+    "year_min": 2001,
+    "year_max": 2009,
+    "status": "partial",
+    "notes": "Named in TuneECU's supported list (Futura RST). Takes the 6-pin Sagem-style adaptor, not the 3-pin. Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "aprilia",
+    "model_pattern": "srv%",
+    "year_min": 2012,
+    "year_max": 2016,
+    "status": "partial",
+    "notes": "Named in TuneECU's supported list (SRV 850). Year range is an era estimate, not a manufacturer-stated figure.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "tuneecu-aprilia",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2026,
+    "status": "incompatible",
+    "notes": "DELIBERATE INCOMPATIBLE ROW. MV Agusta is absent from TuneECU's supported marque list entirely, at every age. TuneECU is often recommended as the cheap route into Italian machines; for MV it is not a route at all.",
+    "verified_by": "https://www.tuneecu.net/"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2015,
+    "status": "incompatible",
+    "notes": "Pre-OBD-stage-I. No J1962 socket, no standardised service modes, and a proprietary K-line Marelli ECU — adapting the plug does not make it answer generic OBD-II queries.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32013R0168"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 2016,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "EURO 4 IS NOT A LOCKED DOOR. L3e vehicles became OBD stage I from 1.1.2016 (new types) / 1.1.2017 (all new registrations). Access must be \"unrestricted and standardised\"; the 3-pin plug is a permitted \"alternative connection interface\" and the manufacturer must publish its pinout free of charge and supply a generic-scan-tool adapter on request. Scope is narrow: emission-related codes and standard PIDs only. Type-approval obligation, not a bench-verified response.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32018R0295"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "aprilia",
+    "model_pattern": "%",
+    "year_min": 2021,
+    "year_max": 2026,
+    "status": "read-only",
+    "notes": "Euro 5 / OBD stage II. Connector must meet ISO 19689:2016 or ISO 15031-3:2004. Still read-only in practice: no ABS, traction control, dash, immobiliser, key programming, service reset, adaptations or coding.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32018R0295"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 1997,
+    "year_max": 2015,
+    "status": "incompatible",
+    "notes": "Pre-OBD-stage-I. Proprietary 2-pin/3-pin plug and an Eldor ECU that does not answer generic OBD-II queries.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/PDF/?uri=CELEX:32013R0168"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 2016,
+    "year_max": 2020,
+    "status": "read-only",
+    "notes": "EURO 4 IS NOT A LOCKED DOOR. Same OBD stage I obligation as Aprilia: the 4-pin \"Diagnostica\" plug is a permitted alternative interface, with a free pinout and a generic-scan-tool adapter owed to independent operators on request. Emission-related codes and standard PIDs only. Type-approval obligation, not bench-verified.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32018R0295"
+  },
+  {
+    "adapter_slug": "elm327-generic-bt-clone",
+    "make": "mv-agusta",
+    "model_pattern": "%",
+    "year_min": 2021,
+    "year_max": 2026,
+    "status": "read-only",
+    "notes": "Euro 5 / OBD stage II, taking a separate adapter again. Everything an MV job actually needs — ABS, dash, immobiliser, coding, service reset, actuator tests — remains outside generic access.",
+    "verified_by": "https://eur-lex.europa.eu/legal-content/EN/TXT/HTML/?uri=CELEX:32018R0295"
   }
 ]
