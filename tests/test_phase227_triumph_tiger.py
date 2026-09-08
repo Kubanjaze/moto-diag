@@ -48,6 +48,20 @@ TIGER = K / "known_issues_triumph_tiger.json"
 BONNIE = K / "known_issues_triumph_bonneville.json"
 COMPAT = SEED_DATA_DIR.parent.parent / "hardware" / "compat_data" / "compat_matrix.json"
 
+#: The five Triumph compat rows that existed before Phase 230 filled the
+#: gap. Phases 226-229 each asserted the count was exactly 5 — the right
+#: guard while the gap was open, and the wrong shape once it closed. Same
+#: "constant standing in for an invariant" bug as the KTM count at 222.
+#: These now assert the original rows SURVIVED, which is what they meant.
+ORIGINAL_TRIUMPH_ROWS = {
+    ("obdlink-mx-plus", "tiger%"),
+    ("obdlink-mx-plus", "675"),
+    ("obdlink-lx", "bonneville%"),
+    ("elm327-generic-bt-clone", "675"),
+    ("obdlink-sx", "tiger%"),
+}
+
+
 DESIGNATIONS = {
     "Tiger 800": r"Tiger 800",
     "Tiger 900": r"Tiger 900",
@@ -314,17 +328,21 @@ class TestRecallScopingIsByFrameNumber:
 class TestTheAdapterGapIsLeftForItsOwner:
     def test_the_triumph_catalog_rows_are_unchanged(self):
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
-        assert len([r for r in matrix if r["make"] == "triumph"]) == 5
+        rows = {(r["adapter_slug"], r["model_pattern"])
+                for r in matrix if r["make"] == "triumph"}
+        assert ORIGINAL_TRIUMPH_ROWS <= rows, ORIGINAL_TRIUMPH_ROWS - rows
 
-    def test_the_tiger_rows_start_at_2013(self):
-        """So the 2011-2012 Tiger 800 has no adapter row — the same
-        shape as the air-cooled Bonneville gap Phase 226 left. Row 230
-        owns Triumph tooling."""
+    def test_the_tiger_coverage_gap_was_filled_by_its_owner(self):
+        """Inverted at Phase 230. This phase found every Tiger row
+        starting at 2013 and none full-access, and left it for row 230.
+        230 added coverage reaching back to 2007, so the assertion now
+        checks the earlier Tigers are reachable rather than that they
+        are not."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         tiger = [r for r in matrix
                  if r["make"] == "triumph" and "tiger" in r["model_pattern"]]
-        assert tiger and all(r["year_min"] >= 2013 for r in tiger)
-        assert all(r["status"] != "full" for r in tiger)
+        assert any(r["year_min"] < 2013 for r in tiger), "no pre-2013 Tiger row"
+        assert any(r["status"] == "full" for r in tiger), "still no full option"
 
 
 class TestSearchability:

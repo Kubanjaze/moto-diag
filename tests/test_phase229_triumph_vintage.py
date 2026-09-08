@@ -53,6 +53,20 @@ VINTAGE = K / "known_issues_triumph_vintage.json"
 TRIUMPH_FILES = sorted(K.glob("known_issues_triumph_*.json"))
 COMPAT = SEED_DATA_DIR.parent.parent / "hardware" / "compat_data" / "compat_matrix.json"
 
+#: The five Triumph compat rows that existed before Phase 230 filled the
+#: gap. Phases 226-229 each asserted the count was exactly 5 — the right
+#: guard while the gap was open, and the wrong shape once it closed. Same
+#: "constant standing in for an invariant" bug as the KTM count at 222.
+#: These now assert the original rows SURVIVED, which is what they meant.
+ORIGINAL_TRIUMPH_ROWS = {
+    ("obdlink-mx-plus", "tiger%"),
+    ("obdlink-mx-plus", "675"),
+    ("obdlink-lx", "bonneville%"),
+    ("elm327-generic-bt-clone", "675"),
+    ("obdlink-sx", "tiger%"),
+}
+
+
 #: The axis this file exists on. Every entry must name one — it is what
 #: forty Japanese-vintage entries cannot say.
 BRITISH_SPECIFIC = {
@@ -281,7 +295,9 @@ class TestDeferralBoundaries:
 
     def test_the_adapter_catalog_is_unchanged(self):
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
-        assert len([r for r in matrix if r["make"] == "triumph"]) == 5
+        rows = {(r["adapter_slug"], r["model_pattern"])
+                for r in matrix if r["make"] == "triumph"}
+        assert ORIGINAL_TRIUMPH_ROWS <= rows, ORIGINAL_TRIUMPH_ROWS - rows
 
 
 class TestProvenanceAndSearchability:

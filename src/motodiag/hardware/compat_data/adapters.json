@@ -388,5 +388,35 @@
     "reliability_1to5": 3,
     "known_issues": "Keihin-era KTMs only, and TuneECU's own bikes list says unlisted bikes are not compatible: no 125/200/250/390 Duke or RC (Bosch), no 790/890/990 Duke or Adventure (Bosch), no EXC TPI/TBI two-strokes, no Euro 5 model of any family. Two physical paths: the K-line bikes (990 LC8, 1190 RC8, 690 to 2013, 250/350 SX-F) need a USB KKL FTDI cable (adaptor type C), while the CAN bikes (690 from 2014, 1050/1090/1190/1290 Adventure, 1290 Super Duke) use an ELM327-class or OBDLink Bluetooth adapter (adaptor type D) — both through the same third-party 6-pin-to-OBD-II adaptor. Function set is narrow on the CAN bikes: fault codes, live data and actuator tests only, no map read/write and no adjustments of any kind. The developer documents connection-stability problems on some KTMs, especially with the engine running (COM-port settings, cable shield to ground, ferrite choke); a reseller warns later KTMs often fail to connect. Windows version discontinued. Price shown is the EUR 25 Standard licence (1 year, 5 bikes) converted at time of writing; hardware adaptor and interface are extra (roughly GBP 12 to 30 from UK resellers). Pro licence EUR 300 / 3 years.",
     "notes": "The independent-shop tool for Keihin-managed, pre-Euro 5 KTMs, distributed as a direct APK from the developer's site rather than an app store. Per TuneECU's Basic guide, by model: 990 LC8 and 1190 RC8 — map read/write over USB, actuator tests (fuel pump, SAI, second throttle, O2, injector, coil), reset engine adaptation and the throttle-cable adjustment; 690 Duke 3 and 690 SMC/Enduro/Supermoto to 2013 — map read/write over USB, tests, reset engine adaptation only; 250/350 SX-F — diagnostics and tests only; 690 Duke 4, 690 from 2014, 1050/1090/1190/1290 Adventure and 1290 Super Duke (all not Euro 5) — Bluetooth only, diagnostics and tests, no adjustments. TuneBoy (Australia) lists twelve older KTMs but as a tune-editing and data-logging kit, not diagnostics. For Bosch-era and Euro 5 KTMs the options are KTM's PC-based dealer tool or dealer-level third-party scanners that list KTM by model."
+  },
+  {
+    "slug": "tuneecu-triumph-android",
+    "brand": "TuneECU",
+    "model": "TuneECU (Android) for Triumph — 16-pin socket, no adaptor",
+    "chipset": "proprietary",
+    "transport": "usb",
+    "price_usd_cents": 2700,
+    "purchase_url": "https://tuneecu.fr/",
+    "supported_protocols_csv": "K-Line (KWP),Triumph Sagem,Triumph Keihin",
+    "supports_bidirectional": true,
+    "supports_mode22": false,
+    "reliability_1to5": 4,
+    "known_issues": "Android only; the Windows build is discontinued. Coverage is defined by engine-management generation and frame-number break rather than by model year, so a machine near a boundary must be checked by frame number — the published breaks are the authoritative discriminator and the year ranges here are mapped from them. Map write and service reset need a USB KKL 409.1 FTDI cable on some models and a specific Bluetooth adapter on others; the function set differs per model in the published matrix, so confirm the exact bike before promising a function. Carburetted air-cooled machines are outside any tool's scope because they have no engine control module at all. Licence price is not published on the vendor site (bought in-app); the figure here is the commonly quoted standard licence converted at time of writing and should be treated as indicative rather than a vendor price.",
+    "notes": "The diagnostics-capable independent tool for Triumph, with a published per-model function matrix spanning both the Sagem-managed bikes (Daytona T595/955i, Speed Triple T509/955i, Sprint ST/RS 955, Tiger T709/955i, Speed Four, TT600) and the later Keihin ones (air-cooled Bonneville 865 family through the modern range). Functions per the vendor's own matrix: read and clear fault codes, live sensor values, actuator tests, reset engine adaption, throttle position reset, reset service interval, and map read/write. Connects directly to Triumph's 16-pin socket — the vendor's guide lists the marques that need an OBD-II adaptor and Triumph is not among them. Euro 5 machines with the red 6-pin connector need a 6-pin-to-16-pin adapter."
+  },
+  {
+    "slug": "dealertool-triumph",
+    "brand": "DealerTool",
+    "model": "DealerTool for Triumph (Windows) — third-party, not Triumph's own software",
+    "chipset": "proprietary",
+    "transport": "usb",
+    "price_usd_cents": 8500,
+    "purchase_url": "https://dealertool.co.uk/buy",
+    "supported_protocols_csv": "K-Line (KWP),Triumph Sagem,Triumph Keihin",
+    "supports_bidirectional": true,
+    "supports_mode22": false,
+    "reliability_1to5": 4,
+    "known_issues": "Third-party product despite the name — this is NOT Triumph's own dealer software, which is the separately distributed Triumph Diagnostic Tool available only through Triumph's dealer portal. Windows only, and requires the vendor's own modified interface cable. Service reset is explicitly not supported on a published exclusion list that includes the Trident, the 660 models generally, the Tiger Sport 800 and several recent models — check the current list before promising that function. Throttle balance without gauges is unavailable on the Sagem-managed and four-cylinder Keihin machines. Bikes from approximately 2023 need a 6-pin-to-16-pin adapter. Prices are the vendor's own in GBP; the figure here is converted at time of writing and is indicative. The vendor site is client-rendered, so a plain fetch of any path returns a shell — the coverage and function statements are on its FAQ and purchase pages.",
+    "notes": "Covers fuel-injected Triumphs broadly, from the earliest Sagem-managed machines through the current Keihin ones, with fault codes and descriptions, code clearing, live sensor values, dealer-level diagnostic tests and a throttle balance performed without vacuum gauges. The strongest single diagnostic answer for the injected air-cooled Bonneville family, which had no adapter coverage in this catalog before Phase 230. Not a tuning product — map flashing is not among its functions."
   }
 ]

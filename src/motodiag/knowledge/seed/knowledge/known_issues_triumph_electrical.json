@@ -1,0 +1,152 @@
+[
+  {
+    "title": "A flashing Triumph warning lamp means an identity or security mismatch — a steady one means an ordinary fault",
+    "description": "Drawn from Triumph workshop manuals. Triumph logs faults as four-digit codes in three families: standard SAE P0-series codes, a Triumph-proprietary P1-series block, and a separate Triumph-proprietary C1-series for the chassis, immobiliser and anti-lock systems. A 2017 model-year workshop manual carries thirty-five standard codes alongside twenty-eight proprietary ones. What makes this worth knowing at the roadside is that **the lamp itself carries information**. The manual's fault tables specify the lamp behaviour per code, and the pattern is consistent: a **flashing** lamp accompanies identity and security mismatches — an immobiliser module that does not match the engine control module, an anti-lock module that does not match, a control module locked by a tune lock, an instrument cluster whose identity is incompatible — while a **steady** lamp accompanies ordinary sensor and circuit faults. So a flashing lamp on a Triumph is a strong hint that a module has been swapped, a tune has been loaded, or a part has come from another machine, and that is a different conversation with the owner than a sensor fault.",
+    "make": "Triumph",
+    "model": "Triumph fuel-injected models with engine and chassis fault-code systems",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "warning lamp flashing on a triumph",
+      "mil steady or flashing what is the difference",
+      "immobiliser does not match the ecm",
+      "module from another bike fitted",
+      "tune lock on a triumph ecm"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Fault codes logged in three families — standard P0, proprietary P1, and proprietary C1 for chassis and security",
+      "Lamp behaviour specified per code in the workshop manual rather than being uniform",
+      "Flashing reserved for identity and security mismatches between modules",
+      "Steady used for ordinary sensor and circuit faults"
+    ],
+    "fix_procedure": "1. Note whether the lamp is steady or flashing before anything else, and record it — the distinction is documented per code and it narrows the search immediately. 2. On a flashing lamp, ask what has been changed on the machine: modules, instruments, a loaded tune, parts from a donor bike. That is what this pattern points at. 3. Read the codes with a Triumph-capable tool; the proprietary P1 and C1 families are not visible to a generic reader, so a clean generic scan is not evidence of a healthy machine. 4. Treat an identity mismatch as a pairing or provenance question rather than a component failure, and establish where the part came from before ordering another. 5. On a steady lamp, proceed with ordinary fault diagnosis from the stored codes.",
+    "parts_needed": [
+      "No parts at the reading stage",
+      "A Triumph-capable diagnostic tool or a referral"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The Triumph diagnostic socket looks like OBD-II but does not speak it — and the newest bikes changed connector again",
+    "description": "Drawn from tool vendor documentation and Triumph service literature. From the late 1990s until around 2023 Triumph fitted a sixteen-pin socket shaped like the automotive OBD-II connector, usually on a loose flying lead under the seat or behind a side panel rather than in a fixed housing. That shape is misleading: the protocol underneath is a Triumph-specific K-line implementation, not the generic emissions layer a car scanner expects, so **plugging in a generic OBD-II code reader will usually achieve nothing** even though it fits perfectly. This is the opposite of the assumption most shops arrive with, and it wastes time before it wastes money. Two further points. Triumph-capable tools connect directly to that socket without an adapter, unlike several other European makes that need one — the tools' own documentation is explicit about which marques need adapters and Triumph is not among them. And on the newest Euro 5 machines Triumph moved to a small red six-pin connector, which needs a six-pin-to-sixteen-pin adapter; the changeover is model-dependent across roughly 2023 to 2025, so check the actual machine rather than the year.",
+    "make": "Triumph",
+    "model": "Triumph fuel-injected models — 16-pin socket to approximately 2023, red 6-pin on Euro 5+",
+    "year_start": 1997,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "generic obd reader will not connect to a triumph",
+      "socket fits but nothing reads",
+      "where is the diagnostic socket on a triumph",
+      "red six pin connector on a new triumph",
+      "do i need an adapter for a triumph"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A sixteen-pin socket shaped like OBD-II but carrying a Triumph-specific K-line protocol rather than the generic emissions layer",
+      "The connector being on a loose flying lead rather than a fixed housing, so it is easy to miss under the seat",
+      "A generic car code reader fitting the socket and achieving nothing, which reads as a bike fault",
+      "Euro 5 machines moving to a red six-pin connector needing an adapter, over a model-dependent transition"
+    ],
+    "fix_procedure": "1. Do not conclude anything from a generic OBD-II reader failing to connect on a Triumph. The socket fits and the protocol does not match; that result is expected. 2. Find the socket before assuming it is absent — on most of these it is a loose lead under the seat or behind a side panel rather than a fixed housing. 3. Use a Triumph-capable tool, which connects to the sixteen-pin socket directly without an adapter. 4. On a recent Euro 5 machine, check for the red six-pin connector and obtain the adapter before booking the work; the changeover varies by model across a transition period rather than falling on one year. 5. Record which connector the machine has on its service record, so the next visit does not repeat the discovery.",
+    "parts_needed": [
+      "Triumph-capable diagnostic interface",
+      "Six-pin to sixteen-pin adapter for Euro 5 machines"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "A carburetted air-cooled Bonneville has no diagnostic interface at all — the right answer is \"none exists\", not \"we lack the tool\"",
+    "description": "Drawn from tool vendor coverage documentation and the machines' own specification. The air-cooled Bonneville family splits at the fuel injection changeover, and the two halves need completely different answers. The **carburetted machines — roughly 2001 to 2007, covering the Bonneville, T100, America, Speedmaster, Thruxton and Scrambler of that period — have no engine control module and no diagnostic connector**. Ignition is a self-contained unit with a pickup coil. There is no tool that will read them because there is nothing to read, and no adapter, subscription or dealer visit changes that. A shop that keeps looking is looking for something that does not exist. The **injected air-cooled machines from 2008 onward** are a different matter and are well covered by several tools. The practical consequence is a conversation rather than a purchase: on a carburetted machine, diagnosis is entirely by measurement and inspection — compression, spark, fuel delivery, carburettor condition — and the absence of codes is the normal state, not a finding.",
+    "make": "Triumph",
+    "model": "Triumph air-cooled Bonneville family — carburetted (approximately 2001–2007) and injected (2008 onward)",
+    "year_start": 2001,
+    "year_end": 2016,
+    "severity": "medium",
+    "symptoms": [
+      "cannot find a diagnostic socket on a bonneville",
+      "no codes on a carburetted triumph",
+      "which tool reads an air cooled bonneville",
+      "is there an ecu on a 2005 bonneville",
+      "scanner will not connect to a thruxton"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Carburetted air-cooled machines having no engine control module and no diagnostic connector",
+      "Ignition being a self-contained unit with a pickup coil rather than a managed system",
+      "The absence of codes being the normal state on those bikes rather than a diagnostic finding",
+      "The injected machines from 2008 being well covered, so the same model family gives two different answers"
+    ],
+    "fix_procedure": "1. Establish carburetted or injected before looking for a socket. On the carburetted machines there is nothing to find and the search itself is the error. 2. Tell the owner plainly that no tool exists for their machine rather than implying one might be obtained. It is not a limitation of the workshop. 3. Diagnose a carburetted machine by measurement: compression, spark quality and timing, fuel delivery, carburettor condition and synchronisation. 4. On an injected air-cooled machine from 2008 onward, use a Triumph-capable tool — these are within several tools' published coverage. 5. Record which half of the family the machine falls in on its service record, because the model name alone does not say.",
+    "parts_needed": [
+      "No parts — this is a scoping step",
+      "Triumph-capable tool for the injected machines only"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  },
+  {
+    "title": "TuneECU, TuneBoy and DealerTool all cover Triumph — and DealerTool is not Triumph's, despite the name",
+    "description": "Drawn from the tools' own documentation. Triumph's independent-tool landscape is more crowded than most makes and the names mislead in two directions. **TuneECU** is the diagnostics-capable tool, with a published per-model function matrix spanning both the older Sagem-managed bikes and the later Keihin ones, offering fault code read and clear, live data, actuator tests, adaptation and service resets, and map read and write. **TuneBoy** is primarily a tune editor — and unlike the situation on other marques, it is not *only* that on Triumph: it publishes a separate Triumph diagnostic module that reads and clears codes, although it does not publish a model list or function matrix for it, so its diagnostic coverage per bike is not established. **DealerTool** covers fuel-injected Triumphs broadly, including a throttle balance without gauges, and — this is the trap — **it is a third-party product, not Triumph's own**, notwithstanding the name and the way the site describes itself. Triumph's actual dealer software is the **Triumph Diagnostic Tool**, distributed to dealers through Triumph's own portal and not publicly purchasable. Choosing between the independents is a question of what the job needs: diagnostics and service functions, or flashing.",
+    "make": "Triumph",
+    "model": "Triumph fuel-injected models — independent and dealer tool landscape",
+    "year_start": 1997,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "which tool reads triumph fault codes",
+      "is dealertool the official triumph tool",
+      "tuneecu or tuneboy for a triumph",
+      "what is the triumph dealer tool called",
+      "tool to reset the service light on a triumph"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Three independent products covering Triumph with different strengths and overlapping names",
+      "DealerTool being a third-party product whose name suggests otherwise",
+      "TuneBoy publishing a Triumph diagnostic module without a model list or function matrix for it",
+      "Triumph's actual dealer software being a separate, non-public product"
+    ],
+    "fix_procedure": "1. Match the tool to the job. For fault codes, live data, actuator tests and service resets, use a tool that publishes a diagnostic function matrix. For map flashing, use a tuning product. 2. Do not assume DealerTool is Triumph's own software because of its name — it is third-party, and telling an owner otherwise misrepresents what they are buying. 3. Check the specific model against the tool's published coverage before buying anything; these tools define coverage by engine-management generation and frame-number breaks rather than by model year, and a machine near a boundary needs its frame number checked. 4. Where a tool publishes no function matrix for its diagnostic module, treat its diagnostic coverage on a given model as unestablished rather than assumed. 5. For work that only the dealer software performs, refer rather than improvise.",
+    "parts_needed": [
+      "A Triumph-capable diagnostic tool appropriate to the job",
+      "Model coverage confirmed by frame number before purchase"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Triumph documents no dash diagnostic mode — the button sequence owners share is not factory procedure",
+    "description": "Drawn from Triumph owner's handbooks and service literature, and included because the absence is the finding. No Triumph handbook or service document consulted describes a dealer mode, a hidden diagnostic menu or a dash code readout. The handbooks document the malfunction lamp and a warning symbol and direct the rider to a dealer, and Triumph's own service schedule calls for a full automated scan with the dealer tool. Owners do widely and consistently describe an undocumented sequence — holding an information button, or a button and the joystick, while switching the ignition on, after which a code appears on the display — and the reports are consistent enough to be worth knowing about. But it is not Triumph procedure, the button combination varies by switchgear generation, and it was not verifiable against any Triumph source. Treat it as something a customer may have done rather than something to rely on or to recommend: a code a rider reports from that sequence is a starting point, not a reading, and the machine still needs a proper scan before parts are ordered.",
+    "make": "Triumph",
+    "model": "Triumph models with instrument displays",
+    "year_start": 2001,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "hidden diagnostic menu on a triumph",
+      "dash code readout on a triumph",
+      "customer read a code off the dash",
+      "dealer mode button sequence",
+      "does the dash show fault codes"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "No factory-documented dealer mode or dash diagnostic menu in Triumph literature",
+      "An undocumented button sequence widely reported by owners but not published by Triumph",
+      "The sequence varying by switchgear generation, so it is not one procedure",
+      "A code obtained that way being unverified against the machine's actual fault memory"
+    ],
+    "fix_procedure": "1. Do not offer the button sequence as procedure to a customer; it is not documented by Triumph and it varies by switchgear. 2. If a customer reports a code they read from the dash, record it as a starting point and confirm it against a proper scan before ordering anything. 3. Read the fault memory with a Triumph-capable tool; the proprietary code families are not visible to a generic reader in any case. 4. Explain to an owner asking about the sequence that the dash is documented to show a lamp and a warning symbol, not codes, and that a reading obtained another way is not a substitute for the scan. 5. Do not treat the absence of a dash readout as a limitation to work around — a full automated scan is what the manufacturer's own schedule calls for.",
+    "parts_needed": [
+      "No parts — this is a reading step",
+      "A Triumph-capable diagnostic tool for the actual scan"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  }
+]

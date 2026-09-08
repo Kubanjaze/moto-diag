@@ -55,6 +55,20 @@ K = SEED_DATA_DIR / "knowledge"
 BONNIE = K / "known_issues_triumph_bonneville.json"
 COMPAT = SEED_DATA_DIR.parent.parent / "hardware" / "compat_data" / "compat_matrix.json"
 
+#: The five Triumph compat rows that existed before Phase 230 filled the
+#: gap. Phases 226-229 each asserted the count was exactly 5 — the right
+#: guard while the gap was open, and the wrong shape once it closed. Same
+#: "constant standing in for an invariant" bug as the KTM count at 222.
+#: These now assert the original rows SURVIVED, which is what they meant.
+ORIGINAL_TRIUMPH_ROWS = {
+    ("obdlink-mx-plus", "tiger%"),
+    ("obdlink-mx-plus", "675"),
+    ("obdlink-lx", "bonneville%"),
+    ("elm327-generic-bt-clone", "675"),
+    ("obdlink-sx", "tiger%"),
+}
+
+
 #: A Bonneville-family designation. The bar is naming one — it is what a
 #: parallel-twin entry from another make cannot do.
 DESIGNATIONS = {
@@ -328,17 +342,37 @@ class TestTheAdapterGapIsLeftForItsOwner:
 
     def test_the_triumph_catalog_rows_are_unchanged(self):
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
-        assert len([r for r in matrix if r["make"] == "triumph"]) == 5
+        rows = {(r["adapter_slug"], r["model_pattern"])
+                for r in matrix if r["make"] == "triumph"}
+        assert ORIGINAL_TRIUMPH_ROWS <= rows, ORIGINAL_TRIUMPH_ROWS - rows
 
-    def test_the_gap_is_real_and_recorded(self):
-        """No full-access Triumph option, and the only Bonneville row
-        starts at 2016 — the air-cooled bikes this phase documents have
-        no adapter row at all. Row 230 owns it."""
+    def test_the_gap_this_phase_left_was_filled_by_its_owner(self):
+        """Inverted at Phase 230, deliberately. This phase found no
+        full-access Triumph option and no adapter row at all for the
+        air-cooled Bonneville it documents, guarded the count, and left
+        the gap for row 230. 230 filled it — so the assertion now checks
+        the gap is CLOSED, and specifically that the air-cooled family
+        this file covers is reachable. A guard should outlive the
+        deliverable it was written for; this one outlived the absence."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         triumph = [r for r in matrix if r["make"] == "triumph"]
-        assert all(r["status"] != "full" for r in triumph)
-        bonnie = [r for r in triumph if "bonneville" in r["model_pattern"].lower()]
-        assert bonnie and all(r["year_min"] >= 2016 for r in bonnie)
+        assert any(r["status"] == "full" for r in triumph), "no full-access option"
+        aircooled = [r for r in triumph
+                     if "bonneville" in r["model_pattern"].lower()
+                     and r["year_min"] < 2016]
+        assert aircooled, "the air-cooled Bonneville still has no row"
+
+    def test_the_carburetted_half_is_marked_incompatible_not_missing(self):
+        """The honest answer 230 found: those machines have no engine
+        control module at all, so no tool exists. An explicit
+        incompatible row says that; an absent row implies we simply
+        lack coverage."""
+        matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
+        carb = [r for r in matrix
+                if r["make"] == "triumph"
+                and "bonneville" in r["model_pattern"].lower()
+                and r["year_max"] <= 2007]
+        assert carb and all(r["status"] == "incompatible" for r in carb)
 
     def test_the_makes_it_is_measured_against_still_have_theirs(self):
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
