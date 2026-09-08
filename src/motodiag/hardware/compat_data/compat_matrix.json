@@ -1148,5 +1148,145 @@
     "status": "full",
     "notes": "K1200S/R/R Sport/GT/LT/RS, K1300S/R/GT, and the K1600GT/GTL six. Full diagnostic and service menu including service reminder reset and integral-brake bleed on the LT/K1600. Caution: this LIKE pattern also matches 1980s-90s K100/K75 flying bricks, which predate the supported diagnostic port - treat those as incompatible.",
     "verified_by": "general-knowledge claim based on vendor and reseller model lists; not confirmed line-by-line against HEX's published coverage matrix"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "990%",
+    "year_min": 2006,
+    "year_max": 2013,
+    "status": "full",
+    "notes": "990 LC8 (Adventure, Super Duke, SM/SMT/SMR): K-line, USB KKL cable and adaptor type C. Map read/write over USB, actuator tests, reset engine adaptation and throttle-cable adjustment. Year range inferred from the 990 LC8 production span; TuneECU's list gives no years for this row. Not the 2024-on 990 Duke, which is Bosch.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (developer's model list and per-model function tabs)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "1190 RC8%",
+    "year_min": 2008,
+    "year_max": 2015,
+    "status": "full",
+    "notes": "1190 RC8/RC8 R: same K-line path and function set as the 990 LC8 — map read/write over USB, tests, reset adaptation, throttle-cable adjustment. Years inferred from the RC8 production span.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (developer's model list and per-model function tabs)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "690%",
+    "year_min": 2008,
+    "year_max": 2013,
+    "status": "full",
+    "notes": "690 Duke 3 and 690 SMC/Enduro/Supermoto up to 2013: K-line, USB KKL cable, adaptor type C. Map read/write over USB, actuator tests, reset engine adaptation (no throttle adjustment on the 690). The 2008 690 SMC is listed by a reseller as an exception — treat that year as unverified.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (developer's model list and per-model function tabs)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "690%",
+    "year_min": 2014,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "690 Duke 4 and 690 SMC/Enduro/Supermoto from 2014, not Euro 5: CAN, Bluetooth ELM327-class adapter, adaptor type D. Fault codes, live data and actuator tests only — no map read/write, no adjustments. Euro 5 cut-over roughly MY2020/2021 by market; the exact year is not stated by TuneECU.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (developer's model list and per-model function tabs)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "1190 Adventure%",
+    "year_min": 2013,
+    "year_max": 2016,
+    "status": "partial",
+    "notes": "1190 Adventure/Adventure R: CAN, Bluetooth only, adaptor type D. Diagnostics and actuator tests, no map access, no adjustments. A reseller review reports a 2015 1190 Adventure failing to connect — expect stability issues.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "1050%",
+    "year_min": 2015,
+    "year_max": 2016,
+    "status": "partial",
+    "notes": "1050 Adventure: CAN, Bluetooth only, adaptor type D. Diagnostics and tests, no adjustments.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "1090%",
+    "year_min": 2017,
+    "year_max": 2019,
+    "status": "partial",
+    "notes": "1090 Adventure/Adventure R: CAN, Bluetooth only, adaptor type D. Diagnostics and tests, no adjustments.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "1290%",
+    "year_min": 2014,
+    "year_max": 2020,
+    "status": "partial",
+    "notes": "1290 Super Duke R/GT and 1290 Super Adventure, not Euro 5: CAN, Bluetooth only, adaptor type D. Fault codes, live data, actuator tests (fuel pump, SAI, O2, injector, coil) — no map read/write and no adjustments, so no adaptation or service reset through this tool. Euro 5 (roughly MY2021+) excluded.",
+    "verified_by": "https://tuneecu.fr/docs/_en/Basic_guide.html (developer's model list and per-model function tabs)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "125%",
+    "year_min": 2011,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "125 Duke/RC (Bosch, Bajaj-built): not on TuneECU's list, which states unlisted bikes are not compatible; a reseller's adaptor page also excludes the small Dukes and RCs.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "390%",
+    "year_min": 2013,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "390 Duke/RC/Adventure (Bosch, Bajaj-built): not listed — not compatible.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "790%",
+    "year_min": 2018,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "790 Duke/Adventure (Bosch ME17-family per a tuning vendor): not listed — not compatible.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "890%",
+    "year_min": 2020,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "890 Duke/Adventure/SMT (Bosch): not listed — not compatible.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "990 Duke%",
+    "year_min": 2024,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "2024-on 990 Duke is the Bosch-managed LC8c, not the Keihin 990 LC8 — not listed, not compatible. Separate row because the 990% pattern above is year-bounded to the LC8 era.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
+  },
+  {
+    "adapter_slug": "tuneecu-ktm-android",
+    "make": "ktm",
+    "model_pattern": "EXC%",
+    "year_min": 2008,
+    "year_max": 2025,
+    "status": "incompatible",
+    "notes": "EXC TPI/TBI two-strokes (Continental/Vitesco) and EXC-F four-strokes are not on TuneECU's list; only the 250/350 SX-F motocross models are, and those are not in this corpus.",
+    "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
   }
 ]

@@ -277,26 +277,42 @@ class TestDeferralBoundaries:
             assert not hits, f"{e['title']}: {hits} belongs to Phase 222/223"
 
 
-class TestTheAdapterGapIsLeftForItsOwner:
-    """The inverse of Phase 220. There the catalog was already covered;
-    here there is a real gap that another phase owns."""
+class TestTheAdapterGapWasLeftForItsOwnerAndThenFilled:
+    """Phase 221 found four KTM compat rows, every one partial or
+    read-only, and no full-access option — a real gap of the kind Phase
+    215 filled for BMW. It declined to fill it because row 225 owned KTM
+    tooling, and guarded the count at 4 so the decision was on record.
 
-    def test_the_ktm_catalog_rows_are_unchanged(self):
+    Phase 225 then filled it, with TuneECU and provenance in every row.
+    So this guard's job changed: it now asserts that the four original
+    rows survived untouched (225 added, it did not rewrite), and that
+    the gap is closed — the inverse of what it asserted before. A guard
+    should outlive the deliverable it was written for; here it outlived
+    the *absence* it was written for."""
+
+    ORIGINAL = {
+        ("obdlink-mx-plus", "1290%", "partial"),
+        ("autel-ap200bt", "690%", "read-only"),
+        ("autel-ap200bt", "390%", "read-only"),
+        ("els27-forscan", "1290%", "read-only"),
+    }
+
+    def test_the_four_original_rows_are_still_there_unchanged(self):
+        matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
+        ktm = {(r["adapter_slug"], r["model_pattern"], r["status"])
+               for r in matrix if r["make"] == "ktm"}
+        assert self.ORIGINAL <= ktm, self.ORIGINAL - ktm
+
+    def test_the_gap_is_now_closed(self):
+        """Inverted from Phase 221's `all(status != "full")`. If this
+        fails, someone removed the full-access rows Phase 225 added."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         ktm = [r for r in matrix if r["make"] == "ktm"]
-        assert len(ktm) == 4
-
-    def test_the_gap_is_real_and_recorded(self):
-        """Every KTM row is partial or read-only — no full-access option,
-        unlike BMW's GS-911 or Ducati's DDS. If a later phase fills this,
-        this assertion is what tells it the gap was known, not missed."""
-        matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
-        ktm = [r for r in matrix if r["make"] == "ktm"]
-        assert all(r["status"] != "full" for r in ktm)
+        assert len(ktm) > 4
+        assert any(r["status"] == "full" for r in ktm), "no full-access KTM option"
 
     def test_the_makes_it_is_measured_against_still_have_theirs(self):
-        """Counter-assertion: 'no full-access adapter' is only meaningful
-        if other makes demonstrably have one."""
+        """Counter-assertion: the comparison that defined the gap."""
         matrix = json.loads(COMPAT.read_text(encoding="utf-8"))
         for make in ("bmw", "ducati"):
             assert any(

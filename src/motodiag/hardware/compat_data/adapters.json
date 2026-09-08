@@ -373,5 +373,20 @@
     "reliability_1to5": 5,
     "known_issues": "BMW-only (plus a few Husqvarna models built on BMW platforms) - useless on any other make. Consumer/Enthusiast tier is VIN-limited: service functions are unlocked for 10 stored VINs, after which HEX wants the Professional upgrade or the ProUnlimited annual subscription (~$99/yr). Two incompatible physical connectors: round 10-pin for pre-2017 bikes, OBD-II for 2017+ EU4 bikes - buying the wrong one means an adapter cable. WiFi mode drives a cloud-hosted app from phone/tablet, so a dead internet connection in the shop degrades you to the USB/PC path. Newest model-year coverage tracks HEX firmware/software releases and can lag the bike's release.",
     "notes": "The de facto independent-shop BMW Motorrad tool. Reads BMW proprietary ECU/ABS/ESA/immobiliser fault codes that generic ELM327 hardware cannot see at all, and runs real service routines: service reminder reset, ABS/integral-brake bleed, throttle/idle adaptation reset, actuator activation, live sensor data. Sold as GS-911wifi (WiFi + USB, PC/Mac/iOS/Android) and a cheaper USB-only Gen 2 (PC only, ~$330). Recommend it over any BimmerCode/OBDLink combination when the job needs BMW service functions rather than coding - the OBDLink path covers coding and generic CAN, the GS-911 covers the dealer-style service menu. For a shop touching more than 10 BMWs, budget for Professional/ProUnlimited from the start."
+  },
+  {
+    "slug": "tuneecu-ktm-android",
+    "brand": "TuneECU",
+    "model": "TuneECU (Android) with KTM 6-pin Sumitomo B6AP to OBD-II adaptor",
+    "chipset": "ELM327",
+    "transport": "bluetooth",
+    "price_usd_cents": 2700,
+    "purchase_url": "https://tuneecu.fr/",
+    "supported_protocols_csv": "K-Line (KWP),ISO 15765 CAN,KTM Keihin proprietary",
+    "supports_bidirectional": true,
+    "supports_mode22": false,
+    "reliability_1to5": 3,
+    "known_issues": "Keihin-era KTMs only, and TuneECU's own bikes list says unlisted bikes are not compatible: no 125/200/250/390 Duke or RC (Bosch), no 790/890/990 Duke or Adventure (Bosch), no EXC TPI/TBI two-strokes, no Euro 5 model of any family. Two physical paths: the K-line bikes (990 LC8, 1190 RC8, 690 to 2013, 250/350 SX-F) need a USB KKL FTDI cable (adaptor type C), while the CAN bikes (690 from 2014, 1050/1090/1190/1290 Adventure, 1290 Super Duke) use an ELM327-class or OBDLink Bluetooth adapter (adaptor type D) — both through the same third-party 6-pin-to-OBD-II adaptor. Function set is narrow on the CAN bikes: fault codes, live data and actuator tests only, no map read/write and no adjustments of any kind. The developer documents connection-stability problems on some KTMs, especially with the engine running (COM-port settings, cable shield to ground, ferrite choke); a reseller warns later KTMs often fail to connect. Windows version discontinued. Price shown is the EUR 25 Standard licence (1 year, 5 bikes) converted at time of writing; hardware adaptor and interface are extra (roughly GBP 12 to 30 from UK resellers). Pro licence EUR 300 / 3 years.",
+    "notes": "The independent-shop tool for Keihin-managed, pre-Euro 5 KTMs, distributed as a direct APK from the developer's site rather than an app store. Per TuneECU's Basic guide, by model: 990 LC8 and 1190 RC8 — map read/write over USB, actuator tests (fuel pump, SAI, second throttle, O2, injector, coil), reset engine adaptation and the throttle-cable adjustment; 690 Duke 3 and 690 SMC/Enduro/Supermoto to 2013 — map read/write over USB, tests, reset engine adaptation only; 250/350 SX-F — diagnostics and tests only; 690 Duke 4, 690 from 2014, 1050/1090/1190/1290 Adventure and 1290 Super Duke (all not Euro 5) — Bluetooth only, diagnostics and tests, no adjustments. TuneBoy (Australia) lists twelve older KTMs but as a tune-editing and data-logging kit, not diagnostics. For Bosch-era and Euro 5 KTMs the options are KTM's PC-based dealer tool or dealer-level third-party scanners that list KTM by model."
   }
 ]

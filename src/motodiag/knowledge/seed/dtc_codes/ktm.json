@@ -1,0 +1,115 @@
+[
+  {
+    "code": "P0120",
+    "description": "Throttle Position Sensor Circuit",
+    "category": "engine",
+    "severity": "medium",
+    "make": "KTM",
+    "common_causes": [
+      "On a Keihin-managed KTM (LC8 990–1290 to Euro 4, LC4 690, EXC-F) a TPS fault that appears after a map load can be an engine adaptation never reset — a documented post-map procedure on the 990/1190; whether any reset is required after throttle-body replacement is not established for either supplier",
+      "KTM's Keihin fault table logs the TPS as blink code 06 — the same code for signal-low P0122 and signal-high P0123, so the blink alone does not say which",
+      "On a Bosch-managed KTM (790/890/990 Duke, 125–390, Euro 5 bikes) any adaptation is KTM-tool only; and on the CAN-bus Keihin bikes (1050–1290, 690 from 2014) TuneECU offers no adjustments at all, so those need the KTM tool too",
+      "Genuine sensor or wiring failure, diagnosed the ordinary way once adaptation has been ruled out"
+    ],
+    "fix_summary": "Establish the ECU supplier and the bus first. On a K-line Keihin bike (990, 1190 RC8) after a map load, run the documented sequence: reset engine adaptation, then the throttle-cable adjustment, then the strict untouched idle period the tool states — cutting the idle short is the usual reason it does not take. The 690 has the adaptation reset only; the CAN-bus 1050–1290 and 2014-on 690 have no TuneECU adjustments, and Bosch bikes none outside the KTM diagnostics tool. Whether any of this is required after throttle-body replacement is not established here — the manual is the source. Then test sensor and wiring as a circuit fault."
+  },
+  {
+    "code": "P0122",
+    "description": "Throttle Position Sensor Circuit Low Input",
+    "category": "engine",
+    "severity": "medium",
+    "make": "KTM",
+    "common_causes": [
+      "The code KTM's own Keihin-era fault table actually uses for a TPS signal interruption — blink code 06 on the FI lamp in neutral on pre-TFT bikes",
+      "Interrupted TPS signal wiring or connector on the throttle body",
+      "An engine adaptation not reset after a map load on a K-line Keihin bike, which can present the same way",
+      "The same blink code covers P0123 (signal too high, short circuit), so read the stored code with a tool rather than counting flashes"
+    ],
+    "fix_summary": "Read the numeric code with a KTM-capable tool rather than from the blink pattern, because 06 covers both this and P0123. Check the TPS connector and loom for an open circuit. If a map load preceded it on a 990 or 1190, do the adaptation reset and idle period before replacing anything. Sensor last."
+  },
+  {
+    "code": "P0130",
+    "description": "O2 Sensor Circuit (Bank 1 Sensor 1)",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "KTM",
+    "common_causes": [
+      "On the LC8 V-twin, KTM's own fault table assigns this code to the REAR cylinder's lambda probe — the front cylinder's is P0150 — so a bank-1 reading here is the rear, not the front cylinder that fires first",
+      "A resistor dongle fitted in place of a removed probe after an aftermarket exhaust, which owners of Keihin-era LC8s commonly use and which does not itself set a code when correct",
+      "Probe heater or signal wiring damaged near the rear cylinder's header, the hotter and more exposed of the two",
+      "Contaminated or aged probe after long service"
+    ],
+    "fix_summary": "Go to the rear cylinder's probe first on an LC8; confirm the front/rear assignment for your generation in the manual before swapping anything. If the exhaust is aftermarket, find out whether the probe is present or emulated — a missing or wrong-value dongle on this cylinder is a cause in its own right. Then heater resistance, wiring and signal as usual."
+  },
+  {
+    "code": "P0150",
+    "description": "O2 Sensor Circuit (Bank 2 Sensor 1)",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "KTM",
+    "common_causes": [
+      "On the LC8 V-twin, KTM's own fault table assigns this code to the FRONT cylinder's lambda probe — the rear's is P0130",
+      "Front-cylinder probe wiring damaged by road spray and heat at the low front header",
+      "A resistor dongle emulating a removed probe after an exhaust change, missing or wrong value",
+      "Aged or contaminated probe"
+    ],
+    "fix_summary": "This is the front cylinder on an LC8. Confirm against the manual for the generation, check whether the probe is real or emulated, then wiring and the probe itself. Do not swap it with the rear probe as a test without noting which came from where."
+  },
+  {
+    "code": "P0301",
+    "description": "Cylinder 1 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "KTM",
+    "common_causes": [
+      "On the LC8 V-twin, KTM's own Keihin-era fault table numbers the REAR cylinder first — cylinder-1 injector, coil and lambda codes all point to the rear — so read a cylinder-1 misfire as the rear cylinder until the manual for your generation says otherwise, not as the front cylinder that fires first",
+      "On the LC8c parallel twin (790/890/990 Duke), which side of the engine is cylinder 1 is not established here — confirm from the manual before working on either",
+      "On a single-cylinder KTM there is only one cylinder, and the code simply means a misfire",
+      "An aftermarket harness colour read as a cylinder number — Dynojet's Power Commander guides for the 1290 route the orange leads to the FRONT injector and yellow to the REAR, which is the opposite of KTM's rear-first numbering",
+      "Coil, plug, injector or a lean condition on that cylinder; an 890 with an aftermarket intake and decat has been reported setting this only while on cruise control"
+    ],
+    "fix_summary": "Resolve the number to a physical cylinder before touching anything, and write front or rear on the job card. On an LC8, start at the rear. On an LC8c, do not assume a side — read it from the manual. Then swap coil and plug with the other cylinder and re-test; if the fault follows the part, it is the part. Check for a lean condition if the bike has aftermarket intake or exhaust."
+  },
+  {
+    "code": "P0302",
+    "description": "Cylinder 2 Misfire Detected",
+    "category": "engine",
+    "severity": "high",
+    "make": "KTM",
+    "common_causes": [
+      "On the LC8 V-twin, cylinder 2 is the FRONT cylinder by KTM's own numbering — injector P0202, coil P0352 and lambda P0150 all address the front — so read this as the front cylinder until the manual for your generation says otherwise",
+      "On the LC8c parallel twin, which side is cylinder 2 is not established here — confirm from the manual",
+      "Front-cylinder coil-on-plug or plug lead on an LC8, sitting low and forward in road spray",
+      "Injector or lean condition on that cylinder"
+    ],
+    "fix_summary": "Resolve the number to a physical cylinder first: front on an LC8, unconfirmed on an LC8c. Swap coil and plug with the other cylinder and re-test. Inspect the front cylinder's coil and lead for water and heat damage on an LC8 before replacing anything."
+  },
+  {
+    "code": "P0420",
+    "description": "Catalyst System Efficiency Below Threshold (Bank 1)",
+    "category": "exhaust",
+    "severity": "low",
+    "make": "KTM",
+    "common_causes": [
+      "On 2024-on Euro 5+ LC8c bikes, a third lambda probe downstream of the catalyst is what sets this after a decat or full aftermarket system — owner reports describe it appearing only after that change",
+      "On Keihin-era LC8s there is no post-catalyst probe to trip this; owners reporting no lamp after removing both probes with resistor dongles are describing that generation, not the newer bikes",
+      "A dealer-installed KTM PowerParts map for a specific exhaust not loaded, so the ECU is running the road calibration against a different system",
+      "A genuinely degraded catalyst, which is the least common cause on a bike that has just had its exhaust changed"
+    ],
+    "fix_summary": "Ask what was changed and when. If the bike is a 2024-on Euro 5+ twin and the exhaust was just changed, this is the downstream probe seeing the change, and the choices are the correct PowerParts map from a dealer, restoring the catalyst, or an emulator — the shop should say plainly which of those is road-legal in its market. On an older Keihin bike the code points elsewhere: check the probes and their dongles."
+  },
+  {
+    "code": "P0560",
+    "description": "System Voltage Malfunction",
+    "category": "electrical",
+    "severity": "high",
+    "make": "KTM",
+    "common_causes": [
+      "The code KTM's own Keihin-era fault table uses for control-unit supply voltage — blink code 24, engine continues to run — rather than the P0562/P0563 low/high codes a generic list expects",
+      "Stator failure on the LC8, which owner reports on 2020 1290s describe as all windings shorted to ground with voltage sagging into the nine-to-twelve-volt range and the dash low-battery warning as the first symptom",
+      "Regulator-rectifier failure, sometimes together with the stator; the OEM part has been reported on back-order",
+      "Battery, earth or main-supply connection faults, which are cheaper and should be excluded first"
+    ],
+    "fix_summary": "Treat the dash low-battery warning as the earliest sign, not a battery complaint. Charging-system test in the usual order: battery state and connections, then charging voltage at idle and at revs, then stator output and insulation to ground on each winding, then the regulator-rectifier. On an LC8 with the stator failed, test the regulator too before reassembly — reports describe losing both."
+  }
+]
