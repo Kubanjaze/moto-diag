@@ -1,0 +1,153 @@
+[
+  {
+    "title": "The Shiver and Dorsoduro share a 90-degree longitudinal V-twin — front and rear cylinders, and the 900 is the 750 stroked",
+    "description": "Drawn from Aprilia service manuals. These two models are one engine in two chassis, and the engine is a **90-degree longitudinal V-twin** — Aprilia's own manuals use the word longitudinal, meaning the vee lies fore and aft, so the cylinders are **front and rear** rather than left and right. Almost every fault code on these machines is per-cylinder, so a technician whose instinct is set by a transverse vee or an inline engine reads the codes onto the wrong physical cylinder before touching anything. The 750 came first, in the Shiver from 2007 and the Dorsoduro from 2008. The 900 that replaced it around 2017 is **the same engine stroked** — identical bore, longer stroke — which matters for parts in a specific way: components that follow the bore may carry across and components that follow the stroke do not. Both were dropped rather than re-homologated when emissions rules tightened, so the range ends rather than continuing. Note also that a Dorsoduro 1200 existed and is **not** this engine, so a search by model name alone can land on the wrong machine entirely.",
+    "make": "Aprilia",
+    "model": "Aprilia Shiver 750/900 and Dorsoduro 750/900 — 90-degree longitudinal V-twin",
+    "year_start": 2007,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "which cylinder is front on a shiver",
+      "dorsoduro 750 or 900 parts",
+      "is the dorsoduro 1200 the same engine",
+      "cylinder code on an aprilia v-twin",
+      "900 and 750 interchange"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A longitudinal 90-degree vee, so cylinders are front and rear rather than left and right",
+      "Per-cylinder fault codes being read onto the wrong physical cylinder by transverse or inline habits",
+      "The 900 being the 750 stroked, so bore-following and stroke-following parts behave differently",
+      "A Dorsoduro 1200 existing on a different engine, so a model-name search can land on the wrong machine"
+    ],
+    "fix_procedure": "1. Resolve any cylinder-specific code to front or rear before removing anything, and write the word rather than the number on the job card. 2. Establish 750 or 900 from the machine before ordering; the two share a bore and not a stroke, so the interchange is partial and not predictable from the model name. 3. Check that a Dorsoduro is the V-twin and not the 1200, which is a different engine despite the shared model name. 4. Take service figures from the manual for the actual displacement rather than assuming the 900 inherits the 750's. 5. Record displacement and model on the work order; neither is recoverable later from the model name alone.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "Displacement confirmed from the machine before ordering"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The Shiver's ride-by-wire self-learns at every key-on — so a weak battery throws a throttle fault before the bike moves",
+    "description": "Drawn from Aprilia service manuals. This was an early production ride-by-wire system and its architecture is genuinely unlike a Japanese one: **two independent motorised throttle bodies**, one per cylinder, each with two position potentiometers; a separate ride-by-wire control unit alongside the engine control unit; two per-cylinder pressure sensors feeding a torque monitor; and a twist-grip sensor with **two tracks that are not a mirrored pair**, so comparing them against each other by the usual expectation gives a wrong answer. The operational consequence is the one to remember: the system runs a **self-learning routine at every key-on**, so a sticky butterfly, condensation or ice in the intake duct, or simply **a weak battery** produces a throttle fault at the moment of switching on rather than while riding. A machine that fails to start with a throttle complaint may have a battery problem. Separately, a torque-monitor safety layer can shut the engine down and store a code the dashboard never displayed, so a stall with nothing on the screen is not the same as a stall with no fault.",
+    "make": "Aprilia",
+    "model": "Aprilia Shiver 750/900 and Dorsoduro 750/900 — ride-by-wire",
+    "year_start": 2007,
+    "year_end": 2020,
+    "severity": "high",
+    "symptoms": [
+      "throttle fault at key on",
+      "shiver will not start throttle error",
+      "engine cut out and nothing on the dash",
+      "weak battery causing a throttle code",
+      "ice in the intake on a dorsoduro"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A self-learning routine that runs at every key-on, so faults surface before the machine moves",
+      "Low battery voltage during that routine producing a throttle fault rather than a charging complaint",
+      "A sticky butterfly or condensation and ice in the intake duct failing the same routine",
+      "A torque-monitor safety layer able to stop the engine while storing a code the dashboard never showed"
+    ],
+    "fix_procedure": "1. Check battery condition and voltage before diagnosing any throttle fault that appears at key-on. On this system a weak battery is a genuine cause, not a coincidence, and it is the cheapest thing to exclude. 2. Inspect the throttle butterflies for stickiness and the intake duct for condensation or ice before condemning electronics. 3. Read the stored codes with a capable tool even when the dashboard showed nothing — the safety layer can act without displaying. 4. Do not compare the twist-grip sensor's two tracks against each other expecting a mirrored pair; they are not, and the manual's per-track figures are the reference. 5. Cycle the ignition and repeat the self-learn after any work in the intake or throttle area, and confirm it completes.",
+    "parts_needed": [
+      "Battery if voltage is the cause",
+      "Intake and throttle cleaning materials",
+      "No electronic parts until the routine's inputs are excluded"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "An Aprilia throttle body is a non-serviceable assembly — and the twist-grip sensor is not repairable either",
+    "description": "Drawn from Aprilia service manuals, and it is a quoting fact as much as a repair one. On these ride-by-wire machines the throttle body is supplied and replaced as a **complete assembly**: the motor and both position potentiometers are not sold separately, and the manual instructs that the calibration screws are never to be disturbed. So the remedy for essentially any confirmed throttle-body fault is the whole unit, and there is no component-level repair to attempt or to offer as a cheaper option. The twist-grip position sensor is the same story — the manual states it cannot be overhauled or replaced on its own, so a sensor fault there means the complete handlebar control assembly. Two consequences for a workshop. A quote built on the assumption that a potentiometer or a motor can be replaced individually is wrong before it is sent. And because the parts are expensive, it is worth being certain the fault is the assembly rather than an input to it — battery, intake condition and the self-learn routine should all be excluded first, because they produce the same complaints.",
+    "make": "Aprilia",
+    "model": "Aprilia Shiver 750/900 and Dorsoduro 750/900 — ride-by-wire",
+    "year_start": 2007,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "can you replace just the throttle potentiometer",
+      "throttle body price on a shiver",
+      "twist grip sensor separate part",
+      "calibration screws on an aprilia throttle body",
+      "quoted a cheap throttle repair"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The throttle body being supplied only as a complete assembly, with motor and potentiometers not sold separately",
+      "Calibration screws that the manual instructs are never to be disturbed",
+      "The twist-grip sensor being non-repairable and non-separable from the handlebar control assembly",
+      "Cheaper component-level repairs being quoted on an assumption the parts catalogue does not support"
+    ],
+    "fix_procedure": "1. Quote the assembly, not a component. On these machines the throttle body and the twist-grip sensor are whole-unit parts and there is no legitimate cheaper repair to offer. 2. Exclude the inputs before condemning the assembly — battery condition, intake cleanliness, and a completed self-learn all produce the same complaints and cost nothing to check. 3. Do not disturb the calibration screws under any circumstances; the manual is explicit and the assembly cannot be recalibrated on the bench. 4. If a customer arrives with a cheaper quote from elsewhere, establish what part it covers before matching it. 5. Record which inputs were excluded before the assembly was ordered, so the decision is defensible if the fault recurs.",
+    "parts_needed": [
+      "Complete throttle body assembly if confirmed faulty",
+      "Complete handlebar control assembly if the twist-grip sensor is at fault"
+    ],
+    "estimated_hours": 2.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "The chronic Shiver and Dorsoduro fuel-pump and charging failures are not in any recall database",
+    "description": "Drawn from searches of three national road-safety recall databases, and included as a negative finding because the internet says otherwise. Claims that these machines suffer chronic fuel-pump and charging-system failure circulate widely, and **no fuel-system, throttle-body or charging recall exists for the Shiver or Dorsoduro in any of the three databases consulted**, with only a handful of owner complaints on record across all model years. What does exist is two campaigns of a different character: one covering a **gearbox output shaft machining fault that lets the front sprocket fastening loosen, with the rear wheel able to lock**, and one covering a **front brake master cylinder that can drag or apply itself with no brake light showing**. Both are serious and neither is what the folklore describes. The practical value is in what a shop tells a customer: a used-buyer's concern about chronic fuel pumps is not supported by regulator data, while two genuine safety campaigns are — and those are the ones to check the frame number against. A separate model, the Mana, does carry its own throttle-related campaign, so a search must be model-specific rather than range-wide.",
+    "make": "Aprilia",
+    "model": "Aprilia Shiver 750/900 and Dorsoduro 750/900",
+    "year_start": 2007,
+    "year_end": 2020,
+    "severity": "high",
+    "symptoms": [
+      "chronic fuel pump failure on a shiver",
+      "is the dorsoduro unreliable",
+      "rear wheel locked on a dorsoduro",
+      "front brake dragging with no brake light",
+      "recall check on a shiver"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A gearbox output shaft machining fault able to loosen the front sprocket fastening, with rear wheel lock as the consequence",
+      "A front brake master cylinder able to drag or self-apply while showing no brake light",
+      "No fuel-system, throttle-body or charging campaign existing in any database consulted, despite widespread claims",
+      "A different model in the range carrying its own throttle campaign, so searches must be model-specific"
+    ],
+    "fix_procedure": "1. Check the frame number against the two genuine campaigns — the gearbox output shaft and the front brake master cylinder — before anything else on a used machine. 2. Tell a customer worried about chronic fuel-pump or charging failure that the regulator data does not support it, rather than repeating the folklore or dismissing them without a reason. 3. Treat any report of the front brake dragging, or of the machine slowing without a brake light, as the master cylinder campaign until it is excluded. 4. On a rear-wheel lock or a loose front sprocket, stop and check the campaign before diagnosing it as wear or as a previous repair. 5. Search recall databases by the specific model, not by the range; a sibling model's campaign does not apply and its absence does not clear this one.",
+    "parts_needed": [
+      "No independent parts where a campaign remedy applies",
+      "Frame number checked against both campaigns"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "The SR Max is a scooter, not a motorcycle — it shares nothing with the Shiver and Dorsoduro",
+    "description": "Drawn from Aprilia's model documentation, and stated because a roadmap row grouping it with two motorcycles invites the wrong assumption. The SR Max is a **maxi-scooter** built around a single-cylinder engine, sold in small displacements, and it shares no engine, chassis or drivetrain architecture with the V-twin Shiver and Dorsoduro. For a workshop that is a different machine class before it is a different model: continuously variable transmission rather than a gearbox and chain, scooter bodywork and access, different service items and different labour. A shop quoting from the Aprilia name and the model grouping will quote the wrong job. Nothing in the V-twin machines' documentation applies to it, and nothing in this file about the ride-by-wire system, the throttle-body assembly or the V-twin cylinder identification transfers. Where scooter work is not part of a workshop's offering, that is worth establishing at the booking rather than at the ramp.",
+    "make": "Aprilia",
+    "model": "Aprilia SR Max — maxi-scooter, unrelated to the Shiver and Dorsoduro",
+    "year_start": 2011,
+    "year_end": 2016,
+    "severity": "low",
+    "symptoms": [
+      "is the sr max the same as a shiver",
+      "aprilia scooter or motorcycle",
+      "quoting a service on an sr max",
+      "cvt not a gearbox on an aprilia",
+      "scooter grouped with the motorcycles"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A maxi-scooter grouped with motorcycles by model range rather than by machine class",
+      "A single-cylinder engine and continuously variable transmission rather than a V-twin and a gearbox",
+      "Scooter bodywork and access making the labour incomparable to the motorcycles",
+      "None of the V-twin machines' documentation or diagnosis transferring to it"
+    ],
+    "fix_procedure": "1. Establish the machine class before quoting. The SR Max is a scooter and its service is a scooter's, whatever the shared badge suggests. 2. Do not carry anything from the Shiver or Dorsoduro documentation across — the engine, transmission and chassis are unrelated. 3. Quote transmission work as continuously variable transmission service, not gearbox and chain. 4. Confirm at booking whether the workshop takes scooter work at all, rather than discovering the mismatch when the machine arrives. 5. Record the class alongside the model on the work order.",
+    "parts_needed": [
+      "No parts — this is a scoping step",
+      "Scooter-specific service documentation"
+    ],
+    "estimated_hours": 0.25,
+    "source": "service-manual"
+  }
+]
