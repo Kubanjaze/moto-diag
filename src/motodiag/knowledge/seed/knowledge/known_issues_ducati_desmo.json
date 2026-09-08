@@ -1,0 +1,187 @@
+[
+  {
+    "title": "Desmodromic valve gear is two rockers and two shims per valve — spring-valve assumptions do not transfer",
+    "description": "A desmodromic engine closes its valves mechanically instead of with springs. Each valve has an opening rocker and a closing rocker, and two shims: a small one on top of the valve stem that sets the opening clearance, and a large one wrapped around the stem, retaining the collets, that sets the closing clearance. There is no bucket and no valve spring to compress. A mechanic who is fluent in shim-under-bucket work can still get this wrong, because the closing clearance has no equivalent in the engine they know and half the measurements they need do not exist on a spring-valve head. Written from general knowledge — every clearance figure, shim size and torque must come from the manual for the specific engine.",
+    "make": "Ducati",
+    "model": "Desmodue, Desmoquattro, Testastretta, Superquadro and Desmosedici Stradale engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "unfamiliar with desmo valve gear",
+      "no valve springs on this engine",
+      "two shims per valve",
+      "closing clearance not understood",
+      "shim under bucket method does not fit"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Desmodromic system closing valves with a second rocker rather than a spring, so there are two clearances per valve rather than one",
+      "Opening shim sitting on the valve stem and closing shim wrapping the stem to retain the collets — neither is a bucket shim",
+      "Mechanic applying shim-under-bucket experience where half the measurements have no equivalent",
+      "Workshop information for spring-valve engines being used on a desmodromic head"
+    ],
+    "fix_procedure": "1. Confirm the engine is desmodromic before starting. Ducati road engines from the Desmodue through the Desmosedici Stradale are; the Multistrada V4's Granturismo is not, and uses conventional spring valve return. 2. Obtain the manual for the exact engine — clearance figures differ between 2-valve and 4-valve heads and between generations, and there is no safe generic figure. 3. SAFETY: cold engine only. Clearances are specified cold and a warm engine gives a false reading. 4. Understand what you are measuring before removing anything: per valve there is an opening clearance between the opening rocker and its shim, and a closing clearance at the closing rocker and its shim. Both are checked. 5. Set the engine to the position the manual specifies for the cylinder being measured, and do not turn the engine with belts or timing drive disturbed. 6. Record every measured clearance per valve before ordering shims — you are solving for two values per valve, not one. 7. Do not attempt to substitute spring-valve shims or procedures. The parts are not interchangeable and the method does not transfer.",
+    "parts_needed": [
+      "Opening and closing shims in the sizes the measurements call for",
+      "Valve cover gaskets and seals",
+      "Engine oil and filter if the service coincides with an oil change"
+    ],
+    "estimated_hours": 4.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Both desmo clearances must be measured — the closing clearance is the one with no spring-valve analogue",
+    "description": "A spring-valve service produces one number per valve. A desmodromic service produces two, and the second — the closing clearance at the closing rocker — is the one a mechanic new to the system tends to skip or mis-measure, because nothing in a shim-under-bucket engine corresponds to it. Measuring only the opening side gives a service that looks complete, passes a road test, and has not actually been done. The two clearances also do not necessarily move in the same direction as an engine accumulates miles, so one being in specification says nothing about the other. Written from general knowledge — the clearance limits, the measuring method and the engine position for each cylinder must come from the manual.",
+    "make": "Ducati",
+    "model": "Desmodue, Desmoquattro, Testastretta, Superquadro and Desmosedici Stradale engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "only opening clearance was checked",
+      "service done but noise remains",
+      "closing clearance never recorded",
+      "valve gear noisy after a service",
+      "clearances measured with one figure"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Closing clearance having no equivalent in a spring-valve engine, so it is skipped by a mechanic working from that background",
+      "A service sheet or invoice recording one clearance per valve rather than two",
+      "Closing clearance measured by an unfamiliar method and recorded incorrectly",
+      "Assuming a correct opening clearance implies a correct closing clearance"
+    ],
+    "fix_procedure": "1. SAFETY: cold engine, correct engine position per the manual for each cylinder, and never rotate the engine with the timing drive disturbed. 2. Measure and record BOTH clearances for every valve — opening and closing — before ordering any shim. A record with one figure per valve is an incomplete service. 3. Use the manual's method for the closing clearance specifically; it is measured differently from the opening clearance and more than one technique exists. Where the manual describes a cross-check, do it. 4. Compare each measurement against the manual's limits for that engine, not against a remembered figure or another Ducati. 5. If a previous service recorded only opening clearances, treat the closing side as unmeasured regardless of what the invoice says. 6. Re-measure after fitting new shims and before reassembly — the point of the job is the final number, not the ordered part. 7. Record both figures per valve in the service history so the next service starts from real data.",
+    "parts_needed": [
+      "Opening and closing shims as measured",
+      "Valve cover gaskets",
+      "Feeler gauges suitable for the manual's method"
+    ],
+    "estimated_hours": 5.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Closing shim collets and half-rings — the step where a desmo service goes badly wrong",
+    "description": "The closing shim on a desmodromic valve wraps the valve stem and is retained by collets, sometimes called half-rings. Getting them seated correctly is the highest-consequence step in the whole service: a collet that is not fully home can release, and a valve that drops in a running engine destroys far more than the valve. There is a manufacturer tool for the job and shops do improvise, but improvising raises the stakes on the one step that must not be got wrong. This is the part of a desmo service that justifies the labour figure, and it is the reason a cheap desmo quote should be treated with suspicion. Written from general knowledge — follow the manual's procedure and use the specified tool.",
+    "make": "Ducati",
+    "model": "Desmodue, Desmoquattro, Testastretta, Superquadro and Desmosedici Stradale engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "collet not seating correctly",
+      "half rings loose on the stem",
+      "closing shim will not sit flat",
+      "valve dropped after a service",
+      "cheap desmo quote received"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Collets not fully seated when the closing shim is refitted, allowing the retention to release in service",
+      "Improvised tooling used in place of the specified collet tool on a step with no margin for error",
+      "Reused collets or shims that are damaged, worn or mismatched",
+      "Time pressure on a labour-heavy job encouraging a rushed reassembly at exactly the wrong step"
+    ],
+    "fix_procedure": "1. SAFETY: this step decides whether the engine survives. Do not rush it and do not improvise if you are unsure — a dropped valve in a running engine is a destroyed cylinder head at best. 2. Work clean. Any debris under a collet or shim prevents correct seating. 3. Inspect every collet and shim before refitting; replace anything worn, damaged or mismatched rather than reusing it. 4. Fit the closing shim and collets exactly per the manual, using the specified tool. Where a shop tool substitutes, confirm it holds the parts in the same relationship the factory tool does. 5. Verify seating positively before moving on — visually and by the manual's check, not by feel alone. 6. Re-measure the closing clearance after the collets are seated; a shim that is not sitting flat reads wrong and is the warning you get. 7. Turn the engine by hand through several full cycles before starting it, per the manual, and stop immediately if anything binds. 8. When quoting, price this step honestly. A desmo service is labour, and a quote that undercuts the labour is undercutting the care this step needs.",
+    "parts_needed": [
+      "Collets / half-rings as required",
+      "Closing shims in the measured sizes",
+      "Valve cover gaskets and seals"
+    ],
+    "estimated_hours": 6.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Shim availability, not shim price, is what strands a Ducati mid-service",
+    "description": "A desmo service produces two shim measurements per valve, and the sizes needed are not known until the engine is open and measured. Opening and closing shims come in many sizes, a shop cannot hold a full range of both, and the bike sits in pieces while parts are ordered. The customer experience of a desmo service is therefore dominated by lead time rather than by parts cost, and a shop that has not warned them will take the blame for a delay that was structural. Booking the job without planning for this is the most common scheduling mistake on these engines. Written from general knowledge — confirm shim ranges and availability for the specific engine with the supplier before booking.",
+    "make": "Ducati",
+    "model": "Desmodue, Desmoquattro, Testastretta, Superquadro and Desmosedici Stradale engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "bike stuck waiting on shims",
+      "shim sizes unknown until measured",
+      "service overran the booked slot",
+      "customer not warned about lead time",
+      "cannot source closing shims"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Required shim sizes being unknowable until the engine is open and every valve measured",
+      "Two shim types per valve in many sizes, so no realistic shop stock covers the range",
+      "Supplier lead time on less common sizes, particularly closing shims for older engines",
+      "Job booked as a fixed-duration slot rather than one with a parts-ordering pause built in"
+    ],
+    "fix_procedure": "1. When booking, tell the customer the bike will be stripped, measured, and then may wait for shims. Set that expectation before the bike arrives, not after. 2. Establish supplier availability and lead time for both shim types for this engine before the bike comes in. 3. Measure every valve and produce the complete shim list in one pass, so one order covers the job — a second order doubles the delay. 4. Order against measured figures only. Guessing sizes to save a day produces a second wrong order and a longer delay. 5. Protect the open engine while it waits: cover the head, keep parts organised and labelled by cylinder and valve, and keep debris out. 6. Where a size is unobtainable, ask the supplier about the nearest available and re-measure against the manual's tolerance rather than accepting a substitution blind. 7. Re-check clearances after fitting, before reassembly.",
+    "parts_needed": [
+      "Opening and closing shims to the measured sizes",
+      "Valve cover gaskets",
+      "Covers or protection for an open engine awaiting parts"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Desmo service intervals vary by generation — a remembered figure produces a wrong quote",
+    "description": "Ducati desmo intervals are not one number. They differ substantially between the older air-cooled 2-valve engines, the liquid-cooled 4-valve engines, and the modern Superquadro and Desmosedici Stradale, and they have generally lengthened over the years. A shop quoting from memory or from experience with a different Ducati will over-quote a modern bike or, worse, under-service an older one that needs attention far sooner than the figure they remember. The interval also drives the customer conversation more than any other number in this service, so getting it from the manual rather than from habit is the whole job. Written from general knowledge — take the interval for the exact model and year from the manual or from Ducati's schedule, never from another Ducati.",
+    "make": "Ducati",
+    "model": "Desmodue, Desmoquattro, Testastretta, Superquadro and Desmosedici Stradale engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "desmo interval quoted from memory",
+      "service schedule does not match bike",
+      "older ducati overdue by years",
+      "quote too high for a modern bike",
+      "unsure when desmo service is due"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Desmo intervals differing between 2-valve, 4-valve and modern engine families and lengthening over the model years",
+      "Shop applying an interval remembered from a different Ducati generation",
+      "Owner relying on general Ducati reputation rather than the schedule for their bike",
+      "Low-mileage bike where a time-based element of the schedule has passed unnoticed"
+    ],
+    "fix_procedure": "1. Identify the exact model, year and engine before saying anything about interval or price. 2. Read the interval from the manual or Ducati's published schedule for that machine. Do not quote from another Ducati, however similar it looks. 3. Check both elements of the schedule — mileage and elapsed time — because a stored or low-mileage bike can be overdue on time while the odometer suggests otherwise. 4. Check the service history for what was actually done, not what was invoiced; a previous service that recorded only one clearance per valve was incomplete. 5. Quote the labour honestly against the manual's figure for that engine — access differs enormously between a 2-valve air-cooled twin and a modern 4-valve engine in a tight chassis. 6. Where a belt-driven engine is also due for belts, say so up front: the two jobs share access and doing them together saves the customer money, while discovering it mid-service does not. 7. Record model, engine and the schedule used in the job notes so the next quote starts correct.",
+    "parts_needed": [
+      "Service items per the manual's schedule for the specific engine",
+      "Shims as measured once the engine is open"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Two-valve and four-valve desmo services are different jobs — access and effort do not scale by cylinder count",
+    "description": "An air-cooled 2-valve Desmodue and a liquid-cooled 4-valve Testastretta or Superquadro both need a desmo service, but the work is not comparable. The 2-valve engine has fewer valves and generally better access; the 4-valve engines have twice the valves, twice the shims again, and sit in tighter chassis with cooling and bodywork in the way. Estimating a 4-valve job from 2-valve experience — or the reverse — produces a quote that is wrong by a wide margin in one direction or the other, and it is a common source of jobs that overrun their booked slot. Written from general knowledge — take the labour figure for the specific engine from the manual.",
+    "make": "Ducati",
+    "model": "Desmodue 2-valve versus Desmoquattro / Testastretta / Superquadro 4-valve engines",
+    "year_start": 1993,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "job overran the booked slot",
+      "quote based on a different ducati",
+      "access worse than expected",
+      "twice as many shims as planned",
+      "labour estimate badly wrong"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Four-valve heads carrying twice the valves and twice the shim measurements of a 2-valve head",
+      "Liquid-cooled engines in tight chassis needing bodywork, cooling and ancillaries removed for access",
+      "Labour estimated from experience with a different Ducati engine family",
+      "Cam belt work on belt-driven engines sharing access and being discovered mid-job rather than planned"
+    ],
+    "fix_procedure": "1. Identify the engine family and count the valves before estimating. A 4-valve head is not a 2-valve job with more parts; it is roughly twice the measurement work plus the access. 2. Read the manual's disassembly sequence for the specific engine and estimate from that, not from the last Ducati that came through. 3. On liquid-cooled bikes, include bodywork, cooling and ancillary removal in the estimate — that access is often a significant share of the labour. 4. On belt-driven engines, check whether belts are also due and plan them into the same job, since the access overlaps. Belt procedure itself is a separate subject. 5. Build the shim-ordering pause into the booking rather than the slot. 6. SAFETY: cold engine throughout; on liquid-cooled engines do not open the cooling system warm. 7. Record actual hours against the engine family so the shop's next estimate improves.",
+    "parts_needed": [
+      "Opening and closing shims as measured",
+      "Valve cover and access gaskets for the specific engine",
+      "Coolant if the cooling system is opened for access"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  }
+]
