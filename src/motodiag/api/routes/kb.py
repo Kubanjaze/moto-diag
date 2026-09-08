@@ -115,6 +115,10 @@ class SymptomListResponse(BaseModel):
 IssueSource = Literal[
     "unverified", "model-generated", "forum",
     "service-manual", "mechanic-verified",
+    # Phase 235B (migration 052) — primary legal text. This list mirrors
+    # the CHECK constraint, so a value missing here is a validation error
+    # on a legitimate row, not a policy choice.
+    "regulation",
 ]
 
 
@@ -136,7 +140,10 @@ class KnownIssueResponse(BaseModel):
     parts_needed: list[str] = Field(default_factory=list)
     estimated_hours: Optional[float] = None
     #: Phase 211 — provenance. Clients should surface anything other
-    #: than `service-manual` / `mechanic-verified` as unreviewed.
+    #: than `service-manual` / `mechanic-verified` / `regulation` as
+    #: unreviewed. Phase 235B added `regulation`: a quoted legal text is
+    #: reviewed content, but it is authoritative about what is required
+    #: rather than about how a specific machine behaves.
     source: IssueSource = "unverified"
 
 

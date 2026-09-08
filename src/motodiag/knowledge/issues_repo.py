@@ -27,8 +27,9 @@ def add_known_issue(
 
     `source` (Phase 211) records provenance and is CHECK-constrained by
     migration 051: `unverified` · `model-generated` · `forum` ·
-    `service-manual` · `mechanic-verified`. It is last and defaulted so
-    every existing caller — 31 of them — is unaffected.
+    `service-manual` · `mechanic-verified`, plus `regulation` from
+    migration 052 (Phase 235B) for primary legal text. It is last and
+    defaulted so every existing caller — 31 of them — is unaffected.
     """
     with get_connection(db_path) as conn:
         cursor = conn.execute(

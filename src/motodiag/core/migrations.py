@@ -3523,6 +3523,132 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE known_issues DROP COLUMN source;
         """,
     ),
+    # Migration 052 — Phase 235B: a provenance value for primary legal text.
+    Migration(
+        version=52,
+        name="known_issues_source_regulation",
+        description=(
+            "Phase 235 shipped knowledge entries quoted verbatim from "
+            "Commission Delegated Regulation (EU) No 44/2014 as amended "
+            "by (EU) 2018/295, and migration 051's five-value vocabulary "
+            "had no slot for a primary legal document. They were filed "
+            "as `service-manual`, meaning 'primary official document', "
+            "because the honest-looking alternative `unverified` sits in "
+            "Gate 2's forum-derived allowlist and would have held a "
+            "regulation to the forum-tip rule. This is a recurring "
+            "content class rather than a one-off: Track K has leaned on "
+            "regulator and legal sources at 228 (a national index "
+            "defect), 231 (a recall misfiled under a misspelled make), "
+            "233 (a do-not-ride campaign) and 235 (EU type approval). "
+            "SQLite cannot alter a CHECK constraint in place, so the "
+            "table is rebuilt — the CREATE-COPY-DROP-RENAME shape used "
+            "by the rollbacks of migrations 003 and 004. The foreign "
+            "key pragma is genuinely required and not defensive: "
+            "`repair_plan_items.source_issue_id` REFERENCES "
+            "known_issues(id), `get_connection` sets foreign_keys=ON, "
+            "and DROP TABLE is refused outright while any child row "
+            "points at the table."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issues_rebuild (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                symptoms TEXT,
+                dtc_codes TEXT,
+                causes TEXT,
+                fix_procedure TEXT,
+                parts_needed TEXT,
+                estimated_hours REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by_user_id INTEGER DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'unverified'
+                    CHECK (source IN (
+                        'unverified', 'model-generated', 'forum',
+                        'service-manual', 'mechanic-verified', 'regulation'
+                    ))
+            );
+
+            INSERT INTO known_issues_rebuild (id, title, description, make, model, year_start, year_end,
+                 severity, symptoms, dtc_codes, causes, fix_procedure,
+                 parts_needed, estimated_hours, created_at,
+                 created_by_user_id, source)
+            SELECT id, title, description, make, model, year_start, year_end,
+                   severity, symptoms, dtc_codes, causes, fix_procedure,
+                   parts_needed, estimated_hours, created_at,
+                   created_by_user_id, source
+            FROM known_issues;
+
+            DROP TABLE known_issues;
+            ALTER TABLE known_issues_rebuild RENAME TO known_issues;
+
+            CREATE INDEX idx_known_issues_make_model
+                ON known_issues(make, model);
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues(severity DESC, title);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        # Maps `regulation` back to `service-manual` — which is exactly
+        # what Phase 235 used as the stand-in, so this restores the
+        # pre-052 state rather than inventing one. Without the mapping
+        # the five-value CHECK would reject those rows and the rollback
+        # would fail on real data.
+        rollback_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issues_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                symptoms TEXT,
+                dtc_codes TEXT,
+                causes TEXT,
+                fix_procedure TEXT,
+                parts_needed TEXT,
+                estimated_hours REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by_user_id INTEGER DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'unverified'
+                    CHECK (source IN (
+                        'unverified', 'model-generated', 'forum',
+                        'service-manual', 'mechanic-verified'
+                    ))
+            );
+
+            INSERT INTO known_issues_rollback (id, title, description, make, model, year_start, year_end,
+                 severity, symptoms, dtc_codes, causes, fix_procedure,
+                 parts_needed, estimated_hours, created_at,
+                 created_by_user_id, source)
+            SELECT id, title, description, make, model, year_start, year_end,
+                   severity, symptoms, dtc_codes, causes, fix_procedure,
+                   parts_needed, estimated_hours, created_at,
+                   created_by_user_id, CASE WHEN source = 'regulation' THEN 'service-manual' ELSE source END
+            FROM known_issues;
+
+            DROP TABLE known_issues;
+            ALTER TABLE known_issues_rollback RENAME TO known_issues;
+
+            CREATE INDEX idx_known_issues_make_model
+                ON known_issues(make, model);
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues(severity DESC, title);
+
+            PRAGMA foreign_keys=ON;
+        """,
+    ),
 ]
 
 

@@ -482,7 +482,7 @@ class TestRegression:
         )
 
     def test_schema_version_pin(self):
-        assert SCHEMA_VERSION == 51, (  # f9-noqa: ssot-pin contract-pin: Gate 11 schema-bump pin. The literal is the point — importing the constant would make this assert `x == x` and it would never fail. Bumped 50→51 at Phase 211 (migration 051 added known_issues.source, provenance for repair content). Previously 49→50 at Phase 207 (migration 050 added customers.shop_id, the tenancy column the customer routes scope on). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+        assert SCHEMA_VERSION == 52, (  # f9-noqa: ssot-pin contract-pin: Gate 11 schema-bump pin. The literal is the point — importing the constant would make this assert `x == x` and it would never fail. Bumped 51→52 at Phase 235B (migration 052 rebuilt known_issues to widen the source CHECK with `regulation`, for entries quoted from primary legal text). Previously 50→51 at Phase 211 (migration 051 added known_issues.source). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
             "SCHEMA_VERSION moved — confirm a migration accompanies it "
             "and update this pin."
         )

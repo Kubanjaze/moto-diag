@@ -142,6 +142,7 @@ class TestProvenanceIsRecorded:
     @pytest.mark.parametrize("value", [
         "unverified", "model-generated", "forum",
         "service-manual", "mechanic-verified",
+        "regulation",  # Phase 235B, migration 052
     ])
     def test_the_full_vocabulary_is_accepted(self, tmp_path, value):
         path = str(tmp_path / f"{value}.db")
@@ -226,4 +227,5 @@ class TestTheApiCarriesProvenance:
         assert set(prop["enum"]) == {
             "unverified", "model-generated", "forum",
             "service-manual", "mechanic-verified",
+            "regulation",  # Phase 235B, migration 052
         }

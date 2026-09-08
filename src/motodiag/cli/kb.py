@@ -214,7 +214,15 @@ def _render_issue_detail(row: dict, console: Console) -> None:
 
 
 #: Sources a mechanic can act on without a second opinion.
-VERIFIED_SOURCES = frozenset({"service-manual", "mechanic-verified"})
+#:
+#: Phase 235B adds `regulation`. A verbatim legal text is at least as
+#: authoritative as a manual for the class of claim it supports, so
+#: excluding it would have printed "Origin not recorded" over a quoted
+#: regulation — false, and a behavioural regression caused by nothing
+#: but a relabelling. It gets its own note below rather than silence,
+#: because it is authoritative about a different object than a manual
+#: is: what is *required*, not what a given machine *does*.
+VERIFIED_SOURCES = frozenset({"service-manual", "mechanic-verified", "regulation"})
 
 
 def _render_provenance(console, source: str | None) -> None:
@@ -224,6 +232,13 @@ def _render_provenance(console, source: str | None) -> None:
     """
     source = source or "unverified"
     console.print(f"[bold]Source:[/bold] {source}")
+    if source == "regulation":
+        console.print(
+            "[dim]Drawn from regulation or legal text. Authoritative on "
+            "what is required, not on how a particular machine behaves — "
+            "confirm against the vehicle in front of you.[/dim]"
+        )
+        return
     if source in VERIFIED_SOURCES:
         return
     if source == "model-generated":
