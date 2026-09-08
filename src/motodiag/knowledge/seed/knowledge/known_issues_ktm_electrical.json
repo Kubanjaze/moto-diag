@@ -1,0 +1,217 @@
+[
+  {
+    "title": "Which engine-management supplier your KTM has decides which diagnostic tool can talk to it — Keihin, Bosch, Continental or Vitesco",
+    "description": "General knowledge entry, drawn from KTM's published technical specifications, on the fact that decides everything downstream. KTM does not use one engine-management supplier. **Keihin** manages the LC8 V-twins from the fuel-injected 990 onward through the 1290 and 1390, the LC4 690 in every generation, and the EXC-F and SX-F four-strokes. **Bosch** manages the LC8c parallel twins — 790, 890 and the 2024-on 990 Duke — and every Bajaj-built small bike, the 125, 200, 250 and 390, from the 2012 200 Duke onward. The 2018–2023 TPI two-strokes run a **Continental** system developed with its Synerject subsidiary, and the 2024-on TBI two-strokes pair a Keihin throttle body with a **Vitesco** ECU. The carburetted 950 Adventure predates injection. A tool that speaks to a Keihin ECU does not speak to a Bosch one, so a shop that has one KTM-capable tool and assumes it covers the marque will find it silent on half the range — and will conclude the bike, not the tool, is the problem.",
+    "make": "KTM",
+    "model": "KTM range by engine-management supplier — LC8 (Keihin), LC8c and 125–390 (Bosch), TPI (Continental), TBI (Vitesco)",
+    "year_start": 2006,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "tool will not connect to this ktm",
+      "unsure which ecu this ktm has",
+      "diagnostic software does not list the model",
+      "works on the 1290 but not the 790",
+      "keihin or bosch on a ktm"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Four engine-management suppliers across one marque, split by engine family rather than by model year",
+      "Diagnostic tools built around one supplier's protocol being assumed to cover the marque",
+      "Model names and displacements giving no indication of the supplier",
+      "The 790/890/990 Duke sharing showroom space with Keihin-managed bikes while running Bosch management"
+    ],
+    "fix_procedure": "1. Identify the engine family, then the supplier: LC8 V-twin, LC4 single and EXC-F four-stroke are Keihin; LC8c parallel twin and the 125–390 singles are Bosch; TPI two-strokes are Continental; TBI two-strokes are Vitesco. Confirm on the KTM technical-specification page for the model and year, which names the supplier outright. 2. Match the tool to the supplier before blaming either. TuneECU reaches Keihin-era bikes only; Bosch-era bikes need the KTM diagnostics tool or a dealer-level scanner that lists them. 3. Do not read a failed connection as a bike fault until the supplier question is settled. 4. Record the supplier on the job card with the engine family; the next person to plug in will otherwise repeat the discovery.",
+    "parts_needed": [
+      "No parts — this is an identification step",
+      "The model's technical-specification sheet, which names the EMS supplier"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "TuneECU reaches Keihin-era KTMs only, TuneBoy is a tune editor rather than a diagnostic tool, and Bosch-era bikes need the KTM tool or a dealer-level scanner",
+    "description": "General knowledge entry, drawn from the tools' own published model lists, on the independent-shop tool landscape for KTM. **TuneECU** (an Android app distributed from the developer's site, not an app store) is the diagnostics-capable independent tool, and its own list is explicit that unlisted bikes are not compatible: it covers the Keihin-managed 990 LC8 and 1190 RC8, the 690 family, the 1050 to 1290 Adventures and the 1290 Super Duke — every one of them marked as not Euro 5 — plus the 250/350 SX-F. It does not cover any Bosch-managed bike (125–390, 790/890/990 Duke), any TPI or TBI two-stroke, or any Euro 5 model. What it does per model varies: on the 990 LC8, RC8 and pre-2014 690 it reads and writes maps over USB and runs adaptation resets and actuator tests; on the 690 Duke 4, 2014-on 690 and the 1050–1290 bikes it is diagnostics and tests only, over Bluetooth on the CAN bus. It needs KTM's six-pin diagnostic socket adapted to a sixteen-pin OBD connector — a small adaptor sold by third parties — and either a USB K-line cable or an ELM327-class Bluetooth adapter depending on the bike. **TuneBoy** lists a dozen older KTMs, but as a tune-editing and data-logging kit, not a diagnostic tool. For Bosch-era and Euro 5 bikes the options are KTM's own PC-based dealer tool or dealer-level third-party scanners that list KTM by name.",
+    "make": "KTM",
+    "model": "KTM with TuneECU-listed Keihin management (990 LC8, 1190 RC8, 690, 1050–1290 Adventure, 1290 Super Duke — not Euro 5); Bosch-era bikes excluded",
+    "year_start": 2006,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "tuneecu will not connect to a 790",
+      "which tool reads ktm fault codes",
+      "tuneboy or tuneecu for a ktm",
+      "need the six pin adaptor for a ktm",
+      "euro 5 ktm not on the tool list"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "TuneECU covering only the Keihin-managed, pre-Euro 5 part of the range, and stating that unlisted bikes are incompatible",
+      "TuneBoy being a tune-editing kit that lists KTM models without offering diagnostics",
+      "KTM's six-pin diagnostic socket needing an adaptor to any OBD-style interface",
+      "Function set differing by model — full map access on older K-line bikes, diagnostics only over Bluetooth on CAN bikes"
+    ],
+    "fix_procedure": "1. Check the bike against TuneECU's own bikes list before buying anything; if it is not listed, the tool will not connect and no adaptor changes that. 2. For a listed bike, buy the six-pin-to-OBD adaptor and the interface the list specifies for that model — USB K-line cable for the older bikes, an ELM327-class Bluetooth adapter for the CAN bikes. 3. Expect connection-stability trouble on some KTMs, particularly with the engine running; the developer documents COM-port and cable-shielding fixes. 4. Do not buy TuneBoy expecting to read fault codes on a KTM; it is a map editor. 5. For a Bosch-era or Euro 5 bike, the realistic options are a dealer visit or a dealer-level scanner whose model list names the bike; do not assume the generic ELM327 path will do more than read emissions codes on the newest bikes.",
+    "parts_needed": [
+      "TuneECU licence for a listed bike",
+      "KTM six-pin to OBD-II adaptor",
+      "USB K-line cable or ELM327-class Bluetooth adapter as the model list specifies",
+      "Dealer-level KTM scanner or a dealer visit for Bosch-era and Euro 5 bikes"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "A KTM dash never shows a numeric fault code — pre-TFT bikes blink a two-digit code in neutral, TFT bikes store plain-text warnings, and the number lives in the fault memory",
+    "description": "General knowledge entry, drawn from KTM owner's and repair manuals, on why a KTM owner cannot tell you the code. No KTM display puts a P-code on screen. On the pre-TFT bikes with an LCD and an FI lamp — the 990 Adventure, the 2012 690 Duke — the lamp flashes a two-digit **blink code** when the bike is in neutral: long flashes for the tens, short for the ones. KTM's repair manuals tabulate that blink code against the stored P-code one to one, so the flash pattern is readable but it is not the number a scanner shows, and several P-codes share one blink code — the TPS signal-low and signal-high faults both blink 06. On the TFT bikes from the 2019 790 Duke onward, and on the 2018-era LCD bikes, the lamp comes on and the display shows a plain-text warning in yellow or red that is kept in a Warnings menu until cleared, and the manual sends the owner to have the fault memory read with the KTM diagnostics tool. There is no documented hidden diagnostic menu on the dash; the dealer's work — reading and clearing memory, flashing, variant settings — is done on KTM's PC-based tool.",
+    "make": "KTM",
+    "model": "KTM road models — pre-TFT LCD bikes (blink code) and TFT bikes (Warnings menu)",
+    "year_start": 2006,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "fi light flashing on a ktm in neutral",
+      "owner cannot tell me the code",
+      "warning text on the ktm display",
+      "counting the flashes on a 990",
+      "no code on the dash only a symbol"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "No KTM display presenting a numeric fault code, by design",
+      "Pre-TFT bikes encoding the fault as a two-digit blink pattern on the FI lamp, in neutral only",
+      "Several P-codes sharing a single blink code, so the pattern narrows the fault without identifying it",
+      "TFT bikes storing plain-text warnings in a menu, with the numeric memory reachable only by a tool"
+    ],
+    "fix_procedure": "1. On a pre-TFT bike, put it in neutral, switch on, and count the FI lamp: long flashes are tens, short are ones. Look the two-digit code up in the repair manual's error table for that model — not another model's, since the tables differ. 2. Treat the blink code as a pointer, not a diagnosis; where it maps to more than one P-code, read the memory with a tool before ordering parts. 3. On a TFT bike, open the Warnings menu and record the text exactly, then read the memory with a KTM-capable tool for the number. 4. Do not spend time hunting for a hidden dash diagnostic mode; the documented path is the tool. 5. Tell the owner why they could not find the code — it saves the next phone call.",
+    "parts_needed": [
+      "No parts — this is a reading step",
+      "The repair manual's error-code table for the exact model",
+      "A KTM-capable tool to read the numeric memory"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "A generic scanner's label for a P1xxx code on a KTM is not the fault — P1xxx is manufacturer-defined, and a 790's side-stand circuit has been reported reading as idle air control",
+    "description": "General knowledge entry on a trap that is general to every make and unusually sharp on KTM. Codes in the P1xxx range are manufacturer-defined, so a generic scanner that prints a description for one is printing another manufacturer's meaning, or a guess. KTM's own tables use the range — the 990's repair manual lists P1105 and P1106 for the front and rear manifold-pressure hoses pulled off, P1687 and P1688 for the front pressure sensor — and P1590 for the side-stand switch — and none of those matches what a generic tool will say. That last one is the point of the story that follows. One documented owner report on a Bosch-managed 790 Duke describes a generic scanner showing P1505 and P1508 as idle air control faults alongside a P1590, when the actual cause was a damaged, shorted side-stand sensor circuit — which is exactly what KTM's own table says P1590 is; the generic labels sent the diagnosis in the wrong direction while KTM's definition had the answer. The rule that follows is simple: on a KTM, a P1xxx description from a generic tool is a placeholder, and the meaning has to come from KTM's own table for that engine.",
+    "make": "KTM",
+    "model": "All fuel-injected KTM models",
+    "year_start": 2006,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "scanner says idle air control on a ktm",
+      "p1 code description does not match the symptom",
+      "chasing a code the scanner named wrong",
+      "manufacturer code on a generic reader"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "P1xxx codes being manufacturer-defined, so a generic description is borrowed from another manufacturer or invented",
+      "KTM using the range for its own faults — manifold-pressure hoses, sensor circuits — with meanings no generic list carries",
+      "A reported case on a 790 Duke where generic labels read idle air control while KTM's own P1590 definition — side-stand switch — named the actual fault",
+      "The label being trusted because it is printed, not because it is sourced"
+    ],
+    "fix_procedure": "1. When a generic tool shows a P1xxx code on a KTM, write down the number and ignore the description. 2. Look the number up in KTM's error table for that engine family and generation — the repair manual, or a KTM-capable tool that carries KTM's definitions. 3. If no KTM definition is available, diagnose from the symptom and the standard P0xxx codes stored alongside it, and treat the P1xxx as unresolved rather than as the description on the screen. 4. Be especially wary when the generic description names a system the bike does not obviously have or that does not fit the symptom — that mismatch is the tell. 5. Record which tool produced the label, so a later reader knows the description was not KTM's.",
+    "parts_needed": [
+      "No parts at this stage",
+      "KTM's error-code table for the engine family, or a tool carrying KTM definitions"
+    ],
+    "estimated_hours": 0.25,
+    "source": "model-generated"
+  },
+  {
+    "title": "Immobiliser no-start on a KTM shows as dash text, not a P-code — check battery voltage before the lock set, because a replacement needs dealer-tool pairing",
+    "description": "General knowledge entry on a no-start that gets expensive when the order of checks is wrong. A KTM immobiliser fault does not present as a standard P-code in any report found; it presents as text on the display — an antenna failure message — or on older bikes as a lamp blink sequence. The three causes that recur are, in order of cost, low battery voltage, a failed ring antenna or ignition-lock set, and a key transponder. Low voltage comes first for two reasons: it is the cheapest, and it is the most common, including lithium batteries in cold weather and bikes left on a tender lead. It comes first for a third reason too — a replacement lock set has to be paired to the bike with the KTM diagnostics tool, so a shop that jumps to the lock set has bought a dealer visit as well as the part. The immobiliser is also an electronic module a generic scanner does not address, so no code from such a tool is the expected result rather than a finding.",
+    "make": "KTM",
+    "model": "KTM road models with an immobiliser",
+    "year_start": 2006,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "immobiliser antenna failure on the dash",
+      "ktm will not start no code",
+      "no start after the battery went flat",
+      "key not recognised on a ktm",
+      "lock set replaced still no start"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Low battery voltage, including lithium batteries in cold weather, being the most common and cheapest cause",
+      "A failed ring antenna or ignition-lock set, which needs pairing to the bike with the KTM diagnostics tool when replaced",
+      "A key transponder fault",
+      "The immobiliser presenting as display text or a lamp sequence rather than a standard P-code, so a generic scanner shows nothing"
+    ],
+    "fix_procedure": "1. Measure battery voltage under load before anything else, and charge or substitute a known-good battery before diagnosing further. A surprising share of these end here. 2. Read the display text or the lamp sequence exactly and look it up in the manual for the model; do not expect a P-code. 3. Try the second key if there is one — a transponder fault is cheaper than an antenna. 4. Only then inspect the ring antenna and lock set, and before ordering a lock set, price the dealer pairing into the quote and tell the owner it is required. 5. Do not treat a clean scan from a generic tool as evidence the immobiliser is healthy; that tool does not reach it.",
+    "parts_needed": [
+      "Battery, if voltage is the cause",
+      "Second key for a transponder test",
+      "Ring antenna or ignition-lock set only if confirmed, plus dealer pairing"
+    ],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "Throttle adaptation on a KTM: a documented post-map-load reset sequence on the K-line Keihin bikes, none through TuneECU on the CAN bikes, KTM-tool only on Bosch — and after throttle-body replacement, not established for either",
+    "description": "General knowledge entry on a procedure that gets done in the wrong order, cut short, or assumed to exist where it does not. What is documented is narrow. On the K-line Keihin bikes — the 990 LC8 and 1190 RC8 — TuneECU offers two adjustments: **reset engine adaptation**, documented as the procedure after loading a map, which is followed by a strict untouched idle period of around a quarter of an hour with an upper limit; and a **throttle-cable adjustment**, which retracts the idle stepper and closes the throttle valves for setting cable clearance. The 690 up to 2013 has the adaptation reset only. On the CAN-bus Keihin bikes — the 690 from 2014 and the 1050 to 1290 Adventures and Super Duke — TuneECU offers **no adjustments at all**: diagnostics and actuator tests only, so any adaptation goes through the KTM diagnostics tool. On Bosch-managed bikes everything goes through the KTM tool. And whether any reset is required after **throttle-body replacement** is not established here for either supplier — the manual for the bike is the only source. The mistakes that follow are a shop cutting the idle period short and replacing a good sensor, and a shop assuming the 990 sequence exists on a 1290 when the tool does not offer it.",
+    "make": "KTM",
+    "model": "Keihin K-line KTM (990 LC8, 1190 RC8, 690 to 2013) — CAN Keihin and all Bosch bikes need the KTM tool",
+    "year_start": 2006,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "idles badly after a map load",
+      "hunting idle after loading a map on a 990",
+      "adaptation reset not offered on a 1290",
+      "adaptation reset order on a ktm",
+      "throttle valve reset needs the dealer tool"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "The reset done and the idle period cut short or interrupted by touching the throttle, so it never took",
+      "A good sensor replaced for a fault that was an adaptation not reset after a map load",
+      "The 990 sequence assumed to exist on the CAN-bus 1050–1290 or 2014-on 690, where TuneECU offers no adjustments",
+      "Bosch-era bikes assumed to follow any Keihin procedure when they need the KTM tool"
+    ],
+    "fix_procedure": "1. Establish supplier and bus: K-line Keihin (990, 1190 RC8, 690 to 2013), CAN Keihin (1050–1290, 690 from 2014), or Bosch. Only the first group has TuneECU adjustments. 2. On a K-line bike after a map load: reset engine adaptation with the tool, then leave the bike at idle untouched for the full stated period — no blipping, no shortening, and not past the stated maximum. 3. Run the throttle-cable adjustment when setting cable clearance, per the tool's description of it. 4. On a CAN Keihin or a Bosch bike, do not improvise the 990 sequence; the adjustment is not offered, and it is a KTM-tool job. 5. After throttle-body replacement on any KTM, take the requirement from the manual rather than from this entry — it is not established here. 6. Only if the idle is still wrong after the documented sequence should the TPS and throttle body be diagnosed as faulty.",
+    "parts_needed": [
+      "No parts for the procedure itself",
+      "TuneECU or the KTM diagnostics tool for a Keihin bike; the KTM tool for a Bosch bike",
+      "TPS or throttle body only if faulty after the full sequence"
+    ],
+    "estimated_hours": 0.75,
+    "source": "model-generated"
+  },
+  {
+    "title": "KTM PowerParts exhaust maps are dealer-installed and exhaust-specific — a decat or SAS removal on any other system is what lights the lamp, and 'cross-platform' means shared part numbers with Husqvarna and GasGas",
+    "description": "General knowledge entry, drawn from KTM's own fitting sheets and warranty terms, on what PowerParts means to a shop. PowerParts is KTM's genuine-accessory line, and KTM's fitting instructions say the parts are to be installed by an authorised workshop. The exhaust systems come with matched engine mappings that KTM distributes to dealers for installation with the dealer tool; the fitting sheets are explicit that a race map must never be loaded on the original exhaust — KTM calls it a fire hazard — and that some road slip-ons need their tuned mapping from the dealer — though many current street slip-on kits are sold needing no new mapping at all, so the question is per kit. Whether the map keeps the secondary-air system and lambda probes active depends on the kit: KTM's older sheets required it, while its later race-only Evolution kits ship with a secondary-air removal kit and are not road-usable. On the warranty side, KTM's terms exclude failures caused by non-genuine parts and by altering the fuel-injection system where they cause the failure, and its North American programme has offered a full warranty on dealer-fitted PowerParts. For a shop the practical points are three: a lamp after an aftermarket exhaust is usually the secondary-air valve or a lambda probe that was removed, not a fault; a KTM map for one exhaust is wrong on another; and 'PowerParts cross-platform' is not a KTM term — the same article numbers are sold under KTM, Husqvarna and GasGas, whose bikes share frames and engines, so one accessory record can apply to all three.",
+    "make": "KTM",
+    "model": "All KTM models; PowerParts article numbers shared with Husqvarna and GasGas",
+    "year_start": 2006,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "engine light after an akrapovic",
+      "dealer will not load the map on my exhaust",
+      "sas removed and now the lamp is on",
+      "is the ktm map for this exhaust",
+      "same part number on a husqvarna"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Exhaust-specific PowerParts mappings distributed to dealers and installed with the dealer tool, not by owners",
+      "Secondary-air valve or lambda probes removed with an aftermarket system, which lights the lamp without any fault",
+      "A map for one exhaust loaded on another — KTM's sheets call a race map on the stock system a fire hazard",
+      "Shared article numbers across KTM, Husqvarna and GasGas, which the roadmap's 'cross-platform' phrase refers to"
+    ],
+    "fix_procedure": "1. When a lamp follows an exhaust change, establish what was removed — secondary-air valve, lambda probe, catalyst — before diagnosing anything. That is usually the whole answer. 2. Establish which exhaust the loaded map is for. A PowerParts map belongs to one system; if the bike has a different one, the map is wrong for it, and a race map on a stock exhaust is unsafe by KTM's own sheet. 3. Send the owner to a dealer for the matched map if they want a PowerParts system to run as designed; a shop cannot load it. 4. Tell the owner plainly what the warranty terms say about non-genuine parts and fuel-injection alteration, and which of the options — dealer map, restored parts, emulator — is road-legal in your market. 5. When sourcing an accessory, search the article number across the three brands; the Husqvarna or GasGas listing is often the same part.",
+    "parts_needed": [
+      "Secondary-air valve, lambda probe or catalyst if restoring the system",
+      "The matched PowerParts map from a dealer for a PowerParts exhaust",
+      "No parts if the answer is explaining what the lamp means"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  }
+]
