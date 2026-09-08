@@ -1,0 +1,153 @@
+[
+  {
+    "title": "The MV triple's crankshaft turns backwards — so \"turn it in the direction of rotation\" means the opposite of your reflex",
+    "description": "Drawn from MV Agusta's own model material. The 675 and 798 triples use a **counter-rotating crankshaft**: it spins in the opposite direction to the wheels, with an additional shaft between crank and gearbox so that the rear wheel still drives forwards and the chain and sprockets remain entirely conventional. The purpose is to cancel part of the wheels' gyroscopic effect and reverse the crank's torque reaction. For a workshop the important thing is what does **not** change: cam timing, firing order, the pumps, the alternator and the starter are all designed around that direction, so there is nothing to re-clock and no correction to apply. What does change is the direction itself, and it is the direction that a mechanic's hands know without thinking. Any instruction to turn the engine \"in its direction of rotation\" — for a valve check, for timing, for finding top dead centre — points the opposite way to the reflex built on conventional engines. Turning it the wrong way risks the one-way cam-chain tensioner letting the chain go slack and back-drives the starter one-way clutch. **Which way that is in MV's own words could not be established here**, so establish it from the machine's own timing marks before turning anything, rather than from habit or from this entry.",
+    "make": "MV Agusta",
+    "model": "MV Agusta 675 and 798 triples — F3, Brutale, Dragster, Turismo Veloce, Rivale",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "which way does an mv triple turn",
+      "counter rotating crankshaft on an f3",
+      "turned the engine the wrong way",
+      "cam chain went slack during a valve check",
+      "tdc on an mv agusta triple"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A counter-rotating crankshaft turning opposite to the wheels, with an extra shaft keeping final drive conventional",
+      "Nothing internal being reversed, so there is no correction to apply and no reason to suspect the timing",
+      "Instructions to turn the engine in its direction of rotation meaning the opposite of the conventional reflex",
+      "Turning against the running direction risking a slack cam chain from the one-way tensioner and back-driving the starter clutch"
+    ],
+    "fix_procedure": "1. Establish the engine's direction of rotation from the machine's own timing marks and documentation before turning the crankshaft at all. Do not take it from habit, and do not take it from this entry — the manufacturer's stated direction is not established here. 2. Once established, treat every \"in the direction of rotation\" instruction as referring to that direction, not to the conventional one. 3. Never turn the engine backwards relative to its running direction; the one-way cam-chain tensioner can let the chain go slack and the starter one-way clutch is back-driven. 4. Do not look for anything else to be reversed. Cam timing, firing order and the ancillaries are all designed for this direction and need no adjustment. 5. Note the direction on the job card once confirmed, so the next person does not have to establish it again.",
+    "parts_needed": [
+      "No parts — this is a procedure and orientation step",
+      "Model-specific service documentation"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The MV triple's starter clutch is handed for reverse rotation — and is reported to have been fitted backwards",
+    "description": "Drawn from owner-forum reporting, and flagged as such because it is not manufacturer documentation. The starter one-way clutch on these triples is handed for the engine's reverse direction of rotation, and the most-discussed mechanical complaint on the family is that clutch failing — the starter spins or whirrs and the engine does not turn. Two things are worth a workshop's attention. Owners repeatedly name a **weak battery** as the underlying cause, which makes battery condition the first thing to check and the cheapest thing to exclude on a starter complaint. And there are reports of the unit being **reassembled the wrong way round** during repair, producing exactly the symptom it was fitted to cure — an error that is only possible because the part is handed for a direction most technicians do not expect. Because this rests on owner reports rather than a campaign or a bulletin, there is no free remedy to quote and the evidence should be described to a customer as what it is.",
+    "make": "MV Agusta",
+    "model": "MV Agusta 675 and 798 triples",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "starter spins but engine does not turn",
+      "sprag clutch failed on an f3",
+      "starter whirrs on a brutale 800",
+      "fitted the starter clutch backwards",
+      "weak battery killing the starter clutch"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A starter one-way clutch handed for the engine's reverse rotation, which is not the orientation a technician expects",
+      "Weak battery condition repeatedly named by owners as the underlying cause of failure",
+      "Reports of the unit being reassembled the wrong way round during repair, reproducing the original symptom",
+      "Owner-report evidence rather than a campaign, so there is no free remedy"
+    ],
+    "fix_procedure": "1. Test the battery properly before anything else on a starter complaint. It is the cheapest exclusion and the one owners most often name as the cause. 2. Check charging output as well; a battery that keeps arriving weak is a charging question rather than a battery one. 3. On reassembly, confirm the one-way clutch orientation against the engine's actual direction of rotation, not against the orientation that looks familiar. Fitting it the wrong way reproduces the symptom exactly. 4. Tell the customer plainly that this is a commonly reported failure rather than a recalled one; there is no campaign and no free remedy. 5. Record the battery test result on the job card, because a repeat failure with no battery record is a much harder conversation.",
+    "parts_needed": [
+      "Starter one-way clutch assembly if failed",
+      "Battery if it is contributing",
+      "Gaskets disturbed by access"
+    ],
+    "estimated_hours": 3.0,
+    "source": "forum"
+  },
+  {
+    "title": "Two MV triple recalls are do-not-ride, and one of them cannot be fixed by re-tensioning the spokes",
+    "description": "Drawn from the road-safety regulator's own campaign records. Three campaigns touch these machines and **two carry a do-not-ride instruction**. The first covers a **fork axle carrier with damaged or undersized threads**. The second covers **rear wheel spokes that can loosen on the spoked-wheel Dragster**, and this is the one where the obvious repair is the wrong one: the root cause is **out-of-specification surface treatment of the spoke nipples**, so the specified tightening torque cannot hold and **re-tensioning the spokes does not restore them**. The published remedy is **replacement of the rear wheel**, free of charge. A shop that responds to a loose-spoke complaint by re-torquing has left a defective wheel on a machine under a do-not-ride campaign. The third campaign covers a **swingarm pin securing bolt**: a batch received incorrect heat treatment and can fail **in service**, allowing the swingarm to loosen while riding — not, as is sometimes described, a bolt that breaks while being tightened. All three are checked by frame number.",
+    "make": "MV Agusta",
+    "model": "MV Agusta 675 and 798 triples — F3, Brutale, Dragster, Rivale",
+    "year_start": 2014,
+    "year_end": 2019,
+    "severity": "critical",
+    "symptoms": [
+      "loose rear spokes on a dragster",
+      "re-tensioned the spokes and they loosened again",
+      "fork thread damaged on an mv",
+      "swingarm loose on a brutale",
+      "do not ride recall on an mv agusta"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Rear wheel spoke nipples with out-of-specification surface treatment, so the specified torque cannot hold",
+      "Re-tensioning being ineffective by the campaign's own account, with wheel replacement as the published remedy",
+      "A fork axle carrier with damaged or undersized threads, under a do-not-ride instruction",
+      "A swingarm pin securing bolt batch with incorrect heat treatment, able to fail in service rather than during tightening"
+    ],
+    "fix_procedure": "1. Check the frame number against all three campaigns before any work, and before releasing the machine — two of them are do-not-ride. 2. On a loose-spoke complaint on a spoked-wheel Dragster, do **not** re-tension and return the bike. The remedy is a replacement wheel and the tightening torque cannot hold on the affected nipples. 3. Do not road-test a machine that falls under either do-not-ride campaign; refer it instead, and put the reason in writing. 4. Treat a loose swingarm as the campaign until excluded, and understand the failure is in service rather than at assembly, so a correctly torqued bolt is not evidence of safety. 5. Inspect fork thread condition on any machine in the fork campaign's build window before concluding an assembly is sound.",
+    "parts_needed": [
+      "No independent parts under an open campaign",
+      "Frame number checked against all three campaigns"
+    ],
+    "estimated_hours": 1.0,
+    "source": "service-manual"
+  },
+  {
+    "title": "The US scope of the MV Agusta fork recall understates the real one — the manufacturer's own bulletin names ten models",
+    "description": "Drawn from the manufacturer's service bulletin as filed in the regulator's public docket, read alongside the campaign record itself. The national campaign for the fork axle carrier lists a small number of machines and a short list of model names. MV's own bulletin in the same docket gives the **global** population as several hundred machines across **ten model names** built within a narrow window — including models absent from the national list. Both documents are genuine and neither is wrong: a national campaign covers the machines supplied in that market, while the manufacturer's bulletin covers the production run. The consequence for a workshop is specific and easy to miss. A machine built in the affected window but supplied to another market — a grey import, a bike bought abroad, a model never officially sold locally — is **outside the national campaign and inside the production defect**. So a clean national recall check on such a machine is not an answer, and the build window plus the model list in the manufacturer's own bulletin is the better test.",
+    "make": "MV Agusta",
+    "model": "MV Agusta 675 and 798 triples built in the affected window",
+    "year_start": 2018,
+    "year_end": 2018,
+    "severity": "high",
+    "symptoms": [
+      "recall check clean but bike was imported",
+      "grey import mv agusta recall",
+      "model not on the recall list",
+      "fork carrier campaign scope",
+      "bike built in the affected window"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A national campaign scoped to machines supplied in that market rather than to the production run",
+      "The manufacturer's own bulletin naming a substantially larger population across more model names",
+      "Imported and grey-market machines falling outside the national campaign while inside the production defect",
+      "A clean national recall check therefore being uninformative on an imported machine"
+    ],
+    "fix_procedure": "1. Establish where the machine was originally supplied before relying on a national recall check. On an imported bike that check answers a different question from the one you are asking. 2. Compare the build date against the affected window rather than relying on the model name appearing in the national list; the manufacturer's list is wider. 3. Treat a machine inside the build window as potentially affected even where the model is not named locally, and refer it for confirmation. 4. Say to the owner what the clean check does and does not mean, rather than reporting the bike as clear. 5. Record the build date and market of supply on the job card; both are needed to interpret any future campaign.",
+    "parts_needed": [
+      "No independent parts under an open campaign",
+      "Build date and market of original supply established"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "MV triple service intervals must come from the specific model's manual — the widely quoted F3 figure is unconfirmed",
+    "description": "Drawn from reproductions of MV's own maintenance tables, with an explicit gap. For the Turismo Veloce and Superveloce the schedule reproduced from MV's tables gives a valve check and adjustment at a long interval, a general service annually or at a shorter mileage, and timing-chain components at a longer one again. For the **F3 675 the commonly quoted valve interval could not be confirmed against MV's own table** — the figure circulates widely and traces to sources that could not be opened, so it is not repeated here. That gap is the entry's point: on this make the intervals differ enough between models that a figure carried across is a real risk, and the one figure most people quote is the one that is least well established. Take the schedule from the manual for the machine in front of you. The valve clearance specification values themselves are also not stated here, because the sources consulted disagreed and none was authoritative — measure against the manual, not against a remembered range.",
+    "make": "MV Agusta",
+    "model": "MV Agusta 675 and 798 triples",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "valve interval on an f3 675",
+      "service schedule for a turismo veloce",
+      "valve clearance spec on an mv triple",
+      "quoted 12000 km for the valves",
+      "which manual for mv service intervals"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Intervals differing between models within the same engine family",
+      "The most widely quoted F3 figure tracing to sources that could not be verified",
+      "Valve clearance specification values disagreeing between the sources consulted",
+      "A figure carried across models being a real risk on a range with this much variation"
+    ],
+    "fix_procedure": "1. Take the interval and the clearance specification from the manual for the exact model and year. On this make that is not a formality. 2. Do not quote the widely circulated F3 valve interval as established; it could not be confirmed against the manufacturer's own table. 3. Where a customer arrives with a figure, ask where it came from before acting on it. 4. Record the schedule source on the job card — which manual, which table — so the next service is not quoted from memory. 5. Measure clearances against the manual's own range rather than a remembered one; the ranges reported by third parties for this engine do not agree.",
+    "parts_needed": [
+      "Valve shims to the model's specification once the manual is consulted",
+      "Gaskets disturbed by access"
+    ],
+    "estimated_hours": 4.0,
+    "source": "service-manual"
+  }
+]
