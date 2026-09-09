@@ -1,0 +1,275 @@
+[
+  {
+    "title": "\"Adventure\" and \"Super Adventure\" are different KTM machines, and a search for one returns the other",
+    "description": "Drawn from KTM's own model range. The 1290 Super Adventure is a large LC8 V-twin; the 390, 790 and 890 Adventure are a single and a parallel twin on entirely different platforms. The names differ by one word, and the consequence is practical rather than cosmetic: a parts or service lookup for \"KTM Adventure\" returns the 1290 confidently and in volume, so a shop can read a Super Adventure procedure, torque figure or recall and apply it to a mid-size machine that shares none of it. The engines are different, the frames are different, the fuel system architecture is different, and the service intervals are different. This project hit the same trap in its own corpus, where every one of the twenty-five \"Adventure\" hits was a Super Adventure and the mid-size line had no coverage at all.",
+    "make": "KTM",
+    "model": "390 Adventure, 790 Adventure, 890 Adventure — as distinct from 1290 Super Adventure",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Procedure does not match the bike on the bench",
+      "Torque figure looks wrong for the fastener",
+      "Parts lookup returns a much larger machine",
+      "Recall check returns an unrelated campaign"
+    ],
+    "causes": [
+      "The model names differ by a single word, and search engines and parts systems treat them as the same string",
+      "The 1290 Super Adventure is far more numerous in published service material, so it dominates any ambiguous search",
+      "Nothing in a Super Adventure document announces that it does not apply to a 890 Adventure",
+      "The shared word is the *model* name, not a platform name — there is no engineering commonality implied by it"
+    ],
+    "fix_procedure": "Establish which machine is in front of you before opening any document, and write the full model name on the job card rather than \"KTM Adventure\". The quick discriminator is the engine: a V-twin is a 1290 Super Adventure, a parallel twin is a 790 or 890 Adventure, a single is a 390 Adventure. When searching for parts or procedures, include the displacement in the query and check that the returned document names it. Treat any Super Adventure figure as inapplicable here until confirmed — the two lines share a badge and very little else.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The mid-size Adventure runs dry with fuel still showing, and there are two distinct causes with different fixes",
+    "description": "Drawn from KTM's owner's manual and the parts catalogue, plus owner reports for the failure pattern. These machines carry a 20-litre tank in two lobes wrapping either side of the engine, joined low down by a balance hose and served by two screw-type shut-off cocks. The catalogue shows **one** fuel pump, in the left lobe, and **one** fuel level sensor, in the right — so the pump and the gauge sit on opposite sides of the machine with a low-flow crossover between them. Owners report the engine starving with five to seven litres nominally aboard. Two causes are documented and they are distinguishable in the bay. The first is simply that a cock is not fully open, including reports of machines delivered with one backed off. The second is a tank vacuum from a blocked vent, which stops fuel moving at all. Because the gauge reads the lobe the pump is not in, either fault leaves visible fuel the engine cannot reach.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "Misfire or cut-out with fuel showing on the gauge",
+      "Runs again after stopping and restarting",
+      "Suck or hiss when the filler cap is opened",
+      "Fault clears after refuelling then returns"
+    ],
+    "causes": [
+      "A fuel shut-off cock not fully open — there are two, one per lobe, and they are screw-type under rubber caps rather than lever taps a rider would notice",
+      "Tank vacuum from a blocked vent, which prevents fuel transferring between the lobes",
+      "The pump sits in the left lobe and the level sensor in the right, so the gauge reports a lobe the pump does not draw from",
+      "The crossover between lobes is low-flow, so anything restricting it strands fuel on the sender's side"
+    ],
+    "fix_procedure": "Do the vent test first because it costs nothing: when the misfire starts, open the filler cap and listen. A suck or hiss is tank vacuum, and the target is the small vent hole in the cap and the vent and drainage plumbing — KTM's own schedule carries a check of all hoses and sleeves for cracking, tightness and correct routing. If there is no vacuum, check that both shut-off cocks are screwed fully open, including on a machine that has never been apart, since they are reported as arriving backed off. Only then look at the pump or its strainer. Explain the layout to the customer, because \"there is fuel in it\" is the reason this fault gets dismissed: the gauge and the pump are on opposite sides of the engine.",
+    "parts_needed": [
+      "Fuel pump filter kit if the in-tank strainer is blocked — it is a separate catalogue item"
+    ],
+    "estimated_hours": 1.5,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The KTM Adventure fuel gauge reading full for the first half of the tank is designed behaviour, not a fault",
+    "description": "Drawn verbatim from KTM's owner's manual. The manual states that measurement of the fuel supply only becomes active after reaching half of the fuel tank content, and that up to half, the fuel level display will be shown as full. It also does not update with the side stand down, refreshing about two minutes after the stand is raised with the kill switch on. This matters because a needle that does not move for the first half of a tank is the single most common reason a level sensor gets condemned on these machines, and the sender is not a cheap part to guess at. The manual also gives the genuine failure symptom, and it is different: the fuel level display **flashes** if the instrument does not receive a signal from the level sensor. So a static full reading is normal and a flashing reading is the fault.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Gauge stays on full for the first half tank",
+      "Gauge does not update on the side stand",
+      "Fuel level display flashing"
+    ],
+    "causes": [
+      "Measurement is inactive above half a tank by design, and the display is pinned to full until then",
+      "The display does not refresh while the side stand is down, and takes about two minutes to update after it is raised",
+      "A flashing display is the manual's stated symptom for no signal from the level sensor — a different condition entirely",
+      "Genuine sender failures do occur and are separately reported on early machines, which is why the two must be told apart rather than assumed"
+    ],
+    "fix_procedure": "Before quoting a level sensor, confirm which behaviour the customer is describing. A steady full reading over the first half of a tank is the manual's stated design and needs no work. A flashing display is the documented no-signal symptom and does justify investigating the sender and its connector, which sits in the right-hand lobe. Check the reading with the machine upright and the stand raised, allowing about two minutes for it to refresh, since testing on the side stand reproduces a non-fault. Note that the sender being in the opposite lobe from the pump means a sender fault and a fuel delivery fault are unrelated problems on this bike.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The ABS module on the mid-size KTM Adventure sits under the fuel tank, so ABS work is a tank-off job",
+    "description": "Drawn from KTM's owner's manual, which states that the ABS module — the hydraulic unit, the ABS control unit and the return pump — is installed under the fuel tank. On a conventional motorcycle the ABS modulator is reachable under a side panel or seat, and a shop quotes ABS work accordingly. Here the split saddle tank sits over it, and the tank is the awkward component on this machine: two shut-off cocks to close, a pump connector and fuel line on the left underside, a balance hose, a level sensor connector on the right, and four bolts. Anything touching the modulator or the lines running to it inherits all of that. The recalled rear brake hose runs from the caliper to the modulator, so that campaign is a tank-off job too, as is the frequently reported coolant leak at the thermostat housing hose.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "ABS fault requiring access to the modulator",
+      "Brake line replacement quoted at conventional hours",
+      "Coolant leak traced to the thermostat housing"
+    ],
+    "causes": [
+      "The ABS hydraulic unit, control unit and return pump are located under the fuel tank rather than under a side panel",
+      "The tank is a multi-connection component — two cocks, a pump connector, a fuel line, a balance hose and a sender connector — so removing it is not a two-minute job",
+      "Brake lines running to the modulator are behind the same access",
+      "Quotes written from generic ABS labour times will be short on this machine"
+    ],
+    "fix_procedure": "Add tank removal to the estimate for any ABS or brake-line job before the customer approves it, rather than discovering it with the bike apart. Run the fuel down or drain it first — a full tank makes the removal materially worse and is the point at which the job goes wrong. While the tank is off, inspect the fuel line for chafing along the frame and have replacement locking tabs for the throttle-body quick-disconnect to hand, since the green tabs are easily lost and the spigot is easily broken. Group work: if the tank is coming off for one reason, do the other tank-off items in the same visit.",
+    "parts_needed": [
+      "Quick-disconnect locking tabs for the throttle body fitting",
+      "Fuel line if chafing is found during inspection"
+    ],
+    "estimated_hours": 1.0,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The mid-size Adventure fuel pump sits low and exposed, and KTM's own 2023 revision concedes the point",
+    "description": "Drawn from KTM's press material and owner reports. The fuel pump, its spigot and its electrical connection sit low and forward in the left tank lobe behind a thin plastic cover, in the path of anything thrown up by the front wheel. Rocks push through the cover and damage the pump or its connections, which is why an aftermarket guard category exists for this specific area. The strongest evidence is KTM's own: the 2023 890 Adventure revision added a wrap-around aluminium engine guard described in KTM's press material as improving the protection of the engine **and fuel tank** against impacts. A separate but related failure is the fuel line itself, which travels outward with the tank during removal and drags on the frame; one owner report describes the protective sheath worn completely through and into the line at around 9,500 miles.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure pre-2023 revision",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "Fuel smell or visible leak low on the left side",
+      "Cracked or holed plastic cover under the tank",
+      "Intermittent no-start after off-road use",
+      "Chafed sheath on the fuel line"
+    ],
+    "causes": [
+      "The pump and its connections sit low in the left lobe behind a thin plastic cover rather than inside a protected tank shell",
+      "The cover is not a guard and does not stop a stone",
+      "The fuel line drags on the frame as the tank is removed and refitted, wearing its protective sheath",
+      "Machines used as intended off-road see exactly the impacts this area is exposed to"
+    ],
+    "fix_procedure": "On any machine used off-road, inspect the underside cover and the pump area as a routine item rather than waiting for a symptom, and treat a cracked cover as work rather than cosmetic damage. Inspect the fuel line for chafe whenever the tank is off, since that is the only time it is visible and the wear is progressive. Where a customer rides off-road, a proper alloy guard for this area is a reasonable recommendation and is what the manufacturer itself fitted from the 2023 revision. Note the boundary: this is a chassis exposure problem, not an engine or fuel-pump quality problem, and it does not apply to the naked models on the same engine, which carry their tank and pump conventionally. Forum tip: owners report inspecting the underside cover at every tyre change, because that is when the machine is already off its wheels and the area is visible without removing the tank.",
+    "parts_needed": [
+      "Aftermarket alloy sump or engine guard covering the pump area",
+      "Fuel line if chafing has reached the line"
+    ],
+    "estimated_hours": 1.0,
+    "dtc_codes": [],
+    "source": "forum"
+  },
+  {
+    "title": "The KTM 950/990 subframe cracking reputation does not belong to the 790 and 890 Adventure, and the real limit is a published 5 kg figure",
+    "description": "Drawn from KTM's technical specification, the parts catalogue and the owner's manual. KTM's specification gives the frame as a chrome-molybdenum steel tubular space frame, powder-coated — not plastic and not aluminium, and no systemic cracking pattern for these models was found in any regulator database or manufacturer bulletin. The well-known KTM subframe-cracking reputation attaches to the earlier 950 and 990 generation, and carrying it across is a straightforward error of the kind that produces unnecessary work. What is genuinely useful is two things the catalogue and the manual do say. First, the subframe is a bolt-on two-piece assembly: the fiche lists a left subframe, a right subframe and a rear reinforcement as separate parts, so one-sided crash damage is a bolt-off repair rather than a frame job. Second, the manual gives a hard load limit — a maximum of 5 kg on the luggage rack plate — which most top-box installations exceed before anything is put in the box.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Crash damage to one side of the rear frame",
+      "Customer asks about the subframe reputation",
+      "Top box fitted with a heavy carrier"
+    ],
+    "causes": [
+      "The 950/990 subframe reputation is widely repeated and is routinely applied to later, unrelated models",
+      "A rear-frame repair is quoted as a frame job when the assembly is in fact two bolt-on halves plus a separate rear reinforcement",
+      "Luggage rack loading above the manufacturer's stated 5 kg plate limit, which is easy to exceed with the carrier alone",
+      "Overall load limits are also published and are easy to exceed two-up with luggage"
+    ],
+    "fix_procedure": "Quote a damaged rear frame from the catalogue rather than from the reputation: left and right subframes and the rear reinforcement are separate parts, so a single-sided impact may be one bolt-off component. Subframe fasteners are specified at 25 Nm for M8 and 50 Nm for M10, both with a medium-strength threadlocker; confirm against the manual for the actual model year. When a customer is fitting luggage, quote the 5 kg luggage rack plate limit explicitly — it is the number that decides whether a top box installation is within specification, and the carrier itself often accounts for most of it. Do not repeat the 950/990 cracking story about these machines; nothing found supports it here.",
+    "parts_needed": [
+      "Left or right subframe as a separate part",
+      "Rear reinforcement if damaged"
+    ],
+    "estimated_hours": 2.5,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The Adventure's tubeless spoked wheels seal on a rim band KTM ages out at five years regardless of wear",
+    "description": "Drawn from KTM's owner's manual. These machines use a tubeless tyre system in which a rim seal band replaces the conventional inner tube, sealing the spoke nipples against the rim. The manual states that KTM recommends the rim seal band be changed after five years at the latest, **regardless of the actual state of wear** — a time-based item on a component that is invisible with a tyre fitted and that nothing on the machine reports. A shop that changes tyres without knowing this will refit a tyre onto an aged band and the machine will lose pressure slowly afterwards, which then reads as a puncture or a valve fault. The manual also specifies spoke checks: a tap test for tension, warnings about both over- and under-tensioning, and a rim run-out check, with a one-time spoke re-tension early in the machine's life.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R, 390 Adventure with spoked wheels",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Slow pressure loss with no puncture found",
+      "Air escaping around spoke nipples when soaped",
+      "Bead seats but will not hold overnight",
+      "Loose or uneven spoke tone on a tap test"
+    ],
+    "causes": [
+      "The rim seal band is a time-expiring part with a five-year replacement recommendation independent of wear or mileage",
+      "The band is not visible with a tyre fitted, and no warning system reports it",
+      "Spoke tension changes affect the seal, and both over- and under-tensioning are warned against",
+      "A slow leak through the spoke bed is easily misdiagnosed as a puncture or a faulty valve"
+    ],
+    "fix_procedure": "Ask the age of the rim seal band before quoting a slow puncture, and check the band whenever a tyre is off — that is the only opportunity. Replace at five years regardless of appearance, which is the manufacturer's own recommendation and not a wear judgement. Soap the spoke bed rather than only the tread and valve when hunting a slow leak on these wheels, because the spoke nipples are the path a tubeless spoked rim leaks through. Check spoke tension by the manual's tap test and correct run-out at the same time, remembering the warning against over-tensioning; and carry out the early one-time re-tension on a new machine, which is a scheduled item rather than a fault.",
+    "parts_needed": [
+      "Rim seal band",
+      "Tyre fitting consumables"
+    ],
+    "estimated_hours": 1.5,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The Adventure and its Duke sibling share an engine but not a service schedule",
+    "description": "Drawn from KTM's own owner's manuals, read from the service schedule tables. The mid-size Adventure models are routinely serviced to the schedule of the naked machine they share an engine with, and the schedules are not the same. The first-generation 390 Adventure schedules a valve clearance check together with a spark plug change at a shorter interval than the 390 Duke does; the 390 Adventure R schedules the valve check alone at a longer one; the 890 Adventure runs a longer interval again. The difference that matters most is not the number but a footnote: the Adventure schedules carry a dusty-conditions marker against the air filter that the Duke schedule does not, because the Adventure is expected to be ridden where the Duke is not. The 890 schedule also carries items the naked bike's does not, including a clutch lubrication oil nozzle check and an early one-time spoke re-tension.",
+    "make": "KTM",
+    "model": "390 Adventure, 390 Adventure R, 890 Adventure — as against 390 Duke, 890 Duke",
+    "year_start": 2020,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Service due at a different mileage than expected",
+      "Air filter heavily loaded before its scheduled change",
+      "Schedule taken from the naked model's manual"
+    ],
+    "causes": [
+      "A shared engine invites the assumption of a shared schedule, and the schedules genuinely differ by model and generation",
+      "The Adventure air filter row carries a dusty-conditions qualifier absent from the naked model's schedule",
+      "Generation matters as much as model — the same badge across two generations does not carry the same interval",
+      "Adventure-only scheduled items exist that no Duke schedule contains"
+    ],
+    "fix_procedure": "Take the schedule from the manual for the exact model, variant and model year in front of you, and do not carry one across from the naked sibling on the ground that the engine is the same. Where the machine is ridden off-road or in dust, apply the Adventure schedule's dusty-conditions qualifier to the air filter rather than the nominal interval — that qualifier is the manufacturer's acknowledgement of how the bike is used. Check for Adventure-only items when writing the job, including the clutch lubrication oil nozzle and the early one-time spoke re-tension, both of which are missed when working from a naked-model schedule. Specific intervals are deliberately not reproduced here because they differ by model, variant and year; read them from the machine's own manual.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The mid-size Adventure recalls are brakes and one tyre campaign, and the tyre one is narrower than it looks",
+    "description": "Drawn from national regulator recall databases, checked across four countries. The reputation of this model line suggests fuel or tank campaigns; there are none. What exists is two brake campaigns on the 790 Adventure and 790 Adventure R — a rear brake hose that can fail from heat under extreme braking, leaving front braking only, and a front brake master cylinder whose return spring is too weak to let the piston return, extending stopping distances — and one tyre campaign affecting the 890 Adventure R and the R Rally, over cracking in an original-equipment knobbly tyre. The tyre campaign is materially narrower than it first appears: the manufacturer's own owner notification restricts it on these models to the **front** tyre, and only to machines still wearing the originally fitted tyres. A machine on its second set is outside it. No fuel, tank, subframe, wheel or suspension campaign was found in any of the databases consulted.",
+    "make": "KTM",
+    "model": "790 Adventure, 790 Adventure R, 890 Adventure R, 890 Adventure R Rally",
+    "year_start": 2019,
+    "year_end": 2023,
+    "severity": "critical",
+    "symptoms": [
+      "Rear brake fade or loss after heavy braking",
+      "Front brake dragging or slow to release",
+      "Extended stopping distance with normal lever feel",
+      "Cracking in the tread of an original knobbly tyre"
+    ],
+    "causes": [
+      "A rear brake hose that can fail from overheating under extreme braking, leaving the front brake as the only means of stopping",
+      "A front master cylinder return spring too weak to return the piston to its rest position",
+      "Cracking in an originally fitted knobbly tyre, scoped by the manufacturer's notification to the front tyre on these models",
+      "Owner-fitted replacement tyres put a machine outside the tyre campaign entirely, so the campaign is not a statement about the current tyres"
+    ],
+    "fix_procedure": "Check by frame number rather than by model and year, and check more than one national database — these campaigns appear in the United States, United Kingdom, Australian and Canadian registers, and a clean result in one is not a clean result. No campaign reference numbers are printed here deliberately, because a number quoted from the wrong market or the wrong make sends a shop down the wrong path; the frame number resolves it correctly every time. On the tyre campaign, establish first whether the machine still wears its original tyres and confirm the front and rear scope from the notification, because quoting a pair of tyres where the manufacturer covers one is a real cost difference. The rear brake hose runs from the caliper to the ABS modulator, which sits under the fuel tank, so budget tank removal into that job.",
+    "parts_needed": [
+      "Rear brake line and hardware to the revised specification",
+      "Front brake master cylinder assembly",
+      "Front tyre where the campaign applies"
+    ],
+    "estimated_hours": 2.0,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Where a mid-size KTM Adventure was built depends on model and generation, and it changes the parts conversation",
+    "description": "Drawn from KTM's own published production-facility listing. These machines are not all built in the same place, and the split does not follow the badge. KTM's listing places the 890 Adventure, 890 Adventure R and 890 Adventure R Rally at the main plant in Mattighofen, Austria. The same listing describes the partnership with CFMoto as overseeing global production of the two LC8c models, the 790 Duke and the 790 Adventure — so the reintroduced 790 is a different production source from the 890 that sits beside it in the showroom. The 390 Adventure, including a separately listed spoked-wheel version, is produced in India, corroborated by the manufacturing partner's own announcement of its millionth KTM built at the Chakan plant near Pune, which names a 390 Adventure as that machine. The build location of the 2025-onward 390 platform could not be established from any manufacturer document, and is left open here rather than assumed to follow the earlier generation.",
+    "make": "KTM",
+    "model": "390 Adventure, 790 Adventure, 890 Adventure and R variants",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Part number differs from the one expected",
+      "Fastener or fixing does not match the manual",
+      "Lead time differs sharply between two similar bikes"
+    ],
+    "causes": [
+      "The 890 family and the reintroduced 790 Adventure come from different production sources despite sitting together in the range",
+      "The 790 Adventure was built in Austria in its first generation and moved to the CFMoto partnership on reintroduction, so year matters as much as model",
+      "The 390 Adventure is produced in India, with a separately listed spoked-wheel version",
+      "Supply routes and lead times follow the plant rather than the badge"
+    ],
+    "fix_procedure": "Order against the parts fiche for the exact model year rather than by model name, particularly on the 790 Adventure, where the first-generation and reintroduced machines are physically similar but come from different plants — do not assume earlier part numbers, suppliers or fixings carry across. Where a part is slow, the production source is often the explanation, and it is worth telling a customer that two apparently similar KTMs can have very different lead times. For the 2025-onward 390 platform, treat the build location as unestablished: it is reported but no manufacturer document consulted states it, and ordering decisions should rest on the fiche rather than on an assumption about which plant it comes from.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  }
+]
