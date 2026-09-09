@@ -1234,9 +1234,9 @@
     "make": "ktm",
     "model_pattern": "125%",
     "year_min": 2011,
-    "year_max": 2025,
+    "year_max": 2024,
     "status": "incompatible",
-    "notes": "125 Duke/RC (Bosch, Bajaj-built): not on TuneECU's list, which states unlisted bikes are not compatible; a reseller's adaptor page also excludes the small Dukes and RCs.",
+    "notes": "125 Duke/RC (Bosch): not on TuneECU's list, which states unlisted bikes are not compatible; a reseller's adaptor page also excludes the small Dukes and RCs.",
     "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
   },
   {
@@ -1244,9 +1244,9 @@
     "make": "ktm",
     "model_pattern": "390%",
     "year_min": 2013,
-    "year_max": 2025,
+    "year_max": 2024,
     "status": "incompatible",
-    "notes": "390 Duke/RC/Adventure (Bosch, Bajaj-built): not listed — not compatible.",
+    "notes": "390 Duke/RC/Adventure (Bosch): not listed — not compatible.",
     "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
   },
   {
