@@ -45,7 +45,7 @@ genericness: "only 2 of 15 entries are pure theory."
 | Metric | Value |
 |--------|-------|
 | Known issues | 865 → 878 |
-| Entries | 13 — 8 `service-manual`, 5 `model-generated` |
+| Entries | 13, all `model-generated` (was 8 `service-manual` / 5 `model-generated`; the eight vendor-documentation entries were demoted at Phase 240B under the weakest-link provenance rule) |
 | Research | paired run with 237 (6/6 returned) |
 | Refuter verdicts on this question | 2 refuted — on contradiction, not genericness |
 | Proposed entries dropped as generic | 2 of 15 (both already Phase 235's) |

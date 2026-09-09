@@ -134,7 +134,7 @@
     "symptoms": [
       "desmo interval quoted from memory",
       "service schedule does not match bike",
-      "older ducati overdue by years",
+      "desmo service history unknown",
       "quote too high for a modern bike",
       "unsure when desmo service is due"
     ],
@@ -143,9 +143,9 @@
       "Desmo intervals differing between 2-valve, 4-valve and modern engine families and lengthening over the model years",
       "Shop applying an interval remembered from a different Ducati generation",
       "Owner relying on general Ducati reputation rather than the schedule for their bike",
-      "Low-mileage bike where a time-based element of the schedule has passed unnoticed"
+      "Ducati's cam-belt and annual-service time limits being carried across to the valve clearances by analogy"
     ],
-    "fix_procedure": "1. Identify the exact model, year and engine before saying anything about interval or price. 2. Read the interval from the manual or Ducati's published schedule for that machine. Do not quote from another Ducati, however similar it looks. 3. Check both elements of the schedule — mileage and elapsed time — because a stored or low-mileage bike can be overdue on time while the odometer suggests otherwise. 4. Check the service history for what was actually done, not what was invoiced; a previous service that recorded only one clearance per valve was incomplete. 5. Quote the labour honestly against the manual's figure for that engine — access differs enormously between a 2-valve air-cooled twin and a modern 4-valve engine in a tight chassis. 6. Where a belt-driven engine is also due for belts, say so up front: the two jobs share access and doing them together saves the customer money, while discovering it mid-service does not. 7. Record model, engine and the schedule used in the job notes so the next quote starts correct.",
+    "fix_procedure": "1. Identify the exact model, year and engine before saying anything about interval or price. 2. Read the interval from the manual or Ducati's published schedule for that machine. Do not quote from another Ducati, however similar it looks. 3. Do not schedule the desmo service by age. On the manufacturer schedules read for this project the valve row is marked under distance columns only — the annual service is a separate row, and on the belt-driven engines it is the cam belts, not the clearances, that carry a months figure. Read the sheet for the model year in hand from the manual rather than assuming either rule. 4. Check the service history for what was actually done, not what was invoiced; a previous service that recorded only one clearance per valve was incomplete. 5. Quote the labour honestly against the manual's figure for that engine — access differs enormously between a 2-valve air-cooled twin and a modern 4-valve engine in a tight chassis. 6. Where a belt-driven engine is also due for belts, say so up front: the two jobs share access and doing them together saves the customer money, while discovering it mid-service does not. 7. Record model, engine and the schedule used in the job notes so the next quote starts correct.",
     "parts_needed": [
       "Service items per the manual's schedule for the specific engine",
       "Shims as measured once the engine is open"

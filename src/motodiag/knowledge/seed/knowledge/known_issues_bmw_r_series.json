@@ -1,7 +1,7 @@
 [
   {
     "title": "Final drive crown-wheel bearing failure — hexhead R1200GS/RT/R",
-    "description": "The 2005–2011 R1200 hexhead final drive uses a single large crown-wheel bearing that is widely reported to fail well before the life of the bike. Early signs are a weep of gear oil at the final-drive seal and a faint rumble on a trailing throttle; left alone it progresses to lateral play at the rear wheel and, eventually, a seized or destroyed drive. Later units and revised replacement parts appear to have improved the failure rate, but any hexhead with unknown history should be checked. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
+    "description": "The 2005–2011 R1200 hexhead final drive uses a single large crown-wheel bearing that is widely reported to fail well before the life of the bike. Early signs are a weep of gear oil at the final-drive seal and a faint rumble on a trailing throttle; left alone it progresses to lateral play at the rear wheel and, eventually, a seized or destroyed drive. Later units and revised replacement parts appear to have improved the failure rate, but any hexhead with unknown history should be checked. The two generations in this span fail and are diagnosed differently. On the pre-2010 hexhead the crown-wheel bearing is a sealed, greased bearing sitting outside the oil section — the final-drive oil never reaches it — so oil condition and change interval have no bearing on its life and no amount of oil changing addresses it. Around 2010 BMW moved that bearing into the oil section and added a vent at the top to handle heat expansion, and only from there is oil condition part of the picture. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
     "model": "R1200GS",
     "year_start": 2005,
@@ -16,10 +16,10 @@
     "dtc_codes": [],
     "causes": [
       "Crown-wheel bearing wear (single-bearing design)",
-      "Lubricant breakdown from heat and extended change intervals",
+      "Lubricant breakdown from heat and extended change intervals — 2010-on units only, where the bearing runs in the oil; on pre-2010 units the bearing is sealed and greased and the oil never reaches it",
       "Seal failure allowing oil loss and contamination"
     ],
-    "fix_procedure": "1. With the bike on the centre stand, grip the rear wheel at 3 and 9 o'clock and rock it; any perceptible play with the wheel bearing and swingarm ruled out points at the crown-wheel bearing. 2. Inspect the final-drive seal area for a wet ring or dripping gear oil. 3. Drain the final drive and inspect the oil for metallic glitter; a magnetic drain plug will show it directly. 4. If play or debris is present, the final drive must be disassembled for bearing and seal replacement — this is a press job and most shops send the unit out or fit an exchange unit. 5. On reassembly, refill with the manual-specified hypoid gear oil and reset the change interval; many owners shorten it from the factory schedule.",
+    "fix_procedure": "1. With the bike on the centre stand, grip the rear wheel at 3 and 9 o'clock and rock it; any perceptible play with the wheel bearing and swingarm ruled out points at the crown-wheel bearing. 2. Inspect the final-drive seal area for a wet ring or dripping gear oil. 3. Drain the final drive and inspect the oil for metallic glitter; a magnetic drain plug will show it directly. On a pre-2010 unit, absence of glitter does not clear the crown-wheel bearing — it sits outside the oil section, so the rock-the-wheel play check in step 1 and the seal weep in step 2 carry the diagnosis there. 4. If play or debris is present, the final drive must be disassembled for bearing and seal replacement — this is a press job and most shops send the unit out or fit an exchange unit. Quote the bearing and the seal by their individual BMW part numbers before quoting a complete or exchange unit — they carry their own numbers. 5. On reassembly, refill with the manual-specified hypoid gear oil.",
     "parts_needed": [
       "Final drive crown-wheel bearing",
       "Final drive output seal",
@@ -209,7 +209,7 @@
   },
   {
     "title": "Alternator drive-belt wear — belt-driven alternator (oilhead, hexhead, R nineT)",
-    "description": "Unlike most motorcycles, the belt-driven boxers use a poly-V belt from the crank to a car-style alternator, and it is a scheduled replacement item that is easy to forget. A tired belt squeals cold, slips under electrical load, and eventually strands the bike with a flat battery and a charging warning. Replacement is straightforward but tension must be set correctly — an over-tight belt loads the alternator bearing. Written from general knowledge — verify the interval and tension against the manual.",
+    "description": "Unlike most motorcycles, the belt-driven boxers turn a car-style alternator from the crank by a belt — and two incompatible belts hide under that one description. Up to mid-2003 it is a conventional poly-V running on an adjuster: set by tension, and re-tensioned on a schedule. From mid-2003 the hexhead R1200, and later the R nineT, use an ELAST stretch-fit belt on a freewheeling pulley: it is fitted to a specified length between the pulley flanges and is never re-tensioned, because there is no adjuster to turn. Treating an ELAST belt as a poly-V and adjusting it is what destroys it. The two do not look meaningfully different — the part number is the discriminator, so identify the belt by number against the production month before ordering or fitting. Note also that the liquid-cooled boxers from 2013 drive the alternator internally through a gear and carry no drive belt at all, so in the later years of this span it is the R nineT that still has one. A tired belt squeals cold, slips under electrical load, and eventually strands the bike with a flat battery and a charging warning. Written from general knowledge — verify the belt type, the interval and the fitting method against the manual for the machine in hand.",
     "make": "BMW",
     "model": "R-series (belt alternator)",
     "year_start": 1994,
@@ -225,12 +225,13 @@
     "dtc_codes": [],
     "causes": [
       "Alternator belt worn or glazed",
-      "Belt tension incorrect",
-      "Alternator bearing wear from over-tight belt"
+      "Poly-V belt tension incorrect — the pre-mid-2003 belt only; the ELAST belt has no tension adjustment",
+      "Alternator bearing wear from an over-tight poly-V belt",
+      "ELAST stretch-fit belt damaged by being treated as a poly-V and adjusted"
     ],
-    "fix_procedure": "1. Check charging voltage at the battery with the engine running at a fast idle; a low or fluctuating reading with a squeal points at the belt. 2. Remove the front belt cover and inspect for cracking, glazing or missing ribs. 3. Replace the belt and set tension per the manual — do not guess it; both slack and over-tight cause failures. 4. Reset the service reminder if the bike tracks belt replacement. 5. If charging remains low with a new belt, test the alternator and regulator.",
+    "fix_procedure": "1. Check charging voltage at the battery with the engine running at a fast idle; a low or fluctuating reading with a squeal points at the belt. 2. Remove the front belt cover and inspect for cracking, glazing or missing ribs. 3. Identify the belt by part number before fitting. Poly-V: set tension to the adjuster specification and observe the scheduled re-tension. ELAST: fit to the specified length between the pulley flanges and make no tension adjustment — there is none, and attempting one is the failure. 4. Reset the service reminder if the bike tracks belt replacement. 5. If charging remains low with a new belt, test the alternator and regulator.",
     "parts_needed": [
-      "Alternator poly-V belt",
+      "Alternator belt — poly-V or ELAST to the part number for the alternator fitted",
       "Belt cover gasket (if fitted)"
     ],
     "estimated_hours": 1.0,

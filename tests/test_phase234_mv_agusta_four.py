@@ -223,7 +223,7 @@ class TestBoundariesAndSearchability:
         assert {e["source"] for e in raw} == {"service-manual"}
         for e in raw:
             assert re.search(r"[Dd]rawn from", e["description"]), e["title"]
-            assert "Forum tip" not in e["fix_procedure"], e["title"]
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
             for s in e["symptoms"]:
                 assert len(s) <= 55 and not s.endswith("."), f"{e['title']}: {s!r}"
 

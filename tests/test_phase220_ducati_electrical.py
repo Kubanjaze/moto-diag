@@ -185,19 +185,26 @@ class TestNothingWasDuplicated:
         assert len(ducati) == 8
         assert any(r["adapter_slug"] == "ducati-dds-readiness-tool" for r in ducati)
 
-    def test_no_title_collides_across_the_five_ducati_files(self):
+    def test_no_title_collides_across_the_ducati_files(self):
         titles = []
         for f in DUCATI_FILES:
             titles += [e["title"] for e in json.loads(f.read_text(encoding="utf-8"))]
         assert len(titles) == len(set(titles))
 
-    def test_all_five_files_load_together(self, tmp_path):
+    def test_the_whole_ducati_block_loads_together(self, tmp_path):
         path = str(tmp_path / "duc.db")
         init_db(path)
         for f in DUCATI_FILES:
             load_known_issues_file(f, path)
-        assert count_known_issues(db_path=path) == 41
-        assert len(search_known_issues(make="Ducati", db_path=path)) == 41
+        # Phase 240B: was a hardcoded total. Derived from the same JSON the
+        # test loads, so it survives corpus growth. The make filter is a
+        # substring match (`make LIKE '%X%'`), so the make-filtered number is
+        # counted the same way rather than assumed equal to the file total.
+        entries = [e for f in DUCATI_FILES for e in json.loads(f.read_text(encoding="utf-8"))]
+        assert count_known_issues(db_path=path) == len(entries)
+        assert len(search_known_issues(make="Ducati", db_path=path)) == sum(
+            1 for e in entries if "ducati" in e["make"].lower()
+        )
 
 
 class TestProvenanceAndSearchability:

@@ -106,21 +106,38 @@ class TestTheRefutedGuidanceWasReplaced:
         assert re.search(r"surface treatment", text, re.I)
         assert re.search(r"cannot hold", text, re.I)
 
-    def test_the_swingarm_bolt_fails_in_service_not_at_assembly(self, raw):
-        """Also corrected: the failure is a heat-treatment defect showing
-        up in service, not a bolt snapping while being torqued."""
+    def test_the_swingarm_bolt_carries_both_halves_of_its_history(self, raw):
+        """Corrected at Phase 240B. Phase 233 recorded the failure as
+        in-service *rather than* at assembly, and this test enforced that
+        reading: it required every "breaks while being tightened" match to
+        sit behind a negation. But the campaign record carries both halves
+        — a factory worker found the defect when a bolt snapped at the
+        prescribed 70 Nm during assembly, and the recall was issued because
+        the same batch fails in service. The old assertion forbade stating
+        the true chronology in the natural present tense, so a test was
+        pinning a false fact.
+
+        Note why the old guard could not simply be left in place as a
+        harmless extra: `break\\w*` does not match "broke" or "snapped", so
+        the corrected wording scores zero against it. It would have stayed
+        green while continuing to block the next correct rewording.
+
+        Both halves are asserted here so neither can be silently dropped
+        again."""
         rec = [e for e in raw if "do-not-ride" in e["title"]][0]
         text = _claims(rec)
         assert re.search(r"heat treatment", text, re.I)
+        # The in-service half — why it was recalled.
         assert re.search(r"in service", text, re.I)
-        # The entry names the wrong description in order to correct it —
-        # "not, as is sometimes described, a bolt that breaks while being
-        # tightened". A bare pattern match reads that as the claim.
-        # Thirteenth mention-versus-use slip.
-        for m in re.finditer(r"break\w* (?:while|during) (?:being )?tighten", text, re.I):
-            window = text[max(0, m.start() - 90):m.start()]
-            assert re.search(r"\bnot\b|rather than|sometimes described", window, re.I), (
-                "asserts the wrong failure mode")
+        # The assembly-discovery half — how it was found. This is the half
+        # Phase 233 denied, and the half a mechanic holding a snapped bolt
+        # off a torque wrench needs.
+        assert re.search(r"at assembly|during assembly|on the line", text, re.I), (
+            "the assembly-discovery half of the chronology has been dropped")
+        # And the entry must not go back to denying it.
+        assert not re.search(
+            r"not,? as is sometimes described|rather than (?:at|during) assembly", text, re.I
+        ), "the entry denies the assembly-discovery half again"
 
     def test_no_campaign_number_appears(self, raw):
         blob = json.dumps(raw)
@@ -256,7 +273,7 @@ class TestTheDesignationBarAndSearchability:
         assert {e["source"] for e in raw} <= {"service-manual", "forum"}
         for e in raw:
             assert re.search(r"[Dd]rawn from", e["description"]), e["title"]
-            assert "Forum tip" not in e["fix_procedure"], e["title"]
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
 
     def test_symptoms_are_short_phrases(self, raw):
         for e in raw:

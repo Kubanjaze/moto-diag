@@ -218,11 +218,46 @@ class TestAllFourDucatiFilesCoexist:
         init_db(path)
         for f in DUCATI_FILES:
             load_known_issues_file(f, path)
-        assert count_known_issues(db_path=path) == 36
-        assert len(search_known_issues(make="Ducati", db_path=path)) == 36
+        # Phase 240B: was a hardcoded total. Derived from the same JSON the
+        # test loads, so it survives corpus growth. The make filter is a
+        # substring match (`make LIKE '%X%'`), so the make-filtered number is
+        # counted the same way rather than assumed equal to the file total.
+        entries = [e for f in DUCATI_FILES for e in json.loads(f.read_text(encoding="utf-8"))]
+        assert count_known_issues(db_path=path) == len(entries)
+        assert len(search_known_issues(make="Ducati", db_path=path)) == sum(
+            1 for e in entries if "ducati" in e["make"].lower()
+        )
 
     def test_no_title_collides(self):
         titles = []
         for f in DUCATI_FILES:
             titles += [e["title"] for e in json.loads(f.read_text(encoding="utf-8"))]
         assert len(titles) == len(set(titles))
+
+
+class TestTheDiscriminatorItself:
+    """Phase 240B. `_asserts` is the mention-versus-use predicate every guard
+    in this file is built on, and its `return True` branch was never reached
+    by any test in the suite. Proved by mutation: replacing `_asserts` with
+    `lambda *a, **k: False` across the seven files that define it left 180 of
+    181 tests passing -- only Phase 221 noticed, and it noticed through a
+    real-data positive assertion rather than a probe.
+
+    So every guard here would have behaved identically if the predicate had
+    been stubbed out. The dangerous regression is an exemption regex that
+    over-matches: that turns `_asserts` permanently False, silently disarming
+    every guard built on it while the suite stays green.
+
+    The probe uses a literal term because this file's `_asserts` calls
+    re.finditer(re.escape(term), ...) -- the two implementations in the tree differ, and a probe
+    written with the wrong kind returns False for the wrong reason and
+    asserts exactly the deadness it is meant to detect."""
+
+    def test_a_plain_assertion_registers(self):
+        assert _asserts("The engine is a V-twin.", 'V-twin') is True
+
+    def test_a_negated_assertion_does_not(self):
+        assert _asserts("The engine is not a V-twin.", 'V-twin') is False
+
+    def test_an_absent_term_does_not(self):
+        assert _asserts("The engine is a parallel twin.", 'V-twin') is False

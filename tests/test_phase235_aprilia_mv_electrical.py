@@ -10,6 +10,10 @@ from pathlib import Path
 
 import pytest
 
+from motodiag.core.database import init_db
+from motodiag.knowledge.dtc_repo import get_dtcs
+from motodiag.knowledge.loader import load_dtc_file
+
 ROOT = Path(__file__).resolve().parents[1]
 SEED = ROOT / "src" / "motodiag" / "knowledge" / "seed"
 K = SEED / "knowledge"
@@ -99,7 +103,7 @@ class TestFileShape:
         forbids everyone else from claiming one. Nothing here is
         forum-derived, so nothing here may claim it."""
         for e in raw:
-            assert "Forum tip" not in e["fix_procedure"], e["title"]
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
 
 
 class TestProvenanceIsHonest:
@@ -462,3 +466,75 @@ class TestDeferralBoundariesStillHold:
             body = _claims(e)
             assert not re.search(r"valve clearance|shim|recall campaign", body, re.I), \
                 e["title"]
+
+
+# ---------------------------------------------------------------------------
+# Phase 240B — the shadow question, answered honestly for these two makes.
+# ---------------------------------------------------------------------------
+GENERIC_DTC = SEED / "dtc_codes" / "generic.json"
+
+#: Codes in these files that also exist in generic.json. Empty today, and that
+#: is the point: Aprilia and MV Agusta shadow nothing, so "does every shadowing
+#: row earn its shadow" has no subject here. Pinning the zero as a constant the
+#: editor must update is what turns an untested claim into a tripwire.
+SHADOWED: set[str] = set()
+
+
+class TestTheShadowQuestion:
+    """The audit recorded that this file never opens generic.json, so its
+    shadow-earning claim was unverified. It was unverified because there is
+    nothing to verify: neither make shadows a generic code.
+
+    A skip would have been the wrong shape. `dtc_repo.get_dtcs` falls through
+    to `candidates[0]` when there is neither a make match nor a generic row,
+    so these rows are reachable from a query for a *different* make — that is
+    recorded below rather than left as a surprise.
+
+    If a later phase ships a code that does exist in generic.json, the first
+    test here fails and tells the editor to add the Phase 215 shadow pair."""
+
+    @pytest.fixture(scope="class")
+    def generic_codes(self):
+        return {r["code"] for r in json.loads(GENERIC_DTC.read_text(encoding="utf-8"))}
+
+    @pytest.fixture
+    def dtc_db(self, tmp_path):
+        """Generic loaded alongside the make files, as Phase 215 does — a
+        precedence test that never loads generic.json cannot express
+        precedence at all."""
+        path = str(tmp_path / "dtc.db")
+        init_db(path)
+        load_dtc_file(GENERIC_DTC, path)
+        load_dtc_file(APRILIA_DTC, path)
+        load_dtc_file(MV_DTC, path)
+        return path
+
+    def test_these_makes_shadow_no_generic_code(self, ap_dtc, mv_dtc, generic_codes):
+        live = {r["code"] for r in ap_dtc + mv_dtc} & generic_codes
+        assert live == SHADOWED, (
+            f"shadowing state changed: {sorted(live)}. Add the code to SHADOWED, "
+            "give these rows the Phase 215 shadow-quality pair (common_causes AND "
+            "fix_summary must differ from generic), and widen Gate 12's precedence "
+            "parametrisation to cover this make."
+        )
+
+    def test_the_make_row_is_reachable_for_its_own_make(self, ap_dtc, dtc_db):
+        """The positive half the other four makes get from the shadow test."""
+        code = ap_dtc[0]["code"]
+        got = get_dtcs([code], make="Aprilia", db_path=dtc_db)
+        assert got[code]["make"] == "Aprilia", got[code]
+
+    def test_a_code_with_no_generic_row_falls_through_to_the_make_row(self, ap_dtc, dtc_db):
+        """Recorded behaviour, not endorsed behaviour.
+
+        `dtc_repo.get_dtcs` tries make-specific, then generic, then
+        `candidates[0]`. These codes have no generic row, so a query for an
+        unrelated make returns the Aprilia row — a row whose entire content
+        argues the SAE reading is wrong *for Aprilia*, now answering for a
+        Honda. Pinned so the day a generic row is added and this changes, it
+        changes visibly."""
+        code = ap_dtc[0]["code"]
+        got = get_dtcs([code], make="Honda", db_path=dtc_db)
+        assert got[code]["make"] == "Aprilia", (
+            "fall-through behaviour changed — update this test and Gate 12"
+        )

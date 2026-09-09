@@ -170,13 +170,36 @@ class TestTheDealerModeEntriesAreTheRealDeliverable:
 
     def test_proprietary_codes_are_described_not_enumerated(self, raw_issues):
         """The format is documented as knowledge; the numbers are not
-        invented as data. Any code cited must be standard-format."""
+        invented as data. Any code cited must be standard-format.
+
+        Phase 240B: the loop below has never executed -- every entry in this
+        file carries `dtc_codes: []`, so STD_CODE has never been applied to
+        anything. It is kept as the conditional it is rather than frozen to
+        `== []`, because a legitimate standard P-code could later belong here
+        (the Aprilia/MV electrical file carries P0217, P0446, P0462, P0510,
+        P0608), and freezing would silently convert a format rule into a
+        content prohibition.
+
+        What was missing is the assertion that covers the actual named risk:
+        proprietary BMW codes transcribed into PROSE, which nothing scanned.
+        The pattern requires a code-word prefix because the prose legitimately
+        contains bare 2016/2017/2021 -- those are years."""
         for e in raw_issues:
             for code in e["dtc_codes"]:
                 assert STD_CODE.match(code), (
                     f"{e['title']}: {code!r} is not a standard DTC — BMW "
                     "proprietary codes must not be transcribed"
                 )
+        cited = re.compile(r"(?:fault|error|code)\s+(?:no\.?\s*)?[0-9A-F]{4,5}\b", re.I)
+        for e in raw_issues:
+            text = " ".join([
+                e["title"], e["description"], " ".join(e.get("causes") or []),
+                e.get("fix_procedure") or "",
+            ])
+            assert not cited.findall(text), (
+                f"{e['title']}: a fault code is transcribed in prose — "
+                "BMW proprietary codes are described, not enumerated"
+            )
 
     def test_it_does_not_restate_phase_212s_zfe_accessory_entries(self, raw_issues):
         """Phase 212 wrote three ZFE *accessory* entries for the
@@ -253,14 +276,33 @@ class TestGs911IsInTheCatalog:
 
 
 class TestTheWholeBmwBlockStillCoheres:
-    def test_all_five_bmw_files_load_together(self, tmp_path):
+    def test_the_whole_bmw_block_loads_together(self, tmp_path):
+        """Phase 240B: both numbers came off literals — `len(files) == 5`
+        and a total of 44. The count was standing in for a coverage
+        guarantee, so the coverage is asserted directly as a subset and the
+        totals are derived from the JSON. A subset assert keeps the
+        guarantee while staying open to a sixth BMW file; an equality did
+        not, and the sibling KTM block proved it by silently going stale by
+        one when Phase 225B landed."""
         path = str(tmp_path / "bmw.db")
         init_db(path)
         files = list((SEED_DATA_DIR / "knowledge").glob("known_issues_bmw_*.json"))
-        assert len(files) == 5, [f.name for f in files]
+        assert files, "no BMW knowledge files found"
+        stems = {f.stem for f in files}
+        assert {
+            "known_issues_bmw_r_series",
+            "known_issues_bmw_f_series_gs",
+            "known_issues_bmw_s1000",
+            "known_issues_bmw_k_series",
+            "known_issues_bmw_electrical",
+        } <= stems, sorted(stems)
         for f in files:
             load_known_issues_file(f, path)
-        assert len(search_known_issues(make="BMW", db_path=path)) == 44
+        entries = [e for f in files for e in json.loads(f.read_text(encoding="utf-8"))]
+        assert count_known_issues(db_path=path) == len(entries)
+        assert len(search_known_issues(make="BMW", db_path=path)) == sum(
+            1 for e in entries if "bmw" in e["make"].lower()
+        )
 
     def test_no_title_collides_across_the_bmw_files(self):
         titles = []

@@ -239,9 +239,23 @@ class TestProvenanceAndSearchability:
         for e in raw:
             assert re.search(r"[Dd]rawn from", e["description"]), e["title"]
 
-    def test_no_entry_fabricates_a_forum_tip(self, raw):
+    def test_the_forum_tip_marker_tracks_the_source(self, raw):
+        """Rule 3, as a biconditional rather than its negative half alone.
+
+        Re-scoped at Phase 240B. This asserted only that no entry claims a
+        forum tip — Gate 2's reverse half. That is correct for every entry
+        whose source is not forum-derived, but it says nothing about the
+        forward half, so a `forum` entry with no tip passed. In two files
+        (226, 233) the file *had* such an entry, and this assertion was
+        actively forbidding the fix.
+
+        The audit found the family: 14 copies under 8 names, 10 of them
+        asserting the negative half only. Keying both halves off `source`
+        makes the guard correct by construction rather than by accident —
+        it stays green while a file has no forum entry, and fires the day
+        one is added untipped."""
         for e in raw:
-            assert "Forum tip" not in e["fix_procedure"], e["title"]
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
 
     def test_symptoms_are_short_phrases(self, raw):
         for e in raw:

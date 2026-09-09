@@ -55,7 +55,11 @@ class TestFileShape:
         assert len(titles) == len(set(titles))
 
     def test_no_forum_tips_claimed(self, raw):
-        assert not any("Forum tip" in e["fix_procedure"] for e in raw)
+        # Rule 3 as a biconditional (Phase 240B). These two files hold no
+        # `forum` entry, so the negative half alone was correct by accident;
+        # keyed off `source` it stays correct if one is ever added.
+        for e in raw:
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
         assert {e["source"] for e in raw} <= {"service-manual", "model-generated"}
 
 
@@ -192,3 +196,53 @@ class TestSearchability:
         words = [w[:5] for w in re.findall(r"[a-z0-9-]+", needle) if len(w) > 3]
         best = max(sum(1 for w in words if w in _claims(e).lower()) for e in raw)
         assert best >= 2, f"{needle!r} matched only {best} terms"
+
+
+class TestTheProvenanceRule:
+    """Phase 240B decided the rule the track had been applying unevenly, and
+    enforces it in the file that broke it.
+
+    THE RULE — an entry's `source` names the weakest link in the evidence
+    chain its load-bearing claim rests on:
+
+      regulation      the entry quotes legal text and the claim IS the
+                      requirement
+      service-manual  a primary official document STATES the claim. A
+                      documented absence counts ("the manual has no such
+                      row" is what the document yielded)
+      model-generated vendor or third-party published material, or an
+                      inference drawn across sources
+      forum           owner reporting or marque-community consensus
+      unverified      legacy rows only — origin never recorded. Never
+                      assigned to Track K content.
+
+    This file carried the same evidence class under two labels: TuneECU's own
+    compatibility table was `service-manual` in four entries and
+    `model-generated` in two. The direction was not a coin flip — Phase 235
+    had already recorded and tested it one phase earlier ("vendor-documentation
+    entries are model-generated"), so the eight vendor entries were DEMOTED
+    rather than the two promoted. Promoting would have put this file in direct
+    conflict with a passing Phase 235 test and would have silenced the CLI's
+    provenance caution across a file where nothing rests on a manufacturer
+    document.
+
+    Asserted as a rule rather than a count so the next cross-make phase
+    inherits it instead of re-deciding it."""
+
+    VENDORS = ("TuneECU", "TEXA", "HEX", "OBDSTAR", "DiagCode", "IDC5", "GS-911")
+
+    def test_no_vendor_sourced_entry_claims_a_manufacturer_document(self, raw):
+        for e in raw:
+            if e["source"] != "service-manual":
+                continue
+            named = [v for v in self.VENDORS if v.lower() in e["description"].lower()]
+            assert not named, (
+                f"{e['title']}: rests on {named[0]}'s own published material but is "
+                "labelled service-manual. Vendor documentation is model-generated — "
+                "see Phase 235's TestProvenanceIsHonest."
+            )
+
+    def test_every_entry_still_says_what_it_is_drawn_from(self, raw):
+        """The demotion must not cost the file its provenance prose."""
+        for e in raw:
+            assert re.search(r"[Dd]rawn from", e["description"]), e["title"]
