@@ -163,12 +163,29 @@ class TestCostHonesty:
 
     def test_no_converted_currencies(self, parts):
         """Fiche prices are GBP/EUR and stay in notes. A refuter caught
-        an NZD figure rendered as USD in the sibling phase."""
+        an NZD figure rendered as USD in the sibling phase.
+
+        Widened at Phase 240: the first version gated on
+        `typical_cost_cents > 0`, so an UNPRICED row's notes were never
+        scanned — and that is exactly where the withheld Moto Guzzi
+        conversion cost survived, as "USD 1,226" on a cost-0 row. The
+        Track K closure audit found it. Both halves are checked now:
+        a priced row must say where its figure came from, and no row
+        may carry a bare foreign-currency amount in its notes."""
         for r in parts:
             if r["slug"] in ORIGINAL_SLUGS:
                 continue
             if r["make"] in EURO and r["typical_cost_cents"] > 0:
                 assert "USD" in r["notes"] or r["verified_by"] == "forum", r["slug"]
+
+    def test_no_withheld_cost_figure_survives_in_notes(self, parts):
+        """The Moto Guzzi 8V conversion cost was removed from content at
+        Phase 237 as a currency error, and survived in a parts note."""
+        for r in parts:
+            if "tappet" not in r["category"]:
+                continue
+            assert not re.search(r"(USD|EUR|GBP|NZD|\$)\s?[\d,]{3,}", r["notes"]), \
+                f"{r['slug']}: withheld conversion cost figure in notes"
 
 
 class TestTheFitmentCorrections:

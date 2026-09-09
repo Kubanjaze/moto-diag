@@ -32,11 +32,11 @@
   },
   {
     "title": "The 125 and 390 Duke are built in India by Bajaj — what that changes is parts sourcing, not quality",
-    "description": "General knowledge entry on a supply-chain fact that is routinely mistaken for a quality claim. The small Dukes are manufactured by Bajaj Auto in India under KTM's engineering, and the same platform underpins the RC models. This is worth knowing for exactly two reasons, both practical. First, parts availability and part numbering can differ by market in a way they do not for a bike built in one place for one region, so a number quoted from a forum post or a parts diagram written for another market may not be the number your supplier stocks. Second, specification varies between markets — emissions equipment, restricted variants for licence classes, and detail changes across model years — so a procedure or a torque figure sourced from a bike in a different market may not describe the bike you have. It is not evidence about how well the bike is made, and treating it that way leads a shop to diagnose from a prejudice instead of from the machine.",
+    "description": "General knowledge entry on a supply-chain fact that is routinely mistaken for a quality claim. The small Dukes are manufactured by Bajaj Auto in India under KTM's engineering, and the same platform underpins the RC models. This is worth knowing for exactly two reasons, both practical. First, parts availability and part numbering can differ by market in a way they do not for a bike built in one place for one region, so a number quoted from a forum post or a parts diagram written for another market may not be the number your supplier stocks. Second, specification varies between markets — emissions equipment, restricted variants for licence classes, and detail changes across model years — so a procedure or a torque figure sourced from a bike in a different market may not describe the bike you have. It is not evidence about how well the bike is made, and treating it that way leads a shop to diagnose from a prejudice instead of from the machine. Scope note added at Phase 240: this covers the platform up to 2024. The build location of the 2025-onward 390 platform could not be established from any manufacturer document — see the mid-size Adventure file — so do not carry this claim across that change.",
     "make": "KTM",
-    "model": "KTM 125 Duke, 390 Duke (and platform-shared RC models)",
+    "model": "KTM 125 Duke, 390 Duke (and platform-shared RC models) — pre-2025 platform",
     "year_start": 2011,
-    "year_end": 2026,
+    "year_end": 2024,
     "severity": "low",
     "symptoms": [
       "part number does not match the parts diagram",
