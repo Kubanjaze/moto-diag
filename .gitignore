@@ -46,3 +46,6 @@ Thumbs.db
 .pytest_cache/
 .coverage
 htmlcov/
+
+# FUSE leftovers from deleted-but-open files — filesystem artifacts, not content
+.fuse_hidden*
