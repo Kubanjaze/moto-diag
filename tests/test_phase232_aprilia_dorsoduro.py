@@ -119,8 +119,14 @@ class TestTheDesignationBar:
             assert _named(e, "both"), f"{e['title']}: body names none"
 
     def test_no_other_makes_entry_scores(self):
+        """Exempts the `european_*` cross-make files (Phase 236 on) by
+        prefix — they own a comparison axis and cannot be written
+        without naming the models they scope. Prefix rather than
+        filename so no later cross-make phase extends a list; their
+        own tests forbid model-specific failure content."""
         for f in K.glob("known_issues_*.json"):
-            if "aprilia" in f.name:
+            if ("aprilia" in f.name
+                    or f.name.startswith("known_issues_european_")):
                 continue
             for e in json.loads(f.read_text(encoding="utf-8")):
                 hits = [n for n, p in UNAMBIGUOUS.items() if re.search(p, json.dumps(e))]
