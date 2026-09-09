@@ -41,7 +41,7 @@ Full instructions — extras, Docker, where your data lives — in the
 [install guide](docs/guide/install.md).
 
 `db init` creates the database and loads the starter data: DTC
-definitions, symptom entries, and 865 curated known issues.
+definitions, symptom entries, and 878 curated known issues.
 
 Verify:
 

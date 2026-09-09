@@ -1,0 +1,339 @@
+[
+  {
+    "title": "\"Supports BMW\" in TuneECU means one 449cc enduro single and nothing else",
+    "description": "Drawn from TuneECU's own published compatibility table. BMW appears in the supported-marque list, which is how a shop ends up buying the software to work on a boxer or an S-series and finding nothing there. The table's entire BMW content is the **G450 X**, a 449cc enduro single, sitting on its own adaptor alongside the CCM 450 and Husqvarna 449/511. No boxer, no K, no S, no F and no R model is listed anywhere. The table also carries its own negative statement, which is what makes this readable rather than inferred: it closes with the line that if a bike is not listed, it is not compatible. So the absence is authoritative rather than an omission, and BMW work needs the make's own tooling.",
+    "make": "BMW",
+    "model": "G450 X is the only supported model — not R, K, S, F or boxer",
+    "year_start": 2008,
+    "year_end": 2011,
+    "severity": "medium",
+    "symptoms": [
+      "Software bought for BMW work finds no model",
+      "Marque list implies coverage the table lacks",
+      "Connects but offers no functions"
+    ],
+    "causes": [
+      "TuneECU's marque list names BMW, but the model table contains only the G450 X",
+      "A marque list and a model table are different documents, and shops read the first",
+      "The G450 X is an enduro single sharing an adaptor with CCM and Husqvarna singles, so it is grouped away from anything a road BMW resembles",
+      "The vendor's own closing statement makes non-listing definitive rather than provisional"
+    ],
+    "fix_procedure": "Check the model table, never the marque list, before buying any tuning or diagnostic software. For BMW work the practical answer is that this tool is not it — budget for the make's own dedicated tooling instead. Treat the vendor's closing statement as the rule it says it is: an unlisted bike is not partially supported, it is unsupported. This is worth checking for every make you intend to cover, because the same document supports some marques comprehensively and others by a single model.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "TuneECU scopes Ducati by ECU part number rather than by model year — the only make it treats that way",
+    "description": "Drawn from TuneECU's own compatibility table. Every other marque in the document is listed by model and model year. Ducati alone is qualified by a single ECU part number, and the machines behind it are all pre-Euro-4 Marelli-era: the 749, 848, 999, 1098 and 1198; the Hypermotard 1100 but explicitly not the EVO; Monster 695, S2R and S4R; Multistrada 620, 1000 and 1100; Streetfighter 848 and 1098; Sport 1000 and GT 1000; ST3 and ST4. No modern Ducati is covered. The consequence for a workshop is that model and year do not answer the compatibility question on this make — two apparently identical machines can differ by the control unit fitted, and the Hypermotard 1100 and 1100 EVO sitting on opposite sides of the line is the clearest warning of that.",
+    "make": "Ducati",
+    "model": "749, 848, 999, 1098, 1198, Hypermotard 1100 (not EVO), Monster 695/S2R/S4R, Multistrada 620/1000/1100, Streetfighter 848/1098, Sport 1000, GT 1000, ST3, ST4",
+    "year_start": 2003,
+    "year_end": 2013,
+    "severity": "medium",
+    "symptoms": [
+      "Software lists the model but will not connect",
+      "Two same-model bikes behave differently",
+      "EVO variant not covered where the base is"
+    ],
+    "causes": [
+      "Coverage is defined by the fitted ECU part number, not by model or year",
+      "The Hypermotard 1100 EVO is explicitly excluded where the 1100 is included, so a trim name changes the answer",
+      "Only pre-Euro-4 Marelli-era machines are in scope; nothing modern is",
+      "A control unit can have been replaced during the machine's life, so the badge is not evidence of what is fitted"
+    ],
+    "fix_procedure": "Identify the fitted control unit before promising a customer anything on a Ducati, rather than working from model and year. Where a machine has had electrical repair history, treat the fitted unit as unknown until confirmed. For anything after the Marelli era, this tool is not the route and the make's own platform is — which on Ducati is less of a constraint than it sounds, because the factory tool's vendor sells to independents as well.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "TuneECU's capability degrades differently on KTM and Triumph, and assuming it degrades the same way is the expensive mistake",
+    "description": "Drawn from TuneECU's own compatibility table, read column by column. The natural assumption is that a tool loses the same functions on every make as bikes get newer. It does not. On the newer CAN-bus **Triumphs**, the table shows diagnostics and write but **no read** — so the tool can flash a map onto the machine but cannot retrieve the calibration already in it. On the newer **KTMs** the same rows show diagnostics only, with no read *and no write* — the Super Duke 1290, the 1050/1090/1190/1290 Adventures, the 690 Duke 4, the 690 SMC and Enduro from the later model years, and the 250/350 SXF are all diagnostics-only. The vendor's own guide agrees that write is not available on the latest KTM. The two failure modes need different conversations with a customer: on Triumph you can overwrite a map but cannot back up what was there first, which is a consent problem; on KTM you cannot write at all, which is a quoting problem.",
+    "make": "KTM",
+    "model": "Super Duke 1290, Adventure 1050/1090/1190/1290, 690 Duke 4, 690 SMC and Enduro later years, 250/350 SXF — contrasted with newer CAN-bus Triumph",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Map read greyed out or unavailable",
+      "Write refused on a bike that diagnoses fine",
+      "Tool behaviour differs between two shop bikes"
+    ],
+    "causes": [
+      "Capability is published per model row, and the rows differ by make as well as by age",
+      "Newer CAN-bus Triumph rows show diagnostics and write but not read",
+      "Newer KTM rows show diagnostics only — neither read nor write",
+      "A shop that learns the tool's behaviour on one make and generalises it will be wrong on the other"
+    ],
+    "fix_procedure": "Read the capability columns for the exact model row before quoting tuning work, and do it per make rather than once. Where the tool can write but not read, tell the customer before touching anything that their existing calibration cannot be backed up and cannot be restored by this route — that is a decision for them, not an implementation detail. Where the tool can only diagnose, do not quote a remap at all on this tool. The newer flashing work also has a hardware requirement the older work does not, so confirm the interface as well as the model.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Ducati and MV Agusta have no dealer-tool lockout — TEXA supplies both the factory tool and the aftermarket one",
+    "description": "Drawn from TEXA's own published material. The usual mental model for an exotic European make is that the dealer has a tool the independent cannot buy. For two of these makes that model is simply wrong. TEXA's own BIKE brochure states that its IDC5 BIKE software has been chosen as official diagnostic software by a named list of manufacturers, and that list includes **Ducati and MV Agusta** — alongside Benelli, Betamotor, Bimota, Brough Superior, Fantic, Moto Morini, SWM and SYM Italia. TEXA states plainly that multi-brand workshops can have the same coverage level as vehicle manufacturers. So on these two makes, buying the aftermarket product buys the factory-level path, and Ducati's own dealer tool is built on TEXA's platform. The other makes here — BMW, KTM, Triumph, Aprilia and Moto Guzzi — are **not** on that list and are covered as ordinary aftermarket coverage.",
+    "make": "Ducati and MV Agusta",
+    "model": "All models covered by the vendor's bike software",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Independent shop declines exotic work on tooling",
+      "Customer told only a dealer can diagnose",
+      "Quoted dealer rates for a routine reset"
+    ],
+    "causes": [
+      "The manufacturer appointed an external diagnostic supplier rather than building its own software, so there is no withheld dealer application",
+      "The vendor sells the same software to independent workshops and states the coverage is equivalent",
+      "The dealer-branded product is that vendor's platform under another name",
+      "This is true of two of these makes and not of the other five, so it cannot be generalised"
+    ],
+    "fix_procedure": "For Ducati and MV Agusta, treat TEXA IDC5/IDC6 BIKE tooling as a purchasing decision rather than an access barrier, and price the interface plus the software subscription together. Do not extend the conclusion to BMW, KTM, Triumph, Aprilia or Moto Guzzi, which are aftermarket coverage on the same product rather than factory appointments. Where a customer has been told that only a dealer can work on their Ducati or MV, that is a statement about the shop rather than about the machine.",
+    "parts_needed": [
+      "Multi-brand bike diagnostic interface and software subscription"
+    ],
+    "estimated_hours": 1.0,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "TEXA lists coding and adaptation functions for two European makes and none for four",
+    "description": "Drawn from TEXA's own brochure, which enumerates brand-specific \"special adjustments\" rather than leaving capability to be inferred from a marque list. Two of the makes here have named entries. **Ducati** has key adaptation and anti-theft enabling and disabling. **BMW** has odometer alignment and a speed limiter unlock after running-in, scoped to three specific machines by BMW's own internal type codes — the S 1000 R, S 1000 XR and S 1000 RR. For **KTM, Triumph, Aprilia and Moto Guzzi** no special adjustments are listed at all. This is the distinction between reading a machine and changing it: expect fault codes, live data, activations and resets across the range, but do not assume coding, key or adaptation functions on the four makes with no entry. It is exactly the capability a shop discovers is missing at the point it has already taken the job.",
+    "make": "BMW and Ducati have listed adjustments; KTM, Triumph, Aprilia, Moto Guzzi have none",
+    "model": "BMW S 1000 R, S 1000 XR, S 1000 RR by type code; Ducati generally",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Key programming unavailable on a covered make",
+      "Tool reads codes but cannot code a component",
+      "Adaptation needed after a part replacement"
+    ],
+    "causes": [
+      "Special adjustments are published per brand and only two of these makes have entries",
+      "Coverage for reading is much broader than coverage for writing, and a marque list does not distinguish them",
+      "The BMW entries are scoped by internal type code rather than by model name, so they do not generalise across the range",
+      "A job accepted on the basis of fault-code coverage can require a function the tool does not have"
+    ],
+    "fix_procedure": "Separate the question \"can this tool read the machine\" from \"can it change the machine\" before accepting work, because the answers differ by make on the same product. Where a job needs key programming, immobiliser work or adaptation after a component change, confirm the specific function against the brand's published adjustment list rather than against the marque list. On BMW, check the machine's type code rather than its model name. Where no adjustment is listed for the make, plan for the make's own tooling or a dealer visit for that step.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "TEXA's entry-tier IDC5 BASIC licence contains no European makes at all",
+    "description": "Drawn from TEXA's own catalogue. Coverage on this platform is tiered, and the tiers are not simply more or less of the same thing — they are different vehicle populations. IDC5 BASIC covers Buell, Harley-Davidson, Indian, Polaris and Victory: an American and powersports set with **no European marque in it**. Every European make a shop would want here — Aprilia, BMW, Ducati, Gilera, Husqvarna, KTM, Moto Guzzi, Moto Morini — sits in IDC5 PLUS. A shop that buys the entry tier expecting to grow into European work has bought the wrong product rather than a smaller version of the right one, and the difference is not visible from the product family name.",
+    "make": "All European makes",
+    "model": "Aprilia, BMW, Ducati, Gilera, Husqvarna, KTM, Moto Guzzi, Moto Morini",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Purchased licence lists no European marques",
+      "Software installs but the brand is absent",
+      "Upgrade quoted after the tool is bought"
+    ],
+    "causes": [
+      "Licence tiers are split by vehicle population rather than by depth of function",
+      "The entry tier is an American and powersports set with no European content",
+      "Product family naming does not signal which population a tier covers",
+      "A demonstration on one tier does not represent the other"
+    ],
+    "fix_procedure": "Confirm the specific licence tier and its marque list before purchase, not the product family. Ask the supplier to show the European marque list on the exact tier being quoted. Where a shop's work is predominantly European, IDC5 PLUS is the only viable purchase and should be budgeted as such rather than treated as an upgrade to grow into later. Subscription renewal is a recurring cost on this platform and belongs in the same calculation.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "BMW's GS-911 is unavoidable, and its Enthusiast tier is disqualified for a workshop by a 10-vehicle cap",
+    "description": "Drawn from HEX's published GS-911 licence terms. BMW is the clearest case in this group of a make that genuinely requires its own dedicated tool: it is absent in practice from the general multi-make tuning software, and the multi-brand diagnostic platform lists only odometer and speed-limiter adjustments for it rather than the fuller coding set. The GS-911 is sold in tiers, and the distinction that matters to a shop is not price or function but a **cap on the number of distinct vehicles the licence may be used with**. The Enthusiast tier is limited to ten vehicle identification numbers, which is coherent for an owner with one or two machines and useless for a workshop that sees a different BMW every week. A shop evaluating on function alone will pick the wrong tier and hit the cap in its first month. One purchasing detail spans BMW's two connector eras: the GS-911 exists in a 10-pin round-plug variant and a 16-pin variant, and each works on the other era through a short adaptor cable — the 10-pin unit onto newer 16-pin bikes with a male adaptor, the 16-pin unit onto older 10-pin bikes with a female one. Buying the 16-pin unit plus the female adaptor cable gives one tool that spans both generations, which is the configuration for a workshop rather than an owner.",
+    "make": "BMW",
+    "model": "Boxer, K, S, F and R series generally",
+    "year_start": 2000,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Licence refuses a new vehicle after several uses",
+      "Tool works then stops accepting bikes",
+      "Function list looks adequate but the tier is not"
+    ],
+    "causes": [
+      "The lower licence tier is capped by distinct vehicle identification numbers rather than by function",
+      "A workshop consumes distinct vehicles far faster than an owner does",
+      "Evaluating the tiers on their function lists hides the cap, because the functions can be similar",
+      "There is no straightforward multi-brand substitute for this make's deeper functions"
+    ],
+    "fix_procedure": "Buy the GS-911 Professional tier for any workshop use and treat the vehicle cap rather than the function list as the deciding specification. Where a shop is trialling the cheaper tier, count the distinct machines it expects to see in a month before committing. Budget this as a make-specific tool that the multi-brand platform does not replace, and price it alongside the multi-brand subscription rather than instead of it.",
+    "parts_needed": [
+      "GS-911 Professional-tier licence and interface",
+      "Adaptor cable for the other connector era — female for a 16-pin unit onto older 10-pin bikes"
+    ],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Aprilia and Moto Guzzi share one dealer tool, PADS, and one independent, DiagCode — visible only when the makes are compared",
+    "description": "Drawn from the manufacturer group's own tooling arrangements. Looked at one make at a time, Aprilia and Moto Guzzi each appear to have a proprietary dealer system. Looked at together, they are the same system: both are marques of the Piaggio Group, and the group's dealer platform, PADS, serves the whole of it — the same platform that covers the group's scooter marques. The independent side mirrors it: DiagCode's package is scoped to the Piaggio Group as a unit rather than to either marque. The practical consequences are the useful part. A shop taking on either make is taking on the same tooling decision rather than two, and an independent tool that names one of the group's marques may cover the others without saying so. The corollary is a warning: a workshop that has solved its Aprilia access has also solved Moto Guzzi, and one that has not solved Aprilia should not assume Moto Guzzi is a separate, easier problem.",
+    "make": "Aprilia and Moto Guzzi",
+    "model": "Group marques sharing one dealer diagnostic platform",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Two makes quoted as two separate tool purchases",
+      "Tool named for one marque covers another",
+      "Dealer access assumed to differ between the two"
+    ],
+    "causes": [
+      "Both marques belong to the Piaggio Group, whose single dealer platform, PADS, covers every marque in the group",
+      "Independent tools such as DiagCode follow the group rather than the marque, so a product named for one may cover several",
+      "Marque-by-marque research hides the shared platform, because each make's own material names only itself",
+      "Group scope includes scooter marques a motorcycle shop may not think to check"
+    ],
+    "fix_procedure": "Evaluate these two makes as one tooling decision rather than two, and when pricing DiagCode or any other independent tool for either, ask which of the group's marques the product covers — the answer is often more than the product name suggests. Where a shop already services one of the group's marques, check the existing tool before buying anything for the other. Conversely, do not expect access to one to be easier than the other; the constraint is the same platform in both cases.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "DiagCode covers only the Piaggio Group, but exceeds the factory tool on keys and odometer",
+    "description": "Drawn from DiagCode's published function list. It is normally safe to assume a factory tool is the most capable option and an independent one a subset. On the Piaggio Group marques there is a documented exception: the DiagCode package, built around a standard pass-through interface offers functions the dealer system does not expose, including key and immobiliser work and odometer operations, alongside ordinary fault-code read and clear, control-unit identification and service functions. Its scope is narrow — the group only — so it is not a general European purchase. But for a shop with Aprilia and Moto Guzzi work it can be the more capable tool rather than the compromise, which inverts the usual buying logic and is worth knowing before defaulting to a dealer referral.",
+    "make": "Aprilia and Moto Guzzi",
+    "model": "Piaggio Group marques only",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Key or immobiliser job referred to a dealer",
+      "Odometer work assumed impossible independently",
+      "Factory tool assumed to be the most capable"
+    ],
+    "causes": [
+      "The independent package targets functions the dealer platform does not expose to a workshop",
+      "Coverage is scoped to one manufacturer group, so it is invisible in general multi-brand comparisons",
+      "The usual assumption that the factory tool is a superset does not hold here",
+      "It runs on a standard pass-through interface rather than proprietary hardware"
+    ],
+    "fix_procedure": "Before referring a Piaggio Group key, immobiliser or odometer job to a dealer, check whether this route covers it — the referral may be unnecessary. Treat the purchase as make-group-specific rather than as part of a general European tool set, and price it against the volume of Aprilia and Moto Guzzi work specifically. Note that capability beyond the factory tool carries its own responsibility: key and odometer functions have legal and ethical constraints, and should only be used with documented owner authorisation.",
+    "parts_needed": [
+      "Pass-through diagnostic interface and the group-specific software licence"
+    ],
+    "estimated_hours": 0.5,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "OBDSTAR's iScan catalogue looks multi-brand but the hardware is one unit per make",
+    "description": "Drawn from OBDSTAR's own product pages. A handheld range advertised across a long list of motorcycle brands reads as a multi-brand purchase, and it is not. The iScan units are sold **one brand per device**: there is a separate unit for Ducati, for BMW, for KTM, for Triumph, for MV Agusta and for Aprilia, with the manufacturer's own page for a given unit stating that it is specialised for that single make. One unit does cover a manufacturer group rather than a single marque, which is the exception rather than the pattern. OBDSTAR's genuinely multi-brand offering is the separate MS80 / MOTOSTAR line. A shop that buys from the brand list expecting European coverage buys one make, plus a subscription that renews after the first year.",
+    "make": "Ducati, BMW, KTM, Triumph, MV Agusta, Aprilia",
+    "model": "Single-brand handheld units, one per make",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Handheld covers one make of several in the shop",
+      "Second make requires a second purchase",
+      "Subscription renewal after the first year"
+    ],
+    "causes": [
+      "The product range is marketed across many brands but sold one brand per unit",
+      "Product naming does not make the single-brand scope obvious",
+      "The manufacturer's genuinely multi-brand offering is a separate, larger product line",
+      "Coverage lists are published as downloadable files rather than on the product page, so per-model scope is hard to confirm before buying"
+    ],
+    "fix_procedure": "Read the individual product page rather than the brand list, and confirm in writing which single make a unit covers before purchase. Where a shop needs several European makes, price the MS80 / MOTOSTAR line rather than accumulating single-brand handhelds, which becomes the more expensive route quickly. Ask the vendor to confirm per-model coverage for the specific machines you see, since that detail is not published on the product page. Include the post-first-year subscription in the comparison.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "Ducati, Aprilia and Moto Guzzi share one 3-pin plug, while KTM's one 6-pin shell hides two protocols",
+    "description": "Drawn from TuneECU's own adaptor list, read across makes. Before Euro 5 these manufacturers each used proprietary diagnostic connectors rather than the standard 16-pin socket, and the overlaps only show when the makes are laid side by side. **Ducati, Aprilia and Moto Guzzi shared one physical 3-pin plug** — TuneECU's adaptor B is literally named the \"Guzzi-Ducati-Aprilia 3pin OBD2 Adaptor\", so one cable covers three makes that a shop would assume were three separate purchases. **KTM is the opposite trap**: one proprietary 6-pin shell, but TuneECU lists two different adaptors for it — adaptor C for the K-Line generation and adaptor D for the CAN generation — because two protocols sat behind the same physical connector across the range. So a plug that fits is not a tool that talks: on the Italian trio the shape is shared and so is the lead, while on KTM the shape is shared and the lead is not.",
+    "make": "BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Moto Guzzi",
+    "model": "Ducati, Aprilia, Moto Guzzi 3-pin era; KTM proprietary 6-pin across K-Line and CAN generations",
+    "year_start": 1997,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "Cable fits the socket but nothing connects",
+      "Same lead works on one make and not another",
+      "Two bikes share a plug but not a tool"
+    ],
+    "causes": [
+      "Ducati, Aprilia and Moto Guzzi used the same physical 3-pin plug before Euro 5, and one adaptor serves all three",
+      "KTM used one 6-pin shell across a K-Line generation and a CAN generation, which need different adaptors",
+      "A connector that mates physically says nothing about the protocol behind it, and KTM's own range is the proof",
+      "Vendor cable listings are organised by make, so both the shared plug and the split protocol are invisible when researching one make at a time"
+    ],
+    "fix_procedure": "Stock the Italian 3-pin lead once and label it for all three makes — it is one purchase, not three. On KTM, do not buy by connector: establish whether the machine is K-Line or CAN before choosing between the two adaptors, because the socket looks identical either way and the wrong lead connects physically and communicates with nothing. Keep leads labelled by protocol as well as by make in a workshop handling several European brands. Where a connection fails on a physically correct plug, suspect protocol before suspecting the cable or the machine.",
+    "parts_needed": [
+      "Guzzi-Ducati-Aprilia 3-pin adaptor (one lead, three makes)",
+      "KTM K-Line adaptor and KTM CAN adaptor — two leads, one socket"
+    ],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "Triumph is the European connector outlier — it had the 16-pin socket before Euro 5, then moved to the red 6-pin",
+    "description": "Drawn from TuneECU's compatibility table and vendor cable listings. Alone among the European makes here, Triumph used the standard J1962 16-pin socket for years before Euro 5, while the others used small proprietary plugs — which is why no Triumph row in TuneECU's table carries an adaptor letter at all, when nearly every other make's rows do. Triumph then moved **to** the red 6-pin socket on its newer models, so the shift to a standardised connector cost Triumph owners the standard-socket compatibility they already had. A Triumph's connector therefore cannot be predicted from the pattern the other makes follow, and the range carried more than one socket across models on sale at the same time. Specific transition years are deliberately not printed here: the sources consulted disagreed by several model years, and a wrong year is worse than none when it decides which lead a shop orders.",
+    "make": "Triumph",
+    "model": "All models across the pre-Euro 5 and Euro 5 transition",
+    "year_start": 1997,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Socket does not match the era expected",
+      "Two same-year Triumphs take different leads",
+      "Lead ordered by model year does not fit"
+    ],
+    "causes": [
+      "Triumph used the J1962 16-pin socket before Euro 5 while the other European makes used proprietary plugs — no adaptor needed, hence no adaptor letter in TuneECU's table",
+      "Newer Triumphs moved to the red 6-pin, so the direction of change is the reverse of every other make in the group",
+      "More than one socket was in use across models on sale at the same time",
+      "Transition dates in circulation disagree with each other, so ordering a lead by model year is the failure point"
+    ],
+    "fix_procedure": "Identify the socket physically on the machine before ordering a lead for a Triumph, rather than inferring it from the year or from what another Triumph in the workshop takes. Where a customer books by phone, ask for a photograph of the diagnostic socket. On an older Triumph with the 16-pin socket, a standard OBD lead fits without an adaptor; on a newer one with the red 6-pin, it does not. Do not carry a connector assumption from another European make onto a Triumph — this is the make in the group where that reasoning fails most often, and in the opposite direction.",
+    "parts_needed": [
+      "The correct Triumph lead for the observed socket"
+    ],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "A vendor's own \"if it is not listed it is not compatible\" line is the most useful sentence in a compatibility document",
+    "description": "Drawn from TuneECU's published compatibility table. Compatibility documents are normally read for what they include, and a model's absence is treated as ambiguous — perhaps untested, perhaps forthcoming, perhaps an omission. This table closes with an explicit statement that a bike not listed is not compatible, which converts every absence in the document into a definite answer. That single sentence is what makes the rest of the table usable as evidence: it is why \"BMW means one enduro single\" is a finding rather than a guess, and why a modern Ducati's absence is a fact rather than a gap in research. It is worth looking for the equivalent sentence in any tool vendor's documentation before drawing conclusions from a list, because most do not have one and their absences genuinely are ambiguous.",
+    "make": "All makes",
+    "model": "Applies to any tool compatibility document",
+    "year_start": 2000,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "Model missing from a compatibility list",
+      "Vendor cannot confirm whether a bike is supported",
+      "Coverage assumed from a marque list"
+    ],
+    "causes": [
+      "Most compatibility lists do not say what an absence means, so absences get read as untested rather than unsupported",
+      "A marque appearing anywhere in a document is read as marque-wide coverage",
+      "Vendors publish marque lists and model tables separately, and the two do not agree in scope",
+      "Without an explicit negative statement, a shop cannot distinguish an omission from an exclusion"
+    ],
+    "fix_procedure": "Look for the vendor's own statement about what a non-listing means before relying on any compatibility document, and treat a document without one as unable to answer questions about absences. Where the statement exists, use it: an unlisted machine is unsupported, and no amount of adaptor or cable buying changes that. Where it does not exist, ask the vendor directly about the specific model rather than inferring from the list, and get the answer in writing before quoting the customer.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  }
+]

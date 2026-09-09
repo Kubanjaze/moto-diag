@@ -233,13 +233,20 @@ class TestTheDesignationBarAndSearchability:
         """MV *model* content belongs in the MV model files, so a search
         for an MV designation resolves to the phase that owns it.
 
-        Phase 235 is exempted because it owns a different axis: fault
-        codes and diagnostic tooling across both Aprilia and MV, which
-        cannot be written without naming the models it scopes. The
-        boundary is enforced from the other side instead — 235's own
-        test forbids model-specific failure content there."""
+        Two kinds of file are exempted because they own a different
+        axis and cannot be written without naming the models they
+        scope: Phase 235's Aprilia/MV tooling file, and the
+        `european_*` cross-make files from Phase 236 onward (tooling
+        comparison, differential diagnosis, intervals, parts). The
+        exemption is by prefix rather than by filename so it is an
+        invariant, not a list each new cross-make phase must extend —
+        the constant-for-invariant bug from 221/222/230, again. The
+        boundary is enforced from the other side: those files' own
+        tests forbid MV model-specific failure content."""
         for f in K.glob("known_issues_*.json"):
-            if "mv_agusta" in f.name or f.name == "known_issues_aprilia_mv_electrical.json":
+            if ("mv_agusta" in f.name
+                    or f.name == "known_issues_aprilia_mv_electrical.json"
+                    or f.name.startswith("known_issues_european_")):
                 continue
             for e in json.loads(f.read_text(encoding="utf-8")):
                 hits = [n for n, p in UNAMBIGUOUS.items() if re.search(p, json.dumps(e))]
