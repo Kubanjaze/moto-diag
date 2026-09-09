@@ -105,6 +105,11 @@ do-not-ride recall whose obvious repair was the wrong one, a "could not be
 obtained" source found on the very page cited, six manufacturer manuals found
 unopened on disk.
 
+**Superseded and generalised at Phase 242B.** The lens prompts this cadence
+uses are now canonical in `docs/phases/RESEARCH_LENSES.md`, after Phase 242 found
+that a figure lens applying one attribution standard to every evidence class
+silently refuted every regulator and community claim it saw.
+
 ### 7. No campaign reference numbers (231 onward)
 A cited number belonged to another manufacturer. Entries describe a campaign’s
 mechanism and remedy and route to the frame number, which cannot go stale and

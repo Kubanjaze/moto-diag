@@ -238,6 +238,10 @@ research and the research answered it. Recorded rather than forced.
 | Corpus-globbing guards swept | 654 passed |
 | Regression | **6047 passed / 0 failed** (baseline 6031; +16 guards) |
 
+**Fixed forward at Phase 242B**: the corrected lenses are now canonical in
+`docs/phases/RESEARCH_LENSES.md`, with the failure written up so the next phase
+inherits the standard rather than the bug.
+
 **Key finding: the refuter layer is only as good as the standard it applies,
 and a single wrong clause in one prompt silently deleted an entire evidence
 class.** The run looked successful — 29 well-attributed claims, every figure
