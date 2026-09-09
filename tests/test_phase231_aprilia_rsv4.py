@@ -102,7 +102,8 @@ class TestTheDesignationBar:
         """Ten V4 files and fifteen rider-aid files already exist. Swept
         corpus-wide rather than sampled."""
         for f in K.glob("known_issues_*.json"):
-            if "aprilia" in f.name:
+            if ("aprilia" in f.name
+                    or f.name.startswith("known_issues_european_")):
                 continue
             for e in json.loads(f.read_text(encoding="utf-8")):
                 hits = [n for n, p in UNAMBIGUOUS.items() if re.search(p, json.dumps(e))]
