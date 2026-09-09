@@ -12,6 +12,7 @@ fail the day someone fills it; and a gate guards the gates before it.
 """
 import json
 import os
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -145,8 +146,26 @@ def _compat_rows(make_slug):
 class TestEveryEuropeanMakeAnswersThroughTheCli:
     @pytest.mark.parametrize("slug", sorted(MAKES))
     def test_kb_search_by_make_returns_known_issues(self, slug):
-        result = _run(["kb", "search", MAKES[slug], "--limit", "5"])
-        assert MAKES[slug].split()[0] in result.output, result.output[-800:]
+        """Asserts CONTENT, not the echoed query.
+
+        The first version asserted the make name appeared in the output.
+        `kb search` prints "No issues mention 'BMW'." on a miss, so that
+        assertion passed on an EMPTY knowledge base — the whole class was
+        vacuous. Proved by running it against a fresh database. It now
+        requires a distinctive title fragment from the make's own seed
+        file, and forbids the miss message."""
+        titles = []
+        for f in K.glob("known_issues_*.json"):
+            for e in json.loads(f.read_text(encoding="utf-8")):
+                if MAKES[slug].lower() in (e.get("make") or "").lower():
+                    titles.append(e["title"])
+        assert titles, f"no seed entry for {slug}"
+        result = _run(["kb", "search", MAKES[slug], "--limit", "20"])
+        assert "No issues mention" not in result.output, result.output[-400:]
+        # A distinctive word from some returned title must appear.
+        words = {w.lower() for t in titles for w in re.findall(r"[A-Za-z]{6,}", t)}
+        out = result.output.lower()
+        assert any(w in out for w in words), result.output[-800:]
 
     @pytest.mark.parametrize("slug", sorted(DTC_MAKES))
     def test_a_make_specific_code_resolves_to_the_make_row_not_the_generic(self, slug, api):
@@ -159,6 +178,28 @@ class TestEveryEuropeanMakeAnswersThroughTheCli:
         body = r.json()
         assert body.get("make") == row["make"], body
         assert body.get("description") == row["description"]
+
+    @pytest.mark.parametrize("slug", sorted(DTC_MAKES))
+    def test_every_shadowing_row_earns_its_shadow(self, slug):
+        """`dtc_repo` resolves make-specific before generic, so a make row
+        that restates the generic row HIDES it. The rule this track set is
+        that a shadowing row must differ in CAUSES and FIX.
+
+        The test above compares the API response to the very file it just
+        read, which proves the loader works and nothing else — it cannot
+        see a restating row. This one can. Note a shared DESCRIPTION is
+        correct and not checked: P0301 is "Cylinder 1 Misfire Detected"
+        on every make; what must differ is what a mechanic does about it."""
+        generic = {r["code"]: r for r in json.loads(
+            (DTC / "generic.json").read_text(encoding="utf-8"))}
+        rows = json.loads((DTC / f"{slug.replace('-', '_')}.json").read_text(encoding="utf-8"))
+        shadowing = [r for r in rows if r["code"] in generic]
+        for r in shadowing:
+            g = generic[r["code"]]
+            new_causes = set(r.get("common_causes", [])) - set(g.get("common_causes", []))
+            assert new_causes, f"{slug} {r['code']}: shadows generic, adds no cause"
+            assert r.get("fix_summary", "") != g.get("fix_summary", ""), \
+                f"{slug} {r['code']}: shadows generic, same fix"
 
     @pytest.mark.parametrize("slug", sorted(COMPAT_MAKES))
     def test_compat_recommend_names_an_adapter_for_the_make(self, slug):
@@ -174,9 +215,91 @@ class TestEveryEuropeanMakeAnswersThroughTheCli:
         # --json rather than the rich table: a long slug is truncated by
         # the renderer, which is a display fact and not a coverage one.
         got = json.loads(result.output)
-        slugs = {r["adapter_slug"] for r in rows}
+        # Deliberate `incompatible` rows are the OPPOSITE of coverage —
+        # Phase 230's carburetted Bonnevilles, Phase 236's TuneECU-on-MV.
+        # Including them in the expected set meant recommending a tool
+        # marked "DELIBERATE INCOMPATIBLE ROW" would have satisfied the
+        # assertion. They are excluded here and asserted against below.
+        slugs = {r["adapter_slug"] for r in rows if r["status"] != "incompatible"}
         found = {(x.get("adapter_slug") or x.get("slug") or "") for x in (got if isinstance(got, list) else got.get("items", got.get("results", [])))}
         assert slugs & found, f"{slug}: none of {sorted(slugs)[:5]} in {sorted(found)[:8]}"
+        # An adapter is BARRED for this make only if EVERY row it has for
+        # the make says incompatible. A first version flagged any adapter
+        # with an incompatible "%" row, which is wrong here:
+        # elm327-generic-bt-clone carries one incompatible row (pre-Euro-4)
+        # AND two read-only rows (Euro 4, Euro 5) for mv-agusta, so it is
+        # legitimately recommendable. Mutation-testing found that the first
+        # version was also unfalsifiable — flipping the incompatible rows
+        # to "full" emptied the barred set and the assertion passed by
+        # construction, because it computed its expectation from the same
+        # data the mutation had changed.
+        by_adapter = {}
+        for r in rows:
+            by_adapter.setdefault(r["adapter_slug"], set()).add(r["status"])
+        barred = {a for a, st in by_adapter.items() if st == {"incompatible"}}
+        # Not every make has one; the corpus-level guarantee that this
+        # check has teeth somewhere is asserted separately, below.
+        #
+        # Honest note on what this can and cannot catch: `compat recommend`
+        # takes --min-status, defaulting to "read-only", so the CODE filters
+        # incompatible rows out before the corpus is consulted. Mutating the
+        # data cannot make this assertion fire. It is kept as a cheap
+        # regression on that behaviour, and the behaviour itself — which IS
+        # falsifiable — is asserted in the test below.
+        assert not (barred & found), f"{slug}: recommended a barred adapter {barred & found}"
+
+    def test_recommend_excludes_incompatible_by_default(self):
+        """The guarantee the assertion above relies on, tested directly.
+
+        Deliberate `incompatible` rows are a Track K deliverable — Phase
+        230's carburetted Bonnevilles, Phase 236's TuneECU-on-MV. They are
+        only worth writing if the recommender honours them. Asked both
+        ways: at the default min-status the barred adapter must be absent,
+        and at --min-status incompatible it must appear. The second half is
+        what makes this falsifiable — without it, a recommender that
+        returned nothing at all would pass."""
+        matrix = json.loads((HW / "compat_matrix.json").read_text(encoding="utf-8"))
+        by_make = {}
+        for r in matrix:
+            by_make.setdefault(r["make"], {}).setdefault(r["adapter_slug"], set()).add(r["status"])
+        target = next(((mk, a) for mk, ad in by_make.items()
+                       for a, st in ad.items() if st == {"incompatible"}), None)
+        assert target, "no wholly-barred adapter to test the recommender against"
+        make, slug_barred = target
+        row = next(r for r in matrix
+                   if r["make"] == make and r["adapter_slug"] == slug_barred)
+        model = row["model_pattern"].replace("%", "").strip() or "any"
+        year = row["year_min"] or 2015
+
+        def _slugs(min_status):
+            res = _run(["hardware", "compat", "recommend", "--make", make, "--model", model,
+                        "--year", str(year), "--limit", "50", "--min-status", min_status,
+                        "--json"], expect_ok=False)
+            assert res.exit_code == 0, res.output[-600:]
+            got = json.loads(res.output)
+            items = got if isinstance(got, list) else got.get("items", got.get("results", []))
+            return {(x.get("adapter_slug") or x.get("slug") or "") for x in items}
+
+        assert slug_barred not in _slugs("read-only"), \
+            f"{make}: {slug_barred} is incompatible for every model yet recommended by default"
+        assert slug_barred in _slugs("incompatible"), \
+            f"{make}: {slug_barred} absent even at --min-status incompatible — the first half proves nothing"
+
+    def test_some_make_actually_has_a_wholly_barred_adapter(self):
+        """Keeps the barred-adapter assertion above from being globally
+        vacuous. Deliberate `incompatible` rows are a real deliverable of
+        this track — Phase 230's carburetted Bonnevilles, Phase 236's
+        TuneECU-on-MV — so at least one adapter must be barred outright
+        for some make, or the check above never has anything to catch."""
+        matrix = json.loads((HW / "compat_matrix.json").read_text(encoding="utf-8"))
+        by_make = {}
+        for r in matrix:
+            by_make.setdefault(r["make"], {}).setdefault(r["adapter_slug"], set()).add(r["status"])
+        wholly_barred = {
+            (mk, a) for mk, adapters in by_make.items()
+            for a, st in adapters.items() if st == {"incompatible"}
+        }
+        assert wholly_barred, "no wholly-barred adapter anywhere — the barred check is vacuous"
 
 
 # ===========================================================================
@@ -331,8 +454,17 @@ class TestTrackKCorpusInvariants:
                 blob = json.dumps(row)
                 if not PLANT.search(blob):
                     continue
-                if NEG.search(blob):
-                    continue  # the entry that records the absence
+                # Negation-aware, but not blindly: the entry that RECORDS
+                # the absence is exempt, UNLESS its title positively asserts
+                # a build location. Phase 240's own fix added a scope note
+                # ("could not be established…") to an entry whose title still
+                # says "are built in India by Bajaj" — which made the whole
+                # entry invisible to this check and let a year_end regression
+                # through. Found by mutation testing, not by review.
+                title = str(row.get("title") or "")
+                asserts_in_title = bool(PLANT.search(title))
+                if NEG.search(blob) and not asserts_in_title:
+                    continue
                 end = row.get("year_end") or row.get("year_max") or 0
                 assert end < 2025, (
                     f"{f.name}: asserts a build location through {end} — the 2025-onward "

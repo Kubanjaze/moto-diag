@@ -6,8 +6,23 @@ verified by a second agent: **46 verdicts, 29 confirmed real** (the
 verification layer rejected roughly 60%, which is its purpose).
 
 **Five findings were fixed at Phase 240** — the leaked deliberate absences,
-listed in that phase's implementation doc. Everything below is confirmed
-and **open**.
+listed in that phase's implementation doc. A sixth, the Euro 4 "free of
+charge" error, was fixed in the Phase 240 follow-up. Everything below is
+confirmed and **open**.
+
+**A counting caveat that matters.** The contradictions auditor reported
+finding **16** cross-phase contradictions. The workflow submitted only the
+first **8** for verification — the script capped each dimension at
+`findings.slice(0, 8)` — and 6 of those 8 were confirmed. **Eight
+contradictions were therefore never verified and are not listed below.**
+Section A is the confirmed subset, not the full set. Anyone working this
+list should re-run the contradictions dimension without the cap before
+believing the corpus is clean.
+
+The per-finding verifier notes, including every `corrected_fix`, are
+committed alongside this file as `TRACK_K_AUDIT_VERIFIER_NOTES.md` — with
+the **rejected** verdicts too, so nobody re-litigates an over-claim. Roughly
+60% of findings did not survive verification.
 
 The audit's own headline: every one of these is a defect no single phase's
 tests could have caught, because each file was written and reviewed against
@@ -31,7 +46,8 @@ being wrong.
 pinned in several places (`test_phase211_bmw_r_series.py` pins 12 twice;
 `test_phase212` pins 24), and a generation-scoping change to
 `bmw_r_series.json[7]` breaks a parametrised coverage test that relies on it
-spanning 2018. Read each verifier's `corrected_fix` before editing.
+spanning 2018. Read each verifier's `corrected_fix` in `TRACK_K_AUDIT_VERIFIER_NOTES.md`
+before editing.
 
 ## B. Guard and gate defects
 
