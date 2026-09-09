@@ -29,6 +29,7 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
+from motodiag.core.severity import severity_rank_sql
 from motodiag.core.database import get_connection
 
 
@@ -260,7 +261,7 @@ def check_vin(vin: str, db_path: Optional[str] = None) -> list[dict]:
     Returns
     -------
     list[dict]
-        Dict rows from the recalls table. Ordered by severity DESC,
+        Dict rows from the recalls table. Ordered worst-first,
         then nhtsa_id. Empty list if VIN can't be decoded (unknown
         WMI) or no recalls apply.
 
@@ -358,7 +359,7 @@ def list_open_for_bike(
                   AND (r.model IS NULL OR LOWER(r.model) = LOWER(?))
                   AND (r.year_start IS NULL OR r.year_start <= ?)
                   AND (r.year_end IS NULL OR r.year_end >= ?)
-                ORDER BY r.severity DESC, r.nhtsa_id
+                ORDER BY """ + severity_rank_sql("r.severity") + """ DESC, r.nhtsa_id
             """
             rows = conn.execute(
                 query, (vehicle_id, make, model, year, year),

@@ -40,6 +40,7 @@ import click
 from rich.panel import Panel
 from rich.table import Table
 
+from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.advanced.comparative import (
     FLEET_UNAVAILABLE,
     PeerComparison,
@@ -2908,7 +2909,7 @@ def register_advanced(cli_group: click.Group) -> None:
                 params: list = []
                 if open_only:
                     base_q += " WHERE open = 1"
-                base_q += " ORDER BY severity DESC, nhtsa_id"
+                base_q += " ORDER BY " + SEVERITY_RANK_SQL + " DESC, nhtsa_id"
                 rows = [dict(r) for r in conn.execute(base_q, params).fetchall()]
         else:
             rows = _lookup(

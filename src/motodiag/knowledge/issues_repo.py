@@ -3,6 +3,7 @@
 import json
 from datetime import datetime
 
+from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
 
 
@@ -116,7 +117,7 @@ def search_known_issues(
     callers that genuinely want everything.
     """
     where, params = _known_issue_filters(query, make, model, year, severity)
-    sql = "SELECT * FROM known_issues" + where + " ORDER BY severity DESC, title"
+    sql = "SELECT * FROM known_issues" + where + " ORDER BY " + SEVERITY_RANK_SQL + " DESC, title"
     if limit is not None:
         sql += " LIMIT ? OFFSET ?"
         params.extend([int(limit), int(offset)])
@@ -151,7 +152,8 @@ def find_issues_by_symptom(symptom: str, db_path: str | None = None) -> list[dic
     """Find known issues that list a given symptom."""
     with get_connection(db_path) as conn:
         cursor = conn.execute(
-            "SELECT * FROM known_issues WHERE symptoms LIKE ? ORDER BY severity DESC",
+            "SELECT * FROM known_issues WHERE symptoms LIKE ? "
+            "ORDER BY " + SEVERITY_RANK_SQL + " DESC",
             (f"%{symptom}%",),
         )
         return [_row_to_dict(row) for row in cursor.fetchall()]
@@ -161,7 +163,8 @@ def find_issues_by_dtc(code: str, db_path: str | None = None) -> list[dict]:
     """Find known issues that list a given DTC code."""
     with get_connection(db_path) as conn:
         cursor = conn.execute(
-            "SELECT * FROM known_issues WHERE dtc_codes LIKE ? ORDER BY severity DESC",
+            "SELECT * FROM known_issues WHERE dtc_codes LIKE ? "
+            "ORDER BY " + SEVERITY_RANK_SQL + " DESC",
             (f"%{code}%",),
         )
         return [_row_to_dict(row) for row in cursor.fetchall()]

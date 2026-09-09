@@ -94,8 +94,14 @@ class TestTheRebuildLosesNothing:
         the reason the migration toggles the pragma at all."""
         path, kid = _populated_v51(tmp_path)
         assert get_current_version(path) == 51
-        assert apply_pending_migrations(db_path=path) == [52]
-        assert get_current_version(path) == 52
+        applied = apply_pending_migrations(db_path=path)
+        # Phase 240C: was `== [52]`, a constant list that any later migration
+        # breaks. What this test is about is that migration 052's table
+        # rebuild survives a live foreign-key child -- so assert that 052 ran
+        # and that the database lands at the current schema version, not the
+        # exact set of migrations that happened to be pending.
+        assert 52 in applied, applied
+        assert get_current_version(path) == SCHEMA_VERSION
         with get_connection(path) as c:
             assert c.execute(
                 "SELECT source_issue_id FROM repair_plan_items"

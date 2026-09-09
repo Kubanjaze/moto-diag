@@ -2076,3 +2076,37 @@ meant abbreviating the care each fix gets. Recommended order is in Part 1 of
 
 Backend `implementation.md` 0.13.52 → 0.13.53. No schema change (still v52), no
 API surface change, no migration. Corpus unchanged at 917 entries.
+
+### 2026-09-09 — Phase 240C: severity sorted backwards on six query paths
+
+Phase 240B recorded this defect rather than fixing it, because it reorders
+every knowledge query in the product. `ORDER BY severity DESC` on a **TEXT**
+column sorts lexicographically, and the four values alphabetise to
+`medium, low, high, critical` — so `critical` came back **last**.
+
+**Project-level state this changes:**
+
+- **Retrieval order changed across the product.** `predictor`, `core/search`
+  and `cli/diagnose` all consume `search_known_issues`, so what a diagnosis
+  surfaces first is different — worst-first now, as intended. Recall listings
+  (`advanced recalls`, the vehicle recall lookup, the inventory lookup)
+  likewise put critical campaigns first. This is a **product-visible
+  behaviour change**, not an internal refactor.
+- **The shape sweep found six sites, not the three Phase 240B named.** The
+  recall paths carry the same defect and the same vocabulary; an open-recall
+  list with the critical campaigns at the bottom is a safety surface.
+- **New module `src/motodiag/core/severity.py`** holds the one canonical
+  `SEVERITY_RANK` / `SEVERITY_RANK_SQL`. The mapping existed **eleven** times
+  in the tree; the six broken SQL sites now use the canonical value and the
+  five already-correct copies are guarded against drift rather than rewritten.
+  Consolidating all eleven remains open for a later phase.
+- **Schema v52 → v53**, migration 053. Index-only, no data touched. It exists
+  because the correctness fix would otherwise have silently undone migration
+  206's optimisation: a `CASE` expression cannot use
+  `idx_known_issues_sort(severity DESC, title)`, so the plan would have gone
+  back to `SCAN` + `USE TEMP B-TREE FOR ORDER BY`. 053 indexes the same
+  expression the queries use, and the guard asserts the **plan** rather than
+  the index definition.
+
+Backend `implementation.md` 0.13.53 → 0.13.54. No API surface change. Corpus
+unchanged at 917 entries.
