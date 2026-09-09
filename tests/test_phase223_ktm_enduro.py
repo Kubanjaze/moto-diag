@@ -195,14 +195,29 @@ class TestIntervalsAreDeferredNotQuoted:
 class TestTheTpiOilingDistinction:
     def test_no_entry_says_a_tpi_model_takes_premix(self, raw):
         """The claim that destroys engines. Explaining that riders mix by
-        habit is required; asserting the bike takes premix is not."""
-        for e in raw:
-            if "TPI" not in _claims(e):
-                continue
+        habit is required; asserting the bike takes premix is not.
+
+        Phase 240B widened the search. The original pattern was the exact
+        two-word form `takes premix|takes premixed`, taken verbatim from the
+        entry's own symptom string -- a deliberate choice, since `_claims`
+        excludes `symptoms`. But that form appears nowhere in the assertion
+        fields, so the loop never entered and the guard was inert: coverage
+        showed the assert line unreached, and "requires premix", "needs
+        premix" and "runs on premix" all passed unchallenged.
+
+        The bare stem is what the corpus actually authors -- the live match
+        is "does not take premixed fuel", which `_asserts` correctly exempts
+        by negation, so the body now executes and still passes. The original
+        literal is kept so the symptom wording stays barred from claim
+        fields."""
+        PREMIX = r"\b(?:takes?|needs?|requires?|runs? on|uses?)\s+premix|takes premixed"
+        tpi = [e for e in raw if "TPI" in _claims(e)]
+        assert tpi, "no TPI entry — the filter selects nothing and the guard is inert"
+        for e in tpi:
             text = _claims(e)
-            for m in re.finditer(r"takes premix|takes premixed", text, re.I):
+            for m in re.finditer(PREMIX, text, re.I):
                 seg = text[max(0, m.start() - 110):m.end() + 40]
-                assert not _asserts(seg, r"takes premix"), e["title"]
+                assert not _asserts(seg, PREMIX), e["title"]
 
     def test_the_oil_pump_and_tank_are_stated(self, raw):
         tpi = [e for e in raw if "TPI" in _claims(e)][0]
@@ -329,3 +344,31 @@ class TestProvenanceAndSearchability:
     ])
     def test_a_mechanic_query_finds_the_entry(self, db_path, needle):
         assert find_issues_by_symptom(needle, db_path), needle
+
+
+class TestTheDiscriminatorItself:
+    """Phase 240B. `_asserts` is the mention-versus-use predicate every guard
+    in this file is built on, and its `return True` branch was never reached
+    by any test in the suite. Proved by mutation: replacing `_asserts` with
+    `lambda *a, **k: False` across the seven files that define it left 180 of
+    181 tests passing -- only Phase 221 noticed, and it noticed through a
+    real-data positive assertion rather than a probe.
+
+    So every guard here would have behaved identically if the predicate had
+    been stubbed out. The dangerous regression is an exemption regex that
+    over-matches: that turns `_asserts` permanently False, silently disarming
+    every guard built on it while the suite stays green.
+
+    The probe uses a regex term because this file's `_asserts` calls
+    re.finditer(term, ...) -- the two implementations in the tree differ, and a probe
+    written with the wrong kind returns False for the wrong reason and
+    asserts exactly the deadness it is meant to detect."""
+
+    def test_a_plain_assertion_registers(self):
+        assert _asserts("The engine is a V-twin.", '\\bV-twin\\b') is True
+
+    def test_a_negated_assertion_does_not(self):
+        assert _asserts("The engine is not a V-twin.", '\\bV-twin\\b') is False
+
+    def test_an_absent_term_does_not(self):
+        assert _asserts("The engine is a parallel twin.", '\\bV-twin\\b') is False

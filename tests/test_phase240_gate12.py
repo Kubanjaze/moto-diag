@@ -131,9 +131,23 @@ def shop_id(api_key):
     return api_key[1]
 
 
+GENERIC_CODES = {
+    r["code"] for r in json.loads((DTC / "generic.json").read_text(encoding="utf-8"))
+}
+
+
 def _first_code(make_slug):
+    """A code that exists in BOTH the make file and generic.json when one
+    does, so the make-before-generic branch is actually taken.
+
+    Phase 240B: this returned rows[0] unconditionally. For four of the six
+    makes rows[0] happens not to shadow anything, so the precedence branch
+    was never exercised and the assertion compared the API answer to the file
+    it had just read. Aprilia and MV Agusta shadow nothing at all — recorded
+    in Phase 235's TestTheShadowQuestion rather than papered over here."""
     rows = json.loads((DTC / f"{make_slug.replace('-', '_')}.json").read_text(encoding="utf-8"))
-    return rows[0]["code"], rows[0]
+    row = next((r for r in rows if r["code"] in GENERIC_CODES), rows[0])
+    return row["code"], row
 
 
 def _compat_rows(make_slug):
@@ -177,7 +191,12 @@ class TestEveryEuropeanMakeAnswersThroughTheCli:
         assert r.status_code == 200, r.text[:400]
         body = r.json()
         assert body.get("make") == row["make"], body
-        assert body.get("description") == row["description"]
+        # Phase 240B: was `description`, which is the shared SAE code title and
+        # is byte-identical to generic for most shadowing codes — so it could
+        # not tell the make row from the generic row, and `make` was doing all
+        # the work. `common_causes` is what the shadow-quality tests guarantee
+        # differs.
+        assert body.get("common_causes") == row["common_causes"], body
 
     @pytest.mark.parametrize("slug", sorted(DTC_MAKES))
     def test_every_shadowing_row_earns_its_shadow(self, slug):
@@ -406,7 +425,14 @@ class TestTrackKCorpusInvariants:
         draft would have passed over all three leaks it found: it read
         only title/description/fix_procedure/causes, so a value in the
         `model` field was invisible, and it never opened the DTC files,
-        the adapter catalogue or the parts catalogue at all."""
+        the adapter catalogue or the parts catalogue at all.
+
+        Scope, stated at Phase 240B rather than left implicit. This scans
+        Track K-authored knowledge files only. `src/motodiag/advanced/data/
+        recalls.json` carries 15 European rows with synthetic campaign ids;
+        it predates Track K (added at Track F, commit 68f65f4) and the Phase
+        231 no-campaign-numbers decision scopes to Track K-authored content.
+        Leaving that unstated made this invariant look broader than it is."""
         import re as _re
         for f in self._track_k_surfaces():
             blob = f.read_text(encoding="utf-8")

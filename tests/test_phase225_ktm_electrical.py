@@ -305,7 +305,7 @@ class TestTheAdapterIsInTheCatalog:
 
 
 class TestTheWholeKtmBlockCoheres:
-    def test_all_five_ktm_files_load_together(self, tmp_path):
+    def test_the_whole_ktm_block_loads_together(self, tmp_path):
         path = str(tmp_path / "ktm.db")
         init_db(path)
         expected = 0
@@ -313,7 +313,15 @@ class TestTheWholeKtmBlockCoheres:
             load_known_issues_file(f, path)
             expected += len(json.loads(f.read_text(encoding="utf-8")))
         assert count_known_issues(db_path=path) == expected
-        assert len(search_known_issues(make="KTM", db_path=path)) == expected
+        # Phase 240B: `expected` is the sum of file lengths, which equals the
+        # make-filtered count only while every entry in these files carries
+        # the make verbatim -- `make LIKE '%X%'` is a substring match. The
+        # Aprilia block already breaks that (compound "Aprilia and MV Agusta"
+        # makes), so count the filtered number rather than assuming it.
+        entries = [e for f in KTM_FILES for e in json.loads(f.read_text(encoding="utf-8"))]
+        assert len(search_known_issues(make="KTM", db_path=path)) == sum(
+            1 for e in entries if "ktm" in e["make"].lower()
+        )
         assert len(json.loads(ELEC.read_text(encoding="utf-8"))) == 7
 
     def test_no_title_collides(self):

@@ -348,3 +348,31 @@ class TestProvenanceAndSearchability:
     ])
     def test_a_mechanic_query_finds_the_entry(self, db_path, needle):
         assert find_issues_by_symptom(needle, db_path), needle
+
+
+class TestTheDiscriminatorItself:
+    """Phase 240B. `_asserts` is the mention-versus-use predicate every guard
+    in this file is built on, and its `return True` branch was never reached
+    by any test in the suite. Proved by mutation: replacing `_asserts` with
+    `lambda *a, **k: False` across the seven files that define it left 180 of
+    181 tests passing -- only Phase 221 noticed, and it noticed through a
+    real-data positive assertion rather than a probe.
+
+    So every guard here would have behaved identically if the predicate had
+    been stubbed out. The dangerous regression is an exemption regex that
+    over-matches: that turns `_asserts` permanently False, silently disarming
+    every guard built on it while the suite stays green.
+
+    The probe uses a regex term because this file's `_asserts` calls
+    re.finditer(term, ...) -- the two implementations in the tree differ, and a probe
+    written with the wrong kind returns False for the wrong reason and
+    asserts exactly the deadness it is meant to detect."""
+
+    def test_a_plain_assertion_registers(self):
+        assert _asserts("The engine is a V-twin.", '\\bV-twin\\b') is True
+
+    def test_a_negated_assertion_does_not(self):
+        assert _asserts("The engine is not a V-twin.", '\\bV-twin\\b') is False
+
+    def test_an_absent_term_does_not(self):
+        assert _asserts("The engine is a parallel twin.", '\\bV-twin\\b') is False

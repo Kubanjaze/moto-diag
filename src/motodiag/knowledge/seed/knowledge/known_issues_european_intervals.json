@@ -1,15 +1,331 @@
 [
-  {"title":"On most European makes the same engine gets the same valve interval — MV Agusta is the documented exception","description":"Drawn from manufacturer schedule tables read visually across six makes, and from six MV Agusta maintenance manuals. The natural fear is that a shared engine hides a different interval between siblings; on KTM, Ducati, Triumph and BMW it does not. KTM's 373cc Duke and 373cc Adventure both carry 15,000 km; its 399cc Duke and 390 Adventure R both 20,000 km; the 890 Duke R, 890 Adventure and 890 Adventure R all 30,000 km. Ducati's Transparent Maintenance poster gives every same-engine pair one figure — Scrambler 800 and Monster 797, Monster 821 and Hypermotard. Triumph's Trident 660, Tiger Sport 660 and Daytona 660 share one handbook and one interval. **MV Agusta is the exception, and it is documented**: the 798cc triple is scheduled at **12,000 km** on the Brutale 800 and Dragster RR MY2015 and Rivale MY2016, and at **30,000 km** on the Turismo Veloce MY2015–16 and the F3 MY2020 — same engine, overlapping years. The difference tracks MV's change from a 6,000 km coupon ladder to a 15,000 km one, applied model by model rather than across the range.","make":"MV Agusta","model":"798cc triple — Brutale 800, Dragster RR, Rivale at 12,000 km; Turismo Veloce, F3 at 30,000 km — against KTM, Ducati and Triumph siblings that agree","year_start":2015,"year_end":2020,"severity":"high","symptoms":["Interval carried from one MV model to another","Sibling model assumed to share a schedule","Two MVs of one year on different ladders"],"causes":["MV moved from a 6,000 km coupon ladder to a 15,000 km ladder one model at a time, so contemporaries sit on different intervals","On KTM, Ducati and Triumph the manufacturer tables give siblings on one engine the same interval, so the MV pattern is not general","A shop that learns the MV pattern will over-service the other makes; one that learns the others will under-service an MV","Which MV ladder applies is a per-model, per-edition fact and cannot be inferred from the engine"],"fix_procedure":"On MV Agusta, never carry a valve interval between models or between manual editions, even on one engine and one year: read the maintenance manual for the exact model and edition. On KTM, Ducati and Triumph the siblings on one engine agree in the manufacturer's tables, so the engine family is a reliable guide there — but confirm the generation, because that is where the numbers do move. Where an MV owner reports a figure from a different model, treat it as belonging to that model.","parts_needed":[],"estimated_hours":0.3,"dtc_codes":[],"source":"service-manual"},
-  {"title":"KTM's 390 valve interval difference is 373cc versus 399cc, not Duke versus Adventure","description":"Drawn from eleven KTM owner's manuals, the schedule tables read visually and confirmed by two independent passes. Phase 225B recorded that the 390 Adventure and 390 Duke carry different valve intervals; the figures it saw are real, but the difference is between **engines**, not between the naked bike and the adventure bike. The 373cc engine — 390 Duke MY2022 and 390 Adventure MY2021 and MY2023 — schedules the valve check with a spark-plug change every **15,000 km**. The 399cc LC4c engine — 390 Duke MY2024–25 and 390 Adventure R MY2025 — schedules it every **20,000 km**. On each engine the Duke and the Adventure agree. What genuinely differs between siblings is the row's contents — the Adventure R row is the valve check alone, the Duke row bundles the plug — and the dusty-conditions qualifier on the Adventure air filter, both of which Phase 225B also recorded and which stand. Its 'shorter interval than the Duke' sentence does not, and is corrected here.","make":"KTM","model":"390 Duke and 390 Adventure, 373cc (to MY2023) versus 399cc (MY2024 on)","year_start":2021,"year_end":2025,"severity":"medium","symptoms":["390 Adventure serviced to the wrong interval","Adventure and Duke assumed to differ on valves","Model year ignored when reading the schedule"],"causes":["The 390 changed engine from 373cc to 399cc in MY2024, and the valve interval moved with the engine","Comparing a 373cc Adventure against a 399cc Duke produces a false sibling difference","Both engines carry the Duke and the Adventure at the same interval in KTM's own tables","No KTM valve row carries a time trigger — the check is distance-only"],"fix_procedure":"Identify the engine — 373cc or 399cc — before reading the interval, using the model year as the discriminator, and apply 15,000 km to the earlier engine and 20,000 km to the later one on Duke and Adventure alike. Do not schedule the valve check by age on any KTM: none of the eleven manuals marks the valve row in a month column. Keep the Adventure-specific items Phase 225B records — the dusty-conditions air-filter qualifier and the Adventure-only rows — which are where the schedules genuinely differ.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"European valve intervals move by engine generation, not by model — four documented steps","description":"Drawn from manufacturer documents for each step. The pattern that holds across makes is that the number changes when the engine changes, and a mechanic who learned a figure on the previous generation will under-service the next. **BMW** boxer: every 10,000 km on the air/oil-cooled hexhead and camhead (dealer schedule and the R nineT Rider's Manual), every 20,000 km on the liquid-cooled R1200, R1250 and R1300 (their Rider's Manuals). **Ducati** Testastretta 11°: Desmo every 24,000 km on the Diavel and Multistrada 1200 MY2010–14, every 30,000 km from MY2015 with DVT (Ducati's own maintenance sheets). **KTM** 390: 15,000 km on the 373cc, 20,000 km on the 399cc. **MV Agusta**: a 6,000 km coupon ladder giving 12,000 km valve checks, replaced model by model with a 15,000 km ladder giving 30,000 km. The S1000RR, on its own engine, is every 30,000 km.","make":"BMW, Ducati, KTM, MV Agusta","model":"Boxer air/oil versus liquid-cooled; Testastretta MY2010–14 versus MY2015 DVT; 390 373cc versus 399cc; MV 6,000 versus 15,000 km ladders","year_start":2004,"year_end":2026,"severity":"medium","symptoms":["Interval remembered from the previous generation","Newer bike over- or under-serviced on valves","Two same-model bikes on different schedules"],"causes":["Each manufacturer changed the interval at an engine revision, not at a model rename","Model names carried across the revision — R1200GS, Multistrada 1200, 390 Duke — so the name does not signal the change","Aggregator sites print one figure per model name and hide the split","The direction of change is longer on every documented step, so the error is over-servicing on the newer bike and under-servicing when the older figure is assumed to have moved"],"fix_procedure":"Read the interval from the manual for the exact model year, and treat an engine revision — liquid cooling, DVT, a displacement change, a new coupon ladder — as the point where a remembered figure expires. When a customer quotes an interval for their model, ask which generation it came from. Where a model name spans a revision, the year is the discriminator, and the older figure is the safer default only until the manual is opened.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"No European valve row opened carries a time trigger — 'due by age' is not a manufacturer instruction on these makes","description":"Drawn from the schedule tables of five BMW Rider's Manuals, eleven KTM owner's manuals, seven Triumph handbooks and Ducati's maintenance sheets, each read visually for the month columns. Every one of these makes runs an annual service, and every one of them separates the valve check from it: the valve row is marked under distance columns only, with **no mark in any month column**, on every document opened. Triumph's tables say 'miles or time period, whichever comes first' and still leave the valve row blank under the annual column. Ducati's Desmo service is by kilometres, its annual service is a separate row, and only the timing belts carry a months figure. A low-mileage machine coming in for its yearly service is therefore not due a valve check on the manufacturer's schedule, however old it is — the widely applied 'every two years regardless' is a shop convention, not a manufacturer instruction, on these makes.","make":"BMW, KTM, Triumph, Ducati","model":"All models whose schedule tables were opened","year_start":2004,"year_end":2026,"severity":"medium","symptoms":["Valve check sold on age alone","Low-mileage bike quoted a valve job at annual service","Customer told valves are 'due every two years'"],"causes":["Manufacturer valve rows are marked under distance columns and not under month columns","The annual service exists on every make and the valve check is a separate row from it","Timing belts on Ducati do carry a months figure, and the belt rule is carried over to the valves by analogy","A time-based valve rule from another make or another era is applied as if universal"],"fix_procedure":"Quote the valve check by distance from the manual, and quote the annual service separately — do not fold the one into the other on any of these makes. Where a customer or a previous shop has applied a time rule, show the manual's month columns. The exception to watch for is Ducati's timing belts, which do carry a months figure and are genuinely due by age; that rule belongs to the belts and does not transfer to the clearances.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"Five valve-train job types across the European makes, and the step each has that the others lack","description":"Drawn from manufacturer manuals where they describe the method, and labelled where they do not. **Desmodromic** (belt-era Ducati): two clearances per valve, and the closer shim is retained by half-rings — removing them is the step with no spring-valve analogue. **Shim-under-bucket, camshafts out**: MV Agusta (the manual names an adjustment pad under the valve cup and sends replacement to the engine manual), Triumph triples and air-cooled twins, Aprilia; KTM and the S1000RR by owner report, no manufacturer page opened. **Screw-and-locknut**: Moto Guzzi V85 TT by its service manual; the air/oil-cooled BMW boxer by owner report. **Rocker-and-shim**, rocker shaft out: Moto Guzzi V100 by its service manual, with named tools; Triumph liquid-cooled twins; the liquid-cooled BMW boxer by owner report. **Spring-valve chain-drive**: Ducati's V4 Granturismo and 890 V2, which are not desmo. Applying the wrong model to a job costs a different thing on each make: on a desmo it costs a valve held off its seat by a tight closer; on a cams-out engine it costs a second disassembly for a shim the mechanic did not have.","make":"All European makes","model":"Ducati desmo; MV, Triumph triples, Aprilia, KTM, S1000RR shim-under-bucket; Guzzi V85, BMW air/oil boxer screw-and-locknut; Guzzi V100, Triumph LC twins, BMW LC boxer rocker-and-shim","year_start":1994,"year_end":2026,"severity":"high","symptoms":["Job quoted on the wrong valve-train type","Shims ordered for a screw-and-locknut engine","Closer clearance not measured on a desmo"],"causes":["Five job types exist across seven makes, and two of them exist within one make","The manufacturer manuals describe the method for some makes and not others, so provenance differs by make","A cams-out job cannot be finished without the shim measured first, which a bucket-and-feeler routine does not anticipate","The desmo closer has no analogue on any other type, so it is the step most often skipped"],"fix_procedure":"Establish the job type from the manual before quoting, because it sets the hours and the parts more than the interval does. On a desmo, measure both clearances per valve and never set a closer tight — Ducati's own guidance is that loose is safer than tight. On a cams-out engine, measure every clearance and order every shim before the second visit, or the job doubles. On a screw-and-locknut engine, feelers and a locknut torque are the whole method. Note which job types here rest on owner reports rather than a manufacturer page — the BMW boxers and KTM — and confirm on the machine.","parts_needed":[],"estimated_hours":0.5,"dtc_codes":[],"source":"model-generated"},
-  {"title":"Ducati publishes its Desmo labour in six-minute units, and the four-cylinder job is twice the twin's","description":"Drawn from Ducati's Transparent Maintenance poster, read both visually and by text. Ducati is the one European maker that publishes its own labour times, in labour units of six minutes, and they settle arguments a shop otherwise has by estimate. A full Desmo Service is **9 h 06** on the Panigale V4, **10 h 30** on the 1299 Panigale, **7 h 00** on the Multistrada 1260, **4 h 42** on the Monster 821, **4 h 30** on the Scrambler 800 and Monster 797, and **7 h 00** for the complete service on the Monster 696–1100 family. The intermediate 'Desmo Interventions' is shorter on every model. The step that costs the time on the Superquadro and V4 is access — fairings, airbox, the radiator on the rear bank — and thirty-two clearances on a V4. The poster's oil-service column differs by group: Group 1 merges it with the annual service, Group 2 lists both, and Group 3 has no oil-service column at all — a detail a refuter corrected, because a shop reading one group's column into another misquotes.","make":"Ducati","model":"Panigale V4, 1299 Panigale, Multistrada 1260, Monster 821, Monster 797, Scrambler 800, Monster 696–1100 — per the Ed.04/18 poster","year_start":2008,"year_end":2018,"severity":"medium","symptoms":["Desmo service quoted by estimate","Customer disputes the hours","Oil service read from the wrong group's column"],"causes":["Ducati publishes labour units of six minutes per model and service type","The V4 and Superquadro figures are dominated by access and the number of clearances","The poster's three groups have different column structures for the oil service","A figure carried between groups or models misquotes by hours"],"fix_procedure":"Quote Desmo work from Ducati's own labour units for the model and service type rather than from an estimate, and show the customer the source. Check which of the three groups the model sits in before reading an oil-service figure, because the columns differ. Budget access on the V4 and Superquadro as the dominant cost, not the clearances themselves.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"KTM publishes service minutes, and the valve service is fifty to eighty-five minutes over the intermediate one","description":"Drawn from KTM's own service-times sheet, dated October 2019. KTM, like Ducati, publishes its labour — in minutes per service per model — and the sheet marks which services include the valve clearance and which are without it. Read across the LC8c and LC8 models, the service that includes the valve check runs roughly fifty to eighty-five minutes longer than the intermediate service: a 790 Duke at 97 minutes for its 15,000 km service and 146 for its 30,000 km; a 790 Adventure 118 and 174; a 1290 Super Duke R 104 and 189. On the 1190 RC8, the service marked as including valve adjustment is **2.3 times** the one without. The sheet gives times, not the valve interval itself; that lives in the owner's manuals and is 15,000 / 20,000 / 30,000 km by engine.","make":"KTM","model":"790 Duke and Adventure, 1290 Super Duke R and Super Adventure S, 390 Duke, 690 Duke, 1190 RC8, 450 SX-F, 450/500 EXC-F — per the 2019 sheet","year_start":2011,"year_end":2019,"severity":"medium","symptoms":["Valve service quoted at intermediate-service hours","Adjustment not costed separately from the check","Customer disputes the hours"],"causes":["KTM publishes minutes per service and marks the valve-inclusive services","The valve service is materially longer than the intermediate on every twin","On the RC8 the adjustment more than doubles the service","The sheet is labour only; the interval is in the manual"],"fix_procedure":"Quote KTM service work from the manufacturer's minutes for the model and service, and read the asterisk marks to see whether the figure includes the valve check and the adjustment. Take the interval from the owner's manual for the engine, not from the sheet. On the RC8, quote the adjustment-inclusive service separately from the check-only one, because the difference is more than double.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"Triumph's own check sheet bills the valve check and the adjustment separately","description":"Drawn from a Triumph Designs service check sheet and seven Triumph handbooks. Triumph's 2006 check sheet states that the basic-service allowance **includes time to check only**, and that adjustment is **subject to additional labour charge** — the manufacturer's own statement that the check and the adjustment are two bookings. The handbooks give the intervals by engine: the 660 family and the liquid-cooled 900 and 1200 twins at 20,000 miles, the Street Triple 765 and Tiger 900 at 12,000 miles, the Speed Triple 1200 at 20,000 miles; from the 2019–2021 handbooks a camshaft-timing check joins the valve row at the same access. No handbook marks the valve row under the annual column.","make":"Triumph","model":"Trident 660, Tiger Sport 660, Daytona 660; Street Triple 765; Tiger 900; Speed Triple 1200; Bonneville T100/T120, Speed Twin, Scrambler 900, Thruxton — per handbook","year_start":2006,"year_end":2024,"severity":"medium","symptoms":["Adjustment absorbed into the check price","Customer surprised by an adjustment charge","Camshaft timing check not quoted with the valves"],"causes":["Triumph's own sheet separates the check allowance from the adjustment charge","Intervals differ by engine — 12,000 miles on the 765 and Tiger 900, 20,000 on the 660s, the 1200 and the twins","The camshaft-timing check was added to the valve row on later handbooks and shares the access","The valve row carries no annual mark"],"fix_procedure":"Quote the check and the adjustment as two items, as Triumph does, and tell the customer before the job which one they are paying for. Take the interval from the handbook by engine — the 765 is not the 1200 — and add the camshaft-timing check to the quote on models whose handbook carries it, since the access is shared. Do not schedule by age.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"Aprilia's 'Trust Aprilia Maintenance' sheets omit the valve check, and using them as a schedule drops it","description":"Drawn from Aprilia's own published maintenance sheets for the RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900 and Shiver 900. These sheets list oil, filter, plugs, air filter, fork oil and fluids at 1,000, 10,000, 20,000, 30,000 and 40,000 km — and **no valve row at all**. They are a consumables list, not the schedule, and a shop that treats one as the schedule drops the valve check from the machine's service life entirely. The valve interval itself could not be opened from an Aprilia schedule page in this phase; the figure this project carries — 20,000 and 40,000 km, halved for track, wet or dust — rests on the service manual cited at Phase 231 and on index snippets, and is recorded as unconfirmed here rather than restated as verified.","make":"Aprilia","model":"RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900, Shiver 900 — the sheets; RS 660 / Tuono 660 / Tuareg 660 intervals unverified","year_start":2017,"year_end":2025,"severity":"high","symptoms":["Valve check missing from a serviced Aprilia's history","Maintenance sheet used as the service schedule","660 interval quoted from an aggregator"],"causes":["The official maintenance sheets are consumables lists with no valve row","Their column structure looks like a schedule, so they are read as one","The valve interval sits in the use-and-maintenance manual, which was not openable this phase","Aggregator figures for the 660 family have no Aprilia document behind them"],"fix_procedure":"Do not schedule an Aprilia from the maintenance sheet; open the use-and-maintenance manual for the model and take the valve row from there. Treat the 20,000 / 40,000 km figure as the best available rather than as confirmed, and halve it for track, wet or dusty use per the manual's own rule. For the 660 family, quote nothing until the manual is opened — the figure in circulation is an aggregator's.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"MV Agusta's coupon ladder starts with a merged cell, and reading it shifted by one sends you to the wrong coupon","description":"Drawn from the Turismo Veloce 800 user's manual MY2018–20, the coupon table read visually after a refuter caught a misread. MV schedules by lettered coupons rather than by a row of jobs, and the manual's table has a trap in its first cell: coupon **A** spans both the 1,000 km column and the 'every year' column as one merged cell. Read as two cells, every letter shifts by one — B becomes the annual coupon instead of 15,000 km, and the 105,000 km coupon loses its letter — which sends a mechanic to the wrong coupon in the maintenance manual. The correct ladder is A at 1,000 km and annually, then B 15,000, C 30,000, D 45,000, E 60,000, F 75,000, G 90,000, H 105,000 km, with the mileage coupons carried along with the mandatory annual one. On this ladder the valve check falls at C, E and G — every 30,000 km. The F3 675/800 MY2020 maintenance manual carries the same 30,000 km valve figure, which resolves the interval Phase 234 could not confirm.","make":"MV Agusta","model":"Turismo Veloce 800 MY2015–20; F3 675/800 MY2020 on the same ladder","year_start":2015,"year_end":2020,"severity":"medium","symptoms":["Coupon letters read one step off","Valve check performed at the wrong coupon","F3 interval quoted from a forum"],"causes":["Coupon A occupies a merged cell across two columns and is read as two","The letters then shift by one for the whole ladder","MV's maintenance manual is indexed by those letters, so the shift propagates into the job list","Older MV models sit on a 6,000 km ladder with different letters again"],"fix_procedure":"Read the coupon table with the merged first cell in mind: A is both the running-in and the annual coupon, and B is the first mileage coupon at 15,000 km. Take the valve check from coupons C, E and G on the 15,000 km ladder. Confirm which ladder the model and edition sit on before applying any letter, since the Brutale, Dragster and Rivale of the same years are on the 6,000 km ladder with the valve check every 12,000 km.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"The MV Agusta F4 shim diameter is still in no manufacturer document — the measure-first rule stands","description":"Drawn from the MV Agusta Brutale ORO/S workshop manual and the maintenance manuals on disk, plus owner reports labelled as such. Phase 234 deliberately did not print a shim diameter because sources disagreed. This phase opened the workshop manual for the early four: it gives the clearances, names the part an adjustment pad under the valve cup, sends pad replacement to the F4 engine manual — and prints **no diameter**. Owner reports give 7.48 mm, the small Japanese size, with a thickness range; that is an owner report, and other sizes circulate. The instruction from Phase 234 is therefore confirmed rather than replaced: measure a shim already in the engine before ordering, and do it before the camshafts are out.","make":"MV Agusta","model":"F4 and four-cylinder Brutale","year_start":1998,"year_end":2018,"severity":"medium","symptoms":["Shim kit ordered before measuring","Camshafts out and no shims to hand","Diameter quoted from a forum"],"causes":["No MV document opened prints the shim diameter","The workshop manual defers pad replacement to an engine manual not obtained","Owner reports give a figure, and other figures circulate","The default is to reach for the Japanese kit on the shelf"],"fix_procedure":"Measure an existing shim's diameter at the first cam cover opening, before committing to the camshafts-out job, and order against that measurement. Treat the 7.48 mm figure as an owner report to be confirmed by the caliper, not a specification. Record the measured size on the job card for the next service.","parts_needed":["Shims to the measured diameter and required thicknesses"],"estimated_hours":0.3,"dtc_codes":[],"source":"service-manual"},
-  {"title":"Ducati's 60,000 and 45,000 km intervals belong to spring-valve engines, not to desmo — 'extending' is the wrong word","description":"Drawn from Ducati's own model pages. The V4 Granturismo in the Multistrada V4 and Diavel V4 carries a valve clearance interval of **60,000 km**, and the 2025 890cc V2 in the Panigale V2 and Multistrada V2 carries **45,000 km**. Aggregators present these as Ducati 'extending' its intervals; they are different engines, and Ducati's own pages say why — both use conventional spring valves rather than desmodromic actuation. A Testastretta desmo does not become a 60,000 km engine because a later Ducati is one. The reverse error is the dangerous one: applying the spring-valve figure to a desmo engine that shares a model name.","make":"Ducati","model":"Multistrada V4, Diavel V4 (V4 Granturismo, 60,000 km); Panigale V2 and Multistrada V2 2025 (890 V2, 45,000 km) — not the desmo engines","year_start":2021,"year_end":2026,"severity":"high","symptoms":["Desmo interval assumed to have grown to 60,000 km","Model name shared across desmo and spring-valve engines","Aggregator quotes 'Ducati extended the interval'"],"causes":["Two current Ducati engines are spring-valve and carry long intervals","Model names — Multistrada, Panigale, Diavel — span both valve-train types","Aggregators report the change by model name rather than by engine","A desmo owner reading the new figure under-services by a factor of two or more"],"fix_procedure":"Establish the engine before the interval: a Multistrada V4 and a Multistrada 1260 share a name and not a valve train. Apply 60,000 km only to the V4 Granturismo and 45,000 km only to the 890 V2, and hold desmo engines to their Transparent Maintenance figures. Where a customer arrives with the new figure, show the engine on the model page.","parts_needed":[],"estimated_hours":0.2,"dtc_codes":[],"source":"service-manual"},
-  {"title":"Moto Guzzi's two current engines take opposite valve jobs: V85 screw-and-locknut at 10,000 km, V100 cams-out at 24,000 km","description":"Drawn from the V85 TT and V100 Mandello service manuals and the V100 owner's manual. The two engines Guzzi currently builds could not be more different at the valves. The V85 TT's service manual gives a **screw-and-locknut** adjustment on the rockers with feeler clearances and a locknut torque, every **10,000 km**, and prints its labour row empty — no manufacturer time exists. The V100 Mandello's manual gives a **rocker-and-pad** job with the camshafts out, two named special tools, an 11–13 Nm figure, every **24,000 km** per its owner's manual with no month marks. A shop that has done the V85 will meet the V100 expecting feelers and find a cams-out shim job.","make":"Moto Guzzi","model":"V85 TT (screw-and-locknut, 10,000 km); V100 Mandello (rocker-and-pad, camshafts out, 24,000 km)","year_start":2019,"year_end":2026,"severity":"medium","symptoms":["V100 quoted as a feeler-and-locknut job","V85 labour taken from a figure that does not exist","Cams-out job started without pads measured"],"causes":["The V85 is screw-and-locknut and the V100 is rocker-and-pad with the camshafts out","The V85 manual's labour row is printed empty","The V100 job needs two named special tools","The intervals differ by more than double between the two"],"fix_procedure":"Quote the V85 as a feeler-and-locknut job at 10,000 km, with an in-house time since Guzzi prints none. Quote the V100 as a cams-out pad job at 24,000 km, with the two named tools and the pads measured before the second visit. Do not carry the method or the interval between the two engines.","parts_needed":["V100: valve pads to measured sizes"],"estimated_hours":0.3,"dtc_codes":[],"source":"service-manual"}
+  {
+    "title": "On most European makes the same engine gets the same valve interval — MV Agusta is the documented exception",
+    "description": "Drawn from manufacturer schedule tables read visually across six makes, and from six MV Agusta maintenance manuals. The natural fear is that a shared engine hides a different interval between siblings; on KTM, Ducati, Triumph and BMW it does not. KTM's 373cc Duke and 373cc Adventure both carry 15,000 km; its 399cc Duke and 390 Adventure R both 20,000 km; the 890 Duke R, 890 Adventure and 890 Adventure R all 30,000 km. Ducati's Transparent Maintenance poster gives every same-engine pair one figure — Scrambler 800 and Monster 797, Monster 821 and Hypermotard. Triumph's Trident 660, Tiger Sport 660 and Daytona 660 share one handbook and one interval. **MV Agusta is the exception, and it is documented**: the 798cc triple is scheduled at **12,000 km** on the Brutale 800 and Dragster RR MY2015 and Rivale MY2016, and at **30,000 km** on the Turismo Veloce MY2015–16 and the F3 MY2020 — same engine, overlapping years. The difference tracks MV's change from a 6,000 km coupon ladder to a 15,000 km one, applied model by model rather than across the range.",
+    "make": "MV Agusta",
+    "model": "798cc triple — Brutale 800, Dragster RR, Rivale at 12,000 km; Turismo Veloce, F3 at 30,000 km — against KTM, Ducati and Triumph siblings that agree",
+    "year_start": 2015,
+    "year_end": 2020,
+    "severity": "high",
+    "symptoms": [
+      "Interval carried from one MV model to another",
+      "Sibling model assumed to share a schedule",
+      "Two MVs of one year on different ladders"
+    ],
+    "causes": [
+      "MV moved from a 6,000 km coupon ladder to a 15,000 km ladder one model at a time, so contemporaries sit on different intervals",
+      "On KTM, Ducati and Triumph the manufacturer tables give siblings on one engine the same interval, so the MV pattern is not general",
+      "A shop that learns the MV pattern will over-service the other makes; one that learns the others will under-service an MV",
+      "Which MV ladder applies is a per-model, per-edition fact and cannot be inferred from the engine"
+    ],
+    "fix_procedure": "On MV Agusta, never carry a valve interval between models or between manual editions, even on one engine and one year: read the maintenance manual for the exact model and edition. On KTM, Ducati and Triumph the siblings on one engine agree in the manufacturer's tables, so the engine family is a reliable guide there — but confirm the generation, because that is where the numbers do move. Where an MV owner reports a figure from a different model, treat it as belonging to that model.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "KTM's 390 valve interval difference is 373cc versus 399cc, not Duke versus Adventure",
+    "description": "Drawn from eleven KTM owner's manuals, the schedule tables read visually and confirmed by two independent passes. Phase 225B recorded that the 390 Adventure and 390 Duke carry different valve intervals; the figures it saw are real, but the difference is between **engines**, not between the naked bike and the adventure bike. The 373cc engine — 390 Duke MY2022 and 390 Adventure MY2021 and MY2023 — schedules the valve check with a spark-plug change every **15,000 km**. The 399cc LC4c engine — 390 Duke MY2024–25 and 390 Adventure R MY2025 — schedules it every **20,000 km**. On each engine the Duke and the Adventure agree. What genuinely differs between siblings is the row's contents — the Adventure R row is the valve check alone, the Duke row bundles the plug — and the dusty-conditions qualifier on the Adventure air filter, both of which Phase 225B also recorded and which stand. Its 'shorter interval than the Duke' sentence does not, and is corrected here.",
+    "make": "KTM",
+    "model": "390 Duke and 390 Adventure, 373cc (to MY2023) versus 399cc (MY2024 on)",
+    "year_start": 2021,
+    "year_end": 2025,
+    "severity": "medium",
+    "symptoms": [
+      "390 Adventure serviced to the wrong interval",
+      "Adventure and Duke assumed to differ on valves",
+      "Model year ignored when reading the schedule"
+    ],
+    "causes": [
+      "The 390 changed engine from 373cc to 399cc in MY2024, and the valve interval moved with the engine",
+      "Comparing a 373cc Adventure against a 399cc Duke produces a false sibling difference",
+      "Both engines carry the Duke and the Adventure at the same interval in KTM's own tables",
+      "No KTM valve row carries a time trigger — the check is distance-only"
+    ],
+    "fix_procedure": "Identify the engine — 373cc or 399cc — before reading the interval, using the model year as the discriminator, and apply 15,000 km to the earlier engine and 20,000 km to the later one on Duke and Adventure alike. Do not schedule the valve check by age on any KTM: none of the eleven manuals marks the valve row in a month column. Keep the Adventure-specific items Phase 225B records — the dusty-conditions air-filter qualifier and the Adventure-only rows — which are where the schedules genuinely differ.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "European valve intervals move by engine generation, not by model — four documented steps",
+    "description": "Drawn from manufacturer documents for each step. The pattern that holds across makes is that the number changes when the engine changes, and a mechanic who learned a figure on the previous generation will under-service the next. **BMW** boxer: every 10,000 km on the air/oil-cooled hexhead and camhead (dealer schedule and the R nineT Rider's Manual), every 20,000 km on the liquid-cooled R1200, R1250 and R1300 (their Rider's Manuals). **Ducati** Testastretta 11°: Desmo every 24,000 km on the Diavel and Multistrada 1200 MY2010–14, every 30,000 km from MY2015 with DVT (Ducati's own maintenance sheets). **KTM** 390: 15,000 km on the 373cc, 20,000 km on the 399cc. **MV Agusta**: a 6,000 km coupon ladder giving 12,000 km valve checks, replaced model by model with a 15,000 km ladder giving 30,000 km. The S1000RR, on its own engine, is every 30,000 km.",
+    "make": "BMW, Ducati, KTM, MV Agusta",
+    "model": "Boxer air/oil versus liquid-cooled; Testastretta MY2010–14 versus MY2015 DVT; 390 373cc versus 399cc; MV 6,000 versus 15,000 km ladders",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Interval remembered from the previous generation",
+      "Newer bike over- or under-serviced on valves",
+      "Two same-model bikes on different schedules"
+    ],
+    "causes": [
+      "Each manufacturer changed the interval at an engine revision, not at a model rename",
+      "Model names carried across the revision — R1200GS, Multistrada 1200, 390 Duke — so the name does not signal the change",
+      "Aggregator sites print one figure per model name and hide the split",
+      "The direction of change is longer on every documented step, so the error is over-servicing on the newer bike and under-servicing when the older figure is assumed to have moved"
+    ],
+    "fix_procedure": "Read the interval from the manual for the exact model year, and treat an engine revision — liquid cooling, DVT, a displacement change, a new coupon ladder — as the point where a remembered figure expires. When a customer quotes an interval for their model, ask which generation it came from. Where a model name spans a revision, the year is the discriminator, and the older figure is the safer default only until the manual is opened.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "No European valve row opened carries a time trigger — 'due by age' is not a manufacturer instruction on these makes",
+    "description": "Drawn from the schedule tables of five BMW Rider's Manuals, eleven KTM owner's manuals, seven Triumph handbooks and Ducati's maintenance sheets, each read visually for the month columns. Every one of these makes runs an annual service, and every one of them separates the valve check from it: the valve row is marked under distance columns only, with **no mark in any month column**, on every document opened. Triumph's tables say 'miles or time period, whichever comes first' and still leave the valve row blank under the annual column. Ducati's Desmo service is by kilometres, its annual service is a separate row, and only the timing belts carry a months figure. A low-mileage machine coming in for its yearly service is therefore not due a valve check on the manufacturer's schedule, however old it is — the widely applied 'every two years regardless' is a shop convention, not a manufacturer instruction, on these makes.",
+    "make": "BMW, KTM, Triumph, Ducati",
+    "model": "All models whose schedule tables were opened",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "Valve check sold on age alone",
+      "Low-mileage bike quoted a valve job at annual service",
+      "Customer told valves are 'due every two years'"
+    ],
+    "causes": [
+      "Manufacturer valve rows are marked under distance columns and not under month columns",
+      "The annual service exists on every make and the valve check is a separate row from it",
+      "Timing belts on Ducati do carry a months figure, and the belt rule is carried over to the valves by analogy",
+      "A time-based valve rule from another make or another era is applied as if universal"
+    ],
+    "fix_procedure": "Quote the valve check by distance from the manual, and quote the annual service separately — do not fold the one into the other on any of these makes. Where a customer or a previous shop has applied a time rule, show the manual's month columns. The exception to watch for is Ducati's timing belts, which do carry a months figure and are genuinely due by age; that rule belongs to the belts and does not transfer to the clearances.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Five valve-train job types across the European makes, and the step each has that the others lack",
+    "description": "Drawn from manufacturer manuals where they describe the method, and labelled where they do not. **Desmodromic** (belt-era Ducati): two clearances per valve, and the closer shim is retained by half-rings — removing them is the step with no spring-valve analogue. **Shim-under-bucket, camshafts out**: MV Agusta (the manual names an adjustment pad under the valve cup and sends replacement to the engine manual), Triumph triples and air-cooled twins, Aprilia. KTM is deliberately not placed in this column: no manufacturer page establishing a KTM valve-train type was opened for this project, the type varies by engine family, and this corpus documents the single-cylinder 690 LC4 as a rocker-arm train — see the KTM 690 rocker-bearing entry in the European differentials file, where the intake rocker runs a needle roller bearing a bucket-and-shim engine does not contain. The S1000RR sits in the same position: owner report only, no manufacturer page opened. **Screw-and-locknut**: Moto Guzzi V85 TT by its service manual; the air/oil-cooled BMW boxer by owner report. **Rocker-and-shim**, rocker shaft out: Moto Guzzi V100 by its service manual, with named tools; Triumph liquid-cooled twins; the liquid-cooled BMW boxer by owner report. **Spring-valve chain-drive**: Ducati's V4 Granturismo and 890 V2, which are not desmo. Applying the wrong model to a job costs a different thing on each make: on a desmo it costs a valve held off its seat by a tight closer; on a cams-out engine it costs a second disassembly for a shim the mechanic did not have.",
+    "make": "All European makes",
+    "model": "Ducati desmo; MV, Triumph triples, Aprilia shim-under-bucket; KTM and S1000RR not established; Guzzi V85, BMW air/oil boxer screw-and-locknut; Guzzi V100, Triumph LC twins, BMW LC boxer rocker-and-shim",
+    "year_start": 1994,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "Job quoted on the wrong valve-train type",
+      "Shims ordered for a screw-and-locknut engine",
+      "Closer clearance not measured on a desmo"
+    ],
+    "causes": [
+      "Five job types exist across seven makes, and two of them exist within one make",
+      "The manufacturer manuals describe the method for some makes and not others, so provenance differs by make",
+      "A cams-out job cannot be finished without the shim measured first, which a bucket-and-feeler routine does not anticipate",
+      "The desmo closer has no analogue on any other type, so it is the step most often skipped"
+    ],
+    "fix_procedure": "Establish the job type from the manual before quoting, because it sets the hours and the parts more than the interval does. On a desmo, measure both clearances per valve and never set a closer tight — Ducati's own guidance is that loose is safer than tight. On a cams-out engine, measure every clearance and order every shim before the second visit, or the job doubles. On a screw-and-locknut engine, feelers and a locknut torque are the whole method. Note which job types here rest on owner reports rather than a manufacturer page — the BMW boxers and the S1000RR — and confirm on the machine. On KTM do not assume shim-under-bucket at all: the corpus already holds a contradicting engine in the 690 LC4's rocker-arm train, so establish the valve-train type for the specific engine before quoting a cams-out job.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "dtc_codes": [],
+    "source": "model-generated"
+  },
+  {
+    "title": "Ducati publishes its Desmo labour in six-minute units, and the four-cylinder job is twice the twin's",
+    "description": "Drawn from Ducati's Transparent Maintenance poster, read both visually and by text. Ducati is the one European maker that publishes its own labour times, in labour units of six minutes, and they settle arguments a shop otherwise has by estimate. A full Desmo Service is **9 h 06** on the Panigale V4, **10 h 30** on the 1299 Panigale, **7 h 00** on the Multistrada 1260, **4 h 42** on the Monster 821, **4 h 30** on the Scrambler 800 and Monster 797, and **7 h 00** for the complete service on the Monster 696–1100 family. The intermediate 'Desmo Interventions' is shorter on every model. The step that costs the time on the Superquadro and V4 is access — fairings, airbox, the radiator on the rear bank — and thirty-two clearances on a V4. The poster's oil-service column differs by group: Group 1 merges it with the annual service, Group 2 lists both, and Group 3 has no oil-service column at all — a detail a refuter corrected, because a shop reading one group's column into another misquotes.",
+    "make": "Ducati",
+    "model": "Panigale V4, 1299 Panigale, Multistrada 1260, Monster 821, Monster 797, Scrambler 800, Monster 696–1100 — per the Ed.04/18 poster",
+    "year_start": 2008,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "Desmo service quoted by estimate",
+      "Customer disputes the hours",
+      "Oil service read from the wrong group's column"
+    ],
+    "causes": [
+      "Ducati publishes labour units of six minutes per model and service type",
+      "The V4 and Superquadro figures are dominated by access and the number of clearances",
+      "The poster's three groups have different column structures for the oil service",
+      "A figure carried between groups or models misquotes by hours"
+    ],
+    "fix_procedure": "Quote Desmo work from Ducati's own labour units for the model and service type rather than from an estimate, and show the customer the source. Check which of the three groups the model sits in before reading an oil-service figure, because the columns differ. Budget access on the V4 and Superquadro as the dominant cost, not the clearances themselves.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "KTM publishes service minutes, and the valve service is fifty to eighty-five minutes over the intermediate one",
+    "description": "Drawn from KTM's own service-times sheet, dated October 2019. KTM, like Ducati, publishes its labour — in minutes per service per model — and the sheet marks which services include the valve clearance and which are without it. Read across the LC8c and LC8 models, the service that includes the valve check runs roughly fifty to eighty-five minutes longer than the intermediate service: a 790 Duke at 97 minutes for its 15,000 km service and 146 for its 30,000 km; a 790 Adventure 118 and 174; a 1290 Super Duke R 104 and 189. On the 1190 RC8, the service marked as including valve adjustment is **2.3 times** the one without. The sheet gives times, not the valve interval itself; that lives in the owner's manuals and is 15,000 / 20,000 / 30,000 km by engine.",
+    "make": "KTM",
+    "model": "790 Duke and Adventure, 1290 Super Duke R and Super Adventure S, 390 Duke, 690 Duke, 1190 RC8, 450 SX-F, 450/500 EXC-F — per the 2019 sheet",
+    "year_start": 2011,
+    "year_end": 2019,
+    "severity": "medium",
+    "symptoms": [
+      "Valve service quoted at intermediate-service hours",
+      "Adjustment not costed separately from the check",
+      "Customer disputes the hours"
+    ],
+    "causes": [
+      "KTM publishes minutes per service and marks the valve-inclusive services",
+      "The valve service is materially longer than the intermediate on every twin",
+      "On the RC8 the adjustment more than doubles the service",
+      "The sheet is labour only; the interval is in the manual"
+    ],
+    "fix_procedure": "Quote KTM service work from the manufacturer's minutes for the model and service, and read the asterisk marks to see whether the figure includes the valve check and the adjustment. Take the interval from the owner's manual for the engine, not from the sheet. On the RC8, quote the adjustment-inclusive service separately from the check-only one, because the difference is more than double. Note for the 690: this sheet prices the job but does not establish the valve-train type. The single-cylinder 690 LC4 is documented in this corpus as a rocker-arm train, not bucket-and-shim, so do not carry a cams-out shim method across to it from the job-type comparison.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Triumph's own check sheet bills the valve check and the adjustment separately",
+    "description": "Drawn from a Triumph Designs service check sheet and seven Triumph handbooks. Triumph's 2006 check sheet states that the basic-service allowance **includes time to check only**, and that adjustment is **subject to additional labour charge** — the manufacturer's own statement that the check and the adjustment are two bookings. The handbooks give the intervals by engine: the 660 family and the liquid-cooled 900 and 1200 twins at 20,000 miles, the Street Triple 765 and Tiger 900 at 12,000 miles, the Speed Triple 1200 at 20,000 miles; from the 2019–2021 handbooks a camshaft-timing check joins the valve row at the same access. No handbook marks the valve row under the annual column.",
+    "make": "Triumph",
+    "model": "Trident 660, Tiger Sport 660, Daytona 660; Street Triple 765; Tiger 900; Speed Triple 1200; Bonneville T100/T120, Speed Twin, Scrambler 900, Thruxton — per handbook",
+    "year_start": 2006,
+    "year_end": 2024,
+    "severity": "medium",
+    "symptoms": [
+      "Adjustment absorbed into the check price",
+      "Customer surprised by an adjustment charge",
+      "Camshaft timing check not quoted with the valves"
+    ],
+    "causes": [
+      "Triumph's own sheet separates the check allowance from the adjustment charge",
+      "Intervals differ by engine — 12,000 miles on the 765 and Tiger 900, 20,000 on the 660s, the 1200 and the twins",
+      "The camshaft-timing check was added to the valve row on later handbooks and shares the access",
+      "The valve row carries no annual mark"
+    ],
+    "fix_procedure": "Quote the check and the adjustment as two items, as Triumph does, and tell the customer before the job which one they are paying for. Take the interval from the handbook by engine — the 765 is not the 1200 — and add the camshaft-timing check to the quote on models whose handbook carries it, since the access is shared. Do not schedule by age.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Aprilia's 'Trust Aprilia Maintenance' sheets omit the valve check, and using them as a schedule drops it",
+    "description": "Drawn from Aprilia's own published maintenance sheets for the RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900 and Shiver 900. These sheets list oil, filter, plugs, air filter, fork oil and fluids at 1,000, 10,000, 20,000, 30,000 and 40,000 km — and **no valve row at all**. They are a consumables list, not the schedule, and a shop that treats one as the schedule drops the valve check from the machine's service life entirely. The valve interval itself could not be opened from an Aprilia schedule page in this phase; the figure this project carries — 20,000 and 40,000 km, halved for track, wet or dust — rests on the service manual cited at Phase 231 and on index snippets, and is recorded as unconfirmed here rather than restated as verified.",
+    "make": "Aprilia",
+    "model": "RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900, Shiver 900 — the sheets; RS 660 / Tuono 660 / Tuareg 660 intervals unverified",
+    "year_start": 2017,
+    "year_end": 2025,
+    "severity": "high",
+    "symptoms": [
+      "Valve check missing from a serviced Aprilia's history",
+      "Maintenance sheet used as the service schedule",
+      "660 interval quoted from an aggregator"
+    ],
+    "causes": [
+      "The official maintenance sheets are consumables lists with no valve row",
+      "Their column structure looks like a schedule, so they are read as one",
+      "The valve interval sits in the use-and-maintenance manual, which was not openable this phase",
+      "Aggregator figures for the 660 family have no Aprilia document behind them"
+    ],
+    "fix_procedure": "Do not schedule an Aprilia from the maintenance sheet; open the use-and-maintenance manual for the model and take the valve row from there. Treat the 20,000 / 40,000 km figure as the best available rather than as confirmed, and halve it for track, wet or dusty use per the manual's own rule. For the 660 family, quote nothing until the manual is opened — the figure in circulation is an aggregator's.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "MV Agusta's coupon ladder starts with a merged cell, and reading it shifted by one sends you to the wrong coupon",
+    "description": "Drawn from the Turismo Veloce 800 user's manual MY2018–20, the coupon table read visually after a refuter caught a misread. MV schedules by lettered coupons rather than by a row of jobs, and the manual's table has a trap in its first cell: coupon **A** spans both the 1,000 km column and the 'every year' column as one merged cell. Read as two cells, every letter shifts by one — B becomes the annual coupon instead of 15,000 km, and the 105,000 km coupon loses its letter — which sends a mechanic to the wrong coupon in the maintenance manual. The correct ladder is A at 1,000 km and annually, then B 15,000, C 30,000, D 45,000, E 60,000, F 75,000, G 90,000, H 105,000 km, with the mileage coupons carried along with the mandatory annual one. On this ladder the valve check falls at C, E and G — every 30,000 km. The F3 675/800 MY2020 maintenance manual carries the same 30,000 km valve figure, which resolves the interval Phase 234 could not confirm.",
+    "make": "MV Agusta",
+    "model": "Turismo Veloce 800 MY2015–20; F3 675/800 MY2020 on the same ladder",
+    "year_start": 2015,
+    "year_end": 2020,
+    "severity": "medium",
+    "symptoms": [
+      "Coupon letters read one step off",
+      "Valve check performed at the wrong coupon",
+      "F3 interval quoted from a forum"
+    ],
+    "causes": [
+      "Coupon A occupies a merged cell across two columns and is read as two",
+      "The letters then shift by one for the whole ladder",
+      "MV's maintenance manual is indexed by those letters, so the shift propagates into the job list",
+      "Older MV models sit on a 6,000 km ladder with different letters again"
+    ],
+    "fix_procedure": "Read the coupon table with the merged first cell in mind: A is both the running-in and the annual coupon, and B is the first mileage coupon at 15,000 km. Take the valve check from coupons C, E and G on the 15,000 km ladder. Confirm which ladder the model and edition sit on before applying any letter, since the Brutale, Dragster and Rivale of the same years are on the 6,000 km ladder with the valve check every 12,000 km.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "The MV Agusta F4 shim diameter is still in no manufacturer document — the measure-first rule stands",
+    "description": "Drawn from the MV Agusta Brutale ORO/S workshop manual and the maintenance manuals on disk, plus owner reports labelled as such. Phase 234 deliberately did not print a shim diameter because sources disagreed. This phase opened the workshop manual for the early four: it gives the clearances, names the part an adjustment pad under the valve cup, sends pad replacement to the F4 engine manual — and prints **no diameter**. Owner reports give 7.48 mm, the small Japanese size, with a thickness range; that is an owner report, and other sizes circulate. The instruction from Phase 234 is therefore confirmed rather than replaced: measure a shim already in the engine before ordering, and do it before the camshafts are out.",
+    "make": "MV Agusta",
+    "model": "F4 and four-cylinder Brutale",
+    "year_start": 1998,
+    "year_end": 2018,
+    "severity": "medium",
+    "symptoms": [
+      "Shim kit ordered before measuring",
+      "Camshafts out and no shims to hand",
+      "Diameter quoted from a forum"
+    ],
+    "causes": [
+      "No MV document opened prints the shim diameter",
+      "The workshop manual defers pad replacement to an engine manual not obtained",
+      "Owner reports give a figure, and other figures circulate",
+      "The default is to reach for the Japanese kit on the shelf"
+    ],
+    "fix_procedure": "Measure an existing shim's diameter at the first cam cover opening, before committing to the camshafts-out job, and order against that measurement. Treat the 7.48 mm figure as an owner report to be confirmed by the caliper, not a specification. Record the measured size on the job card for the next service.",
+    "parts_needed": [
+      "Shims to the measured diameter and required thicknesses"
+    ],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Ducati's 60,000 and 45,000 km intervals belong to spring-valve engines, not to desmo — 'extending' is the wrong word",
+    "description": "Drawn from Ducati's own model pages. The V4 Granturismo in the Multistrada V4 and Diavel V4 carries a valve clearance interval of **60,000 km**, and the 2025 890cc V2 in the Panigale V2 and Multistrada V2 carries **45,000 km**. Aggregators present these as Ducati 'extending' its intervals; they are different engines, and Ducati's own pages say why — both use conventional spring valves rather than desmodromic actuation. A Testastretta desmo does not become a 60,000 km engine because a later Ducati is one. The reverse error is the dangerous one: applying the spring-valve figure to a desmo engine that shares a model name.",
+    "make": "Ducati",
+    "model": "Multistrada V4, Diavel V4 (V4 Granturismo, 60,000 km); Panigale V2 and Multistrada V2 2025 (890 V2, 45,000 km) — not the desmo engines",
+    "year_start": 2021,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "Desmo interval assumed to have grown to 60,000 km",
+      "Model name shared across desmo and spring-valve engines",
+      "Aggregator quotes 'Ducati extended the interval'"
+    ],
+    "causes": [
+      "Two current Ducati engines are spring-valve and carry long intervals",
+      "Model names — Multistrada, Panigale, Diavel — span both valve-train types",
+      "Aggregators report the change by model name rather than by engine",
+      "A desmo owner reading the new figure under-services by a factor of two or more"
+    ],
+    "fix_procedure": "Establish the engine before the interval: a Multistrada V4 and a Multistrada 1260 share a name and not a valve train. Apply 60,000 km only to the V4 Granturismo and 45,000 km only to the 890 V2, and hold desmo engines to their Transparent Maintenance figures. Where a customer arrives with the new figure, show the engine on the model page.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "dtc_codes": [],
+    "source": "service-manual"
+  },
+  {
+    "title": "Moto Guzzi's two current engines take opposite valve jobs: V85 screw-and-locknut at 10,000 km, V100 cams-out at 24,000 km",
+    "description": "Drawn from the V85 TT and V100 Mandello service manuals and the V100 owner's manual. The two engines Guzzi currently builds could not be more different at the valves. The V85 TT's service manual gives a **screw-and-locknut** adjustment on the rockers with feeler clearances and a locknut torque, every **10,000 km**, and prints its labour row empty — no manufacturer time exists. The V100 Mandello's manual gives a **rocker-and-pad** job with the camshafts out, two named special tools, an 11–13 Nm figure, every **24,000 km** per its owner's manual with no month marks. A shop that has done the V85 will meet the V100 expecting feelers and find a cams-out shim job.",
+    "make": "Moto Guzzi",
+    "model": "V85 TT (screw-and-locknut, 10,000 km); V100 Mandello (rocker-and-pad, camshafts out, 24,000 km)",
+    "year_start": 2019,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "V100 quoted as a feeler-and-locknut job",
+      "V85 labour taken from a figure that does not exist",
+      "Cams-out job started without pads measured"
+    ],
+    "causes": [
+      "The V85 is screw-and-locknut and the V100 is rocker-and-pad with the camshafts out",
+      "The V85 manual's labour row is printed empty",
+      "The V100 job needs two named special tools",
+      "The intervals differ by more than double between the two"
+    ],
+    "fix_procedure": "Quote the V85 as a feeler-and-locknut job at 10,000 km, with an in-house time since Guzzi prints none. Quote the V100 as a cams-out pad job at 24,000 km, with the two named tools and the pads measured before the second visit. Do not carry the method or the interval between the two engines.",
+    "parts_needed": [
+      "V100: valve pads to measured sizes"
+    ],
+    "estimated_hours": 0.3,
+    "dtc_codes": [],
+    "source": "service-manual"
+  }
 ]

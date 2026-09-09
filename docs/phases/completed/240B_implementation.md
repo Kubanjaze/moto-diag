@@ -1,6 +1,6 @@
 # Phase 240B — Closing the Track K audit debt
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-09
 
 ## Goal
 
@@ -141,22 +141,22 @@ across phases. A name-keyed sweep missed family members three times.
 
 ## Verification Checklist
 
-- [ ] Contradictions dimension re-run with no cap; findings written up with
+- [x] Contradictions dimension re-run with no cap; findings written up with
       verbatim quotes, reachability traces and kill attempts
-- [ ] All six section A contradictions corrected at every site the verifier named
-- [ ] No entry added, removed or split — corpus stays at 917, so every pinned
+- [x] All six section A contradictions corrected at every site the verifier named
+- [x] No entry added, removed or split — corpus stays at 917, so every pinned
       count and the Phase 208 doc-count guard stay green
-- [ ] Exactly zero untipped `forum` entries; forum-tip guards assert the
+- [x] Exactly zero untipped `forum` entries; forum-tip guards assert the
       biconditional rather than the negative half alone
-- [ ] The eight constant cumulative pins derive their numbers from the JSON
-- [ ] Aprilia/MV zero-shadow state pinned with a tripwire, not a skip
-- [ ] Every de-vacuumed guard mutation-tested: reintroduce the defect, confirm
+- [x] The eight constant cumulative pins derive their numbers from the JSON
+- [x] Aprilia/MV zero-shadow state pinned with a tripwire, not a skip
+- [x] Every de-vacuumed guard mutation-tested: reintroduce the defect, confirm
       the guard fails, revert
-- [ ] `european_tooling.json` is 13/13 `model-generated`; a positive test
+- [x] `european_tooling.json` is 13/13 `model-generated`; a positive test
       enforces the vendor rule
-- [ ] `tests/test_phase236_european_tooling.py` and
+- [x] `tests/test_phase236_european_tooling.py` and
       `docs/phases/completed/236_implementation.md` updated off the 8/5 split
-- [ ] Full regression at or above the 5954 baseline, 0 failed
+- [x] Full regression at or above the 5954 baseline, 0 failed
 
 ## Risks
 
@@ -185,3 +185,88 @@ across phases. A name-keyed sweep missed family members three times.
   contradictions than section A holds. Fixing them all in this phase would mean
   abbreviating the care each entry gets, which the working agreement forbids.
   They are documented and scheduled instead.
+
+---
+
+## Deviations from Plan
+
+**The re-run returned far more than section A held, and the phase did not
+widen to absorb it.** The plan anticipated this; the scale was larger than
+expected. The uncapped sweep returned **27 contradictions and 13 uncertain
+findings** against the original run's 6 confirmed — the cap had not trimmed a
+tail, it had hidden the majority of the dimension. All of it is written up in
+`TRACK_K_AUDIT_DEBT_2.md` with per-finding verification status, and scheduled
+rather than fixed here.
+
+**Five structural defects were found that the audit never looked for**, and
+they are the mechanism behind the contradiction pattern the first audit
+diagnosed only as a documentation habit. They are recorded, not fixed —
+S1 alone reorders every knowledge query in the product and needs its own
+regression. See Part 1 of `TRACK_K_AUDIT_DEBT_2.md`.
+
+**S2 changed the A5 fix.** `european_intervals[4]`, the entry that wrongly puts
+KTM in the shim-under-bucket column, is one of three entries unreachable from
+any make-filtered lookup. Correcting its text alone would have been invisible
+to a `make="KTM"` query. The verifier had recommended editing `intervals[6]`
+as well for consistency; the real reason is that it is the only reachable half
+of the fix.
+
+**Three debt items were closed as no-change**, because verification rejected
+them and the notes say so explicitly: B2 (relabelling the MV F4 shim entry to
+`unverified` — the value is reserved for legacy rows and would pull the entry
+into Gate 2's forum-tip population), B4 as framed (Rule 4 is enforced in four
+phase files; the real gap was that Aprilia and MV shadow nothing), and two of
+section C's three claims (parts-fiche and KTM electrical). Recorded here so
+they are not re-litigated.
+
+**One conflict between two verifiers was adjudicated.** On B1 the MV-sprag
+verifier rejected the finding because `test_phase233` asserts `"Forum tip" not
+in fix_procedure` for every entry — but that assertion *is* the mis-scoped
+denylist Phase 226 identified inside Gate 2 and then reproduced locally. A
+guard that enforces the violation is not evidence the violation is permitted.
+Resolved in favour of the Bonneville verifier: both entries fixed, both guards
+re-scoped, and the whole family of ten converted.
+
+**The A6 test had to be inverted, not extended.** `break\w*` does not match
+"broke" or "snapped", so the corrected wording scored zero against the existing
+negation-window regex — the fix would have landed green while a test asserting
+a false fact survived to block the next correct rewording. Verified before
+editing.
+
+**One process error, recorded because the working agreement asks for it.** A
+mutation test was run against the working tree while the baseline regression
+was still in flight. Test modules are imported at collection, so the run was
+unaffected and returned the expected 5954/0 — but the sequencing was wrong and
+the baseline could not be trusted until it came back matching. Later mutation
+work was serialised against the regression.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Contradictions dimension, original run | 16 found, 8 verified (capped), 6 confirmed |
+| Contradictions dimension, uncapped re-run | **27 contradictions + 13 uncertain** |
+| Structural defects found (recorded, not fixed) | 5 (S1–S5) |
+| Section A contradictions fixed | 6 of 6, at every site each verifier named |
+| Debt items closed as no-change after verification | 3 (B2, B4-as-framed, 2 of 3 in C) |
+| Seed files corrected | 7 |
+| Test files repaired | 26 |
+| Corpus entries | 917 → 917 (no entry added, removed or split) |
+| Provenance after the C rule | `service-manual` 108 → 100, `model-generated` 131 → 139 |
+| Untipped `forum` entries | 2 → **0** |
+| Forum-tip guards asserting the biconditional | 3 → **13** |
+| Constant cumulative pins | 8 → **0** |
+| `_asserts` files detecting a `return False` stub | **1 of 7 → 7 of 7** |
+| Mutation scenarios run | 9, all caught |
+| Regression | **5991 passed / 0 failed** (baseline 5954; +37 tests) |
+
+**Key finding: the cap was not the whole problem — the retrieval layer was.**
+The first audit explained the contradictions as a documentation habit: the
+cross-make files corrected the per-make files and recorded the correction only
+in the new file. That is true, and it is not sufficient. Five of six sweep
+slices independently found that `severity DESC` on a TEXT column sorts
+`medium` above `critical`, and three found that an entry whose `make` reads
+"All European makes" is unreachable from every make-filtered lookup. The
+corrective files were not merely under-propagated; where they did land, they
+were systematically outranked or invisible. A corpus can be internally
+consistent and still hand a mechanic the superseded answer first.

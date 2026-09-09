@@ -2032,3 +2032,47 @@ Read-only audit verifying the Mac F48 session (2026-07-01/02) left the canonical
 - **Regression (Windows Python 3.13):** 4613 passed, 0 failed/errored/skipped in 4969s. All 6 F48-affected files + `test_media_pipeline_wiring_guard` pass. The Mac's 1-fail/1-error (`test_phase129_theme` / `test_phase125_quick`) **pass here** → confirmed a Python-3.14 quirk, not a defect.
 - **Env parity:** venv was missing the `[parquet]` extra; restored to full `pip install -e ".[all]"` (pyarrow 25.0.0; editable metadata refreshed 0.1.0 → 0.6.0).
 - **Doc drift fixed this entry:** `implementation.md` header claimed `pyproject.toml version = "0.3.6"` — actual is `0.6.0`; corrected the claim and extended the bump-history narrative with the real Phase 194 (0.3.6→0.4.0), 195 (→0.5.0), 195B (→0.6.0) bumps. `media/ffmpeg.py:3` docstring pointer `media/video_frames.py` → `media/sim/video_frames.py` (post-F48 relocation). `.gitignore` now covers `data/audio/*` + `data/photos/*` (Phase 194/195 runtime uploads; previously only `data/videos/*` was ignored). Mobile `src/types/report.ts` comment pointers repointed to `analysis_worker` state machine + `vision_types.py:67` (committed separately on `phase-196-bluetooth-obd`).
+
+### 2026-09-09 — Phase 240B: Track K audit debt closed, and five retrieval defects recorded against the product
+
+Track K's closure audit left debt that Gate 12 did not cover, and the debt
+document warned against itself: the contradictions dimension was capped at
+`findings.slice(0, 8)`, so 8 of 16 findings were never examined and section A
+was "the confirmed subset, not the full set". Re-running it uncapped returned
+**27 contradictions and 13 uncertain findings** against 6 confirmed — see
+`docs/phases/completed/TRACK_K_AUDIT_DEBT_2.md`.
+
+**Project-level state this changes.** The phase fixed the six section A
+contradictions, the guard defects and the provenance rule, but the sweep also
+surfaced **five defects outside Track K's boundary that affect the product's
+behaviour**, and they are recorded here because they are not Track K's to
+close:
+
+- **S1 — `src/motodiag/knowledge/issues_repo.py` sorts severity backwards.**
+  `ORDER BY severity DESC` on a TEXT column returns `medium, low, high,
+  critical`, so **critical known-issues come back last** from
+  `search_known_issues`, `find_issues_by_symptom` and `find_issues_by_dtc`.
+  `shop/issue_repo.py:440`, `engine/correlation.py:436` and
+  `advanced/predictor.py:821` all rank severity correctly — the knowledge repo
+  is the only place that does not. **73 test files assert on `results[0]`**, so
+  this needs its own phase and its own regression. It is the highest-value item
+  left in the tree.
+- **S2 — three knowledge entries are unreachable from any make-filtered
+  lookup**, because `make LIKE '%X%'` is matched against a verbatim `make`
+  string of "All European makes" or "All makes".
+- **S3/S4 — `known_issues_european_tooling.json[2]`** carries a Triumph
+  correction under `make: 'KTM'` and runs to `year_end` 2026, making it the
+  only TuneECU answer for MY2021+ on machines the tool does not support.
+- **S5 — two rows in `src/motodiag/advanced/data/service_interval_templates.json`
+  schedule the wrong work**: a blanket 7,500-mile "Desmodromic valve service"
+  for every Ducati including the two spring-valve engines, and a KTM 690 valve
+  check stored as 15,000 **miles** where every KTM figure in the corpus is in
+  kilometres. `scheduler.next_due` reads `every_miles`/`every_months` and never
+  `notes`, so the caveats in those rows cannot reach the scheduler.
+
+None of the five was fixed here; widening the phase to absorb them would have
+meant abbreviating the care each fix gets. Recommended order is in Part 1 of
+`TRACK_K_AUDIT_DEBT_2.md`.
+
+Backend `implementation.md` 0.13.52 → 0.13.53. No schema change (still v52), no
+API surface change, no migration. Corpus unchanged at 917 entries.

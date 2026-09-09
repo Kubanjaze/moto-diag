@@ -28,6 +28,13 @@ ALREADY_IN_CORPUS = (
 )
 
 
+MILEAGE = (
+    r"\b\d{1,3}(?:,\d{3})+\s*(?:km|miles|mi)\b"      # 12,000 km
+    r"|\b\d{4,6}\s*(?:km|miles|mi)\b"                 # 12000 km  (uncomma'd)
+    r"|\b\d{1,3}k\s*(?:km|miles|mi)\b"                # 12k miles
+)
+
+
 @pytest.fixture(scope="module")
 def raw():
     return json.loads(FILE.read_text(encoding="utf-8"))
@@ -139,7 +146,7 @@ class TestBoundaries:
         interval = r"(valve|service|interval|schedule|due|every)"
         for e in raw:
             text = _claims(e)
-            for m in re.finditer(r"\d{1,3},\d{3}\s*(km|miles)", text):
+            for m in re.finditer(MILEAGE, text):
                 window = text[max(0, m.start() - 90):m.end() + 90]
                 assert not re.search(interval, window, re.I), f"{e['title']}: {m.group(0)}"
 
@@ -169,3 +176,27 @@ class TestSearchability:
         best = max(sum(1 for w in words if w in _claims(e).lower().replace("-", ""))
                    for e in raw)
         assert best >= 3, f"{needle!r} matched only {best} terms"
+
+
+class TestTheMileagePatternItself:
+    """Phase 240B. The interval guard below is a negative assertion over a
+    file that contains no mileage token at all, so its loop body has never
+    executed -- coverage confirms the assert line is unreached. A guard that
+    can go dead through a regex typo and stay green is not a guard.
+
+    The anti-vacuity check is on the PATTERN, not on the file. Asserting the
+    file contains a mileage token would be the wrong fix here: this file's
+    stated job (Phase 238 owns intervals) is to print none, so satisfying
+    such an assertion would mean injecting the very thing the guard forbids.
+
+    The uncomma'd and `12k` forms are not hypothetical -- the corpus already
+    authors them (`12000 km` in the MV triple file, `18000 miles` in the
+    Triumph Tiger file), and the original comma-only pattern missed both."""
+
+    @pytest.mark.parametrize("s", ["12,000 km", "12000 km", "18,000 miles", "18000 miles", "12k miles"])
+    def test_it_matches_the_forms_this_corpus_authors(self, s):
+        assert re.search(MILEAGE, s), s
+
+    @pytest.mark.parametrize("s", ["2013", "1200", "1150", "0.5", "R1200GS", "990 LC8"])
+    def test_it_does_not_match_bare_numbers(self, s):
+        assert not re.search(MILEAGE, s), s

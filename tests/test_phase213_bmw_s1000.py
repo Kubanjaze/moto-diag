@@ -200,8 +200,19 @@ class TestAllThreeBmwFilesCoexist:
         init_db(path)
         for f in (R_FILE, F_FILE, S_FILE):
             load_known_issues_file(f, path)
-        assert count_known_issues(db_path=path) == 30
-        assert len(search_known_issues(make="BMW", db_path=path)) == 30
+        FILES = (R_FILE, F_FILE, S_FILE)
+        # Phase 240B: was a hardcoded total. A count derived from the same
+        # JSON the test loads survives corpus growth; a literal has to be
+        # hand-edited by every later phase that adds an entry. The make
+        # filter is a substring match (`make LIKE '%X%'`), so the
+        # make-filtered number is counted the same way rather than assumed
+        # equal to the file total -- they diverge the moment a compound or
+        # cross-make entry lands in a make-prefixed file.
+        entries = [e for f in FILES for e in json.loads(f.read_text(encoding="utf-8"))]
+        assert count_known_issues(db_path=path) == len(entries)
+        assert len(search_known_issues(make="BMW", db_path=path)) == sum(
+            1 for e in entries if "bmw" in e["make"].lower()
+        )
 
     def test_no_title_collides_across_the_bmw_files(self):
         titles = []

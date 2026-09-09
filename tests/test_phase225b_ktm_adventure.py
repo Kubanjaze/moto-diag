@@ -17,6 +17,13 @@ FILE = K / "known_issues_ktm_adventure.json"
 KTM_FILES = sorted(K.glob("known_issues_ktm_*.json"))
 
 
+MILEAGE = (
+    r"\b\d{1,3}(?:,\d{3})+\s*(?:km|miles|mi)\b"      # 12,000 km
+    r"|\b\d{4,6}\s*(?:km|miles|mi)\b"                 # 12000 km  (uncomma'd)
+    r"|\b\d{1,3}k\s*(?:km|miles|mi)\b"                # 12k miles
+)
+
+
 @pytest.fixture(scope="module")
 def raw():
     return json.loads(FILE.read_text(encoding="utf-8"))
@@ -142,7 +149,7 @@ class TestBoundariesWithTheRestOfTheKtmBlock:
         interval_words = r"(valve|service|interval|schedule|due|change at|every)"
         for e in raw:
             text = _claims(e)
-            for m in re.finditer(r"\d{1,3},\d{3}\s*(km|miles)", text):
+            for m in re.finditer(MILEAGE, text):
                 window = text[max(0, m.start() - 90):m.end() + 90]
                 assert not re.search(interval_words, window, re.I), \
                     f"{e['title']}: {m.group(0)} reads as an interval"

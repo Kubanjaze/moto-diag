@@ -43,7 +43,11 @@ class TestFileShape:
         owner-report figure (a shim diameter) is labelled inside an
         entry whose own claim is the document's absence."""
         assert {e["source"] for e in raw} <= {"service-manual", "model-generated"}
-        assert not any("Forum tip" in e["fix_procedure"] for e in raw)
+        # Rule 3 as a biconditional (Phase 240B). These two files hold no
+        # `forum` entry, so the negative half alone was correct by accident;
+        # keyed off `source` it stays correct if one is ever added.
+        for e in raw:
+            assert ("Forum tip" in e["fix_procedure"]) == (e["source"] == "forum"), e["title"]
 
     def test_no_title_collides_corpus_wide(self):
         titles = []

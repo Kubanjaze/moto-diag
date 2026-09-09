@@ -22,7 +22,7 @@
     "parts_needed": [],
     "estimated_hours": 0.2,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "TuneECU scopes Ducati by ECU part number rather than by model year — the only make it treats that way",
@@ -47,7 +47,7 @@
     "parts_needed": [],
     "estimated_hours": 0.3,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "TuneECU's capability degrades differently on KTM and Triumph, and assuming it degrades the same way is the expensive mistake",
@@ -72,7 +72,7 @@
     "parts_needed": [],
     "estimated_hours": 0.3,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "Ducati and MV Agusta have no dealer-tool lockout — TEXA supplies both the factory tool and the aftermarket one",
@@ -99,7 +99,7 @@
     ],
     "estimated_hours": 1.0,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "TEXA lists coding and adaptation functions for two European makes and none for four",
@@ -124,7 +124,7 @@
     "parts_needed": [],
     "estimated_hours": 0.3,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "TEXA's entry-tier IDC5 BASIC licence contains no European makes at all",
@@ -149,7 +149,7 @@
     "parts_needed": [],
     "estimated_hours": 0.2,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "BMW's GS-911 is unavoidable, and its Enthusiast tier is disqualified for a workshop by a 10-vehicle cap",
@@ -177,7 +177,7 @@
     ],
     "estimated_hours": 0.3,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   },
   {
     "title": "Aprilia and Moto Guzzi share one dealer tool, PADS, and one independent, DiagCode — visible only when the makes are compared",
@@ -334,6 +334,6 @@
     "parts_needed": [],
     "estimated_hours": 0.2,
     "dtc_codes": [],
-    "source": "service-manual"
+    "source": "model-generated"
   }
 ]
