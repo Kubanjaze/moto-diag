@@ -2123,3 +2123,28 @@ unchanged at 917 entries.
 - **Track L is open.** Phases 242–250 follow; 250 is Gate 13 (renumbered at 240B).
 
 Backend `implementation.md` 0.13.54 → 0.13.55. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-09 — Phase 242: Zero Motorcycles, and a verifier bug that deleted an evidence class
+
+**Project-level state this changes:**
+- **New knowledge file** `known_issues_zero.json` — 17 entries, 16 `service-manual` and 1 `forum`, covering platform
+  identification, belt tension by platform, the diagnostic route, firmware, and **eight recall campaigns described by
+  mechanism with no reference numbers**. Corpus 927 → 944; four user docs moved with it.
+- **The first make-specific electric content.** A `make=Zero` query now returns this file above 241's HV safety floor,
+  with the critical safety entries first — Phase 240C's ordering fix doing the job it was made for.
+- **No `dtc_codes/zero.json`.** Zero publishes its fault-code vocabulary as a numbered table in the owner's manual, not
+  as a machine-readable list. Recorded rather than invented. `engine/fault_codes.py` is untouched.
+- **No compat/adapter rows.** A Zero is not an OBD-II vehicle; the route is the dash, the Zero app and Zero's own dealer
+  unit. Forcing a row into a schema keyed on adapter slugs would misrepresent it.
+
+**A process finding worth carrying forward.** My own refuter prompt applied a manufacturer-document attribution standard
+to every source class, which structurally refuted every regulator and community claim containing a number — 35 of them,
+including every recall in Zero's history. The result looked clean (29 well-attributed survivors) and its only symptom was
+that 100% of survivors were one source class. Track K's discipline is that findings need verification. This phase adds:
+**the verifier needs its own standard checked, per evidence class, because a verifier wrong in one direction fails
+silently and looks rigorous while doing it.** The same wrong assumption also appeared independently in a test guard.
+
+**Debt:** 5 claims are unverified (not refuted) because their refuters died at a session limit, and the completeness
+critic never ran, so coverage is unverified.
+
+Backend `implementation.md` 0.13.55 → 0.13.56. No schema change (still v53), no API surface change, no migration.

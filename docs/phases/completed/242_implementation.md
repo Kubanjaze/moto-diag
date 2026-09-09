@@ -1,6 +1,6 @@
 # Phase 242 — Zero Motorcycles (S/DS/SR/FX/FXE and the SR/F, SR/S, DSR/X platform)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-09
 
 ## Goal
 
@@ -121,20 +121,20 @@ with 241 or anything corpus-wide.
 
 ## Verification Checklist
 
-- [ ] Every printed figure names its Zero document; every withheld figure
+- [x] Every printed figure names its Zero document; every withheld figure
       states the absence
-- [ ] Every claim in every entry traces to a research finding that survived
+- [x] Every claim in every entry traces to a research finding that survived
       all three refuter lenses; the rejected claims are recorded with reasons
-- [ ] No generic BMS/inverter/thermal content — each entry is Zero-specific
-- [ ] No campaign reference number anywhere
-- [ ] `make` is `"Zero"`; a make-filtered lookup returns the file, and returns
+- [x] No generic BMS/inverter/thermal content — each entry is Zero-specific
+- [x] No campaign reference number anywhere
+- [x] `make` is `"Zero"`; a make-filtered lookup returns the file, and returns
       241's HV entries above it
-- [ ] Provenance per entry matches its `source_class`; forum-tip biconditional
-- [ ] DTC file and compat rows shipped only with vendor-document backing, or
+- [x] Provenance per entry matches its `source_class`; forum-tip biconditional
+- [x] DTC file and compat rows shipped only with vendor-document backing, or
       their absence recorded
-- [ ] Count guards and the four user docs move together
-- [ ] Every new guard mutation-tested
-- [ ] Full regression at or above 6031, 0 failed
+- [x] Count guards and the four user docs move together
+- [x] Every new guard mutation-tested
+- [x] Full regression at or above 6031, 0 failed
 
 ## Risks
 
@@ -152,3 +152,98 @@ with 241 or anything corpus-wide.
   the SR/F, SR/S and DSR/X are the current platform. Year ranges must be
   defensible per model from a document, or wide and stated as such.
 - **Corpus count moves again**, and four user docs with it — the 208 guard.
+
+---
+
+## Deviations from Plan
+
+**I wrote a refuter prompt that biased the whole research run, and it had to be
+repaired before any content was written.** The figure lens was specified as
+"every number must trace to a named Zero Motorcycles document". That is the
+right standard for a manufacturer-document claim and the wrong one for every
+other class: a recall record's model years, build windows and unit counts come
+from the **regulator**, not from Zero. The lens therefore could not pass any
+regulator or community claim containing a number, and it refuted all of them.
+The first run's result — 29 survived, every single one `manufacturer-document`,
+zero recalls, zero community patterns — looked like a clean corpus and was an
+artefact of my own prompt.
+
+A repair run re-judged the 25 claims that had passed the source and scope
+lenses and died only on that bug, using a source-class-aware standard.
+**11 recovered: 8 recall claims and 3 community patterns.** Without it this
+phase would have shipped a Zero file with no recall coverage at all, including
+no stop-riding campaigns.
+
+**The refuters corrected substance, not just attribution, and the corrections
+were safety-relevant.** Every one of the 11 came back with a `corrected_claim`.
+Four that materially changed what a mechanic is told:
+
+- The 2013 water-ingress campaign covers the **FX and XU only**, not the full
+  2013 line — and its remedy is **removal and return of the battery modules**,
+  not the sealing operation the original claim described.
+- The 2020 front-brake-switch record describes **no** failure mode in which the
+  brake light stays on — the original claim said it did. It does record that
+  **cruise control will not cancel** on front-brake application, which the
+  original missed entirely.
+- The 2023-24 key-switch campaign's remedy is a **firmware update**, dealer or
+  over-the-air. The original claim implied harness work, which is what a shop
+  reading the mechanism would quote.
+- The 2012 pack-fire campaign's remedy is the owner's **choice** of repurchase
+  or trade-assist, and the record carries a **park-it advisory** the original
+  claim did not mention.
+
+**14 claims stayed rejected after the repair, on judgement rather than
+infrastructure.** Six were recall claims whose verifiers opened the Part 573
+reports and found the claim wrong on substance — one flagged simply
+"REMEDY IS WRONG AND SAFETY-CRITICAL". Those are not in the file.
+
+**Five claims are unverified rather than refuted**, because their refuters died
+when the run hit a session limit. They are recorded as debt, not shipped. One
+of them — the cross-platform belt-tension comparison — turned out to matter, so
+the entry that covers it was written from the two platform manuals directly
+rather than from the unverified comparison.
+
+**The completeness critic never ran** (same session limit), so coverage is
+unverified. Recorded as debt.
+
+**One test I wrote had the same bug as the refuter prompt.** The guard requiring
+a printed figure to name a Zero document used a `DOC` pattern listing only Zero
+publication types — so a recall entry, whose figures legitimately come from a
+regulator, would have failed it. Widened to accept a regulator record. The bug
+was mine twice in one phase, in two different places, from the same wrong
+assumption.
+
+**No DTC file and no compat rows shipped.** The tooling research established
+that the diagnostic route is the dash error list, the Zero app and Zero's own
+dealer unit, and that Zero does not publish a machine-readable fault-code
+vocabulary — the codes are a numbered table in the owner's manual, which is
+knowledge-base content, not a `dtc_codes` file. The plan left this to the
+research and the research answered it. Recorded rather than forced.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Claims swept / unique after dedup | 5 finders, 76 raw / **75 unique** |
+| Survived first run | 29 — all `manufacturer-document` (the bug) |
+| Recovered by the repair run | **11** of 25 re-judged (8 recalls, 3 community) |
+| Rejected on judgement | 55 |
+| Unverified (refuter died) | 5, recorded as debt |
+| Entries shipped | **17** — 16 `service-manual`, 1 `forum` |
+| Recall campaigns covered | **8**, all by mechanism, **no reference numbers** |
+| Corpus | 927 → **944**; four user docs moved with it |
+| Severity mix | 3 critical, 7 high, 7 medium |
+| Guards | 16, all six families mutation-tested |
+| Mutation scenarios | 6, all caught (one required redoing — my first attempt left a marker in an unstripped field) |
+| Corpus-globbing guards swept | 654 passed |
+| Regression | **6047 passed / 0 failed** (baseline 6031; +16 guards) |
+
+**Key finding: the refuter layer is only as good as the standard it applies,
+and a single wrong clause in one prompt silently deleted an entire evidence
+class.** The run looked successful — 29 well-attributed claims, every figure
+traced to an opened document. What it had actually done was refuse every recall
+in Zero's history on a technicality, and the shape of the result (100% one
+source class) was the only visible symptom. Track K's lesson was that findings
+need verification; this phase's is that the verifier needs its own standard
+checked, because a verifier that is wrong in one direction fails silently and
+looks rigorous while doing it.
