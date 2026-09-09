@@ -1,0 +1,277 @@
+[
+  {
+    "title": "Removing the service disconnect isolates the pack — it does not make the machine safe to touch",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. A high-voltage battery is built as a series string. The service disconnect (also called the service plug or maintenance plug) breaks that string near its middle, so the pack is split into two halves that are each well below the assembled voltage and no longer present pack voltage at the output terminals. That is isolation, and it is the first step of every HV job. It is not proof that the system is dead: the motor controller and DC-DC converter contain capacitors that hold charge after the pack is disconnected, the pack halves themselves are still energised internally, and a contactor that has welded closed will not open when commanded. Treating disconnect removal as the end of the isolation process — rather than the beginning — is the single most common way a competent mechanic is injured on an electric vehicle. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "about to work on a high voltage system",
+      "service plug removed is it safe",
+      "unsure if hv system is isolated",
+      "first time working on an electric bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Disconnect removal treated as the whole isolation procedure rather than its first step",
+      "Capacitor charge in the controller and DC-DC converter after the pack is opened",
+      "A welded contactor that does not open when commanded",
+      "Habits carried from 12V work, where disconnecting the battery does make the system safe"
+    ],
+    "fix_procedure": "1. Read the manufacturer's HV isolation procedure for the exact machine before touching anything. The location of the disconnect, the required PPE and the discharge wait are all model-specific and this entry supplies none of them. 2. Park, power down, remove the key or fob, and remove the 12V supply as the manual directs — the 12V system is what commands the HV contactors. 3. Remove the service disconnect. 4. Keep it under your own control for the whole job — see the lockout entry. 5. Wait the manufacturer's specified discharge interval. Do not estimate it. 6. Verify absence of voltage by measurement, with a meter you have proved live before and after — see the verification entry. Only then is the system dead. 7. If any step cannot be completed as written, stop and escalate. A partially isolated HV system is not a state to work in.",
+    "parts_needed": [
+      "Manufacturer service documentation for the specific machine"
+    ],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Verify absence of voltage with a meter you prove live-dead-live — an untested meter cannot prove anything",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. Absence of voltage is a measurement, never an assumption. The method that makes the measurement trustworthy is to prove the meter immediately before and immediately after the reading that matters: test it on a known live source, take the reading on the isolated system, then test it on the known live source again. The middle reading only means something because the two outer readings show the instrument was working at that moment. A meter with a blown fuse, a broken lead or a wrong function setting reads zero on a live circuit exactly as it reads zero on a dead one, and the reading looks identical either way. The meter and its leads must also be rated for the category and voltage of the system being measured; a general-purpose automotive meter is often not. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "how do i know the hv system is dead",
+      "meter reads zero volts",
+      "verifying isolation before hv work",
+      "is my multimeter rated for this"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A zero reading accepted without proving the instrument",
+      "Blown meter fuse, damaged lead or wrong function selected",
+      "A meter or lead set not rated for the measurement category and voltage",
+      "Measuring at an accessible point rather than the point the manual specifies"
+    ],
+    "fix_procedure": "1. Confirm the meter and leads carry a measurement-category and voltage rating that covers the system. If you cannot establish the rating, do not use the instrument. 2. Inspect the leads for damage before every use. 3. Prove the meter on a known live source. 4. Take the reading at the point the manufacturer's procedure specifies. 5. Prove the meter on the known live source again. 6. Record the result on the job card with the time — the next person needs to know whether verification was done and when, not to infer it. 7. Re-verify after any interruption. Isolation is a state that expires the moment you leave the machine unattended.",
+    "parts_needed": [
+      "Multimeter and leads rated for the system's measurement category and voltage",
+      "A known live source for proving the meter"
+    ],
+    "estimated_hours": 0.3,
+    "source": "model-generated"
+  },
+  {
+    "title": "The capacitor discharge wait is a specified interval, not a pause — and it is not established here",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. After the pack is opened, the motor controller and DC-DC converter hold charge in their DC-link capacitors. Manufacturers specify a wait before the system may be treated as dischargeable, and that interval exists because the stored energy takes time to bleed through the designed discharge path. The interval is model-specific and this entry does not state one for any machine — a wait carried across from another vehicle, or estimated from how long the job is taking anyway, is not a discharge procedure. Two further points that the wait alone does not cover: the discharge path can itself fail, which is why the wait is followed by measurement rather than replaced by it; and the wait starts when the pack is actually open, not when the ignition was switched off. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "how long to wait after disconnecting hv",
+      "capacitor discharge time",
+      "can i start work on the controller yet"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Wait interval estimated rather than read from the manufacturer's procedure",
+      "Interval carried across from a different model or a different manufacturer",
+      "Timing started at key-off rather than at pack disconnection",
+      "Wait treated as a substitute for measured verification rather than a precondition of it"
+    ],
+    "fix_procedure": "1. Read the specified discharge interval for the exact machine. This entry does not supply it and no general figure is safe to use. 2. Start timing when the pack is open, not at key-off. 3. Wait the full interval. 4. Then verify absence of voltage by measurement. The wait makes the measurement likely to read zero; only the measurement establishes that it does. 5. If the measurement does not read as expected after the specified wait, stop. A discharge path that has not worked is a fault condition, not a reason to wait longer and try again.",
+    "parts_needed": [
+      "Manufacturer service documentation for the specific machine"
+    ],
+    "estimated_hours": 0.2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Keep the removed service disconnect on your person — lockout on a motorcycle is custody, not a padlock",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. Industrial lockout/tagout assumes an isolation point that accepts a padlock and a tag. A motorcycle service disconnect usually accepts neither, so the equivalent control is custody: the removed disconnect stays in the pocket of the person working on the machine, or in a locked box that person holds the key to. It does not go on the bench, into the fairing, or back into the machine 'just to keep it safe'. The hazard being controlled is specific and real — a colleague who does not know the machine is open refits the disconnect, or presses the start button, while someone's hands are in the HV system. A tag on the bars stating the machine is isolated, who isolated it and when, is the other half; it is what tells a second person the state of a machine they did not open. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "lockout tagout on a motorcycle",
+      "where to put the service plug",
+      "someone reconnected the bike while i was working"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A disconnect left on the bench or in the machine where anyone can refit it",
+      "No tag, so a second person cannot tell an isolated machine from a running one",
+      "Shift change or break with the machine open and no custody handover",
+      "Industrial LOTO hardware assumed to fit an isolation point that does not accept it"
+    ],
+    "fix_procedure": "1. The person doing the work keeps the disconnect on their person, or in a box only they can open. 2. Tag the bars: machine isolated, by whom, at what time. 3. Never refit the disconnect to store it. 4. At a break or a shift change, either restore the machine to a documented safe state or hand over custody explicitly, face to face, with the tag updated. A verbal 'don't touch the electric one' across a workshop is not a handover. 5. Before refitting at the end of the job, confirm no one else is working on the machine and that all HV covers and fasteners are restored to the manufacturer's specification.",
+    "parts_needed": [
+      "Isolation tag",
+      "Lockable box for the service disconnect"
+    ],
+    "estimated_hours": 0.2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Insulated gloves are rated, dated and inspected — an uninspected glove is not PPE",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. Electrical insulating gloves are classed by the voltage they are tested to, and the class required for a given machine follows from that machine's system voltage — which this entry does not state for any model. Three things about them are routinely missed in a general workshop. They are worn with leather over-protectors, because the insulating rubber is easily cut and a cut glove is not insulating. They carry a test date and go out of service when it expires, whatever their condition looks like. And they are inspected before every single use — visually, and by rolling the cuff to trap air and checking that the glove holds pressure, which finds pinholes the eye does not. Insulated hand tools are a separate matter from gloves: they carry their own standard and their own rating, and an ordinary tool with a plastic-dipped handle is not an insulated tool. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "what gloves for hv work",
+      "insulated tools for electric bike",
+      "ppe for high voltage motorcycle",
+      "are my gloves still in date"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Glove class chosen without establishing the machine's system voltage",
+      "Insulating gloves worn without leather protectors and then cut",
+      "Test date expired, or no date recorded at all",
+      "Plastic-handled ordinary tools mistaken for rated insulated tools"
+    ],
+    "fix_procedure": "1. Establish the system voltage from the manufacturer's documentation and select the glove class from it. Do not select by feel or by what is in the drawer. 2. Wear leather protectors over the insulating gloves. 3. Inspect before every use: visual check, then the air test for pinholes. 4. Check the test date and take out-of-date gloves out of service — physically remove them, do not leave them in the drawer. 5. Use hand tools carrying an insulated-tool rating, and inspect their insulation the same way. 6. Remove watches, rings and anything conductive before starting. 7. Store gloves out of sunlight and away from oil and solvent, which degrade the rubber invisibly.",
+    "parts_needed": [
+      "Electrical insulating gloves of the class the system requires",
+      "Leather over-protectors",
+      "Insulated hand tools carrying a voltage rating"
+    ],
+    "estimated_hours": 0.3,
+    "source": "model-generated"
+  },
+  {
+    "title": "Do not work alone on a live HV system, and know the rescue plan before you start",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. The reason for the second person is not convenience. An electric shock at pack voltage can leave a casualty unable to let go and unable to call for help, and a rescuer who grabs them becomes the second casualty. So the second person's job is defined before work starts: they know where the isolation point is, they know not to touch the casualty until the source is removed, and they know how to call for help from that workshop. This is the one control that has no technical substitute — no amount of PPE or procedure replaces someone who can act. Live HV work should be rare in a general workshop in the first place: most jobs are done on an isolated and verified system, and a job that genuinely requires the system live is a signal to check whether the work is within the shop's qualification. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "working alone on electric bike",
+      "hv safety second person",
+      "what if someone gets shocked in the workshop"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Live HV work undertaken alone",
+      "A second person present but with no briefed role",
+      "No agreed rescue plan, so the instinct is to grab the casualty",
+      "Live work chosen for convenience where an isolated procedure exists"
+    ],
+    "fix_procedure": "1. Prefer the isolated procedure. Ask what makes this job require a live system, and whether it is within the shop's qualification at all. 2. If the work proceeds, brief the second person before it starts: where the isolation point is, how to remove the source, and that they must not touch the casualty until it is removed. 3. Agree how help is called from this building. 4. Keep the working area clear of other people and other work. 5. Stop at the first thing that is not as expected. An HV system behaving unexpectedly is not a puzzle to work through with your hands in it.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "source": "model-generated"
+  },
+  {
+    "title": "Orange cable is a convention, not a guarantee — identify HV from the documentation",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. High-voltage cabling on production electric vehicles is conventionally sheathed in orange, and the convention is useful: it tells a mechanic at a glance which harness not to cut, unplug or lean a tool against. It is a convention rather than a promise. Repairs, aftermarket work, accident damage and a manufacturer's own internal routing can all present HV conductors that are not orange, and a conductor's colour is not evidence of what it carries. The reliable identification is the manufacturer's HV component and routing diagram for the machine, which is also what tells you where the HV runs behind panels — the cable you can see is rarely the whole path. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "which cables are high voltage",
+      "orange cable on electric bike",
+      "where does the hv harness run"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Colour treated as proof rather than as a convention",
+      "Previous repair or aftermarket work with non-standard cable",
+      "HV routing behind panels assumed from the visible run",
+      "Accident damage that has displaced or exposed conductors"
+    ],
+    "fix_procedure": "1. Get the HV component and routing diagram for the machine before removing panels. 2. Treat orange as a warning to be heeded, never as a licence to treat anything else as low voltage. 3. Assume the visible run is not the whole run. 4. Do not cut, probe, unplug or support tooling against any conductor you have not identified from the diagram. 5. On any machine with previous repair history or accident damage, raise your caution rather than lowering it — the convention is least reliable exactly where the risk is highest.",
+    "parts_needed": [
+      "Manufacturer HV component and routing diagram for the machine"
+    ],
+    "estimated_hours": 0.3,
+    "source": "model-generated"
+  },
+  {
+    "title": "A damaged, deformed or submerged pack is a different job — do not open it to look",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. A pack that has been crashed, crushed, punctured, submerged or exposed to fire is outside routine service. Lithium cells that have been mechanically damaged or water-ingressed can go into thermal runaway with a delay measured in hours or days, the reaction is self-sustaining and does not need outside air, and it can restart after it appears to have stopped. The instinct to open the pack and assess the damage is the wrong one: opening it neither reduces the hazard nor produces information a general workshop can act on, and it removes the containment the pack was designed with. The correct response is isolation of the machine from people and property, quarantine for an observation period, and the manufacturer's damaged-pack procedure. Signs that warrant immediate evacuation rather than investigation include heat, swelling, hissing, sweet or solvent-like odour, smoke and audible venting. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "critical",
+    "symptoms": [
+      "crashed electric bike what now",
+      "battery pack damaged after accident",
+      "electric bike was in a flood",
+      "pack is warm and swollen",
+      "smell from the battery"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Impact, crush or puncture damage to the pack",
+      "Water ingress from submersion",
+      "Previous fire exposure",
+      "Delayed thermal runaway that can begin hours or days after the event",
+      "Pack opened for assessment, removing its designed containment"
+    ],
+    "fix_procedure": "1. Do not open the pack. 2. Move the machine away from buildings, vehicles and anything combustible, or if it cannot be moved safely, clear the area around it. 3. Quarantine it outdoors for an observation period and do not leave it charging or connected. 4. Contact the manufacturer and follow their damaged-pack procedure; this entry does not substitute for it and no general observation period is stated here. 5. Treat heat, swelling, hissing, a sweet or solvent-like smell, smoke or venting as a reason to evacuate and call the fire service — tell them it is a lithium traction pack, because it changes their approach. 6. Do not attempt to extinguish or cool a venting pack with a general-purpose extinguisher on your own initiative. 7. Record what happened to the machine; the history is what the manufacturer needs and what the next person handling it needs.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "model-generated"
+  },
+  {
+    "title": "HV work has a qualification requirement, and this corpus does not state what yours is",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. Who may work on a high-voltage vehicle system is set by the jurisdiction the workshop operates in, by the manufacturer's own authorisation scheme, and often by the shop's insurer — and those three do not always agree. This corpus does not state a qualification level, a course, a certificate or a legal threshold for any territory, because the honest position is that the requirement varies and a wrong answer here has consequences beyond the technical. What is transferable is the shape of the question a shop should answer before taking the work: what the local regulator requires, what the manufacturer's scheme requires for warranty and parts access, what the insurer requires for cover to hold, and which of those is the binding constraint. A shop that can do the job technically and cannot answer those questions is exposed in a way no procedure fixes. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "am i qualified to work on electric bikes",
+      "hv training requirement",
+      "does my insurance cover electric vehicle work"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Qualification assumed from general automotive experience",
+      "Manufacturer authorisation conflated with the legal requirement, or the reverse",
+      "Insurance cover never checked against the class of work",
+      "The requirement changing by territory and not being re-checked"
+    ],
+    "fix_procedure": "1. Establish the local regulatory requirement for HV vehicle work. This entry names no level for any territory. 2. Establish the manufacturer's authorisation requirement separately — it is a different question and often a stricter one. 3. Confirm with the insurer, in writing, that the class of work is covered. 4. Record which of the three is binding and keep the evidence with the shop's documentation. 5. Re-check when taking on a new marque, and when a technician leaves — qualification usually attaches to a person, not to the business. 6. Where the work falls outside what the shop can evidence, refer it. Referring an HV job is a commercial decision; doing it unqualified is not.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "model-generated"
+  },
+  {
+    "title": "Isolation expires: re-verify after any interruption, and restore the machine deliberately",
+    "description": "General knowledge entry on high-voltage service practice, written because the practice is transferable and the figures are not. Verification of absence of voltage is a statement about one moment. It stops being true the instant the machine is out of your sight, because you can no longer account for what was done to it — and the machine does not indicate that the state has changed. The practical rule is that isolation is re-verified after any interruption: a break, a phone call, a shift change, another job started and returned from. The mirror of that discipline is restoration. Bringing an HV machine back to life is its own procedure with its own order — covers and fasteners restored to specification, tools and test leads accounted for and removed, the area cleared of people, then the disconnect refitted, then the 12V system, and only then power applied. A tool left inside an HV enclosure is found by the pack, not by the mechanic. This entry deliberately prints no machine-specific figure — no pack voltage, no discharge wait, no torque. Those come from the manufacturer's service documentation for the exact machine, and a figure carried across from another model is the failure this entry exists to prevent.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica, Damon",
+    "model": "Electric motorcycles — Zero S/DS/SR/FX, LiveWire One, Energica Ego/Eva/Esse, Damon HyperSport",
+    "year_start": 2010,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "came back to the bike after a break",
+      "how to power an electric bike back up",
+      "finished hv work what now",
+      "left a tool somewhere in the bike"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Isolation treated as a state that persists rather than a measurement that expires",
+      "Work resumed after an interruption without re-verification",
+      "Tools or test leads left inside an HV enclosure",
+      "Power restored before covers and fasteners were returned to specification"
+    ],
+    "fix_procedure": "1. Re-verify absence of voltage after any interruption, however short, using the same live-dead-live method. 2. Before restoring power, account for every tool and test lead you introduced — count them out as deliberately as you counted them in. 3. Restore all HV covers, seals and fasteners to the manufacturer's specification; the enclosure is part of the safety system, not trim. 4. Clear the area of other people. 5. Refit the disconnect, then the 12V supply, then apply power, in the order the manual specifies. 6. Record on the job card what was isolated, when it was verified, and when it was restored. The next person to open this machine is relying on that record.",
+    "parts_needed": [
+      "Manufacturer service documentation for the specific machine"
+    ],
+    "estimated_hours": 0.3,
+    "source": "model-generated"
+  }
+]

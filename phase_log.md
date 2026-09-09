@@ -2110,3 +2110,16 @@ column sorts lexicographically, and the four values alphabetise to
 
 Backend `implementation.md` 0.13.53 → 0.13.54. No API surface change. Corpus
 unchanged at 917 entries.
+
+### 2026-09-09 — Phase 241: HV safety and lockout/tagout; Track L opens
+
+**Project-level state this changes:**
+- **New knowledge file** `known_issues_electric_hv_safety.json` — 10 entries, all `model-generated`, none printing a
+  machine-specific figure. Corpus 917 → 927; README, install, quickstart and launch-checklist moved with it.
+- **The first electric content in the corpus.** Reachable from Zero, LiveWire, Energica, Damon and Harley-Davidson;
+  a make-only Harley query now also returns HV safety content, accepted because the search has no powertrain filter.
+- **`engine/safety.py` `SafetyChecker` confirmed to have no production caller** — only tests construct it. Recorded
+  and pinned rather than wired. Wiring it is its own phase and must add powertrain context first.
+- **Track L is open.** Phases 242–250 follow; 250 is Gate 13 (renumbered at 240B).
+
+Backend `implementation.md` 0.13.54 → 0.13.55. No schema change (still v53), no API surface change, no migration.
