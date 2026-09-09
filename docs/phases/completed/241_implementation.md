@@ -1,6 +1,6 @@
 # Phase 241 — HV safety and lockout/tagout; Track L opens
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-09
 
 ## Goal
 
@@ -103,17 +103,17 @@ absence is a voltage or a wait time.
 
 ## Verification Checklist
 
-- [ ] Every entry reachable: a make/model-filtered lookup for an electric
+- [x] Every entry reachable: a make/model-filtered lookup for an electric
       machine returns the HV safety content
-- [ ] No entry prints a voltage threshold, discharge wait or torque it cannot
+- [x] No entry prints a voltage threshold, discharge wait or torque it cannot
       attribute; each such absence is stated explicitly
-- [ ] Provenance honest per entry, and no `model-generated` entry is phrased as
+- [x] Provenance honest per entry, and no `model-generated` entry is phrased as
       a validated procedure
-- [ ] Forum-tip biconditional holds (Phase 240B rule 3)
-- [ ] Corpus count guard and Phase 208 doc-count guard stay green
-- [ ] The `SafetyChecker` integration gap is recorded, not silently filled
-- [ ] Every new guard mutation-tested
-- [ ] Full regression at or above 6007, 0 failed
+- [x] Forum-tip biconditional holds (Phase 240B rule 3)
+- [x] Corpus count guard and Phase 208 doc-count guard stay green
+- [x] The `SafetyChecker` integration gap is recorded, not silently filled
+- [x] Every new guard mutation-tested
+- [x] Full regression at or above 6007, 0 failed
 
 ## Risks
 
@@ -132,3 +132,61 @@ absence is a voltage or a wait time.
   ordering real, so the values now decide what a mechanic sees first.
 - **No electric bike exists in the corpus yet**, so a reachability test needs a
   seeded electric vehicle — the fixture is part of the work, not an aside.
+
+---
+
+## Deviations from Plan
+
+**None to the shape of the phase** — the Step 0 findings held and the build
+followed them. Three things are worth recording anyway.
+
+**The `make` convention decided.** Every entry carries
+`"Zero, Harley-Davidson, LiveWire, Energica, Damon"`, so `make LIKE '%X%'`
+returns the whole file for each electric make — verified live for all five,
+and for four electric models via the `model` field. The cost is that a
+make-only `Harley-Davidson` query also returns HV safety content on a
+Sportster. That was accepted deliberately: LiveWire *is* a Harley, the search
+has no powertrain filter (the same gap that keeps `SafetyChecker` unwired), and
+HV safety appearing for a Harley query is over-inclusion, not misinformation.
+A prose make would have been unreachable from everything.
+
+**My own guard fired twice on the entries, and both times the entry was
+right.** The "certified procedure" guard matched *"the point the manual
+specifies"* and *"the order the manual specifies"* — which is deferral, exactly
+what a `model-generated` safety entry should do. Mention versus use, again.
+Tightened so borrowed authority only counts when a figure follows in the same
+clause. The second firing was a join artefact: `_claims()` joined fields with a
+space, so a cause ending *"…the manual specifies"* ran into the next field's
+*"1. Confirm"* and read as *"the manual specifies 1"*. The helper now joins on
+newlines and every clause regex excludes them. Both fixes were mutation-tested
+in both directions.
+
+**Every entry is `model-generated`, and a test pins that.** No manufacturer HV
+document was opened for this phase, so `service-manual` would have been a
+false label on the one file where a false label is dangerous. The pin is
+deliberate: the day a later phase opens a manual, this assertion is what it
+changes, knowingly.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Entries | 10, all `model-generated`, in `known_issues_electric_hv_safety.json` |
+| Corpus | 917 → **927**; four user docs moved with it |
+| Severity mix | 5 critical, 4 high, 1 medium — not uniform, by guard |
+| Machine-specific figures printed | **0** — no pack voltage, discharge wait or torque; every entry states the absence and routes to the manual |
+| Reachable from | Zero, LiveWire, Energica, Damon, Harley-Davidson (make) and LiveWire, Ego, SR, HyperSport (model), verified live |
+| Ordering | critical first through the real path — Phase 240C's fix, visible on a safety file |
+| Guards | 24 |
+| Mutation scenarios | 7, all caught |
+| Corpus-globbing guards swept | 18 files, 635 passed, 0 objections to the new file |
+| `SafetyChecker` gap | recorded as a two-part tripwire, not filled |
+| Regression | **6031 passed / 0 failed** (baseline 6007; +24 guards) |
+
+**Key finding: on a safety file, the deliberate absence is the content.** The
+procedure — isolate, wait, prove the meter live-dead-live, measure, keep
+custody of the disconnect, re-verify after every interruption — is
+transferable and true. The figures are not, and a figure carried across from
+another machine is the exact error the entries exist to prevent. Ten entries
+that print no voltage, no wait and no torque, and say so in every one, are
+worth more to a mechanic than ten that guess.

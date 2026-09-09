@@ -1,7 +1,8 @@
 # Phase 241 — HV safety and lockout/tagout — phase log
 
-**Status:** Planned
-**Opened:** 2026-09-09
+**Status:** ✅ Complete
+**Opened:** 2026-09-09 | **Closed:** 2026-09-09
+**Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
 
@@ -69,3 +70,54 @@ Phase 224/234 deliberate-absence rule, applied to voltages and wait times.
 Baseline before any work: **6007 passed / 0 failed** (Phase 240C).
 
 Plan v1.0 written to `docs/phases/in_progress/241_implementation.md`.
+
+---
+
+## 2026-09-09 — Build complete; Track L is open
+
+**Ten entries** in `known_issues_electric_hv_safety.json`: the service
+disconnect as the first step of isolation rather than the last; live-dead-live
+meter proving; the discharge wait as a specified interval not a pause; custody
+of the disconnect as lockout on a machine that takes no padlock; rated, dated,
+air-tested gloves and rated insulated tools; the second person and the rescue
+plan; orange cable as convention not guarantee; the damaged or submerged pack
+as a different job entirely; the qualification question the corpus refuses to
+answer for any territory; and isolation as a state that expires. **None prints
+a pack voltage, a discharge wait or a torque**, and every one says so and
+routes to the manufacturer's documentation — the Phase 224/234
+deliberate-absence rule, on the file where it matters most.
+
+**All ten are `model-generated`, and a test pins that.** No manufacturer HV
+document was opened, so `service-manual` would have been a false label on
+safety content. The day a later phase opens one, that assertion is what it
+changes — deliberately.
+
+**Reachability verified live, not assumed.** `make` carries
+`"Zero, Harley-Davidson, LiveWire, Energica, Damon"`; a make-filtered lookup
+returns the whole file for all five, and four electric models resolve through
+the `model` field. The accepted cost is over-inclusion on a make-only
+Harley-Davidson query, because the search has no powertrain filter; a prose
+make would have been reachable from nothing (Phase 240B, S2). And Phase 240C's
+ordering fix is visible here in the way it was meant for: `critical` entries
+first on a safety file.
+
+**Two of my own guards fired on correct entries.** Both were mention-versus-use
+— a "certified procedure" regex that treated *"the point the manual specifies"*
+as borrowed authority when it is deferral, and a `_claims()` helper that joined
+fields with spaces so a cause ending *"…the manual specifies"* ran into the
+next field's *"1. Confirm"*. Entries unchanged; guard tightened to require a
+figure in the same clause, helper joins on newlines. Both directions
+mutation-tested.
+
+**`SafetyChecker` left unwired, on purpose, and pinned.** Two tripwires: one
+fails the day any production module constructs it, with the message that the
+wiring also needs powertrain context and the HV rules this phase withheld; the
+other fails if an HV rule lands in `SAFETY_RULES` while it still has no caller.
+
+**The corpus-globbing guard family accepted the new file** — 18 test files,
+635 passed. Corpus 917 → 927; the four user docs carrying the figure moved with
+it under the Phase 208 guard. Seven mutation scenarios, all caught, each
+restored from a `cp` backup rather than `git checkout` — the 240C lesson
+applied. F9 lint clean.
+
+Regression: **6031 passed / 0 failed** (baseline 6007; +24 guards).
