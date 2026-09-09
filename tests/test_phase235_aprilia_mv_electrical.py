@@ -292,8 +292,14 @@ class TestTheEuro4Correction:
         entry = next(e for e in raw if "locked door" in e["title"])
         text = entry["description"]
         assert "2018/295" in text or "44/2014" in text
-        assert "free of charge" in text
         assert "alternative connection interface" in text
+        # The obligation the entry rests on is SUPPLY and non-discrimination.
+        # An earlier version asserted the phrase "free of charge" here, which
+        # is what let the entry attach it to the adapter; the Track K closure
+        # audit caught that. The free-of-charge duty is asserted separately,
+        # and correctly scoped, in test_the_adapter_is_not_claimed_to_be_free.
+        assert "provided upon request to all independent operators" in text
+        assert "non-discriminating manner" in text
 
     def test_it_scopes_the_entitlement_honestly(self, raw):
         """The access is real and narrow. An entry that promised full
@@ -303,6 +309,31 @@ class TestTheEuro4Correction:
         assert re.search(r"narrow", fix, re.I)
         for excluded in ("ABS", "immobiliser", "coding"):
             assert excluded in fix, excluded
+
+    def test_the_adapter_is_not_claimed_to_be_free(self, raw):
+        """The Track K closure audit caught this: point 3.13 has three
+        sentences in a row, and the entry quoted the first and the
+        third. The middle one — "Manufacturers may charge a reasonable
+        and proportionate price for this adapter" — is the one a shop
+        needs before arguing with a dealer. The free-of-charge duty
+        attaches to the PIN CONFIGURATION and is owed to TEST EQUIPMENT
+        MANUFACTURERS, not to a workshop.
+
+        My own verification fetch asked whether 3.13 required a free
+        adapter and got back the sentences that matched the question;
+        the charging sentence was never in the answer. The lesson is in
+        the shape of the question, so this pins the correction."""
+        entry = next(e for e in raw if "locked door" in e["title"])
+        text = " ".join([entry["title"], entry["description"],
+                         entry["fix_procedure"]] + entry["causes"])
+        assert re.search(r"may charge a reasonable and proportionate price", text)
+        assert re.search(r"Expect to pay", text)
+        assert not re.search(r"adapter[^.]{0,80}free of charge", text, re.I)
+        assert not re.search(r"free of charge and without discriminating", text)
+        # The free-of-charge duty must still be stated, correctly scoped.
+        assert re.search(r"free.of.charge[^.]{0,120}pin configuration"
+                         r"|pin configuration[^.]{0,120}free.of.charge", text, re.I)
+        assert "test equipment manufacturers" in text
 
     def test_it_distinguishes_type_approval_from_bench_verification(self, raw):
         entry = next(e for e in raw if "locked door" in e["title"])
