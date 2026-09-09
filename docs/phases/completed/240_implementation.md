@@ -50,7 +50,7 @@ check --make`, and `/shop/{id}/parts/search`, on one database seeded the way
 | Query surfaces | `kb search` (CLI), `/v1/kb/dtc/{code}?make=` (API), `hardware compat recommend --json` (CLI), `/v1/shop/{id}/parts/search` (API) |
 | Executable documentation of gaps | 5 tests that pass today and fail when the gap is filled |
 | Earlier gates re-run | 6 (Gates 5, 6, 7, 8, 9, 11) |
-| Gate tests |  |
+| Gate tests | 46 |
 | Backend regression | 5945 passed / 0 failed |
 
 **The row was mis-numbered, and the correction is a Step 0 finding.** Row 240

@@ -8,7 +8,7 @@
 **Parts catalogue:** 62 → 125 rows, 83 → 100 cross-references; Aprilia, MV Agusta and Moto Guzzi from zero.
 **Schema version at closure:** 52 (Track K added migrations 051 — `known_issues.source` — and 052 — the `regulation` value).
 **Project version at closure:** 0.13.52.
-**Regression at closure:** 5945 passed / 0 failed; Gate 12  tests.
+**Regression at closure:** 5945 passed / 0 failed; Gate 12 46 tests.
 
 MotoDiag opened Track K with 660 known issues that were overwhelmingly Japanese
 and American, no record of where any of them came from, and a roadmap block

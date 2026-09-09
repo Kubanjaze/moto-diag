@@ -23,6 +23,6 @@ copy under tests/ (removed after each run), regression class deselected:
 Final dry run: 37 passed, regression class deselected.
 
 ## Close-out
--  gate tests; regression 5945 passed / 0 failed; F9 clean.
+- 46 gate tests; regression 5945 passed / 0 failed; F9 clean.
 - Cleared for roadmap ✅ (row corrected to Gate 12), implementation.md
   0.13.51 → 0.13.52, merge. **Track K closes.**
