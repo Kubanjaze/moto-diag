@@ -1,5 +1,38 @@
 # Track K — closure audit findings (open)
 
+> **STATUS: CLOSED at Phase 240B, 2026-09-09.** Read this box before acting on
+> anything below.
+>
+> - **Section A (6 contradictions) — FIXED**, each at every site its verifier
+>   named. A5 was fixed at two sites, not one: `european_intervals[4]` is
+>   unreachable from any make-filtered lookup, so the correction also went into
+>   the reachable sibling `intervals[6]`.
+> - **Section B — B1, B3, B5 FIXED. B2 and B4-as-framed CLOSED AS NO-CHANGE**,
+>   because verification rejected them. Do not relabel the MV F4 shim entry to
+>   `unverified`: that value is reserved for legacy rows with no recorded
+>   origin and would pull the entry into Gate 2's forum-tip population. B4's
+>   real content was that Aprilia and MV Agusta shadow *nothing*, which is now
+>   pinned as a tripwire.
+> - **Section C — the rule was decided and applied.** Only the tooling file's
+>   split was real; the parts-fiche and KTM-electrical claims were both
+>   rejected on verification. Eight vendor-documentation entries demoted to
+>   `model-generated` (13/13).
+> - **Section D — the scope boundary is now stated** in Gate 12's docstring.
+>
+> **Two errors in this document, corrected at 240B:** the Bonneville forum
+> entry is at index **10**, not 11. And the counting caveat below understates
+> the problem — the uncapped re-run returned **27 contradictions and 13
+> uncertain findings**, not the 8 unexamined ones it anticipated.
+>
+> **Two confirmed findings this document omits from its own sections**, still
+> open: the Aprilia V4 charging contradiction (`european_differentials[5]`),
+> which section A replaced with the MV swingarm item; and
+> `known_issues_triumph_vintage.json` labelling all 13 entries `service-manual`
+> while two rest on a marque club and a retailer — that one collides with the
+> forum-tip biconditional and needs a decision, not a patch.
+>
+> **The full open list is `TRACK_K_AUDIT_DEBT_2.md`.**
+
 Produced by a read-only adversarial audit run immediately before Gate 12
 closed Track K on 2026-09-08. Six dimensions, each finding independently
 verified by a second agent: **46 verdicts, 29 confirmed real** (the

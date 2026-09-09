@@ -396,6 +396,26 @@ European motorcycle brands — BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta. Ea
 | 240 | Gate 12 — European brand coverage integration test | ✅ | **Row corrected from "Gate 11"**: Phase 205 had already closed under that number (desktop + mobile end-to-end, Track J’s opener), so Track K’s closing gate is **Gate 12** — the same class of correction as "Mercuri (MV)" at 235. **CLOSED 2026-09-08. Track K closes.** Seven makes swept **through the real front doors**, never the repo layer: `kb search` on the CLI, `/v1/kb/dtc/{code}?make=` on the API — asserting the **make’s** meaning wins over the SAE generic, which on Aprilia is the whole point of 235 — `hardware compat recommend --json` on the CLI, and the shop-scoped `/v1/shop/{id}/parts/search` with a key minted for a seeded owner. **A dry run against the pre-merge tree caught six wrong assumptions** before the gate ever ran for real: the `/v1` mount, the API-key gate, a compat catalogue the fixture had **forgotten to seed** (so `recommend` returned nothing for every make), `check` needing `--adapter` where the question is `recommend`, shop scoping, and a list-shaped response. **Moto Guzzi is the honest gap and the gate records it**: no Track K row, no DTC file, no compat rows, no make-file — seven issues and nine parts rows from 236–239 only — as five executable-documentation tests that pass today and fail the day the gap is filled. Corpus invariants now gated: no campaign number anywhere in the European files, the six-value provenance vocabulary with `regulation` in use, and the documented count equal to the live seed. Six earlier gates re-run; schema pinned at 52. 46 gate tests; regression 5945 passed / 0 failed; F9 clean. `TRACK_K_SUMMARY.md` written. **Key finding: a gate’s dry run is where the gate’s own assumptions fail** — six of them, none about the corpus, all about how the front doors are actually built. |
 | 240B | Track K audit debt — the contradictions dimension re-run uncapped | ✅ | **The cap hid the majority of the dimension, and the retrieval layer is why the corpus drifts.** `TRACK_K_AUDIT_DEBT.md` warned against itself: the contradictions auditor found **16**, the workflow submitted `findings.slice(0, 8)`, and section A is "the confirmed subset, not the full set". Re-run uncapped as a six-way partitioned adversarial sweep over 30 files / 257 entries / 8 DTC files / the catalogues, every finding required to carry verbatim quotes from both sides, a same-subject argument, an operative cost, a reachability trace through the real predicate and a recorded kill attempt: **27 contradictions and 13 uncertain**, against 6 confirmed. **CLOSED 2026-09-09.** **Five structural defects surfaced that no content audit would have found**, and they are the mechanism the first audit missed. `issues_repo.py` orders `severity DESC` on a **TEXT** column, so SQLite returns `medium, low, high, critical` — **`critical` comes back last** on all three retrieval paths, and `medium`-rated stale entries outrank the `high` and `critical` corrections written to replace them. Three other modules in the same repo (`shop/issue_repo.py`, `engine/correlation.py`, `advanced/predictor.py`) map severity to a rank correctly; this one is the outlier. **Five of six slices found it independently.** Three entries carry a `make` of "All European makes"/"All makes", which `make LIKE '%X%'` can never match — and one of them is `european_intervals[4]`, **the target of contradiction A5**, which changed the fix: correcting it alone would have been invisible to a `make="KTM"` lookup, so the reachable sibling `intervals[6]` carries the correction too. `european_tooling[2]` holds a KTM *and* a Triumph correction under `make: 'KTM'` — the KTM half was back-propagated, the Triumph half was reachable from nowhere — and its `year_end` of 2026 makes it the **sole** TuneECU answer for MY2021+, implying the tool works on machines it does not support. And two machine-readable service intervals are wrong: a blanket 7,500-mile **"Desmodromic valve service" for every Ducati** including the two spring-valve engines, and a KTM 690 valve check stored as 15,000 **miles** where the corpus states kilometres — `scheduler.next_due` reads `every_miles` and never `notes`, so both caveats are unreachable by the code that books the work. All five recorded and scheduled, **not fixed**: S1 alone reorders every knowledge query in the product and 73 test files assert on `results[0]`. **The six section A contradictions fixed**, each following its verifier's `corrected_fix` rather than the auditor's recommendation, which was wrong or tree-breaking in five of six — the BMW ELAST belt made self-contained rather than rescoped (rescoping breaks a parametrised 2018 coverage test), the final drive made generation-aware **in place** (the entry count is pinned in four places), Euro 4 OBD corrected at **four sites** including the fix step that actually costs a shop work, the desmo time element phrased as a negative instruction plus routing rather than a flat positive claim the entry's 1993–2026 span cannot support, and **the indexed symptom string replaced** because it is what makes an age-based query land there. **917 → 917: no entry added, removed or split**, so every pinned count and the Phase 208 doc-count guard stayed green. **Three debt items closed as no-change after verification** — B2, B4 as framed, and two of section C's three claims — recorded with reasoning so nobody re-litigates them; roughly 60% of the original audit's findings did not survive verification and that is the layer working. **One conflict between two verifiers adjudicated**: the MV-sprag verifier rejected B1 because a test forbids the tip, but that assertion *is* the mis-scoped denylist Phase 226 identified inside Gate 2 and then reproduced locally — a guard that enforces the violation is not evidence the violation is permitted. Both entries fixed, **forum-tip guards asserting the biconditional 3 → 13**, untipped `forum` entries **2 → 0**, tips placed last so `predictor._extract_preventive_action` returns a self-contained action rather than a truncated procedure. **Constant cumulative pins 8 → 0** — totals derived from the same JSON the test loads, and the make-filtered count *counted* rather than assumed equal to the file total, which it is not. **The `_asserts` family de-vacuumed: before, stubbing it to `return False` left 180 of 181 tests passing; after, all seven files fail** — probes written with a literal term in 216–219 and a raw regex in 221–223, because the two implementations differ and the wrong kind asserts the very deadness it is meant to detect. The Phase 237 mileage guard was not merely leaky but **fully dead** (the file holds no km/mile token at all); widened to catch the uncomma'd and `12k` forms the corpus already authors, with the anti-vacuity check on the **pattern** rather than the file, since this file's job is to print no interval. Aprilia/MV shadow **zero** generic codes, so the zero is pinned as a tripwire and `dtc_repo`'s `candidates[0]` fall-through recorded. Section C's rule decided and enforced — **weakest link in the evidence chain** — demoting the eight vendor-documentation entries to `model-generated` (13/13) in the direction Phase 235 had already tested, and asserted as a rule rather than a count. **Nine mutation scenarios, all caught.** Also corrected: the debt document's index for the Bonneville forum entry (10, not 11) and ROADMAP row 233's own "not while being tightened" clause, which denies a documented chronology — the defect was found at assembly when a bolt snapped at the prescribed 70 Nm, and the phase test pinning the denial has been inverted. 7 seed files, 26 test files. Backend `implementation.md` 0.13.52 → 0.13.53. Regression ****5991 passed / 0 failed** (baseline 5954; +37 tests)**. **Key finding: the cap was not the whole problem — the retrieval layer was.** The corrective cross-make files were not merely under-propagated; where they did land, they were systematically outranked or invisible. A corpus can be internally consistent and still hand a mechanic the superseded answer first. |
 
+### Track K — open debt carried forward (as of Phase 240B, 2026-09-09)
+
+Track K is closed and its audit debt is closed, but the uncapped re-run at
+240B left work that is **not** Track K's to do. It is listed here rather than
+only in `docs/phases/completed/TRACK_K_AUDIT_DEBT_2.md` so it is visible from
+the roadmap before a later track starts building on the same substrate.
+
+| id | open item | why it is not fixed | suggested slot |
+|----|-----------|---------------------|----------------|
+| **S1** | `knowledge/issues_repo.py` orders `severity DESC` on a **TEXT** column, so SQLite returns `medium, low, high, critical` — **`critical` known-issues come back last** on `search_known_issues`, `find_issues_by_symptom` and `find_issues_by_dtc`. `shop/issue_repo.py:440`, `engine/correlation.py:436` and `advanced/predictor.py:821` all rank severity correctly; this is the only place that does not. | One-line `CASE` fix, but it reorders **every** knowledge search result in the product and **73 test files assert on `results[0]`**. | Its own phase, its own regression. **Highest value item in the tree.** |
+| **S2** | Three entries carry a `make` of "All European makes"/"All makes", which `make LIKE '%X%'` can never match — so they are unreachable from every make-filtered lookup. | Count-neutral data edit, but it changes make-filtered result sets and must land with a sweep of every pinned make-count. | With S3/S4 |
+| **S3/S4** | `known_issues_european_tooling.json[2]` carries a Triumph correction under `make: 'KTM'`, and its `year_end` of 2026 makes it the sole TuneECU answer for MY2021+ on machines the tool does not support. | Same family as S2: the correction cannot be reached from where the error is. | With S2 |
+| **S5** | `advanced/data/service_interval_templates.json` books a 7,500-mile "Desmodromic valve service" for **every** Ducati including the two spring-valve engines, and a KTM 690 valve check at 15,000 **miles** where the corpus states km. `scheduler.next_due` reads `every_miles`/`every_months` and never `notes`. | Outside Track K's boundary (`advanced/data/`), and no Track K test reads it. | With the catalogue contradictions |
+| **N1–N27** | 27 cross-file contradictions from the uncapped re-run, 13 further uncertain. 6 are [VERIFIED]; the rest are [REPORTED] and **must be verified before they are fixed**. | Fixing them here would have meant abbreviating the care each entry gets. | Make-sized batches |
+| **—** | Two confirmed findings the original debt document omits from its own sections: the Aprilia V4 charging contradiction (`european_differentials[5]`), and `known_issues_triumph_vintage.json` labelling all 13 entries `service-manual` while two rest on a marque club and a retailer. | The vintage one collides with the forum-tip biconditional — demoting untipped breaks it, and fabricating a tip is what Phase 226 warns against. | Needs a decision, not a patch |
+
+**Read `TRACK_K_AUDIT_DEBT_2.md` before working any of these**, and verify any
+`[REPORTED]` finding before fixing it. Roughly 60% of the original audit's
+findings did not survive verification; that layer is the point.
+
 ## Track L — Electric Motorcycles (Phases 241–250)
 
 Electric motorcycle diagnostics — fundamentally different from ICE: HV safety, BMS, motor controllers, regen, thermal management. Requires foundational safety phases before brand-specific coverage.
@@ -411,7 +431,7 @@ Electric motorcycle diagnostics — fundamentally different from ICE: HV safety,
 | 247 | Motor controller / inverter faults | 🔲 | IGBT failures, phase-loss detection, overcurrent faults, controller firmware |
 | 848 | Regenerative braking diagnostics | 🔲 | Regen ratios, coast-down behavior, brake light trigger on regen, single-pedal mode |
 | 249 | Thermal management (battery + motor) | 🔲 | Liquid cooling loops (battery), air cooling (motor), thermal derating curves, ambient temp effects |
-| 250 | Gate 12 — Electric motorcycle integration test | 🔲 | Query electric bike → BMS/motor/regen/thermal analysis end-to-end |
+| 250 | Gate 13 — Electric motorcycle integration test | 🔲 | **Row renumbered from "Gate 12" at Phase 240B**: Phase 240 had already closed Gate 12 as Track K's closing gate, so this row and every gate row after it were off by one — the same collision Phase 240 itself had to correct mid-phase when row 240 was written as "Gate 11" that Phase 205 already held. Gates 10 and 11 are Phases 204 and 205. Corrected before Track L opened rather than during Phase 250. Query electric bike → BMS/motor/regen/thermal analysis end-to-end |
 
 ## Track M — Scooters & Small Displacement (Phases 251–258)
 
@@ -426,7 +446,7 @@ Electric motorcycle diagnostics — fundamentally different from ICE: HV safety,
 | 255 | Twist-and-go vs manual small bikes | 🔲 | Scooter vs small motorcycle diagnostic differences |
 | 256 | Scooter electrical (12V minimal) | 🔲 | Stator-to-battery, no FI on older carb scooters, simple wiring |
 | 257 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions |
-| 258 | Gate 13 — Scooter / small displacement integration test | 🔲 | Query scooter/small bike → CVT + electrical + carb workflow |
+| 258 | Gate 14 — Scooter / small displacement integration test | 🔲 | Query scooter/small bike → CVT + electrical + carb workflow |
 
 ## Track N — Specialized Workflows (Phases 259–272)
 
@@ -447,7 +467,7 @@ Non-diagnostic workflows that shops perform: pre-purchase inspection, tire servi
 | 269 | Brake service workflow | 🔲 | Pad replacement, caliper rebuild, rotor thickness check, fluid flush, bleed procedure |
 | 270 | Suspension service workflow | 🔲 | Fork seal replacement, oil change, spring rate selection, rear shock rebuild, sag setup |
 | 271 | Chain / belt / shaft service workflow | 🔲 | Chain/sprocket replacement, belt tension/alignment, shaft drive oil, u-joint inspection |
-| 272 | Gate 14 — Specialized workflows integration test | 🔲 | Run PPI → tire service → winterization → valve adjust → brake service end-to-end |
+| 272 | Gate 15 — Specialized workflows integration test | 🔲 | Run PPI → tire service → winterization → valve adjust → brake service end-to-end |
 
 ## Track O — Business Infrastructure (Phases 273–292)
 
@@ -474,7 +494,7 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | 289 | Multi-currency support | 🔲 | USD/CAD/EUR/GBP exchange rates, multi-currency invoicing, currency conversion |
 | 290 | Financial reporting | 🔲 | P&L per mechanic, per bay, per customer, monthly/quarterly/annual |
 | 291 | Estimate vs actual variance tracking | 🔲 | Quote accuracy, labor time variance, parts cost variance |
-| 292 | Gate 15 — Business infrastructure integration test | 🔲 | Customer books → intake → warranty check → repair → invoice → payment → accounting export |
+| 292 | Gate 16 — Business infrastructure integration test | 🔲 | Customer books → intake → warranty check → repair → invoice → payment → accounting export |
 
 ## Track P — Reference Data Library (Phases 293–302)
 
@@ -491,7 +511,7 @@ Deep reference database: service manual citations, exploded parts diagrams, visu
 | 299 | Electrical schematic references | 🔲 | Wire color codes per model/year, connector pinouts, module locations |
 | 300 | Special tool database | 🔲 | Tools required per repair, OEM vs aftermarket, cost, rental availability |
 | 301 | Service interval tables | 🔲 | OEM service intervals per model, normal vs severe service, expand Phase 93 |
-| 302 | Gate 16 — Reference data library integration test | 🔲 | Query any bike/repair → manual page + diagram + torque + tool + video |
+| 302 | Gate 17 — Reference data library integration test | 🔲 | Query any bike/repair → manual page + diagram + torque + tool + video |
 
 ## Track Q — Extended UX Affordances (Phases 303–317)
 
@@ -513,7 +533,7 @@ Multi-user auth, voice-first mode, printing, barcode scanning, photo annotation,
 | 314 | Keyboard shortcuts + power user features | 🔲 | Desktop CLI hotkeys, vim-style navigation, command palette, custom aliases |
 | 315 | Customizable dashboards | 🔲 | Drag-and-drop widgets, per-user layouts, saved views |
 | 316 | Workflow recording (train-by-example) | 🔲 | Record my process → replay for training, generate workflow templates from recordings |
-| 317 | Gate 17 — Extended UX integration test | 🔲 | Multi-user auth → voice input → photo annotation → Spanish UI → print work order |
+| 317 | Gate 18 — Extended UX integration test | 🔲 | Multi-user auth → voice input → photo annotation → Spanish UI → print work order |
 
 ## Track R — Advanced AI Capabilities (Phases 318–327)
 
@@ -530,7 +550,7 @@ Beyond the base AI engine: human-in-the-loop learning, tuning recommendations, e
 | 324 | Repair success prediction | 🔲 | "Will this fix work for this bike?" — historical outcome prediction |
 | 325 | Knowledge graph construction | 🔲 | Symptom ↔ cause ↔ fix relationships, graph queries for complex diagnostics |
 | 326 | Continuous learning pipeline | 🔲 | Automated model fine-tuning from accumulated diagnostic feedback |
-| 327 | Gate 18 — Advanced AI integration test | 🔲 | Feedback → learning → prediction → anomaly detection → customer draft end-to-end |
+| 327 | Gate 19 — Advanced AI integration test | 🔲 | Feedback → learning → prediction → anomaly detection → customer draft end-to-end |
 
 ## Track S — Launch + Business Layer (Phases 328–342)
 
@@ -552,7 +572,7 @@ Commercial launch infrastructure: billing, onboarding, data migration from compe
 | 339 | Promotional codes + discounts | 🔲 | Coupon system, time-limited promotions, tier upgrade incentives |
 | 340 | Enterprise sales portal | 🔲 | B2B lead management, custom quotes, multi-year contracts, SLA negotiation |
 | 341 | SLA + uptime dashboard | 🔲 | Public status page, uptime metrics, incident communication, enterprise SLAs |
-| 342 | Gate 19 — Launch readiness check | 🔲 | Billing → signup → onboarding → data migration → first diagnostic under paid plan |
+| 342 | Gate 20 — Launch readiness check | 🔲 | Billing → signup → onboarding → data migration → first diagnostic under paid plan |
 
 ## Track T — Operational Infrastructure (Phases 343–352)
 
@@ -569,7 +589,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 349 | Feature flags / gradual rollout | 🔲 | LaunchDarkly-style feature flags, percentage rollouts, kill switches |
 | 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
-| 352 | Gate 20 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
+| 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
 
 ---
 

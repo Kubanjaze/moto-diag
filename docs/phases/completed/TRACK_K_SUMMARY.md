@@ -145,8 +145,19 @@ the scratchpad and entered the tree only after the previous phase merged.
   detected by 239’s test and left as data.
 - **The KTM 690 / Duke rocker-arm and several 237 differentials** rest on owner
   reports, labelled `forum`; a `mechanic-verified` pass would upgrade them.
-- **Pushes are classifier-blocked** from this environment; `master` is ahead
-  of `origin/master` by every Track K commit since 235.
+- ~~**Pushes are classifier-blocked** from this environment.~~ **No longer
+  true** — corrected at Phase 240B, which pushed `ea872ff..3cae3fb` to
+  `origin/master` without incident. `master` and `origin/master` are level.
+- **The closure audit's contradictions dimension was capped and is now
+  re-run.** Phase 240B closed the section A/B/C debt and found the cap had
+  hidden the majority of the dimension: **27 contradictions and 13 uncertain
+  findings** against 6 confirmed. More importantly it found **five structural
+  retrieval defects** that no content audit would have caught — chief among
+  them that `knowledge/issues_repo.py` sorts `severity DESC` on a TEXT column,
+  so `critical` known-issues come back **last**. The corrective cross-make
+  files were not merely under-propagated; where they did land they were
+  systematically outranked or unreachable. See `TRACK_K_AUDIT_DEBT_2.md`; none
+  of the five is fixed.
 
 ## Track K opens for Track L
 

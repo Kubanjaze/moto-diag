@@ -186,6 +186,18 @@ across phases. A name-keyed sweep missed family members three times.
   abbreviating the care each entry gets, which the working agreement forbids.
   They are documented and scheduled instead.
 
+### Risk resolution (as built)
+
+| risk | outcome |
+|---|---|
+| Pinned entry counts | **Held.** No entry added, removed or split; corpus 917 → 917, so all four BMW pins, the block pins and the Phase 208 doc-count guard stayed green untouched. |
+| The forum-tip fix turns a green test red | **Materialised as predicted, fixed in the same commit.** `test_no_entry_fabricates_a_forum_tip` was re-scoped to the biconditional and renamed; the whole family of ten followed. |
+| A leading `Forum tip:` breaks the predictor | **Avoided.** Both tips appended last, at positions 0.78 and 0.73 — inside the 0.64–0.82 house range. `_extract_preventive_action` was run on both and returns a self-contained action. |
+| The A6 fix can land silently green | **Confirmed real before editing.** `break\w*` matches "breaks" but not "broke" or "snapped"; the guard was inverted rather than extended, then mutation-tested. |
+| Two verifiers disagree on B1 | **Adjudicated in favour of the Bonneville verifier**, with the reasoning recorded in the phase log so it is not re-opened. |
+| BSD sed has no `\b` | **Avoided.** Every doc and JSON edit went through Python with an explicit `assert` that the target text was found, so a silent no-op was impossible. |
+| Scope pressure | **Materialised, and the phase did not widen.** The sweep returned 27 contradictions and 13 uncertain findings plus five structural defects; all are documented and scheduled in `TRACK_K_AUDIT_DEBT_2.md` rather than half-fixed here. |
+
 ---
 
 ## Deviations from Plan

@@ -1,7 +1,9 @@
 # Phase 240B — Closing the Track K audit debt — phase log
 
-**Status:** Planned
-**Opened:** 2026-09-09
+**Status:** ✅ Complete
+**Opened:** 2026-09-09 | **Closed:** 2026-09-09
+**Repo:** https://github.com/Kubanjaze/moto-diag
+**Merged:** `fab19ac` on `master`, pushed `ea872ff..3cae3fb`
 
 ---
 
@@ -141,3 +143,40 @@ Bonneville forum entry is at index **10**, not 11; and ROADMAP row 233's "not
 while being tightened" clause is itself the over-correction Phase 240B fixed.
 
 **Regression: **5991 passed / 0 failed** (baseline 5954; +37 tests)** (baseline 5954/0).
+
+---
+
+## 2026-09-09 — Close-out
+
+Merged `fab19ac`, pushed `ea872ff..3cae3fb`. Then a completion-gate pass
+against CLAUDE.md found five things still open, all now done:
+
+1. **This log still said `Status: Planned`.** Corrected, with close date, repo
+   URL and the merge/push refs.
+2. **The implementation doc's Risks section had no resolution notes**, which
+   the gate requires. Added as a table — including that two risks did
+   materialise (the forum-tip test turning red, and scope pressure) and how
+   each was handled.
+3. **`TRACK_K_AUDIT_DEBT.md` still described everything in it as open**, so the
+   next reader would have re-litigated the three items verification rejected.
+   It now opens with a closure box naming exactly what was fixed, what was
+   closed as no-change and why, and the two confirmed findings it omits from
+   its own sections.
+4. **`TRACK_K_SUMMARY.md` carried a stale claim** — "pushes are
+   classifier-blocked from this environment; `master` is ahead of
+   `origin/master` by every Track K commit since 235". That is no longer true
+   and would have misled the next session into thinking the remote was behind.
+   Corrected, and the 240B outcome recorded alongside it.
+5. **A gate-number collision two tracks ahead.** Row 250 was written as
+   "Gate 12", which Phase 240 already holds — so every gate row from 250 to
+   352 was off by one. This is the *same* error Phase 240 hit and corrected
+   mid-phase, when row 240 was written as "Gate 11" that Phase 205 already
+   held. Renumbered 250→13 … 352→21, with the correction recorded on row 250,
+   so Phase 250 does not have to discover it the hard way. Gates 10 and 11 are
+   Phases 204 and 205; 12 is Phase 240.
+
+Also added a **Track K open-debt block to `docs/ROADMAP.md`**, immediately
+before Track L, so S1–S5 and the 27 unfixed contradictions are visible from the
+roadmap rather than only from a completed-phase document.
+
+Phase 240B is closed. `docs/phases/in_progress/` is empty.
