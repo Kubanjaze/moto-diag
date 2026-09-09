@@ -2,6 +2,7 @@
 
 from typing import Optional
 
+from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
 from motodiag.inventory.models import Recall
 
@@ -49,7 +50,7 @@ def list_recalls_for_vehicle(
             " AND (year_end IS NULL OR year_end >= ?)"
         )
         params.extend([year, year])
-    query += " ORDER BY severity DESC, campaign_number"
+    query += " ORDER BY " + SEVERITY_RANK_SQL + " DESC, campaign_number"
     with get_connection(db_path) as conn:
         cursor = conn.execute(query, params)
         return [dict(r) for r in cursor.fetchall()]

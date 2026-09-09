@@ -1,6 +1,6 @@
 # Phase 240C — Severity sorts backwards: `critical` comes back last
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-09
 
 ## Goal
 
@@ -118,20 +118,20 @@ value is possible and sorts below `low`.
 
 ## Verification Checklist
 
-- [ ] All six sites ordered by the canonical rank; zero `ORDER BY severity`
+- [x] All six sites ordered by the canonical rank; zero `ORDER BY severity`
       on a TEXT column left in `src/`
-- [ ] A shape guard fails if a seventh site reintroduces the pattern
-- [ ] Migration 053 creates the expression index; all three definitions in
+- [x] A shape guard fails if a seventh site reintroduces the pattern
+- [x] Migration 053 creates the expression index; all three definitions in
       `migrations.py` updated
-- [ ] `EXPLAIN QUERY PLAN` guard asserts the known-issues sort uses an index,
+- [x] `EXPLAIN QUERY PLAN` guard asserts the known-issues sort uses an index,
       so the 206 optimisation cannot silently regress again
-- [ ] `SCHEMA_VERSION` 52 → 53 and Gate 12's pin updated
-- [ ] Ordering asserted end-to-end through the real front doors, not the repo
+- [x] `SCHEMA_VERSION` 52 → 53 and Gate 12's pin updated
+- [x] Ordering asserted end-to-end through the real front doors, not the repo
       layer — `critical` before `high` before `medium` before `low`
-- [ ] The five already-correct copies asserted to agree with the canonical rank
-- [ ] Migration rollback tested: 053 down then up leaves the correct index
-- [ ] Every new guard mutation-tested
-- [ ] Full regression green, with every changed expectation explained
+- [x] The five already-correct copies asserted to agree with the canonical rank
+- [x] Migration rollback tested: 053 down then up leaves the correct index
+- [x] Every new guard mutation-tested
+- [x] Full regression green, with every changed expectation explained
 
 ## Risks
 
@@ -154,3 +154,101 @@ value is possible and sorts below `low`.
 - **`ELSE 0` is a judgement call.** An unrecognised severity sorts below `low`
   rather than being surfaced. It matches the house pattern; noted so a later
   phase can revisit it deliberately.
+
+---
+
+## Deviations from Plan
+
+**The feared blast radius did not materialise; a different one did.** Plan
+v1.0 carried "73 test files assert on `results[0]`" forward from Phase 240B's
+audit as though it sized the work. It does not — it counts files that *could*
+be order-sensitive, and the spike (the three knowledge sites only) returned
+5991 passed, identical to baseline. Almost all of those 73 files filter to a
+single entry, use single-severity fixtures, or assert on content rather than
+order.
+
+**But "zero blast radius" was written into these docs before the full change
+had ever been run, and it was wrong.** The complete change — six sites plus
+migration 053 — produced **three failures**. One was a bug this phase
+introduced; two were tests pinning constants that the fix legitimately moved.
+The spike measured a third of the change and the conclusion was generalised to
+all of it. Recorded plainly rather than in the flattering form.
+
+**Six sites, not the three the audit named** — established in Step 0 and
+carried into plan v1.0, so not a deviation from the plan, but worth restating
+as the reason this phase is not a one-line change.
+
+**My own test caught a bug I introduced in the migration.** The first version
+of migration 053 was appended to `migrations.py` and *then* a global replace
+updated every remaining lexicographic index definition to the expression form
+— which reached into 053's own `rollback_sql`, making the rollback a silent
+no-op. `test_rollback_then_upgrade_restores_the_expression_index` failed on
+exactly that. Redone with the two table-rebuild copies updated **before** 053
+is appended, so the replace cannot reach it.
+
+**The shape guard needed scoping, and the scoping needed justifying.** It fired
+on `core/migrations.py`, which legitimately contains the old index form in
+migration 049 (the original) and in 053's rollback. `migrations.py` is DDL
+history, not a live query path, so it is skipped — and the live state is
+covered instead by a guard that asserts the query **plan**, not the file text.
+An index that exists but is not used would be worth nothing.
+
+**One test expectation changed for a reason unrelated to ordering.**
+`test_phase235b_regulation_provenance.py` asserted
+`apply_pending_migrations(...) == [52]` — a constant list that any later
+migration breaks. That is the constant-for-invariant family again. Rewritten to
+assert what the test is actually about: migration 052's table rebuild survives
+a live foreign-key child, and the database lands at `SCHEMA_VERSION`.
+
+**A process error worth recording.** For one mutation test I reverted
+`migrations.py` with `git checkout --` rather than a file backup. Only the plan
+docs were committed at that point, so it discarded all the migration work and
+it had to be redone. The other two mutations used `cp` backups and were
+unaffected.
+
+**I broke a query, and it failed silently.** Substituting the rank expression
+in `advanced/recall_repo.py` dropped the `ORDER BY` keyword — it was part of
+the matched text and the replacement did not restore it. That left malformed
+SQL, and `list_open_for_bike` wraps its query in
+`except sqlite3.OperationalError: return []` to degrade gracefully on a
+pre-migration database, so a syntax error became "no open recalls for this
+bike". On a recall lookup that is the worst available failure mode. Phase 155's
+test caught it; **this phase's own guards did not**, because the recall
+ordering test covered `inventory/recall_repo.py` and not this one. That gap is
+closed with a guard that asserts non-empty before it asserts order, and it is
+mutation-tested.
+
+**Phase 206's performance test failed, and correctly.** It hardcoded
+`ORDER BY severity DESC, title` — the query at the time, but a constant
+standing in for an invariant. Once the ordering moved to a `CASE` rank and
+migration 053 reindexed on that expression, the test was measuring a query the
+product no longer issues. Verified before changing it that all three real query
+shapes (bare, `WHERE 1=1` + `LIMIT`, and `make LIKE` + `LIMIT`) use the new
+index, and only the retired text does not. It now takes the expression from the
+same constant the repository uses.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Defective query sites found by shape sweep | **6** (audit named 3) |
+| Sites fixed | 6 of 6 |
+| Copies of the mapping in the tree | 11 (6 fixed, 5 guarded against drift, 0 rewritten) |
+| Blast radius — spike (3 knowledge sites) | 0 test changes (5991, == baseline) |
+| Blast radius — full change (6 sites + migration) | **3 failures**: 1 bug introduced, 2 constant-for-invariant tests |
+| Test expectations changed | 8 — five deliberate schema pins, three constant-for-invariant |
+| Migration | 053, index-only, no data touched |
+| `SCHEMA_VERSION` | 52 → 53 |
+| Query plan after fix | `SCAN known_issues USING INDEX idx_known_issues_sort` (no temp B-tree) |
+| New guards | 15 |
+| Mutation scenarios | 3, all caught |
+| Regression | **6007 passed / 0 failed** (baseline 5991; +16 guards. First run was red with 3 failures — see Deviations) |
+
+**Key finding: the fix that restores correctness can silently undo an
+optimisation, and only the query plan will tell you.** Changing
+`ORDER BY severity DESC` to a `CASE` rank is correct and looks complete — but
+`idx_known_issues_sort` exists precisely because migration 206 measured
+`SCAN` + `USE TEMP B-TREE FOR ORDER BY` and removed it. A `CASE` expression
+cannot use that index, so the obvious fix would have quietly restored the
+regression a previous phase paid to eliminate, with every test green. The guard
+that matters here asserts the **plan**, not the index definition.

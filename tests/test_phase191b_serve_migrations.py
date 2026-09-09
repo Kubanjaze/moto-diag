@@ -97,7 +97,7 @@ class TestServeAppliesMigrationsByDefault:
 
         assert result.exit_code == 0, result.output
         assert get_current_version(db_path) == SCHEMA_VERSION
-        assert get_current_version(db_path) == 52  # f9-noqa: ssot-pin fixture-data: literal `52` here is the live SCHEMA_VERSION the migrations land at (Phase 235B bumped 51→52 via migration 052, the known_issues.source CHECK rebuild adding `regulation`); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is").
+        assert get_current_version(db_path) == 53  # f9-noqa: ssot-pin fixture-data: literal `52` here is the live SCHEMA_VERSION the migrations land at (Phase 235B bumped 51→52 via migration 052, the known_issues.source CHECK rebuild adding `regulation`); paired with the `== SCHEMA_VERSION` assertion above as a "this version IS the version we expect" cross-check. Replacing with SCHEMA_VERSION would lose the test's intent (verify the integer landed at the specific expected number, not just "matches whatever SCHEMA_VERSION currently is"). Bumped 52→53 at Phase 240C (migration 053 replaces idx_known_issues_sort with an expression index on the severity rank, because the ordering fix moved the queries from `ORDER BY severity DESC` — lexicographic, `critical` last — to a CASE rank that the old index cannot serve).
         # uvicorn was called (we mocked it; it didn't actually launch)
         assert mock_uvicorn.called
         # Output mentions the migration apply (38 → current SCHEMA_VERSION)

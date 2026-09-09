@@ -3592,7 +3592,7 @@ MIGRATIONS: list[Migration] = [
             CREATE INDEX idx_known_issues_make_model
                 ON known_issues(make, model);
             CREATE INDEX idx_known_issues_sort
-                ON known_issues(severity DESC, title);
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
 
             PRAGMA foreign_keys=ON;
         """,
@@ -3644,9 +3644,43 @@ MIGRATIONS: list[Migration] = [
             CREATE INDEX idx_known_issues_make_model
                 ON known_issues(make, model);
             CREATE INDEX idx_known_issues_sort
-                ON known_issues(severity DESC, title);
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
 
             PRAGMA foreign_keys=ON;
+        """,
+    ),
+    Migration(
+        version=53,
+        name="known_issues_severity_rank_index",
+        description=(
+            "Phase 240C. Six query paths ordered by `severity DESC` on a "
+            "TEXT column, which SQLite sorts lexicographically: the four "
+            "values alphabetise to `medium, low, high, critical`, so "
+            "`critical` came back LAST everywhere. The queries now order by "
+            "a CASE rank instead. "
+            "That fix alone would have undone migration 206. Its index "
+            "`idx_known_issues_sort` exists because EXPLAIN QUERY PLAN "
+            "showed `SCAN` + `USE TEMP B-TREE FOR ORDER BY` -- every "
+            "listing sorted the whole table to return 50. A CASE expression "
+            "cannot use that index, so this migration replaces it with an "
+            "index on the SAME expression the queries now use; the plan "
+            "returns to `SCAN known_issues USING INDEX "
+            "idx_known_issues_sort`. "
+            "The expression comes from `motodiag.core.severity."
+            "SEVERITY_RANK_SQL`, shared with the queries deliberately -- "
+            "SQLite only uses an expression index when the ORDER BY "
+            "expression matches the indexed one, so writing it twice would "
+            "silently cost the optimisation. Index-only; touches no data."
+        ),
+        upgrade_sql="""
+            DROP INDEX IF EXISTS idx_known_issues_sort;
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issues_sort;
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues(severity DESC, title);
         """,
     ),
 ]

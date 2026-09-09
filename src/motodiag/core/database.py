@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 52  # Phase 235B: known_issues.source gains `regulation` (migration 052)
+SCHEMA_VERSION = 53  # Phase 240C: severity-rank expression index (migration 053)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

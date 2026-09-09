@@ -575,6 +575,6 @@ class TestRegression:
         assert result.returncode == 0, f"{gate_file} regressed:\n{result.stdout[-2000:]}"
 
     def test_schema_version_pin(self):
-        assert SCHEMA_VERSION == 52, (  # f9-noqa: ssot-pin contract-pin: Gate 12 schema-bump pin. The literal is the point — importing the constant would make this assert `x == x`. 52 is migration 052 (Phase 235B, known_issues.source gains `regulation`). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+        assert SCHEMA_VERSION == 53, (  # f9-noqa: ssot-pin contract-pin: Gate 12 schema-bump pin. The literal is the point — importing the constant would make this assert `x == x`. 52 is migration 052 (Phase 235B, known_issues.source gains `regulation`). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 52→53 at Phase 240C (migration 053 replaces idx_known_issues_sort with an expression index on the severity rank, because the ordering fix moved the queries from `ORDER BY severity DESC` — lexicographic, `critical` last — to a CASE rank that the old index cannot serve).
             "SCHEMA_VERSION moved — confirm a migration accompanies it and update this pin."
         )

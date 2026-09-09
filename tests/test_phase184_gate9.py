@@ -588,7 +588,7 @@ class TestGate9AntiRegression:
         # generalize Phase 191C's no-hardcoded-model-ids lint rule to
         # "no hardcoded SSOT-managed constants in tests" — would have
         # caught this missed-pin-update at Phase 191B finalize.
-        assert SCHEMA_VERSION == 52  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 51→52 at Phase 235B (migration 052 rebuilt known_issues to widen the source CHECK with `regulation`). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration.
+        assert SCHEMA_VERSION == 53  # f9-noqa: ssot-pin contract-pin: Gate 9 schema-bump pin (Phase 184 anti-regression). Bumped 51→52 at Phase 235B (migration 052 rebuilt known_issues to widen the source CHECK with `regulation`). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py + verifying the schema diff at the next migration sequence number; this test is the primary loud-fail surface for accidental SCHEMA_VERSION bumps shipping without their migration. Bumped 52→53 at Phase 240C (migration 053 replaces idx_known_issues_sort with an expression index on the severity rank, because the ordering fix moved the queries from `ORDER BY severity DESC` — lexicographic, `critical` last — to a CASE rank that the old index cannot serve).
 
     def test_track_h_summary_doc_exists(self):
         path = (

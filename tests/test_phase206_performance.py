@@ -24,6 +24,7 @@ from contextlib import contextmanager
 
 import pytest
 
+from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.api.app import create_app
 from motodiag.core.database import get_connection, init_db
 from motodiag.knowledge.dtc_repo import get_dtc, get_dtcs
@@ -200,14 +201,26 @@ class TestKnownIssuesSortUsesAnIndex:
 
     def test_no_temp_btree_for_the_listing_sort(self, seeded_db):
         """`known_issues` is the only large table in the product. Its
-        listing sorts by (severity DESC, title); without an index SQLite
-        sorted every row to return a page."""
+        listing sorts by (severity rank DESC, title); without an index
+        SQLite sorted every row to return a page.
+
+        Phase 240C: this hardcoded the literal string
+        ``ORDER BY severity DESC, title``. That was the query at the time,
+        but it was a constant standing in for an invariant -- when the
+        ordering moved to a CASE rank (because ``severity DESC`` on a TEXT
+        column returned ``critical`` LAST) and migration 053 replaced the
+        index with one on that expression, this test went on measuring a
+        query the product no longer issues, and reported a temp B-tree for
+        it. Correctly: nothing serves the old query any more. It now takes
+        the ordering expression from the same constant the repository uses,
+        so it measures whatever the listing actually sorts by."""
         path, _uid, _codes = seeded_db
         with get_connection(path) as conn:
             plan = [
                 row[-1] for row in conn.execute(
                     "EXPLAIN QUERY PLAN SELECT * FROM known_issues "
-                    "WHERE 1=1 ORDER BY severity DESC, title LIMIT 50",
+                    "WHERE 1=1 ORDER BY " + SEVERITY_RANK_SQL + " DESC, title "
+                    "LIMIT 50",
                 )
             ]
         joined = " | ".join(plan)
