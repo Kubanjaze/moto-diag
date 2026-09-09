@@ -579,5 +579,124 @@
     "equivalence_rating": 3,
     "notes": "Aftermarket crossref pair — front-wheel service kit for CBR600RR.",
     "source_url": "https://www.cbrforum.com/"
+  },
+  {
+    "oem_slug": "aprilia-1a010574-stator",
+    "aftermarket_slug": "rick-s-21-030-stator",
+    "equivalence_rating": 4,
+    "notes": "Functional replacement for the stator half of the 1A010574 assembly; the flywheel is separate.",
+    "source_url": "https://www.ricksmotorsportelectrics.com/"
+  },
+  {
+    "oem_slug": "aprilia-1a010574-stator",
+    "aftermarket_slug": "rmstator-rms900-103848-stator",
+    "equivalence_rating": 4,
+    "notes": "Functional. Maker attributes stator failure to the OEM flywheel's magnet strength — fit with the reduced-magnet flywheel.",
+    "source_url": "https://www.rmstator.com/products/rms900-103848"
+  },
+  {
+    "oem_slug": "aprilia-1a010574-stator",
+    "aftermarket_slug": "rmstator-rms120-103587-flywheel",
+    "equivalence_rating": 3,
+    "notes": "Replaces the flywheel half of the assembly with a reduced-magnet part; not a like-for-like.",
+    "source_url": "https://www.rmstator.com/products/rms120-103587"
+  },
+  {
+    "oem_slug": "aprilia-857201-stator",
+    "aftermarket_slug": "rmstator-rms900-104929-stator",
+    "equivalence_rating": 4,
+    "notes": "Mitsubishi-type kit for the early charging family. Seller's engine-number 3413 split is not an Aprilia document.",
+    "source_url": "https://www.rmstator.com/products/rms900-104929"
+  },
+  {
+    "oem_slug": "aprilia-1a023538-oil-filter",
+    "aftermarket_slug": "hiflofiltro-hf138-oil-filter",
+    "equivalence_rating": 5,
+    "notes": "Hiflo catalogue exact cross-reference; year_min corrected to 2009 by a refuter.",
+    "source_url": "https://www.hiflofiltro.com/catalogue/filter/hf138"
+  },
+  {
+    "oem_slug": "mv-8000b5425-oil-filter",
+    "aftermarket_slug": "hiflofiltro-hf569-oil-filter",
+    "equivalence_rating": 5,
+    "notes": "Hiflo catalogue exact cross-reference.",
+    "source_url": "https://www.hiflofiltro.com/catalogue/filter/hf569"
+  },
+  {
+    "oem_slug": "moto-30153000-oil-filter",
+    "aftermarket_slug": "hiflofiltro-hf551-oil-filter",
+    "equivalence_rating": 5,
+    "notes": "Hiflo catalogue exact cross-reference. Note 2A000633 (small block) has NO Hiflo cross-reference.",
+    "source_url": "https://www.hiflofiltro.com/catalogue/filter/hf551"
+  },
+  {
+    "oem_slug": "ktm-61007090100-fuel-pump",
+    "aftermarket_slug": "ktm-61007090200-fuel-pump",
+    "equivalence_rating": 5,
+    "notes": "Manufacturer supersession on the fiche.",
+    "source_url": "https://www.bike-parts-ktm.com/"
+  },
+  {
+    "oem_slug": "bmw-11318528385-alternator-belt",
+    "aftermarket_slug": "contitech-4pk592-582-elast-alternator-belt",
+    "equivalence_rating": 2,
+    "notes": "Approximate: owner-reproduced Continental table (BMW 4PK582 = Conti 4PK592 (582)). A refuter corrected the research's pairing with 4PK611. Confirm by production month on the fiche.",
+    "source_url": "https://www.ukgser.com/"
+  },
+  {
+    "oem_slug": "bmw-12317681841-alternator-belt",
+    "aftermarket_slug": "contitech-4pk611-592-elast-alternator-belt",
+    "equivalence_rating": 2,
+    "notes": "Approximate: same table (BMW 4PK592 = Conti 4PK611 (592)). Different belt generation from 11318528385.",
+    "source_url": "https://www.ukgser.com/"
+  },
+  {
+    "oem_slug": "bmw-12317681841-alternator-belt",
+    "aftermarket_slug": "elast-mks-ena42088-alternator-belt",
+    "equivalence_rating": 4,
+    "notes": "Retailer-listed functional equivalent, 592 mm.",
+    "source_url": "https://www.nippynormans.com/"
+  },
+  {
+    "oem_slug": "bmw-33117722799-final-drive-bearing",
+    "aftermarket_slug": "skf-6013-2rs1-final-drive-bearing",
+    "equivalence_rating": 2,
+    "notes": "Dimension match only (65x100x18 = 6013). Owner report; approximate by design.",
+    "source_url": "https://www.ukgser.com/"
+  },
+  {
+    "oem_slug": "ducati-73740242a-timing-belt",
+    "aftermarket_slug": "ducati-73740241b-timing-belt",
+    "equivalence_rating": 5,
+    "notes": "Manufacturer supersession on the fiche.",
+    "source_url": "https://www.bike-parts-ducati.com/"
+  },
+  {
+    "oem_slug": "ducati-73740281a-timing-belt",
+    "aftermarket_slug": "ducati-73740241b-timing-belt",
+    "equivalence_rating": 5,
+    "notes": "Manufacturer supersession on the fiche. Two OEM rows carry 73740281A (Scrambler 2015-18; Monster 797); the xref resolves by slug so both are covered.",
+    "source_url": "https://www.bike-parts-ducati.com/"
+  },
+  {
+    "oem_slug": "ducati-73740242a-timing-belt",
+    "aftermarket_slug": "belt-bdl-696-timing-belt",
+    "equivalence_rating": 4,
+    "notes": "Functional (True-Fit).",
+    "source_url": "https://www.motowheels.com/"
+  },
+  {
+    "oem_slug": "ducati-73740242a-timing-belt",
+    "aftermarket_slug": "ca-tb696-timing-belt",
+    "equivalence_rating": 4,
+    "notes": "Functional.",
+    "source_url": "https://www.ca-cycleworks.com/"
+  },
+  {
+    "oem_slug": "ducati-70240691a-cam-tensioner",
+    "aftermarket_slug": "skf-751661238-cam-tensioner",
+    "equivalence_rating": 5,
+    "notes": "Retailer lists the SKF number against the OEM number.",
+    "source_url": "https://www.gothamducati.com/"
   }
 ]
