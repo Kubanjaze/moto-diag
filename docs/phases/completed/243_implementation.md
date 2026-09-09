@@ -1,6 +1,6 @@
 # Phase 243 — Harley-Davidson LiveWire and LiveWire One
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-09
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-09
 
 ## Goal
 
@@ -110,19 +110,19 @@ tooling and the dealer route; platform generation across the brand split.
 
 ## Verification Checklist
 
-- [ ] Every entry reachable from both `Harley-Davidson` and `LiveWire`
-- [ ] Entries state which badge applies to which model years
-- [ ] Every printed figure names its document under the class-matched standard;
+- [x] Every entry reachable from both `Harley-Davidson` and `LiveWire`
+- [x] Entries state which badge applies to which model years
+- [x] Every printed figure names its document under the class-matched standard;
       every withheld figure states the absence
-- [ ] Survivors grouped by `source_class` and the distribution sanity-checked
+- [x] Survivors grouped by `source_class` and the distribution sanity-checked
       before any entry is written
-- [ ] The cross-platform thermostat claim resolved — corrected, or recorded as
+- [x] The cross-platform thermostat claim resolved — corrected, or recorded as
       a contradiction this phase does not own
-- [ ] No campaign reference number anywhere
-- [ ] Provenance honest per entry; forum-tip biconditional
-- [ ] Count guards and the four user docs move together
-- [ ] Every new guard mutation-tested
-- [ ] Full regression at or above 6047, 0 failed
+- [x] No campaign reference number anywhere
+- [x] Provenance honest per entry; forum-tip biconditional
+- [x] Count guards and the four user docs move together
+- [x] Every new guard mutation-tested
+- [x] Full regression at or above 6047, 0 failed
 
 ## Risks
 
@@ -141,3 +141,73 @@ tooling and the dealer route; platform generation across the brand split.
   the brand split may have changed it. What an independent can obtain is a
   research question, not an assumption.
 - **Corpus count moves again**, with the four user docs.
+
+---
+
+## Deviations from Plan
+
+**None to the shape of the phase.** The Track K cadence held: 2 questions x 2
+adversarial lenses = 6 agents, 6 completed, no errors, **~980K subagent tokens
+against Phase 242's ~17M across two runs**. 21 of 28 claims survived.
+
+**The corrected lens worked, and the skew check confirmed it rather than
+assuming it.** Survivors came back 11 `manufacturer-document`, 4
+`regulator-record`, 6 `community-report`. The workflow's own lens-skew warning
+— added after 242, firing when one class exceeds 95% of survivors — stayed
+silent, which is the first positive evidence that the source-class-aware
+standard in `docs/phases/RESEARCH_LENSES.md` does what it was written to do.
+
+**The thermostat question was answered, and the corpus was wrong.** The
+research enumerated and fetched **all 108 sections** of the LiveWire owner's
+manual: the word *thermostat* appears **zero times**. Neither the 2020 nor the
+2021 service-interval table carries a thermostat row. The manual's own
+cooling-system troubleshooting topic lists low or improper coolant, obstructed
+radiator airflow, blocked passages and a radiator cap problem as the causes of
+overheating — no thermostat, which is exactly where one would appear if the
+diagnostic tree recognised one.
+
+The `40,000-50,000 miles` figure turned out to be a corrupted echo of a real
+interval: both manuals **do** schedule a coolant replacement, once, at 80,000
+km (50,000 mi). So a 50,000-mile number is genuine for this machine and
+attaches to the coolant rather than to a thermostat.
+
+`known_issues_cross_platform_cooling.json[0]` was corrected: LiveWire struck
+from the model list, with the reasoning stated inline. **The correction states
+its own scope** — it makes no claim either way about the Street 750 or Pan
+America, which the research did not examine, and a guard asserts that
+disclaimer is present so a later reader cannot mistake silence for a finding.
+
+**The entry records the limit of its own evidence.** No LiveWire parts
+catalogue or service manual could be opened (the lookup endpoint returns 403),
+so whether a thermostat exists as an *orderable part* inside the loop is not
+established — only that it is not a scheduled-service item and carries no
+replacement interval. A guard asserts the entry keeps saying "not established"
+rather than hardening into a claim the research cannot support.
+
+**Two claims were rejected for carrying campaign reference numbers**, which is
+the Phase 231 rule working across tracks without anyone re-arguing it.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Research cadence | Track K: 2 questions x 2 lenses = **6 agents**, 0 errors |
+| Cost | **~980K subagent tokens** (Phase 242: ~17M across two runs) |
+| Claims | 28 unique, **21 survived**, 7 rejected, **0 unverified** |
+| Source-class distribution | 11 manufacturer / 4 regulator / 6 community — **no skew warning** |
+| Entries shipped | **14** — 11 `service-manual`, 3 `forum` |
+| Shipping content corrected | 1 — the cross-platform thermostat list |
+| Corpus | 944 → **958**; four user docs moved with it |
+| Guards | 19, six families mutation-tested |
+| Mutation scenarios | 6, all caught |
+| Regression | **6066 passed / 0 failed** (baseline 6047; +19 guards) |
+
+**Key finding: the cheaper cadence found the error the expensive one would
+have missed, because the question was assigned rather than hoped for.** Phase
+242 swept five finders and 75 claims at seventeen times the cost. This phase
+ran two questions and named the thermostat claim as a required output field of
+one of them — and got a definitive answer with a section count, a zero-hit
+search, and a scoping caveat the researcher volunteered unprompted. Breadth
+finds what you did not know to look for; a named question finds what you
+already suspect is wrong. A phase that has a specific doubt should spend its
+budget on the doubt.

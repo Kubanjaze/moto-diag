@@ -2148,3 +2148,27 @@ silently and looks rigorous while doing it.** The same wrong assumption also app
 critic never ran, so coverage is unverified.
 
 Backend `implementation.md` 0.13.55 → 0.13.56. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-09 — Phase 243: LiveWire, and a correction to shipping content
+
+**Project-level state this changes:**
+- **New knowledge file** `known_issues_livewire.json` — 14 entries covering both badges, 11 `service-manual` and
+  3 `forum`. Corpus 944 → 958; four user docs moved with it.
+- **A correction to existing shipped content.** `known_issues_cross_platform_cooling.json[0]` listed the LiveWire
+  among Harley liquid-cooled models taking a thermostat replaced every 40,000-50,000 miles. The word *thermostat*
+  appears zero times in all 108 sections of the LiveWire owner's manual, no service-interval row exists, and the
+  manual's own overheating troubleshooting topic omits it. LiveWire struck; the correction explicitly claims nothing
+  about the Street 750 or Pan America, which were not examined. Entry count unchanged.
+- **Both badges reach the content.** `make="Harley-Davidson, LiveWire"`, so either name returns the file. The cost,
+  accepted and recorded, is that a combustion Harley query also returns it — the third phase now shaped by the
+  knowledge search having no powertrain filter.
+
+**A method finding worth carrying forward.** Phase 242 swept five finders over 75 claims at ~17M subagent tokens.
+This phase ran two questions at ~980K and found a live error in shipping content, because the doubt was **assigned as
+a required output field** rather than left for breadth to stumble into. Breadth finds what you did not know to look
+for; a named question finds what you already suspect is wrong. A phase carrying a specific doubt should spend its
+budget on the doubt.
+
+**No debt.** Zero refuters died, so no claim is unverified, and the completeness gap that dogged 242 does not recur here.
+
+Backend `implementation.md` 0.13.56 → 0.13.57. No schema change (still v53), no API surface change, no migration.
