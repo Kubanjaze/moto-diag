@@ -193,8 +193,8 @@
     "source": "service-manual"
   },
   {
-    "title": "The Adventure and its Duke sibling share an engine but not a service schedule",
-    "description": "Drawn from KTM's own owner's manuals, read from the service schedule tables. The mid-size Adventure models are routinely serviced to the schedule of the naked machine they share an engine with, and the schedules are not the same. The first-generation 390 Adventure schedules a valve clearance check together with a spark plug change at a shorter interval than the 390 Duke does; the 390 Adventure R schedules the valve check alone at a longer one; the 890 Adventure runs a longer interval again. The difference that matters most is not the number but a footnote: the Adventure schedules carry a dusty-conditions marker against the air filter that the Duke schedule does not, because the Adventure is expected to be ridden where the Duke is not. The 890 schedule also carries items the naked bike's does not, including a clutch lubrication oil nozzle check and an early one-time spoke re-tension.",
+    "title": "The Adventure and its Duke sibling share an engine and its valve interval, but not the rest of the service schedule",
+    "description": "Drawn from KTM's own owner's manuals, read from the service schedule tables, and corrected at Phase 238. The mid-size Adventure models are routinely serviced to the schedule of the naked machine they share an engine with, and on the valve interval that is correct: on each engine — the 373cc single, the 399cc single and the 890 twin — KTM's tables give the Duke and the Adventure the same valve interval. An earlier version of this entry read a 373cc-versus-399cc difference as a Duke-versus-Adventure one; Phase 238 corrected it against eleven KTM manuals, and the figures themselves live there. What genuinely differs is the rest of the row: the Adventure schedules carry a dusty-conditions marker against the air filter that the Duke schedule does not, because the Adventure is expected to be ridden where the Duke is not, and the 890 Adventure schedule carries items the naked bike's does not — a clutch lubrication oil nozzle check and an early one-time spoke re-tension. Generation matters as much as model: the 390 changed engine in MY2024 and the interval moved with the engine.",
     "make": "KTM",
     "model": "390 Adventure, 390 Adventure R, 890 Adventure — as against 390 Duke, 890 Duke",
     "year_start": 2020,
@@ -206,12 +206,12 @@
       "Schedule taken from the naked model's manual"
     ],
     "causes": [
-      "A shared engine invites the assumption of a shared schedule, and the schedules genuinely differ by model and generation",
+      "On one engine the Duke and the Adventure carry the same valve interval in KTM's tables — the difference that was mistaken for a sibling difference is the 373cc versus 399cc engine",
       "The Adventure air filter row carries a dusty-conditions qualifier absent from the naked model's schedule",
-      "Generation matters as much as model — the same badge across two generations does not carry the same interval",
+      "The same badge across two generations does not carry the same interval, because the engine changed",
       "Adventure-only scheduled items exist that no Duke schedule contains"
     ],
-    "fix_procedure": "Take the schedule from the manual for the exact model, variant and model year in front of you, and do not carry one across from the naked sibling on the ground that the engine is the same. Where the machine is ridden off-road or in dust, apply the Adventure schedule's dusty-conditions qualifier to the air filter rather than the nominal interval — that qualifier is the manufacturer's acknowledgement of how the bike is used. Check for Adventure-only items when writing the job, including the clutch lubrication oil nozzle and the early one-time spoke re-tension, both of which are missed when working from a naked-model schedule. Specific intervals are deliberately not reproduced here because they differ by model, variant and year; read them from the machine's own manual.",
+    "fix_procedure": "Take the schedule from the manual for the exact model, variant and model year in front of you. The valve interval follows the engine, and the Duke and Adventure agree on it — read the figure from the manual or from this project's Phase 238 comparison, and do not schedule it by age, since no KTM valve row carries a month mark. Where the machine is ridden off-road or in dust, apply the Adventure schedule's dusty-conditions qualifier to the air filter rather than the nominal interval. Check for Adventure-only items when writing the job, including the clutch lubrication oil nozzle and the early one-time spoke re-tension. Interval figures are deliberately not reproduced here, because Phase 238 owns them; read them from the machine's own manual.",
     "parts_needed": [],
     "estimated_hours": 0.3,
     "dtc_codes": [],

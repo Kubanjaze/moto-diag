@@ -225,9 +225,20 @@ class TestTheDesignationBar:
 
     def test_no_other_makes_parallel_twin_entries_score(self):
         """The counter-assertion, run over the whole corpus rather than
-        one hand-picked entry (the Phase 223 improvement)."""
+        one hand-picked entry (the Phase 223 improvement).
+
+        Exempts the `european_*` cross-make files (Phase 236 on) by
+        prefix, as five sibling guards now do: they own a comparison
+        axis and cannot be written without naming the models they
+        scope, and their own tests forbid model-specific failure
+        content. This was the sixth copy of this guard found, and the
+        first three sweeps missed it because they matched on the test's
+        NAME — this one is `..._parallel_twin_entries_score`, not
+        `..._entry_scores`. The sweep that found it matched on shape:
+        every test that globs the knowledge directory and skips by
+        filename."""
         for f in K.glob("known_issues_*.json"):
-            if "triumph" in f.name:
+            if "triumph" in f.name or f.name.startswith("known_issues_european_"):
                 continue
             for e in json.loads(f.read_text(encoding="utf-8")):
                 hits = [n for n, p in UNAMBIGUOUS.items()
