@@ -1,6 +1,6 @@
 # Phase 244M — The shop remembers the machine
 
-**Version:** 1.0 | **Tier:** Large | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Large | **Date:** 2026-09-10 (built 2026-09-10)
 
 ---
 
@@ -141,14 +141,29 @@ spread across Track N:
 | 324 | Repair success prediction — "will this fix work for this bike?" |
 | 326 | Continuous learning pipeline — "**automated model fine-tuning** from accumulated diagnostic feedback" |
 
-Row **321 is the hive mind** in the operator's words, and row **326 specifies
+Row **321 is the hive mind** in the operator's words, and row **326 specified
 fine-tuning** — the one implementation the research argues hardest against.
 Weights are where a deletion request stops being routine: EDPB 28/2024 holds
 personal data may remain absorbed in model parameters and that a regulator may
 order erasure of the model itself, ICO puts unlearning at "theoretical
-application", and the FTC has twice ordered model destruction. **Row 326 should
-be rewritten to rows-not-weights**, and that is a roadmap edit this phase
-proposes rather than makes.
+application", and the FTC has twice ordered model destruction.
+
+**Row 326 has now been rewritten to rows-not-weights.** The plan proposed it and
+left the decision to the operator, who took it; the edit landed under this
+phase. Row 326 now points at `memory_facts` — a mechanic's correction compiles
+as a `mechanic-verified` row that recall already ranks above everything else, so
+accuracy improves by retrieval and an erasure request stays a DELETE.
+
+**Row 318 carried the identical defect** — it ended "retraining pipeline" — and
+was rewritten in the same pass once the operator asked for it. Its new text says
+something 326's does not: **most of 318 already exists and is unfed.**
+`diagnostic_feedback` has held a mechanic's actual diagnosis, actual fix and
+notes since Phase 116; `FeedbackReader` exposes three read methods and is called
+by nothing; and this phase compiles those rows as `mechanic-verified`, the top
+of recall's ranking. What is genuinely missing is the **capture surface** —
+nothing anywhere prompts a mechanic to record what the fault turned out to be,
+which is why the table sits at zero rows and the most valuable input the corpus
+could have does not exist.
 
 **On the number.** Phase 245 is already taken — Damon HyperSport/HyperFighter.
 This is filed as 244M because the letter-suffix series is this roadmap's only
@@ -233,6 +248,14 @@ context carry the machine's actual history instead of just its identity, which
 improves the *API* answers as much as it enables the offline ones.
 Monotonicity applies — knowing more must never return less.
 
+**As built, the prompt block carries only human-established facts.**
+`recall_summary` excludes `model-generated` observations, filtering before the
+limit. That was not in the plan; it was forced by the first run against real
+data, where ten of vehicle 10's eleven facts were the vision model's own prose
+about to be returned to it as history. See Deviation 1. `show` and `ask` are
+unfiltered — a person reads the label and weighs it, which is what the label
+is for.
+
 **Answering without the API** is deterministic lookup over facts, not reuse of
 generated prose. `memory ask` resolves a bounded question grammar — what was
 done, when, at what mileage, which parts, what was the last complaint, has this
@@ -263,30 +286,40 @@ rather than silently matching every unassigned bike in the shop.
 
 ## Verification Checklist
 
-- [ ] `memory attach` establishes ownership; the sentinel is never written as
+- [x] `memory attach` establishes ownership; the sentinel is never written as
       a real owner
-- [ ] Compile is idempotent — running it twice inserts 0 the second time
-- [ ] Compile reports rows **inserted**, not items walked
-- [ ] A fact with a NULL component still dedupes (COALESCE'd `fact_key`)
-- [ ] A typo'd `source` is **rejected**, not silently dropped
+- [x] Compile is idempotent — running it twice inserts 0 the second time
+- [x] Compile reports rows **inserted**, not items walked
+- [x] A fact with a NULL component still dedupes (COALESCE'd `fact_key`)
+- [x] A typo'd `source` is **rejected**, not silently dropped
       (`ON CONFLICT DO NOTHING`, not `INSERT OR IGNORE`)
-- [ ] Recall feeds `VehicleContext` and the sweep prompt shows the history
-- [ ] Monotonicity: adding a fact never removes one from recall
-- [ ] `memory ask` answers in-grammar questions with **zero** token spend
+- [x] Recall feeds `VehicleContext` and the sweep prompt shows the history
+- [x] Monotonicity: adding a fact never removes one from recall
+- [x] `memory ask` answers in-grammar questions with **zero** token spend
       (asserted against the 244L ledger — no `cost_events` row is written)
-- [ ] `memory ask` returns an explicit miss, never a guess, out of grammar
-- [ ] Every recalled fact carries `established_at` and `source`
-- [ ] A superseded fact is not returned as current
-- [ ] `forget --dry-run` lists exactly what `forget` deletes
-- [ ] `forget` on a sentinel-owned vehicle refuses and explains
-- [ ] Deleting a vehicle cascades its facts
-- [ ] Migration 058 rolls back **without destroying** any pre-existing table
+- [x] `memory ask` returns an explicit miss, never a guess, out of grammar
+- [x] Every recalled fact carries `established_at` and `source`
+- [x] A superseded fact is not returned as current
+- [x] `forget --dry-run` lists exactly what `forget` deletes
+- [x] `forget` on a sentinel-owned vehicle refuses and explains
+- [x] Deleting a vehicle cascades its facts
+- [x] Migration 058 rolls back **without destroying** any pre-existing table
       (the 244L rollback defect, guarded this time from the start)
-- [ ] Mutation: key the memory on `customer_id` → a guard fails
-- [ ] Mutation: make `memory ask` call the API → a guard fails
-- [ ] Mutation: drop `established_at` from recall → a guard fails
-- [ ] No embedding, vector or similarity call appears anywhere in the phase
-- [ ] Full regression green
+- [x] Mutation: key the memory on `customer_id` → a guard fails
+- [x] Mutation: make `memory ask` call the API → a guard fails
+- [x] Mutation: drop `established_at` from recall → a guard fails
+- [x] No embedding, vector or similarity call appears anywhere in the phase
+- [x] **The prompt block excludes the model's own prior observations** —
+      unplanned, found by running it
+- [x] Mutation: feed model-generated facts back into the prompt → a guard fails
+- [x] Mutation: `INSERT OR IGNORE` instead of `ON CONFLICT` → 3 guards fail
+- [x] Mutation: collapse the null-origin sentinel onto id 0 → a guard fails
+- [x] Two machines owned by one customer keep separate memories
+- [x] Erasing one customer leaves another's memory intact
+- [x] `forget` does not touch the mandated records it compiled from
+- [x] A missing source table degrades the compile rather than breaking it
+- [x] Verified against a **copy** of the real database; production untouched
+- [x] Full regression green — **6,417 passed, 0 failed**, 26:24 (first run: 1 failed, the eighth schema pin)
 
 ## Risks
 
@@ -320,3 +353,170 @@ rather than silently matching every unassigned bike in the shop.
   of action. Recording a voice is probably not a voiceprint; *identifying who
   is speaking* likely is. Nothing in this phase identifies a speaker, and that
   is a constraint to carry forward, not a property to assume persists.
+
+---
+
+## Deviations from v1.0
+
+**1. The prompt block excludes the model's own prior observations. This was
+not planned, and it is the most important thing the phase learned.**
+
+The plan said "recall feeds the existing `VehicleContext`" and stopped there.
+Running the compile against a copy of the real database showed what that
+actually meant: vehicle 10 came back with **eleven facts, ten of them
+paragraphs of the vision model's own prose from a single sweep**, and all ten
+were about to be injected into the next sweep's prompt under the header
+*"Known history for this machine"*.
+
+That is a loop with no brake. An early wrong reading — "possible stator cover
+leak" — returns as context, biases the next analysis toward itself, and is
+written back looking more established each time. The provenance label does not
+save it: a label helps a *person* weigh a claim, and the research behind this
+phase measured that even people mostly do not check. A model cannot discount
+its own prior output at all.
+
+`recall_summary` now excludes `model-generated` facts by default, filtering
+**before** applying the limit so a chatty sweep cannot crowd out the one
+complaint that matters. `show` and `ask` are unaffected — a person reading them
+sees the observations with their label, which is exactly the case labels are
+for. Guarded, and the guards fail when the filter is removed.
+
+**2. A guard was vacuous, and its name is what hid it.**
+`test_every_answer_line_is_dated_and_sourced` asserted only the source. The
+name promised both. A mutation that stripped the vintage out of every answer
+line passed it cleanly. It now matches each line against the real
+`established_at` of the fact behind it.
+
+Its sibling had a different flavour of the same weakness: the recall-summary
+guard tested `"20" in line`, which any subject containing "20" would satisfy.
+Also now matched against real dates.
+
+**3. Six mutations run, one initially mis-targeted.** The `-k` filter for the
+vintage mutation matched the *answers* guard rather than the *recall* guard, so
+the first run reported a pass that meant nothing. Re-run against both paths
+separately. Worth recording because the failure mode is invisible: a mutation
+that selects the wrong test looks exactly like a mutation the suite caught.
+
+**4. Eight schema-version pins bumped, and the eighth was found by the
+regression rather than by me.** `SCHEMA_VERSION == 57` appears in Gate 9,
+Gate 11, Gate 12 and four phase files, all maintained in lockstep — that is the
+design, since a schema bump has to be acknowledged by every gate.
+
+The eighth is written differently. `test_phase191b_serve_migrations.py` pins
+`get_current_version(db_path) == 57`, so **a grep for `SCHEMA_VERSION == 57`
+does not find it.** It was the only failure in a 6,417-test regression. The
+same-shaped hazard will recur at the next bump, so a note now sits in that
+pin's own reason string saying it is spelled differently and will be missed by
+the obvious search.
+
+While editing that line: its reason opened *"literal `52` here is the live
+SCHEMA_VERSION"* — stale since Phase 240C moved past 52, three bumps ago. The
+number in the assertion had been maintained and the sentence explaining it had
+not, which is a small version of the defect this whole family is about.
+Corrected.
+
+**5. The `recall` function shadows the `recall` module** in the package
+namespace, because `__init__` re-exports `recall.recall` under the same name.
+`from motodiag.memory import recall as recall_mod` silently binds the
+*function*. The test module uses `importlib.import_module` and says why.
+
+**6. A vision-finding confidence floor was added.** A sweep emits
+low-confidence guesses freely, which is right for a ranked list a technician
+reads and discards, and wrong for a store that will be recalled as "what is
+known about this machine". Findings below 0.5 confidence are not compiled.
+
+## Results
+
+| Metric | Value |
+|---|---|
+| Guards | **76** in `tests/test_phase244M_client_memory.py` (947 LoC) |
+| Mutations run | 6, all caught (one after re-targeting) |
+| Schema | v57 → **v58** (migration 058) |
+| New package | `motodiag/memory/`, 6 modules, 1123 LoC |
+| New CLI surface | `motodiag memory` — 6 subcommands, 177 LoC |
+| Schema pins bumped | 8 |
+| Real-data compile | **31 facts across 10 machines**, idempotent on re-run |
+| Regression | **6,417 passed, 0 failed**, 26:24 |
+
+**Verified against a copy of the real database** — never production, which was
+confirmed untouched afterwards (still schema 56, no `memory_facts` table, 24
+api_keys). Session 6's CBR600F4i compiled to 11 facts:
+
+```
+$ motodiag memory compile
+  vehicle 1: 15 new fact(s)
+  vehicle 10: 11 new fact(s)
+  ...
+31 new fact(s) across 10 machine(s).
+
+$ motodiag memory compile        # again
+0 new fact(s) across 10 machine(s).
+
+$ motodiag memory ask --vehicle 10 --verbose "what was the complaint?"
+(intent: complaints)
+Complaints recorded:
+  - [2026-09-09T19:54] Leaking oil on left side (2026-09-09, customer-reported)
+
+$ motodiag memory ask --vehicle 10 "has this charging fault been seen before?"
+No — nothing in this machine's recorded history mentions charging, fault.
+
+$ motodiag memory ask --vehicle 10 "why is it running lean at 6000 rpm?"
+Not in memory: that question is outside what can be answered from recorded
+facts. […]                                                          exit 1
+
+$ motodiag memory forget --customer 1 --dry-run
+Error: Customer 1 is the `Unassigned` sentinel, not a person. […]   exit 1
+```
+
+Those five outputs are the phase: an answer with no API call, an honest
+negative that names what it searched for, a refusal that does not guess, and a
+deletion that refuses to run against a key meaning "unknown".
+
+### Key finding
+
+**Running it found the defect that reading it could not: the memory's first
+real content was the model's own output, about to be fed back to the model as
+fact.** Ten of vehicle 10's eleven compiled facts were vision prose. Nothing in
+the plan was wrong, and nothing in the code was wrong by its own terms — the
+compile faithfully recorded what the product had recorded, and recall
+faithfully returned it. The defect only exists at the join, and only shows up
+against real data, because the fixture I would have written by hand would have
+had a sensible mix of human and machine facts.
+
+The second finding is smaller and older: **a guard's name is not a guard.**
+`test_every_answer_line_is_dated_and_sourced` checked one of the two things it
+claimed, and the mutation walked straight past it. Sixth instance of the
+vacuous-guard family in this session, and once again the mutation caught what
+reading did not — including, this time, a mutation run that was itself
+mis-targeted and reported a meaningless pass.
+
+### Risks — resolution
+
+- **Nothing to compile** — partly wrong, usefully. The real database yielded 31
+  facts, not zero. `memory stats` reports how much history exists, and it also
+  reports that 10 of 10 vehicles still carry the `Unassigned` sentinel.
+- **The corrections that make this valuable do not exist yet** — unchanged.
+  `diagnostic_feedback` is still empty; the compile path for it is wired and
+  guarded, so the first correction lands without another phase.
+- **A bounded grammar is narrower than "any inquiry"** — held, and now visible:
+  the miss text names what memory *can* answer instead of failing silently.
+- **Ownership disagreement between `vehicles` and `diagnostic_sessions`** —
+  unresolved by design. `attach` writes both, `erase_plan` reads both, and
+  nothing here arbitrates the pre-existing conflict.
+- **New, unplanned:** the self-reinforcement loop above. Resolved by excluding
+  model-generated facts from the prompt path, and guarded.
+- **The confidence floor filters nothing in today's data, though it is not
+  dead.** Deviation 6 added a 0.5 floor on compiled vision findings. Across all
+  20 findings in the database the values run **0.55 to 0.99, with 13 distinct
+  levels** — real variation, not a constant. None sits below 0.5, so the floor
+  admits everything currently recorded, and its guard exercises a synthetic
+  fixture rather than live data. That is a weaker statement than "the floor is
+  useless": the field discriminates, and a finding below 0.5 would be excluded
+  if one appeared.
+
+  **An earlier draft of this section claimed every finding carried 0.99.** That
+  came from sampling one video with `LIMIT 1` — video 2, which has exactly one
+  finding, at 0.99 — and generalising. Corrected here because the wrong version
+  was about to be committed, and because it is the same error the phase is
+  otherwise about: a query answered the question asked of it, and the question
+  was too narrow.

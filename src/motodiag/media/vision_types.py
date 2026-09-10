@@ -288,6 +288,16 @@ class VehicleContext(BaseModel):
             "written down."
         ),
     )
+    history: str = Field(
+        default="",
+        description=(
+            "Phase 244M: what the shop already knows about THIS machine, "
+            "compiled from its own recorded work and dated. Empty when "
+            "nothing has been compiled -- deliberately empty rather than a "
+            "sentence saying there is no history, because that is a claim "
+            "and saying nothing is not."
+        ),
+    )
 
     def to_context_string(self) -> str:
         """Format vehicle context as a text block for prompt injection."""
@@ -302,6 +312,11 @@ class VehicleContext(BaseModel):
             parts.append(self.identity_note.strip())
         if self.notes.strip():
             parts.append(f"Technician notes on this session: {self.notes.strip()}")
+        # Phase 244M. Last, and unabbreviated: the history is the only part of
+        # this block that says what has ALREADY been tried on this machine,
+        # which is what stops the same wrong answer being given twice.
+        if self.history.strip():
+            parts.append(self.history.strip())
         return "\n".join(parts) if parts else "No vehicle context provided."
 
 
