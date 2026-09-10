@@ -126,7 +126,9 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
         # 3. Call Vision pipeline
         try:
             analyzer = VisionAnalyzer(model="sonnet")
-            result = analyzer.analyze_video_frames(frames, vehicle_context=vc)
+            result = analyzer.analyze_video_frames(
+                frames, vehicle_context=vc, video_id=video_id, db_path=db_path,
+            )
         except VisionPipelineError as e:
             _log.warning(
                 "Vision pipeline error for video %d: %s", video_id, e

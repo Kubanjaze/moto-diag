@@ -2528,3 +2528,47 @@ that also swallowed enum changes would have quietly disabled the whole point of 
 that is the difference between a report and a rumour.
 
 Backend `implementation.md` 0.13.67 → 0.13.68. No production code changed, no schema change (still v56).
+
+### 2026-09-10 — Phase 244L complete — vision costs reach the ledger
+
+**Regression: 6341 passed, 0 failed, 24:29.** Schema v56 → **v57** (migration 057). Backend
+`implementation.md` 0.13.68 → 0.13.69.
+
+**Opened because the operator asked what a day of questions costs and there was no way to tell them.**
+Three causes, only one a missing feature: `answer_question_about_frames` bound its usage to `_usage` —
+the convention for *deliberately unused* — so Phase 244J's endpoint spent a vision call per request and
+recorded nothing; `cost_events.kind` carried `CHECK (kind IN ('whisper','claude_extraction'))`, so the
+database would have **rejected** a vision row from any caller who tried; and the table had zero rows.
+
+**Step 0 removed most of the phase.** `shop/cost_repo.py` and `motodiag costs report` already group by
+kind with no fixed list of kinds, so the reporting surface needed no work at all — it rendered vision
+spend the moment rows existed. Seven questions came out as `vision_guidance $0.98`, about **14¢ a
+question**, so a 50-question day runs roughly $7. That figure is separable from sweeps only because two
+kinds were split at migration time; a kind cannot be split retroactively, since rows already written
+would be unattributable.
+
+**The defect that mattered was in the rollback, and it is the finding worth keeping.** Migration 057's
+`rollback_sql` was **migration 043's, copied verbatim** — it drops `cost_events`. Correct for 043, which
+*created* the table. Destructive for 057, which only widened a CHECK: rolling back to any version below
+57 deleted the whisper ledger 043 had built. **The two blocks are byte-identical**, so every text-based
+approach to it is ambiguous by construction — a search returns two hits with one defect, and the first
+patch attempt asserted its anchor appeared once, found two, and stopped. Without that assertion it would
+have rewritten 043's legitimate rollback instead. The question that resolves it is not *where is this
+text* but *which migration does this block belong to*.
+
+It was caught by **Phase 235B's fixture** — ten failures in a file about regulation provenance, which
+rolls back to schema 51 and found no table to read — not by reviewing the migration.
+
+**One of the five new rollback guards was vacuous on first write.** `PRAGMA table_info` returns an empty
+list for a dropped table, so `"video_id" not in cols` passed against the exact defect it guarded. It
+surfaced only because the mutation was actually run. Fifth instance of this family in one session;
+running the mutation has caught every one, reasoning about the guard has caught none.
+
+**Three smaller defects, all caught by other phases' guards rather than this one's:** `Decimal` /
+`ROUND_HALF_UP` replaced `round()` after the docstring claimed half-up on money and Python's is banker's;
+Phase 191C's f9 lint caught a hardcoded `claude-sonnet-4-6` in this phase's own test file; and six
+failures across two files were pre-existing fakes with fixed signatures meeting the new
+`video_id`/`shop_id`/`db_path` kwargs.
+
+**No backfill.** Sweep costs already sitting in `analysis_findings` JSON stay there rather than becoming
+ledger rows with fabricated timestamps in a financial report.

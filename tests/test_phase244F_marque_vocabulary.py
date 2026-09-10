@@ -279,7 +279,7 @@ class TestTheIndexStaysInStepWithTheColumn:
         assert n1 == n2 and n1 > 0
 
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 56  # f9-noqa: ssot-pin contract-pin: Phase 244F schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 54→55 by migration 055 (known_issue_makes junction, because LiveWire and Damon were not queryable makes at all). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 55→56 at Phase 244I (migration 056 adds the known_issue_models junction; the model column has the same list-and-prose disease as make, plus entries that name models in order to EXCLUDE them).
+        assert SCHEMA_VERSION == 57  # f9-noqa: ssot-pin contract-pin: Phase 244F schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 54→55 by migration 055 (known_issue_makes junction, because LiveWire and Damon were not queryable makes at all). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 55→56 at Phase 244I (migration 056 adds the known_issue_models junction; the model column has the same list-and-prose disease as make, plus entries that name models in order to EXCLUDE them). Bumped 56→57 at Phase 244L (migration 057 widens the cost_events kind CHECK to accept vision_sweep and vision_guidance: vision spent money from Phase 191B but the constraint rejected the rows, so the ledger sat empty).
 
     def test_the_migration_backfills_inside_its_own_transaction(self):
         """An index that exists but is empty is indistinguishable from a corpus

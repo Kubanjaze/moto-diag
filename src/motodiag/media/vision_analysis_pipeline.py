@@ -28,6 +28,11 @@ import os
 from pathlib import Path
 from typing import Optional
 
+from motodiag.media.vision_costs import (
+    KIND_GUIDANCE,
+    KIND_SWEEP,
+    record_vision_cost,
+)
 from motodiag.media.vision_types import (
     VISION_ANALYSIS_PROMPT,
     VehicleContext,
@@ -250,6 +255,9 @@ class VisionAnalyzer:
         question: str,
         vehicle_context: Optional[VehicleContext] = None,
         known_issues: Optional[list[dict]] = None,
+        video_id: Optional[int] = None,
+        shop_id: Optional[int] = None,
+        db_path: Optional[str] = None,
     ) -> GuidanceResponse:
         """Answer a technician's question about a machine, using the frames as
         evidence.
@@ -299,7 +307,7 @@ class VisionAnalyzer:
         tool_choice = {"type": "tool", "name": "provide_guidance"}
 
         try:
-            response, _usage = client.ask_with_images(
+            response, usage = client.ask_with_images(
                 prompt=prompt,
                 images=capped,
                 system=GUIDANCE_PROMPT,
@@ -323,7 +331,15 @@ class VisionAnalyzer:
                 "no tool_use block in guidance response; expected provide_guidance"
             )
         try:
-            return GuidanceResponse(**tool_use_input)
+            answer = GuidanceResponse(**tool_use_input)
+            # Phase 244L: this is the call that used to be free as far as the
+            # ledger was concerned — the usage was bound to `_usage` and
+            # discarded, so a request costing a vision call recorded nothing.
+            record_vision_cost(
+                usage, KIND_GUIDANCE,
+                video_id=video_id, shop_id=shop_id, db_path=db_path,
+            )
+            return answer
         except Exception as e:
             raise VisionPipelineError(f"guidance payload did not validate: {e}") from e
 
@@ -331,6 +347,9 @@ class VisionAnalyzer:
         self,
         frames: list[Path],
         vehicle_context: Optional[VehicleContext] = None,
+        video_id: Optional[int] = None,
+        shop_id: Optional[int] = None,
+        db_path: Optional[str] = None,
     ) -> VisualAnalysisResult:
         """Analyze a batch of video frames using Claude Vision via tool-use.
 
@@ -405,6 +424,12 @@ class VisionAnalyzer:
             findings_data["frames_analyzed"] = len(capped)
             findings_data["model_used"] = resolved_model
             findings_data["cost_estimate_usd"] = usage.cost_estimate
+            # Phase 244L: the ledger, not only the JSON blob on the video row.
+            # A blob per video cannot answer "what did today cost".
+            record_vision_cost(
+                usage, KIND_SWEEP,
+                video_id=video_id, shop_id=shop_id, db_path=db_path,
+            )
             return VisualAnalysisResult.model_validate(findings_data)
         except Exception as e:
             raise VisionPipelineError(

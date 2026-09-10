@@ -3857,6 +3857,112 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS known_issue_models;
         """,
     ),
+    Migration(
+        version=57,
+        name="cost_events_vision_kinds",
+        description=(
+            "Phase 244L. `cost_events.kind` carried "
+            "CHECK (kind IN ('whisper', 'claude_extraction')) -- an accurate "
+            "description of the product at Phase 195B, and untrue from Phase "
+            "191B when vision analysis landed. A vision cost could not be "
+            "recorded even by a caller who tried: the database would reject "
+            "the row. Meanwhile Phase 244J's guidance endpoint discarded its "
+            "usage entirely (`_usage`), so a request that spends a vision call "
+            "recorded nothing, and `cost_events` sat at zero rows. "
+            "Widens the CHECK to add `vision_sweep` and `vision_guidance`, and "
+            "adds a nullable video_id FK (ON DELETE SET NULL, matching "
+            "transcript_id) so a ledger row survives its video being deleted. "
+            "TWO kinds rather than one generic `vision` because the question "
+            "this exists to answer is what the QUESTIONS cost, and averaging "
+            "guidance into sweeps loses exactly that number -- a kind cannot "
+            "be split retroactively, since rows already written would be "
+            "unattributable. "
+            "No backfill: the sweep costs sitting in `analysis_findings` JSON "
+            "stay there. Inventing ledger rows with fabricated timestamps "
+            "would put numbers in a financial report that never came from a "
+            "recorded event. "
+            "ROLLBACK REBUILDS the pre-057 table rather than dropping it. "
+            "The first draft copied migration 043's rollback verbatim, "
+            "which drops `cost_events` outright -- correct for 043, which "
+            "CREATED the table, and destructive here, where this migration "
+            "only widened a CHECK. It necessarily DISCARDS vision rows, "
+            "because the narrowed CHECK cannot hold them: that loss is "
+            "stated here rather than left to be discovered."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE cost_events_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('whisper', 'claude_extraction',
+                                    'vision_sweep', 'vision_guidance')),
+                model TEXT NOT NULL,
+                transcript_id INTEGER,
+                video_id INTEGER,
+                shop_id INTEGER,
+                units_label TEXT,
+                units_value INTEGER,
+                cost_usd_cents INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (transcript_id)
+                    REFERENCES voice_transcripts(id) ON DELETE SET NULL,
+                FOREIGN KEY (video_id)
+                    REFERENCES videos(id) ON DELETE SET NULL
+            );
+
+            INSERT INTO cost_events_new
+                (id, kind, model, transcript_id, shop_id,
+                 units_label, units_value, cost_usd_cents, created_at)
+            SELECT id, kind, model, transcript_id, shop_id,
+                   units_label, units_value, cost_usd_cents, created_at
+            FROM cost_events;
+
+            DROP TABLE cost_events;
+            ALTER TABLE cost_events_new RENAME TO cost_events;
+
+            CREATE INDEX idx_cost_events_created ON cost_events(created_at);
+            CREATE INDEX idx_cost_events_shop ON cost_events(shop_id);
+            CREATE INDEX idx_cost_events_kind ON cost_events(kind);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        rollback_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE cost_events_old (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('whisper', 'claude_extraction')),
+                model TEXT NOT NULL,
+                transcript_id INTEGER,
+                shop_id INTEGER,
+                units_label TEXT,
+                units_value INTEGER,
+                cost_usd_cents INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (transcript_id)
+                    REFERENCES voice_transcripts(id) ON DELETE SET NULL
+            );
+
+            INSERT INTO cost_events_old
+                (id, kind, model, transcript_id, shop_id,
+                 units_label, units_value, cost_usd_cents, created_at)
+            SELECT id, kind, model, transcript_id, shop_id,
+                   units_label, units_value, cost_usd_cents, created_at
+            FROM cost_events
+            WHERE kind IN ('whisper', 'claude_extraction');
+
+            DROP TABLE cost_events;
+            ALTER TABLE cost_events_old RENAME TO cost_events;
+
+            CREATE INDEX idx_cost_events_created ON cost_events(created_at);
+            CREATE INDEX idx_cost_events_shop ON cost_events(shop_id);
+            CREATE INDEX idx_cost_events_kind ON cost_events(kind);
+
+            PRAGMA foreign_keys=ON;
+        """,
+    ),
 ]
 
 

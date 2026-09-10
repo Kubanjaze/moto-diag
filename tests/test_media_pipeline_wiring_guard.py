@@ -82,7 +82,9 @@ class TestMediaPipelineWiringGuard:
         # Capture the frames handed to analyze_video_frames.
         captured = {}
 
-        def _fake_analyze_video_frames(frames, vehicle_context=None):
+        def _fake_analyze_video_frames(
+            frames, vehicle_context=None, video_id=None, db_path=None,
+        ):
             captured["frames"] = frames
             return VisualAnalysisResult(
                 overall_assessment="wiring-guard stub result",
