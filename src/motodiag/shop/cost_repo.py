@@ -24,7 +24,18 @@ from motodiag.core.database import get_connection
 
 # Mirrors the migration-043 `kind` CHECK constraint. Literal from
 # day one per F37 Track 1 discipline (Phase 195B plan §7).
-CostEventKind = Literal["whisper", "claude_extraction"]
+CostEventKind = Literal[
+    "whisper",
+    "claude_extraction",
+    # Phase 244L. Vision was untracked from Phase 191B until now: the
+    # CHECK constraint on `cost_events.kind` rejected these outright, so
+    # a caller could not have recorded one even deliberately.
+    # Kept SEPARATE rather than one generic "vision" because the
+    # question this answers is what the QUESTIONS cost, and averaging
+    # guidance into sweeps loses exactly that number.
+    "vision_sweep",
+    "vision_guidance",
+]
 
 
 def _now_iso() -> str:
@@ -50,6 +61,7 @@ def record_cost_event(
     cost_usd_cents: int,
     *,
     transcript_id: Optional[int] = None,
+    video_id: Optional[int] = None,
     shop_id: Optional[int] = None,
     units_label: Optional[str] = None,
     units_value: Optional[int] = None,
@@ -66,13 +78,13 @@ def record_cost_event(
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """INSERT INTO cost_events (
-                   kind, model, transcript_id, shop_id,
+                   kind, model, transcript_id, video_id, shop_id,
                    units_label, units_value, cost_usd_cents,
                    created_at
                )
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
-                kind, model, transcript_id, shop_id,
+                kind, model, transcript_id, video_id, shop_id,
                 units_label, units_value, cost_usd_cents,
                 _now_iso(),
             ),

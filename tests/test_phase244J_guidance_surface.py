@@ -99,7 +99,10 @@ def no_vision(monkeypatch, tmp_path):
         p = f / "frame_001.jpg"; p.write_bytes(b"jpg")
         return [p]
 
-    def _answer(self, frames, question, vehicle_context=None, known_issues=None):
+    def _answer(self, frames, question, vehicle_context=None, known_issues=None,
+                video_id=None, shop_id=None, db_path=None):
+        # Phase 244L widened the real signature with ledger context; a mock
+        # that does not follow is a mock that stops testing the real call.
         calls["asked"].append({"question": question, "context": vehicle_context,
                                "issues": known_issues or []})
         return FAKE_ANSWER

@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 56  # Phase 244I: known_issue_models junction — models named to be EXCLUDED (migration 056)
+SCHEMA_VERSION = 57  # Phase 244L: cost_events accepts vision kinds (migration 057)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

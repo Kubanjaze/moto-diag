@@ -240,7 +240,7 @@ class TestRetrievalGainsPrecisionWithoutLosingPhase244E:
 
 class TestTheSchemaContract:
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 56  # f9-noqa: ssot-pin contract-pin: Phase 244I schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 55→56 by migration 056 (known_issue_models junction). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+        assert SCHEMA_VERSION == 57  # f9-noqa: ssot-pin contract-pin: Phase 244I schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 55→56 by migration 056 (known_issue_models junction). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 56→57 at Phase 244L (migration 057 widens the cost_events kind CHECK to accept vision_sweep and vision_guidance: vision spent money from Phase 191B but the constraint rejected the rows, so the ledger sat empty).
 
     def test_the_migration_backfills_in_its_own_transaction(self):
         # f9-noqa: ssot-pin contract-pin: 56 is the migration this phase adds,

@@ -497,4 +497,6 @@ def ask_about_video(
         question=payload.question,
         vehicle_context=context,
         known_issues=issues,
+        video_id=video_id,
+        db_path=db_path,
     )

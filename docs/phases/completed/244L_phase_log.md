@@ -1,6 +1,6 @@
 # Phase 244L — Vision costs reach the ledger — phase log
 
-**Status:** Planned
+**Status:** ✅ Complete
 **Opened:** 2026-09-10
 
 ---
@@ -48,3 +48,46 @@ unattributable — so the choice has to be made now.
 
 **Recording is subordinate to answering.** A failed ledger write must not cost a
 technician their answer; the money is already spent by then either way.
+
+## 2026-09-10 — Build complete
+
+**Regression: 6341 passed, 0 failed, 24:29.**
+
+The feature was the easy part, and Step 0 had already predicted that — the
+reporting surface needed no change at all, so `motodiag costs report` rendered
+`vision_guidance $0.98` for seven questions the moment rows existed. About 14¢
+a question.
+
+**The first regression came back with 18 failures and none of them were the
+feature.** Ten were in `test_phase235b_regulation_provenance.py`, a file about
+regulation provenance, which rolls back to schema 51 in its fixture and found
+no `cost_events` table to read.
+
+Migration 057's `rollback_sql` was **migration 043's, copied verbatim**. It
+drops the table. That is right for 043, which created `cost_events`; it is
+destructive for 057, which only widened a CHECK — rolling back to anything
+below 57 deleted the whisper ledger 043 had built.
+
+What makes this worth more than a line: the two blocks are byte-identical, so
+**every text-based approach to it is ambiguous by construction.** My first
+attempt to patch it asserted the anchor appeared once, found two, and stopped —
+and had it not asserted, it would have rewritten *043's legitimate rollback*
+instead. The question that resolves it is not "where is this text" but "which
+migration does this block belong to", and only the second one has an answer.
+
+Five rollback guards added. **One of them was vacuous on first write.**
+`test_rolling_back_drops_the_column_it_added` read `PRAGMA table_info` and
+asserted `"video_id" not in cols` — and for a *dropped* table that PRAGMA
+returns an empty list, so the assertion passed against the exact defect it was
+written to catch. It surfaced only because the mutation was actually run.
+That is the fifth instance of this family in one session, and running the
+mutation has caught every one of them; reasoning about the guard has caught
+none.
+
+Three smaller things, all found by other people's guards rather than mine:
+`Decimal`/`ROUND_HALF_UP` replaced `round()` after the docstring claimed
+half-up on money and Python's is banker's; Phase 191C's f9 lint caught a
+hardcoded `claude-sonnet-4-6` in this phase's own test file; and six failures
+across two files were fakes with fixed signatures meeting the new kwargs.
+
+**Status:** ✅ Complete
