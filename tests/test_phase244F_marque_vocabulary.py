@@ -24,6 +24,7 @@ from motodiag.knowledge import marques as mq
 from motodiag.knowledge import vehicle_resolver as vr
 from motodiag.knowledge.issues_repo import add_known_issue, count_known_issues
 from motodiag.knowledge.loader import load_known_issues_file
+from support.source_guards import code_of
 
 SEED = SEED_DATA_DIR / "knowledge"
 
@@ -182,7 +183,7 @@ class TestOverExtractionIsTheDangerousDirection:
 
 class TestTheVocabularyIsDerived:
     def test_no_hardcoded_marque_list_in_the_module(self):
-        src = inspect.getsource(mq)
+        src = code_of(mq)
         code = "\n".join(
             l for l in src.splitlines()
             if not l.strip().startswith("#") and not l.strip().startswith('"')
@@ -199,7 +200,7 @@ class TestTheVocabularyIsDerived:
         assert not any("," in m for m in got)
 
     def test_the_european_set_comes_from_seed_filenames(self):
-        src = inspect.getsource(mq.european_marques)
+        src = code_of(mq.european_marques)
         assert "known_issues_european_" in src
 
 
@@ -260,7 +261,7 @@ class TestTheIndexStaysInStepWithTheColumn:
     def test_db_init_rebuilds_after_seeding(self):
         import inspect as _i
         from motodiag.cli import main as cli_main
-        assert "rebuild_make_index_at" in _i.getsource(cli_main)
+        assert "rebuild_make_index_at" in code_of(cli_main)
 
     def test_reseeding_twice_leaves_the_index_unchanged(self, tmp_path):
         path = str(tmp_path / "seed.db"); init_db(path)
@@ -365,7 +366,7 @@ class TestAMissingJunctionDegradesRatherThanGoesSilent:
         structure is what gets pinned, and this docstring says why rather than
         implying a stronger check than exists."""
         import inspect as _i
-        src = _i.getsource(vr.known_issues_for_vehicle)
+        src = code_of(vr.known_issues_for_vehicle)
         assert 'if "known_issue_makes" not in str(exc):' in src, (
             "the junction fallback must not absorb unrelated SQL errors")
         assert src.count("raise") >= 2

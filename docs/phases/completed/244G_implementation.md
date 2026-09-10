@@ -1,6 +1,6 @@
 # Phase 244G — A guard that reads source text will eventually read a comment
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -78,17 +78,17 @@ the meta-guard fixes tomorrow.
 
 ## Verification Checklist
 
-- [ ] `code_of` blanks comments
-- [ ] `code_of` blanks module, class and function docstrings
-- [ ] `code_of` keeps ordinary string literals, including multi-line ones
-- [ ] Line numbers and indentation survive blanking
-- [ ] All fourteen vulnerable assertions read `code_of`
-- [ ] A negative guard no longer fires when its identifier appears only in a comment
-- [ ] A positive guard now fails when its identifier survives only in a comment
-- [ ] The meta-guard fails on a newly added raw-source assertion
-- [ ] Phase 241's SafetyChecker tripwire and 244D's `OR IGNORE` guard keep working
-- [ ] Mutation: unblank comments → the mention-vs-use guard fails
-- [ ] Full regression green
+- [x] `code_of` blanks comments
+- [x] `code_of` blanks module, class and function docstrings
+- [x] `code_of` keeps ordinary string literals, including multi-line ones
+- [x] Line numbers and indentation survive blanking
+- [x] All fourteen vulnerable assertions read `code_of`
+- [x] A negative guard no longer fires when its identifier appears only in a comment
+- [x] A positive guard now fails when its identifier survives only in a comment
+- [x] The meta-guard fails on a newly added raw-source assertion
+- [x] Phase 241's SafetyChecker tripwire and 244D's `OR IGNORE` guard keep working
+- [x] Mutation: unblank comments → the mention-vs-use guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -105,3 +105,58 @@ the meta-guard fixes tomorrow.
 - **This phase's own guards are in the vulnerable family.** They are written
   against fixtures, not against the suite's own text, so the tool is not used to
   test itself into a circle.
+
+---
+
+## Deviations from Plan
+
+**The meta-guard caught itself, and the reason is the phase's whole thesis.**
+Its first version scanned with a regex and flagged its own file: the sample
+offender code it constructs to test itself lives inside string literals, and a
+regex cannot tell a string containing code from code. That is exactly the
+mistake this phase exists to stop, committed by the tool built to stop it.
+
+Rewritten to parse: `ast` finds assignments from `getsource(` or a `.py`
+`read_text(`, then `Assert` nodes comparing a string constant against those
+names. Precise, and string literals are simply not code to it.
+
+**It then found four offenders the manual audit missed**, two of them written
+the same hour, in Phase 244F. The audit found fourteen; the parser found
+eighteen. Grep-based auditing missed the same class of thing grep-based guards
+miss.
+
+**One limitation is accepted rather than engineered around.** The scanner is
+name-based, not flow-sensitive: if a file assigns `src` from `getsource`
+anywhere, every `assert "..." in src` in that file is flagged, even where `src`
+came from `code_of`. That produced two false positives in 244F, both resolved by
+converting the remaining raw sites — which is the outcome wanted anyway. Making
+it flow-sensitive would add real complexity to catch a case that resolves
+correctly by nudging.
+
+**Phases 241 and 244D were left alone deliberately.** Both already parse the AST
+directly, which is *stronger* than `code_of` for what they assert. Downgrading
+them to the shared helper would have been consistency for its own sake; instead
+this phase guards that they have not regressed to text matching.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Raw-source assertions found | **18** — manual audit found 14, the parser found 4 more |
+| Converted to `code_of` | 18, across 5 files |
+| `code_of` fidelity | byte-length, line count, columns all preserved |
+| Guards | 19 |
+| Mutations run / caught | 5 / 5 |
+| Regression | **6231 passed / 0 failed** (baseline 6212; +19 guards) |
+
+**Key finding: the reverse case is the dangerous one, and nobody had hit it.**
+Four times this session a guard fired on prose — loud, annoying, fixed in
+minutes. Not once had anyone noticed that `assert "get_session" in src` keeps
+passing when the identifier survives *only in a comment*. A guard that fails
+wrongly gets attention; a guard that passes wrongly protects nothing and says
+so to no one.
+
+**And the incentive was worse than the bug.** Phase 241's tripwire fired on the
+sentence written to make its own gap findable, so the cheapest way to green it
+was to delete that sentence. A guard that punishes explaining a defect selects
+for a codebase that explains nothing.
