@@ -70,8 +70,18 @@ def _make_cli():
 def _patch_init_db(monkeypatch, tmp_path):
     """Redirect init_db() to a per-test tmp DB so we don't touch the
     developer's real motodiag DB during CliRunner invocations.
+
+    Phase 244H: this used to patch `init_db` only, which covered the WRITE path
+    and left the READ path alone — `get_connection(db_path=None)` resolves
+    through `get_settings().db_path` on its own, so command queries were hitting
+    the operator's real database and passing because it happened to be seeded.
+    The setting is now redirected as well, which covers both.
     """
+    from motodiag.core.config import reset_settings
+
     db_path = str(tmp_path / "phase140.db")
+    monkeypatch.setenv("MOTODIAG_DB_PATH", db_path)
+    reset_settings()
     init_db(db_path)
 
     # Every command path calls init_db() with no args at the top; we
@@ -89,7 +99,10 @@ def _patch_init_db(monkeypatch, tmp_path):
     monkeypatch.setattr(hw_mod, "init_db", _patched)
     # Also expose the tmp path to tests that want to seed rows via
     # add_dtc(..., db_path=...).
-    yield db_path
+    try:
+        yield db_path
+    finally:
+        reset_settings()
 
 
 # ===========================================================================

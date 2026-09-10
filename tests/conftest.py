@@ -1,6 +1,37 @@
 """Shared test fixtures for MotoDiag."""
 
+import os
+import tempfile
+from pathlib import Path
+
+# ---------------------------------------------------------------------------
+# Phase 244H — redirect the default database BEFORE anything can resolve it.
+#
+# `get_connection(db_path=None)` falls through to `get_settings().db_path`,
+# which points at `data/motodiag.db`, and several CLI command paths call
+# `init_db()` with no arguments. Twice in one day a regression run applied a
+# schema migration to the operator's real database because of it. Both
+# migrations happened to be correct, which is why nobody noticed.
+#
+# This runs at conftest IMPORT time, not in a fixture. `get_settings` is an
+# lru_cache'd singleton and modules may read it while being imported, so a
+# session-scoped fixture runs too late for anything resolved during collection.
+# Conftest module level is the earliest hook pytest offers.
+#
+# Set only when unset, so an explicit MOTODIAG_DB_PATH still wins.
+# ---------------------------------------------------------------------------
+PRODUCTION_DB = str((Path(__file__).parent.parent / "data" / "motodiag.db").resolve())
+
+if not os.environ.get("MOTODIAG_DB_PATH"):
+    _TEST_DB_DIR = tempfile.mkdtemp(prefix="motodiag_test_default_")
+    os.environ["MOTODIAG_DB_PATH"] = str(Path(_TEST_DB_DIR) / "default.db")
+
 import pytest
+
+from motodiag.core.config import reset_settings
+
+# Discard anything cached before the assignment above.
+reset_settings()
 
 from motodiag.core.database import init_db
 from motodiag.core.models import VehicleBase, DTCCode, ProtocolType, SymptomCategory, Severity
@@ -161,3 +192,60 @@ def sample_kawasaki():
         make="Kawasaki", model="ZX-6R", year=2003,
         engine_cc=636, protocol=ProtocolType.K_LINE,
     )
+
+
+
+# ---------------------------------------------------------------------------
+# Phase 244H — the tripwire.
+#
+# A default that silently stops working is worse than no default. This runs for
+# every test and fails the moment the bare database path resolves back to the
+# operator's file.
+# ---------------------------------------------------------------------------
+@pytest.fixture(autouse=True)
+def _never_the_production_database():
+    from motodiag.core.database import get_db_path
+
+    resolved = str(Path(get_db_path()).resolve())
+    assert resolved != PRODUCTION_DB, (
+        "A test resolved the bare database path to the PRODUCTION database "
+        f"({PRODUCTION_DB}).\n"
+        "`get_connection(db_path=None)` falls through to `get_settings().db_path`, "
+        "and several CLI command paths call `init_db()` with no arguments — that is "
+        "how two schema migrations were applied to real data. Pass an explicit "
+        "db_path, or check that conftest's MOTODIAG_DB_PATH redirect is still in "
+        "place."
+    )
+    yield
+    # Phase 244H: a test that redirects the setting must not leave its cached
+    # value behind. `get_settings` is an lru_cache'd singleton, so a stale entry
+    # would follow the next test into whichever database the previous one chose.
+    # Discovered here: a guard that restored its own env var in a `finally`
+    # cleared the session default for every test after it.
+    reset_settings()
+
+
+@pytest.fixture
+def redirect_default_db(tmp_path, monkeypatch):
+    """Point every bare database resolution at a fresh temporary database.
+
+    Phase 244H. Patching `init_db` alone is not enough and several fixtures did
+    exactly that: `get_connection(db_path=None)` resolves through
+    `get_settings().db_path` independently, so the WRITE path went to a temp
+    file while the READ path went to the operator's real database — and those
+    tests passed only because production happened to be seeded.
+
+    Redirecting the setting covers both, and the returned path is initialised so
+    a bare read finds a real schema rather than a confusing empty one.
+    """
+    from motodiag.core.config import reset_settings
+
+    db_path = str(tmp_path / "redirected.db")
+    monkeypatch.setenv("MOTODIAG_DB_PATH", db_path)
+    reset_settings()
+    init_db(db_path)
+    try:
+        yield db_path
+    finally:
+        monkeypatch.delenv("MOTODIAG_DB_PATH", raising=False)
+        reset_settings()

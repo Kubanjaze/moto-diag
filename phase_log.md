@@ -2406,3 +2406,35 @@ The ~60 files asserting over report output, API bodies and JSON corpus content a
 matching it literally is exactly right.
 
 Backend `implementation.md` 0.13.63 → 0.13.64. No production code changed, no schema change (still v55).
+
+### 2026-09-10 — Phase 244H: the test suite was reading and writing the production database
+
+**Project-level state this changes:**
+- **`tests/conftest.py` redirects `MOTODIAG_DB_PATH` at import time**, before any module can resolve the cached
+  settings singleton, and clears the settings cache after every test so a redirect cannot leak forward.
+- **An autouse tripwire** fails the moment a bare database path resolves back to `data/motodiag.db`, with a message
+  that explains the `get_connection(db_path=None)` fall-through rather than merely reporting it.
+- **New shared `redirect_default_db` fixture** redirects the read path as well as the write path.
+
+**What was actually wrong.** Twice in one day a regression run applied a schema migration to the operator's real
+database — 054 and then 055 — because several CLI command paths call `init_db()` with no arguments. Neither was
+noticed at the time; both were found by checking a schema version before doing something unrelated.
+
+**And the reading was worse than the writing.** Four Phase 140 tests failed the instant the default was redirected.
+Their fixture patched `init_db`, the write path, while `get_connection` resolved through the settings independently —
+so those tests had been querying the operator's real seeded data for months, and would fail on a clean checkout. The
+plan's Step 0 said no test depended on the production corpus. It was wrong, and the tripwire disproved it in a minute.
+
+**The property is measured rather than argued.** Across a complete 6,246-test run the production file's mtime, size
+and schema version were identical before and after, with a companion guard proving the probe write landed somewhere
+so the check cannot pass by writing nothing.
+
+**A convention is a defect that has not happened yet.** Five test files already redirected `init_db` and their
+comments explained exactly why — Phase 140's said outright that every command path calls it bare. The knowledge was
+present and correct, applied by whoever remembered. What was missing was a floor beneath it.
+
+**Key finding: the correct migration is the dangerous one.** Both incidents were harmless, so nothing complained and
+nothing was investigated. A suite that writes to real data and gets away with it teaches nobody anything, right up
+until the write is a `DELETE` — and Phase 244D's migration removed 5,940 rows.
+
+Backend `implementation.md` 0.13.64 → 0.13.65. No production code changed, no schema change (still v55).

@@ -1,6 +1,6 @@
 # Phase 244H — The test suite writes to the production database
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -67,15 +67,15 @@ is a proxy for it.
 
 ## Verification Checklist
 
-- [ ] `get_db_path()` inside a test never resolves to the production database
-- [ ] A test that calls `init_db()` bare creates a temporary database instead
-- [ ] Opening the production database during a test fails loudly
-- [ ] The production file's mtime and size are unchanged across a full run
-- [ ] The five files with their own redirects still pass unmodified
-- [ ] The redirect happens at import time, asserted rather than assumed
-- [ ] Mutation: remove the conftest redirect → the tripwire fails
-- [ ] Mutation: point the redirect back at production → the guard fails
-- [ ] Full regression green
+- [x] `get_db_path()` inside a test never resolves to the production database
+- [x] A test that calls `init_db()` bare creates a temporary database instead
+- [x] Opening the production database during a test fails loudly
+- [x] The production file's mtime and size are unchanged across a full run
+- [x] The five files with their own redirects still pass unmodified
+- [x] The redirect happens at import time, asserted rather than assumed
+- [x] Mutation: remove the conftest redirect → the tripwire fails
+- [x] Mutation: point the redirect back at production → the guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -89,3 +89,63 @@ is a proxy for it.
   path specifically, not all of `data/`, and the guard that patches
   `sqlite3.connect` is opt-in per test rather than autouse — a global patch
   would be a second, subtler way to break the suite.
+
+---
+
+## Deviations from Plan
+
+**Step 0 was wrong, and the tripwire disproved it within a minute.** The plan
+said no test depends on the seeded production corpus. Four Phase 140 tests
+failed the instant the default was redirected, with `no such table: dtc_codes`.
+
+They were not merely *at risk* of writing to real data — **they were reading
+it.** Their fixture patched `init_db`, which is the write path, while
+`get_connection(db_path=None)` resolves through `get_settings().db_path`
+independently. Every query in those tests went to the operator's database and
+passed because it happened to be seeded. On a clean checkout they would fail.
+
+That changes what this phase found. Not "tests might touch production" but **a
+working suite has been quietly depending on the operator's data.** The fixture
+now redirects the setting as well, and a shared `redirect_default_db` fixture
+exists so the next author does not have to rediscover that patching `init_db`
+covers half the problem.
+
+**I introduced the same class of bug while fixing it.** A guard restored its env
+var in a `finally`, which runs *before* `monkeypatch` restores — it cleared the
+session default for every test after it and turned four unrelated guards into
+errors. Settings are an `lru_cache`d singleton, so a stale entry follows the
+next test into whichever database the previous one chose. The cache is now
+cleared after every test, which makes the hazard structural rather than a thing
+to remember.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Tests found reading the production database | **4** (Phase 140 CLI tests) |
+| Production DB across a full run | **mtime, size and schema version identical** |
+| Guards | 15 |
+| Mutations run / caught | 5 / 5 |
+| Regression | **6246 passed / 0 failed** (baseline 6231; +15 guards), green first run |
+
+Measured before and after a complete 6,246-test run:
+
+```
+BEFORE  mtime 1789052818  size 32301056  schema 55
+AFTER   mtime 1789052818  size 32301056  schema 55
+```
+
+Two earlier runs today silently advanced that same file to schema 54 and then
+55.
+
+**Key finding: the correct migration is the dangerous one.** Both incidents were
+harmless, so neither surfaced — no failure, no warning, nothing to investigate.
+The isolation gap was only visible because I happened to check a schema version
+before doing something unrelated. A test suite that writes to real data and
+gets away with it teaches nobody anything, right up until the write is
+`DELETE`. Phase 244D's migration removed 5,940 rows.
+
+**A convention is a defect that has not happened yet.** Five files already
+redirected `init_db` and their comments explained exactly why — Phase 140's said
+outright that every command path calls it bare. The knowledge was present,
+correct, and applied by whoever remembered. What was missing was a floor.
