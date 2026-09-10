@@ -3963,6 +3963,74 @@ MIGRATIONS: list[Migration] = [
             PRAGMA foreign_keys=ON;
         """,
     ),
+    # Migration 058 — Phase 244M: per-vehicle compiled memory
+    Migration(
+        version=58,
+        name="memory_facts",
+        description=(
+            "Phase 244M. A compiled long-term memory so the shop can answer "
+            "questions about a machine without spending an API call. "
+            "THE SUBJECT IS THE VEHICLE, NOT THE CUSTOMER, and that is the "
+            "load-bearing decision. `customers` row 1 is named `Unassigned` "
+            "and all ten vehicle rows carry `customer_id = 1` -- the column "
+            "DEFAULT, never overwritten -- while `customer_bikes`, the "
+            "junction intended for this, is empty. Compiling per customer "
+            "against that key produces ONE memory belonging to `Unassigned` "
+            "holding every bike in the shop, which is the exact "
+            "cross-contamination the feature exists to prevent. Keying on the "
+            "vehicle is also right independently: machines outlive ownership, "
+            "and a diagnostic history is continuous across a sale. Customer "
+            "is recovered by joining, which is all an erasure request needs. "
+            "`fact_key` is UNIQUE and COALESCEs its nullable parts, because "
+            "SQLite treats NULLs as DISTINCT in a UNIQUE constraint and a "
+            "naive key would let every re-compile insert duplicates "
+            "(Phase 244D). "
+            "`source` reuses the corpus provenance vocabulary rather than "
+            "inventing one: Phase 244M's research found that field already "
+            "maps onto shareability, and it is the control point a later "
+            "cross-shop phase gates on. "
+            "ON DELETE CASCADE from vehicles: the memory of a deleted machine "
+            "goes with it. Deliberate, and the erase path's backstop rather "
+            "than an accident of FK defaults."
+        ),
+        upgrade_sql="""
+            CREATE TABLE memory_facts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                vehicle_id INTEGER NOT NULL,
+                fact_kind TEXT NOT NULL
+                    CHECK (fact_kind IN ('complaint', 'observation', 'repair',
+                                         'part-replaced', 'measurement',
+                                         'correction')),
+                subject TEXT NOT NULL,
+                value TEXT NOT NULL DEFAULT '',
+                source TEXT NOT NULL
+                    CHECK (source IN ('mechanic-verified', 'model-generated',
+                                      'customer-reported', 'service-record')),
+                origin_table TEXT NOT NULL,
+                origin_id INTEGER,
+                at_miles INTEGER,
+                established_at TEXT NOT NULL,
+                superseded_at TEXT,
+                fact_key TEXT NOT NULL UNIQUE,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+                    ON DELETE CASCADE
+            );
+
+            CREATE INDEX idx_memory_facts_vehicle
+                ON memory_facts(vehicle_id);
+            CREATE INDEX idx_memory_facts_kind
+                ON memory_facts(vehicle_id, fact_kind);
+            CREATE INDEX idx_memory_facts_established
+                ON memory_facts(vehicle_id, established_at DESC);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_memory_facts_established;
+            DROP INDEX IF EXISTS idx_memory_facts_kind;
+            DROP INDEX IF EXISTS idx_memory_facts_vehicle;
+            DROP TABLE IF EXISTS memory_facts;
+        """,
+    ),
 ]
 
 

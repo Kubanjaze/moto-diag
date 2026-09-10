@@ -2572,3 +2572,82 @@ failures across two files were pre-existing fakes with fixed signatures meeting 
 
 **No backfill.** Sweep costs already sitting in `analysis_findings` JSON stay there rather than becoming
 ledger rows with fabricated timestamps in a financial report.
+
+### 2026-09-10 — Phase 244M complete — per-machine compiled memory
+
+**76 guards, 6 mutations, schema v57 → v58** (migration 058). Backend
+`implementation.md` 0.13.69 → 0.13.70. New `motodiag/memory/` package and a
+`motodiag memory` CLI group.
+
+**What the operator asked for:** a per-client long-term memory compiling every
+interaction so inquiries can be answered without an API call, plus a macro
+cross-client repository. This is layer (a). The hive mind is a separate phase,
+and not for reasons of size — GDPR Art. 28(10) makes a processor that sets its
+own purposes a **controller**, and CCPA's service-provider carve-out permits
+self-improvement only "provided that the service provider does not use the
+personal information to perform services on behalf of another person", which is
+the definition of a hive mind. It is a status change, not a privacy technique,
+so no hashing or noise reaches it.
+
+**Step 0 found the blocker, and it was not storage.** Three of the four
+substrates already existed and were simply unfed: `ai_response_cache` with a
+content-addressed SHA256 key and an `offline=True` mode that already refuses to
+call the API on a miss; `service_history` with a repo, scheduler and CLI behind
+it; and `FeedbackReader`, which nothing calls — the fifth integration-gap
+instance this track. All three at zero rows.
+
+What was missing was a trustworthy **subject key**. `customers` row 1 is named
+`Unassigned`, and all **10 of 10** vehicles carry `customer_id = 1` — the column
+default, never overwritten — while `customer_bikes`, the junction meant for
+this, is empty. Compiling per customer against that produces one memory holding
+every bike in the shop. **The subject is therefore the vehicle**, with customer
+derived by joining, which is all an erasure request needs — and which is right
+independently, because machines outlive ownership.
+
+**The finding worth the phase came from running it, not reading it.** Compiling
+against a copy of the real database gave 31 facts across 10 machines. Vehicle
+10 — session 6's CBR600F4i — returned eleven, and **ten were paragraphs of the
+vision model's own prose from one sweep**, about to be injected into the next
+sweep's prompt as *"Known history for this machine"*. That is a loop with no
+brake: an early wrong reading returns as context, biases the next analysis
+toward itself, and is written back looking more established each time. A
+provenance label does not rescue it — a label lets a *person* weigh a claim, and
+a model cannot discount its own prior output at all. Nothing was wrong by its
+own terms; the defect exists only at the join, and only against real data. A
+hand-written fixture would have had a sensible mix and shown nothing.
+`recall_summary` now excludes `model-generated` from the prompt path, filtering
+before the limit so a chatty sweep cannot crowd out the one complaint that
+matters.
+
+**No similarity matching anywhere, deliberately.** The research's surviving
+finding — after three of five relayed claims were corrected as overstated — is
+that similarity is an unreliable key for context-dependent questions, and every
+question this product answers is context-dependent. So `memory ask` resolves a
+bounded grammar against recorded facts and misses explicitly rather than
+guessing, and is asserted to write **zero** rows to the Phase 244L ledger.
+Rows, never weights: nothing here fine-tunes on customer data, because deleting
+a row is solved and unlearning a fine-tune is not.
+
+**The erase path shipped with the store**, because a compiled memory is not in
+the retention set a shop is required to keep, while the work orders it was
+compiled *from* are. `forget` deletes the compiled fact and never the origin
+row, and refuses `--customer 1` outright rather than deleting the whole shop's
+memory under a key meaning "unknown".
+
+**A guard was vacuous and its name is what hid it.**
+`test_every_answer_line_is_dated_and_sourced` checked only the source; a
+mutation stripping the vintage passed it. Sixth instance this session. And one
+mutation run was itself **mis-targeted** — the `-k` filter selected the answers
+guard instead of the recall guard, reporting a pass that meant nothing. That
+failure mode is invisible: a mutation aimed at the wrong test looks exactly like
+a mutation the suite caught.
+
+Eight schema pins bumped 57 → 58 across Gate 9, Gate 11, Gate 12 and four phase
+files — and **the eighth was found by the regression, not by me.**
+`test_phase191b_serve_migrations.py` pins `get_current_version(db_path) == 57`
+rather than `SCHEMA_VERSION == 57`, so the obvious grep does not find it. It was
+the only failure in 6,417 tests. A note now sits in that pin's own reason string
+warning that it is spelled differently, because the same hazard recurs at every
+bump. Its reason also opened *"literal `52` here"* — stale since Phase 240C,
+three bumps ago: the asserted number had been maintained and the sentence
+explaining it had not. Corrected in passing.

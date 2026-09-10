@@ -199,7 +199,7 @@ class TestTheReportNeedsNoChanges:
 
 class TestTheSchemaContract:
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 57  # f9-noqa: ssot-pin contract-pin: Phase 244L schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 56→57 by migration 057 (cost_events accepts vision_sweep and vision_guidance). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+        assert SCHEMA_VERSION == 58  # f9-noqa: ssot-pin contract-pin: Phase 244L schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 56→57 by migration 057 (cost_events accepts vision_sweep and vision_guidance). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 57→58 at Phase 244M (migration 058 adds memory_facts, the per-machine compiled memory: keyed on vehicle_id and deliberately NOT on customer_id, because `customers` row 1 is the `Unassigned` sentinel that every vehicle row carries by DEFAULT, so a customer key would compile one memory holding every bike in the shop -- the exact cross-contamination the feature exists to prevent; fact_key is a UNIQUE hash that COALESCEs its nullable origin_id, because SQLite treats NULLs as DISTINCT and the naive form would let every re-compile duplicate).
 
     def test_the_rebuild_redeclares_every_index(self):
         """Phase 244D's lesson on this codebase's table rebuilds."""

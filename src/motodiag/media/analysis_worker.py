@@ -288,6 +288,18 @@ def _build_vehicle_context(
     except Exception:
         identity_note = ""
 
+    # Phase 244M: the machine's own compiled history. Best-effort like
+    # everything else here -- a memory that cannot be read must not stop an
+    # analysis that would otherwise run.
+    history = ""
+    if vehicle_id:
+        try:
+            from motodiag.memory.recall import recall_summary
+
+            history = recall_summary(vehicle_id, db_path=db_path)
+        except Exception:
+            history = ""
+
     return VehicleContext(
         make=make,
         model=model,
@@ -296,4 +308,5 @@ def _build_vehicle_context(
         reported_symptoms=[s for s in symptoms if s],
         identity_note=identity_note,
         notes=session.get("notes") or "",
+        history=history,
     )
