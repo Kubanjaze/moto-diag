@@ -1,6 +1,6 @@
 # Phase 244K — The gate that watched the doors and not the rooms
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -82,17 +82,17 @@ other leaves that repo internally inconsistent.
 
 ## Verification Checklist
 
-- [ ] A new live schema absent from the snapshot fails
-- [ ] A shared schema whose field set changed fails
-- [ ] A shared schema whose enum gained a value fails — the exact 235B case
-- [ ] A snapshot schema absent from the live API fails
-- [ ] `info.version` differing does **not** fail
-- [ ] `servers` differing does **not** fail
-- [ ] The failure names the schema and the field
-- [ ] The message names both regeneration commands
-- [ ] The existing path assertion still works
-- [ ] Mutation: revert the snapshot's `source` enum → the drift guard fails
-- [ ] Full regression green
+- [x] A new live schema absent from the snapshot fails
+- [x] A shared schema whose field set changed fails
+- [x] A shared schema whose enum gained a value fails — the exact 235B case
+- [x] A snapshot schema absent from the live API fails
+- [x] `info.version` differing does **not** fail
+- [x] `servers` differing does **not** fail
+- [x] The failure names the schema and the field
+- [x] The message names both regeneration commands
+- [x] The existing path assertion still works
+- [x] Mutation: revert the snapshot's `source` enum → the drift guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -106,3 +106,57 @@ other leaves that repo internally inconsistent.
 - **Over-precise field reporting could mislead** if a schema changes shape
   entirely. The comparison reports field-level detail where both sides are
   objects with `properties`, and falls back to naming the schema otherwise.
+
+---
+
+## Deviations from Plan
+
+**The class already had a philosophy the plan nearly broke.** Its docstring
+states: *"Structural comparison, not byte-wise: a prose edit to a description
+should not fail the build."* Strict schema equality — the obvious
+implementation, and what v1.0 implied — would have violated that on the first
+reworded field description.
+
+Prose keys (`description`, `title`, `example`, `examples`) are now stripped
+recursively before comparison. Guarded in both directions: a reworded
+description must not fail, and **an enum change must not be mistaken for prose**,
+because stripping that swallowed the exact thing the phase exists to catch would
+be the worst possible outcome.
+
+**A guard of mine failed on itself — the fifth mention-versus-use of the
+session, in the phase with the least excuse.** The assertion that `info` and
+`servers` are not gated scanned the whole class source and found the very keys it
+forbids, written in its own body. Repaired two ways: `code_of` from Phase 244G
+strips the comments, and the check narrowed to `_schemas()` — the function that
+decides what is compared. **A guard should read the code that does the work, not
+the file it lives in.**
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Axes gated | paths **and** `components.schemas`, both directions |
+| Deliberately ungated | `info.version`, `servers` — with a guard enforcing it |
+| Guards | 6 |
+| Mutations run / behaved correctly | 5 / 5 |
+| Regression | **6306 passed / 0 failed** (baseline 6300; +6 guards) |
+
+Mutation 1 reproduced the real defect — removing `"regulation"` from the
+snapshot's `source` enum — and produced:
+
+```
+KnownIssueResponse.source: snapshot is missing ['regulation']
+```
+
+Not *"a schema differs"*. The field, and the value.
+
+**Key finding: a guard that watches one axis reports safety on every axis.**
+Gate 11 was green for 85 commits while the contract was wrong, and it was
+correct by its own terms the whole time — no path had changed. Nothing was
+broken; the guard simply answered a narrower question than anyone was reading it
+as. **Green meant "no new paths" and was read as "the contract matches".**
+
+The three severities are now separated because they fail differently: a
+**missing** type fails at build, a **stale** type 404s at runtime, and a
+**wrong** type compiles and lies. The last is what went unnoticed, and it is the
+one with no natural symptom.
