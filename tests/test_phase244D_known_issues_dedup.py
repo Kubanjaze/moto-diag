@@ -183,8 +183,8 @@ class TestLoadingIsIdempotent:
 
 
 class TestTheSchemaContract:
-    def test_schema_version_is_54(self):
-        assert SCHEMA_VERSION == 54  # f9-noqa: ssot-pin contract-pin: Phase 244D schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x and it could never fail. Bumped 53→54 by migration 054 (known_issues dedup + UNIQUE expression index over (COALESCE(make,''), COALESCE(model,''), title)). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+    def test_schema_version_is_current(self):
+        assert SCHEMA_VERSION == 55  # f9-noqa: ssot-pin contract-pin: Phase 244D schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x and it could never fail. Bumped 53→54 by migration 054 (known_issues dedup + UNIQUE expression index over (COALESCE(make,''), COALESCE(model,''), title)). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 54→55 at Phase 244F (migration 055 adds the known_issue_makes junction: `known_issues.make` is one free-text column holding a marque, a list of marques, a scope phrase and in one row a whole sentence of findings, so LiveWire and Damon were not queryable makes AT ALL — all 24 LiveWire rows sit inside 'Harley-Davidson, LiveWire' and Phase 243's entire output was unreachable. The column is not modified; the junction is derived from it by knowledge/marques.extract_marques).
 
     def test_a_fresh_database_carries_the_identity_index(self, tmp_path):
         db = str(tmp_path / "f.db"); init_db(db)

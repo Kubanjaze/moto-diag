@@ -1,6 +1,7 @@
 """Known issues repository — common problems, causes, fixes by make/model/year."""
 
 import json
+import sqlite3
 from datetime import datetime
 
 from motodiag.core.severity import SEVERITY_RANK_SQL
@@ -66,6 +67,20 @@ def add_known_issue(
                 datetime.now().isoformat(),
             ),
         )
+        # Phase 244F: keep the marque junction in step with the row. Derived
+        # from the make string, so it is always reproducible from the column and
+        # never writes back to it. Best-effort against a database below schema
+        # 55, where the table does not exist yet.
+        new_id = cursor.lastrowid if cursor.rowcount else None
+        if new_id:
+            try:
+                from motodiag.knowledge.marques import index_makes_for_issue
+
+                index_makes_for_issue(conn, new_id, make)
+            except sqlite3.OperationalError as exc:
+                if "no such table" not in str(exc).lower():
+                    raise
+
         if cursor.rowcount == 0:
             # Ignored as a duplicate. `lastrowid` would be stale or 0 here, so
             # resolve the id of the row that already holds this identity --

@@ -2340,3 +2340,40 @@ resolve to nothing — all 24 LiveWire rows are tagged `"Harley-Davidson, LiveWi
 unreachable. This phase makes retrieval survive that data; repairing it needs its own phase with a data migration.
 
 Backend `implementation.md` 0.13.61 → 0.13.62. No schema change (still v54), no migration, no API surface change.
+
+### 2026-09-10 — Phase 244F: a make column that holds prose cannot be queried (schema v54 → v55)
+
+**Project-level state this changes:**
+- **Schema v54 → v55.** Migration 055 adds `known_issue_makes (issue_id, make)`, one row per marque an entry names,
+  backfilled inside the migration's own transaction.
+- **`Migration` gains an optional `post_apply` hook** (`"module:function"`, run after the DDL with the open
+  connection). A backfill that needs real parsing cannot be written in SQL, and running it after the migration would
+  leave a window in which the schema exists and the data behind it does not.
+- **New `src/motodiag/knowledge/marques.py`** — vocabulary derivation, European-set derivation, marque extraction, and
+  the authoritative index rebuild.
+- **`vehicle_resolver.known_makes()` returns 16 real marques** instead of 26 raw column values including a sentence.
+  Retrieval joins the junction, with a column-matching fallback for pre-55 databases.
+- **`db init` rebuilds the marque index after seeding**, because a derived vocabulary is only correct over a complete
+  corpus.
+
+**What this unblocks.** LiveWire 0 → 24 entries, Damon 0 → 10, Zero 17 → 27, Energica 12 → 22, Triumph 55 → 62,
+Ducati 46 → 55. Phase 243 researched and wrote 24 LiveWire entries and **not one of them could be retrieved** until
+now.
+
+**The `make` column is not corrected, only indexed.** What the author wrote survives — including `All European makes`
+and the sentence — and the junction is derived beside it. Rewriting 970 entries by script is a larger risk than the
+defect, and a derived index can be rebuilt at any time.
+
+**Three self-inflicted bugs, all caught by the suite rather than by me.** Joining the junction made eleven tests go
+*silently empty* on pre-55 databases — the same failure as `make='Homda'` returning zero rows, which is what opened
+this whole chain. Indexing derived its vocabulary from the **production** database no matter which one was being
+written. And the index is **order-dependent until the corpus is complete**, because the vocabulary is a function of
+the whole corpus; nothing about the incremental path looks wrong while it is being wrong.
+
+**A guard that admits its own reach.** The junction fallback is scoped so an unrelated SQL error cannot be absorbed
+into silently column-matched results, but that scoping is not behaviourally testable — both queries share the same
+column dependencies, so any error one hits the other hits too. Mutation testing proved the first version of the guard
+passed with the condition deleted. It is now a source assertion whose docstring states plainly that the behaviour is
+unreachable and that structure is what is pinned.
+
+Backend `implementation.md` 0.13.62 → 0.13.63. Schema v54 → v55 (migration 055). No API surface change.
