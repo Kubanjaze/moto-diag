@@ -53,3 +53,9 @@ htmlcov/
 # Phase 244D: timestamped DB backups taken before destructive migrations.
 # 32MB each; never belong in git.
 data/*.backup-*
+
+# SQLite WAL sidecars — swept in by `git add -A` at Phase 244H.
+# `data/motodiag.db` was ignored but these were not.
+data/*.db-shm
+data/*.db-wal
+data/*.db-journal
