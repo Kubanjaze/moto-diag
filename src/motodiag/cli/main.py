@@ -388,6 +388,14 @@ def db_init() -> None:
         name = issue_file.stem.replace("known_issues_", "").replace("_", " ").title()
         console.print(f"  [green]✓[/green] Loaded {count} known issues ({name})")
 
+    # Phase 244F: the marque vocabulary is derived from the whole corpus, so a
+    # row loaded before the file that establishes a marque cannot index against
+    # it. Rebuild once the corpus is complete — this is the authoritative pass.
+    from motodiag.knowledge.marques import rebuild_make_index_at
+
+    indexed = rebuild_make_index_at()
+    console.print(f"  [green]✓[/green] Indexed {indexed} issue/marque pairs")
+
     # Phase 209: an install that shipped without its seed data used to
     # reach here and report success over an empty knowledge base. Say
     # so instead — a silent empty KB looks identical to a working one

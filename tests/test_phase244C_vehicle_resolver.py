@@ -68,8 +68,11 @@ class TestTheVocabularyComesFromTheCorpus:
 
     def test_no_hardcoded_make_list_in_the_module(self):
         """An alias table drifts the moment a phase adds a make."""
-        src = inspect.getsource(vr)
-        assert "SELECT DISTINCT make" in src
+        # Phase 244F moved the derivation into `knowledge/marques.py`; the
+        # guard follows the code rather than pinning a module.
+        from motodiag.knowledge import marques as _mq
+        src = inspect.getsource(vr) + inspect.getsource(_mq)
+        assert "SELECT DISTINCT make FROM known_issues" in src
         for marque in ("Yamaha", "Suzuki", "Ducati", "Triumph"):
             assert f'"{marque}"' not in src, f"{marque} hard-coded — vocabulary must come from the corpus"
 

@@ -154,16 +154,15 @@ def _missing_table(exc: "sqlite3.OperationalError") -> bool:
 
 def known_makes(db_path: Optional[str] = None) -> list[str]:
     """Distinct makes present in the corpus. The vocabulary, read from the data."""
-    try:
-        with get_connection(db_path) as conn:
-            rows = conn.execute(
-                "SELECT DISTINCT make FROM known_issues WHERE make IS NOT NULL AND make != '' ORDER BY make"
-            ).fetchall()
-    except sqlite3.OperationalError as exc:
-        if _missing_table(exc):
-            return []
-        raise
-    return [r[0] for r in rows]
+    # Phase 244F: return real marques, not raw column values. This used to hand
+    # back 26 strings including "All makes" and a full sentence of findings, and
+    # Phase 244C uses it as its matching pool -- so `LiveWire` could not resolve
+    # at all, while a sentence could. The vocabulary is derived from the corpus,
+    # which is what surfaces LiveWire and Damon: they have no single-marque row
+    # anywhere, only appearances inside multi-marque strings.
+    from motodiag.knowledge.marques import marque_vocabulary
+
+    return sorted(marque_vocabulary(db_path))
 
 
 def known_models(make: Optional[str] = None, db_path: Optional[str] = None) -> list[str]:
@@ -313,16 +312,42 @@ def known_issues_for_vehicle(
             ELSE 2
         END
     """
+    # Phase 244F: match through the marque junction rather than the free-text
+    # `make` column. An entry tagged "Harley-Davidson, LiveWire" belongs to both,
+    # and column equality reached neither -- which is why LiveWire returned
+    # nothing while the corpus documented the machine. The wildcard marker covers
+    # entries whose scope really is every make.
+    from motodiag.knowledge.marques import WILDCARD_MAKE
+
     sql = (
-        f"SELECT *, {tier_sql} AS _match_tier FROM known_issues "
+        f"SELECT known_issues.*, {tier_sql} AS _match_tier FROM known_issues "
+        "JOIN known_issue_makes ON known_issue_makes.issue_id = known_issues.id "
+        "WHERE known_issue_makes.make IN (?, ?) "
+        f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
+    )
+    params: list = [resolved_model, resolved_model, WILDCARD_MODEL,
+                    resolved_make, WILDCARD_MAKE]
+
+    # A database below schema 55 has no junction. Joining against a table that
+    # is not there would return nothing, and "no rows" is precisely the answer
+    # this whole line of work exists to stop being ambiguous -- it would look
+    # identical to a corpus with nothing to say about the machine. Fall back to
+    # matching the column, which is exactly the pre-244F behaviour.
+    fallback_sql = (
+        f"SELECT known_issues.*, {tier_sql} AS _match_tier FROM known_issues "
         "WHERE make = ? "
         f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
     )
-    params: list = [resolved_model, resolved_model, WILDCARD_MODEL, resolved_make]
+    fallback_params: list = [resolved_model, resolved_model, WILDCARD_MODEL, resolved_make]
 
     try:
         with get_connection(db_path) as conn:
-            rows = conn.execute(sql, params).fetchall()
+            try:
+                rows = conn.execute(sql, params).fetchall()
+            except sqlite3.OperationalError as exc:
+                if "known_issue_makes" not in str(exc):
+                    raise
+                rows = conn.execute(fallback_sql, fallback_params).fetchall()
     except sqlite3.OperationalError as exc:
         # A missing TABLE is a legitimately empty knowledge base -- return
         # nothing. Anything else (a missing column, a syntax error) is a bug in

@@ -36,6 +36,16 @@ class Migration(BaseModel):
     description: str = Field(..., description="Human-readable explanation of what this migrates")
     upgrade_sql: str = Field(..., description="SQL to apply the migration")
     rollback_sql: str = Field(default="", description="SQL to revert the migration (optional but recommended)")
+    post_apply: str = Field(
+        default="",
+        description=(
+            "Optional 'module:function' run after upgrade_sql, inside the same "
+            "transaction, receiving the open connection. Phase 244F: a backfill "
+            "that needs real parsing cannot be expressed in SQL, and doing it "
+            "outside the migration would leave a window where the schema exists "
+            "and the data behind it does not."
+        ),
+    )
 
 
 # --- Migration registry ---
@@ -3768,6 +3778,47 @@ MIGRATIONS: list[Migration] = [
             DROP INDEX IF EXISTS idx_known_issues_identity;
         """,
     ),
+    Migration(
+        version=55,
+        name="known_issue_makes_junction",
+        description=(
+            "Phase 244F. `known_issues.make` is one free-text column doing four "
+            "jobs -- a marque, a list of marques, a scope phrase, and in one row "
+            "a whole sentence of findings ('BMW and Ducati have listed "
+            "adjustments; KTM, Triumph, Aprilia, Moto Guzzi have none'). The cost "
+            "was concrete: LiveWire and Damon were not queryable makes AT ALL, "
+            "because every one of their entries lives inside a multi-marque "
+            "string. All 24 LiveWire rows are tagged 'Harley-Davidson, LiveWire', "
+            "so Phase 243's entire output was unreachable by make. "
+            "This adds a junction table holding one row per (issue, marque) pair, "
+            "derived from the make string by "
+            "`motodiag.knowledge.marques.extract_marques`. "
+            "The `make` column is NOT modified: it stays exactly what the author "
+            "wrote and remains the single source, with the junction derived from "
+            "it. Rewriting 970 entries by script is a larger risk than the defect. "
+            "The backfill runs as a post_apply hook inside this migration's own "
+            "transaction, because an index that exists but is empty is "
+            "indistinguishable from a corpus that says nothing -- the exact "
+            "confusion Phase 244C was written to end. "
+            "Reversible: the junction is derived, so dropping it loses nothing "
+            "that cannot be rebuilt from the column."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS known_issue_makes (
+                issue_id INTEGER NOT NULL,
+                make TEXT NOT NULL,
+                UNIQUE (issue_id, make),
+                FOREIGN KEY (issue_id) REFERENCES known_issues(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_known_issue_makes_make
+                ON known_issue_makes(make);
+        """,
+        post_apply="motodiag.knowledge.marques:rebuild_make_index",
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issue_makes_make;
+            DROP TABLE IF EXISTS known_issue_makes;
+        """,
+    ),
 ]
 
 
@@ -3819,6 +3870,17 @@ def apply_migration(migration: Migration, db_path: Optional[str] = None) -> None
     with get_connection(path) as conn:
         # Execute the upgrade SQL (may be multi-statement)
         conn.executescript(migration.upgrade_sql)
+
+        # Phase 244F: a migration whose backfill needs parsing runs it here,
+        # inside the same transaction as its DDL. Running it afterwards would
+        # leave a window in which the table exists and is empty, and an empty
+        # index is indistinguishable from a corpus that says nothing.
+        if migration.post_apply:
+            module_name, _, func_name = migration.post_apply.partition(":")
+            import importlib
+
+            func = getattr(importlib.import_module(module_name), func_name)
+            func(conn)
 
         # Record the migration in schema_version
         conn.execute(
