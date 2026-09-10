@@ -32,6 +32,8 @@ from typing import Optional
 from motodiag.core import video_repo
 from motodiag.core.models import VideoAnalysisState
 from motodiag.media import ffmpeg as ffmpeg_module
+import json
+
 from motodiag.media.vision_types import VehicleContext
 from motodiag.media.vision_analysis_pipeline import (
     VisionAnalyzer,
@@ -118,7 +120,7 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
             )
             return
 
-        # 2. Build vehicle context (best-effort; future: JOIN against sessions)
+        # 2. Build vehicle context (best-effort; JOINs sessions since Phase 244B)
         vc = _build_vehicle_context(video, db_path=db_path)
 
         # 3. Call Vision pipeline
@@ -185,10 +187,111 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
 def _build_vehicle_context(
     video_row: dict, db_path: Optional[str] = None
 ) -> VehicleContext:
-    """Build VehicleContext from the session's vehicle (best-effort).
+    """Build VehicleContext from the session's vehicle.
 
-    Phase 191B Commit 2 returns a stub VehicleContext (empty); Commit 3 + 4
-    will JOIN against sessions/vehicles for richer context. Don't block on
-    missing data — the analysis still runs.
+    Phase 244B: this was a stub returning an empty ``VehicleContext()``. Its
+    docstring said Commit 3 + 4 would "JOIN against sessions/vehicles for
+    richer context" — that never landed, so every video analysis since Phase
+    191B has run with make, model, year and mileage blank.
+
+    The consequence was not subtle. ``VehicleContext.to_context_string()``
+    emits the literal string "No vehicle context provided." when the context is
+    empty, so the model was told, on every analysis, that nothing was known
+    about the machine — and then shown pixels. Guessing the make and model was
+    the only thing left to it, and that is exactly what a user observed it
+    doing while the session already held the answer.
+
+    Same integration-gap family as ``SafetyChecker`` at Phase 241: implemented
+    as a stub, completion deferred to a later commit, wiring never landed, and
+    nothing failed loudly in the meantime.
+
+    Still best-effort by design — a missing session or vehicle must not stop
+    the analysis, it just returns what it can.
     """
-    return VehicleContext()
+    session_id = video_row.get("session_id")
+    if not session_id:
+        return VehicleContext()
+
+    try:
+        from motodiag.core.session_repo import get_session
+
+        session = get_session(session_id, db_path=db_path)
+    except Exception:
+        return VehicleContext()
+    if not session:
+        return VehicleContext()
+
+    symptoms = session.get("symptoms") or []
+    if isinstance(symptoms, str):
+        try:
+            symptoms = json.loads(symptoms)
+        except (ValueError, TypeError):
+            symptoms = [symptoms] if symptoms else []
+
+    # The session denormalizes make/model/year at creation AND keeps a
+    # vehicle_id. Nothing re-syncs them, so editing the bike in the garage
+    # leaves the session's copy stale — a user hit exactly this: they
+    # corrected "Homda" to "Honda" in the garage and the session kept
+    # reporting the typo. The live vehicle row is the source of truth for
+    # what the machine IS; the session snapshot is only a fallback for rows
+    # with no vehicle_id, or whose vehicle has since been deleted.
+    mileage = None
+    make = session.get("vehicle_make") or ""
+    model = session.get("vehicle_model") or ""
+    year = session.get("vehicle_year")
+
+    vehicle_id = session.get("vehicle_id")
+    if vehicle_id:
+        try:
+            from motodiag.core.database import get_connection
+
+            with get_connection(db_path) as conn:
+                row = conn.execute(
+                    "SELECT make, model, year, mileage FROM vehicles WHERE id = ?",
+                    (vehicle_id,),
+                ).fetchone()
+            if row is not None:
+                keyed = not isinstance(row, tuple)
+                mileage = row["mileage"] if keyed else row[3]
+                live_make = (row["make"] if keyed else row[0]) or ""
+                live_model = (row["model"] if keyed else row[1]) or ""
+                live_year = row["year"] if keyed else row[2]
+                # Only override with a live value that actually says something;
+                # a blank garage field must not erase the session's snapshot.
+                make = live_make or make
+                model = live_model or model
+                year = live_year if live_year is not None else year
+        except Exception:
+            mileage = None
+
+    # Phase 244C: resolve the name against the corpus vocabulary. A user typed
+    # "Homda cbrf4i" and every knowledge lookup returned zero rows while the
+    # corpus held entries for the Honda CBR600F4i — silently, with no way for
+    # anything downstream to tell an unmatched name from a machine nobody has
+    # documented. Corrections are reported in the context, never applied
+    # quietly: the technician wrote something, and swapping it without saying
+    # so would just be a different kind of guessing.
+    identity_note = ""
+    try:
+        from motodiag.knowledge.vehicle_resolver import resolve_vehicle
+
+        identity = resolve_vehicle(make, model, db_path=db_path)
+        if identity.make.applied:
+            make = identity.resolved_make()
+        if identity.model.applied:
+            model = identity.resolved_model()
+        notes_parts = identity.corrections() + identity.suggestions()
+        if notes_parts:
+            identity_note = "Vehicle identity: " + "; ".join(notes_parts)
+    except Exception:
+        identity_note = ""
+
+    return VehicleContext(
+        make=make,
+        model=model,
+        year=year,
+        mileage=mileage,
+        reported_symptoms=[s for s in symptoms if s],
+        identity_note=identity_note,
+        notes=session.get("notes") or "",
+    )

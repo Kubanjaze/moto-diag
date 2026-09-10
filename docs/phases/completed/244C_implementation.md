@@ -1,6 +1,6 @@
 # Phase 244C — Vehicle identity resolution: a typo must not silently empty the corpus
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -90,14 +90,14 @@ the technician typed.
 
 ## Verification Checklist
 
-- [ ] `Homda` resolves to `Honda`; `Ducati` resolves to nothing
-- [ ] `cbrf4i` resolves to `CBR600F4i`; `zx10r` does not resolve under Honda
-- [ ] An ambiguous input is suggested, never applied
-- [ ] The corpus lookup for session 6 returns > 0 entries after resolution
-- [ ] A correction is visible in the context string, not silent
-- [ ] The vocabulary is read from the corpus, not hard-coded
-- [ ] Mutation: reintroduce literal matching → a guard fails
-- [ ] Full regression green
+- [x] `Homda` resolves to `Honda`; `Ducati` resolves to nothing
+- [x] `cbrf4i` resolves to `CBR600F4i`; `zx10r` does not resolve under Honda
+- [x] An ambiguous input is suggested, never applied
+- [x] The corpus lookup for session 6 returns > 0 entries after resolution
+- [x] A correction is visible in the context string, not silent
+- [x] The vocabulary is read from the corpus, not hard-coded
+- [x] Mutation: reintroduce literal matching → a guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -115,3 +115,71 @@ the technician typed.
 - **Scope pressure.** This wants to become a global normalization layer touching
   every repo. It stays a resolver plus the media-path wiring; other callers
   adopt it deliberately.
+
+---
+
+## Deviations from Plan
+
+**One guard was vacuous and mutation testing caught it.** Five of six mutations
+failed their guard on the first pass; the sixth —
+`test_a_very_short_string_cannot_fuzzy_match` — passed with `MIN_FUZZY_LEN`
+removed entirely, proving nothing. The input it used, `"Ho"`, scores 0.0 against
+this corpus and was being rejected by the floor, not by the length gate.
+
+The repair required finding an input where the gate is genuinely load-bearing:
+`"cbz"` scores **0.800** against the two-character model `CB` with a **0.400**
+margin, clearing both the floor and the margin rule. Only the length gate stops
+it being read as a real model name. The guard now uses that, and fails when the
+gate is removed. **This is the second phase running where a guard written before
+its evidence tested the failure its author imagined rather than the one that
+exists** — Phase 244's finding, reproduced.
+
+**A third defect was found while wiring, and is a separate piece of work.** The
+`known_issues` table holds **6,600 rows for 660 distinct issues — every entry
+duplicated exactly ten times.** There is no UNIQUE constraint on the table and
+`loader.load_known_issues_file` is not idempotent, so each seed run duplicates
+the whole corpus. This is not cosmetic: it degraded the very run that exposed
+it. A request for 20 corpus rows returned **two distinct facts repeated ten
+times**, and the model accordingly reported the corpus covered only "fuel
+injector issues and float bowl fuel leaks".
+
+`known_issues_for_vehicle` therefore deduplicates on the way out — a
+retrieval-quality fix that takes the same request from 2 distinct facts to 22.
+**It is not a substitute for the constraint**, which needs a migration and a
+table rebuild that must preserve migration 053's severity expression index. That
+is recorded as separate work, not folded in here.
+
+**Corrections are reported, never applied silently.** The plan left open whether
+a confident correction should rewrite the session. It does not. The garage row
+stays the user's, and the analysis context carries an explicit line —
+`Vehicle identity: model recorded as 'cbrf4i', read as 'CBR600F4i'` — so the
+model is told what was typed *and* how it was read. Swapping a technician's
+input without saying so would be a different flavour of the guessing this whole
+line of work exists to stop.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Corpus rows for session 6, before | **0** |
+| Corpus rows for session 6, after | **22 distinct** |
+| Guards | 18 |
+| Mutations run / caught | 6 / 6 (5 on first write, 1 after repair) |
+| Vocabulary source | `SELECT DISTINCT` over `known_issues`, no hard-coded marques |
+| Regression | **6140 passed / 0 failed** (baseline 6087; +53 guards across 244B and 244C). **One run validates both phases** — 244C was built on top of uncommitted 244B work, so there is no independent green run for 244C alone |
+
+**Verified end-to-end against the recording that started this**, a 2001 Honda
+CBR600F4i entered as "Homda cbrf4i" with the complaint in the session notes:
+
+| | before | after |
+|---|---|---|
+| leak candidates | **0 of 15 findings** | 3, ordered by what to check first |
+| corpus grounding | n/a — 0 rows retrieved | 2 of 3 candidates cite real entries |
+| marque | guessed "Kawasaki ZX-series or Suzuki GSX-R" | read from the session |
+
+**Key finding: the corpus was never silent — it was unreachable, and nothing in
+the stack could tell the difference.** A one-character typo and a colloquial
+model name each returned zero rows through the same code path that returns zero
+rows for a machine nobody has documented. The fix that matters is not the fuzzy
+matching, it is that `method` and `corpus_hits` now make those two outcomes
+distinguishable to every caller.

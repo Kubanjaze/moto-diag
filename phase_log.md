@@ -2197,3 +2197,71 @@ before its evidence has only ever been tested against the failure mode its autho
 the evidence lands.**
 
 Backend `implementation.md` 0.13.57 → 0.13.58. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-10 — Phase 244B: Guidance mode, and a stub that had been telling the model nothing was known
+
+**Project-level state this changes:**
+- **New response contract** in `src/motodiag/media/vision_types.py` — `Grounding` enum, `GuidanceCandidate`,
+  `GuidanceResponse`, `GUIDANCE_PROMPT`. Deliberately **cannot express a diagnosis**: no `diagnosis`, no
+  `repair_steps`, no `parts_needed`, no `estimated_cost`. Every candidate carries its grounding, and
+  `NOT_ESTABLISHED` is a first-class value so "this project does not establish that for this machine" is
+  sayable rather than something the model must route around.
+- **`src/motodiag/media/vision_analysis_pipeline.py`** — `answer_question_about_frames()` added as a separate
+  method, with `provide_guidance` offered **beside** `report_video_findings`. `analyze_video_frames` is
+  untouched, and a guard pins its `tool_choice` line and signature so the sweep path cannot regress silently.
+- **`src/motodiag/media/analysis_worker.py` — a stub removed that was doing active harm.**
+  `_build_vehicle_context()` returned an empty `VehicleContext()` under a docstring deferring the session JOIN
+  to "Commit 3 + 4". Those commits never landed. `VehicleContext.to_context_string()` renders empty as the
+  literal **"No vehicle context provided."** — so since Phase 191B **every video analysis has opened by telling
+  the model nothing was known about the machine**, then shown it pixels. The user reported the symptom as the
+  analysis "guessing make and model instead of pulling details already provided by the bike in the session".
+  Now joined via `session_id`, with symptoms JSON-decoded and best-effort fallbacks preserved.
+
+**The pattern to carry forward — third instance in this session.** `SafetyChecker` (241): implemented, tested,
+never wired to a production caller. The `HV_` DTC format (244): asserted in a namespace comment, attributed to
+three makes, sourced by none. And this: stubbed, with the real work deferred to a commit that never came. In
+all three the code looked finished and nothing failed loudly. **A stub whose docstring promises a later commit
+is a checkable shape**, and a guard sweep for that shape is recorded as debt.
+
+**What this phase does not claim.** The 30 guards prove the question reaches the model, that a diagnosis is
+inexpressible, and that grounding is mandatory. They do not prove an answer is *relevant* — that is not a
+regex. **The four structural causes of drift are closed; whether drift is gone needs the original recording
+re-run against this build.** Two plan checklist items are marked unmet rather than ticked, including session
+persistence of the question, which is deferred with the multi-turn surface.
+
+Backend `implementation.md` 0.13.58 → 0.13.59. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-10 — Phase 244C: the corpus was never silent, it was unreachable
+
+**Project-level state this changes:**
+- **New module** `src/motodiag/knowledge/vehicle_resolver.py` — resolves free-text make/model onto the corpus's own
+  vocabulary. `resolve_vehicle()` returns a `VehicleIdentity` carrying, per field, what was given, what it was read as,
+  by which rung of the ladder, and how confident that is. `known_issues_for_vehicle()` is now the one obvious way to
+  fetch knowledge for a free-text vehicle, returning the identity **alongside** the rows so a caller can report why a
+  result is empty rather than only that it is.
+- **`media/vision_types.py`** — `VehicleContext` gains `notes` (Phase 244B) and `identity_note` (244C). Corrections are
+  surfaced to the model, never applied silently.
+- **`media/analysis_worker.py`** — `_build_vehicle_context` now prefers the live vehicle row over the session's stale
+  denormalized snapshot, carries session notes, and resolves the identity, all behind best-effort guards.
+
+**Why this was invisible for so long.** An unmatched name and an undocumented machine returned through the *same code
+path* with the *same value*: zero rows. Nothing in the stack distinguished them, so nothing could warn. The fuzzy
+matching is the visible part of the fix; the part that matters is that `method` and `corpus_hits` now make the two
+outcomes tellable apart by every caller.
+
+**The refusals are load-bearing.** Resolving a machine onto a neighbouring make would attach another bike's documented
+faults to it, with a mechanic acting on the result. `Ducati` resolves to nothing against a corpus that does not contain
+it; `zx10r` finds nothing under Honda; `cbr600` matches three CBR models and is suggested rather than applied. Those are
+pinned tests, not incidental behaviour.
+
+**A defect found and deliberately not folded in.** `known_issues` holds 6,600 rows for 660 distinct issues — every entry
+present exactly ten times, no UNIQUE constraint, non-idempotent loader. It had been degrading retrieval silently: the run
+that exposed it received 20 rows containing 2 distinct facts. Deduplicated at retrieval (2 → 22 for the same request),
+but the constraint needs a migration whose table rebuild must preserve migration 053's severity expression index, so it
+is separate work.
+
+**Method finding, second phase running.** A guard written before its evidence tests the failure its author imagined.
+Six mutations, five caught on first write; the sixth used an input the score floor rejected on its own, so it passed
+with the gate it claimed to test deleted.
+
+Backend `implementation.md` 0.13.59 → 0.13.60. No schema change (still v53), no API surface change, no migration.

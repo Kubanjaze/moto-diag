@@ -269,6 +269,25 @@ class VehicleContext(BaseModel):
         default_factory=list,
         description="Symptoms the mechanic has already reported",
     )
+    identity_note: str = Field(
+        default="",
+        description=(
+            "Phase 244C: how the machine's name was read, when it differed "
+            "from what was typed. Surfaced to the model rather than applied "
+            "silently — the technician wrote something, and swapping it "
+            "without saying so would be a different kind of guessing."
+        ),
+    )
+    notes: str = Field(
+        default="",
+        description=(
+            "Free-text notes recorded on the session by the technician. "
+            "Phase 244B: sessions carry a notes field that no analysis had "
+            "ever read, and in the reported failure case it was the only "
+            "place the actual complaint ('Leaking oil on left side') was "
+            "written down."
+        ),
+    )
 
     def to_context_string(self) -> str:
         """Format vehicle context as a text block for prompt injection."""
@@ -279,4 +298,135 @@ class VehicleContext(BaseModel):
             parts.append(f"Mileage: {self.mileage:,}")
         if self.reported_symptoms:
             parts.append(f"Reported symptoms: {', '.join(self.reported_symptoms)}")
+        if self.identity_note.strip():
+            parts.append(self.identity_note.strip())
+        if self.notes.strip():
+            parts.append(f"Technician notes on this session: {self.notes.strip()}")
         return "\n".join(parts) if parts else "No vehicle context provided."
+
+
+# ---------------------------------------------------------------------------
+# Phase 244B — guidance mode
+# ---------------------------------------------------------------------------
+class Grounding(str, Enum):
+    """What a guidance candidate rests on.
+
+    The corpus has carried per-entry provenance since Track K. This is the same
+    discipline applied to generated reasoning: a technician reading "check the
+    countershaft seal first" must be able to tell whether that came from a
+    corpus entry for THEIR machine, from a cross-platform entry, or from
+    general mechanical reasoning with nothing behind it.
+    """
+
+    MACHINE_SPECIFIC = "machine_specific"   # a corpus entry for this make/model/year
+    CROSS_PLATFORM = "cross_platform"       # a corpus entry that applies generally
+    GENERAL_REASONING = "general_reasoning"  # no corpus support — say so
+    NOT_ESTABLISHED = "not_established"      # nothing found; the honest answer
+
+
+class GuidanceCandidate(BaseModel):
+    """One candidate origin, with how to tell it from the others.
+
+    Deliberately NOT a diagnosis. There is no root-cause field, no repair
+    steps, no parts and no cost — a guidance answer that carries those has
+    stopped guiding and started concluding, which is the drift this phase
+    exists to fix.
+    """
+
+    candidate: str = Field(..., description="The candidate origin or explanation")
+    why_plausible: str = Field(..., description="Why this fits what was observed and asked")
+    how_to_discriminate: str = Field(
+        ...,
+        description=(
+            "The observation or check that distinguishes this candidate from "
+            "the others — the actual value of a guidance answer"
+        ),
+    )
+    grounding: Grounding = Field(..., description="What this candidate rests on")
+    grounding_detail: str = Field(
+        default="",
+        description=(
+            "For machine_specific or cross_platform, the corpus entry title. "
+            "For general_reasoning, say plainly that no corpus entry supports it."
+        ),
+    )
+    check_order_rationale: str = Field(
+        default="",
+        description="Why check this before or after the others — cost, access, or elimination value",
+    )
+
+
+class GuidanceResponse(BaseModel):
+    """An answer to the question the technician actually asked.
+
+    Note what is absent by design: no `diagnosis`, no `severity` roll-up, no
+    repair steps. The technician remains the diagnostician.
+    """
+
+    question_understood_as: str = Field(
+        ...,
+        description=(
+            "Restate the question being answered. If the question could not be "
+            "understood, say so here rather than answering a different one."
+        ),
+    )
+    answers_the_question: bool = Field(
+        ...,
+        description=(
+            "False if the available evidence does not let you address what was "
+            "asked. False with an honest gap beats a confident sweep."
+        ),
+    )
+    candidates: list[GuidanceCandidate] = Field(
+        default_factory=list,
+        description="Candidate origins, ordered by what to check first",
+    )
+    what_would_narrow_it: list[str] = Field(
+        default_factory=list,
+        description="Observations or tests that would most reduce the candidate set",
+    )
+    not_established: str = Field(
+        default="",
+        description=(
+            "What could not be established for this machine. A real answer, not "
+            "a failure — state it rather than inventing a candidate to fill the list."
+        ),
+    )
+    observation_basis: str = Field(
+        default="",
+        description="What in the supplied media this answer actually rests on",
+    )
+
+
+GUIDANCE_PROMPT = """You are helping a motorcycle technician who is standing at \
+the machine and has asked you a specific question. They are the diagnostician. \
+Your job is to guide their search, not to reach a verdict for them.
+
+ANSWER THE QUESTION THAT WAS ASKED. This is the whole task. A complete survey \
+of everything visible is a failure, however accurate it is — the technician \
+did not ask for it, and volume buries the answer. If they ask where a leak is \
+most likely coming from, give candidate ORIGINS and how to tell them apart; do \
+not identify the fluid unless that is what distinguishes the candidates, and do \
+not list unrelated findings.
+
+DO NOT DIAGNOSE. Do not name a root cause. Do not give repair steps, parts or \
+costs. If you can only offer a verdict, you have misunderstood the task.
+
+GROUND EVERY CANDIDATE. For each one set `grounding`:
+  machine_specific   — a supplied corpus entry covers this make/model/year
+  cross_platform     — a supplied corpus entry applies generally
+  general_reasoning  — no corpus entry supports it; say so in grounding_detail
+  not_established    — nothing supports it
+Never present general reasoning as though it were documented. A short honest \
+answer beats a long confident one.
+
+SAY WHAT YOU CANNOT ESTABLISH. If the media does not show enough to address the \
+question, set answers_the_question false and put the gap in not_established. \
+Do not fill the candidate list to look thorough.
+
+THE DISCRIMINATOR IS THE PRODUCT. For each candidate, the most valuable field \
+is how_to_discriminate — the observation that separates it from its neighbours. \
+Order candidates by what to check first, and say why in check_order_rationale: \
+cheapest, most accessible, or most eliminating.
+
+Report through the provide_guidance tool."""

@@ -32,6 +32,8 @@ from motodiag.media.vision_types import (
     VISION_ANALYSIS_PROMPT,
     VehicleContext,
     VisualAnalysisResult,
+    GUIDANCE_PROMPT,
+    GuidanceResponse,
 )
 
 _log = logging.getLogger(__name__)
@@ -73,12 +75,77 @@ def _build_findings_tool() -> dict:
     }
 
 
-def _build_user_prompt(vehicle_context: VehicleContext, frame_count: int) -> str:
-    """Build the user prompt text that accompanies the image content blocks."""
+def _format_known_issues(known_issues: Optional[list[dict]]) -> str:
+    """Render corpus rows for the grounding block of a guidance prompt.
+
+    Titles and a short description only. The point is to let the model cite an
+    entry by title in ``grounding_detail`` so a technician can go and read it —
+    not to inline the whole corpus into a prompt.
+    """
+    if not known_issues:
+        return ""
+    lines = []
+    for row in known_issues[:12]:
+        title = (row.get("title") or "").strip()
+        if not title:
+            continue
+        desc = (row.get("description") or "").strip().replace("\n", " ")
+        lines.append(f"- {title}: {desc[:220]}")
+    return "\n".join(lines)
+
+
+def _build_user_prompt(
+    vehicle_context: VehicleContext,
+    frame_count: int,
+    question: Optional[str] = None,
+    corpus_context: Optional[str] = None,
+) -> str:
+    """Build the user prompt text that accompanies the image content blocks.
+
+    Phase 244B: ``question`` is new and is the point of that phase. Before it,
+    this function took only the vehicle context and a frame count, so a
+    technician's question could not reach the model at all — a request to find
+    where a leak was coming from returned a full six-category sweep, because a
+    sweep was the only thing the prompt ever asked for. The question was not
+    drifted from; it was never an input.
+
+    When a question is supplied the prompt is built for GUIDANCE: answer that
+    question, ground each candidate, and say what cannot be established. When
+    it is not, the original sweep prompt is produced unchanged, so the existing
+    pipeline behaves exactly as before.
+    """
     parts = []
     if vehicle_context:
         ctx = vehicle_context.to_context_string()
         parts.append(f"VEHICLE CONTEXT:\n{ctx}\n")
+
+    if question:
+        parts.append(
+            f"THE TECHNICIAN'S QUESTION — answer this, and only this:\n"
+            f"{question.strip()}\n"
+        )
+        if corpus_context:
+            parts.append(
+                "KNOWN ISSUES FOR THIS MACHINE. Ground your candidates in these "
+                "where they apply, and cite the entry title in grounding_detail. "
+                "Where none applies, mark the candidate general_reasoning and say "
+                "so — do not present reasoning as documentation.\n"
+                f"{corpus_context}\n"
+            )
+        else:
+            parts.append(
+                "NO CORPUS ENTRIES were supplied for this machine. Every candidate "
+                "you give is therefore general_reasoning at best; mark them so, and "
+                "say plainly in not_established that nothing documented was "
+                "available for this machine.\n"
+            )
+        parts.append(
+            f"You are looking at {frame_count} frames from a video capture of "
+            f"this motorcycle. Use them as evidence for the question above. "
+            f"Report through the provide_guidance tool."
+        )
+        return "\n".join(parts)
+
     parts.append(
         f"Analyzing {frame_count} frames extracted from a video diagnostic "
         f"capture of this motorcycle. Examine each frame for the diagnostic "
@@ -86,6 +153,29 @@ def _build_user_prompt(vehicle_context: VehicleContext, frame_count: int) -> str
         f"report_video_findings tool."
     )
     return "\n".join(parts)
+
+
+def _build_guidance_tool() -> dict:
+    """Tool schema for guidance mode.
+
+    Deliberately separate from ``report_video_findings`` rather than replacing
+    it. The sweep tool is correct for a sweep request and its forced
+    ``tool_choice`` is what makes the sweep reliable; the failure was applying
+    that shape to a question. Both tools exist, and the caller picks by whether
+    a question was asked.
+    """
+    schema = GuidanceResponse.model_json_schema()
+    schema.pop("$defs", None)
+    full = GuidanceResponse.model_json_schema()
+    return {
+        "name": "provide_guidance",
+        "description": (
+            "Answer the technician's specific question with candidate origins "
+            "and the observations that tell them apart. Not a diagnosis: no "
+            "root cause, no repair steps, no parts, no costs."
+        ),
+        "input_schema": full,
+    }
 
 
 class VisionPipelineError(RuntimeError):
@@ -137,6 +227,89 @@ class VisionAnalyzer:
 
             self._client = DiagnosticClient(model=self._model)
         return self._client
+
+    def answer_question_about_frames(
+        self,
+        frames: list[Path],
+        question: str,
+        vehicle_context: Optional[VehicleContext] = None,
+        known_issues: Optional[list[dict]] = None,
+    ) -> GuidanceResponse:
+        """Answer a technician's question about a machine, using the frames as
+        evidence.
+
+        Phase 244B. This is deliberately a SEPARATE entry point from
+        :meth:`analyze_video_frames` rather than a flag on it. The sweep is
+        correct for a sweep request, and its forced ``tool_choice`` is what
+        makes it reliable; the failure was applying that shape to a question.
+        Keeping them apart means the sweep path is provably unchanged.
+
+        Args:
+            frames: Frame file paths (JPEG), capped at ``MAX_FRAMES_PER_CALL``.
+            question: What the technician actually asked. Required — this method
+                has no meaning without one.
+            vehicle_context: Motorcycle context for the prompt.
+            known_issues: Corpus rows for this machine, used to ground
+                candidates. When empty the model is told so explicitly and must
+                mark its candidates as general reasoning.
+
+        Returns:
+            A :class:`GuidanceResponse` — candidates and discriminators, never
+            a diagnosis.
+
+        Raises:
+            ValueError: if ``frames`` is empty or ``question`` is blank.
+            VisionPipelineError: if the SDK call or tool extraction fails.
+        """
+        if not frames:
+            raise ValueError(
+                "frames list is empty; answer_question_about_frames requires >=1 frame"
+            )
+        if not question or not question.strip():
+            raise ValueError(
+                "question is required; use analyze_video_frames for an unprompted sweep"
+            )
+
+        capped = frames[:MAX_FRAMES_PER_CALL]
+        client = self._get_client()
+        corpus_context = _format_known_issues(known_issues)
+        prompt = _build_user_prompt(
+            vehicle_context or VehicleContext(),
+            len(capped),
+            question=question,
+            corpus_context=corpus_context,
+        )
+        tools = [_build_guidance_tool()]
+        tool_choice = {"type": "tool", "name": "provide_guidance"}
+
+        try:
+            response, _usage = client.ask_with_images(
+                prompt=prompt,
+                images=capped,
+                system=GUIDANCE_PROMPT,
+                model=self._model,
+                max_tokens=4096,
+                tools=tools,
+                tool_choice=tool_choice,
+            )
+        except VisionPipelineError:
+            raise
+        except Exception as e:
+            raise VisionPipelineError(f"Vision SDK call failed: {e}") from e
+
+        tool_use_input = None
+        for block in response.content:
+            if getattr(block, "type", None) == "tool_use":
+                tool_use_input = block.input
+                break
+        if tool_use_input is None:
+            raise VisionPipelineError(
+                "no tool_use block in guidance response; expected provide_guidance"
+            )
+        try:
+            return GuidanceResponse(**tool_use_input)
+        except Exception as e:
+            raise VisionPipelineError(f"guidance payload did not validate: {e}") from e
 
     def analyze_video_frames(
         self,
