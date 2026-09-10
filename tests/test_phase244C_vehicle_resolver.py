@@ -28,7 +28,9 @@ def corpus(tmp_path, monkeypatch):
     wildcard model and a same-make near-neighbour."""
     p = tmp_path / "kb.db"
     conn = sqlite3.connect(p)
-    conn.execute("CREATE TABLE known_issues (id INTEGER PRIMARY KEY, make TEXT, model TEXT, title TEXT)")
+    # `severity` is part of the real table and the ordering depends on it;
+    # a fixture missing it made a malformed query look like an empty corpus.
+    conn.execute("CREATE TABLE known_issues (id INTEGER PRIMARY KEY, make TEXT, model TEXT, title TEXT, severity TEXT DEFAULT 'medium')")
     rows = [
         ("Honda", "CBR600F4i", "Fuel injector fouling"),
         ("Honda", "CBR600F4i", "Float bowl seep"),
@@ -159,11 +161,30 @@ class TestEmptyAndUnmatchedAreDifferentFailures:
         keys = [(r["make"], r["model"], r["title"]) for r in rows]
         assert len(keys) == len(set(keys)), "duplicate rows reached the caller"
 
-    def test_a_near_neighbour_models_issues_do_not_leak_in(self, corpus):
+    def test_another_makes_issues_never_leak_in(self, corpus):
+        """The absolute half of what was one bundled guard.
+
+        Phase 244E widened retrieval so a same-make, different-model entry may
+        now be returned — labelled — because 30% of the corpus carries prose in
+        its `model` column and an equality filter reaches almost none of it.
+        That relaxation must never extend across makes: attaching a Kawasaki
+        fault to a Honda puts wrong work in a mechanic's hands.
+
+        This assertion is deliberately duplicated in
+        `test_phase244E_retrieval_widening.py`. Splitting a guard is how its
+        strict half goes missing, so it now lives in two files."""
         _, rows = vr.known_issues_for_vehicle("Honda", "CBR600F4i", db_path=corpus, limit=25)
-        titles = {r["title"] for r in rows}
-        assert "Regulator rectifier" not in titles, "CBR600RR's issue leaked into the F4i"
-        assert "Cam chain guide" not in titles, "a Kawasaki issue leaked into a Honda"
+        assert {r["make"] for r in rows} == {"Honda"}
+        assert "Cam chain guide" not in {r["title"] for r in rows}, "a Kawasaki issue leaked into a Honda"
+
+    def test_a_near_neighbour_model_is_returned_but_labelled(self, corpus):
+        """The relaxed half. A CBR600RR entry may reach an F4i query, but it
+        must arrive marked as another model — never as machine-specific."""
+        _, rows = vr.known_issues_for_vehicle("Honda", "CBR600F4i", db_path=corpus, limit=25)
+        by_title = {r["title"]: r for r in rows}
+        assert "Regulator rectifier" in by_title, "Phase 244E: same-make entries now fill the request"
+        assert by_title["Regulator rectifier"]["match_tier"] == "make_other_model"
+        assert by_title["Fuel injector fouling"]["match_tier"] == "model"
 
 
 class TestTheAnalysisPathUsesIt:

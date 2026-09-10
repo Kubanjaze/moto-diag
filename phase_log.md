@@ -2303,3 +2303,40 @@ European and electric make from Tracks K and L is absent. Loading them is now sa
 the operator's data and is theirs to run.
 
 Backend `implementation.md` 0.13.60 → 0.13.61. Schema v53 → v54 (migration 054). No API surface change.
+
+### 2026-09-10 — Phase 244E: resolving a model must not shrink the answer
+
+**Project-level state this changes:**
+- **`knowledge/vehicle_resolver.known_issues_for_vehicle` tiers instead of filtering.** Rows are selected for the
+  resolved make and labelled `model` / `make_wide` / `make_other_model`, ordered most-specific first and filled to the
+  caller's limit. `BMW + "R1200GS"` goes from 1 row to 25.
+- **`media/vision_analysis_pipeline._format_known_issues` renders the tier** and names the source model, and
+  `GUIDANCE_PROMPT` states that a same-make/different-model entry is `cross_platform` at best.
+- **Blanket exception handling narrowed.** A missing table means an empty knowledge base and returns nothing; a
+  missing column or syntax error raises. `known_makes` and `known_models` gained the same treatment.
+
+**Why this was latent until now.** The bug needed Track K data to be visible. The early Japanese/American phases wrote
+clean model names with an `'All'` fallback; every European and electric phase put prose in the `model` column and has
+no fallback at all. Until Phase 244D's re-seed, none of those rows were loaded, so an equality filter looked fine.
+**30.7% of the corpus cannot be reached by matching on `model`.**
+
+**The invariant is the deliverable, not the patch.** *Knowing more must never return less* — asserted across the live
+corpus at 0 violations over 362 make/model pairs. The original bug was invisible for Honda and fatal for BMW, so a
+worked example would have proved nothing. Ducati and Triumph had been escaping it only because their model strings
+failed to resolve, which is not a property to rely on.
+
+**A guard was split, not edited.** Phase 244C asserted in a single test that a CBR600RR entry must not reach an F4i
+*and* that a Kawasaki entry must not reach a Honda. Widening relaxes the first; the second is the one that puts wrong
+work in a mechanic's hands. It is now stated in two files, because splitting a guard is how its strict half goes
+missing.
+
+**Phase 240C's defect, reproduced in new code.** Adding a severity `ORDER BY` against a fixture lacking that column
+raised, and a blanket `except Exception` reported it as "no known issues found" — the same shape as the
+`advanced/recall_repo.py` dropped-keyword incident. Sharper here, because Phase 244C exists precisely to make an
+unmatched name distinguishable from an undocumented machine, and this made a broken query indistinguishable from both.
+
+**Root cause still open.** `make` and `model` are free text carrying prose and multi-make lists. LiveWire and Damon
+resolve to nothing — all 24 LiveWire rows are tagged `"Harley-Davidson, LiveWire"`, leaving Phase 243's entire output
+unreachable. This phase makes retrieval survive that data; repairing it needs its own phase with a data migration.
+
+Backend `implementation.md` 0.13.61 → 0.13.62. No schema change (still v54), no migration, no API surface change.

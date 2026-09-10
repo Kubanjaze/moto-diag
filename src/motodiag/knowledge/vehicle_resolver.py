@@ -27,10 +27,12 @@ from __future__ import annotations
 
 import difflib
 import re
+import sqlite3
 from dataclasses import dataclass, field
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.severity import SEVERITY_RANK_SQL
 
 #: Absolute floor for a fuzzy match. Below this, nothing is proposed at all.
 FUZZY_FLOOR = 0.78
@@ -138,12 +140,29 @@ class VehicleIdentity:
         return out
 
 
+def _missing_table(exc: "sqlite3.OperationalError") -> bool:
+    """True when the corpus table simply is not there.
+
+    The distinction this whole phase turns on: a missing TABLE means an empty
+    knowledge base and returning nothing is right. A missing COLUMN, or a
+    syntax error, is a bug in the query — reporting it as "no known issues"
+    would be the same silent-empty failure Phase 240C shipped in
+    `advanced/recall_repo.py`.
+    """
+    return "no such table" in str(exc).lower()
+
+
 def known_makes(db_path: Optional[str] = None) -> list[str]:
     """Distinct makes present in the corpus. The vocabulary, read from the data."""
-    with get_connection(db_path) as conn:
-        rows = conn.execute(
-            "SELECT DISTINCT make FROM known_issues WHERE make IS NOT NULL AND make != '' ORDER BY make"
-        ).fetchall()
+    try:
+        with get_connection(db_path) as conn:
+            rows = conn.execute(
+                "SELECT DISTINCT make FROM known_issues WHERE make IS NOT NULL AND make != '' ORDER BY make"
+            ).fetchall()
+    except sqlite3.OperationalError as exc:
+        if _missing_table(exc):
+            return []
+        raise
     return [r[0] for r in rows]
 
 
@@ -157,8 +176,13 @@ def known_models(make: Optional[str] = None, db_path: Optional[str] = None) -> l
     if make:
         sql += " AND make = ?"
         params = (make,)
-    with get_connection(db_path) as conn:
-        rows = conn.execute(sql + " ORDER BY model", params).fetchall()
+    try:
+        with get_connection(db_path) as conn:
+            rows = conn.execute(sql + " ORDER BY model", params).fetchall()
+    except sqlite3.OperationalError as exc:
+        if _missing_table(exc):
+            return []
+        raise
     return [r[0] for r in rows if r[0] != WILDCARD_MODEL]
 
 
@@ -268,19 +292,53 @@ def known_issues_for_vehicle(
     if not resolved_make or not identity.make.applied:
         return identity, []
 
-    sql = "SELECT * FROM known_issues WHERE make = ?"
-    params: list = [resolved_make]
-    resolved_model = identity.resolved_model()
-    if resolved_model and identity.model.applied:
-        sql += " AND (model = ? OR model = ?)"
-        params += [resolved_model, WILDCARD_MODEL]
+    resolved_model = identity.resolved_model() if identity.model.applied else None
+
+    # Phase 244E: tier, do not filter. The previous version narrowed to
+    # `model = X OR model = 'All'` whenever the model resolved, which inverted
+    # the point of resolving one: BMW + "R1200GS" returned 1 row where BMW
+    # alone returned 50. 30% of the corpus -- effectively all of Tracks K and L
+    # -- carries prose in the `model` column ("Liquid-cooled R-series boxers,
+    # R1200GS and all LC R models from 2013") and has no `model = 'All'` row to
+    # fall back on, so an equality filter matches almost nothing.
+    #
+    # Selecting the whole make and ranking by specificity keeps the invariant
+    # that matters: knowing more must never return less. Precision is preserved
+    # by LABELLING each row's tier rather than by excluding rows the data
+    # cannot support excluding.
+    tier_sql = """
+        CASE
+            WHEN ? IS NOT NULL AND model = ? THEN 0
+            WHEN model = ? THEN 1
+            ELSE 2
+        END
+    """
+    sql = (
+        f"SELECT *, {tier_sql} AS _match_tier FROM known_issues "
+        "WHERE make = ? "
+        f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
+    )
+    params: list = [resolved_model, resolved_model, WILDCARD_MODEL, resolved_make]
 
     try:
         with get_connection(db_path) as conn:
             rows = conn.execute(sql, params).fetchall()
-    except Exception:
-        return identity, []
+    except sqlite3.OperationalError as exc:
+        # A missing TABLE is a legitimately empty knowledge base -- return
+        # nothing. Anything else (a missing column, a syntax error) is a bug in
+        # this query, and swallowing it would report "no known issues" for a
+        # machine the corpus may cover. Phase 240C shipped exactly that defect
+        # in `advanced/recall_repo.py`: a dropped ORDER BY keyword was caught by
+        # a blanket `except sqlite3.OperationalError: return []`, so a lookup
+        # returned empty instead of raising. This phase reproduced it -- a new
+        # ORDER BY referencing a column a fixture lacked came back as [] rather
+        # than an error. Silence about a broken query is the failure mode this
+        # whole line of work exists to end.
+        if _missing_table(exc):
+            return identity, []
+        raise
 
+    tier_names = {0: "model", 1: "make_wide", 2: "make_other_model"}
     seen: set = set()
     out: list[dict] = []
     for r in rows:
@@ -289,6 +347,7 @@ def known_issues_for_vehicle(
         if key in seen:
             continue
         seen.add(key)
+        d["match_tier"] = tier_names.get(d.pop("_match_tier", 2), "make_other_model")
         out.append(d)
         if len(out) >= limit:
             break

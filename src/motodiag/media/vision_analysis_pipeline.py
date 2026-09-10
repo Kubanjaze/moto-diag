@@ -84,13 +84,29 @@ def _format_known_issues(known_issues: Optional[list[dict]]) -> str:
     """
     if not known_issues:
         return ""
+
+    # Phase 244E: the tier is rendered, not dropped. Retrieval now fills the
+    # request with same-make entries for other models, because 30% of the
+    # corpus carries prose in its `model` column and an equality filter reaches
+    # almost none of it. An unlabelled near-neighbour row is worse than no row:
+    # it would license a machine-specific claim built on another machine's
+    # evidence. Labelling is what lets a row inform an answer without being
+    # mistaken for proof about THIS machine.
+    tier_label = {
+        "model": "[this model]",
+        "make_wide": "[this make, all models]",
+        "make_other_model": "[SAME MAKE, DIFFERENT MODEL — not established for this machine]",
+    }
     lines = []
     for row in known_issues[:12]:
         title = (row.get("title") or "").strip()
         if not title:
             continue
         desc = (row.get("description") or "").strip().replace("\n", " ")
-        lines.append(f"- {title}: {desc[:220]}")
+        label = tier_label.get(row.get("match_tier", "make_other_model"), "")
+        model = (row.get("model") or "").strip()
+        suffix = f" (corpus model: {model[:60]})" if row.get("match_tier") == "make_other_model" and model else ""
+        lines.append(f"- {label} {title}{suffix}: {desc[:220]}")
     return "\n".join(lines)
 
 
