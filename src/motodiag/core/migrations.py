@@ -3683,6 +3683,91 @@ MIGRATIONS: list[Migration] = [
                 ON known_issues(severity DESC, title);
         """,
     ),
+    Migration(
+        version=54,
+        name="known_issues_dedup_and_unique_identity",
+        description=(
+            "Phase 244D. `known_issues` held 6,600 rows for 660 distinct "
+            "issues -- every entry exactly ten times. The table had no "
+            "uniqueness constraint and `add_known_issue` was a plain INSERT, "
+            "so every run of the seed loop duplicated the whole corpus. Not "
+            "cosmetic: a request for 20 corpus rows returned two distinct "
+            "facts repeated ten times, and a live guidance run reported the "
+            "corpus covered only those two topics. "
+            "The constraint is a UNIQUE **expression** index over "
+            "(COALESCE(make,''), COALESCE(model,''), title), not a plain "
+            "column constraint. 43 seeded entries carry a NULL model, and "
+            "SQLite treats NULLs as DISTINCT in a UNIQUE constraint -- a "
+            "plain UNIQUE(make, model, title) would have left those 43 free "
+            "to keep multiplying behind something that looked like a fix. "
+            "Dedup keeps MIN(id) per key so the earliest load survives and "
+            "ids stay stable for anything referencing them. "
+            "The rebuild re-declares `idx_known_issues_sort` in its Phase "
+            "240C EXPRESSION form; recreating the older `severity DESC` form "
+            "would silently undo migration 053, because SQLite only uses an "
+            "expression index when the ORDER BY expression matches it. "
+            "IRREVERSIBLE: rollback restores the table and drops the unique "
+            "index, but the deleted duplicate rows are NOT recoverable. They "
+            "are exact duplicates by the key, so nothing distinct is lost -- "
+            "but a rollback does not return the row count to 6,600."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issues_dedup (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                symptoms TEXT,
+                dtc_codes TEXT,
+                causes TEXT,
+                fix_procedure TEXT,
+                parts_needed TEXT,
+                estimated_hours REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by_user_id INTEGER DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'unverified'
+                    CHECK (source IN (
+                        'unverified', 'model-generated', 'forum',
+                        'service-manual', 'mechanic-verified', 'regulation'
+                    ))
+            );
+
+            INSERT INTO known_issues_dedup (id, title, description, make, model,
+                 year_start, year_end, severity, symptoms, dtc_codes, causes,
+                 fix_procedure, parts_needed, estimated_hours, created_at,
+                 created_by_user_id, source)
+            SELECT id, title, description, make, model,
+                   year_start, year_end, severity, symptoms, dtc_codes, causes,
+                   fix_procedure, parts_needed, estimated_hours, created_at,
+                   created_by_user_id, source
+            FROM known_issues
+            WHERE id IN (
+                SELECT MIN(id) FROM known_issues
+                GROUP BY COALESCE(make, ''), COALESCE(model, ''), title
+            );
+
+            DROP TABLE known_issues;
+            ALTER TABLE known_issues_dedup RENAME TO known_issues;
+
+            CREATE INDEX idx_known_issues_make_model
+                ON known_issues(make, model);
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
+            CREATE UNIQUE INDEX idx_known_issues_identity
+                ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issues_identity;
+        """,
+    ),
 ]
 
 

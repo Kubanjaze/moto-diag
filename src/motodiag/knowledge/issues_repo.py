@@ -32,13 +32,28 @@ def add_known_issue(
     migration 052 (Phase 235B) for primary legal text. It is last and
     defaulted so every existing caller — 31 of them — is unaffected.
     """
+    # Phase 244D: idempotent. `known_issues` had no uniqueness constraint and
+    # this was a plain INSERT, so every run of the seed loop duplicated the
+    # whole corpus -- 6,600 rows for 660 distinct issues by the time it was
+    # found.
+    #
+    # `ON CONFLICT DO NOTHING`, deliberately, NOT `INSERT OR IGNORE`. OR IGNORE
+    # suppresses every constraint violation, CHECK included -- so a typo in
+    # `source` ("servicemanual" for "service-manual") would have been dropped
+    # in silence instead of raising, quietly losing a row and its provenance.
+    # Phases 211 and 235B both pin that the CHECK rejects a typo, and both
+    # caught this. The upsert clause conflicts only on uniqueness and leaves
+    # CHECK violations to raise, which is the behaviour wanted. On a database
+    # below schema 54 there is no unique index, so the clause is inert and this
+    # is a plain INSERT -- correct there too.
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """INSERT INTO known_issues
                (title, description, make, model, year_start, year_end, severity,
                 symptoms, dtc_codes, causes, fix_procedure, parts_needed,
                 estimated_hours, source, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+               ON CONFLICT DO NOTHING""",
             (
                 title, description, make, model, year_start, year_end, severity,
                 json.dumps(symptoms or []),
@@ -51,6 +66,19 @@ def add_known_issue(
                 datetime.now().isoformat(),
             ),
         )
+        if cursor.rowcount == 0:
+            # Ignored as a duplicate. `lastrowid` would be stale or 0 here, so
+            # resolve the id of the row that already holds this identity --
+            # callers asked for the issue to exist and get the id it has.
+            existing = conn.execute(
+                """SELECT id FROM known_issues
+                   WHERE COALESCE(make, '') = COALESCE(?, '')
+                     AND COALESCE(model, '') = COALESCE(?, '')
+                     AND title = ?""",
+                (make, model, title),
+            ).fetchone()
+            if existing is not None:
+                return existing[0] if isinstance(existing, tuple) else existing["id"]
         return cursor.lastrowid
 
 

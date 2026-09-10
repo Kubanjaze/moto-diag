@@ -2265,3 +2265,41 @@ Six mutations, five caught on first write; the sixth used an input the score flo
 with the gate it claimed to test deleted.
 
 Backend `implementation.md` 0.13.59 → 0.13.60. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-10 — Phase 244D: the corpus was stored ten times over (schema v53 → v54)
+
+**Project-level state this changes:**
+- **Schema version 53 → 54.** Migration 054 rebuilds `known_issues`, collapsing 6,600 rows to the 660 distinct
+  issues they represented and adding a UNIQUE **expression** index over
+  `(COALESCE(make,''), COALESCE(model,''), title)`. Keeps `MIN(id)` per key. **IRREVERSIBLE**: rollback drops the
+  index but cannot restore the deleted duplicates, and the migration's description says so rather than implying a
+  clean reverse.
+- **`knowledge/issues_repo.add_known_issue` is idempotent** via `ON CONFLICT DO NOTHING`, and resolves the existing
+  row's id when an insert is skipped rather than returning a stale `lastrowid`.
+- **`knowledge/loader.load_known_issues_file` reports rows actually inserted**, measured before and after, not items
+  walked. Seeding the full corpus three times running now yields 970 / 0 / 0.
+- **Four schema-version contract pins updated** — Gates 9, 11, 12 and Phase 191B.
+
+**Why the naive fix would have shipped looking correct.** 43 seeded entries carry a NULL model, and SQLite treats
+NULLs as DISTINCT in a UNIQUE constraint. The obvious `UNIQUE(make, model, title)` leaves those free to keep
+multiplying. Proven with a three-insert probe before the migration was written: the naive form yields 3 rows where
+the expression index yields 1.
+
+**The finding worth carrying: idempotency and integrity are different properties.** The plan specified
+`INSERT OR IGNORE`, which reads as "skip duplicates" and actually means "skip anything the database objects to" —
+CHECK constraints included. A typo in `source` would have been dropped in silence, losing a row and its provenance
+with no signal. **This phase's own 21 guards did not catch it**; two guards from Phases 211 and 235B, written for an
+unrelated reason, did. The distinction is invisible to any test that only inserts valid rows, which was every test
+this phase wrote.
+
+**Fourth mention-versus-use failure of the session.** The guard added for that bug asserted `INSERT OR IGNORE` does
+not appear in the source, and fired on the comment written to explain why it is not used — the same shape as Phase
+241's SafetyChecker tripwire firing on a docstring. Both now read the AST, where comments do not exist. Four
+instances is a pattern, not luck: **this codebase's guards routinely match source text, and a guard that matches an
+identifier as text will eventually fire on the prose explaining it.** A sweep for that shape is recorded as debt.
+
+**Deliberately not done: the re-seed.** The database holds 660 of 970 seeded entries and 5 of 14 makes — every
+European and electric make from Tracks K and L is absent. Loading them is now safe and idempotent, but it changes
+the operator's data and is theirs to run.
+
+Backend `implementation.md` 0.13.60 → 0.13.61. Schema v53 → v54 (migration 054). No API surface change.
