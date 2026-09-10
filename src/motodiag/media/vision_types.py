@@ -416,6 +416,18 @@ GROUND EVERY CANDIDATE. For each one set `grounding`:
   machine_specific   — a supplied corpus entry covers this make/model/year
   cross_platform     — a supplied corpus entry applies generally
   general_reasoning  — no corpus entry supports it; say so in grounding_detail
+
+Corpus entries are tagged with how closely they match this machine:
+  [this model]                              — about this exact model
+  [this make, all models]                   — about this make generally
+  [SAME MAKE, DIFFERENT MODEL — not established for this machine]
+
+An entry tagged SAME MAKE, DIFFERENT MODEL is evidence about a DIFFERENT
+machine. It may still be worth raising — related engines share parts and
+failure modes — but it is NOT machine_specific. Grounding a candidate on one
+means cross_platform at best, and grounding_detail must name the other model it
+actually came from. Do not present another model's documented fault as
+established for the machine in front of the technician.
   not_established    — nothing supports it
 Never present general reasoning as though it were documented. A short honest \
 answer beats a long confident one.

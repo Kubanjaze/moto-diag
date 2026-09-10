@@ -1,6 +1,6 @@
 # Phase 244E — Resolving a model must not shrink the answer
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -97,17 +97,17 @@ whole table, and the constant is not written twice.
 
 ## Verification Checklist
 
-- [ ] `BMW + R1200GS` returns no fewer rows than `BMW` alone
-- [ ] The monotonicity property holds for every make in the corpus, not one example
-- [ ] Exact-model rows still rank ahead of make-wide and other-model rows
-- [ ] A different make's rows never appear, at any tier
-- [ ] Every returned row carries a `match_tier`
-- [ ] The formatter labels non-specific rows so they cannot read as machine-specific
-- [ ] Within a tier, ordering is by severity rank and uses the 240C SSOT
-- [ ] Phase 244C's cross-make guard still passes unmodified in substance
-- [ ] Mutation: drop the tier fill → the monotonicity guard fails
-- [ ] Mutation: allow cross-make rows → the leakage guard fails
-- [ ] Full regression green
+- [x] `BMW + R1200GS` returns no fewer rows than `BMW` alone
+- [x] The monotonicity property holds for every make in the corpus, not one example
+- [x] Exact-model rows still rank ahead of make-wide and other-model rows
+- [x] A different make's rows never appear, at any tier
+- [x] Every returned row carries a `match_tier`
+- [x] The formatter labels non-specific rows so they cannot read as machine-specific
+- [x] Within a tier, ordering is by severity rank and uses the 240C SSOT
+- [x] Phase 244C's cross-make guard still passes unmodified in substance
+- [x] Mutation: drop the tier fill → the monotonicity guard fails
+- [x] Mutation: allow cross-make rows → the leakage guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -124,3 +124,75 @@ whole table, and the constant is not written twice.
   guarded.
 - **No production caller yet.** The guidance surface is not wired to a route,
   so this is verified by guards and a live re-run rather than in situ.
+
+---
+
+## Deviations from Plan
+
+**A second defect surfaced during the build, and it was the same one twice.**
+Adding an `ORDER BY` on the severity rank made a Phase 244C guard return `[]`.
+The fixture's table had no `severity` column, so the query raised — and the
+blanket `except Exception: return identity, []` **turned a malformed query into
+"no known issues found."**
+
+That is the `advanced/recall_repo.py` defect from Phase 240C, reproduced by me
+in a new file: a dropped `ORDER BY` keyword swallowed by
+`except sqlite3.OperationalError: return []`, so a lookup reported empty rather
+than raising. **The whole point of Phase 244C was that an unmatched name and an
+undocumented machine must be distinguishable — and this made a broken query
+indistinguishable from both.**
+
+The catch is now narrow. A missing **table** means an empty knowledge base and
+returns nothing; a missing column or a syntax error is a bug in the query and
+raises. `known_makes` and `known_models` gained the same treatment, because
+`resolve_vehicle` calls them before retrieval and they were throwing outright on
+a fresh database — best-effort was never reaching the case it existed for.
+
+**Phase 244C's guard was split rather than edited.** It asserted two things at
+once: that a CBR600RR entry must not reach an F4i, and that a Kawasaki entry
+must not reach a Honda. Widening requires relaxing the first. The second is the
+one with a mechanic on the other end, so it is now stated in **both** 244C's and
+this phase's files — splitting a guard is exactly how its strict half goes
+missing, and duplication is cheap insurance against editing one file.
+
+**Ordering by severity was not in v1.0's Logic as a requirement**, only as a
+note. It became load-bearing once rows were filled rather than filtered: with 25
+rows returned instead of 1, which 12 reach the formatter is decided by the
+ordering. It reuses `SEVERITY_RANK_SQL` so migration 053's expression index
+serves it and the constant is not written twice — guarded, since inlining the
+CASE would silently cost the index.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| `BMW + R1200GS` | **1 → 25 rows** |
+| Monotonicity violations, live corpus | **0 across 362 make/model pairs, 26 makes** |
+| Cross-make leakage | forbidden at every tier; asserted in two files |
+| Ordering | tier, then severity rank via the Phase 240C SSOT |
+| Guards | 16 new, plus one 244C guard split into two |
+| Mutations run / caught | 6 / 6 |
+| Regression | **6178 passed / 0 failed** (baseline 6161; +16 new guards, +1 from splitting Phase 244C's bundled leakage guard) |
+
+**Verified live on the original recording.** The model now cites the tier in its
+own reasoning — `"Stator failure diagnosis and replacement — all Honda models
+[this make, all models]"` — and grounds those candidates as `cross_platform`
+rather than `machine_specific`. The label is not decoration; it reaches the
+reasoning and constrains the claim.
+
+**Key finding: when the data cannot support exclusion, precision comes from
+labelling, not from filtering.** The old behaviour dropped 53 relevant BMW rows
+to avoid 3 imprecise ones, and called the result precision. What it actually
+produced was a confident answer built on one row. Returning all 54 with each
+one's specificity attached gives the model more to reason from *and* a clearer
+account of what it is reasoning from — and the monotonicity invariant, *knowing
+more must never return less*, is what makes that checkable rather than a matter
+of taste.
+
+## Follow-up recorded
+
+The root cause is untouched and needs its own phase: `make` and `model` are free
+text carrying prose and multi-make lists. **LiveWire and Damon still resolve to
+nothing** — all 24 LiveWire rows are tagged `"Harley-Davidson, LiveWire"`, so
+Phase 243's entire output remains unreachable. This phase makes retrieval
+survive that data; it does not fix it.
