@@ -218,11 +218,44 @@ class TestTheSafetyCheckerGapIsRecorded:
     fails and tells them what else that wiring needs."""
 
     def test_safety_checker_has_no_production_caller_today(self):
+        """Detects USE, not mention.
+
+        Phase 244B: the first version matched the bare string anywhere in a
+        file, so it fired on a docstring in `media/analysis_worker.py` that
+        cites SafetyChecker as a cross-reference — "same integration-gap family
+        as SafetyChecker at Phase 241". Naming a thing is not calling it, and a
+        tripwire that cannot tell the difference punishes the documentation
+        that makes the gap findable.
+
+        Parsing with `ast` fixes it structurally rather than by pattern: string
+        literals and comments are not part of the tree, so only a real
+        reference — a construction, an attribute access, or an import — counts.
+        """
+        import ast
+
         hits = []
         for py in SRC.rglob("*.py"):
             if py.name in ("safety.py", "__init__.py"):
                 continue
-            if "SafetyChecker" in py.read_text(encoding="utf-8"):
+            src = py.read_text(encoding="utf-8")
+            if "SafetyChecker" not in src:
+                continue  # cheap pre-filter; the AST walk below is the check
+            try:
+                tree = ast.parse(src)
+            except SyntaxError:
+                continue
+            used = False
+            for node in ast.walk(tree):
+                if isinstance(node, ast.Name) and node.id == "SafetyChecker":
+                    used = True
+                elif isinstance(node, ast.Attribute) and node.attr == "SafetyChecker":
+                    used = True
+                elif isinstance(node, ast.ImportFrom):
+                    if any(a.name == "SafetyChecker" for a in node.names):
+                        used = True
+                if used:
+                    break
+            if used:
                 hits.append(str(py.relative_to(SRC)))
         assert not hits, (
             f"SafetyChecker is now constructed in production: {hits}. Before this ships, "
