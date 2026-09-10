@@ -2501,3 +2501,30 @@ Regeneration ran against a throwaway backend on a spare port with a temporary da
 to tooling as well as tests. The mobile repo was committed but not pushed, at the operator's direction.
 
 Backend `implementation.md` 0.13.66 → 0.13.67. No schema change (still v56), no migration.
+
+### 2026-09-10 — Phase 244K: Gate 11 watched the doors and not the rooms
+
+**Project-level state this changes:**
+- **Gate 11 now compares `components.schemas`** as well as paths, in both directions, with drift separated from
+  absence because they fail differently.
+- **`info.version` and `servers` are explicitly not gated**, with a guard enforcing that.
+
+**What was wrong, precisely.** The gate was green for 85 commits while the mobile app compiled against a contract the
+API did not honour, and it was *correct* by its own terms the entire time — no path had changed. Nothing was broken.
+**The guard answered a narrower question than anyone was reading it as: green meant "no new paths" and was read as
+"the contract matches".**
+
+**Three severities, now separated because they fail differently.** A *missing* type fails at build. A *stale* type
+404s at runtime. A *wrong* type compiles and lies — that is the one that went unnoticed, and the one with no natural
+symptom.
+
+**The class's own docstring nearly caught me out.** It already stated that comparison is structural rather than
+byte-wise, so a prose edit must not fail the build. Strict schema equality — the obvious implementation — would have
+violated that immediately. Prose keys are stripped recursively, and guarded in both directions, because stripping
+that also swallowed enum changes would have quietly disabled the whole point of the phase.
+
+**Failure messages name the field.** Reproducing the real Phase 235B defect yields
+`KnownIssueResponse.source: snapshot is missing ['regulation']` rather than "a schema differs" — on a 400KB document
+that is the difference between a report and a rumour.
+
+Backend `implementation.md` 0.13.67 → 0.13.68. No production code changed, no schema change (still v56).

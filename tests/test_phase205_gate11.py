@@ -29,6 +29,7 @@ Zero production code, per the rule every prior gate kept.
 
 from __future__ import annotations
 
+import inspect
 import json
 import re
 import subprocess
@@ -452,6 +453,163 @@ class TestContractSnapshot:
         assert not stale, (
             "The mobile snapshot describes operations the API no longer "
             f"serves — these would 404 at runtime: {stale[:10]}"
+        )
+
+    # -- Phase 244K: the same three questions, asked of SCHEMAS -------------
+    #
+    # Until now this class compared paths only. `KnownIssueResponse.source`
+    # was missing "regulation" for 85 backend commits — added at Phase 235B,
+    # noticed at Phase 244J only because an unrelated endpoint forced a
+    # regeneration — and the gate stayed green the whole time, correctly by
+    # its own terms. A guard that watches one axis reports safety on every
+    # axis.
+    #
+    # Structural, per this class's existing philosophy: prose keys are
+    # stripped before comparing, so editing a description does not fail the
+    # build. `info` and `servers` are deliberately NOT compared — the first
+    # tracks the package version, the second is built from environment
+    # config, and gating on either produces failures regeneration cannot fix.
+
+    _PROSE_KEYS = {"description", "title", "example", "examples"}
+    _REMEDY = (
+        "Run, in the mobile repo:\n"
+        "    npm run refresh-api-schema   (needs a backend running)\n"
+        "    npm run generate-api-types   (src/api-types.ts is tracked and derived)\n"
+        "Refreshing the schema without regenerating types leaves that repo "
+        "internally inconsistent."
+    )
+
+    @classmethod
+    def _structural(cls, node):
+        """Strip prose so a reworded description cannot fail the gate."""
+        if isinstance(node, dict):
+            return {
+                k: cls._structural(v)
+                for k, v in node.items()
+                if k not in cls._PROSE_KEYS
+            }
+        if isinstance(node, list):
+            return [cls._structural(v) for v in node]
+        return node
+
+    @staticmethod
+    def _field_level_diff(name, live_schema, snap_schema):
+        """Describe WHERE two schemas differ.
+
+        "KnownIssueResponse differs" sends someone diffing 400KB of JSON.
+        Naming the field, and the enum value when that is the change, is the
+        difference between a report and a rumour.
+        """
+        lp = live_schema.get("properties")
+        sp = snap_schema.get("properties")
+        if not isinstance(lp, dict) or not isinstance(sp, dict):
+            return f"{name}: schema shape changed"
+
+        notes = []
+        for added in sorted(set(lp) - set(sp)):
+            notes.append(f"{name}.{added}: in the API, absent from the snapshot")
+        for dropped in sorted(set(sp) - set(lp)):
+            notes.append(f"{name}.{dropped}: in the snapshot, absent from the API")
+        for field in sorted(set(lp) & set(sp)):
+            if lp[field] == sp[field]:
+                continue
+            live_enum, snap_enum = lp[field].get("enum"), sp[field].get("enum")
+            if isinstance(live_enum, list) and isinstance(snap_enum, list):
+                gained = [v for v in live_enum if v not in snap_enum]
+                lost = [v for v in snap_enum if v not in live_enum]
+                if gained:
+                    notes.append(f"{name}.{field}: snapshot is missing {gained!r}")
+                if lost:
+                    notes.append(f"{name}.{field}: snapshot still lists {lost!r}")
+                if gained or lost:
+                    continue
+            notes.append(f"{name}.{field}: changed")
+        if set(live_schema.get("required", [])) != set(snap_schema.get("required", [])):
+            notes.append(f"{name}: required fields changed")
+        return "; ".join(notes) or f"{name}: differs"
+
+    def _schemas(self):
+        live = create_app().openapi()
+        snapshot = json.loads(MOBILE_SNAPSHOT.read_text())
+        return (
+            live.get("components", {}).get("schemas", {}),
+            snapshot.get("components", {}).get("schemas", {}),
+        )
+
+    def test_every_live_schema_is_in_the_committed_snapshot(self):
+        """A response type the app has no type for. Fails at build, which is
+        the mild direction."""
+        live, snap = self._schemas()
+        missing = sorted(set(live) - set(snap))
+        assert not missing, (
+            "The API returns schemas the mobile snapshot does not know "
+            f"about: {missing[:10]}\n" + self._REMEDY
+        )
+
+    def test_shared_schemas_have_not_drifted(self):
+        """The severe direction, and the one that went unnoticed for 85
+        commits: the app HAS a type and it is WRONG. Nothing fails at build —
+        it compiles and lies."""
+        live, snap = self._schemas()
+        drifted = [
+            self._field_level_diff(name, live[name], snap[name])
+            for name in sorted(set(live) & set(snap))
+            if self._structural(live[name]) != self._structural(snap[name])
+        ]
+        assert not drifted, (
+            "The mobile snapshot describes schemas differently from the live "
+            "API. The app compiles against these and is wrong at runtime:\n  "
+            + "\n  ".join(drifted[:10]) + "\n" + self._REMEDY
+        )
+
+    def test_the_snapshot_does_not_describe_schemas_the_api_dropped(self):
+        """The app types something the backend no longer returns."""
+        live, snap = self._schemas()
+        stale = sorted(set(snap) - set(live))
+        assert not stale, (
+            "The mobile snapshot describes schemas the API no longer "
+            f"returns: {stale[:10]}\n" + self._REMEDY
+        )
+
+    def test_prose_edits_do_not_fail_the_gate(self):
+        """This class's stated philosophy, now that schemas are compared:
+        rewording a description must not break the build."""
+        a = {"type": "object", "description": "before",
+             "properties": {"x": {"type": "string", "title": "X"}}}
+        b = {"type": "object", "description": "AFTER, entirely reworded",
+             "properties": {"x": {"type": "string", "title": "Ecks"}}}
+        assert self._structural(a) == self._structural(b)
+
+    def test_an_enum_change_is_not_a_prose_edit(self):
+        """The Phase 235B case, in miniature: structural stripping must not
+        also strip the thing that actually drifted."""
+        a = {"properties": {"source": {"enum": ["forum", "regulation"]}}}
+        b = {"properties": {"source": {"enum": ["forum"]}}}
+        assert self._structural(a) != self._structural(b)
+        note = self._field_level_diff("KnownIssueResponse", a, b)
+        assert "source" in note and "regulation" in note, note
+
+    def test_version_and_servers_are_not_gated(self):
+        """`info.version` moves on release and `servers` is environment
+        config. Gating either produces failures regeneration cannot fix, which
+        teaches people to regenerate reflexively.
+
+        Asserted against `_schemas`, the function that decides what is
+        compared — not against the class. The first version scanned the whole
+        class source and failed on ITSELF, because this test names the very
+        keys it forbids. The fifth mention-versus-use failure of the session,
+        in the phase with the least excuse for it; `code_of` from Phase 244G
+        handles the comments, and narrowing to the helper handles the rest."""
+        from support.source_guards import code_of
+
+        src = code_of(type(self)._schemas)
+        for key in ("info", "servers"):
+            assert key not in src, (
+                f"{key!r} is read by the comparison — it drifts legitimately "
+                "and would produce failures regeneration cannot fix"
+            )
+        assert "components" in src and "schemas" in src, (
+            "the comparison must scope to components.schemas"
         )
 
 
