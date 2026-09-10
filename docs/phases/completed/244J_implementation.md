@@ -1,6 +1,6 @@
 # Phase 244J — The guidance surface has no caller
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -74,17 +74,17 @@ directions, and both fail loudly when reality moves.
 
 ## Verification Checklist
 
-- [ ] Asking a question about an owned video returns a `GuidanceResponse`
-- [ ] A video belonging to another user is refused, before any frame work
-- [ ] A video id from a different session in the same account is refused
-- [ ] An empty or whitespace question is rejected with 422
-- [ ] Individual tier is refused with 402
-- [ ] The corpus reaches the call through the resolver, tiered
-- [ ] The sweep path and its queued worker are untouched
-- [ ] The inverse tripwire fails if the production caller is removed
-- [ ] Mutation: drop the ownership check → a guard fails
-- [ ] Mutation: remove the route → the tripwire fails
-- [ ] Full regression green
+- [x] Asking a question about an owned video returns a `GuidanceResponse`
+- [x] A video belonging to another user is refused, before any frame work
+- [x] A video id from a different session in the same account is refused
+- [x] An empty or whitespace question is rejected with 422
+- [x] Individual tier is refused with 402
+- [x] The corpus reaches the call through the resolver, tiered
+- [x] The sweep path and its queued worker are untouched
+- [x] The inverse tripwire fails if the production caller is removed
+- [x] Mutation: drop the ownership check → a guard fails
+- [x] Mutation: remove the route → the tripwire fails
+- [x] Full regression green
 
 ## Risks
 
@@ -100,3 +100,60 @@ directions, and both fail loudly when reality moves.
   rather than half-solved here.
 - **Wiring phases invite scope creep** toward the chat surface the user
   originally described. One question, one answer, one video.
+
+---
+
+## Deviations from Plan
+
+**Adding a route reached into another repository, and found it stale.** Gate 11
+compares the backend's live paths against a committed OpenAPI snapshot in
+`moto-diag-mobile/api-schema/openapi.json`, so the new endpoint failed it
+immediately — which is the guard doing exactly its job.
+
+Regenerating with the mobile repo's own tooling added one path and changed no
+existing one. It also revealed something this phase did not cause:
+**`KnownIssueResponse.source` had been missing `"regulation"` since Phase 235B.**
+The snapshot was last regenerated on 2026-09-07 at Phase 211 — **85 backend
+commits earlier** — so the mobile app's generated types did not know that
+provenance value existed, and a knowledge-base entry carrying it violated the
+type that app compiles against.
+
+**The gate could not have caught that**, because it compares paths only.
+Component-schema drift is invisible to it. Recorded as Phase 244K rather than
+folded in here: this is a wiring phase, and widening it mid-flight to rewrite a
+gate is how a small change becomes an unreviewable one.
+
+The regeneration ran against a throwaway backend on a spare port with a
+temporary database — Phase 244H's lesson applied to tooling as well as tests. A
+pre-existing backend of the operator's on port 8000 was left untouched, and was
+briefly mistaken for the new one until the missing route made the confusion
+obvious.
+
+**The mobile repo was committed but not pushed**, at the operator's direction,
+and `npm run generate-api-types` was run alongside the schema refresh so the
+commit is coherent — the tracked `src/api-types.ts` is derived from the snapshot,
+and committing one without the other would leave that repo internally
+inconsistent.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Endpoint | `POST /v1/sessions/{session_id}/videos/{video_id}/ask` |
+| Integration gaps closed | the fourth this session, and the only one it created |
+| Guards | 20 |
+| Mutations run / caught | 7 / 7 |
+| Cross-repo | 1 path added, **0 existing paths changed**; 85 commits of schema drift repaired |
+| Regression | **6300 passed / 0 failed** (baseline 6280; +20 guards). First run red on Gate 11's cross-repo OpenAPI snapshot — see Deviations |
+
+**Key finding: guards that prove a component works say nothing about whether
+anyone can reach it.** Phase 244B shipped thirty-five passing guards on a method
+with no caller, verified its behaviour against a real recording, and wrote the
+result up as working. Every one of those claims was true. The product still could
+not answer a technician's question, and nothing in the suite noticed — because
+nothing was asking that question.
+
+The inverse tripwire is the cheap fix: Phase 241's asserts `SafetyChecker` has
+**no** production caller, recording a known gap; this one asserts the guidance
+method **does** have one. Same mechanism, opposite polarity, and between them
+they make both states loud instead of silent.

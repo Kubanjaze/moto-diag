@@ -52,6 +52,24 @@ from motodiag.auth.deps import (
 from motodiag.core import video_repo
 from motodiag.core.config import Settings
 from motodiag.core.models import VideoBase, VideoResponse
+from motodiag.media.vision_types import GuidanceResponse
+from pydantic import BaseModel, Field
+
+
+class AskRequest(BaseModel):
+    """A technician's question about a recorded machine.
+
+    Phase 244J. Deliberately one field: this is one question about one video,
+    not a conversation. Multi-turn memory was scoped out at Phase 244B and
+    stays out.
+    """
+
+    question: str = Field(
+        ...,
+        min_length=3,
+        max_length=500,
+        description="What the technician actually wants to know.",
+    )
 
 
 _log = logging.getLogger(__name__)
@@ -408,4 +426,75 @@ def get_video_file(
         path=str(file_path),
         media_type="video/mp4",
         filename=f"video_{video_id}.mp4",
+    )
+
+
+@router.post(
+    "/{session_id}/videos/{video_id}/ask",
+    response_model=GuidanceResponse,
+    summary="Ask a question about a recorded machine",
+)
+def ask_about_video(
+    payload: AskRequest,
+    session_id: int = PathParam(..., gt=0),
+    video_id: int = PathParam(..., gt=0),
+    user: AuthedUser = Depends(require_tier("shop")),
+    db_path: str = Depends(get_db_path),
+) -> GuidanceResponse:
+    """Answer a technician's question using a recorded video as evidence.
+
+    Phase 244J. Phase 244B built the guidance path — a contract that cannot
+    express a diagnosis, and grounding labels that force the model to say what
+    it is reasoning from — and nothing called it. A technician could not ask the
+    product a question because the only way in was a Python import. The fourth
+    integration gap this session found, and the only one it created itself.
+
+    **Synchronous, unlike the upload's queued sweep.** The sweep is queued
+    because nobody is waiting for it. A question has someone waiting, and an
+    answer delivered to nowhere is not an answer. The cost is a request that
+    runs as long as the model takes — typically tens of seconds, since frames
+    are extracted and a vision call is made inline.
+
+    Returns guidance, never a verdict: candidates with what would discriminate
+    between them, each labelled with what it rests on.
+    """
+    import tempfile
+    from pathlib import Path as _Path
+
+    # Ownership first, before any frame extraction or paid API call.
+    # Authorisation ordering is a cost property here, not only a security one.
+    row = video_repo.get_video_for_owner(
+        user_id=user.id, video_id=video_id, db_path=db_path,
+    )
+    if row is None or int(row["session_id"]) != session_id:
+        raise video_repo.VideoOwnershipError(f"video id={video_id} not found")
+
+    file_path = _Path(row["file_path"])
+    if not file_path.exists():
+        raise video_repo.VideoOwnershipError(
+            f"video id={video_id} file missing on disk"
+        )
+
+    from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+    from motodiag.media import ffmpeg as ffmpeg_module
+    from motodiag.media.analysis_worker import _build_vehicle_context
+    from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
+
+    out_dir = _Path(tempfile.mkdtemp(prefix=f"ask_{video_id}_"))
+    frames = ffmpeg_module.extract_frames(video_path=file_path, output_dir=out_dir)
+
+    # The corpus arrives through the resolver, so this endpoint inherits every
+    # fix from Phases 244C-244I: a typo in the make still resolves, prose model
+    # values are indexed, models an entry excludes are not, and rows come back
+    # tiered by how specifically they match.
+    context = _build_vehicle_context(dict(row), db_path=db_path)
+    _identity, issues = known_issues_for_vehicle(
+        context.make, context.model, db_path=db_path, limit=25,
+    )
+
+    return VisionAnalyzer(model="sonnet").answer_question_about_frames(
+        frames=frames,
+        question=payload.question,
+        vehicle_context=context,
+        known_issues=issues,
     )

@@ -2469,3 +2469,35 @@ contains it — harmless for marques, since none is a substring of another, and 
 loses to `390 Adventure R` though both are named and distinct.
 
 Backend `implementation.md` 0.13.65 → 0.13.66. Schema v55 → v56 (migration 056). No API surface change.
+
+### 2026-09-10 — Phase 244J: the guidance surface had no caller
+
+**Project-level state this changes:**
+- **New public endpoint** `POST /v1/sessions/{session_id}/videos/{video_id}/ask`, gated at `shop` tier, returning
+  `GuidanceResponse`. First synchronous vision-calling route on the API — the sweep remains queued.
+- **Cross-repo:** `moto-diag-mobile`'s `api-schema/openapi.json` and `src/api-types.ts` regenerated. One path added,
+  zero existing paths changed.
+
+**Why it needed a phase.** Phase 244B built the guidance path — a contract that cannot express a diagnosis, grounding
+labels that force the model to say what it is reasoning from, thirty-five passing guards — and nothing called it. The
+only way to ask the product a question was a Python import. The fourth integration gap this session found, after
+`SafetyChecker` (241), the `HV_` DTC format (244) and the `_build_vehicle_context` stub (244B), and the only one this
+session created itself.
+
+**An inverse tripwire now guards both directions.** Phase 241's test asserts `SafetyChecker` has *no* production
+caller, recording a known gap so whoever wires it is told what else that wiring needs. This phase's asserts the
+guidance method *does* have one. Same mechanism, opposite polarity.
+
+**Adding a route found a stale contract in another repository.** Gate 11 compares live paths against the mobile
+repo's OpenAPI snapshot, so the endpoint failed it immediately. Regenerating surfaced a defect this phase did not
+cause: `KnownIssueResponse.source` had been missing `"regulation"` since Phase 235B, because that snapshot was last
+regenerated at Phase 211 — **85 backend commits earlier**. The mobile app was compiling against a contract that did
+not know the value existed.
+
+**The gate could not have caught it.** It compares paths only, so component-schema drift is invisible to it. Deferred
+to Phase 244K rather than folded in: a wiring phase that grows to rewrite a gate stops being a reviewable change.
+
+Regeneration ran against a throwaway backend on a spare port with a temporary database — Phase 244H's lesson applied
+to tooling as well as tests. The mobile repo was committed but not pushed, at the operator's direction.
+
+Backend `implementation.md` 0.13.66 → 0.13.67. No schema change (still v56), no migration.
