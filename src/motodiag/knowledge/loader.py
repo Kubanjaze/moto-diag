@@ -140,7 +140,14 @@ def load_known_issues_file(file_path: str | Path, db_path: str | None = None) ->
     if not isinstance(data, list):
         raise ValueError(f"Expected JSON array, got {type(data).__name__}")
 
-    count = 0
+    # Phase 244D: report rows actually inserted, not items walked. The old
+    # counter incremented per item regardless of outcome, so once loading
+    # became idempotent a repeat load still claimed to have inserted every
+    # entry. On a fresh database the two are identical; on a re-seed the
+    # difference is the whole point.
+    from motodiag.knowledge.issues_repo import count_known_issues
+
+    before = count_known_issues(db_path=db_path)
     for item in data:
         add_known_issue(
             title=item["title"],
@@ -161,6 +168,5 @@ def load_known_issues_file(file_path: str | Path, db_path: str | None = None) ->
             # load as `unverified` — a true statement about their origin.
             source=item.get("source", "unverified"),
         )
-        count += 1
 
-    return count
+    return count_known_issues(db_path=db_path) - before
