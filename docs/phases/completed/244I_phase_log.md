@@ -1,7 +1,8 @@
 # Phase 244I — Model vocabulary + model junction — phase log
 
-**Status:** Planned
-**Opened:** 2026-09-10
+**Status:** ✅ Complete
+**Opened:** 2026-09-10 | **Closed:** 2026-09-10
+**Repo:** https://github.com/Kubanjaze/moto-diag
 
 ---
 
@@ -43,3 +44,44 @@ Worth stating what this phase is not for. Phase 244E already makes prose-model
 rows reachable, labelled `make_other_model`. This is about precision, so a bad
 extraction has no upside to trade against — which is why every rule is
 conservative and silent when unsure.
+
+
+---
+
+## 2026-09-10 — Built
+
+Migration 056 adds `known_issue_models`, backfilled in its own transaction.
+**254 of 286 prose rows now carry a precise model**, and the safety property
+holds corpus-wide: zero indexed models are absent from the covered part of their
+source value.
+
+**The plan's exclusion mechanism was wrong and this phase's own guard proved
+it.** v1.0 truncated at the first contrast marker. A parametrised guard over
+every phrasing found `"390 Adventure; 390 Duke not established"`, where the
+excluded model *precedes* the marker and survives truncation. Exclusion is
+clause-scoped instead: negated parentheticals removed, value split into clauses,
+any clause carrying a marker dropped whole. Truncation looks right against the
+examples anyone would pick — they all put the exclusion last. Enumerating all
+fourteen contrast values rather than sampling is what found the one that does
+not.
+
+**My fixture was unrepresentative for the second phase running.** Three
+mutations escaped because it lacked shapes the corpus has — `"... and R"`
+producing a bare `R` that would match almost any text, and a comma inside
+parentheses tearing a year qualifier in half. Adding them caught all three, and
+one surfaced a defect nothing had flagged: `2018+` was entering the vocabulary
+as a machine. **A fixture built from imagination tests the corpus you expected,
+not the one you have** — 244F had the same problem with Triumph and Moto Guzzi.
+
+**And one guard passed for the wrong reason.** The bracket mutation still
+survived after the fixture gained a bracket case, because the fragment was 30
+characters and hit the length check first. Shortened so the check under test is
+the one that fires.
+
+**A latent defect in Phase 244F was fixed here.** `extract_marques` used naive
+substring dedup, which drops a shorter name whenever a longer one contains it.
+Harmless for marques, fatal for models: `390 Adventure` loses to `390 Adventure
+R` though both are named and distinct. The corrected position-aware helper is
+shared.
+
+34 guards, 7/7 mutations caught, F9 lint clean.

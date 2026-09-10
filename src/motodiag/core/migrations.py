@@ -3819,6 +3819,44 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS known_issue_makes;
         """,
     ),
+    Migration(
+        version=56,
+        name="known_issue_models_junction",
+        description=(
+            "Phase 244I. The sibling of migration 055, for the `model` column: "
+            "221 of 363 distinct values carry list or prose structure, so an "
+            "equality filter reaches almost none of them. "
+            "The hazard `make` did not have is that entries name models in "
+            "order to EXCLUDE them -- '390 Adventure, 790 Adventure, 890 "
+            "Adventure -- as distinct from 1290 Super Adventure', 'Hypermotard "
+            "1100 (not EVO)', '1190/1290 fitment unknown, not excluded'. "
+            "Attaching an entry to a machine its author ruled out is worse than "
+            "the gap it closes: a wrong marque is obvious to a technician, a "
+            "wrong MODEL of the right marque reads as a machine-specific match "
+            "and gets acted on. Extraction therefore truncates at the first "
+            "contrast marker and reads only what precedes it. "
+            "Phase 244E already makes these rows reachable as `make_other_model`, "
+            "so this buys precision rather than reachability -- a bad extraction "
+            "has no upside to trade against. "
+            "As with 055 the `model` column is NOT modified; the junction is "
+            "derived beside it and can be rebuilt at any time."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS known_issue_models (
+                issue_id INTEGER NOT NULL,
+                model TEXT NOT NULL,
+                UNIQUE (issue_id, model),
+                FOREIGN KEY (issue_id) REFERENCES known_issues(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_known_issue_models_model
+                ON known_issue_models(model);
+        """,
+        post_apply="motodiag.knowledge.models:rebuild_model_index",
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issue_models_model;
+            DROP TABLE IF EXISTS known_issue_models;
+        """,
+    ),
 ]
 
 

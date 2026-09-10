@@ -80,6 +80,14 @@ def add_known_issue(
             except sqlite3.OperationalError as exc:
                 if "no such table" not in str(exc).lower():
                     raise
+            # Phase 244I: the same for the model junction.
+            try:
+                from motodiag.knowledge.models import index_models_for_issue
+
+                index_models_for_issue(conn, new_id, make, model)
+            except sqlite3.OperationalError as exc:
+                if "no such table" not in str(exc).lower():
+                    raise
 
         if cursor.rowcount == 0:
             # Ignored as a duplicate. `lastrowid` would be stale or 0 here, so

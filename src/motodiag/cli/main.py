@@ -396,6 +396,11 @@ def db_init() -> None:
     indexed = rebuild_make_index_at()
     console.print(f"  [green]✓[/green] Indexed {indexed} issue/marque pairs")
 
+    from motodiag.knowledge.models import rebuild_model_index_at
+
+    indexed_models = rebuild_model_index_at()
+    console.print(f"  [green]✓[/green] Indexed {indexed_models} issue/model pairs")
+
     # Phase 209: an install that shipped without its seed data used to
     # reach here and report success over an empty knowledge base. Say
     # so instead — a silent empty KB looks identical to a working one

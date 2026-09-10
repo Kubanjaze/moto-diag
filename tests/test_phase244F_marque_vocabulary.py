@@ -278,8 +278,8 @@ class TestTheIndexStaysInStepWithTheColumn:
         c.close()
         assert n1 == n2 and n1 > 0
 
-    def test_schema_version_is_55(self):
-        assert SCHEMA_VERSION == 55  # f9-noqa: ssot-pin contract-pin: Phase 244F schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 54→55 by migration 055 (known_issue_makes junction, because LiveWire and Damon were not queryable makes at all). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+    def test_schema_version_is_current(self):
+        assert SCHEMA_VERSION == 56  # f9-noqa: ssot-pin contract-pin: Phase 244F schema-bump pin. The literal is the point — importing the constant alone would make this assert x == x. Bumped 54→55 by migration 055 (known_issue_makes junction, because LiveWire and Damon were not queryable makes at all). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 55→56 at Phase 244I (migration 056 adds the known_issue_models junction; the model column has the same list-and-prose disease as make, plus entries that name models in order to EXCLUDE them).
 
     def test_the_migration_backfills_inside_its_own_transaction(self):
         """An index that exists but is empty is indistinguishable from a corpus
@@ -367,8 +367,10 @@ class TestAMissingJunctionDegradesRatherThanGoesSilent:
         implying a stronger check than exists."""
         import inspect as _i
         src = code_of(vr.known_issues_for_vehicle)
-        assert 'if "known_issue_makes" not in str(exc):' in src, (
+        assert '"known_issue_makes" in msg' in src, (
             "the junction fallback must not absorb unrelated SQL errors")
+        assert "else:\n                    raise" in src, (
+            "an error concerning neither junction must propagate")
         assert src.count("raise") >= 2
 
     def test_a_genuinely_broken_query_still_raises(self, tmp_path, monkeypatch):

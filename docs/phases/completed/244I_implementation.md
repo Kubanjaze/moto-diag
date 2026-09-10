@@ -1,6 +1,6 @@
 # Phase 244I — The model column, and the models an entry says it does NOT cover
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-10
 
 ---
 
@@ -85,18 +85,18 @@ to qualify as `model` rather than `make_other_model`.
 
 ## Verification Checklist
 
-- [ ] An entry naming an excluded model does not reach that model
-- [ ] All fourteen contrast values are checked individually, not sampled
-- [ ] `390 Adventure` and `390 Adventure R` both survive dedup when both appear
-- [ ] A model appearing only inside a longer one is dropped
-- [ ] Vocabulary is per-make; one make's model never matches another's text
-- [ ] Prose rows gain a precise model where one is genuinely named
-- [ ] `All` stays a scope and is never a model
-- [ ] Phase 244E's monotonicity invariant still holds corpus-wide
-- [ ] Phase 244F adopts the corrected dedup
-- [ ] Mutation: drop contrast handling → an exclusion guard fails
-- [ ] Mutation: naive substring dedup → the 390 Adventure guard fails
-- [ ] Full regression green
+- [x] An entry naming an excluded model does not reach that model
+- [x] All fourteen contrast values are checked individually, not sampled
+- [x] `390 Adventure` and `390 Adventure R` both survive dedup when both appear
+- [x] A model appearing only inside a longer one is dropped
+- [x] Vocabulary is per-make; one make's model never matches another's text
+- [x] Prose rows gain a precise model where one is genuinely named
+- [x] `All` stays a scope and is never a model
+- [x] Phase 244E's monotonicity invariant still holds corpus-wide
+- [x] Phase 244F adopts the corrected dedup
+- [x] Mutation: drop contrast handling → an exclusion guard fails
+- [x] Mutation: naive substring dedup → the 390 Adventure guard fails
+- [x] Full regression green
 
 ## Risks
 
@@ -112,3 +112,78 @@ to qualify as `model` rather than `make_other_model`.
   excluded` means *unknown*, and truncating at `not` correctly yields nothing
   for the tail. Pinned as its own case because a cleverer parser would get it
   wrong.
+
+---
+
+## Deviations from Plan
+
+**The plan's exclusion mechanism was wrong, and this phase's own guard proved
+it.** v1.0 specified truncation: cut everything from the first contrast marker
+onward. A parametrised guard over every contrast phrasing found the case that
+breaks:
+
+```
+"390 Adventure; 390 Duke not established"   ->  kept 390 Duke
+```
+
+The excluded model **precedes** the marker there, so truncation leaves it
+standing. Exclusion is not positional, it is **clause-scoped**: negated
+parentheticals are removed, the value is split into clauses, and any clause
+carrying a contrast marker is dropped whole. Verified corpus-wide — **zero**
+indexed models are absent from the covered part of their source value.
+
+Yield moved 258 → 254 with the stricter rule, which is the right direction: four
+rows lost to conservatism against a class of false attribution removed.
+
+**My fixture was unrepresentative, for the second phase running.** Three
+mutations escaped — single-character tokens, unbalanced brackets, scope phrases
+— because the hand-built fixture lacked shapes the real corpus has: `"... and R"`
+splitting to a bare `R` that would match almost any text, and a comma inside
+parentheses tearing a year qualifier in half. Adding those shapes caught all
+three, and one exposed a defect nothing had flagged: **`2018+` was entering the
+vocabulary as a machine.** Bare years and year ranges are now rejected.
+
+Phase 244F had the same problem with Triumph and Moto Guzzi. Worth stating as a
+finding in its own right: **a fixture built from imagination tests the corpus you
+expected, not the one you have.**
+
+**One guard passed for the wrong reason and was rewritten.** The unbalanced-bracket
+mutation survived even after the fixture gained a bracket case, because the
+fragment was 30 characters and got rejected on *length* before the bracket check
+ran. The fixture value was shortened so the check under test is the one that
+fires.
+
+**A latent defect in Phase 244F was fixed here.** Its `extract_marques` used
+naive substring dedup, which discards a shorter name whenever a longer one
+contains it. Harmless for marques — none in the 16-value set is a substring of
+another — and fatal for models, where `390 Adventure` loses to `390 Adventure R`
+though both are named and both are distinct machines. The corrected
+position-aware helper lives in `marques.py` and both callers use it.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Prose rows gaining a precise model | **254 of 286** (4 under the naive derivation) |
+| Excluded models indexed | **0**, corpus-wide |
+| Junction rows | 1,674 across 556 distinct models |
+| Vocabulary | derived, per-make, no hard-coded model list |
+| `model` column rewrites | **0** |
+| Guards | 34 |
+| Mutations run / caught | 7 / 7 (three after repairing the fixture) |
+| Regression | **6280 passed / 0 failed** (baseline 6246; +34 guards). First run red on one missed schema pin |
+
+**Key finding: a corpus that says "not X" must never be indexed as X, and the
+obvious implementation gets that wrong in a way testing at the value level does
+not reveal.** Truncation looks correct against the examples anyone would pick —
+they all put the exclusion last. It fails on the one phrasing where the excluded
+name comes first, and that phrasing is in the corpus. Enumerating every contrast
+value rather than sampling is what found it.
+
+## Follow-up recorded
+
+The contrast vocabulary is a closed list covering the fourteen phrasings present
+today. A new phrasing would extract from text it should not, so the guard
+enumerates all fourteen rather than sampling — a gap shows up as a failure rather
+than as a silent mis-index. Any new contrast wording added to the corpus must be
+added to `CONTRAST`.
