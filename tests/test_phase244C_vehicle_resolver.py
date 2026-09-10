@@ -20,6 +20,7 @@ import pytest
 from motodiag.knowledge import vehicle_resolver as vr
 from motodiag.media import analysis_worker as vap_worker
 from motodiag.media.vision_types import VehicleContext
+from support.source_guards import code_of
 
 
 @pytest.fixture
@@ -71,7 +72,7 @@ class TestTheVocabularyComesFromTheCorpus:
         # Phase 244F moved the derivation into `knowledge/marques.py`; the
         # guard follows the code rather than pinning a module.
         from motodiag.knowledge import marques as _mq
-        src = inspect.getsource(vr) + inspect.getsource(_mq)
+        src = code_of(vr) + code_of(_mq)
         assert "SELECT DISTINCT make FROM known_issues" in src
         for marque in ("Yamaha", "Suzuki", "Ducati", "Triumph"):
             assert f'"{marque}"' not in src, f"{marque} hard-coded — vocabulary must come from the corpus"
@@ -138,7 +139,7 @@ class TestItRefusesWhatIsNotClear:
         auto-fix, which is precisely the dangerous behaviour."""
         assert vr.FUZZY_MARGIN > 0
         assert vr.FUZZY_FLOOR >= 0.7
-        src = inspect.getsource(vr._resolve_against)
+        src = code_of(vr._resolve_against)
         assert "FUZZY_MARGIN" in src and "FUZZY_FLOOR" in src
 
 
@@ -199,6 +200,6 @@ class TestTheAnalysisPathUsesIt:
         assert "cbrf4i" in s and "CBR600F4i" in s
 
     def test_the_builder_calls_the_resolver(self):
-        src = inspect.getsource(vap_worker._build_vehicle_context)
+        src = code_of(vap_worker._build_vehicle_context)
         assert "resolve_vehicle" in src
         assert "except Exception" in src, "resolution must stay best-effort"

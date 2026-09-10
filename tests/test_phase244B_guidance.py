@@ -32,6 +32,7 @@ from motodiag.media.vision_types import (
     VehicleContext,
     VisualAnalysisResult,
 )
+from support.source_guards import code_of
 
 LEAK_Q = "Where is this leak most likely coming from?"
 VC = VehicleContext(make="Honda", model="CBR600RR", year=2008)
@@ -253,7 +254,7 @@ class TestEndToEndWiring:
     def test_the_sweep_path_is_untouched(self):
         """The regression that would matter most: guidance must not have
         changed how a sweep request behaves."""
-        src = inspect.getsource(vap.VisionAnalyzer.analyze_video_frames)
+        src = code_of(vap.VisionAnalyzer.analyze_video_frames)
         assert 'tool_choice = {"type": "tool", "name": "report_video_findings"}' in src
         assert "question" not in inspect.signature(vap.VisionAnalyzer.analyze_video_frames).parameters
 
@@ -285,7 +286,7 @@ class TestTheSessionsVehicleReachesTheModel:
         assert "2008 Honda CBR600RR" in s and "31,450" in s
 
     def test_the_builder_is_no_longer_a_stub(self):
-        src = inspect.getsource(vap_worker._build_vehicle_context)
+        src = code_of(vap_worker._build_vehicle_context)
         assert "return VehicleContext()" in src, "the best-effort fallback must remain"
         assert "get_session" in src, "the session join never landed — this is the Phase 244B fix"
 

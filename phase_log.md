@@ -2377,3 +2377,32 @@ passed with the condition deleted. It is now a source assertion whose docstring 
 unreachable and that structure is what is pinned.
 
 Backend `implementation.md` 0.13.62 → 0.13.63. Schema v54 → v55 (migration 055). No API surface change.
+
+### 2026-09-10 — Phase 244G: read code, not commentary (test infrastructure)
+
+**Project-level state this changes:**
+- **New `tests/support/` package** with `source_guards.code_of()` — source with comments and docstrings blanked and
+  every other byte preserved. First shared test helper of its kind in the suite.
+- **18 assertions across 5 test files** converted from raw source to `code_of`.
+- **A meta-guard** now fails any new assertion that tests a literal against raw Python source, naming the helper and
+  a `raw-source-ok` opt-out in its message.
+
+**Why this needed a phase rather than another local repair.** The same failure happened four times in one session, and
+each time the fix was local to whichever guard broke. Guards here routinely match identifiers as text, so the failure
+is a property of how they are written, not of any one of them.
+
+**The case that justified it had not been hit yet.** `assert "get_session" in src` passes when the identifier survives
+only in a comment — so deleting the code the guard protects leaves the guard green. Every instance so far was the loud
+direction, fixed within minutes. The quiet direction is a guard protecting nothing, and nothing announces it.
+
+**The meta-guard caught itself.** Its first version scanned with a regex and flagged its own file, because the sample
+offender code it constructs to test itself lives inside string literals and a regex cannot distinguish a string
+containing code from code. The tool built to stop that mistake made it. Parsing the AST fixed it, and the parser then
+found four offenders the manual audit had missed — two written the same hour.
+
+**What was left alone, and why.** Phases 241 and 244D repaired their own guards with direct AST parsing, which is
+stronger than `code_of` for what they assert; this phase only guards that they have not regressed to text matching.
+The ~60 files asserting over report output, API bodies and JSON corpus content are untouched — that is data, and
+matching it literally is exactly right.
+
+Backend `implementation.md` 0.13.63 → 0.13.64. No production code changed, no schema change (still v55).

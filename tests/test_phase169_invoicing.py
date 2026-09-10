@@ -62,6 +62,7 @@ from motodiag.shop import (
     update_work_order,
     void_invoice,
 )
+from support.source_guards import code_of
 
 
 # ---------------------------------------------------------------------------
@@ -638,6 +639,6 @@ class TestAntiRegression:
             Path(__file__).parent.parent / "src" / "motodiag" /
             "shop" / "invoicing.py"
         )
-        src = path.read_text(encoding="utf-8")
+        src = code_of(path)
         assert "import anthropic" not in src
         assert "from anthropic" not in src

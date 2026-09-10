@@ -21,6 +21,7 @@ import pytest
 
 from motodiag.knowledge import vehicle_resolver as vr
 from motodiag.media.vision_analysis_pipeline import _format_known_issues
+from support.source_guards import code_of
 
 
 @pytest.fixture
@@ -113,7 +114,7 @@ class TestSpecificityIsRankedNotFiltered:
     def test_severity_orders_within_a_tier_via_the_ssot(self, corpus):
         """Reuses Phase 240C's SEVERITY_RANK_SQL so the expression index serves
         the ordering and the constant is not written twice."""
-        src = inspect.getsource(vr.known_issues_for_vehicle)
+        src = code_of(vr.known_issues_for_vehicle)
         assert "SEVERITY_RANK_SQL" in src
         assert "CASE severity WHEN" not in src, "severity rank inlined instead of imported"
         _, rows = vr.known_issues_for_vehicle("BMW", "", db_path=corpus, limit=50)
