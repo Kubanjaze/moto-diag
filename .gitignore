@@ -49,3 +49,7 @@ htmlcov/
 
 # FUSE leftovers from deleted-but-open files — filesystem artifacts, not content
 .fuse_hidden*
+
+# Phase 244D: timestamped DB backups taken before destructive migrations.
+# 32MB each; never belong in git.
+data/*.backup-*
