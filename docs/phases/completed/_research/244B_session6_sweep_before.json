@@ -1,0 +1,131 @@
+{
+  "_note": "Stored sweep for video 5 / session 6 as it existed BEFORE Phases 244B-244J. Preserved at the operator's request before overwriting: this is the only record of the pre-fix behaviour every phase in that range was measured against. 15 findings, none typed 'leak'; overall_assessment opens by guessing 'Kawasaki ZX-series, Suzuki GSX-R' for a bike the session recorded as a Honda.",
+  "analyzed_at": "2026-09-09T23:52:42.482636+00:00",
+  "findings": {
+    "findings": [
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket tank grip pads (traction pads) installed on both sides of the fuel tank. These are non-OEM rubber/silicone grip panels, commonly used on sport bikes for knee grip during aggressive riding. Appears to be a Kawasaki ZX-series or similar inline-4 sportbike.",
+        "confidence": 0.92,
+        "location_in_image": "Both sides of fuel tank, mid-frame",
+        "severity": "info"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket shorty/adjustable brake lever visible on right handlebar. Non-OEM lever with adjustable reach, appears to be a performance aftermarket unit (possibly Pazzo, Driven, or similar brand).",
+        "confidence": 0.85,
+        "location_in_image": "Right handlebar area, upper frame",
+        "severity": "info"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket clutch lever installed on left handlebar \u2014 appears to be a shorty adjustable lever matching the brake lever, suggesting a matched set of aftermarket controls.",
+        "confidence": 0.8,
+        "location_in_image": "Left handlebar area, upper frame",
+        "severity": "info"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket windscreen/windshield installed \u2014 appears to be a tinted/smoked double-bubble or tall sport screen, replacing the OEM unit. Appears in good condition with no visible cracks.",
+        "confidence": 0.82,
+        "location_in_image": "Upper front fairing area",
+        "severity": "info"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket frame sliders/crash bungs visible on lower frame rails. Black cylindrical sliders mounted to the lower fairing bracket area \u2014 a common track/street modification for crash protection.",
+        "confidence": 0.88,
+        "location_in_image": "Lower frame, beneath engine area",
+        "severity": "info"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Entire motorcycle appears to have been repainted or wrapped in a uniform light gray/silver color. The paint appears fresh and glossy with no visible OEM decals or graphics, suggesting a full respray or vinyl wrap. This could indicate prior damage repair.",
+        "confidence": 0.78,
+        "location_in_image": "Full body \u2014 tank, fairings, frame",
+        "severity": "medium"
+      },
+      {
+        "finding_type": "damage",
+        "description": "Fuel tank cap/filler area shows discoloration and appears weathered or faded compared to the surrounding freshly painted tank surface. The cap ring appears oxidized/aged, inconsistent with a fresh paint job \u2014 may indicate the tank was repainted but the cap was not replaced.",
+        "confidence": 0.72,
+        "location_in_image": "Top of fuel tank, center-right",
+        "severity": "low"
+      },
+      {
+        "finding_type": "wear",
+        "description": "Rear tire visible in later frames shows tread present but image blur limits detailed assessment. Tread pattern appears to be a sport/performance tire. No obvious flat spots, cracking, or extreme wear visible, but a hands-on inspection is recommended.",
+        "confidence": 0.55,
+        "location_in_image": "Rear wheel area, lower right of frame",
+        "severity": "low"
+      },
+      {
+        "finding_type": "wear",
+        "description": "Rider seat shows moderate wear \u2014 the vinyl surface appears slightly faded and worn smooth in the center seating area. No visible tears or cracks, but the seat cover shows use consistent with moderate mileage.",
+        "confidence": 0.7,
+        "location_in_image": "Rider seat, center of bike",
+        "severity": "low"
+      },
+      {
+        "finding_type": "wear",
+        "description": "Passenger seat/rear cowl area shows similar wear to the main seat \u2014 surface appears worn and slightly faded. Consistent with normal use.",
+        "confidence": 0.65,
+        "location_in_image": "Rear seat/cowl area",
+        "severity": "low"
+      },
+      {
+        "finding_type": "corrosion",
+        "description": "Exhaust header pipes visible at the rear of the engine show bronze/golden discoloration consistent with heat cycling and mild surface oxidation. This is typical for used exhaust systems but indicates the bike has been ridden. No heavy rust or pitting visible.",
+        "confidence": 0.75,
+        "location_in_image": "Rear engine area, exhaust headers",
+        "severity": "low"
+      },
+      {
+        "finding_type": "damage",
+        "description": "Multiple loose fasteners/hardware (bolts, screws) observed on the lift table surface next to the motorcycle in later frames. This indicates the bike is partially disassembled or in the process of reassembly. Some fasteners appear to be small body/fairing screws. Technician should verify all fasteners are accounted for and properly torqued.",
+        "confidence": 0.88,
+        "location_in_image": "Lift table surface, left side of motorcycle",
+        "severity": "medium"
+      },
+      {
+        "finding_type": "missing_part",
+        "description": "Rear license plate bracket/tail section hardware appears to be partially removed or absent in some frames. The tail section area shows exposed mounting points consistent with disassembly in progress.",
+        "confidence": 0.6,
+        "location_in_image": "Rear tail section, lower right",
+        "severity": "medium"
+      },
+      {
+        "finding_type": "gauge_reading",
+        "description": "A small amber/orange indicator light is visible illuminated on or near the instrument cluster area in two frames (top-down tank view). This could be a fuel warning light, check engine light, or other warning indicator. The ignition appears to be in the ON position during this inspection. Requires closer investigation to identify which warning lamp is active.",
+        "confidence": 0.65,
+        "location_in_image": "Instrument cluster / top of tank area, center-left",
+        "severity": "high"
+      },
+      {
+        "finding_type": "modification",
+        "description": "Aftermarket bar-end weights or bar-end mirrors appear to have been removed or replaced \u2014 the handlebar ends show aftermarket plugs/caps rather than OEM bar ends.",
+        "confidence": 0.55,
+        "location_in_image": "Handlebar ends, upper frame area",
+        "severity": "info"
+      }
+    ],
+    "overall_assessment": "This appears to be a sport bike (likely a Kawasaki ZX-series, Suzuki GSX-R, or similar inline-4 supersport) currently on a motorcycle lift in a shop environment undergoing service or inspection. The bike has been extensively modified with aftermarket controls, tank grips, windscreen, and frame sliders. Most notably, the entire motorcycle appears to have received a fresh gray/silver respray or vinyl wrap, which warrants investigation into prior accident history or damage repair. The bike is partially disassembled with loose fasteners on the lift table. An amber warning light was observed illuminated in the instrument cluster area during the walkthrough, which is a priority concern requiring identification. No fluid leaks, smoke, or obvious structural damage were detected in the visible frames. Overall cosmetic condition of the fresh paint is good, but the combination of a full respray, aftermarket modifications, and an active warning light suggests this bike has a history that should be thoroughly investigated before return to service.",
+    "suggested_diagnostics": [
+      "Identify and diagnose the amber/orange warning indicator light observed illuminated in the instrument cluster \u2014 pull fault codes with a compatible OBD/diagnostic tool (e.g., KiPass, Healtech GIpro, or dealer tool)",
+      "Perform a full VIN history check to investigate prior accident, salvage, or total-loss records \u2014 the full respray is a significant red flag",
+      "Inspect all fairing and body panel mounting points for signs of prior crash damage, repaired cracks, or misaligned panels hidden under the new paint/wrap",
+      "Verify all loose fasteners on the lift table are catalogued and reinstalled to OEM torque specifications before returning the bike to service",
+      "Perform a complete chain inspection (stretch, lubrication, sprocket wear) \u2014 chain was not clearly visible in the frames provided",
+      "Inspect front and rear brake pads for thickness and glazing \u2014 brake components were partially obscured in available frames",
+      "Check front fork seals for oil weeping \u2014 fork tubes were visible but blur prevented detailed assessment",
+      "Perform a tire pressure check and close-up tread depth measurement on both front and rear tires",
+      "Inspect all cable routing (throttle, clutch, brake lines) for proper routing, kinking, or chafing after reassembly",
+      "Verify coolant level and inspect radiator hoses for condition \u2014 cooling system components were not clearly visible in the provided frames",
+      "Check oil level via sight glass or dipstick and inspect for any leaks around the engine cases"
+    ],
+    "image_quality_note": "Significant motion blur affects the majority of frames \u2014 approximately 60-70% of frames are too blurry for fine-detail analysis. This limits the ability to assess chain condition, brake pad thickness, fork seal condition, and precise gauge readings. Static, close-up photography of key components (chain, brakes, forks, instrument cluster) is strongly recommended for a complete diagnostic assessment.",
+    "frames_analyzed": 22,
+    "model_used": "claude-sonnet-4-6",
+    "cost_estimate_usd": 0.145251
+  }
+}
