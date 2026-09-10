@@ -2438,3 +2438,34 @@ nothing was investigated. A suite that writes to real data and gets away with it
 until the write is a `DELETE` — and Phase 244D's migration removed 5,940 rows.
 
 Backend `implementation.md` 0.13.64 → 0.13.65. No production code changed, no schema change (still v55).
+
+### 2026-09-10 — Phase 244I: the models an entry says it does NOT cover (schema v55 → v56)
+
+**Project-level state this changes:**
+- **Schema v55 → v56.** Migration 056 adds `known_issue_models (issue_id, model)`, backfilled inside its own
+  transaction via the `post_apply` hook Phase 244F introduced.
+- **New `src/motodiag/knowledge/models.py`** — per-make model vocabulary, clause-scoped exclusion, token cleaning,
+  extraction, and the authoritative index rebuild.
+- **`marques.dedupe_contained()` is new and shared**, replacing a naive substring dedup used by `extract_marques`.
+- **`vehicle_resolver.known_models()` returns the derived vocabulary**, and the `model` tier is decided by the
+  junction, with fallbacks for databases below schema 56 and 55.
+
+**The hazard `make` did not have.** Entries name models in order to exclude them. A wrong marque is usually obvious
+to a technician; a wrong *model of the right marque* reads as a machine-specific match and gets acted on. Verified
+corpus-wide: zero indexed models are absent from the covered part of their source value.
+
+**The plan's mechanism was wrong, and this phase's own guard proved it.** v1.0 truncated at the first contrast
+marker. That fails on `"390 Adventure; 390 Duke not established"`, where the excluded model *precedes* the marker.
+Truncation looks correct against every example anyone would pick, because they all put the exclusion last —
+enumerating all fourteen contrast values rather than sampling is what surfaced the one that does not.
+
+**A fixture built from imagination tests the corpus you expected, not the one you have.** Three mutations escaped
+because the hand-built fixture lacked shapes the real corpus contains, and repairing it exposed a defect nothing had
+flagged: `2018+` was entering the model vocabulary as a machine. Phase 244F had the same problem with Triumph and
+Moto Guzzi. Second occurrence, so it is recorded as a pattern rather than an incident.
+
+**A latent defect in Phase 244F was fixed here.** Naive substring dedup drops a shorter name whenever a longer one
+contains it — harmless for marques, since none is a substring of another, and fatal for models where `390 Adventure`
+loses to `390 Adventure R` though both are named and distinct.
+
+Backend `implementation.md` 0.13.65 → 0.13.66. Schema v55 → v56 (migration 056). No API surface change.

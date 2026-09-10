@@ -169,20 +169,23 @@ def known_models(make: Optional[str] = None, db_path: Optional[str] = None) -> l
     """Distinct models, optionally scoped to a make.
 
     The wildcard model is filtered out — see :data:`WILDCARD_MODEL`.
+
+    Phase 244I: this returns the derived model VOCABULARY, not raw column
+    values. It used to hand back whatever the column held — including
+    ``"390 Adventure, 790 Adventure, 890 Adventure — as distinct from 1290
+    Super Adventure"`` as though it were a model name — and Phase 244C uses this
+    as its matching pool. So a real model named only inside a list could not
+    resolve, and the model tier never fired for it. Exactly the defect Phase
+    244F fixed for `known_makes`, one column over.
     """
-    sql = "SELECT DISTINCT model FROM known_issues WHERE model IS NOT NULL AND model != ''"
-    params: tuple = ()
+    from motodiag.knowledge.models import model_vocabulary
+
+    vocab = model_vocabulary(db_path)
     if make:
-        sql += " AND make = ?"
-        params = (make,)
-    try:
-        with get_connection(db_path) as conn:
-            rows = conn.execute(sql + " ORDER BY model", params).fetchall()
-    except sqlite3.OperationalError as exc:
-        if _missing_table(exc):
-            return []
-        raise
-    return [r[0] for r in rows if r[0] != WILDCARD_MODEL]
+        names = vocab.get(make, set())
+    else:
+        names = {m for models in vocab.values() for m in models}
+    return sorted(m for m in names if m != WILDCARD_MODEL)
 
 
 def _resolve_against(field_name: str, given: str, pool: list[str]) -> Resolution:
@@ -305,7 +308,24 @@ def known_issues_for_vehicle(
     # that matters: knowing more must never return less. Precision is preserved
     # by LABELLING each row's tier rather than by excluding rows the data
     # cannot support excluding.
+    # Phase 244I: tier 0 is decided by the MODEL junction, not by column
+    # equality. 221 of 363 distinct model values are lists or prose, so an
+    # equality test reached almost none of them -- and the junction is built
+    # from only the part of each value that states what IS covered, because
+    # entries name models in order to exclude them.
     tier_sql = """
+        CASE
+            WHEN ? IS NOT NULL AND EXISTS (
+                SELECT 1 FROM known_issue_models
+                WHERE known_issue_models.issue_id = known_issues.id
+                  AND known_issue_models.model = ?
+            ) THEN 0
+            WHEN model = ? THEN 1
+            ELSE 2
+        END
+    """
+    # Used when the model junction is absent (a database below schema 56).
+    tier_sql_no_junction = """
         CASE
             WHEN ? IS NOT NULL AND model = ? THEN 0
             WHEN model = ? THEN 1
@@ -334,20 +354,34 @@ def known_issues_for_vehicle(
     # identical to a corpus with nothing to say about the machine. Fall back to
     # matching the column, which is exactly the pre-244F behaviour.
     fallback_sql = (
-        f"SELECT known_issues.*, {tier_sql} AS _match_tier FROM known_issues "
+        f"SELECT known_issues.*, {tier_sql_no_junction} AS _match_tier FROM known_issues "
         "WHERE make = ? "
         f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
     )
     fallback_params: list = [resolved_model, resolved_model, WILDCARD_MODEL, resolved_make]
+
+    # Same shape as the make fallback: a database below schema 56 has no model
+    # junction, and joining a table that is not there would return silence
+    # rather than degrade.
+    make_only_sql = (
+        f"SELECT known_issues.*, {tier_sql_no_junction} AS _match_tier FROM known_issues "
+        "JOIN known_issue_makes ON known_issue_makes.issue_id = known_issues.id "
+        "WHERE known_issue_makes.make IN (?, ?) "
+        f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
+    )
 
     try:
         with get_connection(db_path) as conn:
             try:
                 rows = conn.execute(sql, params).fetchall()
             except sqlite3.OperationalError as exc:
-                if "known_issue_makes" not in str(exc):
+                msg = str(exc)
+                if "known_issue_models" in msg:
+                    rows = conn.execute(make_only_sql, params).fetchall()
+                elif "known_issue_makes" in msg:
+                    rows = conn.execute(fallback_sql, fallback_params).fetchall()
+                else:
                     raise
-                rows = conn.execute(fallback_sql, fallback_params).fetchall()
     except sqlite3.OperationalError as exc:
         # A missing TABLE is a legitimately empty knowledge base -- return
         # nothing. Anything else (a missing column, a syntax error) is a bug in

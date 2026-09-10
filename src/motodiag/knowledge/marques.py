@@ -49,6 +49,43 @@ _PROSE_MARKERS = re.compile(r"\b(have|has|none|listed|adjustments|and)\b", re.I)
 _MAX_MARQUE_LEN = 22
 
 
+def whole_word_spans(needle: str, haystack: str) -> list[tuple[int, int]]:
+    """Every whole-word occurrence of ``needle`` in ``haystack``."""
+    return [
+        (m.start(), m.end())
+        for m in re.finditer(
+            r"(?<![A-Za-z0-9])" + re.escape(needle) + r"(?![A-Za-z0-9])", haystack
+        )
+    ]
+
+
+def dedupe_contained(hits: list[str], haystack: str) -> list[str]:
+    """Drop a match only when EVERY occurrence of it sits inside another match.
+
+    Phase 244I. The obvious version — discard any hit that is a substring of
+    another — loses real machines: "390 Adventure, 390 Adventure R, 890
+    Adventure" drops *390 Adventure* because it sits inside *390 Adventure R*,
+    though both are named and both are distinct bikes. Containment is a property
+    of occurrences, not of strings.
+
+    The naive form was already here in :func:`extract_marques`, latent only
+    because no marque in this corpus is a substring of another. Shared so both
+    call sites are correct.
+    """
+    spans = {h: whole_word_spans(h, haystack) for h in hits}
+    kept = []
+    for hit in hits:
+        for s, e in spans[hit] or [(-1, -1)]:
+            contained = any(
+                other != hit and any(os_ <= s and e <= oe for os_, oe in spans[other])
+                for other in hits
+            )
+            if not contained:
+                kept.append(hit)
+                break
+    return sorted(kept)
+
+
 def _is_multi(value: str) -> bool:
     """Whether a make string is anything other than a single bare marque."""
     return (
@@ -181,7 +218,10 @@ def extract_marques(
         if re.search(r"(?<![A-Za-z])" + re.escape(m) + r"(?![A-Za-z-])", value)
     ]
     # Drop a marque matched only because it sits inside a longer matched one.
-    return sorted({h for h in hits if not any(h != o and h in o for o in hits)})
+    # Phase 244I replaced a naive substring test here: it discarded a shorter
+    # name outright, losing a real one whenever both are named. Latent for
+    # makes, fatal for models.
+    return dedupe_contained(hits, value)
 
 
 def index_makes_for_issue(conn, issue_id: int, make_value: Optional[str],

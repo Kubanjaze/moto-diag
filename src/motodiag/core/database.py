@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 55  # Phase 244F: known_issue_makes junction — LiveWire/Damon were unqueryable (migration 055)
+SCHEMA_VERSION = 56  # Phase 244I: known_issue_models junction — models named to be EXCLUDED (migration 056)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
