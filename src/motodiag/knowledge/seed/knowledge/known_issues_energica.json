@@ -1,0 +1,313 @@
+[
+  {
+    "title": "Energica is not one motor — PMAC, HSM and PMASynRM across three generations, and the brand's own pages disagree",
+    "description": "Drawn from the Energica Eva/Ego owner's manual (Cod. ENF003100 Rev. 02, 02/2018), Energica's own model spec tables including archived captures of energicamotor.com, and the current Technology page. Treating 'an Energica' as one powertrain is the first mistake available on this marque. The pre-EMCE Ego and Eva, roughly 2015 to 2020, are described by the manual as driven by a permanent-magnet synchronous (PMAC), oil-cooled motor, and the 2016 model page lists MOTOR as PERMANENT MAGNET AC (PMAC), OIL COOLED. The EMCE generation — Ego+, Eva Ribelle, EsseEsse9+, announced 2021 and shipping from around MY2022 — is specified as HSM (Hybrid Synchronous Motor) Liquid-Cooled 3-Phase, with motor and inverter sharing a liquid-cooling system; on these machines 'oil-cooled' is simply wrong. The Experia is specified as a Permanent Magnet Assisted Synchronous Reluctance Motor, which is not a plain PMSM at all: torque comes substantially from reluctance and the rotor uses flux barriers rather than a simple magnet array. Note also that Energica contradicts itself — the current Technology page presents PMASynRM as the marque's motor across the whole range while the current Ego, Eva Ribelle and EsseEsse9 model pages on the same site still say HSM.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "what motor does this energica have",
+      "is the energica motor oil cooled",
+      "energica motor spec",
+      "energica pages disagree on the motor"
+    ],
+    "causes": [
+      "A single powertrain assumed across a marque that changed motor type twice",
+      "'Oil-cooled' carried from the pre-2021 machines onto the EMCE bikes",
+      "The Experia's reluctance machine treated as a plain PMSM",
+      "Energica's own Technology page and model pages disagreeing on motor type"
+    ],
+    "fix_procedure": "1. Establish the generation before anything else: pre-EMCE, EMCE, or Experia. The model name alone does not settle it, because Ego spans the change. 2. Match the cooling arrangement to the generation — a separate motor oil circuit on the early bikes, a shared motor-and-inverter liquid loop from EMCE. 3. On an Experia, do not apply PMSM assumptions: the flux-barrier rotor behaves differently and any diagnostic keyed on magnet-flux harmonics will be wrong. 4. Where Energica's own pages disagree, prefer the model page for the specific machine over the marque-level Technology page, and record which you used. 5. Read the spec from the document for the machine in hand; this entry states what each generation's own source says and does not reconcile the contradiction for you.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "No Energica document states a pole or pole-pair count — do not compute a motor frequency from one",
+    "description": "Drawn from an exhaustive search of Energica's published material: the 126-page Eva/Ego owner's manual contains zero occurrences of the string 'pole'; the archived 2016, 2022 and 2023 energicamotor.com spec tables, the current Ego, Eva Ribelle, EsseEsse9 and Experia spec tables, and the current Technology page state none either. Energica publishes nominal voltage, an rpm ceiling, power, torque and peak efficiency, and never a pole count. The Technology page describes rotor construction in words — flux barriers, stator laminations, copper windings — with no number, and its decorative diagram showing four N/S label pairs is an illustration, not a specification. No secondary coverage of the EMCE launch states one either, so there is not even a magazine figure to attribute. This entry exists because the absence is the useful fact: a motor-whine frequency computed from an invented pole count is a fabricated expectation, and two further obstacles sit behind it — audible whine is dominated by slot-passing and PWM switching orders that depend on unpublished stator slot count and carrier frequency, and motor rpm is not derivable from road speed because the internal reduction ratio is unpublished too.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "energica pole pairs",
+      "motor whine frequency for an energica",
+      "expected motor frequency electric bike"
+    ],
+    "causes": [
+      "A pole-pair count assumed or carried across from another machine",
+      "A decorative rotor diagram read as a specification",
+      "Electrical fundamental confused with audible whine, which depends on unpublished slot and carrier data"
+    ],
+    "fix_procedure": "1. Do not state or compute an expected motor frequency for an Energica from a pole count. None is published and none should be inferred. 2. If a frequency-based approach is genuinely needed, note that the electrical fundamental is not the audible whine — whine is dominated by slot-passing and switching orders whose inputs Energica does not publish. 3. Do not derive motor rpm from wheel speed: these machines drive through a reduction gearbox to a chain final drive and the internal ratio is unpublished. 4. Use the qualitative markers instead — a carrier tone that goes silent points at a drive-stage or inverter shutdown, a gear-whine shift under load points at bearing wear in the reduction gear, and a continuous contactor click is a stuck contactor. 5. Record that the figure is unestablished rather than leaving a note that implies one exists.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica publishes 110 fault codes in standard SAE format — and a generic scan tool reads them",
+    "description": "Drawn from the Energica Eva/Ego owner's manual (Cod. ENF003100 Rev. 02, 02/2018), printed pages 77 to 83, and from Energica's own COMPONENT AND DIAGNOSIS INFORMATION sheet (Rev. 15/05/2018) produced for the EU repair-information duty. This is the finding that most distinguishes Energica from the other electric marques in this corpus. The manual carries a section headed 'Diagnostic codes' whose table columns read Label (DTC), Description, MIL, listing 110 codes with plain-English descriptions. The format is standard SAE J2012: a single letter P, B, C or U followed by four alphanumeric characters, with no underscore, word prefix or separator — 65 powertrain, 17 chassis, 15 body, 13 network. Real examples: P0562 VCU MAIN SUPPLY UNDERVOLTAGE; P1010 HV+ CONTACTOR SHORT CIRCUIT; C1000 LEAK DETECTED BETWEEN HV CIRCUIT AND FRAME; U0110 DRIVE GENERIC ERROR. And the diagnosis sheet states the machines support OBD Modes 1, 2, 3, 4 and 9 — Mode 3 reads stored codes, Mode 4 clears them — so an ordinary OBD-II scan tool retrieves and clears them. Note two traps: several codes carry a hex letter in the second position (P0A08, P0A05, P0A02), which a naive four-digit matcher misses; and many are manufacturer-specific P1xxx/B1xxx/C1xxx/U1xxx values whose meaning comes from Energica's table, not from a generic lookup.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "can i scan an energica with obd2",
+      "energica fault code list",
+      "what does p1010 mean on an energica",
+      "reading codes on an electric bike"
+    ],
+    "causes": [
+      "An electric motorcycle assumed to need a proprietary tool",
+      "A four-digit code matcher missing the hex-letter codes such as P0A08",
+      "Manufacturer-specific P1xxx codes looked up against a generic OBD table"
+    ],
+    "fix_procedure": "1. Try a generic OBD-II scan tool. Unlike the other electric marques in this corpus, Energica implements generic OBD services and Mode 3 returns stored codes. 2. Look the code up in the owner's manual's diagnostic-code table, which lists all 110 with descriptions — a manufacturer-specific P1xxx will not resolve against a generic database. 3. Watch for codes with a letter in the second position; if your tool or script filters on four digits it will silently drop them. 4. Record every code before clearing anything, and note that Mode 4 clears them. 5. Where the manual is not to hand, see the entry on Energica's documentation availability — the current site publishes no manual, so a copy may need to be sourced from an archive.",
+    "parts_needed": [
+      "Generic OBD-II scan tool",
+      "Energica owner's manual for the diagnostic-code table"
+    ],
+    "estimated_hours": 0.5,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "The rider can read Energica codes with no tool at all, and clearing one takes four power cycles",
+    "description": "Drawn from the Energica Eva/Ego owner's manual (Cod. ENF003100 Rev. 02, 02/2018). Before any tool is connected, the machine will show its own faults. A yellow diagnostic-warning icon appears at the bottom right of the dash, and the Diagnostics screen reached from the menu displays an image of the motorcycle with the affected area highlighted together with the relative diagnostic code. Alongside the numeric codes, a separate table of plain-language dash messages appears — including instructions carrying an immediate action, such as a leakage warning on the high-voltage circuit that instructs the rider to turn the vehicle off immediately, an invalid BMS status message directing the rider to service, and a family of limp-mode messages. The documented owner procedure on the red FAULT light is: stop, read the code in the diagnostics menu, turn the key off, wait five seconds and turn it back on. The MIL stays lit while the fault persists and, once resolved, extinguishes only after the motorcycle has been switched off and back to GO state four times — so a light still showing after a successful repair is not necessarily an unresolved fault.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "fault light still on after repair",
+      "energica dash warning icon",
+      "how does the owner read a code",
+      "limp mode message on an energica"
+    ],
+    "causes": [
+      "A MIL still lit after a successful repair, before the required power cycles",
+      "Dash plain-language messages treated as advisory when some carry an immediate action",
+      "The on-dash diagnostics screen not used because a tool was assumed necessary"
+    ],
+    "fix_procedure": "1. Read the code off the dash first — the diagnostics menu highlights the affected area and shows the code, with no tool needed. 2. Treat the plain-language messages as instructions where they read as instructions: a high-voltage leakage message tells the rider to switch off immediately and that is not advisory. 3. After a repair, do not conclude the fault persists from a lit MIL alone — the light extinguishes only after four off-and-back-to-GO cycles. Perform them before re-diagnosing. 4. Record the code and the message text separately; they are different tables and both are useful. 5. On any leakage or BMS message, apply the HV safety entries before touching the machine.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica exposes EV live data through standard OBD PIDs, not a proprietary channel",
+    "description": "Drawn from Energica's COMPONENT AND DIAGNOSIS INFORMATION sheet (Rev. 15/05/2018). The machines publish a Mode 1 and Mode 2 PID list that uses standard identifiers for electric-vehicle data rather than a manufacturer-only channel: PID 51 Fuel Type declares value 8 for Electric, PID 5B reports hybrid battery pack remaining life scaled 0 to 100 percent, and PID 42 reports control module voltage scaled 0 to 65.535 V. The practical consequence is that a shop with an ordinary scan tool can see pack remaining life and module voltage on an Energica without dealer software — which is not true of the other electric marques covered in this corpus. The diagnostic connector itself is documented per model in the same sheet, and the Eva owner's manual's fuse-box key lists an OBD port sharing an auxiliary-circuit fuse at position 5 with the ChargeManager and ConnectivityHub, so a dead OBD port may be a blown shared fuse rather than a network fault.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "live data from an energica",
+      "obd port dead on an energica",
+      "pack state of health without dealer tool",
+      "where is the energica obd connector"
+    ],
+    "causes": [
+      "EV live data assumed to need proprietary software",
+      "A dead OBD port diagnosed as a network fault when a shared auxiliary fuse has blown",
+      "Connector location hunted for rather than read from the diagnosis sheet"
+    ],
+    "fix_procedure": "1. Connect a generic tool and read the standard PIDs before assuming dealer software is needed — fuel type, pack remaining life and control module voltage are all standard identifiers on these machines. 2. Find the connector from the manufacturer's component-and-diagnosis sheet, which documents it per model, rather than searching. 3. If the port is dead, check the auxiliary-circuit fuse it shares with the ChargeManager and ConnectivityHub before suspecting the network; confirm the position and rating against the fuse key for the specific model and year rather than from this entry. 4. Record which PIDs responded — a partial response is itself diagnostic. 5. Note that pack remaining life is a percentage scale, not a capacity figure, and should not be quoted to a customer as one.",
+    "parts_needed": [
+      "Generic OBD-II scan tool"
+    ],
+    "estimated_hours": 0.4,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica's service intervals exist but are generation-specific — and the current schedule is unpublished",
+    "description": "Drawn from the Energica Eva/Ego owner's manual (2016 model year applicability) and from current Energica model pages. This entry deliberately prints no interval figure, and the reason is the finding. The pre-EMCE manual does carry a maintenance table with a first service and repeating steps thereafter, and it services three distinct fluids on one machine — transmission oil, motor oil with a filter to clean, and coolant — which is itself worth knowing, because a machine described as 'oil-cooled' also has a separate coolant loop. Those intervals apply to pre-EMCE machines only. For the EMCE bikes, what exists is promotional copy on the Ego and EsseEsse9 model pages describing lengthened transmission-oil and coolant intervals — marketing text, not a published maintenance schedule. Energica currently publishes no service schedule at all: the Owners page states that manuals and owner resources are being prepared. So the honest position is that intervals exist per generation, the pre-EMCE ones are documented in a manual that is no longer distributed by the manufacturer, and the EMCE ones have never been published as a schedule.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "energica service interval",
+      "when is an energica due for service",
+      "energica maintenance schedule",
+      "which fluids does an energica need"
+    ],
+    "causes": [
+      "Pre-EMCE intervals applied to an EMCE machine, or the reverse",
+      "Marketing copy about lengthened intervals mistaken for a published schedule",
+      "An oil-cooled motor assumed to mean no separate coolant loop"
+    ],
+    "fix_procedure": "1. Establish the generation before quoting any interval. This entry states no figure for any generation on purpose. 2. For a pre-EMCE machine, read the interval from that machine's own owner's manual; note it services transmission oil, motor oil with a filter, and coolant as three separate items. 3. For an EMCE machine, treat the model page's interval claims as marketing rather than a schedule, and say so to the customer rather than quoting them as manufacturer instruction. 4. Contact the manufacturer's service address for a current schedule; the Owners page directs riders there. 5. Record on the job card which document the interval came from and its date — on this marque that provenance is unusually likely to be questioned later.",
+    "parts_needed": [
+      "Energica owner's manual for the machine's generation"
+    ],
+    "estimated_hours": 0.4,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica pack capacity grew across generations, and cycle life is rated the same way throughout",
+    "description": "Drawn from Energica's own model spec tables, including archived captures of energicamotor.com and the current Ego, Eva Ribelle, EsseEsse9 and Experia pages. The pack grew across generations: the EMCE machines — Ego+, Eva Ribelle and EsseEsse9+ — carry 21.5 kWh maximum and 18.9 kWh nominal, and the Experia carries 22.5 kWh maximum and 19.6 kWh nominal. Every generation with a published spec table is rated 1200 cycles to 80 percent capacity at 100 percent depth of discharge, which is a consistent basis a shop can use when discussing expected life. The early pack capacities are not printed here: the 2016 figure appears in an archived page rather than a current one, and an intermediate pack is referenced only in passing with no separately documented cycle rating. Note that maximum and nominal are both published and are not interchangeable — quoting the maximum as the usable figure overstates the machine.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "energica battery capacity",
+      "how long does an energica pack last",
+      "nominal or maximum kwh",
+      "expected cycle life electric bike"
+    ],
+    "causes": [
+      "Maximum pack capacity quoted as the usable nominal figure",
+      "Capacity assumed constant across a range that changed generation twice",
+      "Cycle rating quoted without its depth-of-discharge basis"
+    ],
+    "fix_procedure": "1. Identify the generation and read the capacity from that machine's own spec table. 2. Quote nominal, not maximum, when discussing usable capacity, and say which you are quoting. 3. When discussing expected life, give the cycle rating with its basis — cycles to 80 percent capacity at 100 percent depth of discharge — because a bare cycle count is meaningless without it. 4. Do not carry an early-machine capacity figure forward from memory; the archived pages are the source for those and this entry does not print them. 5. Where a customer's expectation was set by a maximum figure, correct it gently and in writing.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica drives through a chain, and the ratio differs by model",
+    "description": "Drawn from Energica's own model spec tables, including an archived 2016 capture and the current model pages. Unlike the belt drives common on other electric motorcycles, every Energica road model uses a chain final drive, and the ratio and chain size vary by model — the Ego is specified with a 16/44 525 O-ring chain and the Experia with a 16/52 520 O-ring chain. Two consequences follow. A shop expecting a belt will not have the right consumables or the right service expectation: a chain needs cleaning, lubrication and adjustment on a cadence a belt does not. And motor rpm cannot be derived from road speed, because the drive passes through a reduction gearbox whose internal ratio Energica does not publish, so the chain ratio alone does not close that calculation.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "does an energica have a belt or chain",
+      "energica chain size",
+      "chain ratio for an experia",
+      "chain maintenance on an electric bike"
+    ],
+    "causes": [
+      "A belt drive assumed because the machine is electric",
+      "One model's chain specification carried across to another",
+      "Motor rpm inferred from road speed without the unpublished reduction ratio"
+    ],
+    "fix_procedure": "1. Confirm the machine uses a chain — every Energica road model does — and stock the consumables accordingly. 2. Read the chain size and sprocket ratio from the spec table for the specific model; they differ across the range. 3. Apply normal chain service — clean, lubricate, check tension and alignment — on the schedule the machine's own documentation gives, noting the caveat in the service-interval entry about what is currently published. 4. Do not compute motor rpm from road speed and the chain ratio; the reduction gearbox ratio is unpublished and the calculation does not close. 5. Inspect sprockets as well as the chain; a worn sprocket on a high-torque electric drivetrain will destroy a new chain quickly.",
+    "parts_needed": [
+      "Chain and sprockets to the specification for the model",
+      "Chain lubricant"
+    ],
+    "estimated_hours": 0.6,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "DC fast charging is standard on an Energica, and the AC charger rating differs by model",
+    "description": "Drawn from Energica's own model and technology pages, including archived captures. Energica claims to be the first electric motorcycle equipped with DC fast charging, and provides Level 1 at 110 V, Level 2 at 240 V and DC fast charge as standard, with a claimed 0 to 80 percent charge within 40 minutes, in both CCS Combo J1772 and CHAdeMO configurations depending on market. The onboard AC charger conforms to SAE J1772 and IEC 62196-2. Its power rating differs between models within the range, which is the practical trap: two Energicas that look alike do not necessarily accept AC at the same rate, so a customer comparing charge times between machines is not necessarily describing a fault. The specific rating is not printed here because it differs by model and should be read from that machine's own spec table.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "energica charges slower than another",
+      "dc fast charging on an energica",
+      "chademo or ccs on an energica",
+      "ac charge rate for an energica"
+    ],
+    "causes": [
+      "Onboard AC charger rating differing between models in the range",
+      "CCS and CHAdeMO configurations differing by market",
+      "A slower AC charge on one machine diagnosed as a fault by comparison with another"
+    ],
+    "fix_procedure": "1. Establish the model and its market before assessing any charging complaint — the DC connector standard and the AC charger rating both vary. 2. Read the machine's own AC rating from its spec table rather than comparing against another Energica; this entry does not print a rating for that reason. 3. Confirm which DC standard the machine carries before sending a customer to a fast charger. 4. Treat a difference in AC charge rate between two Energicas as expected until the specifications say otherwise. 5. Where a DC session fails, separate the machine, the cable and the charging station before condemning any of them.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica's documentation and dealer network have both collapsed — verify before promising anything",
+    "description": "Drawn from Energica's current Owners and Warranty pages and its current dealer listing, with the corporate history a matter of public record: the company entered judicial liquidation in October 2024 and was bought out of it, and the site is now operated by ENERGICA PTE LTD. What this means for a workshop is concrete and immediate. The manufacturer currently publishes no owner's manual, no service schedule and no warranty document: the Owners page states that manuals, software updates and owner resources are being prepared and directs riders to a service email address, and the Warranty page states that full documentation is being updated. The dealer listing shows 7 authorised locations across Europe and Asia Pacific and none at all in North America, against the 23 United States dealers across 13 states the company advertised in 2023. Separately observed and not stated on those pages: the main host's TLS certificate has expired and the shop subdomain no longer resolves, so even archived material can be hard to reach. A shop taking on an Energica should establish parts and warranty reality before quoting, not after.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "can i still get energica parts",
+      "energica warranty claim",
+      "no energica dealer near me",
+      "is energica still in business"
+    ],
+    "causes": [
+      "Parts and warranty support assumed from the machine's age rather than the manufacturer's current state",
+      "Documentation assumed retrievable from the manufacturer when it is not currently published",
+      "A dealer network that has contracted sharply since the machine was sold"
+    ],
+    "fix_procedure": "1. Before quoting any Energica work that depends on parts, establish availability — do not assume a parts pipeline exists. 2. Do not promise a warranty outcome. The manufacturer states its warranty documentation is being updated, and the corporate entity has changed. 3. Source the service documentation before starting: it is not currently published by the manufacturer, so an archived or third-party copy may be the only route, and its provenance should be recorded. 4. Tell the customer the position plainly and in writing before work begins. This is a commercial risk conversation, and having it late is worse than having it early. 5. Check the current dealer listing rather than relying on a network that existed when the machine was sold.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual",
+    "dtc_codes": []
+  },
+  {
+    "title": "Energica exposes two independent data paths, and owners have decoded the OBD one",
+    "description": "Drawn from owner-developer reporting, and labelled as such because Energica publishes none of this. An Energica owner-developer established that the machines carry two independent data paths: a built-in Bluetooth LE link, which is what the official My Energica app uses, and the OBD-II connection reachable with a cheap ELM327-chipset dongle. Writing in early 2022 he judged the OBD-II path easier to connect to and expected it to expose more data once fully decoded, though at that point roughly half of the Bluetooth dataset had been decoded from it, with battery temperature and cell balance among the more promising fields. He published Android and iOS applications built on that work. For a workshop the useful point is that the two paths are independent: an app that has stopped reporting does not imply the OBD path is dead, and vice versa, so a connectivity complaint should be tested on both before anything is condemned.",
+    "make": "Energica",
+    "model": "Energica Ego, Eva/Eva Ribelle, EsseEsse9, Experia",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "my energica app not connecting",
+      "bluetooth or obd on an energica",
+      "can i log energica data",
+      "app works but scan tool does not"
+    ],
+    "causes": [
+      "The Bluetooth app path and the OBD-II path assumed to share a failure mode",
+      "Owner-decoded data fields treated as a manufacturer specification"
+    ],
+    "fix_procedure": "1. Test both paths before concluding anything about connectivity — Bluetooth LE and OBD-II are independent on these machines. 2. For live data a generic ELM327-class dongle reaches the OBD path; see the standard-PID entry for what is exposed there. 3. Treat owner-decoded fields as owner work, not specification: decoding was partial and the fields are not published by Energica. 4. Do not present data from a community application to a customer as a manufacturer reading. 5. Forum tip: owners report the OBD-II path is the easier of the two to connect to and the more promising for battery temperature and cell-balance data, but that the decoding was incomplete at the time of writing.",
+    "parts_needed": [
+      "ELM327-class OBD-II dongle"
+    ],
+    "estimated_hours": 0.4,
+    "source": "forum",
+    "dtc_codes": []
+  },
+  {
+    "title": "An Energica can become an orphaned machine mid-repair — record the risk before you start",
+    "description": "Drawn from owner reporting, and labelled as such. An Experia owner describes a tail subframe structural failure which was repaired, after which the motor failed unexpectedly and completely. The manufacturer denied the warranty claim citing frame modifications, offered a replacement motor with dealer labour on top, and then entered bankruptcy mid-claim — leaving the owner describing the machine as an orphaned product with no parts pipeline. The figures quoted in that account are deliberately not reproduced here: they are one owner's quotation from a company that has since changed hands, and a shop repeating them as a price would be quoting a number that no longer means anything. What transfers is the shape of the risk. A structural repair can be cited against a later unrelated warranty claim; a warranty position can change underneath a claim in progress; and on this marque a parts pipeline cannot be assumed. None of that makes the machine unserviceable, but all of it should be said to the customer before work starts rather than discovered during it.",
+    "make": "Energica",
+    "model": "Energica Experia",
+    "year_start": 2022,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "energica warranty denied",
+      "motor failed after a frame repair",
+      "no parts for my energica",
+      "should i repair this energica"
+    ],
+    "causes": [
+      "A prior structural repair cited against a later unrelated warranty claim",
+      "A warranty position changing while a claim is open, following a corporate change",
+      "A parts pipeline assumed to exist for a marque that has been through liquidation"
+    ],
+    "fix_procedure": "1. Before starting any significant Energica repair, establish parts availability and put the answer in writing. 2. Where the machine has had prior structural or frame work, record it and flag to the customer that it may affect a later warranty position — that is what one owner reports happening. 3. Do not quote parts or labour figures from owner accounts; this entry deliberately reproduces none, because the company that issued them has changed hands. 4. Give the customer the commercial picture before the technical one on this marque: whether the repair is worth doing is a fair question and it is theirs to answer. 5. Forum tip: owners report warranty claims being denied on grounds of prior modification and then overtaken by the company's insolvency, so document the machine's condition and the agreed scope carefully before starting.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "forum",
+    "dtc_codes": []
+  }
+]

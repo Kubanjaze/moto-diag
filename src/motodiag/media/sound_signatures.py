@@ -120,25 +120,43 @@ _ENGINE_CYLINDERS: dict[EngineType, int] = {
 def motor_rpm_to_whine_frequency(motor_rpm: float, pole_pairs: int) -> float:
     """Calculate dominant spectral peak for an electric motor.
 
-    Phase 120: for a permanent-magnet synchronous electric motor the dominant
-    audible frequency is the motor whine fundamental — electrical frequency
-    of the stator windings, given by motor_RPM × pole_pairs / 60.
+    Returns the ELECTRICAL fundamental of the stator windings,
+    motor_RPM × pole_pairs / 60. The arithmetic is correct and the function is
+    kept for that.
 
-    Typical motorcycle traction motors have 4-8 pole pairs. Zero SR/F uses
-    4 pole pairs; LiveWire One uses 8. Higher pole counts mean higher whine
-    frequency for the same mechanical RPM.
+    PHASE 244 WARNING — do not use this to predict audible motor whine, and do
+    not supply a per-make pole-pair count from this project. Four findings:
+
+    1. NO PER-MAKE POLE COUNT IS ESTABLISHED. The per-make figures that stood
+       in this docstring (Zero SR/F 4, LiveWire One 8, Energica 8) carried no
+       source. For Energica the search was exhaustive and came back empty: the
+       126-page owner's manual contains zero occurrences of "pole", as do the
+       archived 2016/2022/2023 spec tables, the current spec tables and the
+       technology page — and no secondary coverage asserts one either. Those
+       numbers were withdrawn rather than re-sourced.
+    2. IT IS THE WRONG PHYSICS FOR THE SYMPTOM. Audible whine on these machines
+       is dominated by slot-passing and PWM switching orders, which depend on
+       stator slot count and inverter carrier frequency. Neither is published
+       by any make examined. A correct pole-pair count would still not give the
+       audible whine fundamental.
+    3. MOTOR TYPE VARIES BY GENERATION, so a single per-make constant cannot be
+       right. Energica alone is oil-cooled PMAC pre-2021, liquid-cooled HSM on
+       the EMCE bikes, and a PMASynRM on the Experia — a reluctance machine
+       whose flux-barrier rotor has different airgap harmonic content, which is
+       precisely what a whine-signature tool keys on.
+    4. MOTOR RPM IS NOT DERIVABLE FROM WHEEL SPEED. These machines drive
+       through a reduction gearbox to a chain final drive, and the internal
+       ratio is not published, so a road-speed observation cannot be converted
+       into the motor_rpm this function needs.
 
     Args:
-        motor_rpm: Motor shaft speed in revolutions per minute (pre-reduction).
-        pole_pairs: Number of pole pairs (magnetic pole count ÷ 2).
+        motor_rpm: Motor shaft speed in rpm (pre-reduction). The caller must
+            establish this from a source; it cannot be inferred from wheel speed.
+        pole_pairs: Pole pairs (magnetic pole count ÷ 2). The caller must supply
+            a sourced value; this project establishes none for any make.
 
     Returns:
-        Motor whine fundamental frequency in Hz.
-
-    Examples:
-        Zero SR/F at 3000 motor RPM, 4 pole pairs: 3000 × 4 / 60 = 200 Hz
-        LiveWire One at 3000 motor RPM, 8 pole pairs: 3000 × 8 / 60 = 400 Hz
-        Either at 7500 motor RPM, 4 pole pairs: 7500 × 4 / 60 = 500 Hz
+        Electrical fundamental frequency in Hz — NOT the audible whine.
     """
     return motor_rpm * pole_pairs / 60.0
 
@@ -297,8 +315,10 @@ SIGNATURES: dict[EngineType, SoundSignature] = {
     EngineType.ELECTRIC_MOTOR: SoundSignature(
         engine_type=EngineType.ELECTRIC_MOTOR,
         idle_rpm_range=(0, 0),  # No idle — silent when stationary
-        # Fields reinterpreted as motor whine fundamental (motor_RPM × pole_pairs / 60).
-        # Assumes 4 pole pairs (Zero SR/F); LiveWire One (8 pole pairs) doubles these.
+        # Phase 244: the pole-pair assumption that stood here was unsourced and
+        # is withdrawn. See motor_rpm_to_whine_frequency for why a per-make pole
+        # count is neither established nor sufficient. The bands below are kept
+        # as ORDER-OF-MAGNITUDE listening guidance, not computed predictions.
         # "Low speed" = 3000 motor RPM (~15 mph); "5000 RPM" slot = 7500 motor RPM (~40 mph).
         firing_freq_idle_low=motor_rpm_to_whine_frequency(3000, 4),   # 200 Hz
         firing_freq_idle_high=motor_rpm_to_whine_frequency(4500, 4),  # 300 Hz
@@ -316,10 +336,20 @@ SIGNATURES: dict[EngineType, SoundSignature] = {
         ],
         cylinders=0,
         notes="Electric motors have no combustion firing frequency. The firing_freq_* fields "
-              "are reinterpreted as motor whine fundamental = motor_RPM × pole_pairs / 60. "
-              "Common motorcycle traction motors: Zero SR/F and LiveWire One use permanent-magnet "
-              "synchronous motors (4 and 8 pole pairs respectively); Energica uses an oil-cooled PMSM "
-              "(8 pole pairs). Key diagnostic markers: inverter carrier tone indicates IGBT health "
+              "are reinterpreted as motor whine. Phase 244 WITHDREW the pole-pair formula and "
+              "the per-make pole counts that stood here. Four separate defects: (1) the "
+              "counts were unsourced -- Energica states no pole or pole-pair figure in its "
+              "owner's manual, its archived or current spec tables, or its technology page, "
+              "and no secondary coverage asserts one either; (2) the motor type was wrong for "
+              "most of the range -- Energica is oil-cooled PMAC only pre-2021, liquid-cooled "
+              "HSM on the EMCE bikes, and a PMASynRM on the Experia, which is a reluctance "
+              "machine rather than a plain PMSM; (3) motor_RPM x pole_pairs / 60 yields the "
+              "ELECTRICAL fundamental, not audible whine, which is dominated by slot-passing "
+              "and PWM switching orders depending on stator slot count and carrier frequency "
+              "-- neither published by any of these makes; and (4) motor RPM is not derivable "
+              "from wheel speed anyway, since these machines drive through an unpublished "
+              "reduction ratio to a chain final drive. No expected-frequency figure is stated "
+              "here until one can be sourced. Key diagnostic markers: inverter carrier tone indicates IGBT health "
               "(silence = driver fault or inverter shutdown); gear whine frequency shift under load "
               "indicates bearing wear in the single-speed reduction gear; regen contactor clicking "
               "is normal during brake lever pull, a continuous click is a stuck contactor.",

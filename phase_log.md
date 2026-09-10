@@ -2172,3 +2172,28 @@ budget on the doubt.
 **No debt.** Zero refuters died, so no claim is unverified, and the completeness gap that dogged 242 does not recur here.
 
 Backend `implementation.md` 0.13.56 → 0.13.57. No schema change (still v53), no API surface change, no migration.
+
+### 2026-09-09 — Phase 244: Energica, and two unsourced claims removed from source code
+
+**Project-level state this changes:**
+- **New knowledge file** `known_issues_energica.json` — 12 entries, 10 `service-manual` and 2 `forum`. Corpus 958 → 970;
+  four user docs moved with it.
+- **`src/motodiag/engine/fault_codes.py` corrected.** The `ELECTRIC_HV` namespace previously claimed Zero, LiveWire and
+  Energica emit `HV_`/`BMS_`-prefixed codes. No manufacturer examined emits it. The namespace is kept — it is a
+  serviceable internal convention and Phase 111 depends on it — but is now documented as internal, with what each make
+  actually publishes recorded beside it. **The matcher itself is unchanged**; only the attribution was wrong.
+- **`src/motodiag/media/sound_signatures.py` corrected.** The per-make pole-pair counts and the whine formula they fed
+  are withdrawn. `motor_rpm_to_whine_frequency()` is kept — the arithmetic is right — but its docstring now states that
+  it returns the electrical fundamental, not audible whine, and that this project establishes no pole count for any make.
+- **Energica is the one electric make a generic OBD-II tool can read.** It publishes 110 SAE J2012 codes and supports
+  OBD Modes 1-4 and 9. That is a materially different diagnostic posture from Zero (owner's-manual table) and LiveWire
+  (Digital Technician II), and it is worth knowing before quoting.
+
+**A method finding worth carrying forward.** Four of five guards were vacuous on first write, each anticipating the wrong
+FORM of the failure: currency symbols where the source used codes, an underscore where the text used a bare prefix, a
+line where the claim spanned a block, presence-of-citation where the question was attribution-of-figure. Writing guards
+before the research is still right — one of them caught a function my own grep had hidden — but **a guard authored
+before its evidence has only ever been tested against the failure mode its author imagined, and must be re-mutated once
+the evidence lands.**
+
+Backend `implementation.md` 0.13.57 → 0.13.58. No schema change (still v53), no API surface change, no migration.
