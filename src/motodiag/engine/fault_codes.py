@@ -45,7 +45,9 @@ class CodeFormat:
     TRIUMPH_TUNEECU = "triumph_tuneecu"  # Triumph TuneECU blink/hex codes
     APRILIA_DIAG = "aprilia_diag"       # Aprilia diagnostic (Marelli-based, DTC-xxxx format)
     # Electric bike format (Phase 111 addition)
-    ELECTRIC_HV = "electric_hv"         # Zero/LiveWire/Energica HV battery/motor DTCs (HV_, MC_, BMS_ prefixes)
+    # Phase 244: an INTERNAL project namespace, not a manufacturer format.
+    # No manufacturer examined emits it -- see the note above classify_code.
+    ELECTRIC_HV = "electric_hv"         # internal HV_/MC_/BMS_/INV_/CHG_/REG_ namespace
     UNKNOWN = "unknown"
 
 
@@ -190,8 +192,31 @@ def classify_code(code: str, make: Optional[str] = None) -> tuple[str, str]:
 
     # --- Electric bike formats (Phase 111) ---
 
-    # Electric HV namespaces: HV_, MC_, BMS_, INV_, CHG_ prefixes
-    # Used by Zero, LiveWire, Energica for HV battery / motor controller / inverter faults
+    # Electric HV namespace: HV_, MC_, BMS_, INV_, CHG_, REG_ prefixes.
+    #
+    # Phase 244 correction. This comment previously read "Used by Zero,
+    # LiveWire, Energica for HV battery / motor controller / inverter
+    # faults". That attribution was wrong for all three makes, and no
+    # source was ever cited for it. What each make actually emits:
+    #   Zero      -- a numbered table in the owner's manual (Phase 242);
+    #                no machine-readable vocabulary is published.
+    #   LiveWire  -- dash-readable codes whose meanings require Digital
+    #                Technician II or the electrical diagnostic manual
+    #                (Phase 243).
+    #   Energica  -- standard SAE J2012 P/B/C/U codes: 110 of them are
+    #                published in the owner's manual, and the machines
+    #                support OBD Modes 1-4 and 9 under EU Reg. 168/2013,
+    #                so a generic scan tool reads them (Phase 244).
+    #
+    # The likely origin of the error: "HV" and "BMS" DO appear in
+    # Energica's table -- in the DESCRIPTION column, never the code label.
+    # P1010 is "HV+ CONTACTOR SHORT CIRCUIT"; P0516 is "BMS TEMPERATURE
+    # SENSOR SHORT CIRCUIT FAULT". Pattern-matching on description text
+    # yields prefixes no manufacturer uses.
+    #
+    # The namespace is kept: it is a serviceable INTERNAL convention for
+    # categorising HV faults, and Phase 111 depends on it. It is simply
+    # not a manufacturer format and must not be described as one.
     if re.match(r'^(HV|MC|BMS|INV|CHG|REG)_[0-9A-Z]{2,5}$', code):
         prefix = code.split("_")[0]
         subsystem = {
