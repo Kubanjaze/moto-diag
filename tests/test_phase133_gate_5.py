@@ -136,15 +136,23 @@ def cli_db(tmp_path, monkeypatch):
 # ----- Canned AI responses (NO network calls anywhere) -----
 
 
-class _DiagItem:
-    """Minimal DiagnosisItem shim matching engine.models shape."""
+def _DiagItem(diagnosis, confidence, severity, evidence, actions=None):
+    """Build a REAL ``DiagnosisItem``.
 
-    def __init__(self, diagnosis, confidence, severity, rationale, actions=None):
-        self.diagnosis = diagnosis
-        self.confidence = confidence
-        self.severity = severity
-        self.rationale = rationale
-        self.recommended_actions = actions or []
+    Second copy of the shim that hid a permanently-broken CLI path: it
+    declared ``rationale`` and ``recommended_actions``, neither of which
+    ``engine.models.DiagnosisItem`` has ever carried. Constructing the real
+    model means a rename fails here instead of drifting.
+    """
+    from motodiag.engine.models import DiagnosisItem
+
+    return DiagnosisItem(
+        diagnosis=diagnosis,
+        confidence=confidence,
+        severity=severity,
+        evidence=[evidence] if isinstance(evidence, str) else list(evidence or []),
+        repair_steps=actions or [],
+    )
 
 
 def _make_canned_diagnose_response():
@@ -162,7 +170,7 @@ def _make_canned_diagnose_response():
                 diagnosis="Stator failure",
                 confidence=0.90,
                 severity="high",
-                rationale=(
+                evidence=(
                     "Classic Sportster 883 failure mode — stator windings "
                     "break down with age and heat, killing charging output."
                 ),

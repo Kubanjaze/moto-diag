@@ -45,15 +45,29 @@ from motodiag.cli.diagnose import (
 # --- Shared test helpers ---
 
 
-class _DiagItem:
-    """Minimal diagnosis-item shim matching engine.models.DiagnosisItem shape."""
-    def __init__(self, diagnosis, confidence, severity="medium",
-                 rationale="test rationale", recommended_actions=None):
-        self.diagnosis = diagnosis
-        self.confidence = confidence
-        self.severity = severity
-        self.rationale = rationale
-        self.recommended_actions = recommended_actions or []
+def _DiagItem(diagnosis, confidence, severity="medium",
+              evidence=None, repair_steps=None):
+    """Build a REAL ``DiagnosisItem``, not a shim.
+
+    This was a hand-rolled class whose docstring said it matched
+    ``engine.models.DiagnosisItem``. It did not: it carried ``rationale`` and
+    ``recommended_actions``, which that model has never had. So it validated
+    the CLI's assumption rather than reality, and `motodiag diagnose quick`
+    crashed on every real run for its entire life while these tests stayed
+    green.
+
+    Constructing the real pydantic model means a future field rename fails
+    here loudly instead of drifting silently.
+    """
+    from motodiag.engine.models import DiagnosisItem
+
+    return DiagnosisItem(
+        diagnosis=diagnosis,
+        confidence=confidence,
+        severity=severity,
+        evidence=evidence or ["test evidence"],
+        repair_steps=repair_steps or [],
+    )
 
 
 def make_response(confidence=0.9, extra_tests=None, diagnoses=None, notes=None):
@@ -64,7 +78,8 @@ def make_response(confidence=0.9, extra_tests=None, diagnoses=None, notes=None):
         symptoms_acknowledged=["won't start"],
         diagnoses=(diagnoses if diagnoses is not None else [
             _DiagItem("Stator failure", confidence, "high",
-                      "Common on 2000s Harleys", ["Check stator AC output", "Replace if low"]),
+                      ["Common on 2000s Harleys"],
+                      ["Check stator AC output", "Replace if low"]),
         ]),
         additional_tests=(extra_tests if extra_tests is not None else []),
         notes=notes,

@@ -463,15 +463,25 @@ def _persist_response(
     db_path: Optional[str],
 ) -> None:
     """Write diagnosis + token metrics to the session row."""
+    # `DiagnosisItem` carries `evidence` and `repair_steps`. This function
+    # used to read `rationale` and `recommended_actions`, which the model has
+    # never had: the first raised AttributeError and crashed the command AFTER
+    # the API call was paid for, and the second was a getattr with a default,
+    # so it silently persisted empty repair steps. `motodiag diagnose quick`
+    # had therefore never once completed -- no session in the database had a
+    # diagnosis. It passed its tests because those tests built a hand-rolled
+    # shim whose docstring claimed to match `DiagnosisItem` and did not.
     top = response.diagnoses[0] if getattr(response, "diagnoses", None) else None
-    diagnosis_text = (
-        f"{top.diagnosis} — {top.rationale}"
-        if top and hasattr(top, "diagnosis")
-        else (response.notes or "No definitive diagnosis.")
-    )
+    if top is not None:
+        evidence = "; ".join(getattr(top, "evidence", None) or [])
+        diagnosis_text = (
+            f"{top.diagnosis} — {evidence}" if evidence else top.diagnosis
+        )
+    else:
+        diagnosis_text = response.notes or "No definitive diagnosis."
     confidence = getattr(top, "confidence", None) if top else None
     severity = getattr(top, "severity", None) if top else None
-    repair_steps = list(getattr(top, "recommended_actions", []) or []) if top else []
+    repair_steps = list(getattr(top, "repair_steps", []) or []) if top else []
 
     set_diagnosis(
         session_id=session_id,
