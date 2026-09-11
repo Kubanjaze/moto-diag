@@ -35,6 +35,14 @@ CostEventKind = Literal[
     # guidance into sweeps loses exactly that number.
     "vision_sweep",
     "vision_guidance",
+    # Phase 244Q. The TEXT diagnosis path -- `motodiag diagnose` -- has
+    # spent money since Phase 03 that this ledger could not hold. 244L
+    # widened the CHECK for vision and text was never in it, so the first
+    # half of 244Q tuned max_tokens against spend nobody could measure.
+    # Callers pass units=("tokens", output_tokens): the completion-length
+    # distribution accumulates as a side effect, and is what should set
+    # max_tokens later instead of doubling 2048 on one observation.
+    "text_diagnosis",
 ]
 
 

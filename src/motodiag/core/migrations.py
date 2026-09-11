@@ -4136,6 +4136,120 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS guidance_interactions;
         """,
     ),
+    # Migration 060 — Phase 244Q: the text diagnosis reaches the cost ledger
+    Migration(
+        version=60,
+        name="cost_events_text_diagnosis",
+        description=(
+            "Phase 244Q. `cost_events.kind` accepted whisper, "
+            "claude_extraction, vision_sweep and vision_guidance -- Phase 244L "
+            "widened it for vision, and the TEXT diagnosis path was never in "
+            "it. So `motodiag diagnose` has always spent money that the ledger "
+            "could not hold, and this phase spent its first half tuning "
+            "max_tokens and the fallback against spend that cannot be "
+            "measured. The only trace of a real call was an "
+            "`ai_response_cache` row, which is a cache artifact rather than a "
+            "ledger entry, and this phase's cache-format bump orphaned it. "
+            "Adds `text_diagnosis` and NOTHING else. No session_id column: "
+            "`cost_events` already carries transcript_id, video_id and "
+            "shop_id, and per-session attribution would be a second table "
+            "rebuild for something nobody has needed yet -- cost by kind, by "
+            "model and by day is what `what does a day cost` actually "
+            "requires. "
+            "Callers record `units_label='tokens'` with the real output token "
+            "count, using the pair that is already kind-polymorphic "
+            "(duration_ms for Whisper, tokens for Claude). That accumulates "
+            "the COMPLETION-LENGTH DISTRIBUTION as a side effect, which is "
+            "what should set max_tokens later -- from a p95 rather than from "
+            "doubling 2048 on a single observation, which is what this phase "
+            "did and said so. "
+            "ROLLBACK REBUILDS rather than drops, per the defect Phase 244L "
+            "shipped and Phase 235B caught: 043 created this table and may "
+            "drop it; a migration that merely widens a CHECK may not. Rolling "
+            "back necessarily DISCARDS text_diagnosis rows, because the "
+            "narrowed CHECK cannot hold them -- stated here rather than "
+            "discovered."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE cost_events_new (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('whisper', 'claude_extraction',
+                                    'vision_sweep', 'vision_guidance',
+                                    'text_diagnosis')),
+                model TEXT NOT NULL,
+                transcript_id INTEGER,
+                video_id INTEGER,
+                shop_id INTEGER,
+                units_label TEXT,
+                units_value INTEGER,
+                cost_usd_cents INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (transcript_id)
+                    REFERENCES voice_transcripts(id) ON DELETE SET NULL,
+                FOREIGN KEY (video_id)
+                    REFERENCES videos(id) ON DELETE SET NULL
+            );
+
+            INSERT INTO cost_events_new
+                (id, kind, model, transcript_id, video_id, shop_id,
+                 units_label, units_value, cost_usd_cents, created_at)
+            SELECT id, kind, model, transcript_id, video_id, shop_id,
+                   units_label, units_value, cost_usd_cents, created_at
+            FROM cost_events;
+
+            DROP TABLE cost_events;
+            ALTER TABLE cost_events_new RENAME TO cost_events;
+
+            CREATE INDEX idx_cost_events_created ON cost_events(created_at);
+            CREATE INDEX idx_cost_events_shop ON cost_events(shop_id);
+            CREATE INDEX idx_cost_events_kind ON cost_events(kind);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        rollback_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE cost_events_old (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('whisper', 'claude_extraction',
+                                    'vision_sweep', 'vision_guidance')),
+                model TEXT NOT NULL,
+                transcript_id INTEGER,
+                video_id INTEGER,
+                shop_id INTEGER,
+                units_label TEXT,
+                units_value INTEGER,
+                cost_usd_cents INTEGER NOT NULL,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (transcript_id)
+                    REFERENCES voice_transcripts(id) ON DELETE SET NULL,
+                FOREIGN KEY (video_id)
+                    REFERENCES videos(id) ON DELETE SET NULL
+            );
+
+            INSERT INTO cost_events_old
+                (id, kind, model, transcript_id, video_id, shop_id,
+                 units_label, units_value, cost_usd_cents, created_at)
+            SELECT id, kind, model, transcript_id, video_id, shop_id,
+                   units_label, units_value, cost_usd_cents, created_at
+            FROM cost_events
+            WHERE kind IN ('whisper', 'claude_extraction',
+                           'vision_sweep', 'vision_guidance');
+
+            DROP TABLE cost_events;
+            ALTER TABLE cost_events_old RENAME TO cost_events;
+
+            CREATE INDEX idx_cost_events_created ON cost_events(created_at);
+            CREATE INDEX idx_cost_events_shop ON cost_events(shop_id);
+            CREATE INDEX idx_cost_events_kind ON cost_events(kind);
+
+            PRAGMA foreign_keys=ON;
+        """,
+    ),
 ]
 
 
