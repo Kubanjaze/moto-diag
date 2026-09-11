@@ -106,7 +106,13 @@ class Settings(BaseSettings):
     # AI Engine
     anthropic_api_key: str = ""
     ai_model: str = "claude-haiku-4-5-20251001"
-    max_tokens: int = 2048
+    # Phase 244Q: 2048 truncated a structured diagnosis mid-JSON -- the
+    # response came back at exactly the cap, parsing failed, and the code
+    # silently stored raw text with a hardcoded confidence of 0.5. 4096
+    # rather than the 8192 ceiling because tool-use output is schema-bound
+    # and less verbose than free prose, and a cap never approached teaches
+    # nothing about real usage. Truncation is now loud regardless.
+    max_tokens: int = 4096
     ai_temperature: float = 0.3
 
     # Hardware

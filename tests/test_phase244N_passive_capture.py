@@ -569,7 +569,7 @@ class TestStats:
 
 class TestTheSchemaContract:
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 59  # f9-noqa: ssot-pin contract-pin: Phase 244N schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 58→59 by migration 059 (guidance_interactions + video_analyses). NOTE: tests/test_phase191b_serve_migrations.py pins this as `get_current_version(db_path) == N`, NOT `SCHEMA_VERSION == N`, so grepping for this form alone MISSES it — that is exactly how it was missed at 244M.
+        assert SCHEMA_VERSION == 60  # f9-noqa: ssot-pin contract-pin: Phase 244N schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 58→59 by migration 059 (guidance_interactions + video_analyses). NOTE: tests/test_phase191b_serve_migrations.py pins this as `get_current_version(db_path) == N`, NOT `SCHEMA_VERSION == N`, so grepping for this form alone MISSES it — that is exactly how it was missed at 244M. Bumped 59→60 at Phase 244Q (migration 060 widens the cost_events kind CHECK to accept text_diagnosis: the TEXT diagnosis path spent money the ledger could not hold, so the first half of 244Q tuned max_tokens against spend nobody could measure). Reminder: test_phase191b_serve_migrations.py spells its pin `get_current_version(db_path) == N`, so grepping only for SCHEMA_VERSION misses it.
 
     def test_the_migration_declares_every_index(self, db):
         with get_connection(db) as conn:

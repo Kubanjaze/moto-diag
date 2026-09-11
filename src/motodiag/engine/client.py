@@ -84,6 +84,127 @@ def _resolve_model(model: str) -> str:
     return MODEL_ALIASES.get(model, model)
 
 
+# Phase 244Q. Bumped from "diagnose" because this phase changes what a
+# stored response IS, and `diagnose()` hashes only the semantic inputs -- not
+# the prompt or the response format. The code said so itself: "if the prompt
+# template changes but the semantic inputs don't, stale cache entries still
+# serve", and named version-prefixing as the remedy. Without this, the
+# truncated blob written before the fix would serve that query forever,
+# immune to the fix and indistinguishable from a good row. Old rows keep
+# kind="diagnose", never match a v2 lookup, and stay readable for forensics.
+def record_diagnosis_cost(usage, *, db_path=None) -> None:
+    """Write one `text_diagnosis` ledger row. Never raises.
+
+    Phase 244Q, folded in after the operator pointed out that everything else
+    in this phase tuned a path the ledger could not hold: `cost_events.kind`
+    took whisper, claude_extraction and the two vision kinds, and text
+    diagnosis was never among them. `max_tokens` was raised against spend
+    nobody could measure.
+
+    Two decisions worth keeping:
+
+    **`units=("tokens", output_tokens)`.** The pair is already
+    kind-polymorphic, so recording the completion length costs nothing extra
+    and **accumulates the distribution that should set `max_tokens` later** --
+    from a p95, rather than from doubling 2048 on a single observation, which
+    is what this phase did and said so in its own plan.
+
+    **Zero-cost calls are skipped.** A cache hit spends nothing, and
+    `ai_response_cache.hit_count` already counts the saving; a zero row would
+    only dilute the averages this ledger exists to produce.
+    """
+    if usage is None:
+        return
+    cents = cost_dollars_to_cents(getattr(usage, "cost_estimate", 0.0) or 0.0)
+    if cents <= 0:
+        return
+    try:
+        from motodiag.shop.cost_repo import record_cost_event
+
+        record_cost_event(
+            kind="text_diagnosis",
+            model=getattr(usage, "model", "") or "",
+            cost_usd_cents=cents,
+            units_label="tokens",
+            units_value=getattr(usage, "output_tokens", None),
+            db_path=db_path,
+        )
+    except Exception as exc:
+        # The call is paid for and the answer is in hand. Losing the answer to
+        # a bookkeeping failure would be the worse trade -- the contract Phase
+        # 244L set for vision costs, for the same reason.
+        _log.warning("Diagnosis cost not recorded: %s", exc)
+
+
+DIAGNOSE_CACHE_KIND = "diagnose-v2"
+
+
+def build_diagnosis_tool() -> dict:
+    """The tool that forces a structured diagnosis.
+
+    Phase 244Q. Same pattern as the vision path's ``_build_findings_tool``,
+    and the schema is passed **whole**: it carries ``$defs`` for
+    ``DiagnosisItem`` and ``DiagnosticSeverity``, which the properties
+    reference by ``$ref``, so a ``$defs``-stripped copy would be unresolvable.
+
+    ``DiagnosticResponse`` exposes exactly the five fields the model should
+    author -- ``vehicle_summary``, ``symptoms_acknowledged``, ``diagnoses``,
+    ``additional_tests`` and ``notes``. Nothing needs removing. (An earlier
+    draft of this phase's plan claimed otherwise, having read ``TokenUsage``'s
+    fields off the wrong class.)
+    """
+    return {
+        "name": "report_diagnosis",
+        "description": (
+            "Report the structured diagnosis for this motorcycle. Call this "
+            "tool exactly once with every diagnosis you are confident enough "
+            "to name, ordered most likely first, each with the evidence that "
+            "supports it and the repair steps that address it."
+        ),
+        "input_schema": DiagnosticResponse.model_json_schema(),
+    }
+
+
+class ToolRefused(RuntimeError):
+    """The model answered in prose instead of calling the forced tool.
+
+    Phase 244Q. Carries the text and usage from the call that already
+    happened, which is the entire point of the type: the first draft of the
+    fallback simply called ``ask()`` again, so every structured failure made a
+    **second paid API call**. The cache integration tests caught it as
+    ``call_count == 2``.
+
+    A silent cost doubling on the failure path is the same shape of defect
+    this phase exists to remove -- the expensive thing happening quietly
+    because nobody looked at what the response actually said.
+    """
+
+    def __init__(self, message: str, *, text: str = "", usage=None):
+        super().__init__(message)
+        self.text = text
+        self.usage = usage
+
+
+class ResponseTruncated(RuntimeError):
+    """The model ran out of room mid-answer.
+
+    Phase 244Q. This exists because the failure it names used to be silent: a
+    diagnosis came back at exactly the 2048-token cap, cut off mid-JSON,
+    ``json.loads`` failed, and the fallback stored the raw text as the
+    diagnosis with a hardcoded ``confidence=0.5``. The command reported
+    success. A crash is found in one run; that record would have been found
+    months later, inside data already reasoned over.
+
+    Carries the usage so the caller can still account for a call that was paid
+    for and produced nothing usable.
+    """
+
+    def __init__(self, message: str, *, usage=None, max_tokens: int = 0):
+        super().__init__(message)
+        self.usage = usage
+        self.max_tokens = max_tokens
+
+
 class DiagnosticClient:
     """Claude API client for motorcycle diagnostic reasoning.
 
@@ -210,6 +331,103 @@ class DiagnosticClient:
         self.session.add_usage(usage)
 
         return text, usage
+
+    def ask_structured(
+        self,
+        prompt: str,
+        tool: dict,
+        system: Optional[str] = None,
+        model: Optional[str] = None,
+        max_tokens: Optional[int] = None,
+        temperature: Optional[float] = None,
+    ) -> tuple[dict, TokenUsage]:
+        """Force Claude to answer by calling ``tool``, and return its input.
+
+        A **sibling** of :meth:`ask`, not a replacement. ``ask`` has five
+        callers outside the diagnosis path -- parts sourcing, labor estimation,
+        the shop AI client and priority scoring -- which depend on its
+        free-text contract. This follows the rule ``ask_with_images`` already
+        wrote down for exactly this situation.
+
+        Why this exists: the diagnosis path used to ask for JSON in prose and
+        parse it back out. That works until the response is cut off, at which
+        point ``json.loads`` fails and the caller cannot tell a refusal from a
+        truncation from a malformed answer. A forced ``tool_choice`` makes the
+        model fill a schema instead of describing one.
+
+        Raises:
+            ResponseTruncated: when the model ran out of room. The API reports
+                this in ``stop_reason`` and the previous implementation never
+                looked, which is the entire reason a truncated response could
+                be stored as though it were a diagnosis.
+            ValueError: when no ``tool_use`` block came back at all.
+        """
+        client = self._get_client()
+        resolved_model = _resolve_model(model) if model else self.model
+        resolved_max = max_tokens or self.max_tokens
+        resolved_temp = temperature if temperature is not None else self.temperature
+        resolved_system = system or DIAGNOSTIC_SYSTEM_PROMPT
+
+        start_ms = int(time.time() * 1000)
+        response = client.messages.create(
+            model=resolved_model,
+            max_tokens=resolved_max,
+            temperature=resolved_temp,
+            system=resolved_system,
+            messages=[{"role": "user", "content": prompt}],
+            tools=[tool],
+            tool_choice={"type": "tool", "name": tool["name"]},
+        )
+        latency = int(time.time() * 1000) - start_ms
+
+        usage = TokenUsage(
+            input_tokens=response.usage.input_tokens,
+            output_tokens=response.usage.output_tokens,
+            model=resolved_model,
+            cost_estimate=_calculate_cost(
+                resolved_model,
+                response.usage.input_tokens,
+                response.usage.output_tokens,
+            ),
+            latency_ms=latency,
+        )
+        self.session.add_usage(usage)
+
+        # Checked BEFORE reading the content: a truncated tool_use block may
+        # still parse into something plausible, and something plausible is
+        # exactly what must not reach the database.
+        if getattr(response, "stop_reason", None) == "max_tokens":
+            # Recorded BEFORE raising. A truncated call is 100% waste -- paid
+            # in full, unusable output -- and if waste is invisible in the
+            # ledger then the most expensive failure mode in the system is the
+            # one nobody can see.
+            record_diagnosis_cost(usage)
+            raise ResponseTruncated(
+                f"Response hit the {resolved_max}-token cap and was cut off. "
+                f"Raise max_tokens and retry -- this is reported rather than "
+                f"salvaged because a partial diagnosis is indistinguishable "
+                f"from a complete one once it is stored.",
+                usage=usage,
+                max_tokens=resolved_max,
+            )
+
+        text = ""
+        for block in response.content:
+            if getattr(block, "type", None) == "tool_use":
+                return dict(block.input), usage
+            if hasattr(block, "text"):
+                text += block.text
+
+        # The prose is handed back rather than discarded so the caller can
+        # fall back WITHOUT paying for a second call. Discarding it is what
+        # made the first version cost double on every refusal.
+        raise ToolRefused(
+            f"Model returned no tool_use block for forced tool "
+            f"{tool['name']!r} (stop_reason="
+            f"{getattr(response, 'stop_reason', None)!r})",
+            text=text,
+            usage=usage,
+        )
 
     def ask_with_images(
         self,
@@ -556,7 +774,7 @@ class DiagnosticClient:
         cache_key = None
         if use_cache:
             try:
-                cache_key = _make_cache_key("diagnose", cache_payload)
+                cache_key = _make_cache_key(DIAGNOSE_CACHE_KIND, cache_payload)
                 cached = get_cached_response(cache_key)
             except Exception as exc:
                 # Cache is an optimization, not a dependency — log and
@@ -610,14 +828,32 @@ class DiagnosticClient:
         # Assemble full prompt
         full_prompt = build_full_prompt(vehicle_ctx, symptom_ctx, knowledge_ctx)
 
-        # Call the API
-        response_text, usage = self.ask(
-            prompt=full_prompt,
-            model=ai_model,
-        )
-
-        # Parse structured response
-        diagnostic = self._parse_diagnostic_response(response_text, make, model_name, year, symptoms)
+        # Phase 244Q: ask the model to FILL a schema rather than to describe
+        # one in prose that we then parse back out. `ResponseTruncated` is
+        # deliberately not caught here -- a cut-off diagnosis must reach the
+        # caller as an error, because the previous behaviour was to quietly
+        # store the fragment with a confidence nobody computed.
+        try:
+            tool_input, usage = self.ask_structured(
+                prompt=full_prompt,
+                tool=build_diagnosis_tool(),
+                model=ai_model,
+            )
+            diagnostic = DiagnosticResponse(**tool_input)
+        except ResponseTruncated:
+            raise
+        except ToolRefused as exc:
+            # Parse the prose the refusal already carries. NO second API call:
+            # the first version called `ask()` again here and doubled the cost
+            # of every refusal, which the cache tests caught as call_count == 2.
+            _log.warning(
+                "Model declined the diagnosis tool — parsing its prose instead "
+                "(no second call): %s", exc,
+            )
+            usage = exc.usage
+            diagnostic = self._parse_diagnostic_response(
+                exc.text, make, model_name, year, symptoms,
+            )
 
         # Store in cache (best-effort — never break the live call).
         # `mode="json"` serializes enums to their string values so the
@@ -629,7 +865,7 @@ class DiagnosticClient:
             try:
                 set_cached_response(
                     cache_key=cache_key,
-                    kind="diagnose",
+                    kind=DIAGNOSE_CACHE_KIND,
                     model_used=usage.model or resolved_model,
                     response_dict=diagnostic.model_dump(mode="json"),
                     tokens_input=usage.input_tokens,
@@ -639,6 +875,7 @@ class DiagnosticClient:
             except Exception as exc:
                 _log.warning("Cache store failed: %s", exc)
 
+        record_diagnosis_cost(usage)
         return diagnostic, usage
 
     def _parse_diagnostic_response(

@@ -798,7 +798,7 @@ class TestErasure:
 
 class TestTheSchemaContract:
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 59  # f9-noqa: ssot-pin contract-pin: Phase 244M schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 57→58 by migration 058 (memory_facts). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 58→59 at Phase 244N (migration 059 adds guidance_interactions and video_analyses: /ask discarded its whole answer while 244L recorded what the question cost, and set_analysis_findings overwrote the findings blob so every re-analysis destroyed the prior sweep).
+        assert SCHEMA_VERSION == 60  # f9-noqa: ssot-pin contract-pin: Phase 244M schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 57→58 by migration 058 (memory_facts). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 58→59 at Phase 244N (migration 059 adds guidance_interactions and video_analyses: /ask discarded its whole answer while 244L recorded what the question cost, and set_analysis_findings overwrote the findings blob so every re-analysis destroyed the prior sweep). Bumped 59→60 at Phase 244Q (migration 060 widens the cost_events kind CHECK to accept text_diagnosis: the TEXT diagnosis path spent money the ledger could not hold, so the first half of 244Q tuned max_tokens against spend nobody could measure). Reminder: test_phase191b_serve_migrations.py spells its pin `get_current_version(db_path) == N`, so grepping only for SCHEMA_VERSION misses it.
 
     def test_the_migration_declares_every_index(self, db):
         with get_connection(db) as conn:

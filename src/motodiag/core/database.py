@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 59  # Phase 244N: passive capture logs (migration 059)
+SCHEMA_VERSION = 60  # Phase 244Q: cost_events accepts text_diagnosis (migration 060)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

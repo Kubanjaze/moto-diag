@@ -1,6 +1,6 @@
 # Phase 244Q — The text diagnosis stops guessing at its own output — phase log
 
-**Status:** Planned
+**Status:** ✅ Complete
 **Opened:** 2026-09-10
 
 ---
@@ -72,3 +72,55 @@ text — the earlier one was a `LIMIT 1` sample that became "every finding carri
 
 What survived: the schema does carry `$defs` for `DiagnosisItem` and
 `DiagnosticSeverity`, so it is self-referential and must be passed whole.
+
+## 2026-09-11 — Built
+
+**The regression found the defect; this phase's own guards could not.**
+`diagnose()` caught a tool refusal and called `ask()` again — two paid API
+calls for one logical operation, on every structured failure. A silent cost
+doubling on the failure path, which is the same shape of defect this phase
+exists to remove.
+
+It surfaced as `call_count == 2` in a nine-phase-old cache test written by
+someone else for another purpose, which counted actual SDK calls. The 22 guards
+written here mocked `ask_structured` itself and could never see how many times
+the API was reached. **They tested the layer just written rather than the
+boundary that costs money.** Fixed with `ToolRefused`, which carries the prose
+and usage already paid for.
+
+Then the same mistake again, in the ledger guards added later the same session:
+nine of them called `record_diagnosis_cost` directly, and deleting the call site
+in `diagnose()` left every one of them green. Caught only because the mutation
+was actually run. **Twice in one phase: verifying a function works while never
+checking that anything calls it** — the integration-gap family turned inward,
+the same defect found in `feedback/`, `SafetyChecker` and `FeedbackReader`, now
+in the tests themselves.
+
+**And a repeat offence.** Phase 191C's f9 lint failed the regression on a
+hardcoded `claude-haiku-4-5-20251001` in this phase's test file. The identical
+mistake was made at 244L four hours earlier, caught by the identical guard, and
+fixed the identical way. That guard has now paid for itself twice in one
+evening against the same author.
+
+**Scope changed mid-phase, and the operator was right about why.** Pushed back
+on the pace: *"we are keeping track to regulate what would be most cost
+efficient, however one needs to let it work to get enough data for that, fixing
+things too quickly may pose an issue."* Checking the ledger against that showed
+the sharper version of the point — `cost_events.kind` accepted the two vision
+kinds and never text, so **the entire first half of this phase tuned cost
+behaviour on a path the ledger structurally could not hold.** Migration 060 and
+`text_diagnosis` were folded in as a result.
+
+The frame that came out of it, and the one to keep: **instrument versus
+tuning.** Instrument fixes belong early, because data collected through a broken
+instrument is worse than no data — the crash fix, `stop_reason`, cache
+versioning, ledger coverage. Tuning waits for a distribution. Judged that way,
+`max_tokens = 4096` is tuning done on n=1, defensible in direction because a
+truncated call is 100% waste, and arbitrary in magnitude. It is labelled as a
+guess in the plan, and `units_value=output_tokens` now accumulates the
+completion-length distribution that should replace it.
+
+The double-call fix is the clearest thing this phase did too fast: a real bug,
+on a refusal path whose frequency is still unmeasured.
+
+**Regression: 6,497 passed, 0 failed, 28:06.**

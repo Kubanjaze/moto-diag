@@ -2783,3 +2783,40 @@ raw text as the diagnosis with a hardcoded confidence of 0.5 and severity
 medium. So the path completes and produces a **plausible-looking but useless**
 record — a JSON fragment as the diagnosis text. Raising the cap is a cost
 decision and is the operator's call, not a hotfix.
+
+## Phase 244Q complete — 2026-09-11
+
+The text diagnosis stops guessing at its own output, and the text path finally
+reaches the cost ledger.
+
+After the hotfix, `diagnose quick` completed and produced something worse than
+the crash: a response cut off at exactly the 2048-token cap, stored as raw JSON
+with a hardcoded `confidence=0.5`, reported as success. The cap was never the
+bug — `stop_reason` is how the API says it ran out of room and nothing read it.
+Truncation now raises, carries its usage, and is never cached.
+
+Structured output went in as a sibling (`ask_structured`), because `ask()` has
+five shop callers. Cache kind bumped to `diagnose-v2`, or the pre-fix blob
+would have served that query forever.
+
+**Scope changed mid-phase and the operator was right about why.** Checking the
+ledger showed `cost_events.kind` accepted the two vision kinds and never text —
+so the first half of this phase tuned cost behaviour on a path the ledger could
+not hold. Migration 060 adds `text_diagnosis`, and `units_value=output_tokens`
+accumulates the completion-length distribution that should set `max_tokens`
+later. 4096 is labelled a guess from n=1.
+
+The frame worth keeping: **instrument versus tuning.** Instrument early, because
+data through a broken instrument is worse than none. Tuning waits for a
+distribution.
+
+Two self-inflicted lessons. The full regression found a second paid API call on
+the fallback path that 22 local guards missed, because they mocked the layer
+just written instead of the boundary that costs money — caught by a
+nine-phase-old cache test counting actual SDK calls. Then the same wrong-layer
+error repeated in the ledger guards, caught only by running the mutation. And
+Phase 191C's f9 lint caught a hardcoded model ID for the second time in one
+evening, from the same author.
+
+Schema v59 → v60. 34 guards, 10 mutations, 10 schema pins.
+Regression 6,497 passed, 0 failed, 28:06.
