@@ -2739,3 +2739,47 @@ than by reading the code.
 Not fixed now — per the operator's decision to accumulate passively and harden
 once data exists. Recorded so the eventual "why are there no overrides?" has an
 answer waiting.
+
+## 2026-09-10 — Hotfix: `motodiag diagnose quick` had never once completed
+
+Ran it to give the 244N override capture an AI-authored session to work
+against. It crashed — **after** the API call was paid for.
+
+`_persist_response` read `top.rationale` and `top.recommended_actions`.
+`DiagnosisItem` has never had either field; it carries `evidence` and
+`repair_steps`. The first raised `AttributeError` and killed the command; the
+second was a `getattr` with a default, so it would have silently persisted
+empty repair steps had the first not crashed first.
+
+**This path has never worked.** Zero sessions in the entire production database
+have ever carried a diagnosis. It also explains, one layer below the debt
+recorded earlier today, why no session had `ai_model_used`: not merely that no
+API route sets it, but that the single CLI path which does crashes four lines
+before reaching that write.
+
+**Why the tests were green.** `tests/test_phase123_diagnose.py` and
+`tests/test_phase133_gate_5.py` each defined a hand-rolled `_DiagItem` class
+whose docstring read *"Minimal diagnosis-item shim matching
+engine.models.DiagnosisItem shape"* — and which carried `rationale` and
+`recommended_actions`. The fixtures encoded the CLI's assumption rather than the
+model's reality, so they confirmed the bug instead of catching it. Both are now
+functions that construct the **real** `DiagnosisItem`, so a future rename fails
+loudly at the fixture instead of drifting.
+
+Same family as the unrepresentative fixtures at 244F and 244I, and worse in
+kind: those fixtures were merely incomplete, this one invented a schema that
+never existed.
+
+Verified after the fix: session 8 persists with `ai_model_used`, and a real
+PATCH through the running API recorded **two** overrides (diagnosis and
+severity), each carrying the prior AI value. `capture stats` moved from "no
+AI-authored sessions, nothing to correct" to "2 overrides of 1 AI-authored
+session".
+
+**Second defect found, NOT fixed — recorded for a decision.** `max_tokens` is
+2048 and this response came back at exactly 2048 output tokens: truncated
+mid-JSON. `json.loads` fails, and `_parse_response` falls back to storing the
+raw text as the diagnosis with a hardcoded confidence of 0.5 and severity
+medium. So the path completes and produces a **plausible-looking but useless**
+record — a JSON fragment as the diagnosis text. Raising the cap is a cost
+decision and is the operator's call, not a hotfix.
