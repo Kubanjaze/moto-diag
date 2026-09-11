@@ -2689,3 +2689,30 @@ while reporting success.
 
 Schema v58 → v59. 46 guards, 6 mutations all caught, 9 schema pins bumped.
 Regression 6,463 passed, 0 failed, 23:36 — green first time.
+
+## 2026-09-10 — 244P deferred pending traffic
+
+Step 0 for 244P found nothing to relate. All six work orders are smoke rows
+("Push smoke", "Timer smoke A/B/C", "Forgotten timer"); the only vehicle with
+both work orders and findings has its work order *preceding* them; and vehicle
+10 — the one machine with real findings, ten of them — has no work orders at
+all. Linkage built now would have zero true positives to be judged against,
+which is the same trap as the confidence-calibration investigation earlier the
+same day, where the premise turned out to be an artefact of a `LIMIT 1` sample.
+
+Also worth recording: **244N incidentally solved the durability half of 244P.**
+The plan called for per-finding stable ids so a finding could be referenced
+permanently. Superseded `video_analyses` rows are never rewritten, so a finding
+is already permanently addressable as (analysis row, index). What ids would add
+is queryability — findings as rows rather than JSON — which is real but modest,
+and not the foundation it was described as.
+
+Decision: build nothing further until `motodiag capture stats` shows real rows.
+244O and 244P are recorded in the roadmap as ⏸️ with their blocking conditions
+stated, so neither gets re-litigated from memory.
+
+**Debt recorded: `motodiag.scheduling` is a seventh integration gap.** Full
+appointment CRUD — 12 public names, `create_appointment` through
+`delete_appointment` — imported by its own modules and its tests, and by
+nothing else. No CLI, no API route, `appointments` at 0 rows. Same family as
+the `feedback/` package closed at 244N.
