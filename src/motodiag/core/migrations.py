@@ -4031,6 +4031,111 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS memory_facts;
         """,
     ),
+    # Migration 059 — Phase 244N: passive capture of what already happens
+    Migration(
+        version=59,
+        name="passive_capture",
+        description=(
+            "Phase 244N. Two append-only logs for streams the product already "
+            "produces and then discards. "
+            "`guidance_interactions`: /ask returns a full GuidanceResponse -- "
+            "restated question, ranked candidates each with a discriminating "
+            "check and a Grounding label, what would narrow it, what could not "
+            "be established -- and persists NONE of it. Since Phase 244L the "
+            "product records what a question COST and not what it WAS. The "
+            "whole response is kept as JSON and the fields worth querying are "
+            "promoted to columns: `answers_the_question` is the single most "
+            "interesting bit in the product (how often can it not answer?) and "
+            "must not require a JSON scan to count. "
+            "`video_analyses`: `set_analysis_findings` ran "
+            "UPDATE videos SET analysis_findings = ?, one blob per video with "
+            "no history, so every re-analysis destroyed the prior sweep. That "
+            "already cost real data -- commit d2c23f8 exists because session "
+            "6's sweep had to be rescued into git by hand before a re-run. "
+            "The `videos.analysis_findings` column is NOT changed and keeps "
+            "working exactly as it does today; it becomes a pointer to the "
+            "current sweep rather than the only copy, so 244M's compile, the "
+            "API and the reports all keep reading it unchanged. "
+            "THERE IS NO OUTCOME COLUMN, and that is deliberate, not an "
+            "omission. A finding nobody acted on is unresolved, not wrong -- it "
+            "may have been right and deprioritised, or right and fixed without "
+            "paperwork. A nullable outcome column invites a default, and a "
+            "default here fabricates negatives that nothing downstream could "
+            "later detect. Interpretation belongs to a phase that can be "
+            "judged on it, against data this migration keeps honest. "
+            "Backfills the existing sweeps into `video_analyses`: adding a "
+            "table whose purpose is to stop dropping sweeps, while dropping "
+            "the sweeps already recorded, would be its own joke."
+        ),
+        upgrade_sql="""
+            CREATE TABLE guidance_interactions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                video_id INTEGER,
+                vehicle_id INTEGER,
+                session_id INTEGER,
+                question TEXT NOT NULL,
+                question_understood_as TEXT NOT NULL DEFAULT '',
+                answers_the_question INTEGER,
+                candidate_count INTEGER NOT NULL DEFAULT 0,
+                response_json TEXT NOT NULL,
+                model_used TEXT,
+                cost_event_id INTEGER,
+                asked_by_user_id INTEGER,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (video_id) REFERENCES videos(id)
+                    ON DELETE SET NULL,
+                FOREIGN KEY (vehicle_id) REFERENCES vehicles(id)
+                    ON DELETE SET NULL,
+                FOREIGN KEY (cost_event_id) REFERENCES cost_events(id)
+                    ON DELETE SET NULL
+            );
+
+            CREATE INDEX idx_guidance_interactions_vehicle
+                ON guidance_interactions(vehicle_id);
+            CREATE INDEX idx_guidance_interactions_video
+                ON guidance_interactions(video_id);
+            CREATE INDEX idx_guidance_interactions_created
+                ON guidance_interactions(created_at DESC);
+            CREATE INDEX idx_guidance_interactions_answered
+                ON guidance_interactions(answers_the_question);
+
+            CREATE TABLE video_analyses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                video_id INTEGER NOT NULL,
+                findings_json TEXT NOT NULL,
+                model_used TEXT,
+                cost_usd_cents INTEGER,
+                frames_analyzed INTEGER,
+                analyzed_at TEXT,
+                superseded_at TEXT,
+                created_at TEXT NOT NULL DEFAULT (datetime('now')),
+                FOREIGN KEY (video_id) REFERENCES videos(id)
+                    ON DELETE CASCADE
+            );
+
+            CREATE INDEX idx_video_analyses_video
+                ON video_analyses(video_id, created_at DESC);
+            CREATE INDEX idx_video_analyses_current
+                ON video_analyses(video_id, superseded_at);
+
+            INSERT INTO video_analyses
+                (video_id, findings_json, analyzed_at)
+            SELECT id, analysis_findings, analyzed_at
+            FROM videos
+            WHERE analysis_findings IS NOT NULL;
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_video_analyses_current;
+            DROP INDEX IF EXISTS idx_video_analyses_video;
+            DROP TABLE IF EXISTS video_analyses;
+
+            DROP INDEX IF EXISTS idx_guidance_interactions_answered;
+            DROP INDEX IF EXISTS idx_guidance_interactions_created;
+            DROP INDEX IF EXISTS idx_guidance_interactions_video;
+            DROP INDEX IF EXISTS idx_guidance_interactions_vehicle;
+            DROP TABLE IF EXISTS guidance_interactions;
+        """,
+    ),
 ]
 
 

@@ -2651,3 +2651,41 @@ warning that it is spelled differently, because the same hazard recurs at every
 bump. Its reason also opened *"literal `52` here"* — stale since Phase 240C,
 three bumps ago: the asserted number had been maintained and the sentence
 explaining it had not. Corrected in passing.
+
+## Phase 244N complete — 2026-09-10
+
+Stop discarding what already happens. Three streams of exactly the data this
+product needs passed through it daily and were dropped at the end of the
+request; they now persist, with no new work for a technician and no visible
+change.
+
+**Step 0's finding reframed the problem.** The `feedback/` package — nine
+public repo functions, `FeedbackReader`, models, two tables, tests, built at
+Phase 116 — has **zero callers** outside itself. No API route, no CLI command.
+`diagnostic_feedback` and `session_overrides` were empty because nothing could
+write to them. That also corrects 244M, which recorded the empty table as a
+fact about usage when it was a fact about wiring.
+
+The hook already existed: `session_overrides` stores
+`(field_name, ai_value, override_value)` and `PATCH /v1/sessions/{id}` was
+overwriting precisely those values while discarding the prior one. **Passive
+means byproduct** — a mechanic corrects the diagnosis because they need it
+correct on the work order, so capturing the correction costs nothing.
+
+Also persisted: `/ask` interactions (since 244L the product recorded what a
+question cost and not what it was) and sweep history (`UPDATE videos SET
+analysis_findings = ?` destroyed the prior sweep; commit `d2c23f8` exists
+because one had to be rescued into git by hand).
+
+**No outcome column anywhere.** A finding nobody acted on is unresolved, not
+wrong. A nullable outcome invites a default, and a default fabricates negatives
+nothing downstream could later detect.
+
+Two defects the guards caught in my own work: the "capture never costs the
+request" promise lived inside the callees while the call sites invoked them
+bare, and the `/ask` capture read `vehicle_id` off `videos`, which has no such
+column — every interaction would have stored NULL, silently breaking erasure
+while reporting success.
+
+Schema v58 → v59. 46 guards, 6 mutations all caught, 9 schema pins bumped.
+Regression 6,463 passed, 0 failed, 23:36 — green first time.

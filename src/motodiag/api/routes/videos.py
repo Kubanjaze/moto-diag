@@ -49,6 +49,7 @@ from motodiag.api.deps import get_db_path, get_settings as get_api_settings
 from motodiag.auth.deps import (
     AuthedUser, get_current_user, require_tier,
 )
+from motodiag.capture import record_guidance_interaction
 from motodiag.core import video_repo
 from motodiag.core.config import Settings
 from motodiag.core.models import VideoBase, VideoResponse
@@ -429,6 +430,31 @@ def get_video_file(
     )
 
 
+def _vehicle_id_for_session(
+    session_id: int, db_path: str | None = None
+) -> int | None:
+    """Resolve the machine a session is about.
+
+    `videos` carries `session_id` and NOT `vehicle_id` -- the first draft of
+    the 244N capture read `row["vehicle_id"]` off the video and would have
+    written NULL on every single interaction. That is not a cosmetic miss:
+    erasure resolves customer -> vehicles -> interactions, so a permanently
+    NULL vehicle_id means a deletion request silently matches nothing while
+    reporting success.
+    """
+    try:
+        from motodiag.core.database import get_connection
+
+        with get_connection(db_path) as conn:
+            row = conn.execute(
+                "SELECT vehicle_id FROM diagnostic_sessions WHERE id = ?",
+                (session_id,),
+            ).fetchone()
+        return row[0] if row is not None else None
+    except Exception:
+        return None
+
+
 @router.post(
     "/{session_id}/videos/{video_id}/ask",
     response_model=GuidanceResponse,
@@ -492,7 +518,7 @@ def ask_about_video(
         context.make, context.model, db_path=db_path, limit=25,
     )
 
-    return VisionAnalyzer(model="sonnet").answer_question_about_frames(
+    answer = VisionAnalyzer(model="sonnet").answer_question_about_frames(
         frames=frames,
         question=payload.question,
         vehicle_context=context,
@@ -500,3 +526,20 @@ def ask_about_video(
         video_id=video_id,
         db_path=db_path,
     )
+
+    # Phase 244N: the answer was serialised to the client and dropped. Since
+    # 244L the product recorded what a question COST and not what it WAS --
+    # and this is the highest-value signal it produces: a real technician, on a
+    # real machine, mid-repair, asking what they actually need to know.
+    # `record_guidance_interaction` never raises; the answer is already paid
+    # for and must not be lost to a logging failure.
+    record_guidance_interaction(
+        payload.question,
+        answer,
+        video_id=video_id,
+        vehicle_id=_vehicle_id_for_session(session_id, db_path),
+        session_id=session_id,
+        asked_by_user_id=user.id,
+        db_path=db_path,
+    )
+    return answer
