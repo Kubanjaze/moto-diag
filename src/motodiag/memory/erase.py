@@ -93,6 +93,17 @@ def erase_plan(customer_id: int, db_path: Optional[str] = None) -> ErasePlan:
             f"SELECT COUNT(*) FROM memory_facts WHERE vehicle_id IN ({placeholders})",
             vehicle_ids,
         ).fetchone()[0]
+        # --dry-run must report what --no-dry-run deletes. Counting only
+        # memory_facts while the delete also removes interactions would make
+        # the preview a lie in exactly the situation it exists to prevent.
+        try:
+            count += conn.execute(
+                "SELECT COUNT(*) FROM guidance_interactions "
+                f"WHERE vehicle_id IN ({placeholders})",
+                vehicle_ids,
+            ).fetchone()[0]
+        except Exception:
+            pass
 
     return ErasePlan(
         customer_id=customer_id,
@@ -119,8 +130,25 @@ def erase_customer(customer_id: int, db_path: Optional[str] = None) -> int:
             f"DELETE FROM memory_facts WHERE vehicle_id IN ({placeholders})",
             plan.vehicle_ids,
         )
+        deleted = cursor.rowcount
+
+        # Phase 244N: a guidance question is a person's own words about their
+        # machine -- free text that will eventually contain a name or a phone
+        # number, whatever the technician typed. As deletable as a compiled
+        # fact, and deleted by the same request.
+        try:
+            cursor = conn.execute(
+                "DELETE FROM guidance_interactions "
+                f"WHERE vehicle_id IN ({placeholders})",
+                plan.vehicle_ids,
+            )
+            deleted += cursor.rowcount
+        except Exception:
+            # Table absent at this install's schema version.
+            pass
+
         conn.commit()
-        return cursor.rowcount
+        return deleted
 
 
 def attach_vehicle(

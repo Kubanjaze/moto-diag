@@ -1,6 +1,6 @@
 # Phase 244N — Stop discarding what already happens
 
-**Version:** 1.0 | **Tier:** Large | **Date:** 2026-09-10
+**Version:** 1.1 | **Tier:** Large | **Date:** 2026-09-10 (built 2026-09-10)
 
 ---
 
@@ -194,27 +194,33 @@ compiled fact.
 
 ## Verification Checklist
 
-- [ ] A PATCH that changes an AI-authored diagnosis writes exactly one override
-- [ ] The override carries the *prior* value in `ai_value`
-- [ ] A PATCH with no change writes nothing
-- [ ] A PATCH on a session with no `ai_model_used` writes nothing
-- [ ] A failing override write does not fail the PATCH
-- [ ] An `/ask` call writes exactly one `guidance_interactions` row
-- [ ] The stored `response_json` round-trips to an equal `GuidanceResponse`
-- [ ] `answers_the_question` is queryable as a column, not via JSON scan
-- [ ] A failing interaction write does not fail the answer
-- [ ] Re-analysis preserves the prior sweep in `video_analyses`
-- [ ] `videos.analysis_findings` still holds the current sweep, unchanged shape
-- [ ] Migration 059 backfills the four existing sweeps
-- [ ] Migration 059 rolls back without destroying anything it did not create
-- [ ] **No column named outcome / verdict / correct / score exists anywhere**
-- [ ] `memory forget` erases a customer's guidance interactions
-- [ ] Deleting a video cascades its analyses
-- [ ] `capture stats` reports real counts
-- [ ] Mutation: overwrite findings destructively again → a guard fails
-- [ ] Mutation: make the override hook raise → a guard fails
-- [ ] Mutation: drop the interaction write → a guard fails
-- [ ] Full regression green
+- [x] A PATCH that changes an AI-authored diagnosis writes exactly one override
+- [x] The override carries the *prior* value in `ai_value`
+- [x] A PATCH with no change writes nothing
+- [x] A PATCH on a session with no `ai_model_used` writes nothing
+- [x] A failing override write does not fail the PATCH
+- [x] An `/ask` call writes exactly one `guidance_interactions` row
+- [x] The stored `response_json` round-trips to an equal `GuidanceResponse`
+- [x] `answers_the_question` is queryable as a column, not via JSON scan
+- [x] A failing interaction write does not fail the answer
+- [x] Re-analysis preserves the prior sweep in `video_analyses`
+- [x] `videos.analysis_findings` still holds the current sweep, unchanged shape
+- [x] Migration 059 backfills the four existing sweeps
+- [x] Migration 059 rolls back without destroying anything it did not create
+- [x] **No column named outcome / verdict / correct / score exists anywhere**
+- [x] `memory forget` erases a customer's guidance interactions
+- [x] Deleting a video cascades its analyses
+- [x] `capture stats` reports real counts
+- [x] Mutation: overwrite findings destructively again → a guard fails
+- [x] Mutation: make the override hook raise → a guard fails
+- [x] Mutation: drop the interaction write → a guard fails
+- [x] Mutation: add an `outcome` column → the record-never-label guards fail
+- [x] Mutation: record no-op PATCHes as corrections → a guard fails
+- [x] Mutation: capture overrides with no AI author → a guard fails
+- [x] A numeric no-op (`0.8` vs `'0.8'`) records nothing
+- [x] The `/ask` capture resolves `vehicle_id` from the **session**, not the video
+- [x] `capture` exposes no `record` command — recording is a byproduct
+- [x] Full regression green — **6,463 passed, 0 failed**, 23:36
 
 ## Risks
 
@@ -244,3 +250,91 @@ compiled fact.
   That is the correct trade and it is worth saying plainly, because a phase
   whose success looks identical to doing nothing is easy to skip and expensive
   to skip late.
+
+---
+
+## Deviations from v1.0
+
+**1. The "never raises" contract was in the wrong place, and the tests caught
+it.** Every capture function was written to swallow its own exceptions, and
+that felt like enough. It is not. Two guards — `a_failing_override_capture_does
+_not_fail_the_patch` and `a_failing_analysis_history_write_does_not_fail_the
+_analysis` — patched the capture callable itself to raise, and **both failed**:
+the promise lived inside the callee, while the call sites invoked it bare. A
+failed import, or one refactor that lets a capture function raise, and a
+technician's edit 500s for a logging concern.
+
+Both call sites are now guarded as well. The contract is "capture never costs
+the request", and **the boundary is where a promise like that has to hold** —
+not one frame further in, where the next person to edit the callee can silently
+revoke it.
+
+**2. `video_repo.py` had no logger, so the fix I wrote raised `NameError` from
+inside its own `except` block.** The guard stayed red after the "fix" and said
+so. A handler that throws is worse than no handler, because it converts a
+swallowed failure into an unhandled one at exactly the moment things are
+already going wrong.
+
+**3. The `/ask` capture would have written `vehicle_id = NULL` on every row.**
+The first draft read `row["vehicle_id"]` off the video. **`videos` carries
+`session_id` and has no `vehicle_id` column**, so the lookup would have been
+`None` forever — and that is not cosmetic: erasure resolves customer →
+vehicles → interactions, so a permanently NULL `vehicle_id` means a deletion
+request silently matches nothing *and reports success*. Caught by checking the
+column list rather than assuming it. Now resolved through the session, with a
+guard.
+
+**4. `cost_estimate` added to the captured fields.** v1.0 named diagnosis,
+confidence and severity. `OverrideField` also has `cost_estimate`, and
+`SessionUpdateRequest` accepts it — the captured set is the intersection of
+what the model authors and what a PATCH can carry, and leaving a member out
+would silently drop a real correction.
+
+**5. Erasure's dry-run had to change too.** `erase_plan` counted only
+`memory_facts` while `erase_customer` now also deletes interactions. A preview
+that undercounts is a lie in precisely the situation it exists to prevent, so
+the count covers both.
+
+**6. Nine schema pins, and the note left at 244M did its job.** 244M was caught
+by the regression because one pin is spelled `get_current_version(db_path) ==
+N` rather than `SCHEMA_VERSION == N`. This time the search covered both forms
+and found all nine before the regression ran — eight of one spelling, one of
+the other. The note in that pin's reason string is why.
+
+**7. The backfill guard was wrong on its first write.** It deleted the
+`schema_version` row for 059 and re-ran `init_db`, which failed with "table
+guidance_interactions already exists" — the migration machinery correctly
+objecting to being told something had been un-applied when it had not. Replaced
+with a real `rollback_to_version(58)`.
+
+**8. The test fixture needed `reset_settings()`.** `get_settings` is an
+`lru_cache(maxsize=1)`, so `create_app()` kept a path cached by an earlier test
+and the API read a different database than the fixture wrote. It surfaced as
+`no such table: api_keys` from inside auth middleware, several layers from the
+cause.
+
+## Results
+
+| | |
+|---|---|
+| Schema | v58 → **v59** (migration 059) |
+| New tables | `guidance_interactions`, `video_analyses` |
+| Backfill | **4 sweeps, 20 findings** preserved from the existing column |
+| Capture streams wired | 3 (overrides, guidance, sweep history) |
+| Feedback subsystem callers | **0 → 1** (nine phases after it was built) |
+| Guards | **46** |
+| Mutations run | **6**, all caught |
+| Schema pins bumped | 9 (8 of one spelling, 1 of the other) |
+| Regression | **6,463 passed, 0 failed**, 23:36 |
+| New source | 614 lines across 6 modules |
+
+**The finding worth the phase.** Step 0 went looking for where to put captured
+data and found that the place already existed — `session_overrides`, correct in
+every column, with `feedback_repo.record_override` sitting beside it. The
+subsystem had **zero callers outside its own package**, no API route and no CLI
+command, since Phase 116. The tables were empty because **nothing could write
+to them**, and the one-line fix was a call at a hook point that had been
+overwriting the exact values the table wanted to store.
+
+That reframes 244M's dead compile path too: 244M recorded "`diagnostic_feedback`
+is empty" as an observation about usage. It was an observation about wiring.

@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user
+from motodiag.capture import capture_session_overrides
 from motodiag.core.session_repo import (
     SessionOwnershipError,
     TIER_SESSION_MONTHLY_LIMITS,
@@ -40,6 +41,8 @@ from motodiag.core.session_repo import (
 
 
 logger = logging.getLogger(__name__)
+_log = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/sessions", tags=["sessions"])
 
 
@@ -302,6 +305,15 @@ def update_session_endpoint(
         if v is not None
     }
     if updates:
+        # Phase 244N: read the prior values BEFORE the update overwrites them.
+        # This is the whole capture -- `session_overrides` has stored
+        # (field_name, ai_value, override_value) since Phase 116 and had no
+        # caller, while this endpoint overwrote AI-authored diagnoses and threw
+        # the prior value away. An override is a byproduct of work the
+        # technician was already doing, which is the only kind of capture that
+        # actually accumulates.
+        before = get_session_for_owner(session_id, user.id, db_path=db_path)
+
         try:
             changed = update_session_for_owner(
                 session_id, user.id, updates, db_path=db_path,
@@ -314,6 +326,26 @@ def update_session_endpoint(
             raise SessionOwnershipError(
                 f"session id={session_id} not found"
             )
+
+        # After the update succeeded, never before, and never in a way that can
+        # fail it: the technician's edit is the thing that matters and the
+        # capture is the thing that might matter later.
+        if before is not None:
+            # Guarded at the CALL SITE as well as inside the capture. The
+            # "never raises" contract living only inside the callee is one
+            # refactor -- or one failed import -- away from a technician's edit
+            # 500ing for a logging concern. The boundary is where the promise
+            # has to hold.
+            try:
+                capture_session_overrides(
+                    session_id, dict(before), updates,
+                    user_id=user.id, db_path=db_path,
+                )
+            except Exception:
+                _log.warning(
+                    "Override capture failed for session %s", session_id,
+                    exc_info=True,
+                )
     row = get_session_for_owner(
         session_id, user.id, db_path=db_path,
     )

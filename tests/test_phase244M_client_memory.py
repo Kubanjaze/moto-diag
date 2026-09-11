@@ -798,7 +798,7 @@ class TestErasure:
 
 class TestTheSchemaContract:
     def test_schema_version_is_current(self):
-        assert SCHEMA_VERSION == 58  # f9-noqa: ssot-pin contract-pin: Phase 244M schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 57→58 by migration 058 (memory_facts). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py.
+        assert SCHEMA_VERSION == 59  # f9-noqa: ssot-pin contract-pin: Phase 244M schema-bump pin. The literal is the point — importing the constant would make this assert x == x. Bumped 57→58 by migration 058 (memory_facts). Bumping requires a corresponding new migration in src/motodiag/core/migrations.py. Bumped 58→59 at Phase 244N (migration 059 adds guidance_interactions and video_analyses: /ask discarded its whole answer while 244L recorded what the question cost, and set_analysis_findings overwrote the findings blob so every re-analysis destroyed the prior sweep).
 
     def test_the_migration_declares_every_index(self, db):
         with get_connection(db) as conn:

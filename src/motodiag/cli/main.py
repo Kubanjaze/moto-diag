@@ -27,6 +27,7 @@ from motodiag.cli.theme import get_console, status, tier_style
 from motodiag.cli.transcripts import register_transcripts
 from motodiag.cli.costs import register_costs
 from motodiag.cli.memory import register_memory
+from motodiag.cli.capture import register_capture
 
 console = get_console()
 
@@ -814,6 +815,7 @@ register_transcripts(cli)
 # `motodiag costs report` rolls up the cost_events ledger).
 register_costs(cli)
 register_memory(cli)
+register_capture(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

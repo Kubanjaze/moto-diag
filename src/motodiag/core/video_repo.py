@@ -29,10 +29,13 @@ use these helpers land in Commit 3.
 from __future__ import annotations
 
 import json
+import logging
 from datetime import datetime, timezone
 from typing import Optional
 
 from motodiag.core.database import get_connection
+
+_log = logging.getLogger(__name__)
 
 
 # ---------------------------------------------------------------------------
@@ -344,7 +347,40 @@ def set_analysis_findings(
                WHERE id = ? AND deleted_at IS NULL""",
             (serialized, now, video_id),
         )
-        return cursor.rowcount > 0
+        updated = cursor.rowcount > 0
+
+    if updated:
+        # Phase 244N. The UPDATE above is destructive by nature -- one blob per
+        # video, no history -- so re-analysing a video used to delete
+        # everything the previous sweep found. That cost real data once:
+        # commit d2c23f8 exists because session 6's sweep had to be rescued
+        # into git by hand before a re-run.
+        #
+        # The column keeps working exactly as before; it is now a pointer to
+        # the current sweep rather than the only copy. Appended AFTER the
+        # update succeeds, and it cannot fail the analysis: a history write
+        # that raises would destroy the thing it exists to preserve.
+        # Guarded here as well as inside `record_analysis`: the import itself
+        # can fail, and a history write that raises would destroy the very
+        # analysis it exists to preserve.
+        try:
+            from motodiag.capture.analyses import record_analysis
+
+            record_analysis(
+                video_id,
+                serialized,
+                model_used=payload.get("model_used"),
+                frames_analyzed=payload.get("frames_analyzed"),
+                analyzed_at=now,
+                db_path=db_path,
+            )
+        except Exception:
+            _log.warning(
+                "Analysis history not recorded for video %s", video_id,
+                exc_info=True,
+            )
+
+    return updated
 
 
 # ---------------------------------------------------------------------------

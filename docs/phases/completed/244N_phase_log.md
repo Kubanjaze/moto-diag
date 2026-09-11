@@ -1,6 +1,6 @@
 # Phase 244N — Stop discarding what already happens — phase log
 
-**Status:** Planned
+**Status:** ✅ Complete
 **Opened:** 2026-09-10
 
 ---
@@ -78,3 +78,52 @@ travels with the data rather than living in one person's head.
 answer gets better; the entire value is in what becomes possible once the rows
 exist. Worth saying plainly, because a phase whose success looks identical to
 doing nothing is easy to skip and expensive to skip late.
+
+## 2026-09-10 — Built
+
+**The tests found a hole in the phase's own headline promise.** Every capture
+function was written to swallow its exceptions, and that felt like enough. Two
+guards patched the capture callable itself to raise and **both failed**: the
+promise lived inside the callee while the call sites invoked it bare. So the
+guarantee held only as long as nobody refactored the callee and no import
+failed. Both call sites are guarded now. *The boundary is where a promise like
+"this never costs the request" has to hold* — one frame further in, the next
+person to edit the callee can silently revoke it.
+
+Then the fix itself was broken: `video_repo.py` has no logger, so the `except`
+block I wrote raised `NameError` from inside itself. The guard stayed red and
+said so. A handler that throws is worse than no handler — it converts a
+swallowed failure into an unhandled one at exactly the moment things are
+already going wrong.
+
+**A silent erasure bug, caught by reading the column list instead of assuming
+it.** The first draft of the `/ask` capture read `row["vehicle_id"]` off the
+video. `videos` carries `session_id` and **has no `vehicle_id` column**, so
+every interaction would have stored NULL. That is not cosmetic: erasure
+resolves customer → vehicles → interactions, so a permanently NULL
+`vehicle_id` means a deletion request matches nothing **and reports success** —
+a compliance failure that looks exactly like compliance.
+
+**The note left at 244M paid for itself.** 244M was caught red by the
+regression over one schema pin spelled `get_current_version(db_path) == N`
+instead of `SCHEMA_VERSION == N`. The note left in that pin's reason string
+said the obvious grep would miss it. This time the search covered both
+spellings up front and found all nine pins before the regression ran.
+
+**Six mutations, all caught:** destroy sweep history again; add an `outcome`
+column; drop the interaction write; stop reading the prior value before a
+PATCH; record no-op PATCHes as corrections; capture overrides with no AI
+author.
+
+**What the phase actually cost to build, versus what it unlocked.** Step 0 went
+looking for somewhere to put captured data and found the place already built —
+`session_overrides`, correct in every column, with `record_override` beside it,
+unused since Phase 116. The tables were empty because nothing could write to
+them. One call, at a hook point that had been overwriting the exact values the
+table wanted to store.
+
+That also corrects 244M's reading of its own dead compile path. 244M recorded
+"`diagnostic_feedback` is empty" as a fact about usage. It was a fact about
+wiring.
+
+**Regression: 6,463 passed, 0 failed, 23:36.** Green first time, which is the first phase this session to manage it — the nine schema pins were found before the run rather than by it.
