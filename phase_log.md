@@ -2716,3 +2716,26 @@ appointment CRUD — 12 public names, `create_appointment` through
 `delete_appointment` — imported by its own modules and its tests, and by
 nothing else. No CLI, no API route, `appointments` at 0 rows. Same family as
 the `feedback/` package closed at 244N.
+
+## 2026-09-10 — Debt: no API route sets `ai_model_used`
+
+Found while preparing the phone to generate traffic for 244N. `ai_model_used`
+is written in exactly one place in the codebase —
+`src/motodiag/cli/diagnose.py:500` — and there is **no API route** that sets it.
+
+That matters because 244N's override capture fires only on sessions the model
+authored, which is deliberate: recording `(NULL → "x")` as a correction would
+fill `session_overrides` with ordinary data entry and ruin every statistic
+drawn from it. But it means **the override stream — the highest-value ground
+truth in the product — is unreachable from any mobile client.** A technician
+with a phone can ask guidance questions and record videos; they cannot produce
+an AI-authored diagnosis to then correct.
+
+So the capture is sound and its most valuable input is gated behind a surface
+that only exists in the CLI. Eighth instance of the integration-gap family, and
+the first one found by asking "what can the user actually do from here" rather
+than by reading the code.
+
+Not fixed now — per the operator's decision to accumulate passively and harden
+once data exists. Recorded so the eventual "why are there no overrides?" has an
+answer waiting.
