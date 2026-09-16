@@ -241,6 +241,25 @@ class VisionAnalyzer:
         self._client = client
         self._model = model
 
+    @property
+    def resolved_model(self) -> str:
+        """The full model ID this analyzer calls, not the alias it was given.
+
+        Resolved rather than raw because `cost_events.model` stores the
+        resolved form (`claude-sonnet-4-6`, not `sonnet`). A guidance
+        interaction recorded as "sonnet" could not be compared against its own
+        cost row without a second translation step, and the first version of
+        the capture recorded no model at all -- so the ledger knew which model
+        answered and the interaction did not.
+
+        Deliberately does NOT go through `_get_client()`: that constructs a
+        client and needs an API key, and asking which model an analyzer uses
+        should not require credentials.
+        """
+        from motodiag.engine.client import _resolve_model
+
+        return _resolve_model(self._model)
+
     def _get_client(self):
         """Lazy-initialize the DiagnosticClient if not provided."""
         if self._client is None:

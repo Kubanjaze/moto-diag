@@ -668,3 +668,83 @@ class TestPassiveMeansNoNewSurface:
         assert set(group.commands) == {
             "stats", "interactions", "overrides", "analyses",
         }, "capture is read-only; recording happens as a byproduct"
+
+
+class TestTheInteractionRecordsWhichModelAnswered:
+    """Found by running the real thing, not by a test.
+
+    The first live `/ask` persisted its question, answer, candidates and
+    grounding -- and `model_used: None`. The cost row for the same call named
+    `claude-sonnet-4-6`. So the ledger knew which model answered and the table
+    built to study the answers did not, which makes "does sonnet answer better
+    than haiku" unanswerable from the interactions alone.
+
+    The value is the RESOLVED id, matching `cost_events.model`. Recording the
+    alias would leave "sonnet" in one table and "claude-sonnet-4-6" in the
+    other, and a comparison across them would silently match nothing.
+    """
+
+    def test_the_analyzer_reports_its_resolved_model(self):
+        from motodiag.engine.client import MODEL_ALIASES
+        from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
+
+        assert VisionAnalyzer(model="sonnet").resolved_model == MODEL_ALIASES["sonnet"]
+
+    def test_a_full_id_passes_through_unchanged(self):
+        from motodiag.engine.client import MODEL_ALIASES
+        from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
+
+        full = MODEL_ALIASES["haiku"]
+        assert VisionAnalyzer(model=full).resolved_model == full
+
+    def test_it_needs_no_api_key(self, monkeypatch):
+        """Asking which model an analyzer uses must not require credentials --
+        it is why this does not go through `_get_client()`."""
+        from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
+
+        monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+        assert VisionAnalyzer(model="sonnet").resolved_model
+
+    def test_the_route_passes_the_model_to_the_recorder(self):
+        from motodiag.api.routes import videos as videos_mod
+
+        src = code_of(videos_mod)
+        assert "model_used=analyzer.resolved_model" in src, (
+            "the interaction must record which model produced it"
+        )
+
+    def test_a_recorded_interaction_carries_the_model(self, db):
+        from motodiag.engine.client import MODEL_ALIASES
+
+        record_guidance_interaction(
+            "q", _answer(), vehicle_id=VEHICLE,
+            model_used=MODEL_ALIASES["sonnet"], db_path=db,
+        )
+        assert list_interactions(vehicle_id=VEHICLE, db_path=db)[0][
+            "model_used"
+        ] == MODEL_ALIASES["sonnet"]
+
+    def test_the_interaction_and_its_cost_row_agree_on_the_model(self, db):
+        """The invariant that matters: the two tables must be comparable."""
+        from motodiag.engine.client import MODEL_ALIASES
+        from motodiag.shop.cost_repo import record_cost_event
+
+        model = MODEL_ALIASES["sonnet"]
+        record_guidance_interaction(
+            "q", _answer(), vehicle_id=VEHICLE, model_used=model, db_path=db,
+        )
+        record_cost_event(
+            kind="vision_guidance", model=model, cost_usd_cents=13,
+            db_path=db,
+        )
+        with get_connection(db) as conn:
+            interaction = conn.execute(
+                "SELECT model_used FROM guidance_interactions"
+            ).fetchone()[0]
+            cost = conn.execute(
+                "SELECT model FROM cost_events WHERE kind = 'vision_guidance'"
+            ).fetchone()[0]
+        assert interaction == cost, (
+            "an alias in one table and a full id in the other would make a "
+            "join across them match nothing"
+        )
