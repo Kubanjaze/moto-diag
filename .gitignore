@@ -59,3 +59,4 @@ data/*.backup-*
 data/*.db-shm
 data/*.db-wal
 data/*.db-journal
+data/serve.log

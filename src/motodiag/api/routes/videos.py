@@ -518,7 +518,8 @@ def ask_about_video(
         context.make, context.model, db_path=db_path, limit=25,
     )
 
-    answer = VisionAnalyzer(model="sonnet").answer_question_about_frames(
+    analyzer = VisionAnalyzer(model="sonnet")
+    answer = analyzer.answer_question_about_frames(
         frames=frames,
         question=payload.question,
         vehicle_context=context,
@@ -539,6 +540,10 @@ def ask_about_video(
         video_id=video_id,
         vehicle_id=_vehicle_id_for_session(session_id, db_path),
         session_id=session_id,
+        # Without this the interaction row said `model_used: None` while its
+        # cost row named the model -- so "does sonnet answer better than
+        # haiku" was unanswerable from the table built to answer it.
+        model_used=analyzer.resolved_model,
         asked_by_user_id=user.id,
         db_path=db_path,
     )
