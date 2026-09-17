@@ -25,7 +25,7 @@ a server that starts, answers `/healthz`, and can't do its main job:
 | 🚨 | Every server recipe left out the `ai` extra, so no deployment could call Claude or Whisper | step 1, step 2 |
 | 🚨 | PDF reports depended on `reportlab`, which nothing declared | step 1, step 2 |
 | 🚨 | The container had no ffmpeg, so every video upload returned 503 | step 2 |
-| 🚨 | The app's server address is compiled in, so a reviewer can't point it anywhere | step 4, and **Decisions** below |
+| 🚨 | The app's server address is compiled in, so a reviewer can't point it anywhere | step 4, and **Decisions** below — ✅ **fixed 2026-09-17**, moto-diag-mobile `49270ba` |
 
 ---
 
@@ -216,21 +216,38 @@ exercise a single feature.
 4. Put the server URL and key in the App Review notes — the template is
    in the listing doc.
 
-   ✅ **Decided 2026-09-17: a runtime server-URL setting in the app**
-   (Decisions §1 below). Until it ships, the rest of this note describes the
-   gap.
+   ✅ **Unblocked 2026-09-17 — the server is set in the app**
+   (moto-diag-mobile `49270ba`, Decisions §1 below). The app uses the
+   address saved in **Settings → Server**, and falls back to `API_BASE_URL`,
+   the default compiled in from `.env`. With neither, it says *"No server
+   set — go to Settings."*
 
-   🚨 **This step can't work yet (found by Phase 209B).** The app has no
-   field for a server URL. `api/client.ts` takes the address from
-   `API_BASE_URL` in `.env` **at build time** and compiles it into the
-   binary. A reviewer can paste a key but can't change which server the app
-   talks to. Today's `.env` points at a tailnet address only your own
-   devices can reach, so a TestFlight build made now would fail review.
-   See **Decisions** below — this needs a product answer before this step.
+   - **If the demo instance is the build's default,** the reviewer only
+     pastes the key.
+   - **If it isn't,** the notes must tell the reviewer to open Settings →
+     Server, enter the demo URL and tap Save before pasting the key.
+   - **Save checks the server before storing it.** The address must be
+     `https://` (plain http is refused for anything but `localhost`,
+     `127.0.0.1` and `10.0.2.2`) and `/healthz` must answer `ok`. The demo
+     instance has to be up and publicly reachable when the reviewer tries.
+   - **The build won't archive without a real server.** A "Check release
+     server URL" build phase fails any Release build whose `API_BASE_URL`
+     is missing, isn't https, or is still `.env.example`'s
+     `https://api.<your-domain>`. The domain is still TBD, so choose it
+     before step 6.
 
-**Done when:** you can install the app fresh on a device, paste that
-key, and reach a populated work-order list without touching your dev
-machine.
+   Verified on a device on 2026-09-17: a Release build installed, the
+   address saved through Settings (the health check reached the server),
+   and Home connected afterwards.
+
+   *History (found by Phase 209B):* until then the app had no field for a
+   server URL. `api/client.ts` compiled `API_BASE_URL` into the binary, with
+   a hardcoded emulator address behind it, so a reviewer could paste a key
+   but never change which server the app talked to.
+
+**Done when:** you can install the app fresh on a device, set the demo
+server in Settings if the build's default isn't it, paste that key, and
+reach a populated work-order list without touching your dev machine.
 
 ---
 
@@ -313,7 +330,7 @@ In short:
 
 | | Decision | Tracked in |
 |---|---|---|
-| §1 | **Runtime server-URL setting.** The default comes from config (`API_BASE_URL`), the Settings screen overrides it, and a live health check runs on save. Plain http only for `localhost` / `127.0.0.1` / `10.0.2.2`. A build-time assertion requires `API_BASE_URL` in production. | moto-diag-mobile |
+| §1 | **Runtime server-URL setting.** The default comes from config (`API_BASE_URL`), the Settings screen overrides it, and a live health check runs on save. Plain http only for `localhost` / `127.0.0.1` / `10.0.2.2`. A build-time assertion requires `API_BASE_URL` in production. | ✅ **Shipped** — moto-diag-mobile `49270ba` |
 | §2 | **$25/month per shop**, enforced via `shop_cost_this_month` | F78 |
 | §3 | **Recompile memory on session close** | F79 |
 | §4 | **The policy must reflect collected data** before submission — owner Kerwyn | F80 |
