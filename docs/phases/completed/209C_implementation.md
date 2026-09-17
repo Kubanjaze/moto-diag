@@ -1,6 +1,6 @@
 # Phase 209C — Closing a session updates what the shop remembers
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -138,23 +138,23 @@ Recorded rather than changed.
 
 ## Verification Checklist
 
-- [ ] `POST /v1/sessions/{id}/close` compiles the session's vehicle, visible through `recall`
-- [ ] `PATCH /v1/sessions/{id}` with `status: "closed"` compiles too, and sets `closed_at`
-- [ ] Leaving `closed` by PATCH clears `closed_at`
-- [ ] The CLI `diagnose` flow's close compiles the vehicle
-- [ ] Reopen → edit diagnosis → close: the old diagnosis fact is superseded, the new one is live, recall shows only the new one
-- [ ] Reverting the edit and closing again revives the original fact
-- [ ] A removed symptom's fact is superseded at the next close
-- [ ] Facts of other vehicles, and of origin tables compile doesn't read, are never superseded
-- [ ] A compile that raises: the close still returns 200, the session is closed, a warning is logged
-- [ ] A session with no vehicle closes without compiling
-- [ ] Closing twice inserts nothing the second time
-- [ ] An AI-authored diagnosis, edited, compiles as `model-generated` on close
-- [ ] `motodiag memory compile` reports superseded/revived counts when non-zero, and its existing output is unchanged otherwise
-- [ ] The reachability gate (209B) still passes; the new functions have callers
-- [ ] A production-copy compile supersedes 0 facts (S0-6 still holds)
-- [ ] Mutations: remove the hook; remove the PATCH routing; drop the supersede step; drop the revive step; let the refresh raise; widen supersede to all origin tables — each caught
-- [ ] Full regression green
+- [x] `POST /v1/sessions/{id}/close` compiles the session's vehicle, visible through `recall`
+- [x] `PATCH /v1/sessions/{id}` with `status: "closed"` compiles too, and sets `closed_at`
+- [x] Leaving `closed` by PATCH clears `closed_at`
+- [x] The CLI `diagnose` flow's close compiles the vehicle
+- [x] Reopen → edit diagnosis → close: the old diagnosis fact is superseded, the new one is live, recall shows only the new one
+- [x] Reverting the edit and closing again revives the original fact
+- [x] A removed symptom's fact is superseded at the next close
+- [x] Facts of other vehicles, and of origin tables compile doesn't read, are never superseded
+- [x] A compile that raises: the close still returns 200, the session is closed, a warning is logged
+- [x] A session with no vehicle closes without compiling
+- [x] Closing twice inserts nothing the second time
+- [x] An AI-authored diagnosis, edited, compiles as `model-generated` on close
+- [x] `motodiag memory compile` reports superseded/revived counts when non-zero, and its existing output is unchanged otherwise
+- [x] The reachability gate (209B) still passes; the new functions have callers
+- [x] A production-copy compile supersedes 0 facts (S0-6 still holds)
+- [x] Mutations: remove the hook; remove the PATCH routing; drop the supersede step; drop the revive step; let the refresh raise; widen supersede to all origin tables — each caught
+- [x] Full regression green
 
 ## Risks
 
@@ -168,3 +168,70 @@ Recorded rather than changed.
   `closed_at`, which it silently didn't before. Any client relying on a
   PATCH-closed session having no `closed_at` would see a difference; none
   was found.
+
+## Deviations from v1.0
+
+**1. The close is guarded at the call site too.** v1.0 put the whole
+"never raises" promise inside `refresh_after_close`. The PATCH route's own
+comment records why that isn't enough: the override capture there is
+guarded at the call site as well, because a promise kept only by the callee
+is *"one refactor -- or one failed import -- away"* from failing the
+request. `close_session` now wraps the import and the call. A test makes the
+module unimportable (`sys.modules[...] = None`) and the close still returns
+200.
+
+**2. That guard could hide a broken refresh, so the refresh is tested
+directly.** With two layers, removing the refresh's own `try` changes
+nothing a route test can see: the outer guard catches the exception and the
+close still succeeds. The first run of mutation M5 would have passed
+silently. The route test now asserts the refresh's **own** log line
+(`(vehicle N) failed; the close stands`), and three tests pin
+`refresh_after_close` itself: it returns what changed, it never raises, and
+an unknown session is a no-op.
+
+**3. A PATCH to `closed` on a session already closed.** v1.0 said a move
+*into* closed goes through `close_session`. Taken literally, a PATCH that
+repeats `status: "closed"` does nothing, `update_session` returns False, and
+the route answers **404**. The status is now rewritten in place: 200, and
+`closed_at` kept rather than bumped. Pinned by a test, and by mutation M10.
+
+## Results
+
+| | |
+|---|---|
+| Close paths that refresh memory | **all of them**: `POST /close`, `PATCH status=closed`, and the CLI `diagnose` flows (2 call sites), through the one function |
+| `closed_at` on a PATCH close | now set. It never was before. Leaving `closed` clears it. |
+| Superseding | implemented for the first time (`reconcile_facts`): edited text, removed symptoms and deleted rows are retired; a reverted edit revives the original row |
+| Scope of a supersede | the compiled vehicle, and only the six tables compile reads (`COMPILED_ORIGIN_TABLES`, held to the source by a test) |
+| Failure behaviour | best-effort at two layers; a failing compile or an unimportable module leaves the close at 200 |
+| Cost | 4–6 ms per vehicle, inside the request |
+| Production copy | full compile: **0 inserted, 0 superseded, 0 revived** across 10 machines; still 37 facts, none superseded |
+| `motodiag memory compile` | reports superseded/revived counts, and only when they're non-zero; unchanged output otherwise is pinned |
+| Schema | unchanged (v60) |
+| Tests added | **31**, all through the API routes or the CLI except the scoping and contract checks |
+| Mutations | **15 of 15 caught** |
+| Regression | **6,657 passed, 0 failed, 25:32** |
+
+**Mutations**
+
+| | mutation | caught by |
+|---|---|---|
+| M1 | `close_session` no longer calls the refresh | `test_the_close_route_compiles_the_machine` |
+| M2 | PATCH writes `closed` directly | `test_a_patch_to_closed_compiles_and_sets_closed_at` |
+| M3 | nothing is superseded | `test_reopen_edit_close_supersedes_the_old_diagnosis` |
+| M4 | nothing is revived | `test_reverting_the_edit_revives_the_original_row` |
+| M5 | the refresh lets exceptions out | the route test's refresh-specific log line, and `test_it_never_raises` |
+| M6 | no call-site guard | `test_a_refresh_module_that_will_not_import` |
+| M7 | supersede ignores the origin table | `test_a_fact_compile_does_not_own_is_never_retired` |
+| M8 | supersede ignores the vehicle | `test_another_machines_facts_are_untouched` |
+| M9 | leaving `closed` keeps `closed_at` | `test_leaving_closed_by_patch_clears_closed_at` |
+| M10 | a repeated PATCH to closed bumps `closed_at` | `test_a_patch_to_closed_on_a_closed_session_keeps_its_closed_at` |
+| M11 | status written before the edited fields | `test_a_patch_to_closed_writes_the_edited_fields_first` |
+| M12 | a compiled table missing from the tuple | `test_the_compiled_tables_are_exactly_the_ones_compile_writes` |
+| M13 | the CLI always prints retire counts | `test_an_unchanged_compile_reads_as_before` |
+| M14 | the refresh compiles a session with no vehicle | `test_a_session_without_a_machine_closes_without_compiling` |
+| M15 | the compile stops inserting | `test_it_returns_what_the_compile_changed` |
+
+**Still as recorded in S0-7:** feedback, analyses finishing after the close
+and completed work orders reach memory at the machine's next session close
+or a manual compile. That is the decided cadence, not a defect.

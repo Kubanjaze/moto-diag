@@ -1,4 +1,4 @@
-"""Phase 244M — the fact row, its key, and the only two ways in and out.
+"""Phase 244M — the fact row, its key, and the only ways in and out.
 
 A "fact" here is deliberately small: one thing established about one machine at
 one time, carrying where it came from. Facts are never mutated. A later fact
@@ -10,7 +10,7 @@ from __future__ import annotations
 
 import hashlib
 from dataclasses import dataclass, field
-from typing import Optional, Sequence
+from typing import Iterable, Optional, Sequence
 
 from motodiag.core.database import get_connection
 
@@ -151,6 +151,62 @@ def insert_facts(
             inserted += cursor.rowcount if cursor.rowcount > 0 else 0
         conn.commit()
     return inserted
+
+
+def reconcile_facts(
+    vehicle_id: int,
+    current_keys: Iterable[str],
+    origin_tables: Sequence[str],
+    db_path: Optional[str] = None,
+) -> tuple[int, int]:
+    """Bring one machine's facts in line with what its records now say.
+
+    Returns ``(superseded, revived)``, counted in rows actually changed.
+
+    Phase 209C. A fact's key includes its text, so when a diagnosis is edited
+    the compile produces a *new* fact and the old one stays. This module's
+    docstring has always said the old one is superseded -- ``superseded_at``
+    set, the row kept -- and ``list_facts`` has always hidden superseded rows,
+    but until 209C nothing ever set it. Compiling on every session close would
+    have made the gap routine: reopen, edit, close left the model's first
+    prose and the edit side by side in recall.
+
+    - **Superseded:** a live fact whose key the compile no longer produces --
+      edited text, a removed symptom, a replaced analysis, a deleted row.
+    - **Revived:** a superseded fact whose key is produced again, so reverting
+      an edit restores the fact instead of hiding it for good. The key is
+      UNIQUE, so re-inserting isn't possible; clearing the mark is the only way
+      back.
+
+    Only facts whose ``origin_table`` is in ``origin_tables`` are considered:
+    a fact written by some other path is not this compile's to retire.
+    """
+    tables = tuple(origin_tables)
+    if not tables:
+        return 0, 0
+    keys = set(current_keys)
+    placeholders = ", ".join("?" for _ in tables)
+    superseded = revived = 0
+    with get_connection(db_path) as conn:
+        rows = conn.execute(
+            "SELECT id, fact_key, superseded_at FROM memory_facts "
+            f"WHERE vehicle_id = ? AND origin_table IN ({placeholders})",
+            (vehicle_id, *tables),
+        ).fetchall()
+        for fact_id, key, superseded_at in rows:
+            if superseded_at is None and key not in keys:
+                superseded += conn.execute(
+                    "UPDATE memory_facts SET superseded_at = datetime('now') "
+                    "WHERE id = ? AND superseded_at IS NULL",
+                    (fact_id,),
+                ).rowcount
+            elif superseded_at is not None and key in keys:
+                revived += conn.execute(
+                    "UPDATE memory_facts SET superseded_at = NULL "
+                    "WHERE id = ? AND superseded_at IS NOT NULL",
+                    (fact_id,),
+                ).rowcount
+    return superseded, revived
 
 
 def list_facts(

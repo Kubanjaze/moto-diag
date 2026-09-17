@@ -21,8 +21,9 @@ import click
 from motodiag.memory import (
     answer_from_memory,
     attach_vehicle,
-    compile_all,
-    compile_vehicle,
+    CompileResult,
+    compile_all_detailed,
+    compile_vehicle_detailed,
     erase_customer,
     erase_plan,
     recall,
@@ -52,23 +53,43 @@ def attach_cmd(vehicle: int, customer: int) -> None:
     click.echo(f"Vehicle {vehicle} attached to customer {customer}.")
 
 
+def _retired(result: CompileResult) -> str:
+    """Phase 209C: the supersede/revive counts, only when there are any, so
+    the output of a compile that changed nothing else reads as before."""
+    parts = []
+    if result.superseded:
+        parts.append(f"{result.superseded} superseded")
+    if result.revived:
+        parts.append(f"{result.revived} revived")
+    return (", " + ", ".join(parts)) if parts else ""
+
+
 @memory.command("compile")
 @click.option("--vehicle", type=int, default=None, help="One machine, or all.")
 def compile_cmd(vehicle: int | None) -> None:
     """Compile recorded interactions into facts. Idempotent."""
     if vehicle is not None:
-        inserted = compile_vehicle(vehicle)
-        click.echo(f"Vehicle {vehicle}: {inserted} new fact(s).")
+        result = compile_vehicle_detailed(vehicle)
+        click.echo(
+            f"Vehicle {vehicle}: {result.inserted} new fact(s){_retired(result)}."
+        )
         return
 
-    results = compile_all()
-    total = sum(results.values())
-    for vid, count in sorted(results.items()):
-        if count:
-            click.echo(f"  vehicle {vid}: {count} new fact(s)")
+    results = compile_all_detailed()
+    total = sum(r.inserted for r in results.values())
+    for vid, result in sorted(results.items()):
+        if result.inserted or result.superseded or result.revived:
+            click.echo(
+                f"  vehicle {vid}: {result.inserted} new fact(s){_retired(result)}"
+            )
     # "inserted", not "walked" -- a re-compile reports 0, which is the
     # honest answer and the one Phase 244D's loader failed to give.
-    click.echo(f"{total} new fact(s) across {len(results)} machine(s).")
+    line = f"{total} new fact(s) across {len(results)} machine(s)"
+    superseded = sum(r.superseded for r in results.values())
+    revived = sum(r.revived for r in results.values())
+    if superseded or revived:
+        line += _retired(CompileResult(0, superseded, revived))
+    click.echo(line + ".")
 
 
 @memory.command("show")
