@@ -244,6 +244,22 @@ def _vin_in_range(vin: str, vin_range_json: Optional[str]) -> bool:
 # ---------------------------------------------------------------------------
 
 
+class RecallNotFoundError(LookupError):
+    """Raised when a recall id does not exist. See :func:`mark_resolved`."""
+
+
+def count_recalls(db_path: Optional[str] = None) -> int:
+    """How many recalls are loaded.
+
+    F86. Every query surface here answers an empty table the same way it
+    answers a genuine all-clear — `check-vin` paints a green "Clear" panel
+    either way. With no recall corpus loaded, that is a safety statement the
+    product is not entitled to make. Callers use this to tell the two apart.
+    """
+    with get_connection(db_path) as conn:
+        return int(conn.execute("SELECT COUNT(*) FROM recalls").fetchone()[0])
+
+
 def check_vin(vin: str, db_path: Optional[str] = None) -> list[dict]:
     """Look up open NHTSA recalls for a VIN.
 
@@ -427,8 +443,17 @@ def mark_resolved(
                     (vehicle_id, recall_id, resolved_by_user_id, notes),
                 )
             return 1 if cursor.rowcount > 0 else 0
-    except sqlite3.IntegrityError:
-        # UNIQUE(vehicle_id, recall_id) — already resolved. Idempotent.
+    except sqlite3.IntegrityError as exc:
+        # Two different violations reach here, and they mean opposite things.
+        #
+        # UNIQUE(vehicle_id, recall_id) is the idempotent case: the work is
+        # recorded, say so. FOREIGN KEY means the recall id does not exist —
+        # nothing was written, and reporting "already resolved" tells a
+        # technician the work is on file when no such recall exists. F86.
+        if "FOREIGN KEY" in str(exc).upper():
+            raise RecallNotFoundError(
+                f"no recall with id {recall_id}"
+            ) from exc
         return 0
 
 
@@ -507,6 +532,19 @@ def load_recalls_from_json(
     path: Optional[str] = None, db_path: Optional[str] = None,
 ) -> int:
     """Load the recalls.json seed into the DB. Idempotent on nhtsa_id.
+
+    ⚠ **The shipped `advanced/data/recalls.json` is illustrative sample data,
+    not filed campaigns.** Its 30 `nhtsa_id` values sit on a visibly synthetic
+    grid — {19,20,21,22}V x {012,123,...,901} x {000,500} — established by
+    this project's own audit (`docs/phases/completed/
+    TRACK_K_AUDIT_VERIFIER_NOTES.md:508`), which recommended labelling the
+    fixture honestly and was never applied until F86. Phase 155's doc called
+    them "real NHTSA campaigns"; that claim is corrected there now.
+
+    Nothing in the product seeds this file, and nothing should: printing a
+    fabricated federal campaign number with a severity that floors a
+    prediction to critical (`advanced/predictor.py:417-430`) is worse than an
+    empty table. Real NHTSA ingestion is roadmap row 281, unstarted.
 
     Uses ``INSERT OR IGNORE`` on the partial UNIQUE INDEX over
     nhtsa_id — re-running the loader is safe and cheap.

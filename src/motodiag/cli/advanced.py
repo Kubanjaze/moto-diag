@@ -50,6 +50,7 @@ from motodiag.advanced.comparative import (
 )
 from motodiag.advanced.predictor import predict_failures
 from motodiag.cli.theme import (
+    ICON_FAIL,
     ICON_OK,
     ICON_WARN,
     format_severity,
@@ -161,6 +162,38 @@ def _list_garage_summary(db_path: Optional[str] = None, limit: int = 10) -> list
 
 
 # --- Register ----------------------------------------------------------
+
+
+def _recall_corpus_warning(console) -> bool:
+    """Say so when no recall data is loaded. Returns True if the corpus is empty.
+
+    F86. `check-vin` and `lookup` printed a green "Clear" panel whether a bike
+    had no open recalls or the product had no recall data at all — the same
+    border, the same checkmark, the same words. An empty corpus cannot clear a
+    motorcycle, and this repo already named that shape "the worst available
+    failure mode" (docs/phases/completed/240C_implementation.md:215).
+
+    Nothing seeds the recalls table today, and the file that ships is
+    illustrative sample data with synthetic campaign ids, so the honest answer
+    is that the lookup could not be performed.
+    """
+    from motodiag.advanced.recall_repo import count_recalls
+
+    if count_recalls() > 0:
+        return False
+    console.print(
+        Panel(
+            f"[yellow]{ICON_WARN} No recall data is loaded — this is NOT an "
+            f"all-clear.[/yellow]\n\n"
+            "[dim]The recalls table is empty, so no campaign could match. The "
+            "sample file shipped with this project carries illustrative "
+            "campaign ids, not filed NHTSA campaigns, and nothing seeds it. "
+            "Check the manufacturer or NHTSA directly.[/dim]",
+            title="Recall lookup unavailable",
+            border_style="yellow",
+        )
+    )
+    return True
 
 
 def register_advanced(cli_group: click.Group) -> None:
@@ -2981,6 +3014,8 @@ def register_advanced(cli_group: click.Group) -> None:
         )
 
         if not rows:
+            if _recall_corpus_warning(console):
+                return
             console.print(
                 Panel(
                     f"[green]{ICON_OK} No open recalls for this VIN.[/green]",
@@ -3033,6 +3068,8 @@ def register_advanced(cli_group: click.Group) -> None:
             return
 
         if not rows:
+            if _recall_corpus_warning(console):
+                return
             console.print(
                 Panel(
                     f"[green]{ICON_OK} No recalls for "
@@ -3072,7 +3109,10 @@ def register_advanced(cli_group: click.Group) -> None:
         json_output: bool,
     ) -> None:
         """Record that a recall has been resolved on a garage bike."""
-        from motodiag.advanced.recall_repo import mark_resolved
+        from motodiag.advanced.recall_repo import (
+            RecallNotFoundError,
+            mark_resolved,
+        )
         from motodiag.cli.diagnose import _resolve_bike_slug
 
         console = get_console()
@@ -3084,12 +3124,26 @@ def register_advanced(cli_group: click.Group) -> None:
             raise click.exceptions.Exit(1)
 
         vehicle_id = int(resolved["id"])
-        inserted = mark_resolved(
-            vehicle_id=vehicle_id,
-            recall_id=recall_id,
-            resolved_at=resolved_at,
-            notes=notes,
-        )
+        try:
+            inserted = mark_resolved(
+                vehicle_id=vehicle_id,
+                recall_id=recall_id,
+                resolved_at=resolved_at,
+                notes=notes,
+            )
+        except RecallNotFoundError:
+            # F86: this used to reach the "already resolved" panel, telling a
+            # technician the work was on file for a recall that does not exist.
+            console.print(
+                Panel(
+                    f"[red]{ICON_FAIL} No recall with id {recall_id}.[/red]\n\n"
+                    "[dim]Nothing was recorded. Run `motodiag advanced recall "
+                    "list` to see the ids that exist.[/dim]",
+                    title="Recall not found",
+                    border_style="red",
+                )
+            )
+            raise click.exceptions.Exit(1)
 
         if json_output:
             click.echo(_json.dumps({
