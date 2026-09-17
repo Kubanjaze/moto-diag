@@ -15,6 +15,7 @@ All AI calls go through an injectable `diagnose_fn` so tests never burn tokens.
 from __future__ import annotations
 
 import json
+import logging
 import os
 import textwrap
 from typing import Any, Callable, Optional
@@ -25,6 +26,8 @@ from rich.panel import Panel
 from rich.table import Table
 
 from motodiag.cli.theme import get_console, status as theme_status, severity_style
+
+_log = logging.getLogger(__name__)
 from motodiag.knowledge.vehicle_resolver import (
     VehicleIdentity,
     known_issues_for_vehicle,
@@ -635,8 +638,70 @@ def _persist_response(
 # --- Rendering ---
 
 
-def _render_response(response: Any, console: Console) -> None:
+#: Alerts at or above this rank reach the technician. The operator chose
+#: CRITICAL + WARNING on 2026-09-17, from a measurement: across the 970 corpus
+#: entries, 30% fire some alert and 9.9% fire a critical one. Rendering all
+#: four levels would put a safety notice on about a third of jobs, most of it
+#: caution-grade ("oil leak"), which is how a safety notice stops being read.
+_ALERT_THRESHOLD = ("critical", "warning")
+
+
+def _render_safety(
+    console: Console,
+    response: Any,
+    *,
+    vehicle: Optional[dict] = None,
+    symptoms: Optional[list[str]] = None,
+) -> None:
+    """Show hazards the diagnosis implies, before the ranked list.
+
+    Phase 244T. `SafetyChecker` has had 19 rules and no caller since Phase 241
+    — `media/analysis_worker.py:223` names it as this codebase's canonical
+    example of built-and-never-wired, and the 209B gate could not see it
+    because `engine/__init__` re-exports the name.
+
+    Reads the model's diagnosis text AND the technician's own symptoms: a leak
+    described at intake but not repeated in the diagnosis is still a leak.
+
+    Never raises. A safety feature that can break a diagnosis is a worse trade
+    than one that occasionally says nothing.
+    """
+    try:
+        from motodiag.engine.safety import SafetyChecker, format_alerts
+
+        text = " ".join(filter(None, [
+            getattr(response, "notes", "") or "",
+            " ".join(
+                f"{getattr(d, 'diagnosis', '')} {getattr(d, 'rationale', '')}"
+                for d in (getattr(response, "diagnoses", []) or [])
+            ),
+            " ".join(symptoms or []),
+        ]))
+        if not text.strip():
+            return
+        checker = SafetyChecker(
+            powertrain=(vehicle or {}).get("powertrain"),
+        )
+        alerts = [
+            a for a in checker.check_diagnosis(text)
+            if a.level.value in _ALERT_THRESHOLD
+        ]
+        if not alerts:
+            return
+        console.print(format_alerts(alerts))
+    except Exception:  # pragma: no cover - defensive
+        _log.warning("safety check failed; the diagnosis stands", exc_info=True)
+
+
+def _render_response(
+    response: Any,
+    console: Console,
+    *,
+    vehicle: Optional[dict] = None,
+    symptoms: Optional[list[str]] = None,
+) -> None:
     """Pretty-print a DiagnosticResponse."""
+    _render_safety(console, response, vehicle=vehicle, symptoms=symptoms)
     summary = getattr(response, "vehicle_summary", "") or ""
     console.print(Panel(summary or "(no summary)", title="Vehicle", border_style="cyan"))
 
@@ -1142,7 +1207,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             console.print(f"[red]{exc}[/red]")
             raise click.exceptions.Exit(1) from exc
         console.print(f"[green]Session #{session_id} created and diagnosed.[/green]\n")
-        _render_response(response, console)
+        _render_response(response, console, vehicle=vehicle, symptoms=symptom_list)
 
     @diagnose.command("start")
     @click.option("--vehicle-id", default=None, type=int)
@@ -1185,7 +1250,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             console.print("[yellow]Session closed with no diagnosis.[/yellow]")
             return
         console.print(f"\n[green]Session #{session_id} saved.[/green]\n")
-        _render_response(response, console)
+        _render_response(response, console, vehicle=vehicle)
 
     @diagnose.command("list")
     @click.option("--status", default=None,
