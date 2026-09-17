@@ -299,3 +299,95 @@ built now.
 
 **v1.2 rather than a quiet edit**, because a Results number changed after the
 phase closed.
+
+## 2026-09-17 13:31 EDT — Decision 1 shipped: the server is set in the app
+
+**moto-diag-mobile `49270ba`** (merge of `98b6eb4`). The plan was approved
+before any code, and the diff was shown before the commit.
+
+`src/api/serverUrl.ts` is now the only place that decides the server, and it
+decides on every request:
+
+1. the address saved in **Settings → Server**;
+2. otherwise `API_BASE_URL`, compiled in from `.env`;
+3. otherwise *"No server set — go to Settings."*
+
+`DEFAULT_BASE_URL = 'http://10.0.2.2:8000'` is gone from `client.ts`, from
+the API index and from the SSOT registry. Transcript audio, which built its
+own URL from the compiled value, now resolves the server the same way.
+
+- **Save checks before storing.** It validates the format, then
+  `GET /healthz` must answer `ok` with a schema version. Nothing is stored
+  otherwise, and the API key is not sent to an address that hasn't been
+  accepted yet.
+- **Plain http is one constant:** `DEV_HTTP_HOSTS` = localhost,
+  127.0.0.1, 10.0.2.2.
+- **Home shows the no-server state** with a way to Settings, and re-checks
+  the backend on focus rather than only on mount.
+- **The build-time assertion** is a "Check release server URL" phase, first
+  in the Xcode target. It runs `scripts/check-release-env.js` for Release
+  only, reads the env file react-native-config actually compiles in, and
+  fails on a missing, non-https or placeholder `API_BASE_URL`.
+
+**One deviation from the approved plan.** The plan was to build the client
+on a sentinel origin and rebase each request onto the stored server inside
+`customFetch`. React Native's fetch polyfill makes that unsafe:
+`whatwg-fetch`'s `Request` constructor takes the body from `options.body`,
+which its own Request objects don't have. The copy would have lost every
+POST and PATCH body on a phone, while Jest's Node `Request` passed. Instead,
+each call passes the resolved server through openapi-fetch 0.13.8's
+per-request `baseUrl`. A test asserts that a POST body arrives intact.
+
+**Three things the tests caught before the commit:**
+
+- **The new release-check test would never have been committed.** It was
+  in `__tests__/build/`, which the `build/` rule in `.gitignore` silently
+  excludes. It moved to `__tests__/release/`.
+- **The app-wide `api` singleton couldn't be tested as written.** It
+  captured `fetch` when the module was imported, so a mocked fetch never
+  reached it. It now looks `fetch` up per call; on a device nothing
+  changes, since the global exists before app code runs.
+- **My first SSOT guard flagged prose.** It matched *"Use https://"* in
+  error messages and reserved `example.com` placeholders. It now parses
+  code with the TypeScript compiler API, ignores comments and
+  RFC 2606/6761 hosts, and still flags an address assembled behind a fixed
+  scheme (`` `http://${ip}` ``).
+
+**Verified.**
+
+- jest **1,164 passed** (was 1,062), tsc clean, lint 0 errors and no new
+  warnings in the touched files.
+- **16/16 mutations caught**, including: build value first, server fixed at
+  construction, literal restored, any host allowed http, the health check
+  sending the key, Save storing before checking, the phase dropped from
+  the target, and the phase never matching Release.
+- **A real Release build for the phone ran the new phase first** and
+  passed on the local `.env`. The bundle contains the new copy and no
+  longer contains `10.0.2.2:8000`.
+- **Installed on the iPhone,** backend up on localhost behind a
+  tailnet-only `tailscale serve`. The operator saved the tailnet address in
+  Settings, then went back to Home. The server log shows both requests from
+  the phone (`100.70.3.60`):
+
+  ```
+  GET /healthz     200   ← Save's check, before storing
+  GET /v1/version  200   ← Home re-checking on focus, after the save
+  ```
+
+  The saved address is the same as this build's default, so the server
+  can't tell which source a request used. The tests are what prove the
+  saved one wins.
+
+**Still open:**
+
+- **The domain is TBD.** A Release build won't archive until
+  `API_BASE_URL` is real, so the domain has to be chosen before
+  TestFlight.
+- **Android has no build-time check.** `react-native-config` isn't applied
+  in `android/app/build.gradle`, so `Config` is empty there and an emulator
+  build opens on "No server set". Android isn't a launch target; no ticket
+  filed.
+- **Jest prints "Cannot log after tests are done" once.** It does so on
+  `main` too, so it isn't from this change.
+
+The launch checklist's step 4 is marked unblocked in `eaf3c86`.
