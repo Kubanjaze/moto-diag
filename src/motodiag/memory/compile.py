@@ -29,16 +29,29 @@ later phase to come back for it.
 from __future__ import annotations
 
 import json
+from dataclasses import dataclass
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.memory.facts import MemoryFact, insert_facts
+from motodiag.memory.facts import MemoryFact, insert_facts, reconcile_facts
 
 # A finding below this confidence is not compiled into memory at all. A vision
 # sweep emits low-confidence guesses freely -- that is appropriate for a
 # ranked list a technician reads and discards, and inappropriate for a store
 # that will later be recalled as "what is known about this machine".
 _MIN_OBSERVATION_CONFIDENCE = 0.5
+
+# Every table a compile reads, as written in `origin_table` below. A compile
+# only ever supersedes facts from these (Phase 209C); a test holds this tuple
+# to the literals in this file, so a new source can't be added without it.
+COMPILED_ORIGIN_TABLES: tuple[str, ...] = (
+    "diagnostic_sessions",
+    "videos",
+    "work_orders",
+    "work_order_parts",
+    "service_history",
+    "diagnostic_feedback",
+)
 
 
 def _date_of(value: Optional[str]) -> str:
@@ -320,8 +333,24 @@ def _feedback_facts(conn, vehicle_id: int) -> list[MemoryFact]:
     return facts
 
 
-def compile_vehicle(vehicle_id: int, db_path: Optional[str] = None) -> int:
-    """Compile one machine's interactions into facts. Returns ROWS INSERTED."""
+@dataclass(frozen=True)
+class CompileResult:
+    """What one machine's compile changed, in rows actually written."""
+
+    inserted: int
+    superseded: int
+    revived: int
+
+
+def compile_vehicle_detailed(
+    vehicle_id: int, db_path: Optional[str] = None,
+) -> CompileResult:
+    """Compile one machine, and retire what its records no longer say.
+
+    Inserting first and reconciling second means a fact that was superseded
+    and is produced again is revived rather than skipped (see
+    :func:`~motodiag.memory.facts.reconcile_facts`).
+    """
     with get_connection(db_path) as conn:
         facts = (
             _session_facts(conn, vehicle_id)
@@ -330,11 +359,38 @@ def compile_vehicle(vehicle_id: int, db_path: Optional[str] = None) -> int:
             + _service_history_facts(conn, vehicle_id)
             + _feedback_facts(conn, vehicle_id)
         )
-    return insert_facts(facts, db_path=db_path)
+    inserted = insert_facts(facts, db_path=db_path)
+    superseded, revived = reconcile_facts(
+        vehicle_id,
+        (f.key() for f in facts),
+        COMPILED_ORIGIN_TABLES,
+        db_path=db_path,
+    )
+    return CompileResult(
+        inserted=inserted, superseded=superseded, revived=revived,
+    )
+
+
+def compile_vehicle(vehicle_id: int, db_path: Optional[str] = None) -> int:
+    """Compile one machine's interactions into facts. Returns ROWS INSERTED."""
+    return compile_vehicle_detailed(vehicle_id, db_path=db_path).inserted
+
+
+def compile_all_detailed(
+    db_path: Optional[str] = None,
+) -> dict[int, CompileResult]:
+    """Compile every machine. Returns {vehicle_id: CompileResult}."""
+    with get_connection(db_path) as conn:
+        vehicle_ids = [r[0] for r in conn.execute("SELECT id FROM vehicles")]
+    return {
+        vid: compile_vehicle_detailed(vid, db_path=db_path)
+        for vid in vehicle_ids
+    }
 
 
 def compile_all(db_path: Optional[str] = None) -> dict[int, int]:
     """Compile every machine. Returns {vehicle_id: rows inserted}."""
-    with get_connection(db_path) as conn:
-        vehicle_ids = [r[0] for r in conn.execute("SELECT id FROM vehicles")]
-    return {vid: compile_vehicle(vid, db_path=db_path) for vid in vehicle_ids}
+    return {
+        vid: result.inserted
+        for vid, result in compile_all_detailed(db_path=db_path).items()
+    }

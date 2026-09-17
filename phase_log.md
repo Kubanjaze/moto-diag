@@ -2851,3 +2851,25 @@ Schema unchanged (v60). 117 guards, 11 of 11 mutations caught. The first
 regression failed twice: my first placement of `reportlab` (in `api`) broke
 Phase 209's Pillow-free `[api]` contract, and Phase 209's own tests caught it.
 Regression Regression 6,626 passed, 0 failed, 25:18.
+
+## Phase 209C complete — 2026-09-17
+
+Closing a session updates what the shop remembers. The operator picked F79
+and, in the same exchange, settled F78's two open questions (block at the
+cap; the session carries its shop — mobile `cee05c7`).
+
+The ticket was one call to `compile_vehicle` on close. Step 0 found the
+reason it couldn't simply be made. Memory facts are keyed on their text,
+and **nothing had ever superseded one**, although the module documented
+exactly how it should happen and recall already honoured it. Compiling on
+every close would have turned each edit-and-reclose into two versions of
+the truth side by side. The same audit found **PATCH closing sessions
+behind `close_session`'s back**, without `closed_at`.
+
+So every close now goes through one function, which refreshes memory
+without ever failing the close. Compile retires what a record no longer
+says and revives what it says again. The mutation run caught a hole in my
+own tests, where two guard layers logged the same phrase. On a production
+copy the change is invisible: 0 facts changed.
+
+Schema unchanged (v60). 31 tests, 15/15 mutations. Regression 6,657 passed, 0 failed, 25:32.

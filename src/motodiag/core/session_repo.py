@@ -49,7 +49,16 @@ def get_session(session_id: int, db_path: str | None = None) -> dict | None:
 
 
 def update_session(session_id: int, updates: dict, db_path: str | None = None) -> bool:
-    """Update session fields. Returns True if updated."""
+    """Update session fields. Returns True if updated.
+
+    ``status`` is not written with the other fields. Phase 209C found that a
+    PATCH to ``status: "closed"`` wrote the column directly: it never set
+    ``closed_at``, and it bypassed :func:`close_session`, where the memory
+    refresh lives. Moving INTO closed now goes through ``close_session``;
+    any other status change clears ``closed_at``, as :func:`reopen_session`
+    does. The other fields are written first, so the refresh compiles the
+    edited values.
+    """
     allowed = {
         "status", "diagnosis", "confidence", "severity",
         "cost_estimate", "ai_model_used", "tokens_used",
@@ -58,15 +67,48 @@ def update_session(session_id: int, updates: dict, db_path: str | None = None) -
     if not filtered:
         return False
 
-    filtered["updated_at"] = datetime.now().isoformat()
-    set_clause = ", ".join(f"{k} = ?" for k in filtered)
-    values = list(filtered.values()) + [session_id]
+    status = filtered.pop("status", None)
+    now = datetime.now().isoformat()
+    changed = False
+
+    if filtered:
+        filtered["updated_at"] = now
+        set_clause = ", ".join(f"{k} = ?" for k in filtered)
+        values = list(filtered.values()) + [session_id]
+        with get_connection(db_path) as conn:
+            cursor = conn.execute(
+                f"UPDATE diagnostic_sessions SET {set_clause} WHERE id = ?",
+                values,
+            )
+            changed = cursor.rowcount > 0
+
+    if status is None:
+        return changed
 
     with get_connection(db_path) as conn:
+        row = conn.execute(
+            "SELECT status FROM diagnostic_sessions WHERE id = ?",
+            (session_id,),
+        ).fetchone()
+    if row is None:
+        return changed
+
+    if status == "closed" and row[0] != "closed":
+        return close_session(session_id, db_path=db_path) or changed
+
+    # Not a move into closed: either already closed (keep its closed_at) or
+    # any other status (a session that isn't closed has no closed_at).
+    with get_connection(db_path) as conn:
         cursor = conn.execute(
-            f"UPDATE diagnostic_sessions SET {set_clause} WHERE id = ?", values
+            """UPDATE diagnostic_sessions
+               SET status = ?,
+                   closed_at = CASE WHEN ? = 'closed' THEN closed_at
+                                    ELSE NULL END,
+                   updated_at = ?
+               WHERE id = ?""",
+            (status, status, now, session_id),
         )
-        return cursor.rowcount > 0
+        return cursor.rowcount > 0 or changed
 
 
 def add_symptom_to_session(
@@ -136,7 +178,14 @@ def set_diagnosis(
 
 
 def close_session(session_id: int, db_path: str | None = None) -> bool:
-    """Close a session, setting status to 'closed' and closed_at timestamp."""
+    """Close a session, setting status to 'closed' and closed_at timestamp.
+
+    Every close goes through here -- the API route, a PATCH to closed, the
+    CLI's diagnose flows -- so this is where the machine's memory is
+    refreshed (Phase 209C, the operator's F79 decision). The refresh runs
+    after the UPDATE has committed and never raises: a memory problem must
+    not undo or fail a close.
+    """
     log.info("Session %d closed", session_id)
     now = datetime.now().isoformat()
     with get_connection(db_path) as conn:
@@ -146,7 +195,23 @@ def close_session(session_id: int, db_path: str | None = None) -> bool:
                WHERE id = ?""",
             (now, now, session_id),
         )
-        return cursor.rowcount > 0
+        closed = cursor.rowcount > 0
+    if closed:
+        # Guarded here as well as inside the refresh, as the PATCH route does
+        # for override capture: a "never raises" promise kept only by the
+        # callee is one failed import away from failing the close. Imported
+        # here so `core` has no import-time dependency on `memory`, which
+        # itself imports `core`.
+        try:
+            from motodiag.memory.refresh import refresh_after_close
+
+            refresh_after_close(session_id, db_path=db_path)
+        except Exception:
+            log.warning(
+                "memory refresh could not run for session %d; the close stands",
+                session_id, exc_info=True,
+            )
+    return closed
 
 
 def list_sessions(

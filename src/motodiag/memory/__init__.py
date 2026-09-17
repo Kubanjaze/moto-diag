@@ -37,8 +37,15 @@ from motodiag.memory.facts import (
     fact_key,
     insert_facts,
     list_facts,
+    reconcile_facts,
 )
-from motodiag.memory.compile import compile_vehicle, compile_all
+from motodiag.memory.compile import (
+    CompileResult,
+    compile_all,
+    compile_all_detailed,
+    compile_vehicle,
+    compile_vehicle_detailed,
+)
 from motodiag.memory.recall import recall, recall_summary
 from motodiag.memory.answers import Answer, answer_from_memory
 from motodiag.memory.erase import (
@@ -55,8 +62,12 @@ __all__ = [
     "fact_key",
     "insert_facts",
     "list_facts",
+    "reconcile_facts",
+    "CompileResult",
     "compile_vehicle",
+    "compile_vehicle_detailed",
     "compile_all",
+    "compile_all_detailed",
     "recall",
     "recall_summary",
     "Answer",
