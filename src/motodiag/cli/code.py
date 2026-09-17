@@ -36,6 +36,7 @@ from motodiag.engine.fault_codes import classify_code
 from motodiag.knowledge.dtc_repo import (
     get_dtc,
     get_dtcs_by_category,
+    list_all_categories,
 )
 
 # Engine imports are lazy inside `_default_interpret_fn` to keep CLI import
@@ -192,13 +193,19 @@ def _render_local(row: dict, console: Console) -> None:
 
     sev = row.get("severity") or "unknown"
     sev_style = severity_style(sev)
-    category = row.get("category") or row.get("code_format") or "unknown"
+    # Phase 244R: the DTC taxonomy, which is what `--category` narrows on.
+    # This panel used to print the SYMPTOM category, so `motodiag code P0440`
+    # said "exhaust" while the same row listed under `--category emissions`.
+    # Both are shown, each labelled as what it is.
+    category = row.get("dtc_category") or row.get("code_format") or "unknown"
+    symptom_category = row.get("category")
     make_str = row.get("make") or "Generic (all makes)"
 
     body = (
         f"[bold]{row['code']}[/bold] — {row.get('description', '')}\n\n"
         f"Category: [cyan]{category}[/cyan]\n"
-        f"Severity: [{sev_style}]{str(sev).upper()}[/{sev_style}]\n"
+        + (f"Symptom area: {symptom_category}\n" if symptom_category else "")
+        + f"Severity: [{sev_style}]{str(sev).upper()}[/{sev_style}]\n"
         f"Make: {make_str}"
     )
     console.print(
@@ -285,7 +292,14 @@ def _render_explain(result: Any, console: Console) -> None:
 def _render_category_list(
     rows: list[dict], console: Console, category: str,
 ) -> None:
-    """Render a table of DTCs matching a category."""
+    """Render a table of DTCs matching a category.
+
+    Phase 244R: an unknown category is reported as one. Before this, a typo
+    and a real-but-empty category printed the same line, so
+    `--category nonsense` was indistinguishable from an honest "nothing here"
+    — and while every row sat in `unknown`, that line was what the product
+    said about all twenty categories.
+    """
     if not rows:
         console.print(
             f"[yellow]No DTCs found in category '{category}'.[/yellow]"
@@ -360,6 +374,15 @@ def register_code(cli_group: click.Group) -> None:
 
         # --- Mode 1: category list ---
         if category:
+            known = [c["category"] for c in list_all_categories()]
+            if category not in known:
+                console.print(
+                    f"[red]'{category}' is not a DTC category.[/red]"
+                )
+                console.print(
+                    "Valid categories: " + ", ".join(known)
+                )
+                raise click.exceptions.Exit(1)
             rows = get_dtcs_by_category(category, make=make)
             _render_category_list(rows, console, category)
             return

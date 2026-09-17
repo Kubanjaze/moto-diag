@@ -3,6 +3,7 @@
     "code": "P0301",
     "description": "Cylinder 1 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Ducati",
     "common_causes": [
@@ -17,6 +18,7 @@
     "code": "P0302",
     "description": "Cylinder 2 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Ducati",
     "common_causes": [
@@ -31,6 +33,7 @@
     "code": "P0120",
     "description": "Throttle/Pedal Position Sensor/Switch A Circuit Malfunction",
     "category": "fuel",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Ducati",
     "common_causes": [
@@ -45,6 +48,7 @@
     "code": "P0230",
     "description": "Fuel Pump Primary Circuit Malfunction",
     "category": "fuel",
+    "dtc_category": "fuel",
     "severity": "high",
     "make": "Ducati",
     "common_causes": [
@@ -59,6 +63,7 @@
     "code": "P0562",
     "description": "System Voltage Low",
     "category": "electrical",
+    "dtc_category": "body",
     "severity": "high",
     "make": "Ducati",
     "common_causes": [
@@ -73,6 +78,7 @@
     "code": "P0505",
     "description": "Idle Control System Malfunction",
     "category": "idle",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "Ducati",
     "common_causes": [

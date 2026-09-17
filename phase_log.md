@@ -2924,3 +2924,32 @@ Re-run against the same bike and symptoms: a real diagnosis, **2,073 output
 tokens** — it would have truncated again at 2048. The second cost row is
 attributed to shop 1 (209D), and closing the session compiled the machine's
 memory (209C): 5 new facts for vehicle 10.
+
+## Phase 244R complete — 2026-09-17
+
+The taxonomy can hold content. `motodiag code --category engine` had been
+answering "No DTCs found" over 29 engine codes, because the seed loader built
+every `DTCCode` without `dtc_category` and it is the only thing that writes
+that table. Nineteen of twenty categories returned nothing; the twentieth,
+`unknown`, returned all 99 rows, which is where they all were.
+
+The phase exists because of where 6,692 tests had been looking. Three of them
+load the real corpus through the real loader and none asserts anything about
+the category; every test of `--category` builds its own rows with the field
+set by hand. The seam between authored data and the filter had never been
+crossed by a test, so the defect was invisible from inside the suite.
+
+Choosing this phase was itself a finding. The roadmap's next six rows were
+audited before picking one: **245 Damon cannot be built honestly** — no
+manual, no published code table, no campaigns — and 246, 248 and half of 249
+need live telemetry the product has never once recorded. What the audit did
+find was three shipped capabilities no user can reach. This is the first;
+244S, 244T and 244U are the others, and F86 (30 real safety recalls that
+nothing ever loads) came out of the same sweep.
+
+Authoring was eight agents: four assigning with reasons, four re-deriving
+every row independently. They agreed on all 99 categories. Before any of them
+started, the authority had to be repaired — `emissions` and `exhaust` both
+claimed O2 and catalyst, so the table could not settle where P0420 went.
+
+Schema 61 → 62. 132 tests, 7/7 mutations. Regression 6,824 passed, 0 failed, 26:33.

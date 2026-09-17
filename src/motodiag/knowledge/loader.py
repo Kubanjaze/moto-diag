@@ -3,10 +3,90 @@
 import json
 from pathlib import Path
 
-from motodiag.core.models import DTCCode, SymptomCategory, Severity
+from motodiag.core.models import DTCCategory, DTCCode, SymptomCategory, Severity
 from motodiag.knowledge.dtc_repo import add_dtc
 from motodiag.knowledge.symptom_repo import add_symptom
 from motodiag.knowledge.issues_repo import add_known_issue
+
+
+def backfill_dtc_categories(conn) -> int:
+    """Classify already-seeded DTC rows from the seed files. Returns rows changed.
+
+    Phase 244R's `post_apply` hook for migration 062. The operator's database
+    holds 99 rows written before the loader read `dtc_category`, all of them
+    `unknown`. Re-seeding would fix them, but `add_dtc` is INSERT OR REPLACE
+    without an id, so a re-seed churns `dtc_codes.id`; this updates one column
+    and leaves the rows where they are.
+
+    Matched on `(code, make)`, the pair the loader itself dedupes on. Rows the
+    seed files do not mention are left alone: an operator may have loaded
+    their own file, and this migration has no opinion about it.
+
+    Idempotent — running it twice changes nothing the second time, which
+    matters because Phase 244H recorded a regression run applying migrations
+    to the operator's real database twice in one day.
+    """
+    import json as _json
+
+    from motodiag.core.config import SEED_DATA_DIR
+
+    seed_dir = Path(SEED_DATA_DIR) / "dtc_codes"
+    if not seed_dir.is_dir():
+        return 0
+
+    changed = 0
+    for path in sorted(seed_dir.glob("*.json")):
+        try:
+            entries = _json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            continue
+        for item in entries:
+            category = item.get("dtc_category")
+            if not category:
+                continue
+            code = str(item["code"]).upper()
+            make = item.get("make")
+            if make is None:
+                cursor = conn.execute(
+                    "UPDATE dtc_codes SET dtc_category = ? "
+                    "WHERE code = ? AND make IS NULL AND dtc_category IS NOT ?",
+                    (category, code, category),
+                )
+            else:
+                cursor = conn.execute(
+                    "UPDATE dtc_codes SET dtc_category = ? "
+                    "WHERE code = ? AND make = ? AND dtc_category IS NOT ?",
+                    (category, code, make, category),
+                )
+            changed += cursor.rowcount if cursor.rowcount > 0 else 0
+    return changed
+
+
+def _dtc_from_seed(item: dict) -> DTCCode:
+    """Build one DTCCode from a seed entry.
+
+    Phase 244R. `dtc_category` used to be absent here, so every row this
+    loader ever wrote took the field default — `DTCCategory.UNKNOWN` — and
+    `dtc_repo.add_dtc` persisted it faithfully. This loader is the only
+    production writer of `dtc_codes`, so that one omission put all 99 seeded
+    codes in `unknown` and left `motodiag code --category engine` answering
+    "No DTCs found" over 29 engine codes.
+
+    Read tolerantly, like every other field here: a seed file without the key
+    still loads, and the corpus guard in
+    tests/test_phase244R_dtc_taxonomy.py is what holds the shipped files to
+    having one.
+    """
+    return DTCCode(
+        code=item["code"],
+        description=item["description"],
+        category=SymptomCategory(item.get("category", "other")),
+        dtc_category=DTCCategory(item.get("dtc_category", "unknown")),
+        severity=Severity(item.get("severity", "medium")),
+        make=item.get("make"),
+        common_causes=item.get("common_causes", []),
+        fix_summary=item.get("fix_summary"),
+    )
 
 
 def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
@@ -39,6 +119,15 @@ def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
     if not isinstance(data, list):
         raise ValueError(f"Expected JSON array, got {type(data).__name__}")
 
+    # Phase 244R: build and validate every row BEFORE deleting anything.
+    #
+    # The pre-delete below commits in its own transaction, and the inserts
+    # run afterwards. Reading `dtc_category` adds a value that can raise on a
+    # typo, which would abort the insert pass with this file's codes already
+    # deleted — a seed file with one bad category would silently empty a
+    # make. Parsing first means a bad file changes nothing at all.
+    parsed = [_dtc_from_seed(item) for item in data]
+
     # Pre-delete any rows that match (code, make) pairs about to be
     # inserted. This is the dedupe step — UNIQUE(code, make) doesn't
     # enforce uniqueness for NULL-make rows, so we have to clean
@@ -61,16 +150,7 @@ def load_dtc_file(file_path: str | Path, db_path: str | None = None) -> int:
                 )
 
     count = 0
-    for item in data:
-        dtc = DTCCode(
-            code=item["code"],
-            description=item["description"],
-            category=SymptomCategory(item.get("category", "other")),
-            severity=Severity(item.get("severity", "medium")),
-            make=item.get("make"),
-            common_causes=item.get("common_causes", []),
-            fix_summary=item.get("fix_summary"),
-        )
+    for dtc in parsed:
         add_dtc(dtc, db_path)
         count += 1
 

@@ -3,6 +3,7 @@
     "code": "P0510",
     "description": "Rear wheel radius acquisition — CAN error during acquisition, or invalid stored value",
     "category": "electrical",
+    "dtc_category": "network",
     "severity": "medium",
     "make": "Aprilia",
     "common_causes": [
@@ -17,6 +18,7 @@
     "code": "P0462",
     "description": "Quick Shift sensor (electronic transmission) — shorted to negative on key-ON, or signal not valid",
     "category": "electrical",
+    "dtc_category": "transmission",
     "severity": "low",
     "make": "Aprilia",
     "common_causes": [
@@ -31,6 +33,7 @@
     "code": "P0461",
     "description": "Gear sensor — shorted to positive or open circuit, or shorted to negative",
     "category": "electrical",
+    "dtc_category": "transmission",
     "severity": "medium",
     "make": "Aprilia",
     "common_causes": [
@@ -45,6 +48,7 @@
     "code": "P0446",
     "description": "Secondary air valve control — short circuit to positive, short circuit to negative, or open circuit (never shown on the instrument panel)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "Aprilia",
     "common_causes": [
@@ -59,6 +63,7 @@
     "code": "P0190",
     "description": "Exhaust valve position — position indicated by the potentiometer does not match the position commanded",
     "category": "exhaust",
+    "dtc_category": "exhaust",
     "severity": "medium",
     "make": "Aprilia",
     "common_causes": [
@@ -73,6 +78,7 @@
     "code": "P0217",
     "description": "Pressure too low at rear cylinder manifold — measured manifold pressure below the estimated value",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "Aprilia",
     "common_causes": [
@@ -87,6 +93,7 @@
     "code": "P0608",
     "description": "Level 2 safety reset — the torque-monitoring safety layer has reset the engine (never shown on the instrument panel)",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Aprilia",
     "common_causes": [
