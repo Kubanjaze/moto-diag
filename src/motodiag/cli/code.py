@@ -157,7 +157,7 @@ def _run_explain(
     TypeError fallback — the same pattern as ``_run_quick``.
     """
     call = interpret_fn or _default_interpret_fn
-    known = _load_known_issues(
+    _identity, known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path=db_path,
     )
     try:

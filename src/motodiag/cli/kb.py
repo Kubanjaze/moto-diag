@@ -436,8 +436,33 @@ def register_kb(cli_group: click.Group) -> None:
         # If --symptom is the only filter, route through that function;
         # otherwise apply --symptom as a post-filter after the structured
         # search. Either way the user gets one combined result.
+        # Phase 244S: resolve the MAKE, and only the make.
+        #
+        # `--make harley-davidson` returned 143 rows while `--make Homda`
+        # returned 0; the resolver reads both as Harley-Davidson and Honda.
+        # Resolving the make here captures that entire measured win.
+        #
+        # `--model` is left alone on purpose. It is documented as a
+        # case-insensitive substring filter, and 244E's specificity tiering
+        # deliberately does not apply to a browse surface — resolving it
+        # NARROWS real queries (`--make BMW --model K1600`: 5 rows to 3).
+        # Turning this list into a ranked view is a separate decision; this
+        # note is the first place that decision is written down.
+        resolved_make = make
+        if make:
+            from motodiag.knowledge.vehicle_resolver import resolve_vehicle
+
+            identity = resolve_vehicle(make, None)
+            if identity.make.applied:
+                resolved_make = identity.make.resolved
+                if identity.make.changed:
+                    console.print(
+                        f"[yellow]Reading {make!r} as "
+                        f"{resolved_make!r}.[/yellow]"
+                    )
+
         rows = search_known_issues(
-            make=make,
+            make=resolved_make,
             model=model_,
             year=year,
             severity=severity.lower() if severity else None,

@@ -56,6 +56,20 @@ def build_symptom_context(symptoms: list[str], description: Optional[str] = None
     return "\n".join(lines)
 
 
+#: How a row's `match_tier` reads in the prompt. Phase 244S: the resolver
+#: tiers rather than filters (244E — knowing more must never return less), so
+#: an entry about another model of the same make arrives in the context. It
+#: used to arrive indistinguishable from one written about this machine. For a
+#: 2022 KTM 1290 Super Adventure the corpus even holds an entry whose model
+#: column says "as distinct from 1290 Super Adventure"; it belongs in the
+#: prompt, labelled as what it is, not presented as machine-specific.
+_TIER_LABEL = {
+    "model": "this model",
+    "make_wide": "this make, model not specified",
+    "make_other_model": "same make, DIFFERENT model",
+}
+
+
 def build_knowledge_context(known_issues: list[dict]) -> str:
     """Format known issues from the knowledge base into context for the AI.
 
@@ -73,11 +87,17 @@ def build_knowledge_context(known_issues: list[dict]) -> str:
         severity = issue.get("severity", "unknown")
         symptoms = issue.get("symptoms", [])
         causes = issue.get("causes", [])
-        fix = issue.get("fix_procedure", "")
+        # `.get(k, "")` returns None when the key exists and is NULL, and
+        # `fix_procedure` is nullable — one corpus entry without a procedure
+        # used to crash the whole prompt build on len(None). Found by 244S's
+        # fixture; the shipped corpus has no such row, yet.
+        fix = issue.get("fix_procedure") or ""
         # Truncate fix procedure to first 300 chars to stay within context budget
         fix_preview = fix[:300] + "..." if len(fix) > 300 else fix
 
-        lines.append(f"--- Issue {i}: {title} (severity: {severity}) ---")
+        tier = _TIER_LABEL.get(str(issue.get("match_tier") or ""))
+        scope = f", scope: {tier}" if tier else ""
+        lines.append(f"--- Issue {i}: {title} (severity: {severity}{scope}) ---")
         if symptoms:
             lines.append(f"  Symptoms: {', '.join(symptoms)}")
         if causes:

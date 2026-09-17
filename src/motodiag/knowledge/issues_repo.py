@@ -110,7 +110,7 @@ def get_known_issue(issue_id: int, db_path: str | None = None) -> dict | None:
     with get_connection(db_path) as conn:
         cursor = conn.execute("SELECT * FROM known_issues WHERE id = ?", (issue_id,))
         row = cursor.fetchone()
-        return _row_to_dict(row) if row else None
+        return row_to_issue_dict(row) if row else None
 
 
 def _known_issue_filters(
@@ -175,7 +175,7 @@ def search_known_issues(
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
-        return [_row_to_dict(row) for row in cursor.fetchall()]
+        return [row_to_issue_dict(row) for row in cursor.fetchall()]
 
 
 def count_known_issues_matching(
@@ -207,7 +207,7 @@ def find_issues_by_symptom(symptom: str, db_path: str | None = None) -> list[dic
             "ORDER BY " + SEVERITY_RANK_SQL + " DESC",
             (f"%{symptom}%",),
         )
-        return [_row_to_dict(row) for row in cursor.fetchall()]
+        return [row_to_issue_dict(row) for row in cursor.fetchall()]
 
 
 def find_issues_by_dtc(code: str, db_path: str | None = None) -> list[dict]:
@@ -218,7 +218,7 @@ def find_issues_by_dtc(code: str, db_path: str | None = None) -> list[dict]:
             "ORDER BY " + SEVERITY_RANK_SQL + " DESC",
             (f"%{code}%",),
         )
-        return [_row_to_dict(row) for row in cursor.fetchall()]
+        return [row_to_issue_dict(row) for row in cursor.fetchall()]
 
 
 def search_known_issues_text(
@@ -265,7 +265,7 @@ def search_known_issues_text(
 
     with get_connection(db_path) as conn:
         cursor = conn.execute(sql, params)
-        return [_row_to_dict(row) for row in cursor.fetchall()]
+        return [row_to_issue_dict(row) for row in cursor.fetchall()]
 
 
 def count_known_issues(make: str | None = None, db_path: str | None = None) -> int:
@@ -280,8 +280,21 @@ def count_known_issues(make: str | None = None, db_path: str | None = None) -> i
         return cursor.fetchone()[0]
 
 
-def _row_to_dict(row) -> dict:
-    """Convert a database row to a dict, parsing JSON fields."""
+def row_to_issue_dict(row) -> dict:
+    """Convert a known_issues row to a dict, parsing its JSON list columns.
+
+    Phase 244S promoted this from a private helper because two retrieval paths
+    now feed one prompt builder, and they must hand back the same shape.
+    `search_known_issues` has always returned rows through here, with
+    `symptoms`, `causes`, `dtc_codes` and `parts_needed` decoded into lists;
+    `vehicle_resolver.known_issues_for_vehicle` returned bare rows, where those
+    four columns are still JSON strings. A caller that iterated `row["symptoms"]`
+    would have walked the characters of a string.
+
+    That is not hypothetical: the `/ask` endpoint has been handing undecoded
+    rows to `_format_known_issues` since 244E and only got away with it because
+    that formatter reads no list field.
+    """
     d = dict(row)
     for field in ("symptoms", "dtc_codes", "causes", "parts_needed"):
         if d.get(field):
