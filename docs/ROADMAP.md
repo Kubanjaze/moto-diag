@@ -298,10 +298,11 @@ REST API for future mobile app / web dashboard. Paywall enforcement flips to HAR
 > which is the single source of truth for this track. See
 > `ROADMAP_AUTHORITY.md` (root of both repos) for the ownership boundary.
 >
-> **Headline status (coarse, may lag the mobile ROADMAP):** Phases 185–195
-> closed. 195 substrate-half + 195B feature-half both ✅. 195C reserved
-> (F37 Track 2 meta-tooling). 196 next (iOS-blocked, needs device). Track I
-> closes at Phase 204 / Gate 10.
+> **Headline status (coarse, may lag the mobile ROADMAP):** Phases 185–204
+> closed, **Gate 10 (204) ✅**. One row open: **196C — OBD Wi-Fi provider**.
+> Refreshed 2026-09-17: this line previously read "196 next (iOS-blocked,
+> needs device)", nine phases stale -- 196 through 204 had all closed in the
+> mobile repo while this summary still described them as blocked.
 >
 > Track I per-phase doc files remain in this repo at
 > `docs/phases/completed/` per the established convention — unchanged.
@@ -446,7 +447,7 @@ Electric motorcycle diagnostics — fundamentally different from ICE: HV safety,
 | 245 | Damon HyperSport / HyperFighter | 🔲 | Shift smart suspension, copilot safety system, startup-phase reliability concerns |
 | 246 | BMS diagnostics (battery management) | 🔲 | Cell balancing, SOH (state of health), voltage curves, thermal derating, cycle counting |
 | 247 | Motor controller / inverter faults | 🔲 | IGBT failures, phase-loss detection, overcurrent faults, controller firmware |
-| 848 | Regenerative braking diagnostics | 🔲 | Regen ratios, coast-down behavior, brake light trigger on regen, single-pedal mode |
+| 248 | Regenerative braking diagnostics | 🔲 | Regen ratios, coast-down behavior, brake light trigger on regen, single-pedal mode |
 | 249 | Thermal management (battery + motor) | 🔲 | Liquid cooling loops (battery), air cooling (motor), thermal derating curves, ambient temp effects |
 | 250 | Gate 13 — Electric motorcycle integration test | 🔲 | **Row renumbered from "Gate 12" at Phase 240B**: Phase 240 had already closed Gate 12 as Track K's closing gate, so this row and every gate row after it were off by one — the same collision Phase 240 itself had to correct mid-phase when row 240 was written as "Gate 11" that Phase 205 already held. Gates 10 and 11 are Phases 204 and 205. Corrected before Track L opened rather than during Phase 250. Query electric bike → BMS/motor/regen/thermal analysis end-to-end |
 
