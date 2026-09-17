@@ -3,6 +3,7 @@
     "code": "P0328",
     "description": "Knock coherence diagnosis cylinder 4 — four-cylinder models only, and impossible on a triple",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "MV Agusta",
     "common_causes": [
@@ -17,6 +18,7 @@
     "code": "P0208",
     "description": "Injector cylinder 4 (upper) — note that the published source mislabels this code's caption",
     "category": "fuel",
+    "dtc_category": "fuel",
     "severity": "high",
     "make": "MV Agusta",
     "common_causes": [
@@ -31,6 +33,7 @@
     "code": "P0638",
     "description": "H-bridge 1 — the ride-by-wire throttle drive stage inside the control unit",
     "category": "electrical",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "MV Agusta",
     "common_causes": [
@@ -45,6 +48,7 @@
     "code": "P0639",
     "description": "H-bridge 2 — the exhaust valve drive stage inside the control unit",
     "category": "exhaust",
+    "dtc_category": "exhaust",
     "severity": "medium",
     "make": "MV Agusta",
     "common_causes": [
@@ -59,6 +63,7 @@
     "code": "P0561",
     "description": "Voltage regulator diagnosis",
     "category": "electrical",
+    "dtc_category": "body",
     "severity": "high",
     "make": "MV Agusta",
     "common_causes": [
@@ -73,6 +78,7 @@
     "code": "P0501",
     "description": "Front vehicle speed sensor diagnosis — present only on ABS-equipped machines",
     "category": "electrical",
+    "dtc_category": "abs",
     "severity": "medium",
     "make": "MV Agusta",
     "common_causes": [

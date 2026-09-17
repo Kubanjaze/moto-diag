@@ -4288,6 +4288,59 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE diagnostic_sessions DROP COLUMN shop_id;
         """,
     ),
+    # Migration 062 — Phase 244R: classify the DTC codes already seeded
+    Migration(
+        version=62,
+        name="dtc_category_backfill",
+        description=(
+            "Phase 244R. `knowledge/loader.py` built every DTCCode without "
+            "`dtc_category`, so the field took its default and all 99 seeded "
+            "codes were written as 'unknown' -- `motodiag code --category "
+            "engine` answered 'No DTCs found' over 29 engine codes, and 19 of "
+            "the 20 categories behaved the same way (the twentieth, "
+            "'unknown', returned the whole table). The loader is fixed to "
+            "read the key, but a fix in the loader only reaches a database "
+            "someone re-seeds; this migration classifies the rows already "
+            "there. "
+            "The `post_apply` hook reads the same seed files and issues one "
+            "UPDATE per code, matched on (code, make) -- the pair the loader "
+            "dedupes on -- so `dtc_codes.id` never changes. A re-seed would "
+            "have worked too, but `add_dtc` is INSERT OR REPLACE without an "
+            "id and would have churned them. Rows the seed files do not "
+            "mention are left alone. "
+            "ALSO rewrites two `dtc_category_meta` descriptions. The shipped "
+            "text made `emissions` ('O2, EVAP, PAIR, cat') and `exhaust` "
+            "('O2, catalyst, SAI') claim the same faults, so the table could "
+            "not settle where P0420 or P0131 belongs -- an authority that "
+            "contradicts itself is not an authority. Emissions now names the "
+            "emission-CONTROL systems and their monitors; exhaust names "
+            "exhaust-PATH hardware that is not one. "
+            "Rollback returns every row this touched to 'unknown' and "
+            "restores both descriptions, which is exactly the pre-migration "
+            "state."
+        ),
+        upgrade_sql="""
+            UPDATE dtc_category_meta
+               SET description = 'Emission-control systems and their monitors (EVAP, catalyst efficiency, O2/lambda, PAIR/SAI, EGR)'
+             WHERE category = 'emissions';
+
+            UPDATE dtc_category_meta
+               SET description = 'Exhaust-path hardware that is not an emission-control device (exhaust valve/servo, flap, backpressure)'
+             WHERE category = 'exhaust';
+        """,
+        post_apply="motodiag.knowledge.loader:backfill_dtc_categories",
+        rollback_sql="""
+            UPDATE dtc_codes SET dtc_category = 'unknown';
+
+            UPDATE dtc_category_meta
+               SET description = 'Emissions system faults (O2, EVAP, PAIR, cat)'
+             WHERE category = 'emissions';
+
+            UPDATE dtc_category_meta
+               SET description = 'Exhaust system faults (O2, catalyst, SAI)'
+             WHERE category = 'exhaust';
+        """,
+    ),
 ]
 
 

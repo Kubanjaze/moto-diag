@@ -3,6 +3,7 @@
     "code": "P0120",
     "description": "Throttle Position Sensor Circuit",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "KTM",
     "common_causes": [
@@ -17,6 +18,7 @@
     "code": "P0122",
     "description": "Throttle Position Sensor Circuit Low Input",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "KTM",
     "common_causes": [
@@ -31,6 +33,7 @@
     "code": "P0130",
     "description": "O2 Sensor Circuit (Bank 1 Sensor 1)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "KTM",
     "common_causes": [
@@ -45,6 +48,7 @@
     "code": "P0150",
     "description": "O2 Sensor Circuit (Bank 2 Sensor 1)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "KTM",
     "common_causes": [
@@ -59,6 +63,7 @@
     "code": "P0301",
     "description": "Cylinder 1 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "KTM",
     "common_causes": [
@@ -74,6 +79,7 @@
     "code": "P0302",
     "description": "Cylinder 2 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "KTM",
     "common_causes": [
@@ -88,6 +94,7 @@
     "code": "P0420",
     "description": "Catalyst System Efficiency Below Threshold (Bank 1)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "KTM",
     "common_causes": [
@@ -102,6 +109,7 @@
     "code": "P0560",
     "description": "System Voltage Malfunction",
     "category": "electrical",
+    "dtc_category": "body",
     "severity": "high",
     "make": "KTM",
     "common_causes": [

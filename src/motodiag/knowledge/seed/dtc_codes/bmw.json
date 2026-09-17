@@ -3,6 +3,7 @@
     "code": "P0171",
     "description": "System Too Lean (Bank 1)",
     "category": "fuel",
+    "dtc_category": "fuel",
     "severity": "medium",
     "make": "BMW",
     "common_causes": [
@@ -18,6 +19,7 @@
     "code": "P0410",
     "description": "Secondary Air Injection System Malfunction",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "BMW",
     "common_causes": [
@@ -33,6 +35,7 @@
     "code": "P0301",
     "description": "Cylinder 1 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "BMW",
     "common_causes": [
@@ -48,6 +51,7 @@
     "code": "P0302",
     "description": "Cylinder 2 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "BMW",
     "common_causes": [
@@ -63,6 +67,7 @@
     "code": "P0562",
     "description": "System Voltage Low",
     "category": "electrical",
+    "dtc_category": "body",
     "severity": "high",
     "make": "BMW",
     "common_causes": [
@@ -78,6 +83,7 @@
     "code": "P0500",
     "description": "Vehicle Speed Sensor A Malfunction",
     "category": "electrical",
+    "dtc_category": "abs",
     "severity": "medium",
     "make": "BMW",
     "common_causes": [
@@ -93,6 +99,7 @@
     "code": "P0335",
     "description": "Crankshaft Position Sensor A Circuit Malfunction",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "critical",
     "make": "BMW",
     "common_causes": [
@@ -108,6 +115,7 @@
     "code": "P0122",
     "description": "Throttle/Pedal Position Sensor/Switch A Circuit Low Input",
     "category": "fuel",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "BMW",
     "common_causes": [
@@ -123,6 +131,7 @@
     "code": "P0505",
     "description": "Idle Control System Malfunction",
     "category": "idle",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "BMW",
     "common_causes": [
@@ -138,6 +147,7 @@
     "code": "P0131",
     "description": "O2 Sensor Circuit Low Voltage (Bank 1, Sensor 1)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "medium",
     "make": "BMW",
     "common_causes": [

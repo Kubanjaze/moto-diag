@@ -3,6 +3,7 @@
     "code": "P0301",
     "description": "Cylinder 1 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Triumph",
     "common_causes": [
@@ -17,6 +18,7 @@
     "code": "P0302",
     "description": "Cylinder 2 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Triumph",
     "common_causes": [
@@ -31,6 +33,7 @@
     "code": "P0303",
     "description": "Cylinder 3 Misfire Detected",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Triumph",
     "common_causes": [
@@ -45,6 +48,7 @@
     "code": "P0315",
     "description": "Crankshaft Position System Variation Not Learned",
     "category": "engine",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "Triumph",
     "common_causes": [
@@ -59,6 +63,7 @@
     "code": "P0120",
     "description": "Throttle/Pedal Position Sensor/Switch A Circuit",
     "category": "fuel",
+    "dtc_category": "engine",
     "severity": "medium",
     "make": "Triumph",
     "common_causes": [
@@ -73,6 +78,7 @@
     "code": "P2138",
     "description": "Throttle/Pedal Position Sensor/Switch D/E Voltage Correlation",
     "category": "fuel",
+    "dtc_category": "engine",
     "severity": "high",
     "make": "Triumph",
     "common_causes": [
@@ -87,6 +93,7 @@
     "code": "P0053",
     "description": "HO2S Heater Resistance (Bank 1 Sensor 1)",
     "category": "exhaust",
+    "dtc_category": "emissions",
     "severity": "low",
     "make": "Triumph",
     "common_causes": [

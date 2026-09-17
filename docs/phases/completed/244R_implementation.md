@@ -1,6 +1,6 @@
 # Phase 244R — The DTC taxonomy can hold content
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -175,22 +175,22 @@ here rather than rediscovering it.
 
 ## Verification Checklist
 
-- [ ] `dtc_category_meta` is named as the authority, and the enum comment no longer disagrees with it
-- [ ] All 99 seed entries carry an authored `dtc_category`; the 23 the legacy column could not answer are listed in the phase log with reasons
-- [ ] The loader reads the key tolerantly — the four existing fixture tests still pass untouched
-- [ ] A bad value in one seed file deletes nothing (parse-then-write)
-- [ ] After `motodiag db init`, zero rows read `unknown`
-- [ ] `motodiag code --category engine` returns the engine codes; parametrised over every populated category
-- [ ] The six EV categories return nothing, and a test says why
-- [ ] `motodiag code --category nonsense` reports an invalid category and lists the valid ones
-- [ ] `motodiag code P0440` and `--category <its category>` agree
-- [ ] Every `dtc_category` value present in the table is a `dtc_category_meta` key
-- [ ] Migration 062 forward: all rows classified, `dtc_codes.id` unchanged
-- [ ] Migration 062 rollback: every row reads `unknown` again
-- [ ] Ten `SCHEMA_VERSION` pins plus Gate 9's updated with the 61→62 reason
-- [ ] Applied to a copy of production: 99 rows classified, integrity ok, no other table touched
-- [ ] Mutations: drop the loader kwarg; make the key required; copy the legacy column instead; skip the backfill; remove the category validation; break the parse-then-write ordering — each caught
-- [ ] 209B reachability gate still passes; f9 lint clean; full regression green
+- [x] `dtc_category_meta` is named as the authority, and the enum comment no longer disagrees with it
+- [x] All 99 seed entries carry an authored `dtc_category`; the 23 the legacy column could not answer are listed in the phase log with reasons
+- [x] The loader reads the key tolerantly — the four existing fixture tests still pass untouched
+- [x] A bad value in one seed file deletes nothing (parse-then-write)
+- [x] After `motodiag db init`, zero rows read `unknown`
+- [x] `motodiag code --category engine` returns the engine codes; parametrised over every populated category
+- [x] The six EV categories return nothing, and a test says why
+- [x] `motodiag code --category nonsense` reports an invalid category and lists the valid ones
+- [x] `motodiag code P0440` and `--category <its category>` agree
+- [x] Every `dtc_category` value present in the table is a `dtc_category_meta` key
+- [x] Migration 062 forward: all rows classified, `dtc_codes.id` unchanged
+- [x] Migration 062 rollback: every row reads `unknown` again
+- [x] Ten `SCHEMA_VERSION` pins plus Gate 9's updated with the 61→62 reason
+- [x] Applied to a copy of production: 99 rows classified, integrity ok, no other table touched
+- [x] Mutations: drop the loader kwarg; make the key required; copy the legacy column instead; skip the backfill; remove the category validation; break the parse-then-write ordering — each caught
+- [x] 209B reachability gate still passes; f9 lint clean; full regression green
 
 ## Risks
 
@@ -205,3 +205,67 @@ here rather than rediscovering it.
   here so nobody later assumes the column stays in sync by itself.
 - **The CLI and API will still disagree** until the API phase lands. The
   plan says so rather than leaving it to be discovered.
+
+## Deviations from v1.0
+
+**1. The authority contradicted itself, so the migration rewrites it.** v1.0
+declared `dtc_category_meta` the authority over the enum comment. Reading the
+shipped rows showed the meta table disagreeing with *itself*: `emissions` was
+"O2, EVAP, PAIR, cat" and `exhaust` was "O2, catalyst, SAI" — the same faults
+filed twice, so no one could say where P0420 or P0131 belonged. Migration 062
+rewrites both descriptions: emissions names the emission-CONTROL systems and
+their monitors, exhaust names exhaust-PATH hardware that is not one. The
+ruling was written into the authoring brief before a single row was assigned,
+and it survived contact with the corpus — the only two `exhaust` rows in the
+result are an exhaust-valve position sensor and its drive stage.
+
+**2. The same code number can land in different categories for different
+makes.** `P0500` is `engine` in the generic file (a powertrain speed sensor
+feeding the ECU) and `abs` in a make file whose own description says "front
+vehicle speed sensor — present only on ABS-equipped". The rule is classify by
+what the entry's description says, and make-specific entries say different
+things. Recorded here so it does not read as an inconsistency later.
+
+**3. Two seed files store one entry per line.** The first pass re-serialised
+all eight files and produced 800 changed lines for a 99-line change, burying
+the review. Redone as a textual insert that keeps each file's own formatting:
+the diff is now exactly one changed line per entry.
+
+## Results
+
+| | |
+|---|---|
+| The reported bug | `motodiag code --category engine` returned nothing over 29 engine codes. It returns them now |
+| Scale of it | 19 of 20 categories returned nothing; the twentieth, `unknown`, returned all 99 rows — that is where every row sat |
+| Codes classified | **99 of 99**, none left `unknown`: engine 48 · emissions 18 · fuel 12 · body 8 · network 3 · cooling, ignition, abs, transmission, exhaust 2 each |
+| How they were authored | four agents assigned with reasons, four independent re-checkers re-derived every row. **The re-checkers agreed with all 99 categories**; their six findings were all about the runner-up annotation, not the assignment |
+| The authority | fixed: `emissions` and `exhaust` no longer claim the same faults (Deviation 1) |
+| The loader | reads the key tolerantly, so four older fixture tests pass untouched, and now parses every row **before** deleting anything — a typo used to be able to empty a make |
+| A typo | `--category nonsense` now says it is not a category and lists the valid ones. It used to print the same line as a real-but-empty category |
+| The panel | `motodiag code P0440` shows the category the filter uses, with the symptom area labelled separately |
+| The operator's rows | migration 062 classifies them in place: **ids unchanged**, no re-seed, idempotent |
+| EV categories | still empty, **on purpose** — no EV DTC data exists and this phase invents none. Roadmap row 247 now has a column to fill |
+| Schema | 61 → **62**; ten pins plus Gate 9's updated |
+| Production copy | 99 classified, ids identical, integrity ok, no other table touched |
+| Tests added | **132** |
+| Mutations | **7 of 7 caught** |
+| Regression | **6,824 passed, 0 failed, 26:33** |
+
+**Mutations**
+
+| | mutation | caught by |
+|---|---|---|
+| M1 | the loader stops reading the key | `test_the_real_corpus_loads_fully_classified` |
+| M2 | the key becomes required | `test_a_file_without_the_key_still_loads` |
+| M3 | the backfill is a no-op | `test_it_classifies_rows_already_in_the_database` |
+| M4 | delete-then-parse comes back | `test_a_bad_category_deletes_nothing` |
+| M5 | an invalid category is silently empty again | `test_an_invalid_category_says_so_and_lists_the_valid_ones` |
+| M6 | the panel reverts to the symptom category | `test_the_panel_and_the_list_agree_about_a_code` |
+| M7 | one seed entry loses its category | the corpus guard, per-entry |
+
+**Filed, not fixed here:** F86 — 30 real NHTSA recalls ship in
+`advanced/data/recalls.json`, the loader is written and tested, and only tests
+call it, so `motodiag recall list` answers "no recalls" for every bike. Same
+family as this phase's bug and arguably worse, because an always-negative
+safety lookup reads as an all-clear. F87 records the CLI/API category
+divergence this phase deliberately did not touch.
