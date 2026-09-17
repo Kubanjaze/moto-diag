@@ -204,3 +204,98 @@ a server, and both would have led them to exactly the broken install this
 phase exists to remove. A docs-only guard could never have seen them.
 
 **Second run: 6,626 passed, 0 failed, 25:18.**
+
+## 2026-09-17 12:55 EDT — Operator decisions recorded (v1.2)
+
+Every open question in the launch checklist's **Decisions** section was
+decided. The full record is in `209B_implementation.md` → **Decisions**.
+This entry covers what was done and checked along the way.
+
+**The order was set by the operator:** report the server and backup state
+before any other work, then the CLAUDE.md gate change, then these docs with
+item 4, then the F-tickets, then the app code.
+
+**Item 3 was answered first, and it was worse than "no leftover backups"
+made it sound.** The server that was down is the laptop's development API
+and its Tailscale exposure, stopped on request on 2026-09-16. No deployed
+server has ever existed. The only backups ever taken were temporary copies
+before table-rebuilding migrations. Nothing else backed the machine up: no
+Time Machine destination, and `data/` is gitignored. The six real videos
+and the first real cost and Q&A records existed in one place. The operator
+zipped `data/` to iCloud Drive. **Checked before anything was deleted:**
+`motodiag.db` plus all six videos, sizes matching the live files, archive
+integrity OK.
+
+**Decision 2 needed a correction before it could be recorded.** It said the
+API "holds Postgres" and asked for managed Postgres with backups from day
+one. This backend has no Postgres support at all — 81 direct `sqlite3` uses,
+58 migrations in SQLite DDL, no driver, no ORM — so that was a port, not a
+hosting choice. The operator chose **SQLite on a Fly.io volume with
+Litestream** and filed the port as F81.
+
+**The target doc was also corrected.** The request named Phase 240B, which is
+the Track K corpus-audit closure; the operator confirmed 209B.
+
+**Item 4 — sessions 8 and 9, printed in full before deletion:**
+
+```
+diagnostic_sessions id=8
+  vehicle_id=10  vehicle_make='Honda'  vehicle_model='cbrf4i'  vehicle_year=2001
+  status='closed'  symptoms='["oil leak on left side of engine", "smoke on startup"]'
+  fault_codes='[]'  diagnosis=None
+  repair_steps='["Review raw AI response for diagnostic details"]'
+  confidence=0.5  severity='medium'  cost_estimate=None
+  ai_model_used='haiku'  tokens_used=0
+  created_at='2026-09-10T21:49:19.812475'  updated_at='2026-09-17 14:52:43'
+  closed_at='2026-09-10T21:49:19.841884'  user_id=1  notes=None  customer_id=None
+
+diagnostic_sessions id=9
+  vehicle_id=10  vehicle_make='Honda'  vehicle_model='cbrf4i'  vehicle_year=2001
+  status='closed'  symptoms='["oil leak on left side of engine", "smoke on startup"]'
+  fault_codes='[]'
+  diagnosis='Leaking left crankcase cover gasket (clutch cover or generator
+    cover) — Oil weeping specifically from left side of engine cases; CBR F4i
+    left side houses clutch cover and generator cover with gaskets prone to
+    seepage; Leak noticed after riding suggests thermal expansion opened a
+    marginal seal; Smoke on cold start could be oil residue on hot engine from
+    previous weeping'
+  repair_steps='["Remove left fairing and side cover", "Drain oil or use oil
+    catch pan", "Remove fasteners from clutch cover or generator cover
+    (whichever is leaking)", "Carefully pry off cover and remove old gasket
+    material", "Clean mating surfaces with solvent and lint-free cloth",
+    "Apply thin bead of gasket sealant to new gasket", "Install new gasket and
+    reinstall cover with proper torque sequence (8-12 Nm for cover bolts)",
+    "Refill oil to proper level", "Start engine and check for leaks"]'
+  confidence=0.75  severity='medium'  cost_estimate=None
+  ai_model_used='haiku'  tokens_used=3464
+  created_at='2026-09-11T00:15:46.645075'  updated_at='2026-09-17 14:54:57'
+  closed_at='2026-09-11T00:16:01.965232'  user_id=1  notes=None  customer_id=None
+
+memory_facts compiled from them: ids 108-112
+  108/109  complaint  'oil leak on left side of engine' / 'smoke on startup'   (session 8)
+  110/111  complaint  'oil leak on left side of engine' / 'smoke on startup'   (session 9)
+  112      observation (model-generated)  session 9's diagnosis text
+
+kept: cost_events id=1  text_diagnosis  claude-haiku-4-5-20251001  1657 tokens  1¢
+```
+
+Nothing else referenced them: no videos, questions, overrides or feedback.
+**Deleted:** both sessions and the 5 facts. `memory_facts` has no foreign key
+to sessions, so the facts would not have gone with them. **Memory was then
+rebuilt from scratch: 37 facts, the same as the targeted delete,** and a
+second pass inserted nothing. Only `diagnostic_sessions` (8 → 6) and
+`memory_facts` (42 → 37) changed. Vehicle 10's prompt history is now its
+single real complaint, not the same complaint three times.
+
+**Item 8 — #30 dropped from the list.** `create_extracted_symptom` was wired
+in by Phase 195 Commit 0 and replaced by Phase 195B Commit 1, so it is
+superseded, not unreachable. It is reclassified in the allowlist, and the
+unwired count is now **32** (22 cause A, 10 cause B). The gate still passes
+(107/107). The operator's fix is the gate itself: **CLAUDE.md phase
+completion item 6** — *a user-reachable entry point exists and is exercised
+by a test* — committed and pushed as workspace-docs `1c21fe0`. The two
+causes are filed as single tickets, F82 and F83. Nothing on the list gets
+built now.
+
+**v1.2 rather than a quiet edit**, because a Results number changed after the
+phase closed.

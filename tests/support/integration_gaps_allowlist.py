@@ -147,9 +147,12 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "shop/intake_repo.py::require_intake": ("public-api",
         "Raising variant of get_intake (IntakeNotFoundError on a miss); no "
         "caller uses this form."),
-    "shop/extracted_symptom_repo.py::create_extracted_symptom": ("unwired-feature",
-        "Single-row create. Rows are written by a second INSERT elsewhere in "
-        "the same repo, and this function appears only in docstrings."),
+    "shop/extracted_symptom_repo.py::create_extracted_symptom": ("superseded",
+        "Wired in by Phase 195 Commit 0 (api/routes/transcripts.py), removed "
+        "by Phase 195B Commit 1 when extraction moved to the async Claude "
+        "pipeline, which writes rows through the repo's other INSERT. "
+        "Reclassified from unwired-feature on 2026-09-17: it was reachable "
+        "once and was replaced, which makes it superseded, not unreachable."),
     "shop/extracted_symptom_repo.py::soft_delete_extracted_symptom": ("unwired-feature",
         "Soft delete with no route or command that calls it."),
     "shop/shop_repo.py::reactivate_shop": ("unwired-feature",

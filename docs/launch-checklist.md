@@ -56,7 +56,16 @@ customer's own phone*.
 
 You said this waits until the app is complete. It is.
 
-**What you decided:** the home desktop, once it is out of storage.
+**What you decided (2026-09-17): Fly.io.** The API runs at `api.<domain>`
+on SQLite, stored on a Fly persistent volume and replicated continuously by
+**Litestream** to object storage from day one. The site and waitlist go on
+Vercel at the bare domain. **Domain: TBD** (being bought this week). **F64 is
+now the deploy ticket.** Full record: 209B implementation doc → *Decisions §2*.
+
+> *Superseded:* the earlier plan here was "the home desktop, once it is out
+> of storage". **Steps 1–4 below were written for that plan** and get
+> rewritten for Fly.io as part of F64. Fly terminates TLS and provides the
+> public name, which replaces steps 2–3.
 
 **Steps:**
 
@@ -207,6 +216,10 @@ exercise a single feature.
 4. Put the server URL and key in the App Review notes — the template is
    in the listing doc.
 
+   ✅ **Decided 2026-09-17: a runtime server-URL setting in the app**
+   (Decisions §1 below). Until it ships, the rest of this note describes the
+   gap.
+
    🚨 **This step can't work yet (found by Phase 209B).** The app has no
    field for a server URL. `api/client.ts` takes the address from
    `API_BASE_URL` in `.env` **at build time** and compiles it into the
@@ -294,8 +307,20 @@ last rather than first.
 
 ## Decisions the 244 work surfaced
 
-None of these can be settled in code. Each needs your call, and several
-block a step above.
+✅ **All resolved on 2026-09-17.** The full record, with reasons and the
+alternatives rejected, is in the **209B implementation doc → Decisions**.
+In short:
+
+| | Decision | Tracked in |
+|---|---|---|
+| §1 | **Runtime server-URL setting.** The default comes from config (`API_BASE_URL`), the Settings screen overrides it, and a live health check runs on save. Plain http only for `localhost` / `127.0.0.1` / `10.0.2.2`. A build-time assertion requires `API_BASE_URL` in production. | moto-diag-mobile |
+| §2 | **$25/month per shop**, enforced via `shop_cost_this_month` | F78 |
+| §3 | **Recompile memory on session close** | F79 |
+| §4 | **The policy must reflect collected data** before submission — owner Kerwyn | F80 |
+| §5 | **Build none of the unreachable features now; fix the gate instead** (CLAUDE.md phase completion item 6) | F82, F83 |
+| — | **Hosting: Fly.io + SQLite + Litestream**; Postgres deferred | F64, F81 |
+
+The original questions are kept below as they were asked.
 
 **1. One binary, or one server per shop?** *(blocks step 4)*
 The app talks to exactly one server, fixed at build time. Step 3 says
@@ -327,12 +352,14 @@ correction. Nothing reports per technician, but the data is there.
 Technician-monitoring law — consent, works councils, two-party-consent
 recording — was flagged in 244M's research as **never looked at**.
 
-**5. 33 built features no user can reach.**
+**5. 32 built features no user can reach.** *(33 when first written; #30
+was reclassified as `superseded` on 2026-09-17 — it was wired in once and
+then replaced.)*
 Phase 209B walked the import graph from every entry point: **38 of 256
 modules (~15%) are unreachable**, and 47 more public functions inside
 reachable code have no caller. Each is classified in
 `tests/support/integration_gaps_allowlist.py`, and a test fails if the list
-and the tree disagree. Of the 33 marked `unwired-feature`, the ones worth a
+and the tree disagree. Of the 32 marked `unwired-feature`, the ones worth a
 decision before launch:
 
 | | |
