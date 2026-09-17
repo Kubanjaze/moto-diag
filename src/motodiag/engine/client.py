@@ -220,7 +220,7 @@ class DiagnosticClient:
         self,
         api_key: Optional[str] = None,
         model: str = "haiku",
-        max_tokens: int = 2048,
+        max_tokens: Optional[int] = None,
         temperature: float = 0.3,
         shop_id: Optional[int] = None,
     ):
@@ -230,7 +230,14 @@ class DiagnosticClient:
             api_key: Anthropic API key. Falls back to ANTHROPIC_API_KEY env var,
                      then to settings.anthropic_api_key.
             model: Model alias ("haiku", "sonnet") or full model ID.
-            max_tokens: Maximum response tokens.
+            max_tokens: Maximum response tokens. **Defaults to
+                     `Settings.max_tokens`, not to a literal.** Phase 244Q
+                     raised that setting to 4096 for exactly the failure it
+                     names, and nothing read it: every construction omitted
+                     this argument, so the old hardcoded 2048 kept winning
+                     and a real diagnosis truncated at it on 2026-09-17 --
+                     paid for, refused, and unusable. A setting nothing
+                     consumes is not a setting.
             temperature: Response temperature (0.0-1.0). Low = consistent diagnostics.
             shop_id: Who pays. Phase 209D — carried on the client rather than
                      threaded through every method, because the ledger write
@@ -239,6 +246,10 @@ class DiagnosticClient:
                      leaves the row unattributed, as every row was before.
         """
         self.shop_id = shop_id
+        self.max_tokens = (
+            max_tokens if max_tokens is not None
+            else get_settings().max_tokens
+        )
         # Resolve API key: explicit > env var > settings
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         if not self._api_key:
@@ -246,7 +257,6 @@ class DiagnosticClient:
             self._api_key = settings.anthropic_api_key
 
         self.model = _resolve_model(model)
-        self.max_tokens = max_tokens
         self.temperature = temperature
 
         # Session metrics

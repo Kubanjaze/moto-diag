@@ -2900,3 +2900,27 @@ why cost_cap_monthly_usd_cents is never enforced"* — went stale the moment it
 had a caller.
 
 Schema 60 → 61. 31 tests, 16/16 mutations. Regression 6,687 passed, 0 failed, 26:19.
+
+## 2026-09-17 — Fix: the configured `max_tokens` was read by nothing
+
+Found by running the product, not by reading it. A live
+`motodiag diagnose quick` on the operator's own CBR truncated at "the
+2048-token cap", refused the partial answer (Phase 244Q's behaviour,
+working), and left a 1-cent ledger row for a call that produced nothing.
+
+Phase 244Q raised `Settings.max_tokens` to 4096 and wrote the reason into
+the setting itself. **`settings.max_tokens` appeared nowhere in `src/`.**
+Every `DiagnosticClient(...)` omitted the argument, so the class default of
+2048 kept winning — the same family as the orphans 209B catalogued and the
+`shop_id` that made 209D's cap a no-op: a value that exists and nothing
+consumes.
+
+`DiagnosticClient` now defaults its cap to the setting; an explicit argument
+still wins. The regression tests drive the CLI's own construction path,
+because that is where the bug lived — a test that built a client directly
+would have passed throughout. 3 of 3 mutations caught.
+
+Re-run against the same bike and symptoms: a real diagnosis, **2,073 output
+tokens** — it would have truncated again at 2048. The second cost row is
+attributed to shop 1 (209D), and closing the session compiled the machine's
+memory (209C): 5 new facts for vehicle 10.

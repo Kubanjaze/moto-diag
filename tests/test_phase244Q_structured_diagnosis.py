@@ -536,3 +536,107 @@ class TestTheTextPathReachesTheLedger:
             assert rows[0][2] == 1873
         finally:
             reset_settings()
+
+
+class TestTheConfiguredCapIsTheCapUsed:
+    """The other half of "raise max_tokens", landed on 2026-09-17.
+
+    This phase raised ``Settings.max_tokens`` to 4096 and wrote the reason
+    into the setting itself. **Nothing read it.** Every ``DiagnosticClient``
+    construction omitted the argument, so the class default of 2048 kept
+    winning, and `settings.max_tokens` appeared nowhere in `src/`.
+
+    It surfaced the way this family always does -- in production, on the
+    operator's own machine: a real `motodiag diagnose quick` truncated at
+    "the 2048-token cap", refused the partial answer as designed, and left a
+    1-cent ledger row for a call that produced nothing.
+
+    The scenario tests below drive the CLI's own construction path, because a
+    setting is only "read" where the product actually builds the client.
+    """
+
+    def test_the_client_takes_its_cap_from_settings(self, monkeypatch):
+        from motodiag.core.config import get_settings, reset_settings
+
+        monkeypatch.setenv("MOTODIAG_MAX_TOKENS", "4096")
+        reset_settings()
+        try:
+            c = DiagnosticClient(api_key="test-key-not-real")
+            assert c.max_tokens == get_settings().max_tokens == 4096
+        finally:
+            reset_settings()
+
+    def test_a_raised_setting_reaches_the_client(self, monkeypatch):
+        from motodiag.core.config import reset_settings
+
+        monkeypatch.setenv("MOTODIAG_MAX_TOKENS", "8192")
+        reset_settings()
+        try:
+            assert DiagnosticClient(api_key="test-key-not-real").max_tokens == 8192
+        finally:
+            reset_settings()
+
+    def test_an_explicit_cap_still_wins(self):
+        c = DiagnosticClient(api_key="test-key-not-real", max_tokens=1234)
+        assert c.max_tokens == 1234
+
+    def test_the_setting_reaches_the_api_call(self, monkeypatch):
+        """Not just the attribute — the number the SDK is asked for."""
+        from motodiag.core.config import reset_settings
+
+        monkeypatch.setenv("MOTODIAG_MAX_TOKENS", "6000")
+        reset_settings()
+        try:
+            c = DiagnosticClient(api_key="test-key-not-real")
+            sdk = mock.Mock()
+            monkeypatch.setattr(c, "_get_client", lambda: sdk)
+            sdk.messages.create.return_value = _api_response(
+                blocks=[_tool_use_block(_good_payload())],
+            )
+            c.ask_structured("prompt", build_diagnosis_tool())
+            assert sdk.messages.create.call_args.kwargs["max_tokens"] == 6000
+        finally:
+            reset_settings()
+
+    def test_the_command_that_truncated_now_asks_for_the_configured_cap(
+        self, monkeypatch,
+    ):
+        """The user-reachable path: `motodiag diagnose` builds its own client.
+
+        The bug lived here — in the construction, not in the engine — so a
+        test that only built a client directly would have passed throughout.
+        """
+        from motodiag.cli.diagnose import _default_diagnose_fn
+        from motodiag.core.config import reset_settings
+
+        monkeypatch.setenv("MOTODIAG_MAX_TOKENS", "4096")
+        monkeypatch.setenv("ANTHROPIC_API_KEY", "test-key-not-real")
+        reset_settings()
+        seen = {}
+
+        class _Spy(DiagnosticClient):
+            def __init__(self, *a, **kw):
+                super().__init__(*a, **kw)
+                seen["max_tokens"] = self.max_tokens
+
+        try:
+            import motodiag.engine.client as engine_mod
+
+            monkeypatch.setattr(engine_mod, "DiagnosticClient", _Spy)
+            sdk = mock.Mock()
+            sdk.messages.create.return_value = _api_response(
+                blocks=[_tool_use_block(_good_payload())],
+            )
+            monkeypatch.setattr(_Spy, "_get_client", lambda self: sdk)
+            _default_diagnose_fn(
+                make="Honda", model_name="CBR600F4i", year=2001,
+                symptoms=["hard starting when hot"], description=None,
+                mileage=None, engine_type=None, known_issues=None,
+                ai_model="haiku",
+            )
+            assert seen["max_tokens"] == 4096, (
+                "the CLI built a client that ignored the configured cap — "
+                "the 2026-09-17 truncation"
+            )
+        finally:
+            reset_settings()
