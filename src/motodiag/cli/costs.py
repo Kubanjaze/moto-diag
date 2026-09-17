@@ -22,7 +22,12 @@ from datetime import datetime, timezone
 
 import click
 
-from motodiag.shop.cost_repo import _month_start_iso, aggregate_costs
+from motodiag.shop.cost_cap import cap_cents
+from motodiag.shop.cost_repo import (
+    _month_start_iso,
+    aggregate_costs,
+    shop_cost_this_month,
+)
 
 
 def register_costs(cli: click.Group) -> None:
@@ -98,6 +103,24 @@ def costs_report(
         f"  total: {_fmt_usd(rollup.total_usd_cents)} "
         f"across {rollup.event_count} call(s)"
     )
+    # Phase 209D: the cap is a server setting that defaults to 0 (off), and
+    # the number is meant to be chosen from months like these. Showing it
+    # here is what makes it choosable -- and saying "none set" is what keeps
+    # a reader from assuming a brake exists.
+    cap = cap_cents()
+    if cap <= 0:
+        click.echo("  cap: none set (MOTODIAG_COST_CAP_MONTHLY_USD_CENTS)")
+    elif shop is None:
+        click.echo(
+            f"  cap: {_fmt_usd(cap)} per shop per month — pass --shop to "
+            f"measure one against it"
+        )
+    else:
+        spent = shop_cost_this_month(shop)
+        click.echo(
+            f"  cap: {_fmt_usd(cap)} this month — spent {_fmt_usd(spent)}, "
+            f"remaining {_fmt_usd(max(cap - spent, 0))}"
+        )
     if rollup.event_count == 0:
         return
     click.echo("  by kind:")

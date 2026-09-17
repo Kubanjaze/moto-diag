@@ -84,7 +84,12 @@ class TestMediaPipelineWiringGuard:
 
         def _fake_analyze_video_frames(
             frames, vehicle_context=None, video_id=None, db_path=None,
+            shop_id=None,
         ):
+            # Phase 209D: the worker now also says who pays. The parameter
+            # existed on the production signature from 244L and nothing ever
+            # passed it, which is why every vision cost row was unattributed.
+            captured["shop_id"] = shop_id
             captured["frames"] = frames
             return VisualAnalysisResult(
                 overall_assessment="wiring-guard stub result",

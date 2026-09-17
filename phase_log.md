@@ -2873,3 +2873,30 @@ own tests, where two guard layers logged the same phrase. On a production
 copy the change is invisible: 0 facts changed.
 
 Schema unchanged (v60). 31 tests, 15/15 mutations. Regression 6,657 passed, 0 failed, 25:32.
+
+## Phase 209D complete — 2026-09-17
+
+Whose spend is it. The phase started with the operator's question — what is
+the cap actually for — and the ledger's answer: **32¢ across four calls.** At
+those prices $25 a month is about 500 automatic sweeps or 190 video
+questions. That is a brake for a runaway, not a budget for a shop, and four
+samples cannot set it. So the instrument got built and the number did not.
+
+Underneath sat the thing that would have made the cap theatre: every
+`cost_events` row for vision and text carried `shop_id = NULL`, because a
+session had no shop. `shop_cost_this_month` would have returned $0 for every
+shop, forever, and a cap enforced through it would never have fired once.
+Migration 061 gives a session a shop; the sweep, the ask route and the CLI
+diagnosis record it. Nothing is guessed: two memberships, or two shops in the
+database, leave the spend unattributed rather than on the wrong ledger.
+
+The block exists, refuses before the money rather than after it, and is off
+until someone sets a number. Both sides are tested, because "off by default"
+and "doesn't work" look identical otherwise.
+
+The 209B reachability gate caught the wiring as it landed: `shop_cost_this_month`
+was orphan #28, and its allowlist entry — *"Nothing reads it, which is half of
+why cost_cap_monthly_usd_cents is never enforced"* — went stale the moment it
+had a caller.
+
+Schema 60 → 61. 31 tests, 16/16 mutations. Regression 6,687 passed, 0 failed, 26:19.

@@ -506,6 +506,15 @@ def ask_about_video(
     from motodiag.media.analysis_worker import _build_vehicle_context
     from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
 
+    # Phase 209D: who pays, and may they. Checked BEFORE the frames are cut
+    # and the vision call is made -- checking afterwards would bill the call
+    # that crossed the line and then report it as refused.
+    from motodiag.shop.attribution import shop_for_session
+    from motodiag.shop.cost_cap import check_cost_cap
+
+    shop_id = shop_for_session(session_id, db_path=db_path)
+    check_cost_cap(shop_id, db_path=db_path)
+
     out_dir = _Path(tempfile.mkdtemp(prefix=f"ask_{video_id}_"))
     frames = ffmpeg_module.extract_frames(video_path=file_path, output_dir=out_dir)
 
@@ -525,6 +534,7 @@ def ask_about_video(
         vehicle_context=context,
         known_issues=issues,
         video_id=video_id,
+        shop_id=shop_id,
         db_path=db_path,
     )
 

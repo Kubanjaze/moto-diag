@@ -260,6 +260,7 @@ def _default_diagnose_fn(
     known_issues: Optional[list[dict]],
     ai_model: str,
     offline: bool = False,
+    shop_id: Optional[int] = None,
 ) -> tuple[Any, Any]:
     """Default production implementation — calls DiagnosticClient.diagnose().
 
@@ -272,7 +273,7 @@ def _default_diagnose_fn(
     """
     from motodiag.engine.client import DiagnosticClient
 
-    client = DiagnosticClient(model=ai_model)
+    client = DiagnosticClient(model=ai_model, shop_id=shop_id)
     return client.diagnose(
         make=make,
         model_name=model_name,
@@ -287,6 +288,45 @@ def _default_diagnose_fn(
     )
 
 
+def _resolve_shop(shop_id: Optional[int], db_path: Optional[str]) -> Optional[int]:
+    """Who pays for this session's AI (Phase 209D).
+
+    ``--shop`` wins; otherwise the shop this database runs, when it runs
+    exactly one. The CLI has no authenticated user to ask, and a database
+    with two shops gets no guess -- the spend stays unattributed rather than
+    landing on the wrong ledger.
+    """
+    if shop_id is not None:
+        return shop_id
+    from motodiag.shop.attribution import only_shop
+
+    return only_shop(db_path)
+
+
+def _check_cap(shop_id: Optional[int], db_path: Optional[str]) -> None:
+    """Refuse before paying, when a cap is set (Phase 209D).
+
+    CostCapExceeded is a RuntimeError, so the commands' existing handler
+    prints it red and exits 1 -- the same surface an offline cache miss uses.
+    """
+    from motodiag.shop.cost_cap import check_cost_cap
+
+    check_cost_cap(shop_id, db_path=db_path)
+
+
+def _call_with_shop(call: Callable, shop_id: Optional[int], **kwargs) -> tuple[Any, Any]:
+    """Call the diagnose_fn, passing the shop when it will take one.
+
+    Same shape as the `offline` fallback below: test doubles written before
+    Phase 209D take neither keyword, and a TypeError from a signature
+    mismatch must not look like a diagnosis failure.
+    """
+    try:
+        return call(shop_id=shop_id, **kwargs)
+    except TypeError:
+        return call(**kwargs)
+
+
 # --- Core orchestrations ---
 
 
@@ -298,6 +338,7 @@ def _run_quick(
     db_path: Optional[str] = None,
     diagnose_fn: Optional[Callable] = None,
     offline: bool = False,
+    shop_id: Optional[int] = None,
 ) -> tuple[int, Any]:
     """Create a session, run one diagnose call, persist, close. Returns (session_id, response).
 
@@ -306,6 +347,8 @@ def _run_quick(
     surfaces to the mechanic as a red message.
     """
     call = diagnose_fn or _default_diagnose_fn
+    shop_id = _resolve_shop(shop_id, db_path)
+    _check_cap(shop_id, db_path)
     session_id = create_session(
         vehicle_make=vehicle["make"],
         vehicle_model=vehicle["model"],
@@ -313,6 +356,7 @@ def _run_quick(
         symptoms=symptoms,
         vehicle_id=vehicle.get("id"),
         db_path=db_path,
+        shop_id=shop_id,
     )
 
     known = _load_known_issues(vehicle["make"], vehicle["model"], vehicle["year"], db_path)
@@ -320,7 +364,8 @@ def _run_quick(
     # Thread `offline` through to the diagnose_fn. Legacy fixture mocks
     # that don't accept `offline=` still work via the TypeError fallback.
     try:
-        response, usage = call(
+        response, usage = _call_with_shop(
+            call, shop_id,
             make=vehicle["make"],
             model_name=vehicle["model"],
             year=vehicle["year"],
@@ -358,6 +403,7 @@ def _run_interactive(
     diagnose_fn: Optional[Callable] = None,
     prompt_fn: Optional[Callable[[str], str]] = None,
     offline: bool = False,
+    shop_id: Optional[int] = None,
 ) -> tuple[int, Any]:
     """Interactive Q&A loop. Returns (session_id, final_response).
 
@@ -372,6 +418,8 @@ def _run_interactive(
     symptoms = _parse_symptoms(initial)
     description = initial if initial else None
 
+    shop_id = _resolve_shop(shop_id, db_path)
+    _check_cap(shop_id, db_path)
     session_id = create_session(
         vehicle_make=vehicle["make"],
         vehicle_model=vehicle["model"],
@@ -379,6 +427,7 @@ def _run_interactive(
         symptoms=symptoms,
         vehicle_id=vehicle.get("id"),
         db_path=db_path,
+        shop_id=shop_id,
     )
 
     known = _load_known_issues(vehicle["make"], vehicle["model"], vehicle["year"], db_path)
@@ -388,7 +437,8 @@ def _run_interactive(
 
     for round_num in range(1, MAX_CLARIFYING_ROUNDS + 1):
         try:
-            response, usage = call(
+            response, usage = _call_with_shop(
+                call, shop_id,
                 make=vehicle["make"],
                 model_name=vehicle["model"],
                 year=vehicle["year"],
@@ -943,10 +993,13 @@ def register_diagnose(cli_group: click.Group) -> None:
                   help="Serve from cache only; error on cache miss. Useful "
                        "when working without internet. Prime the cache "
                        "with an online run first.")
+    @click.option("--shop", default=None, type=int,
+                  help="Shop that pays for this session's AI. Defaults to "
+                       "the only shop in the database, if there is one.")
     def diagnose_quick(vehicle_id: Optional[int], bike: Optional[str],
                        symptoms: str, description: Optional[str],
                        ai_model_flag: Optional[str],
-                       offline: bool) -> None:
+                       offline: bool, shop: Optional[int]) -> None:
         """Run a one-shot diagnosis without Q&A."""
         console = get_console()
         init_db()
@@ -1012,6 +1065,7 @@ def register_diagnose(cli_group: click.Group) -> None:
                     description=description,
                     ai_model=ai_model,
                     offline=offline,
+                    shop_id=shop,
                 )
         except RuntimeError as exc:
             # Phase 131: offline cache-miss. Print red message + exit 1.
@@ -1022,12 +1076,15 @@ def register_diagnose(cli_group: click.Group) -> None:
 
     @diagnose.command("start")
     @click.option("--vehicle-id", default=None, type=int)
+    @click.option("--shop", default=None, type=int,
+                  help="Shop that pays for this session's AI. Defaults to "
+                       "the only shop in the database, if there is one.")
     @click.option("--model", "ai_model_flag", default=None,
                   type=click.Choice(["haiku", "sonnet"], case_sensitive=False))
     @click.option("--offline", is_flag=True, default=False,
                   help="Serve from cache only; error on cache miss.")
     def diagnose_start(vehicle_id: Optional[int], ai_model_flag: Optional[str],
-                       offline: bool) -> None:
+                       offline: bool, shop: Optional[int]) -> None:
         """Start an interactive diagnostic session with Q&A."""
         console = get_console()
         init_db()
@@ -1049,7 +1106,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             with theme_status("Analyzing symptoms..."):
                 session_id, response = _run_interactive(
                     vehicle=vehicle, ai_model=ai_model,
-                    offline=offline,
+                    offline=offline, shop_id=shop,
                 )
         except RuntimeError as exc:
             console.print(f"[red]{exc}[/red]")

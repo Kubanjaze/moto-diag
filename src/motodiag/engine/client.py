@@ -92,7 +92,7 @@ def _resolve_model(model: str) -> str:
 # truncated blob written before the fix would serve that query forever,
 # immune to the fix and indistinguishable from a good row. Old rows keep
 # kind="diagnose", never match a v2 lookup, and stay readable for forensics.
-def record_diagnosis_cost(usage, *, db_path=None) -> None:
+def record_diagnosis_cost(usage, *, shop_id=None, db_path=None) -> None:
     """Write one `text_diagnosis` ledger row. Never raises.
 
     Phase 244Q, folded in after the operator pointed out that everything else
@@ -127,6 +127,7 @@ def record_diagnosis_cost(usage, *, db_path=None) -> None:
             cost_usd_cents=cents,
             units_label="tokens",
             units_value=getattr(usage, "output_tokens", None),
+            shop_id=shop_id,
             db_path=db_path,
         )
     except Exception as exc:
@@ -221,6 +222,7 @@ class DiagnosticClient:
         model: str = "haiku",
         max_tokens: int = 2048,
         temperature: float = 0.3,
+        shop_id: Optional[int] = None,
     ):
         """Initialize the diagnostic client.
 
@@ -230,7 +232,13 @@ class DiagnosticClient:
             model: Model alias ("haiku", "sonnet") or full model ID.
             max_tokens: Maximum response tokens.
             temperature: Response temperature (0.0-1.0). Low = consistent diagnostics.
+            shop_id: Who pays. Phase 209D — carried on the client rather than
+                     threaded through every method, because the ledger write
+                     happens deep inside the call (including the truncated
+                     call, which is paid for and produces nothing). None
+                     leaves the row unattributed, as every row was before.
         """
+        self.shop_id = shop_id
         # Resolve API key: explicit > env var > settings
         self._api_key = api_key or os.environ.get("ANTHROPIC_API_KEY", "")
         if not self._api_key:
@@ -401,7 +409,7 @@ class DiagnosticClient:
             # in full, unusable output -- and if waste is invisible in the
             # ledger then the most expensive failure mode in the system is the
             # one nobody can see.
-            record_diagnosis_cost(usage)
+            record_diagnosis_cost(usage, shop_id=getattr(self, "shop_id", None))
             raise ResponseTruncated(
                 f"Response hit the {resolved_max}-token cap and was cut off. "
                 f"Raise max_tokens and retry -- this is reported rather than "
@@ -875,7 +883,7 @@ class DiagnosticClient:
             except Exception as exc:
                 _log.warning("Cache store failed: %s", exc)
 
-        record_diagnosis_cost(usage)
+        record_diagnosis_cost(usage, shop_id=self.shop_id)
         return diagnostic, usage
 
     def _parse_diagnostic_response(
