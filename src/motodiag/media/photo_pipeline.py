@@ -58,7 +58,8 @@ def _pillow():
     except ModuleNotFoundError as exc:  # pragma: no cover — env-dependent
         raise PillowUnavailableError(
             "photo processing requires Pillow, which ships in the "
-            "`vision` extra: pip install 'motodiag[api,vision]'"
+            "`vision` extra: pip install 'motodiag[server]' installs it "
+            "with the rest of the server"
         ) from exc
     return Image, ImageOps
 

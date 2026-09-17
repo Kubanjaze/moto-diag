@@ -10,6 +10,11 @@
 # and `/healthz` and `/v1/version` both answer 200 — the same commands
 # this image runs. Treat the container mechanics (layer copy, user, volume,
 # healthcheck wiring) as unreviewed until someone builds it. See F76.
+#
+# Phase 209B changed three things below, and verified what it could without
+# Docker: the shell-glob fix (reproduced and fixed under /bin/sh), the
+# `server` extra (a clean-wheel test installs it and renders a PDF), and
+# ffmpeg (NOT verified -- there is no Docker here).
 
 # ---------- build ----------
 FROM python:3.13-slim AS builder
@@ -28,14 +33,25 @@ RUN python -m build --wheel --outdir /dist
 # ---------- runtime ----------
 FROM python:3.13-slim AS runtime
 
-# `api` is required to serve HTTP. `vision` (Pillow) is required for
-# the work-order photo endpoints — without it the API starts fine and
-# only photo processing fails, with a message naming the missing extra.
-# `push` carries the APNs dependencies; drop it if you do not send
-# notifications.
+# ffmpeg is a system binary pip can't provide. Without it every video
+# upload returns 503 -- the vision sweep and Ask are both dead. Added by
+# Phase 209B and exactly as unverified as the rest of this file.
+RUN apt-get update && apt-get install -y --no-install-recommends ffmpeg && rm -rf /var/lib/apt/lists/*
+
+# `server` is the whole server: api + ai + vision + push + reports. This line used to
+# say [api,vision,push] and left out `ai`, so the container could not call
+# Claude or Whisper at all.
+#
+# The wheel path is resolved BEFORE the extras are appended. The previous
+# form, `pip install /tmp/*.whl[api,vision,push]`, never worked: to /bin/sh
+# the brackets are a glob character class, so the pattern matched nothing and
+# went through literally, and pip rejected the `*` ("Invalid wheel filename").
+# Reproduced under /bin/sh without Docker by Phase 209B. `docker build` had
+# never been run, so nobody had seen it fail.
 COPY --from=builder /dist/*.whl /tmp/
-RUN pip install --no-cache-dir /tmp/*.whl[api,vision,push] \
-    && rm -rf /tmp/*.whl
+RUN set -eu; whl="$(ls /tmp/*.whl)"; \
+    pip install --no-cache-dir "${whl}[server]"; \
+    rm -f /tmp/*.whl
 
 # Non-root. The data directory is created and owned before the drop, so
 # the volume mount lands somewhere writable.

@@ -29,6 +29,7 @@ import json
 import os
 import subprocess
 import sys
+import re
 import venv
 import zipfile
 from pathlib import Path
@@ -252,6 +253,19 @@ class TestTheApiStartsOnTheApiExtraAlone:
                     env=env)
         assert proc.stdout.strip() == "True True", proc.stdout + proc.stderr[-400:]
 
+    def test_pdf_reports_name_the_missing_extra(self, api_env):
+        """Phase 209B. `[api]` alone has no reportlab, so a PDF request must
+        say which extra to install, the same way photo processing does."""
+        bindir, env = api_env
+        proc = _run([str(bindir / "python"), "-c",
+                     "from motodiag.reporting.renderers import PdfReportRenderer\n"
+                     "try:\n"
+                     "    PdfReportRenderer()\n"
+                     "except RuntimeError as e:\n"
+                     "    print('NAMED', 'reports' in str(e), 'server' in str(e))"],
+                    env=env)
+        assert "NAMED True True" in proc.stdout, proc.stdout + proc.stderr[-500:]
+
     def test_photo_processing_names_the_missing_extra(self, api_env):
         """Degrading is only useful if the error says what to install."""
         bindir, env = api_env
@@ -379,3 +393,163 @@ class TestLazyAuthBoundaryHolds:
                 assert not stripped.startswith(
                     ("import fastapi", "from fastapi")
                 ), f"{mod} imports fastapi at module level: {stripped!r}"
+
+
+class TestTheServerRecipeIsTheWholeServer:
+    """Phase 209B.
+
+    Three hand-written copies of the server recipe -- the Dockerfile, the
+    launch checklist and install.md's production line -- all said
+    `motodiag[api,vision,push]`. That left out `ai`, the only extra declaring
+    `anthropic` and `openai`, so a server built from any of them could not
+    diagnose, run the vision sweep, answer a question or transcribe audio,
+    with keys or without.
+
+    The API's PDF routes also render with `reportlab`, which nothing declared.
+    It reached the dev venv as a dependency of `xhtml2pdf` from the unrelated
+    `export` extra -- and `reporting/renderers.py` said so outright:
+    "reportlab is already a transitive dep (installed in the project venv)".
+
+    This module's own tests covered a venv with no extras and one with
+    `[api]`, and never the combination a server is actually installed with.
+    """
+
+    @pytest.fixture(scope="class")
+    def server_env(self, wheel, tmp_path_factory):
+        env_dir = tmp_path_factory.mktemp("servervenv")
+        home = tmp_path_factory.mktemp("serverhome")
+        venv.EnvBuilder(with_pip=True, clear=True).create(env_dir)
+        bindir = env_dir / ("Scripts" if os.name == "nt" else "bin")
+        proc = _run([str(bindir / "pip"), "install", f"{wheel}[server]"])
+        if proc.returncode != 0:
+            pytest.skip(f"server extra unavailable offline: {proc.stderr[-300:]}")
+        env = dict(os.environ)
+        env["HOME"] = str(home)
+        env["MOTODIAG_DB_PATH"] = str(home / "server.db")
+        return bindir, env
+
+    def _py(self, server_env, code: str):
+        bindir, env = server_env
+        return _run([str(bindir / "python"), "-c", code], env=env)
+
+    def test_the_ai_sdks_are_present(self, server_env):
+        proc = self._py(server_env, "import anthropic, openai")
+        assert proc.returncode == 0, (
+            "a [server] install cannot call Claude or Whisper:\n"
+            + proc.stderr[-800:]
+        )
+
+    def test_a_pdf_report_renders(self, server_env):
+        """Renders real PDF bytes through the renderer the API's
+        /reports/.../pdf routes use.
+
+        The first draft of this test only constructed the renderer and was
+        still named "renders" -- a name promising more than the body checked.
+        """
+        proc = self._py(server_env, (
+            "from motodiag.reporting.renderers import PdfReportRenderer\n"
+            "b = PdfReportRenderer(deterministic=True).render("
+            "{'title': 'Packaging probe', 'sections': [{'heading': 'Vehicle', "
+            "'rows': [('Make', 'Honda')]}]})\n"
+            "import sys; sys.stdout.write(b[:5].decode('latin-1'))\n"
+        ))
+        assert proc.returncode == 0, (
+            "a [server] install cannot render PDF reports:\n" + proc.stderr[-800:]
+        )
+        assert proc.stdout.startswith("%PDF-"), proc.stdout[:40]
+
+    def test_the_api_builds_with_every_route(self, server_env):
+        proc = self._py(server_env,
+                        "from motodiag.api.app import create_app;"
+                        "print(len(create_app().openapi()['paths']))")
+        assert proc.returncode == 0, proc.stderr[-1500:]
+        assert int(proc.stdout.strip()) >= 75
+
+
+class TestEveryServerRecipeIsComplete:
+    """Static and fast: no venv. Guards the recipes themselves, so the three
+    copies can't drift apart again."""
+
+    PYPROJECT = (REPO_ROOT / "pyproject.toml").read_text(encoding="utf-8")
+    # Source files too: the photo pipeline's own error message recommended
+    # `pip install 'motodiag[api,vision]'` -- an API with no AI -- and a
+    # docs-only scan never saw it.
+    RECIPE_FILES = [
+        REPO_ROOT / "Dockerfile",
+        REPO_ROOT / "README.md",
+        REPO_ROOT / "docs" / "launch-checklist.md",
+        REPO_ROOT / "docs" / "guide" / "install.md",
+        *sorted(SRC_PKG.rglob("*.py")),
+    ]
+    RECIPE = re.compile(r"motodiag\[([a-z0-9_,\-]+)\]")
+
+    def _extras(self) -> dict[str, list[str]]:
+        section = re.search(
+            r"^\[project\.optional-dependencies\]\s*$(.*?)(?=^\[(?!project\.optional)|\Z)",
+            self.PYPROJECT, re.M | re.S,
+        ).group(1)
+        extras: dict[str, list[str]] = {}
+        for name, body in re.findall(r"^([a-z0-9_\-]+)\s*=\s*\[(.*?)\]\s*$",
+                                     section, re.M | re.S):
+            extras[name] = re.findall(r'"([^"]+)"', body)
+        return extras
+
+    def _expand(self, names: set[str]) -> set[str]:
+        """Follow self-references: `server` -> `motodiag[api,ai,...]`."""
+        extras, seen, stack = self._extras(), set(), list(names)
+        while stack:
+            n = stack.pop()
+            if n in seen:
+                continue
+            seen.add(n)
+            for dep in extras.get(n, []):
+                m = re.match(r"motodiag\[([^\]]+)\]", dep)
+                if m:
+                    stack.extend(x.strip() for x in m.group(1).split(","))
+        return seen
+
+    def test_a_server_extra_exists_and_is_complete(self):
+        assert {"api", "ai", "vision", "push", "reports"} <= self._expand({"server"})
+
+    def test_reportlab_is_declared_and_reaches_the_server(self):
+        """Declared in its own extra, and pulled in by `server`.
+
+        Not in `api`: reportlab requires Pillow, and Phase 209 made `[api]`
+        deliberately Pillow-free. The first version of this phase put
+        reportlab in `api`, and Phase 209's own `[api]` tests caught it.
+        """
+        extras = self._extras()
+        assert any("reportlab" in d.lower() for d in extras.get("reports", []))
+        assert "reports" in self._expand({"server"})
+
+    def test_the_api_extra_stays_pillow_free_by_declaration(self):
+        """reportlab and Pillow must not be declared directly in `api`."""
+        api = " ".join(self._extras()["api"]).lower()
+        assert "reportlab" not in api and "pillow" not in api
+
+    def test_every_recipe_names_only_real_extras(self):
+        real = set(self._extras())
+        for path in self.RECIPE_FILES:
+            for match in self.RECIPE.finditer(path.read_text(encoding="utf-8")):
+                named = {x.strip() for x in match.group(1).split(",")}
+                assert named <= real, f"{path.name}: unknown extra in {match.group(0)}"
+
+    def test_no_recipe_installs_the_api_without_ai(self):
+        """An API without the AI SDKs starts, answers /healthz, and then
+        fails every diagnosis, sweep, question and transcription. It looks
+        like a working server, which is what makes it dangerous."""
+        for path in self.RECIPE_FILES:
+            for match in self.RECIPE.finditer(path.read_text(encoding="utf-8")):
+                named = self._expand({x.strip() for x in match.group(1).split(",")})
+                if "api" in named:
+                    assert "ai" in named, (
+                        f"{path.name}: {match.group(0)} installs the API "
+                        "without the AI SDKs"
+                    )
+
+    def test_the_dockerfile_installs_ffmpeg(self):
+        """Unverified here -- Docker isn't installed on the machine that
+        wrote this -- but the absence is certain, and it made every video
+        upload 503 in a container."""
+        text = (REPO_ROOT / "Dockerfile").read_text(encoding="utf-8")
+        assert re.search(r"apt-get install[^\n]*\bffmpeg\b", text)

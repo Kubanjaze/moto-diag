@@ -1,6 +1,6 @@
 # Phase 209B — What the launch checklist doesn't know
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -178,9 +178,9 @@ step 4 honestly: the reviewer path it describes doesn't exist yet.
 - A new **`server` extra** = `api` + `ai` + `vision` + `push`. The Dockerfile,
   the checklist and install.md all point at `motodiag[server]`. Three
   hand-maintained copies drifted identically, and one name can't.
-- **Declare `reportlab` in `api`**, next to the routes that import it. Relying
-  on `export` → `xhtml2pdf` → `reportlab` means the API breaks the day the
-  CLI switches PDF libraries.
+- **Declare `reportlab`** in its own `reports` extra, pulled in by `server`.
+  Relying on `export` → `xhtml2pdf` → `reportlab` means the API breaks the day
+  the CLI switches PDF libraries. *(v1.0 said "in `api`"; see Deviation 7.)*
 - **Extend Phase 209's clean-install test** with a venv built from
   `motodiag[server]` that imports `anthropic`, `openai` and `reportlab` and
   renders a PDF. This part *is* verifiable here, unlike the container.
@@ -230,31 +230,33 @@ with its options, and none is settled here.
 
 ## Verification Checklist
 
-- [ ] The checklist no longer says 4,902 tests, schema v50 or "push three phases"
-- [ ] The checklist names ffmpeg, both AI keys, the third-party data flow and the baked server URL
-- [ ] Step 4 no longer tells a reviewer to enter a URL the app can't accept
-- [ ] A `server` extra exists and is the only server recipe in the docs
-- [ ] `reportlab` is declared, in `api`
-- [ ] A clean `[server]` venv imports anthropic, openai and reportlab
-- [ ] A clean `[server]` venv renders a PDF report
-- [ ] Mutation: drop `ai` from `server` → the packaging test fails
-- [ ] Mutation: drop `reportlab` from `api` → the packaging test fails
-- [ ] The Dockerfile installs `[server]` and ffmpeg, labelled unverified
-- [ ] The Dockerfile resolves the wheel path before appending extras (shell-glob bug)
-- [ ] That form is proven under `/bin/sh` against a real wheel filename
-- [ ] The install guide mentions ffmpeg and both AI keys
-- [ ] Reachability from the declared entry points is the primary check
-- [ ] Literal `import_module` / `__import__` / `post_apply` strings count as edges
-- [ ] The scanner reports unreachable modules and orphaned functions separately
-- [ ] All 38 unreachable modules and all 78 orphans are classified, each with a reason of at least 20 characters
-- [ ] The gate fails on a newly added unreferenced public function
-- [ ] The gate passes on a newly added function that something calls
-- [ ] Route handlers and CLI commands are never flagged
-- [ ] Mutation: add an orphan → the gate fails
-- [ ] Mutation: empty a reason → the gate fails
-- [ ] Mutation: remove an unreachable module from the allowlist → the gate fails
-- [ ] Mutation: import a dead module from a reachable one → the gate fails (stale entry)
-- [ ] Full regression green
+- [x] The checklist no longer says 4,902 tests, schema v50 or "push three phases"
+- [x] The checklist names ffmpeg, both AI keys, the third-party data flow and the baked server URL
+- [x] Step 4 no longer tells a reviewer to enter a URL the app can't accept
+- [x] A `server` extra exists and is the only server recipe in the docs
+- [x] `reportlab` is declared, in `reports`, and `server` includes it
+- [x] `[api]` alone stays Pillow-free (Phase 209's contract)
+- [x] An `[api]`-only PDF request names the missing extra
+- [x] A clean `[server]` venv imports anthropic, openai and reportlab
+- [x] A clean `[server]` venv renders a PDF report
+- [x] Mutation: drop `ai` from `server` → the packaging test fails
+- [x] Mutation: drop `reportlab` from `reports` → the packaging test fails
+- [x] The Dockerfile installs `[server]` and ffmpeg, labelled unverified
+- [x] The Dockerfile resolves the wheel path before appending extras (shell-glob bug)
+- [x] That form is proven under `/bin/sh` against a real wheel filename
+- [x] The install guide mentions ffmpeg and both AI keys
+- [x] Reachability from the declared entry points is the primary check
+- [x] Literal `import_module` / `__import__` / `post_apply` strings count as edges
+- [x] The scanner reports unreachable modules and orphaned functions separately
+- [x] All 38 unreachable modules and all 78 orphans are classified, each with a reason of at least 20 characters
+- [x] The gate fails on a newly added unreferenced public function
+- [x] The gate passes on a newly added function that something calls
+- [x] Route handlers and CLI commands are never flagged
+- [x] Mutation: add an orphan → the gate fails
+- [x] Mutation: empty a reason → the gate fails
+- [x] Mutation: remove an unreachable module from the allowlist → the gate fails
+- [x] Mutation: import a dead module from a reachable one → the gate fails (stale entry)
+- [x] Full regression green — **6,626 passed, 0 failed**, 25:18 (first run: 2 failed — Deviation 7)
 
 ## Risks
 
@@ -273,3 +275,126 @@ with its options, and none is settled here.
 - **This phase fixes almost nothing directly.** Its value is that launch-day
   surprises get found now and are written down where the operator will read
   them.
+
+---
+
+## Deviations from v1.0
+
+**1. The first orphan scanner made the gate take 52 seconds.** It compiled a
+regex per public definition and searched every file with it, roughly 300,000
+scans over this tree. It now counts identifiers once per file, and the gate
+runs in **3.3 seconds**. The two are equivalent: the gate's "no new orphan"
+and "no stale entry" tests pass against the identical allowlist of 47, which
+the fast version could only do by finding exactly the same set.
+
+**2. Four allowlist reasons were plausible stories, and three of them were
+false.** They were drafted before being checked, then checked one by one:
+
+- `require_intake` was described as "an intake guard never applied". It's
+  `get_intake` that raises on a miss.
+- The theme formatters were "left unused after the CLI moved to Rich". They
+  were *added* in Phase 129, the Rich polish phase.
+- `set_bike_role` was said to mean fleet roles "can't be set by any user
+  path". They're set when a bike joins a fleet; what nothing does is change
+  them afterwards.
+- The HEIF probe was said to leave "a failure rather than a clear message".
+  I couldn't support that, so it now just says what the probe is.
+
+The ones that held (`_manager` at module level, a second insert path,
+`deactivate_shop` exists, per-issue pairing exists) stayed. An allowlist full
+of confident fiction is worse than none, because its whole purpose is to be
+believed.
+
+**3. "Uploads are never validated" was an overstatement, caught before the
+plan was committed.** The upload route checks the size cap (413), the quota
+(402) and the metadata schema (422). What it never does is probe the file,
+so width, height, duration and codec come from the client's own claims.
+Corrected in the plan, the log and the allowlist.
+
+**4. The first PDF test was named for more than it checked.**
+`test_a_pdf_report_renders` built the renderer and never rendered anything.
+It now renders a document in the clean `[server]` venv and asserts the output
+starts with `%PDF-`. That's why mutation M1 below means something.
+
+**5. Two edit scripts wrote nothing, and said so.** One anchored on a
+comment-stripped view of `pyproject.toml`; the other was an unquoted heredoc
+that mangled backslashes. Both asserted their anchor before writing, so both
+stopped instead of guessing. Redone against the exact text.
+
+**6. The Dockerfile fix grew by one bug.** Scope B said "install ffmpeg".
+Reading the install line to do that showed the image could never have been
+built at all: `/tmp/*.whl[api,vision,push]` is a shell glob class, and pip
+rejects the literal `*`. Reproduced under `/bin/sh` and fixed the same way.
+
+**7. The first place I declared `reportlab` broke a Phase 209 contract, and
+Phase 209's tests caught it.** I first put `reportlab` in `api`, next to the
+routes that import it. The full regression came back with **2 failures**,
+both in Phase 209's `[api]`-only tests. `reportlab` requires Pillow, and
+Phase 209 had made `[api]` deliberately Pillow-free, so that photo processing
+degrades with a message rather than requiring imaging libraries across the
+whole API. Declaring it there pulled Pillow into every `[api]` install.
+
+The fix is a dedicated **`reports`** extra, which `server` includes. The PDF
+renderer now degrades the same way photos do: its error names the `reports`
+extra and `motodiag[server]`. A new `[api]`-only test pins that behaviour, and
+a new static test fails if `reportlab` or Pillow is ever declared directly in
+`api` (mutation P6).
+
+Scanning `src/` for recipes, which the first version didn't do, then found
+**two more places recommending an API with no AI**. Both were error messages:
+`motodiag serve` said *"run `pip install 'motodiag[api]'`"*, and the photo
+pipeline said `motodiag[api,vision]`. Both now point at `[server]`. The
+recipe guard covers every `.py` file under `src/motodiag`, because these were
+sitting exactly where a docs-only scan couldn't see them.
+
+## Results
+
+| | |
+|---|---|
+| Modules reachable from entry points | **218 / 256** |
+| Unreachable modules | **38** (~15%), every one classified |
+| Orphans inside live modules | **47** (78 in total; 31 sit inside unreachable modules and aren't double-counted) |
+| Classification | `unwired-feature` 33 · `public-api` 21 · `substrate` 16 · `test-infra` 9 · `superseded` 6 |
+| Largest unwired block | Track C2 audio intelligence — 10 modules, marked ✅ on the roadmap |
+| Gate tests | **107**, in 3.3s (from 52s) |
+| Recipes corrected in source | 2 error messages (`serve`, photo pipeline) that recommended an API without AI |
+| Packaging tests added | 10 — 6 static, 4 in clean venvs (`[server]` ×3, `[api]` ×1) |
+| Mutations | **11 of 11 caught** (5 gate, 6 packaging) |
+| `server` extra | added; self-reference proven to resolve from a local wheel |
+| `reportlab` | declared in its own `reports` extra, included by `server` (**not** `api` — see Deviation 7) |
+| Dockerfile | glob bug fixed (**verified** under `/bin/sh`); ffmpeg added (**unverified** — no Docker) |
+| Regression | **6,626 passed, 0 failed**, 25:18 |
+| Launch checklist | 257 → 377 lines; four silent-failure blockers and five decisions added |
+| Install guide | server recipe, AI keys and ffmpeg; a false "verified end to end" claim corrected |
+
+**Mutations**
+
+| | mutation | caught by |
+|---|---|---|
+| G1 | a new orphan in live code | `test_no_new_orphan` |
+| G2 | a reason emptied to "tbd" | `test_classification_and_reason` |
+| G3 | an unreachable module dropped from the list | `test_no_new_unreachable_module` + scale pin |
+| G4 | a dead module wired up | `test_no_stale_unreachable_entry` + scale pin |
+| G5 | a substrate that stops naming its phase | `test_a_substrate_names_the_phase_it_waits_for` |
+| P1 | `reportlab` removed from `reports` | the static check **and a real PDF render failing in a clean venv** |
+| P2 | `ai` removed from `server` | the static check **and a real SDK import failing in a clean venv** |
+| P3 | a doc recipe back to `[api,vision,push]` | `test_no_recipe_installs_the_api_without_ai` |
+| P4 | ffmpeg dropped from the Dockerfile | `test_the_dockerfile_installs_ffmpeg` |
+| P5 | a recipe names an extra that doesn't exist | `test_every_recipe_names_only_real_extras` |
+| P6 | `reportlab` put back in `api` — **my own first mistake** | the static Pillow-free check **and Phase 209's real `[api]` venv** |
+
+P1 and P2 are the ones that justify the phase. Each defect gets reproduced
+in a real, clean install, and the test fails on it. The Phase 209 test that
+already existed covered no extras and `[api]` alone, so the only combination
+it never tried was the one every server actually uses.
+
+**Key finding.** About 15% of the backend can't be reached from anything a
+user can run, and most of it sits under roadmap rows marked complete. The
+roadmap was recording *built and tested*; nothing was recording *reachable*.
+The same blind spot showed up one level down in packaging. Every server
+recipe was missing the extra that makes it an AI product, and the PDF
+dependency existed only because a development environment happened to have
+it. Each problem stayed invisible for the same reason: every check looked at
+its own piece and never at the path a user actually takes. The gate added
+here checks exactly that path, and the clean-install test does the same for
+the thing that actually gets shipped.

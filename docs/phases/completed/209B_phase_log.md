@@ -1,6 +1,6 @@
 # Phase 209B — What the launch checklist doesn't know — phase log
 
-**Status:** Planned
+**Status:** ✅ Complete
 **Opened:** 2026-09-17
 
 ---
@@ -129,3 +129,78 @@ a server is actually installed with.
 So scope B grew from "add ffmpeg" to "make the server recipe one name and make
 it complete". It's the one part of this phase that *can* be verified from
 here, because the packaging test installs from a real wheel.
+
+## 2026-09-17 — Built
+
+**The gate.** Walking the import graph from the declared entry points and
+the API factory finds **38 unreachable modules**. Counting references in code
+only finds **47 orphaned public definitions** inside the reachable ones. All
+85 are classified in `tests/support/integration_gaps_allowlist.py`, and the
+gate fails in both directions: something new becomes unreachable, or something
+listed gets wired up and its entry goes stale. The second direction is what
+stops the list turning into a set of excuses.
+
+The first version took **52 seconds**: a regex compiled per definition and run
+over every file, roughly 300,000 scans. Counting identifiers once per file
+brought it to **3.3 seconds** and produced the identical 47. Five mutations,
+five caught.
+
+**Checking my own reasons turned out to matter as much as the scan.** Several
+allowlist reasons were drafted as plausible explanations and then checked
+before commit. Three were simply false: `require_intake` isn't a guard; the
+theme formatters were *added* in the Rich phase, not left behind by it; fleet
+roles *are* set, just never changed afterwards. A fourth I couldn't support.
+Earlier the same day, "uploads are never validated" had gone the same way:
+the route checks size, quota and schema, and what it never does is probe the
+file. **An allowlist exists to be believed**, so every sentence in it had to
+be checked, not just the counts.
+
+**Packaging.** A `server` extra now names the whole server, `reportlab` is
+declared where it's imported, and the Dockerfile resolves its wheel path
+before appending extras. That last one was a separate bug found while doing
+the ffmpeg change: the image had never been buildable, because
+`*.whl[api,vision,push]` is a shell glob class and pip rejects a literal `*`.
+Reproduced and fixed under `/bin/sh`. ffmpeg itself is added but unverified,
+since there's still no Docker here.
+
+**The two mutations that justify the phase.** Remove `reportlab` from `api`,
+or `ai` from `server`, and a clean venv built from the real wheel **genuinely
+fails**: the PDF won't render, and the SDKs won't import. The Phase 209 test
+already in the repo installed no extras and `[api]` alone, which were never
+the recipe a server uses. This test builds that recipe.
+
+**One of my own tests was named for more than it did.**
+`test_a_pdf_report_renders` built the renderer and never rendered anything,
+and it would have passed P1 anyway. Caught while writing the mutation plan,
+before any mutation ran. It now renders a document and checks the `%PDF-`
+header.
+
+**Docs.** The launch checklist grew from 257 to 377 lines. It now opens with
+the four silent-failure blockers and has a new **Decisions** section: one
+binary or one server per shop, a spending ceiling, when memory refreshes,
+captured-data privacy, and the 33 unreachable features. The install guide's
+"verified end to end" claim is corrected; the route it described couldn't run
+any AI feature.
+
+## 2026-09-17 — Regression red: my reportlab placement broke Phase 209's contract
+
+**First full run: 2 failed, 6,622 passed.** Both failures were in Phase 209's
+`[api]`-only packaging tests. I had declared `reportlab` in `api`, next to the
+routes that import it, and `reportlab` requires Pillow. Phase 209 had made
+`[api]` Pillow-free on purpose, so photo processing degrades with a message
+instead of the whole API needing imaging libraries. My change pulled Pillow
+into every `[api]` install, and the tests that exist to protect that contract
+caught it immediately.
+
+The fix is `reportlab` in its own `reports` extra, which `server` includes.
+The PDF renderer now fails the way photos do, naming the extra to install. A
+new mutation (P6) puts `reportlab` back in `api` and is caught twice.
+
+Widening the recipe guard to scan `src/` found **two more recipes for an API
+with no AI**, both in error messages. `motodiag serve` told a missing-uvicorn
+operator to install `motodiag[api]`, and the photo pipeline recommended
+`motodiag[api,vision]`. Those are the messages someone reads while setting up
+a server, and both would have led them to exactly the broken install this
+phase exists to remove. A docs-only guard could never have seen them.
+
+**Second run: 6,626 passed, 0 failed, 25:18.**

@@ -2820,3 +2820,34 @@ evening, from the same author.
 
 Schema v59 → v60. 34 guards, 10 mutations, 10 schema pins.
 Regression 6,497 passed, 0 failed, 28:06.
+
+## Phase 209B complete — 2026-09-17
+
+What the launch checklist doesn't know. Inserted before Phase 210, which stays
+where it is: the checklist says 210 depends on six steps only the operator can
+do, and the recommendation that opened this session — that 210 was unblocked —
+was wrong.
+
+The checklist was written the day before the 244 series began, and Step 0
+found it would have let a launch fail **silently**: a server that starts,
+answers `/healthz`, and can't do its job. Every server recipe left out the `ai`
+extra. The API's PDF reports leaned on `reportlab`, which nothing declared. The
+image had no ffmpeg, and could never have been built anyway — a shell glob in
+the install line handed pip a literal `*`. The env block had no AI keys, the
+privacy wording had gone false, and the app's server address is compiled in,
+so a reviewer couldn't point it anywhere.
+
+Then the audit the 244 series kept doing by accident. Walking the import graph
+from the real entry points: **38 of 256 modules are unreachable**, about 15% of
+the backend, most of Track C2 among them under rows marked done. It's now a
+gate, with every entry classified and every reason checked. Three of the
+reasons I first drafted were false, and so was one of my claims in the plan.
+
+The key finding is the same at both levels. The roadmap recorded *built and
+tested* and nothing recorded *reachable*; packaging tests covered the pieces
+and never the recipe a server is actually installed with.
+
+Schema unchanged (v60). 117 guards, 11 of 11 mutations caught. The first
+regression failed twice: my first placement of `reportlab` (in `api`) broke
+Phase 209's Pillow-free `[api]` contract, and Phase 209's own tests caught it.
+Regression Regression 6,626 passed, 0 failed, 25:18.

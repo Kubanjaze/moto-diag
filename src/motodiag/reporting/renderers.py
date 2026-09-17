@@ -33,8 +33,10 @@ Two renderers ship in Phase 182:
   stdlib. Useful as a fallback when reportlab isn't installed and
   as a debug convenience.
 - :class:`PdfReportRenderer` — uses reportlab's Platypus flowables.
-  reportlab is already a transitive dep (installed in the project
-  venv); ``PDF_AVAILABLE`` reports runtime presence.
+  reportlab is declared in the ``reports`` extra (Phase 209B). Before
+  that it was only a transitive dependency of ``xhtml2pdf``, and this
+  docstring said so -- which is how PDF reports worked in development and
+  failed on every server. ``PDF_AVAILABLE`` reports runtime presence.
 """
 
 from __future__ import annotations
@@ -259,9 +261,10 @@ class PdfReportRenderer(ReportRenderer):
     def __init__(self, *, deterministic: bool = False) -> None:
         if not PDF_AVAILABLE:
             raise RuntimeError(
-                "reportlab is not installed — PdfReportRenderer is "
-                "unavailable. Install reportlab or use "
-                "TextReportRenderer."
+                "PDF reports require reportlab, which ships in the "
+                "`reports` extra: pip install 'motodiag[server]' installs "
+                "it with the rest of the server. TextReportRenderer needs "
+                "nothing extra."
             )
         self._deterministic = deterministic
         styles = getSampleStyleSheet()
