@@ -68,11 +68,11 @@ def _session_facts(conn, vehicle_id: int) -> list[MemoryFact]:
     facts: list[MemoryFact] = []
     for row in _rows(
         conn,
-        "SELECT id, notes, symptoms, diagnosis, created_at "
+        "SELECT id, notes, symptoms, diagnosis, created_at, ai_model_used "
         "FROM diagnostic_sessions WHERE vehicle_id = ?",
         (vehicle_id,),
     ):
-        sid, notes, symptoms, diagnosis, created_at = row
+        sid, notes, symptoms, diagnosis, created_at, ai_model_used = row
         when = _date_of(created_at)
 
         # The technician's free-text complaint. Phase 244B found this field
@@ -113,12 +113,41 @@ def _session_facts(conn, vehicle_id: int) -> list[MemoryFact]:
                 )
 
         if diagnosis and str(diagnosis).strip():
+            # Who authored the diagnosis decides what it is worth.
+            #
+            # This used to label EVERY session diagnosis `mechanic-verified`,
+            # the top of recall's trust ranking. That was latent while no
+            # session had a diagnosis -- `diagnose quick` had never completed
+            # -- and became live the moment it did: `_persist_response`
+            # writes this field, so the model's own prose was being compiled
+            # as a mechanic's confirmation. That walks straight past the guard
+            # `recall_summary` added to keep model output out of the next
+            # prompt, because the text no longer says it came from a model.
+            #
+            # An EDIT does not change the author. The first proposed fix
+            # promoted a diagnosis to mechanic-verified once a human had
+            # overridden it; the operator pointed out, on 2026-09-17, that the
+            # only diagnosis edit in the database had been made to check
+            # whether edits get logged. A one-word deletion is not a
+            # confirmation, and nothing here can tell a correction from a
+            # tweak or a test. So an AI-authored diagnosis stays
+            # `model-generated` however it has been touched. The edit itself
+            # is still recorded in `session_overrides`, where a later phase can
+            # study it; it is just not trusted automatically.
+            #
+            # A mechanic's explicit confirmation arrives through
+            # `diagnostic_feedback` (`_feedback_facts`), which is the only
+            # path that earns `mechanic-verified` for an AI-involved session.
+            human_authored = not ai_model_used
             facts.append(
                 MemoryFact(
                     vehicle_id=vehicle_id,
-                    fact_kind="correction",
+                    fact_kind="correction" if human_authored else "observation",
                     subject=str(diagnosis).strip(),
-                    source="mechanic-verified",
+                    source=(
+                        "mechanic-verified" if human_authored
+                        else "model-generated"
+                    ),
                     origin_table="diagnostic_sessions",
                     origin_id=sid,
                     established_at=when,
