@@ -9,10 +9,23 @@ Ordered by dependency: each step unblocks the ones under it. Every item
 says how you know it worked, because "I set the env var" and "it works"
 are different claims.
 
-**Status as of 2026-09-07:** Phases 01–209 complete. Backend 4,902 tests
-green, mobile `tsc` clean, 255 CLI commands, 80 API routes, schema v50.
-Phase 210 (launch readiness) is deliberately unstarted — it depends on
-steps 1–6 below.
+**Status as of 2026-09-17** (refreshed by Phase 209B): backend 6,500+ tests
+green, mobile 1,062 tests and `tsc` clean, 265 CLI commands, 81 API routes,
+26 iOS screens, schema v60. Phase 210 (launch readiness) is still
+deliberately unstarted — it depends on steps 1–6 below.
+
+**This checklist was first written on 2026-09-09, the day before the 244
+series added vision questions, a cost ledger, per-machine memory and passive
+capture.** Phase 209B went back through it against the product as it
+actually is now. Four things below would have made a launch fail silently —
+a server that starts, answers `/healthz`, and can't do its main job:
+
+| | What was wrong | Where |
+|---|---|---|
+| 🚨 | Every server recipe left out the `ai` extra, so no deployment could call Claude or Whisper | step 1, step 2 |
+| 🚨 | PDF reports depended on `reportlab`, which nothing declared | step 1, step 2 |
+| 🚨 | The container had no ffmpeg, so every video upload returned 503 | step 2 |
+| 🚨 | The app's server address is compiled in, so a reviewer can't point it anywhere | step 4, and **Decisions** below |
 
 ---
 
@@ -28,6 +41,8 @@ cd ~/Projects/moto-diag-mobile && git push origin main
 ```
 
 **Done when:** `git status` says up to date with origin in both repos.
+
+✅ **Done.** Both repos have been level with origin since 2026-09-10.
 
 ---
 
@@ -54,8 +69,16 @@ You said this waits until the app is complete. It is.
 3. Terminate TLS. App Store review will not accept a plain-HTTP backend,
    and share links sent by text should not be HTTP either.
 4. Deploy — see step 2 for the container, or `pip install
-   "motodiag[api,vision,push]"` and run `motodiag serve --host 0.0.0.0`
-   behind the proxy.
+   "motodiag[server]"` and run `motodiag serve --host 0.0.0.0` behind the
+   proxy. **Install ffmpeg on the host too** (`apt install ffmpeg` /
+   `brew install ffmpeg`). It's a system binary, so pip can't provide it,
+   and without it every video upload returns 503.
+
+   `[server]` is the whole server: `api`, `ai`, `vision`, `push` and
+   `reports`. Use it
+   rather than listing extras by hand. Before 209B every hand-written recipe
+   in this repo left out `ai`, which gives a server that starts cleanly and
+   can't do a single AI task.
 
 **Then set, in the deployed environment:**
 
@@ -65,7 +88,12 @@ MOTODIAG_PUBLIC_BASE_URL=https://<your-host>
 MOTODIAG_BILLING_PROVIDER=stripe        # prod REFUSES to start on `fake`
 MOTODIAG_STRIPE_WEBHOOK_SECRET=<secret>
 MOTODIAG_API_CORS_ORIGINS=https://<your-host>   # F69 — default is localhost
+ANTHROPIC_API_KEY=<key>                  # diagnosis, vision sweep, Ask — all of it
+OPENAI_API_KEY=<key>                     # Whisper voice transcription
 ```
+
+**Without the two AI keys** the server runs and every AI feature fails at
+request time. Nothing checks for them at startup.
 
 **Done when:** you mint a share link from the shop workflow and open it
 on a phone **on cellular data, not the shop wifi**. If it only works on
@@ -100,7 +128,18 @@ docker run --rm motodiag:0.6.0 sh -c 'touch /var/lib/motodiag/probe && echo OK'
 
 # the local database and phase docs must NOT be in the image
 docker run --rm motodiag:0.6.0 sh -c 'ls /app 2>/dev/null; find / -name "motodiag.db" 2>/dev/null | head'
+
+# Phase 209B: the three things the first version of this image couldn't do
+docker run --rm motodiag:0.6.0 ffmpeg -version | head -1          # video uploads
+docker run --rm motodiag:0.6.0 python -c "import anthropic, openai"  # every AI feature
+docker run --rm motodiag:0.6.0 python -c "import reportlab"          # PDF reports
 ```
+
+The last three are new. The ffmpeg install was added to the Dockerfile by
+Phase 209B **and is as unverified as the rest of the file**: Docker still
+wasn't installed on the machine that wrote it. The `[server]` extra and the
+`reportlab` declaration *are* verified — a clean-wheel install test builds
+that exact recipe and renders a PDF from it.
 
 **Done when:** `/healthz` returns `{"status":"ok",...}` from the
 container, the volume probe prints OK, and no `motodiag.db` from your
@@ -126,9 +165,22 @@ draft answers are in
 
 A static page on the host from step 1, or a GitHub Pages page, is
 sufficient. It must state: what the app accesses (camera, microphone,
-photo library, Bluetooth), that data goes only to the operator's own
-backend, that no analytics or crash SDK is present, and how to contact
-you.
+photo library, Bluetooth), that no analytics or crash SDK is present, how
+to contact you, and **where the data goes.**
+
+⚠ **Corrected by Phase 209B.** This step used to say the policy should
+state *"that data goes only to the operator's own backend."* That hasn't
+been true since vision and voice shipped. The backend sends:
+
+- **video frames and the technician's typed questions → Anthropic**
+  (diagnosis, the vision sweep, Ask)
+- **voice recordings → OpenAI** (Whisper transcription)
+
+The policy has to say so. **Whether this changes the App Privacy
+questionnaire** is a decision for you, and possibly counsel. The draft
+answers in `app-store-listing.md` were written before either data flow
+existed, and they claim "Data Not Collected" across the board. Re-check
+them against the current backend, not just the binary.
 
 **Done when:** the URL loads in a browser and goes in the App Store
 Connect "Privacy Policy URL" field.
@@ -154,6 +206,14 @@ exercise a single feature.
    --name appreview`.
 4. Put the server URL and key in the App Review notes — the template is
    in the listing doc.
+
+   🚨 **This step can't work yet (found by Phase 209B).** The app has no
+   field for a server URL. `api/client.ts` takes the address from
+   `API_BASE_URL` in `.env` **at build time** and compiles it into the
+   binary. A reviewer can paste a key but can't change which server the app
+   talks to. Today's `.env` points at a tailnet address only your own
+   devices can reach, so a TestFlight build made now would fail review.
+   See **Decisions** below — this needs a product answer before this step.
 
 **Done when:** you can install the app fresh on a device, paste that
 key, and reach a populated work-order list without touching your dev
@@ -232,18 +292,78 @@ last rather than first.
 
 ---
 
+## Decisions the 244 work surfaced
+
+None of these can be settled in code. Each needs your call, and several
+block a step above.
+
+**1. One binary, or one server per shop?** *(blocks step 4)*
+The app talks to exactly one server, fixed at build time. Step 3 says
+"every deployment is the shop's own", and those two don't fit together.
+The options:
+
+- a runtime server-URL setting (the app asks for a URL as well as a key)
+- a single hosted MotoDiag service every shop's app talks to — which
+  changes step 3's privacy premise entirely
+- a separate build per shop
+
+**2. A spending ceiling.**
+`cost_cap_monthly_usd_cents` exists and nothing reads it, and the read path
+for monthly spend (`shop_cost_this_month`) has no caller either. The first
+real prices: **~1¢ per text diagnosis, ~13¢ per vision question, ~5¢ per
+automatic sweep.** Before launch, decide what should happen to a shop that
+hits a ceiling mid-job. `motodiag costs report` shows real spend so far.
+
+**3. When per-machine memory refreshes.**
+Memory (Phase 244M) only compiles when someone runs
+`motodiag memory compile`. On a live server it goes stale unless something
+runs it — a schedule, a hook when a session closes, or a documented
+operator task.
+
+**4. What the captured data means for the privacy policy.**
+Phase 244N stores technicians' questions, answers and corrections on the
+operator's server, and `session_overrides` records who made each
+correction. Nothing reports per technician, but the data is there.
+Technician-monitoring law — consent, works councils, two-party-consent
+recording — was flagged in 244M's research as **never looked at**.
+
+**5. 33 built features no user can reach.**
+Phase 209B walked the import graph from every entry point: **38 of 256
+modules (~15%) are unreachable**, and 47 more public functions inside
+reachable code have no caller. Each is classified in
+`tests/support/integration_gaps_allowlist.py`, and a test fails if the list
+and the tree disagree. Of the 33 marked `unwired-feature`, the ones worth a
+decision before launch:
+
+| | |
+|---|---|
+| **Track C2 audio intelligence** (10 modules) | Engine-sound analysis, anomaly detection, coaching, fusion, reports — all tested, all marked ✅ on the roadmap, and nothing can reach them |
+| **`core.logging`** | The served app never sets up its own structured logging |
+| **`validate_video`** | Uploads are checked for size and quota, but the file is never probed; the server trusts the client's metadata |
+| **`pricing`** (4 modules) | A non-AI rate table and repair-plan builder |
+| **Guided workflows** | No-start, charging and overheating workflows |
+
+The rest are `substrate` (built ahead for Phases 275, 293–302, 308–310
+and 316), `superseded`, `test-infra` or `public-api`.
+
 ## What is genuinely finished
 
 So you know what you are *not* on the hook for:
 
-- **The product.** 255 CLI commands, 80 API routes, 25 iOS screens,
-  970 curated known issues shipped inside the package.
-- **Tests.** 4,902 backend, green. Mobile `tsc` and lint clean.
+- **The product.** 265 CLI commands, 81 API routes, 26 iOS screens,
+  970 curated known issues shipped inside the package. *Qualified by
+  Phase 209B:* about 15% of the backend's modules can't be reached from any
+  of those commands or routes — see **Decisions §5**.
+- **Tests.** 6,500+ backend and 1,062 mobile, green. Mobile `tsc` and lint
+  clean.
 - **Security.** Phase 207 audited it and fixed six defects including a
   cross-tenant data leak. What remains is configuration, listed above.
 - **Packaging.** `pip install motodiag` works, seeds its knowledge base,
   and puts your data somewhere sane. Verified by installing a real wheel
-  into a clean environment.
+  into a clean environment — and since Phase 209B, by installing
+  `motodiag[server]` and checking that it can reach the AI SDKs and render a
+  PDF. The earlier test covered only the bare install and `[api]`, which is
+  how three broken server recipes passed.
 - **Documentation.** README, quickstart, shop workflow, API guide,
   install guide, release runbook — with a test that fails if any of them
   names a command or route that does not exist.

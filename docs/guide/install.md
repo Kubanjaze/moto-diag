@@ -62,16 +62,18 @@ The base install is deliberately small. Add what you need:
 ```bash
 pipx install "motodiag[ai]"        # AI-assisted diagnosis (Anthropic)
 pipx install "motodiag[hardware]"  # OBD-II adapters
-pipx install "motodiag[api,vision]"  # HTTP API + photo processing
+pipx install "motodiag[server]"    # the whole API — see "Shop: the API"
 ```
 
 | Extra | Gives you | Without it |
 |---|---|---|
-| `ai` | `motodiag diagnose`, `quick` | Fault-code lookup, KB and the shop workflow all still work |
+| `ai` | `motodiag diagnose`, `quick`, and on the API: the vision sweep, Ask, and voice transcription | Fault-code lookup, KB and the shop workflow all still work. **On a server, every AI route fails.** |
 | `hardware` | `motodiag hardware` — adapters, live PIDs | Everything except talking to an ECU |
 | `api` | `motodiag serve` | No HTTP API, so no iOS app |
 | `vision` | Photo processing on the API | The API runs; photo endpoints fail, naming this extra |
 | `push` | APNs notifications | Notifications are queued but not sent |
+| `reports` | PDF session, work-order and invoice reports (reportlab) | PDF routes fail, naming this extra |
+| **`server`** | **All of `api`, `ai`, `vision`, `push` and `reports` — install this on a server** | — |
 
 ## Shop: the API
 
@@ -79,7 +81,14 @@ The iOS app needs an HTTP API to talk to.
 
 > **The container has not been built or run.** It is written and
 > reviewed but Docker was unavailable when it was authored — see F76.
-> The pip route below *has* been verified end to end.
+> The pip route below is verified by a test that installs
+> `motodiag[server]` from a real wheel, calls into the AI SDKs and renders a
+> PDF.
+>
+> *Corrected by Phase 209B:* this note used to say the pip route "has been
+> verified end to end", while the recipe it described left out the `ai`
+> extra. That route started and answered `/healthz`, and couldn't run a
+> single AI feature.
 
 ```bash
 docker compose up --build
@@ -89,10 +98,18 @@ curl localhost:8000/healthz
 Or with pip:
 
 ```bash
+sudo apt install ffmpeg                  # or: brew install ffmpeg
 python3 -m venv /opt/motodiag
-/opt/motodiag/bin/pip install "motodiag[api,vision,push]"
+/opt/motodiag/bin/pip install "motodiag[server]"
+export ANTHROPIC_API_KEY=...             # diagnosis, vision, Ask
+export OPENAI_API_KEY=...                # voice transcription
 /opt/motodiag/bin/motodiag serve --host 0.0.0.0
 ```
+
+**ffmpeg is a system binary, so pip can't install it.** Without it the API
+starts and every video upload returns 503. **Without the two keys** it
+starts and every AI feature fails at request time — nothing checks for them
+at startup.
 
 `serve` applies any pending schema migrations before it binds, so a
 fresh install needs no separate init step.
@@ -102,7 +119,7 @@ curl -s localhost:8000/healthz
 ```
 
 ```json
-{"status": "ok", "schema_version": 50, "detail": null}
+{"status": "ok", "schema_version": 60, "detail": null}
 ```
 
 Then make a key for the app:

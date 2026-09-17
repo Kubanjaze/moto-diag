@@ -84,7 +84,7 @@ def register_serve(cli_group: click.Group) -> None:
         except ImportError as e:
             raise click.ClickException(
                 "uvicorn not installed; run "
-                "`pip install 'motodiag[api]'` first"
+                "`pip install 'motodiag[server]'` first"
             ) from e
 
         from motodiag.core.config import get_settings

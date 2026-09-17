@@ -69,6 +69,24 @@ vision = [
     # under [vision] keeps it co-located with photo/Vision deps.
     "pillow-heif>=1.3.0",
 ]
+# Phase 209B: the whole server, under one name. Three hand-written copies of
+# this recipe -- the Dockerfile, the launch checklist and install.md -- all
+# said [api,vision,push] and all left out `ai`, which gives a server that
+# starts, answers /healthz, and can't run a single AI feature. Point every
+# server install here instead of listing extras by hand.
+server = [
+    "motodiag[api,ai,vision,push,reports]",
+]
+# Phase 209B: the /v1/reports/.../pdf routes render with reportlab directly.
+# It used to arrive only as a dependency of xhtml2pdf, from the unrelated
+# `export` extra -- so PDF reports worked in the dev venv and failed on every
+# server. Its own extra, NOT `api`: reportlab requires Pillow, and Phase 209
+# made `[api]` deliberately Pillow-free so photo processing degrades with a
+# message instead of the whole API needing imaging libraries. Declaring it in
+# `api` broke exactly that, and Phase 209's own tests caught it.
+reports = [
+    "reportlab>=4.0",
+]
 export = [
     "markdown>=3.5",
     "xhtml2pdf>=0.2.13",
