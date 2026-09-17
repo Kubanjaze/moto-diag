@@ -1,6 +1,6 @@
 # Phase 209B — What the launch checklist doesn't know
 
-**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
+**Version:** 1.2 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17; decisions recorded 2026-09-17)
 
 ---
 
@@ -347,6 +347,14 @@ pipeline said `motodiag[api,vision]`. Both now point at `[server]`. The
 recipe guard covers every `.py` file under `src/motodiag`, because these were
 sitting exactly where a docs-only scan couldn't see them.
 
+**8. v1.2, decisions recorded after close, and one result corrected.** After
+the phase closed, the operator decided every open item in the checklist's
+Decisions section; they're recorded below under **Decisions**. The
+decisions triage also found that one of the 33 `unwired-feature` entries,
+`create_extracted_symptom`, had been wired in by Phase 195 Commit 0 and
+replaced by Phase 195B Commit 1. That makes it superseded, not unreachable.
+It's reclassified in the allowlist, and the Results count below now reads 32.
+
 ## Results
 
 | | |
@@ -354,7 +362,7 @@ sitting exactly where a docs-only scan couldn't see them.
 | Modules reachable from entry points | **218 / 256** |
 | Unreachable modules | **38** (~15%), every one classified |
 | Orphans inside live modules | **47** (78 in total; 31 sit inside unreachable modules and aren't double-counted) |
-| Classification | `unwired-feature` 33 · `public-api` 21 · `substrate` 16 · `test-infra` 9 · `superseded` 6 |
+| Classification | `unwired-feature` **32** · `public-api` 21 · `substrate` 16 · `test-infra` 9 · `superseded` **7** *(33 / 6 at close; #30 reclassified in v1.2)* |
 | Largest unwired block | Track C2 audio intelligence — 10 modules, marked ✅ on the roadmap |
 | Gate tests | **107**, in 3.3s (from 52s) |
 | Recipes corrected in source | 2 error messages (`serve`, photo pipeline) that recommended an API without AI |
@@ -398,3 +406,177 @@ it. Each problem stayed invisible for the same reason: every check looked at
 its own piece and never at the path a user actually takes. The gate added
 here checks exactly that path, and the clean-install test does the same for
 the thing that actually gets shipped.
+
+---
+
+## Decisions — recorded 2026-09-17
+
+The operator decided every open question in the launch checklist's
+**Decisions** section on 2026-09-17. This section is the record. The
+checklist marks each one resolved and points here.
+
+| # | Decision | Status | Tracked in |
+|---|---|---|---|
+| 1 | Runtime server-URL setting in the app | Decided; implementation in progress | moto-diag-mobile |
+| 2 | Hosting: Fly.io + SQLite volume + Litestream; site on Vercel | Decided — **domain TBD** | F64 (deploy), F81 (Postgres) |
+| 3 | Which server is down, and what "no backups" covers | Answered; `data/` backed up | — |
+| 4 | Test sessions 8 and 9 | **Done** — deleted | this record |
+| 5 | Spending cap: $25/month per shop | Decided | F78 |
+| 6 | Memory refresh on session close | Decided | F79 |
+| 7 | Privacy policy reflects collected data | Decided — owner **Kerwyn** | F80 |
+| 8 | Unreachable features: don't build; fix the gate | Decided; gate change **done** | F82, F83; CLAUDE.md gate item 6 |
+
+### 1. Server address — runtime setting (blocked launch)
+
+- Add a runtime server-URL setting to the app. **Rejected alternatives:**
+  - *One hosted service for all shops* — we become the host forever, with
+    every shop's data on our box.
+  - *A separate build per shop* — a rebuild and a store resubmission for
+    every customer.
+- **Default:** `https://api.<domain>`, read from config (`API_BASE_URL` at
+  build time), **never a string literal in source** (SSOT rule). The domain
+  is TBD until it's bought this week; `.env.example` stays
+  `api.<your-domain>`.
+- **Override:** a field on the Settings screen. On save, a **live health
+  check** runs against the entered URL: `GET /healthz` must return 200 with
+  `status: "ok"` and a `schema_version`.
+- **Plain http is rejected** except for a dev allowlist — `localhost`,
+  `127.0.0.1` and `10.0.2.2` (the Android emulator's route to the host) — kept
+  in **one constant**, not spread across checks.
+- **No server set** → *"No server set — go to Settings."* Production builds
+  must have `API_BASE_URL` set at build time, enforced by a **build-time
+  assertion**, so a normal user never sees that screen.
+- **Regression guard (required):** a test proving the API client reads the
+  stored setting, not the compiled constant.
+- Until the domain exists, the operator sets the Tailscale address on their
+  phone by hand.
+
+### 2. Hosting
+
+- **Site + waitlist:** Vercel, at the bare domain.
+- **Backend:** **Fly.io**, at `api.<domain>`. Vercel isn't the backend host:
+  it has serverless timeouts, cold starts and no persistent process, and the
+  API runs video analysis, Whisper and uploads, and holds a database.
+- **Database:** **SQLite on a Fly persistent volume, replicated continuously
+  by Litestream to object storage from day one.**
+- **Revised from "managed Postgres with automatic backups".** This backend
+  has no Postgres support: 81 direct `sqlite3` uses, 58 migrations written as
+  SQLite DDL (including table-rebuild patterns), and no Postgres driver or
+  ORM. Moving to Postgres is a port, not a hosting setting, and not a launch
+  task. It's filed as **F81, "Postgres port — revisit when concurrent shops
+  > 1"**.
+- **F64 is now the deploy ticket.** The checklist's step 1 was written for
+  the home-desktop plan, and that plan is superseded.
+- **Domain:** TBD.
+
+### 3. Server down / backups — answered before any other work
+
+- **Down:** the development API on the operator's laptop (`motodiag serve`
+  on `127.0.0.1:8000`) and its Tailscale exposure, shut down on 2026-09-16
+  at 11:31 on request. **No deployed server has ever existed.**
+- **"No leftover backups"** meant only the temporary database copies taken
+  before table-rebuilding migrations. At that point **nothing backed the
+  machine up**: no Time Machine destination, and `data/` is gitignored. The
+  real bike videos, the first real cost events and the first Q&A existed in
+  one place.
+- **Resolved:** the operator zipped `data/` to iCloud Drive
+  (`motodiag-data-2026-09-17.zip`). Before item 4 ran, the archive was
+  checked: `motodiag.db` plus all six videos, sizes matching the live files,
+  zip integrity OK. For launch, the answer is Litestream (decision 2).
+
+### 4. Test sessions 8 and 9 — deleted
+
+- Both were created by Claude running `motodiag diagnose quick` on
+  2026-09-10 and 2026-09-11, using symptoms paraphrased from session 6's
+  real complaint. As a result, vehicle 10's memory held that complaint
+  three times.
+- The argument that session 9 held "the only structured AI diagnosis in the
+  database" was **rejected**: a diagnosis can be regenerated in minutes.
+- **Done:** both sessions printed in full (see the 209B phase log), then
+  deleted, together with the **5 memory facts** compiled from them.
+  `memory_facts` has no foreign key to sessions, so those facts would
+  otherwise have gone stale. Memory was then rebuilt from scratch and came to
+  **37 facts**, the same as the targeted delete. Only `diagnostic_sessions`
+  (8 → 6) and `memory_facts` (42 → 37) changed. **The text-diagnosis cost row
+  was kept** because it records real spend and isn't linked to a session.
+- Vehicle 10's prompt history is now its one real complaint.
+
+### 5. Spending cap — F78
+
+- **$25/month per shop**, enforced through `shop_cost_this_month`, which is
+  #28 in the triage below and currently has no caller at all. Not a launch
+  blocker.
+- Known per-call costs: about **1¢** per text diagnosis, **13¢** per video
+  question, and **5¢** per automatic sweep.
+
+### 6. Memory refresh — F79
+
+- Recompile a machine's memory **when its session closes**. Not a launch
+  blocker.
+
+### 7. Privacy policy — F80 (owner: Kerwyn)
+
+- Collected data must be reflected in the policy before store submission:
+  technicians' questions and answers, corrections and who made them, and the
+  frames and audio sent to Anthropic and OpenAI.
+
+### 8. Unreachable features — triaged, not built
+
+- **Nothing on the list gets built now.**
+- **#30 dropped.** `create_extracted_symptom` was wired in and later
+  replaced, so it's now `superseded`. That leaves **32** genuinely unwired
+  features.
+- **The real fix is the gate.** The phase completion checklist in
+  `CLAUDE.md` gained item 6: *a user-reachable entry point (CLI command or
+  API route) exists and is exercised by a test* (workspace-docs `1c21fe0`,
+  with a dated Change Log entry).
+- **F82:** the 22 cause-A items (media, pricing and workflow islands) —
+  wire or delete, decided per phase.
+- **F83:** the 10 cause-B items (dead repo methods) — delete unless a caller
+  is planned. #28 has one: F78.
+
+**Cause A — built before any way to use it existed, and no later phase came
+back for it (22).** All of these date from 2026-04-15/16. Phases 97–107
+landed as a single 9,552-line commit that day, and the API didn't exist
+until 2026-04-22. The checklists for those phases have no item requiring a
+user entry point; "done" meant "N tests pass".
+
+| # | Feature | File |
+|---|---|---|
+| 1 | Engine-sound spectrogram | `media/spectrogram.py` |
+| 2 | Audio anomaly detection | `media/anomaly_detection.py` |
+| 3 | Audio capture / preprocessing | `media/audio_capture.py` |
+| 4 | Audio-capture coaching | `media/coaching.py` |
+| 5 | Before/after audio comparison | `media/comparative.py` |
+| 6 | Multimodal evidence fusion | `media/fusion.py` |
+| 7 | Real-time audio monitor | `media/realtime.py` |
+| 8 | Media-enhanced reports | `media/reports.py` |
+| 9 | Engine sound-signature database | `media/sound_signatures.py` |
+| 10 | Video annotation | `media/annotation.py` |
+| 11 | Structured logging + audit trail | `core/logging.py` |
+| 12–15 | Guided no-start / charging / overheating workflows + step engine | `engine/workflows.py` |
+| 16–19 | Pricing package, estimates, labor rates, repair plans | `pricing/*` |
+| 20–22 | Pricing models (`LaborRateType`, `PlanItemType`, `RepairPlanStatus`) | `core/models.py` |
+
+**Cause B — the repo or helper layer was written wider than the wired
+feature that used it (10).** The features themselves are live. These
+individual methods from their "Commit 0" or CRUD layers never got a caller.
+
+| # | Method | File | Planned caller |
+|---|---|---|---|
+| 23 | `validate_video` — probe an uploaded file | `media/ffmpeg.py` | — |
+| 24 | `extract_audio` | `media/ffmpeg.py` | — (feeds the cause-A audio layer) |
+| 25 | `heif_available` | `media/photo_pipeline.py` | — |
+| 26 | `list_issue_photos` | `shop/wo_photo_repo.py` | — |
+| 27 | `whisper_available` | `media/whisper_client.py` | — |
+| 28 | `shop_cost_this_month` | `shop/cost_repo.py` | **F78 (spending cap)** |
+| 29 | `soft_delete_extracted_symptom` | `shop/extracted_symptom_repo.py` | — |
+| 31 | `reactivate_shop` | `shop/shop_repo.py` | — |
+| 32 | `set_bike_role` | `advanced/fleet_repo.py` | — |
+| 33 | `update_fleet_description` | `advanced/fleet_repo.py` | — |
+
+Numbering is kept from the original triage, so #30 is absent here.
+
+**The common thread: the phase completion gate checked *tested and
+documented*, never *reachable*,** and both causes passed it. Gate item 6 now
+checks for it.
