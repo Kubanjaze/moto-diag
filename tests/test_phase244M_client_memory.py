@@ -945,3 +945,107 @@ class TestCompileSources:
         assert compile_vehicle(VEHICLE, db_path=db) > 0, (
             "the compile degrades to what was there"
         )
+
+
+class TestADiagnosisIsWorthWhoWroteIt:
+    """Found on production, 2026-09-17, on the first compile against live data.
+
+    The compile labelled EVERY `diagnostic_sessions.diagnosis` as
+    `mechanic-verified` -- the top of recall's trust ranking. `diagnose quick`
+    writes that field, so the model's own prose was compiled as a mechanic's
+    confirmation, and `recall_summary`'s guard against feeding model output
+    back into the next prompt was bypassed because the text no longer said it
+    came from a model.
+
+    The first proposed fix promoted a diagnosis once a human had overridden it.
+    The operator pointed out that the only diagnosis edit in the database had
+    been made to check whether edits get logged. An edit is not a verification,
+    so this class pins the conservative rule instead.
+    """
+
+    def _session(self, db, *, sid, ai_model, diagnosis):
+        c = sqlite3.connect(db)
+        c.execute(
+            "INSERT INTO diagnostic_sessions "
+            "(id, vehicle_id, vehicle_make, vehicle_model, vehicle_year, "
+            " status, diagnosis, ai_model_used, created_at) "
+            "VALUES (?, ?, 'Honda', 'CBR600F4i', 2001, 'open', ?, ?, "
+            "        '2026-09-10T10:00:00')",
+            (sid, VEHICLE, diagnosis, ai_model),
+        )
+        c.commit(); c.close()
+
+    def _fact(self, db, subject):
+        return next(f for f in recall(VEHICLE, db_path=db) if f.subject == subject)
+
+    def test_an_ai_diagnosis_is_model_generated(self, db):
+        self._session(db, sid=20, ai_model="haiku",
+                      diagnosis="Stator cover seal weeping")
+        compile_vehicle(VEHICLE, db_path=db)
+        fact = self._fact(db, "Stator cover seal weeping")
+        assert fact.source == "model-generated", (
+            "the model's diagnosis must not be compiled as a mechanic's"
+        )
+        assert fact.fact_kind == "observation"
+
+    def test_an_EDITED_ai_diagnosis_is_still_model_generated(self, db):
+        """The case the operator named: an edit made to test logging. One
+        deleted word does not turn model prose into a confirmation."""
+        text = "Leaking left crankcase cover gasket - oil weeping from left side"
+        self._session(db, sid=21, ai_model="haiku", diagnosis=text)
+        c = sqlite3.connect(db)
+        c.execute(
+            "INSERT INTO session_overrides "
+            "(session_id, field_name, ai_value, override_value) "
+            "VALUES (21, 'diagnosis', ?, ?)",
+            (text.replace("weeping", "weeping specifically"), text),
+        )
+        c.commit(); c.close()
+
+        compile_vehicle(VEHICLE, db_path=db)
+        assert self._fact(db, text).source == "model-generated", (
+            "an override proves a human touched the field, not that they "
+            "verified what the model wrote"
+        )
+
+    def test_a_human_typed_diagnosis_is_mechanic_verified(self, db):
+        self._session(db, sid=22, ai_model=None,
+                      diagnosis="Split intake boot on cylinder 2")
+        compile_vehicle(VEHICLE, db_path=db)
+        fact = self._fact(db, "Split intake boot on cylinder 2")
+        assert fact.source == "mechanic-verified"
+        assert fact.fact_kind == "correction"
+
+    def test_an_ai_diagnosis_never_reaches_the_prompt(self, db):
+        """The loop this closes, end to end: the model's own diagnosis must not
+        return as 'known history' in the next analysis of the same machine."""
+        self._session(db, sid=23, ai_model="haiku",
+                      diagnosis="Reg-rec overheating suspected")
+        compile_vehicle(VEHICLE, db_path=db)
+        assert "Reg-rec overheating suspected" not in recall_summary(
+            VEHICLE, db_path=db
+        )
+
+    def test_a_human_diagnosis_does_reach_the_prompt(self, db):
+        self._session(db, sid=24, ai_model=None,
+                      diagnosis="Replaced cam chain tensioner")
+        compile_vehicle(VEHICLE, db_path=db)
+        assert "Replaced cam chain tensioner" in recall_summary(
+            VEHICLE, db_path=db
+        )
+
+    def test_explicit_feedback_is_still_the_path_to_mechanic_verified(self, db):
+        """For a session the AI touched, `diagnostic_feedback` is the only
+        route to the top trust tier."""
+        self._session(db, sid=25, ai_model="haiku",
+                      diagnosis="Probably the stator")
+        c = sqlite3.connect(db)
+        c.execute(
+            "INSERT INTO diagnostic_feedback "
+            "(session_id, outcome, actual_diagnosis, submitted_at) "
+            "VALUES (25, 'incorrect', 'Clutch cover gasket', '2026-09-12')"
+        )
+        c.commit(); c.close()
+        compile_vehicle(VEHICLE, db_path=db)
+        assert self._fact(db, "Probably the stator").source == "model-generated"
+        assert self._fact(db, "Clutch cover gasket").source == "mechanic-verified"
