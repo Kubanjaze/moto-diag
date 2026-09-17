@@ -119,6 +119,8 @@ def _exc_class_chain():
         VideoOwnershipError, VideoQuotaExceededError,
     )
     from motodiag.api.routes.videos import VideoFileTooLargeError
+    # Phase 209D — the monthly AI spend cap (off unless one is configured)
+    from motodiag.shop.cost_cap import CostCapExceeded
     from motodiag.api.uploads import UploadTooLargeError
     # Phase 194 — work-order photo domain
     from motodiag.shop.wo_photo_repo import (
@@ -239,6 +241,9 @@ def _exc_class_chain():
          "Video quota exceeded"),
         (VideoFileTooLargeError, 413, "video-too-large",
          "Video file too large"),
+        # Phase 209D — 402 like the other "you may not spend more" cases
+        (CostCapExceeded, 402, "ai-spend-cap-reached",
+         "Monthly AI limit reached for this shop"),
         # Phase 207 — per-request upload ceiling, any media route
         (UploadTooLargeError, 413, "upload-too-large",
          "Uploaded file too large"),

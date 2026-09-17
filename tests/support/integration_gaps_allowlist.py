@@ -141,9 +141,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "media/ffmpeg.py::extract_audio": ("unwired-feature",
         "Audio extraction for the Track C2 audio layer, which is itself "
         "unreachable."),
-    "shop/cost_repo.py::shop_cost_this_month": ("unwired-feature",
-        "Monthly spend per shop. Nothing reads it, which is half of why "
-        "cost_cap_monthly_usd_cents is never enforced."),
     "shop/intake_repo.py::require_intake": ("public-api",
         "Raising variant of get_intake (IntakeNotFoundError on a miss); no "
         "caller uses this form."),

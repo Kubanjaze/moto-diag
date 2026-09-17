@@ -4250,6 +4250,44 @@ MIGRATIONS: list[Migration] = [
             PRAGMA foreign_keys=ON;
         """,
     ),
+    # Migration 061 — Phase 209D: a session belongs to a shop
+    Migration(
+        version=61,
+        name="session_shop_id",
+        description=(
+            "Phase 209D (F78). Adds nullable `diagnostic_sessions.shop_id`. "
+            "Every `cost_events` row written before this had `shop_id = "
+            "NULL`: voice attributed (its route is shop-scoped), vision and "
+            "text did not, because a session carried `user_id` and "
+            "`customer_id` and nothing that resolves a shop. A monthly cap "
+            "enforced through `shop_cost_this_month` would therefore have "
+            "read $0 for every shop and never fired -- a safeguard that "
+            "looks like it works, which is the failure this phase exists to "
+            "prevent. Sessions are stamped at creation from an explicit, "
+            "membership-checked shop or from the owner's single active "
+            "membership; vision and text spend then carry it. "
+            "NOT BACKFILLED on purpose: attributing finished work from "
+            "today's memberships would be a guess, and it would change no "
+            "ledger row, since those are NULL whatever this column says. "
+            "Nullable is a legitimate state -- a walk-in diagnosis, a CLI "
+            "session on a machine with no shop -- exactly as migration 046 "
+            "left `customer_id`. Rollback drops the index and the column, "
+            "the same shape 046 uses; no table rebuild is needed because "
+            "this migration created neither the table nor a CHECK."
+        ),
+        upgrade_sql="""
+            ALTER TABLE diagnostic_sessions
+                ADD COLUMN shop_id INTEGER
+                REFERENCES shops(id) ON DELETE SET NULL;
+
+            CREATE INDEX IF NOT EXISTS idx_sessions_shop
+                ON diagnostic_sessions(shop_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_sessions_shop;
+            ALTER TABLE diagnostic_sessions DROP COLUMN shop_id;
+        """,
+    ),
 ]
 
 

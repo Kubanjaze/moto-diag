@@ -18,19 +18,27 @@ def create_session(
     fault_codes: list[str] | None = None,
     vehicle_id: int | None = None,
     db_path: str | None = None,
+    shop_id: int | None = None,
 ) -> int:
-    """Create a new diagnostic session. Returns session ID."""
+    """Create a new diagnostic session. Returns session ID.
+
+    ``shop_id`` (Phase 209D, migration 061) is who pays for the AI this
+    session runs. The CLI resolves it from ``--shop`` or a single-shop
+    database; ``None`` is a legitimate state and leaves the spend
+    unattributed.
+    """
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """INSERT INTO diagnostic_sessions
                (vehicle_id, vehicle_make, vehicle_model, vehicle_year,
-                status, symptoms, fault_codes, created_at)
-               VALUES (?, ?, ?, ?, 'open', ?, ?, ?)""",
+                status, symptoms, fault_codes, created_at, shop_id)
+               VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)""",
             (
                 vehicle_id, vehicle_make, vehicle_model, vehicle_year,
                 json.dumps(symptoms or []),
                 json.dumps(fault_codes or []),
                 datetime.now().isoformat(),
+                shop_id,
             ),
         )
         sid = cursor.lastrowid
@@ -459,22 +467,33 @@ def create_session_for_owner(
     fault_codes: list[str] | None = None,
     vehicle_id: int | None = None,
     db_path: str | None = None,
+    shop_id: int | None = None,
 ) -> int:
     """Same as :func:`create_session` but stamps ``user_id``. Does NOT
     check tier quota — caller should call
-    :func:`check_session_quota` first."""
+    :func:`check_session_quota` first.
+
+    ``shop_id`` defaults to the owner's shop when they have exactly one
+    active membership (Phase 209D). Two memberships leave it NULL: guessing
+    would put one shop's AI spend on another's ledger.
+    """
+    if shop_id is None:
+        from motodiag.shop.attribution import shop_for_user
+
+        shop_id = shop_for_user(owner_user_id, db_path=db_path)
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """INSERT INTO diagnostic_sessions
                (vehicle_id, vehicle_make, vehicle_model, vehicle_year,
-                status, symptoms, fault_codes, created_at, user_id)
-               VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?)""",
+                status, symptoms, fault_codes, created_at, user_id, shop_id)
+               VALUES (?, ?, ?, ?, 'open', ?, ?, ?, ?, ?)""",
             (
                 vehicle_id, vehicle_make, vehicle_model, vehicle_year,
                 json.dumps(symptoms or []),
                 json.dumps(fault_codes or []),
                 datetime.now().isoformat(),
                 owner_user_id,
+                shop_id,
             ),
         )
         return cursor.lastrowid

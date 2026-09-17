@@ -69,6 +69,22 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
         _log.error("run_analysis_pipeline: video_id=%d not found", video_id)
         return
 
+    # Phase 209D: who pays for this sweep, and may they. Checked before the
+    # state moves, so a capped video stays `pending` -- nothing failed and
+    # nothing was attempted, and "failed" would say otherwise.
+    from motodiag.shop.attribution import shop_for_video
+    from motodiag.shop.cost_cap import CostCapExceeded, check_cost_cap
+
+    shop_id = shop_for_video(video_id, db_path=db_path)
+    try:
+        check_cost_cap(shop_id, db_path=db_path)
+    except CostCapExceeded as capped:
+        _log.warning(
+            "sweep skipped for video %d: %s; the video stays pending",
+            video_id, capped,
+        )
+        return
+
     # Transition: pending -> analyzing
     video_repo.update_analysis_state(
         video_id,
@@ -127,7 +143,8 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
         try:
             analyzer = VisionAnalyzer(model="sonnet")
             result = analyzer.analyze_video_frames(
-                frames, vehicle_context=vc, video_id=video_id, db_path=db_path,
+                frames, vehicle_context=vc, video_id=video_id,
+                shop_id=shop_id, db_path=db_path,
             )
         except VisionPipelineError as e:
             _log.warning(
