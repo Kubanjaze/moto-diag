@@ -25,6 +25,10 @@ from rich.panel import Panel
 from rich.table import Table
 
 from motodiag.cli.theme import get_console, status as theme_status, severity_style
+from motodiag.knowledge.vehicle_resolver import (
+    VehicleIdentity,
+    known_issues_for_vehicle,
+)
 from motodiag.cli.subscription import (
     SubscriptionTier,
     current_tier,
@@ -218,16 +222,76 @@ def _list_garage_summary(db_path: Optional[str] = None, limit: int = 10) -> list
         return []
 
 
+#: How many corpus rows reach the prompt. Phase 244S chose a number where
+#: there was none: retrieval was unbounded, and real vehicles returned 45-95
+#: rows, 40-60 KB of prompt per call, three times over in the interactive
+#: flow. 12 matches what the vision formatter already renders
+#: (media/vision_analysis_pipeline.py:101). It is a cost decision, and since
+#: Phase 209D the ledger can show what it costs.
+KNOWN_ISSUE_PROMPT_LIMIT = 12
+
+#: Fetched before the year filter runs, because the resolver has no year
+#: parameter and filtering after the cap would starve the result.
+_RESOLVER_FETCH = 200
+
+
 def _load_known_issues(
     make: str, model_name: str, year: int, db_path: Optional[str] = None,
-) -> list[dict]:
-    """Retrieve knowledge-base known issues for the vehicle, used as AI context."""
+) -> tuple[Optional["VehicleIdentity"], list[dict]]:
+    """Retrieve knowledge-base known issues for the vehicle, used as AI context.
+
+    Phase 244S. This used to call `search_known_issues`, i.e. `make LIKE
+    '%X%'`, so every retrieval fix from Phases 244C-244I reached the
+    video-question endpoint and nothing else. Two measured consequences on the
+    product's primary command:
+
+    * a bike entered as "Homda" returned **0 rows**, `build_knowledge_context`
+      returned "", and the model diagnosed with no corpus while nothing said
+      so. The resolver returns 143 for the same input.
+    * a 2022 KTM 1290 Super Adventure was handed issue 1277, whose model column
+      reads "390/790/890 Adventure - as distinct from 1290 Super Adventure".
+      `LIKE` matched the exclusion clause; the junction tables do not.
+
+    Returns the identity as well, because a correction the technician never
+    sees is a correction that hides a wrong garage entry rather than fixing it.
+    """
     try:
-        return search_known_issues(
-            make=make, model=model_name, year=year, db_path=db_path,
+        identity, rows = known_issues_for_vehicle(
+            make, model_name, db_path=db_path, limit=_RESOLVER_FETCH,
         )
     except Exception:
-        return []
+        return None, []
+
+    # The resolver takes no year. Applied here, and BEFORE the cap: filtering
+    # after it would drop rows that a narrower fetch would have kept.
+    kept = [r for r in rows if _covers_year(r, year)]
+    return identity, kept[:KNOWN_ISSUE_PROMPT_LIMIT]
+
+
+def _covers_year(row: dict, year: Optional[int]) -> bool:
+    """Mirror of the year window in issues_repo._known_issue_filters."""
+    if year is None:
+        return True
+    start, end = row.get("year_start"), row.get("year_end")
+    if start is not None and year < start:
+        return False
+    if end is not None and year > end:
+        return False
+    return True
+
+
+def _render_identity(console, identity) -> None:
+    """Show what the corpus lookup decided, when it decided anything.
+
+    Phase 244S. Silent resolution is how "Homda" gets fixed for the prompt and
+    stays wrong in the garage forever.
+    """
+    if identity is None:
+        return
+    for line in identity.corrections():
+        console.print(f"[yellow]Knowledge base: {line}[/yellow]")
+    for line in identity.suggestions():
+        console.print(f"[dim]Knowledge base: {line}[/dim]")
 
 
 def _parse_symptoms(text: str) -> list[str]:
@@ -359,7 +423,10 @@ def _run_quick(
         shop_id=shop_id,
     )
 
-    known = _load_known_issues(vehicle["make"], vehicle["model"], vehicle["year"], db_path)
+    identity, known = _load_known_issues(
+        vehicle["make"], vehicle["model"], vehicle["year"], db_path,
+    )
+    _render_identity(get_console(), identity)
 
     # Thread `offline` through to the diagnose_fn. Legacy fixture mocks
     # that don't accept `offline=` still work via the TypeError fallback.
@@ -430,7 +497,10 @@ def _run_interactive(
         shop_id=shop_id,
     )
 
-    known = _load_known_issues(vehicle["make"], vehicle["model"], vehicle["year"], db_path)
+    identity, known = _load_known_issues(
+        vehicle["make"], vehicle["model"], vehicle["year"], db_path,
+    )
+    _render_identity(get_console(), identity)
     total_input = 0
     total_output = 0
     final_response = None

@@ -32,6 +32,7 @@ from dataclasses import dataclass, field
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.knowledge.issues_repo import row_to_issue_dict
 from motodiag.core.severity import SEVERITY_RANK_SQL
 
 #: Absolute floor for a fuzzy match. Below this, nothing is proposed at all.
@@ -401,7 +402,10 @@ def known_issues_for_vehicle(
     seen: set = set()
     out: list[dict] = []
     for r in rows:
-        d = dict(r)
+        # Phase 244S: the same shape `search_known_issues` returns, because
+        # both now feed `build_knowledge_context`. `dict(r)` left the JSON list
+        # columns as strings.
+        d = row_to_issue_dict(r)
         key = (d.get("make"), d.get("model"), d.get("title"))
         if key in seen:
             continue

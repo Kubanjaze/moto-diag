@@ -188,9 +188,15 @@ class TestHelpers:
     def test_load_vehicle_missing(self, db):
         assert _load_vehicle(99999, db_path=db) is None
 
-    def test_load_known_issues_returns_list(self, db, seeded_vehicle):
-        result = _load_known_issues("Harley-Davidson", "Sportster 1200", 2001, db_path=db)
-        assert isinstance(result, list)
+    def test_load_known_issues_returns_identity_and_rows(self, db, seeded_vehicle):
+        """Phase 244S changed this contract deliberately: the caller needs the
+        identity to report a correction, and there is no version of the change
+        that reaches the resolver while returning a bare list."""
+        identity, rows = _load_known_issues(
+            "Harley-Davidson", "Sportster 1200", 2001, db_path=db,
+        )
+        assert isinstance(rows, list)
+        assert identity is None or hasattr(identity, "corrections")
 
     def test_parse_symptoms_simple(self):
         assert _parse_symptoms("won't start, rough idle") == ["won't start", "rough idle"]
