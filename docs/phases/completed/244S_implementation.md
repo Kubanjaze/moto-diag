@@ -1,6 +1,6 @@
 # Phase 244S — The retrieval fixes reach the commands people use
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -116,16 +116,72 @@ than either end.
 
 ## Verification Checklist
 
-- [ ] Both retrieval functions return rows of the same shape, proven by a test that reads a list field from each
-- [ ] `/ask`'s latent undecoded-row bug is gone as a side effect, with a test
-- [ ] `diagnose quick` on a typo'd make ("Homda") retrieves the corpus instead of nothing
-- [ ] The correction is printed, so the technician learns the garage entry is wrong
-- [ ] A 2022 KTM 1290 Super Adventure no longer receives the entry that excludes it
-- [ ] Rows arrive tiered, most specific first
-- [ ] The year filter still applies, and is applied before the cap
-- [ ] The prompt is bounded at 12 rows; before/after sizes recorded
-- [ ] `kb list --make livewire` surfaces LiveWire entries rather than burying them
-- [ ] `kb list --model` still behaves as a substring filter, with the decision recorded
-- [ ] `motodiag code` and the interactive `diagnose start` flow both still work
-- [ ] Mutations: revert each call site; drop the shape conversion; hide the correction; drop the year filter; apply the cap before the filter — each caught
-- [ ] 209B gate passes; f9 lint clean; full regression green
+- [x] Both retrieval functions return rows of the same shape, proven by a test that reads a list field from each
+- [x] `/ask`'s latent undecoded-row bug is gone as a side effect, with a test
+- [x] `diagnose quick` on a typo'd make ("Homda") retrieves the corpus instead of nothing
+- [x] The correction is printed, so the technician learns the garage entry is wrong
+- [x] A 2022 KTM 1290 Super Adventure no longer receives the entry that excludes it
+- [x] Rows arrive tiered, most specific first
+- [x] The year filter still applies, and is applied before the cap
+- [x] The prompt is bounded at 12 rows; before/after sizes recorded
+- [x] `kb list --make livewire` surfaces LiveWire entries rather than burying them
+- [x] `kb list --model` still behaves as a substring filter, with the decision recorded
+- [x] `motodiag code` and the interactive `diagnose start` flow both still work
+- [x] Mutations: revert each call site; drop the shape conversion; hide the correction; drop the year filter; apply the cap before the filter — each caught
+- [x] 209B gate passes; f9 lint clean; full regression green
+
+## Deviations from v1.0
+
+**1. The excluding entry is ranked and labelled, not dropped.** The checklist
+said a 2022 KTM 1290 Super Adventure "no longer receives the entry that
+excludes it". It still receives it — 244E's rule is that knowing more must
+never return less, so the resolver tiers rather than filters. Measured: the
+two model-specific rows come first, and the excluding entry arrives as
+`make_other_model`. That is the right outcome, and the checklist item was
+written too strongly.
+
+**2. The prompt builder had to learn the tier.** A consequence of the above
+that v1.0 did not draw: once tiered rows reach `build_knowledge_context`, an
+entry about another model renders identically to one written about this
+machine. Rows now carry a scope label — "this model", "this make, model not
+specified", "same make, DIFFERENT model" — and a row without a tier renders
+exactly as before.
+
+**3. A latent crash, found by a fixture.** `build_knowledge_context` read
+`issue.get("fix_procedure", "")`, which returns None for a NULL column, and
+called `len()` on it. No shipped corpus row has a NULL there; the column is
+nullable, so one new entry without a procedure would have crashed every
+diagnosis that retrieved it. Fixed in the same phase.
+
+## Results
+
+| | |
+|---|---|
+| The typo case | "Homda"/"cbrf4i" went from **0 rows to 12**, tiered model-first, with both corrections printed |
+| What the model used to get | `""` — an empty knowledge base, with nothing on screen saying so |
+| Row shape | one, `row_to_issue_dict`, used by both paths; the `/ask` endpoint's undecoded rows are repaired as a side effect |
+| Ordering | model-specific first, then make-wide, then other models of the same make |
+| The excluding entry | still present, ranked last of its query and labelled `make_other_model` (Deviation 1) |
+| The prompt | says which scope each entry has (Deviation 2) |
+| Prompt size | bounded at **12** rows, fetched at 200 so the year filter has material. Retrieval was unbounded: 45–95 rows, 40–60 KB per call, ×3 interactively |
+| Year filter | moved into Python and applied **before** the cap |
+| `kb list` | resolves the make; `--model` stays a substring browse filter, and that decision is now written down |
+| Latent crash | a NULL `fix_procedure` no longer breaks the prompt (Deviation 3) |
+| Tests added | **20** |
+| Mutations | **7 of 7 caught** |
+| Regression | **6,856 passed, 0 failed, 26:49** |
+
+**Mutations**
+
+| | mutation | caught by |
+|---|---|---|
+| M1 | diagnose reverts to the LIKE path | `test_the_command_path_now_finds_the_corpus` |
+| M2 | the resolver stops decoding rows | `test_the_resolver_path_does_too` |
+| M3 | the year filter is dropped | `test_an_out_of_range_entry_is_excluded` |
+| M4 | the cap runs before the year filter | `test_the_filter_runs_before_the_cap` |
+| M5 | the prompt stops labelling the tier | `test_the_prompt_says_a_different_model_is_a_different_model` |
+| M6 | a NULL fix_procedure crashes again | `test_a_row_with_no_fix_procedure_does_not_crash_the_prompt` |
+| M7 | the prompt is unbounded again | `test_the_prompt_is_bounded` |
+
+**Left for 244T and 244U**, unchanged: `SafetyChecker` has no caller, and 117
+definitions are invisible to the 209B gate behind re-exports.

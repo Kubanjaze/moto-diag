@@ -2953,3 +2953,30 @@ started, the authority had to be repaired — `emissions` and `exhaust` both
 claimed O2 and catalyst, so the table could not settle where P0420 went.
 
 Schema 61 → 62. 132 tests, 7/7 mutations. Regression 6,824 passed, 0 failed, 26:33.
+
+## Phase 244S complete — 2026-09-17
+
+The retrieval fixes reach the commands people use. Four phases of work on
+typo tolerance, junction retrieval and specificity tiering had reached
+exactly one route — the video-question endpoint — while `motodiag diagnose`,
+the product's primary command, still matched with `make LIKE '%X%'`.
+
+What that cost is measurable on the operator's own corpus: a bike entered as
+"Homda" returned nothing, the prompt builder returned an empty string, and
+the model produced a diagnosis with no knowledge base behind it while the
+screen said nothing at all. It returns 12 rows now, most specific first, and
+prints "make recorded as 'Homda', read as 'Honda'" — because a correction the
+technician never sees fixes one prompt and leaves the garage wrong forever.
+
+Step 0's adversarial checker earned the phase: the obvious wiring would have
+handed callers JSON strings where they expected lists, since the two paths
+never returned the same shape. Fixing that contract first also repaired the
+`/ask` endpoint, which had been passing undecoded rows since 244E.
+
+Two additions the build made to the plan: the prompt now labels each entry's
+scope, because a tiered row about a different model was rendering as though
+it were about this machine; and a NULL `fix_procedure` no longer crashes the
+prompt builder — no shipped row triggers it, and the first one authored
+without a procedure would have.
+
+No schema change. 20 tests, 7/7 mutations. Regression 6,856 passed, 0 failed, 26:49.
