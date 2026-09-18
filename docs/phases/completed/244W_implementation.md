@@ -1,6 +1,6 @@
 # Phase 244W — The gate can see a module that only talks to itself
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17
 
 ---
 
@@ -281,34 +281,128 @@ the blind spot, not the mechanism that closes it, so the winning design is
 held to them rather than the other way round.
 
 *On the real tree*
-- [ ] `engine/history.py` and `engine/retrieval.py` are reported
-- [ ] All 19 modules from S0-3 are reported — the 11 fully invisible ones and the 8 wholly-dead engine modules — and **nothing else** that is not already in `UNREACHABLE_MODULES`
-- [ ] `feedback/learning_hook.py` is reported despite `FeedbackReader` appearing in a string literal at `core/migrations.py:545`
-- [ ] `inventory/item_repo.py` is reported (my own prototype's false negative)
-- [ ] `billing/webhook_handlers.py` is NOT reported (called only from a route handler — the false positive my first prototype produced)
-- [ ] No module in `api/routes/` or `cli/` is reported
-- [ ] The existing gate is unchanged: `test_phase209B` and `test_phase244U` stay green without edits to their assertions, except pins that record a count
+- [x] `engine/history.py` and `engine/retrieval.py` are reported
+- [x] All 19 modules from S0-3 are reported — the 11 fully invisible ones and the 8 wholly-dead engine modules — and **nothing else** that is not already in `UNREACHABLE_MODULES`
+- [x] `feedback/learning_hook.py` is reported despite `FeedbackReader` appearing in a string literal at `core/migrations.py:545`
+- [x] `inventory/item_repo.py` is reported (my own prototype's false negative)
+- [x] `billing/webhook_handlers.py` is NOT reported (called only from a route handler — the false positive my first prototype produced)
+- [x] No module in `api/routes/` or `cli/` is reported
+- [x] The existing gate is unchanged: `test_phase209B` and `test_phase244U` stay green without edits to their assertions, except pins that record a count
 
 *On synthetic trees* (`TestTheScannerIsNotFooled` shape)
-- [ ] A class that names itself, imported only by a package `__init__`, is reported
-- [ ] A dead module importing a second dead module reports **both**
-- [ ] A module called only from a `@router.get` handler is not reported
-- [ ] A module reached only by module-object access (`import x; x.f()`) is not reported
-- [ ] A module whose only reference outside itself is in a docstring is reported
-- [ ] A module whose only reference is a lazy import inside a live function is not reported
-- [ ] A missing entry point is an error, not an empty answer
-- [ ] A module whose only live name is a public **constant** imported elsewhere is not reported
-- [ ] A module used only through an **aliased import** (`from x import f as g`) is not reported
-- [ ] A module whose only use is as a **parameter or return annotation** of a live def is not reported
-- [ ] A **framework subclass** (base resolves outside the package) whose methods nothing in-tree names is not reported
-- [ ] A name used only as a **signature default** of a live def is not reported
-- [ ] A module named only inside a **nested def** of a live function is not reported
+- [x] A class that names itself, imported only by a package `__init__`, is reported
+- [x] A dead module importing a second dead module reports **both**
+- [x] A module called only from a `@router.get` handler is not reported
+- [x] A module reached only by module-object access (`import x; x.f()`) is not reported
+- [x] A module whose only reference outside itself is in a docstring is reported
+- [x] A module whose only reference is a lazy import inside a live function is not reported
+- [x] A missing entry point is an error, not an empty answer
+- [x] A module whose only live name is a public **constant** imported elsewhere is not reported
+- [x] A module used only through an **aliased import** (`from x import f as g`) is not reported
+- [x] A module whose only use is as a **parameter or return annotation** of a live def is not reported
+- [x] A **framework subclass** (base resolves outside the package) whose methods nothing in-tree names is not reported
+- [x] A name used only as a **signature default** of a live def is not reported
+- [x] A module named only inside a **nested def** of a live function is not reported
 
 *The allowlist*
-- [ ] A new entry for each of the 19, classified from S0-4/S0-4b evidence, each reason ≥ 20 chars, substrate entries naming their roadmap phase
-- [ ] The stale direction works: removing a real caller's reference in a synthetic tree makes an entry stale, and the test says which
+- [x] A new entry for each of the 19, classified from S0-4/S0-4b evidence, each reason ≥ 20 chars, substrate entries naming their roadmap phase
+- [x] The stale direction works: removing a real caller's reference in a synthetic tree makes an entry stale, and the test says which
 
 *Discipline*
-- [ ] Mutations: drop the `__init__` exclusion; drop the framework seeding; drop the transitive step; count docstring mentions — each caught
-- [ ] Runtime of the full gate stays under the 209B budget (it was optimised from ~300k regex scans)
-- [ ] Full regression green
+- [x] Mutations: drop the `__init__` exclusion; drop the framework seeding; drop the transitive step; count docstring mentions — each caught
+- [x] Runtime of the full gate stays under the 209B budget (it was optimised from ~300k regex scans)
+- [x] Full regression green — **7,011 passed, 0 failed, 20:21**
+
+---
+
+## Results (v1.1)
+
+**Built as planned, with one defect the synthetic trees caught that the real
+tree could not have.**
+
+`find_module_islands` is 40 lines of logic in
+`tests/support/integration_gaps.py`, the fourth check beside the three 209B
+built. On the real tree it reports **exactly the 19** — both directions
+clean against `MODULE_ISLANDS` — in 1.72s, taking the whole gate from 3.58s
+to 5.30s. `billing/webhook_handlers` is not reported; nothing under
+`api/routes/` or `cli/` is.
+
+### Deviation 1 — an entry point can never be a candidate
+
+Every synthetic-tree test failed on first run with one signature: the
+result was `{'demo.cli.main'}`. The entry-point module defines `cli()`,
+nothing references `cli` in a three-file tree, so the module was flagged —
+and once it was an island its references stopped counting, and everything
+it called was swept in on the next generation. **On the real tree this was
+masked because `cli` is named in dozens of files**: the "accident of
+naming" the fixpoint's author warned about for `router`, seen from the
+other side. The fix is structural, not a seed rule — the roots the question
+is asked from are excluded from candidacy — and the docstring now says that
+route modules survive today through `app.py` naming each `router`, and that
+a framework registering handlers by discovery would need a seed.
+
+### Deviation 2 — the fixture convention
+
+The remaining six failures were the fixture's: 209B's real-tree
+`ENTRY_POINTS` includes the package root (`import motodiag` runs its
+`__init__`) and my synthetic trees passed only `demo.cli.main`, so
+`demo/__init__` was unreachable, everything only it imported was already
+dead, and the check correctly declined to report what the import walk
+already does. Measured for the record: with only `cli.main` as root,
+`demo`, `demo.cli` and `demo.shelf` are all in the import walk's dead set.
+The fixture now passes the root, with a comment saying why.
+
+### The 244U regex — split out as 244X
+
+Scope item 2 as planned; see the plan. The measurement is done (99 → 43
+filtered by this phase → 56 residual in live modules) and the buckets are
+written; the fix and its 56 classifications are one coherent phase of their
+own. Fixing it here alongside 19 module entries would have been the bulk
+edit S0-5 forbids.
+
+### Prose strings
+
+Scope item 6 shipped in the shared loader. Tokenizer-based, so an f-string's
+`{expr}` stays code; a literal with no space is left alone. On `find_orphans`
+it surfaced exactly the three predicted: `FeedbackReader` (inside a dead
+module, so filtered) and two names whose only reference is prose —
+`fleet_repo::list_fleets_for_bike` (a migration description,
+`migrations.py:1221`) and `compat_repo::update_adapter` (its own error
+message, `compat_repo.py:276`) — both added to `ORPHANS` with that evidence.
+
+### The allowlist
+
+`ORPHANS` 58 → 47: thirteen entries inside the 19 dead modules removed under
+the file's own convention (a dead file is one entry), two added. Eleven of
+the thirteen were 244U's, one phase ago; they are reclassified, not lost, and
+`test_no_orphan_entry_inside_a_dead_module` now enforces the convention
+rather than leaving it as a comment. `MODULE_ISLANDS` has 19 entries, every
+one classified from S0-4/S0-4b evidence; the eight engine entries carry the
+audit's consensus score so the phase that deletes or wires them inherits a
+number. Every substrate entry names its roadmap row, checked for all of them
+rather than 209B's top-level-only rule. 244U's running-count pin moved 58 →
+47 with its history.
+
+### Verification
+
+- 61 tests in `test_phase244W_module_islands.py`: nine on the real tree, the
+  table's consistency, thirteen synthetic-tree shapes including the six
+  false-positive classes the def-level prototype logged, and five on prose
+  blanking. 180 across the three gate suites.
+- **11/11 mutations killed**: a re-export counts as a use; no pre-seed; no
+  transitive step; `_public_defs` as the surface; prose not blanked; own
+  mentions count; entry points as candidates; every string blanked; orphans
+  in dead modules re-reported; constants dropped from the surface; the
+  import walk's set re-reported.
+- `ruff`: the gate file clean (0 → 0); the allowlist's 16 pre-existing E501s
+  unchanged; the new test file's one finding is the `f9-noqa` pin line, as
+  209B's and 244U's are.
+- No schema change, no source change under `src/`.
+- Full regression **7,011 passed, 0 failed, 20:21** (6,961 → 7,011: +61 new tests, −11 parametrised allowlist cases).
+
+## Verification Checklist — outcome
+
+Every item in the checklist above is covered by a named test in
+`test_phase244W_module_islands.py`; the runtime item was measured (1.72s
+added to a 3.58s gate) rather than asserted, because a timing assertion is
+how a suite acquires a flaky test.

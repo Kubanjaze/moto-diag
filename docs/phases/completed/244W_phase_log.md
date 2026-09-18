@@ -1,6 +1,6 @@
 # Phase 244W — The gate can see a module that only talks to itself — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-17
 
 ---
@@ -67,3 +67,39 @@ All 19 modules are now classified from evidence in a compaction-safe note:
 three superseded (one an unfulfilled contract, one reimplemented inline with
 its own SQL), eight substrate for named roadmap rows, eight engine modules
 the audit already scored. The delete phase inherits that, not a list.
+
+## 2026-09-17 — Built
+
+The judges split three ways and the adversary settled it: the use-graph led
+on false positives, the fixpoint on maintainability, the def-level call
+graph on coverage — and the adversary, attacking the use-graph, found two
+false-positive classes specific to resolving names through re-export chains,
+one of which this repo already uses at `auth/__init__.py:78`. The fixpoint
+counts identifier tokens per module and is immune to both. The maintenance
+judge's ablation decided it: strip all nine seed rules and the fixpoint's
+answer does not move. Forty lines, one seed, a reason you can grep.
+
+The build's only real defect was one the real tree could not have shown.
+Every synthetic test failed on first run because the entry-point module was
+flagged as an island: nothing in a three-file tree names `cli`, so the root
+was dead, and once the root is dead its references stop counting and
+everything it calls follows. On the real tree `cli` is named in dozens of
+files — the same accident of naming that keeps route modules alive through
+`router`. Roots are now excluded from candidacy, structurally.
+
+The six that remained were the fixture's, and the diagnosis is worth a
+line: 209B's real-tree entry points include the package root, mine did not,
+so the init was unreachable and the check correctly declined to report what
+the import walk already had.
+
+Prose strings are blanked in the shared loader now, and the two extra
+orphans it surfaced were exactly the predicted two. The 244U regex fix is
+244X, with its measurement attached.
+
+61 tests, 180 across the three gate suites, 11/11 mutations.
+
+## 2026-09-17 — Complete
+
+Regression **7,011 passed, 0 failed, 20:21**. No schema change, no source change under `src/`.
+
+Next: 244X, the 244U regex and its 56 residual names.
