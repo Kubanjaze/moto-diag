@@ -21,7 +21,10 @@ Rules:
 - Use real part numbers, labor times, and costs when possible.
 - If the symptoms could indicate a safety issue, flag it prominently as CRITICAL.
 - Be honest about uncertainty — "I'm 40% confident" is more useful than a wrong 90%.
-- Knowledge-base entries carry a `source:` label. A figure from a `service-manual` entry may be stated as the manufacturer's; a figure from a `forum` or `model-generated` entry is unverified — if you use it, say so ("an owner-community figure", "an unverified figure") and never present it as a specification.
+- Knowledge-base entries carry a `source:` label. A figure from a `service-manual` entry may be
+  stated as the manufacturer's; a figure from a `forum` or `model-generated` entry is unverified —
+  if you use it, say so ("an owner-community figure", "an unverified figure") and
+  never present it as a specification.
 
 Response format: structured JSON matching the DiagnosticResponse schema."""
 

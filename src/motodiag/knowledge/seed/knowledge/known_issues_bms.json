@@ -1,0 +1,210 @@
+[
+  {
+    "title": "Cell balancing is automatic on every make — what the BMS shows the rider is a message, not a millivolt figure",
+    "description": "Generic-layer entry for cell balancing, written as what the battery management system (BMS) does and how each make shows it, anchored to the manufacturer's own document for every make named; every figure below is the manufacturer's. Balancing is the BMS bringing the series-connected cell groups to the same state of charge. None of the three makers publishes the balance current, the tolerance or a cell-voltage spread figure, and none exposes a balance readout to the rider. Zero (2021 SR/F owner's manual, part 88-09445-01, sections 2.2, 4.1, 6.38 and 7.6; 2025 owner's manual for the S, SR, SR/F and SR/S, part 8811984-AF, sections 6.40 and 7.2; both read from dealer-hosted mirror copies): the only owner procedure is to leave the motorcycle on the charger for at least 24 hours after long-term storage so the BMS can balance the cells; the 2025 dash shows a five-second notification 'Motorcycle will shut down once battery balancing is complete', and an imbalance the BMS cannot correct surfaces as fault code 54 'Battery Cell Anomaly — Please charge motorcycle'. Energica (Eva owner's manual, translated version, Cod. ENF003100 Rev. 02 of February 2018, pp. 38, 46, 50, 75, 92-93 and 96, read from a mirror copy): balancing is automatic, starts at 98% after the normal charge and is complete when the dash reads 100%; a full balancing charge is required at least every 15 days; a 'Balancing screen' shows the state of balance during charging; the dash prompts 'M BATTERY PACK UNBALANCED: PERFORM A FULL CHARGE'; LIMP mode's remedy for an unbalanced pack is a charge to 100% so that all the cells are balanced correctly; and Long Period Rest (LPR), to be enabled only below 87% state of charge for lay-ups over 30 days, wakes the bike on mains, runs a cell-voltage test and charges or balances to hold 85-87% — the Ego and Eva Ribelle product pages on energicamotor.com describe LPR as maintenance and automatic balancing of the batteries. LiveWire (2020 Harley-Davidson owner's manual, LiveWire model, 94000703, Table 37 on printed page 96, read from a dealer-hosted mirror copy): the only rider-facing exposure is the instrument-module alert 'Alert – RESS Significantly Out of Balance' with the action 'See dealer'; no balance figure, threshold or procedure is published. The Energica statements are anchored to the 2018 Eva manual; no current-generation Energica owner's manual was reachable, so dash text may differ on the Experia, Ego+ and Ribelle.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S; Energica Eva, Ego, Eva Ribelle; Harley-Davidson LiveWire (ELW) and LiveWire ONE (LW1)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "battery pack unbalanced message",
+      "battery cell anomaly fault 54",
+      "ress significantly out of balance alert",
+      "balancing screen during charging",
+      "what is cell balancing",
+      "reduced range after long storage",
+      "bike will not charge past 98 percent"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Cell groups drifting apart in state of charge through storage and partial-charge use",
+      "Pack left unplugged after long-term storage, so the BMS never gets its balance charge",
+      "Charge cycles interrupted before the balancing stage completes (Energica: balancing starts at 98%)"
+    ],
+    "fix_procedure": "1. Read the make's own procedure before acting; this entry names the document for each. 2. Zero: put the motorcycle on the charger for at least 24 hours after storage and let the charge complete; if fault code 54 'Battery Cell Anomaly' persists after a full charge, the BMS log is dealer work. 3. Energica: perform a full charge and leave the bike on the charger until the dash reads 100%, past the 98% point where balancing starts; for lay-ups over 30 days enable LPR while the pack is below 87%. 4. LiveWire: the 'RESS Significantly Out of Balance' alert has one published action, see dealer; there is no owner balancing procedure. 5. No make publishes a millivolt tolerance; do not quote one as the manufacturer's.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual"
+  },
+  {
+    "title": "Reading cell spread from a Zero BMS log — the community bands are the log-analyser's, not Zero's",
+    "description": "Owner-community entry. Source: zerologs.bike, an independent log-analyser tool for Zero owners (its footer: 'Made for Zero Motorcycles owners'), page 'Battery Health & Degradation', Last updated July 30, 2026. Every figure here is that site's, not Zero's: no Zero document publishes a cell-balance tolerance, a balance current or any millivolt figure (the 2021 SR/F owner's manual, part 88-09445-01, and the 2025 owner's manual, part 8811984-AF, were read in full). How it shows: in a BMS log the balance state is read as cell spread, the highest cell voltage minus the lowest in millivolts; the site's diagnosis engine fires on these bands, applied to the report-level average: 40 mV or less excellent, 41-80 mV normal, 81-120 mV moderate, above 120 mV significant. Its own data: across 10,555 discharge rows from four logs, 98.4% sat at or below 40 mV, the median was 5 mV and 0.2% exceeded 120 mV. The site records that a previous version of its table called 60 mV a warning while its product called the same reading normal, so these bands have moved before and carry the page date for that reason.",
+    "make": "Zero",
+    "model": "Zero, all models with BMS logs; the 2020+ Cypher III platform writes the Gen3 log format",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "cell spread in bms log",
+      "highest minus lowest cell mv",
+      "is 60 mv cell spread bad",
+      "zero bms log analysis",
+      "cell imbalance millivolts"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A weak cell group that the BMS cannot pull level during the charge",
+      "Reading a single peak spread instead of the report-level average the bands apply to"
+    ],
+    "fix_procedure": "Forum tip: 1. Treat the bands as the community tool's and label them as such wherever quoted; Zero publishes none. 2. Pull the BMS log (dealer tool; see the state-of-health entry) and read the spread as the report-level average, not one peak row. 3. A spread the bands call significant is grounds for a full balance charge — 24 hours on the charger per Zero's manual — and, if it persists, dealer inspection; the manufacturer's own signal is fault code 54.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "forum"
+  },
+  {
+    "title": "State of health is a dealer-tool number on every make — what the rider sees is a warranty threshold, not a readout",
+    "description": "Generic-layer entry for state of health (SOH), written as what the BMS tracks and how each make exposes it, anchored to the manufacturer's own document for every make named; every figure is the manufacturer's. Zero (2021 SR/F owner's manual, part 88-09445-01, section 9.3, read from a dealer-hosted mirror copy): the warranty threshold is a nominal storage capacity reduction of greater than 20% of the published nominal capacity, measured by an authorized dealer through a BMS log data extraction; neither the 2021 manual nor the 2025 owner's manual (part 8811984-AF) documents a rider-visible state-of-health field. Zero's firmware release notes page on zeromotorcycles.com (updated August 12, 2026) records that per-module Battery State of Health became accessible through dealer diagnostic tools with MBB V46, BMU V22 and BMS V28 on the 2020+ Cypher III platform; the dealer tool is the laptop-based Zero Diagnostic Utility over the OBD-II port with Zero diagnostic cables and an IXXAT USB-CAN interface, which also pulls the motorcycle's logs before a firmware update erases them (Zero service bulletin SV-ZMC-020-405 of July 15, 2019, filed with NHTSA). Energica (Eva owner's manual, Cod. ENF003100 Rev. 02 of February 2018, read in full from a mirror copy): the manual has no state-of-health concept and no such field on the dash, in the app or for a dealer tool; the only capacity-retention figure is the product-page rating on energicamotor.com for the Ego and Eva Ribelle, '1200 Cycles @ 80% Capacity (100% DOD)', and the battery warranty of 3 years or 31,000 miles is not tied to a capacity threshold there. LiveWire (2020 Harley-Davidson owner's manual, LiveWire model, 94000703, printed pages 40 and 173, read from a dealer-hosted mirror copy; the 2023 LiveWire ONE owner's manual, 94001019, on Harley-Davidson's Service Information Portal): state of health is the measurement of impedance and capacity degradation of the RESS compared with when it was new; a 20% loss is expected over the warranty life; SOH is determined during a dealer diagnostic evaluation from vehicle history and RESS data, with warranty pro-ration in 10% increments up to 20%; no SOH field is shown on the instrument module. The 2020 RESS limited warranty (60 months, unlimited miles, on the same portal) calls up to 20% capacity loss over five years a normal characteristic, driven by high temperature, high charge and discharge rates and extended time at low state of charge. For LiveWire's S2 models only (Del Mar, Alpinista and Mulholland, introduced after August 18, 2024), the company's EU Battery Regulation 2023/1542 disclosure on livewire.com (last revised August 18, 2024) states that battery SOH in percent is readable over CAN with UDS service $22, data identifier 0x020E, and reset by routine 0x400E under security access from authorized LiveWire service tools, with a predicted five-year fade below 15% in capacity and 24% in peak power and a rise in internal resistance below 32% on a 30 Ah battery with a ten-year service life; none of that applies to LiveWire ONE.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S; Energica Eva, Ego, Eva Ribelle; Harley-Davidson LiveWire (ELW) and LiveWire ONE (LW1); LiveWire S2 Del Mar, Alpinista and Mulholland for the UDS read only",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "state of health of the battery",
+      "how much capacity has the pack lost",
+      "battery warranty capacity threshold",
+      "soh readout on dash",
+      "pack capacity check before buying used",
+      "battery state of health dealer tool"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Capacity fade with cycles, calendar time, heat and time spent at low or very high state of charge",
+      "No owner-facing SOH field on any of the three makes, so the number is only reachable through a dealer tool or a log"
+    ],
+    "fix_procedure": "1. Do not estimate SOH from range or mileage and present it as a measurement. 2. Zero: a dealer BMS log extraction is the warranty measurement, the threshold is more than 20% loss of nominal capacity, and per-module SOH is in the dealer tool from MBB V46 / BMU V22 / BMS V28. 3. Energica: there is no SOH field to read; the product rating is 1,200 cycles to 80% capacity. 4. LiveWire: SOH is determined at a dealer diagnostic evaluation; expect up to 20% loss over the five-year RESS warranty; the UDS read (0x020E) is documented for S2 models only.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Estimating a Zero pack's usable capacity from its own logs — the community method and its limits",
+    "description": "Owner-community entry. Source: zerologs.bike, an independent log-analyser tool for Zero owners, pages 'Battery Health & Degradation' (Last updated July 30, 2026) and 'Buying a Used Zero' (Last updated September 7, 2026). Every figure is the site's own; Zero publishes no owner-facing state-of-health field, and the manufacturer's dealer-tool path is in the state-of-health entry. How it shows: every Gen3 BMS log carries 78-byte health records, one field of which is the pack's full-charge capacity in ampere-hours; for any generation, each logged charge gives the energy that went in and the state of charge it bought, so energy divided by (SOC gained / 100) estimates the whole pack. The site publishes the result as capacity against nameplate, ±3 percentage points, never as state of health remaining, and finds it runs 87.5% to 89.3% of the badge across every pack in its catalogue, so the deviation from that ratio is the signal. Its findings fire below 70% of nameplate (attention) and below 50% (critical). Limits the site states: the check needs at least 4 usable charges out of the bike's own logs and declines rather than estimating with fewer; Gen3 main-board logs carry no battery current channel, so on many newer bikes there is no measurable charge energy; and the figure describes the pack that was fitted while those logs were recorded.",
+    "make": "Zero",
+    "model": "Zero, all models with BMS logs; the full-charge capacity field is in Gen3 logs only",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "capacity vs nameplate from logs",
+      "how healthy is this used zero battery",
+      "full charge capacity ah in bms log",
+      "zero log analysis state of health",
+      "no charge energy in gen3 logs"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Capacity fade that no rider-facing readout reports",
+      "A log too short to estimate from (fewer than 4 usable charges)",
+      "Gen3 main-board logs without a battery current channel"
+    ],
+    "fix_procedure": "Forum tip: 1. Quote the estimate with its label — a community tool's capacity-against-nameplate figure, ±3 points, not a manufacturer SOH. 2. Read the full-charge capacity field from a Gen3 BMS log where present, or compute charge energy over SOC gained across at least 4 usable charges. 3. Below 70% of nameplate warrants attention and below 50% is critical in the site's terms; Zero's warranty threshold (more than 20% nominal capacity loss, dealer-measured) is the only manufacturer figure. 4. On a used bike, remember the estimate describes the pack fitted while the logs were written.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "forum"
+  },
+  {
+    "title": "No electric motorcycle maker publishes a voltage-to-state-of-charge curve — the rider gets a learned SOC and colour bands",
+    "description": "Generic-layer entry for voltage curves, written as what the BMS does with pack and cell voltage and how each make shows it, anchored to the manufacturer's own document for every make named; every figure is the manufacturer's. None of the three publishes a voltage-versus-state-of-charge curve, an open-circuit-voltage table or an owner-facing pack or cell voltage; the rider-facing number on every make is the BMS's state-of-charge estimate. Zero (2025 owner's manual for the S, SR, SR/F and SR/S, part 8811984-AF, sections 1.3, 4.3 and 5.8-5.9; 2021 SR/F owner's manual, part 88-09445-01, sections 3.50-3.52, 4.3 and 7.6; both read from dealer-hosted mirror copies): the BMS learns SOC from full-swing cycles — discharge below 5% then charge above 95% for the first five cycles — and a pack at 0% must be recharged within 24 hours; the dash Battery menu carries SOC, Estimated Range, Plugged in, Charging and Charge Target, and the app shows a precise state of charge; the rider-set Charge Target runs 30% to 95% in 5% steps (sections 3.51-3.52), although section 3.50 of the same manual says 0-100; fault codes 51 to 53 are voltage-triggered messages, not readouts. Energica (Eva owner's manual, Cod. ENF003100 Rev. 02 of February 2018, pp. 36-37, 63, 75, 81-82 and 91, read from a mirror copy): the 2018 Eva pack is 300 V nominal and 11.7 kWh; the dash shows SOC as a percentage in red (0-19%), yellow (20-39%) and green (above 39%) bands plus estimated range, with no voltage, health, capacity or cycle readout; the SOC gauge is recalibrated by discharging to 'Low battery' at 0% every 10 to 20 charge cycles and recharging within 24 hours, prompted by 'M PERFORM A FULL CHARGING CYCLE TO RESET CHARGE INDICATOR'; pack and cell voltage are separate fault channels — P1000 and P1001 for the pack, P1030 and P1044 for cell-voltage VCU alarms, P1005, P1006, P1008 and P1009 for BMS measurement, U0111, U0112 and U0412 for BMS communication — with no millivolt limit published behind any of them; the Energica fault-code entry in this knowledge base holds the full table. LiveWire (2020 Harley-Davidson owner's manual, LiveWire model, 94000703, Table 17 on printed page 37 and the Battery widget on printed page 99, read from a dealer-hosted mirror copy): the Battery widget shows SOC, Wh/mi and RESS temperature; the specification table gives 15.5 kWh only; no pack or cell voltage and no SOC-to-voltage relationship is published.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S; Energica Eva, Ego, Eva Ribelle; Harley-Davidson LiveWire (ELW) and LiveWire ONE (LW1)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "voltage vs state of charge curve",
+      "pack voltage readout",
+      "charge indicator inaccurate",
+      "soc jumps or drops suddenly",
+      "reset charge indicator message",
+      "charge target setting range",
+      "cell voltage low fault"
+    ],
+    "dtc_codes": [
+      "P1000",
+      "P1001",
+      "P1030",
+      "P1044",
+      "P1005",
+      "P1006",
+      "P1008",
+      "P1009",
+      "U0111",
+      "U0112",
+      "U0412"
+    ],
+    "causes": [
+      "SOC estimate drifting between full-swing cycles (Zero learns it over the first five; Energica resets it every 10-20 cycles)",
+      "Expecting a voltage readout that no maker exposes to the rider"
+    ],
+    "fix_procedure": "1. Read SOC from the make's own surface — Zero dash Battery menu or app, Energica dash percentage and colour bands, LiveWire Battery widget — and do not convert it to a voltage; no maker publishes the curve. 2. Zero: if SOC behaves oddly, run full-swing cycles (below 5%, then above 95%); recharge a 0% pack within 24 hours. 3. Energica: on the 'PERFORM A FULL CHARGING CYCLE TO RESET CHARGE INDICATOR' prompt, discharge to 'Low battery' and recharge within 24 hours. 4. Voltage faults are fault channels, not readouts: Zero codes 51-53, Energica P1000/P1001 (pack) and P1030/P1044 (cell); see the make's fault-code entry.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual"
+  },
+  {
+    "title": "Thermal derating is the BMS refusing charge or discharge at the pack's temperature limits — each make shows it as a message or a colour band",
+    "description": "Generic-layer entry for thermal derating, written as what the BMS does at the pack's temperature limits and how each make shows it, anchored to the manufacturer's own document for every make named; every figure is the manufacturer's. Zero (2021 SR/F owner's manual, part 88-09445-01, sections 3.26, 4.12, 5.1, 7.6 and 7.8; 2025 owner's manual for the S, SR, SR/F and SR/S, part 8811984-AF, sections 3.27, 4.12, 5.1, 7.2 and 7.8-7.10; both read from dealer-hosted mirror copies): the BMS turns off the power controller outside -20 to 60 °C, will not charge below 0 °C or above 50 °C, will not allow discharge above 60 °C at the pack, and the charger reduces current in hot temperatures greater than 43 °C; the 2025 manual adds that the BMS will not discharge below -30 °C, that riding below -5 °C is not recommended, that range can fall by up to 30% at -1 °C against 27 °C, and that a 12 V heating lockout of 1 to 15 minutes applies below 5 °C. How it shows: fault code 55 'Battery Temperature High' and 56 'Battery Temperature Low', each with 'Performance will be reduced and Charging may be disabled'; dash notifications 'Power Pack is Too Hot to Charge', 'Power Pack is Too Cold to Charge' and 'Charging paused. Refer to Owner's Manual'; and a colour-banded battery temperature gauge with no numeric readout — 2021: blue -10 to 10 °C, white 10-55 °C, red 55-75 °C; 2025: blue -10 to 10 °C, white 10-50 °C, yellow 50-55 °C, red 55-75 °C — while a numeric 'Battery Temp' field is available as a configurable dash data field. The solid red temperature indicator of section 4.11 in the 2025 manual is the powertrain's thermal strategy, stated to be normal operation and not a fault; it is not a battery derate. Energica (Eva owner's manual, Cod. ENF003100 Rev. 02 of February 2018, pp. 36, 38, 74-75, 81 and 92, read from a mirror copy): the dash battery temperature is four colour bands — blue at 5 °C and below, green 6-40 °C, yellow 41-55 °C, red above 55 °C — with the instruction to slow down or switch off on red and no automatic action stated at the band edges; LIMP mode, run by the vehicle control unit, cuts power for a nearly drained pack, low pack or cell voltage, a battery too hot or a battery too cold ('LIMP MODE ON: BATTERY TEMPERATURE TOO HIGH', '... BATTERY COLD', '... CELL VOLTAGE LOW'), and recovery is a full charge to 100%; recommended charging is 0 to 45 °C and riding -20 to 45 °C, below which the bike refuses ('M+C BATTERY TOO COLD TO BE RECHARGED') or trickle-charges ('M TRICKLE CHARGE: BATTERY TOO COLD FOR NORMAL CHARGING'); no °C value is published behind LIMP, the charge refusal or the temperature codes P1002, P1003, P0514, P0516 and P0517. LiveWire (2020 Harley-Davidson owner's manual, LiveWire model, 94000703, printed pages 41, 99 and 105, read from a dealer-hosted mirror copy; the 2023 LiveWire ONE owner's manual, 94001019, on Harley-Davidson's Service Information Portal): the charge rate reduces automatically when the battery is too hot or too cold, and charging below 0 °C or above 50 °C significantly increases charge time; there is no derating message — the effect appears as a longer estimated time to full on the Charging widget — and an over-temperature charge stop shows on the 2023 Charging widget as 'RESS Too Warm — Restart charge after vehicle cools down'; under extreme usage or extreme temperature the RESS may limit its performance to prevent damage, with no °C figure given, and RESS temperature is shown directly on the Battery and Temp widgets.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S; Energica Eva, Ego, Eva Ribelle; Harley-Davidson LiveWire (ELW) and LiveWire ONE (LW1)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "performance reduced when battery hot",
+      "power pack too hot to charge",
+      "battery too cold to be recharged",
+      "limp mode battery temperature too high",
+      "charging slow in cold weather",
+      "ress too warm restart charge",
+      "battery temperature gauge red",
+      "what is thermal derating"
+    ],
+    "dtc_codes": [
+      "P1002",
+      "P1003",
+      "P0514",
+      "P0516",
+      "P0517"
+    ],
+    "causes": [
+      "Pack temperature outside the BMS charge window (Zero: below 0 °C or above 50 °C)",
+      "Pack heat-soaked after DC fast charging or hard riding in hot weather",
+      "Cold soak overnight below the charge floor",
+      "Reading the powertrain thermal indicator as a battery fault (Zero 2025 manual, section 4.11)"
+    ],
+    "fix_procedure": "1. Identify which limit fired from the make's own message or code: Zero 55/56 and the 'Too Hot/Too Cold to Charge' notifications, Energica LIMP or charge-refusal text, LiveWire's longer time-to-full or 'RESS Too Warm'. 2. Let the pack return to its window rather than forcing it: Zero's charge window is 0-50 °C, Energica's recommended charging window is 0-45 °C, LiveWire names 0-50 °C as the band outside which charging slows. 3. Energica LIMP for a thermal cause recovers with a full charge to 100% once the pack is back in range. 4. A derate that persists with the pack in range is a sensor or BMS fault: Energica P1002/P1003/P0514/P0516/P0517; on Zero and LiveWire it is a dealer-tool diagnosis.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "No electric motorcycle maker exposes a cycle counter — what each publishes is the ageing drivers and a storage state of charge",
+    "description": "Generic-layer entry for cycle counting, written as what the BMS tracks about pack age and how each make exposes it, anchored to the manufacturer's own document for every make named; every figure is the manufacturer's. None of the three exposes a cycle counter, an ampere-hour throughput counter or a capacity-retention percentage to the rider. Zero (2021 SR/F owner's manual, part 88-09445-01, sections 5.1 and 6.38; 2025 owner's manual for the S, SR, SR/F and SR/S, part 8811984-AF, sections 1.4, 5.1, 6.40 and 7.2; both read from dealer-hosted mirror copies; Zero's Long-Term Storage Guide, a Stories article on zeromotorcycles.com dated December 20, 2024): pack age is based on usage cycles as well as calendar time, accelerated by storage at high state of charge and high temperature; do not charge a hot pack above 35 °C. Storage mode is year-scoped because the two manuals differ: the 2021 manual says that after 30 days without a key-on the BMS drains the pack to 60% state of charge, to be recharged to 60% if it falls below 30%, at a storage temperature of -20 to 35 °C; the 2025 manual and the storage guide say the BMS drains to about 80%, charge if the key-on state of charge falls below 30%, at 10 to 35 °C; the dash shows 'Storage Mode Active' and 'Storage Mode Inactive'. The two figures are separately sourced and no firmware cause for the change is documented. Energica (Eva owner's manual, Cod. ENF003100 Rev. 02 of February 2018, pp. 63, 92 and 97-98, read from a mirror copy; Ego and Eva Ribelle product pages on energicamotor.com): service life is stated as 1,200 cycles with no cycle definition and no rider-visible counter, which the product pages define as '1200 Cycles @ 80% Capacity (100% DOD)'; the rider-controllable ageing factors are DC fast charging, which may stress the battery and shorten its life (prefer AC and mix the modes), and interrupting a charge cycle, which reduces battery performance over time. LiveWire (2020 Harley-Davidson owner's manual, LiveWire model, 94000703, printed pages 40-41 and Table 43 on printed page 128, read from a dealer-hosted mirror copy; the 2023 LiveWire ONE owner's manual, 94001019, and the 2020 RESS limited warranty, both on Harley-Davidson's Service Information Portal): ageing drivers are duration at high temperature, type of charging, number of charge and discharge cycles, and storage duration; DC fast-charge sessions are not capped, but a 4:1 ratio of Level 1 to Level 3 charging is recommended, and charging runs fast to 80% capacity then slows to reduce degradation; storage under 30 days is simply plugged into the EVSE, and over 30 days needs 30-70% state of charge, monitored so it never dips below 30%; the warranty cautions that prolonged exposure above 60 °C or below -40 °C without proper maintenance, charging or storage risks permanent loss of range or state of health, and excludes failure to keep the state of charge above zero.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S; Energica Eva, Ego, Eva Ribelle; Harley-Davidson LiveWire (ELW) and LiveWire ONE (LW1)",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "how many cycles has the battery done",
+      "battery cycle count readout",
+      "storage mode active message",
+      "what soc to store the bike at",
+      "dc fast charging battery life",
+      "pack left at 0 percent for weeks",
+      "winter storage electric motorcycle"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Calendar ageing at high state of charge and high temperature",
+      "Cycle ageing from frequent DC fast charging and interrupted charges",
+      "Storage below the make's floor (Zero 30%, LiveWire 30%) or at 0%"
+    ],
+    "fix_procedure": "1. Do not report a cycle count; none of the three exposes one, and a number computed from mileage or age is not a measurement. 2. Storage: Zero — plug in, let storage mode hold the pack (60% per the 2021 manual, about 80% per the 2025 manual and the storage guide) and recharge if it drops below 30%; Energica — for lay-ups over 30 days use LPR (see the cell-balancing entry); LiveWire — under 30 days stay plugged into the EVSE, over 30 days hold 30-70% and never below 30%. 3. Slow the ageing the makers name: avoid charging a hot pack (Zero: above 35 °C), keep DC fast charging a minority of sessions (LiveWire recommends four Level 1 sessions per Level 3), and let charges finish rather than interrupting them (Energica). 4. A pack left at 0% is a warranty exclusion on LiveWire and must be recharged within 24 hours on Zero and Energica.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual"
+  }
+]
