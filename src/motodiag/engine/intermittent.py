@@ -240,7 +240,9 @@ INTERMITTENT_PATTERNS: list[IntermittentPattern] = [
             "Clean idle air control valve with throttle body cleaner",
             "Spray carb cleaner around intake joints at idle — listen for RPM change",
             "Adjust idle mixture screws to factory spec (turns from seated)",
-            "Measure charging voltage at idle with all accessories on — should be >13V",
+            "Measure charging voltage at idle and at 5000 RPM with all accessories on — "
+            "pass/fail thresholds are in the charging circuit reference "
+            "(motodiag ref circuit charging)",
             "Check valve clearances — intake side especially",
         ],
         system_category="fuel",
@@ -326,8 +328,10 @@ INTERMITTENT_PATTERNS: list[IntermittentPattern] = [
             "Poor ground connections increasing resistance under high current draw",
         ],
         diagnostic_approach=[
-            "Measure charging voltage at battery: idle with lights on, 3000RPM with all accessories",
-            "Should see 13.5-14.5V at 3000RPM; below 13V = charging problem",
+            "Measure charging voltage at the battery at idle and at 5000 RPM "
+            "with all accessories on",
+            "Compare against the charging circuit reference "
+            "(motodiag ref circuit charging) — one source, not two",
             "Test stator AC output (disconnect from reg/rec, measure across each phase pair)",
             "Load test battery — should hold >9.6V for 15 seconds under load",
             "Check total accessory current draw vs charging system rated output",

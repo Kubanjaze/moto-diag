@@ -152,13 +152,16 @@ class TestCorrelationRulesCoverage:
         critical = [r for r in CORRELATION_RULES if r.severity == "critical"]
         assert len(critical) >= 2
 
-    def test_head_gasket_rule_present(self):
-        hg = [r for r in CORRELATION_RULES if "head gasket" in r.root_cause.lower()]
-        assert len(hg) >= 1
-        rule = hg[0]
+    def test_cooling_fan_rule_present(self):
+        """Phase 244Z: CORR-001 (head gasket) was deleted — it diagnosed a
+        coolant-jacket leak on an air-cooled twin. CORR-002 is the fixture
+        rule now; same three-symptom shape."""
+        fan = [r for r in CORRELATION_RULES if "cooling fan" in r.root_cause.lower()]
+        assert len(fan) >= 1
+        rule = fan[0]
         assert "overheating" in rule.symptom_set
-        assert "loss of power" in rule.symptom_set
-        assert "coolant smell" in rule.symptom_set
+        assert "fan not running" in rule.symptom_set
+        assert "temperature gauge high" in rule.symptom_set
 
     def test_stator_rule_present(self):
         stator = [r for r in CORRELATION_RULES if "stator" in r.root_cause.lower()]
@@ -180,11 +183,11 @@ class TestCorrelationRulesCoverage:
 class TestCorrelatorFullMatch:
     """Tests for full symptom matches."""
 
-    def test_head_gasket_full_match(self, correlator):
-        matches = correlator.correlate(["overheating", "loss of power", "coolant smell"])
+    def test_cooling_fan_full_match(self, correlator):
+        matches = correlator.correlate(["overheating", "fan not running", "temperature gauge high"])
         assert len(matches) > 0
         top = matches[0]
-        assert "head gasket" in top.rule.root_cause.lower()
+        assert "cooling fan" in top.rule.root_cause.lower()
         assert top.is_full_match is True
         assert top.match_quality == 1.0
 
@@ -199,8 +202,8 @@ class TestCorrelatorFullMatch:
         assert any("chain" in m.rule.root_cause.lower() for m in matches)
 
     def test_full_match_confidence_equals_base(self, correlator):
-        matches = correlator.correlate(["overheating", "loss of power", "coolant smell"])
-        hg = [m for m in matches if "head gasket" in m.rule.root_cause.lower()][0]
+        matches = correlator.correlate(["overheating", "fan not running", "temperature gauge high"])
+        hg = [m for m in matches if "cooling fan" in m.rule.root_cause.lower()][0]
         assert hg.adjusted_confidence == hg.rule.confidence
 
 
@@ -212,24 +215,24 @@ class TestCorrelatorPartialMatch:
     """Tests for partial symptom matches (>= 2 of 3+ symptoms)."""
 
     def test_partial_match_two_of_three(self, correlator):
-        # Only 2 of 3 head gasket symptoms
-        matches = correlator.correlate(["overheating", "loss of power"])
-        hg = [m for m in matches if "head gasket" in m.rule.root_cause.lower()]
+        # Only 2 of 3 cooling-fan symptoms
+        matches = correlator.correlate(["overheating", "fan not running"])
+        hg = [m for m in matches if "cooling fan" in m.rule.root_cause.lower()]
         assert len(hg) > 0
         assert hg[0].is_full_match is False
         assert hg[0].match_quality == pytest.approx(2 / 3, abs=0.01)
 
     def test_partial_match_reduced_confidence(self, correlator):
-        matches = correlator.correlate(["overheating", "loss of power"])
-        hg = [m for m in matches if "head gasket" in m.rule.root_cause.lower()]
+        matches = correlator.correlate(["overheating", "fan not running"])
+        hg = [m for m in matches if "cooling fan" in m.rule.root_cause.lower()]
         assert len(hg) > 0
         assert hg[0].adjusted_confidence < hg[0].rule.confidence
 
     def test_partial_match_shows_unmatched(self, correlator):
-        matches = correlator.correlate(["overheating", "loss of power"])
-        hg = [m for m in matches if "head gasket" in m.rule.root_cause.lower()]
+        matches = correlator.correlate(["overheating", "fan not running"])
+        hg = [m for m in matches if "cooling fan" in m.rule.root_cause.lower()]
         assert len(hg) > 0
-        assert "coolant smell" in hg[0].unmatched_rule_symptoms
+        assert "temperature gauge high" in hg[0].unmatched_rule_symptoms
 
 
 # ---------------------------------------------------------------------------
@@ -304,9 +307,9 @@ class TestCorrelatorRuleLookup:
         assert "critical" in severities or "high" in severities
 
     def test_get_rule_by_id_found(self, correlator):
-        rule = correlator.get_rule_by_id("CORR-001")
+        rule = correlator.get_rule_by_id("CORR-002")
         assert rule is not None
-        assert "head gasket" in rule.root_cause.lower()
+        assert "cooling fan" in rule.root_cause.lower()
 
     def test_get_rule_by_id_not_found(self, correlator):
         assert correlator.get_rule_by_id("NONEXISTENT") is None

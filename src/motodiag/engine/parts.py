@@ -34,7 +34,9 @@ class PartRecommendation(BaseModel):
     notes: Optional[str] = Field(None, description="Additional guidance (fitment notes, version differences, etc.)")
     cross_references: list[str] = Field(
         default_factory=list,
-        description="Equivalent parts from other brands (e.g., 'Denso IU27 = NGK CR9EIA-9')",
+        description="Alternative part numbers the technician must verify against the "
+                    "manufacturer's fitment data before ordering — "
+                    "never presented as interchangeable",
     )
 
 
@@ -64,7 +66,8 @@ Given a diagnosis and vehicle information, recommend specific parts and tools ne
   Barnett (clutch plates, cables), Vesrah (gaskets), Cometic (head gaskets),
   Moose Racing (dual-sport parts), Trail Tech (electronics)
 - Include price ranges in USD (low to high estimate)
-- List cross-references: equivalent parts from other brands that fit the same application
+- List cross-references: alternative part numbers from other brands that MAY fit —
+  the technician must verify fitment before ordering; do not present any as interchangeable
 - Mark source as oem, aftermarket, used, or generic
 - For each part, note any fitment caveats (year range differences, sub-model variations)
 
