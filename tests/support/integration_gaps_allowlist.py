@@ -266,6 +266,253 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "ValueError for a PID the catalog does not cover; its own "
         "docstring says it exists so callers need not reach into the "
         "catalog dict. "),
+
+    # -- Phase 244X: names only a parenthesised multi-line re-export ever
+    # mentioned. 244U's regex stopped at a newline, so for these packages
+    # its rule had never applied. 57 entries, each verified: zero code
+    # references outside its own file, exactly one init re-exporting it.
+    "accounting/invoice_repo.py::delete_invoice": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "accounting/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "accounting/invoice_repo.py::delete_line_item": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "accounting/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "accounting/invoice_repo.py::get_invoice_by_number": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "accounting/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "accounting/invoice_repo.py::list_invoices": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "accounting/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "accounting/invoice_repo.py::recalculate_invoice_totals": ("superseded",
+        "shop/invoicing.py computes invoice totals itself on the live path. "
+        "Only accounting/__init__.py names it; hidden until Phase 244X "
+        "blanked parenthesised multi-line re-exports."),
+    "accounting/invoice_repo.py::update_line_item": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "accounting/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/fleet_repo.py::Fleet": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/history_repo.py::ServiceEventNotFoundError": ("public-api",
+        "Exception type in the package's public surface, never raised in- "
+        "tree. Only advanced/__init__.py names it; hidden until Phase 244X "
+        "blanked parenthesised multi-line re-exports."),
+    "advanced/history_repo.py::count_service_events": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/history_repo.py::delete_service_event": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/parts_repo.py::get_part_by_oem": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/recall_repo.py::get_resolutions_for_bike": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/recall_repo.py::load_recalls_from_json": ("test-infra",
+        "F86 pins that nothing in src/ may seed the sample recalls; its "
+        "tests load them. Only advanced/__init__.py names it; hidden until "
+        "Phase 244X blanked parenthesised multi-line re-exports."),
+    "advanced/schedule_repo.py::create_interval": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/schedule_repo.py::delete_interval": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/schedule_repo.py::get_interval": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "advanced/tsb_repo.py::tsb_numbers_for_vehicle": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "advanced/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/models.py::PermissionName": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "auth/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/models.py::RoleName": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "auth/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/models.py::RolePermission": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "auth/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/models.py::UserRole": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "auth/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/users_repo.py::count_users": ("public-api",
+        "Repository helper kept as library surface. Only auth/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "auth/users_repo.py::create_user": ("unwired-feature",
+        "No other INSERT INTO users exists; users are migration-005 seed "
+        "data only. No signup path calls this. Only auth/__init__.py names "
+        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
+        "exports."),
+    "auth/users_repo.py::deactivate_user": ("unwired-feature",
+        "Soft-delete wrapper over update_user, whose only caller is this "
+        "function. No command or route deactivates a user. Only "
+        "auth/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "auth/users_repo.py::get_system_user": ("public-api",
+        "Wrapper over get_user for SYSTEM_USER_ID. Only auth/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "auth/users_repo.py::list_users": ("public-api",
+        "Repository helper kept as library surface. Only auth/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "billing/subscription_repo.py::delete_subscription": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "billing/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "billing/subscription_repo.py::get_subscription_by_user": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "billing/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "billing/subscription_repo.py::list_subscriptions": ("public-api",
+        "Repository helper kept as library surface. Only "
+        "billing/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "capture/analyses.py::current_analysis": ("public-api",
+        "Read accessor for the newest analysis row; the API reads by id. "
+        "Only capture/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "crm/customer_bikes_repo.py::get_current_owner": ("public-api",
+        "Wrapper over list_customers_for_bike. Only crm/__init__.py names "
+        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
+        "exports."),
+    "crm/customer_bikes_repo.py::transfer_ownership": ("unwired-feature",
+        "No route or command transfers a bike between customers. Only "
+        "crm/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "crm/customer_repo.py::count_customers": ("public-api",
+        "Repository helper kept as library surface. Only crm/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "crm/customer_repo.py::get_unassigned_customer": ("public-api",
+        "Wrapper over get_customer for the sentinel row. Only "
+        "crm/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "crm/models.py::CustomerBike": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "crm/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "feedback/feedback_repo.py::count_overrides_for_field": ("unwired-feature",
+        "Reads session_overrides, which 244N's record_override writes; no "
+        "command or route reads them back. Only feedback/__init__.py names "
+        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
+        "exports."),
+    "feedback/feedback_repo.py::get_feedback": ("unwired-feature",
+        "Read side of diagnostic_feedback, a table nothing writes (see "
+        "submit_feedback). Only feedback/__init__.py names it; hidden until "
+        "Phase 244X blanked parenthesised multi-line re-exports."),
+    "feedback/feedback_repo.py::get_feedback_for_session": ("unwired-feature",
+        "Read side of diagnostic_feedback, a table nothing writes (see "
+        "submit_feedback). Only feedback/__init__.py names it; hidden until "
+        "Phase 244X blanked parenthesised multi-line re-exports."),
+    "feedback/feedback_repo.py::get_overrides_for_session": ("unwired-feature",
+        "Reads session_overrides, which 244N's record_override writes; no "
+        "command or route reads them back. Only feedback/__init__.py names "
+        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
+        "exports."),
+    "feedback/feedback_repo.py::list_feedback": ("unwired-feature",
+        "Read side of diagnostic_feedback, a table nothing writes (see "
+        "submit_feedback). Only feedback/__init__.py names it; hidden until "
+        "Phase 244X blanked parenthesised multi-line re-exports."),
+    "feedback/feedback_repo.py::submit_feedback": ("unwired-feature",
+        "The only writer of diagnostic_feedback, and nothing calls it: the "
+        "table has 0 rows. 244N wired record_override (session_overrides), "
+        "not this. Only feedback/__init__.py names it; hidden until Phase "
+        "244X blanked parenthesised multi-line re-exports."),
+    "intake/models.py::IntakeUsageEntry": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "intake/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "inventory/recall_repo.py::add_recall": ("superseded",
+        "Phase 118 recall CRUD over the same `recalls` table "
+        "advanced/recall_repo (Phase 155) owns and `advanced recall` "
+        "commands use. Superseded for these four; the file itself is not "
+        "a duplicate — advanced/recall_repo.py:301 delegates to its "
+        "list_recalls_for_vehicle, which is live. Only inventory/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "inventory/recall_repo.py::delete_recall": ("superseded",
+        "Superseded by advanced/recall_repo; see add_recall for the one live "
+        "function this file keeps. Only "
+        "inventory/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "inventory/recall_repo.py::get_recall": ("superseded",
+        "Superseded by advanced/recall_repo; see add_recall for the one live "
+        "function this file keeps. Only "
+        "inventory/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "inventory/recall_repo.py::list_recalls": ("superseded",
+        "Superseded by advanced/recall_repo; see add_recall for the one live "
+        "function this file keeps. Only "
+        "inventory/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "memory/compile.py::compile_all": ("superseded",
+        "One-line wrapper over compile_all_detailed; the detailed forms are "
+        "the live ones since 209C. Only memory/__init__.py names it; hidden "
+        "until Phase 244X blanked parenthesised multi-line re-exports."),
+    "memory/compile.py::compile_vehicle": ("superseded",
+        "One-line wrapper returning .inserted of compile_vehicle_detailed, "
+        "which 209C wired. Only memory/__init__.py names it; hidden until "
+        "Phase 244X blanked parenthesised multi-line re-exports."),
+    "obd_reports/repo.py::list_failures": ("unwired-feature",
+        "The diagnostics route writes obd_failure_reports through this "
+        "file; nothing reads them back. Only obd_reports/__init__.py names "
+        "it; hidden until Phase 244X blanked parenthesised multi-line re- "
+        "exports."),
+    "shop/bay_scheduler.py::BayScheduleSlot": ("public-api",
+        "Data model exported for callers that never came. Only "
+        "shop/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "shop/intake_repo.py::count_intakes": ("public-api",
+        "Repository helper kept as library surface. Only shop/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "shop/issue_repo.py::count_issues": ("public-api",
+        "Repository helper kept as library surface. Only shop/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "shop/issue_repo.py::require_issue": ("public-api",
+        "Repository helper kept as library surface. Only shop/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
+    "shop/parts_sourcing.py::BatchTimeoutError": ("public-api",
+        "Exception type in the package's public surface, never raised in- "
+        "tree. Only shop/__init__.py names it; hidden until Phase 244X "
+        "blanked parenthesised multi-line re-exports."),
+    "shop/priority_scorer.py::PriorityCostCapExceeded": ("public-api",
+        "Exception type in the package's public surface, never raised in- "
+        "tree. Only shop/__init__.py names it; hidden until Phase 244X "
+        "blanked parenthesised multi-line re-exports."),
+    "shop/shop_repo.py::deactivate_shop": ("unwired-feature",
+        "No command or route deactivates a shop; the live UPDATE shops "
+        "writers (triage_queue.py) set triage weights. Only "
+        "shop/__init__.py names it; hidden until Phase 244X blanked "
+        "parenthesised multi-line re-exports."),
+    "shop/work_order_repo.py::count_work_orders": ("public-api",
+        "Repository helper kept as library surface. Only shop/__init__.py "
+        "names it; hidden until Phase 244X blanked parenthesised multi-line "
+        "re-exports."),
 }
 
 # Dotted module name -> (classification, reason). Phase 244W.

@@ -83,7 +83,10 @@ def _package_of(path: Path, root: Path) -> str:
     return rel.parts[0] if len(rel.parts) > 1 else rel.stem
 
 
-_FROM_IMPORT = re.compile(r"(from\s+[\w\.]+\s+import\s*\(?)([^)\n]*\)?)")
+# Phase 244X: the alias group is either a parenthesised list, which may span
+# lines, or the rest of the line. 244U's `[^)\n]*` stopped at a newline, so
+# the multi-line form most packages here use was never blanked at all.
+_FROM_IMPORT = re.compile(r"(from\s+[\w\.]+\s+import\s*)(\([^)]*\)|[^\n]*)")
 _ALL_ASSIGN = re.compile(r"__all__\s*=\s*[\[\(](?:[^\]\)]*)[\]\)]", re.S)
 _STRING_LITERAL = re.compile(r"\"[^\"]*\"|'[^']*'")
 
@@ -111,6 +114,11 @@ def blank_exports(source: str, *, is_init: bool) -> str:
     blanking one occurrence leaves the other standing. An implementer who
     ships the first half, sees a green gate and stops has learned the opposite
     of the truth.
+
+    Phase 244X: the alias list may be parenthesised across several lines —
+    ``auth``, ``inventory``, ``billing`` and ``feedback`` all export that way
+    — and 244U's regex stopped at the first newline, so for those packages
+    the rule above had never applied. 57 names surfaced when it did.
 
     The module path in a ``from`` statement is deliberately left intact:
     :func:`find_unreachable_modules` walks imports for the reachability half
