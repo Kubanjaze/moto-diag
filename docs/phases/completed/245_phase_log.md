@@ -1,6 +1,6 @@
 # Phase 245 — Damon HyperSport / HyperFighter: nothing to write yet, and that is recorded — phase log
 
-**Status:** 🚧 In progress
+**Status:** ⏸️ Paused — trigger recorded
 **Opened:** 2026-09-18
 
 ---
@@ -20,3 +20,19 @@ So this is 241's shape: the deliberate absence is the content. The row is
 corrected and paused with a trigger; a tripwire pins the absence and the
 trap; nothing is authored. The research was run solo through the 242 sweep's
 five lenses — no workflow was opted into, and none was needed.
+
+## 2026-09-18 — Built
+
+Nothing to build, in the sense that matters: no content was authored. The
+row is rewritten with what is actually known and paused with its trigger; a
+tripwire pins the absence against a fixture seeded from the one file that
+names Damon; both mutations — a fabricated forum row ingested, the HV floor
+dropping the name — die where they should. The test file was scanned with
+244G's guard before it was installed, which is the practice 244Y and 244Z
+paid for.
+
+5 tests, 216 across the suites, 2/2 mutations.
+
+## 2026-09-18 — Complete (paused with trigger)
+
+Regression **6,977 passed, 0 failed, 19:48**. Nothing authored; no schema change. The row is ⏸️ with its trigger and the trap recorded.

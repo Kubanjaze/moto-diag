@@ -3197,3 +3197,24 @@ instead. Nothing became reachable; the wire-or-delete decision on the six
 is the operator's, and it is cleaner now.
 
 No schema change. 25 tests, 5/5 mutations. Regression 6,972 passed, 0 failed, 19:43.
+
+## Phase 245 paused with trigger — 2026-09-18
+
+The first row after the 244 series, and the first row that could not be done
+as written — which is a result, not a failure. Damon has delivered no
+customer motorcycle: its own May 2025 investor release puts prototype
+production in Q1 2026 and mentions no deliveries. There is no owner's or
+service manual. NHTSA holds no Damon vehicle. There is no owner community.
+The 242–244 cadence ships sourced claims; there were none to ship.
+
+What the web does hold is fabricated: an aggregator says the bike "launched
+in 2024" and lists monsoon-parking connector problems "fixed by OTA
+updates", with no owner, date or source, contradicting the manufacturer's
+own schedule. That is the trap, and it is recorded where the next
+researcher will read it before searching.
+
+The row's premise was wrong too — Shift is adjustable ergonomics, not
+suspension — the same shape as row 212. Corrected. The row is paused with a
+trigger, a tripwire pins the absence, and nothing was authored.
+
+5 tests, 2/2 mutations. Regression 6,977 passed, 0 failed, 19:48.

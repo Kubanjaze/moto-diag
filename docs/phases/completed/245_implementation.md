@@ -1,6 +1,6 @@
 # Phase 245 — Damon HyperSport / HyperFighter: nothing to write yet, and that is recorded
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-18
 
 ---
 
@@ -94,8 +94,57 @@ opted into nor needed. The research record is this section.
 
 ## Verification Checklist
 
-- [ ] Row 245 no longer says "smart suspension"; it is ⏸️ with the trigger
-- [ ] The tripwire passes today and its docstring names the trigger and the trap
-- [ ] The tripwire fails if a `make = "Damon"` row is inserted with any source other than `model-generated` (mutation)
-- [ ] The tripwire fails if the shared HV row stops naming Damon (mutation)
-- [ ] Full regression green
+- [x] Row 245 no longer says "smart suspension"; it is ⏸️ with the trigger
+- [x] The tripwire passes today and its docstring names the trigger and the trap
+- [x] The tripwire fails if a `make = "Damon"` row is inserted with any source other than `model-generated` (mutation)
+- [x] The tripwire fails if the shared HV row stops naming Damon (mutation)
+- [x] Full regression green — **6,977 passed, 0 failed, 19:48**
+
+---
+
+## Results (v1.1)
+
+**Built as planned. Nothing authored. No deviations.**
+
+Row 245 is rewritten: Shift and CoPilot described from press coverage of the
+CES 2020 prototype, the delivery status from Damon's own 2025-05-28 release,
+the NHTSA result, and the trigger — *customer units shipped and an owner's
+manual published* — with the fabricated-review trap named in the row so
+nobody has to open this doc to be warned. Status ⏸️, not ✅: the row was not
+done, it was found undoable, and that is a different thing.
+
+`tests/test_phase245_damon_absence.py` pins the absence on a fixture seeded
+from the 241 HV file — the only seed file that names Damon, which the
+fixture proves by loading only it: no make-specific row; no Damon seed file;
+the HV floor still names Damon (10 rows); every row naming Damon is
+`model-generated`, so a "forum" or "owner" entry fails there first; the
+marque resolves exactly and the model resolves to nothing, which is correct
+today. The docstring is the trigger and the trap. Scanned with 244G's
+raw-source guard before it was installed: clean.
+
+### Verification
+
+- 5 tests; 216 across the phase suite and the gate suites.
+- **2/2 mutations killed**: a fabricated `forum` row for Damon appended to
+  the HV seed (`test_every_row_naming_damon_is_model_generated` and the
+  make-specific check fail); "Damon" removed from the shared make string
+  (`test_the_hv_floor_still_names_damon` fails). Run with bytecode cleared.
+- No source change under `src/`; no schema change; nothing reachable that
+  was not.
+- Full regression **6,977 passed, 0 failed, 19:48**.
+
+### Research record
+
+Solo, through the 242 sweep's five lenses. **Manufacturer document:** none
+exists; the IR release of 2025-05-28 is the primary status source. **Regulator
+record:** NHTSA products endpoint, `make=damon`, model year 2026, Count 0.
+**Owner community:** `myevdiscussion` and `motorcycleforum` threads are
+pre-order holders and press-ride impressions of prototypes. **Tooling:**
+none published. **Platform generation:** HyperSport HS / Premier / SX / SE
+and HyperFighter are announced trims of a prototype. **Rejected:** `ev.care`
+("launched in Canada/US in 2024"; regen, throttle-map and "monsoon parking"
+connector problems "fixed by OTA") — no owner, date, region or source, and
+contradicts the manufacturer's schedule; `ridereview.com` and
+`bikenrider.com` ("reaches its first customers") — same shape. Damon's
+delivery-date help article returned 404 and `damon.com` 522 on two attempts
+two minutes apart; recorded, not interpreted.
