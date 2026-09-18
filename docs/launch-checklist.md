@@ -395,7 +395,7 @@ and 316), `superseded`, `test-infra` or `public-api`.
 So you know what you are *not* on the hook for:
 
 - **The product.** 265 CLI commands, 81 API routes, 26 iOS screens,
-  970 curated known issues shipped inside the package. *Qualified by
+  977 curated known issues shipped inside the package. *Qualified by
   Phase 209B:* about 15% of the backend's modules can't be reached from any
   of those commands or routes — see **Decisions §5**.
 - **Tests.** 6,500+ backend and 1,062 mobile, green. Mobile `tsc` and lint

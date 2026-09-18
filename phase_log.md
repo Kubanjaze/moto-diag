@@ -3218,3 +3218,24 @@ suspension — the same shape as row 212. Corrected. The row is paused with a
 trigger, a tripwire pins the absence, and nothing was authored.
 
 5 tests, 2/2 mutations. Regression 6,977 passed, 0 failed, 19:48.
+
+## Phase 246 complete — 2026-09-18
+
+The first content row since the 244 series, and the first written under the
+rule the operator set for it: a forum number is allowed only if its label
+travels with it. Step 0 found the one surface where it did not — the prompt —
+and Part 1 fixed that before a word of content existed. Part 2 is seven rows:
+five concepts written as what the BMS does and how each of three makes shows
+it, every statement anchored to a manufacturer document named by code, and
+two community rows for the only community numbers, kept on their own rows
+because a row carries one label.
+
+The research ran as a workflow whose refuter fetched every one of the
+fourteen cited pages itself; a critic then cut what the refuters let
+through — a generic Li-ion editorial dressed as a Zero fact, an inferred
+end-of-life criterion, a rounded ratio that the page states as a range. The
+deliberate absences are the content as much as the figures: no make
+publishes a voltage curve, an owner SOH field, a millivolt tolerance or a
+cycle counter, and the rows say so.
+
+51 tests, 6/6 mutations. Regression 7,028 passed, 0 failed, 27:22.
