@@ -125,14 +125,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Has a test and no caller. Uploads get size, quota and metadata-"
         "schema checks, but the file is never probed: width, height, "
         "duration and codec are taken from the client's own metadata."),
-    "engine/workflows.py::create_no_start_workflow": ("unwired-feature",
-        "Guided no-start diagnostic workflow; no CLI command or route runs it."),
-    "engine/workflows.py::create_charging_workflow": ("unwired-feature",
-        "Guided charging-system workflow; no CLI command or route runs it."),
-    "engine/workflows.py::create_overheating_workflow": ("unwired-feature",
-        "Guided overheating workflow; no CLI command or route runs it."),
-    "engine/workflows.py::generate_next_step": ("unwired-feature",
-        "Step engine for the guided workflows above; unreachable with them."),
     "media/photo_pipeline.py::heif_available": ("unwired-feature",
         "Capability probe for pillow-heif (HEIC decoding) that nothing "
         "consults."),
@@ -193,6 +185,10 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "knowledge/symptom_repo.py::get_symptom": ("public-api", _REPO_HELPER),
     "knowledge/symptom_repo.py::list_symptoms_by_category": ("public-api", _REPO_HELPER),
     "advanced/fleet_repo.py::get_fleet_by_name": ("public-api", _REPO_HELPER),
+    "advanced/fleet_repo.py::list_fleets_for_bike": ("public-api",
+        "Reverse lookup kept as library surface. Its only mention outside its "
+        "own file is prose in core/migrations.py:1221; Phase 244W stopped a "
+        "name inside a string literal from counting as a use."),
     "engine/service_data.py::FluidCapacity": ("public-api",
         "Data model for service data; exported, not constructed in-tree."),
     "hardware/protocols/j1850.py::J1850ParseError": ("public-api",
@@ -225,59 +221,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
     # alias and __all__). Classified by four readers and challenged by
     # four more; 19 stood, one reason was corrected.
     # ---------------------------------------------------------------
-    "engine/confidence.py::rank_diagnoses": ("unwired-feature",
-        "Ranking step of the Phase 83 evidence-weighted confidence "
-        "feature. It sorts ConfidenceScore objects, and the only code "
-        "that builds a ConfidenceScore is "
-        "score_diagnosis_from_evidence in the same module, which is "
-        "itself unreachable — so this is unreachable with it. "),
-    "engine/confidence.py::score_diagnosis_from_evidence": ("unwired-feature",
-        "The whole Phase 83 evidence-weighted confidence capability: "
-        "it turns discrete evidence flags (symptom matches, DTC "
-        "match, KB match, test confirmed/denied, vehicle history, "
-        "environmental) into a 0.0-1.0 score with an itemised "
-        "evidence list and a label. Complete and tested, and no CLI "
-        "command or API route builds one. "),
-    "engine/correlation.py::SymptomCorrelator": ("unwired-feature",
-        "Phase 90 multi-symptom correlation: 15+ hand-written rules "
-        "that map a set of symptoms to one root cause (overheating + "
-        "power loss + coolant smell -> head gasket), with "
-        "full/partial match scoring. "),
-    "engine/cost.py::CostEstimator": ("unwired-feature",
-        "Phase 86's pure-math repair-cost estimator: labor hours plus "
-        "a parts list become low/high totals at dealer, independent "
-        "or DIY rates, with a DIY-savings comparison, and "
-        "estimate_from_diagnosis() takes a DiagnosisItem directly. "
-        "Nothing constructs it. "),
-    "engine/cost.py::format_estimate": ("unwired-feature",
-        "The display half of the same Phase 86 cost feature: it "
-        "renders a CostEstimate as a plain-text quote with line "
-        "items, subtotals, total and DIY savings. "),
-    "engine/evaluation.py::EvaluationTracker": ("unwired-feature",
-        "Phase 94's ADR-005 quality scorecard: record per-session "
-        "outcomes (predicted vs actual, helpfulness, cost, latency, "
-        "model) and get back accuracy, confidence calibration, cost "
-        "efficiency, latency percentiles, a weighted composite and a "
-        "formatted report, plus per-model accuracy and cost "
-        "breakdowns. "),
-    "engine/intermittent.py::IntermittentAnalyzer": ("unwired-feature",
-        "Phase 91 intermittent-fault analysis: pulls environmental "
-        "conditions out of freeform customer text with pre-compiled "
-        "regexes (cold start, heat soak, rain, load, RPM, time-of- "
-        "day) and ranks them against 10+ predefined intermittent "
-        "patterns, locally and with no API call. "),
-    "engine/parts.py::PartsRecommender": ("unwired-feature",
-        "Phase 85 AI second pass that turns a diagnosis plus vehicle "
-        "into concrete parts — part numbers, brand, price range, "
-        "OEM/aftermarket/used source, cross-references — and the "
-        "tools needed for the job. "),
-    "engine/repair.py::RepairProcedureGenerator": ("unwired-feature",
-        "Phase 84 AI second pass that expands a diagnosis into a full "
-        "RepairProcedure: numbered steps each with an optional pro "
-        "tip and safety warning, tools, parts, estimated labour "
-        "hours, an assessed skill level, and top-level safety "
-        "warnings, with a graceful fallback that preserves raw text "
-        "when the model's JSON will not parse. "),
     "engine/service_data.py::build_service_data_context": ("unwired-feature",
         "Formats torque specs, service intervals and valve clearances "
         "into prompt text so a diagnosis can quote real numbers. The "
@@ -300,6 +243,11 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "service-data formatter: the diagnostic prompt has no slot "
         "for circuit context, so the function has never had a "
         "production caller. "),
+    "hardware/compat_repo.py::update_adapter": ("unwired-feature",
+        "Sibling of remove_adapter below and unreached the same way: the "
+        "`hardware compat` CLI has no update command. Its only mentions are "
+        "its own error message (compat_repo.py:276) and __all__; Phase 244W "
+        "stopped a name inside a string literal from counting as a use."),
     "hardware/compat_repo.py::remove_adapter": ("unwired-feature",
         "The only code path that can delete an adapter from the "
         "compatibility knowledge base. The `hardware compat` CLI "
@@ -318,4 +266,108 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "ValueError for a PID the catalog does not cover; its own "
         "docstring says it exists so callers need not reach into the "
         "catalog dict. "),
+}
+
+# Dotted module name -> (classification, reason). Phase 244W.
+#
+# A module every one of whose public names is referenced only by itself, by a
+# package __init__ re-export, or by another module in this table. The import
+# walk cannot see these (the __init__ import edge is real), the package-level
+# island check cannot (the package is alive), and the orphan count cannot (a
+# class that names itself, or a dead module naming another, counts as a use).
+# Orphans inside a module listed here are implied by the module entry and are
+# not listed a second time in ORPHANS — the same convention as
+# UNREACHABLE_MODULES.
+_SUBSTRATE_118 = "Phase 118 substrate (billing/accounting/inventory/scheduling)"
+MODULE_ISLANDS: dict[str, tuple[str, str]] = {
+    # -- superseded: a live implementation does the job elsewhere -----------
+    "motodiag.engine.history": ("superseded",
+        "Phase 88 in-memory session store (DiagnosticHistory/DiagnosticRecord). "
+        "The live store is core/session_repo over diagnostic_sessions. Carries a "
+        "3.0/1.0/0.5/2.0 scoring ladder (history.py:287-311) never measured. Its "
+        "only referrer is engine/retrieval.py, also in this table."),
+    "motodiag.hardware.protocols.models": ("superseded",
+        "Phase 134 containers (PIDResponse, DTCReadResult, ProtocolConnection). "
+        "The docstring says the adapters populate these; the adapters Phases "
+        "135-139 built return plain list[str]/Optional[int] through "
+        "ProtocolAdapter (base.py:101-143), and nothing in the tree constructs "
+        "any of the three. An unfulfilled contract."),
+    "motodiag.auth.roles_repo": ("superseded",
+        "Phase 112 RBAC repo (create_role, assign_role, grant_permission...). "
+        "The live permission check, shop/rbac.py:299-320, walks the same "
+        "roles/role_permissions/permissions tables with its own SQL; the write "
+        "path exists only as migration-005 seed data. Nothing calls these to "
+        "change a role."),
+
+    # -- substrate: built ahead for a named roadmap row ----------------------
+    "motodiag.media.photo_annotation": ("substrate",
+        "Phase 119 photo-annotation model (AnnotationShape, PhotoAnnotation), "
+        "awaiting Phase 307 (photo annotation). Distinct from Phase 105's "
+        "timestamp-based video annotation, which is live."),
+    "motodiag.media.photo_annotation_repo": ("substrate",
+        "Phase 119 CRUD over photo_annotations, awaiting Phase 307. The table "
+        "has no live reader or writer."),
+    "motodiag.inventory.item_repo": ("substrate",
+        _SUBSTRATE_118 + ": inventory-item CRUD over inventory_items, awaiting "
+        "Phase 279 (parts inventory with reorder points). The live parts path "
+        "(shop/parts_needs, api/routes/parts) uses parts/parts_requisitions/"
+        "work_order_parts, not this table."),
+    "motodiag.inventory.vendor_repo": ("substrate",
+        _SUBSTRATE_118 + ": vendor CRUD, awaiting Phases 282-286 (vendor "
+        "integrations). vendors has no live reader or writer."),
+    "motodiag.inventory.warranty_repo": ("substrate",
+        _SUBSTRATE_118 + ": warranty CRUD, awaiting Phase 280 (OEM warranty "
+        "claims) and Gate 16. warranties has no live reader or writer."),
+    "motodiag.billing.payment_repo": ("substrate",
+        _SUBSTRATE_118 + ": customer-payment CRUD over payments, awaiting Phase "
+        "273 (Stripe Connect / card terminals). Distinct from the live Phase 176 "
+        "subscription path (billing/subscription_repo, billing/providers), "
+        "which is the platform charging the shop, not the shop charging a "
+        "customer."),
+    "motodiag.feedback.learning_hook": ("substrate",
+        "Phase 116 read-only FeedbackReader over diagnostic_feedback and "
+        "session_overrides, awaiting Track R Phases 318-327 (human-in-loop "
+        "learning). Its only non-init mention is a string literal in "
+        "core/migrations.py:545 — the case that made Phase 244W blank prose."),
+
+    # -- unwired-feature: complete, tested, reachable by nothing -------------
+    "motodiag.engine.retrieval": ("unwired-feature",
+        "Phase 89 similar-case retrieval (CaseRetriever; symptom/vehicle/year "
+        "weights 0.50/0.30/0.20 at retrieval.py:44-46, never measured). Reads "
+        "only from engine/history.py, above, so it cannot run against real "
+        "sessions without a rewrite."),
+    "motodiag.engine.confidence": ("unwired-feature",
+        "Phase 85 evidence-to-confidence scorer: 19 hardcoded numbers and a "
+        "non-monotonic curve (audit 2026-09-17, consensus 2.3/10). Its two "
+        "public functions were ORPHANS entries until this table absorbed them."),
+    "motodiag.engine.correlation": ("unwired-feature",
+        "Phase 90 symptom-cluster rules. Whole-string matching returns nothing "
+        "on real input, and CORR-001 diagnoses a coolant-jacket leak on an "
+        "air-cooled twin (correlation.py:71-82). Consensus 3.0/10."),
+    "motodiag.engine.cost": ("unwired-feature",
+        "Phase 86 repair-cost estimator: floats-as-dollars beside an "
+        "integer-cents invoicing path (shop/invoicing.py), hardcoded labour "
+        "rates that disagree with themselves (cost.py:28 vs :97). Third "
+        "costing implementation; consensus 2.0/10, delete candidate."),
+    "motodiag.engine.evaluation": ("unwired-feature",
+        "Phase 91 quality scorecard. Its data source, diagnostic_feedback, has "
+        "0 rows and no writer; absent data scores as perfect "
+        "(evaluation.py:102-122). Consensus 2.0/10, delete candidate."),
+    "motodiag.engine.intermittent": ("unwired-feature",
+        "Phase 87: 12 authored intermittent-fault patterns. Unbounded substring "
+        "keyword matching (intermittent.py:584) ranks false positives above "
+        "true ones; its charging thresholds contradict what `ref circuit "
+        "charging` prints. Consensus 4.0/10."),
+    "motodiag.engine.parts": ("unwired-feature",
+        "Phase 83 AI parts recommender. Every call spends money through ask() "
+        "with no cost ledger row, no stop_reason check, and no labelling of "
+        "model-invented part numbers and prices. Consensus 3.3/10."),
+    "motodiag.engine.repair": ("unwired-feature",
+        "Phase 84 AI repair-procedure generator. REPAIR_PROMPT:106 instructs "
+        "the model to invent torque specs and nothing labels them on screen; "
+        "the audit's single highest risk. Consensus 4.3/10."),
+    "motodiag.engine.workflows": ("unwired-feature",
+        "Phase 82 guided-troubleshooting scripts. is_complete() ends the "
+        "charging workflow on its first FAIL, leaving 3 of 4 steps "
+        "unreachable (workflows.py:120-123). Consensus 4.3/10."),
 }

@@ -3057,3 +3057,47 @@ problem this project already fixed once for vision findings.
 
 No schema change. 55 tests, 11/11 mutations. Regression 6,961 passed, 0 failed, 27:37.
 
+## Phase 244W complete — 2026-09-17
+
+The gate that three phases have been sharpening had a second blind spot,
+and it was found by auditing what the first one exposed. A module whose
+public names refer only to each other, inside a package that is otherwise
+alive, was invisible to all three checks: the import walk sees the `__init__`
+edge as real, the package check sees a live package, and the orphan count
+lets a class that names itself count as used. `engine/history.py` and
+`engine/retrieval.py` — 668 lines, no caller — had never been reported.
+
+Step 0 got the scale wrong three times. Fifty-five modules, because route
+modules are reached by registration and not by name. Twenty-five, because
+the allowlist has two tables and I had checked one. Nine, hand-verified.
+Then four independent design prototypes, built without sight of each
+other, converged on nineteen — eleven invisible to every check and eight
+engine modules wholly dead where the gate reported only some of their
+names — and I could explain each of my three wrong numbers from what they
+found. The design pass also found a hole in 244U itself: its regex stops at
+a newline, so a parenthesised multi-line re-export was never blanked, and
+the fixture I wrote that morning used single-line imports. That is 244X,
+with its cost measured.
+
+The judges split three ways and the adversary settled it. The winner is the
+module-level island fixpoint in its honest core, chosen because stripping
+every one of its author's nine seed rules does not change its answer, its
+reason for a flag is a sentence you can grep, and it is immune to two
+false-positive classes the runner-up has — one of which this repo already
+uses as a documented outage fix.
+
+The build's one real defect was one the real tree could not have shown:
+on a three-file synthetic tree the entry-point module itself was flagged,
+because nothing names `cli` there, and once the root is dead everything it
+calls follows. On the real tree `cli` is named in dozens of files. Roots
+are excluded from candidacy now, structurally.
+
+The allowlist lost thirteen orphan entries — eleven of them 244U's — and
+gained nineteen module entries, each classified from evidence with the
+audit's consensus score carried, so the phase that deletes or wires them
+inherits a number rather than a mood. Prose string literals are blanked in
+the shared loader; the two extra orphans that surfaced were exactly the
+two predicted.
+
+No schema change, no source change under src/. 61 tests, 11/11 mutations.
+Regression 7,011 passed, 0 failed, 20:21.

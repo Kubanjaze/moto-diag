@@ -27,6 +27,7 @@ import pytest
 from support.integration_gaps import (
     entry_points_from_pyproject,
     find_orphans,
+    find_module_islands,
     find_unreachable_modules,
     module_map,
 )
@@ -53,8 +54,16 @@ def _current_unreachable() -> frozenset[str]:
 
 
 @lru_cache(maxsize=1)
+def _current_module_islands() -> frozenset[str]:
+    return frozenset(find_module_islands(SRC, "motodiag", ENTRY_POINTS))
+
+
+@lru_cache(maxsize=1)
 def _current_live_orphans() -> frozenset[str]:
-    dead = _current_unreachable()
+    # Phase 244W: an orphan inside a dead module is implied by the module
+    # entry — in UNREACHABLE_MODULES or MODULE_ISLANDS — and not reported
+    # a second time by name.
+    dead = _current_unreachable() | _current_module_islands()
     mods = module_map(SRC, "motodiag")
     dead_files = {mods[m].relative_to(PACKAGE_ROOT).as_posix() for m in dead}
     return frozenset(
