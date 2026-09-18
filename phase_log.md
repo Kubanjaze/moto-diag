@@ -3017,3 +3017,43 @@ generation. Capability a technician would ask for by name, reachable by
 nothing. All 20 classified and challenged; the allowlist is 46 → 66.
 
 No schema change. 38 tests, 13/13 mutations. Regression 6,914 passed, 0 failed, 30:07.
+
+## Phase 244V complete — 2026-09-17
+
+The reference layer 244U exposed is now reachable. Four tables — 20 torque
+specs, 8 valve clearances, 14 service intervals, 5 wiring circuits — complete
+and tested since Phases 92/93, and until today no command or route could get
+at any of them. `motodiag ref circuit charging` prints what a technician keeps
+a manual open for: the three yellow stator leads and what they read at 5000
+RPM, where the connector is, what fails, and "if connector shows any
+browning/melting, solder wires directly as permanent fix".
+
+The harder half was provenance. This data came from the same commit wave as
+the recall fixture whose federal campaign numbers turned out to be synthetic
+(F86, assessed this morning). These are different in kind — a generic torque
+for an M12 drain plug is a real category, nothing impersonates an official
+identifier — but only if the screen says which kind of number it is. So the
+line renders under all nine successful screens, a test asserts it on each
+rather than a sample, and six more assert the screen never claims "official",
+"OEM" or "factory spec". Torque leads with its warning instead of trailing it,
+because the figure is acted on the moment it is read.
+
+Two things the build changed. Listing each table *through* `list_all_*` rather
+than the raw dicts gave those accessors callers too, so eight allowlist
+entries went rather than five. And `[{system}]` in a panel title renders as
+nothing at all — rich reads it as a markup tag — so the system label was
+silently vanishing from every circuit screen until the first smoke run.
+
+244U's two scale pins came down and were rewritten, not deleted: the orphan
+count is a recorded trend now (46 → 66 → 58), and the engine-layer assertion
+is a ceiling rather than a floor, so wiring more of the layer passes and
+adding unreachable capability fails. The layer is still there — cost
+estimation, parts recommendation, repair-procedure generation.
+
+The two prompt-context builders stay on the shelf deliberately. Feeding
+"typical Japanese rear axle nut: 100 Nm" into a question about a specific bike
+invites the model to state it as that bike's figure, which is the laundering
+problem this project already fixed once for vision findings.
+
+No schema change. 55 tests, 11/11 mutations. Regression 6,961 passed, 0 failed, 27:37.
+

@@ -28,6 +28,7 @@ from motodiag.cli.transcripts import register_transcripts
 from motodiag.cli.costs import register_costs
 from motodiag.cli.memory import register_memory
 from motodiag.cli.capture import register_capture
+from motodiag.cli.reference import register_reference
 
 console = get_console()
 
@@ -816,6 +817,11 @@ register_transcripts(cli)
 register_costs(cli)
 register_memory(cli)
 register_capture(cli)
+
+# Phase 244V: register the `ref` subgroup — torque specs, valve
+# clearances, service intervals and wiring circuit references. Phases 92
+# and 93 built all four tables and shipped no way to read them.
+register_reference(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)

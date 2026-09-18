@@ -185,22 +185,32 @@ class TestTheBlankingIsNarrow:
 class TestTheKnownScale:
     """What the blind spot was hiding, pinned like 209B pinned its own."""
 
-    def test_the_orphan_list_grew_by_exactly_twenty(self):
+    def test_the_orphan_list_is_the_running_count(self):
+        """46 before 244U could see through a re-export, 66 after, 58 once
+        244V wired the reference lookups. The literal moves with the tree —
+        DOWN when a phase reaches something, UP only when a new gap lands."""
         from support.integration_gaps_allowlist import ORPHANS
 
-        assert len(ORPHANS) == 66  # f9-noqa: ssot-pin fixture-data: Phase 244U's finding — 46 live orphans before the gate could see through a re-export, 66 after. The literal is the record of what was found; the stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list.
+        assert len(ORPHANS) == 58  # f9-noqa: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
 
     def test_what_was_hidden_was_a_layer_not_a_scattering(self):
-        """Seventeen of the twenty are engine capability — torque specs, valve
-        clearances, wiring references, cost estimates, parts recommendations,
-        repair-procedure generation. A technician would want all of it."""
+        """What the blind spot hid was a LAYER: twenty engine capabilities a
+        technician would want — torque specs, valve clearances, wiring
+        references, cost estimates, parts recommendations, repair-procedure
+        generation — none of them reachable.
+
+        244V took five of them (the torque, clearance, interval and two
+        circuit lookups, now behind `motodiag ref`). Fifteen remain, and this
+        asserts the layer is still there rather than pretending it is not: the
+        bound is a ceiling, so a phase that wires more of it passes, and one
+        that adds engine capability nobody can reach fails."""
         from support.integration_gaps_allowlist import ORPHANS
 
         unwired = [
             k for k in ORPHANS
             if k.startswith("engine/") and ORPHANS[k][0] == "unwired-feature"
         ]
-        assert len(unwired) >= 17, (
+        assert 0 < len(unwired) <= 15, (
             "engine capability a technician would want, reachable by nothing: "
-            f"{len(unwired)} entries"
+            f"{len(unwired)} entries — {sorted(unwired)}"
         )

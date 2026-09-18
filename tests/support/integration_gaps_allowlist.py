@@ -193,11 +193,8 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "knowledge/symptom_repo.py::get_symptom": ("public-api", _REPO_HELPER),
     "knowledge/symptom_repo.py::list_symptoms_by_category": ("public-api", _REPO_HELPER),
     "advanced/fleet_repo.py::get_fleet_by_name": ("public-api", _REPO_HELPER),
-    "engine/service_data.py::list_all_service_intervals": ("public-api", _REPO_HELPER),
-    "engine/service_data.py::list_all_torque_specs": ("public-api", _REPO_HELPER),
     "engine/service_data.py::FluidCapacity": ("public-api",
         "Data model for service data; exported, not constructed in-tree."),
-    "engine/wiring.py::list_all_circuits": ("public-api", _REPO_HELPER),
     "hardware/protocols/j1850.py::J1850ParseError": ("public-api",
         "Exception type in the J1850 protocol's public surface, never raised in-tree."),
     "api/deps.py::get_request_id": ("public-api",
@@ -288,21 +285,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "prompt is assembled from vehicle + symptom + knowledge "
         "context only, and there is no parameter for service data "
         "anywhere in that path. "),
-    "engine/service_data.py::get_service_interval": ("unwired-feature",
-        "Partial-match lookup over 14 generic service intervals (oil, "
-        "valves, chain, brake fluid, fork oil...) with "
-        "miles/km/months axes. Nothing in src/ calls it. "),
-    "engine/service_data.py::get_torque_spec": ("unwired-feature",
-        "Case-insensitive partial-match lookup over 20 torque specs, "
-        "each with Nm, auto-converted ft-lb, thread-locker "
-        "requirement and safety notes on the fasteners that strip "
-        "aluminium. Built as product capability in Phase 93; no CLI "
-        "command, no API route and no other src/ module reaches it. "),
-    "engine/service_data.py::get_valve_clearance": ("unwired-feature",
-        "Lookup over 8 cold valve-clearance ranges grouped by engine "
-        "architecture (inline-4, V-twin, single, Harley Twin Cam), "
-        "intake and exhaust separately. Shipped complete in Phase 93 "
-        "and reachable by nothing in src/. "),
     "engine/symptoms.py::SymptomAnalyzer": ("superseded",
         "Phase 80's two-pass symptom entry point. The same job — "
         "symptoms plus knowledge-base matches in, DiagnosticResponse "
@@ -318,18 +300,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "service-data formatter: the diagnostic prompt has no slot "
         "for circuit context, so the function has never had a "
         "production caller. "),
-    "engine/wiring.py::get_circuit_reference": ("unwired-feature",
-        "The primary lookup into the five-circuit wiring reference "
-        "(charging, starting, fuel injection, ignition, ABS), "
-        "returning wire colours, connector locations, expected "
-        "voltage/resistance, test points and failure patterns. It is "
-        "the payload of the Phase 92 feature and no command, route or "
-        "other src/ module can reach it. "),
-    "engine/wiring.py::get_circuits_by_system": ("unwired-feature",
-        "Second query form over the same circuit library, filtering "
-        "by system category (electrical, fuel, ignition, braking) and "
-        "returning every match. Unreached like the rest of the "
-        "module. "),
     "hardware/compat_repo.py::remove_adapter": ("unwired-feature",
         "The only code path that can delete an adapter from the "
         "compatibility knowledge base. The `hardware compat` CLI "
