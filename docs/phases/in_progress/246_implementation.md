@@ -1,10 +1,10 @@
 # Phase 246 — BMS diagnostics: the generic layer, anchored per make
 
-**Version:** 0.9 — DRAFT FOR OPERATOR REVIEW before any content is authored | **Tier:** Standard | **Date:** 2026-09-18
+**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-18
 
 ---
 
-## Why this stops at the plan
+## Why v0.9 stopped for review
 
 This is the first roadmap row since the 244 series that *authors corpus
 content*. Every lesson that series paid for — F86's fabricated campaign
@@ -75,25 +75,71 @@ document is not written.
 (the category meta table 244R fixed), not a schema change — verify at build.
 No new tables. No AI calls.
 
-**S0-5. Cadence.** 242–244 ran a six-agent sweep-and-refute per make. This
-row spans three makes and an engineering domain; the same discipline solo
-is feasible but slow, and the refuter lens is the part that matters most
-here (it is what killed `HD-20-LW-BMS` in 243). **Operator decision:** opt
-into a research workflow for 246, or run it solo.
+**S0-5. Cadence — decided.** Orchestrated, as 242–244 ran it, with one
+rule the operator added: **the refuter fetches every cited page itself.**
+Another agent vouching for a citation does not count; a page the refuter
+cannot fetch (bot-blocked, expired certificate, 404) leaves the claim
+*unverified*, and an unverified claim is not `service-manual`. One refuter
+per cited URL, checking every claim that cites it.
 
-## Proposed scope
+**S0-6. The `battery` DTC category — audited end to end, deferred to 247.**
+`DTCCategory` (`core/models.py:154`) already has `HV_BATTERY = "hv_battery"`
+— Phase 111 put six EV categories in the Enum, twenty members in all. The
+meta table has twelve rows and no `hv_battery`; `--category` validates
+against the meta table (`cli/code.py:377`), so the value exists in code and
+is rejected at the CLI. No `CHECK` on `dtc_codes.dtc_category` (the one at
+`migrations.py:1967` is `issues.category`); the API exposes `category` as a
+plain string; mobile has no TS union, no icon or filter map, only a cached
+copy of the meta table. Data-only at the contract. But meta rows are seeded
+only by migrations, a migration bumps `SCHEMA_VERSION` 62 → 63, and eleven
+tests pin that literal. And **the corpus holds zero Energica DTCs** — the one
+"battery" hit is `P0132 O2 Sensor Circuit High Voltage` — so there is nothing
+to recategorise and the category would be empty, which is the shape 244R
+fixed. No test pins a per-category count; 244R's `used ⊆ meta` guard would
+have refused an unmet category. Deferred to 247 as its own substrate
+commit, with the Enum/meta gap recorded for it.
+
+**S0-7. Where a `known_issues` number is displayed, and whether the source
+label reaches it.** `kb list` renders a Source column
+(`cli/kb.py:102-119`); `kb show` prints `Source:` through
+`_render_provenance` (`:228-244`); the API's `KnownIssueResponse` carries
+`source` as a six-value enum; the mobile app has no known-issue screen. **The
+prompt does not**: `build_knowledge_context` (`engine/prompts.py:73-107`)
+emits title, severity, scope, symptoms, causes and a 300-character fix
+preview — no source — and `diagnose` renders no KB entries itself, so the
+model's answer *is* the display. A forum-cited threshold in a fix procedure
+reaches the model as if it were manufacturer data.
+
+## Decisions (operator, 2026-09-18)
+
+1. **Research runs as a workflow; the refuter fetches every cited page.**
+2. **The Unofficial Zero Manual is `forum`** — except where the wiki is
+   reproducing an official Zero document, in which case the official
+   document is cited as `service-manual`, and the wiki is not.
+3. **Forum-cited numeric thresholds are allowed only if the provenance
+   label is surfaced wherever the number is displayed, enforced by a test.**
+   Given S0-7 that means `build_knowledge_context` gains a `source` field
+   per entry and the system prompt tells the model to attribute
+   forum-sourced figures as such; the test walks every display surface.
+4. **`battery` category deferred to 247** (S0-6).
+
+## Scope
 
 1. **Five generic entries** — balancing, SOH, voltage curve, thermal
    derating, cycle counting — each anchored per S0-3, `make` list-valued,
    `dtc_category` assigned where a code exists (Energica P0516 family).
 2. **A per-make "how it shows" appendix inside each entry**, not separate
    rows, so `kb search bms` returns one answer per concept.
-3. **A `battery` DTC category** if the meta table allows a data-only add;
-   Energica's BMS P-codes recategorised into it.
+3. **The prompt carries provenance.** `build_knowledge_context` emits
+   `source:` per entry; the system prompt instructs attribution of
+   forum-sourced figures. `diagnose`'s output is where the number is
+   displayed, so this is where the label goes.
 4. **Tests**: every 246 entry names a source page or is not `service-manual`;
-   no entry states a numeric threshold (mV, °C, cycles) without a cited page
-   — the 244Z charging-threshold rule, generalised; the five concepts are
-   reachable through `kb search`.
+   a numeric threshold (mV, °C, cycles) is `service-manual`-cited or
+   `forum`-labelled — never unlabelled; every display surface of a known
+   issue (kb list/search/symptom/show, the prompt) shows `source`, with a
+   mutation that strips it from the prompt; the five concepts are reachable
+   through `kb search`.
 5. **Research record** in this doc: survivors by source class, rejected
    claims with reasons.
 
@@ -110,13 +156,9 @@ into a research workflow for 246, or run it solo.
 - [ ] Five entries, each with at least one manufacturer page cited
 - [ ] No numeric threshold without a cited page (test)
 - [ ] `kb search "cell balancing"` / `"state of health"` / `"derating"` each return a 246 entry
-- [ ] `dtc_category` meta unchanged in schema; `battery` added as data if at all
-- [ ] Mutations: strip a citation (test fails); add an unsourced mV figure (test fails)
+- [ ] `dtc_category_meta` untouched (the category is 247's)
+- [ ] Every display surface of a known issue shows `source`; the prompt test fails when it is stripped
+- [ ] The Zero wiki is cited as `forum` only where it is not reproducing an official document
+- [ ] Mutations: strip a citation (test fails); add an unlabelled mV figure (test fails); strip `source` from the prompt (test fails)
 - [ ] Full regression green
 
-## Open for the operator
-
-1. Workflow opt-in for the research, or solo.
-2. Whether the Unofficial Zero Manual counts as `forum` (my proposal) or is
-   excluded.
-3. Whether to add the `battery` DTC category in this row or leave it to 247.
