@@ -18,12 +18,6 @@ from motodiag.auth.users_repo import (
     create_user, get_user, get_user_by_username, list_users,
     update_user, deactivate_user, get_system_user, count_users,
 )
-from motodiag.auth.roles_repo import (
-    create_role, get_role, get_role_by_name, list_roles,
-    assign_role, remove_role, list_user_roles,
-    grant_permission, revoke_permission, list_role_permissions,
-    user_has_permission, list_user_permissions,
-)
 
 # Phase 176 additions: API keys, rate limiting, FastAPI deps
 from motodiag.auth.api_key_repo import (
@@ -95,10 +89,6 @@ __all__ = [
     "create_user", "get_user", "get_user_by_username", "list_users",
     "update_user", "deactivate_user", "get_system_user", "count_users",
     # Roles repo
-    "create_role", "get_role", "get_role_by_name", "list_roles",
-    "assign_role", "remove_role", "list_user_roles",
-    "grant_permission", "revoke_permission", "list_role_permissions",
-    "user_has_permission", "list_user_permissions",
     # Phase 176: API keys
     "ApiKey", "ApiKeyNotFoundError", "InvalidApiKeyError",
     "create_api_key", "generate_api_key",

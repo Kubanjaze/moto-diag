@@ -16,9 +16,7 @@ from motodiag.inventory.vendor_repo import (
     update_vendor, delete_vendor,
 )
 from motodiag.inventory.recall_repo import (
-    add_recall, get_recall, list_recalls_for_vehicle, list_recalls,
-    delete_recall,
-)
+    list_recalls_for_vehicle, )
 from motodiag.inventory.warranty_repo import (
     add_warranty, get_warranty, list_warranties_for_vehicle,
     increment_claim_count, delete_warranty,
@@ -30,8 +28,6 @@ __all__ = [
     "delete_item", "adjust_quantity", "items_below_reorder",
     "add_vendor", "get_vendor", "get_vendor_by_name", "list_vendors",
     "update_vendor", "delete_vendor",
-    "add_recall", "get_recall", "list_recalls_for_vehicle", "list_recalls",
-    "delete_recall",
-    "add_warranty", "get_warranty", "list_warranties_for_vehicle",
+    "list_recalls_for_vehicle", "add_warranty", "get_warranty", "list_warranties_for_vehicle",
     "increment_claim_count", "delete_warranty",
 ]

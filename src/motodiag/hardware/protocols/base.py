@@ -104,7 +104,7 @@ class ProtocolAdapter(ABC):
         Returns codes in ``P0171`` / ``C1234`` / ``B2468`` / ``U0100``
         format. Empty list means no stored faults (not an error).
         Consumers typically wrap the result in a
-        :class:`~motodiag.hardware.protocols.models.DTCReadResult`
+        a list of DTC code strings
         with a timestamp and source-protocol label — the adapter
         itself stays schema-free.
         """
@@ -134,7 +134,7 @@ class ProtocolAdapter(ABC):
 
         For richer decodes (floats, multi-field), adapters can expose
         their own higher-level methods that return a
-        :class:`~motodiag.hardware.protocols.models.PIDResponse`; this
+        an integer PID value; this
         method is the always-available shortcut that keeps Phase 140
         CLI wiring a one-liner.
         """
@@ -162,7 +162,7 @@ class ProtocolAdapter(ABC):
         Example: ``"ISO 15765-4 (CAN 11/500)"``, ``"ISO 14230 KWP2000"``,
         ``"SAE J1850 VPW"``. The identifier is stable across the life
         of the adapter instance and feeds
-        :attr:`~motodiag.hardware.protocols.models.DTCReadResult.source_protocol`
+        the adapter's protocol name
         plus any UI that tells the mechanic what's connected.
         """
 

@@ -12,8 +12,7 @@ is out of scope — this provides the architecture for it.
 
 import os
 from enum import Enum
-from functools import wraps
-from typing import Callable, Optional
+from typing import Optional
 
 from pydantic import BaseModel, Field
 
@@ -149,14 +148,9 @@ def get_tier_features(tier: Optional[SubscriptionTier] = None) -> TierFeatures:
     return TIER_LIMITS[tier]
 
 
-def has_feature(feature_name: str, tier: Optional[SubscriptionTier] = None) -> bool:
-    """Check if the specified tier (or current) has a specific feature flag."""
-    features = get_tier_features(tier)
-    return bool(getattr(features, feature_name, False))
-
 
 # Enforcement modes — see project_motodiag_paywall_strategy memory
-# SOFT (dev default): warn but allow. HARD (Track H+): raise TierAccessDenied.
+# SOFT (dev default): warn but allow. HARD (Track H+): enforced API-side; the CLI-side raise was removed at Phase 244Y.
 ENFORCEMENT_MODE_SOFT = "soft"
 ENFORCEMENT_MODE_HARD = "hard"
 
@@ -174,64 +168,6 @@ def get_enforcement_mode() -> str:
         return mode
     return ENFORCEMENT_MODE_SOFT  # Development default
 
-
-def requires_tier(minimum: SubscriptionTier, feature_name: Optional[str] = None) -> Callable:
-    """Decorator that gates a CLI command by minimum subscription tier.
-
-    Usage:
-        @requires_tier(SubscriptionTier.SHOP)
-        def export_pdf(): ...
-
-        @requires_tier(SubscriptionTier.SHOP, feature_name="can_export_pdf")
-        def export_pdf(): ...
-
-    Behavior depends on MOTODIAG_PAYWALL_MODE:
-      - "soft" (default during dev): prints upgrade warning but allows execution
-      - "hard" (Track H+): raises TierAccessDenied
-    """
-    def decorator(func: Callable) -> Callable:
-        @wraps(func)
-        def wrapper(*args, **kwargs):
-            user_tier = current_tier()
-            if not user_tier.meets_minimum(minimum):
-                mode = get_enforcement_mode()
-                feat = feature_name or func.__name__
-                if mode == ENFORCEMENT_MODE_HARD:
-                    raise TierAccessDenied(
-                        required_tier=minimum,
-                        current_tier=user_tier,
-                        feature_name=feat,
-                    )
-                # Soft mode: warn but continue
-                import sys
-                sys.stderr.write(
-                    f"[motodiag] ⚠ Feature '{feat}' is gated to {minimum.value} tier or higher "
-                    f"(you have {user_tier.value}). Allowed in dev mode. "
-                    f"Upgrade: https://motodiag.app/pricing\n"
-                )
-            return func(*args, **kwargs)
-        wrapper._required_tier = minimum  # type: ignore[attr-defined]
-        wrapper._feature_name = feature_name  # type: ignore[attr-defined]
-        return wrapper
-    return decorator
-
-
-class TierAccessDenied(Exception):
-    """Raised when the current subscription tier doesn't meet a command's minimum."""
-
-    def __init__(
-        self,
-        required_tier: SubscriptionTier,
-        current_tier: SubscriptionTier,
-        feature_name: str = "",
-    ):
-        self.required_tier = required_tier
-        self.current_tier_val = current_tier
-        self.feature_name = feature_name
-        super().__init__(
-            f"Feature '{feature_name}' requires {required_tier.value} tier "
-            f"(you have {current_tier.value}). Upgrade at https://motodiag.app/pricing"
-        )
 
 
 def format_tier_comparison() -> str:

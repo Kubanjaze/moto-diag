@@ -122,7 +122,6 @@ class TestWhatTheRuleFindsNow:
     @pytest.mark.parametrize("name", [
         "feedback/feedback_repo.py::submit_feedback",
         "advanced/recall_repo.py::load_recalls_from_json",
-        "inventory/recall_repo.py::add_recall",
         "memory/compile.py::compile_all",
         "auth/users_repo.py::create_user",
     ])
@@ -135,7 +134,7 @@ class TestWhatTheRuleFindsNow:
     def test_the_new_entries_match_the_tree_in_both_directions(self):
         """209B's stale/new tests hold the whole list; this holds the 57."""
         new = {k for k, (_, r) in ORPHANS.items() if "Phase 244X" in r}
-        assert len(new) == 57  # f9-noqa: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
+        assert len(new) == 52  # f9-noqa: → 52 (244Y deleted the four recall fns and recalculate_invoice_totals);: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
         assert new <= _live_orphans(), sorted(new - _live_orphans())
 
     @pytest.mark.parametrize("name,entry", sorted(
@@ -144,14 +143,6 @@ class TestWhatTheRuleFindsNow:
     def test_every_new_entry_names_the_init_that_hid_it(self, name, entry):
         pkg = name.split("/")[0]
         assert f"{pkg}/__init__.py" in entry[1], name
-
-    def test_the_duplicate_recall_repo_is_recorded_as_superseded(self):
-        """Phase 118 and Phase 155 each wrote a recall repository over the
-        same table; only the second has a command. The entries say so."""
-        for fn in ("add_recall", "delete_recall", "get_recall", "list_recalls"):
-            cls, reason = ORPHANS[f"inventory/recall_repo.py::{fn}"]
-            assert cls == "superseded"
-            assert "advanced/recall_repo" in reason
 
     def test_submit_feedback_is_recorded_as_unwired_not_as_a_helper(self):
         """Nothing writes diagnostic_feedback. Calling that a library helper

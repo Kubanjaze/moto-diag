@@ -14,24 +14,18 @@ Tests cover:
 import pytest
 
 from motodiag.core.database import (
-    init_db, get_schema_version, SCHEMA_VERSION, get_connection,
+    init_db, get_schema_version, get_connection,
 )
 from motodiag.core.migrations import (
-    get_migration_by_version, rollback_migration,
+    get_migration_by_version,
 )
 from motodiag.auth.models import (
-    User, Role, Permission, RoleName, PermissionName,
+    User, RoleName, PermissionName,
 )
 from motodiag.auth.users_repo import (
     create_user, get_user, get_user_by_username, list_users,
     update_user, deactivate_user, count_users, get_system_user,
-    SYSTEM_USER_ID, SYSTEM_USERNAME,
-)
-from motodiag.auth.roles_repo import (
-    create_role, get_role, get_role_by_name, list_roles,
-    assign_role, remove_role, list_user_roles,
-    grant_permission, revoke_permission, list_role_permissions,
-    user_has_permission, list_user_permissions,
+    SYSTEM_USER_ID,
 )
 
 
@@ -66,44 +60,12 @@ class TestMigration005:
         assert sys_user["username"] == "system"
         assert sys_user["is_active"] == 1
 
-    def test_4_roles_seeded(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        roles = list_roles(db)
-        role_names = {r["name"] for r in roles}
-        assert role_names == {"owner", "tech", "service_writer", "apprentice"}
-
     def test_12_permissions_seeded(self, tmp_path):
         db = str(tmp_path / "t.db")
         init_db(db)
         with get_connection(db) as conn:
             cursor = conn.execute("SELECT COUNT(*) FROM permissions")
             assert cursor.fetchone()[0] == 12
-
-    def test_owner_has_all_permissions(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        owner = get_role_by_name("owner", db)
-        perms = list_role_permissions(owner["id"], db)
-        assert len(perms) == 12  # Owner has all
-
-    def test_tech_has_diagnostic_permissions(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        tech = get_role_by_name("tech", db)
-        perms = {p["name"] for p in list_role_permissions(tech["id"], db)}
-        assert "run_diagnose" in perms
-        assert "write_session" in perms
-        assert "manage_billing" not in perms  # Tech doesn't manage billing
-
-    def test_apprentice_is_read_mostly(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        app = get_role_by_name("apprentice", db)
-        perms = {p["name"] for p in list_role_permissions(app["id"], db)}
-        assert "read_garage" in perms
-        assert "write_garage" not in perms  # No write access
-        assert "manage_users" not in perms
 
     def test_user_id_columns_added(self, tmp_path):
         db = str(tmp_path / "t.db")
@@ -265,104 +227,6 @@ class TestUsersRepo:
 
 
 # --- Roles repo ---
-
-
-class TestRolesRepo:
-    def test_get_role_by_name(self, db):
-        owner = get_role_by_name("owner", db)
-        assert owner is not None
-        assert owner["name"] == "owner"
-
-    def test_assign_and_remove_role(self, db):
-        uid = create_user(User(username="ivy"), db)
-        tech = get_role_by_name("tech", db)
-        assign_role(uid, tech["id"], db)
-
-        user_roles = list_user_roles(uid, db)
-        role_names = {r["name"] for r in user_roles}
-        assert "tech" in role_names
-
-        # Remove
-        ok = remove_role(uid, tech["id"], db)
-        assert ok is True
-        assert list_user_roles(uid, db) == []
-
-    def test_assign_role_idempotent(self, db):
-        uid = create_user(User(username="jack"), db)
-        tech = get_role_by_name("tech", db)
-        assign_role(uid, tech["id"], db)
-        assign_role(uid, tech["id"], db)  # Second assign should no-op
-        assert len(list_user_roles(uid, db)) == 1
-
-    def test_multiple_roles_per_user(self, db):
-        uid = create_user(User(username="karen"), db)
-        tech = get_role_by_name("tech", db)
-        service = get_role_by_name("service_writer", db)
-        assign_role(uid, tech["id"], db)
-        assign_role(uid, service["id"], db)
-        roles = list_user_roles(uid, db)
-        assert len(roles) == 2
-
-    def test_user_has_permission_via_role(self, db):
-        uid = create_user(User(username="liam"), db)
-        tech = get_role_by_name("tech", db)
-        assign_role(uid, tech["id"], db)
-        # Tech should have run_diagnose
-        assert user_has_permission(uid, "run_diagnose", db) is True
-        # Tech should NOT have manage_billing
-        assert user_has_permission(uid, "manage_billing", db) is False
-
-    def test_user_has_permission_without_role(self, db):
-        uid = create_user(User(username="mia"), db)
-        # No roles assigned → no permissions
-        assert user_has_permission(uid, "read_garage", db) is False
-
-    def test_list_user_permissions_deduplicates(self, db):
-        uid = create_user(User(username="noah"), db)
-        # Both tech and service_writer have read_garage
-        tech = get_role_by_name("tech", db)
-        service = get_role_by_name("service_writer", db)
-        assign_role(uid, tech["id"], db)
-        assign_role(uid, service["id"], db)
-        perms = list_user_permissions(uid, db)
-        # read_garage should appear only once
-        assert perms.count("read_garage") == 1
-
-    def test_owner_has_manage_billing(self, db):
-        uid = create_user(User(username="olivia"), db)
-        owner = get_role_by_name("owner", db)
-        assign_role(uid, owner["id"], db)
-        assert user_has_permission(uid, "manage_billing", db) is True
-        assert user_has_permission(uid, "manage_users", db) is True
-
-    def test_apprentice_cannot_write_garage(self, db):
-        uid = create_user(User(username="pete"), db)
-        app = get_role_by_name("apprentice", db)
-        assign_role(uid, app["id"], db)
-        assert user_has_permission(uid, "read_garage", db) is True
-        assert user_has_permission(uid, "write_garage", db) is False
-
-    def test_create_custom_role(self, db):
-        rid = create_role(Role(name="fleet_manager", description="Fleet ops"), db)
-        role = get_role(rid, db)
-        assert role is not None
-        assert role["name"] == "fleet_manager"
-
-    def test_grant_and_revoke_permission(self, db):
-        rid = create_role(Role(name="inspector", description="Safety inspections"), db)
-        # Find read_garage permission
-        with get_connection(db) as conn:
-            cursor = conn.execute("SELECT id FROM permissions WHERE name = 'read_garage'")
-            perm_id = cursor.fetchone()[0]
-
-        grant_permission(rid, perm_id, db)
-        perms = [p["name"] for p in list_role_permissions(rid, db)]
-        assert "read_garage" in perms
-
-        ok = revoke_permission(rid, perm_id, db)
-        assert ok is True
-        perms_after = [p["name"] for p in list_role_permissions(rid, db)]
-        assert "read_garage" not in perms_after
 
 
 # --- Backward compatibility ---

@@ -4,32 +4,8 @@ from typing import Optional
 
 from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
-from motodiag.inventory.models import Recall
 
 
-def add_recall(recall: Recall, db_path: str | None = None) -> int:
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            """INSERT INTO recalls
-               (campaign_number, make, model, year_start, year_end,
-                description, severity, remedy, notification_date)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                recall.campaign_number, recall.make, recall.model,
-                recall.year_start, recall.year_end, recall.description,
-                recall.severity, recall.remedy, recall.notification_date,
-            ),
-        )
-        return cursor.lastrowid
-
-
-def get_recall(recall_id: int, db_path: str | None = None) -> Optional[dict]:
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            "SELECT * FROM recalls WHERE id = ?", (recall_id,),
-        )
-        row = cursor.fetchone()
-        return dict(row) if row else None
 
 
 def list_recalls_for_vehicle(
@@ -56,23 +32,4 @@ def list_recalls_for_vehicle(
         return [dict(r) for r in cursor.fetchall()]
 
 
-def list_recalls(
-    severity: Optional[str] = None, db_path: str | None = None,
-) -> list[dict]:
-    query = "SELECT * FROM recalls WHERE 1=1"
-    params: list = []
-    if severity is not None:
-        query += " AND severity = ?"
-        params.append(severity)
-    query += " ORDER BY campaign_number"
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(query, params)
-        return [dict(r) for r in cursor.fetchall()]
 
-
-def delete_recall(recall_id: int, db_path: str | None = None) -> bool:
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            "DELETE FROM recalls WHERE id = ?", (recall_id,),
-        )
-        return cursor.rowcount > 0

@@ -200,7 +200,7 @@ class TestTheKnownScale:
         new gap lands."""
         from support.integration_gaps_allowlist import ORPHANS
 
-        assert len(ORPHANS) == 104  # f9-noqa: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings) → 104 (244X: 244U's rule finally reached multi-line re-exports, +57). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
+        assert len(ORPHANS) == 96  # f9-noqa: → 96 (244Y deleted nine superseded defs and the gate then surfaced Permission, a model whose only constructor had gone);: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings) → 104 (244X: 244U's rule finally reached multi-line re-exports, +57). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
 
     def test_what_was_hidden_was_a_layer_not_a_scattering(self):
         """What the blind spot hid was a LAYER: twenty engine capabilities a

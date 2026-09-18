@@ -1,5 +1,8 @@
 """Phase 133 — Gate 5: CLI Integration Test.
 
+Phase 244Y removed the `import motodiag.cli.registry` smoke line: the
+registry was never adopted (cli/main.py registers directly) and is deleted.
+
 Pass/fail checkpoint for Track D (mechanic CLI, phases 122-132).
 
 Proves the full mechanic workflow wires together end-to-end on a single
@@ -716,5 +719,4 @@ class TestRegressionAgainstGateR:
         import motodiag.cli.theme  # noqa: F401  (Phase 129)
         import motodiag.cli.export  # noqa: F401  (Phase 132)
         import motodiag.cli.subscription  # noqa: F401  (Phase 118 helper)
-        import motodiag.cli.registry  # noqa: F401  (Phase 109)
         import motodiag.cli.main  # noqa: F401  (top-level glue)

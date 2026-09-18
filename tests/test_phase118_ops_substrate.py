@@ -9,7 +9,6 @@ Tests cover:
 - FK SET NULL: vendor→inventory_items, repair_plan→invoices, mechanic→appointments
 - Unique constraints (invoice_number, sku, vendor name, campaign_number)
 - JSON columns (model_applicable) round-trip
-- recalculate_invoice_totals computes subtotal + tax correctly
 - adjust_quantity/items_below_reorder work
 - list_recalls_for_vehicle year-range filter
 - list_upcoming + list_for_user on appointments
@@ -34,33 +33,25 @@ from motodiag.billing import (
     SubscriptionTier, SubscriptionStatus, PaymentStatus,
     Subscription, Payment,
     create_subscription, get_subscription, get_subscription_by_user,
-    list_subscriptions, update_subscription, delete_subscription,
+    update_subscription, delete_subscription,
     record_payment, get_payment, list_payments,
-    update_payment_status, delete_payment,
+    update_payment_status,
 )
 from motodiag.accounting import (
     InvoiceStatus, InvoiceLineItemType, Invoice, InvoiceLineItem,
-    create_invoice, get_invoice, get_invoice_by_number, list_invoices,
-    update_invoice, delete_invoice,
-    add_line_item, get_line_items, update_line_item, delete_line_item,
-    recalculate_invoice_totals,
+    create_invoice, get_invoice, get_invoice_by_number, delete_invoice,
+    add_line_item, get_line_items,
 )
 from motodiag.inventory import (
-    CoverageType, InventoryItem, Vendor, Recall, Warranty,
-    add_item, get_item, get_item_by_sku, list_items, update_item,
-    delete_item, adjust_quantity, items_below_reorder,
-    add_vendor, get_vendor, get_vendor_by_name, list_vendors,
-    update_vendor, delete_vendor,
-    add_recall, get_recall, list_recalls_for_vehicle, list_recalls,
-    delete_recall,
-    add_warranty, get_warranty, list_warranties_for_vehicle,
-    increment_claim_count, delete_warranty,
+    CoverageType, InventoryItem, Vendor, Warranty,
+    add_item, get_item, get_item_by_sku, adjust_quantity, items_below_reorder,
+    add_vendor, get_vendor, get_vendor_by_name, delete_vendor,
+    add_warranty, get_warranty, increment_claim_count,
 )
 from motodiag.scheduling import (
     AppointmentType, AppointmentStatus, Appointment,
     create_appointment, get_appointment, list_appointments,
-    list_upcoming, list_for_user, update_appointment,
-    cancel_appointment, complete_appointment, delete_appointment,
+    list_upcoming, cancel_appointment, complete_appointment,
 )
 
 
@@ -244,33 +235,6 @@ class TestAccounting:
         row = get_invoice_by_number("INV-XYZ", db)
         assert row is not None
 
-    def test_line_items_and_recalc(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        cid = _mk_customer(db)
-        iid = create_invoice(Invoice(customer_id=cid, invoice_number="INV-100"), db)
-
-        add_line_item(InvoiceLineItem(
-            invoice_id=iid, item_type=InvoiceLineItemType.LABOR,
-            description="Diagnostic labor", quantity=2.0,
-            unit_price=125.0, line_total=250.0,
-        ), db)
-        add_line_item(InvoiceLineItem(
-            invoice_id=iid, item_type=InvoiceLineItemType.PARTS,
-            description="Brake pad set", quantity=1.0,
-            unit_price=85.0, line_total=85.0,
-        ), db)
-        items = get_line_items(iid, db)
-        assert len(items) == 2
-
-        totals = recalculate_invoice_totals(iid, tax_rate=0.0875, db_path=db)
-        assert totals["subtotal"] == 335.0
-        assert round(totals["tax_amount"], 2) == round(335.0 * 0.0875, 2)
-        assert round(totals["total"], 2) == round(335.0 + 335.0 * 0.0875, 2)
-
-        row = get_invoice(iid, db)
-        assert row["subtotal"] == 335.0
-
     def test_cascade_deletes_line_items(self, tmp_path):
         db = str(tmp_path / "t.db")
         init_db(db)
@@ -351,23 +315,6 @@ class TestInventory:
         skus = [i["sku"] for i in low]
         assert "LOW" in skus
         assert "OK" not in skus
-
-    def test_recall_list_for_vehicle(self, tmp_path):
-        db = str(tmp_path / "t.db")
-        init_db(db)
-        add_recall(Recall(
-            campaign_number="21V-234", make="Honda",
-            year_start=2000, year_end=2005,
-            description="Brake caliper bolt torque issue",
-            severity="high",
-        ), db)
-        add_recall(Recall(
-            campaign_number="22V-111", make="Harley-Davidson",
-            description="Stator harness chafe",
-        ), db)
-        hits = list_recalls_for_vehicle("Honda", year=2001, db_path=db)
-        assert len(hits) == 1
-        assert hits[0]["campaign_number"] == "21V-234"
 
     def test_warranty_crud(self, tmp_path):
         db = str(tmp_path / "t.db")

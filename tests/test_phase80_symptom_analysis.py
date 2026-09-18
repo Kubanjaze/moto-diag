@@ -1,25 +1,20 @@
 """Phase 80 — Symptom analysis prompt engineering tests.
 
 Tests symptom categorization, urgency assessment, differential prompt building,
-and the SymptomAnalyzer two-pass approach with mocked API calls.
+(the SymptomAnalyzer two-pass class was removed at Phase 244Y).
 """
 
 import json
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
-import pytest
 
 from motodiag.engine.symptoms import (
     categorize_symptoms,
-    assess_urgency,
-    build_differential_prompt,
-    SymptomAnalyzer,
     SYMPTOM_CATEGORIES,
     CRITICAL_COMBINATIONS,
     SYMPTOM_ANALYSIS_PROMPT,
 )
 from motodiag.engine.client import DiagnosticClient
-from motodiag.engine.models import DiagnosticResponse, DiagnosticSeverity
 
 
 # --- Symptom categorization ---
@@ -78,91 +73,8 @@ class TestSymptomCategorization:
 # --- Urgency assessment ---
 
 
-class TestUrgencyAssessment:
-    def test_overheating_and_power_loss_critical(self):
-        alerts = assess_urgency(["overheating", "loss of power", "steam"])
-        assert len(alerts) >= 1
-        assert any("CRITICAL" in a for a in alerts)
-
-    def test_fuel_smell_and_wont_start_critical(self):
-        alerts = assess_urgency(["fuel smell", "won't start"])
-        assert len(alerts) >= 1
-        assert any("fire risk" in a.lower() for a in alerts)
-
-    def test_brake_failure_critical(self):
-        alerts = assess_urgency(["spongy brake lever", "brake fade"])
-        assert len(alerts) >= 1
-        assert any("brake" in a.lower() for a in alerts)
-
-    def test_no_critical_for_minor_symptoms(self):
-        alerts = assess_urgency(["rough idle"])
-        assert len(alerts) == 0
-
-    def test_no_critical_for_empty_symptoms(self):
-        alerts = assess_urgency([])
-        assert len(alerts) == 0
-
-    def test_noise_and_power_loss_warning(self):
-        alerts = assess_urgency(["noise", "loss of power", "check engine light on"])
-        assert len(alerts) >= 1
-        assert any("WARNING" in a or "CRITICAL" in a for a in alerts)
-
 
 # --- Differential prompt building ---
-
-
-class TestDifferentialPrompt:
-    def test_basic_prompt(self):
-        prompt = build_differential_prompt(
-            vehicle_context="Vehicle: 2015 Suzuki GSX-R600",
-            symptoms=["battery not charging", "dim lights"],
-        )
-        assert "2015 Suzuki GSX-R600" in prompt
-        assert "battery not charging" in prompt
-        assert "DiagnosticResponse" in prompt
-
-    def test_prompt_with_categories(self):
-        prompt = build_differential_prompt(
-            vehicle_context="Vehicle: 2007 Honda CBR600RR",
-            symptoms=["won't start"],
-            categorized_symptoms={"electrical": ["won't start"]},
-        )
-        assert "ELECTRICAL" in prompt
-
-    def test_prompt_with_urgency_alerts(self):
-        prompt = build_differential_prompt(
-            vehicle_context="Vehicle: 2003 Yamaha R6",
-            symptoms=["overheating", "loss of power"],
-            urgency_alerts=["CRITICAL: Possible head gasket failure"],
-        )
-        assert "SAFETY ALERTS" in prompt
-        assert "CRITICAL" in prompt
-
-    def test_prompt_with_knowledge_context(self):
-        issues = [
-            {
-                "title": "GSX-R600 stator failure",
-                "severity": "high",
-                "symptoms": ["battery not charging"],
-                "causes": ["Winding insulation breakdown"],
-                "fix_procedure": "Replace stator...",
-            }
-        ]
-        prompt = build_differential_prompt(
-            vehicle_context="Vehicle: 2015 Suzuki GSX-R600",
-            symptoms=["battery not charging"],
-            knowledge_matches=issues,
-        )
-        assert "GSX-R600 stator failure" in prompt
-        assert "Winding insulation breakdown" in prompt
-
-    def test_prompt_with_description(self):
-        prompt = build_differential_prompt(
-            vehicle_context="Vehicle: 2010 Kawasaki ZX-6R",
-            symptoms=["overheating"],
-            description="Only in traffic, fine on the highway",
-        )
-        assert "Only in traffic" in prompt
 
 
 # --- SymptomAnalyzer with mocked API ---
@@ -198,82 +110,6 @@ class TestSymptomAnalyzerMocked:
         client = DiagnosticClient(api_key="sk-test")
         client._client = mock_anthropic_client
         return client
-
-    def test_analyze_returns_response_and_metadata(self):
-        client = self._make_mock_client()
-        analyzer = SymptomAnalyzer(client)
-
-        response, usage, metadata = analyzer.analyze(
-            make="Suzuki",
-            model_name="GSX-R600",
-            year=2015,
-            symptoms=["battery not charging"],
-        )
-
-        assert isinstance(response, DiagnosticResponse)
-        assert usage.input_tokens == 800
-        assert "categorized_symptoms" in metadata
-        assert "urgency_alerts" in metadata
-        assert "electrical" in metadata["categorized_symptoms"]
-
-    def test_analyze_with_knowledge_context(self):
-        client = self._make_mock_client()
-        analyzer = SymptomAnalyzer(client)
-
-        known_issues = [
-            {
-                "title": "Stator failure",
-                "severity": "high",
-                "symptoms": ["battery not charging"],
-                "causes": ["Winding insulation breakdown"],
-                "fix_procedure": "Replace stator + MOSFET reg/rec...",
-            }
-        ]
-
-        response, usage, metadata = analyzer.analyze(
-            make="Suzuki",
-            model_name="GSX-R600",
-            year=2015,
-            symptoms=["battery not charging"],
-            known_issues=known_issues,
-        )
-
-        assert metadata["knowledge_matches_count"] == 1
-
-        # Verify the knowledge context was passed to the API call
-        call_args = client._client.messages.create.call_args
-        user_message = call_args[1]["messages"][0]["content"]
-        assert "Stator failure" in user_message
-
-    def test_analyze_urgency_detection(self):
-        client = self._make_mock_client()
-        analyzer = SymptomAnalyzer(client)
-
-        response, usage, metadata = analyzer.analyze(
-            make="Honda",
-            model_name="CBR600RR",
-            year=2007,
-            symptoms=["overheating", "loss of power", "steam"],
-        )
-
-        assert len(metadata["urgency_alerts"]) >= 1
-        assert any("CRITICAL" in a for a in metadata["urgency_alerts"])
-
-    def test_analyze_uses_symptom_analysis_prompt(self):
-        client = self._make_mock_client()
-        analyzer = SymptomAnalyzer(client)
-
-        analyzer.analyze(
-            make="Kawasaki",
-            model_name="ZX-6R",
-            year=2012,
-            symptoms=["noise", "rough idle"],
-        )
-
-        call_args = client._client.messages.create.call_args
-        system_prompt = call_args[1]["system"]
-        assert "DIFFERENTIAL DIAGNOSIS" in system_prompt
-        assert "SAFETY CHECK" in system_prompt
 
 
 # --- Prompt template validation ---

@@ -61,10 +61,6 @@ def _current() -> frozenset[str]:
 
 
 class TestTheTreeMatchesTheTable:
-    def test_history_and_retrieval_are_reported(self):
-        """The two that opened the phase."""
-        assert {"motodiag.engine.history", "motodiag.engine.retrieval"} <= _current()
-
     def test_no_new_module_island(self):
         new = _current() - set(MODULE_ISLANDS)
         assert not new, (
@@ -108,7 +104,7 @@ class TestTheTreeMatchesTheTable:
         assert not (_current() & set(UNREACHABLE_MODULES))
 
     def test_the_known_scale(self):
-        assert len(MODULE_ISLANDS) == 19  # f9-noqa: ssot-pin fixture-data: Phase 244W's finding — 19 modules / 4,270 lines invisible to the gate on 2026-09-17, converged on by four independent designs. The new/stale tests above are what hold the tree to the list; this literal is the record of what was found.
+        assert len(MODULE_ISLANDS) == 14  # f9-noqa: → 13 (244Y deleted six superseded modules) → 14 (244Y: inventory/models surfaced as substrate once its last live import went);: ssot-pin fixture-data: Phase 244W's finding — 19 modules / 4,270 lines invisible to the gate on 2026-09-17, converged on by four independent designs. The new/stale tests above are what hold the tree to the list; this literal is the record of what was found.
 
 
 # ---------------------------------------------------------------------------
@@ -150,9 +146,9 @@ class TestEveryEntryExplainsItself:
         number, not a mood."""
         engine = {k: v for k, v in MODULE_ISLANDS.items()
                   if k.startswith("motodiag.engine.") and k != "motodiag.engine.history"}
-        assert len(engine) == 9
+        assert len(engine) == 6  # 244Y deleted cost, evaluation, retrieval
         scored = [v[1] for v in engine.values() if "onsensus" in v[1]]
-        assert len(scored) >= 8
+        assert len(scored) == len(engine), "every remaining engine entry carries its audit score"
 
 
 # ---------------------------------------------------------------------------

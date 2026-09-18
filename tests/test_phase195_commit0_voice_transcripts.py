@@ -22,10 +22,8 @@ from __future__ import annotations
 
 import io
 import json as _json
-import struct
 import wave
-from datetime import datetime, timedelta, timezone
-from pathlib import Path
+from datetime import datetime, timezone
 
 import pytest
 from fastapi.testclient import TestClient
@@ -39,7 +37,6 @@ from motodiag.media.audio_pipeline import (
     inspect_audio,
 )
 from motodiag.media.audio_sweep import (
-    DEFAULT_RETENTION_DAYS,
     prune_old_audio,
 )
 from motodiag.media.transcript_extraction import (
@@ -47,16 +44,9 @@ from motodiag.media.transcript_extraction import (
     split_into_phrases,
 )
 from motodiag.shop import (
-    add_shop_member, create_shop, create_work_order, seed_first_owner,
-)
-from motodiag.shop.extracted_symptom_repo import (
-    confirm_extracted_symptom,
-    create_extracted_symptom,
-    get_extracted_symptom,
-    list_for_transcript,
+    create_shop, create_work_order, seed_first_owner,
 )
 from motodiag.shop.transcript_repo import (
-    VoiceTranscriptQuotaExceededError,
     count_voice_transcripts_this_month_for_uploader,
     count_wo_voice_transcripts,
     create_voice_transcript,
@@ -262,30 +252,6 @@ class TestMigration042:
                     (transcript_id,),
                 )
 
-    def test_fk_cascade_on_wo_delete(self, api_db, authed):
-        user_id, _, _, wo_id = authed
-        transcript_id = create_voice_transcript(
-            work_order_id=wo_id, audio_path="p.m4a",
-            audio_size_bytes=100, audio_format="m4a", audio_sha256="a",
-            duration_ms=1000, captured_at="2026-05-06",
-            uploaded_by_user_id=user_id, db_path=api_db,
-        )
-        create_extracted_symptom(
-            transcript_id=transcript_id, text="rough idle",
-            db_path=api_db,
-        )
-        with get_connection(api_db) as conn:
-            conn.execute("PRAGMA foreign_keys = ON")
-            conn.execute("DELETE FROM work_orders WHERE id = ?", (wo_id,))
-        # Both transcript + extracted_symptom should be gone
-        assert get_voice_transcript(transcript_id, db_path=api_db) is None
-        with get_connection(api_db) as conn:
-            cur = conn.execute(
-                "SELECT COUNT(*) FROM extracted_symptoms "
-                "WHERE transcript_id = ?", (transcript_id,),
-            )
-            assert cur.fetchone()[0] == 0
-
 
 # ---------------------------------------------------------------------------
 # 2. audio_pipeline (Phase 195 substrate — format detection only)
@@ -457,67 +423,6 @@ class TestTranscriptRepo:
             user_id, db_path=api_db,
         ) == 5
 
-
-class TestExtractedSymptomRepo:
-
-    def test_confirm_flips_method_when_text_changes(self, api_db, authed):
-        user_id, _, _, wo_id = authed
-        tid = create_voice_transcript(
-            work_order_id=wo_id, audio_path="p.m4a",
-            audio_size_bytes=100, audio_format="m4a", audio_sha256="a",
-            duration_ms=1000, captured_at="2026-05-06",
-            uploaded_by_user_id=user_id, db_path=api_db,
-        )
-        eid = create_extracted_symptom(
-            transcript_id=tid, text="rough idle", category="fuel",
-            db_path=api_db,
-        )
-        confirm_extracted_symptom(
-            eid, confirmed_by_user_id=user_id,
-            text="rough idle when warm", db_path=api_db,
-        )
-        row = get_extracted_symptom(eid, db_path=api_db)
-        assert row["text"] == "rough idle when warm"
-        assert row["extraction_method"] == "manual_edit"
-        assert row["confirmed_by_user_id"] == user_id
-
-    def test_confirm_keeps_method_when_text_unchanged(
-        self, api_db, authed,
-    ):
-        user_id, _, _, wo_id = authed
-        tid = create_voice_transcript(
-            work_order_id=wo_id, audio_path="p.m4a",
-            audio_size_bytes=100, audio_format="m4a", audio_sha256="a",
-            duration_ms=1000, captured_at="2026-05-06",
-            uploaded_by_user_id=user_id, db_path=api_db,
-        )
-        eid = create_extracted_symptom(
-            transcript_id=tid, text="rough idle", category="fuel",
-            db_path=api_db,
-        )
-        confirm_extracted_symptom(
-            eid, confirmed_by_user_id=user_id, db_path=api_db,
-        )
-        row = get_extracted_symptom(eid, db_path=api_db)
-        assert row["text"] == "rough idle"  # unchanged
-        assert row["extraction_method"] == "keyword"  # unchanged
-        assert row["confirmed_by_user_id"] == user_id
-
-    def test_list_for_transcript_orders_by_id_asc(self, api_db, authed):
-        user_id, _, _, wo_id = authed
-        tid = create_voice_transcript(
-            work_order_id=wo_id, audio_path="p.m4a",
-            audio_size_bytes=100, audio_format="m4a", audio_sha256="a",
-            duration_ms=1000, captured_at="2026-05-06",
-            uploaded_by_user_id=user_id, db_path=api_db,
-        )
-        ids = []
-        for text in ("first", "second", "third"):
-            ids.append(create_extracted_symptom(
-                transcript_id=tid, text=text, db_path=api_db,
-            ))
-        rows = list_for_transcript(tid, db_path=api_db)
-        assert [r["id"] for r in rows] == ids
 
 
 # ---------------------------------------------------------------------------

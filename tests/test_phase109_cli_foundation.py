@@ -1,25 +1,13 @@
 """Phase 109 — CLI foundation + subscription tier tests."""
 
 import os
-import pytest
 from unittest.mock import patch
 
 from motodiag.cli.subscription import (
     SubscriptionTier,
-    TierFeatures,
     TIER_LIMITS,
     current_tier,
-    get_tier_features,
-    has_feature,
-    requires_tier,
-    TierAccessDenied,
     format_tier_comparison,
-)
-from motodiag.cli.registry import (
-    CommandInfo,
-    CommandRegistry,
-    get_registry,
-    register_command,
 )
 
 
@@ -141,104 +129,9 @@ class TestCurrentTier:
 # --- has_feature() ---
 
 
-class TestHasFeature:
-    def test_individual_lacks_export_pdf(self):
-        assert has_feature("can_export_pdf", SubscriptionTier.INDIVIDUAL) is False
-
-    def test_shop_has_export_pdf(self):
-        assert has_feature("can_export_pdf", SubscriptionTier.SHOP) is True
-
-    def test_company_has_api_access(self):
-        assert has_feature("can_use_api", SubscriptionTier.COMPANY) is True
-
-    def test_shop_lacks_api_access(self):
-        assert has_feature("can_use_api", SubscriptionTier.SHOP) is False
-
-    def test_unknown_feature_returns_false(self):
-        assert has_feature("can_teleport", SubscriptionTier.COMPANY) is False
-
 
 # --- requires_tier decorator ---
 
-
-class TestRequiresTier:
-    def test_allowed_tier_passes(self):
-        @requires_tier(SubscriptionTier.INDIVIDUAL)
-        def my_command():
-            return "success"
-
-        with patch.dict(os.environ, {"MOTODIAG_SUBSCRIPTION_TIER": "shop"}):
-            assert my_command() == "success"
-
-    def test_exact_tier_passes(self):
-        @requires_tier(SubscriptionTier.SHOP)
-        def my_command():
-            return "success"
-
-        with patch.dict(os.environ, {"MOTODIAG_SUBSCRIPTION_TIER": "shop"}):
-            assert my_command() == "success"
-
-    def test_insufficient_tier_hard_mode_raises(self):
-        @requires_tier(SubscriptionTier.SHOP)
-        def my_command():
-            return "success"
-
-        with patch.dict(os.environ, {
-            "MOTODIAG_SUBSCRIPTION_TIER": "individual",
-            "MOTODIAG_PAYWALL_MODE": "hard",
-        }):
-            with pytest.raises(TierAccessDenied):
-                my_command()
-
-    def test_insufficient_tier_soft_mode_warns_but_allows(self):
-        """Soft mode (dev default) allows execution with a warning."""
-        @requires_tier(SubscriptionTier.SHOP)
-        def my_command():
-            return "success"
-
-        with patch.dict(os.environ, {
-            "MOTODIAG_SUBSCRIPTION_TIER": "individual",
-            "MOTODIAG_PAYWALL_MODE": "soft",
-        }):
-            # Should NOT raise — should return success
-            assert my_command() == "success"
-
-    def test_default_mode_is_soft(self):
-        """With no MOTODIAG_PAYWALL_MODE set, default is soft (dev mode)."""
-        @requires_tier(SubscriptionTier.COMPANY)
-        def premium():
-            return "allowed in dev"
-
-        with patch.dict(os.environ, {"MOTODIAG_SUBSCRIPTION_TIER": "individual"}, clear=True):
-            # No paywall mode set → soft by default
-            assert premium() == "allowed in dev"
-
-    def test_company_tier_required_hard_mode(self):
-        @requires_tier(SubscriptionTier.COMPANY, feature_name="api_access")
-        def api_command():
-            return "ok"
-
-        with patch.dict(os.environ, {
-            "MOTODIAG_SUBSCRIPTION_TIER": "shop",
-            "MOTODIAG_PAYWALL_MODE": "hard",
-        }):
-            with pytest.raises(TierAccessDenied) as exc_info:
-                api_command()
-            assert "api_access" in str(exc_info.value)
-
-    def test_exception_includes_tier_info(self):
-        @requires_tier(SubscriptionTier.COMPANY)
-        def premium_cmd():
-            pass
-
-        with patch.dict(os.environ, {
-            "MOTODIAG_SUBSCRIPTION_TIER": "individual",
-            "MOTODIAG_PAYWALL_MODE": "hard",
-        }):
-            with pytest.raises(TierAccessDenied) as exc_info:
-                premium_cmd()
-            assert exc_info.value.required_tier == SubscriptionTier.COMPANY
-            assert exc_info.value.current_tier_val == SubscriptionTier.INDIVIDUAL
 
 
 # --- format_tier_comparison ---
@@ -266,87 +159,4 @@ class TestFormatTierComparison:
 # --- CommandRegistry ---
 
 
-class TestCommandRegistry:
-    def test_empty_registry(self):
-        reg = CommandRegistry()
-        assert reg.count() == 0
-        assert reg.list_commands() == []
 
-    def test_register_command(self):
-        reg = CommandRegistry()
-
-        def my_cmd():
-            return "hi"
-
-        reg.register("test", my_cmd, description="A test", group="main", added_in_phase=109)
-        assert reg.count() == 1
-        assert reg.is_registered("test")
-        info = reg.get("test")
-        assert info is not None
-        assert info.name == "test"
-        assert info.description == "A test"
-
-    def test_get_callback(self):
-        reg = CommandRegistry()
-
-        def my_cmd():
-            return "hello"
-
-        reg.register("greet", my_cmd)
-        cb = reg.get_callback("greet")
-        assert cb is not None
-        assert cb() == "hello"
-
-    def test_list_by_group(self):
-        reg = CommandRegistry()
-        reg.register("a", lambda: None, group="main")
-        reg.register("b", lambda: None, group="main")
-        reg.register("c", lambda: None, group="admin")
-
-        main = reg.list_commands(group="main")
-        admin = reg.list_commands(group="admin")
-        assert len(main) == 2
-        assert len(admin) == 1
-
-    def test_groups(self):
-        reg = CommandRegistry()
-        reg.register("a", lambda: None, group="main")
-        reg.register("b", lambda: None, group="diagnostic")
-        reg.register("c", lambda: None, group="admin")
-        assert set(reg.groups()) == {"main", "diagnostic", "admin"}
-
-    def test_clear(self):
-        reg = CommandRegistry()
-        reg.register("a", lambda: None)
-        reg.clear()
-        assert reg.count() == 0
-
-    def test_register_with_tier_requirement(self):
-        reg = CommandRegistry()
-        reg.register("premium", lambda: None, required_tier="shop")
-        info = reg.get("premium")
-        assert info.required_tier == "shop"
-
-
-class TestGlobalRegistry:
-    def test_global_registry_is_singleton(self):
-        reg1 = get_registry()
-        reg2 = get_registry()
-        assert reg1 is reg2
-
-    def test_register_command_decorator(self):
-        # Use a fresh registry state for isolation
-        reg = get_registry()
-        initial_count = reg.count()
-
-        @register_command("phase109_test_cmd", description="Test", added_in_phase=109)
-        def _test_cmd():
-            return "test_result"
-
-        assert reg.is_registered("phase109_test_cmd")
-        info = reg.get("phase109_test_cmd")
-        assert info.added_in_phase == 109
-
-        # Clean up to avoid polluting other tests
-        reg._commands.pop("phase109_test_cmd", None)
-        reg._callbacks.pop("phase109_test_cmd", None)

@@ -36,36 +36,6 @@ def _row_to_dict(row) -> Optional[dict]:
 # ---------------------------------------------------------------------------
 
 
-def create_extracted_symptom(
-    transcript_id: int,
-    text: str,
-    extraction_method: ExtractionMethod = "keyword",
-    category: Optional[str] = None,
-    linked_symptom_id: Optional[int] = None,
-    confidence: float = 1.0,
-    segment_start_ms: Optional[int] = None,
-    segment_end_ms: Optional[int] = None,
-    db_path: Optional[str] = None,
-) -> int:
-    """Insert a new ``extracted_symptoms`` row; return id."""
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            """INSERT INTO extracted_symptoms (
-                   transcript_id, text, category,
-                   linked_symptom_id, confidence,
-                   extraction_method,
-                   segment_start_ms, segment_end_ms
-               )
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?)""",
-            (
-                transcript_id, text, category,
-                linked_symptom_id, confidence,
-                extraction_method,
-                segment_start_ms, segment_end_ms,
-            ),
-        )
-        return int(cursor.lastrowid)
-
 
 def get_extracted_symptom(
     extracted_id: int, db_path: Optional[str] = None,

@@ -45,9 +45,6 @@ _PRICING = (
 
 # Dotted module name -> (classification, reason)
 UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
-    "motodiag.cli.registry": ("superseded",
-        "Phase 109 command registry, never adopted: cli/main.py registers "
-        "every group with a direct register_*(cli) call instead."),
     "motodiag.core.logging": ("unwired-feature",
         "Phase 10 structured logging + audit trail. setup_logging has a test "
         "and no production caller, so the served app never configures its "
@@ -136,12 +133,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "shop/intake_repo.py::require_intake": ("public-api",
         "Raising variant of get_intake (IntakeNotFoundError on a miss); no "
         "caller uses this form."),
-    "shop/extracted_symptom_repo.py::create_extracted_symptom": ("superseded",
-        "Wired in by Phase 195 Commit 0 (api/routes/transcripts.py), removed "
-        "by Phase 195B Commit 1 when extraction moved to the async Claude "
-        "pipeline, which writes rows through the repo's other INSERT. "
-        "Reclassified from unwired-feature on 2026-09-17: it was reachable "
-        "once and was replaced, which makes it superseded, not unreachable."),
     "shop/extracted_symptom_repo.py::soft_delete_extracted_symptom": ("unwired-feature",
         "Soft delete with no route or command that calls it."),
     "shop/shop_repo.py::reactivate_shop": ("unwired-feature",
@@ -155,12 +146,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "No user path edits a fleet's description."),
 
     # --- superseded ---
-    "cli/subscription.py::requires_tier": ("superseded",
-        "CLI tier decorator never applied. The CLI enforces tier inline "
-        "(soft enforcement in diagnose/code) and the API through "
-        "auth.deps.require_tier. Not a gap in enforcement."),
-    "cli/subscription.py::has_feature": ("superseded",
-        "Feature check belonging to the unused requires_tier decorator."),
 
     # --- test infrastructure ---
     "core/config.py::reset_settings": ("test-infra", _TEST_RESET),
@@ -228,14 +213,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "prompt is assembled from vehicle + symptom + knowledge "
         "context only, and there is no parameter for service data "
         "anywhere in that path. "),
-    "engine/symptoms.py::SymptomAnalyzer": ("superseded",
-        "Phase 80's two-pass symptom entry point. The same job — "
-        "symptoms plus knowledge-base matches in, DiagnosticResponse "
-        "plus TokenUsage out — is done live by "
-        "DiagnosticClient.diagnose(), which the CLI calls through "
-        "cli/diagnose.py:341 after its own KB pass, and which has "
-        "since moved ahead: Phase 244Q switched the live path to "
-        "ask_st… "),
     "engine/wiring.py::build_wiring_context": ("unwired-feature",
         "Renders a circuit reference — wire colours, expected "
         "readings, test points, common failures, diagnostic tips — as "
@@ -287,10 +264,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Repository helper kept as library surface. Only "
         "accounting/__init__.py names it; hidden until Phase 244X blanked "
         "parenthesised multi-line re-exports."),
-    "accounting/invoice_repo.py::recalculate_invoice_totals": ("superseded",
-        "shop/invoicing.py computes invoice totals itself on the live path. "
-        "Only accounting/__init__.py names it; hidden until Phase 244X "
-        "blanked parenthesised multi-line re-exports."),
     "accounting/invoice_repo.py::update_line_item": ("public-api",
         "Repository helper kept as library surface. Only "
         "accounting/__init__.py names it; hidden until Phase 244X blanked "
@@ -339,6 +312,10 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Repository helper kept as library surface. Only "
         "advanced/__init__.py names it; hidden until Phase 244X blanked "
         "parenthesised multi-line re-exports."),
+    "auth/models.py::Permission": ("public-api",
+        "Data model for the live permissions table, which shop/rbac.py reads "
+        "with its own SQL. Its only constructor, auth/roles_repo, was removed at "
+        "Phase 244Y; its siblings below were already here."),
     "auth/models.py::PermissionName": ("public-api",
         "Data model exported for callers that never came. Only "
         "auth/__init__.py names it; hidden until Phase 244X blanked "
@@ -444,35 +421,12 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Data model exported for callers that never came. Only "
         "intake/__init__.py names it; hidden until Phase 244X blanked "
         "parenthesised multi-line re-exports."),
-    "inventory/recall_repo.py::add_recall": ("superseded",
-        "Phase 118 recall CRUD over the same `recalls` table "
-        "advanced/recall_repo (Phase 155) owns and `advanced recall` "
-        "commands use. Superseded for these four; the file itself is not "
-        "a duplicate — advanced/recall_repo.py:301 delegates to its "
-        "list_recalls_for_vehicle, which is live. Only inventory/__init__.py "
-        "names it; hidden until Phase 244X blanked parenthesised multi-line "
-        "re-exports."),
-    "inventory/recall_repo.py::delete_recall": ("superseded",
-        "Superseded by advanced/recall_repo; see add_recall for the one live "
-        "function this file keeps. Only "
-        "inventory/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
-    "inventory/recall_repo.py::get_recall": ("superseded",
-        "Superseded by advanced/recall_repo; see add_recall for the one live "
-        "function this file keeps. Only "
-        "inventory/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
-    "inventory/recall_repo.py::list_recalls": ("superseded",
-        "Superseded by advanced/recall_repo; see add_recall for the one live "
-        "function this file keeps. Only "
-        "inventory/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
-    "memory/compile.py::compile_all": ("superseded",
-        "One-line wrapper over compile_all_detailed; the detailed forms are "
+    "memory/compile.py::compile_all": ("public-api",
+        "Kept: 45 tests in test_phase244M call it (244Y). One-line wrapper over compile_all_detailed; the detailed forms are "
         "the live ones since 209C. Only memory/__init__.py names it; hidden "
         "until Phase 244X blanked parenthesised multi-line re-exports."),
-    "memory/compile.py::compile_vehicle": ("superseded",
-        "One-line wrapper returning .inserted of compile_vehicle_detailed, "
+    "memory/compile.py::compile_vehicle": ("public-api",
+        "Kept: 45 tests in test_phase244M call it (244Y). One-line wrapper returning .inserted of compile_vehicle_detailed, "
         "which 209C wired. Only memory/__init__.py names it; hidden until "
         "Phase 244X blanked parenthesised multi-line re-exports."),
     "obd_reports/repo.py::list_failures": ("unwired-feature",
@@ -528,23 +482,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
 _SUBSTRATE_118 = "Phase 118 substrate (billing/accounting/inventory/scheduling)"
 MODULE_ISLANDS: dict[str, tuple[str, str]] = {
     # -- superseded: a live implementation does the job elsewhere -----------
-    "motodiag.engine.history": ("superseded",
-        "Phase 88 in-memory session store (DiagnosticHistory/DiagnosticRecord). "
-        "The live store is core/session_repo over diagnostic_sessions. Carries a "
-        "3.0/1.0/0.5/2.0 scoring ladder (history.py:287-311) never measured. Its "
-        "only referrer is engine/retrieval.py, also in this table."),
-    "motodiag.hardware.protocols.models": ("superseded",
-        "Phase 134 containers (PIDResponse, DTCReadResult, ProtocolConnection). "
-        "The docstring says the adapters populate these; the adapters Phases "
-        "135-139 built return plain list[str]/Optional[int] through "
-        "ProtocolAdapter (base.py:101-143), and nothing in the tree constructs "
-        "any of the three. An unfulfilled contract."),
-    "motodiag.auth.roles_repo": ("superseded",
-        "Phase 112 RBAC repo (create_role, assign_role, grant_permission...). "
-        "The live permission check, shop/rbac.py:299-320, walks the same "
-        "roles/role_permissions/permissions tables with its own SQL; the write "
-        "path exists only as migration-005 seed data. Nothing calls these to "
-        "change a role."),
 
     # -- substrate: built ahead for a named roadmap row ----------------------
     "motodiag.media.photo_annotation": ("substrate",
@@ -554,6 +491,11 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
     "motodiag.media.photo_annotation_repo": ("substrate",
         "Phase 119 CRUD over photo_annotations, awaiting Phase 307. The table "
         "has no live reader or writer."),
+    "motodiag.inventory.models": ("substrate",
+        _SUBSTRATE_118 + ": the pydantic models for inventory_items, vendors, "
+        "warranties and recalls, awaiting Phases 279-286 with the three repos "
+        "below. Surfaced at Phase 244Y as a third-order island: deleting the "
+        "superseded recall CRUD removed its last live import."),
     "motodiag.inventory.item_repo": ("substrate",
         _SUBSTRATE_118 + ": inventory-item CRUD over inventory_items, awaiting "
         "Phase 279 (parts inventory with reorder points). The live parts path "
@@ -578,11 +520,6 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
         "core/migrations.py:545 — the case that made Phase 244W blank prose."),
 
     # -- unwired-feature: complete, tested, reachable by nothing -------------
-    "motodiag.engine.retrieval": ("unwired-feature",
-        "Phase 89 similar-case retrieval (CaseRetriever; symptom/vehicle/year "
-        "weights 0.50/0.30/0.20 at retrieval.py:44-46, never measured). Reads "
-        "only from engine/history.py, above, so it cannot run against real "
-        "sessions without a rewrite."),
     "motodiag.engine.confidence": ("unwired-feature",
         "Phase 85 evidence-to-confidence scorer: 19 hardcoded numbers and a "
         "non-monotonic curve (audit 2026-09-17, consensus 2.3/10). Its two "
@@ -591,15 +528,6 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
         "Phase 90 symptom-cluster rules. Whole-string matching returns nothing "
         "on real input, and CORR-001 diagnoses a coolant-jacket leak on an "
         "air-cooled twin (correlation.py:71-82). Consensus 3.0/10."),
-    "motodiag.engine.cost": ("unwired-feature",
-        "Phase 86 repair-cost estimator: floats-as-dollars beside an "
-        "integer-cents invoicing path (shop/invoicing.py), hardcoded labour "
-        "rates that disagree with themselves (cost.py:28 vs :97). Third "
-        "costing implementation; consensus 2.0/10, delete candidate."),
-    "motodiag.engine.evaluation": ("unwired-feature",
-        "Phase 91 quality scorecard. Its data source, diagnostic_feedback, has "
-        "0 rows and no writer; absent data scores as perfect "
-        "(evaluation.py:102-122). Consensus 2.0/10, delete candidate."),
     "motodiag.engine.intermittent": ("unwired-feature",
         "Phase 87: 12 authored intermittent-fault patterns. Unbounded substring "
         "keyword matching (intermittent.py:584) ranks false positives above "

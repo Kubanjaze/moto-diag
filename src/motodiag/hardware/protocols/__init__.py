@@ -17,9 +17,6 @@ from this package directly)::
 
     from motodiag.hardware.protocols import (
         ProtocolAdapter,
-        ProtocolConnection,
-        DTCReadResult,
-        PIDResponse,
         ProtocolError,
         ConnectionError,
         TimeoutError,
@@ -36,19 +33,11 @@ from motodiag.hardware.protocols.exceptions import (
     UnsupportedCommandError,
 )
 from motodiag.hardware.protocols.j1850 import J1850Adapter
-from motodiag.hardware.protocols.models import (
-    DTCReadResult,
-    PIDResponse,
-    ProtocolConnection,
-)
 
 __all__ = [
     "ProtocolAdapter",
     "ELM327Adapter",
     "J1850Adapter",
-    "ProtocolConnection",
-    "DTCReadResult",
-    "PIDResponse",
     "ProtocolError",
     "ConnectionError",
     "TimeoutError",

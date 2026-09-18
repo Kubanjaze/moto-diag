@@ -11,10 +11,7 @@ without reaching into the ``protocols`` submodule.
 
 from motodiag.hardware.protocols import (
     ConnectionError,
-    DTCReadResult,
-    PIDResponse,
     ProtocolAdapter,
-    ProtocolConnection,
     ProtocolError,
     TimeoutError,
     UnsupportedCommandError,
@@ -22,9 +19,6 @@ from motodiag.hardware.protocols import (
 
 __all__ = [
     "ProtocolAdapter",
-    "ProtocolConnection",
-    "DTCReadResult",
-    "PIDResponse",
     "ProtocolError",
     "ConnectionError",
     "TimeoutError",
