@@ -361,7 +361,7 @@ It's reclassified in the allowlist, and the Results count below now reads 32.
 |---|---|
 | Modules reachable from entry points | **218 / 256** |
 | Unreachable modules | **38** (~15%), every one classified |
-| Orphans inside live modules | **47** (78 in total; 31 sit inside unreachable modules and aren't double-counted) |
+| Orphans inside live modules | **47** (78 in total; 31 sit inside unreachable modules and aren't double-counted) *— corrected by Phase 244U: the scanner could not see a name whose only references were a package re-export, because an `__init__` writes it twice (the import alias and `__all__`). With that fixed the live count is 66. `SafetyChecker` is the name that proved it: Phase 241 recorded it had no caller and this gate never listed it.* |
 | Classification | `unwired-feature` **32** · `public-api` 21 · `substrate` 16 · `test-infra` 9 · `superseded` **7** *(33 / 6 at close; #30 reclassified in v1.2)* |
 | Largest unwired block | Track C2 audio intelligence — 10 modules, marked ✅ on the roadmap |
 | Gate tests | **107**, in 3.3s (from 52s) |

@@ -81,10 +81,62 @@ def _package_of(path: Path, root: Path) -> str:
     return rel.parts[0] if len(rel.parts) > 1 else rel.stem
 
 
+_FROM_IMPORT = re.compile(r"(from\s+[\w\.]+\s+import\s*\(?)([^)\n]*\)?)")
+_ALL_ASSIGN = re.compile(r"__all__\s*=\s*[\[\(](?:[^\]\)]*)[\]\)]", re.S)
+_STRING_LITERAL = re.compile(r"\"[^\"]*\"|'[^']*'")
+
+
+def _blank_identifiers(text: str) -> str:
+    return _IDENTIFIER_FOR_BLANKING.sub(lambda m: "_" * len(m.group(0)), text)
+
+
+_IDENTIFIER_FOR_BLANKING = re.compile(r"[A-Za-z_][A-Za-z0-9_]*")
+
+
+def blank_exports(source: str, *, is_init: bool) -> str:
+    """Blank re-exported names so a re-export stops reading as a use.
+
+    Phase 244U. The scanner counts identifiers, and a package re-export writes
+    the name twice — once in the ``from … import`` alias list, once in
+    ``__all__`` — so every name a package exports looked referenced whether or
+    not anything called it. ``SafetyChecker`` is the proof: Phase 241 recorded
+    that it had no caller, ``engine/__init__`` re-exported it, and the gate
+    stayed silent until Phase 244T wired it four phases later.
+
+    **Both halves are required.** Measured on this tree: blanking the alias
+    lists alone reveals nothing at all (46 orphans, unchanged), blanking
+    ``__all__`` alone reveals 3, and together they reveal 20 — because
+    blanking one occurrence leaves the other standing. An implementer who
+    ships the first half, sees a green gate and stops has learned the opposite
+    of the truth.
+
+    The module path in a ``from`` statement is deliberately left intact:
+    :func:`find_unreachable_modules` walks imports for the reachability half
+    of the gate, and blanking the path would break it.
+    """
+    out = _ALL_ASSIGN.sub(
+        lambda m: _STRING_LITERAL.sub(
+            lambda s: s.group(0)[0] + "_" * (len(s.group(0)) - 2) + s.group(0)[0],
+            m.group(0),
+        ),
+        source,
+    )
+    if is_init:
+        out = _FROM_IMPORT.sub(
+            lambda m: m.group(1) + _blank_identifiers(m.group(2)), out,
+        )
+    return out
+
+
 def _load(root: Path) -> tuple[dict[Path, str], dict[Path, str]]:
     raw = {p: p.read_text(encoding="utf-8", errors="replace")
            for p in _source_files(root)}
-    code = {p: blank_comments_and_docstrings(s) for p, s in raw.items()}
+    code = {
+        p: blank_exports(
+            blank_comments_and_docstrings(s), is_init=(p.name == "__init__.py"),
+        )
+        for p, s in raw.items()
+    }
     return raw, code
 
 

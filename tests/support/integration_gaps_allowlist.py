@@ -220,4 +220,132 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "core/models.py::LaborRateType": ("unwired-feature", _PRICING_MODEL),
     "core/models.py::PlanItemType": ("unwired-feature", _PRICING_MODEL),
     "core/models.py::RepairPlanStatus": ("unwired-feature", _PRICING_MODEL),
+
+    # ---------------------------------------------------------------
+    # Phase 244U — newly visible once a re-export stopped counting as a
+    # use. These 20 were always orphans; the scanner could not see them
+    # because a package __init__ writes each name twice (the import
+    # alias and __all__). Classified by four readers and challenged by
+    # four more; 19 stood, one reason was corrected.
+    # ---------------------------------------------------------------
+    "engine/confidence.py::rank_diagnoses": ("unwired-feature",
+        "Ranking step of the Phase 83 evidence-weighted confidence "
+        "feature. It sorts ConfidenceScore objects, and the only code "
+        "that builds a ConfidenceScore is "
+        "score_diagnosis_from_evidence in the same module, which is "
+        "itself unreachable — so this is unreachable with it. "),
+    "engine/confidence.py::score_diagnosis_from_evidence": ("unwired-feature",
+        "The whole Phase 83 evidence-weighted confidence capability: "
+        "it turns discrete evidence flags (symptom matches, DTC "
+        "match, KB match, test confirmed/denied, vehicle history, "
+        "environmental) into a 0.0-1.0 score with an itemised "
+        "evidence list and a label. Complete and tested, and no CLI "
+        "command or API route builds one. "),
+    "engine/correlation.py::SymptomCorrelator": ("unwired-feature",
+        "Phase 90 multi-symptom correlation: 15+ hand-written rules "
+        "that map a set of symptoms to one root cause (overheating + "
+        "power loss + coolant smell -> head gasket), with "
+        "full/partial match scoring. "),
+    "engine/cost.py::CostEstimator": ("unwired-feature",
+        "Phase 86's pure-math repair-cost estimator: labor hours plus "
+        "a parts list become low/high totals at dealer, independent "
+        "or DIY rates, with a DIY-savings comparison, and "
+        "estimate_from_diagnosis() takes a DiagnosisItem directly. "
+        "Nothing constructs it. "),
+    "engine/cost.py::format_estimate": ("unwired-feature",
+        "The display half of the same Phase 86 cost feature: it "
+        "renders a CostEstimate as a plain-text quote with line "
+        "items, subtotals, total and DIY savings. "),
+    "engine/evaluation.py::EvaluationTracker": ("unwired-feature",
+        "Phase 94's ADR-005 quality scorecard: record per-session "
+        "outcomes (predicted vs actual, helpfulness, cost, latency, "
+        "model) and get back accuracy, confidence calibration, cost "
+        "efficiency, latency percentiles, a weighted composite and a "
+        "formatted report, plus per-model accuracy and cost "
+        "breakdowns. "),
+    "engine/intermittent.py::IntermittentAnalyzer": ("unwired-feature",
+        "Phase 91 intermittent-fault analysis: pulls environmental "
+        "conditions out of freeform customer text with pre-compiled "
+        "regexes (cold start, heat soak, rain, load, RPM, time-of- "
+        "day) and ranks them against 10+ predefined intermittent "
+        "patterns, locally and with no API call. "),
+    "engine/parts.py::PartsRecommender": ("unwired-feature",
+        "Phase 85 AI second pass that turns a diagnosis plus vehicle "
+        "into concrete parts — part numbers, brand, price range, "
+        "OEM/aftermarket/used source, cross-references — and the "
+        "tools needed for the job. "),
+    "engine/repair.py::RepairProcedureGenerator": ("unwired-feature",
+        "Phase 84 AI second pass that expands a diagnosis into a full "
+        "RepairProcedure: numbered steps each with an optional pro "
+        "tip and safety warning, tools, parts, estimated labour "
+        "hours, an assessed skill level, and top-level safety "
+        "warnings, with a graceful fallback that preserves raw text "
+        "when the model's JSON will not parse. "),
+    "engine/service_data.py::build_service_data_context": ("unwired-feature",
+        "Formats torque specs, service intervals and valve clearances "
+        "into prompt text so a diagnosis can quote real numbers. The "
+        "consumer it was written for was never built: the diagnostic "
+        "prompt is assembled from vehicle + symptom + knowledge "
+        "context only, and there is no parameter for service data "
+        "anywhere in that path. "),
+    "engine/service_data.py::get_service_interval": ("unwired-feature",
+        "Partial-match lookup over 14 generic service intervals (oil, "
+        "valves, chain, brake fluid, fork oil...) with "
+        "miles/km/months axes. Nothing in src/ calls it. "),
+    "engine/service_data.py::get_torque_spec": ("unwired-feature",
+        "Case-insensitive partial-match lookup over 20 torque specs, "
+        "each with Nm, auto-converted ft-lb, thread-locker "
+        "requirement and safety notes on the fasteners that strip "
+        "aluminium. Built as product capability in Phase 93; no CLI "
+        "command, no API route and no other src/ module reaches it. "),
+    "engine/service_data.py::get_valve_clearance": ("unwired-feature",
+        "Lookup over 8 cold valve-clearance ranges grouped by engine "
+        "architecture (inline-4, V-twin, single, Harley Twin Cam), "
+        "intake and exhaust separately. Shipped complete in Phase 93 "
+        "and reachable by nothing in src/. "),
+    "engine/symptoms.py::SymptomAnalyzer": ("superseded",
+        "Phase 80's two-pass symptom entry point. The same job — "
+        "symptoms plus knowledge-base matches in, DiagnosticResponse "
+        "plus TokenUsage out — is done live by "
+        "DiagnosticClient.diagnose(), which the CLI calls through "
+        "cli/diagnose.py:341 after its own KB pass, and which has "
+        "since moved ahead: Phase 244Q switched the live path to "
+        "ask_st… "),
+    "engine/wiring.py::build_wiring_context": ("unwired-feature",
+        "Renders a circuit reference — wire colours, expected "
+        "readings, test points, common failures, diagnostic tips — as "
+        "prompt text for AI injection. Same unbuilt seam as the "
+        "service-data formatter: the diagnostic prompt has no slot "
+        "for circuit context, so the function has never had a "
+        "production caller. "),
+    "engine/wiring.py::get_circuit_reference": ("unwired-feature",
+        "The primary lookup into the five-circuit wiring reference "
+        "(charging, starting, fuel injection, ignition, ABS), "
+        "returning wire colours, connector locations, expected "
+        "voltage/resistance, test points and failure patterns. It is "
+        "the payload of the Phase 92 feature and no command, route or "
+        "other src/ module can reach it. "),
+    "engine/wiring.py::get_circuits_by_system": ("unwired-feature",
+        "Second query form over the same circuit library, filtering "
+        "by system category (electrical, fuel, ignition, braking) and "
+        "returning every match. Unreached like the rest of the "
+        "module. "),
+    "hardware/compat_repo.py::remove_adapter": ("unwired-feature",
+        "The only code path that can delete an adapter from the "
+        "compatibility knowledge base. The `hardware compat` CLI "
+        "group ships seven read-and-seed commands and no remove, no "
+        "API route touches compat_repo, and `compat seed` is INSERT "
+        "OR IGNORE — so from every user-reachable path the adapter "
+        "table is append-only. "),
+    "hardware/scenarios/__init__.py::builtin_path": ("test-infra",
+        "Returns a filesystem Path to one of the ten packaged built- "
+        "in simulator YAMLs. Its only two callers are parametrized "
+        "test suites that need a real path — one to feed the loader, "
+        "one to hand to `simulate validate` as a CLI argument. "),
+    "hardware/sensors.py::decode_pid": ("public-api",
+        "Thin __all__-exported wrapper over SENSOR_CATALOG "
+        "(sensors.py:234) that decodes a raw value and raises "
+        "ValueError for a PID the catalog does not cover; its own "
+        "docstring says it exists so callers need not reach into the "
+        "catalog dict. "),
 }

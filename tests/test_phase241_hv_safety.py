@@ -214,10 +214,17 @@ class TestTheSafetyCheckerGapIsRecorded:
     a safety system with no delivery path is the appearance of safety, which
     on high voltage is worse than nothing.
 
-    This pins the current state so the day someone wires the checker in, this
-    fails and tells them what else that wiring needs."""
+    This pinned the state so the day someone wired the checker in, it would
+    fail and say what else that wiring needed. **That day was 2026-09-17**:
+    Phase 244T wired it into `motodiag diagnose`, this test failed in the
+    regression exactly as designed, and its three instructions were carried
+    out — (1) powertrain context, from the garage record and never inferred
+    from the make; (2) the HV rules, NOT added, because inventing safety
+    content for machines nobody can source documentation for is what Phase 245
+    was rejected for — recorded as F88 instead; (3) the tripwire replaced by
+    its inverse, below."""
 
-    def test_safety_checker_has_no_production_caller_today(self):
+    def test_safety_checker_now_has_a_production_caller(self):
         """Detects USE, not mention.
 
         Phase 244B: the first version matched the bare string anywhere in a
@@ -257,16 +264,29 @@ class TestTheSafetyCheckerGapIsRecorded:
                     break
             if used:
                 hits.append(str(py.relative_to(SRC)))
-        assert not hits, (
-            f"SafetyChecker is now constructed in production: {hits}. Before this ships, "
-            "(1) give it vehicle/powertrain context — it has none, so an HV rule fires on a "
-            "carburetted twin; (2) add the HV rules Phase 241 deliberately withheld; "
-            "(3) delete this tripwire."
+        assert hits, (
+            "SafetyChecker has lost its production caller. Phase 244T wired it into "
+            "`motodiag diagnose` so a hazard reaches the technician; if that wiring is "
+            "being removed, say why in the phase doc rather than letting a safety "
+            "surface go quiet."
+        )
+        assert any("cli/diagnose.py" in h for h in hits), (
+            f"wired, but not on the command a technician runs: {hits}"
         )
 
-    def test_no_hv_rule_was_added_to_the_unwired_engine(self):
+    def test_the_hv_rules_are_still_missing_and_that_is_recorded(self):
+        """Now a statement of a gap rather than a guard against filling it.
+
+        Phase 241 withheld HV rules because the checker had no delivery path.
+        244T built the path and still did not add them: there are no
+        high-voltage rules to scope, so an electric bike gets FEWER alerts
+        rather than the ones it needs. Sourcing them is content work — F88.
+        When they land, this test is the one to invert."""
         from motodiag.engine.safety import SAFETY_RULES
 
         hv = [r for r in SAFETY_RULES if re.search(r"high.?voltage|\bHV\b|traction (?:pack|battery)|service (?:plug|disconnect)",
                                                     json.dumps(r), re.I)]
-        assert not hv, "HV rules landed in SAFETY_RULES while it still has no production caller"
+        assert not hv, (
+            "HV rules have landed — good. Update this test, and check they are "
+            "scoped with applies_to so they cannot fire on a combustion bike."
+        )

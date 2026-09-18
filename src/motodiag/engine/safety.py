@@ -53,6 +53,17 @@ class SafetyAlert(BaseModel):
 # Safety rules — keyword patterns mapped to alerts
 # ---------------------------------------------------------------------------
 
+# Phase 244T note on word boundaries. These patterns ran for four phases with
+# no caller, so nothing ever pressed them against real diagnosis text. Wiring
+# them up found two substring false positives, both of which print a CRITICAL
+# "do not start the engine" on ordinary findings:
+#
+#   "gas" inside "gasket"  -> "valve cover gasket weeping; no other leak found"
+#                             raised FUEL LEAK DETECTED
+#   "oil" inside "coil"    -> "ignition coil is leaking oil" raised Oil leak
+#
+# Short tokens here carry \b for that reason. A safety panel that cries wolf on
+# a gasket weep is a safety panel nobody reads.
 SAFETY_RULES: list[dict] = [
     # --- CRITICAL ---
     {
@@ -65,9 +76,11 @@ SAFETY_RULES: list[dict] = [
         "do_not": "Do NOT ride the motorcycle under any circumstances until brakes are verified functional.",
     },
     {
-        "patterns": [r"fuel.*(leak|spill|pooling|drip)", r"gas(oline)?.*(leak|spill|pooling|drip)"],
+        "patterns": [r"\bfuel\b.*(leak|spill|pooling|drip)", r"\bgas(oline)?\b.*(leak|spill|pooling|drip)"],
         "level": AlertLevel.CRITICAL,
         "title": "Fuel leak detected",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Fuel leak creates fire and explosion risk, especially near hot engine surfaces.",
         "affected_system": "fuel",
         "immediate_action": "Do NOT start engine. Check for fuel pooling near hot surfaces.",
@@ -92,9 +105,11 @@ SAFETY_RULES: list[dict] = [
         "do_not": "Do NOT ride until throttle snaps closed on its own when released.",
     },
     {
-        "patterns": [r"(fuel|gas).*(smell|odor|fumes).*(strong|heavy|inside|cockpit)"],
+        "patterns": [r"\b(fuel|gas)\b.*(smell|odor|fumes).*(strong|heavy|inside|cockpit)"],
         "level": AlertLevel.CRITICAL,
         "title": "Strong fuel odor — leak likely",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Strong fuel smell indicates a leak or vapor escape. Fire risk near hot engine or exhaust.",
         "affected_system": "fuel",
         "immediate_action": "Shut off engine. Inspect fuel lines, tank, petcock, and injector seals.",
@@ -106,6 +121,8 @@ SAFETY_RULES: list[dict] = [
         "patterns": [r"head gasket.*(blow|fail|leak|crack)"],
         "level": AlertLevel.WARNING,
         "title": "Head gasket failure",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Blown head gasket can cause rapid overheating and engine seizure.",
         "affected_system": "engine",
         "immediate_action": "Do not continue riding. Risk of engine seizure.",
@@ -161,7 +178,7 @@ SAFETY_RULES: list[dict] = [
         "do_not": "Do NOT ride with a kinked or severely stretched chain.",
     },
     {
-        "patterns": [r"tire.*(worn|bald|flat|crack|tread|plug)", r"(front|rear).*(tire|tyre).*(low|flat)"],
+        "patterns": [r"\btire\b.*(worn|bald|flat|crack|tread|plug)", r"(front|rear).*\b(tire|tyre)\b.*(low|flat)"],
         "level": AlertLevel.CAUTION,
         "title": "Tire condition — replacement needed",
         "message": "Worn tires provide reduced traction, especially in wet conditions.",
@@ -170,7 +187,7 @@ SAFETY_RULES: list[dict] = [
         "do_not": "Do NOT ride in rain on bald or cracked tires.",
     },
     {
-        "patterns": [r"oil.*(leak|drip|seep|pool|puddle)", r"(engine|primary|transmission).*(leak|seep)"],
+        "patterns": [r"\boil\b.*(leak|drip|seep|pool|puddle)", r"(engine|primary|transmission).*(leak|seep)"],
         "level": AlertLevel.CAUTION,
         "title": "Oil leak detected",
         "message": "Oil on tires or brakes creates a crash hazard. Monitor oil level closely.",
@@ -191,6 +208,8 @@ SAFETY_RULES: list[dict] = [
         "patterns": [r"exhaust.*(leak|crack|hole|blow|gasket)"],
         "level": AlertLevel.CAUTION,
         "title": "Exhaust leak — fumes and burn risk",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Exhaust leak can expose rider to CO fumes and cause burns from hot gases.",
         "affected_system": "exhaust",
         "immediate_action": "Inspect header gaskets and pipe joints. Repair before riding in traffic.",
@@ -202,15 +221,19 @@ SAFETY_RULES: list[dict] = [
         "patterns": [r"valve.*(clearance|adjust|tight|loose|shim|lash)"],
         "level": AlertLevel.INFO,
         "title": "Valve clearance service needed",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Out-of-spec valve clearance accelerates valve and seat wear. Tight valves are worse than loose.",
         "affected_system": "engine",
         "immediate_action": "Schedule service. Continued riding accelerates valve damage.",
         "do_not": None,
     },
     {
-        "patterns": [r"air.*(filter|cleaner).*(dirty|clogged|restrict|neglect)"],
+        "patterns": [r"\bair\b.*(filter|cleaner).*(dirty|clogged|restrict|neglect)"],
         "level": AlertLevel.INFO,
         "title": "Air filter maintenance needed",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Restricted airflow causes rich running, reduced power, and increased fuel consumption.",
         "affected_system": "intake",
         "immediate_action": "Replace or clean air filter at next service.",
@@ -220,6 +243,8 @@ SAFETY_RULES: list[dict] = [
         "patterns": [r"spark.*(plug|plugs).*(foul|worn|gap|replace|old)"],
         "level": AlertLevel.INFO,
         "title": "Spark plug service needed",
+        # Phase 244T: combustion-specific — meaningless on an electric bike.
+        "applies_to": ("ice", "hybrid"),
         "message": "Worn or fouled plugs cause misfires, hard starting, and reduced fuel economy.",
         "affected_system": "ignition",
         "immediate_action": "Replace spark plugs at next service. Check gap to spec.",
@@ -352,12 +377,44 @@ class SafetyChecker:
     against predefined safety rules.
     """
 
-    def __init__(self) -> None:
-        """Compile regex patterns for efficient repeated matching."""
+    def __init__(self, powertrain: Optional[str] = None) -> None:
+        """Compile regex patterns for efficient repeated matching.
+
+        Args:
+            powertrain: The bike's powertrain, from its garage record —
+                "ice", "electric" or "hybrid". **Never inferred from the
+                make.** Phase 244T's Step 0 tried that and it failed in both
+                directions on one manufacturer: deriving it from the corpus
+                marque vocabulary classifies Harley-Davidson as electric, so
+                high-voltage advice would print for a carburetted Road King,
+                while a hardcoded list of electric makes misses LiveWire,
+                which is sold as a Harley-Davidson model.
+
+                `None` means unknown, and unknown shows **everything**. The
+                field can itself hold a vision model's guess
+                (`cli/main.py` garage_add_from_photo), so a blank or wrong
+                value must not be able to hide a fuel-leak warning.
+        """
+        self.powertrain = powertrain
         self._compiled_rules: list[tuple[list[re.Pattern], dict]] = []
         for rule in SAFETY_RULES:
+            if not self._applies(rule):
+                continue
             compiled = [re.compile(p, re.IGNORECASE) for p in rule["patterns"]]
             self._compiled_rules.append((compiled, rule))
+
+    def _applies(self, rule: dict) -> bool:
+        """Whether a rule is meaningful for this bike's powertrain.
+
+        A rule with no `applies_to` applies to everything. Scoping can only
+        SUPPRESS here — there are no high-voltage rules in this module, so an
+        electric bike gets fewer alerts rather than different ones. That gap
+        is recorded in Phase 244T rather than filled with invented content.
+        """
+        if self.powertrain is None:
+            return True
+        allowed = rule.get("applies_to")
+        return allowed is None or self.powertrain in allowed
 
     def check_diagnosis(self, diagnosis_text: str) -> list[SafetyAlert]:
         """Scan diagnosis text for safety-critical conditions.

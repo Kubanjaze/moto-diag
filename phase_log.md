@@ -2980,3 +2980,40 @@ prompt builder — no shipped row triggers it, and the first one authored
 without a procedure would have.
 
 No schema change. 20 tests, 7/7 mutations. Regression 6,856 passed, 0 failed, 26:49.
+
+## Phases 244T and 244U complete — 2026-09-17
+
+Two halves of one finding. 244T wired a safety checker that had sat with 19
+rules and no caller since Phase 241; 244U fixed the reason nobody noticed.
+
+Wiring the checker is a small change that found a large problem. Nothing had
+pressed those rules against real diagnosis text in four phases, and two of
+them matched substrings: `gas` inside **gasket**, `oil` inside **coil**. A
+valve-cover gasket weep — an utterly ordinary finding — printed **CRITICAL:
+FUEL LEAK, do not start the engine**. That was 22 of the 98 critical alerts
+the corpus produces. My own first fix then silenced the rules instead of
+narrowing them, because `\b` in a plain Python string is a backspace.
+
+Then Phase 241's tripwire fired in the regression, which is the system working
+exactly as intended: it had pinned "SafetyChecker has no production caller"
+and listed what the day of wiring would owe. Powertrain context, yes — from
+the garage record, never inferred from the make, because inferring calls
+Harley-Davidson electric and misses LiveWire. The withheld high-voltage rules,
+no: there is no sourceable content, and inventing safety procedure is what row
+245 was rejected for. It is F88 now, and an electric bike getting a quieter
+safety panel than a carburetted twin is written down rather than shipped
+quietly.
+
+244U then removed the blind spot that let this sit for four phases. The gate
+counts identifiers, and a package re-export writes a name twice, so everything
+a package exported looked used. Both halves of the fix are required — alias
+lists alone reveal nothing, `__all__` alone reveals three, together twenty —
+and that is now a test, because the obvious half on its own produces a green
+gate and a false conclusion.
+
+What it exposed is a layer: torque specs, valve clearances, wiring circuit
+references, cost estimation, parts recommendation, repair-procedure
+generation. Capability a technician would ask for by name, reachable by
+nothing. All 20 classified and challenged; the allowlist is 46 → 66.
+
+No schema change. 38 tests, 13/13 mutations. Regression 6,914 passed, 0 failed, 30:07.
