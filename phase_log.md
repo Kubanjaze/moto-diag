@@ -3239,3 +3239,26 @@ publishes a voltage curve, an owner SOH field, a millivolt tolerance or a
 cycle counter, and the rows say so.
 
 51 tests, 6/6 mutations. Regression 7,028 passed, 0 failed, 27:22.
+
+## Phase 247 complete — 2026-09-18
+
+The second content row under the label rule, and the first where the row's
+own bullets turned out to be things no maker publishes. IGBT failures,
+phase-loss detection and overcurrent faults are real inverter engineering
+and absent from every owner's manual, service manual, bulletin and recall
+filing read for three makes; the rows say so, document by document, and
+carry instead what the makes do publish: a controller named by rating and
+only rarely by supplier, one generic code or alert per make with no cause
+behind it, firmware that is versioned for the bike board and the pack but
+never for the controller, and the dealer tools that read what the rider
+cannot.
+
+The research ran as 246's fetch-and-verify pass through the Agent tool:
+three sweeps, twenty-one refuters that fetched all forty-seven pages
+themselves, a critic. It reached further than Step 0 expected — Zero's own
+archived service manuals, two 2025 recall filings naming a Dana TM4
+controller — and it caught a shipped error on the way: Phase 244's Energica
+code count. The regulator records sit on their own rows under their own
+label, because a row carries one.
+
+63 tests, 8/8 mutations. Regression 7,091 passed, 0 failed, 27:53.

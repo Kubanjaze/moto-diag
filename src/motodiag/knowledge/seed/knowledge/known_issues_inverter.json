@@ -1,0 +1,265 @@
+[
+  {
+    "title": "What the motor controller is on each make — a name and a current rating in the owner's manual, a supplier only in a service manual or a recall",
+    "description": "Generic-layer entry for the motor controller (inverter) as each make identifies it, written as what the part is and how each make names it, anchored to the manufacturer's own document for every make named; every figure is the manufacturer's. No owner's manual of the three makes names the controller's supplier, model, switching devices or current limit. Zero: the 2021 SR/F owner's manual (part 88-09445-01, read from a dealer-hosted mirror copy) calls it a '3-Phase AC Synchronous Controller' that meters current from the power pack to the motor (section 3.7, item F) and specifies it as a 900 amp 3-phase AC controller with regenerative deceleration (section 8.2); its 'Cypher III operating system' (section 1.2) is not attributed to the controller. The 2025 owner's manual for the S, SR, SR/F and SR/S (part 8811984-AF, dealer-hosted mirror copy, 206 pages) calls it 'Motor Controller' and distinguishes models only by rating: S 600 amp, SR 665 amp (A2) or 785 amp (A3), SR/F and SR/S 900 amp; no supplier appears in the manual. The 2021 S, SR, DS and DSR owner's manual (part 88-09447-01, mirror copy) calls it 'Brushless Motor Controller' (section 3.7), specifies 550 amp or 775 amp 3-phase brushless controllers, and uses the word SEVCON only as a label on three dash error codes, never as a named supplier. Zero's own 2020 S/SR/DS/DSR service manual (Version 1, published by Zero Motorcycles, read from an archived dealer copy) names the part in its controller-replacement procedure as 'CONTROLLER, SIZE 4 GEN 4.5 SEVCON' or 'CONTROLLER, SIZE 6 GEN 4.5 SEVCON', and the 2014 and 2016 service manuals on the same archive say 'GEN 4 SEVCON'. For the 2023 DSR/X, Zero's own recall filing names the controller and its supplier; that is a regulator record and sits on its own entry (see the recall entry for NHTSA campaign 25V834). Energica: the 2018 Eva owner's manual (Cod. ENF003100 Rev. 02 of February 2018, mirror copy) names two controllers in its fuse-box key, '1 30 VCU (Vehicle Control Unit)' and '2 10 Drive (Power Train Controller)', and the OBD port shares fuse 5 (10 A, 'AUS CIRCUIT') with the ChargeManager and ConnectivityHub, the manual's only mention of the OBD port; the technical data names only 'a permanent-magnet synchronous (PMAC), oil-cooled motor', with no inverter type, rating or supplier, and the word inverter occurs once, as 'Inverter coolant' in the liquids table. On Energica's model web pages for the Ego, Eva Ribelle and EsseEsse9 (energicamotor.com, footer 2026) the motor type reads 'HSM (Hybrid Synchronous Motor) Liquid-Cooled 3-Phase – 300 V – 12,000 rpm with Adaptive Control Inverter' and 'A Vehicle Control Unit implementing a multi-map adaptive energy and power management algorithm manages the vehicle'; the Experia page names a 'Permanent Magnet Assisted Synchronous Reluctance Motor (PMASynRM) — 306V nominal, 96% efficiency peak' and vehicle control that is 'Dual Microcontroller ARM Based'; no page names an inverter supplier, and the acronym EMCE is never expanded. LiveWire: the 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, read from a dealer-hosted mirror copy; printed page equals PDF page minus 12) specifies the motor in Table 15 as 'Motor: Revelation', an 'Internal Permanent Magnet Synchronous Motor Water Jacket Cooling', with 'Inverter Type: IGBT', 86 ft-lbs (116 N·m), 105 hp (78 kW) and 15,000 rpm maximum, and its VIN table decodes position 4 as 'E=Revelation electric power train'; the 2023 LiveWire ONE owner's manual (94001019, on Harley-Davidson's Service Information Portal) keeps 'Inverter Type IGBT' with 114 N·m (84 ft-lbs), 75 kW (100 hp) and 15,000 rpm; the 2025 S2 owner's manual (94001315, same portal) has no 'Inverter Type' row and names no motor (263 N·m, 63 kW, 4,850 rpm), while its acronym table defines 'PEU | Power electronics unit', 'EVPT | Electric vehicle powertrain' and 'FOTA | Firmware over the air' and never uses VSC; the 2024 S2 edition still carries the earlier-style table. LiveWire's S2 product web page (livewire.com, undated) describes the Arrow architecture as 'an integrated structural battery pack, motor, and controller' and names no controller model. The Energica manual statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR, DSR/X (2020+ Cypher III and 2014-2021 Cypher II platforms, as this corpus names them); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "what motor controller does this bike have",
+      "inverter type igbt",
+      "sevcon controller size 4 or 6",
+      "controller amp rating",
+      "power electronics unit peu",
+      "drive power train controller energica",
+      "is the controller a dana or a sevcon"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A controller identified from memory or a forum instead of the make's own document",
+      "A generic motor-controller procedure applied across platforms that differ in controller family and rating"
+    ],
+    "fix_procedure": "1. Identify the platform first (Zero: the 2014-2021 service manuals name Sevcon Gen 4 and Gen 4.5 controllers in Size 4 and Size 6; the 2021+ street manuals give only a rating, 550 to 900 amp; the 2023 DSR/X recall names Dana TM4, see the recall entry). 2. Energica: read the fuse-box key, the VCU and the Drive are separate units on separate fuses; the manual publishes no inverter specification. 3. LiveWire: the 2020 and LiveWire ONE manuals publish 'Inverter Type: IGBT' and nothing more; the 2025 S2 manual publishes no inverter row and names the Power Electronics Unit only in its acronym table. 4. Do not state a controller supplier, model or current limit that the make's own document does not; none of the three owner's manuals does.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "How a motor-controller fault reaches the rider on each make — one code, one alert or one LIMP message, and no published cause behind any of them",
+    "description": "Generic-layer entry for the motor-controller fault surface, written as what each make shows the rider when the controller, its supply or its temperature is at fault, anchored to the manufacturer's own document for every make named; every code, message and figure is the manufacturer's. Zero, Cypher III platform (the corpus's name for the 2020+ SR/F, SR/S, DSR/X and 2024+ S, DS, DSR): the 2021 SR/F owner's manual (part 88-09445-01, dealer-hosted mirror copy) lists dash error code 9 'Controller Fault — Motor Controller Fault' with the check-engine mark, which the manual defines as 'a state of permanent torque reduction' with the Check Engine Light lit, and its only rider action is the light's own entry, 'Contact your dealer and arrange to have your motorcycle serviced' (sections 7.4 to 7.6 and 3.24); codes 1 to 5 are the throttle-to-controller surface, 1 High Throttle Fault (no check-engine mark), 2 Torque Fault 'No valid torque input provided from MSC', 3 Torque Fault, 4 Throttle Fault and 5 'Powertrain CAN Communication Fault', where MSC is the Bosch motorcycle stability control defined in section 1.2; codes 41 Motor High Temperature and 57 Controller High Temperature say only 'Performance will be reduced' with no temperature and no check-engine mark; code 32 Contactor Open says 'Disconnect charger. Key Off for 2 minutes and then try again'; codes 65 to 99 read 'Motorcycle Fault — Refer to dealer'; and the transient system notifications, shown at the bottom of the dash for five seconds and not stored, include 'High Throttle Fault. Refer to Owner's Manual', 'Performance will be reduced and Charging may be disabled.' and 'Motorcycle in Limp Mode.', with Limp Mode defined nowhere. The 2025 owner's manual (part 8811984-AF, mirror copy) keeps code 9 and code 57 and adds that the Errors screen stores up to five codes, most recent first; its red temperature indicator (section 4.11) lights solid when 'one or more of the powertrain components have reached their temperature limit', the manual states it 'does not indicate that there's anything malfunctioning', and the temperature bands behind it belong to the thermal-management entry. Zero, Cypher II platform (the corpus's name for the 2014-2021 S, SR, DS, DSR): the 2021 S/SR/DS/DSR owner's manual (part 88-09447-01, mirror copy) lists dash codes 4 and 5 Controller Temperature Warning Stage 1 and 2, 27 Precharge Error, 31 SEVCON CAN Error, 33 SEVCON Error Turn Off, 39 Throttle Out Of Range Disable, 48 SEVCON Startup Disable and 49 Contactor Open Disable, described as 2-digit codes 'for dealer use' with no rider action column; its red System Warning indicator flashes a count, 4 'Precharge Fail — Could not pre-charge motor controller', 8 'Controller Area Network (CAN) Error', 12 'Welded Contactor' and 13 'Motor Controller Error — Motorcycle needs service', each answered 'Contact Zero or your dealer'; and Zero's 2020 service manual states the dash codes are 'errors that the Main Bike Board (MBB) has set', so the Sevcon-labelled rows are the bike board's view of the controller, not the controller's own fault log. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy; the diagnostic-code table on printed pages 78 to 83 holds 129 rows): the Drive has one published fault, U0110 DRIVE GENERIC ERROR, which lights the MIL, plus P2637 TORQUE FEEDBACK ERROR, with no sub-cause; P1049 DRIVE TEMPERATURE TOO HIGH lights the MIL and carries no temperature value; P0117 and P0118 MOTOR COOLANT TEMPERATURE CIRCUIT LOW (SHORT CIRCUIT) and HIGH (OPEN CIRCUIT), P0A02 and P0A03 DRIVE COOLANT TEMPERATURE CIRCUIT LOW and HIGH, P0298 MOTOR OIL OVER TEMPERATURE and P0335 MOTOR POSITION ERROR all light the MIL; P0120 THROTTLE FAULT (physical Error) and P0121 THROTTLE FAULT (logic error) light the MIL; P0562 and P0563 VCU MAIN SUPPLY UNDERVOLTAGE and OVERVOLTAGE and the high-voltage contactor and precharge rows P1010, P1011, P1013, P1018, P1019, P1021, P1025 PRECHARGE SEQUENCE FAILED, P1012 HV+ CONTACTOR WELDED, P1020 HV- CONTACTOR WELDED FAULT, P1026 and P1027 PRECHARGE SEQUENCE FAILED – PRECHARGE CONTACTOR SHORT and OPEN CIRCUIT do not light the MIL; sixteen codes read only 'LOW LEVEL SAFETY ERROR' (P0601, P0603, P0610, P1053, P1054, P1055, P1056, P1057, P1058, P1059, P1060, P1061, P1062, P1063, P2641, U1000), three with a bracketed hint (uC Parameter error, uS Parameter error, watchdog error), and only P2641 lights the MIL. The rider sees over-temperature as the user messages 'LIMP MODE ON: MOTOR TEMPERATURE TOO HIGH.' and 'LIMP MODE ON: MOTOR DRIVE TEMPERATURE TOO HIGH.' (manual clearance; no temperature anywhere in the manual); LIMP mode is 'implemented automatically by the VCU', a continuous supervisor that reduces power for a drained battery, an out-of-range motor temperature or a low battery voltage, shown by an amber lamp (steady active, flashing entering or exiting), and the section omits drive temperature although the message table has it; the red General alarm (FAULT) means the battery pack's input and output power, motor and AC/DC charging, 'are physically disconnected', and the rider is told to stop, read the code in the diagnostics menu, key off, wait five seconds, key on, and report a persisting code to the dealer; the MIL lights only for the rows so marked, stays lit while the fault persists and extinguishes after four OFF-to-GO cycles. LiveWire (2020 Harley-Davidson owner's manual 94000703, mirror copy; the PDF text layer reverses the table columns, quoted here in printed order): Table 37 on printed page 96 lists 'Alert – Motor Fault / Motor or inverter fault / See dealer', 'Alert – Shutdown Alert / Propulsion will start disable sequence / See dealer' and 'Alert – HV Disconnected / High voltage connection issue / See dealer', and its continuation 'Alert – Propulsion Inhibited / General fault / See dealer'; no alert names controller temperature, overcurrent, phase loss or an IGBT, and no code or recovery step is given. The service lamps are an amber 'EV Alert' (needs service, can be operated), a red 'EV Fault' after which 'the vehicle should not be operated and will go into shutdown mode', a MIL that runs power-up self-diagnostics, and a 'Propulsion Limited' indicator that lights 'when there is a fault that requires performance to be limited', with no fault list and no degree; the Temp widget displays RESS temperature, motor controller temperature and motor temperature with no threshold or derate rule; the propulsion interlock messages are 'CALL SERVICE, UNPLUG TO RIDE, PRESS RUN, WAIT - NOT READY, UNLOCK FORK, RAISE SIDE STAND, RELEASE TWIST GRIP and PRESS START', with no published cause for CALL SERVICE. The 2023 LiveWire ONE manual (94001019, Service Information Portal) keeps the Motor Fault row and adds, for the round instrument module, 'Alert – Malfunction Indicator Lamp (MIL) | Propulsion system fault. | See dealer' and 'Alert – Propulsion Limited | Low SOC, ride mode selected or general fault | Charge vehicle If unable to charge, see dealer'. The 2025 S2 manual (94001315) re-tiers the table: 'WARNING – MOTOR FAULT | Motor or inverter fault | See dealer', a new 'WARNING – COMMUNICATION LOST | Vehicle Messaging not being received by Instrument. | See dealer', and 'ALERT – PROPULSION INHIBITED' with rider checks of the run/off switch and side stand before 'See Dealer if not corrected'; it has no Propulsion Limited, MIL or temperature rows, and the 2024 S2 edition keeps the earlier-style table. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR, DSR/X (2020+ Cypher III and 2014-2021 Cypher II platforms, as this corpus names them); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "controller fault code 9",
+      "motor controller fault on dash",
+      "alert motor fault see dealer",
+      "limp mode on motor drive temperature too high",
+      "drive generic error u0110",
+      "torque fault no valid torque input",
+      "sevcon can error code 31",
+      "propulsion limited indicator",
+      "permanent torque reduction check engine light",
+      "general alarm fault light energica"
+    ],
+    "dtc_codes": [
+      "U0110",
+      "P2637",
+      "P1049",
+      "P0117",
+      "P0118",
+      "P0A02",
+      "P0A03",
+      "P0298",
+      "P0335",
+      "P0120",
+      "P0121",
+      "P0562",
+      "P0563",
+      "P1010",
+      "P1011",
+      "P1013",
+      "P1018",
+      "P1019",
+      "P1021",
+      "P1025",
+      "P1012",
+      "P1020",
+      "P1026",
+      "P1027",
+      "P0601",
+      "P0603",
+      "P0610",
+      "P1053",
+      "P1054",
+      "P1055",
+      "P1056",
+      "P1057",
+      "P1058",
+      "P1059",
+      "P1060",
+      "P1061",
+      "P1062",
+      "P1063",
+      "P2641",
+      "U1000"
+    ],
+    "causes": [
+      "A controller, drive or supply fault the bike board or VCU reports as one generic code with no published sub-cause",
+      "Motor or controller over-temperature, surfaced as a reduced-performance code or LIMP message with no published threshold",
+      "Loss of CAN communication between the bike board and the controller (Zero codes 5 and 31, LiveWire COMMUNICATION LOST)",
+      "A throttle or torque-input fault that the controller refuses (Zero codes 1 to 4, Energica P0120 and P0121)"
+    ],
+    "fix_procedure": "1. Read the make's own surface first and record it verbatim: Zero dash error codes (the 2025 Errors screen holds the last five), Energica the diagnostics screen code and the user message, LiveWire the alert text and which lamp is lit. 2. Do not infer a cause the document does not give: Zero code 9, Energica U0110 and LiveWire 'Motor or inverter fault' each have no published sub-cause, and every one routes to the dealer. 3. Temperature codes and LIMP messages carry no threshold; let the machine cool and see the thermal-management entry for the published bands; a reduced-performance state that persists cold is a fault. 4. Zero code 32 has the manual's own retry (disconnect the charger, key off two minutes); Energica's FAULT lamp has the manual's own reset (key off, five seconds, key on) and its MIL clears only after four key cycles once the fault is gone; a code that returns goes to the dealer with the code number. 5. On a Zero, remember the dash codes are set by the main bike board, so a Sevcon-labelled code describes what the board saw, not the controller's internal log.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "No electric motorcycle maker publishes an overcurrent, phase-loss or IGBT diagnostic — the word inverter appears once or twice per manual and nothing sits behind it",
+    "description": "Generic-layer entry for the row's own bullets, IGBT failures, phase-loss detection and overcurrent faults, written as what each make publishes and how it shows, and anchored to the documents read in full to say so; this is a deliberate-absence entry and it prints no threshold because none exists in any manufacturer document read. Zero: in the 2025 S/SR/SR-F/SR-S owner's manual (part 8811984-AF, 206 pages, dealer-hosted mirror copy) the words overcurrent, phase loss, phase fault, IGBT, MOSFET and inverter do not occur; the only 'over current fault' string in the manual is the mobile charging adapter's status message, not the powertrain's; the 2021 SR/F owner's manual (part 88-09445-01) never uses inverter, Sevcon or Dana; the rider-facing controller surface is dash code 9 plus the temperature and CAN codes in the fault-surface entry; Zero's 2020 service manual gives the dealer tool a 'List Faults' button for 'any controller fault information' but publishes no fault list; and the one recall naming the traction-motor controller describes a fastener and busbar-joint failure, not an overcurrent or phase event (see the recall entry for NHTSA campaign 25V834). Energica: the 2018 Eva owner's manual's diagnostic-code table (Cod. ENF003100 Rev. 02, printed pages 78 to 83, 129 rows read row by row) has no entry naming inverter overcurrent, phase loss, phase short, IGBT or desaturation; its sixteen SHORT CIRCUIT rows are contactor, light, charger-fan, water-pump and temperature-sensor circuits; the Drive's only published faults are U0110 DRIVE GENERIC ERROR and P2637 TORQUE FEEDBACK ERROR; and the word inverter occurs once in the manual, as a coolant. LiveWire: the 2020 owner's manual (94000703, 202 pages, mirror copy) uses IGBT once, in the motor specification table, and inverter twice, in that table and in the 'Motor or inverter fault' alert, and never uses phase, overcurrent or derate; the LiveWire ONE and 2025 S2 manuals' only inverter text is the same alert cause; no LiveWire recall filing attributes a failure to inverter protection, and the one propulsion-loss recall tied to a riding pattern concerns the high-voltage fuse in the battery pack, a component of the battery entry, not the inverter. How it shows, on every make: a controller that has protected itself surfaces as the make's single generic code or alert, and the cause is read by a dealer tool that none of the three makes documents for owners. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR, DSR/X (2020+ Cypher III and 2014-2021 Cypher II platforms, as this corpus names them); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "inverter overcurrent fault",
+      "phase loss detection electric motorcycle",
+      "igbt failure symptoms",
+      "motor phase fault",
+      "inverter desaturation fault",
+      "what does the inverter fault code mean"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Expecting an overcurrent, phase or IGBT code that no manufacturer publishes to the rider",
+      "Reading a generic 'Motor or inverter fault' or 'Drive generic error' as a specific power-stage diagnosis"
+    ],
+    "fix_procedure": "1. Do not quote an overcurrent limit, a phase-loss threshold or an IGBT failure mode as the manufacturer's; none of the three publishes one, and a figure from an unrelated inverter is not evidence for this machine. 2. Record the make's own generic surface (Zero code 9, Energica U0110 or P2637, LiveWire 'Motor or inverter fault') and the conditions at the time. 3. The controller's internal fault record is read by the dealer tool (see the tooling entry); the owner-facing surface ends at the generic code. 4. Where a recall names the controller (Zero 25V834), check the VIN against the campaign before diagnosing further.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "Controller firmware is a service item on every make, and none of the three versions the motor controller's firmware for owners",
+    "description": "Generic-layer entry for controller firmware, written as what each make publishes about the software that runs its powertrain and how each make shows it, anchored to the manufacturer's own document for every make named; every version number quoted is the manufacturer's. Zero: the firmware release notes page on zeromotorcycles.com (a manufacturer web page, 'Updated: August 12, 2026') versions the MBB, BMU and BMS on the Cypher III platform (current release MBB V46, BMU V22, BMS V28) and the MBB and BMS on the Cypher II platform (MBB V38, BMS V45), and no motor-controller or Sevcon firmware item exists anywhere on it; the release MBB V43 with BMU V18 carries 'Fix: Resolved behavior that would block the ability to commission the motor with DIAG4Zero after replacing the motor controller', the page's only mention of DIAG4Zero and of controller replacement; the release MBB V42 carries 'Enhanced key switch fault detection and handling', 'Improved vehicle behavior when key switch input is lost during operation', 'Added safety interlocks for OTA updates' and 'Maintained lighting and MBB operation during key switch faults', with no date and no recall named. Zero's service bulletin SV-ZMC-020-405 of July 15, 2019 (filed with NHTSA), covering all 2020 SR/F motorcycles, delivered 'Build 246 / Revision 9', firmware for the main bike board and battery management system 'that improves the calculation of torque during a motorcycle stability control event', over the air to app-registered motorcycles or by a dealer running the Zero Diagnostic Utility version 33. The 2025 owner's manual (part 8811984-AF, mirror copy) says a purchased Cypher upgrade 'will be enabled on the motorcycle by an OTA (Over The Air) firmware update'. Zero's two 2025 recall filings, one of which is remedied by firmware, are regulator records on their own entry (see the recall entry for NHTSA campaigns 25V834 and 25V587). Energica: the company's repair-information sheet 'COMPONENT AND DIAGNOSIS INFORMATION' (Rev. 15/05/2018, mirror copy) identifies the 'PCU/ECU' by one CALID and CVN per model across four releases (calibration identifiers EN.W.000000.025, .026, .028 and .033; for example 'EGO EN.W.001539.033 00001010 48A08843') and states that 'Energica Motor Company SpA will store in its server all the different CVNs that may vary subsequently to any fw update', without saying which controller the CALID identifies; the 2018 Eva owner's manual (Cod. ENF003100 Rev. 02, mirror copy) shows installed firmware versions under the Settings menu item '3. About', anticipates 'new software features by Energica Motor Company in due course', and its maintenance table (printed pages 105 to 109) has no software, firmware or diagnostic-scan row; Energica's archived Global Charging Compatibility web page (capture of December 4, 2023) says charger evolution is 'necessitating new vehicle firmware updates' and names 'release of FW43 for all EGO+, EVA Ribelle and EsseEsse9+ with the 21.5 kWh battery as well as the Experia' without saying how or by whom it is loaded; and its archived warranty conditions (capture of December 28, 2023) require maintenance and repairs 'exclusively by an Energica dealer or a specialized workshop' and state that 'any modifications made to the software of the motorcycle will immediately render the warranty null and void', which is not a statement that updates are dealer-only. LiveWire: the 2020 Harley-Davidson owner's manual (94000703, mirror copy) gives the owner one update, the instrument module, by a file downloaded to a USB-C drive from www.h-d.com/downloads and installed through SETTINGS, SYSTEM, ABOUT, FACTORY OPTIONS, UPDATE SOFTWARE; it describes no over-the-air capability and no owner path for the motor controller, the vehicle supervisory controller or the on-board charger, its service-interval notes say to 'always verify that the latest calibration is installed', and its energy-system warranty excludes 'Unauthorized reprogramming of the RESS electronic controller, or any other vehicle controller'; the 2023 LiveWire ONE manual (94001019, Service Information Portal) is still USB-C only ('gpg file for rectangle IM or pv2 file for round IM') from www.h-d.com/infotainment-support, with no over-the-air update and no diagnostic menu; the 2025 S2 manual (94001315) defines 'Firmware Over The Air (FOTA)' as 'a cellular, cloud-based method to update the vehicles software as needed using the vehicles telematics system', prompted on the instrument, deferrable 'unless a critical update is needed immediately', installable 'only ... when parked, with the jiffy stand down and not charging', with 'Propulsion mode ... not available during update installation', taking 'up to 40 minutes each', followed by a key-off sleep cycle ('Wait 5 minutes') without which faults or limited performance may show, and it does not say which modules FOTA updates; LiveWire's web pages (livewire.com, undated) say the S2 Del Mar 'is the first motorcycle from LiveWire equipped with over-the-air-updates (OTA)' and that updates 'take anywhere from 5 to 60 minutes. During this time, your bike will be immobilized'. The LiveWire recalls remedied by controller software are regulator records on their own entry (see the recall entry for NHTSA campaigns 20V624 and 24V149). The Energica manual statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR, DSR/X (2020+ Cypher III and 2014-2021 Cypher II platforms, as this corpus names them); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "controller firmware version",
+      "firmware update after controller replacement",
+      "commission the motor after replacing the controller",
+      "fota update electric motorcycle",
+      "ota firmware update zero",
+      "energica firmware fw43",
+      "livewire software update usb",
+      "which modules does the firmware update cover"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A replaced motor controller that was not commissioned with the manufacturer's tool (Zero: DIAG4Zero, per the MBB V43 note)",
+      "A powertrain running an old calibration where the maker's remedy was a software revision (see the recall entries)",
+      "An interrupted or un-slept update (LiveWire S2: faults or limited performance until the key-off sleep cycle is done)"
+    ],
+    "fix_procedure": "1. Read the installed versions where the make shows them: Zero dealer tool or the firmware page's release list, Energica the dash Settings 'About' item, LiveWire the instrument module's software information. 2. Know what an update can and cannot touch: Zero's published firmware is MBB, BMU and BMS, the motor controller is commissioned separately by the dealer tool; Energica publishes no owner update path; LiveWire 2020 and ONE owners can update only the instrument module by USB-C, and the S2 takes FOTA with the bike parked, stand down, not charging, then keyed off for five minutes. 3. After a controller replacement on a Zero, commission the motor with the manufacturer's tool before operation, per the 2020 service manual and the MBB V43 release note. 4. Check the VIN against the software recalls on the recall entries before diagnosing a shutdown as hardware.",
+    "parts_needed": [],
+    "estimated_hours": 0.4,
+    "source": "service-manual"
+  },
+  {
+    "title": "What reads the motor controller on each make — Zero's dealer laptop, Energica's own dash and OBD modes, LiveWire's Digital Technician II",
+    "description": "Generic-layer entry for the tooling that reads a motor controller, written as what each make documents and how each make exposes it, anchored to the manufacturer's own document for every make named. Zero: the dealer path is the Zero Diagnostic Utility (ZDU) on a laptop; Zero's service bulletin SV-ZMC-020-405 of July 15, 2019 (filed with NHTSA) says 'Connect the Zero Diagnostic Cables to the OBD-II port on the motorcycle', located on the 2020 SR/F 'inside the tank trunk', then 'Connect the IXXAT USB-CAN device to your computer's USB port', pull the logs first 'because this process erases the existing logs', and afterwards confirm no error codes on the dash and that the motor engages on a little throttle; the bulletin SV-ZMC-020-423 of June 22, 2020 (filed with NHTSA) gives the SDS and XMX platform motorcycles two firmware paths, the 'Zero Motorcycles Mobile App' or 'Zero Diagnostics Utility (ZDU) 33.9 and Diagnostic Cables Only Service Kit Incl. IXXAT V2 (p/n 12-08081)', and expands MBB there as 'Main Brain Board' where the 2019 bulletin says 'main bike board'. Zero's own 2020 S/SR/DS/DSR service manual (Version 1, archived dealer copy) gives the ZDU a 'Motor Controller Interface' tab whose buttons are 'Controller Information — Checks the current firmware version installed', 'List Faults — Displays any controller fault information', 'Commission-Encoder' and 'Encoder Calibration — This is for timing the motor', states that the controller must be 'commissioned using Zero motorcycle programming tools prior to operation' after replacement, names 'PN 85-05665 Controller Discharge Tool' for the controller capacitors, and confines the ZDU firmware function to 'MBB and BMS'; the same text appears in the 2014 and 2016 service manuals, and no Zero document publishes the controller fault list the button displays. The owner-side tool is the smartphone app, which the 2025 owner's manual (part 8811984-AF, mirror copy) says can 'Collect and email logs to Zero support staff' without saying what the logs contain. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy): codes are read on the motorcycle itself; a yellow diagnostic-warning icon sends the rider to the 'Diagnostics screen', reached from the menu, which 'displays an image of the motorcycle with the affected area highlighted, together with the relative diagnostic code', the menu opens only at standstill and exits above '1.9 mph (3 km/h)', and the manual names no dealer diagnostic tool anywhere; Energica's repair-information sheet 'COMPONENT AND DIAGNOSIS INFORMATION' (Rev. 15/05/2018, mirror copy) states 'Energica supports following OBD Modes: Mode 1, Mode 2, Mode 3, Mode 4, Mode 9' with a Mode 1 and 2 PID list ('0C Engine RPM', '11 Throttle position', '51 Fuel Type 8 for Electric') and no inverter PID, names no tool or connector standard, and shows the connector location as photographs, all of which the Energica fault-code entry in this knowledge base already carries; Energica's archived 2017 news page (published April 10, 2017, capture of October 4, 2023) says that with Euro 4 homologation the 2017 model year 'will have the OBD diagnostics' and 'a standard software that will communicate with a universal diagnostics tool. In this way, any workshop will be able to get access to the data'. LiveWire: Harley-Davidson's service bulletin M1519 of October 15, 2020 (filed with NHTSA under recall 20V624) reflashes with 'DIGITAL TECHNICIAN II (HD-48650)' and 'TECHLINK 3 (HD-48650-TL3)', in the order VSC (about 8 minutes), OBC (about 30 minutes) and instrument module (about 10 minutes, by USB-C), 'Do not attempt to reflash more than one module at a time', and 'can only be preformed by a certified ELW dealer' (sic); the modules it reflashes are the VSC, OBC and IM, not a motor controller; LiveWire's bulletin L1015 of August 17, 2024 (filed with NHTSA under recall 24V601) closes a repair with 'Update software', 'Connect Digital Technician II (DT II)', 'Navigate to the Reflash menu', 'Update all available modules software highlighted in red' and 'Check and clear any Diagnostic Trouble Codes (DTCs)', naming no controller or code; Harley-Davidson's Digital Technician II release notes M1490 of October 19, 2020 (filed with NHTSA; text layer without spaces, restored) name a 'Motor Control Module (MCM)' for the 2020 LiveWire, offer an MCM update in version 20.9, add 'Diagnostic Trouble Code (DTC) snapshot data available for MCM, RESS and OBC modules' and 'Add DTC description to VSC P1100000' in 20.10, update 'LiveWire MCM reflash updated to 6.0.10.2' and the VSC to 7.4.28.2 in 20.12, and state 'Motor Control Module (MCM) reflash has been disabled' in 20.13 with no reason; the M1490 notes of September 21, 2022 list for the LW1 'Module Reflash: OBC, Motor Control Module (MCM), VSC, Rechargeable Energy Storage System (RESS), ABS, BCM', 'Guided Diagnostics' and 'Active Tests', state '2020 (and later) LiveWire must use TL-3', and describe VSC v7.4.31.2 as 'Improved cruise control fault tolerance' and 'Improved fault tolerance to ride mode errors from incorrect map requests'; the initial-care bulletin M1502 of October 3, 2019 says DT II 'is not currently configured to show or update LiveWire modules under the reflash tab', that vehicles 'shipped with the latest software loaded to all modules', and lists the special tools 'Motor Controller BOB Harness HD-50390-9' and 'Isolation Ground Fault Detection Kit HD-52742' and the service part 'EVPT (Electric Vehicle Power-Train) 16101029'. For owners, the 2020 manual's powertrain troubleshooting is 'Motorcycle Does Not Operate 1. Check RESS state of charge. Charge battery. 2. Check Main fuse ... 3. See your authorized Harley-Davidson Electric Vehicle (EV) dealer', with no code procedure or list; the 2025 S2 manual (94001315) is the only LiveWire owner document read that says the instrument may show codes, 'A Diagnostic Menu may also be available to view ... Diagnostic Trouble Codes (DTCs) currently Active on the Vehicle', with no format, list or clearing procedure, and its repair text sends 'Clear all DTCs' to the electrical diagnostic manual. No LiveWire owner's manual names the Motor Control Module; it appears only in the dealer-tool release notes. The Energica manual statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR, DSR/X (2020+ Cypher III and 2014-2021 Cypher II platforms, as this corpus names them); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2014,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "how to read motor controller faults",
+      "zero diagnostic utility ixxat",
+      "list faults motor controller interface",
+      "energica diagnostics screen code",
+      "digital technician ii reflash livewire",
+      "techlink 3 livewire",
+      "obd modes energica",
+      "controller discharge tool",
+      "diagnostic menu dtcs livewire s2"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Trying to read a Zero or LiveWire controller with a generic OBD-II scan tool that neither make supports",
+      "A Zero log pull skipped before a firmware update, so the record the fault left is erased",
+      "Reflashing more than one LiveWire module at a time, against the bulletin's instruction"
+    ],
+    "fix_procedure": "1. Zero: read the dash codes first, then the dealer's ZDU with the IXXAT cable at the OBD-II port; pull the logs before any firmware update because the update erases them; the 'List Faults' button is the only documented view of the controller's own faults, and after a controller swap the encoder must be commissioned before the bike is ridden; owners can email the bike's logs to Zero from the app. 2. Energica: read the code on the dash diagnostics screen at standstill; the bike answers generic OBD Modes 1, 2, 3, 4 and 9 per the repair-information sheet, as the Energica fault-code entry describes. 3. LiveWire: Digital Technician II with the TechLink 3 interface at a certified dealer; reflash one module at a time in the bulletin's order; check and clear DTCs after; a 2025 S2 may show active codes on its Bike Status page, but the meanings are in the dealer's electrical diagnostic manual. 4. The Motor Control Module exists in Harley-Davidson's tool notes and in no owner document; do not tell an owner it can be updated by them.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Zero's two 2025 controller recalls: a motor controller replaced for busbar fasteners with no warning, and a firmware limp mode for key-switch signal loss",
+    "description": "Regulator record, from Zero Motorcycles' own Part 573 safety recall reports and the recall records on NHTSA's recalls API, read on September 18, 2026; how it shows is stated by the filings themselves. NHTSA campaign 25V834 (Zero SV-RCL-025-021, report submitted December 2, 2025): 2023 DSR/X motorcycles, 7 units built July 4, 2022 to April 21, 2023; the component is 'Motor Controller', described as 'CONTROLLER DANA X1 750A(S2) INTEGRATED HEATSINK A3 (8365 CHIP)', Zero part number 30-08089, from the Tier 2 supplier 'DANA TM4 Italia S.r.l.'; the defect is non-coated internal fasteners introduced under a supplier deviation, so that 'Higher resistance at the joint can cause an overvoltage event, leading the Mid Pack Protection Unit (MPPU) to fail open and causing an unexpected loss of propulsion while riding'; the filing states 'No known warnings precede this condition'; the API record's component is 'ELECTRICAL SYSTEM:PROPULSION SYSTEM:TRACTION MOTOR:CONTROLLER', its summary reads 'The motor controller may have been built with incorrect fasteners, causing higher resistance at the busbar joint and a loss of drive power', and the remedy is 'Dealers will replace the controller, free of charge'. The report does not say which other Zero models share this controller, and it never uses the words overcurrent, phase or IGBT; the platform name Cypher III is this corpus's, not the filing's. NHTSA campaign 25V587 (Zero SV-RCL-025-018, report submitted September 15, 2025): 2023 to 2024 DSR/X and 2024 DS, DSR and DSRP, 319 units; the API summary reads 'Improperly routed key switch signal wires may break, causing a loss of drive power', the component is 'ELECTRICAL SYSTEM:WIRING', and the remedy is firmware, 'The firmware will be updated by a dealer, or through an over-the-air (OTA) update, free of charge', although the API's over-the-air flag on the record is false; the report describes the pre-remedy behaviour as an immediate shutdown of propulsion on signal loss, even in motion, and the remedy firmware as: 'If the signal is lost, a warning will appear on the dash, and the motorcycle will remain fully operational. After decelerating to 40 kph, the system will transition into a limited-power (\"limp\") mode. The vehicle will remain in this state until it comes to a complete stop and the key is turned off.' Zero's firmware page does not link a release to this campaign.",
+    "make": "Zero",
+    "model": "Zero DSR/X 2023-2024; DS, DSR, DSRP 2024 (25V587); DSR/X 2023 (25V834)",
+    "year_start": 2023,
+    "year_end": 2024,
+    "severity": "critical",
+    "symptoms": [
+      "quits while running dsr/x",
+      "unexpected loss of propulsion zero",
+      "loss of drive power while riding",
+      "motor controller recall zero",
+      "limp mode after key switch fault",
+      "dana controller replaced under recall"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "25V834: non-coated internal busbar fasteners in the motor controller losing preload, raising joint resistance until the Mid Pack Protection Unit opens",
+      "25V587: key-switch signal wires routed so they may break, which the original firmware answered with an immediate propulsion shutdown"
+    ],
+    "fix_procedure": "1. Check the VIN against NHTSA campaigns 25V834 and 25V587 before diagnosing a Zero that quit while running. 2. 25V834: the remedy is controller replacement by the dealer with the corrected hardware; no warning precedes the failure, so a DSR/X in the population with a loss-of-propulsion report goes to the dealer regardless of what the dash showed. 3. 25V587: the remedy is a firmware update by the dealer or over the air; after it, a key-switch signal loss shows a dash warning and, after decelerating to 40 kph, a limited-power limp mode until the bike is stopped and keyed off; the wiring fault itself is the campaign's subject. 4. Neither filing publishes a diagnostic code for the condition.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "regulation"
+  },
+  {
+    "title": "LiveWire's powertrain-shutdown recalls are software in the on-board charger and the vehicle supervisory controller, reflashed by the dealer on the 2020 bike and over the air on the S2",
+    "description": "Regulator record, from Harley-Davidson's and LiveWire EV's own recall filings, dealer notices and the records on NHTSA's recalls API, read on September 18, 2026; how it shows is stated by the filings themselves. NHTSA campaign 20V624 (Harley-Davidson recall 0176, report received August 10, 2020, 1,012 units, filed under model ELW rather than LiveWire): 'The electric vehicle powertrain may unexpectedly shut down and not restart, due to a software issue in the Onboard Charging (OBC) system'; the component is charging-system software, the remedy is 'dealers will update the OBC software', and the API's over-the-air flag is false. Harley-Davidson's dealer notice of October 15, 2020 asks dealers, while the bike is in for the remedy, to 'also install updates to the Instrument Module and the Electric Vehicle Powertrain (also known as the EVPT or Motor) per Service Bulletin M1519', and that bulletin carries out the 'EVPT or Motor' update as a reflash of the Vehicle Supervisory Controller from calibration 7.1.17.2 to 7.4.28.2, not of a motor-controller module (the bulletin's tooling is on the tooling entry). NHTSA campaign 24V149 (LiveWire recall 1001, Part 573 report submitted February 26, 2024, 2024 S2 Del Mar): the vehicle supervisory control software 'may, during certain operating conditions, initiate a shutdown of the electric vehicle powertrain without providing an indication to the rider prior to initiating the shutdown sequence', caused by exceeding software voltage thresholds; the involved component is 'Power Electronics Unit', described as 'Vehicle Supervisory Controller (within the Power Electronics Unit)', part number 73100005; the report's warning field reads 'NR', which the form footnotes as Not Reported; the remedy is that 'The updated VSC software calibration revises the software thresholds which can cause the shutdown of the electric vehicle powertrain' and 'includes a provision to provide notice to a rider, via a limited performance mode, if a voltage threshold is being approached', delivered 'via firmware over the air (FOTA) via the telematics control unit (TCU)' from February 6, 2024. LiveWire's dealer notice of February 29, 2024 names 'Vehicle Supervisory Controller (VSC) software 13.3.16.2 / calibration 13.1.8.2' as the defective software, states 'The VSC software is within the PEU', gives dealers the option of installing the calibration under bulletin L1010 with Digital Technician II, and requires affected Power Electronics Units in dealer parts stock to be remedied as well. The instrument-module term for the rider-facing state is 'Propulsion Limited' (see the fault-surface entry); no filing publishes a diagnostic code for either condition.",
+    "make": "Harley-Davidson, LiveWire",
+    "model": "Harley-Davidson LiveWire ELW 2020 (20V624); LiveWire S2 Del Mar 2024 (24V149)",
+    "year_start": 2020,
+    "year_end": 2024,
+    "severity": "critical",
+    "symptoms": [
+      "livewire shut down while riding",
+      "powertrain shutdown no warning livewire",
+      "del mar shutdown recall",
+      "vsc software recall",
+      "onboard charger software recall 0176",
+      "fota update recall livewire",
+      "powertrain will not restart livewire"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "20V624: on-board charger software that could initiate a powertrain shutdown without indication to the rider, on 2020 ELW machines",
+      "24V149: vehicle supervisory controller software thresholds, inside the Power Electronics Unit, that could shut the powertrain down without prior indication, on 2024 S2 Del Mar machines"
+    ],
+    "fix_procedure": "1. Check the VIN against NHTSA campaigns 20V624 (2020 ELW) and 24V149 (2024 S2 Del Mar) before diagnosing an unexplained shutdown as hardware. 2. 20V624: dealer reflash of the OBC, with the instrument module and the vehicle supervisory controller updated at the same visit per bulletin M1519; not available over the air. 3. 24V149: the corrected VSC calibration arrived by FOTA from February 6, 2024 and requires the rider to accept the update; a dealer can install it under bulletin L1010; after the fix an approaching voltage threshold shows as a limited performance mode rather than a shutdown. 4. A Power Electronics Unit fitted from parts stock must carry the remedied software.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "regulation"
+  },
+  {
+    "title": "What a Zero's own logs hold about the motor controller, per the community log-analyser — motor channels on the older platform, none on the newer one, and fault names that are not log strings",
+    "description": "Owner-community entry. Source: zerologs.bike, an independent log-analyser tool for Zero owners (footer 'Made for Zero Motorcycles owners'), pages 'How Zero Logs Work', the error-codes page and the log-generations page, each 'Last updated: July 30, 2026', read on September 18, 2026. Every statement here is that site's, not Zero's; no Zero document publishes what its logs contain, and Zero's own naming of its controllers is on the identity entry. How it shows: the site states that 'Zero Motorcycles have two independent logging systems', the MBB logs and the BMS logs; that Gen1 and Gen2 MBB logs hold 'Motor temperature & RPM, Controller temperature, Odometer, Battery and motor amps'; and that 'On the Gen3 FST bikes (SR/F, SR/S, DSR/X) the MBB record carries none of the motor channels: no road speed, no RPM and no odometer'. Its error-codes page assigns the Gen2 dash codes to the 'Sevcon Gen4 controller' and lists fault names such as 'Controller Fault', 'Motor Phase Fault' and 'Precharge Failed', which the page describes as hand-maintained descriptive names, 'not verbatim strings lifted out of a log file'. Its log-generations page labels the Gen3 controller 'Cypher III (proprietary)'; Zero's own 2025 recall filing for the 2023 DSR/X names a Dana TM4 controller (see the recall entry), and the two statements are recorded here side by side without reconciling them.",
+    "make": "Zero",
+    "model": "Zero, all models with MBB and BMS logs; the site's Gen3 FST group is the SR/F, SR/S and DSR/X",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "what is in a zero mbb log",
+      "controller temperature in bike logs",
+      "motor phase fault in log",
+      "zero log analyser controller fault",
+      "gen3 log no rpm no speed"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Expecting the MBB log of a Gen3 SR/F, SR/S or DSR/X to carry motor or controller channels the site says it does not",
+      "Reading a community fault name as the verbatim string a Zero log or tool would show"
+    ],
+    "fix_procedure": "Forum tip: 1. Treat everything here as the community tool's description and label it so wherever quoted; Zero publishes no log format. 2. On the older platform, the MBB log's motor and controller temperature, RPM and amps channels can corroborate a controller complaint; on the Gen3 FST bikes the site says those channels are absent from the MBB record, so do not expect them. 3. The fault names on the site's error-codes page are descriptive, not log strings; the dealer's ZDU 'List Faults' view is the manufacturer's route to the controller's own faults (see the tooling entry). 4. Where the site and Zero's filings disagree on what the controller is, the filing is the manufacturer's word.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "forum"
+  }
+]
