@@ -37,7 +37,12 @@ def tree(tmp_path):
     (pkg / "cli").mkdir(parents=True)
     (pkg / "__init__.py").write_text(
         "from demo.live import used_helper\n"
-        "from demo.shelf import ShelfSitter\n"
+        # Parenthesised and multi-line, as this tree's packages actually
+        # re-export. Phase 244X: the single-line form 244U pinned was the
+        # one form its regex handled.
+        "from demo.shelf import (\n"
+        "    ShelfSitter,\n"
+        ")\n"
         '__all__ = ["used_helper", "ShelfSitter"]\n'
     )
     (pkg / "cli" / "__init__.py").write_text("")
@@ -96,7 +101,7 @@ class TestBothHalvesAreRequired:
                 )
             if blank_aliases and p.name == "__init__.py":
                 text = re.sub(
-                    r"(from\s+[\w\.]+\s+import\s*\(?)([^)\n]*\)?)",
+                    r"(from\s+[\w\.]+\s+import\s*)(\([^)]*\)|[^\n]*)",
                     lambda m: m.group(1) + re.sub(r"[A-Za-z_][A-Za-z0-9_]*", lambda x: "_" * len(x.group(0)), m.group(2)),
                     text,
                 )
@@ -189,12 +194,13 @@ class TestTheKnownScale:
         """46 before 244U could see through a re-export, 66 after, 58 once
         244V wired the reference lookups, 47 once 244W moved thirteen names
         into MODULE_ISLANDS (a dead file is one entry, not thirteen) and saw
-        two more through prose strings. The literal moves with the tree —
+        two more through prose strings, 104 once 244X made 244U's rule
+        reach the multi-line re-exports it had missed. The literal moves with the tree —
         DOWN when a phase reaches or reclassifies something, UP only when a
         new gap lands."""
         from support.integration_gaps_allowlist import ORPHANS
 
-        assert len(ORPHANS) == 47  # f9-noqa: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
+        assert len(ORPHANS) == 104  # f9-noqa: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings) → 104 (244X: 244U's rule finally reached multi-line re-exports, +57). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
 
     def test_what_was_hidden_was_a_layer_not_a_scattering(self):
         """What the blind spot hid was a LAYER: twenty engine capabilities a
