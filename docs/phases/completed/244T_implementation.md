@@ -1,6 +1,6 @@
 # Phase 244T — A hazard is told to the person holding the wrench
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -86,15 +86,57 @@ CRITICAL and WARNING only.**
 
 ## Verification Checklist
 
-- [ ] A critical-grade diagnosis shows the alert in `diagnose quick`
-- [ ] A warning-grade diagnosis shows it too
-- [ ] A caution-grade diagnosis shows nothing — the operator's threshold
-- [ ] The technician's typed symptoms are checked, not only the model's text
-- [ ] An engine-only rule does not fire on an electric bike
-- [ ] A universal rule still fires on an electric bike
-- [ ] An unknown powertrain shows everything, rather than suppressing
-- [ ] Nothing infers electric from the make: a Harley stays ICE, a LiveWire is not special-cased
-- [ ] `diagnose start` renders the same way
-- [ ] A safety failure never takes down the diagnosis
-- [ ] Mutations: unwire the caller; drop the threshold; drop the scoping; invert unknown-powertrain; infer from make — each caught
-- [ ] Full regression green
+- [x] A critical-grade diagnosis shows the alert in `diagnose quick`
+- [x] A warning-grade diagnosis shows it too
+- [x] A caution-grade diagnosis shows nothing — the operator's threshold
+- [x] The technician's typed symptoms are checked, not only the model's text
+- [x] An engine-only rule does not fire on an electric bike
+- [x] A universal rule still fires on an electric bike
+- [x] An unknown powertrain shows everything, rather than suppressing
+- [x] Nothing infers electric from the make: a Harley stays ICE, a LiveWire is not special-cased
+- [x] `diagnose start` renders the same way
+- [x] A safety failure never takes down the diagnosis
+- [x] Mutations: unwire the caller; drop the threshold; drop the scoping; invert unknown-powertrain; infer from make — each caught
+- [x] Full regression green
+
+## Deviations from v1.0
+
+**1. 🚨 Wiring it up found two critical false alarms.** Nothing had pressed
+these patterns against real diagnosis text in four phases. `gas(oline)?`
+matched the "gas" inside **"gasket"**, so *"valve cover gasket weeping; no
+other leak found"* printed **CRITICAL: FUEL LEAK — do not start the engine**.
+`oil` matched the "oil" inside **"coil"**. Together they account for **22 of
+the 98 critical alerts** the corpus produced. Fixed here rather than deferred,
+because the threshold this phase chose renders exactly those.
+
+**2. The first fix silenced the rules it was guarding.** Word boundaries went
+in as plain Python strings, where `\b` is a backspace character, not a regex
+boundary — so "fuel leaking from the petcock" stopped alerting. Raw strings,
+and tests in both directions now.
+
+**3. The measured rates changed, and the plan's numbers with them.** After the
+pattern fix: 29.7% of corpus entries fire something and **10.8% fire a
+critical or warning** — what a technician now sees. The plan's 9.9% critical
+was partly the bug.
+
+**4. Phase 241's tripwire fired, exactly as designed.** Its failure message
+carried three instructions for the day someone wired the checker: give it
+powertrain context (done), add the withheld HV rules (**not** done — no
+sourceable content, filed as **F88**), delete the tripwire (done, replaced by
+its inverse so the surface cannot quietly go dark).
+
+## Results
+
+| | |
+|---|---|
+| The gap | 19 rules, no caller since Phase 241 — now rendered by `diagnose quick` and `diagnose start` |
+| Threshold | CRITICAL + WARNING, the operator's decision from measurement: **10.8%** of corpus entries reach it |
+| Electric detection | the garage record only. Inferring from the make calls Harley-Davidson electric and misses LiveWire |
+| Unknown powertrain | shows everything — the field can hold a photo model's guess |
+| False alarms removed | **22 of 98 criticals**, from two substring matches (Deviation 1) |
+| Input | the model's diagnosis AND the technician's typed symptoms |
+| Failure behaviour | a safety failure is logged and swallowed; the diagnosis always renders |
+| HV rules | none exist, so an electric bike gets fewer alerts rather than the right ones — **F88**, not invented |
+| Tests added | **26** |
+| Mutations | **9 of 9 caught** (the run also exposed a weak assertion of mine) |
+| Regression | **6,914 passed, 0 failed, 30:07** |

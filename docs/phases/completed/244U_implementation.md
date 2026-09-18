@@ -1,6 +1,6 @@
 # Phase 244U — The gate can see what a re-export hides
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-17
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-17 (built 2026-09-17)
 
 ---
 
@@ -95,14 +95,48 @@ phase late.
 
 ## Verification Checklist
 
-- [ ] A dead name re-exported from a package `__init__` is reported
-- [ ] A dead name listed in a non-`__init__` module's `__all__` is reported
-- [ ] A name with a real caller is still not reported
-- [ ] Each half alone leaves 17 of the 20 hidden — the conjunctive proof
-- [ ] Module reachability is unchanged by the blanking
-- [ ] All 20 classified, every reason checked against the code
-- [ ] The scale pin moves 46 → 66 and says why
-- [ ] 209B's implementation doc records the corrected count
-- [ ] The gate still fails in both directions (new orphan, stale entry)
-- [ ] Mutations: drop each half; blank the module path too; classify with an empty reason — each caught
-- [ ] Full regression green
+- [x] A dead name re-exported from a package `__init__` is reported
+- [x] A dead name listed in a non-`__init__` module's `__all__` is reported
+- [x] A name with a real caller is still not reported
+- [x] Each half alone leaves 17 of the 20 hidden — the conjunctive proof
+- [x] Module reachability is unchanged by the blanking
+- [x] All 20 classified, every reason checked against the code
+- [x] The scale pin moves 46 → 66 and says why
+- [x] 209B's implementation doc records the corrected count
+- [x] The gate still fails in both directions (new orphan, stale entry)
+- [x] Mutations: drop each half; blank the module path too; classify with an empty reason — each caught
+- [x] Full regression green
+
+## Deviations from v1.0
+
+**1. A test expectation of mine was wrong, and the correction is worth
+keeping.** I assumed a re-exported module would show as unreachable once the
+name stopped counting. It does not, and should not: `demo/__init__` importing
+`demo.shelf` is a real import edge, so the MODULE is reachable while the NAME
+is an orphan inside it. A capability can be importable and still be something
+no user can reach. That distinction is now a test.
+
+**2. The mutation run found the scope untested.** Nothing pinned *where* alias
+blanking applies, so scoping it to package inits survived a mutation that
+applied it everywhere. Pinned now, with the note that widening it is a
+decision to take on purpose rather than by accident.
+
+## Results
+
+| | |
+|---|---|
+| The blind spot | a package re-export writes a name twice, so every exported name looked referenced |
+| How it was found | `SafetyChecker` — Phase 241 recorded it had no caller, the gate never listed it, 244T wired it four phases later |
+| Newly visible | **20** (the sweep claimed 117; measured against the gate's own live-orphan definition it is 20) |
+| Conjunctive proof | alias lists alone **+0** · `__all__` alone +3 · **both +20**, 17 of which appear only together |
+| What was hidden | a layer: torque specs, valve clearances, wiring circuit references, cost estimation, parts recommendation, repair-procedure generation |
+| Classification | 4 readers, 4 challengers; 19 stood, 1 reason corrected |
+| Allowlist | 46 → **66** entries, scale pinned, 209B's Results line corrected |
+| Reachability | unchanged at 38 unreachable modules — the module path is never blanked |
+| Tests added | **12** |
+| Mutations | **4 of 4 caught** |
+| Regression | **6,914 passed, 0 failed, 30:07** |
+
+**What this does not do:** wire any of the 20. The operator's standing
+instruction from 209B is to fix the gate rather than build the backlog, and
+what to do about an unreachable `get_torque_spec` is a product decision.
