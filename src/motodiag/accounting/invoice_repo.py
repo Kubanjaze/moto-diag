@@ -149,25 +149,3 @@ def delete_line_item(item_id: int, db_path: str | None = None) -> bool:
         return cursor.rowcount > 0
 
 
-def recalculate_invoice_totals(
-    invoice_id: int, tax_rate: float = 0.0, db_path: str | None = None,
-) -> dict:
-    """Sum line_total across all line items, recompute subtotal/tax/total.
-
-    tax_rate is a fraction (e.g., 0.0875 for 8.75%).
-    """
-    with get_connection(db_path) as conn:
-        cursor = conn.execute(
-            "SELECT COALESCE(SUM(line_total), 0) FROM invoice_line_items "
-            "WHERE invoice_id = ?",
-            (invoice_id,),
-        )
-        subtotal = cursor.fetchone()[0] or 0.0
-        tax_amount = round(subtotal * tax_rate, 2)
-        total = round(subtotal + tax_amount, 2)
-        conn.execute(
-            "UPDATE invoices SET subtotal = ?, tax_amount = ?, total = ? "
-            "WHERE id = ?",
-            (subtotal, tax_amount, total, invoice_id),
-        )
-    return {"subtotal": subtotal, "tax_amount": tax_amount, "total": total}

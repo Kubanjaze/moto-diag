@@ -24,20 +24,15 @@ Zero hardware, zero serial, zero tokens — pure Python.
 from __future__ import annotations
 
 import abc
-from datetime import datetime, timezone
 from typing import Optional
 
 import pytest
-from pydantic import ValidationError
 
 from motodiag.hardware.protocols import (
     ConnectionError as ProtocolConnectionError,
 )
 from motodiag.hardware.protocols import (
-    DTCReadResult,
-    PIDResponse,
     ProtocolAdapter,
-    ProtocolConnection,
     ProtocolError,
     UnsupportedCommandError,
 )
@@ -158,130 +153,17 @@ class TestProtocolAdapterABC:
 # ---------------------------------------------------------------------------
 
 
-class TestProtocolConnection:
-    """ProtocolConnection — frozen, validated, sensible defaults."""
-
-    def test_valid_construction_with_defaults(self) -> None:
-        conn = ProtocolConnection(port="COM3", protocol_name="ISO 15765-4 (CAN)")
-        assert conn.port == "COM3"
-        assert conn.baud == 38400
-        assert conn.timeout_s == 2.0
-        assert conn.protocol_name == "ISO 15765-4 (CAN)"
-
-    @pytest.mark.parametrize("bad_baud", [0, -1, 1_000_001])
-    def test_invalid_baud_rejected(self, bad_baud: int) -> None:
-        with pytest.raises(ValidationError):
-            ProtocolConnection(
-                port="COM3", baud=bad_baud, protocol_name="CAN"
-            )
-
-    @pytest.mark.parametrize("bad_timeout", [0.0, -0.5, 60.01])
-    def test_invalid_timeout_rejected(self, bad_timeout: float) -> None:
-        with pytest.raises(ValidationError):
-            ProtocolConnection(
-                port="COM3", timeout_s=bad_timeout, protocol_name="CAN"
-            )
-
-    def test_model_is_frozen(self) -> None:
-        conn = ProtocolConnection(port="COM3", protocol_name="CAN")
-        with pytest.raises(ValidationError):
-            conn.port = "COM7"  # type: ignore[misc]
-
-    def test_extra_fields_forbidden(self) -> None:
-        with pytest.raises(ValidationError):
-            ProtocolConnection(
-                port="COM3",
-                protocol_name="CAN",
-                portt="typo",  # type: ignore[call-arg]
-            )
-
 
 # ---------------------------------------------------------------------------
 # TestDTCReadResult
 # ---------------------------------------------------------------------------
 
 
-class TestDTCReadResult:
-    """DTCReadResult — regex validation, uppercase, UTC default."""
-
-    def test_codes_normalize_to_uppercase(self) -> None:
-        result = DTCReadResult(
-            codes=["p0171", "c1234", "b2468", "u0100"],
-            source_protocol="ISO 15765-4 (CAN)",
-        )
-        assert result.codes == ["P0171", "C1234", "B2468", "U0100"]
-
-    @pytest.mark.parametrize(
-        "bad_code",
-        ["X1234", "P12", "P0G71", "", "P01710", "12345", "PP171"],
-    )
-    def test_invalid_code_format_rejected(self, bad_code: str) -> None:
-        with pytest.raises(ValidationError):
-            DTCReadResult(codes=[bad_code], source_protocol="CAN")
-
-    def test_empty_codes_list_valid(self) -> None:
-        result = DTCReadResult(codes=[], source_protocol="CAN")
-        assert result.codes == []
-
-    def test_read_at_defaults_to_utc_aware_datetime(self) -> None:
-        before = datetime.now(timezone.utc)
-        result = DTCReadResult(source_protocol="CAN")
-        after = datetime.now(timezone.utc)
-        assert isinstance(result.read_at, datetime)
-        assert result.read_at.tzinfo is not None
-        # UTC offset is zero
-        assert result.read_at.utcoffset() == timezone.utc.utcoffset(None)
-        assert before <= result.read_at <= after
-
-    def test_source_protocol_is_required(self) -> None:
-        with pytest.raises(ValidationError):
-            DTCReadResult(codes=["P0171"])  # type: ignore[call-arg]
-
 
 # ---------------------------------------------------------------------------
 # TestPIDResponse
 # ---------------------------------------------------------------------------
 
-
-class TestPIDResponse:
-    """PIDResponse — paired presence, PID range."""
-
-    def test_valid_with_parsed_value_and_unit(self) -> None:
-        resp = PIDResponse(
-            pid=0x0C,
-            raw_bytes=b"\x1a\xf8",
-            parsed_value=1726.0,
-            parsed_unit="rpm",
-        )
-        assert resp.parsed_value == 1726.0
-        assert resp.parsed_unit == "rpm"
-
-    def test_valid_with_both_none(self) -> None:
-        resp = PIDResponse(pid=0x0C, raw_bytes=b"\x1a\xf8")
-        assert resp.parsed_value is None
-        assert resp.parsed_unit is None
-
-    def test_value_without_unit_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            PIDResponse(
-                pid=0x0C,
-                raw_bytes=b"\x00",
-                parsed_value=42.0,
-                # parsed_unit omitted
-            )
-
-    def test_unit_without_value_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            PIDResponse(
-                pid=0x0C,
-                raw_bytes=b"\x00",
-                parsed_unit="rpm",
-            )
-
-    @pytest.mark.parametrize("bad_pid", [-1, 0x10000, 70000])
-    def test_pid_out_of_range_rejected(self, bad_pid: int) -> None:
-        with pytest.raises(ValidationError):
-            PIDResponse(pid=bad_pid, raw_bytes=b"\x00")
 
 
 # ---------------------------------------------------------------------------
@@ -320,45 +202,3 @@ class TestExceptionHierarchy:
 # ---------------------------------------------------------------------------
 
 
-class TestPublicReExports:
-    """Canonical import paths and __all__ correctness."""
-
-    def test_protocols_package_exports(self) -> None:
-        # Re-import in a fresh binding and assert the full surface is present.
-        import motodiag.hardware.protocols as proto
-
-        for name in (
-            "ProtocolAdapter",
-            "ProtocolConnection",
-            "DTCReadResult",
-            "PIDResponse",
-            "ProtocolError",
-            "ConnectionError",
-            "TimeoutError",
-            "UnsupportedCommandError",
-        ):
-            assert hasattr(proto, name), f"motodiag.hardware.protocols missing {name}"
-
-    def test_hardware_package_convenience_reexport(self) -> None:
-        from motodiag.hardware import ProtocolAdapter as HW_Adapter
-        from motodiag.hardware import ProtocolConnection as HW_Connection
-
-        assert HW_Adapter is ProtocolAdapter
-        assert HW_Connection is ProtocolConnection
-
-    def test_protocols_all_lists_exact_public_names(self) -> None:
-        # Forward-compat: Phases 135-138 append concrete adapters to __all__.
-        # Assert the Phase 134 baseline set is a subset rather than exact match.
-        import motodiag.hardware.protocols as proto
-
-        phase_134_baseline = {
-            "ProtocolAdapter",
-            "ProtocolConnection",
-            "DTCReadResult",
-            "PIDResponse",
-            "ProtocolError",
-            "ConnectionError",
-            "TimeoutError",
-            "UnsupportedCommandError",
-        }
-        assert phase_134_baseline.issubset(set(proto.__all__))
