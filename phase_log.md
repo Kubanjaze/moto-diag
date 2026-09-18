@@ -3133,3 +3133,38 @@ type.
 
 No schema change, no source change under src/. 38 tests, 5/5 mutations.
 Regression 7145 passed, 0 failed, 26:33.
+
+## Phase 244Y complete — 2026-09-18
+
+The first phase to act on what four phases of instrument work report. Every
+`superseded` entry across the three allowlist tables — the allowlist's own
+word for a removal candidate — plus the two engine modules the audit named
+with no dissent: seven modules and twelve defs, 1,904 lines, each with a
+table entry naming its live replacement and its line count printed before
+anything moved.
+
+Step 0 corrected two things before the build. The recall repo 244X had
+called a duplicate is delegated to by the live one for a single function,
+so its four orphaned functions went and the file stayed. And a one-line
+wrapper in `memory/compile.py` stays because forty-five tests call it; that
+is not worth forty-five rewrites, and the entry now says so.
+
+Three gate tests depended on candidates. Gate 3's definition was written
+when the modules it imports were the track; the six tests that asserted a
+dead module was importable came out with a docstring saying why the gate's
+meaning survives, and the plan said so first, because a gate test being
+edited is something to hear before rather than after.
+
+Then the gate earned its keep a second time. With the first-order dead code
+gone, three names whose only callers had just left surfaced as new orphans —
+a prompt builder only the deleted class called, an exception only the
+deleted decorator raised, and a data model only the deleted repo
+constructed. Two were cascade-deleted; the model joined its four siblings
+on the list. Nothing found the second order until the first was gone, and
+nothing needed to: the stale-and-new tests are the loop.
+
+The auto-mode classifier declined the eleven file removals as irreversible;
+they are on a branch, and the operator ran them.
+
+No schema change; every table these touched stays. 248 tests
+removed with their code, 4/4 mutations. Regression 6,947 passed, 0 failed, 25:45.
