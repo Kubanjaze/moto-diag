@@ -1,6 +1,6 @@
 # Phase 244Z — What the shelved modules would say if anyone wired them
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-18
 
 ---
 
@@ -114,11 +114,77 @@ all — and makes the content honest so the decision is clean.
 
 ## Verification Checklist
 
-- [ ] `REPAIR_PROMPT` contains no numeric torque example and refers the reader to the manual
-- [ ] CORR-001 no longer pairs a liquid-cooling symptom with an air-cooled vehicle; the scan passes over all rules
-- [ ] No voltage/RPM literal in `intermittent.py` contradicts `wiring.py`'s charging circuit
-- [ ] "equivalent" does not appear in `parts.py`'s field description or prompt
-- [ ] All six modules import; `test_phase84_repair`, `test_phase153_parts`, `test_phase82_workflows`, `test_phase91_intermittent`, `test_phase90_correlation`, `test_phase83_confidence` pass
-- [ ] `MODULE_ISLANDS` unchanged: 14 entries, zero stale, zero new
-- [ ] Mutations: restore the torque exemplar; put "coolant" back in CORR-001; restore the 13V idle floor; restore "Equivalent" — each caught
-- [ ] Full regression green
+- [x] `REPAIR_PROMPT` contains no numeric torque example and refers the reader to the manual
+- [x] CORR-001 no longer pairs a liquid-cooling symptom with an air-cooled vehicle; the scan passes over all rules
+- [x] No voltage/RPM literal in `intermittent.py` contradicts `wiring.py`'s charging circuit
+- [x] "equivalent" does not appear in `parts.py`'s field description or prompt
+- [x] All six modules import; `test_phase84_repair`, `test_phase153_parts`, `test_phase82_workflows`, `test_phase91_intermittent`, `test_phase90_correlation`, `test_phase83_confidence` pass
+- [x] `MODULE_ISLANDS` unchanged: 14 entries, zero stale, zero new
+- [x] Mutations: restore the torque exemplar; put "coolant" back in CORR-001; restore the 13V idle floor; restore "Equivalent" — each caught
+- [x] Full regression green — **6,972 passed, 0 failed, 19:43**
+
+---
+
+## Results (v1.1)
+
+**Built as planned, with two deviations — one in a test suite, one in the
+interpreter.**
+
+### The four content fixes
+
+`REPAIR_PROMPT` states a torque figure only if one was supplied, otherwise
+refers to the service manual, with the same both-directions sentence `ref
+torque` leads with; the low-anchoring exemplar is gone. CORR-001 is deleted
+(18 → 17 rules) and the module's docstring example — which *was* CORR-001 in
+prose — now names CORR-002, tagged with its id so the docstring test is not
+vacuous. `intermittent.py`'s two charging thresholds are referrals to `ref
+circuit charging`, and a test computes every charging voltage literal in the
+module against the shipped `wiring.py` entry. `parts.py`'s field description
+and `PARTS_PROMPT` no longer ask for equivalents. All six modules still on
+`MODULE_ISLANDS`, 14 entries, nothing made reachable.
+
+### Deviation 1 — the deleted rule was Phase 90's fixture
+
+Seven tests in `test_phase90_correlation.py` used CORR-001 as their example:
+full match, two-of-three partial match, base-confidence equality, unmatched
+symptoms, lookup by id. Step 0 named the file as the module's suite and did
+not check what it was built on. Retargeted at CORR-002 — the same
+three-symptom shape, so every arithmetic assertion carries — with a
+docstring on the first saying why.
+
+### Deviation 2 — a same-length mutation is invisible to the bytecode cache
+
+M5 (put a nonexistent rule id back into the docstring) *survived*, and the
+docstring test then failed on the real tree while passing alone. Python's
+`.pyc` check is source mtime in whole seconds plus size; `CORR-002` →
+`CORR-001` is the same length, and the mutation runs take 0.05s each, so the
+mutated source was served from the previous run's bytecode and, afterwards,
+the real tree from the mutant's. Every earlier mutant in this series changed
+the file's size, which is why it never bit. The mutation script now clears
+bytecode and runs with `-B`; 5/5 on a clean cache. Recorded because the next
+same-length mutant will be someone else's.
+
+### Deviation 3 — 244G's meta-guard, again, on this file
+
+The full regression failed exactly one test: 244G's
+`test_no_test_asserts_a_literal_against_raw_python_source`, on the two
+assertions that read `intermittent.py` raw to check the stale charging
+floors were gone — the same defect 244Y's file had hours earlier. The
+thresholds were code strings, so blanked code is the honest thing to check;
+`code_of` now. The guard's scanner runs over every new test file before a
+regression from here on; 245's draft was scanned clean before it was ever
+installed.
+
+### Verification
+
+- 25 tests in `test_phase244Z_shelved_content.py`; 488 across the phase
+  suite, the six modules' own suites and the gate suites, on cleared
+  bytecode.
+- **5/5 mutations killed**: the torque exemplar back; a coolant rule on an
+  air-cooled twin back; the 13V idle floor back; the equivalence
+  solicitation back; the docstring naming a rule that does not exist.
+- `ruff` per file against HEAD: `repair` 12 → 12, `correlation` 62 → 60,
+  `intermittent` 22 → 21, `parts` 4 → 4; the new file's one finding is its
+  pin line.
+- No schema change; nothing reachable that was not.
+- Full regression **6,972 passed, 0 failed, 19:43**.

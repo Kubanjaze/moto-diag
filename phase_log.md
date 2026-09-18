@@ -3168,3 +3168,32 @@ they are on a branch, and the operator ran them.
 
 No schema change; every table these touched stays. 248 tests
 removed with their code, 4/4 mutations. Regression 6,947 passed, 0 failed, 25:45.
+
+## Phase 244Z complete — 2026-09-18
+
+The last letter of a series that began as a detour and ends as an
+instrument: built-but-unreachable is now something the tree can see, in
+both directions, at name and module granularity, through re-exports and
+prose strings. This phase is the small one at the end. Six engine modules
+stayed shelved because they are the only route to content the corpus
+lacks, and the audit had named four things in them that would put a wrong
+number or a wrong diagnosis in front of a technician the day any one is
+wired.
+
+Every one was content, not wiring, and every one is fixed as content. The
+repair prompt no longer instructs the model to invent torque specs — its
+exemplar sat about twenty percent under the M14 drain plug, in a module
+with no provenance anywhere — and now states a figure only if it was given
+one. A correlation rule that diagnosed a coolant-jacket leak on an
+air-cooled twin is gone; a mechanical scan showed it was the only one of
+eighteen with that shape, and the scan is a test now. The intermittent
+patterns defer to the one charging reference that ships instead of
+carrying two of their own. The parts prompt stops asking for
+equivalences, because an invented part number fails safe and an invented
+equivalence installs.
+
+Where making content true would have meant authoring it, it was deleted
+instead. Nothing became reachable; the wire-or-delete decision on the six
+is the operator's, and it is cleaner now.
+
+No schema change. 25 tests, 5/5 mutations. Regression 6,972 passed, 0 failed, 19:43.
