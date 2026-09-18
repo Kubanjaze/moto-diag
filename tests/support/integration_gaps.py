@@ -28,8 +28,10 @@ decorator. Console-script entry points in `pyproject.toml` count as references.
 from __future__ import annotations
 
 import ast
+import io
 import re
-from collections import Counter
+import tokenize
+from collections import Counter, defaultdict
 from pathlib import Path
 from typing import Iterable
 
@@ -128,12 +130,53 @@ def blank_exports(source: str, *, is_init: bool) -> str:
     return out
 
 
+def blank_prose_strings(source: str) -> str:
+    """Blank identifiers inside string literals that read as prose.
+
+    Phase 244W. Comments and docstrings were already blanked; a name inside an
+    error message or a migration description was not, so
+    ``feedback/learning_hook.py`` — whose only mention outside its package init
+    is *"phases 318-327 consume this via FeedbackReader read-only hook."* in
+    ``core/migrations.py:545`` — counted as used. The mention-vs-use family,
+    in a string.
+
+    A literal containing a space is prose. One without — a dotted module path,
+    a ``post_apply="mod:attr"`` hook, a table name — is left alone, because
+    the dynamic-import and hook scans read those. Tokenizer-based, so the
+    ``{expr}`` parts of an f-string stay code: only ``FSTRING_MIDDLE`` chunks
+    are touched. Any source the tokenizer rejects is returned unchanged, the
+    same fallback the docstring blanking uses.
+    """
+    try:
+        tokens = list(tokenize.generate_tokens(io.StringIO(source).readline))
+    except (tokenize.TokenError, IndentationError, SyntaxError):
+        return source
+    prose_types = {tokenize.STRING, getattr(tokenize, "FSTRING_MIDDLE", -1)}
+    offsets = [0]
+    for line in source.splitlines(keepends=True):
+        offsets.append(offsets[-1] + len(line))
+    out = list(source)
+    for tok in tokens:
+        if tok.type not in prose_types or " " not in tok.string:
+            continue
+        # A whole-f-string STRING token (Python < 3.12) carries code in
+        # braces; leave it rather than blank an expression.
+        if tok.type == tokenize.STRING and "{" in tok.string and \
+                tok.string.lstrip("rRbBuU")[:1] in ("f", "F"):
+            continue
+        a = offsets[tok.start[0] - 1] + tok.start[1]
+        b = offsets[tok.end[0] - 1] + tok.end[1]
+        out[a:b] = list(_blank_identifiers(source[a:b]))
+    return "".join(out)
+
+
 def _load(root: Path) -> tuple[dict[Path, str], dict[Path, str]]:
     raw = {p: p.read_text(encoding="utf-8", errors="replace")
            for p in _source_files(root)}
     code = {
         p: blank_exports(
-            blank_comments_and_docstrings(s), is_init=(p.name == "__init__.py"),
+            blank_prose_strings(blank_comments_and_docstrings(s)),
+            is_init=(p.name == "__init__.py"),
         )
         for p, s in raw.items()
     }
@@ -286,6 +329,101 @@ def find_unreachable_modules(
         seen.add(mod)
         stack.extend(graph[mod] - seen)
     return known - seen
+
+
+def _public_surface(source: str) -> set[str]:
+    """Every public name a module defines at top level — the module's reason
+    to exist. Unlike :func:`_public_defs` this keeps framework-decorated names
+    and adds module-level constants: a route module's surface *is* its
+    handlers and its ``router``. Stripping them leaves the module vacuously
+    dead and everything it calls follows — 55 modules, 15,669 lines, measured.
+    """
+    try:
+        tree = ast.parse(source)
+    except SyntaxError:
+        return set()
+    names: set[str] = set()
+    for node in tree.body:
+        if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
+            if not node.name.startswith("_"):
+                names.add(node.name)
+        elif isinstance(node, ast.Assign):
+            names.update(t.id for t in node.targets
+                         if isinstance(t, ast.Name) and not t.id.startswith("_"))
+        elif isinstance(node, ast.AnnAssign):
+            if isinstance(node.target, ast.Name) and not node.target.id.startswith("_"):
+                names.add(node.target.id)
+    return names
+
+
+def find_module_islands(
+    src_root: Path, package: str, entry_points: Iterable[str],
+) -> set[str]:
+    """Modules no public name of which is used by any live module.
+
+    Phase 244W. The gate's second blind spot, after 244U's re-exports: a
+    module whose names refer only to each other, inside a package that is
+    otherwise alive. The import walk cannot see it (the ``__init__`` import
+    edge is real), the package-level island check cannot (the package is
+    alive), and the orphan count cannot — a class that names itself counts
+    as used, and a dead module naming another launders it. ``engine/history``
+    and ``engine/retrieval``, 668 lines with no caller, were invisible to all
+    three.
+
+    A reference is evidence of life only if the referring module is not the
+    defining module, not a package ``__init__`` (244U's rule, applied at
+    referrer granularity rather than by text), and not itself an island.
+    The island set starts as :func:`find_unreachable_modules`' answer, which
+    is the one seed that changes the result: a name collision with an
+    already-dead module (``add_item`` in ``pricing/repair_plan``) otherwise
+    shields a second dead module (``inventory/item_repo``). Then iterate to a
+    fixpoint — two generations on this tree. Only what the existing checks do
+    not already report is returned.
+
+    An entry point is never a candidate: it is the root the question is
+    asked from. On this tree that never mattered, because ``cli`` is named
+    in dozens of files — and the synthetic trees showed what happens when it
+    is not: the entry module is flagged, its references stop counting, and
+    everything it calls follows. Route modules survive the same way today,
+    through ``app.py`` naming each ``router``; a framework that registered
+    handlers by discovery instead of by name would need a seed here.
+
+    A module with no public surface is never flagged: there is no name-level
+    evidence either way, and it may exist for an import side effect. The
+    limitation inherited from the whole gate stands: a name collision with a
+    *live* module hides a dead one.
+    """
+    mods = module_map(src_root, package)
+    by_path = {p: m for m, p in mods.items()}
+    raw, code = _load(src_root / package)
+    roots = set(entry_points)
+
+    surface = {by_path[p]: _public_surface(text) for p, text in raw.items()}
+    mentioned_by: dict[str, set[str]] = defaultdict(set)
+    for path, text in code.items():
+        if path.name == "__init__.py":
+            continue
+        for name in set(_IDENTIFIER.findall(text)):
+            mentioned_by[name].add(by_path[path])
+
+    already_dead = find_unreachable_modules(src_root, package, entry_points)
+    islands = set(already_dead)
+    candidates = [
+        m for m, p in mods.items()
+        if p.name != "__init__.py" and surface[m]
+        and m not in islands and m not in roots
+    ]
+    changed = True
+    while changed:
+        changed = False
+        for m in candidates:
+            if m in islands:
+                continue
+            alive = any(mentioned_by[n] - islands - {m} for n in surface[m])
+            if not alive:
+                islands.add(m)
+                changed = True
+    return islands - already_dead
 
 
 def entry_points_from_pyproject(pyproject_text: str) -> set[str]:
