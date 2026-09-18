@@ -41,7 +41,9 @@ CONCEPTS = {
     "thermal derating": r"\bthermal derating\b",
     "cycle counting": r"\bcycle count(?:er|ing)\b",
 }
-_NUMBER = re.compile(r"\b\d+(?:\.\d+)?\s?(?:mV|V|°C|°F|%|cycles?|Ah|kWh|km|mi)\b", re.I)
+#: The trailing guard is a lookahead, not \b: a word boundary never follows '%',
+#: so '40%' was invisible to this rule until Phase 248's mutation 2 caught it.
+_NUMBER = re.compile(r"\b\d+(?:\.\d+)?\s?(?:mV|V|°C|°F|%|cycles?|Ah|kWh|km|mi)(?!\w)", re.I)
 _DOCUMENT = re.compile(
     r"(owner'?s manual|service manual|service bulletin|release notes"
     r"|support (?:article|knowledge base)|spec(?:ification)? sheet|Rev\.|Cod\.)",

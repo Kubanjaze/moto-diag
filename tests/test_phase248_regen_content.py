@@ -1,13 +1,14 @@
-"""Phase 247 — motor controller / inverter faults: the generic layer, anchored per make.
+"""Phase 248 — regenerative braking: the generic layer, anchored per make.
 
-Every entry in `known_issues_inverter.json` is one of five concepts — the
-controller's identity, its fault surface, overcurrent/phase/IGBT, controller
-firmware, tooling — written as *what the controller does* and *how each make
-shows it*, anchored to a manufacturer document for every make named, or not
-written. 246's rules carry over unchanged: the document named in the
-description (no citation column exists), every number labelled, one row one
-label, a forum row dated. 247 adds a boundary: nothing here restates 246's
-pack content or 249's temperature tables.
+Every entry in `known_issues_regen.json` is one of five concepts — the regen
+settings, coast-down behaviour, the brake light on regen, single-pedal
+capability, regen limits and faults — written as *what regen does* and *how
+each make shows it*, anchored to a manufacturer document for every make
+named, or not written. 246's and 247's rules carry over unchanged: the
+document named in the description, every number labelled, one row one
+label, a regulation row names its campaign, a forum row is dated, a listed
+code is named in the text. 248's boundary: nothing here restates 246's pack
+content, 247's controller content or 249's temperature tables.
 """
 
 from __future__ import annotations
@@ -25,29 +26,30 @@ from motodiag.knowledge.loader import load_known_issues_file
 
 ROOT = Path(__file__).resolve().parent.parent
 K = ROOT / "src" / "motodiag" / "knowledge" / "seed" / "knowledge"
-INV = K / "known_issues_inverter.json"
+RGN = K / "known_issues_regen.json"
 
 #: One row per concept, named in the *title* (246's lesson: word-bounded, titles
 #: only — a loose needle once matched "moderate" and hid a deleted row).
 CONCEPTS = {
-    "identity": r"\bmotor controller\b.*\bis\b|\binverter\b.*\bis\b",
-    "fault surface": r"\bfault\b|\balert",
-    "overcurrent phase igbt": r"overcurrent|phase|IGBT",
-    "firmware": r"\bfirmware\b",
-    "tooling": r"\btool\b|\breads\b",
+    "settings": r"\bregen\b.*\b(?:set|sets|setting|settings|level|levels|ratio|ratios)\b",
+    "coast-down": r"\bcoast(?:ing|-down)?\b|\boff[- ]throttle\b",
+    "brake light": r"\bbrake (?:light|lamp)\b",
+    "single-pedal": r"\b(?:one|single)-pedal\b",
+    "limits and faults": r"\blimit(?:s|ed)?\b|\bfault",
 }
 _BAND_TABLE = re.compile(
     r"\bblue\b.*\bwhite\b.*\bred\b|\bblue\b.*\bgreen\b.*\byellow\b", re.I | re.S
 )
-_246_TITLES = re.compile(
-    r"cell balancing|state of health|voltage curve|cycle count|thermal derating", re.I
+_OTHER_ROWS = re.compile(
+    r"cell balancing|state of health|voltage curve|cycle count|thermal derating"
+    r"|motor controller is|inverter faults|controller firmware", re.I
 )
-#: 247's units are the controller's: amps, rpm, kW, torque, speed. A first draft
-#: inherited 246's pack units and let a 600 A model-generated row through (mutation 2).
+#: 248's units are the rider's settings and the machine's speeds: percent, levels,
+#: km/h and mph, plus the pack and controller units 246 and 247 learned to catch.
 #: The trailing guard is a lookahead, not \b: a word boundary never follows '%',
 #: so '40%' was invisible to this rule until Phase 248's mutation 2 caught it.
 _NUMBER = re.compile(
-    r"\b\d+(?:[.,]\d+)?\s?(?:mV|V|A|amps?|°C|°F|%|cycles?|Ah|kWh|kW|hp|rpm|N·m|ft-lbs|kph|km|mi)(?!\w)",
+    r"\b\d+(?:[.,]\d+)?\s?(?:mV|V|A|amps?|°C|°F|%|percent|cycles?|Ah|kWh|kW|hp|rpm|N·m|ft-lbs|kph|km/h|mph|km|mi)(?!\w)",
     re.I,
 )
 _DOCUMENT = re.compile(
@@ -58,7 +60,7 @@ _DOCUMENT = re.compile(
 
 
 def _entries() -> list[dict]:
-    d = json.loads(INV.read_text(encoding="utf-8"))
+    d = json.loads(RGN.read_text(encoding="utf-8"))
     return d if isinstance(d, list) else next(v for v in d.values() if isinstance(v, list))
 
 
@@ -72,9 +74,9 @@ def _text(e: dict) -> str:
 
 @pytest.fixture
 def db(tmp_path):
-    path = str(tmp_path / "phase247.db")
+    path = str(tmp_path / "phase248.db")
     init_db(path)
-    load_known_issues_file(INV, path)
+    load_known_issues_file(RGN, path)
     return path
 
 
@@ -85,13 +87,14 @@ def db(tmp_path):
 
 class TestTheFiveConcepts:
     def test_the_seed_file_exists_and_loads(self, db):
-        assert search_known_issues(db_path=db), "known_issues_inverter.json loaded nothing"
+        assert search_known_issues(db_path=db), "known_issues_regen.json loaded nothing"
 
-    def test_no_row_restates_246_or_249(self):
-        """246 owns the pack, 249 owns the temperature tables. A 247 row may
-        name a temperature-triggered fault; it may not carry the band table."""
+    def test_no_row_restates_246_247_or_249(self):
+        """246 owns the pack, 247 the controller, 249 the temperature tables.
+        A 248 row may name a regen limit tied to the pack or to temperature;
+        it may not carry the band table or restate the other rows."""
         for e in _entries():
-            assert not _246_TITLES.search(e["title"]), e["title"]
+            assert not _OTHER_ROWS.search(e["title"]), e["title"]
             assert not _BAND_TABLE.search(e["description"]), (e["title"][:40], "band table")
 
     @pytest.mark.parametrize("concept", sorted(CONCEPTS))
@@ -145,7 +148,7 @@ class TestTheFiveConcepts:
 
 
 class TestEveryEntryIsAnchored:
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_a_service_manual_entry_names_its_document(self, entry):
         """No citation column exists; 244's convention is the document named
         in the description. `service-manual` without a named document is a
@@ -153,7 +156,7 @@ class TestEveryEntryIsAnchored:
         if entry["source"] == "service-manual":
             assert _DOCUMENT.search(entry["description"]), entry["title"]
 
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_a_number_is_never_unlabelled(self, entry):
         """The operator's rule. A threshold is `service-manual` (document
         named) or `forum` — never `model-generated`, never `unverified`."""
@@ -162,7 +165,21 @@ class TestEveryEntryIsAnchored:
                 f"{entry['title']}: a numeric threshold with source {entry['source']!r}"
             )
 
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
+    def test_a_regen_percentage_is_only_ever_livewires_web_figure(self, entry):
+        """No owner's manual of the three makes prints a regen percentage.
+        The only percentages in the research are LiveWire's S2 preset figures,
+        published on its product web pages. So any percentage in a manual- or
+        regulation-labelled row must name livewire.com in the same sentence;
+        a figure presented as a manual's would be invented."""
+        if entry["source"] == "forum":
+            return
+        for field in ("description", "fix_procedure"):
+            for sentence in re.split(r"(?<=[.!?])\s+", entry.get(field) or ""):
+                if re.search(r"\d\s?%", sentence):
+                    assert "livewire.com" in sentence, (entry["title"][:40], sentence[:120])
+
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_a_regulation_entry_names_its_campaign(self, entry):
         """A regulator record is anchored by its campaign number, the way a
         manual row is anchored by its document code."""
@@ -170,14 +187,14 @@ class TestEveryEntryIsAnchored:
             assert re.search(r"\b\d{2}V\d{3}\b", entry["description"]), entry["title"]
             assert "NHTSA" in entry["description"], entry["title"]
 
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_every_listed_code_is_named_in_the_text(self, entry):
         """`dtc_codes` is what a `code` lookup joins on; a code listed there
         must be the one the description names, character for character."""
         for code in entry["dtc_codes"]:
             assert code in entry["description"], (entry["title"][:40], code)
 
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_a_forum_entry_names_where_it_came_from(self, entry):
         """The research reached one community source: zerologs.bike, an
         independent log-analyser site (its footer: "Made for Zero Motorcycles
@@ -195,7 +212,7 @@ class TestEveryEntryIsAnchored:
                 "the wiki was never fetched; it cannot be cited"
             )
 
-    @pytest.mark.parametrize("entry", _entries() if INV.exists() else [], ids=_ident)
+    @pytest.mark.parametrize("entry", _entries() if RGN.exists() else [], ids=_ident)
     def test_a_forum_number_never_shares_a_row_with_manual_content(self, entry):
         """One row carries one label. A community threshold inside a
         `service-manual` row would be displayed under the manual's label,
@@ -224,7 +241,7 @@ class TestReachable:
     def _wide(self, monkeypatch):
         monkeypatch.setenv("COLUMNS", "220")
 
-    @pytest.mark.parametrize("term", ["inverter", "motor controller", "firmware"])
+    @pytest.mark.parametrize("term", ["regen", "brake light", "coast"])
     def test_kb_search_finds_the_layer(self, db, monkeypatch, term):
         from motodiag.cli.main import cli
         from motodiag.core.config import reset_settings

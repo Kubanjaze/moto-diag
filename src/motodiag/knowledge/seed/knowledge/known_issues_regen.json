@@ -1,0 +1,190 @@
+[
+  {
+    "title": "What the rider can set for regen on each make — named modes and levels in the manuals, percentages only on LiveWire's web pages",
+    "description": "Generic-layer entry for regenerative-braking settings, written as what the rider can set and how each make names it, anchored to the manufacturer's own document for every make named; every name and figure is the manufacturer's. No maker publishes a regen torque, power, current or deceleration figure, and neither Zero nor Energica publishes a regen percentage anywhere. Zero: the 2025 owner's manual for the S, SR, SR/F and SR/S (part 8811984-AF, read from a dealer-hosted mirror copy) lists the default ride modes ECO, STANDARD, SPORT, RAIN and CANYON, plus a CUSTOM mode created and modified in the smartphone application (section 3.13); it ranks regen in words only: RAIN has 'the lowest amount of regenerative braking when the throttle is released' of all factory modes, STANDARD's regenerative braking 'is greater than RAIN, but less than ECO and SPORT', SPORT's regeneration is 'decreased' compared with ECO, and CANYON 'provides an increased amount of regenerative braking when the throttle is released' without naming what it is compared with (sections 3.13 to 3.15); CUSTOM 'is pre-installed from the factory with identical settings to STANDARD mode' and is customised in the app, and the manual names no regen parameter for it (section 3.16). The 2021 SR/F owner's manual (part 88-09445-01, mirror copy) has ECO, STREET, SPORT and RAIN with the same sentence for STREET, and a CUSTOM mode that ships with STREET's settings, is selectable with the mode button and is edited in the app; Zero's firmware release notes page (a manufacturer web page, 'Updated: August 12, 2026') records 'Rename Street Mode to Standard for all FST bikes' in release MBB_V20/BMU_V2/BMS_V19 under its 2020-22 SR/S heading. The 2021 S, SR, DS and DSR owner's manual (part 88-09447-01, mirror copy) has ECO, SPORT and CUSTOM on a handlebar button: ECO 'increases the amount of regeneration when the throttle is released' and SPORT 'decreases' it (section 3.20). Zero's technology web page says 'Torque, regenerative braking, and even top speed limits can be set through your app'; no Zero manual read names the CUSTOM mode's regen parameter or its range. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, translated version read from a mirror copy): four regeneration profiles, OFF, LOW, MEDIUM and HIGH, are chosen on the dash profile screen, and 'The higher the profile, the greater the engine brake effect during deceleration'; no value is attached to any level (printed page 45); the power profiles ECO, URBAN, RAIN and SPORT are a separate selection on the same screen, and no regen level is tied to a power profile. Energica's own web pages word it differently over time: the archived technology page (captures of June 19, 2019, May 21, 2020 and July 9, 2021) describes 'four different motor mappings' and, 'In addition, there are three different settings of regenerative braking that can be manually turned off by the driver'; the current technology page (energicamotor.com, footer 2026) says each riding mode 'remaps throttle response, regenerative braking intensity, and power ceiling' and 'Four regenerative braking maps let riders tune energy recovery independently'; the current Experia page lists '4 Regenerative Modes: High, Medium, Low, Off' and '7 Profiles: Energica 1–4 (factory preset), Custom 1–3 (Customizable)' with no regen stated per profile; the current Ego page lists '4 Regenerative Maps: Low, Medium, High, Off' with riding modes named Eco, Standard, Wet, Sport; and the archived Eva Ribelle (US, capture of March 8, 2024) and EsseEsse9+ RS (capture of December 2, 2021) pages list four regenerative maps, Low, Medium, High and Off, with riding modes Urban, Eco, Rain, Sport. The pages disagree on mode names and on whether riding modes remap regen, and they are recorded side by side here, not reconciled. LiveWire: the 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, mirror copy) exposes regen only as a Custom-mode 'Regen slider' beside Power and Throttle sliders, and 'Regen slider adjusts how much regen will be enabled in the custom ride mode' (Table 30, printed page 79), with no range, units or default; it has three Custom modes, and its presets are described in prose with no regen level printed anywhere in the manual. The 2023 LiveWire ONE owner's manual (94001019, Service Information Portal) allows 'up to three' custom modes, and its round instrument lists 'Regen - Maximum available regenerative braking' as a customisation. The 2025 S2 owner's manual (94001315, same portal) describes Chicane with 'increased regenerative braking' and Flat Track (Del Mar only) with 'reduced regenerative braking for cornering control', both entered from Sport with the bike stopped and propulsion enabled, and both disabling rear ABS and cornering control. LiveWire's S2 Del Mar, Mulholland and Alpinista product web pages (livewire.com, undated, read September 18, 2026) state the preset regen as Sport 65%, Road 35%, Range 80% and Rain 20%, and Custom A and B from 0-100%, figures that appear in no LiveWire owner's manual and that sit in the page data behind the ride-mode tabs; LiveWire's ONE web page (livewire.com) describes regen only in words, Sport and Range 'Full regen braking', Road 'Slightly reduced regen braking' and Rain 'Low regen braking', with Custom set 'in 1% increments'. The Energica manual statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "how much regen does each ride mode have",
+      "regen slider custom mode",
+      "change regen level",
+      "regen percentage per ride mode",
+      "canyon mode regen",
+      "energica regeneration profile off low medium high",
+      "no regen in rain mode"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A ride mode chosen with less regen than the rider expects (Zero RAIN, Energica OFF or LOW, LiveWire Rain or Road)",
+      "A custom mode saved with its regen set low",
+      "A figure quoted from a web page or memory as if the manual published it"
+    ],
+    "fix_procedure": "1. Identify the ride mode and, on a custom mode, the regen setting before diagnosing weak or strong off-throttle braking; the modes differ by design. 2. Zero: the manuals rank regen between modes in words only; CUSTOM regen is set in the app. 3. Energica: check the regeneration profile on the dash profile screen (OFF, LOW, MEDIUM, HIGH); it is set separately from the power profile. 4. LiveWire: the 2020 and ONE manuals expose a Regen slider for custom modes; the S2 preset figures are LiveWire's web figures, not the manual's, and should be quoted as such. 5. Do not quote a regen torque, current or deceleration figure; no maker publishes one.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "Off-throttle regen and coasting on each make — a drag on a closed throttle, a coasting point just off it, and no published behaviour approaching a stop",
+    "description": "Generic-layer entry for coast-down regen, written as what each make does when the throttle is closed and how the rider coasts without it, anchored to the manufacturer's own document for every make named. Zero (2025 owner's manual 8811984-AF, section 3.9, item E, read from a mirror copy; the 2021 SR/F owner's manual 88-09445-01 has the same wording on page 3.9): 'Release the throttle and it automatically returns back to the closed position, which will engage regenerative braking while the motorcycle is in motion'; 'A slight drag is felt when the regenerative braking is activated'; to coast, 'hold the throttle at zero-torque point, just off of the fully closed position. The zero-torque point changes with speed and ride mode.' The 2021 S, SR, DS and DSR owner's manual (88-09447-01, section 3.18) says the throttle 'snaps back to the closed position (B), de-energizing the motor, and regenerative braking begins', and to coast, 'hold the throttle just off of the fully closed position', with no zero-torque wording. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy): off-throttle regen is described only as an engine brake effect that grows with the selected regeneration profile (printed page 45), and letting go of the grip will 'cut off the power supply to the motorcycle' (printed page 32, item H); no coasting band, fade speed or standstill behaviour is described. LiveWire: the 2025 S2 owner's manual (94001315, Roll-Forward Regen page on Harley-Davidson's Service Information Portal) defines 'COAST-DOWN REGEN: When the throttle twist grip is released, regenerative braking is automatically applied. This resembles the feel of internal combustion engine braking. The amount of regenerative braking depends on the vehicle ride mode.' On the same page, rolling the grip forward past the zero/neutral position while moving 'may be enabled to apply additional regenerative braking', which lets the rider 'actively command maximum regenerative power in any ride mode', and returning the grip to neutral restores the ride mode's coast-down regen. LiveWire's roll-forward regen web article (livewire.com, no date shown) adds that 'Even in ride modes configured with full regen, RFR adds extra regen braking power at speeds below 20 mph', that at higher speeds 'RFR does not exceed the regen already provided by roll-off regen braking', and that regen is 'technically ramped to avoid abruptness' yet 'feels instant'. The 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, mirror copy) has no regenerative-braking section and says only 'Decelerate: Slowly twist throttle control grip forward (toward the front) to decrease speed.' How it shows: on every make, closing the throttle while moving brings in regen at the ride mode's level, felt as engine braking. No manual says whether coast-down regen tapers, holds or cuts out approaching a stop. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "how to coast without regen",
+      "bike slows hard when i close the throttle",
+      "zero-torque point throttle",
+      "no engine braking off throttle",
+      "roll-forward regen",
+      "regen feels different at low speed",
+      "coast-down regen"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Closed throttle engages regen by design; coasting needs the throttle held just off closed (Zero)",
+      "The ride mode or regen profile sets how strong coast-down regen is",
+      "A LiveWire S2 rider using roll-forward regen, which adds regen below the article's stated speed"
+    ],
+    "fix_procedure": "1. Confirm the complaint against the documented behaviour: a closed throttle engages regen on every make, felt as a drag or as engine braking. 2. To coast on a Zero, hold the throttle just off fully closed; on the 2021 SR/F and 2025 manuals the zero-torque point moves with speed and ride mode. 3. On an Energica, check the regeneration profile first; OFF gives no engine-brake effect. 4. On a LiveWire S2, check whether roll-forward regen is enabled and whether the rider is rolling the grip forward. 5. Do not promise a regen behaviour approaching a stop; no maker publishes one.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "Does regen light the brake lamp — yes above an unpublished threshold on the LiveWire S2, and unstated in every other manual read",
+    "description": "Generic-layer entry for the brake lamp during regenerative braking, written as what each make states and how each make shows it, anchored to the manufacturer's own document for every make named; where a manual is silent, the silence is recorded as silence, not as 'does not light'. LiveWire: the 2025 S2 owner's manual (94001315, Roll-Forward Regen page on Harley-Davidson's Service Information Portal, the first item of a note after the roll-forward paragraph) states 'This motorcycle automatically illuminates the brake taillights when a threshold of regenerative braking is applied. This notifies other vehicles that the bike is decelerating.' The threshold is not published, the page is headed by a software requirement (bundle 10.1.9), and the manual does not say whether the lamp behaviour depends on that software. LiveWire's roll-forward regen web article (livewire.com, no date shown) says 'Brake lights automatically illuminate when regen reaches a certain threshold', and its companion news post says 'Tail light automatically illuminates during regen to alert other drivers.' The 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, mirror copy, read in full) and the LiveWire ONE owner's manual pages read (94001019) never state that the lamp lights on regen. Zero: the 2025 owner's manual (8811984-AF, mirror copy) and the 2021 SR/F owner's manual (88-09445-01) tie the lamp to the controls, 'The brake light illuminates when the rear brake pedal is applied' (section 3.7, item G) and, for the front lever, 'The brake light also illuminates' (section 3.9, item D), and say nothing either way about regen; the lamp's own dash codes are 20 'Brake Bulb Short Fault' and 21 'Brake Bulb Out Fault', which concern the lamp circuit, not regen. Zero's 2020 S/SR/DS/DSR service manual (Version 1, read from an archived dealer copy) shows in its Splice 37 joint table both brake-light switch outputs joined to the tail light's 'Brake Light Input' and to main bike board connector C1 pin 28 'Brake Light Switch Input'; no bike-board output to the lamp appears in its wiring tables, and what the board does with pin 28 is not described. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy): nothing states that the stop lamp lights during regenerative deceleration; the manual's stop-lamp content is the user message 'STOP LIGHT FAULT.' (printed page 74), the lamp-circuit codes B1002 STOP LIGHTS OPEN CIRCUIT FAULT and B1003 STOP LIGHTS SHORT CIRCUIT FAULT (printed page 79), and a maintenance check of the front and rear brake-light switches (printed page 108). No recall campaign for any of the three makes concerns the brake lamp during regen; Zero's brake-light campaigns in NHTSA's record, 20V704 and 12V307, are brake-light-switch campaigns and belong to the Zero brake-campaigns entry. How it shows: on a LiveWire S2 the lamp can light with no lever or pedal touched once regen passes the threshold; on the other makes, the manuals document only the lever and pedal switches. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "brake light comes on without touching the brakes",
+      "brake light on during regen",
+      "brake light does not come on when regen slows the bike",
+      "tail light flickers off throttle",
+      "does regen turn on the brake light",
+      "stop light fault energica"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "LiveWire S2 lighting the lamp by design once regen passes an unpublished threshold",
+      "A lamp or switch circuit fault, shown by the make's own lamp codes (Zero 20 and 21, Energica B1002 and B1003)",
+      "Expecting regen to light the lamp on a make whose manual only documents the lever and pedal switches"
+    ],
+    "fix_procedure": "1. Establish the make and platform first: only the LiveWire S2 manual states that regen lights the brake lamp, above a threshold it does not publish. 2. On an S2, a lamp that lights off throttle with no lever or pedal touched is documented behaviour; check the software bundle the manual names before calling it a fault. 3. On a Zero or an Energica, test the lamp from the front lever and the rear pedal; those are the only triggers their manuals document, and the lamp-circuit codes (Zero 20 and 21, Energica B1002 and B1003) point to wiring or the bulb, not to regen. 4. On a 2020 SR/F or SR/S whose lamp fails from the front lever, check the brake-switch campaign in the Zero brake-campaigns entry. 5. Do not tell an owner that regen does or does not light the lamp on a make whose manual is silent.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "No electric motorcycle maker offers a one-pedal stop — every manual read ends a stop on the friction brakes",
+    "description": "Generic-layer entry for single-pedal or one-pedal riding, written as what each make states and how it shows, anchored to the documents read in full to say so; this is a deliberate-absence entry. No manual of the three makes describes a one-pedal stop or regen that brings the motorcycle to a standstill. Zero: the 2025 owner's manual (8811984-AF, section 3.9, mirror copy) and the 2021 SR/F owner's manual (88-09445-01, section 3.9) describe off-throttle regen as 'A slight drag', stop the motorcycle with the lever and the pedal, and contain no one-pedal, single-pedal or standstill wording; cruise control is cancelled by the brakes, not by regen. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy, printed page 89): 'Reduce speed, and release the throttle grip. Apply the brakes and stop the motorcycle.' LiveWire: the 2025 S2 owner's manual (94001315, Roll-Forward Regen page) states 'Regenerative braking is not a replacement for the vehicle's friction brakes. Always cover the brake levers and be prepared to apply.', and the 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, read in full) contains no one-pedal or standstill wording. How it shows: on every make regen slows the motorcycle and the brakes stop it. The Energica statement is anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "one pedal mode electric motorcycle",
+      "will regen stop the bike completely",
+      "single pedal driving motorcycle",
+      "regen to a standstill",
+      "do i need the brakes with max regen"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Expecting car-style one-pedal driving that no motorcycle maker in this corpus offers"
+    ],
+    "fix_procedure": "1. Tell the rider plainly: none of the three makes documents a one-pedal stop; regen slows the motorcycle and the friction brakes stop it. 2. On a LiveWire S2, roll-forward regen adds regen on demand but the manual still says regen is not a replacement for the friction brakes. 3. A motorcycle that does come to rest on regen alone has no documented behaviour to compare against; do not describe it as a feature.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "source": "service-manual"
+  },
+  {
+    "title": "When regen is limited or cut on each make — a full pack, a cold pack, rear-wheel slip — and no fault code named for regen",
+    "description": "Generic-layer entry for regen limits and the regen fault surface, written as what each make does when regen is reduced or withdrawn and how each make shows it, anchored to the manufacturer's own document for every make named; no maker publishes the state of charge, temperature or speed at which regen is reduced, and the pack's own limits and the temperature bands belong to the battery and thermal entries. Zero: the 2025 owner's manual (8811984-AF, section 4.21, mirror copy; the 2021 SR/F manual 88-09445-01 has the same section at page 4.23) says drag torque control 'manages the drag on the rear wheel by increasing or decreasing the levels of power regenerated' and reduces drag torque when the wheel speed sensors report rear-wheel slip on deceleration, and warns 'When the ABS is disabled, DTC will also be disabled'; Zero's firmware release notes page (a manufacturer web page, 'Updated: August 12, 2026') lists under its 2020-22 SR/F and 2022 SR heading, release MBB V21, BMS V19, BMU V3, 'Improvements to SoC requirements for regen to activate', without the requirement itself. The 2025 error-code list names no regen code; the nearest entries are 6 and 7 Mode Fault ('Reinstall Ride Modes through Smartphone App'), 12 and 13 Traction Control Fault, 15 Stability Control Fault and 20 and 21 Brake Bulb (sections 7.5 to 7.7; the 2021 SR/F uses the same numbering); the 2021 S, SR, DS and DSR owner's manual's codes 0 to 60 and red flashes 1 to 18 name no regen either, and the controller codes among them belong to the motor-controller entry. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy): 'If the battery is fully charged, the YELLOW symbol will start flashing on the guide screen. The motorcycle will need to discharge slightly before the regeneration profile you require can be activated.' (printed page 45); a profile changed while the motorcycle is in motion activates only after an acceleration and a following deceleration, with the warning 'The engine brake effect has not been activated until the symbol stops flashing. Take care when decelerating and braking.' (printed page 45); the eABS function 'does not act upon the braking system, but temporarily deactivates the battery regeneration system until the tire has regained a perfect grip of the road's surface', shown by 'the last three red LED indicators' either side of the motor power indicator (printed page 29); Energica's archived technology page (capture of June 19, 2019) says 'The VCU interfaces with the ABS system, controlling regenerative engine braking' and that eABS 'limits the maximum regeneration torque' in slippery conditions. The only message naming eABS is 'WSS MALFUNCTION. ABS/eABS DISABLED.' (manual clearance, printed page 74), and the manual does not expand WSS; the diagnostic-code table names no regen code, and the nearest rows, P0500 FRONT WHEEL SPEED SENSOR FAILURE, P2158 REAR WHEEL SPEED SENSOR FAILURE and P2162 WHEEL SPEED SENSOR COHERENCY FAILURE (printed page 80), are not tied to that message in the manual. The manual states no cold-battery regen limit; cold appears as the LIMP message 'LIMP MODE ON: BATTERY COLD.' LiveWire: the 2025 S2 owner's manual (94001315, Roll-Forward Regen page, second item of the note) says 'The amount of regenerative braking available depends on the State of Charge (SOC) and temperature of the battery. It may be limited when the battery is cold, or if the SOC is too high. It is also not available when the powertrain is disabled.' The LiveWire ONE and S2 manuals' Traction Control System page says the drag-torque slip control 'may decrease drag torque, by increasing motor Revolutions Per Minute (RPM)' when it senses rear-wheel slip under powertrain deceleration, without using the word regen, and that disabling traction control does not disable it; the 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, mirror copy) says 'Intervention of the Drag Torque Slip Control is indicated by fast-blinking of the traction control lamp' (printed page 112), and lists the symptom 'Temporarily stiff rear brake pedal' as a 'Normal condition. Regenerative braking (causing the rear wheel to slow down) can activate ABS if applying the rear brake at the same time or immediately after.' (Table 39, printed page 110). LiveWire's model web pages (livewire.com, undated) say the drag-torque slip control 'prevents rear-wheel lock when using regenerative braking' and 'functions at speeds over 10 mph (about 17 kph)'. No LiveWire ONE or S2 alert names regen; the nearest are the LiveWire ONE's 'Alert – Propulsion Limited' and its 'Ride mode fault' icon. How it shows: a full pack delays or blocks regen (Energica's flashing yellow symbol; LiveWire's statement), a cold pack may limit it on the S2, slip control withdraws it on a slippery surface (Energica's red LEDs, the 2020 LiveWire's fast-blinking traction lamp), and no make has a fault code for regen itself. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "no regen with a full battery",
+      "regen weak when cold",
+      "regen cuts out on wet road",
+      "regen not working after changing mode",
+      "traction lamp blinking off throttle",
+      "stiff rear brake pedal with regen",
+      "regen fault code",
+      "wss malfunction abs eabs disabled"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A full pack that cannot accept regenerated energy (Energica's flashing symbol; the LiveWire S2 statement; Zero's firmware note on SoC requirements)",
+      "A cold pack limiting regen (stated for the LiveWire S2)",
+      "Slip control withdrawing regen on rear-wheel slip (Zero DTC, Energica eABS, LiveWire drag-torque slip control)",
+      "An Energica profile changed in motion that has not yet activated",
+      "A wheel-speed-sensor fault disabling Energica's eABS"
+    ],
+    "fix_procedure": "1. Check the state of charge first: a freshly charged pack limits or delays regen on Energica and the LiveWire S2 by design, and Zero's firmware notes gate regen on state of charge. 2. On a LiveWire S2 in cold weather, weak regen is documented behaviour; retest with the pack warm. 3. Look for slip-control indication while off throttle: Energica's last three red LEDs, a fast-blinking traction lamp on the 2020 LiveWire. Withdrawn regen on a slippery surface is protection, not a fault. 4. On an Energica, a newly selected profile activates only after an acceleration and a deceleration; wait for the symbol to stop flashing. 5. 'WSS MALFUNCTION. ABS/eABS DISABLED.' disables eABS; diagnose the wheel-speed sensors. 6. No make publishes a regen fault code; a persistent loss of regen with none of the above is a dealer diagnosis.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Where regen is set and read on each make — the dash, the app, and the dealer tool that loads the regen features",
+    "description": "Generic-layer entry for regen tooling, written as where each make lets the rider set regen and how each make displays it, anchored to the manufacturer's own document for every make named. Zero: the 2025 owner's manual (8811984-AF, section 4.3, mirror copy) lists among the smartphone app's tasks 'Adjust the CUSTOM riding mode'; the dash selects ride modes but does not edit them; Zero's technology web page says 'Torque, regenerative braking, and even top speed limits can be set through your app'. The dash shows regen on a meter: in the 2025 manual 'The REGEN/TORQUE meter indicates the amount of torque applied to the rear wheel while accelerating (torque) or decelerating (regen)' (section 3.21, item L); in the 2021 SR/F owner's manual (88-09445-01) a TORQUE meter reads accelerating '(output) or decelerating (regen)' and a POWER meter shows 'the rate at which energy is feeding back into the power pack during the regenerative braking process' (pages 3.20 and 3.21); no meter has units or a scale. Zero's 2020 S/SR/DS/DSR service manual (Version 1, archived dealer copy) has the dealer road test check for unusual vibrations and sounds 'When braking', 'When coasting', 'When accelerating' and 'When regen braking'; it publishes no regen test beyond that. Energica (2018 Eva owner's manual, Cod. ENF003100 Rev. 02, mirror copy): the profile screen that sets regen is reached with the 'SET' control on the left switch cube, closes after 'ten seconds' without input, and can be used while the motorcycle is in motion (printed pages 26, 44 and 45); the dash shows regen as a colour band on the current indicator, where 'the consumption part will switch on (green band) when accelerating and the regeneration one will switch on (blue band) when decelerating' (printed page 35), and as an 'Active regeneration profile' field (printed page 37), and gives no regen value; its motor current and current power indicators are not described in units. The manual describes the My Energica app for Bluetooth pairing and the charging-station screen, and describes no regen setting through it. LiveWire: the 2025 S2 owner's manual (94001315, Roll-Forward Regen page) makes roll-forward regen an opt-in under the Ride Customization menu, not selectable while propulsion is enabled, available 'If the motorcycle has software bundle 10.1.9 with Instrument Module software 5.146.730_20250523 or later versions installed'; Harley-Davidson's Digital Technician II release notes filed with NHTSA (communication MC-11026163, entry 'LiveWire S2DM/MH/AP EV3') read 'Updated calibration bundle 10.1.9/10: VSC, OBC, RESS, TCU, BCM - Features: Vehicle capability of reverse and roll-forward regen', so the regen feature arrives with a dealer or over-the-air calibration bundle. The 2020 Harley-Davidson owner's manual for the LiveWire model (94000703, mirror copy) shows a Power/Torque widget on the Instrument Module that displays the ride mode, maximum available power and 'maximum available regen' (Figure 35, callout 3, printed page 98). How it shows: regen strength is chosen by ride mode or regen profile on the dash, fine-tuned in an app or custom-mode menu, and displayed as a bar, band or widget without units. The Energica statements are anchored to the 2018 Eva only.",
+    "make": "Zero, Harley-Davidson, LiveWire, Energica",
+    "model": "Zero S, SR, SR/F, SR/S, DS, DSR (2021 and 2025 owner's manuals; 2020 service manual); Energica Eva 2018, Ego, Eva Ribelle, EsseEsse9, Experia; Harley-Davidson LiveWire (ELW, 2020), LiveWire ONE (LW1) and LiveWire S2 Del Mar, Alpinista, Mulholland",
+    "year_start": 2018,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "where do i change regen",
+      "regen meter on the dash",
+      "roll-forward regen missing from menu",
+      "set regen in the zero app",
+      "energica profile screen set button",
+      "regen widget livewire"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A LiveWire S2 whose software bundle predates the roll-forward regen feature, so the option is absent from the menu",
+      "A Zero custom mode edited in the app but not uploaded to the motorcycle",
+      "Reading a dash regen bar as a measured value; none has units"
+    ],
+    "fix_procedure": "1. Set regen where the make puts it: Zero ride-mode button and the app for CUSTOM; Energica the profile screen through the SET control; LiveWire the custom-mode sliders or menu. 2. On a LiveWire S2 without roll-forward regen in Ride Customization, check the installed software against the bundle the manual names; the feature is part of a calibration bundle. 3. Use the dash displays (Zero's REGEN/TORQUE or TORQUE and POWER meters, Energica's blue band and active-profile field, the 2020 LiveWire's Power/Torque widget) to confirm regen is engaging, not to measure it. 4. On a Zero road test, check for vibration or noise under regen braking separately from friction braking and coasting, as the dealer road test does.",
+    "parts_needed": [],
+    "estimated_hours": 0.3,
+    "source": "service-manual"
+  },
+  {
+    "title": "What a Zero does with regen on a full pack, per the community log-analyser — a pulsing engagement that is protection, not a fault",
+    "description": "Owner-community entry. Source: zerologs.bike, an independent log-analyser tool for Zero owners (footer 'Made for Zero Motorcycles owners'), pages 'Reading Your Zero Logs: A Symptom-First Diagnostic Guide' (section 5, Last updated: August 8, 2026; the page carries the site's own independence notice) and 'Log Error Catalog' (Last updated: July 30, 2026), read on September 18, 2026. Every statement here is that site's, not Zero's; Zero's own statement is a firmware note that gates regen on state of charge (see the regen limits entry). How it shows: the guide says 'regen cannot push energy into a full pack, so a downhill start from 100% produces a pulsing engagement rather than smooth braking. That is protection, not a failing regen system.' The error catalogue's entry for a cell over-voltage fault lists 'during regen on a full pack' as a usual cause and says 'Occasional COV events near 100% are normal protection.'; the over-voltage event itself belongs to the battery entry.",
+    "make": "Zero",
+    "model": "Zero, all models with BMS logs",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "low",
+    "symptoms": [
+      "regen pulses on a full battery",
+      "no smooth regen after charging to 100",
+      "cell over-voltage fault after regen",
+      "jerky engine braking downhill full charge"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A full pack that cannot accept regenerated energy, per the community log-analyser"
+    ],
+    "fix_procedure": "Forum tip: 1. Treat everything here as the community tool's description and label it so wherever quoted. 2. A pulsing or absent regen on a downhill start from a full charge is, per the site, protection; retest after some riding has lowered the state of charge. 3. An occasional cell over-voltage event near a full charge is, per the site, normal protection; frequent events on one cell group belong with the battery entry's balancing guidance.",
+    "parts_needed": [],
+    "estimated_hours": 0.2,
+    "source": "forum"
+  }
+]
