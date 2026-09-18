@@ -3,8 +3,8 @@
 Motorcycles often present multiple symptoms from a single underlying failure. A mechanic
 who recognizes the pattern can diagnose faster and avoid chasing individual symptoms.
 
-Example: {overheating, loss of power, coolant smell} → head gasket failure.
-Without correlation, a tech might chase the overheating separately from the power loss.
+Example (CORR-002): {fan not running, overheating, temperature gauge high} → cooling fan circuit failure.
+Without correlation, a tech might chase the overheating separately from the fan.
 
 Matching logic:
 - Full match: all symptoms in a rule's set are present → highest confidence
@@ -68,18 +68,6 @@ class CorrelationMatch(BaseModel):
 
 CORRELATION_RULES: list[CorrelationRule] = [
     # --- Cooling system ---
-    CorrelationRule(
-        rule_id="CORR-001",
-        symptom_set={"overheating", "loss of power", "coolant smell"},
-        root_cause="Head gasket failure",
-        confidence=0.85,
-        explanation="Coolant leaking past the head gasket causes overheating (lost coolant volume), "
-                    "power loss (compression leak into coolant jacket), and coolant smell (burning coolant "
-                    "in exhaust or on hot surfaces). Common on air-cooled twins after high-mileage thermal cycling.",
-        system_category="cooling",
-        severity="critical",
-        common_vehicles=["Harley-Davidson Twin Cam", "Harley-Davidson Evolution"],
-    ),
     CorrelationRule(
         rule_id="CORR-002",
         symptom_set={"overheating", "fan not running", "temperature gauge high"},

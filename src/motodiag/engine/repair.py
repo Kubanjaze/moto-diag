@@ -103,7 +103,10 @@ Given a diagnosis and vehicle context, generate a complete repair procedure as J
 
 Requirements:
 1. **Steps must be numbered and mechanic-friendly** — write as if explaining to a competent technician who hasn't done this specific job before.
-2. **Include torque specs** where applicable (e.g., "Torque drain plug to 14-16 ft-lbs").
+2. **Torque**: state a figure ONLY if one was supplied in the input. Otherwise write
+   "torque to the manufacturer's specification — see the service manual".
+   Never estimate a torque value; an under-torqued caliper bolt is a brake failure
+   and an over-torqued one strips an aluminium case.
 3. **Safety warnings** are MANDATORY for:
    - Fuel system work (fire risk, fuel vapor, pressure relief)
    - Brake system work (verify function before riding)
