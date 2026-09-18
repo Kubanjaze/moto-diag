@@ -3262,3 +3262,22 @@ code count. The regulator records sit on their own rows under their own
 label, because a row carries one.
 
 63 tests, 8/8 mutations. Regression 7,091 passed, 0 failed, 27:53.
+
+## Phase 248 complete — 2026-09-18
+
+The third content row under the label rule, and the one electric subsystem
+the rider sets. The makers publish regen as words — modes ranked against
+each other, profiles named OFF to HIGH, a slider with no scale — and only
+LiveWire puts numbers on it, on its web pages and nowhere in a manual. One
+manual, the LiveWire S2's, says regen lights the brake lamp; the rest are
+silent, and the rows record silence as silence. Nobody offers a one-pedal
+stop.
+
+The refuters did something new this time: every refutation overturned an
+absence the sweeps had asserted, by finding the record the sweep had not
+looked for. The critic held all of it back until it is quoted, because the
+rule is no quote, no row. A mutation also found a bug older than the phase
+— the number rule never saw a percentage — and it is fixed in all three
+content tests.
+
+64 tests, 8/8 mutations. Regression 7,155 passed, 0 failed, 27:31.
