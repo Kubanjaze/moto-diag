@@ -1,6 +1,6 @@
 # Phase 244X — 244U's rule reaches the imports it was written for
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-18
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-18
 
 ---
 
@@ -126,13 +126,76 @@ entry says which, with a phase or a sibling to check it against.
 
 ## Verification Checklist
 
-- [ ] `blank_exports` blanks a parenthesised multi-line alias list in a package init
-- [ ] Single-line, parenthesised single-line, trailing comma, `as` alias, and a comment inside the parentheses all blank correctly
-- [ ] A non-init module's imports are untouched, as before (244U's `test_a_non_init_module_keeps_its_imports`)
-- [ ] The module path in the `from` clause survives (the import walk needs it)
-- [ ] 244U's conjunctive test passes on a multi-line fixture, and each half alone still fails to reveal the name
-- [ ] The real tree reports exactly the 57, both directions clean against `ORPHANS`
-- [ ] `submit_feedback` and `load_recalls_from_json` are reported by name
-- [ ] Every new entry: classification in `CLASSIFICATIONS`, reason ≥ 20 chars, names the re-exporting init
-- [ ] Mutations: revert the regex; blank only the first line; drop the `__all__` half; treat a non-init like an init — each caught
-- [ ] Full regression green
+- [x] `blank_exports` blanks a parenthesised multi-line alias list in a package init
+- [x] Single-line, parenthesised single-line, trailing comma, `as` alias, and a comment inside the parentheses all blank correctly
+- [x] A non-init module's imports are untouched, as before (244U's `test_a_non_init_module_keeps_its_imports`)
+- [x] The module path in the `from` clause survives (the import walk needs it)
+- [x] 244U's conjunctive test passes on a multi-line fixture, and each half alone still fails to reveal the name
+- [x] The real tree reports exactly the 57, both directions clean against `ORPHANS`
+- [x] `submit_feedback` and `load_recalls_from_json` are reported by name
+- [x] Every new entry: classification in `CLASSIFICATIONS`, reason ≥ 20 chars, names the re-exporting init
+- [x] Mutations: revert the regex; blank only the first line; drop the `__all__` half; treat a non-init like an init — each caught
+- [x] Full regression green — **7145 passed, 0 failed, 26:33**
+
+---
+
+## Results (v1.1)
+
+**Built as planned, with one classification corrected before commit.**
+
+### The fix
+
+One regex. The alias group is now `(\([^)]*\)|[^\n]*)` — a parenthesised
+list, which may span lines, or the rest of the line — where 244U's was
+`[^)\n]*`, which could do neither across a newline. Applied to package inits
+only, as before; the module path is untouched, as before. Seven forms are
+pinned: single-line, parenthesised single-line, multi-line, no trailing
+comma, `as`-alias (both sides blanked), a comment inside the parentheses
+(already blanked by the pass before it), and two imports in one file blanked
+independently. Positions are preserved, because the passes beside it assume
+the text keeps its shape.
+
+### 244U's proof, on the shape that occurs
+
+Its fixture re-exports `ShelfSitter` in the parenthesised multi-line form
+now, and `_orphans_with` — the helper that ablates the two halves to prove
+both are required — carries the fixed regex instead of a private copy of the
+broken one. All twelve 244U tests pass unchanged in their assertions,
+which is the point: the conjunctive proof was right, and it was being run
+on the one form the regex handled.
+
+### What surfaced
+
+47 → 104 live orphans, +57, 0 stale, exactly as S0-2 measured. Every entry
+names the init that hid it, and the classification test for that runs over
+all 57. By class: 11 `unwired-feature`, 7 `superseded`, 1 `test-infra`, 38
+`public-api`. Two entries record something the list would otherwise have
+flattened — `inventory/recall_repo` is a Phase 118 duplicate of Phase 155's
+`advanced/recall_repo` over the same table, and `submit_feedback` is the
+only writer of a table nothing writes — and both have tests that pin the
+classification, not only the presence.
+
+### Deviation — the recall repo is delegated to, not duplicated
+
+Written into the plan as a duplicate implementation; 244Y's Step 0, run
+while this phase's regression was still going, found that
+`advanced/recall_repo.py:301` lazily imports and delegates to
+`inventory/recall_repo.list_recalls_for_vehicle`, which is live. The four
+orphaned functions are still superseded — the Phase 155 repo has its own —
+but the file is not deletable wholesale, and an entry that said "duplicate"
+would have sent the delete pass at a live function. The four reasons were
+corrected before the build commit; the 244X suite was re-run on the edit
+(77 passed) since the regression had already imported the allowlist at
+collection.
+
+### Verification
+
+- 38 tests in `test_phase244X_multiline_reexports.py`; 314 across the four
+  gate suites.
+- **5/5 mutations killed**: revert to 244U's regex; handle the parenthesised
+  form but only its first line; drop the `__all__` half; treat a non-init
+  like an init; blank the module path too.
+- `ruff`: gate file 0 → 0; the allowlist's and 244U's pre-existing counts
+  unchanged; the new file's one finding is the `f9-noqa` pin line.
+- No schema change, no source change under `src/`.
+- Full regression **7145 passed, 0 failed, 26:33** (7,011 → +38 new tests, −13 + 57 parametrised allowlist cases).

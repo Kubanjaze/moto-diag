@@ -3101,3 +3101,35 @@ two predicted.
 
 No schema change, no source change under src/. 61 tests, 11/11 mutations.
 Regression 7,011 passed, 0 failed, 20:21.
+
+## Phase 244X complete — 2026-09-18
+
+The last of the instrument work. 244U's rule — a package-init re-export is
+not a use — was implemented with a regex that stopped at a newline, so the
+parenthesised multi-line import that most packages here use for their
+exports was never blanked, and for those packages the rule had never
+applied. The fixture I wrote for 244U used single-line imports. It passed,
+and it was pinning the one shape the regex handled.
+
+One of 244W's design prototypes found it, and 244W measured what fixing it
+would cost before deciding to split it out rather than land it beside
+nineteen module entries. Re-measured on the tree 244W left: 47 → 104 live
+orphans, +57, 0 stale. The 43 that last time sat inside dead modules were
+absorbed by `MODULE_ISLANDS` without a line of new code — the composition
+244W's third scope item existed for, doing its job one phase later.
+
+Every one of the 57 has the same evidence: zero code references outside its
+own file, exactly one init re-exporting it. Classifying them surfaced two
+things the list would otherwise have flattened. `inventory/recall_repo` and
+`advanced/recall_repo` — Phase 118 and Phase 155 — write the same `recalls`
+table, and only the second has a command. And `submit_feedback` is genuinely
+unwired: 244N wired session overrides, and nothing in the product has ever
+written `diagnostic_feedback`, which is why the audit found it with 0 rows.
+
+244U's conjunctive proof now runs on the multi-line form, and its helper's
+private copy of the regex matches the fix, so "both halves are required" is
+demonstrated on the shape that occurs rather than the one that was easy to
+type.
+
+No schema change, no source change under src/. 38 tests, 5/5 mutations.
+Regression 7145 passed, 0 failed, 26:33.
