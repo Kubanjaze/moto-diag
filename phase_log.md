@@ -3281,3 +3281,23 @@ rule is no quote, no row. A mutation also found a bug older than the phase
 content tests.
 
 64 tests, 8/8 mutations. Regression 7,155 passed, 0 failed, 27:31.
+
+## Phase 249 complete — 2026-09-18
+
+The last content row before Gate 13, and the first whose premise failed.
+"Liquid cooling loops (battery)" describes none of the three makes: Zero
+has no coolant at all, Energica's manual credits its battery compartment
+and its web page "ventilation paths", and LiveWire's own service manuals
+route coolant through the charger, the controller electronics and the
+motor but never the battery. The row is corrected, and a test keeps any
+row from asserting how a battery is cooled when no document says.
+
+Most of the rest had already been written, in 243, 244, 246 and 247, so
+the refuters were asked a new question alongside "is this true": is it
+new. Eleven claims were only restatements. The four rows carry what is
+new — Zero's motor gauge and its platform-dependent codes, Energica's pump
+and fan codes, LiveWire's coolant lamp at 178 °F (81 °C) from the dealer
+manuals — and name the rest. The Energica anchor is now the document
+code, because "2018 Eva" asserted a model year the manual does not state.
+
+40 tests, 8/8 mutations. Regression 7,195 passed, 0 failed, 18:47.
