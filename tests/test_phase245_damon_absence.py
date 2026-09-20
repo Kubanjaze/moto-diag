@@ -93,9 +93,27 @@ class TestTheAbsenceIsDeliberate:
 class TestTheMarqueResolves:
     def test_the_make_resolves_exactly(self, db):
         """244F made list-valued makes queryable; Damon surfaces through the
-        union. The make resolves; the model cannot, because no row carries one,
-        and that is correct today."""
+        union. The make resolves exactly.
+
+        Phase 250C changed the second half of this test, and the reason is
+        the phase in one sentence. It used to read "the model cannot resolve,
+        because no row carries one, and that is correct today" — but a row
+        did carry one. Phase 241's high-voltage file names "Damon
+        HyperSport" in its model column, and the model vocabulary was keyed
+        by the raw make string, so every model on that row filed under
+        "Zero, Harley-Davidson, LiveWire, Energica, Damon" and under no
+        marque. The name was in the corpus and unreachable, which is what
+        250C fixed; Damon went from 0 resolvable models to 4.
+
+        What has NOT changed is the absence this file exists to guard: no
+        Damon seed file, no Damon row of its own, every row naming it
+        model-generated and list-valued. The machine now reaches 241's HV
+        rules, which is all the corpus ever said about it."""
         identity = resolve_vehicle("Damon", "HyperSport", db_path=db)
         assert identity.make.resolved == "Damon"
         assert identity.make.method == "exact"
-        assert identity.model.resolved is None
+        assert identity.model.resolved == "Damon HyperSport"
+        assert identity.corpus_hits == 0, (
+            "a resolved model must not imply Damon content: the hits come "
+            "from the shared list-valued make, not from a Damon row"
+        )

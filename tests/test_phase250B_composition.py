@@ -35,6 +35,7 @@ from motodiag.knowledge.models import rebuild_model_index_at
 from motodiag.knowledge.powertrain import is_electric_row
 from motodiag.knowledge.prompt_rows import (
     RELEVANCE_RESERVE,
+    SAFETY_RESERVE,
     compose_prompt_rows,
     relevance_score,
     relevance_tokens,
@@ -335,9 +336,22 @@ class TestTheDiagnosticPath:
 
     def test_the_safety_floor_is_still_there(self, db, garage):
         """241 put the HV rows first on purpose: a technician opening a pack
-        needs them. Composition must not spend them."""
+        needs them. Composition must not spend them.
+
+        Phase 250C rewrote this assertion, and the reason is the point. It
+        used to require five critical rows, which was a snapshot of a prompt
+        whose model never resolved: the machine's own content could not
+        outrank the make-wide safety rules because none of it was tier-0. Once
+        250C made `SR/F` resolve, twelve tier-0 rows arrived and swept every
+        critical row out — so composition now holds `SAFETY_RESERVE` of them
+        back explicitly. The floor is a declared number and the rules
+        themselves are named, rather than a count that happened to hold."""
         rows = _prompt_rows(garage[("Zero", "SR/F")], "range dropped by half")
-        assert sum(1 for r in rows if r.get("severity") == "critical") >= 5
+        critical = [r for r in rows if r.get("severity") == "critical"]
+        assert len(critical) >= SAFETY_RESERVE, [r["title"] for r in rows]
+        titles = " ".join(r["title"].lower() for r in critical)
+        assert "service disconnect" in titles, titles
+        assert "live hv system" in titles or "do not work alone" in titles, titles
 
     @pytest.mark.parametrize("make,model,year", COMBUSTION_BIKES,
                              ids=[f"{m}-{mo}" for m, mo, _y in COMBUSTION_BIKES])

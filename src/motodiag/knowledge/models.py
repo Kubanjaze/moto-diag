@@ -27,7 +27,15 @@ import sqlite3
 from typing import Optional
 
 from motodiag.core.database import get_connection
-from motodiag.knowledge.marques import dedupe_contained
+from motodiag.knowledge.marque_families import same_family
+from motodiag.knowledge.marques import (
+    dedupe_contained,
+    european_marques,
+    extract_marques,
+)
+from motodiag.knowledge.marques import (
+    vocabulary_from_conn as marque_vocabulary_from_conn,
+)
 
 #: Wildcard model meaning "the whole make". Never a model in its own right.
 WILDCARD_MODEL = "All"
@@ -151,31 +159,135 @@ def model_vocabulary(db_path: Optional[str] = None) -> dict[str, set[str]]:
         raise
 
 
-def vocabulary_from_conn(conn) -> dict[str, set[str]]:
-    """Derive the per-make model vocabulary from an open connection.
+#: A slash that belongs to the model's own name rather than separating two
+#: models. Phase 250C: `/` is a list separator in this corpus — "R1200/R1250",
+#: "F650/F700", "450/500 EXC-F", "Zero S/DS", "Ego/Eva" all enumerate two
+#: machines — but it is also part of a designation, and Zero writes four of
+#: them: SR/F, SR/S, SR/FX, DSR/X. Splitting those produced "SR" and "F", so
+#: `SR/F` matched nothing and a Zero SR/F resolved to no model at all.
+#:
+#: The two cases separate cleanly on the corpus's own evidence: in every
+#: enumeration the right-hand fragment is a full designation of three
+#: characters or more (1250, EXC-F, Eva, M50, MT-09), and in every compound
+#: name it is one or two (F, S, FX, X). The left-hand side must be at least
+#: two characters, which is what keeps "S/DS" — Zero S and Zero DS — a list.
+_COMPOUND_SLASH = re.compile(
+    r"(?<![A-Za-z0-9])([A-Za-z0-9]{2,})/([A-Za-z0-9]{1,2})(?![A-Za-z0-9])"
+)
 
-    Scoped per make deliberately: a model name is only meaningful inside a
+#: Stands in for a slash that survives the split, and is put back after it.
+_SLASH_HOLD = "\x00"
+
+
+def _model_tokens(model: str) -> list[str]:
+    """The model names one value states, before any attribution."""
+    if is_scope(model):
+        return []
+    if is_plain_model(model):
+        return [model]
+    held = _COMPOUND_SLASH.sub(
+        lambda m: f"{m.group(1)}{_SLASH_HOLD}{m.group(2)}", covered_part(model))
+    out: list[str] = []
+    for part in re.split(r",|;|—|–|/| and ", held):
+        part = _clean_token(part.replace(_SLASH_HOLD, "/"))
+        if part and not _PROSE_WORD.search(part):
+            out.append(part)
+    return out
+
+
+def _marque_named_by(token: str, marque_vocab: set[str]) -> set[str]:
+    """The marques a model token names, whole-word."""
+    return {
+        marque for marque in marque_vocab
+        if re.search(r"(?<![A-Za-z])" + re.escape(marque) + r"(?![A-Za-z])",
+                     token, re.IGNORECASE)
+    }
+
+
+def vocabulary_from_conn(conn) -> dict[str, set[str]]:
+    """Derive the per-marque model vocabulary from an open connection.
+
+    Scoped per marque deliberately: a model name is only meaningful inside a
     marque, and an unscoped pool would let one make's model match another's text.
+
+    Phase 250C. This used to key on the **raw** make column, which meant a row
+    reading "Zero, Harley-Davidson, LiveWire, Energica" filed its models under
+    that whole string and under no marque at all. 501 of the corpus's 764
+    models were reachable; LiveWire could resolve **none** of its 23 and Damon
+    none of its 10, so the model tier could never fire for them and every such
+    query fell back to make-wide content. Exactly the defect Phase 244F fixed
+    for makes and 244I fixed for model *values*, one level down in the keys.
+
+    Keying alone is not enough, because the junction it would copy is not
+    clean: a row comparing six marques names every model against all six, so
+    "BMW S 1000 R" would enter Aprilia's matching pool. So each token is
+    attributed, in three rungs:
+
+    1. A model seen on a **single-marque** row belongs to that marque. This is
+       what catches "Brutale" and "F4" — MV Agusta machines that name no marque.
+    2. A token that **names** a marque belongs to it, unless the two marques
+       are the same family (`marque_families`): "LiveWire" is a marque *and* a
+       Harley-Davidson machine.
+    3. Otherwise the row's marques all take it.
+
+    A token that is exactly a marque name is not a model and is dropped: the
+    "All European makes" row's model column is a list of marques.
+
+    Measured on the shipped corpus: 638 models against 501, one token in a
+    marque's pool that another marque owns, and 644 of the junction's 764
+    (marque, model) pairs resolving where 511 did.
     """
     rows = conn.execute(
         "SELECT make, model FROM known_issues "
         "WHERE model IS NOT NULL AND model != ''"
     ).fetchall()
 
-    vocab: dict[str, set[str]] = {}
+    marque_vocab = marque_vocabulary_from_conn(conn)
+    european = european_marques(vocabulary=marque_vocab)
+    pairs: list[tuple[list[str], list[str]]] = []
     for row in rows:
         make = (row[0] if isinstance(row, tuple) else row["make"]) or ""
         model = (row[1] if isinstance(row, tuple) else row["model"]) or ""
-        if not make or is_scope(model):
+        if not make:
             continue
-        if is_plain_model(model):
-            vocab.setdefault(make, set()).add(model)
+        tokens = _model_tokens(model)
+        if not tokens:
             continue
-        for part in re.split(r",|;|—|–|/| and ", covered_part(model)):
-            part = _clean_token(part)
-            if part and not _PROSE_WORD.search(part):
-                vocab.setdefault(make, set()).add(part)
-    return vocab
+        marques = extract_marques(make, vocabulary=marque_vocab, european=european)
+        if not marques:
+            continue
+        pairs.append((marques, tokens))
+
+    # Rung 1, first, because it is the only unambiguous evidence there is.
+    vocab: dict[str, set[str]] = {}
+    owner: dict[str, set[str]] = {}
+    for marques, tokens in pairs:
+        if len(marques) != 1:
+            continue
+        for token in tokens:
+            vocab.setdefault(marques[0], set()).add(token)
+            owner.setdefault(token.lower(), set()).add(marques[0])
+
+    for marques, tokens in pairs:
+        if len(marques) == 1:
+            continue
+        for token in tokens:
+            named = _marque_named_by(token, marque_vocab)
+            claim = (named | owner.get(token.lower(), set())) & set(marques)
+            if claim:
+                targets = {
+                    marque for marque in marques
+                    if any(same_family(marque, claimed) for claimed in claim)
+                }
+            else:
+                targets = set(marques)
+            for marque in targets:
+                vocab.setdefault(marque, set()).add(token)
+
+    # A marque name is not a model, wherever it came from.
+    for marque, names in vocab.items():
+        names -= {m for m in list(names) if m in marque_vocab}
+    return {marque: names for marque, names in vocab.items() if names}
 
 
 def extract_models(
@@ -183,11 +295,22 @@ def extract_models(
     value: Optional[str],
     vocabulary: Optional[dict[str, set[str]]] = None,
     db_path: Optional[str] = None,
+    marques: Optional[set[str]] = None,
+    european: Optional[set[str]] = None,
 ) -> list[str]:
     """Return the models a value states the entry covers.
 
     Order matters: a scope yields nothing, a plain name settles immediately, and
     only then is anything parsed — and only the covered part of it.
+
+    Phase 250C: the pool is the union over every marque the make string names,
+    not the entry for the raw string. The vocabulary is keyed by marque now, so
+    a row reading "Harley-Davidson, LiveWire" looks up both and gets both
+    marques' models; before the change it looked up that whole string, which
+    after the re-keying would be a key that exists nowhere.
+
+    `marques` and `european` come after `db_path` deliberately: four callers
+    pass `vocabulary` positionally as the third argument.
     """
     if not value or not value.strip() or is_scope(value):
         return []
@@ -196,7 +319,12 @@ def extract_models(
         return [value]
 
     vocab = model_vocabulary(db_path) if vocabulary is None else vocabulary
-    pool = vocab.get(make or "", set())
+    if marques is None:
+        marques = set(vocab)
+    names = extract_marques(make or "", vocabulary=marques, european=european)
+    pool: set[str] = set()
+    for marque in names:
+        pool |= vocab.get(marque, set())
     if not pool:
         return []
 
@@ -208,11 +336,24 @@ def extract_models(
 
 def index_models_for_issue(conn, issue_id: int, make: Optional[str],
                            model_value: Optional[str],
-                           vocabulary: Optional[dict[str, set[str]]] = None) -> int:
-    """Write one junction row per model an entry covers. Returns how many."""
+                           vocabulary: Optional[dict[str, set[str]]] = None,
+                           marques: Optional[set[str]] = None,
+                           european: Optional[set[str]] = None) -> int:
+    """Write one junction row per model an entry covers. Returns how many.
+
+    Phase 250C: the marque vocabulary is derived from the connection in hand,
+    never from a db_path. `marques.py` records what the alternative cost —
+    deriving by path where a connection was open once let "the write path and
+    the read path disagree about what a marque is".
+    """
     if vocabulary is None:
         vocabulary = vocabulary_from_conn(conn)
-    models = extract_models(make, model_value, vocabulary=vocabulary)
+    if marques is None:
+        marques = marque_vocabulary_from_conn(conn)
+    if european is None:
+        european = european_marques(vocabulary=marques)
+    models = extract_models(make, model_value, vocabulary=vocabulary,
+                            marques=marques, european=european)
     for model in models:
         conn.execute(
             "INSERT INTO known_issue_models (issue_id, model) VALUES (?, ?) "
@@ -230,13 +371,16 @@ def rebuild_model_index(conn) -> int:
     entry that establishes a model name cannot index against it.
     """
     vocab = vocabulary_from_conn(conn)
+    marques = marque_vocabulary_from_conn(conn)
+    european = european_marques(vocabulary=marques)
     conn.execute("DELETE FROM known_issue_models")
     written = 0
     for row in conn.execute("SELECT id, make, model FROM known_issues").fetchall():
         issue_id = row[0] if isinstance(row, tuple) else row["id"]
         make = row[1] if isinstance(row, tuple) else row["make"]
         model = row[2] if isinstance(row, tuple) else row["model"]
-        written += index_models_for_issue(conn, issue_id, make, model, vocab)
+        written += index_models_for_issue(conn, issue_id, make, model, vocab,
+                                          marques=marques, european=european)
     return written
 
 
