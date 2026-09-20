@@ -1,6 +1,6 @@
 # Phase 250C — The model-resolution pool is keyed by the raw make column — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-20
 
 ---
@@ -33,3 +33,7 @@ Three machines still will not resolve and none is this row's: Zero SR/F
 R1200, and right to refuse), and Harley-Davidson LiveWire (the corpus never
 writes a bare "LiveWire"; the name covers two machines). Each was checked
 against today's behaviour before being ruled out, and each is filed.
+
+## 2026-09-20 — Complete
+
+Regression **7,403 passed, 0 failed, 25:05**. No schema change, no migration, no corpus edit. The live junction was rebuilt at close-out, copy first, because the derivation changed and nothing rebuilds it automatically.

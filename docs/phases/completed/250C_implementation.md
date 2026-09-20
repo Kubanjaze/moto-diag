@@ -1,6 +1,6 @@
 # Phase 250C — The model-resolution pool is keyed by the raw make column
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-20
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-20
 
 ---
 
@@ -168,15 +168,115 @@ change what counts as a model, which is a different question.
 - No change to `known_makes`/marque derivation — 244F's work stands.
 - No cleaning of prose tokens (S0-6), no `/` handling (S0-5).
 
+## Results (v1.1)
+
+**Shipped:** `knowledge/models.py` keys the vocabulary by derived marque and
+attributes each token; `knowledge/marque_families.py` holds the one fact the
+data cannot supply; `knowledge/prompt_rows.py` gained a safety floor (see
+Deviations); `tests/test_phase250C_model_vocabulary.py` is 48 tests. No
+schema change, no migration, no corpus edit.
+
+- 48 new tests; 250B's safety-floor assertion and 245's Damon pin rewritten.
+- 9 mutations.
+- Full regression **7,403 passed, 0 failed, 25:05**.
+
+### What the matcher can now see
+
+| marque | before | after | | marque | before | after |
+|---|---|---|---|---|---|---|
+| LiveWire | **0** | 11 | | Aprilia | 31 | 47 |
+| Damon | **0** | 4 | | BMW | 51 | 66 |
+| Energica | 6 | 17 | | Ducati | 83 | 95 |
+| Harley-Davidson | 13 | 24 | | KTM | 62 | 74 |
+| Zero | 14 | 25 | | MV Agusta | 30 | 42 |
+| Moto Guzzi | 11 | 21 | | Triumph | 82 | 95 |
+
+**501 → 639.** Honda 27, Kawasaki 39, Suzuki 29 and Yamaha 23 did not move,
+which is the control: every one of their rows names a single marque, so
+raw-key and marque-key are the same thing for them, and a change there would
+have meant the derivation touched something it had no business touching.
+
+**Resolution: 511 of 764 pairs (67%) → 648 of 743 (87%).** The junction grew
+1,839 → 1,897 rows. It lost 42 pairs and gained 21: every one of the 42 is
+the junk this phase set out to remove — `(Aprilia, "BMW")`, `(BMW, "BMW")`,
+`(Ducati, "Ducati")`, `(Ducati, "18 poster")` — and the 21 gained are the
+compound designations below.
+
+### Deviations
+
+**1. The slash split was folded in, at the operator's request.** S0-5 filed
+`Zero SR/F` as out of scope and D4 said so; mid-build the operator asked for
+it, and since it lives in the same function this phase was rewriting, it was
+done here rather than in another row.
+
+The corpus uses `/` for two different jobs, and the split has to keep both.
+It separates two machines in "R1200/R1250", "F650/F700", "450/500 EXC-F",
+"Ego/Eva", "K1200S/K1200R" and "Zero S/DS"; it is part of the name in Zero's
+own SR/F, SR/S, SR/FX and DSR/X. They separate on the corpus's own evidence:
+in every enumeration the right-hand fragment is a full designation of three
+characters or more, and in every compound name it is one or two. The
+left-hand side must be at least two characters, which is what keeps "S/DS" —
+Zero S and Zero DS — a list. `SR/F`, `SR/S` and `DSR/X` now resolve
+**exact**, and the enumerations still split.
+
+**2. A safety floor, because this phase swept one away.** Making model
+resolution work has a consequence nobody had measured: on a Zero SR/F the
+prompt became twelve tier-0 rows, all specific to that model, and **not one
+critical row survived** — 241's high-voltage rules are `make_wide`, so a
+better model match outranked every one of them. A technician opening a pack
+would have lost "do not work alone on a live HV system" and "removing the
+service disconnect does not de-energise the motor" to a more specific prompt.
+
+`prompt_rows.py` now holds `SAFETY_RESERVE = 3` rows for the most severe
+content the machine has, swapped in over the lowest-ranked rows already
+chosen. After: Zero 3 critical, Energica 3, LiveWire ONE 5, Harley-Davidson
+LiveWire 6 — and the Zero and Energica prompts now carry **all four** generic
+layers, which they did not before. 250B's assertion moved from "at least five
+critical rows" — a snapshot of a prompt whose model never resolved — to the
+declared floor plus the named rules themselves.
+
+**3. What the attribution does not fix, measured.** 30 pool entries are held
+by two or more unrelated marques. Most are genuinely shared fragments — 1000,
+1200, 750, 900, 998 — which belong in each marque's pool. The rest are the
+prose tokens S0-6 already filed ("2020 service manual", "CAN generations")
+and tokens from multi-marque rows that no single-marque row owns, so
+"Alpinista" sits in four electric marques' pools instead of LiveWire's alone.
+The rungs cannot separate those without evidence the corpus does not carry.
+
+**4. Phase 245's Damon pin needed updating, and it is the phase in one
+sentence.** That file asserted the model "cannot resolve, because no row
+carries one, and that is correct today". A row did carry one: 241's
+high-voltage file names "Damon HyperSport" in its model column, and the raw
+keying filed it under "Zero, Harley-Davidson, LiveWire, Energica, Damon" and
+under no marque. The name was in the corpus and unreachable. It now resolves,
+so a Damon HyperSport reaches the HV rules — and the assertion that the
+absence is real (no seed file, no row of its own, every row model-generated
+and list-valued) is untouched, with `corpus_hits == 0` added so a resolved
+model can never be read as Damon content.
+
+The full regression is how this was found: the suites in the blast radius
+were all green, and 245 is not one anybody would have listed.
+
+### Verification
+
+- Pools measured for all sixteen marques, before and after, with the four
+  already-complete marques pinned as unmoved.
+- 382 tests green across the fourteen suites in the blast radius, including
+  244C, 244E, 244F, 244I and their source guards, 244S's four pins, Gate 13
+  and 250B.
+- The three machines S0-5 ruled out were re-checked: `BMW R1250GS` still
+  refuses as `ambiguous`, `Harley-Davidson LiveWire` still refuses, and
+  `Zero SR/F` now resolves because Deviation 1 brought it into scope.
+
 ## Verification Checklist
 
-- [ ] Per-marque pools measured before and after, all sixteen
-- [ ] The four pairs that stop resolving are the cross-marque noise, named
-- [ ] Honda, Kawasaki, Suzuki and Yamaha unchanged — they were complete
-- [ ] 244I, 244C, 244F and 244E green, source guards included
-- [ ] 250B and Gate 13 green — the electric prompts must not move
-- [ ] The new test file scanned by 244G's raw-source guard
-- [ ] Mutations caught
-- [ ] Full regression green, 0 failed and 0 skipped
-- [ ] Live junction rebuilt copy-first, before-state printed
-- [ ] Roadmap row, `implementation.md` history row, `phase_log.md`
+- [x] Per-marque pools measured before and after, all sixteen
+- [x] The four pairs that stop resolving are the cross-marque noise, named
+- [x] Honda, Kawasaki, Suzuki and Yamaha unchanged — they were complete
+- [x] 244I, 244C, 244F and 244E green, source guards included
+- [x] 250B and Gate 13 green — the electric prompts must not move
+- [x] The new test file scanned by 244G's raw-source guard
+- [x] Mutations caught — 9/9
+- [x] Full regression green — **7,403 passed, 0 failed, 25:05**, 0 skipped
+- [x] Live junction rebuilt copy-first, before-state printed
+- [x] Roadmap row, `implementation.md` history row, `phase_log.md`

@@ -3349,3 +3349,24 @@ Row 250C opens with what Step 0 found underneath: the model-resolution pool
 is keyed by the raw make column, so LiveWire and Damon resolve no model at
 all and ten of sixteen marques resolve only some of theirs. That is why a
 Harley-Davidson LiveWire was handed V-twin content in the first place.
+
+
+## 2026-09-20 — Phase 250C complete
+
+48 tests, 9/9 mutations, regression 7,403 passed, 0 failed, 25:05.
+
+The keying fix was the easy half. The half worth recording is what it
+exposed. Making model resolution work for machines it had never worked for
+meant a Zero SR/F suddenly had twelve rows of its own — and every one of
+Phase 241's high-voltage rules fell out of the prompt, because they are
+make-wide and a better model match outranks them. The phase that made
+retrieval more precise would have shipped a diagnosis with no instruction
+not to work alone on a live pack. Composition now holds three rows back for
+the most severe content the machine has, and 250B's assertion stopped
+counting and started naming the rules it wants to see.
+
+The operator's mid-build request folded in the `/` split that Step 0 had
+filed as out of scope. The corpus uses that character for two different
+jobs, and the evidence separates them cleanly: in every enumeration the
+right-hand fragment is a full designation, and in every compound name it is
+one or two characters. Zero writes four of the latter.
