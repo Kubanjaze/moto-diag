@@ -295,58 +295,80 @@ class TestTheFourLayersAreReachableByTheCommandsPeopleUse:
 
 
 # ===========================================================================
-# 3. The diagnostic path as it is — S0-2, pinned
+# 3. The diagnostic path — measured before and after row 250B
 #
-# Every test in this class asserts today's behaviour and is MEANT to fail
-# when row 250B makes retrieval layer- or symptom-aware. Read the failure as
-# the fix landing, not as a regression.
+# Gate 13 wrote this class to pin what it found: the layers 246-249 shipped
+# never reached the model, and the twelve rows did not change when the
+# symptom did. Row 250B fixed that, and these tests now pin the fix, which
+# is what the gate was for. The old measurement is kept in each docstring,
+# because a test that records only the current state cannot tell you a
+# regression from a history.
 # ===========================================================================
-class TestTheDiagnosticPathAsItIs:
+class TestTheDiagnosticPath:
     @pytest.mark.parametrize("make,model,year,expected", PAIRS,
                              ids=[f"{m}-{mo}" for m, mo, _y, _e in PAIRS])
-    def test_which_layers_reach_the_prompt_today(self, gate_db, garage, make, model,
-                                                 year, expected):
-        known, _ctx = _diagnose_and_capture(garage[(make, model)], "reduced range")
-        assert _layers_in(known) == expected, (
-            f"{make} {model}: layers reaching the model changed. If row 250B "
-            f"landed, this is the fix — update the measurement."
-        )
+    def test_a_range_complaint_reaches_the_pack_and_thermal_layers(
+            self, gate_db, garage, make, model, year, expected):
+        """Before 250B: Zero and LiveWire ONE reached the controller layer
+        only; Energica Ego and Harley-Davidson LiveWire reached nothing.
+        After: a range complaint reaches the layers that answer it."""
+        known, _ctx = _diagnose_and_capture(garage[(make, model)], "range dropped by half")
+        assert {"bms", "thermal"} <= _layers_in(known), (
+            f"{make} {model}: a range complaint reached {sorted(_layers_in(known))}")
 
     @pytest.mark.parametrize("make,model,year,expected", PAIRS,
                              ids=[f"{m}-{mo}" for m, mo, _y, _e in PAIRS])
     def test_the_prompt_is_filled_to_its_cap(self, gate_db, garage, make, model,
                                              year, expected):
-        known, _ctx = _diagnose_and_capture(garage[(make, model)], "reduced range")
+        """244S's cap is unchanged by 250B — composition, not enlargement.
+        Reaching all four layers by raising the cap would have cost 27 rows
+        on a Zero and 95 on a Harley-Davidson LiveWire (68 KB of prompt,
+        three times over in the interactive flow)."""
+        known, _ctx = _diagnose_and_capture(garage[(make, model)], "range dropped by half")
         assert len(known) == 12, f"{make} {model}: {len(known)} rows reached the prompt"
 
-    def test_two_of_the_four_pairs_reach_no_layer_at_all(self, gate_db, garage):
-        empty = set()
-        for make, model, _y, _e in PAIRS:
-            known, _ctx = _diagnose_and_capture(garage[(make, model)], "reduced range")
-            if not _layers_in(known):
-                empty.add((make, model))
-        assert empty == {("Energica", "Ego"), ("Harley-Davidson", "LiveWire")}, empty
+    def test_no_electric_pair_is_left_without_a_layer(self, gate_db, garage):
+        """Before 250B this set was {Energica Ego, Harley-Davidson LiveWire} —
+        two of four machines got none of the content Track L wrote for them."""
+        empty = {(make, model) for make, model, _y, _e in PAIRS
+                 if not _layers_in(_diagnose_and_capture(
+                     garage[(make, model)], "range dropped by half")[0])}
+        assert empty == set(), empty
 
-    def test_the_selection_does_not_change_when_the_symptom_does(self, gate_db, garage):
-        """Retrieval is by vehicle only. A rider reporting a hot pack and a
-        rider reporting a dead regen brake light get the same twelve rows."""
+    def test_a_regen_complaint_reaches_the_regen_layer(self, gate_db, garage):
+        """The reserved slots go to what the rider reported, not to a fixed
+        list — so the same machine answers a different complaint differently."""
+        for make, model, _y, _e in PAIRS:
+            known, _ctx = _diagnose_and_capture(
+                garage[(make, model)], "brake light does not come on under regen")
+            assert "regen" in _layers_in(known), (make, model, sorted(_layers_in(known)))
+
+    def test_the_selection_changes_when_the_symptom_does(self, gate_db, garage):
+        """Before 250B these two lists were identical: retrieval was by
+        vehicle only, so a rider reporting a hot pack and a rider reporting a
+        dead regen brake light were handed the same twelve rows."""
         vid = garage[("Zero", "SR/F")]
         hot, _a = _diagnose_and_capture(vid, "pack overheats while charging")
         lamp, _b = _diagnose_and_capture(vid, "brake light does not come on under regen")
-        assert [r["title"] for r in hot] == [r["title"] for r in lamp]
+        assert [r["title"] for r in hot] != [r["title"] for r in lamp]
+        assert "thermal" in _layers_in(hot) and "regen" in _layers_in(lamp)
 
-    def test_the_electric_powertrain_flag_does_not_reach_retrieval(self, gate_db, garage):
-        """The bike is registered `--powertrain electric`, and the knowledge
-        search still has no powertrain filter — the debt Phase 243 recorded
-        and the third phase to be shaped by it."""
+    def test_the_electric_powertrain_flag_now_reaches_retrieval(self, gate_db, garage):
+        """The debt Phase 243 recorded and four phases were shaped by. Before
+        250B, this machine — registered `--powertrain electric` — was handed
+        twelve rows of V-twin content: stator failure, compensator sprocket
+        noise, intake manifold seals, clutch pack wear."""
         known, _ctx = _diagnose_and_capture(
-            garage[("Harley-Davidson", "LiveWire")], "reduced range")
-        assert _layers_in(known) == set(), "electric layers arrived — 250B may have landed"
+            garage[("Harley-Davidson", "LiveWire")], "range dropped by half")
+        assert _layers_in(known), "no electric layer reached a battery-electric machine"
+        titles = " ".join(r["title"].lower() for r in known)
+        for combustion in ("stator", "compensator sprocket", "intake manifold", "clutch pack"):
+            assert combustion not in titles, combustion
 
     def test_the_context_the_model_sees_carries_every_label(self, gate_db, garage):
         """246 Decision 3: the label travels with the number, and the prompt
         is a display surface. That part works, and stays working."""
-        known, ctx = _diagnose_and_capture(garage[("Zero", "SR/F")], "reduced range")
+        known, ctx = _diagnose_and_capture(garage[("Zero", "SR/F")], "range dropped by half")
         assert known and ctx
         for row in known:
             if row.get("source"):
@@ -476,14 +498,16 @@ class TestTheHonestGaps:
                           "known_issues_regen.json": 12, "known_issues_thermal.json": 0,
                           "known_issues_energica.json": 0}, counts
 
-    def test_an_electric_bike_shows_no_motor_power_in_the_garage(self, gate_db, garage):
-        """Found by this gate. `motor_kw` is a real column that `garage add`
-        offers no option to set, so it is always NULL — and the renderer's
-        `.get('motor_kw', '?')` default never fires for a key that exists
-        with a None value. Every electric bike in the garage renders
-        "NonekW". Pinned here, fixed in 250B."""
+    def test_an_electric_bike_shows_its_motor_power_in_the_garage(self, gate_db):
+        """F95, found by this gate and fixed in 250B. `motor_kw` is a real
+        column that `garage add` had no option to set, and the renderer's
+        `.get('motor_kw', '?')` default never fired for a key that exists
+        holding None, so every electric bike printed "NonekW"."""
+        _run(["garage", "add", "--make", "Zero", "--model", "SR/S",
+              "--year", "2024", "--powertrain", "electric", "--motor-kw", "82"])
         out = _run(["garage", "list"]).output
-        assert "NonekW" in out, out[-800:]
+        assert "NonekW" not in out, out[-800:]
+        assert "82.0kW" in out, out[-800:]
 
 
 # ===========================================================================

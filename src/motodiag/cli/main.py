@@ -431,6 +431,8 @@ def garage() -> None:
 @click.option("--model", "model_name", required=True, help="Model name.")
 @click.option("--year", required=True, type=int, help="Model year.")
 @click.option("--engine-cc", type=int, default=None, help="Engine displacement in cc.")
+@click.option("--motor-kw", type=float, default=None,
+              help="Peak motor power in kW (electric bikes; ICE bikes use --engine-cc).")
 @click.option("--vin", default=None, help="Vehicle identification number.")
 @click.option("--protocol", default="none",
               type=click.Choice(["none", "j1850", "k_line", "can", "can_hd",
@@ -441,8 +443,8 @@ def garage() -> None:
               help="Powertrain type.")
 @click.option("--notes", default=None, help="Free-text notes.")
 def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
-               vin: str | None, protocol: str, powertrain: str,
-               notes: str | None) -> None:
+               motor_kw: float | None, vin: str | None, protocol: str,
+               powertrain: str, notes: str | None) -> None:
     """Add a bike to the garage manually."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
@@ -457,6 +459,7 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
             model=model_name,
             year=year,
             engine_cc=engine_cc,
+            motor_kw=motor_kw,
             vin=vin,
             protocol=ProtocolType(protocol),
             powertrain=PowertrainType(powertrain),
@@ -500,7 +503,11 @@ def garage_list() -> None:
         engine = (
             f"{v['engine_cc']}cc"
             if v.get("engine_cc")
-            else f"{v.get('motor_kw', '?')}kW" if v.get("powertrain") == "electric"
+            # Phase 250B: `.get(key, default)` never fires for a key that
+            # exists holding None, and motor_kw is a real column that was
+            # NULL on every row, so every electric bike printed "NonekW".
+            else f"{v['motor_kw']}kW"
+            if v.get("powertrain") == "electric" and v.get("motor_kw")
             else "-"
         )
         table.add_row(

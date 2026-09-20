@@ -48,6 +48,7 @@ from motodiag.core.session_repo import (
     close_session, update_session, reopen_session, append_note, get_notes,
 )
 from motodiag.knowledge.issues_repo import search_known_issues
+from motodiag.knowledge.prompt_rows import compose_prompt_rows
 from motodiag.vehicles.registry import get_vehicle
 
 # --- Slug parsing tunables ---
@@ -240,6 +241,7 @@ _RESOLVER_FETCH = 200
 
 def _load_known_issues(
     make: str, model_name: str, year: int, db_path: Optional[str] = None,
+    *, powertrain: Optional[str] = None, symptoms: Optional[list[str]] = None,
 ) -> tuple[Optional["VehicleIdentity"], list[dict]]:
     """Retrieve knowledge-base known issues for the vehicle, used as AI context.
 
@@ -257,6 +259,15 @@ def _load_known_issues(
 
     Returns the identity as well, because a correction the technician never
     sees is a correction that hides a wrong garage entry rather than fixing it.
+
+    Phase 250B. The rows are now *composed* rather than merely truncated, and
+    the two new arguments are what composition needs: the bike's `powertrain`,
+    which the caller already holds and never passed, and the `symptoms` the
+    rider reported, which retrieval had never seen. With neither, this behaves
+    exactly as 244S left it — the first twelve rows in rank order. Gate 13
+    measured why it could not stay that way: on an Energica Ego and a
+    Harley-Davidson LiveWire, none of the pack, controller, regen or thermal
+    content written across Phases 246-249 reached the model at all.
     """
     try:
         identity, rows = known_issues_for_vehicle(
@@ -268,7 +279,12 @@ def _load_known_issues(
     # The resolver takes no year. Applied here, and BEFORE the cap: filtering
     # after it would drop rows that a narrower fetch would have kept.
     kept = [r for r in rows if _covers_year(r, year)]
-    return identity, kept[:KNOWN_ISSUE_PROMPT_LIMIT]
+    return identity, compose_prompt_rows(
+        kept,
+        limit=KNOWN_ISSUE_PROMPT_LIMIT,
+        powertrain=powertrain,
+        symptoms=symptoms,
+    )
 
 
 def _covers_year(row: dict, year: Optional[int]) -> bool:
@@ -428,6 +444,7 @@ def _run_quick(
 
     identity, known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path,
+        powertrain=vehicle.get("powertrain"), symptoms=symptoms,
     )
     _render_identity(get_console(), identity)
 
@@ -502,6 +519,7 @@ def _run_interactive(
 
     identity, known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path,
+        powertrain=vehicle.get("powertrain"), symptoms=symptoms,
     )
     _render_identity(get_console(), identity)
     total_input = 0
