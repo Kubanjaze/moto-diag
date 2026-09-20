@@ -1,6 +1,6 @@
 # Phase 250B — The electric layers never reach the model
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-19
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-19
 
 ---
 
@@ -176,13 +176,103 @@ at today's size, so there is no cost case for raising it.
   overlap, the shape `predictor.py` already uses.
 - **No cap change**, no new severity ordering, no corpus edits.
 
+## Results (v1.1)
+
+**Shipped:** two small modules and three call-site changes.
+`knowledge/powertrain.py` answers whether a row is about an electric
+machine; `knowledge/prompt_rows.py` composes the prompt;
+`cli/diagnose.py` passes the powertrain and the symptoms it already held;
+`cli/main.py` gains `garage add --motor-kw` and loses the `.get` default
+that never fired. No SQL, no resolver change, no cap change.
+
+- 51 new tests, plus Gate 13's seven updated to the post-fix truth.
+- 9 mutations.
+- Full regression **7,355 passed, 0 failed, 27:53**.
+
+### What a rider now gets
+
+Measured through the real `diagnose quick`, the way Gate 13 measures:
+
+| Machine | "range dropped by half" | "brake light does not come on under regen" |
+|---|---|---|
+| Zero SR/F | bms, inverter, thermal | inverter, regen, thermal |
+| Energica Ego | bms, thermal | inverter, regen |
+| LiveWire ONE | bms, inverter, thermal | inverter, regen, thermal |
+| Harley-Davidson LiveWire | bms, inverter, thermal | inverter, regen, thermal |
+
+Before this phase the first column read "inverter only, none, inverter
+only, none" and the second was identical to the first, because retrieval
+never saw the symptom. Every prompt is still exactly twelve rows and still
+ordered most-specific-tier first.
+
+**The safety floor held.** Critical rows per prompt: Zero 9 → 7, Energica
+5 → 5, LiveWire ONE 7 → 6, and **Harley-Davidson LiveWire 3 → 6**. The
+Harley improves because combustion content stopped crowding it out: before
+this phase that machine's twelve rows were stator failure, compensator
+sprocket noise, intake manifold seal leak, starter solenoid and clutch
+pack wear — an engine, a clutch and a stator a battery-electric motorcycle
+does not have.
+
+### What it changed for combustion bikes
+
+The powertrain filter engages only for an electric machine, so it is a
+no-op there — proved on five bikes, including the Sportster that shares a
+marque with a LiveWire. Relevance, though, applies to every bike, and that
+is the point of making it a general rule rather than an electric one:
+
+| Bike | Reported | Pulled into the prompt |
+|---|---|---|
+| Sportster 1200 | charging system warning | Stator failure — charging system breakdown |
+| CBR600RR | hard starting when hot | Valve clearance tightening |
+| SV650 | front brake feels spongy | Brake system rows |
+
+One honest trade-off: some promoted rows are near-neighbours from another
+model of the same make (an MT-09 fuel-pump row for an MT07). They arrive
+labelled `make_other_model`, and 244S's contract that the prompt says
+"same make, DIFFERENT model" is unchanged — so the model is told what it
+is reading, which is the same standard the corpus applies to provenance.
+
+### Deviations
+
+**Composition lives in `knowledge/`, not in `cli/diagnose.py`.** The plan
+said the change lives in the diagnose path, meaning the resolver stays
+untouched, and it does. The rules went into two small modules because they
+have unit-testable behaviour — the head is never spent, the result is
+exactly full, the order is restored — that a walk through the CLI cannot
+show.
+
+**The combustion no-op is asserted with the classifier, not the layer
+regexes.** A combustion bike legitimately has cooling content: an MT07
+head-gasket row names coolant and a BMW boxer charging row names liquid
+cooling. A keyword search for "cool" called those electric layers and
+failed the test; the honest assertion is that no row the classifier calls
+electric reaches a combustion prompt.
+
+### Verification
+
+- The four electric pairs and five combustion bikes walked through the
+  real `diagnose quick` with the AI call replaced.
+- 244S's four pins green, tier monotonicity included; 405 tests passed
+  across the sixteen suites this change could touch.
+- Mutations: the powertrain filter removed; relevance ignored; the reserve
+  taken from the head; the canonical re-sort dropped; the top-up removed;
+  the LiveWire model hint dropped; the classifier's word boundaries
+  removed; the garage renderer regressed; `--motor-kw` not persisted.
+
+### Filed
+
+| F | What |
+|---|---|
+| F100 | The model-resolution pool is keyed by the raw `make` column: LiveWire and Damon resolve no model at all, ten of sixteen marques resolve only some, and six vocabulary keys are not marques — **row 250C** |
+| F101 | `/ask` fetches 25 rows, applies no year filter, discards the identity, and the vision formatter then slices to its own hard-coded 12 — none of which this phase touched |
+
 ## Verification Checklist
 
-- [ ] Gate 13's tripwires updated, and each one's new assertion measured
-- [ ] The ICE no-op proved on five combustion bikes
-- [ ] 244S's four pins still green, tier monotonicity included
-- [ ] The new test file scanned by 244G's raw-source guard
-- [ ] Mutations caught
-- [ ] Full regression green, 0 failed and 0 skipped
-- [ ] Row 250C opened with S0-9's measurement; F100/F101 filed
-- [ ] Roadmap row 250B, `implementation.md` history row, `phase_log.md`
+- [x] Gate 13's tripwires updated, and each one's new assertion measured
+- [x] The ICE no-op proved on five combustion bikes
+- [x] 244S's four pins still green, tier monotonicity included
+- [x] The new test file scanned by 244G's raw-source guard
+- [x] Mutations caught — 9/9
+- [x] Full regression green — **7,355 passed, 0 failed, 27:53**, 0 skipped
+- [x] Row 250C opened with S0-9's measurement; F100/F101 filed
+- [x] Roadmap row 250B, `implementation.md` history row, `phase_log.md`

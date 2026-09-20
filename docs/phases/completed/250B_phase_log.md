@@ -1,6 +1,6 @@
 # Phase 250B — The electric layers never reach the model — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-19
 
 ---
@@ -33,3 +33,7 @@ Harley-Davidson LiveWire is handed V-twin content — an engine, a clutch and
 a stator it does not have. The operator's decision is that it opens as row
 250C rather than growing this one, because it changes resolution for every
 marque in the corpus, not only the electric ones.
+
+## 2026-09-19 — Complete
+
+Regression **7,355 passed, 0 failed, 27:53**. No schema change, no corpus change. Row 250C opens with the cause underneath: the model-resolution pool is keyed by the raw make column.

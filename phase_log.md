@@ -3324,3 +3324,28 @@ in the garage renders its power as "NonekW", because `motor_kw` is a column
 None; and Track L carries two forum conventions, the generic layer dating its
 pages and the per-make rows naming their evidence class instead, so the gate
 asserts the newer rule only where it applies.
+
+
+## 2026-09-19 — Phase 250B complete
+
+53 new tests, 9/9 mutations, regression 7,355 passed, 0 failed, 27:53.
+
+The prompt is composed rather than truncated: filter to the bike's
+powertrain, eight rows by the old ranking, four reserved for what the rider
+reported, then re-sorted so the order the model sees is the order retrieval
+meant. Every electric machine now gets the layer its complaint points at,
+the safety floor held everywhere and improved on the Harley-Davidson
+LiveWire, and the cap stayed at twelve — the measurement said composition,
+not enlargement, and 95 rows of prompt was the alternative.
+
+The mutation set earned its keep. m7 removed the classifier's word
+boundaries and survived twice: the first version of that guard put its test
+word in the title, which the classifier never reads, and the second put it
+in the model, which the marque patterns never scan. Phase 244's lesson — a
+guard written before the evidence is a guess about what the evidence looks
+like — learned again, in one phase, twice.
+
+Row 250C opens with what Step 0 found underneath: the model-resolution pool
+is keyed by the raw make column, so LiveWire and Damon resolve no model at
+all and ten of sixteen marques resolve only some of theirs. That is why a
+Harley-Davidson LiveWire was handed V-twin content in the first place.
