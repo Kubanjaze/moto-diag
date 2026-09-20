@@ -41,6 +41,22 @@ from motodiag.knowledge.powertrain import is_electric_row
 #: rows — is still two thirds of the prompt.
 RELEVANCE_RESERVE = 4
 
+#: How many of the prompt's rows are held for the most severe content the
+#: machine has, wherever it sits in the ranking.
+#:
+#: Phase 250C added this, and the reason is worth keeping. That phase made
+#: model resolution work for machines it had never worked for, and on a Zero
+#: SR/F the effect was immediate: twelve tier-0 rows, all of them specific to
+#: that model, and **not one critical row left**. Phase 241's high-voltage
+#: rules — do not work alone on a live pack, the service disconnect does not
+#: de-energise the motor, the capacitor discharge wait is a specified interval
+#: — are `make_wide`, so a better model match outranked every one of them.
+#:
+#: Specificity is not the only thing a prompt owes a technician. Three of
+#: twelve is the floor: enough that the rules for opening a pack survive any
+#: ranking, small enough that it never crowds out the machine's own content.
+SAFETY_RESERVE = 3
+
 #: Tier order, most specific first. Mirrors the SQL in
 #: vehicle_resolver.known_issues_for_vehicle; a row with no tier sorts
 #: last, the same fail-safe the resolver uses.
@@ -111,6 +127,7 @@ def compose_prompt_rows(
     powertrain: Optional[str] = None,
     symptoms: Optional[Sequence[str]] = None,
     reserve: int = RELEVANCE_RESERVE,
+    safety: int = SAFETY_RESERVE,
 ) -> list[dict]:
     """Choose the rows that reach the model, and order them as before.
 
@@ -148,4 +165,34 @@ def compose_prompt_rows(
             chosen.append(row)
             chosen_ids.add(id(row))
 
+    chosen = _hold_the_safety_floor(chosen[:limit], pool, reserve=safety)
     return sorted((dict(r) for r in chosen[:limit]), key=_canonical_key)
+
+
+def _hold_the_safety_floor(chosen, pool, *, reserve: int) -> list:
+    """Make room for the most severe rows the machine has.
+
+    They are swapped in over the lowest-ranked rows already chosen, so the
+    prompt keeps its size and loses its least specific content, not its
+    most relevant.
+    """
+    if reserve <= 0:
+        return chosen
+    chosen_ids = {id(r) for r in chosen}
+    present = sum(1 for r in chosen if str(r.get("severity") or "").lower() == "critical")
+    missing = reserve - present
+    if missing <= 0:
+        return chosen
+    candidates = [r for r in pool
+                  if str(r.get("severity") or "").lower() == "critical"
+                  and id(r) not in chosen_ids]
+    if not candidates:
+        return chosen
+    out = list(chosen)
+    for row in candidates[:missing]:
+        droppable = [i for i, r in enumerate(out)
+                     if str(r.get("severity") or "").lower() != "critical"]
+        if not droppable:
+            break
+        out[max(droppable, key=lambda i: _canonical_key(out[i]))] = row
+    return out
