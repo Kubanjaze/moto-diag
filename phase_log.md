@@ -3370,3 +3370,42 @@ filed as out of scope. The corpus uses that character for two different
 jobs, and the evidence separates them cleanly: in every enumeration the
 right-hand fragment is a full designation, and in every compound name it is
 one or two characters. Zero writes four of the latter.
+
+
+## 2026-09-20 — Phase 251 complete
+
+64 tests, 11/11 mutations, regression 7,467 passed, 0 failed, 33:25. Corpus 996 →
+1006. Track M opens.
+
+The research cadence earned its cost twice over, in a way worth recording.
+Three refuters re-fetched every page the ten rows cite and **moved no
+figure at all** — the intervals came back identical when re-read by column
+position rather than mark count, and so did the six-pin pinout, the 10-bar
+hot-start threshold, the valve clearances and the belt limits. What they
+killed was everything the sweeps had written *around* the figures: a brake
+procedure described as replacing an ineffective one, when Piaggio wrote
+only that the new one improves effectiveness; a bench-procedure sentence
+generalised into "the roll lock fails safe locked by design", which the
+owner's manual contradicts; a two-state lamp decode that is really three
+states with an audible alarm as the discriminator; a pre-delivery fluid
+check presented as scheduled maintenance; four campaigns flattened into one
+defect when the fourth is the remedy plating failing in turn; and a
+universal negative about engine names drawn from four manuals chosen where
+those names could never appear. Every one was plausible. None was
+distinguishable from the verified sentences beside it without re-fetching
+the document.
+
+The second lesson is about the tooling rather than the subject. Three
+census sweeps of the regulator's interface returned three different,
+barely-overlapping, confident answers. One of them ran 2,750 queries with
+2,038 failures and 10,322 retries, printed that 74% failure rate, and then
+printed its three-campaign finding anyway. A count beside a result is not a
+gate. The ten campaigns here are written as a floor, the row says so, and a
+test forbids any completeness claim.
+
+Three mutations survived the first pass, and all three were weak guards
+rather than weak content — one of them because the word it checked for was
+in the title rather than the decode. Fixing the second exposed the same
+habit again: banning the phrase "no Piaggio document" failed a sentence
+that was honestly scoped, "no Piaggio document *read for this entry*". The
+rule is not silence, it is scope.
