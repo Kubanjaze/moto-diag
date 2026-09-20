@@ -1,6 +1,6 @@
 # Phase 250 — Gate 13: the electric track through the real front doors
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-19
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-19
 
 ---
 
@@ -184,11 +184,98 @@ index → model index), plus the adapter catalogue through the real
 - **No network, no LLM key, no live database.** The fixture builds its own
   from the packaged seed.
 
+## Results (v1.1)
+
+**Shipped:** `tests/test_phase250_gate13.py` — 106 tests in seven classes,
+and **no production code**, as D1 said. No seed row was written or
+corrected. The fixture builds its own database from the packaged seed the
+way `db init` does and seeds the adapter catalogue; nothing touches the
+live database, the network or an LLM key.
+
+- 106 tests, of which 4 run an earlier gate as a subprocess.
+- 9 mutations, all caught.
+- Full regression **7,301 passed, 0 failed, 28:17**.
+
+### What the gate confirmed
+
+Every Step 0 measurement reproduced on a **freshly seeded** database,
+which is the stronger claim: the fresh seed loads to exactly 996 rows, the
+same count the live database carries, so the corpus and the shipped seed
+agree.
+
+The diagnostic path is as Step 0 measured it. A Zero SR/F and a LiveWire
+ONE query reach the controller layer only; an Energica Ego and a
+Harley-Davidson LiveWire query reach none of the four. Every prompt is
+filled to its twelve-row cap, and the twelve do not change when the
+symptom does: a rider reporting a hot pack and a rider reporting a dead
+regen brake light are handed the same rows. The bikes are registered
+`--powertrain electric` through the real `garage add`, and retrieval
+ignores it.
+
+What does work, and is now gated: the label travels all the way to the
+model — every row in the prompt renders `source: <label>`, the rule 246
+set. `kb search` reaches all twelve layer terms with their labels,
+`kb by-code` reaches the cooling-fault row for all nine Energica codes,
+and `kb by-symptom "liquid cooled battery"` reaches the architecture row.
+
+### What the gate found that Step 0 had not
+
+- **The garage cannot show an electric bike's motor power.** `motor_kw` is
+  a real column, `garage add` offers no option to set it, and the renderer
+  reads `v.get('motor_kw', '?')` — a default that never fires for a key
+  that exists holding `None`. Every electric bike in the garage renders
+  **"NonekW"**. Filed as F95, pinned by a test, fixed in 250B.
+- **Two forum conventions live in one corpus.** The generic layer's forum
+  rows (246–248) name zerologs.bike and a "Last updated" date; the
+  per-make rows (242–244) name their evidence class and carry no page
+  date. The gate asserts the newer rule only where it applies and records
+  the split, because a guard that applied it corpus-wide would report a
+  history as a defect.
+- **`fault_codes.py` still says Energica publishes 110 codes.** Phase 247
+  corrected that to 129 rows and 127 distinct codes in the corpus and on
+  the live database, but the classifier's own comment was not part of that
+  correction. Filed as F98; not touched here, because this gate writes no
+  production code.
+
+### Findings filed
+
+| F | What | Where it goes |
+|---|---|---|
+| F94 | The generic layers do not reach the diagnostic prompt for any electric make; retrieval is vehicle-only, symptom-blind and capped at 12 | **Row 250B** |
+| F95 | `garage list` renders "NonekW" for every electric bike; `garage add` cannot set `motor_kw` | Row 250B |
+| F96 | `classify_code` has no SAE hybrid/EV branch, so P0A05 is "unrecognized code format" | Follow-up |
+| F97 | `kb list --make` resolves a misspelt make; `GET /v1/kb/issues?make=` does not | Follow-up |
+| F98 | `fault_codes.py` comment still states Energica's pre-247 count of 110 | Follow-up |
+| F99 | No adapter compatibility row exists for any electric make, while 244's shipped row says a generic scan tool reads Energica's codes | Follow-up |
+
+### Deviations
+
+**Gates 5, 6 and 7 are not re-run here.** Gate 12 re-runs them and Gate 13
+re-runs Gate 12, so they are guarded transitively. Running them again
+would add three more pytest subprocesses to every regression for a
+guarantee already held.
+
+**The forum-date invariant is scoped to the generic layer.** See above —
+measured, not assumed, and pinned as a split.
+
+### Verification
+
+- The four pairs, the twelve-row cap, the symptom-invariance and the
+  powertrain flag all walked through the real `diagnose quick` with the AI
+  call replaced, never through the retrieval helper.
+- The API half used a key minted in-process for a seeded user and
+  **revoked by id** when the module finished.
+- Mutations: an electric DTC file appears; the compat store gains an
+  electric make; 250B lands (the cap goes 12 → 40); one "2018 Eva" anchor
+  is corrected; the garage renderer is fixed; a regen row gains a fault
+  code; a regulation row loses its campaign number; a forum row loses its
+  page date; the hybrid/EV block is seeded. All nine caught.
+
 ## Verification Checklist
 
-- [ ] The new test file scanned by 244G's raw-source guard before the regression
-- [ ] Every honest-gap test fails when its absence is filled (proved by mutation)
-- [ ] Mutations caught
-- [ ] Full regression green, 0 failed and 0 skipped
-- [ ] Roadmap row 250 updated; row 250B opened with S0-2's measurement
-- [ ] `implementation.md` history row and `phase_log.md` entry
+- [x] The new test file scanned by 244G's raw-source guard before the regression
+- [x] Every honest-gap test fails when its absence is filled — 9/9 mutations
+- [x] Mutations caught — 9/9
+- [x] Full regression green — **7,301 passed, 0 failed, 28:17**, 0 skipped
+- [x] Roadmap row 250 updated; row 250B opened with S0-2's measurement
+- [x] `implementation.md` history row and `phase_log.md` entry

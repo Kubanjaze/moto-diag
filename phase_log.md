@@ -3301,3 +3301,26 @@ manuals — and name the rest. The Energica anchor is now the document
 code, because "2018 Eva" asserted a model year the manual does not state.
 
 40 tests, 8/8 mutations. Regression 7,195 passed, 0 failed, 18:47.
+
+
+## 2026-09-19 — Phase 250 complete
+
+Gate 13, and Track L closes. 106 tests, zero production code, 9/9
+mutations, regression 7,301 passed, 0 failed, 28:17.
+
+The gate's job was to walk the path row 250 names — query an electric bike,
+get BMS, motor, regen and thermal analysis — and it does not deliver it.
+Retrieval is by vehicle and symptom-blind, capped at twelve rows, and 241's
+ten critical HV-safety rows fill the cap on every electric bike: two of the
+four make/model pairs reach none of the four layers, and the other two reach
+only the controller. Twenty-six rows written across 246-249 never arrive.
+The corpus is right; the path to it is not. Row 250B opens with the
+measurement, and the gate's own tests are its acceptance criteria — they are
+written to fail when the fix lands.
+
+Two smaller finds, both from walking rather than reading: every electric bike
+in the garage renders its power as "NonekW", because `motor_kw` is a column
+`garage add` cannot set and a `.get` default never fires for a key holding
+None; and Track L carries two forum conventions, the generic layer dating its
+pages and the per-make rows naming their evidence class instead, so the gate
+asserts the newer rule only where it applies.
