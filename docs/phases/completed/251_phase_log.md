@@ -1,6 +1,6 @@
 # Phase 251 — Vespa and Piaggio: a new marque, anchored per document — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-20
 
 ---
@@ -32,3 +32,7 @@ Three sweeps launched with the plan: Vespa's own documentation, the
 Piaggio-branded scooters and their engine families, and the MP3 together with
 the Piaggio Group USA regulator record. Each fetches every page it cites and
 quotes it, or the claim does not exist.
+
+## 2026-09-20 — Complete
+
+Regression **7,467 passed, 0 failed, 33:25**. Corpus 996 -> 1006, two new marques. No schema change. F103 and F104 filed.
