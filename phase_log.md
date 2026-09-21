@@ -3409,3 +3409,56 @@ in the title rather than the decode. Fixing the second exposed the same
 habit again: banning the phrase "no Piaggio document" failed a sentence
 that was honestly scoped, "no Piaggio document *read for this entry*". The
 rule is not silence, it is scope.
+
+
+## Phase 252 — Honda's small machines: the four the corpus never named
+
+**2026-09-20.** Thirteen rows, corpus 1006 → 1019, Honda's model pool 27 → 46.
+Regression 7,560 passed, 0 failed, 31:28.
+
+Two things made this row different from 251's, and neither was the subject.
+
+The first is what it was written beside. Honda is the corpus's third-largest
+marque — 142 rows — and every one of them is `unverified`, inherited from the
+pre-242 seed. So these thirteen are the first Honda rows that name a document,
+and the plan's fourth decision said plainly that the 142 beside them are not
+evidence for any of it. That turned out to matter more than expected: one of
+those rows, id 261, has the wildcard in its model column and therefore reaches
+every Honda ever made with a ten-entry blink-code table that Honda's own GROM125
+index contradicts on four codes, and a sentence beginning "Forum tip:" inside
+its `fix_procedure`. The machines were never uncovered. They were covered by
+something that named nothing. That is F106.
+
+The second is that the refuters refuted an *inference* rather than a figure.
+Three sweeps, working independently, all concluded that the regulator's
+per-vehicle lookup returns HTTP 400 when it does not recognise a model string —
+a tidy, plausible, load-bearing explanation that I verified the observations
+for and then adopted whole. The refuter ran the control none of the three had
+run: the same model string across several model years. `GROM125` returns 400 for
+2013, 2016, 2019, 2021 and 2023, and 200 for 2014, 2015 and 2020. A 400 simply
+means zero results. A wrong name and an empty year are indistinguishable at
+every layer, and nothing in the response can validate a model string.
+
+Two further claims fell with it — the endpoint that looked like a recall index
+takes a parameter that is inert, returning byte-identical lists for a garbage
+value, and the "hidden Ruckus recall" that had been blocking the Ruckus rows was
+a complaint, ODI 10883289. The blocker dissolved and the rows could be written.
+
+The lesson is recorded in memory, because it is not about this API: confirming
+the data is not confirming the inference. Every status code those sweeps
+reported was real. The story attached to them was not, and the test that broke
+it took one command.
+
+The rest of the refuter layer behaved as it has since 246 — catching a
+misattribution that compared the Metropolitan's punctuation against the Ruckus's
+and read it as Honda contradicting itself; a claimed absence that was really a
+difference, the Ruckus publishing a two-year coolant interval against the
+Metropolitan's three; an oil-spec change that was two changes; a third PCX spark
+plug whose omission would have silently mis-served every 2020 and 2021 machine;
+and a service manual reported to name itself nowhere, which names itself exactly
+once, as the GROM125, and never says MSX at all.
+
+Two guards were too blunt on their first run, both in the way 251 recorded: one
+banned a phrase that appeared inside its own prohibition, the other selected
+rows on a string that also matches a regulator component field. Both were
+rewritten to test the property rather than the token.

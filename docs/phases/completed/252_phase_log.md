@@ -1,6 +1,6 @@
 # Phase 252 — Honda's small machines: the four the corpus never named — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-20
 
 ---
@@ -41,3 +41,7 @@ sharing an engine makes it plausible.
 
 Sweeps launched with the plan. Each fetches every page it cites and quotes
 it, or the claim does not exist.
+
+## 2026-09-20 — Complete
+
+Regression **7,560 passed, 0 failed, 31:28**. Corpus 1006 -> 1019, Honda's model pool 27 -> 46. No schema change. F105, F106 and F107 filed, and F103 amended.
