@@ -40,6 +40,8 @@ from __future__ import annotations
 import ast
 import pathlib
 
+import pytest
+
 from motodiag.core.database import SCHEMA_VERSION
 
 TESTS = pathlib.Path(__file__).resolve().parent
@@ -159,18 +161,67 @@ class TestOnlyOneGenuinePin:
         ]
         assert bad == [], "surviving waivers must be `>=` floors, not equalities:\n  " + "\n  ".join(bad)
 
-    def test_the_guard_detects_a_planted_head_pin(self, tmp_path):
-        """Break-it/see-it-fail, inline: the scanner must catch a real one."""
-        planted = TESTS / "test_zz_f124_planted_probe.py"
-        planted.write_text(
+    @pytest.mark.parametrize("label,body", [
+        (
+            "constant",
             "from motodiag.core.database import SCHEMA_VERSION\n\n\n"
-            f"def test_probe():\n    assert SCHEMA_VERSION == {SCHEMA_VERSION}\n",
-            encoding="utf-8",
-        )
+            "def test_probe():\n    assert SCHEMA_VERSION == {v}\n",
+        ),
+        (
+            "call",
+            "from motodiag.core.migrations import get_current_version\n\n\n"
+            "def test_probe(db_path):\n"
+            "    assert get_current_version(db_path) == {v}\n",
+        ),
+        (
+            "call-reversed",
+            "from motodiag.core.migrations import get_current_version\n\n\n"
+            "def test_probe(db_path):\n"
+            "    assert {v} == get_current_version(db_path)\n",
+        ),
+    ])
+    def test_the_guard_detects_a_planted_head_pin(self, label, body):
+        """Break-it/see-it-fail, inline, once per spelling.
+
+        Both forms existed in this repo and both had to be deleted:
+        `SCHEMA_VERSION == 63` in ten files, and
+        `get_current_version(db_path) == 63` in `191b`. A scanner that saw
+        only the first would have left the second, which is how `191b`'s
+        pin survived being missed at Phase 244M — its own comment says so.
+        The reversed form is included because nothing stops someone
+        writing the literal on the left.
+        """
+        planted = TESTS / f"test_zz_f124_planted_probe_{label.replace('-', '_')}.py"
+        planted.write_text(body.format(v=SCHEMA_VERSION), encoding="utf-8")
         try:
             assert f"{planted.name}:5" in _head_equality_pins(), (
-                "the scanner did not see a planted head pin — it is not "
-                "measuring anything"
+                f"the scanner did not see a planted head pin spelled as a "
+                f"{label} — it is not measuring that spelling"
             )
         finally:
             planted.unlink()
+
+    def test_the_guard_ignores_a_floor_and_a_lower_literal(self):
+        """The other half: it must not fire on what stays legal.
+
+        A `>=` floor at the head (six phases use one) and an equality
+        against an intermediate version (`== 38`, `== 51`, which assert a
+        fixture mid-migration) are both correct and must not be reported.
+        """
+        probes = {
+            "floor": f"    assert SCHEMA_VERSION >= {SCHEMA_VERSION}\n",
+            "intermediate": "    assert get_current_version(db_path) == 38\n",
+        }
+        for label, line in probes.items():
+            planted = TESTS / f"test_zz_f124_legal_probe_{label}.py"
+            planted.write_text(
+                "from motodiag.core.database import SCHEMA_VERSION\n"
+                "from motodiag.core.migrations import get_current_version\n\n\n"
+                "def test_probe(db_path):\n" + line,
+                encoding="utf-8",
+            )
+            try:
+                hits = [h for h in _head_equality_pins() if h.startswith(planted.name)]
+                assert hits == [], f"the guard fired on a legal {label} pin: {hits}"
+            finally:
+                planted.unlink()
