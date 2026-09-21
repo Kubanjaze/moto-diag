@@ -52,15 +52,21 @@ BEFORE = {
 #: already complete, so they are the control group: their pools must not
 #: move at all *from a change to the derivation*.
 #:
-#: Honda's number moved 27 -> 46 at Phase 252, and Yamaha's 23 -> 46 at
-#: Phase 253, neither because the derivation changed: 252 added thirteen
-#: rows naming the Ruckus, the Metropolitan, the Grom and the PCX, and 253
-#: added fourteen naming the Zuma, the Vino and the Taiwanese makers'
-#: machines. Kawasaki and Suzuki are untouched by both and still pin the
-#: derivation exactly, which is what this test is for. When a content phase
-#: moves one of these, move the number and say which phase and why — do not
-#: relax the equality, because the equality is the guard.
-UNCHANGED = {"Honda": 46, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 46}
+#: Honda moved 27 -> 46 at Phase 252 and 46 -> 52 at Phase 254; Yamaha moved
+#: 23 -> 46 at Phase 253 and 46 -> 50 at Phase 254. None of those was the
+#: derivation changing: 252 added the Ruckus, Metropolitan, Grom and PCX,
+#: 253 the Zuma, Vino and the Taiwanese makers' machines, and 254 named
+#: Honda and Yamaha scooters in a generic CVT layer. Kawasaki and Suzuki are
+#: untouched by all three and still pin the derivation exactly, which is
+#: what this test is for.
+#:
+#: NOTE, and it is now three phases running: every content phase that names
+#: a Honda or Yamaha machine moves this number, so for those two marques the
+#: equality has stopped testing the derivation and started tracking content.
+#: Kawasaki and Suzuki still do the real work. Re-shaping this to test the
+#: property — that for a single-marque marque, marque-keying and raw-keying
+#: agree — is filed rather than done here, because 254 is a content row.
+UNCHANGED = {"Honda": 52, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 50}
 
 #: Zero writes four designations with a slash in the name itself.
 COMPOUND = ("SR/F", "SR/S", "DSR/X")
@@ -125,9 +131,10 @@ class TestTheVocabularyIsKeyedByMarque:
         """Honda, Kawasaki, Suzuki and Yamaha write one marque per row, so
         raw-key and marque-key are the same thing for them. If one of these
         moves without a content phase behind it, the derivation changed
-        something it had no business changing. See UNCHANGED for Honda's
-        move at Phase 252 and Yamaha's at Phase 253, both of which had a
-        content phase behind them."""
+        something it had no business changing. See UNCHANGED for the Honda
+        and Yamaha moves at Phases 252, 253 and 254, each of which had a
+        content phase behind it — and for why Kawasaki and Suzuki are now
+        the two marques doing the real work here."""
         assert len(known_models(marque, db_path=corpus)) == count
 
 
