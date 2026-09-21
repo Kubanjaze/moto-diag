@@ -4394,6 +4394,171 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE vehicles DROP COLUMN transmission;
         """,
     ),
+    # Migration 064 — Phase 256: the retrieval chokepoint.
+    Migration(
+        version=64,
+        name="retrieval_chokepoint",
+        description=(
+            "Phase 256. Two changes, both in service of one function "
+            "deciding whether a corpus row may reach a machine. "
+            "(1) `retrieval_withheld` records every distinct make/model "
+            "pair whose transmission resolves to `unknown` or `ambiguous`, "
+            "with the provenance, the purpose it was retrieved for, how "
+            "many retrievals it cost and how many rows were withheld. "
+            "Phase 255 counted this in process memory, which meant the "
+            "number was unreadable by anyone: every CLI command is a fresh "
+            "process, so a stats command would have printed zeros forever "
+            "(209B recorded the two accessors as orphans for exactly that "
+            "reason). Persisted, the table IS the lookup's to-do list -- "
+            "the machines that lost rows, ranked by how often. "
+            "(2) `known_issues` is rebuilt to add "
+            "CHECK (applicability IS NULL OR json_valid(applicability)). "
+            "Migration 063 added the column without one because a JSON "
+            "column carries no constraint by default, and the pydantic "
+            "model was left as the only guard. This narrows the failure "
+            "surface so the column cannot hold unparseable text at all. "
+            "It does NOT validate the JSON *schema* -- an unknown axis key "
+            "or an unknown value is still the pydantic model's job. "
+            "A rebuild rather than ALTER TABLE ADD CONSTRAINT: the latter "
+            "was verified to parse AND enforce on SQLite 3.53.2 (checked "
+            "with a positive control, because an ALTER returning without "
+            "raising is not evidence that it did anything), but the "
+            "shipped product does not control the user's SQLite version, "
+            "and the rebuild works everywhere. Migrations 051 and 052 "
+            "established the pattern for this table. Verified before "
+            "writing: zero of 1,045 rows fail json_valid today. "
+            "PRAGMA foreign_keys=OFF is genuinely required, not "
+            "defensive: repair_plan_items, known_issue_makes and "
+            "known_issue_models all reference known_issues(id), "
+            "get_connection sets foreign_keys=ON, and DROP TABLE is "
+            "refused outright while any child row points at it."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS retrieval_withheld (
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                provenance TEXT NOT NULL CHECK (provenance IN (
+                    'explicit', 'model-sourced', 'powertrain-default',
+                    'ambiguous', 'unknown'
+                )),
+                purpose TEXT NOT NULL CHECK (purpose IN (
+                    'prompt', 'prediction', 'search'
+                )),
+                rows_withheld INTEGER NOT NULL DEFAULT 0,
+                retrievals INTEGER NOT NULL DEFAULT 0,
+                corrupt_rows INTEGER NOT NULL DEFAULT 0,
+                first_seen TEXT NOT NULL,
+                last_seen TEXT NOT NULL,
+                PRIMARY KEY (make, model, provenance, purpose)
+            );
+
+            CREATE INDEX IF NOT EXISTS idx_retrieval_withheld_cost
+                ON retrieval_withheld(rows_withheld DESC, retrievals DESC);
+
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issues_rebuild_064 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                symptoms TEXT,
+                dtc_codes TEXT,
+                causes TEXT,
+                fix_procedure TEXT,
+                parts_needed TEXT,
+                estimated_hours REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by_user_id INTEGER DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'unverified'
+                    CHECK (source IN (
+                        'unverified', 'model-generated', 'forum',
+                        'service-manual', 'mechanic-verified', 'regulation'
+                    )),
+                applicability TEXT
+                    CHECK (applicability IS NULL OR json_valid(applicability))
+            );
+
+            INSERT INTO known_issues_rebuild_064 (id, title, description, make, model,
+                 year_start, year_end, severity, symptoms, dtc_codes, causes,
+                 fix_procedure, parts_needed, estimated_hours, created_at,
+                 created_by_user_id, source, applicability)
+            SELECT id, title, description, make, model, year_start, year_end,
+                   severity, symptoms, dtc_codes, causes, fix_procedure,
+                   parts_needed, estimated_hours, created_at,
+                   created_by_user_id, source, applicability
+            FROM known_issues;
+
+            DROP TABLE known_issues;
+            ALTER TABLE known_issues_rebuild_064 RENAME TO known_issues;
+
+            CREATE INDEX idx_known_issues_make_model
+                ON known_issues(make, model);
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
+            CREATE UNIQUE INDEX idx_known_issues_identity
+                ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_retrieval_withheld_cost;
+            DROP TABLE IF EXISTS retrieval_withheld;
+
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issues_rollback_064 (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                title TEXT NOT NULL,
+                description TEXT NOT NULL,
+                make TEXT,
+                model TEXT,
+                year_start INTEGER,
+                year_end INTEGER,
+                severity TEXT NOT NULL DEFAULT 'medium',
+                symptoms TEXT,
+                dtc_codes TEXT,
+                causes TEXT,
+                fix_procedure TEXT,
+                parts_needed TEXT,
+                estimated_hours REAL,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                created_by_user_id INTEGER DEFAULT 1,
+                source TEXT NOT NULL DEFAULT 'unverified'
+                    CHECK (source IN (
+                        'unverified', 'model-generated', 'forum',
+                        'service-manual', 'mechanic-verified', 'regulation'
+                    )),
+                applicability TEXT
+            );
+
+            INSERT INTO known_issues_rollback_064 (id, title, description, make, model,
+                 year_start, year_end, severity, symptoms, dtc_codes, causes,
+                 fix_procedure, parts_needed, estimated_hours, created_at,
+                 created_by_user_id, source, applicability)
+            SELECT id, title, description, make, model, year_start, year_end,
+                   severity, symptoms, dtc_codes, causes, fix_procedure,
+                   parts_needed, estimated_hours, created_at,
+                   created_by_user_id, source, applicability
+            FROM known_issues;
+
+            DROP TABLE known_issues;
+            ALTER TABLE known_issues_rollback_064 RENAME TO known_issues;
+
+            CREATE INDEX idx_known_issues_make_model
+                ON known_issues(make, model);
+            CREATE INDEX idx_known_issues_sort
+                ON known_issues((CASE severity WHEN 'critical' THEN 4 WHEN 'high' THEN 3 WHEN 'medium' THEN 2 WHEN 'low' THEN 1 ELSE 0 END) DESC, title);
+            CREATE UNIQUE INDEX idx_known_issues_identity
+                ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
+
+            PRAGMA foreign_keys=ON;
+        """,
+    ),
 ]
 
 
