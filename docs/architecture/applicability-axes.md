@@ -176,3 +176,81 @@ pages. No bulk inference, ever.
    retrieves 8 final-drive-chain rows; a belt-drive Harley and a
    shaft-drive Gold Wing should not get those either, which makes final
    drive its own axis and **not** something to solve with `{manual}` sets.
+
+---
+
+## The chokepoint (added Phase 256)
+
+The ADR above described *what* a row declares and *how* a machine is
+classified. It did not say **where the decision is made**, and that gap had
+a measurable shape: by the time Phase 256 opened there were **four** code
+paths retrieving `known_issues` for a specific machine, and only one of
+them applied the filter.
+
+They were found one at a time, each by somebody noticing — never by a
+mechanism:
+
+| door | how it was found |
+|---|---|
+| `_load_known_issues` (diagnose, code) | built with the filter, Phase 255 |
+| video `/ask` | asked late in 255 "which other callers exist?" |
+| `predict_failures` | same question, same afternoon; filed as F123 |
+| `shop/priority_scorer` | Phase 256's Step 0, by a raw-SQL sweep — **dead since it was written**, F126 |
+
+**The rule: one function decides, every door calls it.**
+`knowledge/retrieval.py::rows_for_machine` resolves the machine, applies
+the filter, and records what it withheld. `purpose` is **required with no
+default**, because a default is how the fourth door came to exist without
+anyone deciding what it was.
+
+A structural guard fails the build if any module outside the repo layer
+names `known_issues` in SQL, and it plants a bypass against itself on every
+run — a guard never observed to fail is not a guard.
+
+### What the chokepoint changed about the F122 decision
+
+Phase 255 made an unreadable `applicability` **raise** at read time, having
+weighed only two options: raise, or load it as unscoped. The second would
+put a mistyped row in front of every machine, so it chose the first — and
+the cost shipped, one bad row stopping diagnosis for every machine.
+
+The third option follows from this axis's own principle and was missed:
+**exclude the row.** Never unscoped, so a typo cannot reintroduce the 254
+defect. Never fatal, so one row cannot take down the product. The id is
+logged and the count persisted.
+
+**Loud rejection stays at write time**, and the asymmetry is deliberate: at
+write time nothing is lost by refusing; at read time refusing costs the
+technician an answer they could have had.
+
+### The cost is a table now, not a number in memory
+
+Phase 255 counted withheld rows in process memory. Every CLI command is a
+fresh process, so the aggregate was always zero by the time anyone could
+read it — Phase 209B's orphan guard caught the accessors and said *"retire
+these or wire that route."* Migration 064 adds `retrieval_withheld` and
+`motodiag kb withheld` reads it.
+
+**One correction worth carrying**, because the obvious reading is wrong:
+`rows_withheld` is **the cost of not knowing, not what sourcing recovers.**
+A Grom resolving `unknown` records 8 withheld rows, and sourcing it
+correctly as `manual` withholds the same 8 — those rows are `{cvt}` and a
+manual Grom may not have them either way. Sourcing the Grom recovers
+**zero**. The table is ordered by *retrievals* for that reason.
+
+### A row naming a machine is a claim, not authority
+
+Four rows name a model in their junction that their own `applicability`
+then excludes — a Kymco row names the Filly LX 50 and is withheld from it,
+costing that machine its rank-1 critical prediction.
+
+**No override rule was added.** Letting an explicit model match beat the
+axis filter would make a row's `model` string authoritative over a sourced
+lookup, which is string-naming as authority — the pattern this whole axis
+exists to replace. The row that named the Filly did so on a **recycled
+page header** that Phase 254 had already examined and rejected.
+
+A permanent guard pins the four with their resolutions and fails on a
+fifth. It exists because every other guard here asks whether a machine
+receives rows it may not have; only a refuter thought to ask whether a
+machine misses rows written for it.
