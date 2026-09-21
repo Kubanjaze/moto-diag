@@ -9,6 +9,50 @@ from motodiag.knowledge.symptom_repo import add_symptom
 from motodiag.knowledge.issues_repo import add_known_issue
 
 
+def backfill_row_applicability(conn) -> int:
+    """Declare applicability on already-seeded rows. Returns rows changed.
+
+    Phase 255's `post_apply` hook for migration 063. The twelve Phase 254
+    CVT rows are already in the operator's database, written before there
+    was any column to declare them in, and a fix in the loader only reaches
+    a database someone re-seeds. This updates one column on the rows that
+    are already there.
+
+    Matched on `(title, make)` and applied with an UPDATE, so
+    `known_issues.id` never changes -- the same discipline migration 062
+    used, and for the same reason.
+
+    Every seed file is read, not just 254's: a file that declares nothing
+    contributes nothing, which is every file written before this phase.
+    Rows the seed files do not mention are left alone, because an operator
+    may have loaded their own and this migration has no opinion about it.
+    """
+    from motodiag.knowledge.applicability import dump_applicability
+
+    seed_dir = Path(__file__).parent / "seed" / "knowledge"
+    changed = 0
+    for path in sorted(seed_dir.glob("*.json")):
+        try:
+            items = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or "applicability" not in item:
+                continue
+            payload = dump_applicability(item["applicability"])
+            if payload is None:
+                continue
+            cur = conn.execute(
+                "UPDATE known_issues SET applicability = ? "
+                " WHERE title = ? AND make IS ?",
+                (payload, item.get("title"), item.get("make")),
+            )
+            changed += cur.rowcount or 0
+    return changed
+
+
 def backfill_dtc_categories(conn) -> int:
     """Classify already-seeded DTC rows from the seed files. Returns rows changed.
 
@@ -247,6 +291,9 @@ def load_known_issues_file(file_path: str | Path, db_path: str | None = None) ->
             # Phase 211: files that predate provenance carry no key and
             # load as `unverified` — a true statement about their origin.
             source=item.get("source", "unverified"),
+            # Phase 255: which machines the row's content holds for. Absent
+            # in every file written before 255, which loads as unscoped.
+            applicability=item.get("applicability"),
         )
 
     return count_known_issues(db_path=db_path) - before

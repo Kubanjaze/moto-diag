@@ -69,6 +69,41 @@ class PowertrainType(str, Enum):
     HYBRID = "hybrid"       # Hybrid (rare in motorcycles but reserved)
 
 
+class VehicleTransmission(str, Enum):
+    """How this machine transmits power — Phase 255.
+
+    Phase 110 introduced `PowertrainType` "so downstream modules can gate
+    electric-specific logic without sprinkling make/model checks." This is
+    that sentence one axis over, and Phase 254 measured the cost of not
+    having it: every Honda and every Yamaha in the corpus retrieved the
+    generic CVT layer, a Gold Wing and a CBR1000RR included, because the
+    rows name seven marques and two of those marques also build scooters.
+
+    The axis is **mechanism, not rider experience**, because the maker's own
+    word is unreliable — Honda publishes the Trail 125 as "Semiautomatic;
+    four speeds" in 2022 and "Manual; 4 speeds" in 2026 for an unchanged
+    machine. The question each value answers is the only one retrieval needs
+    answered: *which diagnostic content applies to this machine?*
+
+    `semi_auto` is two values rather than one because the sub-mechanisms
+    differ diagnostically. A Super Cub's centrifugal primary clutch and a
+    Y-AMT's electronically actuated conventional clutch are not the same
+    object, and collapsing them would reproduce in miniature the over-reach
+    this axis exists to fix.
+
+    Honda's E-Clutch (CB650R/CBR650R 2024+) is `MANUAL`: the lever is still
+    there and every manual-clutch diagnostic still applies, so the actuator
+    is an addition rather than a replacement. If actuator-specific content is
+    ever written it is model-scoped, not a seventh value here.
+    """
+    MANUAL = "manual"                 # Rider-operated clutch, rider-selected gears
+    CVT = "cvt"                       # Variable pulleys and belt, centrifugal clutch, no gear selection
+    DCT = "dct"                       # Two clutches, automated engagement
+    SEMI_AUTO_CENTRIFUGAL = "semi_auto_centrifugal"  # Centrifugal clutch, rider-selected gears (Super Cub)
+    SEMI_AUTO_ACTUATED = "semi_auto_actuated"        # Conventional clutch, actuated, rider-selected gears (Y-AMT, YCC-S)
+    DIRECT_DRIVE = "direct_drive"     # No gearbox and no clutch
+
+
 class EngineType(str, Enum):
     """Engine cycle/configuration classification.
 
@@ -130,6 +165,16 @@ class VehicleBase(BaseModel):
     bms_present: bool = Field(
         False,
         description="Whether this vehicle has a Battery Management System (electric/hybrid only)",
+    )
+    transmission: Optional[VehicleTransmission] = Field(
+        None,
+        description=(
+            "Transmission mechanism (Phase 255). Unlike `powertrain`, which "
+            "defaults to ICE, this defaults to None and is never guessed: a "
+            "machine whose transmission nobody recorded has an unknown "
+            "transmission, and saying 'manual' would be a fabrication that "
+            "retrieval would then act on."
+        ),
     )
     notes: Optional[str] = None
 

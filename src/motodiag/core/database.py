@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 62  # Phase 244R: DTC categories backfilled (migration 062)
+SCHEMA_VERSION = 63  # Phase 255: transmission axis (migration 063)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

@@ -25,7 +25,12 @@
     "fix_procedure": "1. Before searching any scooter document for CVT content, establish the maker's own term: weight roller (Kymco, SYM, Honda), roller (Piaggio), primary sheave weight or primary pulley weight (Yamaha) — and note that the common rider phrase, roller weights, reverses the two words no maker reverses. 2. Search the drive side as pulley, sheave, drive face and movable drive face, not only as variator. 3. Expect one book to use two names for the same part; Yamaha's does, between chapters. 4. Treat a zero result as a vocabulary failure before treating it as an absence.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "Three unrelated components are all called a drive belt, and a search for one returns the other two",
@@ -79,7 +84,12 @@
     "fix_procedure": "1. Take the roller limit from the service manual for the specific machine; the limits in this entry span 15.40 to 22.0 mm and do not transfer. 2. Measure outside diameter across the wear surface, and inspect separately for flat spots — a roller can pass the measurement and still be faceted. 3. Check that the metallic insert has not migrated out of the plastic shell. 4. Replace rollers as a set, not individually. 5. Do not grease the rollers; Honda's manual says so explicitly. 6. On a Piaggio, the rollers have their own replacement interval and are not tied to the belt's.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "The clutch side: one maker publishes an engagement speed, one publishes a 1 mm lining limit where everyone else says 2 mm",
@@ -106,7 +116,12 @@
     "fix_procedure": "1. Take the lining limit from the machine's own manual; the published limits in this entry run from 1 mm to 2 mm and are not interchangeable. 2. Measure the bell by inside diameter against its own standard, and on a Piaggio also check eccentricity to 0.15 mm — a bell can pass on diameter and fail on runout. 3. On a Yamaha, compare engagement against the published 2,700 to 3,300 rpm clutch-in band before condemning the clutch. 4. Treat a driven-pulley spring free length as a comparison against the standard, because no limit is published for it. 5. Inspect the torque-driver pins and collar by eye; no maker here gives a figure for them.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "No scooter owner's manual publishes a belt width or wear limit — one even prints the measuring figure with the number left off",
@@ -131,7 +146,12 @@
     "fix_procedure": "1. Do not look for a belt wear limit in an owner's manual; across thirty-four of them, none publishes one. 2. Get the width and limit from the service manual for that specific machine, where they sit alongside the interval rather than instead of it. 3. Where a specification table gives a belt figure in the hundreds of millimetres, that is a length identifying the part, not a wear limit. 4. Where no limit is obtainable, fall back on the qualitative criteria the makers do publish — cracking, fraying, and on a Piaggio the tooth root specifically. 5. Replace on the published interval when no limit can be measured against.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "A Kymco service manual gives four CVT figures twice with different numbers, and carries three different model names in its own page headers",
@@ -157,7 +177,12 @@
     "fix_procedure": "1. On a Kymco Agility 50, do not take a CVT service limit from one place in the manual without checking the other; four of nine disagree. 2. Where they disagree, sanity-check against the standard value and against the same maker's other models rather than preferring the table or the text. 3. Use 5.5 to 6.5 kgf-m for the drive face nut, which two of the three published locations give. 4. Read any torque callout in that manual against its neighbours; two are printed in gram-metres where kilogram-force metres are meant. 5. Treat procedures in the chapters headed with another model name as unverified for this machine. 6. Do not generalise this to Kymco; the People S 250 manual is internally consistent throughout.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "What the makers themselves say a CVT symptom means — quoted rather than inferred",
@@ -184,7 +209,12 @@
     "fix_procedure": "1. Separate the complaint before opening anything: speed and power point at the drive side, take-off and creep point at the clutch side. 2. Inspect the belt first because it appears on both lists, then keep looking — it is rarely the whole answer. 3. For a machine that runs but will not move, check the ramp plate, cam and slider before the clutch. 4. For creeping at idle or stalling on engagement, check the clutch shoe springs as well as the lining. 5. For slip or irregular engagement, inspect the bell for scoring and for contamination before replacing parts. 6. Check for oil in the transmission case, which Piaggio names as a cause in its own right.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "Kickstart backup, and the scooter named Kick that has none",
@@ -210,7 +240,12 @@
     "fix_procedure": "1. On a machine fitted with a kickstart, use it as a diagnostic as well as a fallback: if the engine kick-starts but will not start electrically, suspect the brake-lever switch or the starter circuit rather than the engine. 2. On a Genuine, note that kickstart does not require the brake lever while electric start does. 3. Expect a kickstart on carburetted machines of this class and not on injected ones. 4. Do not assume a scooter has a kickstart because a sibling model does, or because the model name contains the word. 5. Fold the lever back after starting, as the makers instruct.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by the lamp",
@@ -235,7 +270,12 @@
     "fix_procedure": "1. Do not look for a CVT fault code; across sixteen documents from five makers, none exists. 2. Diagnose the transmission by symptom and by measurement, using the makers' own symptom tables. 3. Where a scooter does show a code, read it as belonging to fuelling, ignition or the immobiliser rather than to the transmission. 4. A lamp that is out does not clear a CVT complaint, and a scan tool that reports no faults has not examined the belt.",
     "parts_needed": [],
     "estimated_hours": 0.5,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "Piaggio's belt limit is three different numbers, and one manual prints two of them on the same page",
@@ -261,7 +301,12 @@
     "fix_procedure": "1. Establish the engine displacement class before quoting a Piaggio belt minimum, not the model family. 2. Use the figure printed in the manual section for that displacement: a 50 takes 17.5 mm, a 125 or 150 takes 21.5 mm against 22.5 plus or minus 0.2, a 250 or 300 takes 19.5 mm against 21.3 plus or minus 0.2, and an MP3 400 takes 27 mm against 28.2. 3. Where one manual covers two engine sizes, read the section heading and not the cover. 4. Do not assume a larger machine takes a wider belt; the 250 and 300 minimum is narrower than the 125 and 150 minimum.",
     "parts_needed": [],
     "estimated_hours": 1.0,
-    "source": "service-manual"
+    "source": "service-manual",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "A CVT recall exists that no belt, pulley or variator search would find — it is filed under the word sheave",
@@ -287,7 +332,12 @@
     "fix_procedure": "1. On a 2015 to 2020 XC155, check this campaign by VIN before diagnosing a stall or a no-restart. 2. Treat the machine as not to be ridden until the campaign work is done; the regulator flags it accordingly. 3. When searching a regulator record for a transmission fault, search the maker's own word — sheave for Yamaha — and not only belt, pulley or variator. 4. Do not filter by the regulator's component taxonomy for this class of fault; this one is classified as ENGINE. 5. Retrieve by campaign number as well as by machine, because the per-vehicle route omits the affected-unit count.",
     "parts_needed": [],
     "estimated_hours": 1.0,
-    "source": "regulation"
+    "source": "regulation",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   },
   {
     "title": "What the regulator record shows for scooter CVTs — one campaign, and two indexes that disagree with each other and with the data",
@@ -312,6 +362,11 @@
     "fix_procedure": "1. Treat this as a floor: one CVT campaign found, and no claim that it is the only one. 2. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 3. Do not use either index endpoint to decide whether a make or model has campaigns; they contradict each other and the data in both directions. 4. Do not read an empty per-vehicle response as a clean record, because a wrong model string returns the identical response. 5. Query by campaign number wherever one is known, which is the only route that returns the full record.",
     "parts_needed": [],
     "estimated_hours": 1.0,
-    "source": "regulation"
+    "source": "regulation",
+    "applicability": {
+      "transmission": [
+        "cvt"
+      ]
+    }
   }
 ]

@@ -613,6 +613,6 @@ class TestRegression:
         assert result.returncode == 0, f"{gate_file} regressed:\n{result.stdout[-2000:]}"
 
     def test_schema_version_pin(self):
-        assert SCHEMA_VERSION == 62, (  # f9-noqa: ssot-pin contract-pin: Gate 13 re-pins what Gate 12 pinned; test_phase240_gate12.py carries the full migration history behind this number, and test_phase191b_serve_migrations.py spells its own pin as `get_current_version(db_path) == N`, so grepping for SCHEMA_VERSION alone misses it. Track L added no migration: nine phases of corpus content and one gate, all data and tests.
+        assert SCHEMA_VERSION == 63, (  # f9-noqa: ssot-pin contract-pin: Gate 13 re-pins what Gate 12 pinned; test_phase240_gate12.py carries the full migration history behind this number, and test_phase191b_serve_migrations.py spells its own pin as `get_current_version(db_path) == N`, so grepping for SCHEMA_VERSION alone misses it. Track L added no migration: nine phases of corpus content and one gate, all data and tests. Bumped 62→63 at Phase 255 (migration 063, the transmission axis: `vehicles.transmission` CHECK-constrained and nullable-with-no-default, plus `known_issues.applicability`). Track M is where a content phase finally DID need a migration, because Phase 254's rows reached machines with no CVT and nothing in the schema could say what a row is about.
             "SCHEMA_VERSION moved — confirm a migration accompanies it and update this pin."
         )

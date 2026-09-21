@@ -33,7 +33,9 @@ import re
 from typing import Any, Mapping, Optional, Sequence
 
 from motodiag.core.severity import SEVERITY_RANK
+from motodiag.knowledge.applicability import row_applies
 from motodiag.knowledge.powertrain import is_electric_row
+from motodiag.knowledge.transmission import Resolution, record_withheld
 
 #: How many of the prompt's rows are reserved for rows that match what the
 #: rider reported. Four of twelve: enough to carry the layer a complaint
@@ -120,21 +122,65 @@ def _electric_first(rows: Sequence[Mapping[str, Any]], limit: int) -> list[Mappi
     return electric + [r for r in rows if id(r) not in seen]
 
 
+def drop_inapplicable(
+    rows: Sequence[Mapping[str, Any]],
+    transmission: Optional[Resolution],
+) -> list[Mapping[str, Any]]:
+    """Remove rows whose declared transmission set does not cover this machine.
+
+    Public because `compose_prompt_rows` is not the only door. The video
+    `/ask` endpoint hands retrieved rows straight to a vision model without
+    composing them, and it needs the same filter for the same reason.
+
+    **This excludes; it does not reorder.** That is the deliberate
+    divergence from Phase 250B's powertrain filter twelve lines above, and
+    the ADR records why. 250B puts electric rows first and leaves the rest
+    in place, which is right for its problem — an electric machine that
+    also sees a generic row has lost nothing. It is wrong for this one.
+    A Gold Wing shown a variator-roller row has been told something false
+    about itself, and moving it to position twelve does not make it true.
+
+    The second divergence is where the answer comes from. 250B infers a
+    row's powertrain from the marque names in its `make` column, and is
+    documented as deliberately generous about it. That generosity is
+    exactly what fails here, because Honda and Yamaha build both scooters
+    and motorcycles — it is the mechanism that produced the 254 defect.
+    Nothing here reads row text or marque names: the row declares its own
+    set in the seed file and the machine is classified from a sourced
+    table.
+    """
+    if transmission is None:
+        return list(rows)
+    kept = [r for r in rows if row_applies(r, "transmission", transmission.candidates)]
+    record_withheld(transmission.provenance, len(rows) - len(kept))
+    return kept
+
+
 def compose_prompt_rows(
     rows: Sequence[Mapping[str, Any]],
     *,
     limit: int,
     powertrain: Optional[str] = None,
     symptoms: Optional[Sequence[str]] = None,
+    transmission: Optional[Resolution] = None,
     reserve: int = RELEVANCE_RESERVE,
     safety: int = SAFETY_RESERVE,
 ) -> list[dict]:
     """Choose the rows that reach the model, and order them as before.
 
-    With no powertrain and no symptoms this is exactly what Phase 244S
-    did: the first `limit` rows in rank order. That default is what keeps
-    `motodiag code` and every existing caller unchanged.
+    With no powertrain, no symptoms and no transmission this is exactly
+    what Phase 244S did: the first `limit` rows in rank order. That default
+    is what keeps `motodiag code` and every existing caller unchanged.
+
+    `transmission` (Phase 255) is a `Resolution` — a candidate set and how
+    it was reached. Passing one removes rows the machine cannot have.
     """
+    if not rows:
+        return []
+    # Phase 255. Applicability is settled BEFORE composition, not after:
+    # a row that does not apply to this machine must not occupy one of the
+    # twelve slots, and must not be able to win a reserved slot either.
+    rows = drop_inapplicable(rows, transmission)
     if not rows:
         return []
     pool: Sequence[Mapping[str, Any]] = rows

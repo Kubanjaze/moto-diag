@@ -49,6 +49,7 @@ from motodiag.core.session_repo import (
 )
 from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.knowledge.prompt_rows import compose_prompt_rows
+from motodiag.knowledge.transmission import resolve_transmission
 from motodiag.vehicles.registry import get_vehicle
 
 # --- Slug parsing tunables ---
@@ -242,6 +243,7 @@ _RESOLVER_FETCH = 200
 def _load_known_issues(
     make: str, model_name: str, year: int, db_path: Optional[str] = None,
     *, powertrain: Optional[str] = None, symptoms: Optional[list[str]] = None,
+    transmission: Optional[str] = None,
 ) -> tuple[Optional["VehicleIdentity"], list[dict]]:
     """Retrieve knowledge-base known issues for the vehicle, used as AI context.
 
@@ -268,6 +270,16 @@ def _load_known_issues(
     measured why it could not stay that way: on an Energica Ego and a
     Harley-Davidson LiveWire, none of the pack, controller, regen or thermal
     content written across Phases 246-249 reached the model at all.
+
+    Phase 255. The machine's transmission is resolved here and rows that do
+    not apply to it are removed. Phase 254 measured what its absence cost:
+    a Gold Wing, a CBR1000RR, a Grom, an R1 and an XS650 were each handed
+    seven or eight rows about scooter variators and drive belts, because
+    the rows name seven marques and two of those marques also build
+    scooters. `transmission` is whatever the vehicle row carries, which is
+    NULL for every machine today and for every machine mobile creates --
+    the resolver is what covers them, and it answers `unknown` rather than
+    guessing.
     """
     try:
         identity, rows = known_issues_for_vehicle(
@@ -284,6 +296,9 @@ def _load_known_issues(
         limit=KNOWN_ISSUE_PROMPT_LIMIT,
         powertrain=powertrain,
         symptoms=symptoms,
+        transmission=resolve_transmission(
+            make, model_name, explicit=transmission, powertrain=powertrain,
+        ),
     )
 
 
@@ -445,6 +460,7 @@ def _run_quick(
     identity, known = _load_known_issues(
         vehicle["make"], vehicle["model"], vehicle["year"], db_path,
         powertrain=vehicle.get("powertrain"), symptoms=symptoms,
+        transmission=vehicle.get("transmission"),
     )
     _render_identity(get_console(), identity)
 

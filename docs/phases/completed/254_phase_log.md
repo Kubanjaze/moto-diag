@@ -47,3 +47,54 @@ Sweeps launched with the plan.
 ## 2026-09-21 — Complete
 
 Regression **7,750 passed, 0 failed, 38:34**. Corpus 1033 -> 1045, no new marque. No schema change. F111, F112, F113 and F114 filed.
+
+---
+
+## 2026-09-21 — Bug fix: the rows reach machines they do not describe
+
+Logged against 254 rather than folded into a later phase, because the defect
+is this phase's and the record should say so.
+
+**What shipped wrong.** The twelve rows carry
+`make = "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine"`. Two of those
+marques also build motorcycles, and retrieval's make-wide tier matches on the
+make alone. Measured against the live database the day after the merge:
+
+| machine | Phase 254 rows retrieved |
+|---|---|
+| Honda GL1800 Gold Wing | 9 |
+| Honda CBR1000RR | 9 |
+| Honda Grom | 9 |
+| Yamaha YZF-R1 | 10 |
+| Yamaha XS650 | 10 |
+| Honda PCX 150 *(the intended target)* | 9 |
+| **Kawasaki Ninja 400** | **0** |
+
+Kawasaki's zero isolates the cause. Kawasaki is not in that make list; every
+other marque in it is. **It is the make column doing this, not the content.**
+
+**Nothing about the rows is wrong.** Every one is anchored to a manufacturer
+document, carries one provenance label, and survived the refuters. The rows
+would be correct in front of the right machine. They were put in front of the
+wrong one.
+
+**This is a validation failure, not a verification one** — the distinction
+written into the delivery standards the same day. Phase 254 passed 85 of its
+own tests, 22 of 22 mutations, a 986-test blast radius and a 7,750-test
+regression, all green. Every one of those tests asked whether the rows were
+right. **None asked which machines would receive them.** That class of test —
+assertions about machines, stated as negatives — is what was missing, and
+`tests/test_phase255_transmission_axis.py` is that file.
+
+**How it was fixed.** Not by editing these rows' make column, which would
+trade one hand-maintained list for another. Phase 255 builds the mechanism the
+corpus lacked: a machine attribute, a per-row declaration of what the row
+applies to, and a filter that **excludes**. Eleven of the twelve rows now
+declare `{"transmission": ["cvt"]}`; the twelfth stays unscoped because it is
+about vocabulary rather than about CVTs. Every machine above drops to the one
+unscoped row, and every sourced scooter keeps all of them.
+
+**What this phase should have done at the time.** Measured retrieval against
+named machines that the rows do *not* describe, before close-out — not only
+against the machines they do. A row's correctness and a row's reach are two
+different questions, and 254 only asked the first.

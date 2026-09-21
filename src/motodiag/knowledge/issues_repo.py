@@ -24,6 +24,7 @@ def add_known_issue(
     estimated_hours: float | None = None,
     db_path: str | None = None,
     source: str = "unverified",
+    applicability: object | None = None,
 ) -> int:
     """Add a known issue to the database. Returns issue ID.
 
@@ -32,7 +33,18 @@ def add_known_issue(
     `service-manual` · `mechanic-verified`, plus `regulation` from
     migration 052 (Phase 235B) for primary legal text. It is last and
     defaulted so every existing caller — 31 of them — is unaffected.
+
+    `applicability` (Phase 255) says which machines the row's own content
+    holds for, as a JSON object keyed by axis. It is validated here rather
+    than trusted: a JSON column has no CHECK constraint, so the pydantic
+    model is the only guard there is. An unknown axis key or an unknown
+    value raises instead of loading as unscoped — which is the Phase 254
+    defect that a single typo would otherwise reintroduce.
     """
+    from motodiag.knowledge.applicability import dump_applicability
+
+    applicability_json = dump_applicability(applicability)
+
     # Phase 244D: idempotent. `known_issues` had no uniqueness constraint and
     # this was a plain INSERT, so every run of the seed loop duplicated the
     # whole corpus -- 6,600 rows for 660 distinct issues by the time it was
@@ -52,8 +64,8 @@ def add_known_issue(
             """INSERT INTO known_issues
                (title, description, make, model, year_start, year_end, severity,
                 symptoms, dtc_codes, causes, fix_procedure, parts_needed,
-                estimated_hours, source, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                estimated_hours, source, applicability, created_at)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                ON CONFLICT DO NOTHING""",
             (
                 title, description, make, model, year_start, year_end, severity,
@@ -64,6 +76,7 @@ def add_known_issue(
                 json.dumps(parts_needed or []),
                 estimated_hours,
                 source,
+                applicability_json,
                 datetime.now().isoformat(),
             ),
         )

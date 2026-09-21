@@ -4341,6 +4341,59 @@ MIGRATIONS: list[Migration] = [
              WHERE category = 'exhaust';
         """,
     ),
+    # Migration 063 — Phase 255: the transmission axis.
+    Migration(
+        version=63,
+        name="transmission_axis",
+        description=(
+            "Phase 255. Phase 254 shipped twelve rows about scooter CVTs "
+            "whose `make` column names seven marques, and two of those "
+            "marques also build motorcycles. Measured on the live "
+            "database: a Honda GL1800 Gold Wing retrieved 7 of them, a "
+            "CBR1000RR 7, a Grom 7, a Yamaha YZF-R1 8 and an XS650 8, "
+            "while a Kawasaki Ninja 400 retrieved 0 -- Kawasaki simply is "
+            "not in that make list, which isolates the make column as the "
+            "cause. Nothing in the schema could have caught it, because "
+            "there was no way to say what a row is ABOUT and no way to say "
+            "what a machine HAS. "
+            "This adds both. `vehicles.transmission` is a per-axis typed "
+            "column with a CHECK constraint, exactly as `powertrain` is, "
+            "and it is NULLABLE with no default: unlike powertrain, which "
+            "defaults to 'ice', a machine whose transmission nobody "
+            "recorded has an unknown transmission, and writing 'manual' "
+            "would be a fabrication that retrieval would then act on. "
+            "`known_issues.applicability` is a JSON object keyed by axis, "
+            "so the next axis is a new key rather than a new migration. "
+            "An absent key means unscoped on that axis, which is what "
+            "every row written before this phase is. "
+            "The `post_apply` hook backfills the twelve Phase 254 rows "
+            "from the seed file, because a loader fix only reaches a "
+            "database someone re-seeds and these rows are already live. "
+            "Matched on (title, make) and applied with an UPDATE, so "
+            "`known_issues.id` never changes. "
+            "NOTE a deliberate limit, recorded rather than discovered "
+            "later: a JSON column carries no CHECK constraint, so the "
+            "Phase 195C schema lint does not cover `applicability` the way "
+            "it covers `source`. The pydantic model in "
+            "`knowledge/applicability.py` is the only guard, which makes "
+            "it load-bearing and is why it rejects an unknown axis key and "
+            "an unknown axis value loudly rather than dropping either."
+        ),
+        upgrade_sql="""
+            ALTER TABLE vehicles ADD COLUMN transmission TEXT
+                CHECK (transmission IS NULL OR transmission IN (
+                    'manual', 'cvt', 'dct', 'semi_auto_centrifugal',
+                    'semi_auto_actuated', 'direct_drive'
+                ));
+
+            ALTER TABLE known_issues ADD COLUMN applicability TEXT;
+        """,
+        post_apply="motodiag.knowledge.loader:backfill_row_applicability",
+        rollback_sql="""
+            ALTER TABLE known_issues DROP COLUMN applicability;
+            ALTER TABLE vehicles DROP COLUMN transmission;
+        """,
+    ),
 ]
 
 
