@@ -138,17 +138,33 @@ _E = TransmissionEntry
 #: inference is exactly the bulk guessing this phase forbids.
 TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     # --- Honda -----------------------------------------------------------
-    # Honda's US owner's manuals are systematically silent here: the 2025
-    # Ruckus manual has ZERO occurrences of "belt", and the 2025
-    # Metropolitan none of "drive belt" or "weight roller". Both are CVT
-    # machines and neither gets an entry, because this table records what
-    # documents say, not what is generally known.
+    # Honda states it, under Honda's own trade name. Phase 255 searched for
+    # "belt", "drive belt", "weight roller", "CVT" and "transmission" and
+    # concluded these manuals said nothing -- the exact error Phase 254's row
+    # 4604 exists to warn about, made one phase later. The word is
+    # **V-matic**, and the specification tables print it with a RATIO RANGE,
+    # which is what settles it: a fixed primary reduction is one number.
     _E("Honda", "PCX", CVT, ("pcx", "pcx 125", "pcx125", "pcx 150", "pcx150",
                              "pcx 160", "pcx160", "pcx150a"),
        "Honda PCX125 owner's manual 2021 and 2025 PCX owner's manual: "
        "'the Honda Genuine Parts for drive system such as the drive belt "
        "and weight rollers'; both carry a 'V-BELT indicator'. Weight "
        "rollers are variator-specific — a final-drive belt has none."),
+    _E("Honda", "Ruckus", CVT, ("ruckus", "nps50", "nps 50", "honda ruckus"),
+       "Honda Ruckus owner's manuals 31GGA6300 (2012), 31GGA720 (2022), "
+       "31GJP600 (2024) and 31GJP610 (2025), Specifications table: "
+       "'Primary reduction  V-matic (2.85:1 ~ 0.86:1)'. A ratio RANGE is a "
+       "continuously variable drive; a fixed primary reduction prints one "
+       "number, as the same tables do for 'Final reduction 13.708'."),
+    _E("Honda", "Metropolitan", CVT, ("metropolitan", "chf50", "chf 50",
+                                      "honda metropolitan"),
+       "Honda Metropolitan owner's manuals 31GJB640 (2020) through 31GJB690 "
+       "(2026): 'Primary reduction  V-matic (2.85:1 - 0.86:1)'. Corroborated "
+       "by the CHF50 SERVICE manual, whose specification table carries the "
+       "full variator set -- 'Drive belt width', 'Movable drive face', "
+       "'Driven pulley', 'Weight roller', 'Clutch outer I.D.', 'Lining "
+       "thickness' -- and a chapter titled 'KICKSTARTER/DRIVE PULLEY/DRIVEN "
+       "PULLEY/CLUTCH'."),
     _E("Honda", "SH125i/SH150i", CVT, ("sh125i", "sh150i", "sh 125i", "sh 150i",
                                        "sh125", "sh150"),
        "Honda SH125i/SH150i 21YM owner's manual 32K0RA00 / 00X32-K0R-A000: "
@@ -250,6 +266,9 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "3): 'Automatic transmission', and a fault table entry 'Inefficient "
        "automatic transmission — Check the rollers and the pulley "
        "movement'."),
+    _E("Vespa", "S 50", CVT, ("s 50", "s50", "vespa s 50"),
+       "Piaggio service station manual 664787-664795 'Vespa S 50 2T': "
+       "'Transmission  Automatic expandable pulley variator...'."),
     _E("Vespa", "Primavera 150", CVT, ("primavera", "primavera 150",
                                        "primavera s 150", "primavera s"),
        "Vespa Primavera/S 150 owner's manual: 'The vehicle is fitted with "
@@ -270,16 +289,22 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Piaggio Typhoon 50 service station manual: 'Transmission With "
        "automatic expandable pulley variator, torque server, V-belt, "
        "automatic clutch, gear reduction unit.'"),
-    _E("Piaggio", "Fly 125/150", CVT, ("fly", "fly 125", "fly125", "fly 150",
-                                       "fly150"),
-       "Piaggio service station manual (Fly 125 - 150 4T): 'Transmission "
-       "With automatic expandable pulley variator with torque server, V "
-       "belt, automatic clutch, gear reduction unit and transmission "
-       "housing'."),
-    _E("Piaggio", "Beverly 125", CVT, ("beverly", "beverly 125", "beverly125"),
+    _E("Piaggio", "Fly", CVT, ("fly", "fly 125", "fly125", "fly 150",
+                               "fly150", "fly 50", "fly50"),
+       "Two books, one per displacement, so the 50 is not inferred from the "
+       "125: Piaggio service station manual (Fly 125 - 150 4T) -- "
+       "'Transmission  With automatic expandable pulley variator with torque "
+       "server, V belt, automatic clutch, gear reduction unit'; and workshop "
+       "manual 633212 'MSS Fly 50 4T' -- 'Transmission  With automatic "
+       "expandable pulley...'."),
+    _E("Piaggio", "Beverly", CVT, ("beverly", "beverly 125", "beverly125",
+                                   "beverly tourer 125", "beverly tourer"),
        "Piaggio Beverly 125 service station manual: 'Main drive  Automatic "
        "expandable pulley variator with torque server, V-belt, automatic "
-       "self-ventilating clutch'."),
+       "self-ventilating clutch'. The Tourer 125 spelling is sourced "
+       "separately, to service station manual 665018 (EN) 'Beverly Tourer "
+       "125'. The Beverly 250 is NOT covered by either book and gets no "
+       "alias."),
     _E("Piaggio", "MP3 400", CVT, ("mp3", "mp3 400", "mp3 400 i e", "mp3 250",
                                    "mp3 500"),
        "Piaggio service station manual 664503(EN) (MP3 400 i.e.): "

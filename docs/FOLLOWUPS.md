@@ -88,28 +88,54 @@ Recorded on the general-applicability ticket as the fourth axis.
 
 ### F119
 
-**Honda's US scooter owner's manuals name no transmission at all**
+**~~Honda's US scooter owner's manuals name no transmission at all~~ — WRONG, and wrong in this project's signature way.**
 
-While sourcing the Phase 255 lookup, every manufacturer document was re-read
-first-hand. Honda's US-market scooter owner's manuals are the outlier:
+**Filed 2026-09-21 (Phase 255). Retracted the same day.**
 
-* **2025 Ruckus owner's manual** (31GJP610, 107 pp): **zero** occurrences of
-  "belt".
-* **2025 Metropolitan owner's manual** (31GJB680, 124 pp): zero occurrences of
-  "drive belt" or "weight roller". Only "damage to the transmission" and a
-  "Transmission oil capacity" figure.
+The original claim: the 2025 Ruckus owner's manual has zero occurrences of
+"belt" in 107 pages and the 2025 Metropolitan none of "drive belt" or "weight
+roller", so neither CVT machine could be classified from its own document.
 
-Both are CVT machines. Neither can be classified from its own owner's manual, so
-**neither gets a lookup entry** and both lose the Phase 254 CVT layer. This
-echoes 254's own C24 finding that Honda's CHF50 schedules the clutch shoes and
-has no drive-belt row at all.
+**Both manuals state the transmission, in the Specifications table:**
 
-By contrast Honda's European books do say it: the PCX125 21YM and SH125i/SH150i
-manuals both read *"the drive belt and weight rollers"*, and the PCX carries a
-V-BELT service indicator.
+> **"Primary reduction   V-matic (2.85:1 ~ 0.86:1)"**
 
-**The gap is a document gap, not a knowledge gap** — which is exactly the kind
-this corpus is not allowed to close by inference.
+— Ruckus 31GGA6300 (2012), 31GGA720 (2022), 31GJP600 (2024), 31GJP610 (2025);
+Metropolitan 31GJB640 (2020) through 31GJB690 (2026). **V-matic is Honda's
+trade name for its CVT**, and the *ratio range* is what settles it beyond the
+name: a fixed primary reduction prints a single number, as the same tables do
+two lines below — "Final reduction 13.708".
+
+The same word appears in the PCX manuals ("V-Matic (2.52:1-0.81:1)") and the
+SH125i/SH150i. Corroborated for the Metropolitan by the **CHF50 service
+manual**, held on disk since Phase 254, whose specification table carries the
+whole variator set — *Drive belt width*, *Movable drive face*, *Driven pulley*,
+*Weight roller*, *Clutch outer I.D.*, *Lining thickness* — under a chapter
+titled *KICKSTARTER/DRIVE PULLEY/DRIVEN PULLEY/CLUTCH*.
+
+**Why it was wrong, which is the part worth keeping.** The search was for
+`belt`, `drive belt`, `weight roller`, `CVT` and `transmission`. It was not for
+**the maker's own word**. That is precisely what Phase 254's row 4604 exists to
+warn about — *"what a scooter CVT is, in the makers' own words — and why
+searching for the word 'variator' finds…"* — and the error was made one phase
+later, by the author of the phase built on that row, while writing the
+follow-up that asserted the absence.
+
+A zero result is a fact about the query before it is a fact about the corpus.
+The row says so; the search did not obey it.
+
+**Fixed:** Ruckus and Metropolitan now carry sourced lookup entries. Re-running
+the corrected vocabulary across every document on disk also settled **Piaggio
+Fly 50** (workshop manual 633212, "MSS Fly 50 4T"), **Piaggio Beverly Tourer
+125** (service station manual 665018) and **Vespa S 50 2T** (664787-664795) —
+three more that the first sweep had left unsourced.
+
+**Still unsourced**, and now a much shorter list: Filly LX 50, Piaggio Beverly
+250, SYM JET 50, SYM JET 100, SYM Joyride, Vespa 946, Vespa Sprint, Zuma 50.
+Honda's own web spec pages return **403** to this environment on every path
+tried (`powersports.honda.com`, `automobiles.honda.com`), as they did
+throughout Phase 254, so the remaining eight need either a document or a route
+in.
 
 ### F120
 
