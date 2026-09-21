@@ -345,6 +345,33 @@ reading was meant.
 Intermediate-state literals below the head (`== 38`, `== 51`) stay legal: they
 assert a fixture mid-migration, not the head.
 
+**The guard itself then failed Phase 244G, and that is worth recording here
+rather than only in a commit message.** Its first version asserted a literal
+string against the **raw** source of `test_phase240c_severity_ordering.py`:
+
+```python
+src = path.read_text(...)
+assert "assert SCHEMA_VERSION == max(m.version for m in MIGRATIONS)" in src
+```
+
+244G forbids exactly this, for a reason that applies squarely: the assertion
+would keep passing after the pin it protects was deleted, so long as the same
+text survived anywhere in a comment — **including in this guard's own
+docstring, which quotes it.** A guard that cannot fail is the thing F124 is
+about, rebuilt in the act of fixing F124.
+
+**How it got through:** 244G's scanner was run before the regression and
+reported clean — **over the Phase 255 test file, not over this one.** The call
+takes a directory; it was given one file. Scanning a subset and reporting it as
+covering the change is the same error as reading a `head`-truncated grep, which
+is what produced the eleven-pin hunt in the first place.
+
+**Fixed in `65959c4`:** the invariant is now asserted directly from both
+sources here, so this file fails on its own if the genuine pin is ever removed;
+the existence check reads through `code_of()`, which blanks comments and
+docstrings; and the scanner was re-run over the whole `tests/` tree — no
+offenders.
+
 ### F125
 
 **The ROADMAP_AUTHORITY contract drifted between its two copies, which is the drift class it exists to prevent.**
