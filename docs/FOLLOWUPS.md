@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F126** (this file); the mobile
+At the time of writing the highest assigned is **F127** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -163,6 +163,27 @@ the Filly's data is exactly what 254 could not settle.
 spec pages remain **403** to this environment on every path tried
 (`powersports.honda.com`, `automobiles.honda.com`), as throughout Phase 254 —
 but no remaining gap depended on them.
+
+**CLOSED-UNOBTAINABLE, operator's decision 2026-09-21: Piaggio Beverly 250 and
+Vespa 946.** Both resolve to NULL and **NULL stays** — fail-closed is the
+correct answer for a machine no document describes, and inventing one would be
+the fabrication this axis exists to prevent. Re-open only if a document
+arrives.
+
+**And a vocabulary trap, recorded because it is the reason the search could
+not have succeeded.** The download landing page for the Beverly workshop
+manual spells the model **"bevely"**:
+
+> *"**bevely** 125 e3 workshop manual.pdf download (16.7 MB)"*
+
+A search for `beverly` cannot find `bevely`. This joins the corpus's standing
+collection — *grommet* for Grom, *symptom*/*system* for SYM, *genuine part*
+for Genuine, *controller* for roller, *kickstand* for kickstart, `manual` the
+document versus `manual` the transmission, `946` the phone number, and
+`V-matic` the word Honda actually uses. **Six of those nine are cases where
+the search term was wrong, not the corpus.** `Filly LX 50` stays open
+separately: its document exists and its attribution is what Phase 254 could
+not settle.
 
 ### F120
 
@@ -491,3 +512,43 @@ removed from the main retrieval path. It is deliberately unchanged here —
 this commit exists to establish the **before** number, and changing the
 retrieval shape in the same breath would make before and after
 incomparable.
+
+### F127
+
+**Four real documents on disk cannot be read, and 32 more files are download debris.**
+
+A census of every PDF in the research library, run while auditing Phase 255's
+negative claims: **263 files, of which 36 could not be parsed.** They split
+cleanly into two problems with two different remedies.
+
+**(a) Four are genuine documents that a parser cannot open — these are worth
+OCR.** Each is a real manufacturer document sitting in the library and
+contributing nothing:
+
+| file | size | pages | problem |
+|---|---|---|---|
+| `honda/grom_service.pdf` | — | **266** | image-only, zero extractable text |
+| `pdfs/piaggio_primavera_om.pdf` | 5.9 MB | **53** | image-only, zero extractable text |
+| `v2/sympdf/Fiddle_4_Owners_Manual.pdf` | 42.8 MB | — | `PdfReadError` |
+| `v2/sympdf/Jet_14_Owners_Manual.pdf` | 42.4 MB | — | `PdfReadError` |
+
+The Grom service manual is the sharpest loss: Phase 252 wanted Grom clutch and
+gearbox data and could not read the one document that has it. Phase 254
+established the OCR method — tesseract over rendered pages, with positive
+controls on known-present terms — so the technique is in hand.
+
+**Own phase, after 255B**, per the operator's decision of 2026-09-21. Not now.
+
+**(b) 32 are not documents at all** — failed downloads saved with a `.pdf`
+extension. Confirmed by reading their first bytes: `refute/beverly.pdf` and
+`pdf/bev500.pdf` begin `<!DOC` (HTML landing pages), `pdf/bv500.pdf` is the
+13-byte string `404 Not Found`, `pdfs/kymco_agility125_sm.pdf` is 103 bytes of
+`<html`. Fourteen carry no marque in their filename at all. By marque: 14
+unidentifiable, Honda 7, Lance 7, Roketa 2, SYM 2, Kymco 1, Piaggio 1,
+Bintelli 1, GTR 1.
+
+**Delete-or-refetch, on this same ticket, not now.** They are worse than
+absent: they inflate every "searched N documents" denominator. **That is not
+hypothetical — it is how the Beverly 250 "no document" verdict was reached**,
+over 227 readable files while 36 were silently excluded, three of them
+Beverly-related.
