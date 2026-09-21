@@ -182,9 +182,20 @@ def _record_withheld(
 
     **Only `unknown` and `ambiguous` are recorded.** A machine whose
     transmission is known withholds only rows that genuinely do not apply to
-    it, which is the filter working rather than a gap. The rows here are the
-    ones a sourced lookup entry would have saved — so **this table is the
-    lookup's to-do list**, ordered by what each missing entry costs.
+    it, which is the filter working rather than a gap.
+
+    **`rows_withheld` is the cost of not knowing, NOT what sourcing would
+    recover.** An earlier version of this docstring claimed the latter and a
+    refuter disproved it with numbers: a Grom resolving `unknown` records 8
+    withheld rows, and sourcing it correctly as `manual` withholds the same
+    8, because those rows are `{cvt}` and a manual Grom may not have them
+    either way. **Sourcing the Grom recovers zero.** The figure only equals
+    the recoverable amount for a machine that turns out to be a CVT.
+
+    So the table answers "which machines is the lookup blind to, and how
+    often does it matter" — and it is ordered by **retrievals**, how often
+    the machine is actually seen, because that is the part that is
+    actionable without knowing the answer in advance.
 
     A failure to record must never break a retrieval: the count is
     diagnostics, the rows are the product.
@@ -221,14 +232,20 @@ def _record_withheld(
 def withheld_report(
     db_path: Optional[str] = None, limit: int = 50,
 ) -> list[dict]:
-    """The lookup's to-do list: machines that lost rows, worst first."""
+    """Machines the lookup cannot classify, most frequently seen first.
+
+    Ordered by `retrievals` rather than `rows_withheld`: the row count is
+    the cost of not knowing, not what sourcing recovers, so ranking by it
+    would put a Grom — which recovers nothing when sourced — level with a
+    machine that recovers everything.
+    """
     try:
         with get_connection(db_path) as conn:
             return [dict(r) for r in conn.execute(
                 """SELECT make, model, provenance, purpose, rows_withheld,
                           retrievals, corrupt_rows, first_seen, last_seen
                      FROM retrieval_withheld
-                    ORDER BY rows_withheld DESC, retrievals DESC
+                    ORDER BY retrievals DESC, rows_withheld DESC
                     LIMIT ?""", (int(limit),),
             ).fetchall()]
     except sqlite3.OperationalError as exc:

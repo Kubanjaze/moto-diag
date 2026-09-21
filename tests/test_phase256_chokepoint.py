@@ -342,3 +342,244 @@ class TestTheKawasakiControlIsUnmoved:
         before, after = DOORS[door](db, "Kawasaki", "Ninja 400", 2020)
         assert before & scoped_ids(db) == set()
         assert after & scoped_ids(db) == set()
+
+
+# ---------------------------------------------------------------------------
+# The structural guard — D5
+# ---------------------------------------------------------------------------
+
+#: Modules allowed to name `known_issues` in SQL. Everything else must go
+#: through the chokepoint. Pinned as a set with reasons, not a count: eleven
+#: schema pins accumulated one reasonable exception at a time (F124), and so
+#: did four retrieval doors.
+SQL_ALLOWED = {
+    "knowledge/retrieval.py": "the chokepoint itself — it sizes the fetch",
+    "knowledge/issues_repo.py": "the repo layer itself — the SQL lives here",
+    "knowledge/vehicle_resolver.py": "the resolver's tiered retrieval",
+    "knowledge/marques.py": "rebuilds the derived make junction",
+    "knowledge/models.py": "rebuilds the derived model junction",
+    "knowledge/loader.py": "seed writes",
+    "core/migrations.py": "schema history; one-time, not a read path",
+}
+
+_KEY_KYMCO = "A Kymco service manual gives four CVT figures twice "
+_KEY_PIAGGIO = "Piaggio's belt limit is three different numbers, and"
+_KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
+
+#: Rows whose junction names a model their own `applicability` excludes.
+#: **Each is a real defect and none is fixed here.** Pinned so a NEW one
+#: fails; found by a refuter attacking the door-3 change, not by this suite.
+KNOWN_SELF_EXCLUDING = {
+    (_KEY_KYMCO, "Filly LX 50"):
+        "Kymco's own row names the Filly, and the Filly resolves `unknown` "
+        "because Phase 254 showed the Agility manual's FILLY pages are a "
+        "recycled template. It was that machine's rank-1 critical "
+        "prediction. Closed-unobtainable; revisit if a document appears.",
+    (_KEY_PIAGGIO, "Piaggio Beverly 250"):
+        "Named by the row, no document on disk (F119 closed-unobtainable).",
+    (_KEY_REGULATOR, "Vespa 946"):
+        "Named by the row, no document on disk (F119 closed-unobtainable).",
+    (_KEY_REGULATOR, "SYM Symba"):
+        "A genuine contradiction ON DISK: 4615 declares {'transmission': "
+        "['cvt']} and names the Symba, which this phase's own lookup "
+        "classifies `semi_auto_centrifugal` from SYM's manual ('Wet "
+        "multi-plate type, auto centrifugal clutch'). Phase 255 flagged "
+        "4615 as carrying a general half wider than CVT and deferred the "
+        "split to 255B; this is what that deferral costs.",
+}
+
+
+def _sql_offenders() -> list[str]:
+    """Modules naming known_issues in SQL, read via AST.
+
+    AST, not grep: Phase 256's Step 0 positive control showed a grep misses
+    dynamic table names, split string literals and multi-line SQL. `ast`
+    joins adjacent literals for free.
+    """
+    import ast
+    import re
+
+    src_root = ROOT / "src" / "motodiag"
+    pat = re.compile(r"\b(FROM|JOIN|INTO|UPDATE)\s+known_issues\b", re.I)
+    out = []
+    for f in sorted(src_root.rglob("*.py")):
+        rel = str(f.relative_to(src_root))
+        if rel in SQL_ALLOWED:
+            continue
+        try:
+            tree = ast.parse(f.read_text(encoding="utf-8"))
+        except SyntaxError:
+            continue
+        for node in ast.walk(tree):
+            text = None
+            if isinstance(node, ast.Constant) and isinstance(node.value, str):
+                text = node.value
+            elif isinstance(node, ast.JoinedStr):
+                text = "".join(p.value for p in node.values
+                               if isinstance(p, ast.Constant)
+                               and isinstance(p.value, str))
+            if text and pat.search(re.sub(r"\s+", " ", text)):
+                out.append(f"{rel}:{node.lineno}")
+    return sorted(set(out))
+
+
+class TestNothingBypassesTheChokepoint:
+    def test_no_module_outside_the_repo_layer_queries_known_issues(self):
+        offenders = _sql_offenders()
+        assert offenders == [], (
+            "these modules query known_issues directly instead of going "
+            "through knowledge/retrieval.py::rows_for_machine:\n  "
+            + "\n  ".join(offenders)
+        )
+
+    def test_the_scanner_sees_a_planted_bypass(self, tmp_path):
+        """Positive control. A guard never observed to fail is not a guard.
+
+        Plants a real module inside the package — the shape door 4 had for
+        its whole existence — and asserts the scanner reports it.
+        """
+        planted = ROOT / "src" / "motodiag" / "zz_planted_bypass.py"
+        planted.write_text(
+            "def leak(conn, make):\n"
+            "    return conn.execute(\n"
+            '        "SELECT * FROM known_issues WHERE make = ?", (make,)\n'
+            "    ).fetchall()\n",
+            encoding="utf-8",
+        )
+        try:
+            assert any(o.startswith("zz_planted_bypass.py") for o in _sql_offenders()), (
+                "the scanner did not see a planted raw query"
+            )
+        finally:
+            planted.unlink()
+
+    def test_the_scanner_sees_the_shapes_a_grep_would_miss(self, tmp_path):
+        """The three blind spots Step 0's grep had, each planted."""
+        shapes = {
+            "dynamic": 'TBL = "known_issues"\n'
+                       'def f(c):\n    return c.execute(f"SELECT * FROM {TBL}")\n',
+            "split": 'def f(c):\n    return c.execute("SELECT * FROM "\n'
+                     '                     "known_issues WHERE id = 1")\n',
+            "multiline": 'def f(c):\n    return c.execute("""SELECT *\n'
+                         '        FROM\n      known_issues""")\n',
+        }
+        for name, body in shapes.items():
+            planted = ROOT / "src" / "motodiag" / f"zz_shape_{name}.py"
+            planted.write_text(body, encoding="utf-8")
+            try:
+                seen = any(o.startswith(f"zz_shape_{name}.py") for o in _sql_offenders())
+            finally:
+                planted.unlink()
+            if name == "dynamic":
+                # An AST scan cannot see a table name that only exists at
+                # runtime. Recorded rather than papered over: the dynamic
+                # shape is caught by `test_no_dynamic_table_names` below.
+                assert not seen
+            else:
+                assert seen, f"the {name} shape was missed"
+
+    def test_no_dynamic_table_names_outside_the_repo_layer(self):
+        """The one shape the AST scan cannot resolve, guarded separately.
+
+        `f"SELECT * FROM {table}"` hides its target until runtime, so no
+        AST scan can say what it reads.
+
+        **Step 0 said there was one. There are four**, and Step 0's own
+        dynamic search missed three of them for the same reason the first
+        version of this test did: it looked for `FROM {`, and `{table}` is
+        a FormattedValue that never appears in the literal text. The
+        literal just ends with `"FROM "`. Step 0's eleven "hits" were prose
+        in log messages and its one real find was luck.
+
+        All four are safe, verified by reading every literal passed as the
+        table argument — `intakes`, `customers`, `vehicles`, `work_orders`,
+        `diagnostic_sessions`, `video_analyses` and so on. **`known_issues`
+        is not among them in any of the four.** A fifth is a new door until
+        someone proves otherwise.
+        """
+        import ast
+        import re
+
+        src_root = ROOT / "src" / "motodiag"
+        # The table name is a FormattedValue, so it is NOT in the joined
+        # literal text -- the literal simply ENDS with "FROM ". Matching on
+        # "FROM {" finds nothing, which is how the first version of this
+        # test saw zero of the one query that exists. Matching on "ends with
+        # FROM" alone then found thirteen, twelve of them prose in log
+        # messages. Both halves are needed: it must LOOK like SQL, and a
+        # literal must end where a table name would go.
+        looks_like_sql = re.compile(r"^\s*(SELECT|INSERT|DELETE|UPDATE|WITH)\b", re.I)
+        ends_at_table = re.compile(r"\b(FROM|JOIN|INTO)\s*$", re.I)
+        found = []
+        for f in sorted(src_root.rglob("*.py")):
+            rel = str(f.relative_to(src_root))
+            try:
+                tree = ast.parse(f.read_text(encoding="utf-8"))
+            except SyntaxError:
+                continue
+            for node in ast.walk(tree):
+                if not isinstance(node, ast.JoinedStr):
+                    continue
+                parts = [p.value for p in node.values
+                         if isinstance(p, ast.Constant) and isinstance(p.value, str)]
+                if not parts or not looks_like_sql.search("".join(parts)):
+                    continue
+                if any(ends_at_table.search(p) for p in parts):
+                    found.append(f"{rel}:{node.lineno}")
+        assert sorted(set(found)) == [
+            "capture/stats.py:19",
+            "shop/intake_repo.py:90",
+            "shop/issue_repo.py:173",
+            "shop/work_order_repo.py:112",
+        ], f"new dynamic table-name query: {sorted(set(found))}"
+
+
+def _key_of(title: str) -> str:
+    """Stable identity for a row: a title prefix, not its id.
+
+    Row ids are assigned in seed order, so the operator's database says
+    4609 where a fresh fixture says 158. Keying a pinned set on ids would
+    make this guard pass or fail depending on which database it ran
+    against — the guard would be measuring the fixture.
+    """
+    return " ".join(str(title or "").split())[:52]
+
+
+class TestNoRowExcludesAMachineItNames:
+    """A row that names a machine and is then withheld from it.
+
+    Found by a refuter attacking the door-3 change, not by this suite —
+    worth recording, because the suite was asking "does a machine get rows
+    it may not have" and never "does a machine miss rows written FOR it".
+    """
+
+    def test_the_self_excluding_set_is_exactly_the_known_four(self, db):
+        from motodiag.knowledge.applicability import row_applies
+        from motodiag.knowledge.transmission import resolve_transmission
+
+        with sqlite3.connect(db) as conn:
+            conn.row_factory = sqlite3.Row
+            rows = {r["id"]: dict(r) for r in conn.execute(
+                "SELECT id, title, make, model, applicability FROM known_issues "
+                "WHERE applicability IS NOT NULL")}
+            found = set()
+            for iid, row in rows.items():
+                for (model,) in conn.execute(
+                    "SELECT model FROM known_issue_models WHERE issue_id = ?", (iid,)
+                ):
+                    makes = [m.strip() for m in (row["make"] or "").split(",")]
+                    res = next(
+                        (resolve_transmission(mk, model) for mk in makes
+                         if resolve_transmission(mk, model).provenance == "model-sourced"),
+                        resolve_transmission(makes[0] if makes else "", model),
+                    )
+                    if not row_applies(row, "transmission", res.candidates):
+                        # keyed on the title, because row ids are
+                        # seed-order-relative and differ between a fresh
+                        # fixture and the operator's database
+                        found.add((_key_of(row["title"]), model))
+        assert found == set(KNOWN_SELF_EXCLUDING), (
+            "the set of rows naming a model they exclude has changed.\n"
+            f"  new:  {sorted(found - set(KNOWN_SELF_EXCLUDING))}\n"
+            f"  gone: {sorted(set(KNOWN_SELF_EXCLUDING) - found)}"
+        )

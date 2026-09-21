@@ -229,6 +229,12 @@ def predict_failures(
     #
     # **No scoring change ships with this.** Every weight, bonus and sort
     # key is untouched; the only difference is which rows are eligible.
+    # NOTE a contract change a refuter caught: this function's docstring
+    # called the pipeline "side-effect free", and the chokepoint WRITES --
+    # it upserts `retrieval_withheld` for a machine whose transmission is
+    # unknown or ambiguous. That is telemetry, not scoring: no prediction,
+    # rank or score depends on it, and the write is best-effort and never
+    # fatal. It is called out here rather than left for someone to find.
     from motodiag.knowledge.retrieval import rows_for_machine
 
     filtered = rows_for_machine(
