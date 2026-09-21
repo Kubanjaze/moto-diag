@@ -1,6 +1,6 @@
 # Phase 255 — The transmission axis: a machine attribute, a row declaration, and a filter that excludes
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-21
 
 ---
 
@@ -423,3 +423,260 @@ splitting.
 | 5 | Reviewed | hash, diff stat, a line of v1.1 read |
 | 6 | No new shadowed constant | `check_f9_patterns.py --check-ssot-constants` clean |
 | 7 | Shipped data reusable | n/a — no dataset shipped this phase |
+
+---
+
+## Results (v1.1)
+
+### What shipped
+
+| piece | where |
+|---|---|
+| `VehicleTransmission(str, Enum)`, six values by mechanism | `core/models.py` |
+| `vehicles.transmission` — typed, CHECK-constrained, **nullable with no default** | migration 063 |
+| `known_issues.applicability` — JSON keyed by axis | migration 063 |
+| The applicability contract — pydantic, `Literal` keys and values | `knowledge/applicability.py` |
+| The resolver — candidate sets, four-rung precedence, provenance, counter | `knowledge/transmission.py` |
+| The filter that **excludes** | `knowledge/prompt_rows.py` |
+| 11 of 12 Phase 254 rows declared `{"transmission": ["cvt"]}` | `known_issues_cvt.json` |
+| The backfill for rows already in the operator's database | `loader.backfill_row_applicability` |
+| ADR | `docs/architecture/applicability-axes.md` |
+
+`SCHEMA_VERSION` 62 → 63. 130 tests, 26 of 26 mutations, F9 lint clean.
+Regression **7,882 passed, 0 failed, 0 skipped, 25:43** (baseline 7,750; +132). The
+783-test blast radius ran red on three hard-coded `== 62` schema pins — as
+designed — but three was not the whole set. **Twelve pins had to be touched
+and it took five passes to find them all**; the account is below, because
+the way they were missed is more useful than the number.
+
+### The defect, before and after — on the diagnose path, measured by row id
+
+Row counts below are the `_load_known_issues` path. The other two doors are
+accounted for separately under "`compose_prompt_rows` was not the only
+door".
+
+Row ids 4604–4615 are Phase 254's. Eleven declare `{cvt}`; 4605 is
+deliberately unscoped, which is why every "after" column reads 1 rather
+than 0.
+
+| machine | what it is | before | after | provenance |
+|---|---|---|---|---|
+| Honda GL1800 Gold Wing | six-speed or DCT tourer | 9 | **1** | ambiguous |
+| Honda CBR1000RR | six-speed sportbike | 9 | **1** | unknown |
+| Honda Grom | five-speed minibike | 9 | **1** | unknown |
+| Yamaha YZF-R1 | six-speed sportbike | 10 | **1** | unknown |
+| Yamaha XS650 | five-speed twin | 10 | **1** | unknown |
+| Honda CB500 | **live vehicle** | 9 | **1** | unknown |
+| Honda CBR954RR | **live vehicle** | 9 | **1** | unknown |
+| Honda cbrf4i | **live vehicle** | 9 | **1** | unknown |
+| Yamaha MT07 | **live vehicle** | 10 | **1** | unknown |
+| SYM Symba | Cub clone, centrifugal | 9 | **1** | model-sourced |
+| SYM Wolf 150 | manual motorcycle | 9 | **1** | model-sourced |
+| Kawasaki Ninja 400 | the control | 0 | 0 | unknown |
+| **Honda PCX 150** | CVT scooter | 9 | **9** | model-sourced |
+| **Yamaha Zuma 125** | CVT scooter | 10 | **10** | model-sourced |
+| **Kymco Agility 50** | CVT scooter | 10 | **10** | model-sourced |
+| **Genuine Buddy 125** | CVT scooter | 9 | **9** | model-sourced |
+| **Vespa Primavera** | CVT scooter | 10 | **10** | model-sourced |
+| **Piaggio Fly 125** | CVT scooter | 10 | **10** | model-sourced |
+| **SYM Symply 125** | CVT scooter | 9 | **9** | model-sourced |
+
+**SYM is the row that proves the mechanism.** One maker, three machines,
+three answers, all from that maker's own manuals: the Symply is a CVT and
+keeps everything, the Symba is a Cub and loses it, the Wolf is a motorcycle
+and loses it. No marque-wide inference could produce that.
+
+**The Gold Wing is fixed by the absence of an entry, not the presence of
+one.** That is worth stating because it is the opposite of how a lookup
+table usually works. Fail-closed means every unlisted machine loses scoped
+rows automatically; the lookup exists to **preserve** retrieval for the
+machines that should keep it.
+
+### The lookup, and what it cost to source it
+
+**43 entries across 8 marques, every one re-read first-hand in this
+session** — not accepted from a sweep's report. The evidence is tiered and
+each entry quotes its document:
+
+* **A type statement.** Genuine's twelve books all print "Transmission
+  Type — Continuously Variable (CVT) · Clutch — Dry, Centrifugal"; Kymco's
+  print "Transmission … Automatic CVT"; Piaggio's service manuals print
+  "automatic expandable pulley variator, torque server, V-belt, automatic
+  clutch"; Yamaha's Zuma 125 service manual prints "Transmission type
+  V-belt automatic".
+* **Variator-specific parts, where no type statement exists.** Honda's
+  European books say "the drive belt **and weight rollers**". A final-drive
+  belt has no weight rollers, which is what makes this evidence rather than
+  a guess.
+* **Rejected.** A bare "Drive Belt" line in a maintenance schedule was
+  **not** accepted as evidence — it is exactly the ambiguity Phase 254's
+  own row 4605 documents, where three unrelated components share the name.
+  That decision alone excluded fifteen budget-marque manuals (Lance ×8,
+  Roketa ×5, Tank, GTR 50), eleven of which are OCR'd image-only scans.
+
+### The fail-closed cost, measured rather than argued about
+
+Of the **53 model spellings** the Phase 254 rows reach through the model
+junction, **40 resolve from a document** and **13 do not**:
+
+> Filly LX 50 · Honda CHF50 · Honda Metropolitan · Piaggio Beverly 250 · Piaggio Beverly Tourer 125 · Piaggio Fly 50 · SYM JET 100 · SYM JET 50 · SYM Joyride · Vespa 946 · Vespa Sprint · XC155 · Zuma 50
+
+Several of those are genuinely CVT machines that will lose the layer. That
+is the accepted cost of never guessing, it is attributed by the
+withheld-rows counter rather than invisible, and the sourced-coverage phase
+is what closes it.
+
+**No live vehicle regresses.** The operator's `vehicles` table holds 10
+machines across 5 of the 7 makes — Honda CB500, CBR954RR, cbrf4i; Yamaha
+MT07, YZF-R1 — and every one of them correctly *loses* CVT rows it should
+never have had. The exposure is entirely future: whatever a user adds next,
+which is why the mobile transmission field moved up to the phase
+immediately after 255B.
+
+### Mutations — 26 of 26, after two survivors were fixed
+
+The first run caught 22. Both survivors were real gaps and both are worth
+recording, because each was a test that looked like it was checking
+something and was not:
+
+* **Alpha/numeric splitting survived.** The test asserted that
+  `XMAX250TECHMAX` resolves unknown — true both with and without splitting,
+  so it could not tell the two implementations apart. Replaced with two
+  discriminating cases (`Sprint49`, `Primavera150`) whose *split* forms are
+  real aliases while the concatenations are not, plus an assertion that the
+  split form really is an alias, so the test fails loudly if that ever
+  stops being true.
+* **Removing the migration's backfill survived.** The fixture database is
+  built by loading the seed files, and the loader writes `applicability` on
+  the way in — so the `post_apply` hook never had to do anything and the
+  test was reading the loader's work. Replaced with a test that walks the
+  operator's actual path: rows present, column absent, migration applied.
+  **This is the piece that repairs the live database, and it was
+  untested.**
+
+### Schema pins, and how many it actually took to find them all
+
+**Twelve** pins had to be touched — eleven bumped to 63, one relaxed — and
+finding them took five passes. The count matters less than the sequence,
+because **every pass looked complete at the time**:
+
+1. The **subsystem-scoped blast radius** found **three**.
+2. Running a neighbouring test file found a **fourth**, in a file the blast
+   radius had no reason to include.
+3. A `grep` found **four more**, one carrying a "NOTE FOR THE NEXT SCHEMA
+   BUMP" written after the same pin was missed at Phase 244M.
+4. A **ninth** was reachable only because `gate12` runs `gate11` in a
+   **subprocess**, so it never appeared in the parent's own failure output.
+5. The last **three** came from re-running that grep and **counting its
+   hits instead of reading its first screenful** — the first pass had been
+   piped through `head` and the truncated list was treated as the whole
+   set. That is this phase's own subject, repeated at the end of it: a
+   measurement that looks complete because nothing says it isn't.
+
+Phase 244R's pin was the one exception: relaxed from `== 62` to `>= 62`
+rather than bumped, because its equality asserted two things at once — that
+244R's bump happened, and that nothing had happened since — and only the
+first was ever its claim.
+
+### `compose_prompt_rows` was not the only door
+
+Asked late, and it should have been asked first: **which callers retrieve
+corpus rows for a specific machine?** That is the question Phase 254 never
+asked about its own rows, and asking it here found three doors, not one.
+
+| door | what it does | before | after |
+|---|---|---|---|
+| `_load_known_issues` — `diagnose`, `code` | composes and caps at 12 | leaking | **filtered** |
+| video `/ask` endpoint | hands 25 rows straight to a vision model, no composition at all | leaking | **filtered** |
+| `predict_failures` | its own `search_known_issues` retrieval, 50 scored predictions | leaking | **still leaking — F123** |
+
+**The `/ask` leak, measured before it was closed:** a Yamaha MT07 and an
+XS650 each received rows **4614** (a CVT recall) and **4606** (variator
+roller wear limits). The Hondas missed them at `limit=25` only because
+their own rows filled the 25 first — ranking luck, not correctness. Closed
+here, because it is the same shape as the diagnose path: rows handed to a
+model as context about one machine.
+
+**The predictor leak, measured and left:** a Yamaha MT07 gets **5** of the
+254 rows behind its maintenance predictions and a Gold Wing **2**. It is
+not fixed in this phase — it is a scored fifty-prediction pipeline with
+drift bonuses and its own retrieval, and changing it late, without a plan
+and without its own refuter, is how Phase 254's defect got shipped in the
+first place. Filed as **F123** with the numbers.
+
+`drop_inapplicable` is public rather than private precisely because of
+this: one filter, more than one door.
+
+### The cost of "rejected loudly", found by testing it
+
+The contract says an invalid declaration is rejected loudly at seed load
+**and at read**. Implementing that and then exercising it showed what loudly
+costs: a single bad value in `known_issues.applicability` raises out of
+`_load_known_issues`, which is the retrieval path for the primary diagnose
+command *and* for `motodiag code` — three call sites. **One corrupt row stops
+diagnosis.**
+
+The trade is kept, because the alternative is worse in the specific way this
+phase exists to prevent: dropping the row silently would load
+`{"transmision": ["cvt"]}` as unscoped and put it back in front of every Gold
+Wing. A typo must not be able to reintroduce the defect.
+
+Two things were changed rather than left: the error now **names the offending
+row** by id and title, because a loud failure nobody can act on is not much
+better than a quiet one; and the behaviour is **pinned by a test and two
+mutations** so it reads as a decision rather than an accident. Filed as
+**F122** so the operator can revisit the trade rather than discover it.
+
+### The orphan guard caught three things this phase built and never wired
+
+The full regression's only failure was Phase 209B's integration-gap guard —
+F9 subtype 2, and exactly the right guard for a phase about things that do
+not reach where they should:
+
+* **`applicability.scoped_rows` was dead**, and its docstring said "Used by
+  the counter", which was never true. **Deleted**, rather than allowlisted:
+  a helper nobody calls, describing a caller that does not exist, is not a
+  gap to record.
+* **`withheld_snapshot` and `reset_withheld` have no in-tree caller**, and
+  there is a concrete reason they cannot: **the counters live in process
+  memory and every CLI command is a fresh process**, so a
+  `motodiag … stats` command would print zeros every time. Recorded in the
+  209B allowlist as `test-infra` with that reason and a wire-or-retire
+  note — the honest caller is an API route on the running server, which is
+  a decision this phase did not make.
+
+**So D6 needs stating more precisely than the plan stated it.** The
+withheld-rows cost is visible **in the logs** — `record_withheld` fires on
+every retrieval that withholds a row and names the provenance. The
+**aggregate is not surfaced anywhere a user can see it.** The measurements
+in this document were taken by calling the snapshot from a script, which is
+exactly what the guard was pointing at.
+
+### Known limits, accepted and recorded
+
+1. **Large maxi-scooters lose friction-plate content.** The Yamaha TMAX and
+   Suzuki Burgman 650 run a wet multiplate clutch *alongside* a CVT.
+   Declared `{cvt}`, they will not receive friction-plate rows that
+   genuinely apply. Missing, not misleading — the trade D4 already makes.
+2. **Rows 4611 and 4615 ship as `{cvt}`** although each carries a general
+   half wider than CVT (kickstart backup; the regulator-index methodology).
+   Splitting them belongs to 255B and is named in its plan.
+3. **Honda E-Clutch is `manual`**, and actuator-specific rows, if ever
+   written, are model-scoped rather than a seventh enum value.
+4. **XC155 / SMAX is not asserted.** What is sourced is the negative:
+   Yamaha's XMAX codes are YP125RA, CZD250-A and CZD300-A, read off three
+   owner's-manual covers, so XC155 is **not** an XMAX. Whether it is the
+   SMAX remains unsourced.
+5. **Piaggio calls a CVT "direct drive."** The Primavera/S 150 owner's
+   manual reads "fitted with direct drive automatic transmission" and
+   contains zero occurrences of "variator". A documentation hazard, not a
+   runtime one, because nothing in the code reads document text.
+
+### Non-goals held
+
+No content row (255B). No mobile field (the phase after 255B). No general
+applicability mechanism. No fix for the XS650 cooling over-reach, the
+`manual` substring collision, or row 4605's make column — each has its own
+finding. **No change to 250B**, pinned by a test. No row declares `manual`,
+pinned by a test across every seed file. No keyword matching in seed or at
+runtime.

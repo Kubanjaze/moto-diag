@@ -1,0 +1,178 @@
+# Applicability axes — what a corpus row is about, and what a machine has
+
+**Status:** accepted · **Phase:** 255 · **Date:** 2026-09-21
+
+## The problem, as measured
+
+Phase 254 wrote twelve rows about small-displacement scooter CVTs. Each row
+is anchored to a manufacturer document, each carries one provenance label,
+and the file passed 85 of its own tests, 22 of 22 mutations, a 986-test
+blast radius and a 7,750-test regression. Nothing about the rows is wrong.
+
+Measured against the live database the day after it merged:
+
+| machine | Phase 254 rows retrieved |
+|---|---|
+| Honda GL1800 Gold Wing | 9 |
+| Honda CBR1000RR | 9 |
+| Honda Grom | 9 |
+| Yamaha YZF-R1 | 10 |
+| Yamaha XS650 | 10 |
+| Honda PCX 150 *(the intended target)* | 9 |
+| **Kawasaki Ninja 400** | **0** |
+
+Kawasaki's zero isolates the cause. The rows carry `make = "Piaggio, Vespa,
+Honda, Yamaha, Kymco, SYM, Genuine"`, so any Honda or Yamaha matches at the
+make-wide tier and Kawasaki does not. It is the make column doing this, not
+the content. **Every test asked whether the rows were right. None asked
+which machines would receive them.**
+
+`known_issues` had no way to say what a row is *about*, and `vehicles` had
+no way to say what a machine *has*. This ADR adds both.
+
+## Decision
+
+**A row declares the values it applies to, per axis, by hand.**
+`known_issues.applicability` is a JSON object keyed by axis —
+`{"transmission": ["cvt"]}`. An absent key means unscoped on that axis,
+which is what every row written before Phase 255 is. Adding cooling or
+final drive later is a new key, not a migration, and the extra cost over a
+`transmission_applicability` column is small because the filtering happens
+in Python rather than SQL.
+
+**A machine carries a typed column per axis.** `vehicles.transmission` has
+its own CHECK constraint, exactly as `powertrain` does. It is nullable with
+no default, and that is a deliberate divergence from `powertrain`, which
+defaults to `ice`: a machine whose transmission nobody recorded has an
+unknown transmission, and writing `manual` would be a fabrication that
+retrieval would then act on.
+
+**The resolver returns a candidate set, not a value.** `make/model/year`
+genuinely cannot separate a manual Africa Twin from a DCT Africa Twin —
+Honda sells both in the same model year — so a resolver returning one value
+would have to invent it. Four rungs, first answer wins: explicit column →
+model lookup → powertrain default → unknown. Each answer carries its
+provenance: `explicit`, `model-sourced`, `powertrain-default`, `ambiguous`,
+`unknown`.
+
+**The inclusion rule is coverage, and it fails closed.** A scoped row is
+included only if its declared set covers *every* candidate. An unknown
+machine has all six transmissions as candidates, so only a row declaring
+all six passes — which is the same as being unscoped.
+
+The consequence is worth stating plainly, because it is the opposite of
+what one expects from a lookup table: **the Gold Wing is fixed by the
+absence of an entry, not by the presence of one.** The lookup exists to
+*preserve* retrieval for the machines that should keep it. Every machine
+missing from it loses scoped rows automatically.
+
+**Never misleading, sometimes missing.** A Gold Wing told about variator
+rollers is a wrong answer; a PCX missing one row is an incomplete one.
+Those are not the same kind of failure, and this axis prefers the second.
+
+## Why this diverges from Phase 250B, which is not touched
+
+250B filters the prompt by powertrain and looks superficially like the
+thing to copy. It is not, for two independent reasons, both read from the
+code rather than assumed.
+
+**It reorders; it does not exclude.** `_electric_first` returns
+`electric + [everything else]` and nothing is removed. That is right for
+its problem — an electric machine that also sees a generic row has lost
+nothing. It is wrong for this one: moving a variator row to position twelve
+does not make it true of a Gold Wing.
+
+**It infers the row's powertrain from the marque names in its `make`
+column**, and `is_electric_row` is documented as *"deliberately generous: a
+row naming four marques of which one is electric IS about an electric
+machine."* That generosity is precisely the mechanism that produced the 254
+defect, because Honda and Yamaha build both scooters and motorcycles.
+
+So 255 diverges on both points and **250B itself is unchanged**. Marque
+inference is recorded here as a known weaker pattern, not as a precedent to
+follow.
+
+## No keyword matching, anywhere
+
+Not in seed authoring, not at load, not at read. Rows are declared by id
+with a written reason; machines are classified from a table sourced to
+manufacturer documents. Nothing in the code ever looks at row text to
+decide applicability.
+
+Model matching is make-scoped, normalised, and whole-token against an
+**explicit alias list**. No fuzzy matching, no alpha/numeric splitting, no
+substring matching. The reason is concrete: **Like, Fly, Jet, Kick, Wolf
+and Buddy are all real model names and all are ordinary words.** Substring
+matching would make every one of them a hazard.
+
+## Two things the documents taught us
+
+**A name search does not prove absence.** Phase 254 concluded that no
+corpus row says "SMAX" and treated `XC155` as a separate matter. They may
+well be one machine; the equivalence could not be sourced and is not
+asserted. What follows instead is structural: every lookup entry carries an
+explicit alias list pairing model code with marketing name, sourced where
+possible — the Yamaha Zuma 125 service manual cover reads `Model : YW125Y`,
+and that is where its alias comes from.
+
+**A manufacturer uses one of this enum's value names to mean something
+else.** The Vespa Primavera/S 150 owner's manual states *"The vehicle is
+fitted with direct drive automatic transmission"* — a CVT scooter, where
+Piaggio's "direct drive" means no intermediate gearbox, not this axis's
+`direct_drive` value of "no gearbox and no clutch". The same manual
+contains zero occurrences of "variator". This is a documentation hazard and
+not a runtime one, precisely because nothing in the code reads document
+text; it is recorded so the next author does not resolve it the wrong way.
+
+## The limit this carries, stated rather than discovered later
+
+A JSON column has **no CHECK constraint**, so the Phase 195C schema lint
+does not cover `applicability` the way it covers `known_issues.source`. The
+pydantic model in `knowledge/applicability.py` is the only guard there is,
+which makes it load-bearing. It uses `Literal` axis keys and `Literal`
+values, forbids unknown keys, validates at seed load and again at read, and
+rejects an unknown key or value loudly rather than dropping either — a typo
+like `{"transmision": ["cvt"]}` must not load as unscoped and quietly
+reintroduce the 254 defect. An empty list is a validation error, never
+"applies to nothing" and never "applies to everything", because a slip that
+could silently mean either of two opposite things must fail.
+
+**What "loudly" costs, measured rather than assumed.** Validating at read
+means one corrupt value raises out of `_load_known_issues`, which serves
+both `motodiag diagnose` and `motodiag code` — so a single bad row stops
+diagnosis. The trade is kept: dropping the row silently would load a typo
+as unscoped and put it straight back in front of every Gold Wing, which is
+this ADR's whole subject. The error names the offending row by id and
+title, and the behaviour is pinned by a test rather than left implicit.
+
+## Sequencing
+
+**Phase 255 ships the mechanism plus `cvt` scoping only.** No shipped row
+declares `manual`, and a test enforces it across every seed file. The
+reason is measured rather than stylistic: a clutch-cable row declared
+`{manual}` would be withheld from every CBR and Harley absent from the
+lookup, which is a worse outcome than today's, not a better one. Set logic
+and the ambiguous-candidate rule are exercised with synthetic test-only
+rows, so every value is proven without shipping any.
+
+Sourced manual-transmission coverage of the corpus's models is a **specific
+later phase** — workflow plus refuter, source = manufacturer specification
+pages. No bulk inference, ever.
+
+## Named phases that follow
+
+1. **255B** — the content row the transmission axis was built for
+   (twist-and-go versus manual small bikes), selecting rows by the axis
+   rather than by searching for the word "manual".
+2. **The mobile transmission field** — the phase immediately after 255B.
+   Mobile already sends `powertrain` as a first-class field, so the
+   precedent exists. Until it lands, every mobile-created vehicle arrives
+   with the column NULL and the resolver is what covers it; the residual
+   gap is whatever machines users add next.
+3. **Sourced manual coverage** — as above.
+4. **The general applicability mechanism** — a third and fourth axis are
+   already visible and measured. A Yamaha XS650, an air-cooled twin,
+   retrieves 11 liquid-cooling rows, and that one predates 254. A Honda PCX
+   retrieves 8 final-drive-chain rows; a belt-drive Harley and a
+   shaft-drive Gold Wing should not get those either, which makes final
+   drive its own axis and **not** something to solve with `{manual}` sets.

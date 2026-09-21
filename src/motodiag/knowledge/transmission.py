@@ -1,0 +1,501 @@
+"""Which transmission a machine has — Phase 255.
+
+Phase 254 wrote twelve rows about scooter CVTs and gave them a `make`
+column naming seven marques. Two of those marques also build motorcycles,
+so a Gold Wing, a CBR1000RR, a Grom, an R1 and an XS650 were each handed
+seven or eight rows about variator rollers and drive belts. Nothing was
+wrong with the rows. What was missing was any way to ask *what the machine
+in front of us actually has*.
+
+This module answers that, and the shape of the answer is the point.
+
+**It returns a candidate set, not a value.** `make/model/year` genuinely
+cannot separate a manual Africa Twin from a DCT Africa Twin — Honda sells
+both in the same model year — so a resolver that returned one value would
+have to invent it. This one says `{manual, dct}` and lets the caller
+decide what is safe to show.
+
+**Unknown is all six.** A machine nobody can classify has every
+transmission as a candidate, and `applicability.row_applies` includes a
+scoped row only when its declared set covers every candidate. So an
+unknown machine receives scoped rows only from a row that declares all
+six, which is the same as being unscoped. That is the fail-closed policy,
+and it is what fixes the 254 defect: **the Gold Wing is fixed by the
+absence of an entry, not by the presence of one.** The lookup below exists
+to *preserve* retrieval for the machines that should keep it.
+
+**Nothing here reads row text.** No keyword matching, in seed or at
+runtime. Machines are classified by an explicit, sourced table; rows are
+classified by an explicit declaration in the seed file. The two never meet
+through a regex.
+"""
+
+from __future__ import annotations
+
+import logging
+import re
+import threading
+from dataclasses import dataclass
+from typing import Any, Iterable, Literal, Mapping, Optional
+
+from motodiag.core.models import VehicleTransmission
+
+logger = logging.getLogger(__name__)
+
+#: Every value. What an unknown machine's candidate set is, and therefore
+#: the fail-closed baseline.
+ALL_TRANSMISSIONS: frozenset[str] = frozenset(v.value for v in VehicleTransmission)
+
+#: How a resolution was reached. Returned alongside the candidates so the
+#: withheld-rows counter can attribute the cost of the policy instead of
+#: reporting one undifferentiated number.
+Provenance = Literal[
+    "explicit",            # the vehicle row carried a transmission
+    "model-sourced",       # a lookup entry, sourced to a manufacturer document
+    "powertrain-default",  # electric with no gearbox, and no override
+    "ambiguous",           # the model is sold with more than one transmission
+    "unknown",             # nothing classified it — all six candidates
+]
+
+
+@dataclass(frozen=True)
+class TransmissionEntry:
+    """One machine, classified from a document that says so.
+
+    `aliases` is an explicit list of spellings, and it is explicit for a
+    reason Phase 255 had to learn twice. A name search does not prove
+    absence: "SMAX returns zero corpus rows" and "XC155 returns two" can
+    be one machine wearing two names, and this resolver must not conclude
+    anything from one spelling. Nothing is derived — no fuzzy matching, no
+    splitting `PCX150` into `PCX` and `150`. If a spelling occurs in the
+    wild, it is written down here.
+
+    `source` names the document the classification came from and quotes
+    the sentence that carries it. A row with no document does not exist in
+    this corpus, and neither does an entry here.
+    """
+
+    make: str
+    canonical: str
+    transmission: VehicleTransmission
+    aliases: tuple[str, ...]
+    source: str
+
+
+@dataclass(frozen=True)
+class Resolution:
+    """What the resolver concluded, and how."""
+
+    candidates: frozenset[str]
+    provenance: Provenance
+    entry: Optional[TransmissionEntry] = None
+
+    @property
+    def certain(self) -> bool:
+        """True when exactly one transmission is possible."""
+        return len(self.candidates) == 1
+
+    @property
+    def value(self) -> Optional[str]:
+        """The single value, or None when the answer is a set."""
+        return next(iter(self.candidates)) if self.certain else None
+
+
+def _norm(text: Any) -> str:
+    """Lower-case, punctuation to spaces, runs collapsed.
+
+    Deliberately shallow. It makes `PCX-150`, `PCX 150` and `pcx  150` the
+    same string and stops there: `PCX150` is a *different* string and gets
+    its own alias, because splitting letters from digits is the fuzzy
+    matching this resolver does not do.
+    """
+    return re.sub(r"[^a-z0-9]+", " ", str(text or "").lower()).strip()
+
+
+def _tokens(text: Any) -> tuple[str, ...]:
+    return tuple(_norm(text).split())
+
+
+CVT = VehicleTransmission.CVT
+MANUAL = VehicleTransmission.MANUAL
+SEMI_CENT = VehicleTransmission.SEMI_AUTO_CENTRIFUGAL
+
+_E = TransmissionEntry
+
+#: Machines classified from a manufacturer document read first-hand.
+#:
+#: Read what this table is *for*. It is not an attempt to classify the
+#: world's motorcycles — that is a later phase with its own workflow and
+#: refuter, sourced from manufacturer specification pages. Every machine
+#: absent from it resolves to unknown and loses scoped rows, which is the
+#: correct outcome for a Gold Wing and the accepted cost for a Ruckus.
+#:
+#: **There is no make-default.** Not even for marques that build nothing
+#: but scooters. A make-default has to be right for every machine the
+#: marque ever sold, and Piaggio's hand-shift Vespa PX and the Genuine
+#: Stella are the standing counter-examples — neither is sourced here, and
+#: a default would be the only thing speaking for them. Marque-wide
+#: inference is exactly the bulk guessing this phase forbids.
+TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
+    # --- Honda -----------------------------------------------------------
+    # Honda's US owner's manuals are systematically silent here: the 2025
+    # Ruckus manual has ZERO occurrences of "belt", and the 2025
+    # Metropolitan none of "drive belt" or "weight roller". Both are CVT
+    # machines and neither gets an entry, because this table records what
+    # documents say, not what is generally known.
+    _E("Honda", "PCX", CVT, ("pcx", "pcx 125", "pcx125", "pcx 150", "pcx150",
+                             "pcx 160", "pcx160", "pcx150a"),
+       "Honda PCX125 owner's manual 2021 and 2025 PCX owner's manual: "
+       "'the Honda Genuine Parts for drive system such as the drive belt "
+       "and weight rollers'; both carry a 'V-BELT indicator'. Weight "
+       "rollers are variator-specific — a final-drive belt has none."),
+    _E("Honda", "SH125i/SH150i", CVT, ("sh125i", "sh150i", "sh 125i", "sh 150i",
+                                       "sh125", "sh150"),
+       "Honda SH125i/SH150i 21YM owner's manual 32K0RA00 / 00X32-K0R-A000: "
+       "'the drive belt and weight rollers, to ensure correct Torque "
+       "Control operation', plus a 'Drive Belt' maintenance row."),
+    _E("Honda", "Super Cub C125", SEMI_CENT, ("c125", "super cub c125", "super cub"),
+       "Honda parts catalogue 13K0GK01 (© Honda Motor Co., Ltd. 2018): "
+       "'WEIGHT SET, PRIMARY CLUTCH' 22535-K73-T30 in group E-7, friction "
+       "plates in E-8, and owner's manual 32K0GC20 showing a gear-position "
+       "indicator with no clutch lever."),
+    _E("Honda", "CT125 Hunter Cub", SEMI_CENT, ("ct125", "ct 125", "trail 125",
+                                                "ct125a", "hunter cub"),
+       "Honda parts catalogue 13K2EB0AJ 'CT125 HUNTER CUB' (© Honda Motor "
+       "Co., Ltd. 2020): the same three groups as the C125 — 'WEIGHT SET, "
+       "PRIMARY CLUTCH' in E-7 'ONE WAY CLUTCH', 'DISK, CLUTCH FRICTION' "
+       "in E-8, 'LEVER COMP., CLUTCH' in E-6."),
+
+    # --- Yamaha ----------------------------------------------------------
+    _E("Yamaha", "Zuma 125", CVT, ("zuma 125", "zuma125", "yw125", "yw125y"),
+       "Yamaha Zuma 125 service manual 32SF819770E0, cover 'Model : "
+       "YW125Y': 'Transmission type V-belt automatic'. The cover is also "
+       "where the model-code alias comes from."),
+    _E("Yamaha", "XMAX", CVT,
+       ("xmax", "xmax 125", "xmax125", "yp125ra",
+        "xmax 250", "xmax250", "czd250", "czd250 a", "czd250a",
+        "czd250d", "czd250d a",
+        "xmax 300", "xmax300", "czd300", "czd300 a", "czd300a",
+        "czd300d", "czd300d a",
+        "xmax tech max", "xmax 300 tech max", "xmax 250 tech max"),
+       "Yamaha owner's manuals 2DM-F819D-P3 ('YP125RA XMAX'), BMK-F8199-F0 "
+       "('CZD250-A (XMAX 250)', 'CZD300-A (XMAX 300)') and PBMKF8199SAS "
+       "('CZD250D-A (XMAX 250 TECH MAX)', 'CZD300D-A (XMAX 300 TECH MAX)'): "
+       "each carries a 'TRIP V-BELT' belt-replacement counter. One entry "
+       "for the family because all three documents agree and the junction "
+       "carries the bare form 'XMAX'. These covers are ALSO the evidence "
+       "that XC155 is not an XMAX: Yamaha's XMAX codes are YP125RA, CZD250 "
+       "and CZD300, and none of them is XC155."),
+
+    # --- Kymco -----------------------------------------------------------
+    _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",
+                                 "agility 125", "agility125"),
+       "Kymco Agility 50/125 owner's manual: "
+       "'Transmission ... Automatic CVT'."),
+    _E("Kymco", "People S", CVT, ("people s", "peoples", "people s 50",
+                                  "people s 125", "people s 200", "people",
+                                  "people s 250", "people 250"),
+       "Kymco People S 50/125/200 owner's manual: "
+       "'Transmission ... Automatic CVT'."),
+    _E("Kymco", "Super 8", CVT, ("super 8", "super8", "super 8 50r", "super8 50r"),
+       "Kymco Super 8 50R owner's manual: a 'CVT FILTER' maintenance row "
+       "and 'DRIVE BELT ... Inspect every 5000km, replace every 20000km'."),
+    _E("Kymco", "Like 150i", CVT, ("like 150i", "like150i", "like"),
+       "Kymco Like 150i owner's manual: a 'CVT FILTER' row and "
+       "'* DRIVE BELT Inspect every 5000km,replace every 20000km'. Phase "
+       "254 recorded that this PDF's internal Title metadata reads "
+       "'DOWNTOWN 125i(ok)' — High confidence in the quotes, Medium that "
+       "the document is authored as a Like 150i manual."),
+
+    # --- SYM -------------------------------------------------------------
+    # SYM is the marque that proves the table is not 'scooter maker means
+    # CVT': the same maker's Symba is a Cub and its Wolf is a motorcycle.
+    _E("SYM", "Symba 100", SEMI_CENT, ("symba", "symba 100", "symba100"),
+       "SYM Symba owner's manual: 'Clutch  Wet multi-plate type, auto "
+       "centrifugal clutch' and 'Transmission  4 - speed gear change'. "
+       "This is the mechanism definition of semi_auto_centrifugal, in the "
+       "maker's own words."),
+    _E("SYM", "Wolf 150", MANUAL, ("wolf", "wolf 150", "wolf150"),
+       "SYM Wolf 150 owner's manual: 'Clutch lever' in the controls list "
+       "and a 'Clutch lever free play' maintenance item."),
+    _E("SYM", "Mio 50", CVT, ("mio", "mio 50", "mio50"),
+       "SYM Mio 50 owner's manual: 'Clutch  Centrifugal type  "
+       "Transmission  CVT'."),
+    _E("SYM", "Jet 4 RX125", CVT, ("jet 4", "jet4", "jet 4 rx125", "jet4 rx125",
+                                   "jet 4 125", "jet 4 rx 125"),
+       "SYM Jet 4 RX125 owner's manual: 'Clutch  Centrifugal type  "
+       "Transmission  CVT'."),
+    _E("SYM", "ADX125", CVT, ("adx", "adx125", "adx 125"),
+       "SYM ADX125 owner's manual: 'Transmission  CVT'."),
+    _E("SYM", "Fiddle III", CVT, ("fiddle", "fiddle iii", "fiddle 3", "fiddle3"),
+       "SYM Fiddle III owner's manual: a combined 'Drive belt/roller  I R' "
+       "maintenance row. Belt and roller together are variator-specific."),
+    _E("SYM", "Symphony ST", CVT, ("symphony", "symphony st"),
+       "SYM Symphony ST owner's manual: a combined 'Drive belt/roller  "
+       "I R' maintenance row."),
+    _E("SYM", "Symply 125", CVT, ("symply", "symply 125", "symply125"),
+       "SYM Symply service manual: chapter 8 'V-BELT DRIVING SYSTEM/KICK "
+       "STARTER ARM', and maintenance rows 'CVT driving device (belt)' and "
+       "'CVT driving device (roller)'."),
+
+    # --- Piaggio and Vespa ------------------------------------------------
+    # Piaggio prints one house sentence across its service manuals, which
+    # is the single best transmission statement in the whole set.
+    _E("Vespa", "LX 50", CVT, ("lx 50", "lx50"),
+       "Piaggio service station manual 633416 (Vespa LX 50): 'Transmission "
+       "With automatic expandable pulley variator, torque server, V-belt, "
+       "automatic clutch, gear reduction unit.'"),
+    _E("Vespa", "LX 125/150", CVT, ("lx", "lx 125", "lx125", "lx 150", "lx150"),
+       "Piaggio service station manual 633976 (Vespa LX 125 - 150 4T Euro "
+       "3): 'Automatic transmission', and a fault table entry 'Inefficient "
+       "automatic transmission — Check the rollers and the pulley "
+       "movement'."),
+    _E("Vespa", "Primavera 150", CVT, ("primavera", "primavera 150",
+                                       "primavera s 150", "primavera s"),
+       "Vespa Primavera/S 150 owner's manual: 'The vehicle is fitted with "
+       "direct drive automatic transmission.' NOTE the vocabulary trap — "
+       "Piaggio's 'direct drive' here means no intermediate gearbox, NOT "
+       "this axis's `direct_drive` value. The same manual contains zero "
+       "occurrences of 'variator'."),
+    _E("Vespa", "GTS 300/310", CVT, ("gts", "gts 300", "gts300", "gts 310",
+                                     "gts310", "gts 300 super", "gts super 300",
+                                     "gts 300 i", "gts 300 ie", "gts 310 hpe"),
+       "Vespa GTS owner's manual (cover 'Gts 310 HPE'): 'the vehicle is "
+       "equipped with automatic transmission' and 'THE AUTOMATIC "
+       "TRANSMISSION MAKES THE REAR WHEEL TURN EVEN WHEN THE THROTTLE IS "
+       "SLIGHTLY TWISTED'. The 'GTS Super 300' spelling is sourced "
+       "separately, to the Piaggio workshop manual whose cover reads "
+       "'GTS Super 300 ie (2008)'."),
+    _E("Piaggio", "Typhoon 50", CVT, ("typhoon", "typhoon 50", "typhoon50"),
+       "Piaggio Typhoon 50 service station manual: 'Transmission With "
+       "automatic expandable pulley variator, torque server, V-belt, "
+       "automatic clutch, gear reduction unit.'"),
+    _E("Piaggio", "Fly 125/150", CVT, ("fly", "fly 125", "fly125", "fly 150",
+                                       "fly150"),
+       "Piaggio service station manual (Fly 125 - 150 4T): 'Transmission "
+       "With automatic expandable pulley variator with torque server, V "
+       "belt, automatic clutch, gear reduction unit and transmission "
+       "housing'."),
+    _E("Piaggio", "Beverly 125", CVT, ("beverly", "beverly 125", "beverly125"),
+       "Piaggio Beverly 125 service station manual: 'Main drive  Automatic "
+       "expandable pulley variator with torque server, V-belt, automatic "
+       "self-ventilating clutch'."),
+    _E("Piaggio", "MP3 400", CVT, ("mp3", "mp3 400", "mp3 400 i e", "mp3 250",
+                                   "mp3 500"),
+       "Piaggio service station manual 664503(EN) (MP3 400 i.e.): "
+       "'TRANSMISSION  Automatic expandable pulley variator with torque "
+       "server, V-belt, automatic clutch.'"),
+
+    # --- Genuine ---------------------------------------------------------
+    # Genuine prints the same spec row in every book: 'Transmission Type
+    # Continuously Variable (CVT)  Clutch  Dry, Centrifugal'.
+    _E("Genuine", "Buddy 50", CVT, ("buddy 50", "buddy50"),
+       "Genuine Buddy 50 owner's manual MY2027: 'Transmission Type "
+       "Continuously Variable (CVT)  Clutch  Dry, Centrifugal'."),
+    _E("Genuine", "Buddy 125", CVT, ("buddy", "buddy 125", "buddy125"),
+       "Genuine Buddy 125 owner's manual: 'Transmission Type Continuously "
+       "Variable (CVT)  Clutch  Dry, Centrifugal'."),
+    _E("Genuine", "Buddy 170i", CVT, ("buddy 170", "buddy170", "buddy 170i",
+                                      "buddy170i"),
+       "Genuine Buddy 170 owner's manual 2023: 'Transmission Type "
+       "Continuously Variable (CVT)  Clutch  Dry, Centrifugal', plus "
+       "'V Belt * Check variator rollers, sliders, etc for wear'."),
+    _E("Genuine", "Buddy Kick 125", CVT, ("buddy kick", "buddy kick 125",
+                                          "buddykick", "buddykick 125"),
+       "Genuine Buddy Kick 125 owner's manual: 'Dry centrifugal govern "
+       "weight  V-belt  C.V.T', plus a 'CVT Filter' maintenance row."),
+    _E("Genuine", "Bella Classic 50", CVT, ("bella", "bella classic",
+                                            "bella classic 50", "bella 50"),
+       "Genuine Bella Classic 50 owner's manual: 'Transmission Type "
+       "Continuously Variable (CVT)', and a 'Transmission Variator / "
+       "Clutch*' service row reading 'Check rollers, sliders, clutch "
+       "pads'."),
+    _E("Genuine", "Brio 50i", CVT, ("brio", "brio 50", "brio50", "brio 50i",
+                                    "brio50i"),
+       "Genuine Brio 50i owner's manual: 'Transmission Type Continuously "
+       "Variable (CVT)  Clutch  Dry, Centrifugal'."),
+    _E("Genuine", "Hooligan 170i", CVT, ("hooligan", "hooligan 170",
+                                         "hooligan170", "hooligan 170i"),
+       "Genuine Hooligan 170 owner's manual: 'clutch type DRY TYPE  gear "
+       "shift type AUTOMATIC (V BELT)'."),
+    _E("Genuine", "Rattler 125", CVT, ("rattler", "rattler 125", "rattler125"),
+       "Genuine Rattler 125 owner's manual: 'Your scooter is equipped with "
+       "a CVT transmission', and 'Check the transmission for belt and "
+       "roller wear'."),
+    _E("Genuine", "Rattler 200i", CVT, ("rattler 200", "rattler200",
+                                        "rattler 200i", "rattler200i"),
+       "Genuine Rattler 200i owner's manual: 'Your scooter is equipped "
+       "with a CVT transmission'."),
+    _E("Genuine", "Roughhouse 50", CVT, ("roughhouse", "roughhouse 50",
+                                         "roughhouse50"),
+       "Genuine Roughhouse 50 owner's manual: 'Transmission Type "
+       "Continuously Variable (CVT)  Clutch  Dry, Centrifugal'."),
+    _E("Genuine", "Urbano 125", CVT, ("urbano", "urbano 125", "urbano125"),
+       "Genuine Urbano 125 owner's manual: 'Your scooter is equipped with "
+       "a CVT transmission'."),
+    _E("Genuine", "Urbano 200i", CVT, ("urbano 200", "urbano200",
+                                       "urbano 200i", "urbano200i"),
+       "Genuine Urbano 200i owner's manual: 'Your scooter is equipped with "
+       "a CVT transmission'."),
+
+    # --- Bintelli --------------------------------------------------------
+    # Not a corpus marque, so these entries reach no rows today. They are
+    # here because a user may add one tomorrow, and because this manual is
+    # the counter-example that shaped Phase 254's belt row.
+    _E("Bintelli", "Sprint", CVT, ("sprint", "sprint 49", "sprint 50"),
+       "Bintelli User's Manual, 'Technical Specifications': 'Transmission "
+       "CVT', belt model 'Gates 669MM'."),
+    _E("Bintelli", "Breeze", CVT, ("breeze",),
+       "Bintelli User's Manual, 'Technical Specifications': 'Transmission "
+       "CVT'."),
+    _E("Bintelli", "Edge", CVT, ("edge",),
+       "Bintelli User's Manual, 'Technical Specifications': 'Transmission "
+       "CVT'."),
+    _E("Bintelli", "Scorch", CVT, ("scorch",),
+       "Bintelli User's Manual, 'Technical Specifications': 'Transmission "
+       "CVT'."),
+    _E("Bintelli", "Havoc", CVT, ("havoc",),
+       "Bintelli User's Manual, 'Technical Specifications': 'Transmission "
+       "CVT', belt model 'Gates 835MM'."),
+)
+
+#: Models sold with more than one transmission in the same model year.
+#: `make/model/year` cannot separate them and this resolver will not
+#: pretend otherwise — it returns the set and lets fail-closed do the rest.
+AMBIGUOUS_MODELS: tuple[tuple[str, tuple[str, ...], frozenset[str]], ...] = (
+    ("Honda", ("africa twin", "crf1100l", "crf1000l", "crf1100l africa twin"),
+     frozenset({MANUAL.value, VehicleTransmission.DCT.value})),
+    ("Honda", ("nc750x", "nc750", "nc 750x"),
+     frozenset({MANUAL.value, VehicleTransmission.DCT.value})),
+    ("Honda", ("gold wing", "goldwing", "gl1800", "gl1800 gold wing",
+      "gold wing gl1800", "gl 1800"),
+     frozenset({MANUAL.value, VehicleTransmission.DCT.value})),
+    ("Honda", ("rebel 1100", "cmx1100"),
+     frozenset({MANUAL.value, VehicleTransmission.DCT.value})),
+)
+
+#: Electric machines the `electric ⇒ direct_drive` default must NOT touch.
+#: The default is a default, not a rule: the Brammo Empulse has a
+#: six-speed gearbox, Electric Motion trials machines have a rider clutch
+#: and a single ratio that fits none of the six values cleanly, and the
+#: Ninja 7 Hybrid is an automated manual. Each resolves to unknown rather
+#: than to a value nobody sourced.
+POWERTRAIN_DEFAULT_EXCLUDED: tuple[tuple[str, tuple[str, ...]], ...] = (
+    ("Brammo", ("empulse", "empulse r")),
+    ("Victory", ("empulse", "empulse tt")),
+    ("Kawasaki", ("ninja 7", "ninja 7 hybrid", "ninja7")),
+    ("Electric Motion", ("escape", "epure", "epure race", "epure sport")),
+)
+
+
+def _alias_match(make: str, model: str, aliases: Iterable[str]) -> bool:
+    """Whole-token match of `model` against an explicit alias list.
+
+    The make prefix is stripped first, so "Honda PCX150" and "PCX150" are
+    the same query. After that the comparison is exact on the normalised
+    token sequence. Nothing is split, nothing is scored, and no alias is
+    matched as a substring of the query — "Jet" must not match "Jetstream"
+    and "Like" must not match "Like a Vespa".
+    """
+    query = _tokens(model)
+    make_tokens = _tokens(make)
+    if make_tokens and query[: len(make_tokens)] == make_tokens:
+        query = query[len(make_tokens):]
+    if not query:
+        return False
+    return any(query == _tokens(a) for a in aliases)
+
+
+def resolve_transmission(
+    make: str,
+    model: str,
+    *,
+    explicit: Optional[str] = None,
+    powertrain: Optional[str] = None,
+) -> Resolution:
+    """What transmissions this machine might have, and how we know.
+
+    Precedence, in order, and it stops at the first rung that answers:
+
+    1. **explicit** — the vehicle row carries a transmission. A human or a
+       future mobile field said so, and nothing here second-guesses it.
+    2. **model lookup** — an entry sourced to a manufacturer document.
+       Ambiguous models answer here too, with their whole candidate set.
+    3. **powertrain default** — `electric` with no gearbox is
+       `direct_drive`, minus the machines that prove it is a default and
+       not a rule.
+    4. **unknown** — all six candidates, which withholds every scoped row.
+    """
+    if explicit:
+        value = _norm(explicit).replace(" ", "_")
+        if value in ALL_TRANSMISSIONS:
+            return Resolution(frozenset({value}), "explicit")
+        logger.warning(
+            "transmission: ignoring unrecognised explicit value %r", explicit
+        )
+
+    make_n = _norm(make)
+
+    for entry in TRANSMISSION_LOOKUP:
+        if _norm(entry.make) != make_n:
+            continue
+        if _alias_match(entry.make, model, entry.aliases):
+            return Resolution(frozenset({entry.transmission.value}),
+                              "model-sourced", entry)
+
+    for amb_make, aliases, candidates in AMBIGUOUS_MODELS:
+        if _norm(amb_make) == make_n and _alias_match(amb_make, model, aliases):
+            return Resolution(candidates, "ambiguous")
+
+    if _norm(powertrain) == "electric":
+        for exc_make, aliases in POWERTRAIN_DEFAULT_EXCLUDED:
+            if _norm(exc_make) == make_n and _alias_match(exc_make, model, aliases):
+                return Resolution(ALL_TRANSMISSIONS, "unknown")
+        return Resolution(
+            frozenset({VehicleTransmission.DIRECT_DRIVE.value}),
+            "powertrain-default",
+        )
+
+    return Resolution(ALL_TRANSMISSIONS, "unknown")
+
+
+# --- The cost of the policy, counted rather than argued about -------------
+
+_counter_lock = threading.Lock()
+_withheld: dict[str, int] = {}
+_withheld_rows: dict[str, int] = {}
+
+
+def record_withheld(provenance: str, rows: int) -> None:
+    """Note that `rows` scoped rows were withheld from one retrieval.
+
+    Phase 255 chose to withhold rather than mislead, and a choice like
+    that should be measurable. Broken down by provenance because "unknown"
+    and "ambiguous" are different problems: the first is a gap in the
+    lookup that a later phase closes, the second is a machine that genuinely
+    cannot be told apart from its sibling.
+    """
+    if rows <= 0:
+        return
+    with _counter_lock:
+        _withheld[provenance] = _withheld.get(provenance, 0) + 1
+        _withheld_rows[provenance] = _withheld_rows.get(provenance, 0) + rows
+    logger.info(
+        "transmission: withheld %d scoped row(s); provenance=%s", rows, provenance
+    )
+
+
+def withheld_snapshot() -> dict[str, dict[str, int]]:
+    """Retrievals and rows withheld so far, per provenance."""
+    with _counter_lock:
+        return {
+            p: {"retrievals": _withheld[p], "rows": _withheld_rows.get(p, 0)}
+            for p in sorted(_withheld)
+        }
+
+
+def reset_withheld() -> None:
+    """Clear the counters. For tests and for a fresh process."""
+    with _counter_lock:
+        _withheld.clear()
+        _withheld_rows.clear()

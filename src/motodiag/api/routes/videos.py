@@ -501,6 +501,8 @@ def ask_about_video(
             f"video id={video_id} file missing on disk"
         )
 
+    from motodiag.knowledge.prompt_rows import drop_inapplicable
+    from motodiag.knowledge.transmission import resolve_transmission
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
     from motodiag.media import ffmpeg as ffmpeg_module
     from motodiag.media.analysis_worker import _build_vehicle_context
@@ -525,6 +527,22 @@ def ask_about_video(
     context = _build_vehicle_context(dict(row), db_path=db_path)
     _identity, issues = known_issues_for_vehicle(
         context.make, context.model, db_path=db_path, limit=25,
+    )
+    # Phase 255: this endpoint hands the rows straight to a vision model as
+    # context about one specific machine, which is the same shape as the
+    # diagnose path and needs the same applicability filter. Measured before
+    # it was added: a Yamaha MT07 and an XS650 each received two of Phase
+    # 254's scooter-CVT rows here -- 4614 (a CVT recall) and 4606 (variator
+    # roller wear limits) -- on machines with no variator. The Hondas missed
+    # them at limit=25 only because their own rows filled the 25 first, which
+    # is ranking luck rather than correctness.
+    issues = drop_inapplicable(
+        issues,
+        resolve_transmission(
+            context.make, context.model,
+            explicit=getattr(context, "transmission", None),
+            powertrain=getattr(context, "powertrain", None),
+        ),
     )
 
     analyzer = VisionAnalyzer(model="sonnet")
