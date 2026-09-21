@@ -196,7 +196,7 @@ class TestTheKnownScale:
         into MODULE_ISLANDS (a dead file is one entry, not thirteen) and saw
         two more through prose strings, 104 once 244X made 244U's rule
         reach the multi-line re-exports it had missed, 96 after 244Y deleted
-        nine superseded definitions, and 98 at Phase 255. The literal moves
+        nine superseded definitions, 98 at Phase 255, and back to 96 at Phase 256 — the first DOWN in a while, and the good kind: the transmission counter's two accessors were retired rather than re-explained, because Phase 256 persisted the count to a table and wired `motodiag kb withheld` to read it. That is what their allowlist entry asked for. The literal moves
         with the tree — DOWN when a phase reaches or reclassifies something,
         UP only when a new gap lands.
 
@@ -210,7 +210,7 @@ class TestTheKnownScale:
         in-tree caller can read a non-zero value."""
         from support.integration_gaps_allowlist import ORPHANS
 
-        assert len(ORPHANS) == 98  # f9-noqa: → 96 (244Y deleted nine superseded defs and the gate then surfaced Permission, a model whose only constructor had gone) → 98 (Phase 255 added the transmission counter's two accessors as test-infra; a third orphan from the same phase, applicability.scoped_rows, was DELETED rather than listed, because it had no caller and a docstring naming one);: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings) → 104 (244X: 244U's rule finally reached multi-line re-exports, +57). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
+        assert len(ORPHANS) == 96  # f9-noqa: → 96 (244Y deleted nine superseded defs and the gate then surfaced Permission, a model whose only constructor had gone) → 98 (Phase 255 added the transmission counter's two accessors as test-infra; a third orphan from the same phase, applicability.scoped_rows, was DELETED rather than listed, because it had no caller and a docstring naming one);: ssot-pin fixture-data: the running count of live orphans — 46 (pre-244U) → 66 (244U opened the blind spot) → 58 (244V wired eight reference lookups) → 47 (244W: 13 reclassified as dead modules, +2 seen through prose strings) → 104 (244X: 244U's rule finally reached multi-line re-exports, +57). The stale/new-entry tests in test_phase209B_integration_gaps.py are what hold the tree to the list; this literal is the record of the trend.
 
     def test_what_was_hidden_was_a_layer_not_a_scattering(self):
         """What the blind spot hid was a LAYER: twenty engine capabilities a

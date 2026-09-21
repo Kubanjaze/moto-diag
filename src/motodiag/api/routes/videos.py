@@ -501,8 +501,7 @@ def ask_about_video(
             f"video id={video_id} file missing on disk"
         )
 
-    from motodiag.knowledge.prompt_rows import drop_inapplicable
-    from motodiag.knowledge.transmission import resolve_transmission
+    from motodiag.knowledge.retrieval import rows_for_machine
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
     from motodiag.media import ffmpeg as ffmpeg_module
     from motodiag.media.analysis_worker import _build_vehicle_context
@@ -536,14 +535,13 @@ def ask_about_video(
     # roller wear limits) -- on machines with no variator. The Hondas missed
     # them at limit=25 only because their own rows filled the 25 first, which
     # is ranking luck rather than correctness.
-    issues = drop_inapplicable(
+    issues = rows_for_machine(
         issues,
-        resolve_transmission(
-            context.make, context.model,
-            explicit=getattr(context, "transmission", None),
-            powertrain=getattr(context, "powertrain", None),
-        ),
-    )
+        make=context.make, model=context.model,
+        transmission=getattr(context, "transmission", None),
+        powertrain=getattr(context, "powertrain", None),
+        purpose="prompt", db_path=db_path,
+    ).rows
 
     analyzer = VisionAnalyzer(model="sonnet")
     answer = analyzer.answer_question_about_frames(

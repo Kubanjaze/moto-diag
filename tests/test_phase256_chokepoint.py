@@ -115,14 +115,13 @@ def door1_diagnose(db_path, make, model, year):
     does not, because a cap is a presentation decision: raise it tomorrow
     and a property proved through it stops being proved.
     """
-    from motodiag.knowledge.prompt_rows import compose_prompt_rows
-    from motodiag.knowledge.transmission import resolve_transmission
+    from motodiag.knowledge.retrieval import rows_for_machine
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path,
                                               limit=GUARD_FETCH)
-    kept = compose_prompt_rows(raw, limit=GUARD_FETCH,
-                               transmission=resolve_transmission(make, model))
+    kept = rows_for_machine(raw, make=make, model=model, purpose="prompt",
+                            db_path=db_path).rows
     return {r["id"] for r in raw}, {r["id"] for r in kept}
 
 
@@ -135,13 +134,13 @@ def door2_ask(db_path, make, model, year):
     evaporates the day someone raises the limit. The guard therefore fetches
     wide and asserts that the FILTER withholds them.
     """
-    from motodiag.knowledge.prompt_rows import drop_inapplicable
-    from motodiag.knowledge.transmission import resolve_transmission
+    from motodiag.knowledge.retrieval import rows_for_machine
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     _identity, issues = known_issues_for_vehicle(make, model, db_path=db_path,
                                                  limit=GUARD_FETCH)
-    kept = drop_inapplicable(issues, resolve_transmission(make, model))
+    kept = rows_for_machine(issues, make=make, model=model, purpose="prompt",
+                            db_path=db_path).rows
     return {r["id"] for r in issues}, {r["id"] for r in kept}
 
 

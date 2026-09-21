@@ -116,24 +116,8 @@ _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pric
 # `relative/path.py::name` inside REACHABLE modules -> (classification, reason).
 # Orphans inside unreachable modules are implied by the module entry and are
 # not listed a second time.
-_P255_COUNTER = (
-    "Phase 255's withheld-rows counter. The counter's PRODUCT surface is "
-    "the log line in record_withheld, which fires on every retrieval that "
-    "withholds a row and names the provenance; these two read and clear "
-    "the in-process aggregate, and only the test suite does that. They "
-    "cannot have an in-tree caller today for a concrete reason: the "
-    "counters live in process memory and every CLI command is a fresh "
-    "process, so a `motodiag ... stats` command would print zeros every "
-    "time. The honest caller would be a long-running surface -- an API "
-    "route on the running server -- which is a decision this phase did "
-    "not make. Retire these or wire that route; do not let the entry sit."
-)
-
 ORPHANS: dict[str, tuple[str, str]] = {
     # --- the ones that matter ---
-    "knowledge/transmission.py::withheld_snapshot": ("test-infra", _P255_COUNTER),
-    "knowledge/transmission.py::reset_withheld": ("test-infra", _P255_COUNTER),
-
     "media/ffmpeg.py::validate_video": ("unwired-feature",
         "Has a test and no caller. Uploads get size, quota and metadata-"
         "schema checks, but the file is never probed: width, height, "

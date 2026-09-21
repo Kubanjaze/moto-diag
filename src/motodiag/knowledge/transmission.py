@@ -523,43 +523,19 @@ def resolve_transmission(
     return Resolution(ALL_TRANSMISSIONS, "unknown")
 
 
-# --- The cost of the policy, counted rather than argued about -------------
-
-_counter_lock = threading.Lock()
-_withheld: dict[str, int] = {}
-_withheld_rows: dict[str, int] = {}
-
-
-def record_withheld(provenance: str, rows: int) -> None:
-    """Note that `rows` scoped rows were withheld from one retrieval.
-
-    Phase 255 chose to withhold rather than mislead, and a choice like
-    that should be measurable. Broken down by provenance because "unknown"
-    and "ambiguous" are different problems: the first is a gap in the
-    lookup that a later phase closes, the second is a machine that genuinely
-    cannot be told apart from its sibling.
-    """
-    if rows <= 0:
-        return
-    with _counter_lock:
-        _withheld[provenance] = _withheld.get(provenance, 0) + 1
-        _withheld_rows[provenance] = _withheld_rows.get(provenance, 0) + rows
-    logger.info(
-        "transmission: withheld %d scoped row(s); provenance=%s", rows, provenance
-    )
-
-
-def withheld_snapshot() -> dict[str, dict[str, int]]:
-    """Retrievals and rows withheld so far, per provenance."""
-    with _counter_lock:
-        return {
-            p: {"retrievals": _withheld[p], "rows": _withheld_rows.get(p, 0)}
-            for p in sorted(_withheld)
-        }
-
-
-def reset_withheld() -> None:
-    """Clear the counters. For tests and for a fresh process."""
-    with _counter_lock:
-        _withheld.clear()
-        _withheld_rows.clear()
+# --- Where the cost of the policy is counted ------------------------------
+#
+# Phase 255 counted withheld rows here, in a module-level dict, behind
+# `record_withheld` / `withheld_snapshot` / `reset_withheld`. All three are
+# gone.
+#
+# They could not work. Every CLI command is a fresh process, so the
+# aggregate was zero by the time anyone could read it, and Phase 209B's
+# orphan guard caught the two accessors and recorded them with the note
+# "retire these or wire that route; do not let the entry sit."
+#
+# Phase 256 wired the route: `knowledge/retrieval.py` writes each
+# withholding to the `retrieval_withheld` table (migration 064) and
+# `withheld_report` reads it back, surfaced as `motodiag kb withheld`.
+# That table is the lookup's to-do list -- every machine that lost rows,
+# ordered by what the missing entry costs.
