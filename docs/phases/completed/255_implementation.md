@@ -526,10 +526,17 @@ is the accepted cost of never guessing, it is attributed by the
 withheld-rows counter rather than invisible, and the sourced-coverage phase
 is what closes it.
 
-**No live vehicle regresses.** The operator's `vehicles` table holds 10
-machines across 5 of the 7 makes — Honda CB500, CBR954RR, cbrf4i; Yamaha
-MT07, YZF-R1 — and every one of them correctly *loses* CVT rows it should
-never have had. The exposure is entirely future: whatever a user adds next,
+**No live vehicle regresses.** The operator's `vehicles` table holds **10
+machines across 6 makes**. **Five** of them are Honda or Yamaha — CB500,
+CBR954RR, cbrf4i, MT07, YZF-R1 — and those are the only five that ever
+retrieved the CVT layer, because those are the only two of the seven marques
+named in the Phase 254 rows. Each of the five correctly *loses* rows it
+should never have had. The other five — a Harley-Davidson Road King, a KTM
+390, a Kawasaki Ninja ZX-10R and two Suzukis — never retrieved them at all,
+for the same reason the Ninja 400 control returns zero.
+
+*(Both "five" and "ten" appear in earlier write-ups of this phase without
+saying which is which. Ten is the table; five is the affected subset.)* The exposure is entirely future: whatever a user adds next,
 which is why the mobile transmission field moved up to the phase
 immediately after 255B.
 
