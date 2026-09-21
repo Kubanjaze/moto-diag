@@ -3462,3 +3462,58 @@ Two guards were too blunt on their first run, both in the way 251 recorded: one
 banned a phrase that appeared inside its own prohibition, the other selected
 rows on a string that also matches a regulator component field. Both were
 rewritten to test the property rather than the token.
+
+
+## Phase 253 — Yamaha's scooters and the Taiwanese makers
+
+**2026-09-21.** Fourteen rows, corpus 1019 → 1033, three new marques, Yamaha's
+model pool 23 → 46. Regression 7,665 passed, 0 failed, 36:56.
+
+Step 0 opened on a joke the corpus plays on anyone who trusts a substring.
+Searching for `SYM` returns 117 rows and every one is *symptom* or *system*;
+`Genuine` returns 60 and every one is *genuine part*. 252 met this once, as
+*grommet*. Three in one phase is not coincidence — it is what happens when
+marque names are ordinary words, and it turned the opening question from a
+content question into a safety one: does adding makes literally named `SYM`
+and `Genuine` corrupt retrieval for the whole corpus? Measured on a copy
+before anything was written. It does not. That answer cost one script and is
+now evidence rather than hope, and the same check runs against the shipped
+rows.
+
+What this phase will be remembered for is the refuter layer, which overturned
+**one headline claim from each of the three sweeps** — and in two cases the
+sweep had the disproving document in its own hands.
+
+The Yamaha sweep reported that the words *Zuma* and *BWS* appear in none of
+the fourteen manuals it read. *Zuma* is on two covers, and one of those two
+documents is the one the sweep cited for its own belt-interval finding. The
+corrected version is better than the original: naming is **year-dependent**,
+which still argues for keying rows on the model code, and it resolved a
+conflict between two sweeps by anchoring the XC50-to-Vino bridge in the 2007
+manual — the same model year as the connecting-rod campaign that names only
+the code.
+
+The Taiwanese sweep concluded that SYM's entire statement about its Honda
+relationship is one vague clause with no dates or models. It is, on SYM's
+corporate site. On SYM's **US** site it is a year, the relationship type and
+two named cars. The sweep looked at one end of the company and generalised to
+the whole of it.
+
+The third sweep searched twenty-one manuals for MIL, DTC, fault code and two
+other standard terms, found zero of each, and concluded these makers print no
+fault codes. They print them under their own words — *Fi error code
+indicator*, *Engine Warning Indicator*, *EFi Trouble Indicator*. The zero was
+real and the conclusion was not. And one of those twenty-one files has no
+extractable text on forty-seven of its fifty-seven pages, so its contribution
+to every count was never evidence of anything.
+
+That last one is the lesson worth carrying. A scoped zero is only as good as
+the vocabulary it searched and the documents it could actually read, and both
+halves have to be stated. The refuter ran positive controls through the same
+path, which is what made its own zeros trustworthy.
+
+One smaller thing became a memory rather than a note, because it has now
+happened in three consecutive phases: a guard that bans a string fires on the
+honest row written to correct that string, because such a row has to name the
+error in order to disclaim it. This time one of the two blunt guards
+contradicted a sibling assertion twelve lines away in the same file.

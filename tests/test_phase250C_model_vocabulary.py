@@ -52,14 +52,15 @@ BEFORE = {
 #: already complete, so they are the control group: their pools must not
 #: move at all *from a change to the derivation*.
 #:
-#: Honda's number moved 27 -> 46 at Phase 252, and not because the
-#: derivation changed: 252 added thirteen rows naming the Ruckus, the
-#: Metropolitan, the Grom, the PCX and their siblings, machines the corpus
-#: had never carried. The other three are untouched by that phase and still
-#: pin the derivation exactly, which is what this test is for. When a
-#: content phase moves one of these, move the number and say which phase
-#: and why — do not relax the equality, because the equality is the guard.
-UNCHANGED = {"Honda": 46, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 23}
+#: Honda's number moved 27 -> 46 at Phase 252, and Yamaha's 23 -> 46 at
+#: Phase 253, neither because the derivation changed: 252 added thirteen
+#: rows naming the Ruckus, the Metropolitan, the Grom and the PCX, and 253
+#: added fourteen naming the Zuma, the Vino and the Taiwanese makers'
+#: machines. Kawasaki and Suzuki are untouched by both and still pin the
+#: derivation exactly, which is what this test is for. When a content phase
+#: moves one of these, move the number and say which phase and why — do not
+#: relax the equality, because the equality is the guard.
+UNCHANGED = {"Honda": 46, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 46}
 
 #: Zero writes four designations with a slash in the name itself.
 COMPOUND = ("SR/F", "SR/S", "DSR/X")
@@ -125,7 +126,8 @@ class TestTheVocabularyIsKeyedByMarque:
         raw-key and marque-key are the same thing for them. If one of these
         moves without a content phase behind it, the derivation changed
         something it had no business changing. See UNCHANGED for Honda's
-        move at Phase 252, which had a content phase behind it."""
+        move at Phase 252 and Yamaha's at Phase 253, both of which had a
+        content phase behind them."""
         assert len(known_models(marque, db_path=corpus)) == count
 
 
