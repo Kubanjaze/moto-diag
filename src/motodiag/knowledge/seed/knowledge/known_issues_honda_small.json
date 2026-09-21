@@ -1,0 +1,359 @@
+[
+  {
+    "title": "Honda's two 50 cm3 scooters are opposite machines — the Ruckus is carburetted through 2025 and the Metropolitan is fuel-injected",
+    "description": "They are the same displacement, the same dealer and the same era, and almost nothing transfers between them. The Ruckus owner's manuals 31GGA720 (2022), 31GJP600 (2024) and 31GJP610 (2025) say 'The exhaust emission control system consists of appropriate carburetor settings, and no adjustment should be made except idle speed adjustment' (31GJP610 p.85), and 31GJP610 p.89 carries a whole 'High Altitude Carburetor Adjustment' section. Across those manuals plus 31GGA6300 (2012), the strings PGM-FI, fuel injection, injector and throttle body return zero hits and carburetor returns eight per document. The Metropolitan is the reverse: 31GJB640 (2020) p.111 says 'The PGM-FI (programmed fuel injection) system uses sequential multiport fuel injection', carburetor returns zero across 31GJB640, 31GJB660, 31GJB670, 31GJB680 and 31GJB690, and a malfunction indicator lamp is described in all five while none of the four Ruckus manuals mentions one. The service figures diverge with the fuelling, and the comparison below is between the current editions of each machine rather than across the model's whole history: spark plug CR8EH-9 against CPR8EA-9; oil JASO T 903 standard MA with Pro Honda GN4 against standard MB with Pro Honda HP4M; tyre pressure 25 psi (175 kPa) front and rear against 18 psi (125 kPa) front and 29 psi (200 kPa) rear; main fuse 20 A against 25 A; battery YTZ7S 12 V-6 Ah against GTZ5S 12 V-3.5 Ah; final reduction 13.708 against 12.321. The Ruckus idle is set with a throttle stop screw and the Metropolitan's is printed '(non-adjustable)', though both specify 2,000 +/- 100 rpm. Two cautions on names. The Metropolitan is sold in Canada as the Giorno from model year 2024 — the covers of 31GJB670, 31GJB680 and 31GJB690 read 'METROPOLITAN / GIORNO' and 31GJB670 p.107 lists a 'Canada 2024 Giorno Service Manual' — so a search on Metropolitan alone misses the Canadian documents. And NPS50 appears only in the 2012 and 2022 Ruckus manuals; it returns zero hits in 31GJP600 and 31GJP610, so a search on the model code misses the current books. One limit on that contrast: the earlier CHF50-generation Metropolitan specified CR8EH-9, the same plug the Ruckus uses, so the difference belongs to these editions and is not a permanent split between the two machines.",
+    "make": "Honda",
+    "model": "Ruckus, NPS50, Metropolitan, NCW50, Giorno",
+    "year_start": 2002,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "ruckus fuel injection",
+      "metropolitan carburetor",
+      "50cc scooter spark plug",
+      "is the ruckus injected",
+      "giorno metropolitan",
+      "scooter oil grade"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Assuming two 50 cm3 scooters from one maker share a fuel system",
+      "Carrying a plug, oil grade or tyre pressure from one machine to the other",
+      "Searching only 'Metropolitan' and missing the Canadian Giorno documents"
+    ],
+    "fix_procedure": "1. Establish which machine is in front of you before quoting any figure — the Ruckus is carburetted and the Metropolitan is injected, and that governs everything downstream. 2. On a Ruckus there is no malfunction indicator lamp to read in the owner's manual and no fuel-injection fault to chase; idle is adjusted at the throttle stop screw. 3. On a Metropolitan the lamp is real and the owner's manual sends it to a dealer; the idle speed is not adjustable. 4. Never carry the plug, the JASO oil grade, the tyre pressures, the fuse or the battery between the current machines — and check the edition before applying the contrast backwards, because the CHF50-generation Metropolitan used the Ruckus's plug. 5. For a Canadian machine of model year 2024 or later, look for the Giorno documents as well.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "What changed between Ruckus editions — two separate oil-spec changes, and a caster figure that looks changed and is not",
+    "description": "Honda revised the Ruckus owner's manual quietly, and a technician comparing editions can read both a change that happened and one that did not. The engine-oil requirement moved twice, not once: 31GGA6300 (2012) p.105 says 'SG or higher except oils labeled as energy conserving on the circular API service label'; 31GGA720 (2022) p.99 adds the words 'or resource conserving'; and 31GJP600 (2024) p.99 with 31GJP610 (2025) p.100 then raise the classification to 'SJ or higher'. Viscosity SAE 10W-30 and JASO T 903 standard MA are unchanged throughout. The same two-step happened on the Metropolitan, one edition later: SG through 31GJB640 (2020) and SJ from 31GJB660 (2023). The primary reduction is the one figure Honda's own Ruckus manuals print two ways — 'V-matic (2.8:1 ~ 0.86:1)' in 31GGA6300 p.104 against 'V-matic (2.85:1 ~ 0.86:1)' in 31GJP610 p.99 — with bore, stroke and compression ratio identical across the two, so this is a printed-figure difference and not a confirmable specification change. Against that, the caster reads '26 degrees 30 minutes' in the 2012 and 2022 manuals and '26.5 degrees' in the 2024 and 2025 manuals: the same angle in two notations, which any comparison by text would report as a change. The Ruckus spark plug is unchanged from 2012 to 2025 and is specified in three heat ranges by use — CR8EH-9 (NGK) standard, CR7EH-9 for cold climate, CR9EH-9 for high speed riding — gapped 0.031 to 0.035 in (0.80 to 0.90 mm). The 2012 manual also prints 'Type AF58' and a minimum tread depth of 0.03 in (0.8 mm); both were dropped from 2022 onward. Every figure here was read from Honda's own CDN copies, not from a mirror.",
+    "make": "Honda",
+    "model": "Ruckus, NPS50, Metropolitan, NCW50, Giorno",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "ruckus oil specification",
+      "which oil for a ruckus",
+      "scooter spark plug heat range",
+      "ruckus caster angle",
+      "manual says different spec"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Comparing two manual editions without checking whether the notation changed rather than the value",
+      "Quoting an SG oil requirement from an older edition on a current machine",
+      "Treating 26 degrees 30 minutes and 26.5 degrees as two different angles"
+    ],
+    "fix_procedure": "1. Quote the oil classification from the edition that matches the machine: SG for 2012 and 2022 Ruckus, SJ for 2024 and 2025; SG through 2020 Metropolitan and SJ from 2023. 2. Honda excludes energy-conserving oils in every edition and adds resource-conserving from 2022 — read the exclusion, not only the letter grade. 3. Choose the plug heat range by use, not by preference: CR8EH-9 standard, CR7EH-9 cold climate, CR9EH-9 high speed. 4. Before reporting a specification change between editions, check whether the units or notation changed — 26 degrees 30 minutes and 26.5 degrees are the same angle. 5. Treat the 2.8 against 2.85 primary reduction as an unresolved printed difference, not as a revision.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "A Grom fault above 1800 rpm shows as a steady lamp, not a blink code — and the stored-code pre-flash lasts 0.3 seconds",
+    "description": "The Honda GROM125 service manual, which identifies itself on its 'HOW TO USE THIS MANUAL' page as 'This manual describes the service procedures for the GROM125' over the imprint 'Honda Motor Co., Ltd. SERVICE PUBLICATION OFFICE, Date of Issue: August., 2013', states on page 4-6: 'The MIL will start blinking when the ignition switch is \"ON\" or engine revs are below 1800 min-1 (rpm). In any other conditions, the MIL will illuminate and stay on.' A technician who revs the engine while watching the lamp therefore sees a steady light and concludes there is no code, when the code is present and simply not being blinked. The encoding is on the same page: 'The long blinking lasts for 1.3 seconds, the short blinking lasts for 0.3 seconds. One long blink is the equivalent to ten short blinks', with Honda's worked example that two long blinks followed by five short blinks is code 25. Page 4-7 adds the discriminator between a stored and a current fault: 'If the ECM has stored DTC, the MIL will illuminate 0.3 seconds and go off, then start blinking as its DTC.' Reading stored codes needs the data link connector under the seat, shorted with Honda's SCS connector 070PZ-ZY30100, blue to green/black. The manual contradicts itself about reaching that connector: pages 4-7 and 4-24 both say to remove the seat, while page 4-8 step 2 says to remove the front body cover, and the photographs show the same connector beside the battery. Erasing is a six-step procedure with a timing window that fails silently: 'The DLC must be jumped while the MIL lights. If not, the MIL will go off and stay on (unsuccessful pattern). In that case, turn the ignition switch to \"OFF\" and try again from step 3', and the short connector must be reconnected 'while the MIL stays ON about 5 seconds (reset receiving pattern)', and 'the self-diagnostic memory cannot be erased if the ignition switch is turned \"OFF\" before the MIL starts blinking.' A separate ECM initializing procedure on page 4-24 has its own success pattern, one short blink repeating. No page read states a pin count for the connector, so none is given here. Read from a third-party mirror copy: Honda's own CDN returns HTTP 403 to every non-browser client, and Honda does not publish service manuals free at all.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "high",
+    "symptoms": [
+      "grom fi light",
+      "grom check engine light",
+      "reading grom codes",
+      "fi light stays on",
+      "clearing a grom code",
+      "blink code will not clear"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Revving the engine while watching the lamp, so a fault above 1800 rpm reads as no fault",
+      "Jumping the connector outside the window in which the lamp is lit",
+      "Turning the ignition off before the lamp starts blinking, which abandons the erase"
+    ],
+    "fix_procedure": "1. Read the lamp with the ignition on or the engine below 1800 rpm; above that a real fault shows as a steady lamp. 2. A 0.3 second illumination before blinking means the code is stored rather than current. 3. Count long blinks as tens and short blinks as ones: 1.3 seconds long, 0.3 seconds short. 4. To read stored codes, reach the data link connector under the seat and short it with SCS connector 070PZ-ZY30100, blue to green/black. 5. To erase, jump the connector while the lamp is lit, then reconnect the short connector while the lamp stays on for about five seconds; if the lamp goes off and stays on, switch off and restart from step 3. 6. Do not switch the ignition off before the lamp begins blinking or the memory is not cleared.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The eleven codes a GROM125 can show — and the one pair Honda printed inverted",
+    "description": "The GROM125 service manual (self-identified, Date of Issue August 2013) holds its whole fault-code table on one page, 4-9, titled 'DTC INDEX' while the manual's own index calls it 'MIL CODE INDEX'. It contains exactly eleven entries and no more: 7-1 and 7-2 engine oil temperature sensor circuit low and high voltage, with the fail-safe 'Hard start at a low temperature' and a pre-program value of 100 degrees C (212 degrees F); 8-1 and 8-2 throttle position sensor circuit low voltage below 0.3 V and high voltage above 4.93 V, fail-safe 'Poor engine acceleration', pre-program value 0 degrees; 9-1 and 9-2 intake air temperature sensor, 'Engine operates normally', pre-program value 35 degrees C (95 degrees F); 12-1 fuel injector malfunction, 'Engine does not start', with the injector, fuel pump and ignition coil shut down; 21-1 oxygen sensor malfunction, engine operates normally; 33-2 EEPROM malfunction, 'Engine stalls, hard to start, rough idling'; and 54-1 and 54-2 bank angle sensor circuit low voltage below 0.02 V and high voltage above 4.98 V, where the engine operates normally but 'Bank angle sensor does not operate. (The engine keeps running when the vehicle falls.)' One pair is printed inverted. Rows 9-1 and 9-2 read 'low voltage (more than 0.07 V)' and 'high voltage (less than 4.93 V)', the opposite way round from every other pair in the table — 7-1 reads 'low voltage (less than 0.07 V)' and 7-2 'high voltage (more than 4.93 V)'. The page was rendered at seven and fourteen times magnification to settle it: the words are unambiguous, so this is an error in Honda's own table rather than a reading artifact, and 9-1 and 9-2 are the only inverted pair. Two further oddities of the page: its cross-reference column skips from 4-12 to 4-14, and the numbering is a two-part main-and-sub form rather than an SAE P-code, so a generic scan tool's code list does not describe it. Read from a third-party mirror copy: Honda's own CDN returns HTTP 403 to every non-browser client, and Honda does not publish service manuals free at all.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "high",
+    "symptoms": [
+      "grom code 12",
+      "grom code 33",
+      "grom fault code list",
+      "bank angle sensor code",
+      "eeprom code 33",
+      "what does code 7 mean on a grom"
+    ],
+    "dtc_codes": [
+      "7-1",
+      "7-2",
+      "8-1",
+      "8-2",
+      "9-1",
+      "9-2",
+      "12-1",
+      "21-1",
+      "33-2",
+      "54-1",
+      "54-2"
+    ],
+    "causes": [
+      "Reading a two-part Honda MIL code as an SAE P-code",
+      "Taking the 9-1 and 9-2 voltage comparisons at face value from the printed table",
+      "Expecting codes this machine's index does not contain"
+    ],
+    "fix_procedure": "1. Match the code against this machine's own eleven-entry index rather than a generic Honda code list. 2. For 9-1 and 9-2, treat the printed comparison as inverted: read them the way 7-1 and 7-2 are written, low voltage meaning below the threshold. 3. Code 12-1 shuts down the injector, fuel pump and ignition coil, so it presents as a no-start rather than a running fault. 4. Code 33-2 is an EEPROM fault inside the ECM, not a fuel-supply fault, despite presenting as stalling and hard starting. 5. A 54-x bank angle fault leaves the engine running normally and disables the sensor, so the machine will not cut out if it falls. 6. Do not expect a scan tool's generic code table to decode these; they are Honda main-and-sub numbers.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "In model year 2022 the Grom and the Trail 125 ran different engines — and Honda prints three displacements for one bore and stroke",
+    "description": "The miniMOTO machines are widely treated as one engine family, and for one model year at least two of them were not. Honda's own specification releases give the 2022 Grom as '123.9cc air-cooled four-stroke 80 degree single cylinder' with bore and stroke 50.0 mm x 63.1 mm and a compression ratio of 10.0:1, while the 2022 Trail 125 release of the same year gives bore and stroke 52.4 mm x 57.9 mm and a compression ratio of 9.3:1 — the pre-2022 Grom figures. The Trail 125 had adopted 123.9 cm3, 50.0 x 63.1 mm and 10.0:1 by the 2026 release, but still with 'Transmission Manual; 4 speeds', and the model years in between were not read, so the year the change landed is unknown here. Honda states the Monkey did take the new engine — 'equipping the Monkey with the same five-speed engine that has earned rave reviews in the all-new 2022 Grom' — in a July 2021 release, and that is the only fetched document in which Honda says two of these machines share a powerplant. Even so the final drives differ: the 2025 Monkey is 14T/37T, the 2025 Grom 15T/38T, the 2024 Super Cub C125 14T/35T and the 2026 Trail125 14T/38T. Displacement is printed three ways for the same measured engine: 123.9 cm3 for the Grom, 124 cm3 for the Super Cub C125 and 124.9 cm3 for the pre-2022 machines, and the 2022 Grom's figure is lower than the 2020 Grom's although the engine is larger. Two naming traps sit in Honda's own copy. The 2022 Grom features release contains the sentence 'Wheels are a 12-inch cast design, a signature feature of the Grom, but the 2021 model boasts a new five-spoke pattern' while elsewhere saying the machine 'is now coming to the U.S. market for model-year 2022' — US copy reusing text from the global 2021 launch, which is why the five-speed is so often dated a year early. And Honda prints the Trail 125 transmission as 'Semiautomatic; four speeds' in 2022 and 'Manual; 4 speeds' in 2026, so a search on either phrase misses the other machine. Honda's model codes appear only in the 2025 Grom release: Grom ABS (MSX125AS), Grom SP (MSX125SS), Grom (MSX125S).",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125, Monkey 125, Super Cub C125, Trail 125, CT125, Trail125",
+    "year_start": 2013,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "grom trail 125 same engine",
+      "minimoto shared engine",
+      "2022 grom five speed",
+      "grom compression ratio",
+      "monkey 125 engine"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Assuming the miniMOTO machines share one engine because they share a displacement class",
+      "Carrying a Grom specification to a Trail 125 of the same model year",
+      "Dating the five-speed Grom to 2021 from Honda's own reused launch copy"
+    ],
+    "fix_procedure": "1. Check bore, stroke and compression ratio for the specific model and year before treating two miniMOTO machines as the same engine. 2. In model year 2022 a Grom is 50.0 x 63.1 mm at 10.0:1 and a Trail 125 is 52.4 x 57.9 mm at 9.3:1. 3. Treat the Monkey as sharing the 2022 Grom engine only because Honda says so, and still check the final drive, which differs. 4. Do not reconcile 123.9, 124 and 124.9 cm3 into one number; quote whichever document you are citing. 5. For a US Grom, the five-speed is model year 2022 regardless of the 2021 reference inside Honda's own release. 6. Search both 'semiautomatic' and 'manual' when looking for Trail 125 transmission data.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Grom service data that belongs only to the pre-2022 four-speed machine — including a 600-mile service that adjusts valves",
+    "description": "The only Honda service manual reachable for this family is the GROM125 book issued August 2013, and its general specifications on page 1-5 describe the four-speed machine: bore and stroke 52.4 x 57.9 mm (2.06 - 2.28 in), displacement 124.9 cm3, compression ratio 9.3:1, 'Constant mesh, 4 speeds', final reduction 2.266 (34/15), fuel tank 5.5 litres (1.45 US gal), tyres 120/70-12 51L front and 130/70-12 56L rear. Every figure below is scoped to that machine and must not be carried to a 2022 or later Grom, or to a Monkey, Super Cub or Trail 125. Valve clearance is 'IN: 0.10 +/- 0.02 mm (0.004 +/- 0.001 in)' and 'EX: 0.17 +/- 0.02 mm (0.007 +/- 0.001 in)', adjusted 'while the engine is cold (below 35 degrees C / 95 degrees F)', lock nut 9.0 N-m (0.9 kgf-m, 6.6 lbf-ft). The positioning step is the one that goes wrong: rotate the crankshaft counterclockwise until the T mark on the flywheel aligns with the index notch, then confirm top dead centre on the compression stroke by checking rocker-arm slack, because 'If there is no slack, turn the crankshaft again until the correct position is obtained' — skip that and the engine is 360 degrees out. Engine oil is 0.9 litre (0.96 US qt) at draining and 1.1 litres (1.16 US qt) at disassembly, drain bolt 24 N-m (2.4 kgf-m, 18 lbf-ft), oil 'API service classification: SG or higher (except oils labeled as energy conserving)', JASO T903 standard MA, SAE 10W-30. Spark plug CPR6EA-9 (NGK) or U20EPR9 (DENSO), gap 0.8 to 0.9 mm (0.03 - 0.04 in), torque 16 N-m (1.6 kgf-m, 12 lbf-ft). Drive chain slack is 30 to 40 mm (1.2 - 1.6 in) with a service limit of 518 mm (20.4 in) measured over 41 pins, and a notice that 'Excessive chain slack, 50 mm or more, may damage the frame'. The maintenance grid on page 3-3 runs four columns only — 0.6, 2.5, 5 and 7.5 thousand miles (1, 4, 8 and 12 thousand km) — and two items sit outside it entirely: the drive chain every 300 mi (500 km) and the air cleaner every 10,000 mi (16,000 km). Checked against the column centres under magnification, valve clearance carries an inspect mark in all four columns including the 600-mile one, while the spark plug carries nothing at 600 miles: the first service adjusts the valves and does not touch the plug. The manual instructs a cold tyre pressure check on page 3-14 but prints no pressure value anywhere, and page 1-5 gives only size and load rating. Read from a third-party mirror copy: Honda's own CDN returns HTTP 403 to every non-browser client, and Honda does not publish service manuals free at all.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "medium",
+    "symptoms": [
+      "grom valve clearance",
+      "grom first service",
+      "grom oil capacity",
+      "grom chain slack",
+      "600 mile service",
+      "grom spark plug"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Applying four-speed Grom figures to a 2022 or later five-speed machine",
+      "Setting valves at top dead centre on the exhaust stroke because the rocker-arm slack check was skipped",
+      "Treating the 600-mile service as an oil change only"
+    ],
+    "fix_procedure": "1. Confirm the machine is a pre-2022 four-speed Grom before using any figure here. 2. Set valves cold, below 35 degrees C, to 0.10 mm intake and 0.17 mm exhaust. 3. Align the T mark with the index notch, then confirm the compression stroke by rocker-arm slack before measuring; if there is no slack, turn another full revolution. 4. Include the valve clearance in the 600-mile service; the spark plug is not due until 2,500 miles. 5. Service the drive chain every 300 miles, which is far shorter than any column in the grid. 6. Take the tyre pressure from a document that prints one, because this manual does not.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "The PCX changed displacement three times in five years, and a 2022 manual puts PCX150 on the cover of a 157 cm3 machine",
+    "description": "Keying PCX service data on the name printed on the cover will cross-contaminate three generations that take different parts. Honda's owner's manual 31K36A00 gives the 2015 PCX150 as 'Displacement 9.3 cu-in (153 cm3)' with bore and stroke 58.0 x 57.9 mm. Manual 31K97A10 gives the 2020 machine as 9.1 cu-in (149 cm3), 57.3 x 57.9 mm, compression 10.6:1 — and that manual alone footnotes the field with 'Displacement less than 9.2 cu-in (150 cm3) may have highway operating restrictions depending on state laws', so the 149 figure is a deliberate regulatory artifact rather than a rounding difference. Manual 31K1ZA10 extracts its first page as 'Owner's Manual 2022 PCX150/A' while its specification table reads 'Displacement 9.6 cu-in (157 cm3)', bore and stroke 60.0 x 55.5 mm and compression ratio 12.0:1 — the post-2021 engine under the older name. Honda's 2021 press release states the change as a delta, a bore up from 57.3 mm to 60.0 and a stroke down from 57.9 to 55.5, and says 'For 2021, it has been renamed as the PCX.' Three generations, three spark plugs: CPR7EA-9 (NGK) for 2015, MR8K-9 (NGK) for 2020, and LMAR8L-9 (NGK) for 2022 through 2025 — so a comparison drawn only between the oldest and newest manual mis-serves every 2020 and 2021 machine. Tyre sizes moved too, 90/90-14 front and 100/90-14 rear in 2015 against 110/70-14 and 130/70-13 in 2025. The third generation introduced a V-BELT service indicator: 'The V-BELT indicator appears for the first time when the distance traveled reaches 8,000 miles (12,000 km)', and after a reset it 'comes on again after another 8,000 miles (12,000 km) are ridden' — word for word the same in 31K1ZA10 and 31K1ZA40, and absent from the 2015 and 2020 manuals entirely. A separate oil change indicator first appears at 600 miles (1,000 km) and returns every 4,000 miles (6,400 km). The ABS lamp carries two different speed thresholds for two different conditions and they must not be conflated: 'Indicator does not go off at speeds above 6 mph (10 km/h)' describes a fault, while a lamp flashing because the rear wheel was turned off the ground clears on an ignition cycle and goes off 'after your speed reaches 19 mph (30 km/h)'. Honda does not use the name PCX160 in any of these documents. All were read from Honda's own CDN.",
+    "make": "Honda",
+    "model": "PCX, PCX125, PCX150, PCX 150, PCX160",
+    "year_start": 2015,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "pcx spark plug",
+      "pcx belt indicator",
+      "pcx displacement",
+      "v-belt light on",
+      "pcx abs light",
+      "which pcx do i have"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Identifying a PCX by the name on its owner's manual cover rather than its specification table",
+      "Comparing only the oldest and newest manuals and missing the 2020 generation",
+      "Reading the two ABS lamp speed thresholds as one rule"
+    ],
+    "fix_procedure": "1. Identify a PCX by the displacement in its specification table, not by the cover name: 153, 149 or 157 cm3. 2. Select the spark plug by generation — CPR7EA-9 for 2015, MR8K-9 for 2020, LMAR8L-9 from 2022. 3. Treat the V-BELT indicator as a third-generation feature; it does not exist on the 2015 or 2020 machines. 4. The belt indicator is an 8,000 mile counter that must be reset after service, not a fault. 5. Distinguish the two ABS lamp conditions: a lamp still lit above 6 mph is a fault, while a lamp lit after the rear wheel was spun off the ground clears by 19 mph after an ignition cycle. 6. Do not search for a PCX160; Honda's documents do not use that name.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Honda's current owner's manuals stopped carrying torque figures and fault-code procedures — and say where they went",
+    "description": "Across nine owner's manuals read from Honda's own CDN, the current editions are thinner than their predecessors in ways a technician discovers only when the figure is needed. A torque specifications table survives in exactly two of them: 31GGA6300 (2012 Ruckus) p.105 with two rows, drain bolt and oil plug, and 31GJB640 (2020 Metropolitan) p.122 with three, adding the air cleaner housing cover screw. In 31GGA720, 31GJP600, 31GJP610, 31GJB660, 31GJB670, 31GJB680 and 31GJB690 the string 'lbf' returns zero, 'N-m' as printed returns zero and the whole-word 'Torque' returns zero; the only kgf remaining is kgf/cm2 in a tyre pressure. The Ruckus schedule shows the shape of the gap plainly: page 38 of all four Ruckus manuals prints 'Valve Clearance Every 15,000 mi (24,000 km)' and its refer-to-page cell reads a dash, and no Ruckus owner's manual prints a clearance figure at all. The same is true of fault-code work. Across six PCX owner's manuals — 31K36A00, 31K97A10, 31K1ZA10, 31K1ZA20, 31K1ZA30 and 31K1ZA40 — the strings DLC, data link, self-diagnos and DTC each return zero, and the counts were validated by running positive controls through the identical search, which found 'Honda' 60 to 73 times per document and 'V-BELT' 25 times in each 2022-onward manual. The five Metropolitan manuals return zero for DLC, data link, blink and trouble code as well, and 31GJB680 p.82 simply says 'If the indicator comes on while riding, you may have a serious problem with the PGM-FI system. Reduce speed and have your vehicle inspected by your dealer.' Honda names the documents that do carry this material: the 2025 PCX manual points to a '2025 PCX Service Manual' and a 'Common Service Manual (61CSM00)' available 'from your Honda dealer or Helm, Inc.', 31GJP600 p.90 points to a single '2003-2024 Ruckus Service Manual' covering twenty-two model years, and 31GJB640 p.116 lists '61GJB04 2020 NCW50 Service Manual'. None of these service manuals could be obtained, so no valve clearance, torque table or fault-code procedure for the Ruckus, Metropolitan or PCX appears in this corpus — that is a gap, not a finding that Honda publishes none. One caution on Honda's own cross-references: the 2012 Ruckus manual's table prints 31GGA630 for a document whose internal code is 31GGA6300, so those tables are not reliable part-number sources.",
+    "make": "Honda",
+    "model": "Ruckus, NPS50, Metropolitan, NCW50, Giorno, PCX, PCX125, PCX150, PCX 150",
+    "year_start": 2012,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "scooter torque specs",
+      "ruckus valve clearance figure",
+      "pcx diagnostic connector",
+      "where is the dlc",
+      "owner manual has no torque",
+      "honda service manual"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Expecting a current owner's manual to carry the torque or clearance figure an older edition did",
+      "Concluding from an owner's manual that a machine has no diagnostic connector",
+      "Citing a part number from Honda's own cross-reference table"
+    ],
+    "fix_procedure": "1. For torque or valve-clearance figures on these machines, go to the service manual; the current owner's manuals do not carry them. 2. Do not read the absence of DLC, DTC or self-diagnosis wording in an owner's manual as evidence that the machine has no diagnostic connector — the owner's manual is not where Honda puts it. 3. The Ruckus valve interval is 15,000 mi (24,000 km) and the figure to set it to is not in the owner's manual. 4. Source service manuals through a Honda dealer or Helm, Inc.; Honda publishes none of them free. 5. Verify a part number inside the document itself rather than from another manual's cross-reference table.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "A completed Grom fuel-pump recall is not proof of a repaired machine — 16V661000 re-opens some bikes already fixed under 14V672000",
+    "description": "Campaign 14V672000, filed October 2014, covers 'certain model year 2014 GROM125 motorcycles manufactured June 12, 2013, to September 24, 2014' alongside the 2014 Forza NSS300, for a defect the filing describes as 'The resin bracket inside the fuel pump of the affected motorcycles may swell and cause the pump impeller to seize.' The remedy was that 'dealers will replace the fuel pump with an updated fuel pump, free of charge.' Honda's own number for it was JL2. Campaign 16V661000, filed September 2016 under Honda numbers KC3 and KC4, replaces the pump again 'with one that uses a metal bracket internally' and carries the sentence that matters: 'Note: This recall supersedes recall 14V-672. Some, but not all, motorcycles that were remedied under that campaign are affected by this recall as well'. Its scope is also wider — 'certain model year 2014-2015 Grom 125 motorcycles manufactured June 12, 2013, to September 8, 2015' — so a 2015 Grom falls under the second campaign and never fell under the first. The practical consequence is that a completion record against 14V672000 does not establish that the machine in front of you has a metal-bracket pump, and neither campaign's paperwork tells an owner which bracket they received. This is a different mechanism from the other repeat campaigns in this corpus, and the distinction is worth holding: it is not a remedy that failed in service, and not a second defect in a replacement part discovered later, but a first remedy that was only partly effective across the population, leaving some already-repaired machines still affected. Both campaigns were read from the US regulator's own campaign records. The affected counts as filed were 10,076 units for the first and 17,643 for the second, across all models named in each.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125",
+    "year_start": 2013,
+    "year_end": 2016,
+    "severity": "high",
+    "symptoms": [
+      "grom fuel pump",
+      "grom will not start",
+      "fuel pump recall",
+      "grom stalls",
+      "recall already done"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Treating a completed 14V672000 record as evidence the fuel pump is the metal-bracket type",
+      "Checking only the first campaign for a 2014 machine",
+      "Assuming a 2015 Grom was outside the fuel-pump recalls because it was outside the first one"
+    ],
+    "fix_procedure": "1. On any 2014 or 2015 Grom with a fuel-delivery complaint, check the machine against 16V661000 specifically, not only 14V672000. 2. A completed record against the 2014 campaign does not close the 2016 one; the later campaign explicitly re-opens some machines already remedied. 3. For a 2015 machine, the first campaign never applied and the second does. 4. Confirm the current campaign status by VIN through a Honda dealer or the regulator's own lookup rather than from service history alone. 5. The failure mode is a swelling resin bracket seizing the pump impeller, so it presents as a no-start or a stall rather than as a gradual fault.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "The Metropolitan transmission campaign covers ten model years, and the regulator filing names the sounds before the failure",
+    "description": "Campaign 24V825000, submitted by the manufacturer in November 2024 under recall number KR0, covers the '2016-2025 Honda Metropolitan Scooter' with production dates from December 15, 2015 to September 2, 2024 — ten model years, 23,483 units potentially involved, with an estimated percentage with the defect of one per cent. The manufacturer's own Part 573 filing describes the defect as 'Due to poor sealing of the transmission case to the left crankcase mating surfaces, transmission oil may leak.' The regulator's separate summary of the same campaign puts it differently — 'An improper seal between the transmission case and left-side crankcase may allow transmission fluid to leak' — so the two records are two documents describing one defect, not a discrepancy. The consequence as filed is that 'A transmission fluid leak can cause the driveshaft bearings to fail, causing a sudden loss of drive power', and the remedy is that 'The dealer will inspect and repair the transmission case as necessary, free of charge.' Owner letters were mailed December 30, 2024. The most useful sentence for diagnosis appears only in the manufacturer's filing, under its heading for any warning that can occur, and not in the regulator's summary: 'Abnormal sounds coming from the rear wheel area and/or unintended deceleration while the vehicle is ridden.' It is quoted here from the filing, which is where it exists. The filing names the components involved with their part numbers, Crank Case Comp L 11200-GGZ-J01 and Case Comp Mission 21200-GGZ-J01. One sequence is worth recording without a claim attached to it: Honda's owner's manuals for this machine gained a transmission oil capacity row — 0.11 US qt (0.10 L) at draining and at disassembly — starting with the 2025 edition 31GJB680 at page 117 and continuing in 31GJB690 at page 118, where the 2020, 2023 and 2024 editions have no such row. No document read states any connection between that editorial change and this campaign, and none is asserted here.",
+    "make": "Honda",
+    "model": "Metropolitan, NCW50, Giorno",
+    "year_start": 2016,
+    "year_end": 2025,
+    "severity": "high",
+    "symptoms": [
+      "metropolitan noise from rear",
+      "scooter loses drive",
+      "transmission oil leak",
+      "metropolitan recall",
+      "grinding from rear wheel"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Poor sealing between the transmission case and the left crankcase mating surfaces",
+      "Driveshaft bearing failure following the fluid loss",
+      "Dismissing rear-end noise on a scooter with no owner-serviceable transmission oil level"
+    ],
+    "fix_procedure": "1. On any 2016 to 2025 Metropolitan reporting noise from the rear wheel area or unintended deceleration, check this campaign by VIN before diagnosing further. 2. Treat abnormal rear-area sound as the documented early warning, not as a secondary symptom. 3. The repair is an inspection and repair of the transmission case at a dealer under the campaign, at no cost. 4. Do not rely on an owner noticing a low transmission oil level; the capacity is only 0.11 US qt and the owner's manuals before 2025 do not print it at all. 5. Canadian machines from 2024 are badged Giorno and fall under the same description.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "Two miniMOTO campaigns that are easy to misread — one is a broken weld, the other is a reflector that is not bright enough",
+    "description": "Campaign 21V804000, filed October 2021 under Honda number KM8, covers 'certain 2021 Trail 125 (CT125A) motorcycles' — 2,181 units — for a defect stated as 'The gearshift pedal arm weld may fail, possibly resulting in the pedal breaking off the motorcycle', with the consequence that 'A broken or detached gearshift pedal can increase the risk of a crash or injury' and a remedy replacing the gearshift pedal assembly free of charge. Owner letters were mailed December 10, 2021. Campaign 21V382000, filed May 2021 under Honda number KM3, is not a defect campaign at all. Its component is exterior lighting and its finding is that 'The rear reflector lens may not reflect brightly enough. As such, these vehicles fail to comply with the requirements of Federal Motor Vehicle Safety Standard (FMVSS) number 108' — a compliance failure, remedied by replacing the rear reflector, across 28,528 units of many models. Its model coverage is not uniform and reading it as a blanket 2020-2021 campaign would be wrong: in the regulator's own model rows, GROM125 and CRF250L appear for 2020 only, CB500F and CRF300L for 2021 only, while C125 and MONKEY125 appear for both years. Two naming traps follow from these records. The regulator's summary prose for 21V382000 writes GROM and Monkey while its queryable model field writes GROM125 and MONKEY125, so a lookup keyed on the prose finds nothing. And the Trail 125 appears under three spellings in one campaign — the retrievable model string is CT125, the prose says Trail 125, and the machine itself is a CT125A. Both campaigns were read from the regulator's own campaign records; the manufacturer's filing for 21V382000 could not be retrieved, so its compliance status rests on the regulator record alone.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Monkey 125, Super Cub C125, Trail 125, CT125",
+    "year_start": 2020,
+    "year_end": 2021,
+    "severity": "medium",
+    "symptoms": [
+      "trail 125 gear lever",
+      "gearshift pedal broke",
+      "minimoto recall",
+      "reflector recall",
+      "grom recall 2020"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A gearshift pedal arm weld that may fail",
+      "A rear reflector lens that does not meet the federal brightness standard",
+      "Searching a recall record with the model name as the prose writes it rather than as the record keys it"
+    ],
+    "fix_procedure": "1. On a 2021 Trail 125 with a loose, bent or missing gearshift pedal, check 21V804000 before treating it as impact damage. 2. Do not present 21V382000 as a safety defect; it is a compliance failure on a reflector, remedied by replacing the reflector. 3. Check the specific model year against 21V382000 rather than assuming both 2020 and 2021 are covered — a Grom is covered for 2020 only. 4. When querying these records, use the keyed model strings GROM125, MONKEY125, C125 and CT125, not the prose names. 5. A Trail 125 may appear as CT125 or CT125A depending on the field.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "What the US regulator record shows for Honda's small machines — a floor, and a lookup that cannot tell silence from absence",
+    "description": "This entry records what could be retrieved and, as importantly, what retrieval cannot establish. The campaigns found for these machines are 14V672000 and 16V661000 for the Grom, 21V382000 for the Grom, Monkey 125 and Super Cub C125, 21V804000 for the Trail 125, 24V825000 for the Metropolitan, and 06V270000 for the 2006 CHF50. That list is a floor. It is not a census and no completeness claim is made for it. The 2006 CHF50 campaign is included here because it would be easy to mis-ship as a mechanical defect and it is not one: its component field reads equipment, owners or service manual, its defect is that 'THE OWNER'S MANUALS CONTAIN INCORRECT CONTACT INFORMATION FOR THE NATIONAL HIGHWAY TRAFFIC SAFETY ADMINISTRATION'S VEHICLE SAFETY HOTLINE', and its remedy is a mailed postcard rather than a repair. Nothing was retrieved for the Ruckus. That is not the same as the Ruckus having no campaigns: 120 lookups covering the strings NPS50, RUCKUS, NPS50S, NPS 50 and RUCKUS 50 across model years 2003 to 2026 returned no campaign at all, and the machine should be treated as unverified rather than clear. The reason a stronger statement cannot be made is worth recording, because the same trap would catch any future sync. The regulator's per-vehicle recall lookup returns an HTTP 400 status carrying a body that reads 'Results returned successfully' with zero results, and it does this for an ordinary empty year as readily as for a name it does not recognise. A recognised model string demonstrates it: the same string returns campaigns for some model years and the 400-with-success body for others. So nothing in the response distinguishes 'no campaigns exist' from 'this query found nothing' and a client cannot use the status to validate a model name. A second endpoint that lists models per make and year looks like a recall index and is not one: the parameter that appears to filter by issue type is inert, returning byte-identical lists for recalls, complaints, investigations and for a meaningless value, and it both omits models that do have campaigns and includes models that have only complaints. A model appearing there proves nothing about recalls. The bulk file that would allow a genuine census is no longer served, so completeness is not available by any route attempted.",
+    "make": "Honda",
+    "model": "Ruckus, NPS50, Metropolitan, NCW50, Giorno, CHF50, Grom, GROM125, Monkey 125, Super Cub C125, Trail 125, CT125, PCX, PCX150",
+    "year_start": 2002,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "honda scooter recall",
+      "ruckus recall",
+      "is my scooter recalled",
+      "recall lookup",
+      "chf50 recall"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Reading an empty recall lookup as proof that a machine has no campaigns",
+      "Treating a model listing endpoint as a recall index",
+      "Mis-shipping a documentation campaign as a mechanical defect"
+    ],
+    "fix_procedure": "1. Treat this campaign list as a floor for these machines and confirm any individual machine by VIN through a dealer or the regulator's own lookup. 2. Do not tell an owner a Ruckus has no recalls; the correct statement is that none was retrievable. 3. Recognise 06V270000 as an owner's-manual correction, not a defect. 4. When querying the regulator's per-vehicle endpoint, do not read a 400 status as an error or as a bad model name — it is returned for empty results too. 5. Do not use the per-make model listing to decide whether a model has campaigns; it is populated by any safety issue, including complaints alone.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "What Honda's own documents say about modifying a Grom — four acts its noise-emission section presumes to be tampering",
+    "description": "The Grom has the largest modding community of any machine in this corpus, and almost nothing about it is documented by Honda. What Honda does publish sits in the GROM125 service manual (Date of Issue August 2013) and is narrower than it first appears. Page 1-25 carries the heading 'TAMPERING WITH THE NOISE CONTROL SYSTEM IS PROHIBITED: Local law may prohibit the following acts or the causing thereof', followed by 'AMONG THOSE ACTS PRESUMED TO CONSTITUTE TAMPERING ARE THE ACTS LISTED BELOW:' and four items: removal of, or puncturing of the muffler, baffles, header pipes or any other component which conducts exhaust gases; removal of, or puncturing of any part of the intake system; lack of proper maintenance; and removing or disabling any emissions compliance component, or replacing any compliance component with a non-compliant component. That list belongs to the noise emission control system specifically, not to the manual's emissions sections generally, and it is worth reading precisely: the first two items are the two commonest modifications made to this machine. Separately, on the three-way catalytic converter, the manual says 'No adjustment to these systems should be made although periodic inspection of the components is recommended', and its service rules open with 'Parts that do not meet Honda's design specifications may cause damage to the motorcycle' — worded as a damage warning rather than as a warranty term. What is absent matters as much. Across the documents read for this entry, none contains warranty terms, any description of an immobiliser, any engine-control-unit reflashing language, or any bulletin about non-standard parts. The manual's own chapter contents name an ECM initializing procedure, a throttle position sensor reset and an altitude setting, but those pages were not read and nothing is claimed about them. This is a statement about the documents listed here, not about everything Honda publishes. Read from a third-party mirror copy: Honda's own CDN returns HTTP 403 to every non-browser client, and Honda does not publish service manuals free at all.",
+    "make": "Honda",
+    "model": "Grom, GROM125, Grom 125",
+    "year_start": 2014,
+    "year_end": 2021,
+    "severity": "medium",
+    "symptoms": [
+      "grom exhaust swap",
+      "grom intake modification",
+      "grom warranty",
+      "aftermarket exhaust legal",
+      "will a mod void warranty",
+      "grom ecu flash"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Removing or puncturing the muffler, baffles or header pipes",
+      "Removing or puncturing part of the intake system",
+      "Replacing an emissions compliance component with a non-compliant one"
+    ],
+    "fix_procedure": "1. Read the tampering list as what it is — four acts named under the noise emission control system, two of which are the machine's commonest modifications. 2. Do not present that list as a warranty consequence; Honda words its parts rule as a damage warning, not as a warranty term, and no document read here contains warranty terms at all. 3. Treat the catalytic converter as inspect-only; the manual says no adjustment should be made. 4. Where a rider asks about reflashing or an immobiliser, say that the documents read do not cover it rather than inferring from another Honda model. 5. When a modified machine presents a fault, establish which emissions components are still present before reading codes, because the intake and exhaust are the usual changes.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  }
+]
