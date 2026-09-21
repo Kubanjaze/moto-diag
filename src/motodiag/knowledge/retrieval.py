@@ -49,6 +49,35 @@ Purpose = Literal["prompt", "prediction", "search"]
 _RECORDED_PROVENANCE = frozenset({"unknown", "ambiguous"})
 
 
+def candidate_fetch_size(db_path=None) -> int:
+    """How many rows the candidate stage may return: all of them.
+
+    **Not a number.** Phase 256 replaced three chosen limits — 200, 200 and
+    25 — with the corpus count, because every one of them was a pre-filter
+    cap, and a pre-filter cap decides correctness by arithmetic.
+
+    Door 2 is the case that makes it concrete. The `/ask` endpoint fetched
+    twenty-five rows and filtered those. A Gold Wing's transmission-scoped
+    rows start at resolver position 56, so at twenty-five that door could
+    not have leaked them **whatever the filter did** — and it would start
+    leaking the day somebody raised the limit, with no change to the filter
+    and no test failing.
+
+    Measured on a 1,045-row corpus before the change: the worst unfiltered
+    match count across the fixture machines is **165 rows (16%)**, and
+    fetching the whole corpus costs **17.6 ms against 17.6 ms** for the
+    capped fetch. The caps were doing no work.
+
+    Caps still exist, and still should — the prompt takes twelve, the
+    scorer takes five. They now apply **after** the filter, where a cap
+    only decides presentation.
+    """
+    from motodiag.core.database import get_connection
+
+    with get_connection(db_path) as conn:
+        return int(conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]) or 1
+
+
 @dataclass(frozen=True)
 class FilterResult:
     """What survived, and what it cost."""

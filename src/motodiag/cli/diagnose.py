@@ -49,7 +49,7 @@ from motodiag.core.session_repo import (
 )
 from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.knowledge.prompt_rows import compose_prompt_rows
-from motodiag.knowledge.retrieval import rows_for_machine
+from motodiag.knowledge.retrieval import candidate_fetch_size, rows_for_machine
 from motodiag.vehicles.registry import get_vehicle
 
 # --- Slug parsing tunables ---
@@ -283,7 +283,8 @@ def _load_known_issues(
     """
     try:
         identity, rows = known_issues_for_vehicle(
-            make, model_name, db_path=db_path, limit=_RESOLVER_FETCH,
+            make, model_name, db_path=db_path,
+            limit=candidate_fetch_size(db_path),
         )
     except Exception:
         return None, []

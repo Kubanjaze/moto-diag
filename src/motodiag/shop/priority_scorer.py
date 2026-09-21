@@ -23,10 +23,10 @@ from typing import Callable, Optional
 
 from motodiag.core.database import get_connection
 
-#: How many rows to fetch before filtering, and how many to hand the
-#: scorer. The fetch is wider than the cap so the filter chooses from the
-#: machine's real candidates rather than from whatever five arrived first.
-_KB_MATCH_FETCH = 200
+#: How many rows the scorer receives. The FETCH is no longer a number --
+#: see `retrieval.candidate_fetch_size` -- because a pre-filter cap decides
+#: correctness by arithmetic. This one applies after the filter, where a cap
+#: only decides how much the scorer reads.
 _KB_MATCH_LIMIT = 5
 from motodiag.shop.ai_client import (
     AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
@@ -280,7 +280,9 @@ def _kb_candidates_for_vehicle(
     """
     if vehicle_id is None:
         return []
-    from motodiag.knowledge.retrieval import rows_for_machine
+    from motodiag.knowledge.retrieval import (
+        candidate_fetch_size, rows_for_machine,
+    )
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     with get_connection(db_path) as conn:
@@ -304,7 +306,7 @@ def _kb_candidates_for_vehicle(
     try:
         _identity, candidates = known_issues_for_vehicle(
             str(row["make"]), str(row["model"]), db_path=db_path,
-            limit=_KB_MATCH_FETCH,
+            limit=candidate_fetch_size(db_path),
         )
     except sqlite3.OperationalError as exc:
         # The one condition the original fallback was written for.

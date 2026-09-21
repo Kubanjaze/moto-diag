@@ -101,11 +101,26 @@ def vehicle_id_of(db_path: str, make: str, model: str) -> int:
 # machine entitled to them.
 
 
-#: Wide enough that no door's own limit can hide a scoped row. A Gold Wing's
-#: scoped rows sit at resolver positions 56, 64, 75, 81, 113 and 115, so any
-#: fetch narrower than that makes a leak invisible and the guard useless —
-#: which is exactly how door 4's first tripwire passed on leaking code.
-GUARD_FETCH = 400
+def _no_candidate_cap(db_path: str) -> int:
+    """Every row that could possibly match — the corpus itself, not a number.
+
+    This was `GUARD_FETCH = 400`, and 400 was the door-2 problem wearing a
+    different hat: safe by arithmetic until the corpus grows past it, at
+    which point a scoped row could sit beyond the fetch and the guard would
+    pass on leaking code without anyone touching the guard.
+
+    Measured before removing it, on a 1,045-row corpus: the worst
+    unfiltered match count across the fixture machines is **165 rows, 16%
+    of the corpus**, and fetching the whole corpus costs **17.6 ms against
+    17.6 ms** for the capped fetch — the cap was doing no work at all. So
+    there is no cost to removing it, and the bound is now definitional
+    rather than chosen.
+
+    **The only cap in this file is post-filter**, where a cap belongs: it
+    decides presentation, never correctness.
+    """
+    with sqlite3.connect(db_path) as conn:
+        return int(conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0])
 
 
 def door1_diagnose(db_path, make, model, year):
@@ -119,7 +134,7 @@ def door1_diagnose(db_path, make, model, year):
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path,
-                                              limit=GUARD_FETCH)
+                                              limit=_no_candidate_cap(db_path))
     kept = rows_for_machine(raw, make=make, model=model, purpose="prompt",
                             db_path=db_path).rows
     return {r["id"] for r in raw}, {r["id"] for r in kept}
@@ -138,7 +153,7 @@ def door2_ask(db_path, make, model, year):
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     _identity, issues = known_issues_for_vehicle(make, model, db_path=db_path,
-                                                 limit=GUARD_FETCH)
+                                                 limit=_no_candidate_cap(db_path))
     kept = rows_for_machine(issues, make=make, model=model, purpose="prompt",
                             db_path=db_path).rows
     return {r["id"] for r in issues}, {r["id"] for r in kept}
@@ -157,7 +172,7 @@ def door4_priority(db_path, make, model, year):
 
     vid = vehicle_id_of(db_path, make, model)
     _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path,
-                                              limit=GUARD_FETCH)
+                                              limit=_no_candidate_cap(db_path))
     after = {r["id"] for r in _kb_candidates_for_vehicle(vid, db_path)}
     return {r["id"] for r in raw}, after
 
