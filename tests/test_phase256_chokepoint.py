@@ -177,9 +177,73 @@ def door4_priority(db_path, make, model, year):
     return {r["id"] for r in raw}, after
 
 
+def door3_predict(db_path, make, model, year):
+    """`predict_failures` AS THE PRODUCT CALLS IT.
+
+    The first version of this helper rebuilt the candidate pool here and
+    called `rows_for_machine` on it. That tested the filter and not the
+    wiring: bypassing the filter inside `predict_failures` left all 60
+    assertions green. A guard that passes whether or not the product is
+    wired is the same defect as the cap-masking two doors ago, and the same
+    defect Phase 254 shipped.
+
+    So it calls the real function. `before` is the unfiltered candidate
+    pool, reconstructed the way `predict_failures` builds it, purely so the
+    test can show the scoped rows WERE reachable.
+
+    `_MAX_PREDICTIONS` caps the output at 50, which could in principle hide
+    a scoped row ranked below that — so this is paired with a source-level
+    wiring assertion in `TestTheDoorsAreActuallyWired`. Neither alone is
+    enough.
+    """
+    from motodiag.advanced.predictor import predict_failures
+    from motodiag.knowledge.issues_repo import search_known_issues
+
+    pool = {}
+    for issue in search_known_issues(make=make, model=model, db_path=db_path):
+        pool[issue["id"]] = issue
+    for issue in search_known_issues(make=make, model=None, db_path=db_path):
+        pool.setdefault(issue["id"], issue)
+
+    preds = predict_failures(
+        {"make": make, "model": model, "year": year, "mileage": 20000},
+        horizon_days=None, db_path=db_path,
+    )
+    return set(pool), {p.issue_id for p in preds}
+
+
+def door3_filter_only(db_path, make, model, year):
+    """Door 3's candidate pool, filter applied, nothing else.
+
+    `predict_failures` drops rows for several reasons that have nothing to
+    do with applicability: a 50-prediction cap, a horizon window, a
+    severity floor, and an onset model that simply does not fire for every
+    row. So "did this machine lose a scoped row?" cannot be asked of its
+    output — a PCX 150 legitimately loses six scoped rows to the cap and
+    the onset model, and asserting otherwise would demand the filter be
+    loosened to satisfy a question it was never answering.
+
+    The negative direction ("did a Gold Wing RECEIVE one?") is asked of the
+    product output, because a leak must be caught wherever it surfaces.
+    The positive direction is asked here, of the filter alone.
+    """
+    from motodiag.knowledge.issues_repo import search_known_issues
+    from motodiag.knowledge.retrieval import rows_for_machine
+
+    pool = {}
+    for issue in search_known_issues(make=make, model=model, db_path=db_path):
+        pool[issue["id"]] = issue
+    for issue in search_known_issues(make=make, model=None, db_path=db_path):
+        pool.setdefault(issue["id"], issue)
+    kept = rows_for_machine(list(pool.values()), make=make, model=model,
+                            purpose="prediction", db_path=db_path, record=False).rows
+    return set(pool), {r["id"] for r in kept}
+
+
 DOORS = {
     "1-diagnose": door1_diagnose,
     "2-video-ask": door2_ask,
+    "3-predict-failures": door3_predict,
     "4-priority-scorer": door4_priority,
 }
 
@@ -191,6 +255,12 @@ DOORS = {
 NOT_ENTITLED = [m for m in MACHINES if not m[3]]
 ENTITLED = [m for m in MACHINES if m[3]]
 _ids = lambda ms: [f"{m}-{d}" for m, d, _y, _k, _w in ms]
+
+
+#: For the "nothing withheld" direction only, door 3 is probed at the filter
+#: rather than at its output. See `door3_filter_only` for why.
+WITHHOLD_PROBES = dict(DOORS)
+WITHHOLD_PROBES["3-predict-failures"] = door3_filter_only
 
 
 @pytest.mark.parametrize("door", sorted(DOORS))
@@ -229,12 +299,38 @@ class TestEveryDoorRespectsApplicability:
         self, db, door, make, model, year, keeps_scoped, why
     ):
         """The filter must take nothing from a machine that may have it."""
-        before, after = DOORS[door](db, make, model, year)
+        before, after = WITHHOLD_PROBES[door](db, make, model, year)
         scoped = scoped_ids(db)
         lost = (before & scoped) - after
         assert lost == set(), (
             f"door {door}: {make} {model} lost scoped row(s) {sorted(lost)} "
             "— the filter withheld from a machine entitled to them"
+        )
+
+
+class TestTheDoorsAreActuallyWired:
+    """The behavioural fixtures above can pass on an unwired door.
+
+    Door 3's output is capped at 50 and door 4's at five, so a scoped row
+    ranked below the cap is invisible to a behavioural assertion. These
+    read the source, through `code_of` so comments and docstrings are
+    blanked — Phase 244G forbids raw-source matching precisely because a
+    string in a comment keeps a guard green after the code is deleted.
+    """
+
+    @pytest.mark.parametrize("module_path,door", [
+        ("motodiag.cli.diagnose", "1-diagnose"),
+        ("motodiag.api.routes.videos", "2-video-ask"),
+        ("motodiag.advanced.predictor", "3-predict-failures"),
+        ("motodiag.shop.priority_scorer", "4-priority-scorer"),
+    ])
+    def test_the_door_calls_the_chokepoint(self, module_path, door):
+        import importlib
+        from support.source_guards import code_of
+
+        code = code_of(importlib.import_module(module_path))
+        assert "rows_for_machine(" in code, (
+            f"door {door} ({module_path}) does not call the chokepoint"
         )
 
 

@@ -1,0 +1,3764 @@
+{
+ "Honda GL1800 Gold Wing": [
+  {
+   "rank": 0,
+   "issue_id": 221,
+   "title": "Regulator/rectifier failure \u2014 overcharging or de",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 1,
+   "issue_id": 222,
+   "title": "Cam chain tensioner (CCT) failure \u2014 top-end ratt",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 303,
+   "title": "Charging system failure \u2014 early Honda generators",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 306,
+   "title": "Brake master cylinder and caliper rebuild \u2014 agin",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 194,
+   "title": "HESD failure \u2014 same as CBR600RR but higher force",
+   "severity": "critical",
+   "confidence": 0.8,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 201,
+   "title": "Regulator/rectifier failure \u2014 same Honda disease",
+   "severity": "critical",
+   "confidence": 0.8,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 211,
+   "title": "HESD (Honda Electronic Steering Damper) failure ",
+   "severity": "critical",
+   "confidence": 0.7867,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 292,
+   "title": "Regulator/rectifier failure \u2014 V4 heat generation",
+   "severity": "critical",
+   "confidence": 0.7733,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 191,
+   "title": "Regulator/rectifier failure \u2014 high-output stator",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 212,
+   "title": "Regulator/rectifier failure \u2014 improved but still",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 23,
+   "title": "Stator connector melting \u2014 fire risk and solder ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 51,
+   "title": "Fuel pump failure and testing \u2014 all EFI motorcyc",
+   "severity": "critical",
+   "confidence": 0.74,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 1,
+   "title": "Brake fluid contamination \u2014 DOT 4 hygroscopic wa",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 5,
+   "title": "Master cylinder failure \u2014 internal seal wear, le",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 18,
+   "title": "Float bowl overflow and fuel leak \u2014 fire hazard",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 21,
+   "title": "Stator winding failure \u2014 insulation breakdown ca",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 231,
+   "title": "Cam chain tensioner (CCT) \u2014 the Honda inline-4 u",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 241,
+   "title": "Regulator/rectifier failure \u2014 Shadow and VTX",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 263,
+   "title": "Regulator/rectifier failure \u2014 the universal Hond",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 264,
+   "title": "Stator failure diagnosis and replacement \u2014 all H",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 281,
+   "title": "Regulator/rectifier failure \u2014 shared sport bike ",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 223,
+   "title": "HISS immobilizer lockout \u2014 929RR and 954RR",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 4585,
+   "title": "A completed Grom fuel-pump recall is not proof o",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 244,
+   "title": "VTX 1800 starter motor and starter clutch failur",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 4579,
+   "title": "A Grom fault above 1800 rpm shows as a steady la",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 4580,
+   "title": "The eleven codes a GROM125 can show \u2014 and the on",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 206,
+   "title": "Clutch cable fraying and sudden failure \u2014 cable ",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 255,
+   "title": "Africa Twin coolant system and radiator protecti",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 4586,
+   "title": "The Metropolitan transmission campaign covers te",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 301,
+   "title": "Points ignition failure and conversion \u2014 pre-198",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 225,
+   "title": "Fork seal leak and suspension sag \u2014 age-related",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 226,
+   "title": "Starter clutch (sprag clutch) failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 302,
+   "title": "Carburetor bank rebuild \u2014 4-carb inline-4 servic",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 304,
+   "title": "Cam chain and tensioner wear \u2014 high-mileage SOHC",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 309,
+   "title": "Wiring harness deterioration \u2014 brittle insulatio",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 4581,
+   "title": "In model year 2022 the Grom and the Trail 125 ra",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 203,
+   "title": "Cam chain tensioner (CCT) rattle \u2014 all F-series",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 207,
+   "title": "Radiator fan failure and overheating in traffic",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 213,
+   "title": "C-ABS unit failure \u2014 2009+ ABS models",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 245,
+   "title": "Fuel pump failure \u2014 EFI Shadow and VTX models",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 295,
+   "title": "VFR800 linked braking system (CBS/C-ABS) issues",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 298,
+   "title": "Fuel pump relay failure \u2014 VFR and RC51",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 8,
+   "title": "ABS modulator bleeding \u2014 specialized procedure v",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 193,
+   "title": "Cam chain tensioner \u2014 liter bike version",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 199,
+   "title": "Brake master cylinder and caliper piston stickin",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 214,
+   "title": "Cam chain tensioner noise \u2014 all years",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 46,
+   "issue_id": 215,
+   "title": "Fuel pump failure \u2014 low-fuel overheating",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 47,
+   "issue_id": 219,
+   "title": "Stator failure on high-RPM track use",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 262,
+   "title": "HISS immobilizer system \u2014 all EFI Honda models",
+   "severity": "high",
+   "confidence": 0.5333,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 11,
+   "title": "CV carburetor diaphragm failure \u2014 all makes and ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  }
+ ],
+ "Honda CBR1000RR": [
+  {
+   "rank": 0,
+   "issue_id": 1,
+   "title": "Brake fluid contamination \u2014 DOT 4 hygroscopic wa",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": 0,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 1,
+   "issue_id": 21,
+   "title": "Stator winding failure \u2014 insulation breakdown ca",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": 0,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 2,
+   "issue_id": 191,
+   "title": "Regulator/rectifier failure \u2014 high-output stator",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": 0,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 3,
+   "issue_id": 194,
+   "title": "HESD failure \u2014 same as CBR600RR but higher force",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": 0,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 4,
+   "issue_id": 221,
+   "title": "Regulator/rectifier failure \u2014 overcharging or de",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 222,
+   "title": "Cam chain tensioner (CCT) failure \u2014 top-end ratt",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 303,
+   "title": "Charging system failure \u2014 early Honda generators",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 306,
+   "title": "Brake master cylinder and caliper rebuild \u2014 agin",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 201,
+   "title": "Regulator/rectifier failure \u2014 same Honda disease",
+   "severity": "critical",
+   "confidence": 0.8,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 211,
+   "title": "HESD (Honda Electronic Steering Damper) failure ",
+   "severity": "critical",
+   "confidence": 0.7867,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 292,
+   "title": "Regulator/rectifier failure \u2014 V4 heat generation",
+   "severity": "critical",
+   "confidence": 0.7733,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 212,
+   "title": "Regulator/rectifier failure \u2014 improved but still",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 23,
+   "title": "Stator connector melting \u2014 fire risk and solder ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 51,
+   "title": "Fuel pump failure and testing \u2014 all EFI motorcyc",
+   "severity": "critical",
+   "confidence": 0.74,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 5,
+   "title": "Master cylinder failure \u2014 internal seal wear, le",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 18,
+   "title": "Float bowl overflow and fuel leak \u2014 fire hazard",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 231,
+   "title": "Cam chain tensioner (CCT) \u2014 the Honda inline-4 u",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 241,
+   "title": "Regulator/rectifier failure \u2014 Shadow and VTX",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 263,
+   "title": "Regulator/rectifier failure \u2014 the universal Hond",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 264,
+   "title": "Stator failure diagnosis and replacement \u2014 all H",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 281,
+   "title": "Regulator/rectifier failure \u2014 shared sport bike ",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 0,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 193,
+   "title": "Cam chain tensioner \u2014 liter bike version",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 15000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 22,
+   "issue_id": 199,
+   "title": "Brake master cylinder and caliper piston stickin",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 15000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 23,
+   "issue_id": 223,
+   "title": "HISS immobilizer lockout \u2014 929RR and 954RR",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 4585,
+   "title": "A completed Grom fuel-pump recall is not proof o",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 244,
+   "title": "VTX 1800 starter motor and starter clutch failur",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 4579,
+   "title": "A Grom fault above 1800 rpm shows as a steady la",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 4580,
+   "title": "The eleven codes a GROM125 can show \u2014 and the on",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 206,
+   "title": "Clutch cable fraying and sudden failure \u2014 cable ",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 255,
+   "title": "Africa Twin coolant system and radiator protecti",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 4586,
+   "title": "The Metropolitan transmission campaign covers te",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 301,
+   "title": "Points ignition failure and conversion \u2014 pre-198",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 225,
+   "title": "Fork seal leak and suspension sag \u2014 age-related",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 226,
+   "title": "Starter clutch (sprag clutch) failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 302,
+   "title": "Carburetor bank rebuild \u2014 4-carb inline-4 servic",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 304,
+   "title": "Cam chain and tensioner wear \u2014 high-mileage SOHC",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 309,
+   "title": "Wiring harness deterioration \u2014 brittle insulatio",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 4581,
+   "title": "In model year 2022 the Grom and the Trail 125 ra",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 203,
+   "title": "Cam chain tensioner (CCT) rattle \u2014 all F-series",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 207,
+   "title": "Radiator fan failure and overheating in traffic",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 213,
+   "title": "C-ABS unit failure \u2014 2009+ ABS models",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 245,
+   "title": "Fuel pump failure \u2014 EFI Shadow and VTX models",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 295,
+   "title": "VFR800 linked braking system (CBS/C-ABS) issues",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 298,
+   "title": "Fuel pump relay failure \u2014 VFR and RC51",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 8,
+   "title": "ABS modulator bleeding \u2014 specialized procedure v",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 214,
+   "title": "Cam chain tensioner noise \u2014 all years",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 46,
+   "issue_id": 215,
+   "title": "Fuel pump failure \u2014 low-fuel overheating",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 47,
+   "issue_id": 219,
+   "title": "Stator failure on high-RPM track use",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 262,
+   "title": "HISS immobilizer system \u2014 all EFI Honda models",
+   "severity": "high",
+   "confidence": 0.5333,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 11,
+   "title": "CV carburetor diaphragm failure \u2014 all makes and ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 15000,
+   "tier": "generic"
+  }
+ ],
+ "Honda Grom": [
+  {
+   "rank": 0,
+   "issue_id": 221,
+   "title": "Regulator/rectifier failure \u2014 overcharging or de",
+   "severity": "critical",
+   "confidence": 0.6267,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 1,
+   "issue_id": 222,
+   "title": "Cam chain tensioner (CCT) failure \u2014 top-end ratt",
+   "severity": "critical",
+   "confidence": 0.6267,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 303,
+   "title": "Charging system failure \u2014 early Honda generators",
+   "severity": "critical",
+   "confidence": 0.6133,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 306,
+   "title": "Brake master cylinder and caliper rebuild \u2014 agin",
+   "severity": "critical",
+   "confidence": 0.6133,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 194,
+   "title": "HESD failure \u2014 same as CBR600RR but higher force",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 201,
+   "title": "Regulator/rectifier failure \u2014 same Honda disease",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 211,
+   "title": "HESD (Honda Electronic Steering Damper) failure ",
+   "severity": "critical",
+   "confidence": 0.5867,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 292,
+   "title": "Regulator/rectifier failure \u2014 V4 heat generation",
+   "severity": "critical",
+   "confidence": 0.5733,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 191,
+   "title": "Regulator/rectifier failure \u2014 high-output stator",
+   "severity": "critical",
+   "confidence": 0.56,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 212,
+   "title": "Regulator/rectifier failure \u2014 improved but still",
+   "severity": "critical",
+   "confidence": 0.56,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 23,
+   "title": "Stator connector melting \u2014 fire risk and solder ",
+   "severity": "critical",
+   "confidence": 0.5533,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 51,
+   "title": "Fuel pump failure and testing \u2014 all EFI motorcyc",
+   "severity": "critical",
+   "confidence": 0.54,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 1,
+   "title": "Brake fluid contamination \u2014 DOT 4 hygroscopic wa",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 5,
+   "title": "Master cylinder failure \u2014 internal seal wear, le",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 18,
+   "title": "Float bowl overflow and fuel leak \u2014 fire hazard",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 21,
+   "title": "Stator winding failure \u2014 insulation breakdown ca",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 231,
+   "title": "Cam chain tensioner (CCT) \u2014 the Honda inline-4 u",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 241,
+   "title": "Regulator/rectifier failure \u2014 Shadow and VTX",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 263,
+   "title": "Regulator/rectifier failure \u2014 the universal Hond",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 264,
+   "title": "Stator failure diagnosis and replacement \u2014 all H",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 281,
+   "title": "Regulator/rectifier failure \u2014 shared sport bike ",
+   "severity": "critical",
+   "confidence": 0.5,
+   "miles_to_onset": 7000,
+   "tier": "generic"
+  }
+ ],
+ "Honda Africa Twin": [
+  {
+   "rank": 0,
+   "issue_id": 221,
+   "title": "Regulator/rectifier failure \u2014 overcharging or de",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 1,
+   "issue_id": 222,
+   "title": "Cam chain tensioner (CCT) failure \u2014 top-end ratt",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 303,
+   "title": "Charging system failure \u2014 early Honda generators",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 306,
+   "title": "Brake master cylinder and caliper rebuild \u2014 agin",
+   "severity": "critical",
+   "confidence": 0.8133,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 194,
+   "title": "HESD failure \u2014 same as CBR600RR but higher force",
+   "severity": "critical",
+   "confidence": 0.8,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 201,
+   "title": "Regulator/rectifier failure \u2014 same Honda disease",
+   "severity": "critical",
+   "confidence": 0.8,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 211,
+   "title": "HESD (Honda Electronic Steering Damper) failure ",
+   "severity": "critical",
+   "confidence": 0.7867,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 292,
+   "title": "Regulator/rectifier failure \u2014 V4 heat generation",
+   "severity": "critical",
+   "confidence": 0.7733,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 191,
+   "title": "Regulator/rectifier failure \u2014 high-output stator",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 212,
+   "title": "Regulator/rectifier failure \u2014 improved but still",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 23,
+   "title": "Stator connector melting \u2014 fire risk and solder ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 51,
+   "title": "Fuel pump failure and testing \u2014 all EFI motorcyc",
+   "severity": "critical",
+   "confidence": 0.74,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 1,
+   "title": "Brake fluid contamination \u2014 DOT 4 hygroscopic wa",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 5,
+   "title": "Master cylinder failure \u2014 internal seal wear, le",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 18,
+   "title": "Float bowl overflow and fuel leak \u2014 fire hazard",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 21,
+   "title": "Stator winding failure \u2014 insulation breakdown ca",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 231,
+   "title": "Cam chain tensioner (CCT) \u2014 the Honda inline-4 u",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 241,
+   "title": "Regulator/rectifier failure \u2014 Shadow and VTX",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 263,
+   "title": "Regulator/rectifier failure \u2014 the universal Hond",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 264,
+   "title": "Stator failure diagnosis and replacement \u2014 all H",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 281,
+   "title": "Regulator/rectifier failure \u2014 shared sport bike ",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 255,
+   "title": "Africa Twin coolant system and radiator protecti",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 12000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 22,
+   "issue_id": 223,
+   "title": "HISS immobilizer lockout \u2014 929RR and 954RR",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 4585,
+   "title": "A completed Grom fuel-pump recall is not proof o",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 244,
+   "title": "VTX 1800 starter motor and starter clutch failur",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 4579,
+   "title": "A Grom fault above 1800 rpm shows as a steady la",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 4580,
+   "title": "The eleven codes a GROM125 can show \u2014 and the on",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 206,
+   "title": "Clutch cable fraying and sudden failure \u2014 cable ",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 4586,
+   "title": "The Metropolitan transmission campaign covers te",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 301,
+   "title": "Points ignition failure and conversion \u2014 pre-198",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 225,
+   "title": "Fork seal leak and suspension sag \u2014 age-related",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 226,
+   "title": "Starter clutch (sprag clutch) failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 302,
+   "title": "Carburetor bank rebuild \u2014 4-carb inline-4 servic",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 304,
+   "title": "Cam chain and tensioner wear \u2014 high-mileage SOHC",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 309,
+   "title": "Wiring harness deterioration \u2014 brittle insulatio",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 4581,
+   "title": "In model year 2022 the Grom and the Trail 125 ra",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 203,
+   "title": "Cam chain tensioner (CCT) rattle \u2014 all F-series",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 207,
+   "title": "Radiator fan failure and overheating in traffic",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 213,
+   "title": "C-ABS unit failure \u2014 2009+ ABS models",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 245,
+   "title": "Fuel pump failure \u2014 EFI Shadow and VTX models",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 295,
+   "title": "VFR800 linked braking system (CBS/C-ABS) issues",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 298,
+   "title": "Fuel pump relay failure \u2014 VFR and RC51",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 8,
+   "title": "ABS modulator bleeding \u2014 specialized procedure v",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 193,
+   "title": "Cam chain tensioner \u2014 liter bike version",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 199,
+   "title": "Brake master cylinder and caliper piston stickin",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 214,
+   "title": "Cam chain tensioner noise \u2014 all years",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 46,
+   "issue_id": 215,
+   "title": "Fuel pump failure \u2014 low-fuel overheating",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 47,
+   "issue_id": 219,
+   "title": "Stator failure on high-RPM track use",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 262,
+   "title": "HISS immobilizer system \u2014 all EFI Honda models",
+   "severity": "high",
+   "confidence": 0.5333,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 11,
+   "title": "CV carburetor diaphragm failure \u2014 all makes and ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 12000,
+   "tier": "generic"
+  }
+ ],
+ "Yamaha YZF-R1": [
+  {
+   "rank": 0,
+   "issue_id": 48,
+   "title": "Transmission shifting issues \u2014 false neutral, ha",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": -7000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 1,
+   "issue_id": 561,
+   "title": "Cam chain tensioner failure \u2014 cross-model patter",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": -7000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 2,
+   "issue_id": 592,
+   "title": "Universal stator connector failure \u2014 every Yamah",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": -7000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 3,
+   "issue_id": 612,
+   "title": "Stator and charging system failure \u2014 1998-2008 m",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": -7000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 4,
+   "issue_id": 588,
+   "title": "Tenere 700 off-road crash protection \u2014 essential",
+   "severity": "critical",
+   "confidence": 0.8667,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 645,
+   "title": "RD350/400 oil injection system failure \u2014 Autolub",
+   "severity": "critical",
+   "confidence": 0.8533,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 633,
+   "title": "YZF600R Thundercat charging system and regulator",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 610,
+   "title": "All FZ/MT models \u2014 exposed radiator vulnerabilit",
+   "severity": "critical",
+   "confidence": 0.82,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 642,
+   "title": "XS650 charging system \u2014 rotor and stator failure",
+   "severity": "critical",
+   "confidence": 0.7867,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 572,
+   "title": "V-Star 650/1100 vacuum petcock failure \u2014 fuel in",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 621,
+   "title": "Cam chain tensioner failure \u2014 2003-2005 R6 notor",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 653,
+   "title": "Gen 1 VMAX charging system failure \u2014 stator and ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 38,
+   "title": "Head gasket failure \u2014 coolant-in-oil diagnosis a",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -7000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 562,
+   "title": "Ethanol fuel damage \u2014 storage and fuel system de",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 14,
+   "issue_id": 563,
+   "title": "Valve clearance tightening \u2014 universal Yamaha pa",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 15,
+   "issue_id": 565,
+   "title": "Brake fluid neglect and ABS modulator corrosion ",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 16,
+   "issue_id": 593,
+   "title": "MOSFET regulator upgrade \u2014 universal recommendat",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 17,
+   "issue_id": 594,
+   "title": "Ground wire corrosion \u2014 the most misdiagnosed Ya",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 18,
+   "issue_id": 595,
+   "title": "Yamaha wiring harness degradation \u2014 heat and age",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 19,
+   "issue_id": 616,
+   "title": "Fuel pump failure and tank corrosion",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 20,
+   "issue_id": 617,
+   "title": "Cam chain tensioner \u2014 Yamaha version",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 8000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 21,
+   "issue_id": 625,
+   "title": "2006-2007 underseat exhaust heat damage",
+   "severity": "high",
+   "confidence": 0.6933,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 590,
+   "title": "Tenere 700 rear shock inadequacy for loaded adve",
+   "severity": "high",
+   "confidence": 0.6667,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 637,
+   "title": "R7 suspension inadequacy for track use \u2014 budget ",
+   "severity": "high",
+   "confidence": 0.6667,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 573,
+   "title": "V-Star 1100 stator and charging system failure",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 574,
+   "title": "V-Star 1300/950 shaft drive final drive service ",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 632,
+   "title": "YZF600R Thundercat vacuum petcock failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 581,
+   "title": "WR250R stator and charging \u2014 small engine, high ",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 602,
+   "title": "MT-09/FZ-09 CP3 engine \u2014 valve clearance tighten",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 608,
+   "title": "MT-09/FZ-09 fuel pump and fuel system \u2014 ethanol ",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 4602,
+   "title": "Yamaha's scooter campaigns include a drain bolt ",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 584,
+   "title": "XT250 carburetor and fuel system \u2014 ethanol and s",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 4591,
+   "title": "Yamaha prints the same V-belt interval three dif",
+   "severity": "high",
+   "confidence": 0.5933,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 622,
+   "title": "Stator and charging system failure \u2014 all fuel-in",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 626,
+   "title": "Fuel pump failure \u2014 ethanol and low-fuel damage",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 641,
+   "title": "XS650 points ignition timing and condenser failu",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 644,
+   "title": "XS650 cam chain and tensioner \u2014 40+ year old eng",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 571,
+   "title": "V-Star 650 carburetor issues \u2014 pilot jet cloggin",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 577,
+   "title": "V-Star 650 starter clutch and starting difficult",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 623,
+   "title": "Valve clearance tightening \u2014 shim-under-bucket r",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 651,
+   "title": "Gen 1 V-Boost system malfunction \u2014 butterfly val",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 655,
+   "title": "Gen 1 VMAX fuel system \u2014 tank corrosion and petc",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 4590,
+   "title": "One Yamaha scooter nameplate covers three differ",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 12,
+   "title": "Pilot jet clogging from ethanol fuel \u2014 seasonal ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 650,
+   "title": "SR400/500 valve adjustment \u2014 screw-type, frequen",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 8000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 40,
+   "title": "Track and racing coolant requirements \u2014 Engine I",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 28000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 46,
+   "issue_id": 54,
+   "title": "O2 sensor failure and elimination \u2014 closed-loop ",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 28000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 47,
+   "issue_id": 564,
+   "title": "EXUP valve system \u2014 cross-model exhaust valve di",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 28000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 48,
+   "issue_id": 566,
+   "title": "Chain and sprocket wear patterns \u2014 sport vs crui",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 28000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 49,
+   "issue_id": 567,
+   "title": "Coolant hose degradation and clamp loosening \u2014 a",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 28000,
+   "tier": "exact_model"
+  }
+ ],
+ "Yamaha MT07": [
+  {
+   "rank": 0,
+   "issue_id": 588,
+   "title": "Tenere 700 off-road crash protection \u2014 essential",
+   "severity": "critical",
+   "confidence": 0.8667,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 1,
+   "issue_id": 645,
+   "title": "RD350/400 oil injection system failure \u2014 Autolub",
+   "severity": "critical",
+   "confidence": 0.8533,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 633,
+   "title": "YZF600R Thundercat charging system and regulator",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 610,
+   "title": "All FZ/MT models \u2014 exposed radiator vulnerabilit",
+   "severity": "critical",
+   "confidence": 0.82,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 612,
+   "title": "Stator and charging system failure \u2014 1998-2008 m",
+   "severity": "critical",
+   "confidence": 0.7933,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 642,
+   "title": "XS650 charging system \u2014 rotor and stator failure",
+   "severity": "critical",
+   "confidence": 0.7867,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 572,
+   "title": "V-Star 650/1100 vacuum petcock failure \u2014 fuel in",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 621,
+   "title": "Cam chain tensioner failure \u2014 2003-2005 R6 notor",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 653,
+   "title": "Gen 1 VMAX charging system failure \u2014 stator and ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 48,
+   "title": "Transmission shifting issues \u2014 false neutral, ha",
+   "severity": "critical",
+   "confidence": 0.72,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 38,
+   "title": "Head gasket failure \u2014 coolant-in-oil diagnosis a",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 561,
+   "title": "Cam chain tensioner failure \u2014 cross-model patter",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 592,
+   "title": "Universal stator connector failure \u2014 every Yamah",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -5000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 625,
+   "title": "2006-2007 underseat exhaust heat damage",
+   "severity": "high",
+   "confidence": 0.6933,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 590,
+   "title": "Tenere 700 rear shock inadequacy for loaded adve",
+   "severity": "high",
+   "confidence": 0.6667,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 637,
+   "title": "R7 suspension inadequacy for track use \u2014 budget ",
+   "severity": "high",
+   "confidence": 0.6667,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 573,
+   "title": "V-Star 1100 stator and charging system failure",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 574,
+   "title": "V-Star 1300/950 shaft drive final drive service ",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 632,
+   "title": "YZF600R Thundercat vacuum petcock failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 581,
+   "title": "WR250R stator and charging \u2014 small engine, high ",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 602,
+   "title": "MT-09/FZ-09 CP3 engine \u2014 valve clearance tighten",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 608,
+   "title": "MT-09/FZ-09 fuel pump and fuel system \u2014 ethanol ",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 4602,
+   "title": "Yamaha's scooter campaigns include a drain bolt ",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 584,
+   "title": "XT250 carburetor and fuel system \u2014 ethanol and s",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 4591,
+   "title": "Yamaha prints the same V-belt interval three dif",
+   "severity": "high",
+   "confidence": 0.5933,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 622,
+   "title": "Stator and charging system failure \u2014 all fuel-in",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 626,
+   "title": "Fuel pump failure \u2014 ethanol and low-fuel damage",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 641,
+   "title": "XS650 points ignition timing and condenser failu",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 644,
+   "title": "XS650 cam chain and tensioner \u2014 40+ year old eng",
+   "severity": "high",
+   "confidence": 0.5867,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 571,
+   "title": "V-Star 650 carburetor issues \u2014 pilot jet cloggin",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 577,
+   "title": "V-Star 650 starter clutch and starting difficult",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 623,
+   "title": "Valve clearance tightening \u2014 shim-under-bucket r",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 651,
+   "title": "Gen 1 V-Boost system malfunction \u2014 butterfly val",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 655,
+   "title": "Gen 1 VMAX fuel system \u2014 tank corrosion and petc",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 4590,
+   "title": "One Yamaha scooter nameplate covers three differ",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 616,
+   "title": "Fuel pump failure and tank corrosion",
+   "severity": "high",
+   "confidence": 0.52,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 617,
+   "title": "Cam chain tensioner \u2014 Yamaha version",
+   "severity": "high",
+   "confidence": 0.52,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 12,
+   "title": "Pilot jet clogging from ethanol fuel \u2014 seasonal ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 562,
+   "title": "Ethanol fuel damage \u2014 storage and fuel system de",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 563,
+   "title": "Valve clearance tightening \u2014 universal Yamaha pa",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 565,
+   "title": "Brake fluid neglect and ABS modulator corrosion ",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 593,
+   "title": "MOSFET regulator upgrade \u2014 universal recommendat",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 594,
+   "title": "Ground wire corrosion \u2014 the most misdiagnosed Ya",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 595,
+   "title": "Yamaha wiring harness degradation \u2014 heat and age",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 650,
+   "title": "SR400/500 valve adjustment \u2014 screw-type, frequen",
+   "severity": "high",
+   "confidence": 0.5,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  }
+ ],
+ "Yamaha XS650": [
+  {
+   "rank": 0,
+   "issue_id": 642,
+   "title": "XS650 charging system \u2014 rotor and stator failure",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": -25000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 1,
+   "issue_id": 588,
+   "title": "Tenere 700 off-road crash protection \u2014 essential",
+   "severity": "critical",
+   "confidence": 0.8667,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 645,
+   "title": "RD350/400 oil injection system failure \u2014 Autolub",
+   "severity": "critical",
+   "confidence": 0.8533,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 633,
+   "title": "YZF600R Thundercat charging system and regulator",
+   "severity": "critical",
+   "confidence": 0.8267,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 610,
+   "title": "All FZ/MT models \u2014 exposed radiator vulnerabilit",
+   "severity": "critical",
+   "confidence": 0.82,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 612,
+   "title": "Stator and charging system failure \u2014 1998-2008 m",
+   "severity": "critical",
+   "confidence": 0.7933,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 572,
+   "title": "V-Star 650/1100 vacuum petcock failure \u2014 fuel in",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 621,
+   "title": "Cam chain tensioner failure \u2014 2003-2005 R6 notor",
+   "severity": "critical",
+   "confidence": 0.76,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 653,
+   "title": "Gen 1 VMAX charging system failure \u2014 stator and ",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 48,
+   "title": "Transmission shifting issues \u2014 false neutral, ha",
+   "severity": "critical",
+   "confidence": 0.72,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 38,
+   "title": "Head gasket failure \u2014 coolant-in-oil diagnosis a",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 561,
+   "title": "Cam chain tensioner failure \u2014 cross-model patter",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 592,
+   "title": "Universal stator connector failure \u2014 every Yamah",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": -25000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 641,
+   "title": "XS650 points ignition timing and condenser failu",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": -10000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 14,
+   "issue_id": 644,
+   "title": "XS650 cam chain and tensioner \u2014 40+ year old eng",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": -10000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 15,
+   "issue_id": 625,
+   "title": "2006-2007 underseat exhaust heat damage",
+   "severity": "high",
+   "confidence": 0.8933,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 590,
+   "title": "Tenere 700 rear shock inadequacy for loaded adve",
+   "severity": "high",
+   "confidence": 0.8667,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 637,
+   "title": "R7 suspension inadequacy for track use \u2014 budget ",
+   "severity": "high",
+   "confidence": 0.8667,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 573,
+   "title": "V-Star 1100 stator and charging system failure",
+   "severity": "high",
+   "confidence": 0.8333,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 574,
+   "title": "V-Star 1300/950 shaft drive final drive service ",
+   "severity": "high",
+   "confidence": 0.8333,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 632,
+   "title": "YZF600R Thundercat vacuum petcock failure",
+   "severity": "high",
+   "confidence": 0.8267,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 581,
+   "title": "WR250R stator and charging \u2014 small engine, high ",
+   "severity": "high",
+   "confidence": 0.82,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 602,
+   "title": "MT-09/FZ-09 CP3 engine \u2014 valve clearance tighten",
+   "severity": "high",
+   "confidence": 0.82,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 608,
+   "title": "MT-09/FZ-09 fuel pump and fuel system \u2014 ethanol ",
+   "severity": "high",
+   "confidence": 0.82,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 4602,
+   "title": "Yamaha's scooter campaigns include a drain bolt ",
+   "severity": "high",
+   "confidence": 0.8133,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 584,
+   "title": "XT250 carburetor and fuel system \u2014 ethanol and s",
+   "severity": "high",
+   "confidence": 0.8,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 4591,
+   "title": "Yamaha prints the same V-belt interval three dif",
+   "severity": "high",
+   "confidence": 0.7933,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 622,
+   "title": "Stator and charging system failure \u2014 all fuel-in",
+   "severity": "high",
+   "confidence": 0.7867,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 626,
+   "title": "Fuel pump failure \u2014 ethanol and low-fuel damage",
+   "severity": "high",
+   "confidence": 0.7867,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 571,
+   "title": "V-Star 650 carburetor issues \u2014 pilot jet cloggin",
+   "severity": "high",
+   "confidence": 0.76,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 577,
+   "title": "V-Star 650 starter clutch and starting difficult",
+   "severity": "high",
+   "confidence": 0.76,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 623,
+   "title": "Valve clearance tightening \u2014 shim-under-bucket r",
+   "severity": "high",
+   "confidence": 0.76,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 651,
+   "title": "Gen 1 V-Boost system malfunction \u2014 butterfly val",
+   "severity": "high",
+   "confidence": 0.7533,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 655,
+   "title": "Gen 1 VMAX fuel system \u2014 tank corrosion and petc",
+   "severity": "high",
+   "confidence": 0.7533,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 4590,
+   "title": "One Yamaha scooter nameplate covers three differ",
+   "severity": "high",
+   "confidence": 0.7533,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 616,
+   "title": "Fuel pump failure and tank corrosion",
+   "severity": "high",
+   "confidence": 0.72,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 617,
+   "title": "Cam chain tensioner \u2014 Yamaha version",
+   "severity": "high",
+   "confidence": 0.72,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 12,
+   "title": "Pilot jet clogging from ethanol fuel \u2014 seasonal ",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 562,
+   "title": "Ethanol fuel damage \u2014 storage and fuel system de",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 563,
+   "title": "Valve clearance tightening \u2014 universal Yamaha pa",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 565,
+   "title": "Brake fluid neglect and ABS modulator corrosion ",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 593,
+   "title": "MOSFET regulator upgrade \u2014 universal recommendat",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 594,
+   "title": "Ground wire corrosion \u2014 the most misdiagnosed Ya",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 595,
+   "title": "Yamaha wiring harness degradation \u2014 heat and age",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 650,
+   "title": "SR400/500 valve adjustment \u2014 screw-type, frequen",
+   "severity": "high",
+   "confidence": 0.7,
+   "miles_to_onset": -10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 66,
+   "title": "Points ignition maintenance and electronic conve",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 10000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 46,
+   "issue_id": 643,
+   "title": "XS650 oil leaks \u2014 engine case, pushrod seals, an",
+   "severity": "medium",
+   "confidence": 1.0,
+   "miles_to_onset": 10000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 47,
+   "issue_id": 615,
+   "title": "YCC-I (Yamaha Chip Controlled Intake) variable i",
+   "severity": "medium",
+   "confidence": 0.7933,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 607,
+   "title": "FZ8 \u2014 throttle bodies and idle issues (Fazer eng",
+   "severity": "medium",
+   "confidence": 0.7867,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 630,
+   "title": "2017+ R6 electronics suite \u2014 shared R1 platform ",
+   "severity": "medium",
+   "confidence": 0.78,
+   "miles_to_onset": 10000,
+   "tier": "generic"
+  }
+ ],
+ "Kawasaki Ninja 400": [
+  {
+   "rank": 0,
+   "issue_id": 360,
+   "title": "All Ninja 250/300/400 \u2014 oil change neglect and f",
+   "severity": "critical",
+   "confidence": 1.0,
+   "miles_to_onset": 3000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 1,
+   "issue_id": 391,
+   "title": "2004-2005 ZX-10R headshake and stability \u2014 raw f",
+   "severity": "critical",
+   "confidence": 0.7933,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 368,
+   "title": "GPz550/750 brake system \u2014 aging calipers and mas",
+   "severity": "critical",
+   "confidence": 0.78,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 342,
+   "title": "ZX-12R charging system \u2014 same era, same weakness",
+   "severity": "critical",
+   "confidence": 0.7667,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 423,
+   "title": "ZX-9R charging system failure \u2014 universal Kawasa",
+   "severity": "critical",
+   "confidence": 0.7667,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 428,
+   "title": "ZX-9R brake system aging \u2014 same urgency as ZX-7R",
+   "severity": "critical",
+   "confidence": 0.7667,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 412,
+   "title": "ZX-7R fuel system aging \u2014 petcock, fuel lines, a",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 419,
+   "title": "ZX-7R brake system \u2014 caliper rebuild and fluid f",
+   "severity": "critical",
+   "confidence": 0.7533,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 332,
+   "title": "H2 extreme cooling demands \u2014 dual radiator syste",
+   "severity": "critical",
+   "confidence": 0.7267,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 337,
+   "title": "H2 fuel system \u2014 high-flow demands under boost",
+   "severity": "critical",
+   "confidence": 0.7267,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 311,
+   "title": "KLR650 doohickey failure \u2014 balancer chain tensio",
+   "severity": "critical",
+   "confidence": 0.6667,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 392,
+   "title": "ZX-10R stator and charging system \u2014 literbike he",
+   "severity": "critical",
+   "confidence": 0.6533,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 381,
+   "title": "Z900/Z1000 exposed radiator vulnerability \u2014 nake",
+   "severity": "critical",
+   "confidence": 0.6467,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 2,
+   "title": "Caliper piston seizure \u2014 rebuild procedure and w",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 22,
+   "title": "Regulator/rectifier failure \u2014 shunt-type vs MOSF",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 33,
+   "title": "Coolant degradation \u2014 acidic coolant corroding w",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 402,
+   "title": "ZX-6R stator and charging system failure \u2014 sport",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 3000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 354,
+   "title": "Ninja 300/400 fuel pump and FI system \u2014 EFI begi",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 18000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 18,
+   "issue_id": 355,
+   "title": "Ninja 250/300/400 chain maintenance neglect \u2014 ne",
+   "severity": "high",
+   "confidence": 1.0,
+   "miles_to_onset": 18000,
+   "tier": "exact_model"
+  },
+  {
+   "rank": 19,
+   "issue_id": 421,
+   "title": "ZX-9R carburetor issues (1998-1999) \u2014 CV carbs o",
+   "severity": "high",
+   "confidence": 0.6933,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 426,
+   "title": "ZX-9R fuel pump aging (2000-2003 FI models)",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 424,
+   "title": "ZX-9R cam chain tensioner \u2014 900cc inline-4",
+   "severity": "high",
+   "confidence": 0.6667,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 361,
+   "title": "KZ1000/1100 cam chain tensioner failure \u2014 manual",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 385,
+   "title": "Z H2 supercharged naked \u2014 unique cooling and boo",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 411,
+   "title": "ZX-7R carburetor sync and idle issues \u2014 4 CV car",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 413,
+   "title": "ZX-7R charging system \u2014 stator and regulator on ",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 414,
+   "title": "ZX-7RR flat-slide FCR carburetor maintenance \u2014 h",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 415,
+   "title": "ZX-7R cam chain tensioner \u2014 750cc inline-4 stres",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 362,
+   "title": "KZ650/750 charging system \u2014 stator and regulator",
+   "severity": "high",
+   "confidence": 0.6467,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 331,
+   "title": "Supercharger system \u2014 understanding the centrifu",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 335,
+   "title": "H2 chain and sprocket \u2014 supercharged torque stre",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 336,
+   "title": "H2 oil consumption and quality \u2014 supercharger lu",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 339,
+   "title": "H2 brake system \u2014 stopping 500+ lbs of superchar",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 340,
+   "title": "H2 valve clearance \u2014 supercharged engine increas",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 371,
+   "title": "Vulcan 800/900 carburetor issues \u2014 pilot jet and",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 384,
+   "title": "Z750/Z800 stator and charging \u2014 mid-displacement",
+   "severity": "high",
+   "confidence": 0.62,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 324,
+   "title": "Kawasaki immobilizer (KIPASS) system issues",
+   "severity": "high",
+   "confidence": 0.6067,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 346,
+   "title": "ZX-14R shaft drive discussion \u2014 chain-drive main",
+   "severity": "high",
+   "confidence": 0.6067,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 350,
+   "title": "ZX-14R valve clearance \u2014 high-mileage sport-tour",
+   "severity": "high",
+   "confidence": 0.6067,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 363,
+   "title": "KZ/GPz inline-4 carburetor synchronization and r",
+   "severity": "high",
+   "confidence": 0.6067,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 388,
+   "title": "Z1000 CCT \u2014 high-revving naked inline-4",
+   "severity": "high",
+   "confidence": 0.5933,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 351,
+   "title": "Ninja 250R carburetor issues \u2014 pilot jets and ch",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 364,
+   "title": "GPz900R/1000RX fuel system \u2014 petcock and tank ru",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 347,
+   "title": "ZX-12R and ZX-14R CCT \u2014 high-torque inline-4",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 374,
+   "title": "Vulcan 750 starter system \u2014 starter clutch and r",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 373,
+   "title": "Vulcan 1500/1600 shaft drive service neglect",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 46,
+   "issue_id": 394,
+   "title": "ZX-10R CCT failure \u2014 high-output literbike engin",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 47,
+   "issue_id": 395,
+   "title": "ZX-10R fuel pump and fuel system \u2014 high-flow dem",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 396,
+   "title": "ZX-10R valve clearance \u2014 literbike service inter",
+   "severity": "high",
+   "confidence": 0.5533,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 406,
+   "title": "ZX-6R fuel pump failure \u2014 ethanol and heat damag",
+   "severity": "high",
+   "confidence": 0.5467,
+   "miles_to_onset": 18000,
+   "tier": "generic"
+  }
+ ],
+ "Honda PCX 150": [
+  {
+   "rank": 0,
+   "issue_id": 221,
+   "title": "Regulator/rectifier failure \u2014 overcharging or de",
+   "severity": "critical",
+   "confidence": 0.7267,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 1,
+   "issue_id": 222,
+   "title": "Cam chain tensioner (CCT) failure \u2014 top-end ratt",
+   "severity": "critical",
+   "confidence": 0.7267,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 2,
+   "issue_id": 303,
+   "title": "Charging system failure \u2014 early Honda generators",
+   "severity": "critical",
+   "confidence": 0.7133,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 3,
+   "issue_id": 306,
+   "title": "Brake master cylinder and caliper rebuild \u2014 agin",
+   "severity": "critical",
+   "confidence": 0.7133,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 4,
+   "issue_id": 194,
+   "title": "HESD failure \u2014 same as CBR600RR but higher force",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 5,
+   "issue_id": 201,
+   "title": "Regulator/rectifier failure \u2014 same Honda disease",
+   "severity": "critical",
+   "confidence": 0.7,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 6,
+   "issue_id": 211,
+   "title": "HESD (Honda Electronic Steering Damper) failure ",
+   "severity": "critical",
+   "confidence": 0.6867,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 7,
+   "issue_id": 292,
+   "title": "Regulator/rectifier failure \u2014 V4 heat generation",
+   "severity": "critical",
+   "confidence": 0.6733,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 8,
+   "issue_id": 191,
+   "title": "Regulator/rectifier failure \u2014 high-output stator",
+   "severity": "critical",
+   "confidence": 0.66,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 9,
+   "issue_id": 212,
+   "title": "Regulator/rectifier failure \u2014 improved but still",
+   "severity": "critical",
+   "confidence": 0.66,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 10,
+   "issue_id": 23,
+   "title": "Stator connector melting \u2014 fire risk and solder ",
+   "severity": "critical",
+   "confidence": 0.6533,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 11,
+   "issue_id": 51,
+   "title": "Fuel pump failure and testing \u2014 all EFI motorcyc",
+   "severity": "critical",
+   "confidence": 0.64,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 12,
+   "issue_id": 1,
+   "title": "Brake fluid contamination \u2014 DOT 4 hygroscopic wa",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 13,
+   "issue_id": 5,
+   "title": "Master cylinder failure \u2014 internal seal wear, le",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 14,
+   "issue_id": 18,
+   "title": "Float bowl overflow and fuel leak \u2014 fire hazard",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 15,
+   "issue_id": 21,
+   "title": "Stator winding failure \u2014 insulation breakdown ca",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 16,
+   "issue_id": 231,
+   "title": "Cam chain tensioner (CCT) \u2014 the Honda inline-4 u",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 17,
+   "issue_id": 241,
+   "title": "Regulator/rectifier failure \u2014 Shadow and VTX",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 18,
+   "issue_id": 263,
+   "title": "Regulator/rectifier failure \u2014 the universal Hond",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 19,
+   "issue_id": 264,
+   "title": "Stator failure diagnosis and replacement \u2014 all H",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 20,
+   "issue_id": 281,
+   "title": "Regulator/rectifier failure \u2014 shared sport bike ",
+   "severity": "critical",
+   "confidence": 0.6,
+   "miles_to_onset": 1000,
+   "tier": "generic"
+  },
+  {
+   "rank": 21,
+   "issue_id": 223,
+   "title": "HISS immobilizer lockout \u2014 929RR and 954RR",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 22,
+   "issue_id": 4585,
+   "title": "A completed Grom fuel-pump recall is not proof o",
+   "severity": "high",
+   "confidence": 0.68,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 23,
+   "issue_id": 244,
+   "title": "VTX 1800 starter motor and starter clutch failur",
+   "severity": "high",
+   "confidence": 0.66,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 24,
+   "issue_id": 4579,
+   "title": "A Grom fault above 1800 rpm shows as a steady la",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 25,
+   "issue_id": 4580,
+   "title": "The eleven codes a GROM125 can show \u2014 and the on",
+   "severity": "high",
+   "confidence": 0.6533,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 26,
+   "issue_id": 206,
+   "title": "Clutch cable fraying and sudden failure \u2014 cable ",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 27,
+   "issue_id": 255,
+   "title": "Africa Twin coolant system and radiator protecti",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 28,
+   "issue_id": 4586,
+   "title": "The Metropolitan transmission campaign covers te",
+   "severity": "high",
+   "confidence": 0.64,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 29,
+   "issue_id": 301,
+   "title": "Points ignition failure and conversion \u2014 pre-198",
+   "severity": "high",
+   "confidence": 0.6333,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 30,
+   "issue_id": 225,
+   "title": "Fork seal leak and suspension sag \u2014 age-related",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 31,
+   "issue_id": 226,
+   "title": "Starter clutch (sprag clutch) failure",
+   "severity": "high",
+   "confidence": 0.6267,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 32,
+   "issue_id": 302,
+   "title": "Carburetor bank rebuild \u2014 4-carb inline-4 servic",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 33,
+   "issue_id": 304,
+   "title": "Cam chain and tensioner wear \u2014 high-mileage SOHC",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 34,
+   "issue_id": 309,
+   "title": "Wiring harness deterioration \u2014 brittle insulatio",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 35,
+   "issue_id": 4581,
+   "title": "In model year 2022 the Grom and the Trail 125 ra",
+   "severity": "high",
+   "confidence": 0.6133,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 36,
+   "issue_id": 203,
+   "title": "Cam chain tensioner (CCT) rattle \u2014 all F-series",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 37,
+   "issue_id": 207,
+   "title": "Radiator fan failure and overheating in traffic",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 38,
+   "issue_id": 213,
+   "title": "C-ABS unit failure \u2014 2009+ ABS models",
+   "severity": "high",
+   "confidence": 0.6,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 39,
+   "issue_id": 245,
+   "title": "Fuel pump failure \u2014 EFI Shadow and VTX models",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 40,
+   "issue_id": 295,
+   "title": "VFR800 linked braking system (CBS/C-ABS) issues",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 41,
+   "issue_id": 298,
+   "title": "Fuel pump relay failure \u2014 VFR and RC51",
+   "severity": "high",
+   "confidence": 0.5733,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 42,
+   "issue_id": 8,
+   "title": "ABS modulator bleeding \u2014 specialized procedure v",
+   "severity": "high",
+   "confidence": 0.5667,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 43,
+   "issue_id": 193,
+   "title": "Cam chain tensioner \u2014 liter bike version",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 44,
+   "issue_id": 199,
+   "title": "Brake master cylinder and caliper piston stickin",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 45,
+   "issue_id": 214,
+   "title": "Cam chain tensioner noise \u2014 all years",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 46,
+   "issue_id": 215,
+   "title": "Fuel pump failure \u2014 low-fuel overheating",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 47,
+   "issue_id": 219,
+   "title": "Stator failure on high-RPM track use",
+   "severity": "high",
+   "confidence": 0.56,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 48,
+   "issue_id": 4606,
+   "title": "Every maker publishes a roller wear limit \u2014 in a",
+   "severity": "high",
+   "confidence": 0.54,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  },
+  {
+   "rank": 49,
+   "issue_id": 4607,
+   "title": "The clutch side: one maker publishes an engageme",
+   "severity": "high",
+   "confidence": 0.54,
+   "miles_to_onset": 16000,
+   "tier": "generic"
+  }
+ ]
+}
