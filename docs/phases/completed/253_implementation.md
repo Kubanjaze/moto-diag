@@ -1,6 +1,6 @@
 # Phase 253 — Yamaha's scooters and the Taiwanese makers
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-20
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-21
 
 ---
 
@@ -148,15 +148,111 @@ an unrecognised model string, so nothing in a response validates a name.
 - Nothing from memory: no interval, torque or capacity that a fetched page
   does not state.
 
+## Results (v1.1)
+
+**Shipped:** `known_issues_yamaha_kymco_sym_genuine.json`, fourteen rows —
+nine `service-manual`, five `regulation`, none `model-generated` and none
+`unverified`. Corpus 1019 → 1033. **Three new marques**, and Yamaha's model
+pool **23 → 46**.
+
+- 105 tests, 20 mutations.
+- Full regression **7,665 passed, 0 failed, 36:56**.
+
+### The rows
+
+Three carry what the corpus had no equivalent of. **One nameplate covers
+three engines**: the Zuma 50 is an air-cooled two-stroke with autolube and
+no sump to drain through model year 2011, the Zuma 50F a liquid-cooled
+injected four-stroke from 2012, and the Zuma 125 air-cooled through 2021
+then liquid-cooled with variable valve actuation — while the **Vino splits
+the other way**, its 50 liquid-cooled and carburetted where its 125 of the
+same era is air-cooled. The figure that does damage is the spark-plug
+torque: **20 N·m on the two-stroke against 13 N·m on the four-stroke**.
+
+**Yamaha prints one interval three ways.** The same 18,000 km Zuma 125
+V-belt replacement appears as "Every 1200 mi", "Every 18000 km (12000 mi)"
+and "Every 11000 mi" across three documents — the 2009 owner's manual short
+by roughly a factor of nine, and the same misprint in the Vino 125 book.
+Beneath it sits a wider defect: a 4,000 mile interval given as 7,000 km and
+then 6,000 km in one sentence, in **twelve of fifteen manuals spanning 2006
+to 2022**. That is a house style, not a slip.
+
+**Who builds a Genuine scooter is a chain, not a sentence.** A VIN prefix
+registered to a Taiwanese manufacturer trading as PGO, a regulator
+manufacturer record carrying both names, and unerased "SHOULD BE DONE BY
+YOUR PGO DEALER" text in three current manuals — reported as a chain,
+because no reachable document contains the declaration, and shipped with
+the three counterweights that cut against it.
+
+### What the refuters changed — one headline per sweep
+
+| The sentence | Why it died |
+|---|---|
+| "Zuma and BWS appear in none of the fourteen documents" | *Zuma* is on two covers, and the sweep had cited one of those documents under its own belt claim. Naming is **year-dependent**, not absent |
+| "XC50 is the Vino 50 is unanchored folklore" | the 2007 Vino 50 manual carries `XC50W` on its cover and `VINO` on page 5 — **the campaign's own model year** |
+| "SYM's entire Honda statement is one clause, no dates, no models" | SYM's **US** host gives 1962, "joint venture", and two named cars. The sweep scoped to the corporate parent |
+| "no fault codes across 21 Kymco and SYM manuals" | they exist under the makers' own words — *Fi error code indicator*, *Engine Warning Indicator*, *EFi Trouble Indicator*, *Fault indicator light* |
+| that scoped zero | one of the 21 files has **no text on 47 of its 57 pages**; its zeros were never evidence |
+| "JASO appears nowhere" | Kymco-only; it appears once, in SYM's Wolf CR300i |
+| "the Rattler 50 takes a wider plug gap than the Buddy 50" | the Rattler's own manual prints both gaps — a defect, not a difference |
+| "campaign 04V381000 covers the Super-9" | it covers the **Vitality** too, in both years |
+| "one of the two NIU campaigns is a do-not-ride" | **both** are; only one also lacks a remedy |
+| "the Super 8 50 name collision is a site-labelling defect" | Kymco's site labels the 50X and 50R correctly; the collision is inside the documents |
+| "the People S manual describes no injection" | it describes **secondary air** injection; only fuel injection is absent |
+
+Each is a test and a mutation.
+
+### The safety question Step 0 asked first
+
+Two of the three new marque names are ordinary English words — `SYM` sits
+inside 397 corpus rows as *symptom* or *system*, `Genuine` inside 60 as
+*genuine part*. Before any row was written, a probe loaded makes literally
+named `SYM` and `Genuine` into a copy of the live database:
+`resolve_vehicle("system")` and `("symptom")` both stayed **unresolved**,
+marque matching is not substring-based, all three resolved exact,
+`integrity_check` returned `ok`, and no existing retrieval moved except
+Yamaha's make-wide count rising by the one probe row carrying its name.
+The same check now runs against the shipped rows.
+
+### Deviations
+
+**The roadmap row's "parts availability" got a thinner answer than hoped,
+and that is the answer.** Kymco makes quantified claims — parts stocked in
+US warehouses, over 500 dealers — but states no support duration for a
+discontinued model. SYM makes no parts claim at all; its discontinued-models
+page lists eleven machines and says nothing about parts for any of them.
+Genuine gates parts manuals behind a dealer login. The row records what each
+maker does and does not commit to, rather than inventing a comparison.
+
+**Two guards were too blunt on their first run, and one contradicted a
+sibling test twelve lines away.** Both were rewritten to test the claim,
+scoped to a sentence. This is the third consecutive phase in which a
+token-ban guard fired on the honest row that names an error in order to
+disclaim it, so it is now written down as a memory rather than relearned.
+
+### Verification
+
+- Fourteen rows, every one anchored to a document named in its description;
+  Yamaha's own library named where the document came off it, mirrors named
+  where they did not.
+- All sixteen machines resolve exact — Zuma, Zuma 125, Vino, Vino 50, XC50A,
+  GQX125N, Agility, Like 150i, Vitality, Symba, Mio 50, Wolf CR300i, Buddy,
+  Buddy Kick, Roughhouse 50, Stella.
+- `system`, `symptom` and `genuine part` still resolve to nothing after the
+  load.
+- The 250C control-group pin moved 23 → 46 for Yamaha with its reason, as
+  Step 0 said it would.
+- 20 mutations, all caught.
+
 ## Verification Checklist
 
-- [ ] Every row anchored to a named document, or dropped
-- [ ] Every number labelled; no number without a fetched source
-- [ ] No row restates Phase 252 or a generic layer 254/256/257 will own
-- [ ] Kymco, SYM and Genuine resolve as marques, with their models, after the load
-- [ ] Zuma, Vino and BWS resolve as Yamaha models
-- [ ] The new test file scanned by 244G's raw-source guard
-- [ ] Mutations caught
-- [ ] Full regression green — 0 failed, 0 skipped
-- [ ] Live DB loaded copy-first, before-state printed; count docs moved
-- [ ] Roadmap row, `implementation.md` history row, `phase_log.md`
+- [x] Every row anchored to a named document, or dropped
+- [x] Every number labelled; no number without a fetched source
+- [x] No row restates Phase 252 or a generic layer 254/256/257 will own
+- [x] Kymco, SYM and Genuine resolve as marques, with their models, after the load
+- [x] Zuma, Vino and BWS resolve as Yamaha models
+- [x] The new test file scanned by 244G's raw-source guard
+- [x] Mutations caught — 20/20
+- [x] Full regression green — **7,665 passed, 0 failed, 36:56**, 0 skipped
+- [x] Live DB loaded copy-first, before-state printed; count docs moved
+- [x] Roadmap row, `implementation.md` history row, `phase_log.md`

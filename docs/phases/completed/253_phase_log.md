@@ -1,6 +1,6 @@
 # Phase 253 — Yamaha's scooters and the Taiwanese makers — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-20
 
 ---
@@ -44,3 +44,7 @@ field. Filed, not fixed — this is a content row.
 
 Sweeps launched with the plan. Each fetches every page it cites and quotes
 it, or the claim does not exist.
+
+## 2026-09-21 — Complete
+
+Regression **7,665 passed, 0 failed, 36:56**. Corpus 1019 -> 1033, three new marques (Kymco, SYM, Genuine), Yamaha's model pool 23 -> 46. No schema change. F108, F109 and F110 filed.
