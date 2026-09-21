@@ -1,0 +1,373 @@
+[
+  {
+    "title": "One Yamaha scooter nameplate covers three different engines — and a two-stroke plug torque on a four-stroke head is over 50 percent high",
+    "description": "The Zuma and Vino names each span machines with nothing mechanical in common, and Yamaha's own owner's manuals say so. The Zuma 50 through model year 2011 (cover code YW50A, owner's manual LIT-11626-24-58) is 'Air cooled 2-stroke' with 'Separate lubrication (Yamaha autolube)' and a Teikei carburettor, 'Y14P-13E ( 5PJ5 ) x 1'; its 1.40 L figure is printed as an engine oil quantity, and there is no sump to drain. From model year 2012 the Zuma 50F (YW50FB, later YW50FK, LIT-11626-32-53) is 'Liquid cooled 4-stroke, SOHC' with fuel injection, throttle body ID 3B31 01, bore and stroke moving from 40.0 x 39.2 mm to 38.0 x 43.6 mm and compression from 7.01:1 to 12.0:1. The Zuma 125 is air-cooled through 2021 (YW125M) and liquid-cooled from 2022 (GQX125N), which also gains variable valve actuation — 'This model is equipped with variable valve actuation (VVA)' — a phrase that occurs zero times in the 2021 manual. The Vino splits the other way: the Vino 50 (XC50) is liquid-cooled and still carburetted at model year 2011, 'KEIHIN' 'NCV18 x 1', while the Vino 125 of the same era (YJ125Y) is 'Air cooled 4-stroke, SOHC' with a Mikuni 'BS26 x 1'. The Vino Classic (XC50J) is injected, throttle body ID 3P31 00. The figure that does damage is the spark plug torque. The two-stroke manual prints '20 Nm (2.0 m-kgf, 14.4 ft-lbf)' with an NGK BPR7HS gapped 0.6 to 0.7 mm; the four-stroke prints '13 Nm (1.3 m-kgf, 9.4 ft-lbf)' with an NGK CR7E gapped 0.7 to 0.8 mm. Transmission oil splits the same way — SAE 85W-140 on the two-stroke, SAE 10W-30 type SE motor oil on the four-stroke — and the 2009 Vino 125 and Zuma 125 take different oils at an identical 0.13 L, 85W-140 (GL5) against 10W-30 SE. All figures read from Yamaha's own owner's-manual library, not from a mirror.",
+    "make": "Yamaha",
+    "model": "Zuma, Zuma 50, Zuma 50F, Zuma 125, Vino, Vino 50, Vino 125, Vino Classic, YW50A, YW50FK, YW125M, GQX125N, XC50A, XC50J, YJ125Y",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "zuma spark plug torque",
+      "zuma two stroke or four stroke",
+      "vino transmission oil",
+      "which engine does my zuma have",
+      "scooter plug torque",
+      "zuma 125 vva"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Carrying a two-stroke figure to a four-stroke machine of the same name",
+      "Assuming a nameplate implies one engine across model years",
+      "Using the Vino 125's gear oil on a Vino 50 or the reverse"
+    ],
+    "fix_procedure": "1. Establish the cover code before quoting any figure: YW50A is a two-stroke, YW50F is a four-stroke, YW125 is air-cooled and GQX125 is liquid-cooled. 2. Torque a two-stroke plug to 20 Nm and a four-stroke plug to 13 Nm; the two-stroke figure on a four-stroke head is over half again too high. 3. Match the plug to the engine, BPR7HS on the two-stroke and CR7E on the four-stroke, with their different gaps. 4. Do not look for an engine oil change on the two-stroke Zuma 50 — it is autolube, and the 1.40 L is a reservoir quantity. 5. Check transmission oil per machine, not per nameplate: 85W-140 and 10W-30 SE are both correct on different scooters of the same model year.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Yamaha prints the same V-belt interval three different ways, and a 4,000 mile interval as two different kilometre figures in twelve manuals",
+    "description": "For one interval — replacing the Zuma 125's V-belt at 18,000 km — Yamaha's own documents give three different mileages. The 2009 owner's manual (LIT-11626-22-71) prints 'Every 1200 mi (18000 km)'. The 2009 service manual for the same machine prints 'Every 18000 km (12000 mi)'. The 2021 owner's manual (LIT-11626-34-48) prints 'Every 11000 mi (18000 km)'. 18,000 km is about 11,185 miles, so the 2009 owner's-manual figure is short by roughly a factor of nine, and the same misprint appears in the 2009 Vino 125 manual (LIT-11626-22-70). Each was checked as a single contiguous text run against its own V-belt row rather than reconstructed from a table, so none is an extraction artefact. The error is bounded: it is corrected to 'Every 11000 mi (18000 km)' by model year 2018 and remains correct at 2021 and 2022. A second, wider inconsistency sits in the maintenance chart itself. The spark-plug row reads 'Replace at 4000 mi (7000 km) or 12 months and thereafter every 4000 mi (6000 km) or 12 months' — 4,000 miles given as 7,000 km and then as 6,000 km in one sentence, on a page whose own column header reads 4,000 mi over 7,000 km. That is not one book's slip: the same contradiction appears in twelve of fifteen owner's manuals read, spanning 2006 to 2022. It is a house style, and a technician who trusts the metric half will shorten or lengthen the interval depending on which clause they read. One caution on the belt figures themselves: 18,000 km belongs to the Zuma 125. The 50 cm3 machines replace the belt at 'Every 6250 mi (10000 km)', so a belt interval keyed on the nameplate alone crosses the two families.",
+    "make": "Yamaha",
+    "model": "Zuma 125, Vino 125, Zuma 50, Zuma 50F, YW125Y, YW125M, YJ125Y",
+    "year_start": 2006,
+    "year_end": 2022,
+    "severity": "high",
+    "symptoms": [
+      "zuma belt interval",
+      "when to change the v-belt",
+      "manual says two different intervals",
+      "vino 125 belt",
+      "scooter belt replacement"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Quoting the 1,200 mile figure printed in the 2009 owner's manuals",
+      "Reading the metric half of a spark-plug interval that contradicts its own header",
+      "Applying the 125's belt interval to a 50"
+    ],
+    "fix_procedure": "1. For a Zuma 125 V-belt, use 18,000 km, which is about 11,000 miles; the 1,200 mile figure in the 2009 books is a misprint. 2. On a 50 cm3 Zuma or Vino the belt interval is 10,000 km (6,250 miles), not 18,000 km. 3. Where the spark-plug row gives two kilometre figures for 4,000 miles, take the column header's 7,000 km. 4. Prefer the mileage column on a US machine and treat the metric conversions in these charts as unreliable. 5. When two Yamaha documents for one machine disagree, check the model year — the belt error is confined to the 2009 editions.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "A Yamaha scooter names itself only in some model years, so identify it by cover code — and one recall names codes the nameplate never appears beside",
+    "description": "Keying a Yamaha scooter on its marketing name fails silently, because the name is in the document only some years. Across fifteen owner's manuals, the word Zuma appears on exactly two covers — 'ZUMA 125' on LIT-11626-31-33 (2018) and LIT-11626-34-48 (2021) — and nowhere else, while 'BWS' appears zero times in any of them. Vino appears in three documents: 'Congratulations on your purchase of the Yamaha VINO.' in the 2006 and 2007 Vino 50 manuals, and VINO125 in a 2004 book. By model year 2011 the same machine's manual says only 'Congratulations on your purchase of the Yamaha XC50A'. Those counts were taken with positive controls through the same search — Yamaha itself returns 1,711 hits across the set, spark plug 724 — so the zeros are real zeros and not a broken search. What is stable is the cover code: YW50A, YW50FK, YW125Y, YW125M, GQX125N, XC50V, XC50W, XC50A, XC50J, YJ125Y. The suffix is a year letter, so the base code is what identifies the machine. This matters for one recall in particular. Campaign 08V461000 of September 2008 covers 4,800 model year 2007 machines for a defect stated as 'A CRACK MAY DEVELOP ON THE CONNECTING ROD', with dealers to disassemble the engine and replace the crankshaft — and it names only 'XF50 AND XC50'. The bridge from that code to the nameplate is documented in the campaign's own model year: the 2007 Vino 50 owner's manual (LIT-11626-20-36) carries XC50W on its cover and 'VINO' on page 5. So the campaign does reach a Vino 50, and the link is a document rather than an inference — but it is anchored for 2006 and 2007 and lapses afterward, which is why the campaign must be recorded against the code and not the name.",
+    "make": "Yamaha",
+    "model": "Vino 50, Vino, XC50V, XC50W, XC50A, XF50, Zuma 125, YW125Y, GQX125N",
+    "year_start": 2006,
+    "year_end": 2011,
+    "severity": "medium",
+    "symptoms": [
+      "vino recall",
+      "connecting rod recall",
+      "what model is my vino",
+      "xc50 vino",
+      "scooter model code",
+      "zuma model code"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Searching a corpus or a recall record for a marketing name the document never uses",
+      "Treating a cover-code suffix as part of the model rather than a year letter",
+      "Assuming a campaign that names a code does not reach the machine sold under a name"
+    ],
+    "fix_procedure": "1. Identify a Yamaha scooter by the cover code on its owner's manual, not by the name on the bodywork. 2. Read the last letter of the code as a model year and search on the base code — XC50, YW50, YW125. 3. For a 2007 Vino 50, check campaign 08V461000, which names XF50 and XC50 and covers a connecting-rod crack requiring crankshaft replacement. 4. Do not expect a recall record to carry the marketing name; the regulator writes what the manufacturer filed. 5. Record the machine against its code so a later search finds it whichever way the question is asked.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "regulation"
+  },
+  {
+    "title": "Kymco and SYM publish owner's manuals and outsource everything else — one to a third-party publisher, the other to a file-sharing host",
+    "description": "Neither Taiwanese maker withholds documentation the way some marques do, but neither publishes a service manual either, and the shape of what they do publish is worth knowing before a job starts. Kymco USA hosts owner's manuals free on its own server, 29 models, no registration — 'Let us be your file cabinet. Bookmark this page and return anytime you need to grab all of the information possible'. Its Manuals page carries no links in the page body at all; the two that exist are sitewide footer links, and the second, labelled Service Manuals, leaves Kymco's site for a third party. That third party states of itself, on its own host, 'Note: Cyclepedia Press LLC is an official authorized KYMCO manual publisher.' — a claim by the publisher, not by Kymco, whose own act is the link. SYM USA publishes owner's manuals only, exactly fourteen of them, and every single one is hosted on a file-sharing service rather than on SYM's own server, alongside a fifteenth link to a warranty certificate. The strings service manual, shop manual and repair return zero on that page. SYM's global corporate site offers no manuals at all — its download menu carries only catalogues, wallpapers and media information. What the makers say about support differs as sharply. Kymco USA makes quantified claims on its own site: 'our US facility stocks millions of dollars in parts, ensuring that when you need support, it's already here on American soil', a network of over 500 dealers, and exclusive US distribution. It states no support duration, and nothing anywhere says how long parts are held for a discontinued model. SYM makes no parts claim at all. Its only anchored commitments are a 24-month warranty conditioned on an inspection — 'VEHICLES MUST BE INSPECTED BY AN AUTHORIZED SYM DEALER WITHIN 500 MILES FROM DATE OF PURCHASE' — which is non-transferable and excludes drive belts, air cleaner elements, brake pads, brake shoes and clutch disks as consumables, with batteries covered one month. Its own discontinued-models page lists eleven machines and says nothing about parts for any of them.",
+    "make": "Kymco, SYM",
+    "model": "Agility, Agility 125, Super 8, Super 8 50X, Super 8 50R, People S, Like 150i, X-Town 300, K-Pipe, Mio 50, Symba, Fiddle III, Wolf Classic 150, Wolf CR300i, Jet 14",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "kymco service manual",
+      "sym owners manual",
+      "where to get a scooter manual",
+      "kymco parts availability",
+      "sym warranty",
+      "discontinued scooter parts"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Expecting a service manual from a maker that publishes only owner's manuals",
+      "Reading a publisher's authorisation claim as the manufacturer's own statement",
+      "Assuming a warranty survives a missed early inspection or a resale"
+    ],
+    "fix_procedure": "1. For either maker, expect an owner's manual free and a service manual from somewhere else. 2. Kymco's service manuals come from a third-party publisher it links to; treat that publisher's authorisation claim as the publisher's own. 3. SYM's manuals are on a file-sharing host, so a link may move; keep a local copy of any manual a job depends on. 4. On a SYM, check whether the 500-mile dealer inspection was done before relying on the warranty, and note that it does not transfer on resale. 5. Do not promise parts support duration for either maker; neither publishes one.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Kymco's own product page serves a 2009 carburetted manual for a fuel-injected scooter it sells today",
+    "description": "The People S 150i ABS is a current Kymco model — its 2026 specification sheet reads 'DISPLACEMENT 149cc' and 'FUEL MANAGEMENT Fuel Injection'. The owner's manual Kymco links for it, from the manuals index and from the product page itself, is 'T300-BA40BB-US-A5', imprinted 'Prepared: March 2009'. That document contains three specification tables — People S 50, 125 and 200 — and no 150 table at all. It prints 'Ignition type ... DC-CDI' three times and carries a carburettor row in its maintenance schedule. The only injection in it is secondary air: an air injection control valve and an air injection air cleaner in the clean-air diagram, which is not fuel injection. The same manual misprints two of its three displacements by a factor of exactly one hundred: 'Displacement....................................... 1.25 cm3 (7.6 cu. in)' for the 125 and '1.63 cm3 (9.94 cu. in)' for the 200, against a correct '49.5 cm3 (3.0 cu. in)' for the 50. The manual's own bore and stroke — 52.4 by 57.8 mm and 60 by 57.8 mm — work out at about 124.6 and 163.4 cm3, which confirms the cubic-inch figures and identifies the metric ones as the broken half. A second document has the mirror-image defect. The 2008 Super 8 manual prints 'Dry weight ... 233.5 lbs (118 kg)' for the 50 and '258 lbs (118 kg)' for the 150 — one kilogram figure for two different pound figures. 258 lb is about 117 kg, so the 150's pair is self-consistent and the 50's metric figure is the wrong one. And Kymco's own web page disagrees with its own specification sheet for the People S 150i: 13.5 hp at 9,000 rpm and 149.8 cm3 on the page against 13.5 hp at 8,500 rpm and 149 cm3 in the PDF. One thing that is not a defect, despite appearances: Kymco sells a Super 8 50X and a Super 8 50R, the first carburetted and the second injected, and its site labels them correctly. The collision is inside the documents, where one reads 'SPECIFICATIONS - Super 8 (50 model)' and the other 'Super 8 50 SPECIFICATIONS'. The index does however serve one file under both Super 8 50X and Super 8 150X.",
+    "make": "Kymco",
+    "model": "People S, People S 150i, People S 50, People S 125, People S 200, Super 8, Super 8 50X, Super 8 50R, Super 8 150X",
+    "year_start": 2008,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "people s manual wrong",
+      "kymco displacement wrong",
+      "which super 8 do i have",
+      "scooter manual does not match",
+      "kymco spec disagreement"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Taking a service figure from a manual the maker links for a different generation",
+      "Reading a displacement from a table whose metric column is misprinted",
+      "Assuming two machines sold under one number share a fuel system"
+    ],
+    "fix_procedure": "1. Before using a Kymco owner's manual, check its imprint date against the machine's model year — the linked manual may predate the machine by fifteen years. 2. On a current People S 150i, expect fuel injection; the linked manual describes carburetted 50, 125 and 200 machines and has no 150 table. 3. Where a displacement looks impossible, check it against the manual's own bore and stroke before quoting it. 4. Distinguish a Super 8 50X from a 50R by fuel system, not by the number on the bodywork. 5. When Kymco's web page and its specification sheet disagree, record both and say which you used.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "A SYM manual tells you to change the oil three times more often than its own schedule does, and the site disagrees with the manual on four more figures",
+    "description": "The Symba's owner's manual gives an oil interval twice, and the two do not agree. Its prose says 'Change engine oil after the first 200 miles, and change the engine oil every 600 miles thereafter.' Its maintenance schedule gives the same item as 'Replacement for every 3,000KM'. Three thousand kilometres is about 1,864 miles, so the prose is roughly three times more frequent than the table. The schedule's column headings are kilometre-based throughout — 300 km, then every 1,000, 3,000, 6,000 and 12,000 km — while its footnote reads 'The above maintenance schedule is established by figuring a usage of 1000 miles per month', a miles-per-month basis under kilometre headings in a manual that elsewhere states the US odometer reads in miles. The Wolf 150 settles which half is wrong. It uses a schedule of the same design and its footnote reads 'taking the monthly 1,000 kilometers as a reference', and its prose is internally consistent: 'Change engine oil after the first 300km, and change the engine oil every 3,000km thereafter.' So the Symba is the lone outlier, and the shape of the error is a kilometre figure converted into miles without being converted. Separately, SYM's own US site and SYM's own manual disagree about the Symba on four points: compression ratio 9.6:1 against 9.2:1, wheels aluminium against steel, capacity 299 lb against a maximum load of 170 kg (374 lb), and the name itself, Symba 100 on the site against Model SYMBA 110 in the manual, though both give 101.4 cm3. The site page also contradicts itself within one page, describing 17 inch spoked rims in prose while its table says aluminium, and lists the ignition as a carburettor. Two other SYM naming traps sit nearby. The Fiddle III's cover calls it 170 c.c., its specification table says 169.0 c.c., and it is sold as the Fiddle III 200i. And one linked file called Mio 50 contains three market tables sharing a model code, where the US and Danish versions publish different power, torque and fuses.",
+    "make": "SYM",
+    "model": "Symba, Symba 100, SYMBA 110, Wolf Classic 150, Wolf 150, Fiddle III, Mio 50",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "high",
+    "symptoms": [
+      "symba oil change interval",
+      "sym oil interval",
+      "manual and website disagree",
+      "symba compression ratio",
+      "fiddle iii displacement"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A kilometre interval carried into a miles column without conversion",
+      "Taking a specification from a distributor page rather than the manual",
+      "Reading a cover name as the machine's displacement"
+    ],
+    "fix_procedure": "1. On a Symba, use the schedule's 3,000 km oil interval rather than the prose's 600 miles; the Wolf 150's consistent wording shows which is the conversion error. 2. Treat the miles-per-month footnote as unreliable wherever the column headings are metric. 3. Where SYM's site and its manual disagree, prefer the manual and record the discrepancy. 4. Identify a Fiddle III by the 169.0 c.c. in its specification table, not by the 170 or 200 in its names. 5. On a Mio 50, confirm which market table applies before quoting power, torque or fuse ratings.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Kymco and SYM do show fault codes on the dash — under names no standard diagnostic vocabulary would find",
+    "description": "Searching these makers' manuals for the usual words returns nothing. Across twenty-one Kymco and SYM owner's manuals the strings MIL, malfunction indicator, fault code, trouble code, DTC, OBD, scan tool, diagnostic connector, data link, blink code and flash code all return zero, and no manual prints a table of code numbers. That absence is real but it is not the whole picture, because the makers use their own vocabulary. Kymco's X-Town 300 manual describes 'The Fi error code indicator Display the error code of fuel injection system.' and separately numbers an 'Engine Warning Indicator: It goes with the Fi error code' — so Kymco does put error codes on the dash, under the words error code rather than fault code. Its smaller EFI machines describe a CELP indicator instead: 'If it keeps on after start the engine, it indicates that a fault has been detected in the EFI or electrical system', with a power-on self-test, 'Whenever the ignition switch is turned on, it goes on then off after self-diagnose.' SYM has its own names again: the Wolf CR300i carries an EFi Trouble Indicator and tells the rider to check the self-diagnosis system, while the Mio 50, Fiddle 4 and Jet 14 carry a Fault indicator light. What none of the twenty-one documents contains is a code table or a described diagnostic connector, and the only instruction offered is to see a dealer. Two cautions on how far these zeros reach. One of the twenty-one files has no usable text on forty-seven of its fifty-seven pages, so its zeros are not evidence of anything and were not counted as such. And the zeros are scoped to these documents rather than to the makers: the oil standard JASO, for instance, appears in none of the seven Kymco manuals but does appear once in the corpus, in SYM's Wolf CR300i, as 'SAE 10W-40, API SJ, JASO MA'. Kymco's own oil specification is not uniform either — API SJ on the Agility, People S and Super 8, API SL or higher on the Like 150i, with SAE 15W-40, 10W-40 and 5W-50 all appearing across the range.",
+    "make": "Kymco, SYM",
+    "model": "X-Town 300, Like 150i, Super 8 50R, Agility, People S, Wolf CR300i, Mio 50, Fiddle 4, Jet 14, K-Pipe",
+    "year_start": 2004,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "kymco error code",
+      "sym fault light",
+      "scooter check engine light",
+      "efi trouble indicator",
+      "celp indicator",
+      "kymco fi light"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Searching a manual for standard diagnostic vocabulary the maker does not use",
+      "Concluding from an empty search that a machine shows no codes",
+      "Treating a zero from a document whose text layer is missing as evidence"
+    ],
+    "fix_procedure": "1. On a Kymco or SYM, look for the maker's own words — error code, CELP indicator, Engine Warning Indicator, EFi Trouble Indicator, Fault indicator light — not MIL or DTC. 2. The X-Town 300 displays an error code on the dash; the smaller EFI machines only light a lamp. 3. Expect no code table and no described diagnostic connector in any owner's manual from either maker. 4. Before treating an absent term as evidence, confirm the document is actually searchable; one of these manuals has no text on most of its pages. 5. Take the oil standard from the specific manual — these makers are not consistent across their own ranges.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Who builds a Genuine scooter is answerable as a chain of records, not as a sentence — and the company's own manual says something different",
+    "description": "Genuine Scooter Company describes itself as 'an American scooter company founded in Chicago in 2002', and the question of who manufactures its machines has a documentary answer that stops short of a declaration. The chain runs like this. Genuine's own recall portal states that its VINs begin with one of two prefixes, MD7 or RFV. The US regulator's vehicle-identification database decodes the prefix RFV to make 'GENUINE SCOOTERS' and manufacturer 'MOTIVE POWER INDUSTRY CO. LTD.', listing that manufacturer's URL as the PGO scooter company's domain. The same database's manufacturer record for Motive Power Industry, in Taiwan, carries the trading name 'PGO SCOOTERS' and the common name 'Genuine Scooters', registered as a completed vehicle manufacturer. And three current Genuine owner's manuals — Buddy 125, Roughhouse 50 and Buddy 170i — carry unerased source text instructing the owner to use a PGO dealer: 'SHOULD BE DONE BY YOUR PGO DEALER, PLEASE DO NOT DO IT BY YOURSELF.' and 'Please contact to PGO dealer if the clearance is incorrect.' What no document says, anywhere that could be reached — including the PGO company's own English pages, which mention Genuine, export and the United States exactly zero times — is a sentence of the form that one company manufactures a given model for the other. The chain is the evidence and it is reported as a chain. Three things cut the other way and belong beside it. The regulator record is a registration filed by Motive Power that itself carries Genuine Scooters as a common name, and completed vehicle manufacturer is a self-selected category on that filing rather than a per-model statement of who built what. Genuine's own Buddy Kick manual says 'Each vehicle manufactured by Genuine Scooter Company has been marked with a vehicle identification number'. And Genuine's own about page names its Indian partner explicitly, as a former Piaggio manufacturing partner, while never naming a Taiwanese one, saying only that it works 'directly alongside manufacturers in India and Taiwan on product development, specifications, and market-specific tuning'. One inference that looks available is not: the PGO source text appears in three manuals and is absent from the Rattler 50, the Buddy Kick and both Buddy 50 files, so its absence cannot be used to place a model outside that lineage.",
+    "make": "Genuine",
+    "model": "Buddy, Buddy 50, Buddy 125, Buddy 170i, Buddy Kick, Buddy Kick 125, Roughhouse, Roughhouse 50, Rattler 50, Rattler 125, Hooligan 170i, Stella",
+    "year_start": 2002,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "who makes genuine scooters",
+      "is a buddy a pgo",
+      "genuine scooter manufacturer",
+      "buddy 125 parts source",
+      "genuine pgo"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Reading a VIN-prefix registration as a statement of who built a given model",
+      "Using the absence of source-text residue to exclude a model from a lineage",
+      "Treating an encyclopaedia assertion as a primary record"
+    ],
+    "fix_procedure": "1. State the relationship as the chain of records it is: a VIN prefix registered to a Taiwanese manufacturer trading as PGO, plus unerased PGO dealer instructions in three current manuals. 2. Do not write that one company manufactures a given model for the other; no reachable document says it. 3. Carry the counterweights — the registration is self-declared, and Genuine's own manual credits Genuine with manufacture. 4. Do not infer a different factory from the absence of PGO text; three Genuine models lack it. 5. For a parts question, work from the model's own manual and parts listing rather than from an assumed donor machine.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "A Genuine VIN may not decode at all, and one of its manuals introduces the wrong scooter",
+    "description": "Genuine's own recall portal states that its VINs begin with MD7 or RFV. Only one of those resolves. The US regulator's vehicle-identification database returns a result for RFV and returns zero results for MD7, and a VIN built on MD7 comes back with the error 'Manufacturer is not registered with NHTSA for sale or importation in the U.S. for use on U.S roads' — which is the sentence a decoder will put in front of a user holding a perfectly ordinary scooter. Genuine's portal lists Stella among the machines it covers, and Genuine's about page attributes the Stella to an Indian partner, so MD7 most likely belongs to that line; the database has no record for that partner either. There is also a lookup trap under Genuine's own name: searching the regulator's manufacturer table for Genuine returns a US trailer company, unrelated to scooters. The documents have their own defects. The manual Genuine publishes under Rattler 50 opens 'Congratulations on your purchase of the Genuine Scooter Company Roughhouse 50.' — the wrong model on its second page, where every other Genuine manual names itself correctly. Its specification tables are the Rattler's, so only the introduction is wrong, but a technician identifying the machine from the front of the book will misidentify it. The same manual then gives the spark plug gap twice and disagrees with itself: 0.6 to 0.7 mm in the service section, 0.7 to 0.8 mm in the specification table. The Buddy 170i is specified with fuel injection yet ships two maintenance schedules — a retained older table at 1,800, 3,600 and 5,400 miles that still lists decarbonising, ignition timing and a carburettor, sitting directly above a current table at 1,875 and 3,750 miles. A service-interval lookup can return either. And two different files are published under the name Buddy 50, both for the same model year, of different lengths and different contents, so a citation to the Buddy 50 manual by page number is ambiguous unless the file is named. One caution on the chassis: the Rattler 50 and Buddy 50 share an engine specification but not a chassis — 120/70-12 and 130/70-12 against 90/90-10 front and rear.",
+    "make": "Genuine",
+    "model": "Buddy 50, Buddy 170i, Rattler 50, Roughhouse 50, Stella, Buddy Kick 125",
+    "year_start": 2002,
+    "year_end": 2027,
+    "severity": "high",
+    "symptoms": [
+      "genuine vin will not decode",
+      "vin not recognised",
+      "rattler 50 manual",
+      "buddy 170 service interval",
+      "scooter vin error",
+      "genuine spark plug gap"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A VIN whose world manufacturer identifier is not registered with the US regulator",
+      "A manual introduction naming a different model from its own specification tables",
+      "Two maintenance schedules retained in one document"
+    ],
+    "fix_procedure": "1. If a Genuine VIN beginning MD7 fails to decode, that is expected and is not evidence of a bad VIN or a grey-market machine. 2. Do not look up Genuine in the regulator's manufacturer table; the name returns an unrelated trailer company. 3. On a Rattler 50, ignore the introduction and work from the specification tables, and resolve the plug gap against the service section rather than the table. 4. On a Buddy 170i, use the current 1,875 mile schedule and disregard the retained carburettor and ignition-timing rows. 5. When citing a Buddy 50 manual, name the file, because two different ones are published under that model. 6. Do not carry Buddy 50 tyre sizes to a Rattler 50.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "What Genuine publishes free, what it gates, and a warranty that is not one warranty",
+    "description": "Genuine publishes owner's manuals openly — thirty-four of them, fetchable without any credential. Everything a technician would want beyond that is behind a dealer login, and the page describing it says so plainly: 'The information in this site is confidential and for internal use only.' The gated set it enumerates is service bulletins, instruction sheets, owner's manuals, a dealer price sheet, labor time standards, parts manuals, pre-delivery videos, service manuals, wiring diagrams and a troubleshooting library. So for these machines the corpus can carry what an owner's manual states and no more: no wiring diagram, no labor time, no service-manual procedure. The warranty is not a single term, and quoting it as one would be wrong in three directions. A named group of models carries three years unlimited mileage: 'The following scooters have a 3-Year Unlimited Mileage Warranty : Buddy 50/125/170i, Buddy Kick 125, Roughhouse 50/Sport, Hooligan 170i'. All other Genuine gas-powered models carry two years unlimited. But the electric models carry one year limited to parts, the motorcycles carry two years capped at 24,000 miles rather than unlimited, and a separate brand carries one year or 6,000 miles. Transferability is stated elsewhere, on the company's questions page rather than its warranty page: 'Genuine's 2-3 year Unlimited Warranty is valid only for the original purchaser of the scooter and does not transfer if sold.' A second-hand machine therefore has no warranty regardless of its age. One operational caution about Genuine's recall lookup: it carries a 2014 copyright, states that recalls issued before 2011 are not included in its results, and was unreachable on half the attempts made against it. It is useful but it is not something to depend on at the moment a machine is in front of you.",
+    "make": "Genuine",
+    "model": "Buddy 50, Buddy 125, Buddy 170i, Buddy Kick 125, Roughhouse 50, Hooligan 170i, Rattler 50, Rattler 125, Stella",
+    "year_start": 2011,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "genuine warranty",
+      "is my scooter still under warranty",
+      "genuine service manual",
+      "bought used scooter warranty",
+      "genuine wiring diagram"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Quoting one warranty term across a range that has four",
+      "Assuming a warranty survives a resale",
+      "Expecting a wiring diagram from a maker that gates them"
+    ],
+    "fix_procedure": "1. Expect an owner's manual free and everything else — service manual, wiring diagram, labor times, parts manual — behind a dealer login. 2. Check the model against the named three-year group before quoting three years; gas models outside it get two. 3. Do not quote unlimited mileage for a Genuine motorcycle or an electric model; those terms are capped or parts-only. 4. On a second-hand machine, treat the factory warranty as void; it does not transfer. 5. Do not build a workflow that depends on the recall portal being reachable, and remember it excludes campaigns before 2011.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
+  },
+  {
+    "title": "Kymco's US campaigns include an engine replaced whole, two machines delivered without a required control, and two different faults on one model in one pair of years",
+    "description": "Six campaigns were retrieved for Kymco, and several of them are unusual enough to be worth naming individually. Campaign 04V381000, filed August 2004, states 'THE ENGINE MOUNT CAN BREAK.' and its remedy is not a bracket but the whole unit: 'KYMCO WILL REPLACE THE ENTIRE ENGINE.' It is narrowed by engine number and casting number, and it covers two model lines, the Super-9 and the Vitality, in both 2004 and 2005 — a machine described only as a Super-9 campaign would leave half the affected fleet out. Campaign 06V269000 of July 2006 is a compliance failure rather than a wear defect: 'THE MANDATORY ENGINE STOP SWITCH ON THE RIGHT HAND HANDLEBAR WAS NOT INSTALLED', against Federal Motor Vehicle Safety Standard 123. Its remedy reads that dealers will replace the switch, which sits oddly beside a defect describing a switch that was never fitted. It covers the Agility for 2006 and 2007. Campaign 16V392000 of June 2016 is the same standard again and just as unusual: on the K-Pipe, 'the gear shift pattern was assembled in a reverse sequence when compared to the standard setup.' Campaign 15V583000 of September 2015 covers the Super 8-50 X and Super 8-150 X, where 'the front hydraulic brake hose may be improperly routed, and as a result, the brake hose may contact the front tire', remedied with two securing brackets. And the Like 150i carries two separate campaigns across the same 2018 and 2019 model years, which must not be collapsed into one. Campaign 19V037000 of January 2019 is a fuel-system fire risk: 'The fuel pump may leak fuel from the electrical connection area when the tank is full.' Campaign 20V350000 of June 2020 is a wheel-speed-sensor fault with an assembly cause: 'Excessive grease applied to the ABS sensor magnetic ring may cause the deterioration of the magnetic ring, resulting in ABS failure.' Same models, same years, different components, different remedies.",
+    "make": "Kymco",
+    "model": "Super-9, Vitality, Agility, K-Pipe, Super 8-50 X, Super 8-150 X, Like 150i",
+    "year_start": 2004,
+    "year_end": 2020,
+    "severity": "high",
+    "symptoms": [
+      "kymco recall",
+      "agility engine stop switch",
+      "like 150i abs light",
+      "kymco fuel pump leak",
+      "super 8 brake hose",
+      "gear shift backwards"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "An engine mount that can break, remedied by replacing the engine",
+      "A required handlebar control absent from delivery",
+      "Excess assembly grease degrading an ABS magnetic ring"
+    ],
+    "fix_procedure": "1. On a 2004 or 2005 Super-9 or Vitality, check 04V381000 by engine and casting number before diagnosing a mount failure. 2. On a 2006 or 2007 Agility missing its engine stop switch, treat that as the campaign rather than as a removed part. 3. On a 2018 or 2019 Like 150i, check both campaigns: a fuel-pump leak and an ABS magnetic ring are separate open items. 4. On a 2015 Super 8, inspect the front brake hose routing for tyre contact. 5. On a 2016 K-Pipe, confirm the shift pattern before assuming a rider complaint is inexperience.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "Genuine's electric scooter carries two campaigns at once, both telling the rider to stop riding, and one with no remedy yet",
+    "description": "Four campaigns were retrieved for Genuine, and the 2022 electric model carries two of them simultaneously. Campaign 22V597000 states 'A loss of drive power may occur due to a firmware issue in the electric motor', remedied by new motors with new firmware. Campaign 22V629000, filed nine days later against the same scooters, states 'During operation, excessive handlebar vibration can occur which may cause rider fatigue or loss of vehicle control.' Each cross-references the other. Both are park-it campaigns: both carry the regulator's do-not-ride flag and both tell owners not to ride until the repair is complete. What distinguishes the second is that it had no fix — 'The remedy is currently under development. Owners have the option to return their scooters for a full refund.' A campaign offering a refund in place of a repair is rare enough to be worth recognising on sight. One clerical note for anyone searching: the regulator's summary for the first of the two misspells the make, writing NUI where the machine is a NIU. Campaign 14V408000 of July 2014 covers the Stella 125 Automatic, where the scooters 'may have a faulty engine control unit (ECU) which can cause the engine to stall without warning', remedied by replacing the unit. Campaign 22V862000 covers the Buddy Kick 125, where 'The impeller may strike the fuel pump body, causing the fuel pump to fail', with owner letters mailed in December 2022. That campaign is the one that shows why any list here is a floor: it does not appear in the regulator's own browse index for this make in any year, and is reachable only by its campaign number or by querying the exact model string.",
+    "make": "Genuine",
+    "model": "NIU MQiGT EVO, Stella, Stella 125, Buddy Kick, Buddy Kick 125",
+    "year_start": 2014,
+    "year_end": 2022,
+    "severity": "high",
+    "symptoms": [
+      "genuine recall",
+      "niu loses power",
+      "handlebar vibration",
+      "stella stalls",
+      "buddy kick fuel pump",
+      "scooter do not ride"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Electric motor firmware causing loss of drive power",
+      "Excessive handlebar vibration affecting control",
+      "A fuel pump impeller striking the pump body"
+    ],
+    "fix_procedure": "1. On a 2022 NIU MQiGT EVO, check for both campaigns; they are separate and both say not to ride. 2. Where a remedy is still under development, the owner is entitled to a refund rather than a repair — say so rather than scheduling work. 3. On a Stella 125 Automatic that stalls without warning, check 14V408000 before diagnosing fuelling. 4. On a 2022 Buddy Kick with fuel-delivery symptoms, check 22V862000 by campaign number, because the model does not appear in the regulator's browse index. 5. Search the make spelled as the regulator wrote it as well as correctly; one summary misspells it.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "Yamaha's scooter campaigns include a drain bolt that can loosen into the rear tyre, and one where the regulator writes both the code and the name",
+    "description": "Three further Yamaha scooter campaigns were retrieved, beyond the connecting-rod campaign recorded against the XC50 code. Campaign 00V281000 of September 2000 states 'THE DRAIN BOLT FOR THE TRANSMISSION OIL CAN COME LOOSE DURING OPERATION', with the consequence as filed that 'THIS COULD CAUSE THE REAR TIRE TO SLIP', remedied by dealers tightening the bolt. It is a useful reminder that a transmission drain bolt on a scooter sits directly above the rear tyre's contact patch. Campaign 04V475000 of October 2004 covers model year 2005 machines for 'THE REAR BRAKE SHOE MATERIAL COULD SEPARATE DUE TO IMPROPER ADHESIVE CURING', remedied by replacing the shoes. It is the one campaign in this set that the regulator files under the Zuma name as well as under a model code. Campaign 13V035000 of February 2013 is the clearest identification of any campaign here, because the regulator writes both identifiers in one phrase: it covers 'certain model year 2009 YW125 (Zuma 125) scooters manufactured between July 2008 and April 2009', 8,700 units, for 'improper clearances in the internal fuel pump components' which 'may cause an inadequate supply of fuel', remedied with a newly designed fuel pump. That last campaign is worth holding up beside the rest of this row's material: most regulator records name a model code and leave the reader to bridge to the name the machine is sold under. This one does the bridging itself, and is the exception rather than the rule.",
+    "make": "Yamaha",
+    "model": "Zuma, Zuma 125, YW125, YW50T, Riva",
+    "year_start": 2000,
+    "year_end": 2013,
+    "severity": "high",
+    "symptoms": [
+      "yamaha scooter recall",
+      "transmission drain bolt loose",
+      "rear brake shoe separated",
+      "zuma 125 fuel pump",
+      "scooter loses fuel supply"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A transmission oil drain bolt working loose over the rear tyre",
+      "Rear brake shoe lining separating from improper adhesive curing",
+      "Improper internal clearances in a fuel pump restricting supply"
+    ],
+    "fix_procedure": "1. On an early Yamaha scooter with a rear-end complaint, check the transmission drain bolt's torque before looking further. 2. On a 2005 machine with rear brake trouble, check 04V475000 rather than assuming wear. 3. On a 2009 Zuma 125 with fuelling symptoms, check 13V035000 by the code YW125 as well as by the name. 4. Expect most campaigns to name a model code only, and bridge to the nameplate using the owner's manual for the same model year. 5. Do not treat a campaign's absence under a marketing name as evidence the machine is unaffected.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  },
+  {
+    "title": "The regulator's own index under-lists these machines against its own campaign records — so every list here is a floor",
+    "description": "This entry records what could be retrieved for these makes and, more usefully, what retrieval cannot establish. The campaigns found are 00V281000, 04V475000, 08V461000 and 13V035000 for Yamaha; 04V381000, 06V269000, 15V583000, 16V392000, 19V037000 and 20V350000 for Kymco; and 14V408000, 22V597000, 22V629000 and 22V862000 for Genuine. That list is a floor. It is not a census and no completeness claim is made for it. The reason is measurable rather than theoretical. The regulator offers a browse index of models per make, and for these makes it omits machines that its own campaign records cover. Its Kymco index never lists the Vitality in any year, although a campaign's own model rows name it for 2004 and 2005; never lists the Super 8-50 X, although a campaign covers it; lists the Super-9 for 2004 but not 2005; and lists the K-Pipe for 2017 and 2022 but not 2016, although the 2016 campaign's own row says 2016. Its Genuine index returns four models across twenty-two years and never returns the Buddy Kick, which has a campaign. Every one of those is retrievable by exact model string or by campaign number. A second limit sits in the per-vehicle lookup itself. It answers an ordinary empty year with an HTTP 400 carrying a body that reads 'Results returned successfully' and zero results — and it answers an unrecognised model string exactly the same way. A real model and a nonsense string are indistinguishable by response alone, so nothing in a reply can be used to confirm that a name was understood, in either direction. The third limit is that no bulk cross-check exists. The regulator's current bulk recall file is no longer served, returning a not-found response carrying an explicit deletion marker, and the historic companion file is absent too. A file on the same host in the same family still serves normally, so this is specific to those files rather than an outage. The practical consequence for any machine in this row is that absence from a search is not absence of a campaign, and any individual scooter should be confirmed by VIN with a dealer or the regulator's own lookup.",
+    "make": "Yamaha, Kymco, SYM, Genuine",
+    "model": "Zuma, Zuma 125, Vino, Vino 50, XC50, YW125, Agility, Super-9, Vitality, K-Pipe, Like 150i, Super 8-50 X, Super 8-150 X, Buddy Kick, Stella, NIU MQiGT EVO, Mio 50, Symba",
+    "year_start": 2000,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "is my scooter recalled",
+      "scooter recall lookup",
+      "no recalls found",
+      "kymco recall search",
+      "sym recall"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "Reading an empty recall lookup as proof that a machine has no campaigns",
+      "Treating a browse index as a list of models that have campaigns",
+      "Assuming a bulk file exists to cross-check an API result"
+    ],
+    "fix_procedure": "1. Treat these campaign lists as a floor for these makes and confirm any individual machine by VIN through a dealer or the regulator's own lookup. 2. Do not use the regulator's per-make model index to decide whether a model has campaigns; it omits models its own records cover. 3. Query by exact model string and by campaign number, not only by browsing. 4. Do not read an empty response as either a valid or an invalid model name; the two are indistinguishable. 5. Record what was searched and how, so a later reader can tell a real absence from an unasked question.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
+  }
+]
