@@ -49,7 +49,7 @@ from motodiag.core.session_repo import (
 )
 from motodiag.knowledge.issues_repo import search_known_issues
 from motodiag.knowledge.prompt_rows import compose_prompt_rows
-from motodiag.knowledge.transmission import resolve_transmission
+from motodiag.knowledge.retrieval import candidate_fetch_size, rows_for_machine
 from motodiag.vehicles.registry import get_vehicle
 
 # --- Slug parsing tunables ---
@@ -283,7 +283,8 @@ def _load_known_issues(
     """
     try:
         identity, rows = known_issues_for_vehicle(
-            make, model_name, db_path=db_path, limit=_RESOLVER_FETCH,
+            make, model_name, db_path=db_path,
+            limit=candidate_fetch_size(db_path),
         )
     except Exception:
         return None, []
@@ -291,14 +292,17 @@ def _load_known_issues(
     # The resolver takes no year. Applied here, and BEFORE the cap: filtering
     # after it would drop rows that a narrower fetch would have kept.
     kept = [r for r in rows if _covers_year(r, year)]
+    # Phase 256: applicability first, at the chokepoint, then composition.
+    applicable = rows_for_machine(
+        kept, make=make, model=model_name, year=year,
+        powertrain=powertrain, transmission=transmission,
+        purpose="prompt", db_path=db_path,
+    ).rows
     return identity, compose_prompt_rows(
-        kept,
+        applicable,
         limit=KNOWN_ISSUE_PROMPT_LIMIT,
         powertrain=powertrain,
         symptoms=symptoms,
-        transmission=resolve_transmission(
-            make, model_name, explicit=transmission, powertrain=powertrain,
-        ),
     )
 
 

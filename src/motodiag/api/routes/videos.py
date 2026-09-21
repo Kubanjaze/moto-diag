@@ -111,6 +111,13 @@ class VideoFileTooLargeError(Exception):
 # ---------------------------------------------------------------------------
 
 
+
+#: How many rows the /ask endpoint hands the vision model. Was a pre-filter
+#: `limit=25` on the retrieval; Phase 256 moved it after the filter, so the
+#: model now receives up to twenty-five rows that APPLY rather than
+#: twenty-five rows of which some are then dropped.
+_ASK_ROW_LIMIT = 25
+
 router = APIRouter(prefix="/sessions", tags=["videos"])
 
 logger = logging.getLogger(__name__)
@@ -501,8 +508,9 @@ def ask_about_video(
             f"video id={video_id} file missing on disk"
         )
 
-    from motodiag.knowledge.prompt_rows import drop_inapplicable
-    from motodiag.knowledge.transmission import resolve_transmission
+    from motodiag.knowledge.retrieval import (
+        candidate_fetch_size, rows_for_machine,
+    )
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
     from motodiag.media import ffmpeg as ffmpeg_module
     from motodiag.media.analysis_worker import _build_vehicle_context
@@ -526,7 +534,8 @@ def ask_about_video(
     # tiered by how specifically they match.
     context = _build_vehicle_context(dict(row), db_path=db_path)
     _identity, issues = known_issues_for_vehicle(
-        context.make, context.model, db_path=db_path, limit=25,
+        context.make, context.model, db_path=db_path,
+        limit=candidate_fetch_size(db_path),
     )
     # Phase 255: this endpoint hands the rows straight to a vision model as
     # context about one specific machine, which is the same shape as the
@@ -536,14 +545,13 @@ def ask_about_video(
     # roller wear limits) -- on machines with no variator. The Hondas missed
     # them at limit=25 only because their own rows filled the 25 first, which
     # is ranking luck rather than correctness.
-    issues = drop_inapplicable(
+    issues = rows_for_machine(
         issues,
-        resolve_transmission(
-            context.make, context.model,
-            explicit=getattr(context, "transmission", None),
-            powertrain=getattr(context, "powertrain", None),
-        ),
-    )
+        make=context.make, model=context.model,
+        transmission=getattr(context, "transmission", None),
+        powertrain=getattr(context, "powertrain", None),
+        purpose="prompt", db_path=db_path,
+    ).rows[:_ASK_ROW_LIMIT]
 
     analyzer = VisionAnalyzer(model="sonnet")
     answer = analyzer.answer_question_about_frames(

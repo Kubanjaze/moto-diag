@@ -216,6 +216,38 @@ def predict_failures(
     if not candidates:
         return []
 
+    # --- Phase 256: the retrieval chokepoint. -------------------------------
+    # This door had its own four-pass `search_known_issues` retrieval and no
+    # applicability filter at all, so a Yamaha MT07 carried five of Phase
+    # 254's scooter-CVT rows behind its maintenance predictions and a Gold
+    # Wing two. Measured before the change, on the operator's database.
+    #
+    # The filter runs on the CANDIDATE POOL, before scoring, so a row this
+    # machine cannot have never earns a rank. Filtering the scored output
+    # instead would leave the ranking computed against rows that do not
+    # apply, and the numbers below it would be quietly wrong.
+    #
+    # **No scoring change ships with this.** Every weight, bonus and sort
+    # key is untouched; the only difference is which rows are eligible.
+    # NOTE a contract change a refuter caught: this function's docstring
+    # called the pipeline "side-effect free", and the chokepoint WRITES --
+    # it upserts `retrieval_withheld` for a machine whose transmission is
+    # unknown or ambiguous. That is telemetry, not scoring: no prediction,
+    # rank or score depends on it, and the write is best-effort and never
+    # fatal. It is called out here rather than left for someone to find.
+    from motodiag.knowledge.retrieval import rows_for_machine
+
+    filtered = rows_for_machine(
+        list(candidates.values()),
+        make=make, model=model_name, year=year,
+        powertrain=vehicle.get("powertrain"),
+        transmission=vehicle.get("transmission"),
+        purpose="prediction", db_path=db_path,
+    ).rows
+    candidates = {r["id"]: r for r in filtered}
+    if not candidates:
+        return []
+
     now_year = datetime.now().year
     age_years = now_year - int(year)
 

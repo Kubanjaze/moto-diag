@@ -22,6 +22,12 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from motodiag.core.database import get_connection
+
+#: How many rows the scorer receives. The FETCH is no longer a number --
+#: see `retrieval.candidate_fetch_size` -- because a pre-filter cap decides
+#: correctness by arithmetic. This one applies after the filter, where a cap
+#: only decides how much the scorer reads.
+_KB_MATCH_LIMIT = 5
 from motodiag.shop.ai_client import (
     AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
 )
@@ -238,59 +244,111 @@ def _load_issues_safe(wo_id: int, db_path: Optional[str] = None) -> list[dict]:
         return []
 
 
-def _find_kb_matches_safe(
+def _kb_candidates_for_vehicle(
     vehicle_id: Optional[int], db_path: Optional[str] = None,
 ) -> list[dict]:
-    """Known-issue matches for a vehicle; empty list only when there is nothing.
+    """Known-issue matches for a vehicle, through the Phase 256 chokepoint.
 
-    F126. This selected a column named ``fix``. The column is
+    **History, because this door has been wrong twice in different ways.**
+
+    F126: it selected a column named ``fix``. The column is
     ``fix_procedure`` and ``fix`` has never existed in any version of the
-    schema, so every call raised ``OperationalError`` and the bare
-    ``except Exception`` below returned ``[]``. **The function had never
-    returned a row.** Measured on the operator's database after the column
-    name was corrected: seven of ten vehicles match, up to five rows each.
+    schema, so every call raised and a bare ``except Exception`` returned
+    ``[]``. The function had never returned a row, and the AI work-order
+    scorer was told the knowledge base had nothing on the machine, always.
+    Fixed separately, before this phase, so that the before number for this
+    rewire is a real one: seven of ten of the operator's vehicles match.
 
-    The consumer is the AI work-order priority scorer, so a shop's
-    prioritisation was running on an input that was silently always empty
-    and read exactly like a legitimate "no known issues".
+    Phase 256: it ran its own SQL —
+    ``LOWER(make) = ? AND (model IS NULL OR LOWER(model) LIKE ?)`` — which
+    is the substring model matching Phases 244C-244I removed from the main
+    retrieval path. It never reached this door because nobody knew it was a
+    door. That form matches a row whose ``model`` column names a model in
+    order to **exclude** it, which is the exact failure 244I's
+    clause-scoped extraction exists to prevent, and it applied no
+    applicability filter at all.
 
-    The fallback was written for a **missing table** -- an older install
-    without the Phase 08 schema -- and it silently absorbed a **wrong
-    column** instead. It is now narrowed to that case, and to a vehicle
-    that does not exist. Anything else raises, because a schema error that
-    looks like an empty corpus is the defect.
-
-    NOTE the model match is still ``LOWER(model) LIKE '%...%'`` -- the
-    substring matching Phases 244C-244I removed from the main retrieval
-    path, which never reached this door because nobody knew it was one.
-    That is Phase 256's job, and it is deliberately NOT changed here: this
-    commit exists to establish the before number, and changing the
-    retrieval shape in the same breath would make the before and after
-    incomparable.
+    It now retrieves through the resolver and its junctions, and every row
+    passes ``rows_for_machine``. **That pairing is not optional.** Before
+    the rewire this door was safe for the wrong reason: exact
+    ``LOWER(make) = ?`` equality never matched the transmission-scoped
+    rows, whose make column is a seven-marque list. Routing through the
+    junction is precisely what makes those rows reachable here, so a rewire
+    landing without the filter would move this door from *missing* to
+    *misleading*. ``tests/test_phase256_chokepoint.py`` was committed before
+    this change for that reason and fails if the two are ever split.
     """
     if vehicle_id is None:
         return []
+    from motodiag.knowledge.retrieval import (
+        candidate_fetch_size, rows_for_machine,
+    )
+    from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+
+    with get_connection(db_path) as conn:
+        # Ask the table what it has rather than guessing. `transmission`
+        # arrived at schema 63 and `powertrain` at 3, so a database below
+        # either would raise on a fixed column list -- and this function's
+        # whole history is a schema mismatch that read as an empty corpus.
+        have = {r[1] for r in conn.execute("PRAGMA table_info(vehicles)")}
+        wanted = [c for c in ("make", "model", "year", "powertrain", "transmission")
+                  if c in have]
+        if "make" not in have or "model" not in have:
+            return []
+        row = conn.execute(
+            f"SELECT {', '.join(wanted)} FROM vehicles WHERE id = ?",
+            (vehicle_id,),
+        ).fetchone()
+    if row is None:
+        return []
+
+    keys = set(wanted)
     try:
-        with get_connection(db_path) as conn:
-            row = conn.execute(
-                "SELECT make, model, year FROM vehicles WHERE id = ?",
-                (vehicle_id,),
-            ).fetchone()
-            if row is None:
-                return []
-            kb_rows = conn.execute(
-                "SELECT id, title, severity, fix_procedure FROM known_issues "
-                "WHERE LOWER(make) = ? "
-                "  AND (model IS NULL OR LOWER(model) LIKE ?) "
-                "LIMIT 5",
-                (str(row["make"]).lower(), f"%{str(row['model']).lower()}%"),
-            ).fetchall()
-            return [dict(r) for r in kb_rows]
+        _identity, candidates = known_issues_for_vehicle(
+            str(row["make"]), str(row["model"]), db_path=db_path,
+            limit=candidate_fetch_size(db_path),
+        )
     except sqlite3.OperationalError as exc:
-        # The one condition the fallback was written for.
+        # The one condition the original fallback was written for.
         if "no such table" in str(exc).lower():
             return []
         raise
+
+    result = rows_for_machine(
+        candidates,
+        make=str(row["make"]), model=str(row["model"]),
+        year=row["year"] if "year" in keys else None,
+        powertrain=row["powertrain"] if "powertrain" in keys else None,
+        transmission=row["transmission"] if "transmission" in keys else None,
+        purpose="prediction",
+        db_path=db_path,
+    )
+    return result.rows
+
+
+def _find_kb_matches_safe(
+    vehicle_id: Optional[int], db_path: Optional[str] = None,
+) -> list[dict]:
+    """The scorer's five rows: filtered first, capped second.
+
+    **The cap is deliberately not where the filtering happens, and the two
+    are deliberately separable.** The first version of this rewire capped
+    and filtered in one expression, and the Phase 256 tripwire could not
+    see past the cap: with the filter removed, the transmission-scoped rows
+    for a Gold Wing sit at resolver positions 56, 64, 75, 81, 113 and 115,
+    so a five-row cap hid every one of them and the guard passed on code
+    that leaked. That is the same masking the old `LIMIT 5` did.
+
+    So `_kb_candidates_for_vehicle` returns the filtered set entire, this
+    function caps it, and the guard asserts against the former. **A cap must
+    never be what makes a correctness property hold**, because a cap is a
+    presentation decision and someone will raise it.
+    """
+    return [
+        {"id": r.get("id"), "title": r.get("title"),
+         "severity": r.get("severity"), "fix_procedure": r.get("fix_procedure")}
+        for r in _kb_candidates_for_vehicle(vehicle_id, db_path)[:_KB_MATCH_LIMIT]
+    ]
 
 
 # ---------------------------------------------------------------------------

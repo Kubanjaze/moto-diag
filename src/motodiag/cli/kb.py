@@ -634,6 +634,56 @@ def register_kb(cli_group: click.Group) -> None:
             rows, console, title=f"Known Issues matching {query!r}",
         )
 
+    @kb.command("withheld")
+    @click.option("--limit", default=25, type=int, show_default=True,
+                  help="How many machines to show.")
+    def kb_withheld(limit: int) -> None:
+        """Machines that lost rows because their transmission is unknown.
+
+        This is the transmission lookup's to-do list, and it is measured
+        rather than guessed. Phase 255 chose to withhold a scoped row from
+        a machine it could not classify -- missing beats misleading -- and
+        recorded the cost in process memory, where nobody could read it:
+        every command is a fresh process, so the number was always zero by
+        the time anyone looked.
+
+        Phase 256 persists it. Each row is a make/model pair that resolved
+        `unknown` or `ambiguous`, how many retrievals it cost and how many
+        rows it lost. **Sourcing a lookup entry for the top row buys back
+        more than sourcing one for the bottom.**
+
+        `corrupt` counts rows excluded because their applicability could
+        not be read at all; any non-zero value there is a corpus defect,
+        not a lookup gap.
+        """
+        from motodiag.knowledge.retrieval import withheld_report
+
+        console = get_console()
+        init_db()
+        rows = withheld_report(limit=limit)
+        if not rows:
+            console.print(
+                "[green]Nothing withheld yet.[/green] Either every machine "
+                "retrieved so far resolved to a known transmission, or no "
+                "retrieval has run against this database."
+            )
+            return
+
+        table = Table(title="Withheld by unknown transmission — the lookup's to-do list")
+        for col in ("Make", "Model", "Provenance", "Purpose"):
+            table.add_column(col)
+        for col in ("Rows lost", "Retrievals", "Corrupt"):
+            table.add_column(col, justify="right")
+        table.add_column("Last seen")
+        for r in rows:
+            table.add_row(
+                str(r["make"]), str(r["model"]), str(r["provenance"]),
+                str(r["purpose"]), str(r["rows_withheld"]),
+                str(r["retrievals"]), str(r["corrupt_rows"]),
+                str(r["last_seen"])[:19],
+            )
+        console.print(table)
+
     @kb.command("by-symptom")
     @click.argument("symptom")
     def kb_by_symptom(symptom: str) -> None:

@@ -50,16 +50,14 @@ from motodiag.knowledge.loader import load_known_issues_file
 from motodiag.knowledge.marques import rebuild_make_index_at
 from motodiag.knowledge.models import rebuild_model_index_at
 from motodiag.knowledge.prompt_rows import compose_prompt_rows
+from motodiag.knowledge.retrieval import rows_for_machine
 from motodiag.knowledge.transmission import (
     ALL_TRANSMISSIONS,
     AMBIGUOUS_MODELS,
     POWERTRAIN_DEFAULT_EXCLUDED,
     TRANSMISSION_LOOKUP,
     Resolution,
-    record_withheld,
-    reset_withheld,
     resolve_transmission,
-    withheld_snapshot,
 )
 from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
@@ -96,14 +94,25 @@ def _scoped_ids(db_path: str) -> set[int]:
         }
 
 
+def _filtered(rows, resolution):
+    """Apply the applicability filter to `rows` for an already-resolved machine.
+
+    Phase 256 moved the filter out of `compose_prompt_rows` and into
+    `retrieval.rows_for_machine`, so there is one way to apply it rather
+    than two. These tests exercise the rule, not a door, so they call the
+    predicate directly and skip the recording side.
+    """
+    from motodiag.knowledge.applicability import row_applies
+
+    return [r for r in rows if row_applies(r, "transmission", resolution.candidates)]
+
+
 def _reaching(db_path: str, make: str, model: str, *, powertrain: str = "ice") -> set[int]:
     """Row ids that survive the filter for this machine. No cap, so the
     measurement is about applicability and not about the twelve-row budget."""
     _, raw = known_issues_for_vehicle(make, model, db_path=db_path, limit=400)
-    kept = compose_prompt_rows(
-        raw, limit=400,
-        transmission=resolve_transmission(make, model, powertrain=powertrain),
-    )
+    kept = rows_for_machine(raw, make=make, model=model, powertrain=powertrain,
+                            purpose="prompt", db_path=db_path, record=False).rows
     return {r["id"] for r in kept}
 
 
@@ -218,10 +227,9 @@ class TestTheMachineLevelRegression:
             titles_before = {r["title"] for r in raw}
             if not (unscoped & titles_before):
                 continue
-            kept = compose_prompt_rows(
-                raw, limit=400,
-                transmission=resolve_transmission(make, model),
-            )
+            kept = rows_for_machine(raw, make=make, model=model,
+                                    purpose="prompt", db_path=db,
+                                    record=False).rows
             assert unscoped <= {r["title"] for r in kept}, (
                 f"{make} {model} lost the unscoped vocabulary row"
             )
@@ -322,23 +330,29 @@ class TestTheContract:
                 applicability={"transmission": ["belt_drive"]},
             )
 
-    def test_a_corrupt_row_stops_retrieval_and_names_itself(self, db):
-        """The read-path raise is specified, and it reaches the product.
+    def test_a_corrupt_row_is_excluded_not_fatal(self, db, caplog):
+        """**Phase 256 changed this deliberately. Read the change, not the diff.**
 
-        "Validated at seed load and again at read; an unknown key or value
-        rejected loudly" is the decision, and this is what loudly costs: a
-        single bad value in `known_issues.applicability` raises out of
-        `_load_known_issues`, which is the primary diagnose command's
-        retrieval path and also `motodiag code`'s.
+        Phase 255 made an unreadable `applicability` RAISE at read time, on
+        the reasoning that the only alternative was loading it as unscoped —
+        which would put a mistyped row back in front of every machine. The
+        cost shipped: one bad row stopped diagnosis for every machine, not
+        just the one the row would have reached. That was filed as F122.
 
-        That trade is deliberate — dropping the row silently would load a
-        typo as unscoped, which is the Phase 254 defect reintroduced by one
-        character — but it is a trade, so it is pinned here rather than
-        left to be discovered. The error names the offending row, because a
-        loud failure nobody can act on is not much better than a quiet one.
+        The third option follows from this axis's own principle, *missing
+        beats misleading*, and Phase 256 takes it: the chokepoint
+        **excludes** the row, logs it by id, and counts it. Never unscoped,
+        so a typo cannot reintroduce the Phase 254 defect. Never fatal, so
+        one bad row cannot take down the product.
+
+        **Loud rejection stays at write time** — the test below this one
+        still asserts that `add_known_issue` raises. The asymmetry is the
+        point: at write time nothing is lost by refusing; at read time
+        refusing costs the technician an answer they could have had.
         """
+        import logging
         import shutil
-        from motodiag.cli.diagnose import _load_known_issues
+        from motodiag.knowledge.retrieval import rows_for_machine
 
         corrupt = str(Path(db).parent / "corrupt.db")
         shutil.copy(db, corrupt)
@@ -347,14 +361,19 @@ class TestTheContract:
                 "SELECT id FROM known_issues WHERE applicability IS NOT NULL "
                 "ORDER BY id LIMIT 1"
             ).fetchone()[0]
-            conn.execute(
-                "UPDATE known_issues SET applicability = ? WHERE id = ?",
-                ('{"transmision": ["cvt"]}', target),
-            )
+            conn.execute("UPDATE known_issues SET applicability = ? WHERE id = ?",
+                         ('{"transmision": ["cvt"]}', target))
 
-        with pytest.raises(ApplicabilityError) as caught:
-            _load_known_issues("Honda", "PCX 150", 2020, corrupt)
-        assert f"id={target!r}" in str(caught.value), str(caught.value)
+        _, raw = known_issues_for_vehicle("Honda", "PCX 150", db_path=corrupt, limit=400)
+        assert target in {r["id"] for r in raw}, "the corrupt row was not retrieved"
+
+        with caplog.at_level(logging.ERROR):
+            result = rows_for_machine(raw, make="Honda", model="PCX 150",
+                                      purpose="prompt", db_path=corrupt)
+
+        assert target not in {r["id"] for r in result.rows}, "corrupt row was served"
+        assert result.corrupt == 1
+        assert str(target) in caplog.text, "the log must name the offending row id"
 
     def test_dump_round_trips(self):
         assert dump_applicability({"transmission": ["cvt"]}) == '{"transmission": ["cvt"]}'
@@ -624,10 +643,7 @@ class TestTheFilter:
                  **SYNTHETIC["cvt_only"]),
             dict(id=2, title="generic", match_tier="make_wide", severity="medium"),
         ]
-        out = compose_prompt_rows(
-            rows, limit=12,
-            transmission=Resolution(frozenset({"manual"}), "model-sourced"),
-        )
+        out = _filtered(rows, Resolution(frozenset({"manual"}), "model-sourced"))
         assert [r["id"] for r in out] == [2], "the row was reordered, not removed"
 
     def test_no_transmission_argument_changes_nothing(self):
@@ -653,8 +669,8 @@ class TestTheFilter:
         ] + [dict(id=99, title="variator rollers", match_tier="make_wide",
                   severity="critical", **SYNTHETIC["cvt_only"])]
         out = compose_prompt_rows(
-            rows, limit=12, symptoms=["variator rollers worn"],
-            transmission=Resolution(frozenset({"manual"}), "model-sourced"),
+            _filtered(rows, Resolution(frozenset({"manual"}), "model-sourced")),
+            limit=12, symptoms=["variator rollers worn"],
         )
         assert 99 not in {r["id"] for r in out}
 
@@ -695,7 +711,7 @@ class TestTheOtherDoors:
         the 25 first — ranking luck, not correctness, which is why the
         assertion is on the machines that demonstrably leaked.
         """
-        from motodiag.knowledge.prompt_rows import drop_inapplicable
+        from motodiag.knowledge.retrieval import rows_for_machine
 
         scoped = _scoped_ids(db)
         for make, model in (("Yamaha", "MT07"), ("Yamaha", "XS650")):
@@ -706,21 +722,20 @@ class TestTheOtherDoors:
                 f"{make} {model} no longer leaks at limit=25 — this test is "
                 "not measuring anything"
             )
-            kept = drop_inapplicable(
-                issues, resolve_transmission(make, model),
-            )
+            kept = rows_for_machine(issues, make=make, model=model,
+                                    purpose="prompt", db_path=db,
+                                    record=False).rows
             assert {r["id"] for r in kept} & scoped == set()
 
     def test_the_ask_endpoint_keeps_a_scooters_rows(self, db):
-        from motodiag.knowledge.prompt_rows import drop_inapplicable
+        from motodiag.knowledge.retrieval import rows_for_machine
 
         _, issues = known_issues_for_vehicle(
             "Yamaha", "Zuma 125", db_path=db, limit=25,
         )
         before = {r["id"] for r in issues} & _scoped_ids(db)
-        kept = drop_inapplicable(
-            issues, resolve_transmission("Yamaha", "Zuma 125"),
-        )
+        kept = rows_for_machine(issues, make="Yamaha", model="Zuma 125",
+                                purpose="prompt", db_path=db, record=False).rows
         assert before and before <= {r["id"] for r in kept}
 
     def test_the_ask_endpoint_is_actually_wired_to_the_filter(self):
@@ -734,46 +749,78 @@ class TestTheOtherDoors:
         from motodiag.api.routes import videos as videos_mod
 
         src = code_of(videos_mod)
-        assert "drop_inapplicable(" in src, (
-            "the /ask endpoint must filter retrieved rows by applicability"
+        assert "rows_for_machine(" in src, (
+            "the /ask endpoint must filter retrieved rows through the "
+            "Phase 256 chokepoint"
         )
-        assert "resolve_transmission(" in src
 
 
 # ---------------------------------------------------------------------------
 # 7. The counter — the cost of the policy, measured
 # ---------------------------------------------------------------------------
 class TestTheCounter:
-    def test_it_breaks_down_by_provenance(self):
-        reset_withheld()
-        record_withheld("unknown", 7)
-        record_withheld("unknown", 3)
-        record_withheld("ambiguous", 2)
-        snap = withheld_snapshot()
-        assert snap["unknown"] == {"retrievals": 2, "rows": 10}
-        assert snap["ambiguous"] == {"retrievals": 1, "rows": 2}
-        reset_withheld()
+    """Phase 256 moved this from process memory to a table.
 
-    def test_withholding_nothing_is_not_counted(self):
-        reset_withheld()
-        record_withheld("model-sourced", 0)
-        assert withheld_snapshot() == {}
+    Phase 255 counted withheld rows in a module-level dict behind
+    `record_withheld` / `withheld_snapshot` / `reset_withheld`. All three
+    are retired. They could not have worked: every CLI command is a fresh
+    process, so the aggregate was always zero by the time anyone could read
+    it, and Phase 209B's orphan guard flagged the two accessors with the
+    note "retire these or wire that route". Phase 256 wired the route and
+    the entries came out of the allowlist.
+    """
 
-    def test_the_filter_records_what_it_withheld(self):
-        reset_withheld()
-        rows = [dict(id=1, title="v", match_tier="make_wide", severity="medium",
-                     **SYNTHETIC["cvt_only"])]
-        compose_prompt_rows(
-            rows, limit=12,
-            transmission=Resolution(ALL_TRANSMISSIONS, "unknown"),
-        )
-        assert withheld_snapshot()["unknown"]["rows"] == 1
-        reset_withheld()
+    def test_a_known_machine_is_not_recorded_as_a_gap(self, db):
+        """Only `unknown` and `ambiguous` belong in the to-do list.
 
+        A machine whose transmission is sourced withholds only rows that
+        genuinely do not apply to it — the filter working, not a hole in
+        the lookup. Recording it would bury the real gaps.
+        """
+        import shutil
+        from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
 
-# ---------------------------------------------------------------------------
-# 8. Schema and migration
-# ---------------------------------------------------------------------------
+        path = str(Path(db).parent / "known.db")
+        shutil.copy(db, path)
+        _, raw = known_issues_for_vehicle("SYM", "Wolf 150", db_path=path, limit=400)
+        result = rows_for_machine(raw, make="SYM", model="Wolf 150",
+                                  purpose="prompt", db_path=path)
+        assert result.resolution.provenance == "model-sourced"
+        assert result.withheld > 0, "the Wolf is a manual; scoped rows must go"
+        assert [r for r in withheld_report(path) if r["model"] == "Wolf 150"] == []
+
+    def test_repeated_retrievals_accumulate(self, db):
+        import shutil
+        from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
+
+        path = str(Path(db).parent / "accum.db")
+        shutil.copy(db, path)
+        _, raw = known_issues_for_vehicle("Honda", "Grom", db_path=path, limit=400)
+        for _ in range(3):
+            rows_for_machine(raw, make="Honda", model="Grom",
+                             purpose="prompt", db_path=path)
+        row = [r for r in withheld_report(path) if r["model"] == "Grom"][0]
+        assert row["retrievals"] == 3
+
+    def test_the_chokepoint_persists_what_it_withheld(self, db):
+        """The count lives in a table, readable by `motodiag kb withheld`."""
+        import shutil
+        from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
+
+        path = str(Path(db).parent / "record.db")
+        shutil.copy(db, path)
+        _, raw = known_issues_for_vehicle("Honda", "GL1800 Gold Wing",
+                                          db_path=path, limit=400)
+        result = rows_for_machine(raw, make="Honda", model="GL1800 Gold Wing",
+                                  purpose="prompt", db_path=path)
+        assert result.withheld > 0
+        rows = [r for r in withheld_report(path)
+                if r["model"] == "GL1800 Gold Wing"]
+        assert rows, "nothing was persisted"
+        assert rows[0]["rows_withheld"] == result.withheld
+        assert rows[0]["provenance"] == "ambiguous"
+        assert rows[0]["purpose"] == "prompt"
+
 class TestTheSchema:
     def test_schema_version_is_at_least_63(self):
         from motodiag.core.database import SCHEMA_VERSION
