@@ -3577,3 +3577,36 @@ with its reason, as before, but the pattern is now the finding: for Honda and
 Yamaha that equality tracks content rather than the derivation it was written to
 guard, while Kawasaki and Suzuki still do the real work. Re-shaping it to test
 the property is filed, not done — this is a content row.
+
+
+---
+
+## 2026-09-21 — ROADMAP_AUTHORITY amended: findings are governed, and the contract had drifted
+
+**Decision (operator's), recorded in both repos' phase logs as the contract's
+amendment procedure requires.**
+
+The contract governed phase status, and since F54 the backend's architecture
+inventories. It said nothing about **findings**, and the gap had an effect that
+could be counted: nine consecutive backend findings — F115-F123, from Phase 255,
+about retrieval paths, corpus rows and manufacturer documents — were filed in
+the **mobile** repo, because that is where the follow-ups file happened to start
+and the practice lived in an agent's memory rather than in a document.
+
+Three rules added: a finding lives in the repo whose code it is about;
+F-numbers are ONE global sequence across both files, so the next number is the
+max across BOTH plus one; and each file's header states both rules and points at
+the other. `moto-diag/docs/FOLLOWUPS.md` created. F115-F123 moved, keeping their
+numbers, with a pointer left behind. **Nothing older moved** — renumbering
+history would break every reference to it in phase docs and roadmap rows.
+
+**And the contract had itself drifted, which is the drift class it exists to
+prevent.** It says "Identical copy committed to both repos... Do not edit one
+copy without the other." The F54 "Inventories are not status" amendment of
+2026-09-02 was committed to the **backend copy only**. The mobile repo carried a
+contract missing one of its two amendments for **19 days**, and the mobile copy
+is the one a reader in that repo would consult. Both copies are now
+byte-identical (`md5 87f96432e7534ffd53f33b2a96f5eefa`). Filed as **F125**: the
+contract's stated purpose is to remove a drift class "structurally rather than
+relying on hand-sync discipline", and it is itself maintained by hand-sync
+discipline, which failed. Nothing verifies the two copies match.

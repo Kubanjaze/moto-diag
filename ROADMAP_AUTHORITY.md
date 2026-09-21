@@ -100,3 +100,38 @@ described `api` as "empty, awaiting Phase 175". Every one of those phases was
 Track I, and each close-out correctly skipped the backend status surfaces — and
 then skipped the inventories with them. Repaired under F54; this rule is the
 structural fix so the same drift cannot recur by the same reasoning.
+
+---
+
+## Findings are governed too (added 2026-09-21)
+
+The boundary above governs **phase status**, and since F54 the backend's
+architecture **inventories**. It said nothing about findings, and the gap had a
+measurable effect: nine consecutive backend findings (F115–F123, moto-diag
+Phase 255 — retrieval paths, corpus rows, manufacturer documents) were filed in
+the **mobile** repo, because that is where the follow-ups file happened to
+start and the practice lived in an agent's memory rather than in this contract.
+
+**The rule, which is now part of this contract:**
+
+1. **A finding lives in the repo whose code it is about.** Backend findings in
+   `moto-diag/docs/FOLLOWUPS.md`; mobile findings in
+   `moto-diag-mobile/docs/FOLLOWUPS.md`. A finding that spans both is filed
+   once, in the repo where the fix lands, and referenced from the other.
+2. **F-numbers are ONE global sequence across both files.** The next number is
+   `max(F across BOTH files) + 1`, never the max of one. A number is never
+   reused, and a finding that moves repos **keeps its number**.
+3. **Each file's header states both rules and points at the other file.** The
+   rule lives in the documents, not in memory.
+
+**Migration, 2026-09-21:** F115–F123 moved from the mobile file to the new
+backend file, keeping their numbers, with a one-line pointer left behind.
+**Nothing older moved** — entries below F115 predate the rule and stay where
+they are, including several about backend code. Renumbering history would break
+every reference to them in phase docs and roadmap rows, which is a worse defect
+than an inconsistent archive.
+
+This is consistent with the boundary above rather than an exception to it:
+per-phase docs follow the *phase*, and findings follow the *code*. Those differ
+only for Track I, where a mobile-owned phase may produce a backend finding —
+which rule 1 resolves by asking where the fix lands.
