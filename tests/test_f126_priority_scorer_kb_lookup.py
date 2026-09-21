@@ -27,6 +27,8 @@ import sqlite3
 import pytest
 
 from motodiag.core.database import init_db
+from motodiag.knowledge.marques import rebuild_make_index_at
+from motodiag.knowledge.models import rebuild_model_index_at
 from motodiag.shop.priority_scorer import _find_kb_matches_safe
 
 
@@ -52,6 +54,11 @@ def db(tmp_path):
             "INSERT INTO known_issues (title, description, make, model, severity, fix_procedure)"
             " VALUES ('Yamaha thing', 'd', 'Yamaha', 'MT07', 'high', 'not this one')"
         )
+    # Door 4 retrieves through the resolver since Phase 256, and the
+    # resolver reads the make/model junctions. The raw query it replaced
+    # did not, which is why this fixture did not build them.
+    rebuild_make_index_at(path)
+    rebuild_model_index_at(path)
     reset_settings()
     return path
 
@@ -79,14 +86,13 @@ class TestItReturnsRowsAtAll:
         assert _find_kb_matches_safe(9999, db) == []
 
 
-def _stripped_db(tmp_path, *, with_known_issues: bool, column: str | None):
-    """A database whose `known_issues` is genuinely the wrong shape.
+def _bare_vehicles_db(tmp_path, *, with_known_issues: bool):
+    """A database whose shape predates the schema this door now needs.
 
-    Built by hand rather than mocked: the point is that a REAL schema
-    mismatch reaches the caller, and a mock of the driver would prove only
-    that the mock works.
+    Built by hand rather than mocked: a REAL schema mismatch must reach the
+    caller, and a mocked driver would prove only that the mock works.
     """
-    path = str(tmp_path / f"shape_{with_known_issues}_{column}.db")
+    path = str(tmp_path / f"shape_{with_known_issues}.db")
     with sqlite3.connect(path) as conn:
         conn.execute(
             "CREATE TABLE vehicles (id INTEGER PRIMARY KEY, make TEXT, model TEXT, year INTEGER)"
@@ -94,45 +100,54 @@ def _stripped_db(tmp_path, *, with_known_issues: bool, column: str | None):
         conn.execute("INSERT INTO vehicles VALUES (1, 'Honda', 'CB500', 2020)")
         if with_known_issues:
             conn.execute(
-                f"CREATE TABLE known_issues (id INTEGER PRIMARY KEY, title TEXT, "
-                f"severity TEXT, make TEXT, model TEXT{', ' + column + ' TEXT' if column else ''})"
-            )
-            conn.execute(
-                "INSERT INTO known_issues (title, severity, make, model) "
-                "VALUES ('t', 'high', 'Honda', 'CB500')"
+                "CREATE TABLE known_issues (id INTEGER PRIMARY KEY, title TEXT, "
+                "severity TEXT, make TEXT, model TEXT, fix_procedure TEXT)"
             )
     return path
 
 
 class TestAFailureNoLongerReadsAsAnEmptyCorpus:
-    def test_a_missing_column_raises(self, tmp_path):
-        """The negative control, and the actual subject of F126.
+    def test_an_unexpected_database_error_propagates(self, db, monkeypatch):
+        """The property F126 was really about, re-aimed after the rewire.
 
-        A schema error must not be reportable as "this machine has no known
-        issues". Here `known_issues` exists but has no `fix_procedure`
-        column -- exactly the shape the original code hit on every call,
-        against a real database rather than a mock.
+        The original defect -- a query naming a column called `fix` -- is
+        structurally gone: Phase 256 deleted the raw SQL and this door now
+        retrieves through the resolver, which selects `known_issues.*` and
+        degrades gracefully when the junction tables are absent. So there
+        is no longer a wrong-column shape to plant.
+
+        What must still hold is the policy that let the defect hide for as
+        long as it did: **anything other than a missing table surfaces.** A
+        bare `except` that turns every failure into `[]` is how a dead
+        query looked exactly like an empty knowledge base.
         """
-        path = _stripped_db(tmp_path, with_known_issues=True, column=None)
-        with pytest.raises(sqlite3.OperationalError) as caught:
-            _find_kb_matches_safe(1, path)
-        assert "no such column" in str(caught.value)
+        import motodiag.shop.priority_scorer as mod
 
-    def test_the_same_database_with_the_column_returns_rows(self, tmp_path):
-        """Positive control for the test above.
+        def boom(*_a, **_kw):
+            raise sqlite3.OperationalError("database disk image is malformed")
 
-        Without this, `test_a_missing_column_raises` would also pass if the
-        function raised for some unrelated reason -- or always.
-        """
-        path = _stripped_db(tmp_path, with_known_issues=True, column="fix_procedure")
-        rows = _find_kb_matches_safe(1, path)
-        assert len(rows) == 1 and rows[0]["title"] == "t"
+        monkeypatch.setattr(
+            "motodiag.knowledge.vehicle_resolver.known_issues_for_vehicle", boom
+        )
+        with pytest.raises(sqlite3.OperationalError):
+            _find_kb_matches_safe(1, db)
+
+    def test_a_missing_knowledge_table_is_still_an_empty_list(self, db, monkeypatch):
+        """The one case the original fallback was written for is preserved."""
+        def no_table(*_a, **_kw):
+            raise sqlite3.OperationalError("no such table: known_issues")
+
+        monkeypatch.setattr(
+            "motodiag.knowledge.vehicle_resolver.known_issues_for_vehicle", no_table
+        )
+        assert _find_kb_matches_safe(1, db) == []
 
     def test_a_missing_table_is_still_an_empty_list(self, tmp_path):
-        """The one case the fallback was written for is preserved.
+        """The one case the original fallback was written for is preserved.
 
         An older install without the Phase 08 schema gets an empty list,
-        not a crash. Narrowing the except must not remove that.
+        not a crash. Neither narrowing the except nor the rewire may
+        remove that.
         """
-        path = _stripped_db(tmp_path, with_known_issues=False, column=None)
+        path = _bare_vehicles_db(tmp_path, with_known_issues=False)
         assert _find_kb_matches_safe(1, path) == []

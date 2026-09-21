@@ -47,6 +47,7 @@ MACHINES = [
     ("Honda", "CBR1000RR", 2019, False, "unknown: six-speed sportbike"),
     ("Honda", "Grom", 2022, False, "unknown: five-speed, the Step 0 poster child"),
     ("Honda", "Africa Twin", 2021, False, "ambiguous, column NULL: manual or DCT"),
+    ("Yamaha", "YZF-R1", 2016, False, "unknown: six-speed, and a LIVE vehicle"),
     ("Kawasaki", "Ninja 400", 2020, False, "the isolating control: never had them"),
     ("Honda", "PCX 150", 2020, True, "model-sourced cvt: MUST keep them"),
 ]
@@ -126,11 +127,22 @@ def door2_ask(db_path, make, model, year):
 
 
 def door4_priority(db_path, make, model, year):
-    from motodiag.shop.priority_scorer import _find_kb_matches_safe
+    """Asserted BEFORE the five-row cap, deliberately.
 
-    got = {r["id"] for r in _find_kb_matches_safe(
-        vehicle_id_of(db_path, make, model), db_path)}
-    return got, got
+    The first version of this helper read `_find_kb_matches_safe`, which
+    caps at five. That made the tripwire useless: with the filter removed,
+    a Gold Wing's scoped rows sit at resolver positions 56, 64, 75, 81, 113
+    and 115, so the cap hid every one and the guard passed on leaking code.
+    The cap is a presentation decision; the filter is the correctness
+    property, and they are tested apart.
+    """
+    from motodiag.shop.priority_scorer import _kb_candidates_for_vehicle
+    from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+
+    vid = vehicle_id_of(db_path, make, model)
+    _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path, limit=200)
+    after = {r["id"] for r in _kb_candidates_for_vehicle(vid, db_path)}
+    return {r["id"] for r in raw}, after
 
 
 DOORS = {
