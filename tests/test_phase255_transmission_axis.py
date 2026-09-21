@@ -530,10 +530,32 @@ class TestMatching:
         assert resolve_transmission("Yamaha", model).value == "cvt"
 
     def test_matching_is_make_scoped(self):
-        """'Sprint' is a Bintelli scooter and also a Vespa. Only one is
-        sourced here, and the other must not borrow its answer."""
-        assert resolve_transmission("Bintelli", "Sprint").value == "cvt"
-        assert resolve_transmission("Vespa", "Sprint").provenance == "unknown"
+        """'Sprint' is a Bintelli scooter AND a Vespa, from different books.
+
+        This test used to assert that the Vespa Sprint resolved to unknown,
+        because Phase 255 dropped its aliases as unsourced. They were
+        sourced all along — the Primavera manual's own cover reads "Vespa
+        Primavera S - Sprint S 125-150" — so the old assertion was pinning
+        a gap rather than a property, and it broke the moment the gap
+        closed.
+
+        The property it was reaching for survives, and is now checked
+        directly: one spelling, two makes, two different entries and two
+        different documents. Both answer `cvt`, so provenance cannot tell
+        them apart — only the entry can.
+        """
+        bintelli = resolve_transmission("Bintelli", "Sprint")
+        vespa = resolve_transmission("Vespa", "Sprint")
+        assert bintelli.value == vespa.value == "cvt"
+        assert bintelli.entry is not None and vespa.entry is not None
+        assert bintelli.entry.canonical != vespa.entry.canonical
+        assert bintelli.entry.source != vespa.entry.source
+
+    def test_a_model_does_not_resolve_under_another_marque(self):
+        """The negative half: a make that does not build it gets nothing."""
+        assert resolve_transmission("Genuine", "Buddy 125").value == "cvt"
+        for other in ("Honda", "Yamaha", "Vespa", "SYM"):
+            assert resolve_transmission(other, "Buddy 125").provenance == "unknown", other
 
     def test_the_make_prefix_is_stripped_not_ignored(self):
         """Stripping is positional: a leading make token is removed, and a

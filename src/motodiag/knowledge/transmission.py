@@ -187,6 +187,14 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Yamaha Zuma 125 service manual 32SF819770E0, cover 'Model : "
        "YW125Y': 'Transmission type V-belt automatic'. The cover is also "
        "where the model-code alias comes from."),
+    _E("Yamaha", "Zuma 50", CVT, ("zuma 50", "zuma50", "zuma 50f", "zuma50f",
+                                  "yw50", "yw50t", "yw50fb", "yw50fk",
+                                  "yw50fxe"),
+       "A separate machine from the 125 and sourced separately: Yamaha "
+       "owner's manuals 5PJ-F8199-13 (YW50T), 1CD-F8199-10 (YW50FB), "
+       "1CD-F8199-17 (YW50FK) and 2DT-F8199-10 (YW50FXE) each schedule "
+       "'V-belt' as a maintenance item alongside 'Final transmission oil'. "
+       "The model-code aliases come from those covers."),
     _E("Yamaha", "XC155 / SMAX", CVT, ("xc155", "xc 155", "xc155f", "xc 155f",
                                        "smax", "s max", "s-max"),
        "Two NHTSA campaigns, Yamaha's own defect-notice text. The NAME: "
@@ -252,6 +260,20 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
                                    "jet 4 125", "jet 4 rx 125"),
        "SYM Jet 4 RX125 owner's manual: 'Clutch  Centrifugal type  "
        "Transmission  CVT'."),
+    _E("SYM", "Jet 50/100", CVT, ("jet 50", "jet50", "jet 100", "jet100",
+                                  "jet euro 50", "jet euro 100"),
+       "SYM service manual 7326249: 'the technical data of each component "
+       "inspection and repair for the SANYANG JET 50/100 and JET Euro "
+       "50/100 series motorcycle', specification table 'Primary Reduction "
+       "BELT ... Secondary Reduction GEAR'. A BELT primary reduction is the "
+       "variator. NOTE this is a DIFFERENT machine from the Jet 4 RX125 "
+       "above, which is why the bare alias 'jet' belongs to neither."),
+    _E("SYM", "Joyride", CVT, ("joyride", "joyride 125", "joyride 150",
+                               "joyride 200", "joyride 200 efi", "rv200"),
+       "SYM service manual 7429958: 'the technical data ... for the Sanyang "
+       "JOYRIDE 125/150/200 motorcycle', chapter 8 titled 'V-BELT DRIVING "
+       "SYSTEM/FOOT STARTER'. Corroborated by the RV200 owner's manual "
+       "specification table, 'Model Joyride 200 EFi / Joyride 125'."),
     _E("SYM", "ADX125", CVT, ("adx", "adx125", "adx 125"),
        "SYM ADX125 owner's manual: 'Transmission  CVT'."),
     _E("SYM", "Fiddle III", CVT, ("fiddle", "fiddle iii", "fiddle 3", "fiddle3"),
@@ -281,9 +303,15 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Piaggio service station manual 664787-664795 'Vespa S 50 2T': "
        "'Transmission  Automatic expandable pulley variator...'."),
     _E("Vespa", "Primavera 150", CVT, ("primavera", "primavera 150",
-                                       "primavera s 150", "primavera s"),
+                                       "primavera s 150", "primavera s",
+                                       "sprint", "sprint s", "sprint 125",
+                                       "sprint 150", "sprint s 125",
+                                       "sprint s 150"),
        "Vespa Primavera/S 150 owner's manual: 'The vehicle is fitted with "
-       "direct drive automatic transmission.' NOTE the vocabulary trap — "
+       "direct drive automatic transmission.' Its cover reads 'Vespa "
+       "Primavera S - Sprint S 125-150 Ed. 01_05/2018 Cod. 1Q000662', which "
+       "is the source for the Sprint aliases — Phase 255 dropped them as "
+       "unsourced without reading the cover. NOTE the vocabulary trap — "
        "Piaggio's 'direct drive' here means no intermediate gearbox, NOT "
        "this axis's `direct_drive` value. The same manual contains zero "
        "occurrences of 'variator'."),

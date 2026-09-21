@@ -130,12 +130,39 @@ Fly 50** (workshop manual 633212, "MSS Fly 50 4T"), **Piaggio Beverly Tourer
 125** (service station manual 665018) and **Vespa S 50 2T** (664787-664795) —
 three more that the first sweep had left unsourced.
 
-**Still unsourced**, and now a much shorter list: Filly LX 50, Piaggio Beverly
-250, SYM JET 50, SYM JET 100, SYM Joyride, Vespa 946, Vespa Sprint, Zuma 50.
-Honda's own web spec pages return **403** to this environment on every path
-tried (`powersports.honda.com`, `automobiles.honda.com`), as they did
-throughout Phase 254, so the remaining eight need either a document or a route
-in.
+**The remaining eight were then classified rather than listed**, because
+"unsourced" was hiding two different problems. Asked of each: no document, or
+an alias gap?
+
+**Five were alias gaps — the document was already on disk:**
+
+| spelling | document | quote |
+|---|---|---|
+| SYM JET 50 / JET 100 | SYM service manual **7326249** | *"for the SANYANG JET 50/100 and JET Euro 50/100 series"*, spec table *"Primary Reduction **BELT**"* |
+| SYM Joyride | SYM service manual **7429958** | *"for the Sanyang JOYRIDE 125/150/200"*, chapter 8 *"V-BELT DRIVING SYSTEM/FOOT STARTER"* |
+| Vespa Sprint | Primavera owner's manual | cover: *"Vespa Primavera S - **Sprint S** 125-150 Ed. 01_05/2018 Cod. 1Q000662"* |
+| Zuma 50 | Yamaha OMs **5PJ-F8199-13**, **1CD-F8199-10/-17**, **2DT-F8199-10** | *"V-belt"* scheduled beside *"Final transmission oil"*; covers give YW50T/FB/FK/FXE |
+
+The Vespa Sprint is the sharpest of these: Phase 255 **removed** its aliases as
+unsourced without reading the manual's own cover, which names it.
+
+**Two are genuinely no-document:** **Piaggio Beverly 250** — zero mentions
+across 227 readable PDFs — and **Vespa 946**, whose sixteen apparent hits are
+all the phone number *"(888) 946-6329"* in Honda manuals. A textbook instance
+of the substring collision this corpus keeps meeting.
+
+**One is contested attribution, not a gap: Filly LX 50.** The Kymco Agility 50
+service manual carries the CVT data (*"Type Non-stage transmission · Operation
+Automatic centrifugal type"*) and prints `FILLY LX 50` as a header on 21 of its
+183 pages — but Phase 254 established those pages alternate by odd/even folio,
+the signature of a recycled template, with provenance genuinely unestablished
+in two chapters. **No alias added:** the data is in the book, and whether it is
+the Filly's data is exactly what 254 could not settle.
+
+**Result: 50 of the 53 model spellings now resolve, up from 40.** Honda's web
+spec pages remain **403** to this environment on every path tried
+(`powersports.honda.com`, `automobiles.honda.com`), as throughout Phase 254 —
+but no remaining gap depended on them.
 
 ### F120
 
