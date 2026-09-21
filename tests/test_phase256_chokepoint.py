@@ -101,29 +101,48 @@ def vehicle_id_of(db_path: str, make: str, model: str) -> int:
 # machine entitled to them.
 
 
+#: Wide enough that no door's own limit can hide a scoped row. A Gold Wing's
+#: scoped rows sit at resolver positions 56, 64, 75, 81, 113 and 115, so any
+#: fetch narrower than that makes a leak invisible and the guard useless —
+#: which is exactly how door 4's first tripwire passed on leaking code.
+GUARD_FETCH = 400
+
+
 def door1_diagnose(db_path, make, model, year):
+    """The diagnose/code path. Asserted pre-cap.
+
+    The product caps this at twelve (`KNOWN_ISSUE_PROMPT_LIMIT`). The guard
+    does not, because a cap is a presentation decision: raise it tomorrow
+    and a property proved through it stops being proved.
+    """
     from motodiag.knowledge.prompt_rows import compose_prompt_rows
     from motodiag.knowledge.transmission import resolve_transmission
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
-    _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path, limit=400)
-    before = {r["id"] for r in raw}
-    kept = compose_prompt_rows(
-        raw, limit=400, transmission=resolve_transmission(make, model),
-    )
-    return before, {r["id"] for r in kept}
+    _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path,
+                                              limit=GUARD_FETCH)
+    kept = compose_prompt_rows(raw, limit=GUARD_FETCH,
+                               transmission=resolve_transmission(make, model))
+    return {r["id"] for r in raw}, {r["id"] for r in kept}
 
 
 def door2_ask(db_path, make, model, year):
-    """The video /ask path, at the limit the endpoint actually uses."""
+    """The video /ask path. Asserted pre-cap, and that matters here.
+
+    The endpoint fetches twenty-five. A Gold Wing's scoped rows start at
+    position 56, so at twenty-five this door cannot leak them **whatever
+    the filter does** — safety by arithmetic, not by design, and it
+    evaporates the day someone raises the limit. The guard therefore fetches
+    wide and asserts that the FILTER withholds them.
+    """
     from motodiag.knowledge.prompt_rows import drop_inapplicable
     from motodiag.knowledge.transmission import resolve_transmission
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
-    _identity, issues = known_issues_for_vehicle(make, model, db_path=db_path, limit=25)
-    before = {r["id"] for r in issues}
+    _identity, issues = known_issues_for_vehicle(make, model, db_path=db_path,
+                                                 limit=GUARD_FETCH)
     kept = drop_inapplicable(issues, resolve_transmission(make, model))
-    return before, {r["id"] for r in kept}
+    return {r["id"] for r in issues}, {r["id"] for r in kept}
 
 
 def door4_priority(db_path, make, model, year):
@@ -133,14 +152,13 @@ def door4_priority(db_path, make, model, year):
     caps at five. That made the tripwire useless: with the filter removed,
     a Gold Wing's scoped rows sit at resolver positions 56, 64, 75, 81, 113
     and 115, so the cap hid every one and the guard passed on leaking code.
-    The cap is a presentation decision; the filter is the correctness
-    property, and they are tested apart.
     """
     from motodiag.shop.priority_scorer import _kb_candidates_for_vehicle
     from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
 
     vid = vehicle_id_of(db_path, make, model)
-    _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path, limit=200)
+    _identity, raw = known_issues_for_vehicle(make, model, db_path=db_path,
+                                              limit=GUARD_FETCH)
     after = {r["id"] for r in _kb_candidates_for_vehicle(vid, db_path)}
     return {r["id"] for r in raw}, after
 
