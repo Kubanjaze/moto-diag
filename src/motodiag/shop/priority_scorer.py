@@ -17,6 +17,7 @@ from __future__ import annotations
 
 import json
 import logging
+import sqlite3
 from datetime import datetime, timezone
 from typing import Callable, Optional
 
@@ -240,7 +241,33 @@ def _load_issues_safe(wo_id: int, db_path: Optional[str] = None) -> list[dict]:
 def _find_kb_matches_safe(
     vehicle_id: Optional[int], db_path: Optional[str] = None,
 ) -> list[dict]:
-    """Try Phase 08 known_issues lookup; fall back to empty list on miss."""
+    """Known-issue matches for a vehicle; empty list only when there is nothing.
+
+    F126. This selected a column named ``fix``. The column is
+    ``fix_procedure`` and ``fix`` has never existed in any version of the
+    schema, so every call raised ``OperationalError`` and the bare
+    ``except Exception`` below returned ``[]``. **The function had never
+    returned a row.** Measured on the operator's database after the column
+    name was corrected: seven of ten vehicles match, up to five rows each.
+
+    The consumer is the AI work-order priority scorer, so a shop's
+    prioritisation was running on an input that was silently always empty
+    and read exactly like a legitimate "no known issues".
+
+    The fallback was written for a **missing table** -- an older install
+    without the Phase 08 schema -- and it silently absorbed a **wrong
+    column** instead. It is now narrowed to that case, and to a vehicle
+    that does not exist. Anything else raises, because a schema error that
+    looks like an empty corpus is the defect.
+
+    NOTE the model match is still ``LOWER(model) LIKE '%...%'`` -- the
+    substring matching Phases 244C-244I removed from the main retrieval
+    path, which never reached this door because nobody knew it was one.
+    That is Phase 256's job, and it is deliberately NOT changed here: this
+    commit exists to establish the before number, and changing the
+    retrieval shape in the same breath would make the before and after
+    incomparable.
+    """
     if vehicle_id is None:
         return []
     try:
@@ -252,15 +279,18 @@ def _find_kb_matches_safe(
             if row is None:
                 return []
             kb_rows = conn.execute(
-                "SELECT id, title, severity, fix FROM known_issues "
+                "SELECT id, title, severity, fix_procedure FROM known_issues "
                 "WHERE LOWER(make) = ? "
                 "  AND (model IS NULL OR LOWER(model) LIKE ?) "
                 "LIMIT 5",
                 (str(row["make"]).lower(), f"%{str(row['model']).lower()}%"),
             ).fetchall()
             return [dict(r) for r in kb_rows]
-    except Exception:
-        return []
+    except sqlite3.OperationalError as exc:
+        # The one condition the fallback was written for.
+        if "no such table" in str(exc).lower():
+            return []
+        raise
 
 
 # ---------------------------------------------------------------------------

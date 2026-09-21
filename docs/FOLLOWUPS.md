@@ -467,7 +467,27 @@ it silently absorbed a **wrong column** instead.
    defect Phases 244C–244I removed from the main retrieval path. This door
    never got the fix because nobody knew it was a door.
 
-**Fix belongs to the chokepoint phase**, and is the argument for it: route
-this through the chokepoint and all three go away at once — the query becomes
-the resolver's, the failure becomes loud, and applicability is applied. Until
-then it is returning nothing, which is wrong but not misleading.
+**FIXED 2026-09-21 — this is a bug, not a finding to carry.** Two of the three
+defects are closed on master in their own commit, ahead of Phase 256:
+
+* **the wrong column** — `fix` → `fix_procedure`. The function now returns rows,
+  and the counts match this ticket's table exactly: Road King 5, YZF-R1 5,
+  GSX-R1000 5, SV650 5, KTM 390 5, ZX-10R 2, CB500 2.
+* **the bare `except`** — narrowed to the one case it was written for, a
+  missing `known_issues` table on an older install. Everything else raises. A
+  schema error that reads as an empty corpus is the defect; the typo was only
+  how it got in.
+
+`tests/test_f126_priority_scorer_kb_lookup.py` covers both halves. The
+negative control builds a database whose `known_issues` genuinely lacks
+`fix_procedure` — a real schema mismatch, not a mocked driver — and asserts it
+**raises**; a paired positive control proves the same database *with* the
+column returns a row, so the raising test cannot pass by always failing. The
+whole file was run against the restored defect: **4 of 8 fail**.
+
+**The third defect stays open and belongs to Phase 256:** the model match is
+still `LOWER(model) LIKE '%...%'`, the substring matching Phases 244C–244I
+removed from the main retrieval path. It is deliberately unchanged here —
+this commit exists to establish the **before** number, and changing the
+retrieval shape in the same breath would make before and after
+incomparable.
