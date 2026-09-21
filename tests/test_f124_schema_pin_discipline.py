@@ -115,12 +115,35 @@ def _schema_version_waivers() -> dict[str, list[str]]:
 
 
 class TestOnlyOneGenuinePin:
-    def test_the_genuine_pin_exists_and_compares_two_sources(self):
-        """It must compare the constant to the registry, not to a literal."""
-        src = (TESTS / "test_phase240c_severity_ordering.py").read_text(encoding="utf-8")
-        assert "assert SCHEMA_VERSION == max(m.version for m in MIGRATIONS)" in src, (
-            "the one genuine schema pin is gone; F124 deleted eleven copies on "
-            "the strength of it existing"
+    def test_the_invariant_the_deleted_pins_claimed_to_guard_still_holds(self):
+        """Assert the property itself, not that some file mentions it.
+
+        F124 deleted eleven copies on the strength of one genuine pin
+        existing elsewhere. If that pin is ever removed, this file should
+        fail on its own rather than on the honour system — so the
+        invariant is checked here directly, from the two sources.
+        """
+        from motodiag.core.migrations import MIGRATIONS
+
+        assert SCHEMA_VERSION == max(m.version for m in MIGRATIONS)
+
+    def test_the_genuine_pin_still_exists_in_code(self):
+        """And that a TEST asserts it, so the invariant has a named owner.
+
+        Read through `code_of`, which blanks comments and docstrings.
+        Against raw source this would keep passing after the pin was
+        deleted, as long as the same text survived anywhere in a comment —
+        including in this file's own docstring, which quotes it. Phase 244G
+        forbids raw-source assertions for exactly that reason, and caught
+        this one in the full regression after I ran its scanner over the
+        wrong file and reported it clean.
+        """
+        from support.source_guards import code_of
+
+        code = code_of(TESTS / "test_phase240c_severity_ordering.py")
+        assert "max(m.version for m in MIGRATIONS)" in code, (
+            "the one genuine schema pin is gone from code; F124 deleted "
+            "eleven copies on the strength of it existing"
         )
 
     def test_no_test_pins_the_head_with_a_literal(self):

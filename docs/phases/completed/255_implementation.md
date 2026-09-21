@@ -517,7 +517,9 @@ each entry quotes its document:
 ### The fail-closed cost, measured rather than argued about
 
 Of the **53 model spellings** the Phase 254 rows reach through the model
-junction, **40 resolve from a document** and **13 do not**:
+junction, **40 resolved from a document at merge** and 13 did not. Ten of
+those 13 have since been closed — see Deviations — leaving **50 of 53**. The
+list as it stood at merge:
 
 > Filly LX 50 · Honda CHF50 · Honda Metropolitan · Piaggio Beverly 250 · Piaggio Beverly Tourer 125 · Piaggio Fly 50 · SYM JET 100 · SYM JET 50 · SYM Joyride · Vespa 946 · Vespa Sprint · XC155 · Zuma 50
 
@@ -678,18 +680,34 @@ breaking the constraint at the time**, it was written up under "the fail-closed
 cost, measured" as though a measured cost were the same as an accepted one. It
 is recorded here as a deviation, not only as F119.
 
-**Partly repaired after merge, and the repair changed the reason.** The 13 were
-not all unsourceable. Five were unsourced because the *search* was wrong, not
-because the documents were silent: Honda prints **"Primary reduction V-matic
-(2.85:1 ~ 0.86:1)"** in the Ruckus and Metropolitan specification tables, and
-the first sweep never searched for Honda's own word. Ruckus, Metropolitan,
-CHF50, Piaggio Fly 50 and Beverly Tourer 125 are now sourced; **eight remain**
-— Filly LX 50, Beverly 250, SYM JET 50, SYM JET 100, SYM Joyride, Vespa 946,
-Vespa Sprint, Zuma 50.
+**Repaired after merge, and the repair changed the reason.** Almost none of
+the 13 were actually unsourceable. **Ten were unsourced because the search was
+wrong, not because the documents were silent:**
 
-So the constraint is still not met, for eight spellings rather than thirteen,
-and the honest statement is: **the phase traded coverage for correctness
-without saying it was trading against a stated constraint.**
+* Honda prints **"Primary reduction V-matic (2.85:1 ~ 0.86:1)"** in the Ruckus
+  and Metropolitan specification tables. The first sweep searched for *belt*,
+  *drive belt*, *weight roller*, *CVT* and *transmission* — never for Honda's
+  own word. That closed Ruckus, Metropolitan, CHF50, and with the same
+  corrected vocabulary, Piaggio Fly 50 and Beverly Tourer 125.
+* Five more were **alias gaps against documents already on disk**: SYM JET
+  50/100 (service manual 7326249), SYM Joyride (7429958), Vespa Sprint — whose
+  aliases this phase *removed* as unsourced without reading the Primavera
+  manual's cover, which names it — and Zuma 50 (four Yamaha owner's manuals).
+
+**Three remain**, and they are now honestly characterised rather than lumped
+together: **Piaggio Beverly 250** and **Vespa 946** have no document at all,
+and **Filly LX 50** has a document whose attribution Phase 254 showed to be
+unestablished.
+
+**Coverage: 50 of 53 spellings resolve, up from 40 at merge.**
+
+The deviation still stands, and is worth stating exactly: **the phase traded
+coverage for correctness without saying it was trading against a stated
+constraint** — and most of what it traded away it did not have to, because the
+coverage was there to be found and the search was at fault. A fail-closed
+policy is only honest about its cost if the cost has actually been measured
+against the evidence available, not against the evidence that one query
+happened to reach.
 
 **D2. Scope grew during the build, once.** The video `/ask` endpoint fix was
 not in the plan. It was the right fix — the same defect on another door — but
