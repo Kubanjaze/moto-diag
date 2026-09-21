@@ -258,6 +258,45 @@ tiered matching, and the applicability filter.
 3. **The negative**: no `{cvt}` row reaches a Gold Wing through this door, by
    name, per D8.
 
+### D3a. Sequencing constraint — the filter lands in the same commit as the rewire
+
+**Measured first, because the reason matters.** Door 4 does **not** leak
+transmission-scoped rows today. Run against master `6298dfd`, the D8 machines
+through door 4: Gold Wing, CBR1000RR, Grom, Africa Twin, YZF-R1, Road King,
+GSX-R1000, Ninja 400 and CB500 all receive **zero** scoped rows; a Zuma 125
+receives 4614, which is correct. Verified **without** the `LIMIT 5`, because
+"5 rows returned" against a limit of 5 can hide a sixth — an R1 matches 33
+rows unlimited, none scoped.
+
+**But it is safe for the wrong reason, and that reason is about to be
+removed.** Door 4 matches `LOWER(make) = ?`, exact string equality. Nine of
+the eleven scoped rows carry
+`make = "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine"`, which is never
+equal to `"yamaha"`. The 244C–244I defect on this door — the thing D3 exists
+to fix — is currently acting as accidental protection.
+
+**So the rewire is what creates the exposure.** The moment door 4 retrieves
+through the resolver and its junctions, an R1 becomes eligible for all nine
+multi-marque rows. A rewire that lands without the filter would take door 4
+from *missing* to *misleading*, which is the one direction this axis forbids.
+
+**The constraint:** the applicability filter lands in the **same commit** as
+the door-4 rewire. Never after, not even by one commit.
+
+**Enforced, not written.** The D8 door-4 negative fixtures — R1, Gold Wing and
+CBR1000RR **must not receive a transmission-scoped row through door 4** — are
+committed **before** the rewire commit. They pass today (door 4 matches
+nothing scoped), and they pass after (the filter withholds it). **They fail in
+between**, so a later split of rewire from filter fails the suite rather than
+merely violating a paragraph.
+
+**One caveat on that, stated because it is the shape of a test that passes for
+the wrong reason:** a fixture green both before and after cannot, by itself,
+tell the two reasons apart. So the rewire commit carries a **positive
+control** — the filter call is removed, the fixture is shown to fail, and the
+call is restored — exactly as the F124 and F126 guards did. Without it, these
+fixtures would be three more assertions that have never been observed to fail.
+
 ## D4. `predict_failures` — the before number ships in the plan or nothing ships
 
 **Measured before any change, on the live database** (the four-pass retrieval,
