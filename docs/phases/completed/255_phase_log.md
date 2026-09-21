@@ -198,3 +198,50 @@ pin behind it, and the third was clean. Both of the first two failures were
 guards doing their job on code this phase wrote, which is the outcome to want
 from a phase that exists because Phase 254's guards had nothing to say about
 where its rows went.
+
+---
+
+## 2026-09-21 — Bug fix #1 (entered retroactively): the video /ask endpoint was never filtered
+
+**Entered after the fact, on review, and that is itself the defect being
+recorded.** This was a fix to shipped code made during the 255 build and folded
+into the single build commit `eb5ad13` with no bug-fix entry and no commit of
+its own. Phase 255 has one build commit and, until now, zero bug-fix entries —
+which reads as "nothing went wrong during the build". Something did.
+
+**Issue.** `POST /v1/sessions/{id}/videos/{video_id}/ask` retrieved twenty-five
+corpus rows via `known_issues_for_vehicle` and passed them straight to the
+vision model as `known_issues`. It never called `compose_prompt_rows`, so it
+never saw the applicability filter this phase exists to add. Measured before
+the fix, at the limit the endpoint actually uses: a **Yamaha MT07** and a
+**Yamaha XS650** each received row **4614** (a scooter CVT recall) and row
+**4606** (variator roller wear limits). The Hondas escaped only because their
+own rows filled the twenty-five first — ranking luck, not correctness.
+
+**Root cause.** The plan scoped the filter to `prompt_rows.py` and named its
+caller as `_load_known_issues`. Nobody asked which *other* callers retrieve
+corpus rows for a specific machine. That is the same question Phase 254 failed
+to ask about its own rows, unasked again in the phase built to answer it.
+
+**Fix.** `_drop_inapplicable` made public as `drop_inapplicable` — one filter,
+more than one door — and called in `videos.py` on the retrieved rows, with the
+machine resolved the same way the diagnose path resolves it.
+
+**Files.** `src/motodiag/api/routes/videos.py`,
+`src/motodiag/knowledge/prompt_rows.py`,
+`tests/test_phase255_transmission_axis.py` (class `TestTheOtherDoors`).
+
+**Verified.** MT07 and XS650 drop from two scoped rows to zero at `limit=25`; a
+Zuma 125 keeps both. Three tests: the behaviour, the scooter's rows surviving,
+and — because the first two pass whether or not the endpoint calls the filter —
+a wiring assertion that `videos.py` names `drop_inapplicable` and
+`resolve_transmission`.
+
+**What should have happened.** Its own commit, and this entry written at the
+time. A fix to shipped code folded into a build commit is invisible in the log
+and invisible in the history.
+
+**Still open from the same discovery:** `predict_failures` is a third door and
+remains unfiltered — five of the 254 rows sit behind an MT07's maintenance
+predictions, two behind a Gold Wing's. Filed as **F123**, deliberately not
+patched here.
