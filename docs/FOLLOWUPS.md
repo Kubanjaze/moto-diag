@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F125** (this file); the mobile
+At the time of writing the highest assigned is **F126** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -379,3 +379,68 @@ rather than pass when the sibling repo is absent, since a silent skip is how
 this went unnoticed. **Not fixed here:** it needs a decision about where the
 check runs, and a skip that is counted rather than invisible is exactly the
 close-out gate discipline this project already learned once.
+
+### F126
+
+**The fourth retrieval door has been dead since it was written, and a bare `except` hid it.**
+
+Found by the chokepoint phase's Step 0, asking the question directly: *which
+code paths read `known_issues` for prompt, search or prediction purposes?*
+Three were known. There is a fourth — `shop/priority_scorer.py`, which feeds
+the AI work-order priority scorer — and it is not leaking. **It has never
+returned a single row.**
+
+```python
+kb_rows = conn.execute(
+    "SELECT id, title, severity, fix FROM known_issues "      # <-- no such column
+    "WHERE LOWER(make) = ? AND (model IS NULL OR LOWER(model) LIKE ?) LIMIT 5",
+    ...
+).fetchall()
+```
+
+**There is no column `fix`.** It is `fix_procedure`, and `fix` has never
+existed in the schema — not in `SCHEMA_SQL`, not in any migration. Every call
+raises `sqlite3.OperationalError: no such column: fix`, and the enclosing
+`except Exception: return []` converts it into an empty result.
+
+**Measured against the live database**, running the same query with the column
+name corrected:
+
+| vehicle | returns today | would return |
+|---|---|---|
+| Harley-Davidson Road King | **0** | 5 |
+| Yamaha YZF-R1 | **0** | 5 |
+| Suzuki GSX-R1000 | **0** | 5 |
+| Suzuki SV650 | **0** | 5 |
+| KTM 390 | **0** | 5 |
+| Kawasaki Ninja ZX-10R | **0** | 2 |
+| Honda CB500 | **0** | 2 |
+| Honda CBR954RR, cbrf4i, Yamaha MT07 | 0 | 0 |
+
+**Seven of ten live vehicles lose real knowledge-base context**, and the
+scorer is told the corpus has nothing to say about the machine. That is not a
+missing feature the user can see — it is an AI prioritisation running on a
+silently emptied input, which reads exactly like a legitimate "no known
+issues".
+
+**No test covers the function.** `grep` for `_find_kb_matches_safe` across
+`tests/` returns nothing, so the docstring's promise — *"Try Phase 08
+known_issues lookup; fall back to empty list on miss"* — was never exercised
+against a real schema. The fallback was written for a **missing table**, and
+it silently absorbed a **wrong column** instead.
+
+**Three defects, one line apart:**
+
+1. **Wrong column name**, never caught because nothing executed the query in a
+   test.
+2. **`except Exception` swallowing everything**, so a schema error is
+   indistinguishable from an empty corpus — the F103 family: *a failure that
+   reads as no results*.
+3. **Substring model matching** (`LOWER(model) LIKE '%...%'`), the exact
+   defect Phases 244C–244I removed from the main retrieval path. This door
+   never got the fix because nobody knew it was a door.
+
+**Fix belongs to the chokepoint phase**, and is the argument for it: route
+this through the chokepoint and all three go away at once — the query becomes
+the resolver's, the failure becomes loud, and applicability is applied. Until
+then it is returning nothing, which is wrong but not misleading.
