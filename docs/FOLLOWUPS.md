@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F127** (this file); the mobile
+At the time of writing the highest assigned is **F128** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -287,6 +287,23 @@ asserting that every retrieval path applies the applicability filter** — a new
 fourth door would leak silently. That guard belongs with the general
 applicability mechanism.
 
+**CLOSED 2026-09-21 by Phase 256.** `predict_failures` routes through
+`knowledge/retrieval.py::rows_for_machine(purpose="prediction")`, applied to
+the **candidate pool before scoring**, so a row the machine cannot have
+never earns a rank.
+
+**No scoring change shipped**, and that is a diff rather than a claim: 421
+predictions across 9 machines, **21 rows removed, all transmission-scoped,
+zero non-scoped**, every scoring field identical for every survivor, and
+relative order preserved on every machine. The MT07 drops 50 → 45 because
+its pool ran out; the rest backfill from below the 50-cap.
+
+This ticket also asked for "a test asserting that every retrieval path
+applies the filter, so a fourth door cannot leak silently". That exists now:
+`tests/test_phase256_chokepoint.py` fails the build if any module outside
+the repo layer names `known_issues` in SQL, and plants a bypass against
+itself on every run.
+
 ### F124
 
 **Eleven schema pins shadow `SCHEMA_VERSION`, and the lint was suppressed eleven times.**
@@ -552,3 +569,42 @@ absent: they inflate every "searched N documents" denominator. **That is not
 hypothetical — it is how the Beverly 250 "no document" verdict was reached**,
 over 227 readable files while 36 were silently excluded, three of them
 Beverly-related.
+
+### F128
+
+**Four rows name a machine their own applicability excludes — and one is a contradiction on disk.**
+
+Found by a refuter attacking Phase 256's door-3 change. **No guard in that
+phase could have found it**: they all ask whether a machine *receives* rows
+it may not have. None asked whether a machine *misses* rows written for it.
+
+| machine | row | cost |
+|---|---|---|
+| **Kymco Filly LX 50** | **4609** | **rank-1 prediction: critical, confidence 0.747, 3,000 miles overdue** |
+| Piaggio Beverly 250 | 4613 | rank 5, high, confidence 0.593 |
+| Vespa 946 | 4613 | rank 5 |
+| SYM Symba | 4615 | rank 8 |
+
+**No override rule was added, deliberately.** Letting an explicit model
+match beat the axis filter would make a row's `model` string authoritative
+over a sourced lookup — string-naming as authority, the pattern the
+transmission axis exists to replace. **A row naming a machine is a claim;
+the lookup is evidence.**
+
+**4609 over-claimed.** It names the Filly because the Kymco Agility service
+manual's **recycled page header** prints `FILLY LX 50` on 21 of 183 pages —
+which Phase 254 examined and rejected as unestablished attribution. The row
+asserted a machine its own document does not establish.
+
+**4615 contradicts itself on disk**: it declares `{"transmission": ["cvt"]}`
+while naming the Symba, which Phase 255's own lookup classifies
+`semi_auto_centrifugal` from SYM's manual (*"Wet multi-plate type, auto
+centrifugal clutch"*).
+
+**Owed by 255B:** drop the Filly from 4609's model column; split 4615's
+general half, which resolves the Symba naming. **Beverly 250 and Vespa 946
+stay as they are** — closed-unobtainable per F119.
+
+**Guarded permanently**, not phase-scoped:
+`tests/test_phase256_chokepoint.py::TestNoRowExcludesAMachineItNames` pins
+these four with their reasons and fails on a fifth.

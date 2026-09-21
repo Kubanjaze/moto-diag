@@ -1,6 +1,6 @@
 # Phase 256 — The retrieval chokepoint
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-21
 
 > **Step 0 below is unchanged from the committed draft** (`471f123`) and is
 > not re-run. The plan begins at "Positive control on Step 0 itself".
@@ -566,3 +566,99 @@ its 45 predictions and records nothing, silently, at debug level.
 - [ ] `withheld_snapshot` / `reset_withheld` retired and de-allowlisted
 - [ ] Regression green, **with commit hash and collected count**
 
+---
+
+## Results (v1.1)
+
+### What shipped
+
+| piece | where |
+|---|---|
+| The chokepoint, `purpose` required with no default | `knowledge/retrieval.py` |
+| `retrieval_withheld` + `json_valid` CHECK on `known_issues` | migration 064 |
+| Four doors routed through it | `cli/diagnose.py`, `api/routes/videos.py`, `advanced/predictor.py`, `shop/priority_scorer.py` |
+| Structural guard + self-excluding-rows guard | `tests/test_phase256_chokepoint.py` |
+| `motodiag kb withheld` — the lookup's to-do list | `cli/kb.py` |
+| In-memory counter retired, de-allowlisted | `knowledge/transmission.py`, 209B, 244U |
+
+`SCHEMA_VERSION` 63 → 64. **Regression `c8a0e16`: 7,964 collected, 7,964
+passed, 0 failed, 0 skipped, 30:40.** F9 lint clean, 244G clean.
+
+### One chokepoint, proved rather than asserted
+
+A **single** mutation — the filter in `rows_for_machine` made a no-op —
+fires **all fifteen** machine assertions, five machines across three doors.
+Per-door controls: doors 1+2 ten failures, door 3 five (six when the call
+is deleted, the extra being the wiring assertion), door 4 five.
+
+### The doors
+
+| door | before | after |
+|---|---|---|
+| 1 diagnose / code | filtered (255) | via chokepoint |
+| 2 video `/ask` | filtered (255 bug fix #1) | via chokepoint, and now caps **after** filtering |
+| 3 `predict_failures` | **unfiltered** — MT07 carried 5 scooter-CVT rows, Gold Wing 2 | via chokepoint, pre-scoring |
+| 4 `priority_scorer` | **dead since written** (F126) | via chokepoint, raw SQL deleted |
+
+### Door 3 — no scoring change, shown as a diff
+
+421 predictions across 9 machines. **21 rows removed, all
+transmission-scoped, zero non-scoped. Every scoring field identical for
+every survivor. Relative order preserved on every machine.** The MT07 drops
+50 → 45 because it ran out of candidates; the rest backfill from below the
+50-cap. See Deviations D-2 for why that backfill is not neutral.
+
+### F124's promise, collected
+
+The 63 → 64 bump needed **zero test edits** — 747 tests across the eleven
+files that used to require one each, `git diff tests/` empty. That bump
+cost five discovery passes last time.
+
+### Four variations of one error, in one day
+
+Each was *a guard that cannot observe the thing it claims to guard*, and
+**each was caught by a positive control, none by reading the code**:
+
+1. The old `LIMIT 5` masking a door-4 leak — caught while checking whether
+   F126's fix reopened it.
+2. **My own door-4 tripwire, an hour later**, capping and filtering in one
+   expression, so it read five rows while the scoped rows sat at positions
+   56–115. It passed on leaking code.
+3. `GUARD_FETCH = 400` — safe by arithmetic until the corpus grows.
+   Measured: worst match 165 rows, unlimited costs 17.6 ms against 17.6 ms.
+   The caps were doing no work.
+4. My door-3 fixture rebuilding the candidate pool itself, so bypassing the
+   filter *inside* `predict_failures` left all 60 assertions green.
+
+### What the refuter found that no guard here could
+
+All four verified before acting. The sharpest: **rows that name a machine
+and are then withheld from it** — every guard in this file asks whether a
+machine *receives* rows it may not have; none asked whether a machine
+*misses* rows written for it. Four cases, recorded in Deviations D-1 by
+machine and row id.
+
+It also disproved a docstring written with some confidence — `rows_withheld`
+is the cost of not knowing, **not** what sourcing recovers; sourcing a Grom
+recovers zero — and caught that `predict_failures` had begun writing to the
+database while its docstring called the pipeline side-effect free.
+
+### Known limits carried forward
+
+1. **Four rows name a machine they exclude.** Guard is permanent; 4609 and
+   4615 resolve in 255B, the other two are closed-unobtainable.
+2. **Alias matching is exact.** `Piaggio / Primavera 150` resolves
+   `unknown` where `Vespa / Primavera 150` is sourced, and `PCX 150 ABS`
+   misses `PCX 150`. The no-fuzzy-matching decision is Phase 255's and
+   stands; the cost is now visible.
+3. **A fully-withheld candidate pool returns `[]` before recalls are
+   fetched.** Not reachable today — minimum survivors by make are SYM 5,
+   Genuine 6, Kymco 6, Vespa 8, Piaggio 9 — but it becomes reachable if a
+   marque's rows are ever all scoped.
+
+### Non-goals held
+
+No scoring change. No content rows. No lookup changes beyond what a door
+needed. No third axis. **255B is still owed**, and now owes three specific
+things: the 4609 model-column fix, the 4615 split, and the PCX generic-layer
+question.
