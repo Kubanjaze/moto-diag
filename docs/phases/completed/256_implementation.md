@@ -604,7 +604,13 @@ is deleted, the extra being the wiring assertion), door 4 five.
 
 421 predictions across 9 machines. **21 rows removed, all
 transmission-scoped, zero non-scoped. Every scoring field identical for
-every survivor. Relative order preserved on every machine.** The MT07 drops
+every survivor. Relative order preserved on every machine.**
+
+**The evidence is committed, not summarised**:
+[`256_predictions_before.json`](256_predictions_before.json) and
+[`256_predictions_after.json`](256_predictions_after.json) hold every
+prediction — rank, issue id, title, severity, confidence, miles-to-onset
+and match tier — so the claim above can be re-derived rather than trusted. The MT07 drops
 50 → 45 because it ran out of candidates; the rest backfill from below the
 50-cap. See Deviations D-2 for why that backfill is not neutral.
 
