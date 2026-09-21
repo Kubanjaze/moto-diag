@@ -1,6 +1,6 @@
 # Phase 254 — Small-displacement CVT diagnostics — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete
 **Opened:** 2026-09-21
 
 ---
@@ -43,3 +43,7 @@ going to a refuter as a claim to break rather than into a row as a finding.
 The last three phases have all turned on exactly that kind of sentence.
 
 Sweeps launched with the plan.
+
+## 2026-09-21 — Complete
+
+Regression **7,750 passed, 0 failed, 38:34**. Corpus 1033 -> 1045, no new marque. No schema change. F111, F112, F113 and F114 filed.

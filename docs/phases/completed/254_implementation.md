@@ -1,6 +1,6 @@
 # Phase 254 — Small-displacement CVT diagnostics: the layer three rows left alone
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-21
 
 ---
 
@@ -133,15 +133,119 @@ has largely disappeared, that absence is the content.
 - Nothing from memory: no interval, clearance or wear limit that a fetched
   page does not state.
 
+## Results (v1.1)
+
+**Shipped:** `known_issues_cvt.json`, twelve rows — ten `service-manual`, two
+`regulation`, none `model-generated` and none `unverified`. Corpus 1033 →
+1045. **No new marque**; every make in the layer already existed.
+
+- 85 tests, 22 mutations.
+- Full regression **7,750 passed, 0 failed, 38:34**.
+
+### The row did what Step 0 said it was for
+
+Step 0's argument was that three unrelated components share the phrase
+*drive belt* and retrieval cannot separate them. Measured before and after:
+
+| search | before | after |
+|---|---|---|
+| `drive belt` | 8 rows, **1 CVT, last** | 13 rows, **5 CVT** |
+| `variator` | 1 | 6 |
+| `weight roller` | 0 | 4 |
+| `primary sheave` | 0 | 4 |
+| `clutch bell` | 0 | 2 |
+| `kickstart` | 0 | 2 |
+
+One gap was found by re-measuring after the first load rather than by
+assuming: `roller weight` still returned **zero**, because every maker
+writes *weight roller* and the rows had faithfully inherited the makers'
+ordering — reproducing the exact gap the phase exists to close. The
+vocabulary row now names both orderings.
+
+### The hypothesis died three times
+
+Step 0 flagged a tidy pattern across five makers and wrote that it was
+"exactly the kind of tidy claim the last three phases have taught me to
+hand to a refuter rather than to trust". It was sent out to be falsified.
+
+| version | killed by | how |
+|---|---|---|
+| "only Piaggio publishes a belt wear limit" | sweep A | **every** maker publishes roller limits — Honda 19.5 mm, Yamaha 19.5 mm, Kymco 15.4, SYM 19.500 and 15.40, PGO 17.40 |
+| "intervals in owner's manuals, limits in service manuals" | sweep B | **three service manuals carry both** — Piaggio 633976 prints the interval one page from the limit |
+| "only Piaggio publishes it in an *owner-reachable* document" | sweep C | **backwards** — Piaggio's limit is in a manual stating it is "to be used by the workshops of Piaggio-Gilera dealers", while the Vespa owner's manual has "width" **zero** times and is fully searchable |
+| "every belt *number* lives in a service manual" | refuter 3 | a Bintelli owner's manual prints **"Belt Model   Gates 669MM"** — a *length* |
+
+**What survives, and ships:** no owner's manual publishes a belt **width or
+wear limit**, tested across 34 of them. The row is worded "width or wear
+limit" rather than "number" *because* of that counter-example — the
+difference between a claim that survives the sample and one that is false.
+
+### What the refuters corrected
+
+| The sentence | Why it died |
+|---|---|
+| "the Kymco manual contradicts itself three times" | **four**, and the direction of error is inconsistent, so "trust the table" is ruled out |
+| "the manual mixes two machines" | the FILLY pages alternate **strictly by odd/even folio** — a recycled page template — except in two whole chapters where provenance genuinely is unestablished |
+| "only the clutch bell is self-consistent" | **four of nine** rows agree; the sweeps stopped reading at 9-10 and missed page 9-11 |
+| "the belt limit rests on a third-party transcription" | it is in Kymco's own PDF, **with a paired standard of 17.5 mm** |
+| "Kymco's figures cannot be trusted" | a **one-book** defect; the People S 250 agrees with itself on all six figures across 243 uniformly-headed pages |
+| "21.5/22.5 belongs to the Vespa LX platform" | it appears in **four** Piaggio manuals and splits by **displacement class**; manual 618162 prints two pairs **on one page** |
+| "the shipped 251 row is wrong" | the row's figures and prose are right; the defect is one model name in a **scope field** (F111) |
+| "the bare ENGINE component is an anomaly" | 10 of 1,125 campaigns, 233 colon-free — a taxonomy gap, not a one-off |
+| "the makes index systematically omits" | **bidirectional** — 13 one way, 12 the other, of 102 tested |
+
+Each is a test and a mutation.
+
+### What was found that nothing had
+
+**Campaign 21V251000** — Yamaha XC155, 4,262 units, park-it: *"The primary
+sheave nut may loosen and fall off"*, with *"A missing primary sheave nut
+may cause a stall, without the ability to restart the engine"*. It surfaced
+**only** because a refuter searched Yamaha's own word, **sheave**, which
+appears in exactly **one** of 1,125 campaigns collected — while **variator
+appears in none at all** — and it is filed under a bare `ENGINE` component,
+so a taxonomy filter would skip it too.
+
+### Deviations
+
+**The Piaggio "correction" was not made.** A sweep proposed correcting a
+shipped 251 row; a refuter found the row right and the sweep wrong. The
+real defect is smaller — one model name in a coarse scope field — and
+because `known_issues` identity is (make, model, title), editing that
+column creates a row rather than updating one. **Filed as F111 rather than
+patched mid-phase.**
+
+**No marque was created for the counter-example maker.** Bintelli is named
+in text where it kills the claim, and deliberately not made a marque,
+because it would carry no machines of its own — 245's Damon lesson.
+
+**The 250C control-group pin moved for the third consecutive phase** and
+was bumped with its reason, as in 252 and 253. The pattern is now recorded
+as F112: for Honda and Yamaha that equality tracks content rather than the
+derivation, while Kawasaki and Suzuki still do the real work.
+
+### Verification
+
+- Twelve rows, every one anchored; mirror provenance stated for the service
+  manuals, and the statement that **no maker here publishes a service manual
+  on its own site** carried explicitly.
+- Retrieval measured before and after, not asserted.
+- Six of the first 85 assertions failed and **three were real content
+  defects the guards caught** — two rows citing no document, one regulator
+  row printing no campaign number. All three fixed rather than excused.
+- Two blunt token-ban guards, the fourth consecutive phase, both rewritten
+  to test the claim scoped to a sentence.
+- 22 mutations, all caught.
+
 ## Verification Checklist
 
-- [ ] Every row anchored to a named document, or dropped
-- [ ] Every number labelled; no number without a fetched source
-- [ ] No row restates a per-machine row from 251, 252 or 253
-- [ ] The three meanings of "drive belt" are named and separated
-- [ ] The published-limit pattern survived a refuter, or was corrected
-- [ ] The new test file scanned by 244G's raw-source guard
-- [ ] Mutations caught
-- [ ] Full regression green — 0 failed, 0 skipped
-- [ ] Live DB loaded copy-first, before-state printed; count docs moved
-- [ ] Roadmap row, `implementation.md` history row, `phase_log.md`
+- [x] Every row anchored to a named document, or dropped
+- [x] Every number labelled; no number without a fetched source
+- [x] No row restates a per-machine row from 251, 252 or 253
+- [x] The three meanings of "drive belt" are named and separated
+- [x] The published-limit pattern survived a refuter, or was corrected
+- [x] The new test file scanned by 244G's raw-source guard
+- [x] Mutations caught — 22/22
+- [x] Full regression green — **7,750 passed, 0 failed, 38:34**, 0 skipped
+- [x] Live DB loaded copy-first, before-state printed; count docs moved
+- [x] Roadmap row, `implementation.md` history row, `phase_log.md`
