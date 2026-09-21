@@ -213,6 +213,65 @@ asserting that every retrieval path applies the applicability filter** — a new
 fourth door would leak silently. That guard belongs with the general
 applicability mechanism.
 
+### F124
+
+**Eleven schema pins shadow `SCHEMA_VERSION`, and the lint was suppressed eleven times.**
+
+`SCHEMA_VERSION` is the single source of truth for the schema head. Eleven test
+assertions duplicate its current value as a literal:
+
+| file | line | form |
+|---|---|---|
+| `test_phase184_gate9.py` | 591 | `SCHEMA_VERSION == 63` |
+| `test_phase205_gate11.py` | 643 | `SCHEMA_VERSION == 63` |
+| `test_phase240_gate12.py` | 578 | `SCHEMA_VERSION == 63` |
+| `test_phase244D_known_issues_dedup.py` | 187 | `SCHEMA_VERSION == 63` |
+| `test_phase244F_marque_vocabulary.py` | 282 | `SCHEMA_VERSION == 63` |
+| `test_phase244I_model_vocabulary.py` | 243 | `SCHEMA_VERSION == 63` |
+| `test_phase244L_vision_costs.py` | 202 | `SCHEMA_VERSION == 63` |
+| `test_phase244M_client_memory.py` | 801 | `SCHEMA_VERSION == 63` |
+| `test_phase244N_passive_capture.py` | 572 | `SCHEMA_VERSION == 63` |
+| `test_phase250_gate13.py` | 616 | `SCHEMA_VERSION == 63` |
+| `test_phase191b_serve_migrations.py` | 100 | `get_current_version(db_path) == 63` |
+
+**Every one carries an `f9-noqa: ssot-pin` suppression.** The SSOT lint
+(`scripts/check_f9_patterns.py --check-ssot-constants`) flagged all eleven
+correctly, and all eleven were waived — F9 subtype 4, suppressed at scale.
+
+**They catch nothing.** The failure mode they claim to guard — the constant
+bumped without a migration — is already caught by a single genuine pin,
+`tests/test_phase240c_severity_ordering.py:257`:
+
+```python
+assert SCHEMA_VERSION == max(m.version for m in MIGRATIONS)
+```
+
+Verified: on a clean tree it passes; with `SCHEMA_VERSION` set to 64 and no
+migration added it fails on its own, in 0.07s. It compares two independent
+sources, which is what makes it a real pin rather than a copy.
+
+**What they cost.** Every migration requires editing all eleven, and each
+carries a hand-maintained "schema history" comment restating the migration
+log — now 1–2 KB apiece. Phase 255 appended to eleven of them and needed
+**five passes** to find them all: a subsystem blast radius found three, a
+neighbour a fourth, a grep four more, a ninth only because `gate12` runs
+`gate11` in a subprocess, and the last three only when the grep's hits were
+counted rather than read off a `head`-truncated screen.
+
+**Converting them to `== SCHEMA_VERSION` is not the fix** — that is `x == x`,
+as their own comments say. They are deleted.
+
+**Schema history has one canonical home:** each `Migration.description` in
+`src/motodiag/core/migrations.py`, which already carries the full rationale for
+every version, plus the per-phase `docs/phases/completed/NNN_implementation.md`
+for narrative. The comment blobs were copies of it.
+
+**Closed by** the commit that deletes all eleven and adds a guard failing on any
+test literal equal to the current `SCHEMA_VERSION`, and on any new
+`f9-noqa: ssot-pin` waiver for the schema version. Intermediate-state literals
+below the head (`== 38`, `== 51`) stay legal — they assert a fixture mid-migration,
+not the head.
+
 ### F125
 
 **The ROADMAP_AUTHORITY contract drifted between its two copies, which is the drift class it exists to prevent.**
