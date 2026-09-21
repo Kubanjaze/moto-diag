@@ -310,6 +310,84 @@ ADR names it, because a third axis is already visible (S0-4).
   `hondamotopub.com` carries owner's manuals and parts catalogues only.
 - **No keyword matching in seed or at runtime** (D3).
 
+## Amendments to v1.0 (same day, before build)
+
+**A1. Sequencing — no `manual` in any set until coverage is sourced.** The NULL
+cost only bites when `{manual}` rows are scoped: a clutch-cable row declared
+`{manual}` would be withheld from every unlisted CBR and Harley, which is a
+worse outcome than today's. **255 therefore ships the mechanism plus `cvt`
+scoping only.** Set logic and the ambiguous-candidate rule are exercised with
+**synthetic test-only rows** — the Africa Twin fixture uses those, not shipped
+content. The sourced manual-coverage list is a **specific later phase**:
+workflow plus refuter, source = manufacturer specification pages. **No bulk
+inference, ever.**
+
+**A2. The regression that matters is machine-level, not corpus-level.** My
+earlier reasoning — "models with no corpus rows can't lose retrieval they never
+had" — **was wrong.** Make-wide retrieval keys on the **vehicle's** make, not on
+the model having rows; that is the Step 0 defect itself, a Grom receiving seven
+rows with no Grom content. So a user's TMAX or NMAX **does** get the CVT layer
+today and **would lose it** on deploy. The diff is against machines:
+
+- **(a) Live `vehicles` table, measured.** 10 vehicles, 5 of the seven makes:
+  Honda CB500, CBR954RR, cbrf4i; Yamaha MT07, YZF-R1. Each gets 7–8 CVT rows
+  today and each correctly loses them — none is a CVT machine. **No live vehicle
+  regresses.** The exposure is future machines.
+- **(b) Every model from 254's 34 owner's manuals goes in the lookup**, sourced
+  to that manual, **whether or not it has corpus rows.**
+- **(c) No make-default for scooter marques.** The Vespa PX and older Genuine
+  Stella are **manual** — a Vespa-means-CVT default would be wrong on a machine
+  Piaggio still sold recently.
+- **(d) Residual gap is whatever users add next**, so the **mobile transmission
+  field moves up: it is the phase immediately after 255B**, no longer "later".
+
+**A3. XC155 / SMAX — unverified, and the lesson stands anyway.** I could not
+source the equivalence: Yamaha's model pages return 200 but are JavaScript
+shells, and `model_list` returned HTTP 500. The only first-hand evidence is the
+**regulator's**, where the rows read `YAMAHA / XC155` and **no row says SMAX** —
+so "(SMAX)" was a sweep's gloss, not a document. **The equivalence is not
+asserted.** What does follow, and is the more useful half: **a name search does
+not prove absence.** "SMAX returns zero rows" and "XC155 returns two rows" may
+well be one machine. **Every lookup entry therefore carries an explicit alias
+list — model code and marketing name — and absence is never concluded from one
+spelling.**
+
+**A4. Matching rule.** Per entry: an **explicit alias list**; strip the make
+prefix; **whole-token match against aliases**, make-scoped. **No fuzzy matching.
+No alpha/numeric splitting. No substring matching anywhere.** Every form
+currently in the junction is a test case — `PCX150`, `PCX 150`, `PCX125`,
+`PCX160`, `Honda PCX150`, `Honda PCX125`, `Zuma`, `Zuma 125`, `Zuma 50`,
+`Zuma 50F`, `Yamaha Zuma 125`, `Vino`, `Vino 50`, `Vino 125`, `Vino Classic`,
+`Metropolitan`, `Honda Metropolitan`, `Ruckus`, `XMAX`, `Yamaha XMAX`, `XC155`.
+A test also feeds a free-text model string chosen to collide — **Like, Fly, Jet,
+Kick, Wolf and Buddy are all real model names** and all are ordinary words.
+**Junction junk itself stays with F108** and is not cleaned here.
+
+**A5. Resolver returns value plus provenance**, one of `explicit`,
+`model-sourced`, `powertrain-default`, `ambiguous`, `unknown`. **The
+withheld-rows counter breaks down by provenance**, so the fail-closed cost is
+attributable rather than a single number.
+
+**A6. Final drive is a fourth axis, not a transmission problem.** Measured: a
+PCX 150 retrieves **8** final-drive-chain rows, 3 clutch-lever/cable/pack rows
+and 1 gearbox row; a Zuma 125, 4/1/2. **A belt-drive Harley and a shaft-drive
+Gold Wing should not get chain rows either**, which is why this is its own axis
+and **must not be solved with `{manual}` sets.** Added to the
+general-mechanism F-ticket as the fourth axis.
+
+**A7. Row 4605 is unreachable to the owners it was written for.** Its make
+column is `Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine`, so a
+Harley-Davidson Road King and a BMW R1200GS both reach it: **False**. The row
+explaining that a Harley final-drive belt is not a CVT belt cannot be retrieved
+by a Harley owner. **Own finding, not fixed here.**
+
+**A8. The set counts, corrected.** Twelve rows: **nine plain `{cvt}`**, **two
+flagged `{cvt}`** (4611 kickstart, 4615 regulator methodology — both carry a
+general half that belongs to a machine class wider than CVT), and **one
+unscoped** (4605). **Eleven rows carry `{cvt}`; one carries no transmission
+key.** 4611 and 4615 are recorded as known limits and named in the 255B plan for
+splitting.
+
 ## Verification Checklist
 
 - [ ] `VehicleTransmission` enum, six values, each defined by mechanism
@@ -324,6 +402,10 @@ ADR names it, because a third axis is already visible (S0-4).
       ambiguous Africa Twin fixture with the column NULL
 - [ ] 254's CVT rows reach a PCX and a Kymco Agility, and reach **none** of
       CBR1000RR, Gold Wing DCT, Grom, R1, XS650, Zero
+- [ ] No shipped row declares a set containing `manual` (A1)
+- [ ] Synthetic test-only rows exercise set logic and the ambiguous rule (A1)
+- [ ] Every junction model form matches; a colliding free-text string does not (A4)
+- [ ] Resolver returns provenance; counter breaks down by it (A5)
 - [ ] Mutations caught
 - [ ] Full regression green — 0 failed, 0 skipped
 - [ ] 254 bug-fix entry logged with its own commit
