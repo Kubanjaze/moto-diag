@@ -245,3 +245,53 @@ and invisible in the history.
 remains unfiltered — five of the 254 rows sit behind an MT07's maintenance
 predictions, two behind a Gold Wing's. Filed as **F123**, deliberately not
 patched here.
+
+---
+
+## 2026-09-21 — Correction: the A3 amendment was wrong, and the evidence was already on disk
+
+**Correcting a shipped claim in this phase's own plan, in the style of the
+dated bug-fix entry logged against Phase 254.**
+
+**What v1.0's A3 amendment said:**
+
+> "The only first-hand evidence is the **regulator's**, where the rows read
+> `YAMAHA / XC155` and **no row says SMAX** — so '(SMAX)' was a sweep's gloss,
+> not a document. **The equivalence is not asserted.**"
+
+**One row says it.** NHTSA campaign **16V892000**, Yamaha's own defect-notice
+text, verified live today and corroborated offline:
+
+> *"Yamaha Motor Corporation, USA (Yamaha) is recalling certain model year 2015
+> **XC155F SMAX** scooters manufactured September 17, 2014, to October 27,
+> 2015."*
+
+Campaign **20V277000** lists both `XC155` and `XC155F` for MY2015, tying the
+two spellings to one machine. So **XC155 = XC155F = SMAX**, in the
+manufacturer's words, through the regulator.
+
+**Where the evidence was.** In `FLAT_RCL_POST_2010.txt` — NHTSA's flat recall
+file, 245,336 rows, **downloaded during Phase 254 and sitting on disk the whole
+time**. Phase 255 queried Yamaha's model pages (JavaScript shells), their
+`model_list` API (HTTP 500) and a guessed library path (404), concluded the
+answer was unobtainable, and shipped that conclusion. It never queried the
+regulator dataset it already had.
+
+**Why the search failed even against the right file.** "SMAX" occurs **exactly
+once** in the entire post-2010 dataset, inside prose, in a file keyed by model
+code. A name search returning nothing was never evidence of anything — which is
+the lesson A3 itself drew and then did not apply to its own conclusion.
+
+Now recorded in `CLAUDE.md`: *exhaust the evidence already on disk before
+searching externally.*
+
+**What stands.** The narrower claim in the same amendment — that Yamaha's XMAX
+codes are `YP125RA`, `CZD250-A` and `CZD300-A`, so XC155 is **not** an XMAX —
+remains correct, sourced to three owner's-manual covers. It was correct and
+incomplete.
+
+**Fixed:** `XC155 / SMAX` is now a sourced lookup entry (`cvt`), aliased under
+both names plus `XC155F`, with the name sourced to 16V892000 and the
+transmission to 21V251000 — *"The primary sheave nut may loosen and fall
+off"*, a primary sheave being the CVT drive pulley. Seven parametrised tests
+cover both names. One more of the thirteen unsourced spellings closed.

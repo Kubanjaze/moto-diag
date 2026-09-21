@@ -187,6 +187,17 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Yamaha Zuma 125 service manual 32SF819770E0, cover 'Model : "
        "YW125Y': 'Transmission type V-belt automatic'. The cover is also "
        "where the model-code alias comes from."),
+    _E("Yamaha", "XC155 / SMAX", CVT, ("xc155", "xc 155", "xc155f", "xc 155f",
+                                       "smax", "s max", "s-max"),
+       "Two NHTSA campaigns, Yamaha's own defect-notice text. The NAME: "
+       "16V892000 reads 'recalling certain model year 2015 XC155F SMAX "
+       "scooters', and campaign 20V277000 lists both XC155 and XC155F for "
+       "MY2015 — so XC155 = XC155F = SMAX, in the manufacturer's words. The "
+       "TRANSMISSION: 21V251000 reads 'The primary sheave nut may loosen and "
+       "fall off'; a primary sheave is the CVT drive pulley. NOTE 'SMAX' "
+       "occurs exactly ONCE in NHTSA's entire post-2010 flat recall file "
+       "(245,336 rows), which is why Phase 255 searched for it, found "
+       "nothing, and wrongly concluded the equivalence was unsourced."),
     _E("Yamaha", "XMAX", CVT,
        ("xmax", "xmax 125", "xmax125", "yp125ra",
         "xmax 250", "xmax250", "czd250", "czd250 a", "czd250a",
@@ -201,7 +212,7 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "for the family because all three documents agree and the junction "
        "carries the bare form 'XMAX'. These covers are ALSO the evidence "
        "that XC155 is not an XMAX: Yamaha's XMAX codes are YP125RA, CZD250 "
-       "and CZD300, and none of them is XC155."),
+       "and CZD300, and none of them is XC155 — which is correct, and incomplete: XC155 is the SMAX, sourced in its own entry above."),
 
     # --- Kymco -----------------------------------------------------------
     _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",

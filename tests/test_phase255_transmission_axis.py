@@ -512,6 +512,23 @@ class TestMatching:
         assert resolve_transmission("Honda", "PCX150").provenance == "model-sourced"
         assert resolve_transmission("Honda", "SH125i").provenance == "model-sourced"
 
+    @pytest.mark.parametrize("model", [
+        "XC155", "XC155F", "xc 155f", "SMAX", "S-Max", "Yamaha SMAX",
+        "Yamaha XC155F",
+    ])
+    def test_the_smax_resolves_under_either_name(self, model):
+        """One machine, two names, and the marketing name is nearly invisible.
+
+        Phase 255 shipped saying this equivalence was unsourced, after
+        Yamaha's model pages returned JavaScript shells and their model API
+        returned HTTP 500. It is in NHTSA's flat recall file, held on disk
+        since Phase 254: campaign 16V892000 reads "certain model year 2015
+        XC155F SMAX scooters" — the only occurrence of "SMAX" in 245,336
+        rows. Searching for the marketing name and finding nothing was
+        never evidence of anything.
+        """
+        assert resolve_transmission("Yamaha", model).value == "cvt"
+
     def test_matching_is_make_scoped(self):
         """'Sprint' is a Bintelli scooter and also a Vespa. Only one is
         sourced here, and the other must not borrow its answer."""
