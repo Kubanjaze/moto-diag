@@ -3517,3 +3517,63 @@ happened in three consecutive phases: a guard that bans a string fires on the
 honest row written to correct that string, because such a row has to name the
 error in order to disclaim it. This time one of the two blunt guards
 contradicted a sibling assertion twelve lines away in the same file.
+
+
+## Phase 254 — Small-displacement CVT diagnostics
+
+**2026-09-21.** Twelve rows, corpus 1033 → 1045, no new marque. Regression
+7,750 passed, 0 failed, 38:34.
+
+This row existed because three previous rows refused to write it. 251, 252 and
+253 each shipped a test file forbidding `variator`, `roller weight`, `clutch
+bell` and `driven pulley` in its own rows, and the vocabulary check at Step 0
+confirmed the discipline had held: all four returned zero across 1033 rows, and
+the one `CVT` row and one `variator` row were the same Piaggio row.
+
+The argument for writing it was measurable rather than asserted. Searching the
+corpus for `drive belt` returned eight rows — a Harley final-drive tensioner, a
+BMW oilhead alternator belt, and one CVT row, last — because three mechanically
+unrelated components share one phrase and retrieval cannot separate them.
+
+What this phase will be remembered for is a hypothesis dying three times.
+
+Step 0 noticed a tidy pattern across five makers — that only Piaggio published a
+belt wear limit — and wrote in the plan that it was "exactly the kind of tidy
+claim the last three phases have taught me to hand to a refuter rather than to
+trust". It went out as a claim to falsify. Sweep A killed it: every maker
+publishes roller limits, in service manuals. The obvious retreat — intervals in
+owner's manuals, limits in service manuals — lasted until sweep B found three
+service manuals carrying both. Sweep C killed the third version backwards:
+Piaggio's limit sits in a manual that states in its own words that it is for
+dealer workshops, while the Vespa owner's manual contains the word "width" zero
+times and is fully searchable.
+
+The fourth version went to a refuter with instructions to find a counter-example,
+and it found one — a Bintelli specification table printing a belt *length*. That
+kill is the most useful result of the phase, because it forced the row to say
+"width or wear limit" where it would otherwise have said "number", and the
+difference is between a claim that survives 34 owner's manuals and one that is
+simply false.
+
+The refuter work around it was the best of the session. One OCR'd eleven
+image-only scans rather than counting their zeros, and controlled three Yamaha
+manuals in Portuguese, French and Spanish because English search terms would have
+returned a worthless zero. Another rendered every table it cited, reconstructed a
+service-manual grid from word coordinates to rule out column collision, ran a
+full header census over 183 pages and found a third model spelling nobody had
+looked for. A third refuted a sweep's proposed correction to a row this corpus
+already ships — the figures were right, and the real defect was one model name in
+a scope field.
+
+Two things recurred and are worth naming. Six of the test file's first eighty-five
+assertions failed, and **three of those were real content defects the guards
+caught** — two rows citing no document and a regulator row printing no campaign
+number. Two of the remaining three were blunt token bans firing on legitimate
+sentences, which is now the fourth consecutive phase, and both were rewritten to
+test the claim scoped to a sentence.
+
+And the 250C control-group pin moved for the third phase running. It was bumped
+with its reason, as before, but the pattern is now the finding: for Honda and
+Yamaha that equality tracks content rather than the derivation it was written to
+guard, while Kawasaki and Suzuki still do the real work. Re-shaping it to test
+the property is filed, not done — this is a content row.
