@@ -266,11 +266,31 @@ as their own comments say. They are deleted.
 every version, plus the per-phase `docs/phases/completed/NNN_implementation.md`
 for narrative. The comment blobs were copies of it.
 
-**Closed by** the commit that deletes all eleven and adds a guard failing on any
-test literal equal to the current `SCHEMA_VERSION`, and on any new
-`f9-noqa: ssot-pin` waiver for the schema version. Intermediate-state literals
-below the head (`== 38`, `== 51`) stay legal — they assert a fixture mid-migration,
-not the head.
+**CLOSED 2026-09-21.** All eleven deleted — ten whole test methods that held
+nothing else, and one bare assertion in `191b` that sat beside an
+`== SCHEMA_VERSION` line doing the same job. Nine unused `SCHEMA_VERSION`
+imports removed with them. Guard added at
+`tests/test_f124_schema_pin_discipline.py`: it fails on any equality against a
+literal equal to the current head, on any NEW file taking an
+`f9-noqa: ssot-pin` waiver on a schema-version line, and on any surviving
+waiver that is not a `>=` floor — and it plants a head pin against its own
+scanner to prove the scanner sees one.
+
+**Proved, not asserted.** On a scratch branch, `SCHEMA_VERSION` was bumped to
+64 with a no-op migration 064 — two source files touched, **zero test files
+edited** — and the 735 tests that previously demanded eleven edits ran
+**735 passed, 0 failed**. Branch discarded.
+
+**Read of the instruction, stated because it is a judgement call:** "fail on
+any literal equal to current SCHEMA_VERSION" is implemented as *equality*
+comparisons only. Banning `>= 63` as well would forbid a phase from pinning
+its own migration — the floor-pin pattern six phases use (194, 195, 195B,
+235B, 244R, 255) — and a floor pin is written once and never edited again, so
+it carries none of the cost this ticket is about. Say the word if the stricter
+reading was meant.
+
+Intermediate-state literals below the head (`== 38`, `== 51`) stay legal: they
+assert a fixture mid-migration, not the head.
 
 ### F125
 

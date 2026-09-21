@@ -40,7 +40,7 @@ from fastapi.testclient import TestClient
 
 from motodiag.api.app import create_app
 from motodiag.cli.main import cli as real_cli
-from motodiag.core.database import SCHEMA_VERSION, get_connection, init_db
+from motodiag.core.database import get_connection, init_db
 from motodiag.engine.prompts import build_knowledge_context
 from motodiag.hardware.compat_loader import seed_all
 from motodiag.knowledge.loader import load_dtc_directory, load_known_issues_file
@@ -612,7 +612,3 @@ class TestRegression:
         )
         assert result.returncode == 0, f"{gate_file} regressed:\n{result.stdout[-2000:]}"
 
-    def test_schema_version_pin(self):
-        assert SCHEMA_VERSION == 63, (  # f9-noqa: ssot-pin contract-pin: Gate 13 re-pins what Gate 12 pinned; test_phase240_gate12.py carries the full migration history behind this number, and test_phase191b_serve_migrations.py spells its own pin as `get_current_version(db_path) == N`, so grepping for SCHEMA_VERSION alone misses it. Track L added no migration: nine phases of corpus content and one gate, all data and tests. Bumped 62→63 at Phase 255 (migration 063, the transmission axis: `vehicles.transmission` CHECK-constrained and nullable-with-no-default, plus `known_issues.applicability`). Track M is where a content phase finally DID need a migration, because Phase 254's rows reached machines with no CVT and nothing in the schema could say what a row is about.
-            "SCHEMA_VERSION moved — confirm a migration accompanies it and update this pin."
-        )
