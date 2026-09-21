@@ -43,6 +43,42 @@ had told it about, and it is the one that found door 4.** A future audit
 should run the raw-SQL sweep first and treat the function list as derived
 from it, not the reverse.
 
+
+### Correction to Step 0, 2026-09-21 — "one dynamic query" was wrong; there are four
+
+Step 0 reported **one** dynamic table-name query in the tree
+(`capture/stats.py:19`) and treated the rest of its 11 hits as false
+positives. **There are four.** The three it missed:
+
+* `shop/intake_repo.py:90`
+* `shop/issue_repo.py:173`
+* `shop/work_order_repo.py:112`
+
+each `f"SELECT * FROM {table} WHERE id = ?"`.
+
+**Why the search could not have found them**, which is the part worth
+keeping: it looked for `FROM` followed by `{`. In an f-string, `{table}` is
+a **FormattedValue** — it is not in the literal text at all. The literal
+simply ends with `"SELECT * FROM "`. So the search was scanning for a
+character the target never contains, and its eleven "hits" were prose in
+log messages; the one real find was luck.
+
+This is another instance of the rule added to `CLAUDE.md` the same day: **a
+search that cannot find is not a census.** The absence claim was about the
+search, not the tree.
+
+**All four are safe**, and that is verified rather than assumed: every
+literal passed as the table argument was read from the call sites —
+`intakes`, `customers`, `vehicles`, `shops`, `work_orders`,
+`diagnostic_sessions`, `video_analyses`, `guidance_interactions` and the
+rest. **`known_issues` is not among them in any of the four.**
+
+The structural guard now pins all four and fails on a fifth, and its own
+first version repeated Step 0's mistake exactly before over-correcting to
+thirteen — twelve of them the same prose. It needs both halves: the
+f-string must look like SQL **and** a literal must end where a table name
+would go.
+
 ## Step 0 — the doors
 
 | # | path | how it retrieves | applicability | status |
@@ -414,6 +450,77 @@ receive**, by row id:
 Every assertion names the machine, so deleting one is a visible edit. Each door
 gets the full matrix — **24 assertions**, not one shared helper called four
 times, because a shared helper is how door 2 went unfiltered for a phase.
+
+
+---
+
+## Deviations
+
+### D-1. Four machines are denied a row that names them, by row id
+
+Found by a refuter attacking the door-3 change, not by this phase's own
+suite — which asked "does a machine receive rows it may not have" and never
+"does a machine miss rows written **for** it".
+
+| machine | row | what the row is | cost |
+|---|---|---|---|
+| **Kymco Filly LX 50** | **4609** | Kymco's self-contradicting CVT figures | **its rank-1 prediction: critical, confidence 0.747, 3,000 miles overdue** |
+| Piaggio Beverly 250 | 4613 | Piaggio's belt limit, three different numbers | rank 5, high, confidence 0.593 |
+| Vespa 946 | 4613 | same row | rank 5 |
+| SYM Symba | 4615 | the regulator-index methodology | rank 8 |
+
+**No "explicit model match overrides the axis filter" rule was added**, and
+that is a decision rather than an omission. Such a rule would make a row's
+`model` string authoritative over the sourced lookup — string-naming as
+authority, which is the exact pattern this axis exists to replace. **A row
+naming a machine is a claim. The lookup is evidence.**
+
+**4609 over-claimed.** It names the Filly because the Kymco Agility service
+manual's **recycled header** prints `FILLY LX 50` on 21 of its 183 pages —
+which Phase 254 examined and the lookup rejected as unestablished
+attribution. The row asserted a machine its own document does not
+establish. **4609's model column drops the Filly in 255B.**
+
+**4615's Symba naming is a contradiction on disk** — the row declares
+`{"transmission": ["cvt"]}` and names a machine this phase's lookup
+classifies `semi_auto_centrifugal` from SYM's own manual. **Resolved by the
+255B split**, which Phase 255 already scheduled for that row's general half.
+
+**Beverly 250 and Vespa 946 stay as they are** — closed-unobtainable
+(F119), no document on disk.
+
+**The Filly losing its rank-1 critical prediction is the fail-closed cost
+made visible.** It is recorded here as a named machine and a named row
+rather than as a count, because "some machines lose some rows" is the kind
+of summary that lets a real loss pass review.
+
+### D-2. The backfill is not neutral where a tie-break exists
+
+Stated more precisely than the first write-up, which called it "the cap
+refilling" and described the length rather than the list:
+
+* Gold Wing, CBR1000RR and Africa Twin each replace a confidence **0.5400**
+  row with **0.5333** (id 262) and **0.5000** (id 11).
+* **YZF-R1 and XS650 lose id 4614 — critical, confidence 0.8600, at ranks 5
+  and 2 — and backfill five mediums at ranks 45–49.**
+
+The removal is correct: 4614 is a CVT recall and neither machine has a CVT.
+But the machine trades a high-confidence prediction that was **wrong for
+it** against lower-confidence ones that are **right for it**, and that is
+the trade, not a neutral swap.
+
+### D-3. `predict_failures` is no longer side-effect free
+
+Its docstring said it was. The chokepoint upserts `retrieval_withheld` for
+any machine resolving `unknown` or `ambiguous`. Documented at both ends as
+**telemetry, not scoring** — no prediction, rank or score depends on it.
+
+Verified rather than assumed: two calls in one process produce
+`retrievals=2` and `rows_withheld=18` against `9` for one call, in **one**
+table row, so it accumulates per retrieval and not per call site. On a
+read-only database — which is what every rehearsal and close-out dry run
+uses, per the operator's standing rule to test against copies — it returns
+its 45 predictions and records nothing, silently, at debug level.
 
 ## Scope
 

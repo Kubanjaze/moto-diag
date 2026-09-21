@@ -367,25 +367,43 @@ _KEY_PIAGGIO = "Piaggio's belt limit is three different numbers, and"
 _KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
 
 #: Rows whose junction names a model their own `applicability` excludes.
-#: **Each is a real defect and none is fixed here.** Pinned so a NEW one
-#: fails; found by a refuter attacking the door-3 change, not by this suite.
+#:
+#: **This check is permanent, not phase-scoped.** It does not expire with
+#: Phase 256 and it does not become 255B's to delete. Any fifth entry fails
+#: the suite and has to be argued for, because the failure it describes —
+#: a row written FOR a machine and then withheld FROM it — is invisible to
+#: every other guard here. Those ask "does a machine get rows it may not
+#: have"; this asks the opposite, and only a refuter thought to.
+#:
+#: **Each of the four is a real defect and none is fixed here.** The
+#: operator's decision, 2026-09-21: there is deliberately NO "an explicit
+#: model match overrides the axis filter" rule, because that is
+#: string-naming as authority — the exact pattern this axis exists to
+#: replace. A row naming a machine is a claim; the lookup is evidence.
 KNOWN_SELF_EXCLUDING = {
     (_KEY_KYMCO, "Filly LX 50"):
-        "Kymco's own row names the Filly, and the Filly resolves `unknown` "
-        "because Phase 254 showed the Agility manual's FILLY pages are a "
-        "recycled template. It was that machine's rank-1 critical "
-        "prediction. Closed-unobtainable; revisit if a document appears.",
+        "The row over-claimed. It names the Filly because the Agility "
+        "service manual's RECYCLED HEADER prints `FILLY LX 50` on 21 of "
+        "183 pages — evidence Phase 254 examined and the lookup rejected. "
+        "The row asserted a machine the document does not establish. "
+        "**Resolution: 4609's model column drops the Filly in 255B.** "
+        "Until then the Filly loses its rank-1 critical prediction, which "
+        "is the fail-closed cost made visible rather than argued about.",
     (_KEY_PIAGGIO, "Piaggio Beverly 250"):
-        "Named by the row, no document on disk (F119 closed-unobtainable).",
+        "Named by the row, no document on disk. **Stays as-is** — "
+        "F119 closed-unobtainable, operator's decision 2026-09-21.",
     (_KEY_REGULATOR, "Vespa 946"):
-        "Named by the row, no document on disk (F119 closed-unobtainable).",
+        "Named by the row, no document on disk. **Stays as-is** — "
+        "F119 closed-unobtainable, operator's decision 2026-09-21.",
     (_KEY_REGULATOR, "SYM Symba"):
         "A genuine contradiction ON DISK: 4615 declares {'transmission': "
         "['cvt']} and names the Symba, which this phase's own lookup "
         "classifies `semi_auto_centrifugal` from SYM's manual ('Wet "
         "multi-plate type, auto centrifugal clutch'). Phase 255 flagged "
         "4615 as carrying a general half wider than CVT and deferred the "
-        "split to 255B; this is what that deferral costs.",
+        "split to 255B; this is what that deferral costs. "
+        "**Resolution: the 255B split settles it** — the general half stops "
+        "being declared `cvt` and the Symba naming becomes correct.",
 }
 
 

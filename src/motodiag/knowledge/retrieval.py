@@ -219,11 +219,20 @@ def _record_withheld(
                  int(rows_withheld), int(corrupt_rows), now, now),
             )
     except sqlite3.OperationalError as exc:
-        # A database below schema 64 has no table. That is not an error
-        # worth failing a retrieval over -- but anything else is unexpected
-        # and is logged rather than swallowed, because a counter that
-        # silently stops counting is how Phase 255's cost went unmeasured.
-        if "no such table" not in str(exc).lower():
+        # Two expected environments, neither an error worth failing a
+        # retrieval over:
+        #   * a database below schema 64 has no table;
+        #   * a READ-ONLY copy, which is what every rehearsal and every
+        #     close-out dry run uses -- the operator's standing rule is to
+        #     test against copies, so warning once per retrieval would make
+        #     a correct workflow noisy and train people to ignore the log.
+        # Anything else is unexpected and stays at warning, because a
+        # counter that silently stops counting is how Phase 255's cost went
+        # unmeasured in the first place.
+        msg = str(exc).lower()
+        if "no such table" in msg or "readonly database" in msg:
+            logger.debug("retrieval: not recording withheld rows (%s)", exc)
+        else:
             logger.warning("retrieval: could not record withheld rows: %s", exc)
     except Exception as exc:  # pragma: no cover - defensive, logged not hidden
         logger.warning("retrieval: could not record withheld rows: %s", exc)
