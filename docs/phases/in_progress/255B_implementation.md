@@ -557,6 +557,16 @@ missing anchor guard described below — so the second unscoped row was
 mis-seeded and did not retrieve normally. The conclusion is unchanged; the
 numbers were wrong and are restated here from a correctly seeded database.
 
+### Regression
+
+**7,997 passed / 0 failed / 0 skipped / 29:47** at `1fbcdaa`.
+Phase 256 closed at 7,964; this phase adds 33 tests.
+
+It went red twice on the way, and both are recorded above: 134 failures
+from a deleted anchor guard, then 4 from the Phase 208 documented-count
+invariant catching four documents still claiming 1,045 rows after the
+corpus reached 1,046.
+
 ## Verification checklist
 
 * [ ] `tests/test_phase244G_guard_shapes.py::scan_for_raw_source_assertions` run over the **whole** `tests/` tree, before the regression. Source assertions use `from support.source_guards import code_of`, never raw `read_text`.
