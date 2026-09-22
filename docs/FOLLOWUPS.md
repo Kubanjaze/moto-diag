@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F131** (this file); the mobile
+At the time of writing the highest assigned is **F134** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -776,3 +776,122 @@ Kymco `Like 150i` entry's aliases are `like 150i`, `like150i`, `like`. `Like
 about the Kymco Like owner's manual's clutch-lever defect applies to the
 combined Like 50i/150i edition too, and had to be declared for the `Like 150i`
 alone rather than name a machine the lookup cannot place.
+
+---
+
+### F132 — CLOSED by migration 065 (Phase 255B, 2026-09-22)
+
+**An unevidenced year window silently gated retrieval on shipped rows.**
+
+Filed as a follow-up and reclassified the same day as a live defect, because
+`cli/diagnose.py::_covers_year` applies `year_start`/`year_end` **before**
+retrieval. The Phase 254 CVT rows carried a 25-year window, 2002–2026, cited
+to nothing at either end. `estimated_hours` was set on all thirteen rows in
+the file and **none of them describes a repair** — checked, not assumed: no
+`fix_procedure` in the file contains a repair action.
+
+**Scope rule applied:** only windows no cited document supports; a row whose
+description names a model-year range keeps it. Two did — *"It covers 4,262
+units across model years 2015 to 2020"* and *"model years 2003 to 2026"*.
+Eleven did not.
+
+**The evidence it shipped on.** Nulling a bound removes a gate, so this can
+only widen, which is the direction the phase had otherwise been tightening.
+Measured over 11 machines × 8 model years, rows entering / leaving:
+
+```
+machine                      class        2001   2003   2005   2013   2019   2022   2026   2027
+------------------------------------------------------------------------------------------------
+Honda PCX 150                cvt            +9   same   same   same   same   same   same     +9
+Kymco Agility 50             cvt           +10     +1   same     +1     +1     +1     +1    +10
+Vespa LX 50                  cvt           +10     +1   same   same   same     +1     +1    +10
+Yamaha Zuma 125              cvt            +9   same   same   same   same   same   same     +9
+Genuine Buddy 125            cvt            +9   same   same   same   same   same   same     +9
+Kymco People S 250           cvt           +10     +1   same     +1     +1     +1     +1    +10
+Honda GL1800 Gold Wing       NOT cvt        +2   same   same   same   same   same   same     +2
+Yamaha YZF-R1                NOT cvt        +2   same   same   same   same   same   same     +2
+Honda Grom                   NOT cvt        +2   same   same   same   same   same   same     +2
+Kawasaki Ninja 400           NOT cvt      same   same   same   same   same   same   same   same
+SYM Symba 100                semi-auto      +2   same   same   same   same   same   same     +2
+------------------------------------------------------------------------------------------------
+TOTAL entering: 143    TOTAL leaving: 0
+```
+
+**Nothing leaves.** Non-CVT machines gain two rows, and both are unscoped by
+design — 4605, the drive-belt vocabulary row, and 4615's general half about
+the regulator record. No scoped CVT content reaches a machine the filter
+excludes, which is what the guard asserts.
+
+**The first version of this table was wrong** — 123 entering, one row for
+non-CVT machines. It was measured against a database in which migration
+065's hook had seeded rows on an empty database, because an anchor guard had
+been deleted. Corrected from a correctly seeded database. Recorded because a
+measurement taken on a broken fixture reads exactly like a correct one.
+
+**Also settled here rather than row by row:** `source: service-manual` means
+a **manufacturer document**, not literally a service manual. Measured across
+all 107 seed files — 192 rows carry the label and **75 of them (39%) cite an
+owner's manual** in their own description. That is the label's meaning, not
+an error repeated 75 times. Stated in
+[`docs/architecture/applicability-axes.md`](architecture/applicability-axes.md);
+no new enum value, no rows mislabeled.
+
+**Closed by migration 065.** Live database round trip verified: rows with a
+year window 12 → 2, rows with `estimated_hours` 12 → 0. Guarded by
+`tests/test_phase255B_twist_and_go.py::TestF132UnevidencedMetadata`, three
+tests, each broken on purpose and seen to fail.
+
+---
+
+### F133 — FOLDED INTO F118 (Phase 255B, 2026-09-22)
+
+**Reserved, not independently filed.** The finding — that almost every
+drive-chain row in the corpus is unscoped, so it passes the transmission
+gate for any CVT machine — is the corpus-side measurement F118 was missing,
+not a separate defect. Operator's decision, 2026-09-22: attach to F118
+rather than open a number.
+
+The census lives in **F118's addendum** above: vocabulary `drive chain` /
+`chain slack` / `chain tension` over `title || description || fix_procedure
+|| symptoms`, scope all 107 seed files, **80 rows across 52 files, exactly
+one declaring applicability, 79 unscoped.**
+
+The number is recorded here so it is not reused, and so a reader who meets
+"F133" in a commit message or transcript finds where it went.
+
+---
+
+### F134 — CLOSED by the deduplication commit (Phase 255B, 2026-09-22)
+
+**Counting file paths as documents inflated every "N manuals say X" claim.**
+
+The evidence library held **263 `.pdf` files and 172 distinct documents**.
+The Genuine Buddy Kick owner's manual existed under **five** paths, the
+Kymco Agility owner's manual under four, the Honda CHF50 service manual
+under three.
+
+**Two claims were already wrong because of it**, both inside Phase 255B:
+
+* a Kymco Like owner's manual was cited as appearing in *"two editions"* —
+  three paths held **one byte-identical file**, md5 `de2df98e…`, 3,163,921
+  bytes, 61 pages. That sentence was the row's entire reason for existing,
+  promoting it from a typo in one book to a document-integrity defect.
+* a SYM count treated `pdf/sym_fiddle3.pdf` and
+  `v2/sympdf/Fiddle_III_Owners_Manual.pdf` as two machines. Byte-identical,
+  md5 `9d8814f3…`.
+
+**Closed by deduplicating on content hash**: 75 redundant copies removed,
+533.8 MB, every one byte-identical by md5 to the copy kept.
+`~/research/motodiag/DEDUP_MANIFEST.md` maps each removed path to its
+replacement. The **16 download-debris files were deliberately not
+deduplicated** — they are F127's evidence and two repo documents cite
+`pdf/bv500.pdf` by path.
+
+**The rule that replaces the practice:** a claim about how many manuals say
+something cites **distinct documents, not paths**, and a count taken by
+globbing the library is wrong by construction until it is hashed. Recorded
+in `ROADMAP_AUTHORITY.md`, matched in both repos.
+
+**One more instance of the same census error, for the record:** this phase
+wrote *"247 readable PDFs"* into `ROADMAP_AUTHORITY.md` — a **file** count
+quoted as a **document** count. The real figure is **172**, wrong by 75.
