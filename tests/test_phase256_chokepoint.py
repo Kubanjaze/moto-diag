@@ -362,48 +362,58 @@ SQL_ALLOWED = {
     "core/migrations.py": "schema history; one-time, not a read path",
 }
 
-_KEY_KYMCO = "A Kymco service manual gives four CVT figures twice "
 _KEY_PIAGGIO = "Piaggio's belt limit is three different numbers, and"
 _KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
 
 #: Rows whose junction names a model their own `applicability` excludes.
 #:
 #: **This check is permanent, not phase-scoped.** It does not expire with
-#: Phase 256 and it does not become 255B's to delete. Any fifth entry fails
+#: Phase 256 and it did not become 255B's to delete. Any NEW entry fails
 #: the suite and has to be argued for, because the failure it describes —
 #: a row written FOR a machine and then withheld FROM it — is invisible to
 #: every other guard here. Those ask "does a machine get rows it may not
 #: have"; this asks the opposite, and only a refuter thought to.
 #:
-#: **Each of the four is a real defect and none is fixed here.** The
-#: operator's decision, 2026-09-21: there is deliberately NO "an explicit
-#: model match overrides the axis filter" rule, because that is
+#: The operator's decision, 2026-09-21: there is deliberately NO "an
+#: explicit model match overrides the axis filter" rule, because that is
 #: string-naming as authority — the exact pattern this axis exists to
 #: replace. A row naming a machine is a claim; the lookup is evidence.
+#:
+#: **Phase 255B resolved the Kymco/Filly entry** by withdrawing the claim,
+#: not by granting the row. 4609's model column dropped `Filly LX 50`, so
+#: the row no longer names a machine it excludes and the key no longer has
+#: anything to describe. The Filly's retrieval is UNCHANGED: it is absent
+#: from the transmission lookup, resolves `unknown`, and a {cvt} row is
+#: withheld from it before and after. No lookup entry, no override.
+#: Entries are deleted when they resolve rather than re-worded, because
+#: the guard asserts set equality against what it finds.
+#:
+#: **Phase 256's third deferred debt — splitting 4611 — is CLOSED as
+#: WRONG, not carried forward.** 255B made that split, shipped it and then
+#: audited it: the "general half" asserted that a kickstart and an electric
+#: starter do not share interlocks, which Genuine's Buddy 50 owner's manual
+#: supports and Kymco's Agility 50/125 and Super 8 50X owner's manuals
+#: contradict ("While squeezing the rear brake lever, kick down on the kick
+#: start lever"). The claim is maker-specific and a transmission-scoped row
+#: cannot carry it. 4611 stays one {cvt} row as Phase 256 left it. Operator's
+#: decision, 2026-09-22. See tests/test_phase255B_twist_and_go.py::
+#: TestRow4611WasNotSplit.
+#:
+#: **Phase 255B resolved the SYM Symba entry** by splitting 4615. The
+#: general half — the regulator-index methodology, which was never about
+#: CVTs — is now its own UNSCOPED row and carries the Symba naming. The
+#: CVT half keeps `{cvt}` and no longer names the Symba, so nothing
+#: declares a transmission the lookup contradicts. `Vespa 946` stays on
+#: the CVT half deliberately: it is the F119 entry below and moving it to
+#: the unscoped half would have resolved a pin 255B was not asked to
+#: touch.
 KNOWN_SELF_EXCLUDING = {
-    (_KEY_KYMCO, "Filly LX 50"):
-        "The row over-claimed. It names the Filly because the Agility "
-        "service manual's RECYCLED HEADER prints `FILLY LX 50` on 21 of "
-        "183 pages — evidence Phase 254 examined and the lookup rejected. "
-        "The row asserted a machine the document does not establish. "
-        "**Resolution: 4609's model column drops the Filly in 255B.** "
-        "Until then the Filly loses its rank-1 critical prediction, which "
-        "is the fail-closed cost made visible rather than argued about.",
     (_KEY_PIAGGIO, "Piaggio Beverly 250"):
         "Named by the row, no document on disk. **Stays as-is** — "
         "F119 closed-unobtainable, operator's decision 2026-09-21.",
     (_KEY_REGULATOR, "Vespa 946"):
         "Named by the row, no document on disk. **Stays as-is** — "
         "F119 closed-unobtainable, operator's decision 2026-09-21.",
-    (_KEY_REGULATOR, "SYM Symba"):
-        "A genuine contradiction ON DISK: 4615 declares {'transmission': "
-        "['cvt']} and names the Symba, which this phase's own lookup "
-        "classifies `semi_auto_centrifugal` from SYM's manual ('Wet "
-        "multi-plate type, auto centrifugal clutch'). Phase 255 flagged "
-        "4615 as carrying a general half wider than CVT and deferred the "
-        "split to 255B; this is what that deferral costs. "
-        "**Resolution: the 255B split settles it** — the general half stops "
-        "being declared `cvt` and the Symba naming becomes correct.",
 }
 
 

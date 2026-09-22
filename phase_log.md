@@ -3610,3 +3610,69 @@ byte-identical (`md5 87f96432e7534ffd53f33b2a96f5eefa`). Filed as **F125**: the
 contract's stated purpose is to remove a drift class "structurally rather than
 relying on hand-sync discipline", and it is itself maintained by hand-sync
 discipline, which failed. Nothing verifies the two copies match.
+
+---
+
+## Phase 255B — Twist-and-go vs manual small bikes — CLOSED 2026-09-22
+
+**The phase is named for a comparison it did not write.** Seven content
+subjects were drafted and **seven died to the documents** across two
+adversarial cycles; an eighth, already committed, died in audit. What shipped
+is the mechanism repair around them: one new row, three repaired, one split
+made and backed out, F115 closed, F132 fixed, F129–F131 filed, schema 64 → 65.
+
+### The lesson worth carrying: a split separates a claim from its counter-evidence
+
+Phase 256 recorded three deferred debts, two of them "split this row". Both
+splits were made. One was correct. The other, 4611, shipped a diagnostic —
+*a kickstart that works when the starter button does not indicts the
+brake-lever switch* — that is documented for one maker family and
+**contradicted by two of the machines the split half itself declared**:
+
+* Genuine's Buddy 50 owner's manual: *"It is not necessary to hold the brake
+  lever in when starting your vehicle with the kick-start method"*
+* Kymco's Agility 50/125 and Super 8 50X owner's manuals: *"While squeezing
+  the rear brake lever, kick down on the kick start lever"*
+
+**The Kymco quote was already in 4611, and it stayed in the half I did not
+move.** Splitting a row takes a claim to one side and can leave the evidence
+that limits it on the other, and nothing notices, because each half reads
+coherently on its own. Two refuter cycles ran over other rows without
+catching it; it was found by a completeness critic reading neighbouring rows,
+two commits and one push after it shipped.
+
+**So: when a row is split, the halves must be read against each other before
+either ships.** Not against their sources — against each other. The debt is
+recorded CLOSED AS WRONG rather than carried forward, because the split as
+conceived cannot work: the claim is maker-specific and a transmission-scoped
+row cannot carry a maker-specific claim.
+
+### A second instance for the same list: a single fault-table hit is not evidence
+
+Repairing the above, I narrowed the row's model column from 29 machines to 9
+by searching each declared machine's own manual for the maker's kickstart
+vocabulary. That narrowing **kept Piaggio Fly on one hit** — and the Fly
+125's own specification at page index 8 reads *"Start-up Electric"*, with a
+single occurrence of "kick" in 223 pages, in a boilerplate troubleshooting
+cell. A hit in a fault table, a contents list or an index is not evidence
+that a machine has the part; only a statement about that machine is. The fix
+repeated, in miniature, the error it was fixing.
+
+### Counting paths as documents
+
+The evidence library held **263 `.pdf` files and 172 distinct documents.**
+The Genuine Buddy Kick manual existed under five paths, the Kymco Agility
+owner's manual under four. Two claims were already wrong because of it: a
+manual cited as *"two editions"* was three paths holding one byte-identical
+file, and a SYM count treated `sym_fiddle3.pdf` and
+`Fiddle_III_Owners_Manual.pdf` as two machines. Deduplicated by content hash
+— 75 copies removed, 533.8 MB — and the library moved off `/private/tmp`,
+which is not durable, to `~/research/motodiag/`. Both recorded in
+`ROADMAP_AUTHORITY.md`.
+
+### What the phase concluded about its own subject
+
+The twist-and-go/manual distinction **is already carried by the transmission
+axis and the applicability filter.** Every content row that tried to state it
+in prose was either false, or true only of one maker, or true only of one
+document. No further twist-and-go content phase is scheduled.

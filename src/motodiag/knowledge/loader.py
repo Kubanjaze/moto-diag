@@ -1,6 +1,7 @@
 """Knowledge base loader — import DTC codes and other data from JSON files."""
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 from motodiag.core.models import DTCCategory, DTCCode, SymptomCategory, Severity
@@ -50,6 +51,263 @@ def backfill_row_applicability(conn) -> int:
                 (payload, item.get("title"), item.get("make")),
             )
             changed += cur.rowcount or 0
+    return changed
+
+
+#: Phase 255B. Row edits applied by IDENTITY rather than by re-seeding.
+#:
+#: `known_issues` has a UNIQUE index on
+#: `(COALESCE(make,''), COALESCE(model,''), title)` and `add_known_issue`
+#: upserts with `ON CONFLICT DO NOTHING`. So a seed edit that touches any of
+#: those three columns does NOT update the existing row on a re-seed -- the
+#: conflict never fires and a SECOND row is inserted. Demonstrated while
+#: planning 255B: re-seeding `known_issues_cvt.json` after dropping the Filly
+#: from 4609's model column took the corpus from 12 rows to 13, leaving the
+#: over-claiming row in place alongside its replacement. Filed as F129.
+#:
+#: Every edit below therefore matches the row's OLD identity and issues an
+#: UPDATE, so `known_issues.id` never changes -- the discipline migrations
+#: 062 and 063 used, and for the same reason.
+_255B_MODEL_EDITS: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "A Kymco service manual gives four CVT figures twice",
+        "Kymco",
+        "Agility 50, Agility 125, People S 250, People 250, Filly LX 50",
+        "Agility 50, Agility 125, People S 250, People 250",
+    ),
+    (
+        # 4615's CVT half. `SYM Symba` leaves, because the lookup classifies
+        # the Symba `semi_auto_centrifugal` from SYM's own manual and this
+        # half declares {cvt}. `Vespa 946` deliberately STAYS: it is a live
+        # KNOWN_SELF_EXCLUDING entry the operator ruled stays as-is (F119,
+        # closed-unobtainable), and moving it would silently resolve a pin
+        # this phase was not asked to touch.
+        "What the regulator record shows for scooter CVTs",
+        "Yamaha, Piaggio, Vespa, Honda, Kymco, SYM, Genuine",
+        "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, "
+        "Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, "
+        "Genuine Buddy, Genuine Buddy Kick",
+        "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, "
+        "Honda Metropolitan, Kymco Agility, Kymco Like 150i, "
+        "Genuine Buddy, Genuine Buddy Kick",
+    ),
+)
+
+#: F115. Row 4605 is a vocabulary row: three mechanically unrelated
+#: components are all called a drive belt. Its make column reached the
+#: scooter marques and not the marques whose owners produce the collision,
+#: so the owners it exists to inform could not receive it.
+#:
+#: The list is measured, not chosen. Vocabulary `drive belt` over
+#: title||description||symptoms across all 1,045 rows returns 13 (positive
+#: control: 4605 is in its own set). Five carry a non-CVT meaning --
+#: 188 Harley-Davidson final drive, 1312 Harley-Davidson/LiveWire final
+#: drive, 715 and 870 BMW alternator, 579 Yamaha final drive. Yamaha was
+#: already in the column, so three marques are added.
+#:
+#: MAKES ONLY, not models: `make_wide` is the tier that carries this, and
+#: naming a model no document establishes is the 4609 mistake repaired one
+#: commit away.
+_255B_MAKE_EDITS: tuple[tuple[str, str, str], ...] = (
+    (
+        "Three unrelated components are all called a drive belt",
+        "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
+        "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine, "
+        "Harley-Davidson, BMW, LiveWire",
+    ),
+)
+
+#: Rows 255B ADDS, by title. The prose lives in the seed file and nowhere
+#: else -- this hook reads it from there rather than carrying a second copy
+#: that could drift from the one the loader uses.
+_255B_NEW_ROW_TITLES: tuple[str, ...] = (
+    "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record",
+)
+
+#: The seed file 255B's new rows live in.
+_255B_SEED = "known_issues_cvt.json"
+
+#: A Phase 254 title this phase does not touch. Its presence is how the
+#: hook tells a seeded corpus from a fresh database.
+#:
+#: RESTORED after being deleted twice. `init_db` runs migrations, so without
+#: this guard migration 065 fires on an empty database and inserts 255B's
+#: rows at ids 1-n before the loader writes anything -- after which the
+#: loader's own ON CONFLICT DO NOTHING silently skips them, leaving rows at
+#: ids nothing else agrees with. It broke 134 tests across 17 phase files
+#: the second time, all of them counting rows after loading one seed file.
+_255B_SEEDED_ANCHOR = "What a scooter CVT is, in the makers' own words"
+
+
+def _insert_255B_new_rows(conn) -> int:
+    """Insert 255B's added rows if they are not already present.
+
+    Reads them from the seed file so the prose has exactly one home. Keyed
+    on the full title, which is what the identity index uses; a row already
+    present is skipped rather than duplicated, so the hook is idempotent.
+    """
+    from motodiag.knowledge.applicability import dump_applicability
+
+    # This hook REPAIRS an already-seeded corpus; it must not seed a fresh
+    # one. See _255B_SEEDED_ANCHOR. Do not remove without removing the two
+    # tests that pin both sides of it.
+    if not conn.execute(
+        "SELECT 1 FROM known_issues WHERE title LIKE ?",
+        (_255B_SEEDED_ANCHOR + "%",),
+    ).fetchone():
+        return 0
+
+    path = Path(__file__).parent / "seed" / "knowledge" / _255B_SEED
+    try:
+        items = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return 0
+    by_title = {i.get("title"): i for i in items if isinstance(i, dict)}
+
+    inserted = 0
+    for title in _255B_NEW_ROW_TITLES:
+        item = by_title.get(title)
+        if item is None:
+            raise ValueError(
+                f"migration 065 expects {title!r} in {_255B_SEED} and it is not "
+                "there -- the seed file and the migration have drifted"
+            )
+        present = conn.execute(
+            "SELECT 1 FROM known_issues WHERE title = ? AND make IS ? AND model IS ?",
+            (title, item.get("make"), item.get("model")),
+        ).fetchone()
+        if present:
+            continue
+        conn.execute(
+            """INSERT INTO known_issues
+               (title, description, make, model, year_start, year_end, severity,
+                symptoms, dtc_codes, causes, fix_procedure, parts_needed,
+                estimated_hours, source, applicability, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                item["title"], item["description"], item.get("make"),
+                item.get("model"), item.get("year_start"), item.get("year_end"),
+                item.get("severity", "medium"),
+                json.dumps(item.get("symptoms") or []),
+                json.dumps(item.get("dtc_codes") or []),
+                json.dumps(item.get("causes") or []),
+                item.get("fix_procedure"),
+                json.dumps(item.get("parts_needed") or []),
+                item.get("estimated_hours"),
+                item.get("source", "unverified"),
+                dump_applicability(item.get("applicability")),
+                datetime.now().isoformat(),
+            ),
+        )
+        inserted += 1
+    return inserted
+
+
+def _null_unevidenced_metadata(conn) -> int:
+    """F132. Clear year windows and repair estimates the documents do not support.
+
+    `known_issues.year_start`/`year_end` on the Phase 254 CVT rows was a
+    25-year window, 2002-2026, cited to nothing at either end -- and
+    `cli/diagnose.py::_covers_year` applies it BEFORE retrieval, so it
+    silently added and removed rows. Two of the twelve rows do have a window
+    their own prose establishes ("model years 2015 to 2020", "model years
+    2003 to 2026"); those keep it. The rest lose it.
+
+    `estimated_hours` was 0.5 or 1.0 on every row in the file. None of them
+    describes a repair -- they are vocabulary, document-integrity and
+    evidence rows -- so the field was asserting a duration for work that
+    does not exist.
+
+    Derived from the seed file rather than from a second list: a column the
+    seed leaves out is nulled here. One source of truth, which is the
+    discipline F129 exists to demand.
+
+    Nulling a bound REMOVES a gate, so this can only widen. Measured across
+    11 machines and 8 model years: 143 row-slots gained, 0 lost. For every
+    row declaring {cvt} the widening reaches only machines the filter
+    already admits. The exceptions are the two rows that are unscoped by
+    design -- 4605, saying three unrelated components are all called a drive
+    belt, and 4615's general half about the regulator record -- which reach
+    a 2001 Gold Wing and a 2027 R1 once their windows go. That is those rows
+    doing their job, and the operator's decision of 2026-09-22 was to apply
+    the scope rule uniformly rather than keep an unevidenced window to hold
+    that reach down.
+    """
+    seed_dir = Path(__file__).parent / "seed" / "knowledge"
+    changed = 0
+    for path in sorted(seed_dir.glob("*.json")):
+        try:
+            items = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or "title" not in item:
+                continue
+            sets, args = [], []
+            if "year_start" not in item:
+                sets.append("year_start = NULL")
+            if "year_end" not in item:
+                sets.append("year_end = NULL")
+            if "estimated_hours" not in item:
+                sets.append("estimated_hours = NULL")
+            if not sets:
+                continue
+            where = " AND ".join(s.split(" =")[0] + " IS NOT NULL" for s in sets)
+            cur = conn.execute(
+                f"UPDATE known_issues SET {', '.join(sets)} "
+                f" WHERE title = ? AND make IS ? AND ({where})",
+                (item["title"], item.get("make")),
+            )
+            changed += cur.rowcount or 0
+    return changed
+
+
+def reconcile_255B_rows(conn) -> int:
+    """Phase 255B's row edits, applied to an already-seeded database.
+
+    Returns the number of `known_issues` rows changed.
+
+    `post_apply` hook for migration 065. The operator's database already
+    holds these rows, and a seed-file edit only reaches a database someone
+    re-seeds -- which, for an identity-column edit, would duplicate rather
+    than update (see `_255B_MODEL_EDITS`).
+
+    Both junctions are rebuilt at the end because `known_issue_makes` and
+    `known_issue_models` are derived from the `make` and `model` columns,
+    and this hook edits both. Rebuilding is authoritative rather than
+    incremental for the reason Phase 244F gives: the vocabulary is a
+    function of the whole corpus.
+
+    Idempotent. An edit whose old value is already gone matches nothing and
+    contributes nothing, so a re-run is a no-op rather than an error.
+    """
+    from motodiag.knowledge.marques import rebuild_make_index
+    from motodiag.knowledge.models import rebuild_model_index
+
+    changed = 0
+    for title_prefix, make, old_model, new_model in _255B_MODEL_EDITS:
+        cur = conn.execute(
+            "UPDATE known_issues SET model = ? "
+            " WHERE title LIKE ? AND make IS ? AND model IS ?",
+            (new_model, title_prefix + "%", make, old_model),
+        )
+        changed += cur.rowcount or 0
+
+    for title_prefix, old_make, new_make in _255B_MAKE_EDITS:
+        cur = conn.execute(
+            "UPDATE known_issues SET make = ? "
+            " WHERE title LIKE ? AND make IS ?",
+            (new_make, title_prefix + "%", old_make),
+        )
+        changed += cur.rowcount or 0
+
+    changed += _insert_255B_new_rows(conn)
+    changed += _null_unevidenced_metadata(conn)
+
+    rebuild_make_index(conn)
+    rebuild_model_index(conn)
     return changed
 
 

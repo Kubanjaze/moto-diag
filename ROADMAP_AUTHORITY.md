@@ -135,3 +135,75 @@ This is consistent with the boundary above rather than an exception to it:
 per-phase docs follow the *phase*, and findings follow the *code*. Those differ
 only for Track I, where a mobile-owned phase may produce a backend finding —
 which rule 1 resolves by asking where the fix lands.
+
+---
+
+## Evidence lives outside the repos, at one durable path (added 2026-09-21, F127-adjacent)
+
+The 263 source documents every Phase 250–256 citation rests on lived at
+`/private/tmp/claude-501/<session-id>/scratchpad`. That path is
+**session-specific and not durable**: the session id recorded in Phase 255B's
+own handoff was already dead when 255B opened, and `/private/tmp` is cleared
+by the OS without notice. It is the same mistake this contract's deploy rule
+already forbids for backups, made with irreplaceable evidence instead of a
+database copy.
+
+**The rule, which is now part of this contract:**
+
+1. **The canonical evidence path is `~/research/motodiag/`.** Every citation
+   path — in a phase doc, a row description, a finding, or a commit message —
+   points there.
+2. **Never `/private/tmp`, never a session scratchpad.** A scratchpad holds
+   intermediates that can be regenerated. A source document cannot.
+3. **A phase that acquires a document files it under the canonical path before
+   citing it,** not after. A citation to a path that does not exist is a
+   citation to nothing.
+4. **Citations name the file relative to that root** — `manuals/genuine/…`,
+   not an absolute path that encodes someone's home directory.
+
+**State recorded at the move, 2026-09-21.** 9,624 files, 2.7 GB, verified
+**byte-identical by an md5 manifest across all 9,624 files** before the source
+was removed. Counts match on both sides: 9,624 files, 263 `.pdf`, 2,878,775,081
+bytes.
+
+**Two counts that do not reconcile with F127, recorded rather than resolved.**
+Of the 263 files carrying a `.pdf` extension, **247 are PDFs by magic bytes**
+and **16 are download debris** — 12 HTML documents, 2 short ASCII files, 1 XML
+stub, 1 empty file. F127 records **32** debris files. Neither number should be
+trusted until F127's own phase re-derives it against this tree.
+
+**Deduplicated by content hash, 2026-09-22 (Phase 255B).** The move above
+preserved the library exactly as it was, duplicates included — and the
+duplicates were load-bearing in the wrong direction. **Counting file paths as
+documents inflated every "N manuals say X" claim.** Two were already wrong
+when this was found: a Kymco Like owner's manual was cited as *"two
+editions"* when three paths held one byte-identical file, and a SYM count
+treated `pdf/sym_fiddle3.pdf` and `v2/sympdf/Fiddle_III_Owners_Manual.pdf` as
+two machines. The Genuine Buddy Kick manual existed under **five** paths.
+
+**75 redundant copies removed, 533.8 MB freed.** Every one was byte-identical
+(md5) to the copy kept; nothing unique was deleted, and
+`~/research/motodiag/DEDUP_MANIFEST.md` records each removed path against the
+one that replaced it. The 16 download-debris files were deliberately **not**
+deduplicated — they are F127's evidence and two repo documents cite
+`pdf/bv500.pdf` by path.
+
+**The document count, corrected.** The figures above are FILE counts and must
+not be quoted as document counts:
+
+| | |
+|---|---|
+| `.pdf` files before dedup | 263 |
+| distinct contents | 187 |
+| **distinct valid documents** | **172** |
+| download debris (kept) | 16 |
+| `.pdf` files after dedup | 188 |
+
+**A claim about how many manuals say something cites distinct documents, not
+paths.** A count taken by globbing the library is wrong by construction until
+it is hashed.
+
+**Build debris was moved intact, not pruned.** The tree carries two throwaway
+virtualenvs (`grom/venv`, `honda/venv` — 5,242 files) and 235 MB of pip logs.
+A durability fix does not authorise deciding what counts as evidence; pruning
+is a separate decision.

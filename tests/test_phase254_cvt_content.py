@@ -108,12 +108,55 @@ def db(tmp_path_factory):
 # ---------------------------------------------------------------------------
 # 1. Coverage, and the boundaries the rest of the track owns
 # ---------------------------------------------------------------------------
+#: The twelve rows Phase 254 shipped, by title. This file is shared with
+#: later phases, so 254's contribution is pinned by name rather than by
+#: the file's length.
+TITLES_254 = frozenset({
+    "What a scooter CVT is, in the makers' own words — and why searching for the word 'variator' finds nothing",
+    "Three unrelated components are all called a drive belt, and a search for one returns the other two",
+    "Every maker publishes a roller wear limit — in a service manual, and two of them publish it twice with different numbers",
+    "The clutch side: one maker publishes an engagement speed, one publishes a 1 mm lining limit where everyone else says 2 mm",
+    "No scooter owner's manual publishes a belt width or wear limit — one even prints the measuring figure with the number left off",
+    "A Kymco service manual gives four CVT figures twice with different numbers, and carries three different model names in its own page headers",
+    "What the makers themselves say a CVT symptom means — quoted rather than inferred",
+    "Kickstart backup, and the scooter named Kick that has none",
+    "No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by the lamp",
+    "Piaggio's belt limit is three different numbers, and one manual prints two of them on the same page",
+    "A CVT recall exists that no belt, pulley or variator search would find — it is filed under the word sheave",
+    "What the regulator record shows for scooter CVTs — one campaign, and two indexes that disagree with each other and with the data",
+})
+
+#: Rows added to this file after 254, each named with the phase that added
+#: it. An unexplained thirteenth row fails the coverage test above.
+TITLES_ADDED_LATER = {
+    "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record":
+        "255B — the general half split out of 4615",
+}
+
+
 class TestTheLayerIsCovered:
     def test_the_seed_file_loads(self, db):
         assert search_known_issues(db_path=db)
 
-    def test_twelve_rows_shipped(self):
-        assert len(_entries()) == 12
+    def test_the_file_is_254s_twelve_plus_named_later_additions(self):
+        """254 shipped twelve, and the seed file is now shared.
+
+        Phase 255B split two of those twelve — the retained half keeps the
+        original title, because the title is part of the UNIQUE identity
+        index and changing it would duplicate rather than update (F129) —
+        and added the half that came out. A bare `len() == 12` would have
+        failed for a legitimate reason and told no one which row moved, so
+        this pins 254's twelve BY TITLE and requires every later addition
+        to be named with the phase that made it.
+        """
+        have = {e["title"] for e in _entries()}
+        missing = TITLES_254 - have
+        assert not missing, f"254 rows gone from the file: {sorted(missing)}"
+        unaccounted = have - TITLES_254 - set(TITLES_ADDED_LATER)
+        assert not unaccounted, (
+            "rows in this file that neither 254 shipped nor a later phase "
+            f"claimed: {sorted(unaccounted)}")
+        assert len(have) == len(TITLES_254) + len(TITLES_ADDED_LATER)
 
     @pytest.mark.parametrize("concept", sorted(CONCEPTS))
     def test_each_concept_has_a_row(self, concept):
@@ -319,8 +362,13 @@ class TestWhatTheRefutersCorrected:
         assert "233" in body
 
     def test_the_index_contradiction_is_bidirectional(self):
-        """Refuter 1 corrected 'systematically omits' to a two-way defect."""
-        row = _row("two indexes that disagree")
+        """Refuter 1 corrected 'systematically omits' to a two-way defect.
+
+        Phase 255B split this claim out of the CVT row: it was never about
+        CVTs, and declaring {cvt} withheld it from every other machine.
+        The claim is unchanged; only the row carrying it moved.
+        """
+        row = _row("two indexes contradict each other")
         body = row["description"]
         assert re.search(r"in both directions", body)
         assert "thirteen" in body and "twelve" in body
@@ -375,7 +423,8 @@ class TestClaimsStayScoped:
                 assert disclaimed, (e["title"][:50], sentence[:130])
 
     def test_no_row_reads_an_empty_response_as_a_clean_record(self):
-        row = _row("two indexes that disagree")
+        # Moved to the unscoped half by Phase 255B's split; see above.
+        row = _row("two indexes contradict each other")
         body = row["description"]
         assert re.search(r"cannot distinguish a wrong name from a clean record", body)
         assert re.search(r"reads exactly like a machine with no campaigns", body)

@@ -4559,6 +4559,194 @@ MIGRATIONS: list[Migration] = [
             PRAGMA foreign_keys=ON;
         """,
     ),
+    # Migration 065 — Phase 255B: the row edits Phase 256 deferred.
+    Migration(
+        version=65,
+        name="twist_and_go_row_edits",
+        description=(
+            "Phase 255B. Three debts Phase 256 recorded and deferred, plus "
+            "F115. All four are edits to rows that are already live, and "
+            "all four touch a column in the identity index -- which is why "
+            "they are applied here and not by re-seeding. "
+            "`known_issues` has a UNIQUE index on (make, model, title) and "
+            "`add_known_issue` upserts ON CONFLICT DO NOTHING, so a seed "
+            "edit to any of those three columns does not update the row: "
+            "the conflict never fires and a second row is inserted. "
+            "Measured while planning this phase -- re-seeding after "
+            "dropping `Filly LX 50` from 4609's model column took a "
+            "12-row corpus to 13, with the over-claiming row still there. "
+            "Filed as F129 and NOT fixed here. "
+            "Row 4609 drops `Filly LX 50`. The row named it because the "
+            "Kymco Agility service manual prints FILLY LX 50 in the "
+            "recycled header of 21 of its 183 pages -- evidence Phase 254 "
+            "examined and the transmission lookup rejected. Withdrawing "
+            "the claim does NOT give the Filly the row: the Filly is "
+            "absent from the lookup, resolves `unknown`, and the "
+            "fail-closed filter withholds a {cvt} row from it before and "
+            "after this migration. What changes is that the row stops "
+            "asserting a machine its document does not establish. "
+            "No lookup entry is added and no override is written. "
+            "Row 4615 splits. It declared {cvt} over two claims: one about "
+            "scooter CVT campaigns, and one about how the regulator's "
+            "record behaves for ANY machine -- two contradictory index "
+            "endpoints, and a per-vehicle lookup whose empty answer is "
+            "identical for a wrong model name and a clean record. The "
+            "second was withheld from every non-CVT machine in the corpus "
+            "and named the SYM Symba, which the lookup classifies "
+            "`semi_auto_centrifugal`. The general half becomes its own "
+            "UNSCOPED row and carries the Symba; the CVT half keeps its "
+            "id, its title and {cvt}, and drops the Symba. "
+            "`Vespa 946` deliberately stays on the CVT half: it is a live "
+            "KNOWN_SELF_EXCLUDING entry the operator ruled stays as-is "
+            "under F119, and moving it would have resolved a pin this "
+            "phase was not asked to touch. "
+            "Row 4611 splits on the same principle, without a column "
+            "edit. It declared {cvt} over a kickstart-availability survey "
+            "-- which machines in this class have one, carburetted versus "
+            "injected, and the Buddy Kick that is named for a kickstart it "
+            "does not have -- and over a diagnostic that is not about "
+            "transmissions at all: a brake-lever switch failure kills "
+            "electric start and leaves the kickstart working, so an engine "
+            "that kick-starts but will not start electrically is pointing "
+            "at the switch or the starter circuit rather than at itself. "
+            "The interlock is a lever and a switch. Unscoping that half "
+            "reaches the Honda Super Cub C125 and the CT125 Hunter Cub, "
+            "both `semi_auto_centrifugal` and both kickstart-equipped, "
+            "which a {cvt} declaration had been withholding it from. "
+            "Measured while writing this, and NOT fixed here: the CT125 "
+            "reaches it as `CT125`, `Trail 125` or `Hunter Cub` but not "
+            "as `CT125 Hunter Cub`, because that entry's canonical label "
+            "is missing from its own alias tuple. Six of the 50 lookup "
+            "entries have that shape; five are compound display labels "
+            "nobody types. Filed as F131. "
+            "F115: row 4605's make column gains Harley-Davidson, BMW and "
+            "LiveWire. It is a vocabulary row -- three mechanically "
+            "unrelated components are all called a drive belt -- and its "
+            "make column reached the scooter marques but not the marques "
+            "whose owners produce the collision, so the owners it exists "
+            "to inform could not receive it. The list is measured: "
+            "`drive belt` over title/description/symptoms across all "
+            "1,045 rows returns 13, of which five carry a non-CVT meaning "
+            "(188 and 1312 Harley-Davidson/LiveWire final drive, 715 and "
+            "870 BMW alternator, 579 Yamaha final drive). Yamaha was "
+            "already there, so three marques are added. Makes only, not "
+            "models. "
+            "4605 stays UNSCOPED and a test pins it there: a Road King, "
+            "an R1200GS and a LiveWire ONE all resolve `unknown`, so any "
+            "transmission set on this row would withhold it from exactly "
+            "the three marques this fix adds -- F115 re-created by "
+            "another route, in the migration claiming to close it. "
+            "F132: the unevidenced year windows go, and so do the repair "
+            "estimates on rows that describe no repair. The Phase 254 CVT "
+            "rows carried year_start/year_end of 2002-2026 cited to nothing "
+            "at either end, and `cli/diagnose.py::_covers_year` applies that "
+            "window BEFORE retrieval, so it silently added and removed rows. "
+            "Two rows whose own prose names a model-year range keep theirs. "
+            "`estimated_hours` was set on every row in the file and none of "
+            "them describes a repair. "
+            "Nulling a bound removes a gate, so this can only widen. "
+            "Measured over 11 machines and 8 model years: 143 row-slots "
+            "gained, 0 lost, and for every row declaring {cvt} the widening "
+            "reaches only machines the filter already admits. The two "
+            "exceptions are the rows that are unscoped by design -- 4605, "
+            "the drive-belt vocabulary row, and 4615's general half about "
+            "the regulator record -- which now reach a 2001 Gold Wing. That "
+            "is those rows doing their job. Operator's decision, "
+            "2026-09-22, on the table in the phase's v1.1 Results."
+            "4611 has no KNOWN_SELF_EXCLUDING entry before or after: its "
+            "junction names no machine it excludes. Two of this phase's "
+            "three splits touch that pin, not three. "
+            "The hook rebuilds both junctions because both are derived "
+            "from the columns this migration edits."
+        ),
+        upgrade_sql="",
+        post_apply="motodiag.knowledge.loader:reconcile_255B_rows",
+        rollback_sql="""
+            UPDATE known_issues
+               SET model = 'Agility 50, Agility 125, People S 250, People 250, Filly LX 50'
+             WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%'
+               AND make IS 'Kymco'
+               AND model IS 'Agility 50, Agility 125, People S 250, People 250';
+
+            DELETE FROM known_issues
+             WHERE title = 'The regulator''s two indexes contradict each other, and an empty recall answer is not a clean record';
+
+            UPDATE known_issues
+               SET model = 'XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick'
+             WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
+
+            DELETE FROM known_issues
+             WHERE title = 'A kickstart that works when the starter button does not is a brake-lever switch test';
+
+            -- known_issue_models is DERIVED from the model column, and the
+            -- rollback path has no post_apply hook to rebuild it with. The
+            -- two UPDATEs above restore the columns; these restore the two
+            -- junction rows those columns lost. Without them a rollback
+            -- lands at 2,422 junction rows where it started at 2,424 --
+            -- measured, not assumed, on a copy of the live database.
+            INSERT OR IGNORE INTO known_issue_models (issue_id, model)
+            SELECT id, 'Filly LX 50' FROM known_issues
+             WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%';
+
+            INSERT OR IGNORE INTO known_issue_models (issue_id, model)
+            SELECT id, 'SYM Symba' FROM known_issues
+             WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
+
+            -- F132, reversed: the unevidenced year windows and the repair
+            -- estimates on rows that describe no repair.
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'What a scooter CVT is, in the makers'' own words — and why searching for the word ''variator'' finds nothing';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Three unrelated components are all called a drive belt, and a search for one returns the other two';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Every maker publishes a roller wear limit — in a service manual, and two of them publish it twice with different numbers';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'The clutch side: one maker publishes an engagement speed, one publishes a 1 mm lining limit where everyone else says 2 mm';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'No scooter owner''s manual publishes a belt width or wear limit — one even prints the measuring figure with the number left off';
+
+            UPDATE known_issues SET year_start = 2004, year_end = 2012, estimated_hours = 0.5
+             WHERE title = 'A Kymco service manual gives four CVT figures twice with different numbers, and carries three different model names in its own page headers';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'What the makers themselves say a CVT symptom means — quoted rather than inferred';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Kickstart backup, and the scooter named Kick that has none';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by the lamp';
+
+            UPDATE known_issues SET year_start = 2004, year_end = 2020, estimated_hours = 1.0
+             WHERE title = 'Piaggio''s belt limit is three different numbers, and one manual prints two of them on the same page';
+
+            UPDATE known_issues SET estimated_hours = 1.0
+             WHERE title = 'A CVT recall exists that no belt, pulley or variator search would find — it is filed under the word sheave';
+
+            UPDATE known_issues SET estimated_hours = 0.5
+             WHERE title = 'What the regulator record shows for scooter CVTs — one campaign, and two indexes that disagree with each other and with the data';
+
+            UPDATE known_issues SET year_start = 2003, year_end = 2026, estimated_hours = 1.0
+             WHERE title = 'The regulator''s two indexes contradict each other, and an empty recall answer is not a clean record';
+
+            -- F115, reversed. The make column and, because it is derived
+            -- the same way and has no rebuild on this path, the three
+            -- marque junction rows it produced.
+            UPDATE known_issues
+               SET make = 'Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine'
+             WHERE title LIKE 'Three unrelated components are all called a drive belt%';
+
+            DELETE FROM known_issue_makes
+             WHERE make IN ('Harley-Davidson', 'BMW', 'LiveWire')
+               AND issue_id IN (
+                   SELECT id FROM known_issues
+                    WHERE title LIKE 'Three unrelated components are all called a drive belt%');
+        """,
+    ),
 ]
 
 

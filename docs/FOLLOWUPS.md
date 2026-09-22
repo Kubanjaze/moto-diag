@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F128** (this file); the mobile
+At the time of writing the highest assigned is **F131** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -85,6 +85,33 @@ they are manual-transmission machines that still must not receive chain content.
 Final drive is its own axis: chain / belt / shaft.
 
 Recorded on the general-applicability ticket as the fourth axis.
+
+**Addendum, 2026-09-22 (Phase 255B) — the census, with a count.**
+F118 was filed from one machine's retrieval. The corpus-side number is worse
+than the retrieval-side number suggested.
+
+Vocabulary `drive chain` / `chain slack` / `chain tension`, case-insensitive,
+over `title || description || fix_procedure || symptoms`, scope every
+`known_issues_*.json` in `src/motodiag/knowledge/seed/knowledge` (107 files):
+**80 rows carry drive-chain content, across 52 files. Exactly 1 declares any
+applicability** — and that one is Phase 255B's own, which may not survive its
+refuter pass. The other **79 are unscoped**, so they pass the transmission
+gate for any machine the lookup resolves as `cvt`.
+
+Phase 255B's refuter pass reached the same conclusion from the retrieval side
+with a different vocabulary and got 89 rows — the two counts differ by search
+terms, not by substance, and both say the same thing: **almost every
+chain row in the corpus is unscoped.** Named live examples it verified:
+`known_issues_honda_cross_model.json` "Chain and sprocket maintenance" and
+`known_issues_cross_platform_drivetrain.json` "Chain stretch measurement …
+all chain-driven motorcycles" both reach a Honda PCX 150;
+`known_issues_yamaha_crossmodel.json` reaches a Yamaha Zuma 125.
+
+This is why F118 says the fix is a **final-drive axis** and not a `{manual}`
+set: scoping 79 rows by transmission would be inferring final drive from
+gearbox type, which is wrong for a belt-drive Harley in the other direction.
+
+---
 
 ### F119
 
@@ -608,3 +635,144 @@ stay as they are** — closed-unobtainable per F119.
 **Guarded permanently**, not phase-scoped:
 `tests/test_phase256_chokepoint.py::TestNoRowExcludesAMachineItNames` pins
 these four with their reasons and fails on a fifth.
+
+---
+
+### F129
+
+**A row has no identity independent of its title text, so editing a title, make or model on a seeded database duplicates the row instead of updating it.**
+
+`known_issues` carries
+
+```sql
+CREATE UNIQUE INDEX idx_known_issues_identity
+    ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
+```
+
+and `issues_repo.add_known_issue` inserts with `ON CONFLICT DO NOTHING`. Those
+three columns are therefore the row's identity, and all three are **content**
+that a phase may legitimately need to correct.
+
+**Measured, not argued.** Seeding `known_issues_cvt.json` into a fresh database
+gave 12 rows. Dropping `Filly LX 50` from 4609's `model` column and re-seeding
+the same database gave **13**, with both rows present:
+
+```
+id=6   model=Agility 50, Agility 125, People S 250, People 250, Filly LX 50
+id=18  model=Agility 50, Agility 125, People S 250, People 250
+```
+
+The over-claiming row survives its own correction, and nothing reports it.
+
+**The second keyed reader.** `loader.backfill_row_applicability` matches on
+`(title, make)` and applies an `UPDATE`. A title change re-points that matcher
+too, so a renamed row silently stops receiving its applicability backfill —
+failing open, as an unscoped row.
+
+**Why this bites content work specifically.** Phase 255B had to change a model
+column (4609, withdrawing an over-claim), a make column (4605, F115) and would
+have liked to trim a title (4615, whose trailing clause moved to another row).
+The first two were done through a migration hook that `UPDATE`s matched on the
+row's OLD identity; the title trim was **abandoned** — the operator's decision
+of 2026-09-21 was to leave 4615's title verbatim rather than risk the
+duplicate. So this defect is already shaping content decisions.
+
+**Not fixed in 255B.** A fix means giving rows a stable key that is not their
+prose — a slug, a source-file-plus-ordinal, or a UUID written at seed time —
+and re-pointing the identity index, the upsert and the backfill matcher at it.
+That is a corpus-wide schema and loader change, not a content phase's work.
+
+**What 255B did instead**, and what a fix would let it stop doing:
+`knowledge/loader.py::reconcile_255B_rows` and migration 065 carry the old and
+new column values as literal pairs so the `UPDATE` can find the row. Every such
+pair is a workaround for this finding.
+
+---
+
+### F130
+
+**Two corpora the predictor reads have no applicability field at all, and 24 of 30 patterns in one of them apply to every machine ever made.**
+
+Phase 255 added the transmission axis to `known_issues` and Phase 256 made one
+chokepoint apply it. Neither reached these two files, which
+`advanced/wear.py` and `advanced/schedule_repo.py` read directly — outside the
+chokepoint by construction, because they are not `known_issues`.
+
+| file | shape |
+|---|---|
+| `src/motodiag/advanced/wear_patterns.json` | **24 of 30** patterns at `make: null`, `model_pattern: "%"` |
+| `src/motodiag/advanced/data/service_interval_templates.json` | `chain-clean-lube` at `make: "*"`, described *"Universal chain maintenance"* |
+
+**Demonstrated, not inferred.** Feeding each pattern its own symptom strings and
+resolving against two machines that cannot have the part:
+
+| pattern | Honda PCX 150 (CVT, no clutch cable, no chain) | Harley Road King (belt final drive) |
+|---|---|---|
+| `clutch-cable-stretch` | **matches** | **matches** |
+| `chain-stretch-sprocket` | **matches** | **matches** |
+| `clutch-basket-judder` | **matches** | **matches** |
+| `final-drive-splines` | **matches** | **matches** |
+
+The symptom vocabulary leans the same way: of 40 symptoms, `Clutch slipping` and
+`Hard shifting` are manual-machine symptoms, and **none** of belt, creep or
+kickstart appears at all.
+
+**This is the exact distinction Phase 255B's content rows document.** 255B ships
+a row saying a machine in this class has no drive chain and that a chain
+interval is meaningless on it, while `chain-clean-lube` offers that machine a
+universal chain-maintenance interval from a different code path in the same
+product.
+
+**Not fixed in 255B** — operator's decision of 2026-09-21, filed rather than
+scoped. A fix means an applicability field on both files, a reader that applies
+it, and guards, which is a mechanism phase like 255 rather than a content phase.
+
+---
+
+### F131
+
+**Six transmission-lookup entries have a canonical name that does not resolve to their own entry, and one of them is a name a rider would actually type.**
+
+`TRANSMISSION_LOOKUP` holds 50 entries. Resolving each entry's own `canonical`
+string against its own `make` returns a different entry, or `unknown`, for six:
+
+| canonical | resolves as | aliases it does have |
+|---|---|---|
+| `SH125i/SH150i` | unknown | `sh125i`, `sh150i`, `sh 125i`, `sh 150i`, `sh125`, `sh150` |
+| `XC155 / SMAX` | unknown | `xc155`, `xc 155`, `xc155f`, `smax`, `s max`, `s-max` |
+| `Jet 50/100` | unknown | `jet 50`, `jet50`, `jet 100`, `jet100`, … |
+| `LX 125/150` | unknown | `lx`, `lx 125`, `lx125`, `lx 150`, `lx150` |
+| `GTS 300/310` | unknown | `gts`, `gts 300`, `gts300`, `gts 310`, … |
+| **`CT125 Hunter Cub`** | **unknown** | `ct125`, `ct 125`, `trail 125`, `ct125a`, `hunter cub` |
+
+**Five of the six are harmless.** They are compound display labels covering two
+models — nobody types `LX 125/150` as a model name, and every real spelling is
+in the alias tuple.
+
+**The sixth is not.** `CT125 Hunter Cub` is Honda's own name for the machine. A
+rider or a technician who enters it gets `provenance='unknown'`, every
+transmission candidate open, and therefore — under the fail-closed filter Phase
+255 built — **every transmission-scoped row withheld**. Entering `CT125`,
+`Trail 125` or `Hunter Cub` instead works correctly. The failure is silent and
+looks like a machine with no known issues.
+
+```
+resolve_transmission("Honda", "CT125 Hunter Cub") -> unknown, entry=None
+resolve_transmission("Honda", "CT125")            -> model-sourced, semi_auto_centrifugal
+```
+
+**Same family as the Phase 255B Step 0 finding** that the junction stores
+marque-prefixed model strings (`Honda PCX150`) the tier query cannot match
+against the resolved `PCX 150` — 469 of 2,424 junction rows, 19%. Both are
+string-matching gaps between how a name is stored and how it is looked up.
+
+**Not fixed in 255B**, whose non-goals forbid adding lookup entries. Pinned
+instead: `tests/test_phase255B_twist_and_go.py::test_the_canonical_name_gap_is_recorded_not_silently_worked_around`
+asserts the set of six, so a seventh fails the suite.
+
+**A related coverage gap, recorded here rather than as its own finding:** the
+Kymco `Like 150i` entry's aliases are `like 150i`, `like150i`, `like`. `Like
+50i` and `Like 125` resolve `unknown`. This cost 255B real coverage — the row
+about the Kymco Like owner's manual's clutch-lever defect applies to the
+combined Like 50i/150i edition too, and had to be declared for the `Like 150i`
+alone rather than name a machine the lookup cannot place.

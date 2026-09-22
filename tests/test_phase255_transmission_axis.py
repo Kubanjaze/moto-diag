@@ -164,6 +164,28 @@ MUST_KEEP = [
 ]
 
 
+#: Rows in the CVT seed file that declare NO applicability, and why each
+#: one must stay that way. A count would not say which row or why; this
+#: names both, and a new unscoped row has to be argued for here.
+#: Phase 255B briefly added a third entry here — the general half split out
+#: of 4611 — and then backed the split out entirely after an audit found its
+#: claim is maker-specific (see tests/test_phase255B_twist_and_go.py::
+#: TestRow4611WasNotSplit). Two entries, not three.
+UNSCOPED_CVT_ROWS = {
+    "Three unrelated components are all called a drive belt, and a search for one returns the other two":
+        "A fact about vocabulary, not about CVTs. Phase 255B additionally "
+        "added the belt/cam-belt marques to its make column (F115): a "
+        "Road King, an R1200GS and a LiveWire all resolve `unknown`, so "
+        "ANY transmission set here would withhold the row from exactly "
+        "the owners it exists to inform.",
+    "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record":
+        "Phase 255B split this out of 4615. How the regulator's record "
+        "behaves is true of every machine looked up in it; declaring "
+        "{cvt} withheld it from every non-CVT machine and contradicted "
+        "the SYM Symba the row named.",
+}
+
+
 class TestTheMachineLevelRegression:
     @pytest.mark.parametrize("make,model,why", OVER_REACHED,
                              ids=[f"{m}-{d}" for m, d, _ in OVER_REACHED])
@@ -221,17 +243,29 @@ class TestTheMachineLevelRegression:
         unscoped = {
             r["title"] for r in _cvt_rows() if "applicability" not in r
         }
-        assert len(unscoped) == 1
+        assert unscoped == set(UNSCOPED_CVT_ROWS), (
+            "the unscoped set changed — add it to UNSCOPED_CVT_ROWS with a "
+            f"reason, or scope it.\n  new:  {sorted(unscoped - set(UNSCOPED_CVT_ROWS))}"
+            f"\n  gone: {sorted(set(UNSCOPED_CVT_ROWS) - unscoped)}")
+        # What this must prove is that the APPLICABILITY FILTER never drops an
+        # unscoped row. It must not also assert that every unscoped row is
+        # retrieved for every machine: retrieval is by make and model, and a
+        # row whose make column does not name the marque was never a
+        # candidate. The original form conflated the two and failed when
+        # Phase 255B narrowed one unscoped row's make column to the machines
+        # its documents actually establish — a correct edit that this guard
+        # reported as a lost row.
         for make, model, _why in OVER_REACHED:
             _, raw = known_issues_for_vehicle(make, model, db_path=db, limit=400)
-            titles_before = {r["title"] for r in raw}
-            if not (unscoped & titles_before):
+            retrieved = unscoped & {r["title"] for r in raw}
+            if not retrieved:
                 continue
             kept = rows_for_machine(raw, make=make, model=model,
                                     purpose="prompt", db_path=db,
                                     record=False).rows
-            assert unscoped <= {r["title"] for r in kept}, (
-                f"{make} {model} lost the unscoped vocabulary row"
+            assert retrieved <= {r["title"] for r in kept}, (
+                f"{make} {model}: the filter dropped an unscoped row — "
+                f"{sorted(retrieved - {r['title'] for r in kept})}"
             )
 
 
@@ -262,11 +296,19 @@ class TestSequencing:
                 declared |= set((row.get("applicability") or {}).get("transmission") or [])
         assert declared <= {"cvt"}, declared
 
-    def test_the_254_file_declares_eleven_of_twelve(self):
+    def test_every_cvt_file_row_is_declared_or_named_unscoped(self):
+        """Was "eleven of twelve" — Phase 255B made the file thirteen.
+
+        254 shipped twelve; 255B split the general half out of 4615 into
+        its own unscoped row. The property that matters is not the count
+        but that nothing is unscoped by accident, so every undeclared row
+        must appear in UNSCOPED_CVT_ROWS with a reason.
+        """
         rows = _cvt_rows()
-        assert len(rows) == 12
         declared = [r for r in rows if "applicability" in r]
-        assert len(declared) == 11
+        unscoped = [r for r in rows if "applicability" not in r]
+        assert len(declared) + len(unscoped) == len(rows)
+        assert {r["title"] for r in unscoped} == set(UNSCOPED_CVT_ROWS)
         assert all(r["applicability"] == {"transmission": ["cvt"]} for r in declared)
 
 
@@ -927,7 +969,7 @@ class TestTheSchema:
         rollback_to_version(62, db_path=path)
         apply_pending_migrations(db_path=path)
         with sqlite3.connect(path) as conn:
-            blank = conn.execute(
-                "SELECT COUNT(*) FROM known_issues WHERE applicability IS NULL"
-            ).fetchone()[0]
-        assert blank == 1
+            blank = {r[0] for r in conn.execute(
+                "SELECT title FROM known_issues WHERE applicability IS NULL")}
+        assert blank == set(UNSCOPED_CVT_ROWS), (
+            "the backfill must neither invent a declaration nor drop one")
