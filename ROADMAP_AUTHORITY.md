@@ -135,3 +135,44 @@ This is consistent with the boundary above rather than an exception to it:
 per-phase docs follow the *phase*, and findings follow the *code*. Those differ
 only for Track I, where a mobile-owned phase may produce a backend finding —
 which rule 1 resolves by asking where the fix lands.
+
+---
+
+## Evidence lives outside the repos, at one durable path (added 2026-09-21, F127-adjacent)
+
+The 263 source documents every Phase 250–256 citation rests on lived at
+`/private/tmp/claude-501/<session-id>/scratchpad`. That path is
+**session-specific and not durable**: the session id recorded in Phase 255B's
+own handoff was already dead when 255B opened, and `/private/tmp` is cleared
+by the OS without notice. It is the same mistake this contract's deploy rule
+already forbids for backups, made with irreplaceable evidence instead of a
+database copy.
+
+**The rule, which is now part of this contract:**
+
+1. **The canonical evidence path is `~/research/motodiag/`.** Every citation
+   path — in a phase doc, a row description, a finding, or a commit message —
+   points there.
+2. **Never `/private/tmp`, never a session scratchpad.** A scratchpad holds
+   intermediates that can be regenerated. A source document cannot.
+3. **A phase that acquires a document files it under the canonical path before
+   citing it,** not after. A citation to a path that does not exist is a
+   citation to nothing.
+4. **Citations name the file relative to that root** — `manuals/genuine/…`,
+   not an absolute path that encodes someone's home directory.
+
+**State recorded at the move, 2026-09-21.** 9,624 files, 2.7 GB, verified
+**byte-identical by an md5 manifest across all 9,624 files** before the source
+was removed. Counts match on both sides: 9,624 files, 263 `.pdf`, 2,878,775,081
+bytes.
+
+**Two counts that do not reconcile with F127, recorded rather than resolved.**
+Of the 263 files carrying a `.pdf` extension, **247 are PDFs by magic bytes**
+and **16 are download debris** — 12 HTML documents, 2 short ASCII files, 1 XML
+stub, 1 empty file. F127 records **32** debris files. Neither number should be
+trusted until F127's own phase re-derives it against this tree.
+
+**Build debris was moved intact, not pruned.** The tree carries two throwaway
+virtualenvs (`grom/venv`, `honda/venv` — 5,242 files) and 235 MB of pip logs.
+A durability fix does not authorise deciding what counts as evidence; pruning
+is a separate decision.
