@@ -42,15 +42,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 
 #: The floor. A commit that collects fewer tests than this fails the suite.
 #:
-#: 7997 (Phase 255B, 2026-09-22) — the first pin. Set to the count of the
-#: regression that closed 255B, at `1fbcdaa`. Phase 256 closed at 7,964;
-#: 255B added 33.
+#: 7999 (Phase 255B, 2026-09-22) — the first pin. The regression that closed
+#: 255B collected 7,997 at `1fbcdaa`; this file's own two tests make 7,999.
+#: Phase 256 closed at 7,964.
 #:
 #: Raise it in the commit that adds the tests. Lower it only deliberately,
 #: with the reason in the commit message — a superseded module taking its
 #: tests with it is a legitimate reason; a refactor that "tidied" a file is
 #: not.
-COLLECTED_TEST_FLOOR = 7997
+COLLECTED_TEST_FLOOR = 7999
 
 
 def _collected_count() -> int:
