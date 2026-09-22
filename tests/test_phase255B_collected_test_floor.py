@@ -52,11 +52,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: one-canonical-per-machine work — the six-spelling PCX control, Guard 1,
 #: Guard 2 per marque, the tier table and the schema-56 degradation path.
 #:
+#: 8091 (Phase 255C bug fix #7, 2026-09-22) — +3: Guard 3 over the whole
+#: junction, its planted positive control, and a unit test of `canonicalise`
+#: against another marque's prefix. Guard 3 is the one decision 6 specified
+#: and nobody wrote; it caught 59 rows the day it was written.
+#:
 #: Raise it in the commit that adds the tests. Lower it only deliberately,
 #: with the reason in the commit message — a superseded module taking its
 #: tests with it is a legitimate reason; a refactor that "tidied" a file is
 #: not.
-COLLECTED_TEST_FLOOR = 8088
+COLLECTED_TEST_FLOOR = 8091
 
 
 def _collected_count() -> int:
