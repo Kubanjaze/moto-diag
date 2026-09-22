@@ -1,6 +1,6 @@
 # Phase 255B — Twist-and-go vs manual small bikes
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-21
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-22
 
 > **Step 0 below is unchanged from the committed draft** (`b157da2`) and is
 > not re-run. The plan begins at "Decisions taken".
@@ -436,6 +436,115 @@ the 24-of-30 census, `chain-clean-lube` at `make: "*"`, and the two readers
 | Splitting 4611/4615 churns ids and breaks the backfill matcher | D4.4 — the retained half keeps id **and** title verbatim; the new half is a new row. |
 | The migration's junction rebuild is skipped and the make/model columns disagree with the junctions | A test asserts column-vs-junction agreement for every row this phase touches, in both directions. |
 | The engine-braking and creep rows (R4, R6) over-claim about the three `semi_auto_centrifugal` machines | Each of those rows must cite a document for the semi-auto machine specifically, not only for a scooter, or it drops to `{cvt}`. |
+
+## Results (v1.1)
+
+### What shipped, and what did not
+
+**Zero twist-and-go content rows.** The phase is named for a comparison it
+did not write. Seven content subjects were drafted; **seven died to the
+documents** across two adversarial cycles, and an eighth — a row already
+committed — died in audit.
+
+What did ship is the mechanism repair around it:
+
+| | |
+|---|---|
+| rows added | **1** (4615's general half) |
+| rows repaired | **3** (4609, 4615, 4605) |
+| rows restored | **1** (4611 — a split made and backed out) |
+| corpus | 1,045 → **1,046** |
+| schema | 64 → **65** (migration 065) |
+| findings filed | F129, F130, F131 |
+| findings resolved | **F115** |
+| live defects fixed | **F132** |
+| `KNOWN_SELF_EXCLUDING` | 4 entries → **2** |
+
+### Deviations — every content subject, and the document that killed it
+
+**R1 — no clutch lever.** Shipped nothing. Honda's PCX150 owner's manual:
+*"operating the rear brake lever applies the rear brake and a portion of the
+front brake."* The left lever is a linked-brake lever on four machines the
+row named. The rewrite then died on attribution: the passage is verbatim
+only in the 2015 edition, and the 2022/2023 editions gate it *"Except ABS
+type"*.
+
+**R2 — no gear to select.** Shipped nothing. Killed on its own cited page:
+Piaggio's MP3 400 workshop manual gives the drive after the variator as
+*"Final reduction Gear reduction unit in oil bath"*, while the row's fix
+step forbade quoting "an oil for a gearbox". The rewrite kept the same
+clause and died on it again.
+
+**R3 — no chain.** Shipped nothing. The Kymco Agility 50 service manual's
+own periodic maintenance table lists *"Drive chain I I I I"*. Two of the
+four positive controls, the Honda C70 and CT110, have **no PDF in the
+library at all** — only OCR'd text and an archive landing page. The rewrite
+inverted to that schedule line being the defect and died because it cited
+the wrong table: the manual's real schedule is clean and the line sits in an
+unheaded appendix.
+
+**R4 — engine braking.** Never written. Both halves of its premise were
+contradicted before a row existed. Honda's PCX owner's manual warns of *"the
+rear wheel from skidding due to engine braking"* on a CVT scooter; Honda's
+Super Cub C125 owner's manual instructs *"Engine braking helps slow your
+vehicle down when you release the throttle"*, and the SYM Symba manual heads
+a section *"Engine Brake"*. This is the citation rule working at the
+cheapest possible point.
+
+**R5 — "transmission oil" names two things.** Shipped nothing. The thesis
+was inverted by the documents it cited: Honda's PCX owner's manual prints
+*"Transmission oil capacity After draining 0.13 US qt (0.12 L)"* in the same
+booklet whose schedule says "Final Drive Oil"; Kymco's Super 8 50X prints
+*"Gear oil"* in its maintenance table and *"Transmission oil … 0.19 qt"* in
+its capacities table. The rewrite inverted to the collision and still died:
+*"on the Yamaha it is not the term at all"* is false — the Zuma 125 service
+manual heads its procedure **"CHANGING THE TRANSMISSION OIL"** — and *"a
+fifth of a litre or less"* is false, the GTS 300 printing 250 cm³ and the
+Primavera 270 cm³.
+
+**R6 — creep at idle.** Shipped nothing. Five Piaggio-group service manuals
+carry *"REAR WHEEL ROTATES WITH ENGINE AT IDLE — Idling rpm too high →
+Adjust the engine idle speed"* as the **first** cause, so the row's claim
+that the makers name the clutch rather than the idle screw was false. The
+rewrite inverted to "the makers disagree on order" and died too: Piaggio's
+50cc books list three and four causes, and Kymco and Honda publish exactly
+one cause with **no ordering at all**, so there is no opposite order.
+
+**R7 — the Kymco Like clutch-lever step.** Shipped nothing, and this is the
+one whose *substance* survived both cycles. The defect is real and verbatim
+at page index 48. It died on the documentary record instead: *"two
+editions"* was three paths holding one byte-identical PDF, and the corrected
+row died on scope — the manual's own specification tables put **ABS on the
+150i and drum on the 50i**, so a drum-model defect was being declared for
+the ABS machine and withheld from the drum machine.
+
+### The F132 table — the evidence the year-window change shipped on
+
+Rows entering / leaving per machine per model year, nulling the unevidenced
+windows:
+
+```
+machine                      class        2001   2003   2005   2013   2019   2022   2026   2027
+------------------------------------------------------------------------------------------------
+Honda PCX 150                cvt            +8   same   same   same   same   same   same     +8
+Kymco Agility 50             cvt            +9     +1   same     +1     +1     +1     +1     +9
+Vespa LX 50                  cvt            +9     +1   same   same   same     +1     +1     +9
+Yamaha Zuma 125              cvt            +8   same   same   same   same   same   same     +8
+Genuine Buddy 125            cvt            +8   same   same   same   same   same   same     +8
+Kymco People S 250           cvt            +9     +1   same     +1     +1     +1     +1     +9
+Honda GL1800 Gold Wing       NOT cvt        +1   same   same   same   same   same   same     +1
+Yamaha YZF-R1                NOT cvt        +1   same   same   same   same   same   same     +1
+Honda Grom                   NOT cvt        +1   same   same   same   same   same   same     +1
+Kawasaki Ninja 400           NOT cvt      same   same   same   same   same   same   same   same
+SYM Symba 100                semi-auto      +1   same   same   same   same   same   same     +1
+------------------------------------------------------------------------------------------------
+TOTAL entering: 123    TOTAL leaving: 0
+```
+
+Nothing ever leaves — a null bound removes a gate. The prediction that
+non-CVT machines would show **zero** change did not hold, and the table is
+what showed it. The one row they gain is 4605, unscoped by design, whose
+reach this phase deliberately widened when it closed F115.
 
 ## Verification checklist
 
