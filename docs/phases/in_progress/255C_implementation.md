@@ -242,7 +242,7 @@ WHEN ? IS NOT NULL AND EXISTS (
 | the vocabulary is scoped per make | The pair form makes this structural rather than conventional. |
 | a rebuild is idempotent | One canonical per row means the rebuild converges by construction. Pinned. |
 | the vocabulary is derived, not hardcoded | No alias table (decision 1). The canonical is a function of the corpus. |
-| debris filters | The two leaks are fixed **at extraction** in their own commit (D5). |
+| debris filters | Replaced by a **positive gate** at extraction (D5 amended). The blacklists are the defect, not an incomplete list. |
 | the migration backfills in its own transaction | 255C's migration does the same, `post_apply` → `rebuild_model_index`. |
 | monotonicity: knowing more never returns less | Measured in Step 0 — retrieved and kept both unchanged at 166; nine rows move **up** a tier. Pinned as a tier table (D6). |
 
@@ -282,17 +282,88 @@ control:** a planted `resolve_vehicle` caller was found, then removed.
   the table is diagnostics, and migrating a counter would assert a continuity
   the counter does not have.
 
-## D5. The two debris strings — own commit, fixed at extraction
+## D5 (amended 2026-09-22). A positive gate at extraction — and three wrong counts on the way to it
 
-`'Piaggio Group marques only'` and `'Triumph siblings that agree'` are prose
-fragments that pass 244I's single-character, bare-year and bracket filters.
-They are the **only** two junction strings whose leading marque is not their
-row's make, which is what makes them findable.
+**The original D5 said "the two debris strings". The number was wrong three
+times, each time from an under-scoped search, and each time it moved the
+same direction.**
 
-Fixed **at extraction**, never by editing the junction (decision 4). The
-positive control is a **planted prose fragment**: a fixture row whose model
-column carries a sentence of the same shape, asserted absent from the
-junction — and the guard is broken first to see it fail.
+| count | how it was reached | why it was wrong |
+|---|---|---|
+| **2** | Step 0 searched for junction strings whose **leading marque** was not their row's make | Seven of the next nine do not lead with a marque at all. Same family as the V-matic miss: the search could not find what it was looking for. |
+| **9** | shape heuristics over a hand-picked pattern list | Found what I thought to look for. A pattern list is a blacklist by another name. |
+| **85** | the gate run over **all 706** junction strings — the whole-corpus negative control the operator required | This is the first count defined by a **rule** rather than by a search, which is why it is the first one that holds. |
+
+**The lesson is the method, not the number.** Two searches and a heuristic
+each returned a subset and each read as complete. Defining the set by a rule
+and running it over the whole corpus is what ended it — and that is the same
+correction the evidence-discipline rule already demands for negative claims,
+arrived at from the other direction.
+
+### Why the decision-6 guard cannot close this class
+
+The guard as specified — *every junction string resolves to its own
+machine's canonical* — fires on **0 of the debris strings**, and it is
+circular. 244I derives `model_vocabulary` **from the model column**;
+extraction wrote `'000 km'` into the junction, so the vocabulary contains it,
+so `resolve_vehicle('Ducati', '000 km')` returns `'000 km'` by exact match.
+**Debris defines its own canonical.** A check satisfied by construction on
+exactly the strings it was written for.
+
+Guard 2 — *no two junction strings for one machine* — fires on 52 groups
+covering 105 strings and catches **0** debris, because each debris string
+appears once. **The two guards close one class between them: spelling-split.
+They are kept for that, and they do not close debris.**
+
+The common cause, and the reason the four blacklist fixes were dropped:
+**extraction has no positive gate.** `CONTRAST`, `_PROSE_WORD`,
+`_NEGATED_PAREN` and `is_scope` are all blacklists, and every root cause
+found was a gap in one. A fifth gap lands silently.
+
+### The gate
+
+**Rule: a token is rejected when it contains a bare lowercase word and
+carries no code token.** A bare lowercase word is one that does not begin
+with a capital or a digit and is not alphanumeric-mixed; parentheticals are
+stripped first, so `'R-series (airhead)'` is judged on `'R-series'`. A code
+token is `[A-Z]{1,4}\d{2,4}`, a bare 3–4 digit number, `nV`, or `Vn`.
+
+*(The operator's phrasing was "no code token, no capitalised proper noun".
+The rule above is what produces exactly the set below — `'Electric
+motorcycles'` carries a capital and is still debris — so the rule is stated
+here as implemented rather than as described.)*
+
+**What it admits:** every model designation the corpus uses — `PCX 150`,
+`F-series`, `R-series (airhead)`, `250`, `125`, `Brutale 800`,
+`Super Cub C125`, `390 Adventure R`, `XC155 / SMAX`, `S 1000 RR by type
+code` — and every group (B) string.
+
+**Scope: group (A) only — 57 strings, 105 junction rows.** Strings with no
+code token and no designation: `'Electric motorcycles'` (10 rows), `'as this
+corpus names them'` (5), `'Desmosedici Stradale engines'` (5), `'BMS logs'`
+(4), down to `'year'`, `'location'`, `'related'`, `'independent'`,
+`'per handbook'`.
+
+**Negative control is the whole corpus:** run over all 706 junction strings,
+the gate rejects **exactly** those 57 and admits the other 649, group (B)
+included. The 57 are pinned as a set; a fifty-eighth fails the suite naming
+the string, in `KNOWN_SELF_EXCLUDING` style.
+
+**Loud means a failing test, not a seed-load crash.** A gate cannot know
+whether a rejection is legitimate, so it never crashes the loader —
+operator's correction, 2026-09-22.
+
+### Group (B) is not 255C's
+
+28 strings carrying a code token but reading as prose. **No shape rule
+separates them**, and the pair that shows why is `'R1200 hexhead'` — an
+engine-family designation 244I's vocabulary is built to carry — against
+`'2020 service manual'` — debris. Both are "number plus lowercase words".
+
+Telling them apart is a question about **what the corpus means by a model**,
+which is 244I semantics, not spelling identity. **Filed on the
+general-applicability ticket with that pair as the example. Group (B)
+strings stay exactly as they are today.**
 
 ## D6. Verification
 
