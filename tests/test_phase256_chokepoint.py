@@ -387,6 +387,15 @@ _KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
 #: withheld from it before and after. No lookup entry, no override.
 #: Entries are deleted when they resolve rather than re-worded, because
 #: the guard asserts set equality against what it finds.
+#:
+#: **Phase 255B resolved the SYM Symba entry** by splitting 4615. The
+#: general half — the regulator-index methodology, which was never about
+#: CVTs — is now its own UNSCOPED row and carries the Symba naming. The
+#: CVT half keeps `{cvt}` and no longer names the Symba, so nothing
+#: declares a transmission the lookup contradicts. `Vespa 946` stays on
+#: the CVT half deliberately: it is the F119 entry below and moving it to
+#: the unscoped half would have resolved a pin 255B was not asked to
+#: touch.
 KNOWN_SELF_EXCLUDING = {
     (_KEY_PIAGGIO, "Piaggio Beverly 250"):
         "Named by the row, no document on disk. **Stays as-is** — "
@@ -394,15 +403,6 @@ KNOWN_SELF_EXCLUDING = {
     (_KEY_REGULATOR, "Vespa 946"):
         "Named by the row, no document on disk. **Stays as-is** — "
         "F119 closed-unobtainable, operator's decision 2026-09-21.",
-    (_KEY_REGULATOR, "SYM Symba"):
-        "A genuine contradiction ON DISK: 4615 declares {'transmission': "
-        "['cvt']} and names the Symba, which this phase's own lookup "
-        "classifies `semi_auto_centrifugal` from SYM's manual ('Wet "
-        "multi-plate type, auto centrifugal clutch'). Phase 255 flagged "
-        "4615 as carrying a general half wider than CVT and deferred the "
-        "split to 255B; this is what that deferral costs. "
-        "**Resolution: the 255B split settles it** — the general half stops "
-        "being declared `cvt` and the Symba naming becomes correct.",
 }
 
 

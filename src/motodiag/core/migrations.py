@@ -4586,6 +4586,20 @@ MIGRATIONS: list[Migration] = [
             "after this migration. What changes is that the row stops "
             "asserting a machine its document does not establish. "
             "No lookup entry is added and no override is written. "
+            "Row 4615 splits. It declared {cvt} over two claims: one about "
+            "scooter CVT campaigns, and one about how the regulator's "
+            "record behaves for ANY machine -- two contradictory index "
+            "endpoints, and a per-vehicle lookup whose empty answer is "
+            "identical for a wrong model name and a clean record. The "
+            "second was withheld from every non-CVT machine in the corpus "
+            "and named the SYM Symba, which the lookup classifies "
+            "`semi_auto_centrifugal`. The general half becomes its own "
+            "UNSCOPED row and carries the Symba; the CVT half keeps its "
+            "id, its title and {cvt}, and drops the Symba. "
+            "`Vespa 946` deliberately stays on the CVT half: it is a live "
+            "KNOWN_SELF_EXCLUDING entry the operator ruled stays as-is "
+            "under F119, and moving it would have resolved a pin this "
+            "phase was not asked to touch. "
             "The hook rebuilds both junctions because both are derived "
             "from the columns this migration edits."
         ),
@@ -4597,6 +4611,13 @@ MIGRATIONS: list[Migration] = [
              WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%'
                AND make IS 'Kymco'
                AND model IS 'Agility 50, Agility 125, People S 250, People 250';
+
+            DELETE FROM known_issues
+             WHERE title = 'The regulator''s two indexes contradict each other, and an empty recall answer is not a clean record';
+
+            UPDATE known_issues
+               SET model = 'XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick'
+             WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
         """,
     ),
 ]

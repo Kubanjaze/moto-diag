@@ -198,3 +198,95 @@ class TestMigration065EditsByIdentity:
             assert reconcile_255B_rows(conn) == 1
             assert reconcile_255B_rows(conn) == 0, "a second run must match nothing"
             _row(conn, T_4609)  # still exactly one
+
+
+T_4615_CVT = "What the regulator record shows for scooter CVTs"
+T_4615_GENERAL = ("The regulator's two indexes contradict each other, and an "
+                  "empty recall answer is not a clean record")
+
+
+class TestRow4615Splits:
+    """The regulator-index methodology was never about CVTs.
+
+    4615 declared `{cvt}` over two claims: one genuinely about scooter CVT
+    campaigns, and one about how the regulator's record behaves for any
+    machine at all. The second was withheld from every non-CVT machine in
+    the corpus, and it named the SYM Symba, which the lookup classifies
+    `semi_auto_centrifugal` — a contradiction on disk.
+    """
+
+    def test_the_cvt_half_keeps_its_id_title_and_scope(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4615_CVT)
+        assert json.loads(row["applicability"]) == {"transmission": ["cvt"]}
+        assert row["source"] == "regulation"
+
+    def test_the_cvt_half_no_longer_names_the_symba(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4615_CVT)
+            models = {m for (m,) in conn.execute(
+                "SELECT model FROM known_issue_models WHERE issue_id = ?", (row["id"],))}
+        assert "SYM Symba" not in row["model"]
+        # Exact membership, not a substring: the junction stores the
+        # marque-prefixed `SYM Symba` (S0-4), so `"Symba" not in models`
+        # would pass even with the entry present.
+        assert not any("Symba" in m for m in models), sorted(models)
+        assert "Vespa GTS" in models, "positive control: the junction is populated"
+
+    def test_the_cvt_half_still_names_the_vespa_946(self, seeded):
+        """Deliberate, not an oversight.
+
+        `(regulator, Vespa 946)` is a live KNOWN_SELF_EXCLUDING entry the
+        operator ruled stays as-is under F119 (closed-unobtainable).
+        Moving the 946 to the unscoped half would have resolved a pin this
+        phase was not asked to touch, and would have done it silently.
+        """
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4615_CVT)
+        assert "Vespa 946" in row["model"]
+
+    def test_the_general_half_is_unscoped(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4615_GENERAL)
+        assert row["applicability"] is None, (
+            "the index methodology holds for every machine; declaring any "
+            "transmission on it re-creates the defect the split repairs")
+        assert row["source"] == "regulation"
+
+    def test_the_general_half_carries_the_symba_and_reaches_it(self, seeded):
+        """The Symba gets the row it was being denied."""
+        res = resolve_transmission("SYM", "Symba 100")
+        assert res.provenance == "model-sourced"
+        assert res.candidates == frozenset({"semi_auto_centrifugal"})
+
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4615_GENERAL)
+            models = {m for (m,) in conn.execute(
+                "SELECT model FROM known_issue_models WHERE issue_id = ?", (row["id"],))}
+        assert "SYM Symba" in row["model"]
+        assert any("Symba" in m for m in models), sorted(models)
+        assert row_applies(row, "transmission", res.candidates) is True
+
+        cvt_only = {"applicability": json.dumps({"transmission": ["cvt"]})}
+        assert row_applies(cvt_only, "transmission", res.candidates) is False, (
+            "positive control: a {cvt} row IS withheld from the Symba")
+
+    def test_both_halves_name_an_nhtsa_campaign(self, seeded):
+        """The regulation provenance rule: a regulation row names its campaign."""
+        pat = __import__("re").compile(r"\b\d{2}V\d{3}0*\b")
+        with sqlite3.connect(seeded) as conn:
+            for title in (T_4615_CVT, T_4615_GENERAL):
+                row = _row(conn, title)
+                found = set(pat.findall(row["description"]))
+                assert found, f"{title[:40]!r} names no campaign"
+                assert row["source"] == "regulation"
+
+    def test_the_split_did_not_duplicate_the_index_prose(self, seeded):
+        """A split, not a copy. The methodology lives in one row."""
+        needle = "sixty-six byte body"
+        with sqlite3.connect(seeded) as conn:
+            hits = [r[0] for r in conn.execute(
+                "SELECT title FROM known_issues WHERE description LIKE ?",
+                ("%" + needle + "%",))]
+        assert len(hits) == 1, f"{len(hits)} rows carry the index prose: {hits}"
+        assert hits[0] == T_4615_GENERAL

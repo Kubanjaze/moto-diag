@@ -341,32 +341,55 @@
   },
   {
     "title": "What the regulator record shows for scooter CVTs — one campaign, and two indexes that disagree with each other and with the data",
-    "description": "A sweep of 3,545 make, model and year combinations across thirty makes and model years 2003 to 2026 collected 1,125 distinct campaigns, of which exactly one touches a scooter CVT component: campaign 21V251000, the Yamaha primary sheave nut campaign recorded separately. Across the small-scooter makes specifically — Kymco, SYM, Piaggio, Vespa, Aprilia, Genuine, Lance, Moto Guzzi and others, forty-two campaigns between them — there is not one belt, pulley, sheave, variator or transmission campaign. The only other campaigns using CVT vocabulary are automotive gearboxes, not scooter drivelines. That is a floor and not a census, and the sweep that produced it demonstrated why. Its enumeration was driven by the regulator's model index, and that index returns nothing for 2026 Vespa — so the sweep's own list omitted campaign 26V302000, a real 2026 Vespa campaign that the same sweep had already confirmed by campaign number. A count built on the index is a lower bound by construction. The two index endpoints also disagree with each other, in both directions. The 2013 Vespa 946 fuel-line campaign 14V364000 resolves only under its own model string, and for model year 2018 the model index returns one Vespa model while the make index for the same year returns 347 makes with Vespa absent. Tested across seventeen makes and six model years, 25 of 102 combinations were contradictory — thirteen where the model index returns results while the make is missing from the make index, and twelve the other way round. The contradictions concentrate in low-volume makes, though two touched high-volume ones. Seventeen makes over six years is a sample and not a census. Worse, the model index cannot be trusted as a source of query strings even for itself: the exact model string it supplies for 2018 Vespa returns nothing when used against the per-vehicle recall lookup. And the per-vehicle lookup cannot distinguish a wrong name from a clean record. A real make with a real model, a real make with a fabricated model, and a pair of nonsense strings all return the same HTTP 400 carrying the same sixty-six byte body reading that results were returned successfully with a count of zero. A misspelled model name reads exactly like a machine with no campaigns.",
+    "description": "A sweep of 3,545 make, model and year combinations across thirty makes and model years 2003 to 2026 collected 1,125 distinct campaigns, of which exactly one touches a scooter CVT component: campaign 21V251000, the Yamaha primary sheave nut campaign recorded separately. Across the small-scooter makes specifically — Kymco, SYM, Piaggio, Vespa, Aprilia, Genuine, Lance, Moto Guzzi and others, forty-two campaigns between them — there is not one belt, pulley, sheave, variator or transmission campaign. The only other campaigns using CVT vocabulary are automotive gearboxes, not scooter drivelines. That is a floor and not a census, and the sweep that produced it demonstrated why: its enumeration was driven by the regulator's model index, and that index returns nothing for 2026 Vespa — so the sweep's own list omitted campaign 26V302000, a real 2026 Vespa campaign that the same sweep had already confirmed by campaign number. A count built on the index is a lower bound by construction. The indexes fail in several further ways that are not specific to CVTs and are not repeated here; the companion entry titled 'The regulator's two indexes contradict each other, and an empty recall answer is not a clean record' carries them, and applies to any machine rather than only to a CVT.",
     "make": "Yamaha, Piaggio, Vespa, Honda, Kymco, SYM, Genuine",
-    "model": "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick",
+    "model": "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, Genuine Buddy, Genuine Buddy Kick",
     "year_start": 2003,
     "year_end": 2026,
     "severity": "medium",
     "symptoms": [
-      "scooter recall lookup",
-      "is my scooter recalled",
       "cvt recall",
-      "no recalls found",
-      "recall search scooter"
+      "scooter recall lookup",
+      "variator recall",
+      "is there a recall on my scooter cvt"
     ],
     "dtc_codes": [],
     "causes": [
-      "A recall index that omits models its own campaign data contains",
-      "A per-vehicle lookup whose empty answer is identical for a wrong name and a clean record"
+      "A campaign count built from an index that omits records the same sweep confirmed by campaign number"
     ],
-    "fix_procedure": "1. Treat this as a floor: one CVT campaign found, and no claim that it is the only one. 2. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 3. Do not use either index endpoint to decide whether a make or model has campaigns; they contradict each other and the data in both directions. 4. Do not read an empty per-vehicle response as a clean record, because a wrong model string returns the identical response. 5. Query by campaign number wherever one is known, which is the only route that returns the full record.",
+    "fix_procedure": "1. Treat this as a floor: one CVT campaign found, and no claim that it is the only one. 2. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 3. Do not conclude from this entry that a scooter CVT has no open campaign — conclude only that a corpus-wide sweep found one.",
     "parts_needed": [],
-    "estimated_hours": 1.0,
+    "estimated_hours": 0.5,
     "source": "regulation",
     "applicability": {
       "transmission": [
         "cvt"
       ]
     }
+  },
+  {
+    "title": "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record",
+    "description": "The regulator publishes two index endpoints and they disagree with each other, in both directions. The 2013 Vespa 946 fuel-line campaign 14V364000 resolves only under its own model string, and for model year 2018 the model index returns one Vespa model while the make index for the same year returns 347 makes with Vespa absent. Tested across seventeen makes and six model years, 25 of 102 combinations were contradictory — thirteen where the model index returns results while the make is missing from the make index, and twelve the other way round. The contradictions concentrate in low-volume makes, though two touched high-volume ones. Seventeen makes over six years is a sample and not a census. The model index also returns nothing for 2026 Vespa while campaign 26V302000 is a real 2026 Vespa campaign, so any count built on the index is a lower bound by construction. Worse, the model index cannot be trusted as a source of query strings even for itself: the exact model string it supplies for 2018 Vespa returns nothing when used against the per-vehicle recall lookup. And the per-vehicle lookup cannot distinguish a wrong name from a clean record. A real make with a real model, a real make with a fabricated model, and a pair of nonsense strings all return the same HTTP 400 carrying the same sixty-six byte body reading that results were returned successfully with a count of zero. A misspelled model name reads exactly like a machine with no campaigns. None of this is specific to a CVT, to a scooter, or to any transmission: it is how the record behaves for every machine looked up in it.",
+    "make": "Yamaha, Piaggio, Vespa, Honda, Kymco, SYM, Genuine",
+    "model": "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick",
+    "year_start": 2003,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "is my scooter recalled",
+      "no recalls found",
+      "recall search scooter",
+      "recall lookup returns nothing",
+      "recall search wrong model name"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A recall index that omits models its own campaign data contains",
+      "A per-vehicle lookup whose empty answer is identical for a wrong name and a clean record"
+    ],
+    "fix_procedure": "1. Do not use either index endpoint to decide whether a make or model has campaigns; they contradict each other and the data in both directions. 2. Do not read an empty per-vehicle response as a clean record, because a wrong model string returns the identical response. 3. Query by campaign number wherever one is known, which is the only route that returns the full record. 4. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 5. Treat any count built from an index as a lower bound, never as a census.",
+    "parts_needed": [],
+    "estimated_hours": 1.0,
+    "source": "regulation"
   }
 ]

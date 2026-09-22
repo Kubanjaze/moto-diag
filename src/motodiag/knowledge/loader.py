@@ -1,6 +1,7 @@
 """Knowledge base loader — import DTC codes and other data from JSON files."""
 
 import json
+from datetime import datetime
 from pathlib import Path
 
 from motodiag.core.models import DTCCategory, DTCCode, SymptomCategory, Severity
@@ -74,7 +75,89 @@ _255B_MODEL_EDITS: tuple[tuple[str, str, str, str], ...] = (
         "Agility 50, Agility 125, People S 250, People 250, Filly LX 50",
         "Agility 50, Agility 125, People S 250, People 250",
     ),
+    (
+        # 4615's CVT half. `SYM Symba` leaves, because the lookup classifies
+        # the Symba `semi_auto_centrifugal` from SYM's own manual and this
+        # half declares {cvt}. `Vespa 946` deliberately STAYS: it is a live
+        # KNOWN_SELF_EXCLUDING entry the operator ruled stays as-is (F119,
+        # closed-unobtainable), and moving it would silently resolve a pin
+        # this phase was not asked to touch.
+        "What the regulator record shows for scooter CVTs",
+        "Yamaha, Piaggio, Vespa, Honda, Kymco, SYM, Genuine",
+        "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, "
+        "Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, "
+        "Genuine Buddy, Genuine Buddy Kick",
+        "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, "
+        "Honda Metropolitan, Kymco Agility, Kymco Like 150i, "
+        "Genuine Buddy, Genuine Buddy Kick",
+    ),
 )
+
+#: Rows 255B ADDS, by title. The prose lives in the seed file and nowhere
+#: else -- this hook reads it from there rather than carrying a second copy
+#: that could drift from the one the loader uses.
+_255B_NEW_ROW_TITLES: tuple[str, ...] = (
+    "The regulator's two indexes contradict each other, and an empty recall "
+    "answer is not a clean record",
+)
+
+#: The seed file 255B's new rows live in.
+_255B_SEED = "known_issues_cvt.json"
+
+
+def _insert_255B_new_rows(conn) -> int:
+    """Insert 255B's added rows if they are not already present.
+
+    Reads them from the seed file so the prose has exactly one home. Keyed
+    on the full title, which is what the identity index uses; a row already
+    present is skipped rather than duplicated, so the hook is idempotent.
+    """
+    from motodiag.knowledge.applicability import dump_applicability
+
+    path = Path(__file__).parent / "seed" / "knowledge" / _255B_SEED
+    try:
+        items = json.loads(path.read_text(encoding="utf-8"))
+    except (json.JSONDecodeError, OSError):
+        return 0
+    by_title = {i.get("title"): i for i in items if isinstance(i, dict)}
+
+    inserted = 0
+    for title in _255B_NEW_ROW_TITLES:
+        item = by_title.get(title)
+        if item is None:
+            raise ValueError(
+                f"migration 065 expects {title!r} in {_255B_SEED} and it is not "
+                "there -- the seed file and the migration have drifted"
+            )
+        present = conn.execute(
+            "SELECT 1 FROM known_issues WHERE title = ? AND make IS ? AND model IS ?",
+            (title, item.get("make"), item.get("model")),
+        ).fetchone()
+        if present:
+            continue
+        conn.execute(
+            """INSERT INTO known_issues
+               (title, description, make, model, year_start, year_end, severity,
+                symptoms, dtc_codes, causes, fix_procedure, parts_needed,
+                estimated_hours, source, applicability, created_at)
+               VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)""",
+            (
+                item["title"], item["description"], item.get("make"),
+                item.get("model"), item.get("year_start"), item.get("year_end"),
+                item.get("severity", "medium"),
+                json.dumps(item.get("symptoms") or []),
+                json.dumps(item.get("dtc_codes") or []),
+                json.dumps(item.get("causes") or []),
+                item.get("fix_procedure"),
+                json.dumps(item.get("parts_needed") or []),
+                item.get("estimated_hours"),
+                item.get("source", "unverified"),
+                dump_applicability(item.get("applicability")),
+                datetime.now().isoformat(),
+            ),
+        )
+        inserted += 1
+    return inserted
 
 
 def reconcile_255B_rows(conn) -> int:
@@ -107,6 +190,8 @@ def reconcile_255B_rows(conn) -> int:
             (new_model, title_prefix + "%", make, old_model),
         )
         changed += cur.rowcount or 0
+
+    changed += _insert_255B_new_rows(conn)
 
     rebuild_make_index(conn)
     rebuild_model_index(conn)
