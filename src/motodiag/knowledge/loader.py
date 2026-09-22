@@ -127,6 +127,17 @@ _255B_NEW_ROW_TITLES: tuple[str, ...] = (
 #: The seed file 255B's new rows live in.
 _255B_SEED = "known_issues_cvt.json"
 
+#: A Phase 254 title this phase does not touch. Its presence is how the
+#: hook tells a seeded corpus from a fresh database.
+#:
+#: RESTORED after being deleted twice. `init_db` runs migrations, so without
+#: this guard migration 065 fires on an empty database and inserts 255B's
+#: rows at ids 1-n before the loader writes anything -- after which the
+#: loader's own ON CONFLICT DO NOTHING silently skips them, leaving rows at
+#: ids nothing else agrees with. It broke 134 tests across 17 phase files
+#: the second time, all of them counting rows after loading one seed file.
+_255B_SEEDED_ANCHOR = "What a scooter CVT is, in the makers' own words"
+
 
 def _insert_255B_new_rows(conn) -> int:
     """Insert 255B's added rows if they are not already present.
@@ -136,6 +147,15 @@ def _insert_255B_new_rows(conn) -> int:
     present is skipped rather than duplicated, so the hook is idempotent.
     """
     from motodiag.knowledge.applicability import dump_applicability
+
+    # This hook REPAIRS an already-seeded corpus; it must not seed a fresh
+    # one. See _255B_SEEDED_ANCHOR. Do not remove without removing the two
+    # tests that pin both sides of it.
+    if not conn.execute(
+        "SELECT 1 FROM known_issues WHERE title LIKE ?",
+        (_255B_SEEDED_ANCHOR + "%",),
+    ).fetchone():
+        return 0
 
     path = Path(__file__).parent / "seed" / "knowledge" / _255B_SEED
     try:
@@ -203,14 +223,15 @@ def _null_unevidenced_metadata(conn) -> int:
     discipline F129 exists to demand.
 
     Nulling a bound REMOVES a gate, so this can only widen. Measured across
-    11 machines and 8 model years: 123 row-slots gained, 0 lost. For every
+    11 machines and 8 model years: 143 row-slots gained, 0 lost. For every
     row declaring {cvt} the widening reaches only machines the filter
-    already admits. The one exception is row 4605, which is unscoped by
-    design -- a vocabulary row saying three unrelated components are all
-    called a drive belt -- and which therefore reaches a 2001 Gold Wing and
-    a 2027 R1 once its window goes. That is the row doing its job, and the
-    operator's decision of 2026-09-22 was to apply the scope rule uniformly
-    rather than keep an unevidenced window to hold that reach down.
+    already admits. The exceptions are the two rows that are unscoped by
+    design -- 4605, saying three unrelated components are all called a drive
+    belt, and 4615's general half about the regulator record -- which reach
+    a 2001 Gold Wing and a 2027 R1 once their windows go. That is those rows
+    doing their job, and the operator's decision of 2026-09-22 was to apply
+    the scope rule uniformly rather than keep an unevidenced window to hold
+    that reach down.
     """
     seed_dir = Path(__file__).parent / "seed" / "knowledge"
     changed = 0

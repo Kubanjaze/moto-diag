@@ -526,25 +526,36 @@ windows:
 ```
 machine                      class        2001   2003   2005   2013   2019   2022   2026   2027
 ------------------------------------------------------------------------------------------------
-Honda PCX 150                cvt            +8   same   same   same   same   same   same     +8
-Kymco Agility 50             cvt            +9     +1   same     +1     +1     +1     +1     +9
-Vespa LX 50                  cvt            +9     +1   same   same   same     +1     +1     +9
-Yamaha Zuma 125              cvt            +8   same   same   same   same   same   same     +8
-Genuine Buddy 125            cvt            +8   same   same   same   same   same   same     +8
-Kymco People S 250           cvt            +9     +1   same     +1     +1     +1     +1     +9
-Honda GL1800 Gold Wing       NOT cvt        +1   same   same   same   same   same   same     +1
-Yamaha YZF-R1                NOT cvt        +1   same   same   same   same   same   same     +1
-Honda Grom                   NOT cvt        +1   same   same   same   same   same   same     +1
+Honda PCX 150                cvt            +9   same   same   same   same   same   same     +9
+Kymco Agility 50             cvt           +10     +1   same     +1     +1     +1     +1    +10
+Vespa LX 50                  cvt           +10     +1   same   same   same     +1     +1    +10
+Yamaha Zuma 125              cvt            +9   same   same   same   same   same   same     +9
+Genuine Buddy 125            cvt            +9   same   same   same   same   same   same     +9
+Kymco People S 250           cvt           +10     +1   same     +1     +1     +1     +1    +10
+Honda GL1800 Gold Wing       NOT cvt        +2   same   same   same   same   same   same     +2
+Yamaha YZF-R1                NOT cvt        +2   same   same   same   same   same   same     +2
+Honda Grom                   NOT cvt        +2   same   same   same   same   same   same     +2
 Kawasaki Ninja 400           NOT cvt      same   same   same   same   same   same   same   same
-SYM Symba 100                semi-auto      +1   same   same   same   same   same   same     +1
+SYM Symba 100                semi-auto      +2   same   same   same   same   same   same     +2
 ------------------------------------------------------------------------------------------------
-TOTAL entering: 123    TOTAL leaving: 0
+TOTAL entering: 143    TOTAL leaving: 0
 ```
 
 Nothing ever leaves — a null bound removes a gate. The prediction that
 non-CVT machines would show **zero** change did not hold, and the table is
-what showed it. The one row they gain is 4605, unscoped by design, whose
-reach this phase deliberately widened when it closed F115.
+what showed it. They gain **two** rows, and both are unscoped by design:
+4605, the drive-belt vocabulary row whose reach this phase widened when it
+closed F115, and 4615's general half, which is unscoped precisely so that
+every machine looked up in the regulator's record can receive it. No scoped
+CVT content reaches a machine the filter excludes, which is the property the
+test asserts.
+
+**This table is a correction.** The version first measured reported 123
+entering and one row for non-CVT machines. It was run against a database in
+which migration 065's hook had seeded rows on an empty database — the
+missing anchor guard described below — so the second unscoped row was
+mis-seeded and did not retrieve normally. The conclusion is unchanged; the
+numbers were wrong and are restated here from a correctly seeded database.
 
 ## Verification checklist
 

@@ -668,7 +668,75 @@ class TestF132UnevidencedMetadata:
                     # whose reach F115 deliberately widened. Anything else
                     # would mean scoped CVT content reaching a machine the
                     # filter is supposed to exclude.
+                    # A non-CVT machine may gain only rows that are UNSCOPED
+                    # by design — the drive-belt vocabulary row and the
+                    # regulator-index row. Both are unscoped precisely so
+                    # every machine can receive them, and neither is CVT
+                    # content. Anything else would mean scoped content
+                    # reaching a machine the filter is supposed to exclude.
+                    entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+                    unscoped = {e["title"] for e in entries
+                                if "applicability" not in e}
                     for t in a - b:
-                        assert t.startswith("Three unrelated components"), (
-                            f"{make} {model} {year} gained a scoped row: {t}")
+                        assert t in unscoped, (
+                            f"{make} {model} {year} gained a SCOPED row: {t}")
         assert lost_total == 0
+
+
+class TestTheHookOnlyRepairsASeededCorpus:
+    """Both sides of the anchor guard in `_insert_255B_new_rows`.
+
+    `init_db` runs migrations, so a hook with no guard fires on an empty
+    database and inserts this phase's rows before the loader writes
+    anything. These two tests exist because that defect shipped TWICE: the
+    first time it was caught by a round-trip test's arithmetic, the second
+    time the guard AND these tests were deleted together by a regex edit,
+    and nothing noticed until a full regression failed 134 tests across 17
+    phase files — every one of them a `test_loads` counting rows after
+    loading a single seed file.
+
+    An edit that removes a protection and its test in the same stroke
+    leaves nothing to notice. That is why the guard's comment names these
+    tests and these tests name the guard.
+    """
+
+    def test_the_hook_does_not_seed_a_fresh_database(self, tmp_path):
+        path = str(tmp_path / "fresh.db")
+        init_db(path)
+        with sqlite3.connect(path) as conn:
+            n = conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]
+        assert n == 0, (
+            f"init_db planted {n} known_issues rows on a fresh database — "
+            "the anchor guard in _insert_255B_new_rows is missing again")
+
+    def test_a_single_seed_file_loads_to_its_own_count(self, tmp_path):
+        """The shape of the 134 failures, pinned directly.
+
+        Every one of them was a phase test loading one seed file into a
+        fresh database and asserting the row count. If the hook seeds, they
+        all read one too many.
+        """
+        path = str(tmp_path / "one.db")
+        init_db(path)
+        one = SEED_DIR / "known_issues_suzuki_common.json"
+        expected = len(json.loads(one.read_text(encoding="utf-8")))
+        load_known_issues_file(one, path)
+        with sqlite3.connect(path) as conn:
+            got = conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]
+        assert got == expected, f"{one.name}: loaded {got}, file holds {expected}"
+
+    def test_the_hook_still_repairs_a_seeded_corpus(self, tmp_path):
+        """The other side: the guard must not make the hook a no-op."""
+        path = str(tmp_path / "seeded.db")
+        init_db(path)
+        for f in sorted(SEED_DIR.glob("known_issues_*.json")):
+            if f.name == CVT_SEED.name:
+                continue
+            load_known_issues_file(f, path)
+        load_known_issues_file(
+            TestTheSplitsAsASet()._pre_255B_seed(tmp_path), path)
+        with sqlite3.connect(path) as conn:
+            before = conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]
+            reconcile_255B_rows(conn)
+            after = conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]
+        assert after - before == len(_255B_ADDED), (before, after)
