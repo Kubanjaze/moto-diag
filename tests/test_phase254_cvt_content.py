@@ -131,8 +131,6 @@ TITLES_254 = frozenset({
 TITLES_ADDED_LATER = {
     "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record":
         "255B — the general half split out of 4615",
-    "A kickstart that works when the starter button does not is a brake-lever switch test":
-        "255B — the general half split out of 4611",
 }
 
 

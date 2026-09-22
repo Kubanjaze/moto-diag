@@ -64,10 +64,7 @@ MARQUES_ADDED_F115 = ("Harley-Davidson", "BMW", "LiveWire")
 
 #: The rows Phase 255B adds — the general half of each split.
 _255B_ADDED = (
-    "The regulator's two indexes contradict each other, and an empty recall "
-    "answer is not a clean record",
-    "A kickstart that works when the starter button does not is a "
-    "brake-lever switch test",
+    "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record",
 )
 
 
@@ -311,118 +308,6 @@ class TestRow4615Splits:
 
 
 T_4611_CVT = "Kickstart backup, and the scooter named Kick that has none"
-T_4611_GENERAL = ("A kickstart that works when the starter button does not is a "
-                  "brake-lever switch test")
-
-
-class TestRow4611Splits:
-    """A brake-lever switch is not a transmission.
-
-    4611 declared `{cvt}` over two claims: which machines in this class
-    have a kickstart, and what a working kickstart tells you when the
-    starter button does nothing. The second is about an interlock — a
-    lever and a switch — and was being withheld from every machine that
-    is not a CVT.
-    """
-
-    def test_the_cvt_half_keeps_its_id_title_and_scope(self, seeded):
-        with sqlite3.connect(seeded) as conn:
-            row = _row(conn, T_4611_CVT)
-        assert json.loads(row["applicability"]) == {"transmission": ["cvt"]}
-        assert row["source"] == "service-manual"
-
-    def test_the_general_half_is_unscoped(self, seeded):
-        with sqlite3.connect(seeded) as conn:
-            row = _row(conn, T_4611_GENERAL)
-        assert row["applicability"] is None
-
-    def test_4611_names_no_machine_it_excludes_before_or_after(self, seeded):
-        """Stated because the brief implied otherwise.
-
-        Two of this phase's three splits touch KNOWN_SELF_EXCLUDING, not
-        three. 4611 has no entry because no model in its junction resolves
-        to something its `{cvt}` declaration excludes — every one of them
-        is a CVT or resolves `unknown` without being named by the lookup
-        as something else.
-        """
-        with sqlite3.connect(seeded) as conn:
-            row = _row(conn, T_4611_CVT)
-            models = [m for (m,) in conn.execute(
-                "SELECT model FROM known_issue_models WHERE issue_id = ?", (row["id"],))]
-        assert models, "positive control: the junction is populated"
-        makes = [m.strip() for m in row["make"].split(",")]
-        offenders = []
-        for model in models:
-            res = next((resolve_transmission(mk, model) for mk in makes
-                        if resolve_transmission(mk, model).provenance == "model-sourced"),
-                       resolve_transmission(makes[0], model))
-            if not row_applies(row, "transmission", res.candidates):
-                offenders.append((model, res.provenance))
-        assert offenders == [], offenders
-
-    def test_unscoping_reaches_the_semi_auto_machines_it_was_withheld_from(self, seeded):
-        """The gain, measured rather than asserted.
-
-        The Super Cub C125 and the CT125 Hunter Cub are
-        `semi_auto_centrifugal` and both are kickstart machines. A `{cvt}`
-        declaration withheld the diagnostic from them; an unscoped row
-        does not.
-        """
-        with sqlite3.connect(seeded) as conn:
-            general = _row(conn, T_4611_GENERAL)
-            cvt_half = _row(conn, T_4611_CVT)
-
-        # `CT125` and not `CT125 Hunter Cub`: the canonical label of that
-        # lookup entry is absent from its own alias tuple, so the exact
-        # canonical string resolves `unknown` while every alias resolves.
-        # Filed as F131. Using the string that works keeps this test about
-        # the split rather than about that defect.
-        for model in ("Super Cub C125", "CT125"):
-            res = resolve_transmission("Honda", model)
-            assert res.provenance == "model-sourced", model
-            assert res.candidates == frozenset({"semi_auto_centrifugal"}), model
-            assert row_applies(general, "transmission", res.candidates) is True, model
-            assert row_applies(cvt_half, "transmission", res.candidates) is False, (
-                f"positive control: the CVT half IS still withheld from {model}")
-
-    def test_the_split_did_not_duplicate_the_diagnostic_prose(self, seeded):
-        needle = "not necessary to hold the brake lever"
-        with sqlite3.connect(seeded) as conn:
-            hits = [r[0] for r in conn.execute(
-                "SELECT title FROM known_issues WHERE description LIKE ?",
-                ("%" + needle + "%",))]
-        assert len(hits) == 1, f"{len(hits)} rows carry the quote: {hits}"
-        assert hits[0] == T_4611_GENERAL
-
-    def test_the_canonical_name_gap_is_recorded_not_silently_worked_around(self):
-        """F131, pinned so the workaround above cannot rot unnoticed.
-
-        Six of the 50 lookup entries have a canonical label that does not
-        resolve to their own entry. Five are compound display labels
-        nobody types as a model — `LX 125/150`, `GTS 300/310`,
-        `SH125i/SH150i`, `XC155 / SMAX`, `Jet 50/100`. The sixth,
-        `CT125 Hunter Cub`, is Honda's actual name for the machine, and a
-        rider who types it loses every scoped row to the fail-closed
-        filter. Not fixed here — 255B adds no lookup entries — but a
-        seventh, or a change in the six, should be noticed.
-        """
-        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
-        unresolved = {
-            e.canonical for e in TRANSMISSION_LOOKUP
-            if resolve_transmission(e.make, e.canonical).entry is not e
-        }
-        assert unresolved == {
-            "SH125i/SH150i", "CT125 Hunter Cub", "XC155 / SMAX",
-            "Jet 50/100", "LX 125/150", "GTS 300/310",
-        }, sorted(unresolved)
-
-    def test_the_general_half_names_its_documents(self, seeded):
-        """No quote, no row — and the quote needs a document behind it."""
-        with sqlite3.connect(seeded) as conn:
-            body = _row(conn, T_4611_GENERAL)["description"]
-        assert "Buddy 50 owner's manual" in body
-        assert "service station manual 633976" in body
-        assert "not necessary to hold the brake lever" in body
 
 
 class TestTheSplitsAsASet:
@@ -433,7 +318,6 @@ class TestTheSplitsAsASet:
         titles = {e["title"] for e in entries}
         for t in _255B_NEW_ROW_TITLES:
             assert t in titles, f"hook expects {t!r}, seed file does not have it"
-        assert set(_255B_NEW_ROW_TITLES) == {T_4615_GENERAL, T_4611_GENERAL}
 
     def test_no_row_in_the_file_declares_a_set_containing_manual(self):
         """Phase 255's rule, and 255B's first non-goal.
@@ -626,3 +510,54 @@ class TestF115TheVocabularyRowReachesTheOwnersItIsFor:
                                 purpose="prompt", db_path=seeded, record=False).rows
         assert title not in {r["title"] for r in kept}, (
             "the fix must not become a wildcard")
+
+
+class TestRow4611WasNotSplit:
+    """Phase 256 recorded a debt: split 4611's general half out. 255B tried,
+    shipped it, audited it, and backed it out. The debt is CLOSED as wrong,
+    not carried forward — the operator's decision of 2026-09-22.
+
+    **The split as conceived cannot work.** The general half asserted that a
+    kickstart and an electric starter do not share interlocks, so an engine
+    that kick-starts but will not start electrically indicts the brake-lever
+    switch. That is documented for one maker family and CONTRADICTED by two
+    of the machines the split half declared:
+
+    * Genuine's Buddy 50 owner's manual: *"It is not necessary to hold the
+      brake lever in when starting your vehicle with the kick-start method"*
+      — the interlock difference the diagnostic needs.
+    * Kymco's Agility 50/125 owner's manual and Super 8 50X owner's manual:
+      *"While squeezing the rear brake lever, kick down on the kick start
+      lever without rotating the throttle grip."* — the brake lever IS
+      required, so on a Kymco the comparison proves nothing.
+
+    The claim is maker-specific, and a row scoped by transmission cannot
+    carry a maker-specific claim. A Genuine-only interlock row is a note for
+    a future content phase, not a 255B debt.
+
+    **The split's own failure mode is the lesson**: the quote that refutes
+    generalising the diagnostic was left behind in the other half. Splitting
+    a row separates a claim from its counter-evidence unless someone checks
+    for that, and nobody did until an audit ran.
+    """
+
+    def test_4611_is_one_row_again(self):
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        hits = [e for e in entries if e["title"] == T_4611_CVT]
+        assert len(hits) == 1
+        assert hits[0]["applicability"] == {"transmission": ["cvt"]}
+
+        halves = [e for e in entries
+                  if "brake-lever switch test" in e["title"]
+                  or "starter button does not" in e["title"]]
+        assert halves == [], f"the 4611 split is back: {[h['title'][:60] for h in halves]}"
+
+    def test_both_the_claim_and_its_counter_evidence_live_in_that_one_row(self):
+        """The reason the split failed, pinned so a re-split has to face it."""
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        body = next(e for e in entries if e["title"] == T_4611_CVT)["description"]
+        assert "not necessary to hold the brake lever" in body, (
+            "the Genuine interlock quote — the diagnostic's evidence")
+        assert "squeezing the rear brake lever" in body, (
+            "the Kymco quote — the counter-evidence that stops it generalising. "
+            "If a future phase splits this row, these two must not be separated.")

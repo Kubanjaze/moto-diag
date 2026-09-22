@@ -167,6 +167,10 @@ MUST_KEEP = [
 #: Rows in the CVT seed file that declare NO applicability, and why each
 #: one must stay that way. A count would not say which row or why; this
 #: names both, and a new unscoped row has to be argued for here.
+#: Phase 255B briefly added a third entry here — the general half split out
+#: of 4611 — and then backed the split out entirely after an audit found its
+#: claim is maker-specific (see tests/test_phase255B_twist_and_go.py::
+#: TestRow4611WasNotSplit). Two entries, not three.
 UNSCOPED_CVT_ROWS = {
     "Three unrelated components are all called a drive belt, and a search for one returns the other two":
         "A fact about vocabulary, not about CVTs. Phase 255B additionally "
@@ -179,11 +183,6 @@ UNSCOPED_CVT_ROWS = {
         "behaves is true of every machine looked up in it; declaring "
         "{cvt} withheld it from every non-CVT machine and contradicted "
         "the SYM Symba the row named.",
-    "A kickstart that works when the starter button does not is a brake-lever switch test":
-        "Phase 255B split this out of 4611. The interlock is a brake lever "
-        "and a switch; nothing about it is a transmission property. "
-        "Unscoping reaches the Super Cub C125 and CT125 Hunter Cub, both "
-        "`semi_auto_centrifugal` and both kickstart-equipped.",
 }
 
 

@@ -121,10 +121,7 @@ _255B_MAKE_EDITS: tuple[tuple[str, str, str], ...] = (
 #: else -- this hook reads it from there rather than carrying a second copy
 #: that could drift from the one the loader uses.
 _255B_NEW_ROW_TITLES: tuple[str, ...] = (
-    "The regulator's two indexes contradict each other, and an empty recall "
-    "answer is not a clean record",
-    "A kickstart that works when the starter button does not is a "
-    "brake-lever switch test",
+    "The regulator's two indexes contradict each other, and an empty recall answer is not a clean record",
 )
 
 #: The seed file 255B's new rows live in.
