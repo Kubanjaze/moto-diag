@@ -218,3 +218,44 @@ motodiag costs report    # the spend ledger
 ## License
 
 See [LICENSE](LICENSE).
+
+## Working on this repo with Claude Code
+
+Two things about this repository's setup are not obvious, and both were
+learned by hitting them.
+
+### Start the session in this directory
+
+Skills and hooks under `.claude/` are discovered **from the directory the
+session was started in, at the moment it starts.** A session opened in the
+parent directory does not see them, and a skill added part-way through a
+session is not available until the next one.
+
+So: **open moto-diag sessions at the repository root.** No symlinks and no
+`.claude/` at the parent — both work, and both hide where the mechanism is
+actually reading from, which is how the next confusing hour begins.
+
+### The push guard, and what it does not promise
+
+`.claude/settings.json` registers a `PreToolUse` hook that runs
+`.claude/skills/closeout/pre_push_guard.sh`. It blocks a `git push` **that
+puts commits on `master`** when the current phase's close-out is incomplete,
+and it stays out of the way otherwise — phase-branch pushes, and every
+command that is not a push, pass untouched.
+
+**A committed hook only runs in a trusted workspace.** A fresh clone has no
+push guard until the workspace is trusted, and **a hook that silently does
+not run reads exactly like a hook that passed.** So the hook is not the
+guarantee. `tests/test_phase255D_closeout_contract.py` is: it travels with
+the repository, runs in any checkout, and calls the same function the guard
+calls. The hook only moves the feedback earlier — to the push, instead of
+the next full regression.
+
+### If a hook ever blocks your shell
+
+A blocking hook matching `Bash` blocks **every** `Bash` call, including the
+one that would remove it. Edit `.claude/settings.json` with the **Write
+tool**, which does not pass through a `Bash` matcher.
+
+Also: **hook config takes about a turn to load.** A guard tested in the same
+turn it was written looks broken. Wait a turn before changing anything.

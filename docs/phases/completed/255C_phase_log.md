@@ -461,3 +461,15 @@ containment directly, which is what its docstring always claimed it did.
 counts.
 
 **Commit.** See the close-out commit for this fix.
+
+### 2026-09-22 19:30 — Closing regression and final state
+
+Added at Phase 255D's close-out check, which found the phase log carried no
+line recording the final regression with both its commit and its count. The
+figures were in the commit messages and the `implementation.md` row but not
+here, which is the one place a reader looks for them.
+
+**Regression 8,091 passed / 0 failed / 0 skipped / 31:37 at `f279533`.**
+Merged at `090615b`. Schema 65 → 66. `COLLECTED_TEST_FLOOR` 7,999 → 8,091.
+Live junction 2,795 rows, marque-leading strings 0, `integrity_check: ok`.
+Backup `motodiag_pre255Cfix7_20260922_162542.db`, 5 retained.
