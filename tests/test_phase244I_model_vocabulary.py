@@ -67,6 +67,20 @@ def db(tmp_path):
     return path
 
 
+def _extracted(make, value, vocab):
+    """The models a value covers, without their marques.
+
+    Phase 255C deleted `md.extract_models`. These four assertions are about
+    244I's exclusion parsing, which is indifferent to the marque dimension,
+    so they project the pair form rather than change what they test. See the
+    note where `extract_models` used to live for why it was deleted rather
+    than kept: its plain-model branch returned the raw column value, which is
+    the defect 255C removes.
+    """
+    return sorted({model for _, model in md.extract_model_pairs(
+        make, value, vocab)})
+
+
 def _models_for(path, title):
     c = sqlite3.connect(path)
     try:
@@ -114,7 +128,7 @@ class TestAnExcludedModelIsNeverIndexed:
     ])
     def test_every_contrast_phrasing_truncates(self, db, value, forbidden):
         vocab = md.model_vocabulary(db)
-        got = md.extract_models("KTM", value, vocab)
+        got = _extracted("KTM", value, vocab)
         assert forbidden not in got, f"{forbidden!r} survived {value!r}"
 
     def test_fitment_unknown_yields_nothing_for_the_tail(self, db):
@@ -122,7 +136,7 @@ class TestAnExcludedModelIsNeverIndexed:
         at `not` is correct; a parser clever enough to read the double negative
         would get it wrong."""
         vocab = md.model_vocabulary(db)
-        got = md.extract_models("KTM", "390 Adventure on the fiche; 1190/1290 fitment unknown, not excluded", vocab)
+        got = _extracted("KTM", "390 Adventure on the fiche; 1190/1290 fitment unknown, not excluded", vocab)
         assert "1190" not in got and "1290" not in got
 
 
@@ -158,7 +172,7 @@ class TestTheVocabularyComesFromTheStringsThatBrokeTheColumn:
 
     def test_a_model_from_another_make_does_not_match(self, db):
         vocab = md.model_vocabulary(db)
-        assert md.extract_models("Ducati", "390 Adventure, 890 Adventure", vocab) == []
+        assert _extracted("Ducati", "390 Adventure, 890 Adventure", vocab) == []
 
     def test_known_models_returns_the_vocabulary_not_raw_column_values(self, db):
         got = set(vr.known_models("KTM", db))
@@ -210,7 +224,7 @@ class TestScopesAreNotModels:
 
     def test_a_scope_phrase_yields_nothing_even_with_a_populated_pool(self, db):
         vocab = md.model_vocabulary(db)
-        assert md.extract_models("KTM", "All 390 Adventure variants", vocab) == []
+        assert _extracted("KTM", "All 390 Adventure variants", vocab) == []
 
     def test_a_wildcard_row_still_reaches_the_make(self, db):
         _, rows = vr.known_issues_for_vehicle("Honda", "CBR600F4i", db_path=db, limit=50)

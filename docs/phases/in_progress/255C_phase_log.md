@@ -83,3 +83,141 @@ the pinned set.
 **Break-it.** Disabling the gate in `_model_tokens` fails 2 tests; disabling
 only the `extract_models` plain-model accept fails the whole-corpus control
 specifically — which is the test that found that bypass in the first place.
+
+### 2026-09-22 15:05 — The fork on single-token models, and a remedy for a non-problem
+
+**Issue.** Building the pair form raised a case v1.0 had not decided: a model
+name that is a single token also present as a marque or a common word. `ONE`
+is the specimen — LiveWire's model, and an English word.
+
+**Two branches drafted, both rejected.** Each kept or reintroduced the marque
+inside the model string, which decision 3 forbids. The operator's ruling was
+*neither branch* — the fork is an extraction problem, not a canonical-form
+one.
+
+**The mechanism tried.** Admit a single-token model only when it appears
+adjacent to its marque in the source string. Measured before committing, as
+instructed: it **lost 457 legitimate rows across 108 models.** `SR` 33 → 1,
+`DS` 28 → 1, `Experia` 26 → 0, `DSR` 26 → 2, `FX` 20 → 1, `Alpinista` and
+`Mulholland` 16 → 0 each, plus `Grom`, `Thruxton`, `Speedmaster`. Named and
+stopped, per the standing instruction not to reach for a list. Stripped out.
+
+**Why it was ever built.** The "32 false `One` rows" it was meant to remove
+do not exist. The count was read off the rows' **titles** rather than the
+**model columns** that produced the junction entries. Forty-two model columns
+literally contain `LiveWire ONE`, and a bare `One` was the correct canonical
+on every one of them. Recorded as D7 in the plan, and on the CLAUDE.md
+instance list as *measure what produced the number*.
+
+**Resolution.** Decision 3's plain rule, nothing added. `One` stays bare;
+`Zuma` collapses against `Zuma 125` by containment. `_stands_alone` and
+`_is_single_token` removed. The per-marque dedupe restructuring is kept
+regardless — under the pair form `dedupe_contained` must compare within one
+make, which is right whether or not a cross-make collision exists today.
+
+**Measured after.**
+
+| quantity | before | after |
+|---|---|---|
+| PCX 150 rows at tier `model` | 2 | **11** |
+| PCX 150 retrieved / kept | 166 | **166, unchanged** |
+| distinct `(issue, model)` | 2,433 | **2,397** (ceiling was 2,412) |
+| total `(issue, make, model)` | — | **2,795** (+398 = the marque dimension) |
+| PCX spellings in the junction | 6 | **1** |
+| Guard 2 violations, per marque | — | **0** |
+| strings the whole-corpus gate rejects | — | **55, exactly** |
+
+**Break-it.** Guard 1 and Guard 2 were each broken on purpose and seen to
+fail before the commit landed.
+
+### 2026-09-22 15:40 — Three more bug fixes, each a real defect in shipped code
+
+* **#2 — migration 065's `post_apply` wrote the 3-column junction at v65.**
+  It calls `rebuild_model_index`, which writes the pair form, but 065 runs
+  while the table is still 2-column. **Any database at 64 or 65 could not
+  migrate.** Fixed by reading `PRAGMA table_info` and writing to suit the
+  shape in front of it.
+* **#3 — the schema-56 degradation path crashed on placeholder count.** The
+  tier query gained a binding for the pair; the make-only fallback still
+  passed six parameters into five placeholders — *"Incorrect number of
+  bindings"*. Reachable on any database short of migration 057. Fixed with a
+  separate `make_only_params`.
+* **#4 — migration 065's rollback restored a string no rebuild produces.**
+  Its `INSERT OR IGNORE` carried the literal `'SYM Symba'`, the form the
+  model **column** spells; 255C canonicalises that machine to `'Symba'`. The
+  round trip landed one row short — 2,385 → 2,384, `(164, 'Symba')` lost and
+  `'SYM Symba'` left behind — and the 2,385 baseline was itself inflated by
+  the same spurious insert, so the *correct* figure on both sides is 2,384.
+  Fixed to the canonical form, reasoning left in the SQL. **Junction literals
+  are written in the form the extractor produces, never the form the column
+  spells.**
+
+**Process note.** 255C's first three commits were made on `master` rather
+than on a phase branch, against the convention every prior phase follows.
+Corrected before this commit: `phase-255C-junction-identity` was created at
+the tip and local `master` rewound to the pushed v1.0 at `297780a`. Nothing
+that had been pushed was discarded.
+
+### 2026-09-22 16:20 — The full regression found two the narrow run could not
+
+The four-file run was green and the first commit landed at `f11505b`. The
+full regression — 8,088 collected — came back **2 failed / 8,086 passed** in
+30m56s. Both failures were real, and neither was reachable from the files
+255C had touched. This is the case for running the whole thing.
+
+**Failure 1 — `test_phase245_damon_absence`: `'HyperSport' != 'Damon
+HyperSport'`.** A **17th** pinned literal, where D4's AST enumeration named
+sixteen. The pin was stale, not wrong-to-move: the caller asks for
+`("Damon", "HyperSport")` and was handed back a model carrying its own
+marque, because the vocabulary was built from Phase 241's column, which
+spells it `Damon HyperSport`. **The canonical a caller got back could not be
+typed by that caller** — 255C's defect in miniature. Moved to `HyperSport`;
+`corpus_hits == 0` still pins what the file exists to guard.
+
+**D4's enumeration missed one, and the reason is worth recording:** it
+enumerated consumers of canonical strings in `src/`. This pin is in a test,
+asserting a resolver return value. The enumeration's positive control proved
+it found what it looked for; it did not prove it looked in the right places.
+
+**Failure 2 — 209B's orphan pin: `knowledge/models.py::extract_models`.** The
+pair form superseded its one `src/` caller, leaving a public function
+referenced by nothing but its own tests — the F9 integration gap, exactly
+what that pin is for.
+
+**It was deleted rather than allowlisted, and measuring is what decided
+that.** `extract_models` and `extract_model_pairs` disagree on **3 of 1,003**
+live rows, and every disagreement is a marque-prefixed raw string:
+`Energica Experia`, `KTM 690 Duke (LC4 single)`, `KTM LC8 75-degree V-twin`.
+A superseded function still emitting the defect its replacement removes is a
+loaded gun for the next caller.
+
+**And chasing that disagreement found bug fix #5, which is the real one.**
+The three rows above are indexed by the pair form as **nothing at all**. The
+plain-model early accept tests **exact** vocabulary membership, and
+`Energica Experia` is not in a pool that now correctly holds `Experia`. So
+row 868 names the Experia and an Experia can never reach tier 0 on it —
+**255C's own defect, reintroduced on three rows by 255C.**
+
+The accept is removed, not patched. It skipped `covered_part` *and* the
+vocabulary and returned the raw column text, which is a second normaliser in
+a phase whose decision 1 says extraction has none.
+
+| | |
+|---|---|
+| rows unchanged | **985** |
+| rows changed | **18** |
+| rows lost | **0** |
+| rescued from being indexed as nothing | **3** |
+| distinct `(issue, model)` | 2,393 → **2,397** |
+| total `(issue, make, model)` | 2,791 → **2,795** (ceiling 2,412 on the distinct form still holds) |
+
+The fifteen others traded a raw string for the canonical:
+`S1000XR (2015-2019)` → `S 1000 XR`, `Road King (FLHR)` → `Road King`,
+`R-series (Paralever)` → `R-series`, and `R1150/R1200 (Integral ABS)` →
+**both** `R1150` and `R1200` — one row reaching two machines it always named.
+
+**Where the gate went.** It stays in `_model_tokens`, at vocabulary
+construction, which is where a name is first admitted and where the
+whole-corpus negative control measures. Nothing reaches `extract_model_pairs`
+that the vocabulary did not already admit, so the second gate had nothing
+left to gate.

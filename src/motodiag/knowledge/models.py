@@ -446,42 +446,19 @@ def canonicalise(marque: str, names: set[str]) -> set[str]:
     return set(out.values())
 
 
-def extract_models(
-    make: Optional[str],
-    value: Optional[str],
-    vocabulary: Optional[dict[str, set[str]]] = None,
-    db_path: Optional[str] = None,
-    marques: Optional[set[str]] = None,
-    european: Optional[set[str]] = None,
-) -> list[str]:
-    """Return the models a value states the entry covers.
-
-    Order matters: a scope yields nothing, a plain name settles immediately, and
-    only then is anything parsed — and only the covered part of it.
-
-    Phase 250C: the pool is the union over every marque the make string names,
-    not the entry for the raw string. The vocabulary is keyed by marque now, so
-    a row reading "Harley-Davidson, LiveWire" looks up both and gets both
-    marques' models; before the change it looked up that whole string, which
-    after the re-keying would be a key that exists nowhere.
-
-    `marques` and `european` come after `db_path` deliberately: four callers
-    pass `vocabulary` positionally as the third argument.
-    """
-    if not value or not value.strip() or is_scope(value):
-        return []
-    value = value.strip()
-    if is_plain_model(value):
-        # Second `is_plain_model` early-accept, and it needs the same gate as
-        # the one in `_model_tokens`. Two call sites short-circuit on "this is
-        # a single name rather than a list", and neither consulted any filter,
-        # so a short delimiter-free prose sentence was admitted whole by both.
-        return [value] if admits_as_model(value) else []
-
-    pairs = extract_model_pairs(make, value, vocabulary=vocabulary,
-                                db_path=db_path, marques=marques,
-                                european=european)
-    return sorted({model for _, model in pairs})
+# `extract_models` (244I, flat `list[str]`) was deleted in Phase 255C.
+#
+# The pair form superseded its one `src/` caller, and 209B's orphan pin caught
+# what was left: a public function referenced by nothing but its own tests.
+# Deleting rather than allowlisting it was not tidiness. Its plain-model
+# branch returned the RAW column value, so it disagreed with the pair form on
+# three live rows and every disagreement was a marque-prefixed string —
+# `Energica Experia`, `KTM 690 Duke (LC4 single)`, `KTM LC8 75-degree V-twin`
+# — which is the exact defect 255C exists to remove. A superseded function
+# that still emits the old defect is a loaded gun for the next caller.
+#
+# Tests that want models without marques project the pair form:
+#     sorted({model for _, model in extract_model_pairs(...)})
 
 
 def extract_model_pairs(
@@ -500,6 +477,28 @@ def extract_model_pairs(
     strings against one haystack, so pooling every marque's models first
     meant one marque's name could suppress another's. Containment is decided
     inside a marque now, which is the scope the pair form gives it.
+
+    **There is no `is_plain_model` early accept.** 244I short-circuited a
+    delimiter-free value straight into the index, which skipped `covered_part`
+    AND the vocabulary — so the raw column text became the junction entry.
+    Under 255C that is the defect itself: `Energica Experia` indexed with its
+    marque still attached, and `R-series (Paralever)` with a qualifier no
+    caller ever types. Decision 1 says extraction has no normaliser of its
+    own; an accept that returns the raw value IS a second normaliser, and the
+    worst kind, because it returns the input unchanged.
+
+    Every value now goes through the vocabulary, which is canonical. Measured
+    over the corpus: **985 rows unchanged, 18 changed, none lost.** Three of
+    the 18 were being indexed as NOTHING — the plain branch tested exact
+    membership, and `Energica Experia` is not in a pool that holds `Experia`.
+    The other 15 traded a raw string for the canonical: `S1000XR (2015-2019)`
+    → `S 1000 XR`, `Road King (FLHR)` → `Road King`, and
+    `R1150/R1200 (Integral ABS)` → **both** `R1150` and `R1200`, which is one
+    row reaching two machines it always named.
+
+    The gate stays where it belongs, at vocabulary construction in
+    `_model_tokens`. Nothing reaches this function that the vocabulary did
+    not already admit.
     """
     if not value or not value.strip() or is_scope(value):
         return []
@@ -507,14 +506,6 @@ def extract_model_pairs(
     vocab = model_vocabulary(db_path) if vocabulary is None else vocabulary
     if marques is None:
         marques = set(vocab)
-    if is_plain_model(value):
-        if not admits_as_model(value):
-            return []
-        owners = [mq for mq in extract_marques(make or "", vocabulary=marques,
-                                               european=european)
-                  if value in vocab.get(mq, set())]
-        return [(mq, value) for mq in owners]
-
     names = extract_marques(make or "", vocabulary=marques, european=european)
     head = covered_part(value)
     out: list[tuple[str, str]] = []

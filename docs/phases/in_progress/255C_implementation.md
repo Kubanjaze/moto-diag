@@ -454,8 +454,12 @@ collision exists in today's corpus. The identity-key fallback was not needed.
 | quantity | rows |
 |---|---|
 | OLD `(issue, model)`, pre-255C | 2,433 |
-| NEW distinct `(issue, model)` | **2,393** — below the ~2,412 ceiling set for the fork |
-| NEW total `(issue, make, model)` | **2,791** — +398 is the marque dimension, structural, not growth |
+| NEW distinct `(issue, model)` | **2,397** — below the ~2,412 ceiling set for the fork |
+| NEW total `(issue, make, model)` | **2,795** — +398 is the marque dimension, structural, not growth |
+
+Both figures moved by +4 after bug fix #5 below, which was found by the full
+regression after the first commit landed at 2,393 / 2,791. The ceiling still
+holds.
 
 ## Bug fixes found while building
 
@@ -485,3 +489,30 @@ fail first.
   with the reasoning in the SQL comment so the next canonicalisation finds
   it. **Junction literals are written in the form the extractor produces,
   never the form the column spells.**
+* **#5 — the plain-model early accept bypassed canonicalisation entirely, and
+  indexed three rows as nothing.** Found by the **full regression**, after the
+  four-file run and the first commit were both green — two failures the
+  narrow run could not have produced. 244I short-circuits a delimiter-free
+  value straight into the index, skipping `covered_part` *and* the
+  vocabulary, so the raw column text became the junction entry. Under 255C
+  that is the defect itself. Worse, the pair form's version of the accept
+  tested **exact** membership, and `Energica Experia` is not in a pool that
+  now holds `Experia` — so rows 868, 1290 and 1307 were indexed as
+  **nothing at all**, and an Experia could never reach tier 0 on the row that
+  names it. Decision 1 says extraction has no normaliser of its own; an
+  accept that returns the input unchanged is a second normaliser, and the
+  worst kind. Removed. Measured over the corpus: **985 rows unchanged, 18
+  changed, none lost** — three rescued from total loss, fifteen trading a raw
+  string for the canonical (`S1000XR (2015-2019)` → `S 1000 XR`,
+  `Road King (FLHR)` → `Road King`, and `R1150/R1200 (Integral ABS)` → both
+  `R1150` **and** `R1200`, one row reaching two machines it always named).
+  The gate stays at vocabulary construction, where a name is first admitted.
+* **#6 — `extract_models` was left orphaned, still emitting the old defect.**
+  209B's orphan pin caught it: the pair form superseded its one `src/`
+  caller, leaving a public function referenced by nothing but its own tests.
+  It was **deleted, not allowlisted** — its plain-model branch returned the
+  raw value, so it disagreed with the pair form on exactly the three rows
+  above, and every disagreement was a marque-prefixed string. A superseded
+  function that still emits the defect its replacement removes is a loaded
+  gun for the next caller. 244I's four assertions are about exclusion
+  parsing, so they project the pair form and test the same thing.

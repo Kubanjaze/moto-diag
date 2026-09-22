@@ -150,13 +150,20 @@ class TestThePositiveGate:
             assert b in present, f"group (B) string {b!r} was removed; it must not be"
 
     def test_the_plain_model_path_is_gated_too(self):
-        """Both `is_plain_model` early-accepts needed the gate.
+        """The surviving `is_plain_model` early-accept needs the gate.
 
         A short delimiter-free prose sentence takes that branch in BOTH
-        `_model_tokens` and `extract_models`, and neither consulted any
-        filter. "Piaggio Group marques only" is 26 characters with no comma,
-        and reached the junction whole through each of them. Fixing one left
-        the other open, and the whole-corpus control is what found it.
+        `_model_tokens` and the old `extract_models`, and neither consulted
+        any filter. "Piaggio Group marques only" is 26 characters with no
+        comma, and reached the junction whole through each of them. Fixing
+        one left the other open, and the whole-corpus control is what found
+        it.
+
+        The extraction-side accept was then deleted outright rather than
+        gated — it returned the RAW column value, so gating it only narrowed
+        which raw values it emitted. `_model_tokens` keeps its accept and its
+        gate, because vocabulary construction is where a name is first
+        admitted. This test guards the one that remains.
         """
         from motodiag.knowledge.models import _model_tokens, is_plain_model
         s = "Piaggio Group marques only"

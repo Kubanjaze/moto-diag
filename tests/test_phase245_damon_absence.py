@@ -108,11 +108,21 @@ class TestTheMarqueResolves:
         What has NOT changed is the absence this file exists to guard: no
         Damon seed file, no Damon row of its own, every row naming it
         model-generated and list-valued. The machine now reaches 241's HV
-        rules, which is all the corpus ever said about it."""
+        rules, which is all the corpus ever said about it.
+
+        Phase 255C moved this pin from `Damon HyperSport` to `HyperSport`.
+        The caller asks for `("Damon", "HyperSport")` and used to be handed
+        back a model carrying its own marque, because the vocabulary was
+        built from 241's column, which spells it `Damon HyperSport`. That is
+        the 255C defect in miniature: the canonical a caller gets back could
+        not be typed by the caller. Decision 3 — the model never carries the
+        marque — so the make resolves to `Damon` and the model to
+        `HyperSport`, and the pair is what the junction stores. The absence
+        this file guards is unchanged, which `corpus_hits == 0` still pins."""
         identity = resolve_vehicle("Damon", "HyperSport", db_path=db)
         assert identity.make.resolved == "Damon"
         assert identity.make.method == "exact"
-        assert identity.model.resolved == "Damon HyperSport"
+        assert identity.model.resolved == "HyperSport"
         assert identity.corpus_hits == 0, (
             "a resolved model must not imply Damon content: the hits come "
             "from the shared list-valued make, not from a Damon row"
