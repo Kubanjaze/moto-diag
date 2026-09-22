@@ -67,3 +67,14 @@ PYTHONUTF8=1 "$PY" -m pytest -k "$PHASE" -q 2>&1 | tail -3
 
 echo "=== 11. closeout contract (all seven artefacts) ==="
 "$PY" -B "$DIR/closeout_check.py" "$REPO" "$PHASE" && echo "  closeout complete"
+
+echo "=== 12. refuter checklist, if the phase ran one ==="
+if grep -q "^## Refuter pass" docs/phases/completed/${PHASE}_phase_log.md 2>/dev/null; then
+  "$PY" -B "$DIR/../refute/refute_check.py" \
+      "docs/phases/completed/${PHASE}_phase_log.md" && echo "  every row has a verdict, a quote and a page"
+else
+  echo "  no refuter block (the phase ran no pass, or did not record one)"
+fi
+
+echo "=== 13. findings resolve ==="
+"$PY" -B "$DIR/../finding/finding_check.py" "$REPO" && echo "  every cited F-number resolves"
