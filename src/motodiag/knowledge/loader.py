@@ -53,6 +53,66 @@ def backfill_row_applicability(conn) -> int:
     return changed
 
 
+#: Phase 255B. Row edits applied by IDENTITY rather than by re-seeding.
+#:
+#: `known_issues` has a UNIQUE index on
+#: `(COALESCE(make,''), COALESCE(model,''), title)` and `add_known_issue`
+#: upserts with `ON CONFLICT DO NOTHING`. So a seed edit that touches any of
+#: those three columns does NOT update the existing row on a re-seed -- the
+#: conflict never fires and a SECOND row is inserted. Demonstrated while
+#: planning 255B: re-seeding `known_issues_cvt.json` after dropping the Filly
+#: from 4609's model column took the corpus from 12 rows to 13, leaving the
+#: over-claiming row in place alongside its replacement. Filed as F129.
+#:
+#: Every edit below therefore matches the row's OLD identity and issues an
+#: UPDATE, so `known_issues.id` never changes -- the discipline migrations
+#: 062 and 063 used, and for the same reason.
+_255B_MODEL_EDITS: tuple[tuple[str, str, str, str], ...] = (
+    (
+        "A Kymco service manual gives four CVT figures twice",
+        "Kymco",
+        "Agility 50, Agility 125, People S 250, People 250, Filly LX 50",
+        "Agility 50, Agility 125, People S 250, People 250",
+    ),
+)
+
+
+def reconcile_255B_rows(conn) -> int:
+    """Phase 255B's row edits, applied to an already-seeded database.
+
+    Returns the number of `known_issues` rows changed.
+
+    `post_apply` hook for migration 065. The operator's database already
+    holds these rows, and a seed-file edit only reaches a database someone
+    re-seeds -- which, for an identity-column edit, would duplicate rather
+    than update (see `_255B_MODEL_EDITS`).
+
+    Both junctions are rebuilt at the end because `known_issue_makes` and
+    `known_issue_models` are derived from the `make` and `model` columns,
+    and this hook edits both. Rebuilding is authoritative rather than
+    incremental for the reason Phase 244F gives: the vocabulary is a
+    function of the whole corpus.
+
+    Idempotent. An edit whose old value is already gone matches nothing and
+    contributes nothing, so a re-run is a no-op rather than an error.
+    """
+    from motodiag.knowledge.marques import rebuild_make_index
+    from motodiag.knowledge.models import rebuild_model_index
+
+    changed = 0
+    for title_prefix, make, old_model, new_model in _255B_MODEL_EDITS:
+        cur = conn.execute(
+            "UPDATE known_issues SET model = ? "
+            " WHERE title LIKE ? AND make IS ? AND model IS ?",
+            (new_model, title_prefix + "%", make, old_model),
+        )
+        changed += cur.rowcount or 0
+
+    rebuild_make_index(conn)
+    rebuild_model_index(conn)
+    return changed
+
+
 def backfill_dtc_categories(conn) -> int:
     """Classify already-seeded DTC rows from the seed files. Returns rows changed.
 

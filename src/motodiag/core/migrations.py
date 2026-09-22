@@ -4559,6 +4559,46 @@ MIGRATIONS: list[Migration] = [
             PRAGMA foreign_keys=ON;
         """,
     ),
+    # Migration 065 — Phase 255B: the row edits Phase 256 deferred.
+    Migration(
+        version=65,
+        name="twist_and_go_row_edits",
+        description=(
+            "Phase 255B. Three debts Phase 256 recorded and deferred, plus "
+            "F115. All four are edits to rows that are already live, and "
+            "all four touch a column in the identity index -- which is why "
+            "they are applied here and not by re-seeding. "
+            "`known_issues` has a UNIQUE index on (make, model, title) and "
+            "`add_known_issue` upserts ON CONFLICT DO NOTHING, so a seed "
+            "edit to any of those three columns does not update the row: "
+            "the conflict never fires and a second row is inserted. "
+            "Measured while planning this phase -- re-seeding after "
+            "dropping `Filly LX 50` from 4609's model column took a "
+            "12-row corpus to 13, with the over-claiming row still there. "
+            "Filed as F129 and NOT fixed here. "
+            "Row 4609 drops `Filly LX 50`. The row named it because the "
+            "Kymco Agility service manual prints FILLY LX 50 in the "
+            "recycled header of 21 of its 183 pages -- evidence Phase 254 "
+            "examined and the transmission lookup rejected. Withdrawing "
+            "the claim does NOT give the Filly the row: the Filly is "
+            "absent from the lookup, resolves `unknown`, and the "
+            "fail-closed filter withholds a {cvt} row from it before and "
+            "after this migration. What changes is that the row stops "
+            "asserting a machine its document does not establish. "
+            "No lookup entry is added and no override is written. "
+            "The hook rebuilds both junctions because both are derived "
+            "from the columns this migration edits."
+        ),
+        upgrade_sql="",
+        post_apply="motodiag.knowledge.loader:reconcile_255B_rows",
+        rollback_sql="""
+            UPDATE known_issues
+               SET model = 'Agility 50, Agility 125, People S 250, People 250, Filly LX 50'
+             WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%'
+               AND make IS 'Kymco'
+               AND model IS 'Agility 50, Agility 125, People S 250, People 250';
+        """,
+    ),
 ]
 
 
