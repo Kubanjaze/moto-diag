@@ -221,3 +221,66 @@ construction, which is where a name is first admitted and where the
 whole-corpus negative control measures. Nothing reaches `extract_model_pairs`
 that the vocabulary did not already admit, so the second gate had nothing
 left to gate.
+
+### 2026-09-22 17:10 — Deploy verification, measured like for like
+
+**A correction to this log's first deploy report.** The before/after table
+posted at deploy took its "before" column by running **255C's code against
+the pre-255C schema**, which is the degradation path, not the old behaviour.
+Totals are unaffected by that — a total does not depend on tier — but every
+"before" tier-0 figure in it was understated, some to zero. A table that
+reads as like-for-like must be like-for-like, so it was measured again.
+
+**Method.** A detached worktree at `3a5fbdb` (the pre-255C master tip,
+`SCHEMA_VERSION = 65`) run against
+`~/backups/motodiag/motodiag_pre255C_20260922_150946.db`, the backup taken
+immediately before migration 066. Old code, old schema, old data. The "after"
+column is `709a335` against the live database at schema 66. Same sixteen
+machines, same query, same limit.
+
+| machine | total | tier `model` | resolved model |
+|---|---|---|---|
+| Honda PCX 150 | 166 → 166 | **2 → 11** | `PCX 150` |
+| Honda Gold Wing | 166 → 166 | 1 → 1 | `GL1800 Gold Wing` |
+| Honda Grom | 166 → 166 | 8 → 8 | `Grom` |
+| Kawasaki Ninja 400 | 141 → 141 | 7 → 7 | `Ninja 400` |
+| Yamaha R1 | 128 → 128 | 0 → 0 | *unresolved* |
+| Yamaha XS650 | 128 → 128 | 5 → 5 | `XS650` |
+| Yamaha Zuma 125 | 128 → 128 | **6 → 14** | `Zuma 125` |
+| Kymco Agility 50 | 17 → 17 | **1 → 9** | `Agility 50` |
+| Vespa LX 50 | 19 → 19 | **1 → 9** | `LX50` → **`LX 50`** |
+| Genuine Buddy 125 | 16 → 16 | **2 → 10** | `Buddy 125` |
+| Energica Experia | 43 → 43 | 26 → 27 | `Experia` |
+| BMW R1200 | 63 → 63 | 3 → 4 | `R1200` |
+| Harley-Davidson Road King | 166 → 166 | 1 → 4 | `Road King` |
+| LiveWire ONE | 47 → 47 | **0 → 42** | *unresolved* → **`One`** |
+| SYM Symba | 15 → 15 | 3 → 4 | `Symba` |
+| Damon HyperSport | 11 → 11 | 10 → 10 | `Damon HyperSport` → **`HyperSport`** |
+
+**Retrieved total changed on zero of sixteen machines.** Tier-0 rows summed
+over the sixteen go **76 → 165**. Nothing is added or removed; rows move up a
+tier, which is what 244I's monotonicity pin requires.
+
+**What the honest column changes about the story.**
+
+* **Grom 8 → 8 and Damon HyperSport 10 → 10 are FLAT.** The degradation-path
+  table showed both starting at 0, which read as a gain. Neither gained.
+* **Energica Experia is 26 → 27, not 0 → 27.** The single row is the bug fix
+  #5 rescue of row 868 — real, and exactly one row, not twenty-seven.
+* **LiveWire ONE 0 → 42 survives the honest measurement**, and is the largest
+  single gain in the table. `resolve_vehicle("LiveWire", "ONE")` returned
+  **nothing at all** before — the model did not resolve, so no row could
+  reach tier 0 by name. These are the 42 rows the "32 false `One` rows"
+  measurement would have destroyed.
+* **Two canonical forms are visible in the resolver itself**: `LX50` → `LX 50`
+  and `Damon HyperSport` → `HyperSport`, the latter being F136's pin, now
+  confirmed on live data rather than in a fixture.
+* **The four non-CVT controls are unchanged in both columns** — Gold Wing
+  1 → 1, Ninja 400 7 → 7, R1 0 → 0, XS650 5 → 5 — which the degradation-path
+  table could not have established, because it was not measuring the old
+  behaviour on any of them either.
+
+**The rule this is an instance of** is the one added to CLAUDE.md the same
+day: *measure what produced the number.* A "before" column produced by new
+code is not a number about the old code, however carefully the rest of the
+table is built.
