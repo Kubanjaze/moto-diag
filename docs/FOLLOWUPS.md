@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F134** (this file); the mobile
+At the time of writing the highest assigned is **F136** (this file); the mobile
 file's highest is **F114**.
 
 ---
@@ -895,3 +895,71 @@ in `ROADMAP_AUTHORITY.md`, matched in both repos.
 **One more instance of the same census error, for the record:** this phase
 wrote *"247 readable PDFs"* into `ROADMAP_AUTHORITY.md` — a **file** count
 quoted as a **document** count. The real figure is **172**, wrong by 75.
+
+---
+
+### F135
+
+**What the corpus means by a "model" — group (B) is a 244I semantics question, not a spelling one**
+
+Filed by Phase 255C, which explicitly left it undecided. 255C's positive
+extraction gate closes **group (A)** — fragments with no code token and a
+bare lowercase word — with a whole-corpus negative control that rejects
+exactly 55 strings. **Group (B) it does not touch, and cannot.**
+
+Group (B) is **28 strings that carry a code token but read as prose**, and
+**no shape rule separates them.** The pair that shows why:
+
+| string | verdict | why it is hard |
+|---|---|---|
+| `R1200 hexhead` | a real engine-family designation 244I's vocabulary is built to carry | number plus lowercase words |
+| `2020 service manual` | debris | number plus lowercase words |
+
+Phase 255C's bug fix #5 added a third specimen from the other direction:
+`KTM LC8 75-degree V-twin` is now indexed as a model for KTM, and it is an
+**engine**, not a machine. It reached the junction through the same
+ambiguity — it carries a code token, so no gate rejects it.
+
+Telling these apart requires deciding **what the corpus means by a model**:
+whether an engine family, a generation nickname, or a service-document title
+is a thing a caller can own. That is 244I semantics, and it belongs with the
+general-applicability axes (F117 cooling, F118 final drive) rather than with
+identity normalisation.
+
+**Group (B) strings stay exactly as they are today.** They are not debris and
+removing them would lose real designations; they are simply not decidable by
+shape.
+
+**Correction recorded with this entry:** Phase 255C's plan states this was
+"filed on the general-applicability ticket". It was not — the claim was
+written and the entry never created. Found at close-out by checking
+`FOLLOWUPS.md` for the ticket the plan cited. **A document saying a thing was
+filed is not the filing**, which is the same class as every census error this
+week: the claim was checked against what it sat next to rather than against
+what produced it.
+
+### F136
+
+**"Every consumer" was enumerated over `src/` and missed a canonical pinned in a test**
+
+Phase 255C's decision 5 required that the resolver change reach every
+consumer of canonical strings, with a positive control, **before v1.0**. D4
+did that: an AST-based enumeration, sixteen pinned literals named, a positive
+control proving the enumeration found what it looked for.
+
+The full regression found a **seventeenth**.
+`tests/test_phase245_damon_absence.py` asserts
+`identity.model.resolved == "Damon HyperSport"` — a canonical string, pinned
+in a test, asserting a resolver return value. D4 enumerated consumers in
+`src/`, so it could not have seen it.
+
+**The positive control proved the enumeration found what it looked for. It
+did not prove the enumeration looked in the right places.** That is the
+distinction between validation and verification, applied to a census rather
+than to a test, and it is the third time this week the same shape has landed.
+
+**What to change:** an enumeration whose subject is "every consumer of X"
+scopes over `src/` **and** `tests/`, because a pinned literal in a test is a
+consumer — it is the one that fails the build. Cheap to do: the sixteen were
+found by AST; the seventeenth would have been found by the same pass with
+`tests/` in its roots.
