@@ -48,3 +48,38 @@ does not reject and which the operator's decision of 2026-09-22 leaves as
 it is, filed on the general-applicability ticket. The fix is still strictly
 better: four bare numbers leave the model vocabulary, where they could match
 almost any text.
+
+### 2026-09-22 12:20 — The positive gate at extraction
+
+**What it replaces.** `CONTRAST`, `_PROSE_WORD`, `_NEGATED_PAREN` and
+`is_scope` are all blacklists, and every debris root cause found was a gap in
+one of them. Four gaps in a single pass is the signature of the wrong shape
+of check: **a blacklist admits everything nobody thought to name.**
+
+**The rule.** `admits_as_model` rejects a fragment that contains a bare
+lowercase word and carries no designation code. Parentheticals are stripped
+first, so `R-series (airhead)` is judged on `R-series`.
+
+**The bypass that the whole-corpus control found.** `is_plain_model` is used
+as an early-accept in **two** places — `_model_tokens` and `extract_models`
+— and neither consulted any filter. A short delimiter-free prose sentence
+took that branch in both. `"Piaggio Group marques only"` is 26 characters
+with no comma and reached the junction whole through each of them. Gating
+one left the other open, and only running the gate over all 705 strings
+showed it.
+
+**Result, on a copy of the live database:** junction 2,430 → 2,334 rows,
+705 → 650 distinct strings. The gate rejects **exactly** the 55 pinned
+group (A) strings and admits the other 650, every group (B) string included.
+
+**Two pins moved deliberately.** Phase 250C's `BEFORE` table asserts no
+marque's pool may shrink; Ducati 83 → 78 and Triumph 82 → 77, because what
+left was `dry clutch`, `wet slipper clutch`, `spring valves`, `rear radar`,
+`belt-driven cams`, `carburetted`, `injected`, `independent`, `related` and
+`per handbook`. Each is in `REJECTED_BY_THE_GATE`. First time that table has
+been lowered, and it stays a pin: a pool may only shrink by strings named in
+the pinned set.
+
+**Break-it.** Disabling the gate in `_model_tokens` fails 2 tests; disabling
+only the `extract_models` plain-model accept fails the whole-corpus control
+specifically — which is the test that found that bypass in the first place.

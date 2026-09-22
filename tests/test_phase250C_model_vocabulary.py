@@ -41,11 +41,24 @@ K = REPO_ROOT / "src" / "motodiag" / "knowledge" / "seed" / "knowledge"
 
 #: What each marque could resolve BEFORE this phase, measured on the shipped
 #: corpus. The point of the table is the direction: no marque may go down.
+#:
+#: **Ducati 83 -> 78 and Triumph 82 -> 77 at Phase 255C**, and this is the
+#: first time the table has been lowered. It is a deliberate edit with a
+#: reason, not a relaxed pin: 255C added a POSITIVE gate at extraction, and
+#: what left these two pools was prose that had been serving as model names.
+#: Ducati lost `dry clutch`, `wet slipper clutch`, `spring valves`,
+#: `rear radar` and `belt-driven cams`; Triumph lost `carburetted`,
+#: `injected`, `independent`, `related` and `per handbook`. Each is in
+#: `tests/support/model_gate_fixtures.py::REJECTED_BY_THE_GATE`, and the
+#: gate's negative control is the whole corpus rather than these cases.
+#:
+#: The pin still does its job in the direction that matters. A pool may only
+#: shrink by strings named in that pinned set; anything else fails here.
 BEFORE = {
-    "Aprilia": 31, "BMW": 51, "Damon": 0, "Ducati": 83, "Energica": 6,
+    "Aprilia": 31, "BMW": 51, "Damon": 0, "Ducati": 78, "Energica": 6,
     "Harley-Davidson": 13, "Honda": 27, "KTM": 62, "Kawasaki": 39,
     "LiveWire": 0, "MV Agusta": 30, "Moto Guzzi": 11, "Suzuki": 29,
-    "Triumph": 82, "Yamaha": 23, "Zero": 14,
+    "Triumph": 77, "Yamaha": 23, "Zero": 14,
 }
 
 #: The four marques whose every row carries a single marque. They were

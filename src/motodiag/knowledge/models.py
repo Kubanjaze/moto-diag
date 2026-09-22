@@ -72,6 +72,65 @@ _PROSE_WORD = re.compile(
 #: longer than this in the corpus is a description, not a name.
 _MAX_MODEL_LEN = 28
 
+#: A parenthetical qualifier is not part of the name being judged:
+#: "R-series (airhead)" is judged on "R-series".
+_PAREN_QUALIFIER = re.compile(r"\([^)]*\)")
+
+#: A designation code — the thing that makes a fragment a machine name rather
+#: than a description. "PCX", "CBR1000RR", "XC155", "LC8", "R1200", "1290",
+#: "2V", "V4".
+_CODE_TOKEN = re.compile(
+    r"\b(?:[A-Z]{1,4}\d{2,4}[A-Za-z]?|\d{3,4}|[0-9]V|V\d)\b"
+)
+
+
+def admits_as_model(value: str) -> bool:
+    """Whether a fragment is shaped like a model name. A POSITIVE gate.
+
+    Phase 255C. Every filter above this one is a blacklist — `CONTRAST`,
+    `_PROSE_WORD`, `_NEGATED_PAREN`, `is_scope` — and each defect found in
+    the junction was a gap in one of them. Four gaps were found in a single
+    pass, which is the signature of the wrong shape of check rather than of
+    four oversights: a blacklist admits everything nobody thought to name.
+
+    So this asks the other question. A fragment is admitted when **every
+    word looks like part of a designation** — capitalised, all-caps, numeric,
+    or alphanumeric-mixed — or when the fragment carries a designation code
+    even though some word is lowercase. A fragment with a bare lowercase word
+    and no code is prose.
+
+    Admitted, and these are the negative control: `PCX 150`, `F-series`,
+    `R-series (airhead)`, `250`, `125`, `Brutale 800`, `Super Cub C125`,
+    `390 Adventure R`, `XC155 / SMAX`, `S 1000 RR by type code`, and every
+    engine-family designation the corpus uses.
+
+    Rejected: `Electric motorcycles`, `as this corpus names them`, `BMS logs`,
+    `year`, `location`, `per handbook`, `one per make`.
+
+    **The boundary this does NOT draw**, recorded because it is the next
+    question and not this one: a fragment carrying a code token is admitted
+    whatever else it says, so `R1200 hexhead` (a designation 244I is built to
+    carry) and `2020 service manual` (debris) are both admitted. No shape
+    rule separates them — both are "number plus lowercase words" — and
+    telling them apart is a question about what the corpus means by a model.
+    Filed rather than guessed.
+    """
+    core = _PAREN_QUALIFIER.sub(" ", value or "").strip()
+    if not core:
+        return False
+    if _CODE_TOKEN.search(core):
+        return True
+    for word in (w for w in re.split(r"[\s/]+", core) if w):
+        token = word.strip(".,;:")
+        if not token:
+            continue
+        if token[0].isupper() or token[0].isdigit():
+            continue
+        if any(c.isdigit() for c in token) and any(c.isalpha() for c in token):
+            continue
+        return False
+    return True
+
 
 def _clean_token(part: str) -> str:
     """Normalise a split fragment into a candidate model name, or "".
@@ -195,7 +254,13 @@ def _model_tokens(model: str) -> list[str]:
     if is_scope(model):
         return []
     if is_plain_model(model):
-        return [model]
+        # The gate applies here too. `is_plain_model` only asks whether a
+        # value is a single name rather than a list, so a short prose
+        # sentence with no delimiter takes this branch and would bypass
+        # every downstream filter: "Piaggio Group marques only" is 26
+        # characters and carries no comma, and reached the junction as a
+        # model name that way.
+        return [model] if admits_as_model(model) else []
     held = _COMPOUND_SLASH.sub(
         lambda m: f"{m.group(1)}{_SLASH_HOLD}{m.group(2)}", covered_part(model))
     held = _THOUSANDS_COMMA.sub(_COMMA_HOLD, held)
@@ -203,7 +268,7 @@ def _model_tokens(model: str) -> list[str]:
     for part in re.split(r",|;|—|–|/| and ", held):
         part = _clean_token(
             part.replace(_SLASH_HOLD, "/").replace(_COMMA_HOLD, ","))
-        if part and not _PROSE_WORD.search(part):
+        if part and not _PROSE_WORD.search(part) and admits_as_model(part):
             out.append(part)
     return out
 
@@ -329,7 +394,11 @@ def extract_models(
         return []
     value = value.strip()
     if is_plain_model(value):
-        return [value]
+        # Second `is_plain_model` early-accept, and it needs the same gate as
+        # the one in `_model_tokens`. Two call sites short-circuit on "this is
+        # a single name rather than a list", and neither consulted any filter,
+        # so a short delimiter-free prose sentence was admitted whole by both.
+        return [value] if admits_as_model(value) else []
 
     vocab = model_vocabulary(db_path) if vocabulary is None else vocabulary
     if marques is None:
