@@ -4600,6 +4600,28 @@ MIGRATIONS: list[Migration] = [
             "KNOWN_SELF_EXCLUDING entry the operator ruled stays as-is "
             "under F119, and moving it would have resolved a pin this "
             "phase was not asked to touch. "
+            "Row 4611 splits on the same principle, without a column "
+            "edit. It declared {cvt} over a kickstart-availability survey "
+            "-- which machines in this class have one, carburetted versus "
+            "injected, and the Buddy Kick that is named for a kickstart it "
+            "does not have -- and over a diagnostic that is not about "
+            "transmissions at all: a brake-lever switch failure kills "
+            "electric start and leaves the kickstart working, so an engine "
+            "that kick-starts but will not start electrically is pointing "
+            "at the switch or the starter circuit rather than at itself. "
+            "The interlock is a lever and a switch. Unscoping that half "
+            "reaches the Honda Super Cub C125 and the CT125 Hunter Cub, "
+            "both `semi_auto_centrifugal` and both kickstart-equipped, "
+            "which a {cvt} declaration had been withholding it from. "
+            "Measured while writing this, and NOT fixed here: the CT125 "
+            "reaches it as `CT125`, `Trail 125` or `Hunter Cub` but not "
+            "as `CT125 Hunter Cub`, because that entry's canonical label "
+            "is missing from its own alias tuple. Six of the 50 lookup "
+            "entries have that shape; five are compound display labels "
+            "nobody types. Filed as F131. "
+            "4611 has no KNOWN_SELF_EXCLUDING entry before or after: its "
+            "junction names no machine it excludes. Two of this phase's "
+            "three splits touch that pin, not three. "
             "The hook rebuilds both junctions because both are derived "
             "from the columns this migration edits."
         ),
@@ -4617,6 +4639,23 @@ MIGRATIONS: list[Migration] = [
 
             UPDATE known_issues
                SET model = 'XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick'
+             WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
+
+            DELETE FROM known_issues
+             WHERE title = 'A kickstart that works when the starter button does not is a brake-lever switch test';
+
+            -- known_issue_models is DERIVED from the model column, and the
+            -- rollback path has no post_apply hook to rebuild it with. The
+            -- two UPDATEs above restore the columns; these restore the two
+            -- junction rows those columns lost. Without them a rollback
+            -- lands at 2,422 junction rows where it started at 2,424 --
+            -- measured, not assumed, on a copy of the live database.
+            INSERT OR IGNORE INTO known_issue_models (issue_id, model)
+            SELECT id, 'Filly LX 50' FROM known_issues
+             WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%';
+
+            INSERT OR IGNORE INTO known_issue_models (issue_id, model)
+            SELECT id, 'SYM Symba' FROM known_issues
              WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
         """,
     ),

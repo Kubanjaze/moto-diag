@@ -179,6 +179,11 @@ UNSCOPED_CVT_ROWS = {
         "behaves is true of every machine looked up in it; declaring "
         "{cvt} withheld it from every non-CVT machine and contradicted "
         "the SYM Symba the row named.",
+    "A kickstart that works when the starter button does not is a brake-lever switch test":
+        "Phase 255B split this out of 4611. The interlock is a brake lever "
+        "and a switch; nothing about it is a transmission property. "
+        "Unscoping reaches the Super Cub C125 and CT125 Hunter Cub, both "
+        "`semi_auto_centrifugal` and both kickstart-equipped.",
 }
 
 

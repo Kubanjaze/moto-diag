@@ -99,6 +99,8 @@ _255B_MODEL_EDITS: tuple[tuple[str, str, str, str], ...] = (
 _255B_NEW_ROW_TITLES: tuple[str, ...] = (
     "The regulator's two indexes contradict each other, and an empty recall "
     "answer is not a clean record",
+    "A kickstart that works when the starter button does not is a "
+    "brake-lever switch test",
 )
 
 #: The seed file 255B's new rows live in.

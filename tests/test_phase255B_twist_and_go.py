@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import json
 import sqlite3
+import pathlib
 from pathlib import Path
 
 import pytest
@@ -51,6 +52,14 @@ T_4609 = "A Kymco service manual gives four CVT figures twice"
 #: 255B. The difference is the whole of commit 1.
 MODEL_4609_AS_SHIPPED = "Agility 50, Agility 125, People S 250, People 250, Filly LX 50"
 MODEL_4609_AFTER = "Agility 50, Agility 125, People S 250, People 250"
+
+#: The rows Phase 255B adds — the general half of each split.
+_255B_ADDED = (
+    "The regulator's two indexes contradict each other, and an empty recall "
+    "answer is not a clean record",
+    "A kickstart that works when the starter button does not is a "
+    "brake-lever switch test",
+)
 
 
 @pytest.fixture(scope="module")
@@ -290,3 +299,221 @@ class TestRow4615Splits:
                 ("%" + needle + "%",))]
         assert len(hits) == 1, f"{len(hits)} rows carry the index prose: {hits}"
         assert hits[0] == T_4615_GENERAL
+
+
+T_4611_CVT = "Kickstart backup, and the scooter named Kick that has none"
+T_4611_GENERAL = ("A kickstart that works when the starter button does not is a "
+                  "brake-lever switch test")
+
+
+class TestRow4611Splits:
+    """A brake-lever switch is not a transmission.
+
+    4611 declared `{cvt}` over two claims: which machines in this class
+    have a kickstart, and what a working kickstart tells you when the
+    starter button does nothing. The second is about an interlock — a
+    lever and a switch — and was being withheld from every machine that
+    is not a CVT.
+    """
+
+    def test_the_cvt_half_keeps_its_id_title_and_scope(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4611_CVT)
+        assert json.loads(row["applicability"]) == {"transmission": ["cvt"]}
+        assert row["source"] == "service-manual"
+
+    def test_the_general_half_is_unscoped(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4611_GENERAL)
+        assert row["applicability"] is None
+
+    def test_4611_names_no_machine_it_excludes_before_or_after(self, seeded):
+        """Stated because the brief implied otherwise.
+
+        Two of this phase's three splits touch KNOWN_SELF_EXCLUDING, not
+        three. 4611 has no entry because no model in its junction resolves
+        to something its `{cvt}` declaration excludes — every one of them
+        is a CVT or resolves `unknown` without being named by the lookup
+        as something else.
+        """
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4611_CVT)
+            models = [m for (m,) in conn.execute(
+                "SELECT model FROM known_issue_models WHERE issue_id = ?", (row["id"],))]
+        assert models, "positive control: the junction is populated"
+        makes = [m.strip() for m in row["make"].split(",")]
+        offenders = []
+        for model in models:
+            res = next((resolve_transmission(mk, model) for mk in makes
+                        if resolve_transmission(mk, model).provenance == "model-sourced"),
+                       resolve_transmission(makes[0], model))
+            if not row_applies(row, "transmission", res.candidates):
+                offenders.append((model, res.provenance))
+        assert offenders == [], offenders
+
+    def test_unscoping_reaches_the_semi_auto_machines_it_was_withheld_from(self, seeded):
+        """The gain, measured rather than asserted.
+
+        The Super Cub C125 and the CT125 Hunter Cub are
+        `semi_auto_centrifugal` and both are kickstart machines. A `{cvt}`
+        declaration withheld the diagnostic from them; an unscoped row
+        does not.
+        """
+        with sqlite3.connect(seeded) as conn:
+            general = _row(conn, T_4611_GENERAL)
+            cvt_half = _row(conn, T_4611_CVT)
+
+        # `CT125` and not `CT125 Hunter Cub`: the canonical label of that
+        # lookup entry is absent from its own alias tuple, so the exact
+        # canonical string resolves `unknown` while every alias resolves.
+        # Filed as F131. Using the string that works keeps this test about
+        # the split rather than about that defect.
+        for model in ("Super Cub C125", "CT125"):
+            res = resolve_transmission("Honda", model)
+            assert res.provenance == "model-sourced", model
+            assert res.candidates == frozenset({"semi_auto_centrifugal"}), model
+            assert row_applies(general, "transmission", res.candidates) is True, model
+            assert row_applies(cvt_half, "transmission", res.candidates) is False, (
+                f"positive control: the CVT half IS still withheld from {model}")
+
+    def test_the_split_did_not_duplicate_the_diagnostic_prose(self, seeded):
+        needle = "not necessary to hold the brake lever"
+        with sqlite3.connect(seeded) as conn:
+            hits = [r[0] for r in conn.execute(
+                "SELECT title FROM known_issues WHERE description LIKE ?",
+                ("%" + needle + "%",))]
+        assert len(hits) == 1, f"{len(hits)} rows carry the quote: {hits}"
+        assert hits[0] == T_4611_GENERAL
+
+    def test_the_canonical_name_gap_is_recorded_not_silently_worked_around(self):
+        """F131, pinned so the workaround above cannot rot unnoticed.
+
+        Six of the 50 lookup entries have a canonical label that does not
+        resolve to their own entry. Five are compound display labels
+        nobody types as a model — `LX 125/150`, `GTS 300/310`,
+        `SH125i/SH150i`, `XC155 / SMAX`, `Jet 50/100`. The sixth,
+        `CT125 Hunter Cub`, is Honda's actual name for the machine, and a
+        rider who types it loses every scoped row to the fail-closed
+        filter. Not fixed here — 255B adds no lookup entries — but a
+        seventh, or a change in the six, should be noticed.
+        """
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        unresolved = {
+            e.canonical for e in TRANSMISSION_LOOKUP
+            if resolve_transmission(e.make, e.canonical).entry is not e
+        }
+        assert unresolved == {
+            "SH125i/SH150i", "CT125 Hunter Cub", "XC155 / SMAX",
+            "Jet 50/100", "LX 125/150", "GTS 300/310",
+        }, sorted(unresolved)
+
+    def test_the_general_half_names_its_documents(self, seeded):
+        """No quote, no row — and the quote needs a document behind it."""
+        with sqlite3.connect(seeded) as conn:
+            body = _row(conn, T_4611_GENERAL)["description"]
+        assert "Buddy 50 owner's manual" in body
+        assert "service station manual 633976" in body
+        assert "not necessary to hold the brake lever" in body
+
+
+class TestTheSplitsAsASet:
+    def test_both_new_rows_are_registered_with_the_migration_hook(self):
+        """The hook reads prose from the seed file and raises on drift."""
+        from motodiag.knowledge.loader import _255B_NEW_ROW_TITLES
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        titles = {e["title"] for e in entries}
+        for t in _255B_NEW_ROW_TITLES:
+            assert t in titles, f"hook expects {t!r}, seed file does not have it"
+        assert set(_255B_NEW_ROW_TITLES) == {T_4615_GENERAL, T_4611_GENERAL}
+
+    def test_no_row_in_the_file_declares_a_set_containing_manual(self):
+        """Phase 255's rule, and 255B's first non-goal.
+
+        Manual coverage is not sourced — the lookup holds one `manual`
+        entry — so a `{manual}` row would be withheld from every machine
+        that resolves `unknown`, which is most of them.
+        """
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        offenders = [e["title"][:50] for e in entries
+                     if "manual" in (e.get("applicability") or {}).get("transmission", [])]
+        assert offenders == [], offenders
+
+        declared = [e for e in entries if "applicability" in e]
+        assert declared, "positive control: rows in this file DO declare a set"
+
+    def _pre_255B_seed(self, tmp_path) -> pathlib.Path:
+        """The CVT seed file as it stood before this phase.
+
+        Reconstructed from the shipped file rather than from a rollback,
+        which is the whole point: a round trip measured against a state
+        the rollback itself produced cannot detect a rollback that is
+        wrong in the same way twice.
+        """
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        entries = [e for e in entries if e["title"] not in _255B_ADDED]
+        assert len(entries) == 12, len(entries)
+        for e in entries:
+            if e["title"].startswith(T_4609):
+                assert "Filly" not in e["model"]
+                e["model"] = MODEL_4609_AS_SHIPPED
+            if e["title"].startswith(T_4615_CVT):
+                assert "SYM Symba" not in e["model"]
+                e["model"] = e["model"].replace(
+                    "Kymco Like 150i", "Kymco Like 150i, SYM Symba")
+        out = tmp_path / "known_issues_cvt.json"
+        out.write_text(json.dumps(entries), encoding="utf-8")
+        return out
+
+    def test_migration_065_round_trips_including_the_derived_junctions(self, tmp_path):
+        """Apply then roll back must land exactly where it started.
+
+        Found by running it: the first cut of `rollback_sql` restored the
+        `model` columns and deleted the added rows, but nothing rebuilt
+        `known_issue_models` -- rollback has no `post_apply` hook, it is
+        pure SQL. The round trip landed at 2,422 junction rows having
+        started at 2,424, silently short the Filly and Symba entries.
+
+        The FIRST version of this test also passed with the fix removed,
+        because it took its baseline after a rollback and so compared a
+        buggy rollback against itself. The baseline is now built from a
+        reconstructed pre-255B seed file, independent of the rollback
+        path. Counts, not spot checks, because counts are what caught it.
+        """
+        from motodiag.core.migrations import (
+            apply_pending_migrations, rollback_migration,
+            get_migration_by_version, rollback_to_version,
+        )
+
+        path = str(tmp_path / "roundtrip.db")
+        init_db(path)
+        for f in sorted(SEED_DIR.glob("known_issues_*.json")):
+            if f.name == CVT_SEED.name:
+                continue
+            load_known_issues_file(f, path)
+        load_known_issues_file(self._pre_255B_seed(tmp_path), path)
+        rebuild_make_index_at(path)
+        rebuild_model_index_at(path)
+        rollback_to_version(64, db_path=path)
+
+        def counts():
+            with sqlite3.connect(path) as conn:
+                return tuple(conn.execute(q).fetchone()[0] for q in (
+                    "SELECT COUNT(*) FROM known_issues",
+                    "SELECT COUNT(*) FROM known_issue_models",
+                    "SELECT COUNT(*) FROM known_issue_makes",
+                ))
+
+        before = counts()
+        with sqlite3.connect(path) as conn:
+            assert conn.execute(
+                "SELECT COUNT(*) FROM known_issue_models WHERE model = 'Filly LX 50'"
+            ).fetchone()[0] == 1, "baseline must be the genuine pre-255B state"
+
+        apply_pending_migrations(db_path=path)
+        after = counts()
+        assert after[0] == before[0] + len(_255B_ADDED), (
+            f"migration should add {len(_255B_ADDED)} rows: {before} -> {after}")
+
+        rollback_migration(get_migration_by_version(65), db_path=path)
+        assert counts() == before, (
+            f"rollback is not a round trip: {before} -> {after} -> {counts()}")

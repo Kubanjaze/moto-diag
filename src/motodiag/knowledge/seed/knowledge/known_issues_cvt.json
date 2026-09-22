@@ -218,7 +218,7 @@
   },
   {
     "title": "Kickstart backup, and the scooter named Kick that has none",
-    "description": "A kickstart is a starting method that does not need the battery, and on the machines where it survives the makers say so plainly. Kymco's Agility 50 and 125 owner's manual lists the starting system as 'Electric starter motor (kick-start back-up)' and publishes the procedure: 'While squeezing the rear brake lever, kick down on the kick start lever without rotating the throttle grip' and 'Once the scooter is started, fold the kick start lever back to its original position.' Its troubleshooting checklist makes the reason explicit — 'Is the battery voltage low (you may need to kick start your scooter)?' Genuine states the purpose for the Buddy 50: 'The kick start lever can be used to start your engine as an alternative to the electric-start option', and lists the starting system as 'Electric and Manual Kick-Start'; the Urbano 125 manual says 'Electric and Kick'. The diagnostically useful difference is one Genuine states outright: 'It is not necessary to hold the brake lever in when starting your vehicle with the kick-start method', where the same manual's electric-start procedure requires pulling a brake lever and holding the button. A failed brake-lever switch therefore kills electric start and leaves the kickstart working — which turns the kickstart into a diagnostic test rather than only a fallback. Piaggio and Honda both fitted kickstarts to carburetted machines of the same era. Piaggio's Vespa LX 125-150 lists 'Start-up Electrical / Kick starter' and its troubleshooting says to 'Check the starter motor and the kick-starter unit'; Honda's CHF50 service manual titles a whole chapter 'KICKSTARTER/DRIVE PULLEY/DRIVEN PULLEY/CLUTCH'. What the documents do not support is the case a rider most wants answered. Across the manuals read for this entry, kickstart and fuel injection never appear on the same machine. Yamaha's injected Zuma 125 lists 'Starting system type Electric starter' and the word kick appears zero times in its 338 pages. Genuine's Buddy Kick is injected and lists 'Start-up Electric Start' — every occurrence of the word kick in that manual is the model's own name. The one maker statement linking a flat battery to the kickstart belongs to a carburetted machine. So whether an injected scooter can be kick-started on a flat battery has no answer in these documents, because the injected machines here have no kickstart to answer with.",
+    "description": "A kickstart is a starting method that does not need the battery, and on the machines where it survives the makers say so plainly. Kymco's Agility 50 and 125 owner's manual lists the starting system as 'Electric starter motor (kick-start back-up)' and publishes the procedure: 'While squeezing the rear brake lever, kick down on the kick start lever without rotating the throttle grip' and 'Once the scooter is started, fold the kick start lever back to its original position.' Its troubleshooting checklist makes the reason explicit — 'Is the battery voltage low (you may need to kick start your scooter)?' Genuine states the purpose for the Buddy 50: 'The kick start lever can be used to start your engine as an alternative to the electric-start option', and lists the starting system as 'Electric and Manual Kick-Start'; the Urbano 125 manual says 'Electric and Kick'. Piaggio and Honda both fitted kickstarts to carburetted machines of the same era. Piaggio's Vespa LX 125-150 lists 'Start-up Electrical / Kick starter', and Honda's CHF50 service manual titles a whole chapter 'KICKSTARTER/DRIVE PULLEY/DRIVEN PULLEY/CLUTCH'. What the documents do not support is the case a rider most wants answered. Across the manuals read for this entry, kickstart and fuel injection never appear on the same machine. Yamaha's injected Zuma 125 lists 'Starting system type Electric starter' and the word kick appears zero times in its 338 pages. Genuine's Buddy Kick is injected and lists 'Start-up Electric Start' — every occurrence of the word kick in that manual is the model's own name. The one maker statement linking a flat battery to the kickstart belongs to a carburetted machine. So whether an injected scooter can be kick-started on a flat battery has no answer in these documents, because the injected machines here have no kickstart to answer with. What a kickstart is worth diagnostically does not depend on the transmission and is not repeated here; the companion entry titled 'A kickstart that works when the starter button does not is a brake-lever switch test' carries it.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
     "year_start": 2002,
@@ -226,18 +226,17 @@
     "severity": "medium",
     "symptoms": [
       "kick start",
-      "flat battery scooter",
-      "scooter will not start",
       "kickstart procedure",
-      "start without battery",
-      "electric start not working"
+      "does my scooter have a kickstart",
+      "scooter kickstart injected",
+      "buddy kick kickstart"
     ],
     "dtc_codes": [],
     "causes": [
-      "A discharged battery leaving electric start unavailable",
-      "A failed brake-lever switch preventing electric start while kickstart still works"
+      "A model name containing the word kick on a machine with no kickstart",
+      "A sibling model fitted with a kickstart where the injected variant is not"
     ],
-    "fix_procedure": "1. On a machine fitted with a kickstart, use it as a diagnostic as well as a fallback: if the engine kick-starts but will not start electrically, suspect the brake-lever switch or the starter circuit rather than the engine. 2. On a Genuine, note that kickstart does not require the brake lever while electric start does. 3. Expect a kickstart on carburetted machines of this class and not on injected ones. 4. Do not assume a scooter has a kickstart because a sibling model does, or because the model name contains the word. 5. Fold the lever back after starting, as the makers instruct.",
+    "fix_procedure": "1. Expect a kickstart on carburetted machines of this class and not on injected ones. 2. Do not assume a scooter has a kickstart because a sibling model does, or because the model name contains the word. 3. Check the starting-system line of the machine's own owner's manual before promising a rider a kickstart. 4. Fold the lever back after starting, as the makers instruct.",
     "parts_needed": [],
     "estimated_hours": 0.5,
     "source": "service-manual",
@@ -391,5 +390,31 @@
     "parts_needed": [],
     "estimated_hours": 1.0,
     "source": "regulation"
+  },
+  {
+    "title": "A kickstart that works when the starter button does not is a brake-lever switch test",
+    "description": "On machines fitted with both a kickstart and an electric starter, the two start paths do not share the same interlocks, and that difference is a free diagnostic. Genuine's Buddy 50 owner's manual states it outright: 'It is not necessary to hold the brake lever in when starting your vehicle with the kick-start method', where the same owner's manual's electric-start procedure requires pulling a brake lever and holding the button. A failed brake-lever switch therefore kills electric start and leaves the kickstart working. So an engine that kick-starts but will not start electrically is pointing at the brake-lever switch or the starter circuit, not at the engine — the engine has just demonstrated that it runs. Piaggio's Vespa LX 125-150 service station manual 633976 sends the technician to 'Check the starter motor and the kick-starter unit' for the same reason: the two paths fail separately. Note which way the inference runs. A kickstart that works tells you the fault is in the electric-start path; a kickstart that does not work tells you very little on its own, because it shares the engine, fuel and ignition with every other start attempt. Nothing here is a property of the transmission. The interlock is a brake lever and a switch, and the test holds on any machine that has both start paths — the two manuals behind it happen to be scooter manuals because that is the corpus it was written from, and it is scoped by the machines those manuals cover rather than by what they drive through.",
+    "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
+    "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
+    "year_start": 2002,
+    "year_end": 2026,
+    "severity": "medium",
+    "symptoms": [
+      "electric start not working",
+      "starter button does nothing",
+      "starts with kickstart but not button",
+      "flat battery scooter",
+      "scooter will not start",
+      "start without battery"
+    ],
+    "dtc_codes": [],
+    "causes": [
+      "A failed brake-lever switch preventing electric start while kickstart still works",
+      "A discharged battery leaving electric start unavailable"
+    ],
+    "fix_procedure": "1. If the engine kick-starts but will not start electrically, suspect the brake-lever switch or the starter circuit rather than the engine. 2. Check both brake-lever switches, not one: either can be the interlock on a given machine. 3. On a Genuine, note that kickstart does not require the brake lever while electric start does, which is what makes the comparison valid there. 4. Do not read the reverse: a kickstart that also fails does not isolate anything, because it shares the engine, fuel and ignition with the electric path. 5. Confirm battery voltage before concluding a switch fault.",
+    "parts_needed": [],
+    "estimated_hours": 0.5,
+    "source": "service-manual"
   }
 ]
