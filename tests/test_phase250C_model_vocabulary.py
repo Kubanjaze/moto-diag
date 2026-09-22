@@ -41,11 +41,24 @@ K = REPO_ROOT / "src" / "motodiag" / "knowledge" / "seed" / "knowledge"
 
 #: What each marque could resolve BEFORE this phase, measured on the shipped
 #: corpus. The point of the table is the direction: no marque may go down.
+#:
+#: **Ducati 83 -> 78 and Triumph 82 -> 77 at Phase 255C**, and this is the
+#: first time the table has been lowered. It is a deliberate edit with a
+#: reason, not a relaxed pin: 255C added a POSITIVE gate at extraction, and
+#: what left these two pools was prose that had been serving as model names.
+#: Ducati lost `dry clutch`, `wet slipper clutch`, `spring valves`,
+#: `rear radar` and `belt-driven cams`; Triumph lost `carburetted`,
+#: `injected`, `independent`, `related` and `per handbook`. Each is in
+#: `tests/support/model_gate_fixtures.py::REJECTED_BY_THE_GATE`, and the
+#: gate's negative control is the whole corpus rather than these cases.
+#:
+#: The pin still does its job in the direction that matters. A pool may only
+#: shrink by strings named in that pinned set; anything else fails here.
 BEFORE = {
-    "Aprilia": 31, "BMW": 51, "Damon": 0, "Ducati": 83, "Energica": 6,
+    "Aprilia": 31, "BMW": 51, "Damon": 0, "Ducati": 78, "Energica": 6,
     "Harley-Davidson": 13, "Honda": 27, "KTM": 62, "Kawasaki": 39,
     "LiveWire": 0, "MV Agusta": 30, "Moto Guzzi": 11, "Suzuki": 29,
-    "Triumph": 82, "Yamaha": 23, "Zero": 14,
+    "Triumph": 72, "Yamaha": 23, "Zero": 14,
 }
 
 #: The four marques whose every row carries a single marque. They were
@@ -66,7 +79,32 @@ BEFORE = {
 #: Kawasaki and Suzuki still do the real work. Re-shaping this to test the
 #: property — that for a single-marque marque, marque-keying and raw-keying
 #: agree — is filed rather than done here, because 254 is a content row.
-UNCHANGED = {"Honda": 52, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 50}
+#:
+#: **Phase 255C moves this table DOWN, and it is a derivation change — the
+#: first one this control group has actually been asked to catch.** Honda
+#: 52 -> 46, Yamaha 50 -> 48, and the numbers reconcile against named
+#: merges rather than a count:
+#:
+#:   Honda   6 spelling groups  ['Honda PCX150', 'PCX 150', 'PCX150'],
+#:                              ['CHF50', 'Honda CHF50'],
+#:                              ['GROM125', 'Grom 125'],
+#:                              ['Honda Metropolitan', 'Metropolitan'],
+#:                              ['Honda PCX125', 'PCX125'],
+#:                              ['Trail 125', 'Trail125']
+#:   Yamaha  2 spelling groups  ['XMAX', 'Yamaha XMAX'],
+#:                              ['Yamaha Zuma 125', 'Zuma 125']
+#:
+#: Honda settles at 45, not 46: the intermediate figure came from a
+#: short-lived exception that kept the marque on single mixed-case
+#: names. Removing it let `Grom`/`Honda Grom` merge as well.
+#:
+#: Every one is the same machine written two ways, which is the defect 255C
+#: exists to end: the resolver returned a different canonical for each
+#: spelling, so a row reached tier 0 only from the spelling that indexed it.
+#: Kawasaki and Suzuki do not move, and that is the signal — they had no
+#: split spellings, so canonicalisation has nothing to merge for them and
+#: they still pin the derivation exactly.
+UNCHANGED = {"Honda": 45, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 48}
 
 #: Zero writes four designations with a slash in the name itself.
 COMPOUND = ("SR/F", "SR/S", "DSR/X")

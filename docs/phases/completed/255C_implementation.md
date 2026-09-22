@@ -242,7 +242,7 @@ WHEN ? IS NOT NULL AND EXISTS (
 | the vocabulary is scoped per make | The pair form makes this structural rather than conventional. |
 | a rebuild is idempotent | One canonical per row means the rebuild converges by construction. Pinned. |
 | the vocabulary is derived, not hardcoded | No alias table (decision 1). The canonical is a function of the corpus. |
-| debris filters | The two leaks are fixed **at extraction** in their own commit (D5). |
+| debris filters | Replaced by a **positive gate** at extraction (D5 amended). The blacklists are the defect, not an incomplete list. |
 | the migration backfills in its own transaction | 255C's migration does the same, `post_apply` → `rebuild_model_index`. |
 | monotonicity: knowing more never returns less | Measured in Step 0 — retrieved and kept both unchanged at 166; nine rows move **up** a tier. Pinned as a tier table (D6). |
 
@@ -282,17 +282,88 @@ control:** a planted `resolve_vehicle` caller was found, then removed.
   the table is diagnostics, and migrating a counter would assert a continuity
   the counter does not have.
 
-## D5. The two debris strings — own commit, fixed at extraction
+## D5 (amended 2026-09-22). A positive gate at extraction — and three wrong counts on the way to it
 
-`'Piaggio Group marques only'` and `'Triumph siblings that agree'` are prose
-fragments that pass 244I's single-character, bare-year and bracket filters.
-They are the **only** two junction strings whose leading marque is not their
-row's make, which is what makes them findable.
+**The original D5 said "the two debris strings". The number was wrong three
+times, each time from an under-scoped search, and each time it moved the
+same direction.**
 
-Fixed **at extraction**, never by editing the junction (decision 4). The
-positive control is a **planted prose fragment**: a fixture row whose model
-column carries a sentence of the same shape, asserted absent from the
-junction — and the guard is broken first to see it fail.
+| count | how it was reached | why it was wrong |
+|---|---|---|
+| **2** | Step 0 searched for junction strings whose **leading marque** was not their row's make | Seven of the next nine do not lead with a marque at all. Same family as the V-matic miss: the search could not find what it was looking for. |
+| **9** | shape heuristics over a hand-picked pattern list | Found what I thought to look for. A pattern list is a blacklist by another name. |
+| **85** | the gate run over **all 706** junction strings — the whole-corpus negative control the operator required | This is the first count defined by a **rule** rather than by a search, which is why it is the first one that holds. |
+
+**The lesson is the method, not the number.** Two searches and a heuristic
+each returned a subset and each read as complete. Defining the set by a rule
+and running it over the whole corpus is what ended it — and that is the same
+correction the evidence-discipline rule already demands for negative claims,
+arrived at from the other direction.
+
+### Why the decision-6 guard cannot close this class
+
+The guard as specified — *every junction string resolves to its own
+machine's canonical* — fires on **0 of the debris strings**, and it is
+circular. 244I derives `model_vocabulary` **from the model column**;
+extraction wrote `'000 km'` into the junction, so the vocabulary contains it,
+so `resolve_vehicle('Ducati', '000 km')` returns `'000 km'` by exact match.
+**Debris defines its own canonical.** A check satisfied by construction on
+exactly the strings it was written for.
+
+Guard 2 — *no two junction strings for one machine* — fires on 52 groups
+covering 105 strings and catches **0** debris, because each debris string
+appears once. **The two guards close one class between them: spelling-split.
+They are kept for that, and they do not close debris.**
+
+The common cause, and the reason the four blacklist fixes were dropped:
+**extraction has no positive gate.** `CONTRAST`, `_PROSE_WORD`,
+`_NEGATED_PAREN` and `is_scope` are all blacklists, and every root cause
+found was a gap in one. A fifth gap lands silently.
+
+### The gate
+
+**Rule: a token is rejected when it contains a bare lowercase word and
+carries no code token.** A bare lowercase word is one that does not begin
+with a capital or a digit and is not alphanumeric-mixed; parentheticals are
+stripped first, so `'R-series (airhead)'` is judged on `'R-series'`. A code
+token is `[A-Z]{1,4}\d{2,4}`, a bare 3–4 digit number, `nV`, or `Vn`.
+
+*(The operator's phrasing was "no code token, no capitalised proper noun".
+The rule above is what produces exactly the set below — `'Electric
+motorcycles'` carries a capital and is still debris — so the rule is stated
+here as implemented rather than as described.)*
+
+**What it admits:** every model designation the corpus uses — `PCX 150`,
+`F-series`, `R-series (airhead)`, `250`, `125`, `Brutale 800`,
+`Super Cub C125`, `390 Adventure R`, `XC155 / SMAX`, `S 1000 RR by type
+code` — and every group (B) string.
+
+**Scope: group (A) only — 57 strings, 105 junction rows.** Strings with no
+code token and no designation: `'Electric motorcycles'` (10 rows), `'as this
+corpus names them'` (5), `'Desmosedici Stradale engines'` (5), `'BMS logs'`
+(4), down to `'year'`, `'location'`, `'related'`, `'independent'`,
+`'per handbook'`.
+
+**Negative control is the whole corpus:** run over all 706 junction strings,
+the gate rejects **exactly** those 57 and admits the other 649, group (B)
+included. The 57 are pinned as a set; a fifty-eighth fails the suite naming
+the string, in `KNOWN_SELF_EXCLUDING` style.
+
+**Loud means a failing test, not a seed-load crash.** A gate cannot know
+whether a rejection is legitimate, so it never crashes the loader —
+operator's correction, 2026-09-22.
+
+### Group (B) is not 255C's
+
+28 strings carrying a code token but reading as prose. **No shape rule
+separates them**, and the pair that shows why is `'R1200 hexhead'` — an
+engine-family designation 244I's vocabulary is built to carry — against
+`'2020 service manual'` — debris. Both are "number plus lowercase words".
+
+Telling them apart is a question about **what the corpus means by a model**,
+which is 244I semantics, not spelling identity. **Filed on the
+general-applicability ticket with that pair as the example. Group (B)
+strings stay exactly as they are today.**
 
 ## D6. Verification
 
@@ -334,3 +405,114 @@ junction — and the guard is broken first to see it fail.
 | Dropping the marque merges two marques' machines | Step 0 measured **zero** cross-marque collisions across all 706 strings; the pair form makes the make structural, and Guard 1 pins it |
 | A pinned literal is missed and a test asserts an old canonical | D4's enumeration is AST-based with a positive control; the 16 are named and change in one commit |
 | The tier change is read as rows being lost | Retrieved and kept are unchanged at 166 and the tier table shows it; the twelve-row prompt change is the 244S cap re-cutting a re-ranked list |
+
+## D7 (2026-09-22). The fork on single-token models, and the measurement that invented it
+
+Building D2 surfaced a case the plan had not decided: **a model name that is a
+single token also present as a marque or a common word.** `ONE` is the
+specimen — LiveWire's model, and an English word.
+
+Two branches were drafted. Both were rejected by the operator, and correctly:
+each kept or reintroduced the marque inside the model string, which
+**decision 3 forbids** — the model never carries its marque. The fork was
+then reframed as an *extraction* problem rather than a canonical-form one,
+and a mechanism was tried: admit a single-token model only when it appears
+**adjacent to its marque** in the source string.
+
+It was measured before committing, as instructed. **It lost 457 legitimate
+rows across 108 models.** Named, not summarised: `SR` 33 → 1, `DS` 28 → 1,
+`Experia` 26 → 0, `DSR` 26 → 2, `FX` 20 → 1, `Alpinista` and `Mulholland`
+16 → 0 each, and `Grom`, `Thruxton` and `Speedmaster` among the rest. The
+operator's standing instruction — *name it and stop, don't reach for a list*
+— was followed, and adjacency was stripped out.
+
+### The measurement that invented the problem
+
+Adjacency was a remedy for a defect that did not exist. The "32 false `One`
+rows" that motivated it came from **reading the row TITLES instead of the
+model columns that produced them.** Forty-two model columns literally contain
+the string `LiveWire ONE`. A bare `One` in the junction was the correct
+canonical on all forty-two.
+
+This is the same class as every census error of the week — the 2 → 9 → 85
+debris counts, the 247-files-quoted-as-172-documents, the F132 table read off
+a corrupted database. The rule it yields is **check what produced the
+number, not what the number sits next to**, and it is on the CLAUDE.md
+instance list under that name.
+
+### Resolution
+
+Decision 3's plain rule stands with nothing added. `One` stays bare and is
+right on all 42 rows; `Zuma` collapses against `Zuma 125` by containment.
+`_stands_alone` and `_is_single_token` are gone. The **per-marque dedupe
+restructuring is kept** regardless: under the pair form `dedupe_contained`
+must compare within one make, which is correct whether or not a cross-make
+collision exists in today's corpus. The identity-key fallback was not needed.
+
+### The junction, decomposed
+
+| quantity | rows |
+|---|---|
+| OLD `(issue, model)`, pre-255C | 2,433 |
+| NEW distinct `(issue, model)` | **2,397** — below the ~2,412 ceiling set for the fork |
+| NEW total `(issue, make, model)` | **2,795** — +398 is the marque dimension, structural, not growth |
+
+Both figures moved by +4 after bug fix #5 below, which was found by the full
+regression after the first commit landed at 2,393 / 2,791. The ceiling still
+holds.
+
+## Bug fixes found while building
+
+Each is a real defect in shipped code, found by a test that was written to
+fail first.
+
+* **#1 — a comma inside a thousands separator split a figure in half.**
+  `_model_tokens` split on `,` before protecting `1,200`. Own commit
+  (`8fd680f`), dated entry, planted control.
+* **#2 — migration 065's `post_apply` wrote the 3-column junction at v65.**
+  `rebuild_model_index` writes the pair form, but 065 runs while the table is
+  still 2-column, so **any database at 64 or 65 could not migrate.** Fixed by
+  reading `PRAGMA table_info(known_issue_models)` and writing 2 or 3 columns
+  to suit the shape in front of it.
+* **#3 — the schema-56 degradation path crashed on placeholder count.**
+  The tier query gained a binding for the pair, but the make-only fallback
+  still passed six parameters into five placeholders: *"Incorrect number of
+  bindings"*. Fixed with a separate `make_only_params`. The path is reachable
+  on any database that has not taken migration 057, which is why it is a
+  crash and not a cosmetic mismatch.
+* **#4 — migration 065's rollback restored a junction string no rebuild
+  produces.** Its `INSERT OR IGNORE` carried the literal `'SYM Symba'`, the
+  form the *model column* spells. 255C canonicalises the junction, where that
+  machine is `'Symba'`. The round trip landed one row short — 2,385 → 2,384,
+  `(164, 'Symba')` lost and `'SYM Symba'` left behind — and the baseline was
+  itself inflated by the same spurious insert. Fixed to the canonical form,
+  with the reasoning in the SQL comment so the next canonicalisation finds
+  it. **Junction literals are written in the form the extractor produces,
+  never the form the column spells.**
+* **#5 — the plain-model early accept bypassed canonicalisation entirely, and
+  indexed three rows as nothing.** Found by the **full regression**, after the
+  four-file run and the first commit were both green — two failures the
+  narrow run could not have produced. 244I short-circuits a delimiter-free
+  value straight into the index, skipping `covered_part` *and* the
+  vocabulary, so the raw column text became the junction entry. Under 255C
+  that is the defect itself. Worse, the pair form's version of the accept
+  tested **exact** membership, and `Energica Experia` is not in a pool that
+  now holds `Experia` — so rows 868, 1290 and 1307 were indexed as
+  **nothing at all**, and an Experia could never reach tier 0 on the row that
+  names it. Decision 1 says extraction has no normaliser of its own; an
+  accept that returns the input unchanged is a second normaliser, and the
+  worst kind. Removed. Measured over the corpus: **985 rows unchanged, 18
+  changed, none lost** — three rescued from total loss, fifteen trading a raw
+  string for the canonical (`S1000XR (2015-2019)` → `S 1000 XR`,
+  `Road King (FLHR)` → `Road King`, and `R1150/R1200 (Integral ABS)` → both
+  `R1150` **and** `R1200`, one row reaching two machines it always named).
+  The gate stays at vocabulary construction, where a name is first admitted.
+* **#6 — `extract_models` was left orphaned, still emitting the old defect.**
+  209B's orphan pin caught it: the pair form superseded its one `src/`
+  caller, leaving a public function referenced by nothing but its own tests.
+  It was **deleted, not allowlisted** — its plain-model branch returned the
+  raw value, so it disagreed with the pair form on exactly the three rows
+  above, and every disagreement was a marque-prefixed string. A superseded
+  function that still emits the defect its replacement removes is a loaded
+  gun for the next caller. 244I's four assertions are about exclusion
+  parsing, so they project the pair form and test the same thing.

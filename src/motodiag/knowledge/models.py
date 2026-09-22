@@ -23,6 +23,7 @@ make-scoped, truncated at the first contrast marker, and silent when unsure.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 import sqlite3
 from typing import Optional
 
@@ -71,6 +72,65 @@ _PROSE_WORD = re.compile(
 #: "Harley-Davidson Road Glide Special" is 34 characters, but a model *value*
 #: longer than this in the corpus is a description, not a name.
 _MAX_MODEL_LEN = 28
+
+#: A parenthetical qualifier is not part of the name being judged:
+#: "R-series (airhead)" is judged on "R-series".
+_PAREN_QUALIFIER = re.compile(r"\([^)]*\)")
+
+#: A designation code — the thing that makes a fragment a machine name rather
+#: than a description. "PCX", "CBR1000RR", "XC155", "LC8", "R1200", "1290",
+#: "2V", "V4".
+_CODE_TOKEN = re.compile(
+    r"\b(?:[A-Z]{1,4}\d{2,4}[A-Za-z]?|\d{3,4}|[0-9]V|V\d)\b"
+)
+
+
+def admits_as_model(value: str) -> bool:
+    """Whether a fragment is shaped like a model name. A POSITIVE gate.
+
+    Phase 255C. Every filter above this one is a blacklist — `CONTRAST`,
+    `_PROSE_WORD`, `_NEGATED_PAREN`, `is_scope` — and each defect found in
+    the junction was a gap in one of them. Four gaps were found in a single
+    pass, which is the signature of the wrong shape of check rather than of
+    four oversights: a blacklist admits everything nobody thought to name.
+
+    So this asks the other question. A fragment is admitted when **every
+    word looks like part of a designation** — capitalised, all-caps, numeric,
+    or alphanumeric-mixed — or when the fragment carries a designation code
+    even though some word is lowercase. A fragment with a bare lowercase word
+    and no code is prose.
+
+    Admitted, and these are the negative control: `PCX 150`, `F-series`,
+    `R-series (airhead)`, `250`, `125`, `Brutale 800`, `Super Cub C125`,
+    `390 Adventure R`, `XC155 / SMAX`, `S 1000 RR by type code`, and every
+    engine-family designation the corpus uses.
+
+    Rejected: `Electric motorcycles`, `as this corpus names them`, `BMS logs`,
+    `year`, `location`, `per handbook`, `one per make`.
+
+    **The boundary this does NOT draw**, recorded because it is the next
+    question and not this one: a fragment carrying a code token is admitted
+    whatever else it says, so `R1200 hexhead` (a designation 244I is built to
+    carry) and `2020 service manual` (debris) are both admitted. No shape
+    rule separates them — both are "number plus lowercase words" — and
+    telling them apart is a question about what the corpus means by a model.
+    Filed rather than guessed.
+    """
+    core = _PAREN_QUALIFIER.sub(" ", value or "").strip()
+    if not core:
+        return False
+    if _CODE_TOKEN.search(core):
+        return True
+    for word in (w for w in re.split(r"[\s/]+", core) if w):
+        token = word.strip(".,;:")
+        if not token:
+            continue
+        if token[0].isupper() or token[0].isdigit():
+            continue
+        if any(c.isdigit() for c in token) and any(c.isalpha() for c in token):
+            continue
+        return False
+    return True
 
 
 def _clean_token(part: str) -> str:
@@ -178,19 +238,38 @@ _COMPOUND_SLASH = re.compile(
 #: Stands in for a slash that survives the split, and is put back after it.
 _SLASH_HOLD = "\x00"
 
+#: A comma BETWEEN DIGITS is a thousands separator, not a list delimiter.
+#: Splitting on it tore figures in half and fed both halves to the
+#: vocabulary: "Rivale at 12,000 km" became the tokens "Rivale at 12" and
+#: "000 km", and "Diavel V4 (V4 Granturismo, 60,000 km)" contributed
+#: "000 km" to three more rows. Held across the split the same way a
+#: compound slash is, and put back after.
+_THOUSANDS_COMMA = re.compile(r"(?<=\d),(?=\d)")
+
+#: Stands in for a thousands-separator comma across the split.
+_COMMA_HOLD = "\x01"
+
 
 def _model_tokens(model: str) -> list[str]:
     """The model names one value states, before any attribution."""
     if is_scope(model):
         return []
     if is_plain_model(model):
-        return [model]
+        # The gate applies here too. `is_plain_model` only asks whether a
+        # value is a single name rather than a list, so a short prose
+        # sentence with no delimiter takes this branch and would bypass
+        # every downstream filter: "Piaggio Group marques only" is 26
+        # characters and carries no comma, and reached the junction as a
+        # model name that way.
+        return [model] if admits_as_model(model) else []
     held = _COMPOUND_SLASH.sub(
         lambda m: f"{m.group(1)}{_SLASH_HOLD}{m.group(2)}", covered_part(model))
+    held = _THOUSANDS_COMMA.sub(_COMMA_HOLD, held)
     out: list[str] = []
     for part in re.split(r",|;|—|–|/| and ", held):
-        part = _clean_token(part.replace(_SLASH_HOLD, "/"))
-        if part and not _PROSE_WORD.search(part):
+        part = _clean_token(
+            part.replace(_SLASH_HOLD, "/").replace(_COMMA_HOLD, ","))
+        if part and not _PROSE_WORD.search(part) and admits_as_model(part):
             out.append(part)
     return out
 
@@ -287,51 +366,154 @@ def vocabulary_from_conn(conn) -> dict[str, set[str]]:
     # A marque name is not a model, wherever it came from.
     for marque, names in vocab.items():
         names -= {m for m in list(names) if m in marque_vocab}
-    return {marque: names for marque, names in vocab.items() if names}
+    return {marque: canonicalise(marque, names)
+            for marque, names in vocab.items() if names}
 
 
-def extract_models(
+def _identity_key(name: str) -> str:
+    """What makes two spellings the same machine. Case and separators only."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+@lru_cache(maxsize=4096)
+def _flex_pattern(name: str) -> "re.Pattern[str]":
+    """A pattern matching `name` however the text spaces or hyphenates it.
+
+    Phase 255C. The pool is canonical now — one spelling per machine — but a
+    row's model column is whatever its author typed. Matching the canonical
+    literally would find `PCX 150` in a column reading "PCX 150" and miss it
+    in one reading "Honda PCX150", which is the same defect one level along:
+    an identity that depends on spelling.
+
+    So separators between the runs of a designation are optional, and the
+    marque may precede it. Boundaries are still enforced on both ends, which
+    is what keeps `PCX` out of `PCX150` and `R` out of `R1200GS`.
+    """
+    runs = [r for r in re.findall(r"[A-Za-z]+|\d+", name) if r]
+    if not runs:
+        return re.compile(r"(?!x)x")
+    body = r"[\s\-/]*".join(re.escape(r) for r in runs)
+    return re.compile(r"(?<![A-Za-z0-9])" + body + r"(?![A-Za-z0-9])", re.I)
+
+
+def _flex_search(name: str, haystack: str) -> bool:
+    return bool(_flex_pattern(name).search(haystack))
+
+
+def canonicalise(marque: str, names: set[str]) -> set[str]:
+    """One canonical model string per machine, within a marque.
+
+    Phase 255C. The resolver has **no rule about marques** — its canonical
+    set is this vocabulary, which 244I derives from what row authors typed
+    into the model column. So one machine acquired several canonicals:
+    `Honda PCX150` and `PCX 150` are both `exact`, confidence 1.0, and which
+    one a caller gets depends on whether they typed the marque. The junction
+    then indexed under whichever spelling the row used, and a row reached
+    tier 0 only from the spelling that produced it.
+
+    Two operations, in order:
+
+    1. **The model never carries its own marque.** `Aprilia SR Max` under
+       Aprilia becomes `SR Max`. A leading marque is stripped only when it
+       names the marque whose pool this is — so `LiveWire One` under
+       Harley-Davidson keeps its `LiveWire`, which is a machine there and
+       not a redundant prefix.
+    2. **One spelling per identity.** Forms differing only in case or
+       separators collapse to one, preferring the spaced form because that
+       is how the corpus writes a designation when it writes it out:
+       `PCX 150` over `PCX150`.
+    """
+    out: dict[str, str] = {}
+    prefix = marque.lower() + " "
+    for name in names:
+        stripped = (name[len(prefix):].strip()
+                    if name.lower().startswith(prefix) else name)
+        if not stripped:
+            stripped = name
+        # The model NEVER carries its own marque — decision 3, unconditional.
+        # An earlier cut made an exception for single mixed-case words, to stop
+        # `LiveWire One` becoming `One`; it was wrong twice over. It kept the
+        # marque in the model string, and it created `Yamaha Zuma`, which then
+        # matched inside "Yamaha Zuma 125" without being contained by it, so
+        # `dedupe_contained` could not collapse the pair. The `One` problem is
+        # an EXTRACTION problem and is solved there, by marque adjacency.
+        key = _identity_key(stripped)
+        if not key or len(stripped) < 2:
+            continue
+        held = out.get(key)
+        if held is None or (stripped.count(" "), stripped) > (held.count(" "), held):
+            out[key] = stripped
+    return set(out.values())
+
+
+# `extract_models` (244I, flat `list[str]`) was deleted in Phase 255C.
+#
+# The pair form superseded its one `src/` caller, and 209B's orphan pin caught
+# what was left: a public function referenced by nothing but its own tests.
+# Deleting rather than allowlisting it was not tidiness. Its plain-model
+# branch returned the RAW column value, so it disagreed with the pair form on
+# three live rows and every disagreement was a marque-prefixed string —
+# `Energica Experia`, `KTM 690 Duke (LC4 single)`, `KTM LC8 75-degree V-twin`
+# — which is the exact defect 255C exists to remove. A superseded function
+# that still emits the old defect is a loaded gun for the next caller.
+#
+# Tests that want models without marques project the pair form:
+#     sorted({model for _, model in extract_model_pairs(...)})
+
+
+def extract_model_pairs(
     make: Optional[str],
     value: Optional[str],
     vocabulary: Optional[dict[str, set[str]]] = None,
     db_path: Optional[str] = None,
     marques: Optional[set[str]] = None,
     european: Optional[set[str]] = None,
-) -> list[str]:
-    """Return the models a value states the entry covers.
+) -> list[tuple[str, str]]:
+    """The (marque, model) pairs a value states the entry covers.
 
-    Order matters: a scope yields nothing, a plain name settles immediately, and
-    only then is anything parsed — and only the covered part of it.
+    Phase 255C. Two things this does that the flat form could not.
 
-    Phase 250C: the pool is the union over every marque the make string names,
-    not the entry for the raw string. The vocabulary is keyed by marque now, so
-    a row reading "Harley-Davidson, LiveWire" looks up both and gets both
-    marques' models; before the change it looked up that whole string, which
-    after the re-keying would be a key that exists nowhere.
+    **Dedupe is per marque.** `dedupe_contained` compares a flat list of
+    strings against one haystack, so pooling every marque's models first
+    meant one marque's name could suppress another's. Containment is decided
+    inside a marque now, which is the scope the pair form gives it.
 
-    `marques` and `european` come after `db_path` deliberately: four callers
-    pass `vocabulary` positionally as the third argument.
+    **There is no `is_plain_model` early accept.** 244I short-circuited a
+    delimiter-free value straight into the index, which skipped `covered_part`
+    AND the vocabulary — so the raw column text became the junction entry.
+    Under 255C that is the defect itself: `Energica Experia` indexed with its
+    marque still attached, and `R-series (Paralever)` with a qualifier no
+    caller ever types. Decision 1 says extraction has no normaliser of its
+    own; an accept that returns the raw value IS a second normaliser, and the
+    worst kind, because it returns the input unchanged.
+
+    Every value now goes through the vocabulary, which is canonical. Measured
+    over the corpus: **985 rows unchanged, 18 changed, none lost.** Three of
+    the 18 were being indexed as NOTHING — the plain branch tested exact
+    membership, and `Energica Experia` is not in a pool that holds `Experia`.
+    The other 15 traded a raw string for the canonical: `S1000XR (2015-2019)`
+    → `S 1000 XR`, `Road King (FLHR)` → `Road King`, and
+    `R1150/R1200 (Integral ABS)` → **both** `R1150` and `R1200`, which is one
+    row reaching two machines it always named.
+
+    The gate stays where it belongs, at vocabulary construction in
+    `_model_tokens`. Nothing reaches this function that the vocabulary did
+    not already admit.
     """
     if not value or not value.strip() or is_scope(value):
         return []
     value = value.strip()
-    if is_plain_model(value):
-        return [value]
-
     vocab = model_vocabulary(db_path) if vocabulary is None else vocabulary
     if marques is None:
         marques = set(vocab)
     names = extract_marques(make or "", vocabulary=marques, european=european)
-    pool: set[str] = set()
-    for marque in names:
-        pool |= vocab.get(marque, set())
-    if not pool:
-        return []
-
     head = covered_part(value)
-    hits = [m for m in pool if re.search(
-        r"(?<![A-Za-z0-9])" + re.escape(m) + r"(?![A-Za-z0-9])", head)]
-    return dedupe_contained(hits, head)
+    out: list[tuple[str, str]] = []
+    for marque in names:
+        hits = [m for m in vocab.get(marque, set()) if _flex_search(m, head)]
+        for model in dedupe_contained(hits, head):
+            out.append((marque, model))
+    return out
 
 
 def index_models_for_issue(conn, issue_id: int, make: Optional[str],
@@ -352,15 +534,43 @@ def index_models_for_issue(conn, issue_id: int, make: Optional[str],
         marques = marque_vocabulary_from_conn(conn)
     if european is None:
         european = european_marques(vocabulary=marques)
-    models = extract_models(make, model_value, vocabulary=vocabulary,
-                            marques=marques, european=european)
-    for model in models:
-        conn.execute(
-            "INSERT INTO known_issue_models (issue_id, model) VALUES (?, ?) "
-            "ON CONFLICT DO NOTHING",
-            (issue_id, model),
-        )
-    return len(models)
+    pairs = extract_model_pairs(make, model_value, vocabulary=vocabulary,
+                                marques=marques, european=european)
+    # Phase 255C: the junction carries the MARQUE the model belongs to, not
+    # just the model. Phase 250C already works this out -- its three-rung
+    # ladder attributes every token to a marque and handles the case where a
+    # marque is also a model line ("LiveWire is a marque AND a
+    # Harley-Davidson machine") -- and the junction write then threw that
+    # attribution away. This carries it through; nothing new is derived.
+    # The junction gained its `make` column at migration 066, and this runs as
+    # the post_apply of 056 and 065 as well -- on a database that has not
+    # reached 066 yet. Writing three columns into the two-column table failed
+    # the 64 -> 65 -> 66 path outright, which is the ordering the operator's
+    # own database is on. Shape is read, not assumed.
+    has_make = any(
+        r[1] == "make"
+        for r in conn.execute("PRAGMA table_info(known_issue_models)")
+    )
+    written = 0
+    seen: set = set()
+    for owner, model in pairs:
+        if has_make:
+            conn.execute(
+                "INSERT INTO known_issue_models (issue_id, make, model) "
+                "VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                (issue_id, owner, model),
+            )
+        else:
+            if model in seen:
+                continue
+            seen.add(model)
+            conn.execute(
+                "INSERT INTO known_issue_models (issue_id, model) VALUES (?, ?) "
+                "ON CONFLICT DO NOTHING",
+                (issue_id, model),
+            )
+        written += 1
+    return written
 
 
 def rebuild_model_index(conn) -> int:

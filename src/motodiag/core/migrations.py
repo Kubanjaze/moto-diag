@@ -4684,12 +4684,23 @@ MIGRATIONS: list[Migration] = [
             -- junction rows those columns lost. Without them a rollback
             -- lands at 2,422 junction rows where it started at 2,424 --
             -- measured, not assumed, on a copy of the live database.
+            --
+            -- These literals are junction values, so they are written in
+            -- whatever form the extractor currently produces -- NOT in the
+            -- form the model column spells. Phase 255C canonicalised the
+            -- junction: the model never carries its marque, so the column's
+            -- `SYM Symba` indexes as `Symba`. Restoring the pre-255C literal
+            -- here put a string in the junction that no rebuild would ever
+            -- produce, and the round trip landed one row short (2,385 ->
+            -- 2,384) with `(164, 'Symba')` lost and `SYM Symba` left behind.
+            -- `Filly LX 50` needs no change: its marque is Kymco, which the
+            -- column does not prefix, so canonicalisation leaves it alone.
             INSERT OR IGNORE INTO known_issue_models (issue_id, model)
             SELECT id, 'Filly LX 50' FROM known_issues
              WHERE title LIKE 'A Kymco service manual gives four CVT figures twice%';
 
             INSERT OR IGNORE INTO known_issue_models (issue_id, model)
-            SELECT id, 'SYM Symba' FROM known_issues
+            SELECT id, 'Symba' FROM known_issues
              WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
 
             -- F132, reversed: the unevidenced year windows and the repair
@@ -4745,6 +4756,84 @@ MIGRATIONS: list[Migration] = [
                AND issue_id IN (
                    SELECT id FROM known_issues
                     WHERE title LIKE 'Three unrelated components are all called a drive belt%');
+        """,
+    ),
+    # Migration 066 — Phase 255C: the junction carries the marque.
+    Migration(
+        version=66,
+        name="model_junction_carries_marque",
+        description=(
+            "Phase 255C. A row that NAMES a machine could not reach tier 0 "
+            "for it, because the tier query compares the resolved model "
+            "against `known_issue_models.model` by equality and the resolver "
+            "returned TWO canonical forms for one machine -- 'PCX 150' when "
+            "the caller typed the model alone, 'Honda PCX150' when they "
+            "typed the marque, both `exact`, both confidence 1.0. The "
+            "junction held seven strings for the PCX family. One machine, "
+            "two disjoint tier-0 sets, chosen by how somebody typed. "
+            "Measured: 50 of 706 distinct junction strings were one machine "
+            "under several spellings, and 48 of those 50 resolved to more "
+            "than one canonical. "
+            "The resolver has no rule about marques -- `known_models` returns "
+            "244I's vocabulary, derived from what row authors typed -- so "
+            "there was no design to preserve, only an inconsistency. "
+            "Identity is now a (make, model) PAIR. The junction gains the "
+            "make, populated from Phase 250C's attribution ladder, which "
+            "already resolves which marque owns a token and already handles "
+            "a marque that is also a model line. 250C computed it and the "
+            "junction write discarded it; this carries it through. "
+            "A table rebuild rather than ALTER, because the UNIQUE "
+            "constraint moves from (issue_id, model) to "
+            "(issue_id, make, model) and SQLite cannot alter a constraint. "
+            "The `model` COLUMN on known_issues is untouched -- 244I pins "
+            "that it is never rewritten, and the junction is derived beside "
+            "it as it always was."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issue_models_rebuild_066 (
+                issue_id INTEGER NOT NULL,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                UNIQUE (issue_id, make, model),
+                FOREIGN KEY (issue_id) REFERENCES known_issues(id) ON DELETE CASCADE
+            );
+
+            DROP INDEX IF EXISTS idx_known_issue_models_model;
+            DROP TABLE known_issue_models;
+            ALTER TABLE known_issue_models_rebuild_066 RENAME TO known_issue_models;
+
+            CREATE INDEX idx_known_issue_models_model
+                ON known_issue_models(model);
+            CREATE INDEX idx_known_issue_models_pair
+                ON known_issue_models(make, model);
+
+            PRAGMA foreign_keys=ON;
+        """,
+        post_apply="motodiag.knowledge.models:rebuild_model_index",
+        rollback_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE known_issue_models_rollback_066 (
+                issue_id INTEGER NOT NULL,
+                model TEXT NOT NULL,
+                UNIQUE (issue_id, model),
+                FOREIGN KEY (issue_id) REFERENCES known_issues(id) ON DELETE CASCADE
+            );
+
+            INSERT OR IGNORE INTO known_issue_models_rollback_066 (issue_id, model)
+            SELECT issue_id, model FROM known_issue_models;
+
+            DROP INDEX IF EXISTS idx_known_issue_models_model;
+            DROP INDEX IF EXISTS idx_known_issue_models_pair;
+            DROP TABLE known_issue_models;
+            ALTER TABLE known_issue_models_rollback_066 RENAME TO known_issue_models;
+
+            CREATE INDEX idx_known_issue_models_model
+                ON known_issue_models(model);
+
+            PRAGMA foreign_keys=ON;
         """,
     ),
 ]

@@ -46,11 +46,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 255B collected 7,997 at `1fbcdaa`; this file's own two tests make 7,999.
 #: Phase 256 closed at 7,964.
 #:
+#: 8088 (Phase 255C, 2026-09-22) — +89, all in
+#: `test_phase255C_junction_identity.py`: the thousands-separator bug fix,
+#: the positive gate and its whole-corpus negative control, and the
+#: one-canonical-per-machine work — the six-spelling PCX control, Guard 1,
+#: Guard 2 per marque, the tier table and the schema-56 degradation path.
+#:
 #: Raise it in the commit that adds the tests. Lower it only deliberately,
 #: with the reason in the commit message — a superseded module taking its
 #: tests with it is a legitimate reason; a refactor that "tidied" a file is
 #: not.
-COLLECTED_TEST_FLOOR = 7999
+COLLECTED_TEST_FLOOR = 8088
 
 
 def _collected_count() -> int:

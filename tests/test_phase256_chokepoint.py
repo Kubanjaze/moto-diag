@@ -385,6 +385,13 @@ _KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
 #: anything to describe. The Filly's retrieval is UNCHANGED: it is absent
 #: from the transmission lookup, resolves `unknown`, and a {cvt} row is
 #: withheld from it before and after. No lookup entry, no override.
+#: **Phase 255C renamed both remaining keys and changed neither machine.**
+#: `Piaggio Beverly 250` -> `Beverly 250` and `Vespa 946` -> `946`, because
+#: 255C made the model a bare name and put the marque in the junction's own
+#: column. Same two machines, same F119 reason, same unobtainable documents.
+#: The keys track the canonical form, so a form change renames them; what
+#: must never change silently is the SET, and it has not.
+#:
 #: Entries are deleted when they resolve rather than re-worded, because
 #: the guard asserts set equality against what it finds.
 #:
@@ -408,10 +415,10 @@ _KEY_REGULATOR = "What the regulator record shows for scooter CVTs — o"
 #: the unscoped half would have resolved a pin 255B was not asked to
 #: touch.
 KNOWN_SELF_EXCLUDING = {
-    (_KEY_PIAGGIO, "Piaggio Beverly 250"):
+    (_KEY_PIAGGIO, "Beverly 250"):
         "Named by the row, no document on disk. **Stays as-is** — "
         "F119 closed-unobtainable, operator's decision 2026-09-21.",
-    (_KEY_REGULATOR, "Vespa 946"):
+    (_KEY_REGULATOR, "946"):
         "Named by the row, no document on disk. **Stays as-is** — "
         "F119 closed-unobtainable, operator's decision 2026-09-21.",
 }
