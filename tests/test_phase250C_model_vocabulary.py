@@ -58,7 +58,7 @@ BEFORE = {
     "Aprilia": 31, "BMW": 51, "Damon": 0, "Ducati": 78, "Energica": 6,
     "Harley-Davidson": 13, "Honda": 27, "KTM": 62, "Kawasaki": 39,
     "LiveWire": 0, "MV Agusta": 30, "Moto Guzzi": 11, "Suzuki": 29,
-    "Triumph": 77, "Yamaha": 23, "Zero": 14,
+    "Triumph": 72, "Yamaha": 23, "Zero": 14,
 }
 
 #: The four marques whose every row carries a single marque. They were
@@ -79,7 +79,32 @@ BEFORE = {
 #: Kawasaki and Suzuki still do the real work. Re-shaping this to test the
 #: property — that for a single-marque marque, marque-keying and raw-keying
 #: agree — is filed rather than done here, because 254 is a content row.
-UNCHANGED = {"Honda": 52, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 50}
+#:
+#: **Phase 255C moves this table DOWN, and it is a derivation change — the
+#: first one this control group has actually been asked to catch.** Honda
+#: 52 -> 46, Yamaha 50 -> 48, and the numbers reconcile against named
+#: merges rather than a count:
+#:
+#:   Honda   6 spelling groups  ['Honda PCX150', 'PCX 150', 'PCX150'],
+#:                              ['CHF50', 'Honda CHF50'],
+#:                              ['GROM125', 'Grom 125'],
+#:                              ['Honda Metropolitan', 'Metropolitan'],
+#:                              ['Honda PCX125', 'PCX125'],
+#:                              ['Trail 125', 'Trail125']
+#:   Yamaha  2 spelling groups  ['XMAX', 'Yamaha XMAX'],
+#:                              ['Yamaha Zuma 125', 'Zuma 125']
+#:
+#: Honda settles at 45, not 46: the intermediate figure came from a
+#: short-lived exception that kept the marque on single mixed-case
+#: names. Removing it let `Grom`/`Honda Grom` merge as well.
+#:
+#: Every one is the same machine written two ways, which is the defect 255C
+#: exists to end: the resolver returned a different canonical for each
+#: spelling, so a row reached tier 0 only from the spelling that indexed it.
+#: Kawasaki and Suzuki do not move, and that is the signal — they had no
+#: split spellings, so canonicalisation has nothing to merge for them and
+#: they still pin the derivation exactly.
+UNCHANGED = {"Honda": 45, "Kawasaki": 39, "Suzuki": 29, "Yamaha": 48}
 
 #: Zero writes four designations with a slash in the name itself.
 COMPOUND = ("SR/F", "SR/S", "DSR/X")

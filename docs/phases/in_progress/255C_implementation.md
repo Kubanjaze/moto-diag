@@ -405,3 +405,83 @@ strings stay exactly as they are today.**
 | Dropping the marque merges two marques' machines | Step 0 measured **zero** cross-marque collisions across all 706 strings; the pair form makes the make structural, and Guard 1 pins it |
 | A pinned literal is missed and a test asserts an old canonical | D4's enumeration is AST-based with a positive control; the 16 are named and change in one commit |
 | The tier change is read as rows being lost | Retrieved and kept are unchanged at 166 and the tier table shows it; the twelve-row prompt change is the 244S cap re-cutting a re-ranked list |
+
+## D7 (2026-09-22). The fork on single-token models, and the measurement that invented it
+
+Building D2 surfaced a case the plan had not decided: **a model name that is a
+single token also present as a marque or a common word.** `ONE` is the
+specimen — LiveWire's model, and an English word.
+
+Two branches were drafted. Both were rejected by the operator, and correctly:
+each kept or reintroduced the marque inside the model string, which
+**decision 3 forbids** — the model never carries its marque. The fork was
+then reframed as an *extraction* problem rather than a canonical-form one,
+and a mechanism was tried: admit a single-token model only when it appears
+**adjacent to its marque** in the source string.
+
+It was measured before committing, as instructed. **It lost 457 legitimate
+rows across 108 models.** Named, not summarised: `SR` 33 → 1, `DS` 28 → 1,
+`Experia` 26 → 0, `DSR` 26 → 2, `FX` 20 → 1, `Alpinista` and `Mulholland`
+16 → 0 each, and `Grom`, `Thruxton` and `Speedmaster` among the rest. The
+operator's standing instruction — *name it and stop, don't reach for a list*
+— was followed, and adjacency was stripped out.
+
+### The measurement that invented the problem
+
+Adjacency was a remedy for a defect that did not exist. The "32 false `One`
+rows" that motivated it came from **reading the row TITLES instead of the
+model columns that produced them.** Forty-two model columns literally contain
+the string `LiveWire ONE`. A bare `One` in the junction was the correct
+canonical on all forty-two.
+
+This is the same class as every census error of the week — the 2 → 9 → 85
+debris counts, the 247-files-quoted-as-172-documents, the F132 table read off
+a corrupted database. The rule it yields is **check what produced the
+number, not what the number sits next to**, and it is on the CLAUDE.md
+instance list under that name.
+
+### Resolution
+
+Decision 3's plain rule stands with nothing added. `One` stays bare and is
+right on all 42 rows; `Zuma` collapses against `Zuma 125` by containment.
+`_stands_alone` and `_is_single_token` are gone. The **per-marque dedupe
+restructuring is kept** regardless: under the pair form `dedupe_contained`
+must compare within one make, which is correct whether or not a cross-make
+collision exists in today's corpus. The identity-key fallback was not needed.
+
+### The junction, decomposed
+
+| quantity | rows |
+|---|---|
+| OLD `(issue, model)`, pre-255C | 2,433 |
+| NEW distinct `(issue, model)` | **2,393** — below the ~2,412 ceiling set for the fork |
+| NEW total `(issue, make, model)` | **2,791** — +398 is the marque dimension, structural, not growth |
+
+## Bug fixes found while building
+
+Each is a real defect in shipped code, found by a test that was written to
+fail first.
+
+* **#1 — a comma inside a thousands separator split a figure in half.**
+  `_model_tokens` split on `,` before protecting `1,200`. Own commit
+  (`8fd680f`), dated entry, planted control.
+* **#2 — migration 065's `post_apply` wrote the 3-column junction at v65.**
+  `rebuild_model_index` writes the pair form, but 065 runs while the table is
+  still 2-column, so **any database at 64 or 65 could not migrate.** Fixed by
+  reading `PRAGMA table_info(known_issue_models)` and writing 2 or 3 columns
+  to suit the shape in front of it.
+* **#3 — the schema-56 degradation path crashed on placeholder count.**
+  The tier query gained a binding for the pair, but the make-only fallback
+  still passed six parameters into five placeholders: *"Incorrect number of
+  bindings"*. Fixed with a separate `make_only_params`. The path is reachable
+  on any database that has not taken migration 057, which is why it is a
+  crash and not a cosmetic mismatch.
+* **#4 — migration 065's rollback restored a junction string no rebuild
+  produces.** Its `INSERT OR IGNORE` carried the literal `'SYM Symba'`, the
+  form the *model column* spells. 255C canonicalises the junction, where that
+  machine is `'Symba'`. The round trip landed one row short — 2,385 → 2,384,
+  `(164, 'Symba')` lost and `'SYM Symba'` left behind — and the baseline was
+  itself inflated by the same spurious insert. Fixed to the canonical form,
+  with the reasoning in the SQL comment so the next canonicalisation finds
+  it. **Junction literals are written in the form the extractor produces,
+  never the form the column spells.**

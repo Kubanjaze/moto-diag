@@ -23,6 +23,7 @@ make-scoped, truncated at the first contrast marker, and silent when unsure.
 from __future__ import annotations
 
 import re
+from functools import lru_cache
 import sqlite3
 from typing import Optional
 
@@ -365,7 +366,84 @@ def vocabulary_from_conn(conn) -> dict[str, set[str]]:
     # A marque name is not a model, wherever it came from.
     for marque, names in vocab.items():
         names -= {m for m in list(names) if m in marque_vocab}
-    return {marque: names for marque, names in vocab.items() if names}
+    return {marque: canonicalise(marque, names)
+            for marque, names in vocab.items() if names}
+
+
+def _identity_key(name: str) -> str:
+    """What makes two spellings the same machine. Case and separators only."""
+    return re.sub(r"[^a-z0-9]", "", name.lower())
+
+
+@lru_cache(maxsize=4096)
+def _flex_pattern(name: str) -> "re.Pattern[str]":
+    """A pattern matching `name` however the text spaces or hyphenates it.
+
+    Phase 255C. The pool is canonical now — one spelling per machine — but a
+    row's model column is whatever its author typed. Matching the canonical
+    literally would find `PCX 150` in a column reading "PCX 150" and miss it
+    in one reading "Honda PCX150", which is the same defect one level along:
+    an identity that depends on spelling.
+
+    So separators between the runs of a designation are optional, and the
+    marque may precede it. Boundaries are still enforced on both ends, which
+    is what keeps `PCX` out of `PCX150` and `R` out of `R1200GS`.
+    """
+    runs = [r for r in re.findall(r"[A-Za-z]+|\d+", name) if r]
+    if not runs:
+        return re.compile(r"(?!x)x")
+    body = r"[\s\-/]*".join(re.escape(r) for r in runs)
+    return re.compile(r"(?<![A-Za-z0-9])" + body + r"(?![A-Za-z0-9])", re.I)
+
+
+def _flex_search(name: str, haystack: str) -> bool:
+    return bool(_flex_pattern(name).search(haystack))
+
+
+def canonicalise(marque: str, names: set[str]) -> set[str]:
+    """One canonical model string per machine, within a marque.
+
+    Phase 255C. The resolver has **no rule about marques** — its canonical
+    set is this vocabulary, which 244I derives from what row authors typed
+    into the model column. So one machine acquired several canonicals:
+    `Honda PCX150` and `PCX 150` are both `exact`, confidence 1.0, and which
+    one a caller gets depends on whether they typed the marque. The junction
+    then indexed under whichever spelling the row used, and a row reached
+    tier 0 only from the spelling that produced it.
+
+    Two operations, in order:
+
+    1. **The model never carries its own marque.** `Aprilia SR Max` under
+       Aprilia becomes `SR Max`. A leading marque is stripped only when it
+       names the marque whose pool this is — so `LiveWire One` under
+       Harley-Davidson keeps its `LiveWire`, which is a machine there and
+       not a redundant prefix.
+    2. **One spelling per identity.** Forms differing only in case or
+       separators collapse to one, preferring the spaced form because that
+       is how the corpus writes a designation when it writes it out:
+       `PCX 150` over `PCX150`.
+    """
+    out: dict[str, str] = {}
+    prefix = marque.lower() + " "
+    for name in names:
+        stripped = (name[len(prefix):].strip()
+                    if name.lower().startswith(prefix) else name)
+        if not stripped:
+            stripped = name
+        # The model NEVER carries its own marque — decision 3, unconditional.
+        # An earlier cut made an exception for single mixed-case words, to stop
+        # `LiveWire One` becoming `One`; it was wrong twice over. It kept the
+        # marque in the model string, and it created `Yamaha Zuma`, which then
+        # matched inside "Yamaha Zuma 125" without being contained by it, so
+        # `dedupe_contained` could not collapse the pair. The `One` problem is
+        # an EXTRACTION problem and is solved there, by marque adjacency.
+        key = _identity_key(stripped)
+        if not key or len(stripped) < 2:
+            continue
+        held = out.get(key)
+        if held is None or (stripped.count(" "), stripped) > (held.count(" "), held):
+            out[key] = stripped
+    return set(out.values())
 
 
 def extract_models(
@@ -400,20 +478,51 @@ def extract_models(
         # so a short delimiter-free prose sentence was admitted whole by both.
         return [value] if admits_as_model(value) else []
 
+    pairs = extract_model_pairs(make, value, vocabulary=vocabulary,
+                                db_path=db_path, marques=marques,
+                                european=european)
+    return sorted({model for _, model in pairs})
+
+
+def extract_model_pairs(
+    make: Optional[str],
+    value: Optional[str],
+    vocabulary: Optional[dict[str, set[str]]] = None,
+    db_path: Optional[str] = None,
+    marques: Optional[set[str]] = None,
+    european: Optional[set[str]] = None,
+) -> list[tuple[str, str]]:
+    """The (marque, model) pairs a value states the entry covers.
+
+    Phase 255C. Two things this does that the flat form could not.
+
+    **Dedupe is per marque.** `dedupe_contained` compares a flat list of
+    strings against one haystack, so pooling every marque's models first
+    meant one marque's name could suppress another's. Containment is decided
+    inside a marque now, which is the scope the pair form gives it.
+    """
+    if not value or not value.strip() or is_scope(value):
+        return []
+    value = value.strip()
     vocab = model_vocabulary(db_path) if vocabulary is None else vocabulary
     if marques is None:
         marques = set(vocab)
-    names = extract_marques(make or "", vocabulary=marques, european=european)
-    pool: set[str] = set()
-    for marque in names:
-        pool |= vocab.get(marque, set())
-    if not pool:
-        return []
+    if is_plain_model(value):
+        if not admits_as_model(value):
+            return []
+        owners = [mq for mq in extract_marques(make or "", vocabulary=marques,
+                                               european=european)
+                  if value in vocab.get(mq, set())]
+        return [(mq, value) for mq in owners]
 
+    names = extract_marques(make or "", vocabulary=marques, european=european)
     head = covered_part(value)
-    hits = [m for m in pool if re.search(
-        r"(?<![A-Za-z0-9])" + re.escape(m) + r"(?![A-Za-z0-9])", head)]
-    return dedupe_contained(hits, head)
+    out: list[tuple[str, str]] = []
+    for marque in names:
+        hits = [m for m in vocab.get(marque, set()) if _flex_search(m, head)]
+        for model in dedupe_contained(hits, head):
+            out.append((marque, model))
+    return out
 
 
 def index_models_for_issue(conn, issue_id: int, make: Optional[str],
@@ -434,15 +543,43 @@ def index_models_for_issue(conn, issue_id: int, make: Optional[str],
         marques = marque_vocabulary_from_conn(conn)
     if european is None:
         european = european_marques(vocabulary=marques)
-    models = extract_models(make, model_value, vocabulary=vocabulary,
-                            marques=marques, european=european)
-    for model in models:
-        conn.execute(
-            "INSERT INTO known_issue_models (issue_id, model) VALUES (?, ?) "
-            "ON CONFLICT DO NOTHING",
-            (issue_id, model),
-        )
-    return len(models)
+    pairs = extract_model_pairs(make, model_value, vocabulary=vocabulary,
+                                marques=marques, european=european)
+    # Phase 255C: the junction carries the MARQUE the model belongs to, not
+    # just the model. Phase 250C already works this out -- its three-rung
+    # ladder attributes every token to a marque and handles the case where a
+    # marque is also a model line ("LiveWire is a marque AND a
+    # Harley-Davidson machine") -- and the junction write then threw that
+    # attribution away. This carries it through; nothing new is derived.
+    # The junction gained its `make` column at migration 066, and this runs as
+    # the post_apply of 056 and 065 as well -- on a database that has not
+    # reached 066 yet. Writing three columns into the two-column table failed
+    # the 64 -> 65 -> 66 path outright, which is the ordering the operator's
+    # own database is on. Shape is read, not assumed.
+    has_make = any(
+        r[1] == "make"
+        for r in conn.execute("PRAGMA table_info(known_issue_models)")
+    )
+    written = 0
+    seen: set = set()
+    for owner, model in pairs:
+        if has_make:
+            conn.execute(
+                "INSERT INTO known_issue_models (issue_id, make, model) "
+                "VALUES (?, ?, ?) ON CONFLICT DO NOTHING",
+                (issue_id, owner, model),
+            )
+        else:
+            if model in seen:
+                continue
+            seen.add(model)
+            conn.execute(
+                "INSERT INTO known_issue_models (issue_id, model) VALUES (?, ?) "
+                "ON CONFLICT DO NOTHING",
+                (issue_id, model),
+            )
+        written += 1
+    return written
 
 
 def rebuild_model_index(conn) -> int:

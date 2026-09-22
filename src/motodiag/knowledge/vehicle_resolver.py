@@ -241,7 +241,36 @@ def resolve_vehicle(
     """
     make_res = _resolve_against("make", make or "", known_makes(db_path))
     scope = make_res.resolved if make_res.applied else None
-    model_res = _resolve_against("model", model or "", known_models(scope, db_path))
+
+    # Phase 255C: a model string may repeat its own marque — "Honda PCX150"
+    # for a Honda — because that is how some rows are written and how some
+    # callers type. The pool is canonical now and carries the model alone, so
+    # the repeated marque is stripped before matching. `given` keeps what the
+    # caller actually said; only the lookup key changes.
+    #
+    # Stripped only when it repeats the marque already resolved, so
+    # "LiveWire One" under Harley-Davidson keeps its LiveWire — a machine
+    # there, not a redundant prefix. Without this, canonicalising the pool
+    # traded one spelling dependence for another: 'PCX 150' resolved and
+    # 'Honda PCX150' stopped resolving at all.
+    pool = known_models(scope, db_path)
+    model_res = _resolve_against("model", model or "", pool)
+
+    # The string as given is tried first, because some canonicals legitimately
+    # carry their marque — `Energica Ego`, `LiveWire One` — where the bare
+    # word would not stand alone as a name. Only if that finds nothing is the
+    # repeated marque stripped and the lookup retried.
+    if not model_res.applied and scope and model:
+        trimmed = re.sub(r"^\s*" + re.escape(scope) + r"[\s\-]*", "", model, flags=re.I)
+        trimmed = trimmed.strip()
+        if trimmed and len(trimmed) >= 2 and _norm(trimmed) != _norm(model):
+            retry = _resolve_against("model", trimmed, pool)
+            if retry.applied:
+                # `given` stays what the caller said; only the key changed.
+                model_res = Resolution(
+                    retry.field_name, model, retry.resolved,
+                    retry.method, retry.confidence, retry.alternatives,
+                )
 
     identity = VehicleIdentity(make=make_res, model=model_res)
     identity.corpus_hits = _count_hits(
@@ -314,11 +343,17 @@ def known_issues_for_vehicle(
     # equality test reached almost none of them -- and the junction is built
     # from only the part of each value that states what IS covered, because
     # entries name models in order to exclude them.
+    # Phase 255C: tier 0 is decided by the (make, model) PAIR. Matching the
+    # model alone meant one machine could hold two canonicals -- 'PCX 150'
+    # and 'Honda PCX150', both `exact` and both confidence 1.0 -- and a row
+    # reached tier 0 only from the spelling that indexed it. The junction
+    # carries the marque now, from Phase 250C's attribution.
     tier_sql = """
         CASE
             WHEN ? IS NOT NULL AND EXISTS (
                 SELECT 1 FROM known_issue_models
                 WHERE known_issue_models.issue_id = known_issues.id
+                  AND known_issue_models.make = ?
                   AND known_issue_models.model = ?
             ) THEN 0
             WHEN model = ? THEN 1
@@ -346,8 +381,10 @@ def known_issues_for_vehicle(
         "WHERE known_issue_makes.make IN (?, ?) "
         f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
     )
-    params: list = [resolved_model, resolved_model, WILDCARD_MODEL,
-                    resolved_make, WILDCARD_MAKE]
+    # Phase 255C: the tier CASE now binds (model IS NOT NULL, make, model)
+    # before the tier-1 model comparison.
+    params: list = [resolved_model, resolved_make, resolved_model,
+                    WILDCARD_MODEL, resolved_make, WILDCARD_MAKE]
 
     # A database below schema 55 has no junction. Joining against a table that
     # is not there would return nothing, and "no rows" is precisely the answer
@@ -370,6 +407,12 @@ def known_issues_for_vehicle(
         "WHERE known_issue_makes.make IN (?, ?) "
         f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
     )
+    # Phase 255C: this path has its OWN bindings. `tier_sql_no_junction` takes
+    # three placeholders where the pair form takes four, and reusing `params`
+    # here raised "5 bindings supplied, 6 given" the moment the junction was
+    # missing -- turning a deliberate degradation into a crash.
+    make_only_params: list = [resolved_model, resolved_model, WILDCARD_MODEL,
+                              resolved_make, WILDCARD_MAKE]
 
     try:
         with get_connection(db_path) as conn:
@@ -378,7 +421,7 @@ def known_issues_for_vehicle(
             except sqlite3.OperationalError as exc:
                 msg = str(exc)
                 if "known_issue_models" in msg:
-                    rows = conn.execute(make_only_sql, params).fetchall()
+                    rows = conn.execute(make_only_sql, make_only_params).fetchall()
                 elif "known_issue_makes" in msg:
                     rows = conn.execute(fallback_sql, fallback_params).fetchall()
                 else:

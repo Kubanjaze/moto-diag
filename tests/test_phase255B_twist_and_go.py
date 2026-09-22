@@ -242,11 +242,12 @@ class TestRow4615Splits:
             models = {m for (m,) in conn.execute(
                 "SELECT model FROM known_issue_models WHERE issue_id = ?", (row["id"],))}
         assert "SYM Symba" not in row["model"]
-        # Exact membership, not a substring: the junction stores the
-        # marque-prefixed `SYM Symba` (S0-4), so `"Symba" not in models`
-        # would pass even with the entry present.
+        # Phase 255C made the junction's model a bare canonical with the
+        # marque in its own column, so the entry to look for is `Symba`
+        # rather than `SYM Symba`. Exact membership, not a substring.
         assert not any("Symba" in m for m in models), sorted(models)
-        assert "Vespa GTS" in models, "positive control: the junction is populated"
+        # 255C: the junction model is a bare canonical, marque in its own column.
+        assert "GTS" in models, "positive control: the junction is populated"
 
     def test_the_cvt_half_still_names_the_vespa_946(self, seeded):
         """Deliberate, not an oversight.
@@ -410,7 +411,12 @@ class TestTheSplitsAsASet:
         assert after[0] == before[0] + len(_255B_ADDED), (
             f"migration should add {len(_255B_ADDED)} rows: {before} -> {after}")
 
-        rollback_migration(get_migration_by_version(65), db_path=path)
+        # Roll back to the version the baseline was taken at, not just 065.
+        # Phase 255C's migration 066 changes the junction's SHAPE, so undoing
+        # 065 alone leaves a three-column junction being compared against a
+        # two-column baseline — 2,779 against 2,385, which is a schema
+        # difference reported as a row-count difference.
+        rollback_to_version(64, db_path=path)
         assert counts() == before, (
             f"rollback is not a round trip: {before} -> {after} -> {counts()}")
 
