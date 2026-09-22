@@ -4619,6 +4619,23 @@ MIGRATIONS: list[Migration] = [
             "is missing from its own alias tuple. Six of the 50 lookup "
             "entries have that shape; five are compound display labels "
             "nobody types. Filed as F131. "
+            "F115: row 4605's make column gains Harley-Davidson, BMW and "
+            "LiveWire. It is a vocabulary row -- three mechanically "
+            "unrelated components are all called a drive belt -- and its "
+            "make column reached the scooter marques but not the marques "
+            "whose owners produce the collision, so the owners it exists "
+            "to inform could not receive it. The list is measured: "
+            "`drive belt` over title/description/symptoms across all "
+            "1,045 rows returns 13, of which five carry a non-CVT meaning "
+            "(188 and 1312 Harley-Davidson/LiveWire final drive, 715 and "
+            "870 BMW alternator, 579 Yamaha final drive). Yamaha was "
+            "already there, so three marques are added. Makes only, not "
+            "models. "
+            "4605 stays UNSCOPED and a test pins it there: a Road King, "
+            "an R1200GS and a LiveWire ONE all resolve `unknown`, so any "
+            "transmission set on this row would withhold it from exactly "
+            "the three marques this fix adds -- F115 re-created by "
+            "another route, in the migration claiming to close it. "
             "4611 has no KNOWN_SELF_EXCLUDING entry before or after: its "
             "junction names no machine it excludes. Two of this phase's "
             "three splits touch that pin, not three. "
@@ -4657,6 +4674,19 @@ MIGRATIONS: list[Migration] = [
             INSERT OR IGNORE INTO known_issue_models (issue_id, model)
             SELECT id, 'SYM Symba' FROM known_issues
              WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
+
+            -- F115, reversed. The make column and, because it is derived
+            -- the same way and has no rebuild on this path, the three
+            -- marque junction rows it produced.
+            UPDATE known_issues
+               SET make = 'Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine'
+             WHERE title LIKE 'Three unrelated components are all called a drive belt%';
+
+            DELETE FROM known_issue_makes
+             WHERE make IN ('Harley-Davidson', 'BMW', 'LiveWire')
+               AND issue_id IN (
+                   SELECT id FROM known_issues
+                    WHERE title LIKE 'Three unrelated components are all called a drive belt%');
         """,
     ),
 ]

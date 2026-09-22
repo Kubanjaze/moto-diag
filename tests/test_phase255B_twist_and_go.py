@@ -53,6 +53,15 @@ T_4609 = "A Kymco service manual gives four CVT figures twice"
 MODEL_4609_AS_SHIPPED = "Agility 50, Agility 125, People S 250, People 250, Filly LX 50"
 MODEL_4609_AFTER = "Agility 50, Agility 125, People S 250, People 250"
 
+T_4605 = "Three unrelated components are all called a drive belt"
+
+#: F115. The marques whose owners produce the `drive belt` collision but
+#: which 4605's make column did not reach. Measured from the corpus, not
+#: chosen: see _255B_MAKE_EDITS in knowledge/loader.py.
+MAKE_4605_AS_SHIPPED = "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine"
+MAKE_4605_AFTER = MAKE_4605_AS_SHIPPED + ", Harley-Davidson, BMW, LiveWire"
+MARQUES_ADDED_F115 = ("Harley-Davidson", "BMW", "LiveWire")
+
 #: The rows Phase 255B adds — the general half of each split.
 _255B_ADDED = (
     "The regulator's two indexes contradict each other, and an empty recall "
@@ -460,6 +469,9 @@ class TestTheSplitsAsASet:
                 assert "SYM Symba" not in e["model"]
                 e["model"] = e["model"].replace(
                     "Kymco Like 150i", "Kymco Like 150i, SYM Symba")
+            if e["title"].startswith(T_4605):
+                assert e["make"] == MAKE_4605_AFTER
+                e["make"] = MAKE_4605_AS_SHIPPED
         out = tmp_path / "known_issues_cvt.json"
         out.write_text(json.dumps(entries), encoding="utf-8")
         return out
@@ -517,3 +529,100 @@ class TestTheSplitsAsASet:
         rollback_migration(get_migration_by_version(65), db_path=path)
         assert counts() == before, (
             f"rollback is not a round trip: {before} -> {after} -> {counts()}")
+
+
+class TestF115TheVocabularyRowReachesTheOwnersItIsFor:
+    """4605 exists to tell a cruiser owner a final-drive belt is not a CVT belt.
+
+    Its make column named seven scooter marques. A Harley Road King owner,
+    a BMW R1200GS owner and a LiveWire owner — the three the row's own
+    description is about — could not receive it.
+    """
+
+    def test_the_marque_list_is_derived_from_the_corpus_not_chosen(self, seeded):
+        """The collision set, measured. Scope and count, not a screenful.
+
+        Vocabulary is the maker's own phrase `drive belt`, over
+        title || description || symptoms, across the whole corpus.
+        """
+        with sqlite3.connect(seeded) as conn:
+            hits = list(conn.execute(
+                "SELECT id, make FROM known_issues WHERE "
+                "lower(title || ' ' || description || ' ' || COALESCE(symptoms,'')) "
+                "LIKE '%drive belt%' ORDER BY id"))
+        assert len(hits) >= 13, f"collision set shrank to {len(hits)}"
+
+        marques = {m.strip() for _, mk in hits for m in (mk or "").split(",")}
+        for marque in MARQUES_ADDED_F115:
+            assert marque in marques, (
+                f"{marque} is in 4605's make column but no row in the "
+                "collision set justifies it")
+
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4605)
+        assert row["id"] in {i for i, _ in hits}, (
+            "positive control: 4605 must be in its own collision set")
+
+    def test_the_make_column_now_carries_the_three_marques(self, seeded):
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4605)
+            makes = {m for (m,) in conn.execute(
+                "SELECT make FROM known_issue_makes WHERE issue_id = ?", (row["id"],))}
+        assert row["make"] == MAKE_4605_AFTER
+        for marque in MARQUES_ADDED_F115:
+            assert marque in makes, f"{marque} missing from the derived junction"
+        assert "Piaggio" in makes, "positive control: the original marques stay"
+
+    def test_no_model_was_invented_for_the_new_marques(self, seeded):
+        """Makes only. Naming a model no document establishes is 4609's error."""
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4605)
+        for name in ("Road King", "R1200GS", "LiveWire ONE", "VRSC", "Bolt"):
+            assert name not in (row["model"] or ""), name
+
+    def test_4605_stays_unscoped_and_that_is_the_point(self, seeded):
+        """Scoping this row would re-create F115 in the fix that closes it.
+
+        All three added marques resolve `unknown`, and the filter is
+        fail-closed, so ANY transmission set here withholds the row from
+        exactly the owners this commit added.
+        """
+        with sqlite3.connect(seeded) as conn:
+            row = _row(conn, T_4605)
+        assert row["applicability"] is None
+
+        for make, model in (("Harley-Davidson", "Road King"),
+                            ("BMW", "R1200GS"),
+                            ("LiveWire", "ONE")):
+            res = resolve_transmission(make, model)
+            assert res.provenance == "unknown", (make, model)
+            assert row_applies(row, "transmission", res.candidates) is True
+            scoped = {"applicability": json.dumps({"transmission": ["cvt"]})}
+            assert row_applies(scoped, "transmission", res.candidates) is False, (
+                f"positive control: a scoped row IS withheld from {make} {model}")
+
+    def test_the_row_actually_reaches_those_machines_now(self, seeded):
+        """End to end, through the chokepoint, not just the column."""
+        from motodiag.knowledge.retrieval import rows_for_machine
+        from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+
+        with sqlite3.connect(seeded) as conn:
+            title = _row(conn, T_4605)["title"]
+
+        for make, model in (("Harley-Davidson", "Road King"),
+                            ("BMW", "R1200GS"),
+                            ("LiveWire", "ONE")):
+            _, raw = known_issues_for_vehicle(make, model, db_path=seeded, limit=400)
+            kept = rows_for_machine(raw, make=make, model=model, purpose="prompt",
+                                    db_path=seeded, record=False).rows
+            assert title in {r["title"] for r in kept}, (
+                f"{make} {model} still does not receive the row written for it")
+
+        # Positive control: a marque with no belt-vocabulary collision and
+        # no entry in 4605's make column must NOT start receiving it.
+        _, raw = known_issues_for_vehicle("Kawasaki", "Ninja 400",
+                                          db_path=seeded, limit=400)
+        kept = rows_for_machine(raw, make="Kawasaki", model="Ninja 400",
+                                purpose="prompt", db_path=seeded, record=False).rows
+        assert title not in {r["title"] for r in kept}, (
+            "the fix must not become a wildcard")

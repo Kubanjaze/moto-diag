@@ -93,6 +93,30 @@ _255B_MODEL_EDITS: tuple[tuple[str, str, str, str], ...] = (
     ),
 )
 
+#: F115. Row 4605 is a vocabulary row: three mechanically unrelated
+#: components are all called a drive belt. Its make column reached the
+#: scooter marques and not the marques whose owners produce the collision,
+#: so the owners it exists to inform could not receive it.
+#:
+#: The list is measured, not chosen. Vocabulary `drive belt` over
+#: title||description||symptoms across all 1,045 rows returns 13 (positive
+#: control: 4605 is in its own set). Five carry a non-CVT meaning --
+#: 188 Harley-Davidson final drive, 1312 Harley-Davidson/LiveWire final
+#: drive, 715 and 870 BMW alternator, 579 Yamaha final drive. Yamaha was
+#: already in the column, so three marques are added.
+#:
+#: MAKES ONLY, not models: `make_wide` is the tier that carries this, and
+#: naming a model no document establishes is the 4609 mistake repaired one
+#: commit away.
+_255B_MAKE_EDITS: tuple[tuple[str, str, str], ...] = (
+    (
+        "Three unrelated components are all called a drive belt",
+        "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
+        "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine, "
+        "Harley-Davidson, BMW, LiveWire",
+    ),
+)
+
 #: Rows 255B ADDS, by title. The prose lives in the seed file and nowhere
 #: else -- this hook reads it from there rather than carrying a second copy
 #: that could drift from the one the loader uses.
@@ -190,6 +214,14 @@ def reconcile_255B_rows(conn) -> int:
             "UPDATE known_issues SET model = ? "
             " WHERE title LIKE ? AND make IS ? AND model IS ?",
             (new_model, title_prefix + "%", make, old_model),
+        )
+        changed += cur.rowcount or 0
+
+    for title_prefix, old_make, new_make in _255B_MAKE_EDITS:
+        cur = conn.execute(
+            "UPDATE known_issues SET make = ? "
+            " WHERE title LIKE ? AND make IS ?",
+            (new_make, title_prefix + "%", old_make),
         )
         changed += cur.rowcount or 0
 
