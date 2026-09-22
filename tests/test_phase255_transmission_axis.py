@@ -248,16 +248,25 @@ class TestTheMachineLevelRegression:
             "the unscoped set changed — add it to UNSCOPED_CVT_ROWS with a "
             f"reason, or scope it.\n  new:  {sorted(unscoped - set(UNSCOPED_CVT_ROWS))}"
             f"\n  gone: {sorted(set(UNSCOPED_CVT_ROWS) - unscoped)}")
+        # What this must prove is that the APPLICABILITY FILTER never drops an
+        # unscoped row. It must not also assert that every unscoped row is
+        # retrieved for every machine: retrieval is by make and model, and a
+        # row whose make column does not name the marque was never a
+        # candidate. The original form conflated the two and failed when
+        # Phase 255B narrowed one unscoped row's make column to the machines
+        # its documents actually establish — a correct edit that this guard
+        # reported as a lost row.
         for make, model, _why in OVER_REACHED:
             _, raw = known_issues_for_vehicle(make, model, db_path=db, limit=400)
-            titles_before = {r["title"] for r in raw}
-            if not (unscoped & titles_before):
+            retrieved = unscoped & {r["title"] for r in raw}
+            if not retrieved:
                 continue
             kept = rows_for_machine(raw, make=make, model=model,
                                     purpose="prompt", db_path=db,
                                     record=False).rows
-            assert unscoped <= {r["title"] for r in kept}, (
-                f"{make} {model} lost the unscoped vocabulary row"
+            assert retrieved <= {r["title"] for r in kept}, (
+                f"{make} {model}: the filter dropped an unscoped row — "
+                f"{sorted(retrieved - {r['title'] for r in kept})}"
             )
 
 
