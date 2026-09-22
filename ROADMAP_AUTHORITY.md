@@ -172,6 +172,37 @@ and **16 are download debris** — 12 HTML documents, 2 short ASCII files, 1 XML
 stub, 1 empty file. F127 records **32** debris files. Neither number should be
 trusted until F127's own phase re-derives it against this tree.
 
+**Deduplicated by content hash, 2026-09-22 (Phase 255B).** The move above
+preserved the library exactly as it was, duplicates included — and the
+duplicates were load-bearing in the wrong direction. **Counting file paths as
+documents inflated every "N manuals say X" claim.** Two were already wrong
+when this was found: a Kymco Like owner's manual was cited as *"two
+editions"* when three paths held one byte-identical file, and a SYM count
+treated `pdf/sym_fiddle3.pdf` and `v2/sympdf/Fiddle_III_Owners_Manual.pdf` as
+two machines. The Genuine Buddy Kick manual existed under **five** paths.
+
+**75 redundant copies removed, 533.8 MB freed.** Every one was byte-identical
+(md5) to the copy kept; nothing unique was deleted, and
+`~/research/motodiag/DEDUP_MANIFEST.md` records each removed path against the
+one that replaced it. The 16 download-debris files were deliberately **not**
+deduplicated — they are F127's evidence and two repo documents cite
+`pdf/bv500.pdf` by path.
+
+**The document count, corrected.** The figures above are FILE counts and must
+not be quoted as document counts:
+
+| | |
+|---|---|
+| `.pdf` files before dedup | 263 |
+| distinct contents | 187 |
+| **distinct valid documents** | **172** |
+| download debris (kept) | 16 |
+| `.pdf` files after dedup | 188 |
+
+**A claim about how many manuals say something cites distinct documents, not
+paths.** A count taken by globbing the library is wrong by construction until
+it is hashed.
+
 **Build debris was moved intact, not pruned.** The tree carries two throwaway
 virtualenvs (`grom/venv`, `honda/venv` — 5,242 files) and 235 MB of pip logs.
 A durability fix does not authorise deciding what counts as evidence; pruning
