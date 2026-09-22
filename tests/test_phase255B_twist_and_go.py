@@ -561,3 +561,114 @@ class TestRow4611WasNotSplit:
         assert "squeezing the rear brake lever" in body, (
             "the Kymco quote — the counter-evidence that stops it generalising. "
             "If a future phase splits this row, these two must not be separated.")
+
+
+#: F132. Machines and model years the year-window change was measured over.
+#: Named individually so that dropping one is an edit somebody reviews.
+F132_MACHINES = [
+    ("Honda", "PCX 150", True), ("Kymco", "Agility 50", True),
+    ("Vespa", "LX 50", True), ("Yamaha", "Zuma 125", True),
+    ("Genuine", "Buddy 125", True), ("Kymco", "People S 250", True),
+    ("Honda", "GL1800 Gold Wing", False), ("Yamaha", "YZF-R1", False),
+    ("Honda", "Grom", False), ("Kawasaki", "Ninja 400", False),
+    ("SYM", "Symba 100", False),
+]
+F132_YEARS = [2001, 2003, 2005, 2013, 2019, 2022, 2026, 2027]
+
+#: The two rows whose own prose names a model-year range and therefore keep
+#: their window: "model years 2015 to 2020" / "April 2021", and "model years
+#: 2003 to 2026".
+F132_KEEP_WINDOW = {
+    "A CVT recall exists that no belt, pulley or variator search would find",
+    "What the regulator record shows for scooter CVTs",
+}
+
+
+class TestF132UnevidencedMetadata:
+    """Year windows and repair estimates the documents do not support.
+
+    `_covers_year` gates retrieval, so an unevidenced window silently adds
+    and removes rows. Nulling a bound REMOVES a gate, so this can only
+    widen — which is the direction the rest of this phase has been
+    tightening, and why the change shipped with a measured table rather
+    than an argument.
+    """
+
+    def test_only_rows_whose_prose_names_a_range_keep_a_window(self):
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        kept = {e["title"] for e in entries if e.get("year_start") is not None}
+        expected = {t for t in {e["title"] for e in entries}
+                    if any(t.startswith(k) for k in F132_KEEP_WINDOW)}
+        assert kept == expected, (
+            "a year window appeared or vanished. A row keeps one only if its "
+            "own description names the model-year range.\n"
+            f"  unexpected: {sorted(kept - expected)}\n"
+            f"  missing:    {sorted(expected - kept)}")
+
+    def test_no_row_in_this_file_asserts_repair_hours(self):
+        """None of these rows describes a repair; they are reference rows."""
+        entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+        offenders = [e["title"][:50] for e in entries
+                     if e.get("estimated_hours") is not None]
+        assert offenders == [], offenders
+
+    def test_the_widening_never_removes_a_row(self, tmp_path):
+        """The property that makes this change safe to review as a table.
+
+        A null bound cannot exclude, so no machine may lose a row. If this
+        ever fails, the change is doing something other than removing a
+        gate.
+        """
+        from motodiag.knowledge.retrieval import rows_for_machine
+        from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+
+        titles = {e["title"] for e in json.loads(CVT_SEED.read_text(encoding="utf-8"))}
+
+        def build(restore_windows: bool) -> str:
+            path = str(tmp_path / f"f132-{restore_windows}.db")
+            init_db(path)
+            entries = json.loads(CVT_SEED.read_text(encoding="utf-8"))
+            if restore_windows:
+                for e in entries:
+                    e.setdefault("year_start", 2002)
+                    e.setdefault("year_end", 2026)
+            f = tmp_path / f"seed-{restore_windows}.json"
+            f.write_text(json.dumps(entries), encoding="utf-8")
+            for s in sorted(SEED_DIR.glob("known_issues_*.json")):
+                load_known_issues_file(f if s.name == CVT_SEED.name else s, path)
+            rebuild_make_index_at(path)
+            rebuild_model_index_at(path)
+            return path
+
+        def covers(row, year):
+            s, e = row.get("year_start"), row.get("year_end")
+            return not ((s is not None and year < s) or (e is not None and year > e))
+
+        def reached(db, make, model, year):
+            _, raw = known_issues_for_vehicle(make, model, db_path=db, limit=400)
+            kept = [r for r in raw if covers(r, year)]
+            out = rows_for_machine(kept, make=make, model=model, year=year,
+                                   purpose="prompt", db_path=db, record=False).rows
+            return {r["title"] for r in out} & titles
+
+        before, after = build(True), build(False)
+        lost_total = 0
+        for make, model, is_cvt in F132_MACHINES:
+            for year in F132_YEARS:
+                b = reached(before, make, model, year)
+                a = reached(after, make, model, year)
+                lost = b - a
+                lost_total += len(lost)
+                assert not lost, (
+                    f"{make} {model} {year} LOST {sorted(lost)} — nulling a "
+                    "year bound must never exclude a row")
+                if not is_cvt:
+                    # The only row a non-CVT machine may gain is the one that
+                    # is unscoped by design: the drive-belt vocabulary row,
+                    # whose reach F115 deliberately widened. Anything else
+                    # would mean scoped CVT content reaching a machine the
+                    # filter is supposed to exclude.
+                    for t in a - b:
+                        assert t.startswith("Three unrelated components"), (
+                            f"{make} {model} {year} gained a scoped row: {t}")
+        assert lost_total == 0

@@ -183,6 +183,66 @@ def _insert_255B_new_rows(conn) -> int:
     return inserted
 
 
+def _null_unevidenced_metadata(conn) -> int:
+    """F132. Clear year windows and repair estimates the documents do not support.
+
+    `known_issues.year_start`/`year_end` on the Phase 254 CVT rows was a
+    25-year window, 2002-2026, cited to nothing at either end -- and
+    `cli/diagnose.py::_covers_year` applies it BEFORE retrieval, so it
+    silently added and removed rows. Two of the twelve rows do have a window
+    their own prose establishes ("model years 2015 to 2020", "model years
+    2003 to 2026"); those keep it. The rest lose it.
+
+    `estimated_hours` was 0.5 or 1.0 on every row in the file. None of them
+    describes a repair -- they are vocabulary, document-integrity and
+    evidence rows -- so the field was asserting a duration for work that
+    does not exist.
+
+    Derived from the seed file rather than from a second list: a column the
+    seed leaves out is nulled here. One source of truth, which is the
+    discipline F129 exists to demand.
+
+    Nulling a bound REMOVES a gate, so this can only widen. Measured across
+    11 machines and 8 model years: 123 row-slots gained, 0 lost. For every
+    row declaring {cvt} the widening reaches only machines the filter
+    already admits. The one exception is row 4605, which is unscoped by
+    design -- a vocabulary row saying three unrelated components are all
+    called a drive belt -- and which therefore reaches a 2001 Gold Wing and
+    a 2027 R1 once its window goes. That is the row doing its job, and the
+    operator's decision of 2026-09-22 was to apply the scope rule uniformly
+    rather than keep an unevidenced window to hold that reach down.
+    """
+    seed_dir = Path(__file__).parent / "seed" / "knowledge"
+    changed = 0
+    for path in sorted(seed_dir.glob("*.json")):
+        try:
+            items = json.loads(path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError):
+            continue
+        if not isinstance(items, list):
+            continue
+        for item in items:
+            if not isinstance(item, dict) or "title" not in item:
+                continue
+            sets, args = [], []
+            if "year_start" not in item:
+                sets.append("year_start = NULL")
+            if "year_end" not in item:
+                sets.append("year_end = NULL")
+            if "estimated_hours" not in item:
+                sets.append("estimated_hours = NULL")
+            if not sets:
+                continue
+            where = " AND ".join(s.split(" =")[0] + " IS NOT NULL" for s in sets)
+            cur = conn.execute(
+                f"UPDATE known_issues SET {', '.join(sets)} "
+                f" WHERE title = ? AND make IS ? AND ({where})",
+                (item["title"], item.get("make")),
+            )
+            changed += cur.rowcount or 0
+    return changed
+
+
 def reconcile_255B_rows(conn) -> int:
     """Phase 255B's row edits, applied to an already-seeded database.
 
@@ -223,6 +283,7 @@ def reconcile_255B_rows(conn) -> int:
         changed += cur.rowcount or 0
 
     changed += _insert_255B_new_rows(conn)
+    changed += _null_unevidenced_metadata(conn)
 
     rebuild_make_index(conn)
     rebuild_model_index(conn)

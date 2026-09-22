@@ -4,8 +4,6 @@
     "description": "Three makers define the mechanism in their own documents, and no two use the same vocabulary. SYM gives the plainest statement of what the rollers do, in the Joyride 125/150/200 service manual (Sanyang models LA12W, LA15W, LA18W): 'The weight rollers are to press movable drive face by means of centrifuge force.' The same page states the wear consequence directly — 'Thus, if weight rollers are worn out or damaged, the centrifuge force will be effected' (spelling as printed). Piaggio names the whole assembly in its Vespa LX 50 workshop manual 633416: 'With automatic expandable pulley variator, torque server, V-belt, automatic clutch, gear reduction unit.' Honda scopes it as one serviceable unit in the PCX150 2013-2017 service manual: 'This section covers maintenance of the drive pulley, driven pulley and clutch.' The vocabulary is the trap, and it runs in both directions: riders and parts sellers say roller weights, while every maker here that uses the two words at all writes them the other way round, as weight rollers. In Yamaha's 338-page Zuma 125 service manual the words variator, drive pulley, weight roller and ramp plate return zero hits; Yamaha calls the part a primary sheave weight in its procedure chapter and a primary pulley weight in its troubleshooting chapter, in the same book. Kymco and SYM say weight roller; Piaggio says variator and roller; Honda says weight roller and movable drive face. A search built on one maker's word finds one maker's machines. This matters beyond the page: a recall on this exact component was filed under a word that no keyword list for this subject would have contained. Every document named here was read from a third-party mirror; Piaggio's own server refused a plain request, and none of these makers publishes a service manual on its own site.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "medium",
     "symptoms": [
       "what is a variator",
@@ -24,7 +22,6 @@
     ],
     "fix_procedure": "1. Before searching any scooter document for CVT content, establish the maker's own term: weight roller (Kymco, SYM, Honda), roller (Piaggio), primary sheave weight or primary pulley weight (Yamaha) — and note that the common rider phrase, roller weights, reverses the two words no maker reverses. 2. Search the drive side as pulley, sheave, drive face and movable drive face, not only as variator. 3. Expect one book to use two names for the same part; Yamaha's does, between chapters. 4. Treat a zero result as a vocabulary failure before treating it as an absence.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -37,8 +34,6 @@
     "description": "In this corpus the phrase drive belt names three mechanically unrelated things, and nothing in a text search separates them. The first is a toothed final-drive belt, which replaces a chain between gearbox and rear wheel on large cruisers and on some electric machines — the component behind a Harley-Davidson drive belt tensioner bearing and the belt that a LiveWire carries with its own tension gauge. The second is an accessory belt driving an alternator, which on some BMW boxers comes in two incompatible types. The third is the CVT belt of a scooter, which Piaggio's Vespa LX 50 workshop manual 633416 defines as part of an assembly of 'automatic expandable pulley variator, torque server, V-belt, automatic clutch, gear reduction unit', and which Honda's PCX150 service manual groups with the pulleys it runs between: 'This section covers maintenance of the drive pulley, driven pulley and clutch.' It carries all the drive and is replaced as a wear item on a published interval. Measured on the corpus as it stands, a search for the phrase returns eight entries — five about a final drive or another component, two about an alternator belt, and one about a CVT. The scooter belt is the last of them. The practical consequence is that a scooter owner's question and a cruiser owner's question have the same words in them, and the distinction has to be made by the machine rather than by the phrase. A CVT belt is identified by what it runs between: two variable-diameter pulleys with no chain and no fixed gearing.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine, Harley-Davidson, BMW, LiveWire",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "medium",
     "symptoms": [
       "drive belt",
@@ -54,7 +49,6 @@
     ],
     "fix_procedure": "1. Establish which belt is meant before quoting any interval or limit: final drive, alternator, or CVT. 2. On a twist-and-go scooter with no gear lever, a drive belt question is almost always the CVT belt. 3. A CVT belt runs between two expanding pulleys; a final-drive belt runs from gearbox to rear wheel and is toothed on one face; an alternator belt drives an accessory and is unrelated to propulsion. 4. Do not carry a tension procedure from a final-drive belt to a CVT belt — a CVT belt is not tensioned, it is measured and replaced.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual"
   },
   {
@@ -62,8 +56,6 @@
     "description": "Roller wear is the most consistently documented CVT failure across these makers, and the figures are all in service manuals rather than owner's manuals. Honda's PCX150 service manual gives 'Measure the weight roller O.D. SERVICE LIMIT: 19.5 mm (0.77 in)' against a standard of 19.92 to 20.08 mm. Yamaha's Zuma 125 service manual gives the same limit under a different name: 'Primary sheave weight outside diameter 20mm (0.79in) <Limit>: 19.5mm (0.77in)'. SYM's Joyride manual gives 19.500 mm against 19.950 to 20.100 mm, and its JET 50/100 manual gives 15.40 mm against 15.92 to 16.08 mm. Kymco's People S 250 gives 22.0 mm against 22.92 to 23.08 mm. PGO's PA125 gives 17.40 mm against 17.920 to 18.080 mm — and its PA100 is a different roller entirely at 15.50 mm against 15.992 to 16.008 mm. Two cautions on reading those figures. The first is that the limit is an outside diameter on a wear surface, so a roller can be within limit on one axis and flat-spotted on another; Piaggio addresses that with a criterion needing no measurement at all — 'Check that the rollers do not show signs of marked facetting on the sliding surface' and 'that the metallic insert does not come out of the plastic shell borders'. The second is that a roller diameter is meaningless without the machine: the seven limits above span 15.40 to 22.0 mm, and the two figures in one PGO document differ by 1.9 mm between models in the same manual. Piaggio is also the only maker here that schedules the rollers separately from the belt, listing 'Variable speed rollers - replacement' at 10,000 km and again at 20,000, 30,000, 40,000 and 50,000 km, where the belt has its own line. None of the eight service manuals read for this entry publishes a roller mass in grams, a roller part number, or a roller count in text — the count appears only in exploded diagrams, and was not read out of an illustration.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "high",
     "symptoms": [
       "worn rollers",
@@ -83,7 +75,6 @@
     ],
     "fix_procedure": "1. Take the roller limit from the service manual for the specific machine; the limits in this entry span 15.40 to 22.0 mm and do not transfer. 2. Measure outside diameter across the wear surface, and inspect separately for flat spots — a roller can pass the measurement and still be faceted. 3. Check that the metallic insert has not migrated out of the plastic shell. 4. Replace rollers as a set, not individually. 5. Do not grease the rollers; Honda's manual says so explicitly. 6. On a Piaggio, the rollers have their own replacement interval and are not tied to the belt's.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -96,8 +87,6 @@
     "description": "The driven side of a scooter CVT is a centrifugal clutch running inside a bell, and the published figures diverge more than the mechanism does. Yamaha is the only maker in this set that publishes an engagement speed, in the Zuma 125 service manual: 'Clutch-in revolution 2700 ~ 3300r/min' and 'Clutch-stall revolution 5150 ~ 6150r/min'. Both are printed in the standard column with no entry in the limit column — they are targets to check against, not wear limits. Clutch lining is where the makers disagree. Yamaha gives 'Clutch shoe thickness 3.2mm ~ 3.5mm (0.13~0.14in) 2.0mm (0.079in)', the only figure here with both a standard range and a limit. Honda's CHF50 service manual gives a lining limit of 2.0 mm, SYM's XA05W-6 gives 2.0 mm against a 4.000 mm standard, and PGO's PA manual gives 1.5 mm against 3 mm. Piaggio's Vespa LX 125-150 service station manual gives 'Check minimum thickness 1 mm' — the lowest limit in the set, and published with no standard value at all. A 1 mm limit and a 2 mm limit are not interchangeable, and neither is a substitute for the figure belonging to the machine in front of you. The bell is measured by inside diameter and falls into size classes rather than a continuum: Honda's CHF50 and Kymco's Agility 50 both give 107.5 mm against a 107.0 to 107.2 mm standard, Piaggio's LX 125-150 gives 134.5 mm against 134 to 134.2 mm, Kymco's People S 250 gives 153.5 mm, and Yamaha calls the part a clutch housing and gives 120.5 mm against 120 mm. Piaggio alone publishes a criterion the others do not: 'Admissible limit eccentricity: 0.15 mm' — a bell can be within diameter and still out of round. Two things are published as standards with no limit, so the documents do not say when to replace: Piaggio's driven half-pulley spring at 'Standard length: 106 mm', and its torque-driver check, which is qualitative only — 'Make sure the pins and collar are not worn, re-assemble the pins and collar.'",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "high",
     "symptoms": [
       "clutch judder",
@@ -115,7 +104,6 @@
     ],
     "fix_procedure": "1. Take the lining limit from the machine's own manual; the published limits in this entry run from 1 mm to 2 mm and are not interchangeable. 2. Measure the bell by inside diameter against its own standard, and on a Piaggio also check eccentricity to 0.15 mm — a bell can pass on diameter and fail on runout. 3. On a Yamaha, compare engagement against the published 2,700 to 3,300 rpm clutch-in band before condemning the clutch. 4. Treat a driven-pulley spring free length as a comparison against the standard, because no limit is published for it. 5. Inspect the torque-driver pins and collar by eye; no maker here gives a figure for them.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -128,8 +116,6 @@
     "description": "Across thirty-four scooter owner's manuals read for this entry — two Honda, one Vespa, thirteen Genuine, three Yamaha, eight Lance, five Roketa, one Tank and one Bintelli — not one publishes a drive-belt width or a wear limit. Eleven of those were image-only scans and were read by optical character recognition rather than counted as empty. The clearest illustration is Genuine's, because the manual comes so close. The Buddy 125 owner's manual instructs the owner directly: 'Check the transmission for belt and roller wear. Rollers should not have major flat spots. Measure belt width to determine wear.' The accompanying illustration is a belt cross-section with arrows marking the width — and no number in the callout. The facing page of the same manual prints a spark plug gap of 0.6 to 0.7 mm and a torque figure, so the document is willing to print a tolerance. It prints none for the belt. The same wording appears in nine further Genuine manuals. Honda's owner's manuals behave the same way. In the SH125i and SH150i manual the word width appears once and means the vehicle's overall width, 730 mm; the drive belt has a maintenance row and its procedure page reference is a dash. In the PCX125 manual every one of twenty-six belt mentions is the dashboard service indicator, the schedule row or the index. Vespa's Primavera S and Sprint S manual contains the word width zero times while remaining fully searchable. Three Yamaha XMAX manuals in Portuguese, French and Spanish were searched in their own languages and returned no belt dimension either. One thing these manuals are not is free of belt numbers. A Bintelli owner's manual prints 'Belt Model   Gates 669MM' in its specification table, with a different model in the same table at 835 mm. That is a belt length identifying the part, not a width or a wear criterion — which is precisely the distinction this entry turns on. The widths and the limits exist, in service manuals, and those service manuals carry intervals too. Piaggio's Vespa LX 125-150 service station manual prints 'Minimum width 21.5 mm Standard width 22.5 ± 0.2 mm' one page after the interval it belongs to; SYM's Symply 125 gives a 19.0 mm limit and a separate interval table; Kymco's Agility 50 gives 'Drive belt width 17.5 16.5'. So the split is not intervals here and limits there. It is that an owner's manual never gives the number.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "high",
     "symptoms": [
       "belt width",
@@ -145,7 +131,6 @@
     ],
     "fix_procedure": "1. Do not look for a belt wear limit in an owner's manual; across thirty-four of them, none publishes one. 2. Get the width and limit from the service manual for that specific machine, where they sit alongside the interval rather than instead of it. 3. Where a specification table gives a belt figure in the hundreds of millimetres, that is a length identifying the part, not a wear limit. 4. Where no limit is obtainable, fall back on the qualitative criteria the makers do publish — cracking, fraying, and on a Piaggio the tooth root specifically. 5. Replace on the published interval when no limit can be measured against.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -158,8 +143,6 @@
     "description": "The Kymco Agility 50 service manual states a service limit in its chapter 9 specification table and states it again in the inspection text of the same chapter, and for four items the two disagree. The weight roller is 15.4 mm in the table and 'Service Limit: 12.4mm replace if below' in the text. The drive face collar is 23.94 mm in the table and 19.97 mm in the text. The clutch lining is 1.5 mm in the table and 2.0 mm in the text. The driven face spring free length is 154.6 mm in the table and 92.8 mm in the text. All four were read from rendered pages and confirmed by word position, so none is an extraction artefact, and the document is fully searchable with no empty pages in its 183. There is no rule that rescues this. The errors do not run one way: 15.4 mm is the credible roller limit against a 15.920 to 16.080 mm standard and 12.4 mm is not, while a 154.6 mm spring free length is implausible against 92.8 mm, with the same maker's People S 250 giving 130.5 mm for its equivalent. The table is right on one and probably wrong on the other. A fifth disagreement sits in the torque figures: the chapter 9 exploded view labels the drive face nut 3.5 to 4.0, the chapter 9 table says 5.5 to 6.5 kgf-m, and a third table in chapter 1 also says 5.5 to 6.5. Two against one. The same exploded view prints two of its callouts in gram-metres where kilogram-force metres are meant, and the specification table mixes kgf-m and kg-m within three adjacent rows. Four of the nine cross-referenced rows in that chapter do agree with their inspection text, including the belt at 16.5 mm and the clutch bell at 107.5 mm, so the manual is not uniformly unreliable — it is unreliable in a way that cannot be predicted from the page. The page headers carry three different model names. Of 183 pages, 153 read AGILITY 50, 21 read FILLY LX 50, five read AGIKITY 50 and four carry none. The FILLY pages are not an appendix: two whole chapters are headed that way, and two more alternate strictly by odd and even folio, which is the signature of a recycled page template rather than of two machines documented together — the content beneath a FILLY header in chapter 3 is Agility content. For the two chapters where every page carries the other name, the provenance of the procedures themselves is not established. This is a defect in one book, not a maker's habit. The same maker's People S 250 service manual agrees with itself on all six of its cross-referenced CVT figures and carries one model name across all 243 pages.",
     "make": "Kymco",
     "model": "Agility 50, Agility 125, People S 250, People 250",
-    "year_start": 2004,
-    "year_end": 2012,
     "severity": "critical",
     "symptoms": [
       "kymco agility service limit",
@@ -176,7 +159,6 @@
     ],
     "fix_procedure": "1. On a Kymco Agility 50, do not take a CVT service limit from one place in the manual without checking the other; four of nine disagree. 2. Where they disagree, sanity-check against the standard value and against the same maker's other models rather than preferring the table or the text. 3. Use 5.5 to 6.5 kgf-m for the drive face nut, which two of the three published locations give. 4. Read any torque callout in that manual against its neighbours; two are printed in gram-metres where kilogram-force metres are meant. 5. Treat procedures in the chapters headed with another model name as unverified for this machine. 6. Do not generalise this to Kymco; the People S 250 manual is internally consistent throughout.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -189,8 +171,6 @@
     "description": "Five makers publish symptom-to-component tables for the transmission, and they agree closely enough that the disagreements are informative. For loss of top speed or acceleration, Honda's PCX150 service manual lists 'Poor performance at high speed or lack of power • Worn drive belt • Weak driven face spring • Worn weight rollers'. Yamaha's Zuma 125 service manual heads the same fault 'POOR SPEED PERFORMANCE' and names 'Primary pulley weight(s) • Faulty operation • Worn primary pulley weight'. Kymco's People S 250 service manual gives 'Lack of power • Worn weight roller'. PGO's PA 100/125 service manual gives 'Can' t reach high speed, no pick-up 1.driving belt worn out. 2.Driving plate spring distortion. 3.Weight roller worn out' (spacing as printed). Piaggio's Vespa LX service station manual pairs cause with action: 'Roller wear; Presence of oil; Dirt' against 'Check the cap with filter is fitted to the transmission cover; clean the speed variator, replace the rollers if worn out'. For a machine that runs but will not move, Honda names 'Worn drive belt • Damaged ramp plate', Kymco names a 'Broken ramp plate', and Yamaha names the cam and the slider specifically: 'Damaged or worn primary pulley cam • Damaged or worn primary pulley slider'. For faults at take-off the lists move to the clutch. Honda ties 'Engine stalls or scooter creeps' to a 'Broken clutch shoe spring' — the spring, not the shoe. Kymco's road test says 'If the motorcycle tends to creep, or the engine stalls, check the clutch shoes for wear and replace if necessary.' Piaggio heads a section 'IRREGULAR CLUTCH PERFORMANCE OR SLIPPAGE' and instructs 'Check that the clutch bell is not scored or worn abnormally', and for a rear wheel turning at idle names 'Clutch fault Check the springs / clutch masses'. SYM gives the most specific list of all, for a machine that lurches as it pulls away: 'Clutch ling spring broken', 'Clutch outer cover stuck with clutch balance weights', 'Connection parts in clutch and shaft worn out or burned' (typo as printed). The pattern worth carrying is that the drive side owns speed and power complaints, the driven side owns take-off complaints, and the belt appears on both lists — which is why the belt is checked first and is rarely the whole answer.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "high",
     "symptoms": [
       "scooter will not accelerate",
@@ -208,7 +188,6 @@
     ],
     "fix_procedure": "1. Separate the complaint before opening anything: speed and power point at the drive side, take-off and creep point at the clutch side. 2. Inspect the belt first because it appears on both lists, then keep looking — it is rarely the whole answer. 3. For a machine that runs but will not move, check the ramp plate, cam and slider before the clutch. 4. For creeping at idle or stalling on engagement, check the clutch shoe springs as well as the lining. 5. For slip or irregular engagement, inspect the bell for scoring and for contamination before replacing parts. 6. Check for oil in the transmission case, which Piaggio names as a cause in its own right.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -221,8 +200,6 @@
     "description": "A kickstart is a starting method that does not need the battery, and on the machines where it survives the makers say so plainly. Kymco's Agility 50 and 125 owner's manual lists the starting system as 'Electric starter motor (kick-start back-up)' and publishes the procedure: 'While squeezing the rear brake lever, kick down on the kick start lever without rotating the throttle grip' and 'Once the scooter is started, fold the kick start lever back to its original position.' Its troubleshooting checklist makes the reason explicit — 'Is the battery voltage low (you may need to kick start your scooter)?' Genuine states the purpose for the Buddy 50: 'The kick start lever can be used to start your engine as an alternative to the electric-start option', and lists the starting system as 'Electric and Manual Kick-Start'; the Urbano 125 manual says 'Electric and Kick'. The diagnostically useful difference is one Genuine states outright: 'It is not necessary to hold the brake lever in when starting your vehicle with the kick-start method', where the same manual's electric-start procedure requires pulling a brake lever and holding the button. A failed brake-lever switch therefore kills electric start and leaves the kickstart working — which turns the kickstart into a diagnostic test rather than only a fallback. Piaggio and Honda both fitted kickstarts to carburetted machines of the same era. Piaggio's Vespa LX 125-150 lists 'Start-up Electrical / Kick starter' and its troubleshooting says to 'Check the starter motor and the kick-starter unit'; Honda's CHF50 service manual titles a whole chapter 'KICKSTARTER/DRIVE PULLEY/DRIVEN PULLEY/CLUTCH'. What the documents do not support is the case a rider most wants answered. Across the manuals read for this entry, kickstart and fuel injection never appear on the same machine. Yamaha's injected Zuma 125 lists 'Starting system type Electric starter' and the word kick appears zero times in its 338 pages. Genuine's Buddy Kick is injected and lists 'Start-up Electric Start' — every occurrence of the word kick in that manual is the model's own name. The one maker statement linking a flat battery to the kickstart belongs to a carburetted machine. So whether an injected scooter can be kick-started on a flat battery has no answer in these documents, because the injected machines here have no kickstart to answer with.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "medium",
     "symptoms": [
       "kick start",
@@ -239,7 +216,6 @@
     ],
     "fix_procedure": "1. On a machine fitted with a kickstart, use it as a diagnostic as well as a fallback: if the engine kick-starts but will not start electrically, suspect the brake-lever switch or the starter circuit rather than the engine. 2. On a Genuine, note that kickstart does not require the brake lever while electric start does. 3. Expect a kickstart on carburetted machines of this class and not on injected ones. 4. Do not assume a scooter has a kickstart because a sibling model does, or because the model name contains the word. 5. Fold the lever back after starting, as the makers instruct.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -252,8 +228,6 @@
     "description": "Across sixteen documents read for this entry, from Piaggio, Kymco, SYM, Genuine and PGO, not one publishes a fault code associated with a drive belt, a variator, a roller, a clutch or a drive pulley. Each of those documents was confirmed searchable before its zero was counted, returning at least seventeen hits on a control term. What the makers publish instead is a symptom table. Piaggio's service station manual routes transmission faults to 'Inefficient automatic transmission | Check the rollers and the pulley movement, replace the damaged parts' and 'Excessive driving belt wear | Check it and replace, if necessary'. Its owner's manual does the same for the rider: 'AUTOMATIC TRANSMISSION PROBLEMS / CVT rollers and/or drive belt damaged / Contact an Authorised Service Centre.' PGO's service manual has no code table at all, only a symptom-to-cause list. Where these makers do publish codes, the codes are about something else. Piaggio's diagnostic code section covers the immobiliser alone — a one-flash, two-flash and three-flash code, all concerning the transponder, aerial or key, with the first described as indicating 'a system where the serial line is not present or is not detected'. The one numeric code found in any owner's manual read here is Genuine's 'Some error messages (Code: P0261) will be indicated on the display panel when the rollover switch has been activated', which is an injector-circuit code; that manual's diagnostic page lists engine speed, coolant temperature, manifold pressure, throttle position and idle control, and no transmission channel at all. The consequence for diagnosis is direct. A scooter with a CVT fault will not set a code, will not illuminate a transmission warning, and cannot be triaged with a scan tool. The fault has to be reached through the symptom tables the makers publish and through measurement of the parts themselves.",
     "make": "Piaggio, Vespa, Honda, Yamaha, Kymco, SYM, Genuine",
     "model": "Vespa LX 50, Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa Primavera, Vespa Sprint, Piaggio MP3 400, Piaggio Beverly, Piaggio Fly, Honda PCX150, Honda PCX125, Honda SH125i, Honda SH150i, Honda CHF50, Yamaha Zuma 125, Yamaha XMAX, Kymco Agility 50, Kymco Agility 125, Kymco People S 250, Kymco Like 150i, Kymco Super 8, SYM Joyride, SYM JET 50, SYM JET 100, SYM Symply 125, Genuine Buddy 125, Genuine Buddy 170i, Genuine Roughhouse 50, Genuine Urbano 125",
-    "year_start": 2002,
-    "year_end": 2026,
     "severity": "medium",
     "symptoms": [
       "cvt fault code",
@@ -269,7 +243,6 @@
     ],
     "fix_procedure": "1. Do not look for a CVT fault code; across sixteen documents from five makers, none exists. 2. Diagnose the transmission by symptom and by measurement, using the makers' own symptom tables. 3. Where a scooter does show a code, read it as belonging to fuelling, ignition or the immobiliser rather than to the transmission. 4. A lamp that is out does not clear a CVT complaint, and a scan tool that reports no faults has not examined the belt.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -282,8 +255,6 @@
     "description": "Asking what a Piaggio drive belt's minimum width is has no single answer, and the way the figures divide is the useful part. Across six Piaggio and Vespa workshop and service station manuals, the minimum width is published three ways: the Fly 50 4T workshop manual 633212 gives 'Transmission belt/Minimum width 17.5 mm' with no standard value at all; the Vespa LX 125-150 4T Euro 3 manual 633976, the Fly 125-150 workshop manual 633225 and the Beverly Tourer 125 service station manual 665018 all give a 21.5 mm minimum against a 22.5 plus or minus 0.2 mm standard; and the Vespa GTS Super 300 ie manual gives 19.5 mm against 21.3 plus or minus 0.2 mm. The MP3 400 gives a different pair again, 27 mm minimum against 28.2 mm standard. The division is by engine displacement class rather than by model family, and one document proves it: workshop manual 618162 covers the Beverly 125 and the Beverly 250 together and prints both pairs on the same page — 21.5 mm for the 125 4T and 19.5 mm for the 250 4T. Two machines sharing a model name, a manual and a page, with different belts. That is the trap. A figure taken from a Piaggio manual and applied to another Piaggio is wrong roughly as often as it is right, and the error is not small: 17.5 mm and 27 mm are both real minimums for machines from the same maker. The 250 and 300 class takes a narrower minimum than the 125 and 150 class, which is counter-intuitive if a reader assumes bigger machine means bigger belt. The corpus already carries the 125-class figures against the manuals that publish them. What this entry adds is the rule that governs which figure applies, and the warning that the model name on the cover does not determine it.",
     "make": "Piaggio, Vespa",
     "model": "Vespa LX 125, Vespa LX 150, Vespa GTS 300, Vespa GTS Super 300, Piaggio Fly 50, Piaggio Fly 125, Piaggio Fly 150, Piaggio Beverly 125, Piaggio Beverly 250, Piaggio Beverly Tourer 125, Piaggio MP3 400",
-    "year_start": 2004,
-    "year_end": 2020,
     "severity": "high",
     "symptoms": [
       "piaggio belt width",
@@ -300,7 +271,6 @@
     ],
     "fix_procedure": "1. Establish the engine displacement class before quoting a Piaggio belt minimum, not the model family. 2. Use the figure printed in the manual section for that displacement: a 50 takes 17.5 mm, a 125 or 150 takes 21.5 mm against 22.5 plus or minus 0.2, a 250 or 300 takes 19.5 mm against 21.3 plus or minus 0.2, and an MP3 400 takes 27 mm against 28.2. 3. Where one manual covers two engine sizes, read the section heading and not the cover. 4. Do not assume a larger machine takes a wider belt; the 250 and 300 minimum is narrower than the 125 and 150 minimum.",
     "parts_needed": [],
-    "estimated_hours": 1.0,
     "source": "service-manual",
     "applicability": {
       "transmission": [
@@ -331,7 +301,6 @@
     ],
     "fix_procedure": "1. On a 2015 to 2020 XC155, check this campaign by VIN before diagnosing a stall or a no-restart. 2. Treat the machine as not to be ridden until the campaign work is done; the regulator flags it accordingly. 3. When searching a regulator record for a transmission fault, search the maker's own word — sheave for Yamaha — and not only belt, pulley or variator. 4. Do not filter by the regulator's component taxonomy for this class of fault; this one is classified as ENGINE. 5. Retrieve by campaign number as well as by machine, because the per-vehicle route omits the affected-unit count.",
     "parts_needed": [],
-    "estimated_hours": 1.0,
     "source": "regulation",
     "applicability": {
       "transmission": [
@@ -359,7 +328,6 @@
     ],
     "fix_procedure": "1. Treat this as a floor: one CVT campaign found, and no claim that it is the only one. 2. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 3. Do not conclude from this entry that a scooter CVT has no open campaign — conclude only that a corpus-wide sweep found one.",
     "parts_needed": [],
-    "estimated_hours": 0.5,
     "source": "regulation",
     "applicability": {
       "transmission": [
@@ -372,8 +340,6 @@
     "description": "The regulator publishes two index endpoints and they disagree with each other, in both directions. The 2013 Vespa 946 fuel-line campaign 14V364000 resolves only under its own model string, and for model year 2018 the model index returns one Vespa model while the make index for the same year returns 347 makes with Vespa absent. Tested across seventeen makes and six model years, 25 of 102 combinations were contradictory — thirteen where the model index returns results while the make is missing from the make index, and twelve the other way round. The contradictions concentrate in low-volume makes, though two touched high-volume ones. Seventeen makes over six years is a sample and not a census. The model index also returns nothing for 2026 Vespa while campaign 26V302000 is a real 2026 Vespa campaign, so any count built on the index is a lower bound by construction. Worse, the model index cannot be trusted as a source of query strings even for itself: the exact model string it supplies for 2018 Vespa returns nothing when used against the per-vehicle recall lookup. And the per-vehicle lookup cannot distinguish a wrong name from a clean record. A real make with a real model, a real make with a fabricated model, and a pair of nonsense strings all return the same HTTP 400 carrying the same sixty-six byte body reading that results were returned successfully with a count of zero. A misspelled model name reads exactly like a machine with no campaigns. None of this is specific to a CVT, to a scooter, or to any transmission — the contradictory combinations include Ducati, Suzuki and Moto Guzzi as well as the scooter makes. Nor is it uniform. Of the 102 combinations tested, 77 were consistent, and seven of the seventeen makes produced no contradiction at all in the sample. So a make that comes back clean has not been shown to be sound; it has been shown to be untested here, which is the same caution the sample size already requires.",
     "make": "Yamaha, Piaggio, Vespa, Honda, Kymco, SYM, Genuine, Aprilia, Lance, Moto Guzzi, Suzuki, Ducati",
     "model": "XC155, Vespa GTS, Vespa Primavera, Vespa 946, Piaggio MP3, Honda Metropolitan, Kymco Agility, Kymco Like 150i, SYM Symba, Genuine Buddy, Genuine Buddy Kick",
-    "year_start": 2003,
-    "year_end": 2026,
     "severity": "medium",
     "symptoms": [
       "is my scooter recalled",
@@ -389,7 +355,6 @@
     ],
     "fix_procedure": "1. Do not use either index endpoint to decide whether a make or model has campaigns; they contradict each other and the data in both directions. 2. Do not read an empty per-vehicle response as a clean record, because a wrong model string returns the identical response. 3. Query by campaign number wherever one is known, which is the only route that returns the full record. 4. Confirm any individual machine by VIN through a dealer or the regulator's own lookup rather than by an enumeration. 5. Treat any count built from an index as a lower bound, never as a census.",
     "parts_needed": [],
-    "estimated_hours": 1.0,
     "source": "regulation"
   }
 ]

@@ -254,3 +254,41 @@ A permanent guard pins the four with their resolutions and fails on a
 fifth. It exists because every other guard here asks whether a machine
 receives rows it may not have; only a refuter thought to ask whether a
 machine misses rows written for it.
+
+---
+
+## `source` means "manufacturer document", not "service manual" (added Phase 255B)
+
+A refuter auditing Phase 255B's rows reported, repeatedly and across several
+rows, that `source: service-manual` was wrong wherever the row's evidence was
+an **owner's** manual. The question is settled here rather than row by row,
+because the answer is already in the corpus.
+
+**Measured across all 107 seed files: 192 rows carry `source:
+service-manual`, and 75 of them — 39% — cite an owner's manual in their own
+description.** That is not a labelling error repeated 75 times. It is what the
+label has always meant.
+
+**The decision: `service-manual` means the row's evidence is a manufacturer
+document.** Owner's manual, service manual, workshop manual, service station
+manual, parts catalogue — all of them. It is the provenance *class*, which is
+the axis the `source` vocabulary discriminates on:
+
+| label | what it means |
+|---|---|
+| `service-manual` | a manufacturer document |
+| `regulation` | primary legal or regulator text |
+| `mechanic-verified` | a person confirmed it on a machine |
+| `forum` | community-derived, provenance surfaced at display |
+| `unverified` · `model-generated` | neither, and not shippable content |
+
+**No new enum value was added**, deliberately. A separate `owners-manual`
+value would split one provenance class across two labels, make every existing
+query wrong, and answer a question nobody asks: what a reader needs to know is
+whether a claim rests on a document the maker published, and it does.
+
+**What the row must still do** is name its document *type* accurately in its
+own prose. `test_a_service_manual_row_names_its_document` enforces that a
+document is named at all; naming it as a service manual when it is an owner's
+manual is a defect in the sentence, not in the label. Phase 255B fixed two
+such sentences and dropped the rows that had more.

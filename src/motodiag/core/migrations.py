@@ -4636,6 +4636,22 @@ MIGRATIONS: list[Migration] = [
             "transmission set on this row would withhold it from exactly "
             "the three marques this fix adds -- F115 re-created by "
             "another route, in the migration claiming to close it. "
+            "F132: the unevidenced year windows go, and so do the repair "
+            "estimates on rows that describe no repair. The Phase 254 CVT "
+            "rows carried year_start/year_end of 2002-2026 cited to nothing "
+            "at either end, and `cli/diagnose.py::_covers_year` applies that "
+            "window BEFORE retrieval, so it silently added and removed rows. "
+            "Two rows whose own prose names a model-year range keep theirs. "
+            "`estimated_hours` was set on every row in the file and none of "
+            "them describes a repair. "
+            "Nulling a bound removes a gate, so this can only widen. "
+            "Measured over 11 machines and 8 model years: 123 row-slots "
+            "gained, 0 lost, and for every row declaring {cvt} the widening "
+            "reaches only machines the filter already admits. Row 4605 is "
+            "the exception because it is unscoped by design, and it now "
+            "reaches a 2001 Gold Wing -- which is the vocabulary row doing "
+            "its job. Operator's decision, 2026-09-22, on the table in the "
+            "phase's v1.1 Results."
             "4611 has no KNOWN_SELF_EXCLUDING entry before or after: its "
             "junction names no machine it excludes. Two of this phase's "
             "three splits touch that pin, not three. "
@@ -4674,6 +4690,47 @@ MIGRATIONS: list[Migration] = [
             INSERT OR IGNORE INTO known_issue_models (issue_id, model)
             SELECT id, 'SYM Symba' FROM known_issues
              WHERE title LIKE 'What the regulator record shows for scooter CVTs%';
+
+            -- F132, reversed: the unevidenced year windows and the repair
+            -- estimates on rows that describe no repair.
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'What a scooter CVT is, in the makers'' own words — and why searching for the word ''variator'' finds nothing';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Three unrelated components are all called a drive belt, and a search for one returns the other two';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Every maker publishes a roller wear limit — in a service manual, and two of them publish it twice with different numbers';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'The clutch side: one maker publishes an engagement speed, one publishes a 1 mm lining limit where everyone else says 2 mm';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'No scooter owner''s manual publishes a belt width or wear limit — one even prints the measuring figure with the number left off';
+
+            UPDATE known_issues SET year_start = 2004, year_end = 2012, estimated_hours = 0.5
+             WHERE title = 'A Kymco service manual gives four CVT figures twice with different numbers, and carries three different model names in its own page headers';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'What the makers themselves say a CVT symptom means — quoted rather than inferred';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'Kickstart backup, and the scooter named Kick that has none';
+
+            UPDATE known_issues SET year_start = 2002, year_end = 2026, estimated_hours = 0.5
+             WHERE title = 'No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by the lamp';
+
+            UPDATE known_issues SET year_start = 2004, year_end = 2020, estimated_hours = 1.0
+             WHERE title = 'Piaggio''s belt limit is three different numbers, and one manual prints two of them on the same page';
+
+            UPDATE known_issues SET estimated_hours = 1.0
+             WHERE title = 'A CVT recall exists that no belt, pulley or variator search would find — it is filed under the word sheave';
+
+            UPDATE known_issues SET estimated_hours = 0.5
+             WHERE title = 'What the regulator record shows for scooter CVTs — one campaign, and two indexes that disagree with each other and with the data';
+
+            UPDATE known_issues SET year_start = 2003, year_end = 2026, estimated_hours = 1.0
+             WHERE title = 'The regulator''s two indexes contradict each other, and an empty recall answer is not a clean record';
 
             -- F115, reversed. The make column and, because it is derived
             -- the same way and has no rebuild on this path, the three
