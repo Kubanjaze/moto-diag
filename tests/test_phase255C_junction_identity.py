@@ -22,6 +22,7 @@ from __future__ import annotations
 import json
 import pathlib
 import re
+import shutil
 import sqlite3
 
 import pytest
@@ -243,6 +244,84 @@ class TestOneCanonicalPerMachine:
             if got.model.resolved != model:
                 bad.append((make, model, got.model.resolved))
         assert not bad, f"{len(bad)} junction pair(s) do not resolve to themselves: {bad[:6]}"
+
+    # ---- Guard 3: decision 3, asserted over the junction itself ----------
+    #
+    # Guards 1 and 2 could not see this class and neither could have.
+    # Guard 2 is scoped PER MARQUE, so `(Harley-Davidson, 'LiveWire One')`
+    # and `(LiveWire, 'One')` are different pools and never compared.
+    # Guard 1 asks whether a pair resolves to itself, and a marque-leading
+    # string is in the vocabulary, so it resolves to itself perfectly.
+    #
+    # What was reported as "0" for this property was S0-5's CROSS-MARQUE
+    # COLLISION count — no normalised key carrying two explicit marques —
+    # which is a different question that happens to also answer 0. The
+    # guard named in decision 6 was never written. This is it.
+
+    @staticmethod
+    def _marque_leading(conn, marques):
+        """The rule, in one place. The guard and its positive control share
+        this function, because a control that reimplements the rule proves
+        only that two implementations agree."""
+        return [(i, mk, md) for i, mk, md in conn.execute(
+            "SELECT issue_id, make, model FROM known_issue_models")
+            if any(md.lower().startswith(m.lower() + " ") for m in marques)]
+
+    def test_guard_3_no_junction_model_begins_with_a_marque(self, seeded):
+        """Decision 3 says the model never carries the marque. ANY marque.
+
+        Measured on the live database before the fix: **59 rows**, two
+        strings — `LiveWire One` (42) and `LiveWire S2 Del Mar` (17), both
+        filed under `Harley-Davidson`. `canonicalise` stripped only the
+        pool's OWN marque, so a sub-brand's name survived in the parent's
+        pool. All 59 were redundant: every issue holding the prefixed form
+        already held the canonical pair under LiveWire, and not one issue
+        had only the prefixed form.
+        """
+        from motodiag.knowledge.marques import marque_vocabulary
+        marques = set(marque_vocabulary(seeded))
+        assert marques, "fixture assumption: the marque vocabulary is not empty"
+        with sqlite3.connect(seeded) as conn:
+            bad = self._marque_leading(conn, marques)
+        assert not bad, (
+            f"{len(bad)} junction row(s) carry a marque-leading model. "
+            f"Decision 3: the model never carries the marque, and a "
+            f"sub-brand is still a marque. Offenders: {sorted({b[2] for b in bad})[:6]}")
+
+    def test_guard_3_positive_control_a_planted_string_is_caught(self, seeded, tmp_path):
+        """A guard that cannot fail is not a guard.
+
+        Plants `Yamaha Zuma 125` under Honda — a marque-leading model in a
+        pool that does not own that marque, which is exactly the shape the
+        live corpus held — and asserts the rule returns it and only it.
+        """
+        from motodiag.knowledge.marques import marque_vocabulary
+        marques = set(marque_vocabulary(seeded))
+        planted = tmp_path / "planted.db"
+        shutil.copy(seeded, planted)
+        with sqlite3.connect(planted) as conn:
+            issue = conn.execute("SELECT id FROM known_issues LIMIT 1").fetchone()[0]
+            conn.execute(
+                "INSERT OR REPLACE INTO known_issue_models (issue_id, make, model) "
+                "VALUES (?, 'Honda', 'Yamaha Zuma 125')", (issue,))
+        with sqlite3.connect(planted) as conn:
+            bad = self._marque_leading(conn, marques)
+        assert [b[2] for b in bad] == ["Yamaha Zuma 125"], (
+            "the guard did not catch a planted marque-leading string, so it "
+            f"cannot catch a real one either; it returned {bad}")
+
+    def test_canonicalise_strips_another_marques_prefix(self):
+        """The unit, away from any corpus. Both directions in one place."""
+        from motodiag.knowledge.models import canonicalise
+        marques = {"Harley-Davidson", "LiveWire", "Yamaha", "Honda"}
+        # another marque's prefix, in a pool that does not own it
+        assert canonicalise("Harley-Davidson", {"LiveWire One"}, marques) == {"One"}
+        # the pool's own marque, which always worked
+        assert canonicalise("Yamaha", {"Yamaha Zuma 125"}, marques) == {"Zuma 125"}
+        # NOT a marque, so nothing is stripped
+        assert canonicalise("Honda", {"Super Cub C125"}, marques) == {"Super Cub C125"}
+        # a bare marque name alone is left rather than emptied
+        assert canonicalise("Harley-Davidson", {"LiveWire"}, marques) == {"LiveWire"}
 
     def test_the_junction_carries_the_marque(self, seeded):
         with sqlite3.connect(seeded) as conn:

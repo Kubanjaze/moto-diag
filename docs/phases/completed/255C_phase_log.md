@@ -49,6 +49,12 @@ it is, filed on the general-applicability ticket. The fix is still strictly
 better: four bare numbers leave the model vocabulary, where they could match
 almost any text.
 
+**Commit.** `8fd680f`.
+
+> **The bug-fix register for this phase is #1 through #7**, one dated entry
+> each, in the shape Issue / Root cause / Fix / Files / Verified / Commit.
+> #1 is here; #2–#4 are at 15:40, #5–#6 at 16:20, #7 at 18:05.
+
 ### 2026-09-22 12:20 — The positive gate at extraction
 
 **What it replaces.** `CONTRAST`, `_PROSE_WORD`, `_NEGATED_PAREN` and
@@ -130,27 +136,77 @@ make, which is right whether or not a cross-make collision exists today.
 **Break-it.** Guard 1 and Guard 2 were each broken on purpose and seen to
 fail before the commit landed.
 
-### 2026-09-22 15:40 — Three more bug fixes, each a real defect in shipped code
+### 2026-09-22 15:40 — Bug fix #2: migration 065's post_apply wrote the wrong table shape
 
-* **#2 — migration 065's `post_apply` wrote the 3-column junction at v65.**
-  It calls `rebuild_model_index`, which writes the pair form, but 065 runs
-  while the table is still 2-column. **Any database at 64 or 65 could not
-  migrate.** Fixed by reading `PRAGMA table_info` and writing to suit the
-  shape in front of it.
-* **#3 — the schema-56 degradation path crashed on placeholder count.** The
-  tier query gained a binding for the pair; the make-only fallback still
-  passed six parameters into five placeholders — *"Incorrect number of
-  bindings"*. Reachable on any database short of migration 057. Fixed with a
-  separate `make_only_params`.
-* **#4 — migration 065's rollback restored a string no rebuild produces.**
-  Its `INSERT OR IGNORE` carried the literal `'SYM Symba'`, the form the
-  model **column** spells; 255C canonicalises that machine to `'Symba'`. The
-  round trip landed one row short — 2,385 → 2,384, `(164, 'Symba')` lost and
-  `'SYM Symba'` left behind — and the 2,385 baseline was itself inflated by
-  the same spurious insert, so the *correct* figure on both sides is 2,384.
-  Fixed to the canonical form, reasoning left in the SQL. **Junction literals
-  are written in the form the extractor produces, never the form the column
-  spells.**
+**Issue.** Any database at schema 64 or 65 could not migrate. The failure is
+a write against a table that does not have the column being written.
+
+**Root cause.** Migration 065's `post_apply` calls
+`models:rebuild_model_index`. Phase 255C changed that function to write the
+`(issue_id, make, model)` pair form — but 065 runs while the junction is
+still the 2-column `(issue_id, model)` table, because the column is added by
+066, which has not run yet. The function was correct for the schema it ends
+at and wrong for the schema it runs at.
+
+**Fix.** `index_models_for_issue` reads `PRAGMA table_info(known_issue_models)`
+and writes 3 columns when `make` is present, 2 (deduped) when it is not. It
+writes to suit the shape in front of it rather than the shape it expects.
+
+**Files.** `src/motodiag/knowledge/models.py` — `index_models_for_issue`.
+
+**Verified.** A database seeded at 64 migrates to 66 without error; the
+255B round-trip test exercises the 64 → 66 → 64 path end to end.
+
+**Commit.** `f11505b`.
+
+### 2026-09-22 15:40 — Bug fix #3: the schema-56 degradation path crashed on placeholder count
+
+**Issue.** `sqlite3.ProgrammingError: Incorrect number of bindings supplied`
+on any database that has not taken migration 057.
+
+**Root cause.** The tier query gained a binding when the junction test
+became a `(make, model)` pair. The make-only fallback — the branch that
+keeps a pre-057 database returning rows rather than silence — kept its five
+placeholders while being handed the new six-parameter list.
+
+**Fix.** A separate `make_only_params` built for that branch, five bindings
+to five placeholders.
+
+**Files.** `src/motodiag/knowledge/vehicle_resolver.py` —
+`known_issues_for_vehicle`.
+
+**Verified.** `test_the_degradation_path_still_binds` builds a database at
+the older schema and executes the fallback; it fails with the shared
+parameter list and passes with the separate one.
+
+**Commit.** `f11505b`.
+
+### 2026-09-22 15:40 — Bug fix #4: migration 065's rollback restored a string no rebuild produces
+
+**Issue.** A full rollback to schema 64 landed the junction one row short —
+2,385 → 2,384 — with `(164, 'Symba')` lost and `'SYM Symba'` left behind.
+
+**Root cause.** `known_issue_models` is derived, and the rollback path has no
+`post_apply` to rebuild it, so 065's `rollback_sql` restores two junction
+rows by hand. One literal read `'SYM Symba'` — the form the model **column**
+spells. Phase 255C canonicalises that machine to `'Symba'`, so the rollback
+inserted a string no rebuild would ever produce. The 2,385 baseline was
+inflated by the same spurious insert, so the correct figure on both sides is
+2,384.
+
+**Fix.** The literal changed to the canonical `'Symba'`, with the reasoning
+left in the SQL comment so the next canonicalisation finds it.
+`'Filly LX 50'` needed no change: its marque is Kymco, which the column does
+not prefix. **Junction literals are written in the form the extractor
+produces, never the form the column spells.**
+
+**Files.** `src/motodiag/core/migrations.py` — migration 065 `rollback_sql`.
+
+**Verified.** The round trip is exact in both directions,
+`LOST: []  GAINED: []`, measured on an independently reconstructed
+pre-255B seed.
+
+**Commit.** `f11505b`.
 
 **Process note.** 255C's first three commits were made on `master` rather
 than on a phase branch, against the convention every prior phase follows.
@@ -284,3 +340,124 @@ tier, which is what 244I's monotonicity pin requires.
 day: *measure what produced the number.* A "before" column produced by new
 code is not a number about the old code, however carefully the rest of the
 table is built.
+
+### 2026-09-22 16:20 — Bug fix #5: the plain-model early accept bypassed canonicalisation
+
+**Issue.** Three live rows — 868, 1290 and 1307 — were indexed into the
+junction as **nothing at all**. Row 868 names the Energica Experia, so an
+Experia could never reach tier 0 on the row that names it: Phase 255C's own
+defect, reintroduced on three rows by Phase 255C.
+
+**Root cause.** 244I short-circuits a delimiter-free model value straight
+into the index, skipping `covered_part` *and* the vocabulary, so the raw
+column text became the junction entry. The pair form's version of that
+accept tested **exact** vocabulary membership, and `Energica Experia` is not
+in a pool that now correctly holds `Experia`, so no marque owned it and the
+row produced no pair. Decision 1 says extraction has no normaliser of its
+own; an accept that returns the input unchanged is a second normaliser, and
+the worst kind.
+
+**Fix.** The accept is removed, not patched. Every value goes through the
+vocabulary, which is canonical. The gate stays in `_model_tokens`, at
+vocabulary construction, where a name is first admitted.
+
+**Files.** `src/motodiag/knowledge/models.py` — `extract_model_pairs`.
+
+**Verified.** Measured over the corpus: **985 rows unchanged, 18 changed, 0
+lost**, three rescued from being indexed as nothing. The other fifteen
+traded a raw string for the canonical: `S1000XR (2015-2019)` → `S 1000 XR`,
+`Road King (FLHR)` → `Road King`, `R-series (Paralever)` → `R-series`, and
+`R1150/R1200 (Integral ABS)` → **both** `R1150` and `R1200`.
+
+**Commit.** `0e438ca`.
+
+### 2026-09-22 16:20 — Bug fix #6: extract_models was orphaned and still emitting the old defect
+
+**Issue.** Phase 209B's orphan pin failed:
+`knowledge/models.py::extract_models` is referenced by no code anywhere in
+`src/`. The F9 integration gap — a public function kept alive only by its
+own tests.
+
+**Root cause.** The pair form superseded its single `src/` caller.
+
+**Fix.** Deleted rather than allowlisted, and measuring is what decided
+that: `extract_models` and `extract_model_pairs` disagree on **3 of 1,003**
+live rows, and every disagreement is a marque-prefixed raw string —
+`Energica Experia`, `KTM 690 Duke (LC4 single)`, `KTM LC8 75-degree V-twin`.
+A superseded function that still emits the defect its replacement removes is
+a loaded gun for the next caller.
+
+**Files.** `src/motodiag/knowledge/models.py` (deletion plus a note where it
+stood); `tests/test_phase244I_model_vocabulary.py` — four assertions about
+exclusion parsing now project the pair form through one `_extracted` helper.
+
+**Verified.** 209B's orphan pin passes; 244I's four assertions test the same
+property through the projection.
+
+**Commit.** `0e438ca`.
+
+### 2026-09-22 18:05 — Bug fix #7: canonicalise stripped only the pool's own marque
+
+**Issue.** Raised by the operator's terminal check. **59 junction rows carry
+a model string that begins with a marque name**, which decision 3 forbids:
+`LiveWire One` (42 rows) and `LiveWire S2 Del Mar` (17 rows), both filed
+under `Harley-Davidson`.
+
+**Root cause, in two parts.**
+
+*The code.* `canonicalise(marque, names)` strips `marque.lower() + " "` —
+the pool's OWN marque only. `LiveWire One` does not begin with
+`harley-davidson `, so it survived with the marque attached. A sub-brand's
+name in its parent's pool is invisible to that rule.
+
+*The rationale.* The docstring stated the narrowing was deliberate: that
+`LiveWire One` under Harley-Davidson "is a machine there and **not a
+redundant prefix**". **That was asserted, never measured.** Measured: all 59
+are redundant. Every issue holding `(Harley-Davidson, 'LiveWire One')`
+already held `(LiveWire, 'One')`; every issue holding
+`(Harley-Davidson, 'LiveWire S2 Del Mar')` already held
+`(LiveWire, 'S2 Del Mar')`. **Not one issue had only the prefixed form.**
+
+**And the guard that should have caught it did not exist.** Decision 6
+specified *no junction string starts with a marque name*, and `0` was
+reported against it. That `0` was S0-5's **cross-marque collision** count —
+no normalised key carrying two explicit marques — which is a different
+question that also answers 0. Guard 1 could not see this class (a
+marque-leading string is in the vocabulary, so it resolves to itself
+perfectly) and Guard 2 could not either (it is scoped per marque, and these
+are two different marques' pools). The specified guard was never written.
+
+**Fix.** `canonicalise` takes the marque vocabulary and strips a leading
+**known marque, whoever owns the pool**, longest prefix first. Guard 3 is
+now written as specified and run over the whole junction, with a positive
+control that plants `Yamaha Zuma 125` under Honda and asserts the rule
+returns it and only it — guard and control sharing one rule function,
+because a control that reimplements the rule proves only that two
+implementations agree.
+
+**Files.** `src/motodiag/knowledge/models.py` — `canonicalise` and its call
+site in `model_vocabulary`; `tests/test_phase255C_junction_identity.py` —
+Guard 3, its positive control, and a unit test of `canonicalise`;
+`tests/test_phase250C_model_vocabulary.py` — see below.
+
+**Verified.** Guard 3 over the live junction: **59 → 0**. Rebuild is
+surgical — junction total unchanged at 2,795, `LiveWire One` → `One` (42),
+`LiveWire S2 Del Mar` → `S2 Del Mar` (17), nothing else moves. Retrieval
+re-measured across all sixteen machines: **no machine's total or tier-0
+count changes**, which is what "all 59 were redundant" predicts. Break-it:
+with the fix reverted, Guard 3 fails listing all 59 and the positive control
+fails too.
+
+**One test moved with it, and it is the same lesson again.** 250C's
+`test_a_sub_marques_models_stay_with_its_parent` asserted that
+Harley-Davidson's pool contains a string with the **substring `"LiveWire"`**
+in it — the marque's *spelling* standing in for the sub-marque's *machines*.
+Decision 3 removed the marque from every model string, so the proxy went to
+zero while the property it stood for was completely intact: every one of
+LiveWire's nine models, `One` and `S2 Del Mar` included, is still reachable
+from Harley-Davidson. The assertion now names the machines and checks
+containment directly, which is what its docstring always claimed it did.
+**Measure what produced the number** applies to assertions as well as to
+counts.
+
+**Commit.** See the close-out commit for this fix.

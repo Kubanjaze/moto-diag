@@ -366,7 +366,7 @@ def vocabulary_from_conn(conn) -> dict[str, set[str]]:
     # A marque name is not a model, wherever it came from.
     for marque, names in vocab.items():
         names -= {m for m in list(names) if m in marque_vocab}
-    return {marque: canonicalise(marque, names)
+    return {marque: canonicalise(marque, names, marque_vocab)
             for marque, names in vocab.items() if names}
 
 
@@ -400,7 +400,8 @@ def _flex_search(name: str, haystack: str) -> bool:
     return bool(_flex_pattern(name).search(haystack))
 
 
-def canonicalise(marque: str, names: set[str]) -> set[str]:
+def canonicalise(marque: str, names: set[str],
+                 marques: Optional[set[str]] = None) -> set[str]:
     """One canonical model string per machine, within a marque.
 
     Phase 255C. The resolver has **no rule about marques** — its canonical
@@ -413,30 +414,58 @@ def canonicalise(marque: str, names: set[str]) -> set[str]:
 
     Two operations, in order:
 
-    1. **The model never carries its own marque.** `Aprilia SR Max` under
-       Aprilia becomes `SR Max`. A leading marque is stripped only when it
-       names the marque whose pool this is — so `LiveWire One` under
-       Harley-Davidson keeps its `LiveWire`, which is a machine there and
-       not a redundant prefix.
+    1. **The model never carries A marque** — not its own, and not another's.
+       `Aprilia SR Max` under Aprilia becomes `SR Max`; `LiveWire One` under
+       Harley-Davidson becomes `One`.
+
+       *This rule was narrower for one commit, and the narrowing was wrong.*
+       It stripped only the pool's own marque, on the stated grounds that
+       `LiveWire One` under Harley-Davidson "is a machine there and not a
+       redundant prefix". That rationale was asserted, never measured.
+       Measured: **59 junction rows carried a marque-leading model, and all
+       59 were redundant** — every issue holding `(Harley-Davidson,
+       'LiveWire One')` already held `(LiveWire, 'One')`, and every issue
+       holding `(Harley-Davidson, 'LiveWire S2 Del Mar')` already held
+       `(LiveWire, 'S2 Del Mar')`. Not one issue had only the prefixed form.
+       Decision 3 says the model never carries the marque; a sub-brand is
+       still a marque, and this pool's `One` is reached from
+       Harley-Davidson while LiveWire's own `One` is untouched.
+
     2. **One spelling per identity.** Forms differing only in case or
        separators collapse to one, preferring the spaced form because that
        is how the corpus writes a designation when it writes it out:
        `PCX 150` over `PCX150`.
+
+    `marques` is the known marque vocabulary. Omitted, only the pool's own
+    marque is stripped, which is the pre-fix behaviour and is kept solely so
+    the function is callable in isolation by tests.
     """
     out: dict[str, str] = {}
-    prefix = marque.lower() + " "
+    own = marque.lower() + " "
+    # Longest first, so `Harley-Davidson ` wins over any shorter marque that
+    # happens to prefix it. A marque is stripped whoever owns the pool.
+    others = sorted(((m.lower() + " ") for m in (marques or set())
+                     if m.lower() != marque.lower()),
+                    key=len, reverse=True)
     for name in names:
-        stripped = (name[len(prefix):].strip()
-                    if name.lower().startswith(prefix) else name)
+        low = name.lower()
+        if low.startswith(own):
+            stripped = name[len(own):].strip()
+        else:
+            stripped = name
+            for prefix in others:
+                if low.startswith(prefix):
+                    stripped = name[len(prefix):].strip()
+                    break
         if not stripped:
             stripped = name
-        # The model NEVER carries its own marque — decision 3, unconditional.
+        # The model NEVER carries a marque — decision 3, unconditional.
         # An earlier cut made an exception for single mixed-case words, to stop
         # `LiveWire One` becoming `One`; it was wrong twice over. It kept the
         # marque in the model string, and it created `Yamaha Zuma`, which then
         # matched inside "Yamaha Zuma 125" without being contained by it, so
-        # `dedupe_contained` could not collapse the pair. The `One` problem is
-        # an EXTRACTION problem and is solved there, by marque adjacency.
+        # `dedupe_contained` could not collapse the pair. `One` stays bare and
+        # is correct on all 42 rows that produced it.
         key = _identity_key(stripped)
         if not key or len(stripped) < 2:
             continue

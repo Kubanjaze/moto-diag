@@ -202,9 +202,25 @@ class TestAttribution:
     def test_a_sub_marques_models_stay_with_its_parent(self, corpus):
         """The exemption. "LiveWire" names a marque *and* is a
         Harley-Davidson machine, so the rung-2 exclusion would have taken
-        every LiveWire model out of Harley-Davidson's pool."""
-        harley = known_models("Harley-Davidson", db_path=corpus)
-        assert [m for m in harley if "LiveWire" in m], sorted(harley)
+        every LiveWire model out of Harley-Davidson's pool.
+
+        Phase 255C rewrote the assertion, not the property. It used to look
+        for the SUBSTRING "LiveWire" inside Harley-Davidson's pool, which is
+        the marque's *spelling* standing in for the sub-marque's *machines*.
+        Decision 3 then removed the marque from every model string, so
+        `LiveWire One` became `One` and the proxy went to zero while the
+        property it stood for was completely intact. The assertion now names
+        the machines and checks containment directly, which is what the
+        docstring always claimed it did.
+        """
+        harley = set(known_models("Harley-Davidson", db_path=corpus))
+        livewire = set(known_models("LiveWire", db_path=corpus))
+        assert livewire, "fixture assumption: LiveWire has a non-empty pool"
+        assert {"One", "S2 Del Mar"} <= harley, sorted(harley)
+        missing = livewire - harley
+        assert not missing, (
+            "a sub-marque's models must stay reachable from its parent; "
+            f"these are in LiveWire's pool but not Harley-Davidson's: {sorted(missing)}")
 
     def test_the_family_is_declared_not_derived(self):
         assert SUB_MARQUES == {"LiveWire": "Harley-Davidson"}
