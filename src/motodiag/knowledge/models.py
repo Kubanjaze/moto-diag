@@ -178,6 +178,17 @@ _COMPOUND_SLASH = re.compile(
 #: Stands in for a slash that survives the split, and is put back after it.
 _SLASH_HOLD = "\x00"
 
+#: A comma BETWEEN DIGITS is a thousands separator, not a list delimiter.
+#: Splitting on it tore figures in half and fed both halves to the
+#: vocabulary: "Rivale at 12,000 km" became the tokens "Rivale at 12" and
+#: "000 km", and "Diavel V4 (V4 Granturismo, 60,000 km)" contributed
+#: "000 km" to three more rows. Held across the split the same way a
+#: compound slash is, and put back after.
+_THOUSANDS_COMMA = re.compile(r"(?<=\d),(?=\d)")
+
+#: Stands in for a thousands-separator comma across the split.
+_COMMA_HOLD = "\x01"
+
 
 def _model_tokens(model: str) -> list[str]:
     """The model names one value states, before any attribution."""
@@ -187,9 +198,11 @@ def _model_tokens(model: str) -> list[str]:
         return [model]
     held = _COMPOUND_SLASH.sub(
         lambda m: f"{m.group(1)}{_SLASH_HOLD}{m.group(2)}", covered_part(model))
+    held = _THOUSANDS_COMMA.sub(_COMMA_HOLD, held)
     out: list[str] = []
     for part in re.split(r",|;|—|–|/| and ", held):
-        part = _clean_token(part.replace(_SLASH_HOLD, "/"))
+        part = _clean_token(
+            part.replace(_SLASH_HOLD, "/").replace(_COMMA_HOLD, ","))
         if part and not _PROSE_WORD.search(part):
             out.append(part)
     return out
