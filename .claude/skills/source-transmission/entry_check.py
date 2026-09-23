@@ -421,7 +421,23 @@ def passing_sentences(excerpts: list[dict]) -> list[str]:
 # drops a spelling silently; a false alarm costs one source call — so the
 # list leans wide (automatic, V-belt, variator, single-speed; operator).
 MECHANISM = re.compile(r"\bv-?matic\b|\bcvt\b|\bdct\b|\by-amt\b|\bamt\b|\bcentrifugal\b|\bdirect[- ]drive\b|"
-                       r"\bautomatic\b|\bv-belt\b|\bvariator\b|\bsingle[- ]speed\b", re.I)
+                       r"\bv-belt\b|\bvariator\b|\bsingle[- ]speed\b", re.I)
+# "automatic" counts only within three words of a drive term (operator,
+# 2026-09-23), the shape of the "manual" rule: "V-belt automatic", not
+# Triumph's "automatic warnings if tyres fall", BMW's "Automatic Stability
+# Control" or Honda's "automatic reset mode".
+AUTOMATIC_WORD = re.compile(r"\bautomatic\b", re.I)
+DRIVE_TERM = re.compile(r"\b(?:transmission|gearbox|belt|clutch|drive)\b", re.I)   # "belt" matches V-belt
+
+
+def _beside(pattern: re.Pattern, sentence: str, near: re.Pattern) -> bool:
+    """A match of `pattern` with a match of `near` within MANUAL_REACH words."""
+    for m in pattern.finditer(sentence):
+        close = (re.findall(r"[\w'-]+", sentence[:m.start()])[-MANUAL_REACH:],
+                 re.findall(r"[\w'-]+", sentence[m.end():])[:MANUAL_REACH])
+        if any(near.search(" ".join(w)) for w in close):
+            return True
+    return False
 
 
 def mechanism_lines(excerpts: list[dict]) -> list[str]:
@@ -432,7 +448,7 @@ def mechanism_lines(excerpts: list[dict]) -> list[str]:
     seen: dict[str, None] = {}
     for e in excerpts or []:
         for s in _sentences(" ".join(str(e.get("text", "")).split())):
-            if manual_evidence(s) or MECHANISM.search(s):
+            if manual_evidence(s) or MECHANISM.search(s) or _beside(AUTOMATIC_WORD, s, DRIVE_TERM):
                 seen.setdefault(s, None)
     return list(seen)
 

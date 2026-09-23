@@ -2000,3 +2000,49 @@ E11 was checked with `library_index.maker_host`, the function E11 calls.
 
 **Nothing sourced.** Every open question above needs either a further
 fetch or an operator decision on `MAKER_HOSTS`, which would widen E11.
+
+### 2026-09-23 — The dry run: "automatic" counts only beside a drive term (operator decision)
+
+**Decision (operator):** "automatic" counts only within three words of
+transmission, gearbox, V-belt, belt, clutch or drive, the same shape as
+the "manual" rule. The operator's earlier scan had looked only at
+sentences that also named a gearbox, so it missed the tyre line.
+
+**Done:**
+- "automatic" leaves `MECHANISM`.
+- `AUTOMATIC_WORD` and `DRIVE_TERM` added, with `_beside(pattern,
+  sentence, near)`, which uses the same reach (`MANUAL_REACH`, 3).
+- `mechanism_lines` counts a sentence that passes E12, matches
+  `MECHANISM`, or has "automatic" beside a drive term.
+- **`DRIVE_TERM` has no separate "v-belt".** `\bbelt\b` already matches
+  inside "V-belt", so that alternative could never be seen to fail.
+
+**Controls on real text:**
+- These count as nothing:
+  - Triumph's "This smart system generates convenient automatic warnings
+    if tyres fall below optimum levels."
+  - BMW K 1300 S's "… with Automatic Stability Control …".
+  - Honda CB500F 2018 (31MJWB20): "You can activate or deactivate the
+    automatic reset mode by refueling." Found in the library with the
+    sentence splitter the dry run uses.
+- "V-belt automatic" counts.
+- Dry run over the real runs: **Triumph 172417 → 0** (was 6). BMW 142134
+  (14), BMW 154333 (3), Honda 155534 (9) and Yamaha 123945 (0) are
+  unchanged, and every written spelling is still sent.
+
+**Tests** (`TestTheDryRun`, 25):
+- the three real sentences, plus a constructed one with the drive term
+  four words away, must not count;
+- "automatic" beside each drive term must count ("Automatic
+  transmission", "Gearbox: automatic", "V-belt automatic", "Belt
+  automatic", "Automatic clutch", "Final drive fully automatic").
+
+**Break-it**, each part reverted on its own; every one is caught:
+- the automatic rule dropped → 6 fail;
+- proximity dropped → 4;
+- transmission → 2;
+- gearbox → 1;
+- belt → 1;
+- clutch → 1;
+- drive → 1;
+- reach 3 → 10 → 1.

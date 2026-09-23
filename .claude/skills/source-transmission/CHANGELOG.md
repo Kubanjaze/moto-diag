@@ -116,3 +116,11 @@ spelling silently; a false alarm costs one source call. On the five run
 artefacts, the new words bring back the six Triumph spellings through a
 tyre-pressure sentence ("automatic warnings"). BMW's "Automatic Stability
 Control" also matches, on a spelling already sent. No spelling is dropped.
+
+## 2026-09-23 — "automatic" in the dry run needs a drive term beside it (operator)
+
+"Automatic" now counts only within three words of transmission, gearbox,
+belt (which also matches V-belt), clutch or drive, the same shape as E12's
+"manual" rule. It no longer counts Triumph's "automatic warnings if tyres
+fall", BMW's "Automatic Stability Control" or Honda's "automatic reset
+mode". Triumph's dry run is back to 0.

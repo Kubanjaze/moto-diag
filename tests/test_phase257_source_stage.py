@@ -721,6 +721,30 @@ class TestTheDryRun:
         from entry_check import mechanism_lines
         assert mechanism_lines([{"text": sentence}]) == [sentence]
 
+    @pytest.mark.parametrize("sentence", [
+        # Real: Triumph Speed Triple 1200 RS page (tyre pressure monitoring).
+        "This smart system generates convenient automatic warnings if tyres fall below optimum levels.",
+        # Real: BMW K 1300 S rider's manual excerpt.
+        "( 69) with Automatic Stability Con- trol OE ASC self-diagnosis is per- formed.",
+        # Real: Honda CB500F 2018 owner's manual (31MJWB20).
+        "You can activate or deactivate the automatic reset mode by refueling.",
+        # Constructed: a drive term, but four words or more away.
+        "The automatic warnings appear before you engage the clutch.",
+    ])
+    def test_automatic_away_from_a_drive_term_is_not_a_line(self, sentence):
+        """Operator, 2026-09-23: "automatic" counts only within three words
+        of transmission, gearbox, V-belt, belt, clutch or drive."""
+        from entry_check import mechanism_lines
+        assert mechanism_lines([{"text": sentence}]) == []
+
+    @pytest.mark.parametrize("sentence", [
+        "Automatic transmission", "Gearbox: automatic", "V-belt automatic", "Belt automatic",
+        "Automatic clutch", "Final drive fully automatic",
+    ])
+    def test_automatic_beside_a_drive_term_is_a_line(self, sentence):
+        from entry_check import mechanism_lines
+        assert mechanism_lines([{"text": sentence}]) == [sentence]
+
     def test_an_e12_passing_line_is_a_line_and_a_table_cell_is_not(self):
         from entry_check import mechanism_lines
         assert mechanism_lines([{"text": "Select neutral or, if a gear is engaged, pull the clutch lever."}])
