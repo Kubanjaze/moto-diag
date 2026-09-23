@@ -1051,3 +1051,27 @@ refute kept it with `names_model: true`, `model_line` "2026 SV650 ABS", and
 cites the page's spec row "Transmission 6-speed, constant mesh". The script
 agrees (model scope, `abs_edition`). The earlier run the same day
 (`Suzuki_20260923_100443`) stopped on E1 — bug fix #4.
+
+### 2026-09-23 — Kawasaki whole re-run: STOPPED — refute killed Ninja 650 (nothing written)
+
+After the ABS acquire (Ninja H2, Z900, Ninja 300 from their `-abs` year
+pages; Vulcan 900, ZX-14R, Versys 650, Ninja H2 SX, Z H2 have neither a base
+nor a plain `-abs` page and stay out). Run `Kawasaki_20260923_100438`: 14
+sent, 11 refuted.
+
+| stage | tokens | turns | per unit |
+|---|---|---|---|
+| source | 113,101 | 2 | 8,079 / spelling sent |
+| refute | 292,482 | 10 | 26,589 / finding refuted |
+
+**Stop: "refute disagreed on: Ninja 650"** — killed: the quoted spec row
+reads only "Transmission 6-speed", which does not establish a manual
+mechanism (a 6-speed can be a DCT). A sound kill; the previous run's
+refute had kept the same quote. **Rejections: none** — the candidates fix
+held: ZX-10R and Ninja ZX-10R now cite the 2026 page's own spec row
+("Transmission 6-speed, return shift").
+
+Kept, `names_model` true from refute and the script, **not written** (a
+stop): ZX-10R, Ninja ZX-10R, ZX-6R, Ninja ZX-6R, KLR650, KLX300, Z650, and
+under the ABS exception Ninja H2, Z900, Ninja 300 (`edition: ABS`, refute
+naming the exception each time). no_evidence: ZX-14R, Ninja H2 SX, Z H2.
