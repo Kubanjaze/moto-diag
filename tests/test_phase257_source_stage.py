@@ -48,9 +48,11 @@ def _found(spelling="Trail 250", document=TRAIL_DOC, quote=TRAIL_QUOTE):
 class Fake:
     """Stands in for subprocess.run. Records calls; answers per route."""
 
-    def __init__(self, findings=(), turns=2, verdict="kept", source_usage=None, refute_usage=None):
+    def __init__(self, findings=(), turns=2, verdict="kept", source_usage=None, refute_usage=None,
+                 model_line=""):
         self.calls: list[list[str]] = []
         self.findings, self.turns, self.verdict = list(findings), turns, verdict
+        self.model_line = model_line
         self.source_usage = source_usage if source_usage is not None else _usage(SUBC_MODEL)
         self.refute_usage = refute_usage if refute_usage is not None else _usage(OPUS_MODEL)
 
@@ -67,7 +69,8 @@ class Fake:
             out = {"type": "result", "is_error": False, "num_turns": 3,
                    "structured_output": {"verdicts": [
                        {"spelling": f["spelling"], "verdict": self.verdict, "quote": f["quote"],
-                        "page": f["page"], "reason": "fake refute"} for f in findings]},
+                        "page": f["page"], "model_line": self.model_line, "reason": "fake refute"}
+                       for f in findings]},
                    "modelUsage": self.refute_usage}
         return subprocess.CompletedProcess(cmd, 0, stdout="banner\n" + json.dumps(out) + "\n", stderr="")
 
@@ -190,12 +193,28 @@ class TestTheTokenStop:
         assert s["tokens"]["stop"] and any("per spelling" in r for r in s["stops"])
         assert fake.refute_calls() == [] and s["ready_to_write"] == []
 
-    def test_refute_counts_toward_the_same_budget(self, run_with):
-        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 100_000, 0),
-                    refute_usage=_usage(OPUS_MODEL, 60_000, 0))
+    def test_refute_has_its_own_budget(self, run_with):
+        """Operator decision 2026-09-23: refute is budgeted apart, never
+        trimmed. The real Kymco re-run — source 9,227, refute 226,857 — is
+        under both budgets."""
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 9_227, 0),
+                    refute_usage=_usage(OPUS_MODEL, 226_857, 0))
         s = run_with(fake, ["Trail 250"])
-        assert len(fake.refute_calls()) == 1
-        assert any("per spelling" in r for r in s["stops"]) and s["ready_to_write"] == []
+        assert s["tokens"]["stop"] is None and s["stops"] == []
+        assert s["tokens"]["refute_ceiling"] == O.REFUTE_STOP_PER_FINDING
+
+    def test_refute_over_its_budget_is_a_stop_not_a_skip(self, run_with):
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 9_227, 0),
+                    refute_usage=_usage(OPUS_MODEL, O.REFUTE_STOP_PER_FINDING + 1, 0))
+        s = run_with(fake, ["Trail 250"])
+        assert len(fake.refute_calls()) == 1, "refute ran; it was not skipped"
+        assert any(r.startswith("refute tokens") for r in s["stops"]) and s["ready_to_write"] == []
+
+    def test_refute_tokens_do_not_spend_the_source_budget(self, run_with):
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 100_000, 0),
+                    refute_usage=_usage(OPUS_MODEL, 100_000, 0))
+        s = run_with(fake, ["Trail 250"])
+        assert s["stops"] == []
 
     def test_the_budget_is_per_spelling_sent_not_per_spelling_asked(self, run_with):
         """A no_evidence spelling costs nothing and must not lend its 150K."""
@@ -236,3 +255,49 @@ class TestNotAMachineIsNotSearched:
         assert s["sent_to_model"] == ["Trail 250"]
         notes = {f["spelling"]: f.get("note", "") for f in s["findings"]}
         assert "not a machine name (prose)" in notes["2020 service manual"]
+
+
+GT_DOC = str(LIB / "pdfs" / "zz_sprint900gt_om.txt")
+S_DOC = str(LIB / "pdfs" / "zz_sprint900_om.txt")
+
+
+def _sprint(document, quote):
+    return {"make": "ZZ", "spelling": "Sprint 900", "aliases": [], "outcome": "found", "transmission": "manual",
+            "quote": quote, "document": document, "page": 3, "evidence_kind": "owners_manual"}
+
+
+class TestADocumentSourcesOnlyTheModelItNames:
+    """The 4609 over-claim (operator decision 4): a page that names only a
+    sibling — the Sprint 900 GT — is family evidence for the Sprint 900. It
+    is recorded, refute still runs, and it writes nothing unless refute
+    returns a line that names the model and that line is on the page."""
+
+    def test_a_sibling_page_is_family_evidence_and_writes_nothing(self, run_with):
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")])
+        s = run_with(fake, ["Sprint 900"])
+        assert len(fake.refute_calls()) == 1
+        assert s["ready_to_write"] == [] and [f["scope"] for f in s["family_evidence"]] == ["family"]
+
+    def test_refute_naming_only_the_sibling_does_not_promote_it(self, run_with):
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")],
+                    model_line="ZZ Sprint 900 GT Owner's Manual")
+        s = run_with(fake, ["Sprint 900"])
+        assert s["ready_to_write"] == []
+
+    def test_refute_cannot_promote_it_with_a_line_the_page_does_not_have(self, run_with):
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")],
+                    model_line="ZZ Sprint 900 specifications")
+        s = run_with(fake, ["Sprint 900"])
+        assert s["ready_to_write"] == []
+
+    def test_refute_confirms_a_model_the_text_rule_missed(self, run_with):
+        """'ZZ Sprint 900' ends a line and the next begins 'S:' — the text
+        rule reads 'Sprint 900 S'. Refute's line names the model and is on
+        the page: the finding is written."""
+        fake = Fake(findings=[_sprint(S_DOC, "Transmission  5-speed constant mesh")], model_line="ZZ Sprint 900")
+        s = run_with(fake, ["Sprint 900"])
+        assert [f["spelling"] for f in s["ready_to_write"]] == ["Sprint 900"]
+
+    def test_a_page_naming_the_model_is_model_scope(self, run_with):
+        s = run_with(Fake(findings=[_found()]), ["Trail 250"])
+        assert s["ready_to_write"][0]["scope"] == "model" and s["family_evidence"] == []

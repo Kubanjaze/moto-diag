@@ -260,6 +260,61 @@ def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[s
     return []
 
 
+# Words that, right after a model's name, make it a different model — each
+# seen in this phase: KTM '1290 Super Duke GT', BMW 'F 800 GS' / 'S 1000 XR',
+# Triumph '765 RS', '1200 RR', Zero 'SR/S', 'SR/F', Honda 'SP', 'SE', Ducati
+# 'V4 R', KTM '890 Adventure R Rally', '450 SX-F', '300 XC', 'RC 390', 'Evo'.
+# ABS is equipment, not a model, and is deliberately absent.
+VARIANT_TOKENS = {"gt", "r", "rr", "rs", "s", "sp", "se", "x", "xr", "gs", "sx", "xc", "f", "rc",
+                  "rally", "evo"}
+
+
+def _words_of(text: str) -> list[str]:
+    return re.findall(r"[a-z0-9]+", (text or "").lower())
+
+
+def names_model(text: str, spelling: str) -> bool:
+    """Does text name THIS model — its words in a run, as the document
+    spells them ('CR 300i' names 'CR300i'), not followed by a variant word?
+
+    The 4609 over-claim, as a rule: 'F800' is not named by 'F 800 GS', nor
+    '1290 Super Duke' by '1290 Super Duke GT', nor 'SR' by 'SR/S'. A page
+    that only names a sibling or the family is family evidence."""
+    target = "".join(_words_of(spelling))
+    if not target:
+        return False
+    toks = _words_of(text)
+    for i, t in enumerate(toks):
+        if not target.startswith(t):
+            continue
+        acc, j = t, i
+        while len(acc) < len(target) and j + 1 < len(toks) and target.startswith(acc + toks[j + 1]):
+            j += 1
+            acc += toks[j]
+        if acc == target and (j + 1 >= len(toks) or toks[j + 1] not in VARIANT_TOKENS):
+            return True
+    return False
+
+
+def document_text(f: dict, docs_root: pathlib.Path) -> str | None:
+    """The text a finding's claims are checked against: the original behind
+    an evidence copy, else the document itself (HTML as text)."""
+    doc = pathlib.Path(f.get("document") or "")
+    doc = doc if doc.is_absolute() else docs_root / doc
+    if _is_evidence_copy(doc, docs_root):
+        return _original_text(doc, "", [])
+    return _extract_text(doc) if doc.is_file() else None
+
+
+def model_scope(f: dict, docs_root: pathlib.Path) -> str:
+    """'model' when the cited document names the finding's own model;
+    'family' when it names only a sibling or the family. Family evidence is
+    recorded and cannot write an entry unless refute shows the page names
+    the model (orchestrate.batch)."""
+    text = document_text(f, docs_root)
+    return "model" if text is not None and names_model(text, f.get("spelling", "")) else "family"
+
+
 SPEC_LABEL = re.compile(r"transmission|gearbox|clutch|drive|gear|speed", re.I)
 
 

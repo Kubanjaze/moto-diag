@@ -377,3 +377,24 @@ class TestTheReferrerLinkIsResolvedLikeABrowser:
     def test_relative_and_encoded_links(self, url, ok):
         from entry_check import links_to
         assert links_to(self.PAGE, self.AT, url) is ok
+
+
+class TestNamesModel:
+    """entry_check.names_model — the words of the model in a run, not
+    followed by a variant word (VARIANT_TOKENS). Shapes from this phase."""
+
+    @pytest.mark.parametrize("text,spelling,named", [
+        ("KTM 1290 SUPER DUKE GT specifications", "1290 Super Duke", False),
+        ("the 1290 Super Duke R is", "1290 Super Duke R", True),
+        ("F 800 GS rider manual", "F800", False),
+        ("Model WOLF CR 300i", "Wolf CR300i", True),
+        ("Zero SR/S", "SR", False),
+        ("Zero SR and SR/S", "SR", True),
+        ("2025 Honda Grom Specifications", "Grom", True),
+        ("Grom ABS (MSX125AS)", "Grom", True),
+        ("K-PIPE 125 owner's manual", "K-Pipe", True),
+        ("the Speed Triple 1200 RS", "Speed Triple 1200", False),
+    ])
+    def test_named(self, text, spelling, named):
+        from entry_check import names_model
+        assert names_model(text, spelling) is named

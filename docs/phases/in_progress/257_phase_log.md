@@ -719,3 +719,49 @@ hash together (every hash agreeing), then 1. Two defects found by the
 first run of the tests and fixed: candidates read acquired HTML
 originals as well as their text; a run with nothing to do still fetched
 its listing. 323 pass across 257 + 255D; 244G clean.
+
+### 2026-09-23 — operator decisions: refute's own budget; BMW PDFs; the 4609 rule in the pipeline
+
+**1. Refute has its own budget** — never excluded, never trimmed, never
+skipped; over it is a stop. `token_stop` now holds two: every stage but
+refute at 150K per spelling sent (unchanged), and refute at
+`REFUTE_STOP_PER_FINDING` per finding refuted. **That number is PROPOSED,
+not decided: 300,000** (~1.3× the largest refute measured: 226,857,
+Kymco re-run; 165,071 before). No refute runs until the operator sets it.
+The refute prompt now says to render page images only for findings
+marked `needs_page_image`. Tests: the real Kymco figures pass both
+budgets; refute over its own is a stop after it ran (not a skip); refute
+does not spend the source budget. Break-it: one shared budget again → 3;
+refute budget off → 1.
+
+**3. BMW PDFs:** the library is `~/research/motodiag`, outside the
+repository and with no git of its own, so nothing there can be committed;
+`acquire.py` now **refuses a library inside the repository** (tested), and
+`.gitignore` gains `*.pdf`, `acquired/`, `inbox/` (0 PDFs tracked before).
+**Dedupe by content hash** within `acquired/`: identical bytes are stored
+once and the spellings merged. The 30-fetch cap stays. And a fix found
+while writing it: a page fetched again with new bytes must never overwrite
+the saved copy — a Dropbox-hosted manual counts only through that copy's
+pinned sha — so a different file under a taken name gets its sha in the
+name. The first test of that survived the mutation (a Kymco page is on a
+maker host; E11 never reads its referrer); rewritten on the Wolf 150
+shape, it fails.
+
+**4. The 4609 rule — a document sources only the model it names.**
+`entry_check.names_model(text, spelling)`: the spelling's words in a run
+as the document spells them ("CR 300i" names "CR300i"), **not followed by
+a variant word** (`VARIANT_TOKENS`, each seen this phase: GT, R, RR, RS,
+S, SP, SE, X, XR, GS, SX, XC, F, RC, Rally, Evo; ABS is equipment and
+absent). So "1290 Super Duke GT" does not name the 1290 Super Duke, "F 800
+GS" not the F800, "SR/S" not the SR. `model_scope` marks each finding
+`model` or `family`; family evidence still goes to refute, is recorded in
+`summary.family_evidence`, and **writes nothing** unless refute returns a
+`model_line` that the script checks both names the model and is on the
+page. `acquire.py` records each match as `exact` or `contains` in the
+report and the sidecar's `matches`. Tests: a sibling page writes nothing;
+refute quoting the sibling, or a line the page lacks, does not promote it;
+refute's line confirms a model the text rule missed ("ZZ Sprint 900" at a
+line end, the next line "S: …"). Break-it: variant words ignored → 7;
+family writes → 3; refute's line trusted → 2; line not checked on the page
+→ 1; line not checked for the model → 1; dedupe off → 1; repo guard off →
+1; match kind not recorded → 1. 344 pass across 257 + 255D; 244G clean.

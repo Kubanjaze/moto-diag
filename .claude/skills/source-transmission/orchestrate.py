@@ -64,6 +64,10 @@ SOURCE_MAX_TURNS = 2
 # changes it. Counted per spelling SENT to the model (a no_evidence spelling
 # costs nothing and must not dilute the rest), over every stage of the batch.
 TOKEN_STOP_PER_SPELLING = 150_000
+# Refute's own budget, per finding refuted. PROPOSED, awaiting the operator:
+# ~1.3x the largest refute measured (226,857 for one finding, Kymco
+# 2026-09-23; 165,071 before the redesign).
+REFUTE_STOP_PER_FINDING = 300_000
 USAGE_FIELDS = ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens")
 
 ROUTES = {
@@ -240,15 +244,23 @@ def usage(out: dict) -> dict:
     return {"known": True, **u, "total": sum(u.values())}
 
 
-def token_stop(stages: dict[str, dict], sent: int) -> str | None:
-    """The 150K-per-spelling stop over the stages run so far, or None."""
+def token_stop(stages: dict[str, dict], sent: int, refuted: int = 0) -> str | None:
+    """The two budgets over the stages run so far, or None.
+
+    Every stage but refute: 150K per spelling sent. Refute: its own budget,
+    per finding sent to it (operator decision 2026-09-23 — refute is the
+    step that caught fabricated citations; it is budgeted, never trimmed or
+    skipped; over its budget is a stop)."""
     unknown = [k for k, u in stages.items() if not u["known"]]
     if unknown:
         return f"token usage unrecorded for stage(s) {', '.join(unknown)}: cannot show the batch is under budget"
-    total = sum(u["total"] for u in stages.values())
-    if total > TOKEN_STOP_PER_SPELLING * max(sent, 1):
-        return (f"tokens {total:,} exceed {TOKEN_STOP_PER_SPELLING:,} per spelling "
+    rest = sum(u["total"] for k, u in stages.items() if k != "refute")
+    if rest > TOKEN_STOP_PER_SPELLING * max(sent, 1):
+        return (f"tokens {rest:,} exceed {TOKEN_STOP_PER_SPELLING:,} per spelling "
                 f"x {sent} sent = {TOKEN_STOP_PER_SPELLING * max(sent, 1):,}")
+    if "refute" in stages and stages["refute"]["total"] > REFUTE_STOP_PER_FINDING * max(refuted, 1):
+        return (f"refute tokens {stages['refute']['total']:,} exceed {REFUTE_STOP_PER_FINDING:,} per finding "
+                f"x {refuted} refuted = {REFUTE_STOP_PER_FINDING * max(refuted, 1):,}")
     return None
 
 
@@ -303,10 +315,11 @@ SOURCE_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["
 VERDICT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["verdicts"],
                   "properties": {"verdicts": {"type": "array", "items": {
                       "type": "object", "additionalProperties": False,
-                      "required": ["spelling", "verdict", "quote", "page", "reason"],
+                      "required": ["spelling", "verdict", "quote", "page", "model_line", "reason"],
                       "properties": {"spelling": {"type": "string"},
                                      "verdict": {"enum": ["kept", "killed"]},
                                      "quote": {"type": "string"}, "page": {"type": ["string", "integer"]},
+                                     "model_line": {"type": "string"},
                                      "reason": {"type": "string"}}}}}}
 
 SOURCE_PROMPT = """You are the SOURCE stage of the moto-diag transmission procedure. Make: {make}. Spellings to source, exactly these: {spellings}.
@@ -324,9 +337,22 @@ EXCERPTS (JSON, by spelling):
 REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings and must not trust them. For each finding below, OPEN the cited document yourself at the cited page and decide kept or killed.
 If the cited document is under evidence/, it is a copy the source stage saved: its <file>.provenance.json names the ORIGINAL (and, for a URL, the pinned fetch in "fetched_as"). Check the quote against the ORIGINAL, not against the copy.
 Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
+Render page images ONLY for findings marked needs_page_image (weak OCR); for a digital text layer, read the text.
+`model_line`: copy VERBATIM the line on the document that names THIS exact model (the finding's spelling) — not a sibling, a variant or the family: "1290 Super Duke GT" does not name the 1290 Super Duke R; "F 800 GS" does not name the F800. If the document names only a sibling or the family, return "" — the finding is then family evidence and cannot write an entry. The line is checked against the document by a script.
 Return one verdict per finding with the verbatim quote YOU saw and its page.
 Findings:
 {findings}"""
+
+
+def model_named(f: dict, verdicts: list[dict], docs_root: pathlib.Path) -> bool:
+    """Refute's confirmation that a family-scope finding's page names the
+    model — never taken on its word: the line must name the model by
+    entry_check's rule and be in the document."""
+    import entry_check
+    line = next((v.get("model_line") or "" for v in verdicts if v.get("spelling") == f["spelling"]), "")
+    text = entry_check.document_text(f, docs_root)
+    return bool(line) and text is not None and entry_check.names_model(line, f["spelling"]) \
+        and entry_check._norm(line) in entry_check._norm(text)
 
 
 def no_evidence(make: str, spelling: str, unnamed: str | None = None) -> dict:
@@ -372,6 +398,8 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     rejections = entry_check.check(findings, r["clone"], cands)
     passed = [f for f in findings if f.get("outcome") == "found"
               and not entry_check.check_one(f, r["clone"], cands)]
+    for f in passed:
+        f["scope"] = entry_check.model_scope(f, r["clone"])     # the 4609 rule: model or family
     verdicts = []
     over = token_stop(stages, len(sent))
     if passed and not over:         # over budget already: refute is not spent
@@ -379,12 +407,14 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
             library=LIBRARY, findings=json.dumps(passed, indent=1)), schema=VERDICT_SCHEMA)
         (r["run"] / "refute.json").write_text(json.dumps(ref, indent=1), encoding="utf-8")
         stages["refute"] = usage(ref)
-        over = token_stop(stages, len(sent))
+        over = token_stop(stages, len(sent), len(passed))
         verdicts = (ref.get("structured_output") or {}).get("verdicts", []) if not ref.get("is_error") else [
             {"spelling": f["spelling"], "verdict": "error", "quote": "", "page": "", "reason": ref.get("result")}
             for f in passed]
     tokens = {"stages": stages, "total": sum(u["total"] for u in stages.values()),
               "sent": len(sent), "ceiling": TOKEN_STOP_PER_SPELLING * max(len(sent), 1),
+              "refuted": len(passed) if "refute" in stages else 0,
+              "refute_ceiling": REFUTE_STOP_PER_FINDING * max(len(passed), 1) if "refute" in stages else None,
               "stop": over}
     reasons = stops(findings, verdicts, tokens)
     if missing:
@@ -394,8 +424,17 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
+    writable, family = [], []
+    for f in (passed if not over else []):
+        if f["spelling"] not in kept:
+            continue
+        if f["scope"] == "model" or model_named(f, verdicts, r["clone"]):
+            writable.append(f)
+        else:
+            family.append(f)
     summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
-                    "ready_to_write": [] if over else [f for f in passed if f["spelling"] in kept],
+                    "family_evidence": family,
+                    "ready_to_write": writable,
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     if reasons:

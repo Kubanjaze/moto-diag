@@ -74,3 +74,14 @@ the maker's bytes. E11 accepts a file on the make's own host, or one
 linked — relative links resolved like a browser — from an unchanged
 maker-host page in the library (SYM's Dropbox-hosted Wolf 150).
 `candidates.py` reads acquired files only through their E11-checked text.
+
+## 2026-09-23 — refute's own budget; a document sources only the model it names
+
+Refute is budgeted apart (per finding refuted; the figure awaits the
+operator) and is never trimmed or skipped — over budget is a stop. A
+finding whose document names only a sibling or the family (the 4609
+over-claim: "1290 Super Duke GT" for the 1290 Super Duke) is family
+evidence: recorded, refuted, and it writes nothing unless refute's quoted
+line names the model and is on the page. acquire.py dedupes by content
+hash, never overwrites a pinned referrer, and refuses a library inside the
+repository.

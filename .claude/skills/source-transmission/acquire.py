@@ -129,14 +129,44 @@ def _suffix(row: dict) -> str:
     return ".html"
 
 
+def _same_bytes(library: pathlib.Path, sha: str) -> pathlib.Path | None:
+    """An original already under acquired/ with these bytes, or None."""
+    for side in (library / "acquired").glob("*/*.acquired.json"):
+        try:
+            s = json.loads(side.read_text(encoding="utf-8"))
+        except ValueError:
+            continue
+        if s.get("sha256") == sha and not s.get("derived_from"):
+            p = side.with_name(side.name[: -len(".acquired.json")])
+            if p.is_file():
+                return p
+    return None
+
+
 def save(make: str, row: dict, *, referrer: dict | None, for_spellings: list[str],
          supplied_by: str = "acquire.py", library: pathlib.Path = LIBRARY) -> dict:
     """Write the original, its sidecar, its derived text and that sidecar.
     Returns {"path", "sha256"} relative to the library."""
     folder = library / "acquired" / make
     folder.mkdir(parents=True, exist_ok=True)
+    same = _same_bytes(library, _sha(row["body"]))
+    if same is not None:
+        # Dedupe by content hash: one copy, its spellings merged (operator, 2026-09-23).
+        for p in (same, same.with_name(same.name + ".txt")):
+            side = p.with_name(p.name + ".acquired.json")
+            if side.is_file():
+                s = json.loads(side.read_text(encoding="utf-8"))
+                s["for_spellings"] = sorted(set(s.get("for_spellings") or []) | set(for_spellings))
+                side.write_text(json.dumps(s, indent=1) + "\n", encoding="utf-8")
+        return {"url": row["final_url"] or row["url"], "path": same.relative_to(library).as_posix(),
+                "sha256": _sha(row["body"]), "deduped": True}
     name = _slug(row["final_url"] or row["url"])
     name = name if name.lower().endswith(_suffix(row)) else name + _suffix(row)
+    if (folder / name).exists():
+        # Different bytes under a taken name (a listing re-fetched): never
+        # overwrite — earlier files pin this page's sha as their referrer.
+        stem, dot, ext = name.rpartition(".")
+        name = f"{stem}.{_sha(row['body'])[:12]}.{ext}"
     path = folder / name
     path.write_bytes(row["body"])
     sha = _sha(row["body"])
@@ -157,21 +187,32 @@ def save(make: str, row: dict, *, referrer: dict | None, for_spellings: list[str
 
 
 # --- matching a spelling to a route's names ------------------------------------
-def match(spelling: str, names: dict[str, str]) -> str | None:
-    """The route name (and its URL) for a spelling, or None.
+def match_detail(spelling: str, names: dict[str, str]) -> tuple[str, str, str] | None:
+    """(url, name, kind) for a spelling, or None. kind is 'exact' — the
+    name IS the spelling — or 'contains' — a longer name (a sibling or
+    variant: 'F800' → 'F 800 GS'). A 'contains' page is fetched and
+    recorded, but by the 4609 rule it sources an entry only if the page
+    names the model itself (orchestrate: scope, refute's model_line).
 
-    A strong spelling matches a name that contains it word for word; the
-    shortest wins ("Street Triple 765" over "Street Triple 765 RS"). A weak
-    one ("Bolt", "CB", "Monster 821") needs the name to BE it — "CB" must
-    not take the first CB it sees."""
+    A strong spelling may take the shortest name containing it word for
+    word; a weak one ("Bolt", "CB", "Monster 821") needs the name to BE it."""
     sk = _key(spelling)
     exact = [n for n in names if _key(n) == sk]
     if exact:
-        return names[min(exact, key=len)]
+        n = min(exact, key=len)
+        return names[n], n, "exact"
     if weak_spelling(spelling):
         return None
     hits = [n for n in names if sk in _key(n)]
-    return names[min(hits, key=len)] if hits else None
+    if not hits:
+        return None
+    n = min(hits, key=len)
+    return names[n], n, "contains"
+
+
+def match(spelling: str, names: dict[str, str]) -> str | None:
+    d = match_detail(spelling, names)
+    return d[0] if d else None
 
 
 # UI badges a maker appends to a link's text, named where seen: Zero's
@@ -241,12 +282,13 @@ def _newest_year_page(f: Fetcher, make: str, family_url: str, library: pathlib.P
 
 
 def _fetch_matched(f, make, spellings, names, ref_for, to_spec, library, year_hop=False) -> dict:
-    report: dict = {"matched": {}, "unmatched": [], "failed": {}}
+    report: dict = {"matched": {}, "unmatched": [], "failed": {}, "match": {}}
     by_url: dict[str, list[str]] = {}
     for s in spellings:
-        u = match(s, names)
-        if u:
-            by_url.setdefault(u, []).append(s)
+        d = match_detail(s, names)
+        if d:
+            by_url.setdefault(d[0], []).append(s)
+            report["match"][s] = {"name": d[1], "kind": d[2]}
         else:
             report["unmatched"].append(s)
     for u, ss in by_url.items():
@@ -299,12 +341,14 @@ def honda_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Pa
         if row["method"] == "json_endpoint":
             for n in json.loads(row["body"]):
                 names.setdefault(n, n)
-    report: dict = {"matched": {}, "unmatched": [], "failed": {}}
+    report: dict = {"matched": {}, "unmatched": [], "failed": {}, "match": {}}
     for s in spellings:
-        name = match(s, names)
-        if not name:
+        d = match_detail(s, names)
+        if not d:
             report["unmatched"].append(s)
             continue
+        name = d[0]
+        report["match"][s] = {"name": d[1], "kind": d[2]}
         yrow = f.get(f"{site}/ajax/get_model_years/AHM/{urllib.parse.quote(name)}", hdr)
         years = json.loads(yrow["body"]) if yrow["method"] == "json_endpoint" else []
         if not years:
@@ -334,12 +378,14 @@ def doc_links_route(listings: list[str], page_pattern: str, pdf_pattern: str):
             row = f.get(lst)
             if row["status"] == 200:
                 names.update(_links(row["body"], row["final_url"], page_pattern))
-        report: dict = {"matched": {}, "unmatched": [], "failed": {}}
+        report: dict = {"matched": {}, "unmatched": [], "failed": {}, "match": {}}
         for s in spellings:
-            u = match(s, names)
-            if not u:
+            d = match_detail(s, names)
+            if not d:
                 report["unmatched"].append(s)
                 continue
+            u = d[0]
+            report["match"][s] = {"name": d[1], "kind": d[2]}
             page = f.get(u)
             pdfs = list(_links(page["body"], page["final_url"], pdf_pattern).values()) if page["status"] == 200 else []
             if not pdfs:
@@ -394,8 +440,27 @@ def already(make: str, library: pathlib.Path = LIBRARY) -> set[str]:
     return out
 
 
+def _record_match(path: pathlib.Path, spelling: str, detail: dict | None) -> None:
+    """Write how a spelling was matched into the file's sidecar and its
+    derived text's: 'contains' is family/sibling evidence (the 4609 rule)."""
+    for p in (path, path.with_name(path.name + ".txt")):
+        side = p.with_name(p.name + ".acquired.json")
+        if side.is_file():
+            s = json.loads(side.read_text(encoding="utf-8"))
+            s.setdefault("matches", {})[spelling] = detail
+            side.write_text(json.dumps(s, indent=1) + "\n", encoding="utf-8")
+
+
+def outside_repo(library: pathlib.Path) -> None:
+    """Maker documents never live in the repository (operator, 2026-09-23)."""
+    lib, repo = library.resolve(), C.REPO.resolve()
+    if lib == repo or repo in lib.parents:
+        raise RuntimeError(f"library {lib} is inside the repository {repo}; refusing")
+
+
 def fetch(make: str, limit: int | None = None, *, fetcher: Fetcher | None = None,
           library: pathlib.Path = LIBRARY, spellings: list[str] | None = None) -> dict:
+    outside_repo(library)
     if make not in ROUTES:
         return {"make": make, "error": "no measured route (D7)"}
     todo = [s for s in (spellings if spellings is not None else machine_names(make)) if s not in already(make, library)]
@@ -409,6 +474,9 @@ def fetch(make: str, limit: int | None = None, *, fetcher: Fetcher | None = None
         report["stopped"] = None
     except CapReached as e:
         report = {"matched": {}, "unmatched": [], "failed": {}, "stopped": f"cap reached: {e}"}
+    for s, m in report.get("matched", {}).items():
+        m["match"] = report.get("match", {}).get(s)
+        _record_match(library / m["path"], s, m["match"])
     report.update({"make": make, "asked": todo, "fetches": f.count, "log": f.log})
     return report
 
@@ -447,6 +515,7 @@ What ingest (and E11) require, so nothing is rejected on format:
 
 
 def ingest(library: pathlib.Path = LIBRARY) -> dict:
+    outside_repo(library)
     inbox = library / "inbox"
     report: dict = {"ingested": [], "rejected": {}}
     for mdir in sorted(p for p in inbox.iterdir() if p.is_dir()) if inbox.is_dir() else []:

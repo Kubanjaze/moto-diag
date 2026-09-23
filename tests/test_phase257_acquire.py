@@ -197,3 +197,51 @@ class TestTheInbox:
         self._drop(lib, **kw)
         r = A.ingest(lib)
         assert r["ingested"] == [] and why in next(iter(r["rejected"].values()))
+
+
+class TestOperatorDecisions:
+    """2026-09-23: dedupe by content hash; never inside the repo; a
+    'contains' match is recorded as such (the 4609 rule)."""
+
+    def test_identical_bytes_are_stored_once_with_both_spellings(self, lib):
+        pages = {"https://kymcousa.com/scooters/": (200, KYMCO_LIST),
+                 "https://kymcousa.com/scooters/super-8-50x/": (200, KYMCO_SPEC),
+                 "https://kymcousa.com/scooters/x-town-300i/": (200, KYMCO_SPEC)}
+        r, _ = _kymco(lib, site(pages), spellings=("Super 8-50 X", "X-Town 300i"))
+        assert r["matched"]["Super 8-50 X"]["path"] == r["matched"]["X-Town 300i"]["path"]
+        path = lib / r["matched"]["X-Town 300i"]["path"]
+        side = json.loads(path.with_name(path.name + ".acquired.json").read_text())
+        assert side["for_spellings"] == ["Super 8-50 X", "X-Town 300i"]
+        assert len(list((lib / "acquired" / "Kymco").glob("*super-8-50x*.html"))) == 1
+
+    def test_a_refetched_referrer_never_overwrites_the_copy_others_pin(self, lib):
+        """The Wolf 150 shape: a Dropbox-hosted manual counts only through
+        SYM's page, pinned by sha. The page is fetched again later with new
+        bytes — the pinned copy must survive, or the manual loses its proof."""
+        page_url = "https://sym-usa.com/maintenance-guides/"
+        doc_url = "https://www.dropbox.com/s/x/Wolf150 Owner Manual.pdf?dl=0"
+        page = f'<html><a href="{doc_url}">Wolf 150</a></html>'.encode()
+        row = lambda url, body: {"url": url, "final_url": url, "status": 200, "body": body,  # noqa: E731
+                                 "method": "document_links", "fetched_at": "t"}
+        ref = A.save("SYM", row(page_url, page), referrer=None, for_spellings=[], library=lib)
+        doc = A.save("SYM", dict(row(doc_url, b"SYM WOLF 150 manual\n"), method="document_endpoint"),
+                     referrer=ref, for_spellings=["Wolf 150"], library=lib)
+        A.save("SYM", row(page_url, page + b"<!-- rebuilt -->"), referrer=None, for_spellings=[], library=lib)
+        assert acquired_provenance(lib / doc["path"], lib, "SYM", "t") == []
+
+    def test_a_library_inside_the_repo_is_refused(self):
+        with pytest.raises(RuntimeError, match="inside the repository"):
+            A.fetch("Kymco", library=A.C.REPO / "data" / "library", spellings=["x"])
+
+    def test_the_match_kind_is_in_the_sidecar(self, lib):
+        """A strong spelling ('X-Town 300i') takes a longer name; recorded as
+        'contains'. (A weak one, 'Super 8-50 X', never does.)"""
+        names_page = (b'<html><a href="https://kymcousa.com/scooters/x-town-300i-gt/">X-Town 300i GT</a></html>')
+        t = site({"https://kymcousa.com/scooters/": (200, names_page),
+                  "https://kymcousa.com/scooters/x-town-300i-gt/": (200, KYMCO_SPEC)})
+        r, _ = _kymco(lib, t, spellings=("X-Town 300i",))
+        m = r["matched"]["X-Town 300i"]
+        assert m["match"] == {"name": "X-Town 300i GT", "kind": "contains"}
+        path = lib / m["path"]
+        side = json.loads(path.with_name(path.name + ".acquired.json").read_text())
+        assert side["matches"]["X-Town 300i"]["kind"] == "contains"

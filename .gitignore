@@ -60,3 +60,9 @@ data/*.db-shm
 data/*.db-wal
 data/*.db-journal
 data/serve.log
+
+# Phase 257: maker documents live in ~/research/motodiag (outside the repo;
+# acquire.py refuses a library inside it). Belt and braces: no PDF is tracked.
+*.pdf
+acquired/
+inbox/
