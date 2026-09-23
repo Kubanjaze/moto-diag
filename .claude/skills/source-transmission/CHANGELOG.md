@@ -85,3 +85,17 @@ evidence: recorded, refuted, and it writes nothing unless refute's quoted
 line names the model and is on the page. acquire.py dedupes by content
 hash, never overwrites a pinned referrer, and refuses a library inside the
 repository.
+
+## 2026-09-23 — a dry run before the source call (operator, after Triumph)
+
+Triumph sent 15 spellings and Yamaha 9, and wrote nothing, because their
+spec pages give clutch type and gear count only as table cells. Now, before
+the source call, `entry_check.mechanism_lines` counts each spelling's
+excerpt sentences that pass E12 or name a non-manual mechanism (V-matic,
+CVT, DCT, Y-AMT, AMT, centrifugal, direct drive). A spelling with none is
+`no_evidence`, "no mechanism line in the fetched pages", and costs no call.
+The counts are in `summary.mechanism_lines`.
+
+Controls on the real runs: every written BMW and Honda spelling (13 of 13)
+would still be sent, and none of Yamaha's 9. Triumph would still send 5,
+all on one suspension sentence that passes E12's word-"manual" rule.

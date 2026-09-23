@@ -459,9 +459,10 @@ def model_named(f: dict, verdicts: list[dict], docs_root: pathlib.Path) -> bool:
         and entry_check._norm(line) in entry_check._norm(text)
 
 
-def no_evidence(make: str, spelling: str, unnamed: str | None = None) -> dict:
+def no_evidence(make: str, spelling: str, unnamed: str | None = None, no_line: bool = False) -> dict:
     """The finding for a spelling nothing is sent for. No model is asked."""
     note = (f"census: not a machine name ({unnamed}); not searched, the model was not called" if unnamed
+            else "dry run: no mechanism line in the fetched pages; the model was not called" if no_line
             else "candidates.py: no library document names this spelling; the model was not called")
     return {"make": make, "spelling": spelling, "outcome": "no_evidence", "transmission": None, "note": note}
 
@@ -488,8 +489,13 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
     names = [s for s in spellings if s not in unnamed]
     cands = candidates.candidates(names, LIBRARY, make=make) if names else {}
     (r["run"] / "candidates.json").write_text(json.dumps(cands, indent=1), encoding="utf-8")
-    sent = [s for s in names if cands.get(s)]
-    findings = [no_evidence(make, s, unnamed.get(s)) for s in spellings if s not in sent]
+    # The dry run (operator, 2026-09-23): an excerpt with no sentence that
+    # passes E12 or names a non-manual mechanism gives the source stage
+    # nothing to quote, so that spelling costs no call.
+    mechanism = {s: len(entry_check.mechanism_lines(cands[s])) for s in names if cands.get(s)}
+    sent = [s for s in names if mechanism.get(s)]
+    findings = [no_evidence(make, s, unnamed.get(s), no_line=s in mechanism)
+                for s in spellings if s not in sent]
     summary["source_error"] = None
     stages: dict[str, dict] = {}
     if sent:
@@ -591,7 +597,7 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
                                 f"refute {'named' if refute_says else 'family'})")
     if disagree:
         withheld.append(f"refute and the script disagree on whether the page names the model: {', '.join(disagree)}")
-    summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "e12_reader": e12_reader, "verdicts": verdicts,
+    summary.update({"not_a_machine": unnamed, "mechanism_lines": mechanism, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "e12_reader": e12_reader, "verdicts": verdicts,
                     "family_evidence": family, "refute_per_finding": per_finding,
                     # A systemic stop writes nothing; a withheld finding writes nothing itself.
                     "ready_to_write": [] if reasons else writable, "withheld": withheld,

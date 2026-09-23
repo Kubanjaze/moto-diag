@@ -1751,3 +1751,68 @@ pedal or "manual". The listing and overview pages have no gearbox wording.
 
 **Conclusion:** Triumph's spec pages cannot pass E12. Like Yamaha, it needs
 owner's manuals before a re-run. The census is unchanged at 573.
+
+### 2026-09-23 — The dry run: a spelling is sent only with a mechanism line in its excerpts (operator)
+
+**Why.** Triumph (15 sent) and Yamaha (9 sent) cost source calls that
+could not produce a writable finding, because their spec pages give the
+gearbox only as table cells.
+
+**Done:**
+- `entry_check.mechanism_lines(excerpts)`: the deduplicated excerpt
+  sentences that pass E12 (`manual_evidence`, unchanged) or match
+  `MECHANISM` (V-matic, CVT, DCT, Y-AMT, AMT, centrifugal, direct drive).
+- `orchestrate.batch` computes it for every spelling with excerpts, before
+  the source call, and sends only spellings with at least one line. The
+  rest are `no_evidence`, with the note "dry run: no mechanism line in the
+  fetched pages; the model was not called". `summary.mechanism_lines`
+  records the count per spelling.
+- E12 is not changed.
+
+**Controls on real run artefacts** (each run's own `candidates.json`, the
+spellings it actually sent):
+
+| run | sent then | would send now | written | written and still sent |
+|---|---|---|---|---|
+| `BMW_20260923_142134` | 25 | 14 | 4 | 4 |
+| `BMW_20260923_154333` | 3 | 3 | 3 | 3 |
+| `Honda_20260923_155534` | 14 | 9 | 6 | 6 |
+| `Yamaha_20260923_123945` | 9 | **0** | 0 | — |
+| `Triumph_20260923_172417` | 15 | **5** | 0 | — |
+
+(`Honda_20260922_233404`, the Grom run, predates `candidates.json`.)
+
+**Triumph is not zero**, against the operator's expectation. Speed Triple,
+RS, Speed Triple 1200, 1200 RS and Speed Triple 1200 RS each have exactly
+one line, the same Speed Triple 1200 RS sentence: "For those who prefer a
+fixed setup, manual adjustment of compression and rebound damping is also
+available via the instrument menu." It is a suspension sentence. It passes
+E12 because `MANUAL_WORD` accepts "manual" in any sense. That is a gap in
+E12 itself, reported to the operator and not changed. Neither the source
+stage nor refute used it in `Triumph_20260923_172417`.
+
+Yamaha's Zuma (a scooter) is skipped correctly: none of its excerpt
+sentences mentions a transmission, clutch, belt, drive or "automatic".
+
+**Tests** (`tests/test_phase257_source_stage.py::TestTheDryRun`, 11), with
+planted pages in the makers' own wording: Triumph's table cells
+(`fixtures/library/html/zz_tempo1200rs_spec.html`) and Honda's V-matic row
+(`fixtures/library/zz_putt50_om.txt`).
+- The table-cell page is found as a candidate, costs no call, and gets
+  the note.
+- The V-matic page is sent.
+- Only spellings with a line are sent, and a spelling with no excerpt
+  keeps its own note.
+- Each named mechanism counts as a line.
+- An E12 line counts; a table cell does not.
+
+**Break-it**, each part reverted on its own; every one is caught:
+- the gate removed → 2 fail;
+- `MECHANISM` never consulted → 8 fail;
+- E12 not counted → 38 fail;
+- the note dropped → 2 fail;
+- the counts left out of the summary → 2 fail.
+
+A first `MECHANISM` break prefixed `(?!x)x|`, which left every
+alternative matching, and survived, so it was not a break. It was redone
+by replacing the search with `False`.

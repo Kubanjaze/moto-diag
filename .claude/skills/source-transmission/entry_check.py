@@ -399,6 +399,26 @@ def passing_sentences(excerpts: list[dict]) -> list[str]:
     return list(seen)
 
 
+# The non-manual mechanisms in the maker's own words (operator, 2026-09-23):
+# a sentence naming one is something the source stage could classify from.
+# V-matic is Honda's CVT; Y-AMT is Yamaha's automated manual.
+MECHANISM = re.compile(r"\bv-?matic\b|\bcvt\b|\bdct\b|\by-amt\b|\bamt\b|\bcentrifugal\b|\bdirect[- ]drive\b",
+                       re.I)
+
+
+def mechanism_lines(excerpts: list[dict]) -> list[str]:
+    """The dry run before the source call: the sentences in a spelling's
+    excerpts that pass E12 or name a non-manual mechanism, deduplicated.
+    None → nothing for the source stage to quote, and the spelling is not
+    sent (Yamaha and Triumph: spec pages whose gearbox is a table cell)."""
+    seen: dict[str, None] = {}
+    for e in excerpts or []:
+        for s in _sentences(" ".join(str(e.get("text", "")).split())):
+            if manual_evidence(s) or MECHANISM.search(s):
+                seen.setdefault(s, None)
+    return list(seen)
+
+
 def reader_note(excerpts: list[dict], scope: str = "model") -> str:
     """A miss counts only when the finding's document names its own model
     (operator, 2026-09-23): R1100's passing line is in the R 1100 S's

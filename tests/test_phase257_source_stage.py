@@ -658,3 +658,58 @@ class TestCTheReaderIsMeasured:
     def test_the_source_prompt_says_to_prefer_an_unnegated_sentence(self):
         assert ("choose one whose sentence has no negation word at all: a troubleshooting row whose "
                 "condition says \"not\" fails even when its remedy names the lever") in O.SOURCE_PROMPT
+
+
+class TestTheDryRun:
+    """Operator, 2026-09-23 (after Triumph): before the source call, count the
+    excerpt sentences that pass E12 or name a non-manual mechanism; a
+    spelling with none is not sent. Triumph's and Yamaha's spec pages give
+    the gearbox only as table cells and cost 15 and 9 calls for nothing.
+    The planted cases are in the makers' own wording: Triumph's table cells
+    (`html/zz_tempo1200rs_spec.html`) and Honda's V-matic row (`zz_putt50_om.txt`)."""
+
+    NOTE = "dry run: no mechanism line in the fetched pages; the model was not called"
+
+    def test_a_table_cell_gearbox_costs_no_call(self, run_with):
+        fake = Fake()
+        s = run_with(fake, ["Tempo 1200 RS"])
+        cands = json.loads((pathlib.Path(s["run"]) / "candidates.json").read_text())
+        assert cands["Tempo 1200 RS"], "the planted page must be found, or this tests the no-excerpt path"
+        assert fake.calls == [] and s["sent_to_model"] == []
+        assert s["mechanism_lines"] == {"Tempo 1200 RS": 0}
+        [f] = s["findings"]
+        assert f["outcome"] == "no_evidence" and f["note"] == self.NOTE
+
+    def test_a_non_manual_mechanism_is_sent(self, run_with):
+        fake = Fake()
+        s = run_with(fake, ["Putt 50"])
+        assert s["sent_to_model"] == ["Putt 50"] and len(fake.source_calls()) == 1
+        assert s["mechanism_lines"] == {"Putt 50": 1}
+
+    def test_only_spellings_with_a_line_are_sent(self, run_with):
+        fake = Fake(findings=[_found()])
+        s = run_with(fake, ["Trail 250", "Tempo 1200 RS", "Nowhere 999"])
+        assert s["sent_to_model"] == ["Trail 250"]
+        prompt = fake.source_calls()[0][fake.source_calls()[0].index("-p") + 1]
+        assert "Tempo 1200 RS" not in prompt
+        notes = {f["spelling"]: f["note"] for f in s["findings"] if f["outcome"] == "no_evidence"}
+        assert notes["Tempo 1200 RS"] == self.NOTE
+        assert notes["Nowhere 999"].startswith("candidates.py: no library document names this spelling")
+
+    @pytest.mark.parametrize("sentence", [
+        "Primary reduction V-matic (2.85:1 - 0.86:1)",
+        "Transmission CVT",
+        "The DCT shifts for you.",
+        "Y-AMT lets the rider choose.",
+        "The AMT model has no clutch lever.",
+        "A centrifugal clutch engages as revs rise.",
+        "Direct drive from the motor to the wheel.",
+    ])
+    def test_each_named_mechanism_is_a_line(self, sentence):
+        from entry_check import mechanism_lines
+        assert mechanism_lines([{"text": sentence}]) == [sentence]
+
+    def test_an_e12_passing_line_is_a_line_and_a_table_cell_is_not(self):
+        from entry_check import mechanism_lines
+        assert mechanism_lines([{"text": "Select neutral or, if a gear is engaged, pull the clutch lever."}])
+        assert mechanism_lines([{"text": "Clutch Wet, multi-plate, slip and assist\nGearbox 6-Speed"}]) == []
