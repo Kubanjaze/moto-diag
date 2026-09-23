@@ -17,6 +17,7 @@ known-bad fixture can require that each one fires.
 """
 from __future__ import annotations
 
+import datetime as dt
 import pathlib
 import re
 import subprocess
@@ -42,6 +43,55 @@ def _git_root(path: pathlib.Path) -> pathlib.Path | None:
     r = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel"],
                        capture_output=True, text=True)
     return pathlib.Path(r.stdout.strip()) if r.returncode == 0 else None
+
+
+#: How far a heading may run ahead of the commit that recorded it. Headings
+#: are written to the minute and committed a moment later; anything beyond
+#: this is a time the entry could not have been written at.
+TIME_TOLERANCE = dt.timedelta(minutes=5)
+_HEAD_TIME = re.compile(r"^#{1,3}\s+(\d{4}-\d{2}-\d{2} \d{2}:\d{2})\b")
+
+
+def recorded_at(log: pathlib.Path, heading: str) -> dt.datetime | None:
+    """Author time of the first commit that wrote this exact heading line.
+
+    None when no commit holds it yet — an uncommitted entry, whose recording
+    time is "now". Searched in both `completed/` and `in_progress/`, because
+    a phase log is written in one and moved to the other.
+    """
+    root = _git_root(log.parent)
+    if root is None:
+        return None
+    rel = log.resolve().relative_to(root.resolve())
+    paths = {str(rel), str(rel).replace("/completed/", "/in_progress/")}
+    r = subprocess.run(
+        ["git", "-C", str(root), "log", "--reverse", "--format=%ad",
+         "--date=format:%Y-%m-%d %H:%M", "-S", heading, "--", *sorted(paths)],
+        capture_output=True, text=True)
+    first = r.stdout.splitlines()[:1]
+    return dt.datetime.strptime(first[0], "%Y-%m-%d %H:%M") if first else None
+
+
+def dated_after_recording(log: pathlib.Path, heading: str,
+                          now: dt.datetime | None = None) -> str | None:
+    """A heading dated later than the commit that wrote it cannot be true.
+
+    The rule is deliberately NOT "heading matches the fix commit". Measured
+    over 255C and 255D, a heading records when the ENTRY was written — often
+    in a close-out batch an hour after the fix — so that rule failed 11 of
+    13 honest entries. What no honest entry does is carry a time later than
+    the commit that recorded it: 255C #7 (18:05, written at 16:25), 255D #5
+    and #6 (21:40/21:55, written at 20:17/20:18), and the invented 22:40 and
+    22:55 of fixes #7/#8 (written at 20:39). This rule catches exactly those.
+    """
+    m = _HEAD_TIME.match(heading)
+    if not m:
+        return None
+    stated = dt.datetime.strptime(m.group(1), "%Y-%m-%d %H:%M")
+    at = recorded_at(log, heading) or (now or dt.datetime.now())
+    if stated > at + TIME_TOLERANCE:
+        return f"heading {m.group(1)} is after it was recorded ({at:%Y-%m-%d %H:%M})"
+    return None
 
 
 def unresolved_commits(repo: pathlib.Path, line: str) -> list[str] | None:
@@ -118,9 +168,9 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
         if not m:
             continue
         end = heads[pos + 1] if pos + 1 < len(heads) else len(lines)
-        entries.append((m.group(1), "\n".join(lines[i + 1:end])))
+        entries.append((m.group(1), "\n".join(lines[i + 1:end]), lines[i]))
     if entries:
-        nums = [int(n) for n, _ in entries]
+        nums = [int(n) for n, _, _ in entries]
         expected = list(range(1, max(nums) + 1))
         if sorted(nums) != expected:
             fails.append(f"A4 bug-fix numbering is not contiguous from #1: "
@@ -131,7 +181,11 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
         # and 255D #5/#6 shipped that way. A check that passes on a
         # non-answer is the defect this folder exists to stop shipping.
         no_commit, non_answer, unresolved = [], [], []
-        for n, body in entries:
+        late = []
+        for n, body, head in entries:
+            why = dated_after_recording(log, head)
+            if why:
+                late.append(f"#{n} {why}")
             m = re.search(r"^\*\*Commit\.?\*\*(.*)$", body, re.I | re.M)
             if not m:
                 no_commit.append(int(n))
@@ -150,6 +204,9 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
         if unresolved:
             fails.append("A4 bug-fix commits that do not resolve "
                          "(git cat-file -e): " + "; ".join(unresolved))
+        if late:
+            fails.append("A4 bug-fix headings dated after the commit that "
+                         "recorded them: " + "; ".join(late))
     # No bug fixes at all is legitimate — a phase may have found none.
 
     # A5 — a regression line carrying BOTH a commit hash and a count

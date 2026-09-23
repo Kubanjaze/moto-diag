@@ -211,7 +211,7 @@ and a script for the parts that are "run this and check that".
 No schema change, no migration, no database touched — this phase is process
 files and tests only.
 
-### 2026-09-22 21:40 — Bug fix #5: B2 could not tell describing a number from citing one
+### 2026-09-22 20:18 — Bug fix #5: B2 could not tell describing a number from citing one
 
 **Issue.** `verify_phase.sh` run against **255D itself** failed check 13:
 three dangling F-numbers — F138, F139, F140 — cited by 255D's own
@@ -246,7 +246,7 @@ the ceiling, the global pin, and nearly the sub-brand narrowing in 255C.
 **An exclusion is a claim that something cannot be the thing you are looking
 for, and it needs a control like any other claim.**
 
-### 2026-09-22 21:55 — Bug fix #6: A7 could only ever be satisfied by the newest phase
+### 2026-09-22 20:18 — Bug fix #6: A7 could only ever be satisfied by the newest phase
 
 **Issue.** `verify_phase.sh`'s check 10 failed for 255D:
 `test_a_closed_phase_passes` reported **255C** — a phase that was correct
@@ -365,4 +365,46 @@ a repo-rooted session start. It does not re-test the parent-rooted case,
 which D1 measured as failing and which the rule exists to avoid; and, as the
 `ping` skill itself says, loading a skill is not the same as following it.
 The enforcement stays in the tests.
+
+### 2026-09-22 21:24 — Bug fix #9: A4 could not tell a true heading time from an impossible one
+
+**Issue.** The register's own times were wrong and nothing checked them:
+#5 and #6 read 21:40 and 21:55, both written in commits authored at
+20:17–20:18; #7 and #8 were first written as 22:40 and 22:55 in a commit
+authored at 20:39. 255C #7 read 18:05, written at 16:25.
+
+**Root cause.** A4 checked that each commit exists, never the time claimed
+beside it.
+
+**The rule requested, and why it was not the one built.** The operator asked
+for the heading compared to the *fix* commit. Measured over 255C and 255D,
+that fails **11 of 13 honest entries**: a heading records when the entry was
+written, often in a close-out batch an hour after the fix (255D #1–#4:
+fixed 19:14–19:23, written 20:10, committed 20:15). The rule would have
+required rewriting correct headings to make it pass. The operator chose
+instead: **a heading may not be later than the commit that recorded it**, +5
+minutes. It fires on exactly the five impossible headings above and nothing
+else.
+
+**Fix.** `dated_after_recording` in `closeout_check.py`, via the first
+commit whose diff adds that exact heading line (`git log -S`). 255C #7
+corrected to 16:25; #5/#6 corrected to 20:18 in `2509272`.
+
+**Files.** `.claude/skills/closeout/closeout_check.py`, the bad fixture, the
+contract test, `docs/phases/completed/255C_phase_log.md`, the floor.
+
+**Verified.** 38 closeout tests; the three historical headings fire, 255D
+#1 (late but honest) passes. Break-it: rule neutered, five fail.
+`COLLECTED_TEST_FLOOR` 8,139 → 8,145.
+
+**Commit.** `1e3da83`.
+
+### 2026-09-22 22:02 — Regression of record, after fix #9
+
+**Regression 8,145 passed / 0 failed / 0 skipped / 36:52 at `486e847`.**
+This supersedes `2b24d39` as the regression of record: fix #9 changed
+`closeout_check.py`, and `2509272` changed the closeout `SKILL.md` — both
+under `.claude/`, which check 2 now counts as code. `COLLECTED_TEST_FLOOR`
+8,145, raised in `1e3da83` before this run. Everything after `486e847` is
+this log. The no-database note above still holds: 255D touched no database.
 

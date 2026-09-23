@@ -1,5 +1,22 @@
 # closeout — changelog
 
+## 2026-09-22 — A4: a heading may not be dated after it was recorded (Phase 255D fix #9)
+
+The operator asked for A4 to compare each bug-fix heading's time with its
+fix commit. **Measured first: that rule fails 11 of 13 honest entries** in
+255C and 255D, because a heading records when the *entry* was written —
+often in a close-out batch an hour after the fix. It would have rewritten
+the meaning of every heading to make the check pass.
+
+What no honest entry does is carry a time **later than the commit that wrote
+it**. That is the rule: the heading's time must not exceed the author time
+of the first commit containing that heading line, plus five minutes; an
+uncommitted heading is judged against now. It fires on exactly 255C #7
+(18:05, written 16:25), 255D #5/#6 as first written (21:40/21:55, written
+20:17/20:18), and the invented 22:40/22:55 of #7/#8 (written 20:39) — and on
+nothing else. The historical headings are the positive control; git history
+cannot drift.
+
 ## 2026-09-22 — check 2 sees `.claude/` (Phase 255D fix #8, F137)
 
 `verify_phase.sh` check 2 was `git diff -- src/ tests/`. Fixes #5 and #6
