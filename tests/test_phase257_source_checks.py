@@ -223,14 +223,19 @@ def _db(tmp_path, pairs):
 
 class TestCensus:
     def test_only_unknown_pairs_are_counted_with_their_rows(self, tmp_path):
+        # The unknown Honda is a spelling absent from the real junction, so
+        # no batch can ever source it (it was the CBR1000RR, then the CBR929RR).
+        from motodiag.knowledge.transmission import resolve_transmission
+        assert resolve_transmission("Honda", "ZZ-0 unlisted").provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         db = _db(tmp_path, [
             (1, "Honda", "PCX 150"), (2, "Honda", "PCX 150"),      # model-sourced: out
             (3, "Honda", "Africa Twin"),                           # ambiguous: out
-            (4, "Honda", "CBR929RR"), (5, "Honda", "CBR929RR"),    # unknown, 2 rows
+            (4, "Honda", "ZZ-0 unlisted"), (5, "Honda", "ZZ-0 unlisted"),  # unknown, 2 rows
             (6, "Ducati", "Panigale V4"),                          # unknown, 1 row
             (7, "Honda", "CBR1000RR"),                             # model-sourced since 257: out
         ])
-        assert census(db) == {"Honda": [{"model": "CBR929RR", "rows": 2}],
+        assert census(db) == {"Honda": [{"model": "ZZ-0 unlisted", "rows": 2}],
                               "Ducati": [{"model": "Panigale V4", "rows": 1}]}
 
     def test_the_make_filter(self, tmp_path):

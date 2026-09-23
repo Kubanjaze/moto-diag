@@ -509,10 +509,13 @@ class TestPrecedence:
         assert r.provenance == "model-sourced" and r.value == "cvt"
 
     def test_unknown_is_all_six(self):
-        # CBR929RR, not CBR1000RR: Phase 257 sourced the CBR1000RR as
-        # `manual` from its own 2018 owner's manual. The claim is the unknown
-        # shape, not the machine; the CBR929RR is still unknown.
-        r = resolve_transmission("Honda", "CBR929RR")
+        # A spelling absent from the junction, so no batch can ever source
+        # it. It was the CBR1000RR, then the CBR929RR; each real machine
+        # broke this test the day it was sourced (Phase 257). The claim is
+        # the unknown shape, not the machine.
+        r = resolve_transmission("Honda", "ZZ-0 unlisted")
+        assert r.provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         assert r.candidates == ALL_TRANSMISSIONS
         assert r.provenance == "unknown"
         assert r.value is None and r.certain is False
@@ -838,20 +841,23 @@ class TestTheCounter:
         import shutil
         from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
 
-        # CBR929RR, not the Grom this test originally used nor the
-        # CBR1000RR that replaced it: Phase 257 sourced both as `manual`
-        # (tranche 1; run Honda_20260923_155534), and a model-sourced
-        # machine is deliberately absent from the report (see the Wolf
-        # test above — recording it would bury the real gaps). The claim
-        # under test is the counter, not the machine; CBR929RR is still
-        # unknown, so it is still recorded.
+        # A spelling absent from the junction, so no batch can ever source
+        # it. It was the Grom, then the CBR1000RR, then the CBR929RR; each
+        # broke this test when Phase 257 sourced it, because a model-sourced
+        # machine is deliberately absent from the report (see the Wolf test
+        # above — recording it would bury the real gaps). It needs no
+        # junction rows of its own: the make-wide tier withholds 8 rows from
+        # it, as from the CBR929RR (measured). The claim is the counter.
+        machine = "ZZ-0 unlisted"
+        assert resolve_transmission("Honda", machine).provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         path = str(Path(db).parent / "accum.db")
         shutil.copy(db, path)
-        _, raw = known_issues_for_vehicle("Honda", "CBR929RR", db_path=path, limit=400)
+        _, raw = known_issues_for_vehicle("Honda", machine, db_path=path, limit=400)
         for _ in range(3):
-            rows_for_machine(raw, make="Honda", model="CBR929RR",
+            rows_for_machine(raw, make="Honda", model=machine,
                              purpose="prompt", db_path=path)
-        row = [r for r in withheld_report(path) if r["model"] == "CBR929RR"][0]
+        row = [r for r in withheld_report(path) if r["model"] == machine][0]
         assert row["retrievals"] == 3
 
     def test_the_chokepoint_persists_what_it_withheld(self, db):

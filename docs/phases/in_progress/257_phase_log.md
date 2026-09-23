@@ -1669,3 +1669,37 @@ and prints the same "Primary reduction V-matic (2.85:1 - 0.86:1)" line.
 - NCW50 leaves the stays-unknown list.
 - Break-it: the aliases removed → 3 fail.
 - Census 574 → **573**.
+
+### 2026-09-23 — Test examples of "an unknown machine" can no longer be sourced (operator fix 1)
+
+**Why.** The unknown-Honda example moved twice (Grom → CBR1000RR →
+CBR929RR) and the unknown-BMW example once (R1200GS → R1250). A move of
+this kind produced the red commit `d2bcc71`. CBR929RR is still in the Honda
+census, so it would break again the day its manual was acquired.
+
+**Measured before choosing:**
+- None of the five tests needs junction rows of its own. A Honda spelling
+  absent from the junction has 8 rows withheld through the make-wide tier,
+  exactly as the CBR929RR, CB and Shadow do.
+- **R1250 is not a safe family spelling.** `names_model("R 1250 RT", "R1250")`
+  and `names_model("BMW R 1250", "R1250")` are both True, because "rt" is
+  not in `VARIANT_TOKENS`, so an R 1250 RT manual could write "R1250". This
+  is reported to the operator, not changed here.
+
+**Done:** every moved example is now `"ZZ-0 unlisted"`, which is absent
+from the junction (0 rows, checked), so no batch can source it. Each test
+first asserts that its example is still unknown, with the message "pick
+another spelling absent from the junction". The five tests:
+- 255 `test_unknown_is_all_six`;
+- 255 `test_repeated_retrievals_accumulate`;
+- 255B `test_4605_stays_unscoped_and_that_is_the_point` (BMW);
+- 257 `TestCensus` (a synthetic junction);
+- tranche 1 `test_a_honda_spelling_that_was_never_seen_stays_unknown`.
+
+No other assertion was touched.
+
+**Break-it:** "zz-0 unlisted" added as an alias to a Honda and a BMW entry
+→ all 5 tests fail.
+
+**Not moved** (never moved, so outside the instruction, but the same
+exposure): 257 `TestCensus` still plants Ducati "Panigale V4" as an unknown.

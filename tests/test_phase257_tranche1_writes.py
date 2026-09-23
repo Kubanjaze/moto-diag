@@ -125,8 +125,11 @@ class TestHondaWrite:
         assert "cvt" not in r.candidates
 
     def test_a_honda_spelling_that_was_never_seen_stays_unknown(self):
-        # CBR929RR since run Honda_20260923_155534 sourced the CBR1000RR.
-        r = resolve_transmission("Honda", "CBR929RR")
+        # A spelling absent from the junction, so no batch can ever source
+        # it (it was the CBR1000RR, then the CBR929RR; each broke when sourced).
+        r = resolve_transmission("Honda", "ZZ-0 unlisted")
+        assert r.provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         assert r.provenance == "unknown"
         assert r.candidates != frozenset({"manual"})
 
