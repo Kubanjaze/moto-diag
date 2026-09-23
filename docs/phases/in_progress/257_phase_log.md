@@ -1295,3 +1295,20 @@ plate for a light pull and consistent release point."); refute kept it,
 abs), `source_route="anthropic-sonnet"`, its source naming the ABS-edition
 page. Census 587 → **586**. SV650 Gladius stays unknown (a different
 machine). The written-entries guard now covers 16 manual entries.
+
+### 2026-09-23 — Yamaha: acquired; batch STOPPED — Sonnet took 3 turns (the one-turn guard); nothing written
+
+**Acquire** (11 fetches): 9 exact matches on Yamaha's own `/specs` pages —
+YZF-R1, YZF-R7, MT-03, MT-07, MT-09, MT-10, Ténéré 700, XT250, V-Star 250.
+30 unmatched (older and scooter models: Zuma, Vino, XC50 variants, V-Star
+650/1100/1300, FZ6/8, VMAX, …).
+
+**Batch** `Yamaha_20260923_123945`, `--source-route anthropic`: the source
+stage (claude-sonnet-5, 174,080 tokens) returned 9 findings but in **3
+turns**; `SOURCE_MAX_TURNS = 2` (measured on Haiku and GLM) made it a
+source-stage error — a systemic stop, refute not run, nothing written. With
+`--tools ""` a third turn can only be a structured-output retry, not
+browsing, but the limit is a threshold: reported to the operator, not
+changed. Also flagged for the write: Yamaha sells the MT-07 and MT-09 in
+Y-AMT versions too — if the pages say so, those are ambiguous machines
+(like the Africa Twin), not `manual`.
