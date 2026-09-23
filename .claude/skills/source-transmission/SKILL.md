@@ -17,7 +17,7 @@ answering a mistake that was actually made.
 ```
 
 No spellings → every `unknown` spelling of that make from the census.
-`--source-route anthropic` sends the source stage to claude-sonnet-5 (one
+`--source-route anthropic` sends the source stage to claude-opus-5-5@medium (one
 turn, no tools, the same guards) while Subconscious is unavailable; refute
 stays on Opus. The default is `subconscious`; switching back is the flag.
 Each summary records `source_route`, and each lookup entry a batch writes
