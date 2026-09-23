@@ -1848,3 +1848,59 @@ triumphtechnicalinformation.com, not triumphmotorcycles.com. E11 accepts a
 file on the make's own host, or one linked from an unchanged maker-host
 page. A link that the app's script builds is not in any maker-host page's
 HTML.
+
+### 2026-09-23 — E12 tightened: the word "manual" counts only beside a gearbox term (operator decision)
+
+**Decision (operator):** "manual" counts only within three words of
+transmission, gearbox, gear shift or a gear count ("6-speed"), as in
+"Manual transmission", "6-speed manual gearbox" and "Transmission Manual;
+5 speeds". The reason: owner's manuals come next, and they say "manual
+choke", "manual fuel valve" and "manual adjustment". This tightens a check,
+by operator decision.
+
+**Done:**
+- `entry_check.GEARBOX_TERM` and `MANUAL_REACH = 3`.
+- `_unnegated` takes `near=`: a match must also have a `near` match within
+  three words before or after it.
+- `manual_evidence` passes `near=GEARBOX_TERM` for the word "manual" only.
+- The clutch and foot-shift rules are unchanged.
+
+**Controls on real text:**
+- The Triumph sentence ("For those who prefer a fixed setup, manual
+  adjustment of compression and rebound damping …") now **fails**.
+- **All 28 written manual entries pass; none flips.** Before and after,
+  the same 3 entries pass only through the word "manual": Grom 125
+  ("Transmission Manual; 5 speeds"), K 1200 RS ("Manual transmission
+  6-speed …") and K 1200 S ("Manual gearbox …"). The operator's
+  simulation (28 of 28) is confirmed.
+- The dry run over `Triumph_20260923_172417` now sends **0** (was 5).
+  BMW 142134 (14), BMW 154333 (3), Honda 155534 (9) and Yamaha 123945 (0)
+  are unchanged, and every written spelling is still sent.
+- Excerpt sentences in those five runs that old E12 passed and new E12
+  fails: **15**. 14 are Honda, "manual" as a document ("… guidelines in
+  this manual.", a manual-aggregator page's Grom text). 1 is the Triumph
+  suspension sentence. None describes a gearbox.
+
+**Tests** (`test_phase257_source_checks.py::TestE12TheWordManualNeedsAGearbox`,
+12):
+- 5 must fail: the Triumph sentence (real), Honda's "in this manual"
+  (real), "manual choke", "manual fuel valve", and a gearbox term four
+  words away.
+- 7 must pass, one for each gearbox term on its own ("Manual transmission",
+  "Manual gearbox …", "manual gear shift", "A six-speed manual"), plus the
+  real Grom, K 1200 RS and K 1200 S shapes.
+
+**Break-it**, each part reverted on its own; every one is caught:
+- no gearbox requirement → 5 fail;
+- the proximity check never satisfied → 12 fail, including the 3 written
+  entries;
+- "transmission" dropped → 1;
+- "gearbox" dropped → 2, including K 1200 S;
+- "gear shift" dropped → 1;
+- the gear count dropped → 1;
+- reach 3 → 10 → 1;
+- the after-window dropped → 6.
+
+A first gear-count break left an empty alternative that matched
+everything. It went red for the wrong reason, so it was not a break. It
+was redone by removing the alternative.

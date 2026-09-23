@@ -332,6 +332,13 @@ RIDER_CLUTCH = re.compile(
 FOOT_SHIFT = re.compile(r"return shift|shift pedal|change pedal|gear ?shift pedal|foot[- ]shift|"
                         r"foot[- ]operated (?:return )?shift", re.I)
 MANUAL_WORD = re.compile(r"\bmanual\b", re.I)
+# The word "manual" counts only within MANUAL_REACH words of a gearbox term
+# (operator, 2026-09-23): "Manual transmission", "6-speed manual gearbox",
+# "Transmission Manual; 5 speeds" — not "manual choke", "manual fuel valve"
+# or Triumph's "manual adjustment of compression and rebound damping".
+GEARBOX_TERM = re.compile(r"\b(?:transmission|gearbox|gear ?shift|"
+                          r"(?:\d|two|three|four|five|six|seven)[- ]?speeds?)\b", re.I)
+MANUAL_REACH = 3
 DOCUMENT_MANUAL = re.compile(r"(?:owner'?s?|owners|service|workshop|shop|repair|rider'?s?|user'?s?)\s+manual", re.I)
 # The clutch pull, widened to one sentence (operator, 2026-09-23): "clutch"
 # and a NOUN pull — "a light (lever) pull", "the pull of the clutch" — not
@@ -357,12 +364,20 @@ def _sentences(q: str) -> list[str]:
     return [s for s in re.split(r"(?<=[.!?])\s+", q) if s.strip()]
 
 
-def _unnegated(pattern: re.Pattern, sentence: str) -> bool:
+def _unnegated(pattern: re.Pattern, sentence: str, near: re.Pattern | None = None) -> bool:
+    """A match of `pattern` with no negation governing it — and, given
+    `near`, with a match of `near` within MANUAL_REACH words of it."""
     for m in pattern.finditer(sentence):
         before = re.findall(r"[\w'-]+", sentence[:m.start()])[-NEGATION_REACH:]
         after = re.findall(r"[\w'-]+", sentence[m.end():])[:NEGATION_AFTER]
-        if not any(NEGATION.search(" ".join(w)) for w in (before, after)) and not NEGATION.search(m.group(0)):
-            return True
+        if any(NEGATION.search(" ".join(w)) for w in (before, after)) or NEGATION.search(m.group(0)):
+            continue
+        if near is not None:
+            close = (re.findall(r"[\w'-]+", sentence[:m.start()])[-MANUAL_REACH:],
+                     re.findall(r"[\w'-]+", sentence[m.end():])[:MANUAL_REACH])
+            if not any(near.search(" ".join(w)) for w in close):
+                continue
+        return True
     return False
 
 
@@ -370,7 +385,8 @@ def manual_evidence(quote: str) -> bool:
     """Does the quote itself show a manual gearbox's mechanism? One of its
     sentences must name a rider-operated clutch (a lever, cable, hydraulic
     clutch, or a clutch pull — a noun pull, anywhere in the sentence), a
-    foot-shift pattern, or the word "manual" — with no automated-transmission
+    foot-shift pattern, or the word "manual" within three words of a gearbox
+    term — with no automated-transmission
     marker in that sentence and no negation governing the term."""
     # Typographic apostrophes read as plain ones (bug fix #5): BMW prints
     # "Rider’s Manual", Honda "don’t" — the rules below were written for "'".
@@ -382,7 +398,7 @@ def manual_evidence(quote: str) -> bool:
             return True
         if re.search(r"\bclutch", s, re.I) and _unnegated(CLUTCH_PULL, s):
             return True
-        if _unnegated(MANUAL_WORD, DOCUMENT_MANUAL.sub(" ", s)):
+        if _unnegated(MANUAL_WORD, DOCUMENT_MANUAL.sub(" ", s), near=GEARBOX_TERM):
             return True
     return False
 

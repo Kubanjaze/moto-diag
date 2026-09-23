@@ -53,7 +53,8 @@ One finding's refute kill, entry_check rejection, names-the-model
 disagreement, or a spelling the source skipped is **withheld**: recorded in
 `summary.withheld`, never written, and it does not block the batch's other
 ready findings. A `manual` finding needs a quote naming a rider-operated
-clutch, a foot-shift pattern or the word "manual" (E12). **Never resolve a
+clutch, a foot-shift pattern or the word "manual" within three words of
+transmission, gearbox, gear shift or a gear count (E12). **Never resolve a
 stop by editing the check.**
 
 ## The boundary

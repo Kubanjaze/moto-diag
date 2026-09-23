@@ -574,3 +574,40 @@ class TestBugFix5E12ReadsRealTypography:
     def test_it_fails_e12(self, quote):
         from entry_check import manual_evidence
         assert not manual_evidence(quote)
+
+
+class TestE12TheWordManualNeedsAGearbox:
+    """Operator decision 2026-09-23, before owner's manuals: the word "manual"
+    counts only within three words of transmission, gearbox, gear shift or a
+    gear count. Owner's manuals say "manual choke", "manual fuel valve",
+    "manual adjustment"; the Triumph run's dry run sent five spellings on one
+    suspension sentence."""
+
+    @pytest.mark.parametrize("quote", [
+        # Real: triumphmotorcycles.com, Speed Triple 1200 RS page.
+        "For those who prefer a fixed setup, manual adjustment of compression and rebound damping "
+        "is also available via the instrument menu.",
+        # Real: Honda owner's manual excerpt (Honda_20260923_155534).
+        "Follow all load limits and other loading guidelines in this manual.",
+        # Constructed, the operator's examples.
+        "Pull the manual choke knob fully out.",
+        "Turn the manual fuel valve to ON.",
+        # Constructed: a gearbox term, but four words or more away.
+        "Pull the manual choke knob fully out before you select the transmission.",
+    ])
+    def test_manual_away_from_a_gearbox_fails(self, quote):
+        from entry_check import manual_evidence
+        assert not manual_evidence(quote)
+
+    @pytest.mark.parametrize("quote", [
+        "Manual transmission",                                                  # transmission
+        "Manual gearbox The motorcycle can be started in the neutral position",  # gearbox (BMW K 1200 S)
+        "The manual gear shift sits by the left footpeg",                       # gear shift (constructed)
+        "A six-speed manual",                                                   # a gear count (constructed)
+        "6-speed manual gearbox",
+        "Transmission  Manual; 5 speeds",                                       # Honda Grom
+        "Manual transmission 6-speed with claw shift and integral…",            # BMW K 1200 RS
+    ])
+    def test_manual_beside_a_gearbox_passes(self, quote):
+        from entry_check import manual_evidence
+        assert manual_evidence(quote)

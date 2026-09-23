@@ -99,3 +99,12 @@ The counts are in `summary.mechanism_lines`.
 Controls on the real runs: every written BMW and Honda spelling (13 of 13)
 would still be sent, and none of Yamaha's 9. Triumph would still send 5,
 all on one suspension sentence that passes E12's word-"manual" rule.
+
+## 2026-09-23 — E12: the word "manual" needs a gearbox beside it (operator)
+
+"Manual" now counts only within three words of transmission, gearbox,
+gear shift or a gear count ("Manual transmission", "6-speed manual
+gearbox", "Transmission Manual; 5 speeds"). Owner's manuals come next, and
+they say "manual choke", "manual fuel valve" and "manual adjustment".
+Triumph's "manual adjustment of compression and rebound damping" had made
+the dry run send five spellings. All 28 written manual entries still pass.
