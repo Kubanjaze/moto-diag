@@ -1,5 +1,14 @@
 # closeout — changelog
 
+## 2026-09-22 — check 2 sees `.claude/` (Phase 255D fix #8, F137)
+
+`verify_phase.sh` check 2 was `git diff -- src/ tests/`. Fixes #5 and #6
+changed two skill scripts after the closing regression and check 2 said
+"docs only". The scope now lives in `code_after_regression.py` — one
+implementation, called by the script and the test — and is inverted: a path
+is code unless it is positively documentation. The positive control is the
+real `b0ae748..3dfc78a` range, which cannot drift.
+
 ## 2026-09-22 — A4 resolves the commit, not the word (Phase 255D fix #7)
 
 **A4 passed on a non-answer.** It looked only for the words `**Commit.**`,

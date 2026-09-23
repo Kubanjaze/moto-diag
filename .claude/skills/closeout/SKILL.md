@@ -63,8 +63,10 @@ check.
 | `closeout_check.py` | the seven assertions; the single implementation |
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
+| `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
+| `fixtures/check2` | hand-written path lists for check 2 |
 | `CHANGELOG.md` | what changed here and why |
 
 ## Two things that will bite you

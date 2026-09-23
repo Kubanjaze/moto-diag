@@ -200,3 +200,55 @@ class TestThePushGuardNeverBlocksANonPushCommand:
         assert is_git_push("git push origin master")
         assert is_git_push("cd /x && git push -u origin branch")
         assert not is_git_push('echo "git push"')
+
+
+class TestCheck2SeesCodeOutsideSrcAndTests:
+    """F137. verify_phase.sh check 2 was `git diff -- src/ tests/`.
+
+    Phase 255D fixes #5 and #6 changed two skill scripts after the closing
+    regression, and check 2 reported "docs only". `.claude/` is code; the
+    two-directory scope was an exclusion no one had written down as one.
+    """
+
+    FIX = SKILL / "fixtures" / "check2"
+
+    @staticmethod
+    def _paths(name):
+        return (TestCheck2SeesCodeOutsideSrcAndTests.FIX / name).read_text(
+            encoding="utf-8").splitlines()
+
+    def test_a_skill_script_change_is_reported(self):
+        from code_after_regression import code_paths
+        assert code_paths(self._paths("bad_paths.txt")) == [
+            ".claude/skills/closeout/closeout_check.py"]
+
+    def test_a_docs_only_change_is_not(self):
+        from code_after_regression import code_paths
+        assert code_paths(self._paths("good_paths.txt")) == []
+
+    def test_the_real_255D_miss_is_reported(self):
+        """Positive control from history, not from a fixture.
+
+        b0ae748 is 255D's closing regression; 3dfc78a is the merge of fix
+        #6. Between them the old check 2 saw only a floor-test bump. Both
+        commits are immutable, so this case cannot drift.
+        """
+        from code_after_regression import changed_since
+        hits = changed_since(ROOT, "b0ae748", "3dfc78a")
+        assert ".claude/skills/closeout/closeout_check.py" in hits, hits
+        assert ".claude/skills/finding/finding_check.py" in hits, hits
+
+    def test_every_tracked_script_is_code(self):
+        """The exclusion needs a control too: nothing executable may fall
+        through to "documentation"."""
+        from code_after_regression import is_code
+        tracked = subprocess.run(
+            ["git", "-C", str(ROOT), "ls-files"], capture_output=True,
+            text=True, check=True).stdout.splitlines()
+        suffixes = (".py", ".sh", ".js", ".cjs", ".mjs", ".ts", ".toml",
+                    ".yaml", ".yml", ".cfg", ".ini", ".sql")
+        scripts = [p for p in tracked
+                   if p.endswith(suffixes) and not p.startswith("docs/")]
+        assert scripts, "the census found no scripts; the control is broken"
+        missed = [p for p in scripts if not is_code(p)]
+        assert missed == [], missed

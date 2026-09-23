@@ -1,0 +1,6 @@
+docs/phases/completed/255D_phase_log.md
+docs/phases/completed/256_predictions_after.json
+docs/ROADMAP.md
+implementation.md
+phase_log.md
+CLAUDE.md
