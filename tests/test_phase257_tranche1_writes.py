@@ -91,3 +91,40 @@ class TestKymcoWrite:
         r = resolve_transmission("Kymco", "X-Town")
         assert r.provenance == "unknown"
         assert r.candidates != frozenset({"manual"})
+
+
+class TestHondaWrite:
+    """Run Honda_20260922_233404: two spellings, both refute verdicts kept.
+
+    The plan expected the service manual's page images to carry the Grom
+    (its text layer is OCR). The batch found a better source — Honda's own
+    digital spec pages — and the OCR corroborates without being the
+    citation. The 255 over-reach test still holds: a `{manual}` Grom
+    receives no CVT-declared row, it just stops being all-six-unknown.
+    """
+
+    def test_grom_and_grom_125_resolve_manual(self):
+        for model in ("Grom", "Grom 125"):
+            r = resolve_transmission("Honda", model)
+            assert r.provenance == "model-sourced", model
+            assert r.candidates == frozenset({"manual"}), model
+
+    def test_every_grom_alias_resolves(self):
+        for model in ("Grom ABS", "Grom SP", "Grom (MSX125S)",
+                      "Grom ABS (MSX125AS)", "Grom SP (MSX125SS)",
+                      "MSX125", "MSX 125", "MSX125S", "MSX125AS", "MSX125SS"):
+            r = resolve_transmission("Honda", model)
+            assert r.provenance == "model-sourced", model
+            assert r.candidates == frozenset({"manual"}), model
+
+    def test_the_grom_still_receives_no_cvt_row(self):
+        """The 254 over-reach, restated at the resolver: candidates are
+        {manual}, so a cvt-only row is withheld — the fix is not undone
+        by classifying the machine."""
+        r = resolve_transmission("Honda", "Grom")
+        assert "cvt" not in r.candidates
+
+    def test_a_honda_spelling_that_was_never_seen_stays_unknown(self):
+        r = resolve_transmission("Honda", "CBR1000RR")
+        assert r.provenance == "unknown"
+        assert r.candidates != frozenset({"manual"})

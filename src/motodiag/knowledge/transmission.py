@@ -181,6 +181,22 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Co., Ltd. 2020): the same three groups as the C125 — 'WEIGHT SET, "
        "PRIMARY CLUTCH' in E-7 'ONE WAY CLUTCH', 'DISK, CLUTCH FRICTION' "
        "in E-8, 'LEVER COMP., CLUTCH' in E-6."),
+    # Phase 257 tranche 1, run Honda_20260922_233404, both refute verdicts
+    # kept. The plan expected the GROM125 service manual's page images to
+    # carry this entry, because its text layer is OCR; the batch found a
+    # strictly better source first — Honda's own spec pages, digital
+    # text. The OCR corroborates and is deliberately not the citation.
+    _E("Honda", "Grom 125", MANUAL,
+       ("grom", "grom 125", "grom125", "grom abs", "grom sp",
+        "grom (msx125s)", "grom abs (msx125as)", "grom sp (msx125ss)",
+        "msx125", "msx 125", "msx125s", "msx125as", "msx125ss"),
+       "Honda's own Grom specifications pages: 2025 (Model 'Grom ABS "
+       "(MSX125AS) / Grom SP (MSX125SS) / Grom (MSX125S)') reads "
+       "'Transmission  Manual; 5 speeds' and 'Clutch  Multiplate wet'; the "
+       "2020 page for the 124.9 cc Grom reads 'Transmission  Manual; four "
+       "speeds'. The GROM125 service manual's OCR page 9 says the same "
+       "(constant-mesh four-speed, wet multiplate clutch, 1-N-2-3-4) but "
+       "is OCR evidence and is not the citation."),
 
     # --- Yamaha ----------------------------------------------------------
     _E("Yamaha", "Zuma 125", CVT, ("zuma 125", "zuma125", "yw125", "yw125y"),

@@ -76,3 +76,32 @@ Census of record: **603 → 602** (Kymco 11 → 10). Tranche tests now 10
 (a Kymco class: the spelling, every alias, an unseen Kymco spelling
 stays unknown). 166 pass across the tranche file, 244G and the 255
 axis suite. Honda still in flight when this was written.
+
+### 2026-09-22 23:44 — Tranche 1 write: Honda (one make, one commit)
+
+Batch `Honda_20260922_233404`: both Grom spellings kept. The plan
+expected the service manual's **page images** to carry the Grom because
+its text layer is OCR; the batch found a strictly better source first —
+Honda's own spec pages on disk (2018/2020/2022/2023/2025, digital text,
+`ocr: false`), and refute verified the quotes against the source HTML.
+The service-manual OCR corroborates and is deliberately not the
+citation. `stops` empty.
+
+| spelling | before | after | entry |
+|---|---|---|---|
+| Grom | unknown | model-sourced, manual | one entry, canonical Grom 125 |
+| Grom 125 | unknown | model-sourced, manual | same entry (MSX125 codes as aliases) |
+
+Census of record: **602 → 600** (Honda 28 → 26); tranche total
+605 → 600, five spellings, as planned in D8.
+
+One 255 test used the Grom as its example of an unknown machine:
+`test_repeated_retrievals_accumulate` (the counter test). A
+model-sourced machine is deliberately absent from the withheld report,
+so the fixture moved to CBR1000RR (still unknown, still a named
+over-reach machine) — the assertion is untouched. Tranche tests now 14.
+387 pass across the seven touched suites. **Noticed while writing, and
+handed to the operator:** the Honda findings cite `./evidence/grom*.txt`
+— saved copies the model rendered from the on-disk HTML — and
+entry_check E3 verified the quotes against those copies, not the
+originals. A model that edits its own saved copy passes E3 today.
