@@ -210,3 +210,38 @@ and a script for the parts that are "run this and check that".
 
 No schema change, no migration, no database touched — this phase is process
 files and tests only.
+
+### 2026-09-22 21:40 — Bug fix #5: B2 could not tell describing a number from citing one
+
+**Issue.** `verify_phase.sh` run against **255D itself** failed check 13:
+three dangling F-numbers — F138, F139, F140 — cited by 255D's own
+documents.
+
+**Root cause.** Those documents *describe* the `finding` known-bad fixture,
+and that fixture uses fabricated numbers. **Prose about an identifier is
+indistinguishable from a citation of it** under a bare `\bF\d+\b` scan.
+
+**Root cause of the first FIX, which is the interesting part.** The obvious
+repair was to pin 138–140 in `KNOWN_DANGLING`. It made check 13 pass — and
+**broke the control**, because F139 is the fixture's deliberate
+one-past-the-end case. A global pin made the known-bad fixture pass and the
+assertion meaningless. **That is the ceiling bug again, in the fix for a
+different bug**, twice in one phase.
+
+**Fix.** `DESCRIBED_NOT_CITED` holds `(number, document)` pairs, so the
+exclusion is scoped to the documents that merely describe the numbers. The
+fixture still catches F139 where it matters.
+
+**Files.** `.claude/skills/finding/finding_check.py`.
+
+**Verified.** Real repository clean; all 9 finding tests green, including
+`test_b2_names_the_citation_one_past_the_end`, which is the one the global
+pin had silently disabled.
+
+**Commit.** This one.
+
+**The lesson, since it is now three for three.** Every exclusion rule
+written in this phase removed a true positive along with the false ones:
+the ceiling, the global pin, and nearly the sub-brand narrowing in 255C.
+**An exclusion is a claim that something cannot be the thing you are looking
+for, and it needs a control like any other claim.**

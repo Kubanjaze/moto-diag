@@ -81,7 +81,6 @@ KNOWN_DANGLING = {
         "themselves.",
 }
 
-
 def check(repo: pathlib.Path, followups: str = "docs/FOLLOWUPS.md",
           phase_docs: str = "docs/phases/completed",
           sibling: str | None = SIBLING_FOLLOWUPS) -> list[str]:
@@ -114,7 +113,8 @@ def check(repo: pathlib.Path, followups: str = "docs/FOLLOWUPS.md",
         for doc in sorted(d.glob("*.md")):
             body = doc.read_text(encoding="utf-8", errors="replace")
             for n in {int(x) for x in _CITE.findall(body)}:
-                if n in present or n in KNOWN_DANGLING or n in NOT_FINDINGS:
+                if (n in present or n in KNOWN_DANGLING or n in NOT_FINDINGS
+                        or (n, doc.name) in DESCRIBED_NOT_CITED):
                     continue
                 dangling.setdefault(n, []).append(doc.name)
         if dangling:
@@ -125,6 +125,26 @@ def check(repo: pathlib.Path, followups: str = "docs/FOLLOWUPS.md",
                 f"B2 {len(dangling)} F-number(s) cited by a phase document "
                 f"have no entry: {shown}")
     return fails
+
+
+#: (number, document) pairs where a phase document DESCRIBES an F-number
+#: rather than citing one.
+#:
+#: Found by running `verify_phase.sh` against Phase 255D itself, which is how
+#: this check's own blind spot surfaced: **prose ABOUT an identifier is
+#: indistinguishable from a citation OF it.** 255D's documents explain the
+#: `finding` known-bad fixture, and that fixture uses fabricated numbers.
+#:
+#: **The first attempt pinned the numbers globally and broke the control** —
+#: F139 is the fixture's deliberate one-past-the-end case, so a global pin
+#: made the fixture pass and the assertion meaningless. Exactly the shape of
+#: the ceiling bug it was fixing. The pin is scoped to the DOCUMENT instead,
+#: so the fixture still catches F139 where it matters.
+DESCRIBED_NOT_CITED = {
+    (138, "255D_implementation.md"), (138, "255D_phase_log.md"),
+    (139, "255D_phase_log.md"), (139, "255D_implementation.md"),
+    (140, "255D_implementation.md"), (140, "255D_phase_log.md"),
+}
 
 
 ASSERTION_IDS = ("B1", "B2")
