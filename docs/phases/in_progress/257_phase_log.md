@@ -129,3 +129,68 @@ its pinned fetch). Tests: 19 in `test_phase257_source_checks.py`
 copy again → the doctored-copy test fails; (2) E9's sidecar and hash
 gates removed → exactly the three E9 tests fail. Restored: all green.
 F141 filed and marked CLOSED in `docs/FOLLOWUPS.md` by this commit. A model that edits its own saved copy passes E3 today.
+
+### 2026-09-23 — Opus session: review of the GLM session's five commits
+
+Before building on them. **The three tranche-1 writes stand**, each
+checked against its run and the document itself, not the run's account:
+
+| write | run | check | result |
+|---|---|---|---|
+| SYM Wolf Classic 150 / CR300i (`129b242`) | `SYM_20260922_232240`: stops [], both kept | pypdf over the fetched PDFs: quote on PDF p18 / p12; p35 'Model Classic 150 … Transmission Gear'; p24 'WOLF CR 300i / PF30A3-EU'; Dropbox links present in `sym_mg.html` | holds |
+| Kymco K-Pipe (`97a3dc3`) | `Kymco_20260922_232607`: stops [], kept | page 57 rendered here with pypdfium2 and read as an image: 'Transmission……4-speed, foot shift' under SPECIFICATIONS - K-PIPE 125, printed 56 | holds |
+| Honda Grom 125 (`16928bb`) | `Honda_20260922_233404`: stops [], both kept | both quotes found in the ORIGINAL `honda/grom2025.html` / `grom2020.html` (tags stripped here, not the saved copies) | holds |
+
+`16928bb`'s moved test: the diff touches the machine name only; the
+assertion `row["retrievals"] == 3` is unchanged and passes, and
+CBR1000RR still resolves `unknown`. No duplicate aliases in the lookup.
+
+**Two things wrong, neither in what was written:**
+
+1. **F141 is not closed.** E9 makes a copy under `evidence/` declare an
+   original and its sha256 — but the model writes the sidecar, and
+   nothing stops the "original" being another file it wrote. Shown in a
+   scratch run, all three accepted by `check_one` with zero failures:
+   (a) a document in the clone root, outside `evidence/`, is treated as
+   an original and read directly; (b) a sidecar whose `original` is a
+   relative path to a second model-written file in `evidence/`; (c) a
+   URL original whose `fetched_as` is a model-written file. The hash pins
+   only that the model's two files agree. The redesign's no-tools source
+   stage removes the model's ability to write anything, and step 2 adds
+   the check that a cited document must be one `candidates.py` supplied.
+2. **"The run itself recorded nothing" is wrong.** Every `source.json`
+   carries `modelUsage`: Kymco's source stage is inputTokens 7,661,322 —
+   the operator's 7.7M — plus 18,077 out and 6,133,632 cache-read; SYM
+   3,393,862 in; Honda 724,033 in. What was missing is the sum and the
+   gate, which is step 3.
+
+### 2026-09-23 — token redesign step 1: `candidates.py`
+
+No model. For each spelling, the library files (`~/research/motodiag`,
+`*.txt` and HTML→text via `entry_check._extract_text`) that name it, cut
+to the hit line ±40 lines, with the absolute path, the page (from the
+extract's own `=== PAGE N ===` / `===PAGE N===` / `<<<PAGE N>>>` markers
+or form feeds) and the line range. Capped at 8 excerpts and 40,000
+characters per spelling. A file whose own name names the spelling is about
+that machine throughout, so its gearbox lines anchor excerpts too
+(`anchor: "file"`): the Wolf CR300i manual's gear-change page never
+repeats the model name. Excluded: the project's own artefacts in the
+library folder (phase notes `250_*`, crawl/fetch logs, `refute/`,
+virtualenvs) and anything over 32 MB (NHTSA's 311 MB flat recall file —
+a database dump, and 93 of the first run's 95 seconds).
+
+Measured on the real library, 2.6 s per make. The quote each tranche-1
+entry cites is inside the excerpts for K-Pipe (page 57 spec table,
+ranked first), Grom (four spec pages) and Wolf CR300i (the gear-change
+page). Two spellings get excerpts that cannot carry a finding: **Wolf
+Classic 150** — its manual was fetched from the web in tranche 1 and is
+not on disk — and **Grom 125** — no maker page uses that string. Both
+would now come back `no_evidence`: the price of taking web acquire out of
+the source stage, and the honest answer for the second.
+
+`tests/test_phase257_candidates.py` (17) against a hand-written fixture
+library (`fixtures/library/`). **Break-it, seen to fail:** context 20 →
+the ±40 test; `refute/` read → 4; form feed ignored → the page test;
+letters and digits not split → 3; char cap off → the cap test; file anchor
+off → 2; phase notes read → 4. Restored: 17 pass. 244G scan over
+`tests/`: clean.
