@@ -1063,7 +1063,7 @@ the rule, retire both seed tests in the same commit that lifts it, with the
 reason — a rule enforced in one place and lifted in another is how the two
 drift.
 
-### F141 — CLOSED by the entry_check provenance rule (E9), 2026-09-22
+### F141 — CLOSED by the no-tools source stage and E10 (excerpt binding), 2026-09-23; E9 alone did not close it
 
 **entry_check E3 verified quotes against the model's own saved copies, not against the originals they claim to come from**
 
@@ -1095,4 +1095,21 @@ stale hash; break-it tests verified each fires and that disabling the
 original-matching makes the doctored-copy test fail. The source-stage
 prompt now instructs the model to write the sidecars. Filed and closed
 by the same commit (Phase 257, branch `phase-257-orchestrator`).
+
+**Reopened 2026-09-23 — E9 did not close it.** The model writes the
+sidecar, so the "original" it declares can be another file it wrote.
+Three cases, each accepted by `check_one` with zero failures: (a) a
+document in the clone root, outside `evidence/`, is read directly as an
+original; (b) a sidecar whose `original` is a second model-written file
+in `evidence/`; (c) a URL original whose `fetched_as` is model-written.
+The sha256 pins only that the model's two files agree.
+
+**What closed it:** the token redesign. The batch source stage is one
+turn with `--tools ""` and writes nothing; its only inputs are the
+library excerpts `candidates.py` cut. **E10** rejects a finding whose
+document is not one of those excerpts or whose quote is not inside them,
+and E3 matches the library original itself. Planted: a document not
+handed over (the quote in it, the machine named — E3/E4 pass), and a
+quote from the right file outside its excerpt; break-it seen to fail for
+each. E9 stays for any path that still saves copies.
 

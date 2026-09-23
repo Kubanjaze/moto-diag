@@ -36,3 +36,22 @@ against that, never against the copy. Known-bad fixtures plant a
 doctored copy, a missing sidecar and a stale hash; both breaks were
 seen to fail before the check was trusted. Filed and closed as F141 in
 the same commit.
+
+## 2026-09-23 — the source stage is one turn with no tools (token redesign)
+
+As an agent loop the source stage cost ~2.4M tokens a spelling; Kymco's
+one spelling was 7,661,322 input tokens. It browsed. Now `candidates.py`
+(no model) cuts the library to excerpts per spelling — ±40 lines, path,
+page — and the source stage gets those in its prompt, with `--tools ""`,
+and answers once. A spelling with no excerpt is `no_evidence` and the
+model is not called. More than two turns is an error.
+
+This also closes what E9 left open (F141): a sandboxed model with tools
+could write the "original" a sidecar declares. The stage now writes
+nothing, and **E10** rejects a finding whose document is not one of the
+excerpts it was handed, or whose quote is not inside them. E3 reads a
+library original through `_extract_text`, so an HTML page is matched as
+the text the stage saw.
+
+Web acquire left the source stage with this change: a manual not on disk
+comes back `no_evidence`. Refute is unchanged and keeps its tools.

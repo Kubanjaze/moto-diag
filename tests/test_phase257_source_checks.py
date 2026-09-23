@@ -28,10 +28,19 @@ from entry_check import REJECTION_IDS, check  # noqa: E402
 FIX = SKILL / "fixtures"
 
 
+def _excerpt_fixture():
+    """fixtures/excerpts.json with its documents made absolute, as candidates.py emits them."""
+    x = json.loads((FIX / "excerpts.json").read_text(encoding="utf-8"))
+    ex = {s: [dict(e, document=str(FIX / e["document"])) for e in v] for s, v in x["excerpts"].items()}
+    return ex, x["bad"], x["good"]
+
+
 class TestEntryCheckKnownBad:
     @pytest.fixture(scope="class")
     def fails(self):
-        return check(json.loads((FIX / "bad.json").read_text(encoding="utf-8")), FIX)
+        ex, bad, _ = _excerpt_fixture()
+        return (check(json.loads((FIX / "bad.json").read_text(encoding="utf-8")), FIX)
+                + check(bad, FIX, ex))
 
     @pytest.mark.parametrize("rid", REJECTION_IDS)
     def test_this_rejection_fires(self, fails, rid):
@@ -66,6 +75,45 @@ class TestEntryCheckKnownBad:
         the copy's bytes, not the original's."""
         assert any(f.startswith("E9") and "sha256" in f for f in fails), (
             "a provenance pin that does not match the original was accepted")
+
+
+class TestTheExcerptBinding:
+    """E10 — the token redesign's source stage reads candidates.py's
+    excerpts and nothing else, so a finding must cite one of them. This is
+    what E9 could not do (F141, reopened): every file the model could name
+    before, it could also have written."""
+
+    def test_a_document_it_was_not_handed_is_rejected(self):
+        ex, bad, _ = _excerpt_fixture()
+        fails = check([bad[0]], FIX, ex)
+        assert fails and all(f.startswith("E10") for f in fails), fails
+        assert "not one of the excerpts" in fails[0]
+
+    def test_a_quote_outside_its_excerpt_is_rejected(self):
+        ex, bad, _ = _excerpt_fixture()
+        fails = check([bad[1]], FIX, ex)
+        assert fails and all(f.startswith("E10") for f in fails), fails
+        assert "not inside the excerpts" in fails[0]
+
+    def test_a_finding_from_its_excerpt_passes(self):
+        ex, _, good = _excerpt_fixture()
+        assert check(good, FIX, ex) == []
+
+    def test_a_library_html_page_is_matched_as_text(self):
+        """The source stage now cites library HTML directly (no saved
+        copy). Its quote spans `</td><td>`: matched against the raw
+        markup it fails; against the text candidates.py showed, it holds."""
+        f = {"make": "ZZ", "spelling": "Scout 50", "aliases": ["scout 50"], "outcome": "found",
+             "transmission": "cvt", "quote": "Transmission Automatic; V-Matic belt",
+             "document": "library/zz_scout_spec.html", "page": "spec table",
+             "evidence_kind": "maker_spec_page"}
+        assert check([f], FIX) == []
+
+    def test_without_excerpts_the_check_is_unchanged(self):
+        """E10 applies only where the excerpts are known; the plants are
+        otherwise sound findings."""
+        _, bad, _ = _excerpt_fixture()
+        assert check(bad, FIX) == []
 
 
 class TestEntryCheckKnownGood:

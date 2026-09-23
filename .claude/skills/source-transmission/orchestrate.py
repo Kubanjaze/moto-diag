@@ -3,16 +3,25 @@
 
 Runs the written procedure for one make at a time:
 
-    census  (census.py, no model)
-      -> source  (sandboxed, Subconscious GLM-5.3 Marathon: acquire + extract + classify)
-      -> check   (entry_check.py, no model: rejects bad evidence)
+    census      (census.py, no model)
+      -> candidates  (candidates.py, no model: library excerpts per spelling)
+      -> source      (sandboxed, Subconscious GLM-5.3 Marathon, ONE turn, NO tools:
+                      extract + classify from the excerpts in its prompt)
+      -> check       (entry_check.py, no model: rejects bad evidence; E10 binds
+                      each finding to the excerpts it was handed)
       -> refute  (sandboxed, Opus, fresh context: re-opens every citation)
       -> summary (per-make file; stops alert)
 
-**Why two routes.** The source stages read manuals and portals — long,
-context-heavy work — so they run through Subconscious (`subc claude`),
-whose gateway keeps a 3M-token context and compacts for us. That is the
-operator's reason for the orchestrator. Refute and write stay on Opus.
+**Why two routes.** The source stage runs through Subconscious (`subc
+claude`), the operator's reason for the orchestrator. Refute and write stay
+on Opus.
+
+**Why one turn, no tools.** As an agent loop the source stage browsed the
+library itself and cost ~2.4M tokens per spelling (Kymco's one spelling:
+7,661,322 input). Now `candidates.py` cuts the library to excerpts first
+and the model sees only those, in one call it cannot extend: a spelling
+with no excerpt is `no_evidence` without a call at all. Web acquire left
+the source stage with this change. Refute is unchanged and keeps its tools.
 
 The WRITE step — editing the lookup in the repository — is not done here.
 It is done by Opus in the repository, one make per commit, from the refuted
@@ -46,6 +55,11 @@ SUBC_PROFILE = HOME / ".subconscious" / "profiles" / "default.env"
 ANTHROPIC_TOKEN_FILE = HOME / ".config" / "motodiag" / "anthropic.env"
 BUDGET_USD = 3.0                    # per call; Opus route only (see run_stage)
 BLOCKED_STOP = 0.5                  # plan D5
+# The source stage's flags: no tools, no MCP servers, no skills listing. With
+# --json-schema a no-tools call reports 2 turns (the structured answer, then
+# its acknowledgement) — measured 2026-09-23; more than that is a loop.
+SOURCE_FLAGS = ("--tools", "", "--strict-mcp-config", "--disable-slash-commands")
+SOURCE_MAX_TURNS = 2
 
 ROUTES = {
     # Credential held by `subc login`; the orchestrator never reads the key.
@@ -183,7 +197,8 @@ def parse_result(stdout: str) -> dict:
     return {"is_error": True, "result": stdout[-500:]}
 
 
-def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None) -> dict:
+def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None,
+              extra: tuple[str, ...] = ()) -> dict:
     """One sandboxed call. The model's text is never acted on unchecked."""
     env = {"HOME": str(HOME), "PATH": f"{SUBC.parent}:/usr/bin:/bin:{CLAUDE.parent}",
            "USER": os.environ.get("USER", ""), "TERM": "dumb",
@@ -191,7 +206,7 @@ def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None) -
     if route == "anthropic":
         env["CLAUDE_CODE_OAUTH_TOKEN"] = load_anthropic_token()
     check_route(route, env)
-    cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema)
+    cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema, extra=extra)
     p = subprocess.run(cmd, cwd=r["clone"], env=env, capture_output=True, text=True,
                        stdin=subprocess.DEVNULL, timeout=3600)
     out = parse_result(p.stdout)
@@ -252,17 +267,17 @@ VERDICT_SCHEMA = {"type": "object", "additionalProperties": False, "required": [
                                      "quote": {"type": "string"}, "page": {"type": ["string", "integer"]},
                                      "reason": {"type": "string"}}}}}}
 
-SOURCE_PROMPT = """You are the SOURCE stage of the moto-diag transmission procedure (.claude/skills/source-transmission/SKILL.md — read it first). Make: {make}. Spellings to source, exactly these: {spellings}.
-For EACH spelling return one finding. Rules, each from a real mistake:
-- On-disk library FIRST: {library} (text extracts are *.txt next to the PDFs). Only then maker portals / spec pages on the web.
-- If you fetch a web document, save it under ./evidence/ in this directory and cite that path as `document`. Cite on-disk library files by absolute path.
-- If you save anything under ./evidence/, you MUST also write a sidecar next to it, <file>.provenance.json, declaring where it came from: {{"original": "<absolute library path or URL>", "original_sha256": "<sha256 hex of those original bytes>"}} — and for a URL original also save the bytes you fetched and name that file in "fetched_as". entry_check verifies every quote against the ORIGINAL, never against your saved copy; a copy with no sidecar is rejected outright (E9).
-- `quote` must be copied VERBATIM from the document (it will be string-matched against it), a full statement, not a table cell alone. Use the maker's own word for the mechanism.
-- `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. No evidence -> outcome no_evidence and NULL. Never infer from the make or the model family.
-- Blocked or not found are outcomes: record `url_tried`, never guess past them.
-- If the evidence is OCR of a scanned page, set ocr=true and needs_page_image=true.
-- evidence_kind: owners_manual | service_manual | workshop_manual | spec_sheet | maker_spec_page. Anything else (marketing, dealer, forum, mirror sites) is not evidence.
-- `aliases`: spellings and model codes the document itself uses for this machine.{hints}"""
+SOURCE_PROMPT = """You are the SOURCE stage of the moto-diag transmission procedure. Make: {make}. Spellings to source, exactly these: {spellings}.
+You have no tools and one answer. Everything you may cite is in the EXCERPTS below: passages of on-disk library documents, cut by a script around each spelling. Return one finding per spelling. Rules, each from a real mistake:
+- `document` is an excerpt's `document` path, exactly as given. `page` is the page of the quoted line: the nearest PAGE marker above it inside the excerpt text, else the excerpt's `page`, else its `lines` range.
+- `quote` must be copied VERBATIM from that excerpt's text (it is string-matched against the excerpt and against the document), a full statement, not a table cell alone. Use the maker's own word for the mechanism.
+- An excerpt with anchor "file" comes from a document whose file name names the machine, but that passage does not name it: say so in `note`.
+- `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. If the excerpts do not establish the gearbox of THIS machine -> outcome no_evidence and transmission NULL. Never infer from the make or the model family, and never from anything but the excerpts.
+- If the text is OCR of a scanned page (garbled words, broken spacing), set ocr=true and needs_page_image=true.
+- evidence_kind: owners_manual | service_manual | workshop_manual | spec_sheet | maker_spec_page. Anything else (marketing, dealer, forum, mirror sites, recall notices) is not evidence.
+- `aliases`: spellings and model codes the document itself uses for this machine.{hints}
+EXCERPTS (JSON, by spelling):
+{excerpts}"""
 
 REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings and must not trust them. For each finding below, OPEN the cited document yourself at the cited page and decide kept or killed.
 If the cited document is under evidence/, it is a copy the source stage saved: its <file>.provenance.json names the ORIGINAL (and, for a URL, the pinned fetch in "fetched_as"). Check the quote against the ORIGINAL, not against the copy.
@@ -272,22 +287,42 @@ Findings:
 {findings}"""
 
 
+def no_evidence(make: str, spelling: str) -> dict:
+    """The finding for a spelling no library file names. No model is asked."""
+    return {"make": make, "spelling": spelling, "outcome": "no_evidence", "transmission": None,
+            "note": "candidates.py: no library document names this spelling; the model was not called"}
+
+
 def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     """Run one make end to end. Returns the summary; never edits the repository."""
+    import candidates
     import entry_check
     r = make_run(RUNS_ROOT, make)
     summary = {"make": make, "spellings": spellings, "run": str(r["run"]),
                "started": dt.datetime.now().isoformat(timespec="seconds")}
-    src = run_stage(r, SOURCE_ROUTE, SOURCE_PROMPT.format(
-        make=make, spellings=json.dumps(spellings), library=LIBRARY,
-        hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA)
-    (r["run"] / "source.json").write_text(json.dumps(src, indent=1), encoding="utf-8")
-    findings = (src.get("structured_output") or {}).get("findings", []) if not src.get("is_error") else []
-    summary["source_error"] = src.get("result") if src.get("is_error") else None
+    cands = candidates.candidates(spellings, LIBRARY, make=make)
+    (r["run"] / "candidates.json").write_text(json.dumps(cands, indent=1), encoding="utf-8")
+    sent = [s for s in spellings if cands.get(s)]
+    findings = [no_evidence(make, s) for s in spellings if s not in sent]
+    summary["source_error"] = None
+    if sent:
+        src = run_stage(r, SOURCE_ROUTE, SOURCE_PROMPT.format(
+            make=make, spellings=json.dumps(sent),
+            excerpts=json.dumps({s: cands[s] for s in sent}, indent=1),
+            hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA, extra=SOURCE_FLAGS)
+        if not src.get("is_error") and (src.get("num_turns") or 0) > SOURCE_MAX_TURNS:
+            src["is_error"] = True
+            src["result"] = (f"the no-tools source stage took {src.get('num_turns')} turns "
+                             f"(at most {SOURCE_MAX_TURNS}): it was not the one call it was built as")
+        (r["run"] / "source.json").write_text(json.dumps(src, indent=1), encoding="utf-8")
+        if src.get("is_error"):
+            summary["source_error"] = src.get("result")
+        else:
+            findings += (src.get("structured_output") or {}).get("findings", [])
     missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
-    rejections = entry_check.check(findings, r["clone"])
+    rejections = entry_check.check(findings, r["clone"], cands)
     passed = [f for f in findings if f.get("outcome") == "found"
-              and not entry_check.check_one(f, r["clone"])]
+              and not entry_check.check_one(f, r["clone"], cands)]
     verdicts = []
     if passed:
         ref = run_stage(r, REFUTE_ROUTE, REFUTE_PROMPT.format(
@@ -304,7 +339,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
-    summary.update({"findings": findings, "rejections": rejections, "verdicts": verdicts,
+    summary.update({"sent_to_model": sent, "findings": findings, "rejections": rejections, "verdicts": verdicts,
                     "ready_to_write": [f for f in passed if f["spelling"] in kept],
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")

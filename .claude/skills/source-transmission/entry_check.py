@@ -20,12 +20,19 @@ work (F141). Rejection classes, one per trap:
 | E7 | a blocked / not-found outcome carrying a value, or without the URL tried | never guess past a block |
 | E8 | OCR-sourced evidence not flagged for a page-image check | the Grom: OCR is not evidence |
 | E9 | an evidence copy with no provenance: missing/invalid sidecar, unreadable original, a URL with no pinned fetch, or a sha256 that does not match | the saved copy is not the evidence; the original is (F141) |
+| E10 | (when the excerpts handed to the source stage are given) a document that is not one of them, or a quote that is not inside them | the source stage reads only `candidates.py`'s excerpts; E9 alone accepted "originals" the model wrote itself (F141, reopened) |
 
 A document under `evidence/` must carry a sibling `<file>.provenance.json`:
 
     {"original": "<absolute on-disk path, path relative to the sidecar, or URL>",
      "original_sha256": "<sha256 hex of the original bytes>",
      "fetched_as": "<sibling filename holding the bytes fetched from the URL>"}
+
+E9 is weaker than it reads: the model writes the sidecar, so an
+"original" can be a second file it wrote, and a URL's `fetched_as` is its
+own bytes. Since the token redesign the batch source stage has no tools
+and writes nothing; E10 is what binds its findings to documents it did
+not author — the library files `candidates.py` excerpted.
 
 `fetched_as` is required only for a URL original: entry_check is a no-model,
 offline check and cannot re-fetch, so the fetch must be pinned by hash
@@ -35,7 +42,7 @@ never against the copy. Documents cited by absolute path outside
 `evidence/` (the on-disk library) are originals already and are read
 directly.
 
-Usage:  entry_check.py FINDINGS.json [--docs-root DIR]
+Usage:  entry_check.py FINDINGS.json [--docs-root DIR] [--excerpts CANDIDATES.json]
 """
 from __future__ import annotations
 
@@ -157,7 +164,18 @@ def _original_text(doc: pathlib.Path, tag: str, fails: list[str]) -> str | None:
     return text
 
 
-def check_one(f: dict, docs_root: pathlib.Path) -> list[str]:
+def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[str]:
+    """E10: the document is one the source stage was handed, and so is the quote."""
+    mine = [e for e in excerpts.get(f.get("spelling"), [])
+            if pathlib.Path(e["document"]).resolve() == doc.resolve()]
+    if not mine:
+        return [f"E10 {tag}: {doc} is not one of the excerpts supplied for this spelling"]
+    if not any(_norm(f["quote"]) in _norm(e["text"]) for e in mine):
+        return [f"E10 {tag}: the quote is not inside the excerpts supplied from {doc.name}"]
+    return []
+
+
+def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None) -> list[str]:
     fails: list[str] = []
     tag = f"{f.get('make')} | {f.get('spelling')}"
     outcome = f.get("outcome")
@@ -194,12 +212,17 @@ def check_one(f: dict, docs_root: pathlib.Path) -> list[str]:
 
     doc = pathlib.Path(f["document"])
     doc = doc if doc.is_absolute() else docs_root / doc
+    if excerpts is not None:
+        fails += _in_excerpts(f, doc, excerpts, tag)
     if _is_evidence_copy(doc, docs_root):
         # F141: a copy the model saved is not the evidence. The quote is
         # matched against the ORIGINAL the copy's sidecar declares.
         text = _original_text(doc, tag, fails)
     elif doc.is_file():
-        text = doc.read_text(encoding="utf-8", errors="ignore")
+        # A library original: HTML is matched as text, as candidates.py showed it.
+        text = _extract_text(doc)
+        if text is None:
+            fails.append(f"E3 {tag}: cannot extract text from {doc}")
     else:
         text = None
         fails.append(f"E3 {tag}: document not readable at {doc}")
@@ -213,11 +236,11 @@ def check_one(f: dict, docs_root: pathlib.Path) -> list[str]:
     return fails
 
 
-def check(findings: list[dict], docs_root: pathlib.Path) -> list[str]:
-    return [x for f in findings for x in check_one(f, docs_root)]
+def check(findings: list[dict], docs_root: pathlib.Path, excerpts: dict | None = None) -> list[str]:
+    return [x for f in findings for x in check_one(f, docs_root, excerpts)]
 
 
-REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9")
+REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10")
 
 
 def main(argv: list[str]) -> int:
@@ -226,7 +249,9 @@ def main(argv: list[str]) -> int:
         return 2
     path = pathlib.Path(argv[0])
     root = pathlib.Path(argv[argv.index("--docs-root") + 1]) if "--docs-root" in argv else path.parent
-    fails = check(json.loads(path.read_text(encoding="utf-8")), root)
+    excerpts = (json.loads(pathlib.Path(argv[argv.index("--excerpts") + 1]).read_text(encoding="utf-8"))
+                if "--excerpts" in argv else None)
+    fails = check(json.loads(path.read_text(encoding="utf-8")), root, excerpts)
     for x in fails:
         print(x)
     return 1 if fails else 0

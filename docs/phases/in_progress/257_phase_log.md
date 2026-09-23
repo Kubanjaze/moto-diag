@@ -194,3 +194,30 @@ the ±40 test; `refute/` read → 4; form feed ignored → the page test;
 letters and digits not split → 3; char cap off → the cap test; file anchor
 off → 2; phase notes read → 4. Restored: 17 pass. 244G scan over
 `tests/`: clean.
+
+### 2026-09-23 — token redesign step 2: one turn, no tools; E10
+
+`orchestrate.batch` now runs `candidates.py` first and writes
+`candidates.json` into the run. A spelling with no excerpt gets a
+`no_evidence` finding and **no model call**. The rest go to the source
+stage in ONE call with `--tools "" --strict-mcp-config
+--disable-slash-commands`; the prompt carries the excerpts as JSON and no
+browsing, web or `evidence/` instructions. A no-tools call with
+`--json-schema` reports `num_turns` 2 (measured once on Haiku, local
+login, not Subconscious); more than `SOURCE_MAX_TURNS = 2` is a source
+error and a stop. `summary.json` gains `sent_to_model`.
+
+`entry_check` **E10** (given the excerpts): the finding's document must be
+one of the excerpts supplied for its spelling and the quote must sit
+inside them. E3 reads a library original through `_extract_text`, so a
+cited HTML page is matched as the text the stage saw. F141 reopened and
+re-closed in `docs/FOLLOWUPS.md` (see the review entry above).
+
+Tests: `test_phase257_source_stage.py` (7) drives the real `batch` with
+`subprocess.run` faked — no model; `test_phase257_source_checks.py`
+19 → 25 (E10 plants in the hand-written `fixtures/excerpts.json`, a
+library-HTML case). **Break-it, seen to fail, one test each unless
+noted:** tools flags removed; model called without excerpts (2); findings
+not bound to excerpts; turn limit off; E10 document check off; E10 quote
+check off; library read raw instead of as text. Restored: 158 pass across
+255D contracts + 257. 244G scan: clean.
