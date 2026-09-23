@@ -7,7 +7,10 @@ all run; only the model is absent. What is pinned: a spelling no library
 file names costs no call; a spelling that has excerpts costs exactly one,
 with no tools; the prompt carries the excerpts and not the old browsing
 instructions; a finding citing anything but its excerpts is rejected
-(E10) and never reaches refute; a stage that looped is an error.
+(E10) and never reaches refute; a stage that looped is an error; every
+stage's tokens are summed into the summary and a batch above 150K per
+spelling sent is a stop — the before figure being the Kymco agent loop's
+own recorded usage (`fixtures/kymco_source_usage.json`).
 """
 from __future__ import annotations
 
@@ -45,9 +48,11 @@ def _found(spelling="Trail 250", document=TRAIL_DOC, quote=TRAIL_QUOTE):
 class Fake:
     """Stands in for subprocess.run. Records calls; answers per route."""
 
-    def __init__(self, findings=(), turns=2, verdict="kept"):
+    def __init__(self, findings=(), turns=2, verdict="kept", source_usage=None, refute_usage=None):
         self.calls: list[list[str]] = []
         self.findings, self.turns, self.verdict = list(findings), turns, verdict
+        self.source_usage = source_usage if source_usage is not None else _usage(SUBC_MODEL)
+        self.refute_usage = refute_usage if refute_usage is not None else _usage(OPUS_MODEL)
 
     def __call__(self, cmd, **kw):
         if cmd[0] == "git":
@@ -56,14 +61,14 @@ class Fake:
         if str(O.SUBC) in cmd:
             out = {"type": "result", "is_error": False, "num_turns": self.turns,
                    "structured_output": {"findings": self.findings},
-                   "modelUsage": _usage(SUBC_MODEL)}
+                   "modelUsage": self.source_usage}
         else:
             findings = json.loads(cmd[cmd.index("-p") + 1].split("Findings:\n", 1)[1])
             out = {"type": "result", "is_error": False, "num_turns": 3,
                    "structured_output": {"verdicts": [
                        {"spelling": f["spelling"], "verdict": self.verdict, "quote": f["quote"],
                         "page": f["page"], "reason": "fake refute"} for f in findings]},
-                   "modelUsage": _usage(OPUS_MODEL)}
+                   "modelUsage": self.refute_usage}
         return subprocess.CompletedProcess(cmd, 0, stdout="banner\n" + json.dumps(out) + "\n", stderr="")
 
     def source_calls(self):
@@ -154,3 +159,65 @@ class TestTheExcerptsBindTheFindings:
         assert any(r.startswith("E10") for r in s["rejections"]), s["rejections"]
         assert fake.refute_calls() == [] and s["ready_to_write"] == []
         assert any("rejected by entry_check" in r for r in s["stops"])
+
+
+KYMCO = json.loads((SKILL / "fixtures" / "kymco_source_usage.json").read_text(encoding="utf-8"))
+
+
+class TestTheTokenStop:
+    """150K tokens per spelling sent, across every stage — the operator's
+    ceiling. A stop, not a setting: nothing in the CLI changes it."""
+
+    def test_usage_is_summed_per_stage_into_the_summary(self, run_with):
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 20_000, 2_000),
+                    refute_usage=_usage(OPUS_MODEL, 5_000, 1_000))
+        s = run_with(fake, ["Trail 250"])
+        t = s["tokens"]
+        assert t["stages"]["source"]["total"] == 22_000
+        assert t["stages"]["refute"]["total"] == 6_000
+        assert t["total"] == 28_000 and t["ceiling"] == 150_000 and t["stop"] is None
+        assert s["stops"] == []
+
+    def test_the_recorded_kymco_source_stage_is_a_stop(self):
+        """The real before: the agent loop's own modelUsage, one spelling."""
+        u = O.usage(KYMCO)
+        assert u["inputTokens"] == 7_661_322
+        assert O.token_stop({"source": u}, 1).startswith("tokens ")
+
+    def test_an_over_budget_source_stage_stops_and_skips_refute(self, run_with):
+        fake = Fake(findings=[_found()], source_usage=KYMCO["modelUsage"])
+        s = run_with(fake, ["Trail 250"])
+        assert s["tokens"]["stop"] and any("per spelling" in r for r in s["stops"])
+        assert fake.refute_calls() == [] and s["ready_to_write"] == []
+
+    def test_refute_counts_toward_the_same_budget(self, run_with):
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 100_000, 0),
+                    refute_usage=_usage(OPUS_MODEL, 60_000, 0))
+        s = run_with(fake, ["Trail 250"])
+        assert len(fake.refute_calls()) == 1
+        assert any("per spelling" in r for r in s["stops"]) and s["ready_to_write"] == []
+
+    def test_the_budget_is_per_spelling_sent_not_per_spelling_asked(self, run_with):
+        """A no_evidence spelling costs nothing and must not lend its 150K."""
+        fake = Fake(findings=[_found()], source_usage=_usage(SUBC_MODEL, 200_000, 0))
+        s = run_with(fake, ["Trail 250", "Nowhere 999", "Nowhere 998"])
+        assert s["tokens"]["sent"] == 1 and s["tokens"]["ceiling"] == 150_000
+        assert any("per spelling" in r for r in s["stops"])
+        assert fake.refute_calls() == [], "refute was spent on a batch already over budget"
+
+    def test_cache_reads_and_writes_are_tokens(self, run_with):
+        """An agent loop's cost is mostly cache reads (Kymco: 6,133,632)."""
+        mu = {SUBC_MODEL: {"inputTokens": 10_000, "outputTokens": 1_000,
+                           "cacheReadInputTokens": 120_000, "cacheCreationInputTokens": 30_000}}
+        fake = Fake(findings=[_found()], source_usage=mu)
+        s = run_with(fake, ["Trail 250"])
+        assert s["tokens"]["stages"]["source"]["total"] == 161_000
+        assert any("per spelling" in r for r in s["stops"])
+
+    def test_unrecorded_usage_is_a_stop(self, run_with):
+        fake = Fake(findings=[_found()], source_usage={})
+        s = run_with(fake, ["Trail 250"])
+        assert any("unrecorded" in r for r in s["stops"])
+
+    def test_the_ceiling_is_the_operators(self):
+        assert O.TOKEN_STOP_PER_SPELLING == 150_000

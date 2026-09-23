@@ -1,0 +1,20 @@
+{
+ "_from": "~/.cache/motodiag/source-runs/Kymco_20260922_232607/source.json, the agent-loop source stage before the token redesign: its modelUsage and num_turns, copied verbatim",
+ "num_turns": 37,
+ "modelUsage": {
+  "subconscious/glm-5.3-marathon": {
+   "inputTokens": 7661322,
+   "outputTokens": 18077,
+   "cacheReadInputTokens": 6133632,
+   "cacheCreationInputTokens": 0,
+   "webSearchRequests": 0,
+   "costUSD": 41.825351,
+   "contextWindow": 3000000,
+   "maxOutputTokens": 32000,
+   "thinkingTokens": 0,
+   "canonicalModel": "subconscious/glm-5.3-marathon",
+   "provider": "firstParty",
+   "costBasis": "unknown"
+  }
+ }
+}

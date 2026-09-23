@@ -35,7 +35,9 @@ sees the summary and any stop — nothing else.
 
 ## Stops (alert + non-zero exit)
 
-A refute verdict that is not `kept`; blocked rate above 50%; a spelling
+Tokens above **150,000 per spelling sent** to the model, all stages
+together (refute is not spent once the source stage is over); a stage
+with no recorded usage; a refute verdict that is not `kept`; blocked rate above 50%; a spelling
 with no finding; any entry_check rejection; a stage served by the wrong
 model. **Never resolve a stop by editing the check.**
 

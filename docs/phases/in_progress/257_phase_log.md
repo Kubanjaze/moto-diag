@@ -221,3 +221,36 @@ noted:** tools flags removed; model called without excerpts (2); findings
 not bound to excerpts; turn limit off; E10 document check off; E10 quote
 check off; library read raw instead of as text. Restored: 158 pass across
 255D contracts + 257. 244G scan: clean.
+
+### 2026-09-23 — token redesign step 3: token accounting and the 150K stop
+
+`orchestrate.usage(out)` sums each stage's `modelUsage` (input, output,
+cache-read, cache-creation) into `summary.json` → `tokens`: per stage,
+total, the number of spellings sent, the ceiling, the stop. The stop,
+`TOKEN_STOP_PER_SPELLING = 150_000` — the operator's ceiling, a constant,
+no CLI option — is checked after the source stage (**over budget →
+refute is not spent**) and again after refute, and added through
+`stops()`. The ceiling is 150K × spellings *sent to the model*: a
+`no_evidence` spelling costs nothing and must not lend its 150K to the
+rest. A stage with no recorded usage is a stop (cannot show it is under).
+
+Caveat recorded in the code: the total adds cache reads to input. For
+Anthropic they are separate; the Subconscious gateway's `inputTokens` may
+already include them, so the total can overcount there — early, never
+late. **The before figure, from the run's own record**
+(`fixtures/kymco_source_usage.json`, copied from Kymco's `source.json`):
+7,661,322 input + 18,077 output + 6,133,632 cache-read = 13,813,031 by this
+count; 7,661,322 by input alone (the operator's 7.7M). Either is ~51× the
+ceiling for one spelling.
+
+Tests: `test_phase257_source_stage.py` 7 → 15. **Break-it, seen to fail:**
+ceiling ×10 → 4; refute not counted → 2; ceiling per spelling asked
+instead of sent → 1 (a first version of that test survived it: it did not
+check refute was skipped — tightened); unrecorded usage accepted → 1;
+refute run over budget → 1; stop not passed through `stops()` → 4; cache
+tokens not counted → 1 (survived at first too — no test fed cache
+tokens; added). Restored: all pass.
+
+Handoff step 4 (fixtures + break-it) was done inside steps 1–3, each
+against its own hand-written fixtures. Step 5, the Kymco re-run, waits for
+the Subconscious reset.

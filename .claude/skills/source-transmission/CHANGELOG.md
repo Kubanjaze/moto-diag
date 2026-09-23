@@ -55,3 +55,11 @@ the text the stage saw.
 
 Web acquire left the source stage with this change: a manual not on disk
 comes back `no_evidence`. Refute is unchanged and keeps its tools.
+
+## 2026-09-23 — every stage's tokens are recorded; 150K per spelling is a stop
+
+`summary.json` carries `tokens`: each stage's usage from `claude -p`'s
+`modelUsage`, the total, and the ceiling — 150,000 × spellings sent to
+the model, set by the operator and not an option. Over it after the
+source stage, refute is not run. The runs did always record usage in
+`source.json`; nothing summed it or acted on it.

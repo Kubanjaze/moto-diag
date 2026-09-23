@@ -60,6 +60,11 @@ BLOCKED_STOP = 0.5                  # plan D5
 # its acknowledgement) — measured 2026-09-23; more than that is a loop.
 SOURCE_FLAGS = ("--tools", "", "--strict-mcp-config", "--disable-slash-commands")
 SOURCE_MAX_TURNS = 2
+# The operator's ceiling, a stop and not a setting: no flag or argument
+# changes it. Counted per spelling SENT to the model (a no_evidence spelling
+# costs nothing and must not dilute the rest), over every stage of the batch.
+TOKEN_STOP_PER_SPELLING = 150_000
+USAGE_FIELDS = ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens")
 
 ROUTES = {
     # Credential held by `subc login`; the orchestrator never reads the key.
@@ -218,9 +223,40 @@ def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None,
     return out
 
 
+# --- token accounting -------------------------------------------------------------
+def usage(out: dict) -> dict:
+    """One stage's tokens, from the `modelUsage` block `claude -p` prints.
+
+    `total` adds all four fields. Anthropic reports cache reads apart from
+    input; the Subconscious gateway's inputTokens may already include them
+    (Kymco's source stage: 7,661,322 in, 6,133,632 cache-read), so the total
+    can overcount there. Overcounting stops a batch early, never late.
+    A stage that printed no usage is counted as unknown, which is a stop.
+    """
+    mu = out.get("modelUsage") or {}
+    if not mu:
+        return {"known": False, "total": 0}
+    u = {k: sum(int(m.get(k) or 0) for m in mu.values()) for k in USAGE_FIELDS}
+    return {"known": True, **u, "total": sum(u.values())}
+
+
+def token_stop(stages: dict[str, dict], sent: int) -> str | None:
+    """The 150K-per-spelling stop over the stages run so far, or None."""
+    unknown = [k for k, u in stages.items() if not u["known"]]
+    if unknown:
+        return f"token usage unrecorded for stage(s) {', '.join(unknown)}: cannot show the batch is under budget"
+    total = sum(u["total"] for u in stages.values())
+    if total > TOKEN_STOP_PER_SPELLING * max(sent, 1):
+        return (f"tokens {total:,} exceed {TOKEN_STOP_PER_SPELLING:,} per spelling "
+                f"x {sent} sent = {TOKEN_STOP_PER_SPELLING * max(sent, 1):,}")
+    return None
+
+
 # --- stops (D5) ----------------------------------------------------------------
-def stops(findings: list[dict], verdicts: list[dict]) -> list[str]:
+def stops(findings: list[dict], verdicts: list[dict], tokens: dict | None = None) -> list[str]:
     reasons = []
+    if tokens and tokens.get("stop"):
+        reasons.append(tokens["stop"])
     n = len(findings)
     blocked = sum(f.get("outcome") in ("blocked", "not_found") for f in findings)
     if n and blocked / n > BLOCKED_STOP:
@@ -305,6 +341,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     sent = [s for s in spellings if cands.get(s)]
     findings = [no_evidence(make, s) for s in spellings if s not in sent]
     summary["source_error"] = None
+    stages: dict[str, dict] = {}
     if sent:
         src = run_stage(r, SOURCE_ROUTE, SOURCE_PROMPT.format(
             make=make, spellings=json.dumps(sent),
@@ -315,6 +352,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
             src["result"] = (f"the no-tools source stage took {src.get('num_turns')} turns "
                              f"(at most {SOURCE_MAX_TURNS}): it was not the one call it was built as")
         (r["run"] / "source.json").write_text(json.dumps(src, indent=1), encoding="utf-8")
+        stages["source"] = usage(src)
         if src.get("is_error"):
             summary["source_error"] = src.get("result")
         else:
@@ -324,14 +362,20 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     passed = [f for f in findings if f.get("outcome") == "found"
               and not entry_check.check_one(f, r["clone"], cands)]
     verdicts = []
-    if passed:
+    over = token_stop(stages, len(sent))
+    if passed and not over:         # over budget already: refute is not spent
         ref = run_stage(r, REFUTE_ROUTE, REFUTE_PROMPT.format(
             library=LIBRARY, findings=json.dumps(passed, indent=1)), schema=VERDICT_SCHEMA)
         (r["run"] / "refute.json").write_text(json.dumps(ref, indent=1), encoding="utf-8")
+        stages["refute"] = usage(ref)
+        over = token_stop(stages, len(sent))
         verdicts = (ref.get("structured_output") or {}).get("verdicts", []) if not ref.get("is_error") else [
             {"spelling": f["spelling"], "verdict": "error", "quote": "", "page": "", "reason": ref.get("result")}
             for f in passed]
-    reasons = stops(findings, verdicts)
+    tokens = {"stages": stages, "total": sum(u["total"] for u in stages.values()),
+              "sent": len(sent), "ceiling": TOKEN_STOP_PER_SPELLING * max(len(sent), 1),
+              "stop": over}
+    reasons = stops(findings, verdicts, tokens)
     if missing:
         reasons.append(f"source returned no finding for: {', '.join(missing)}")
     if rejections:
@@ -339,8 +383,8 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
-    summary.update({"sent_to_model": sent, "findings": findings, "rejections": rejections, "verdicts": verdicts,
-                    "ready_to_write": [f for f in passed if f["spelling"] in kept],
+    summary.update({"sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
+                    "ready_to_write": [] if over else [f for f in passed if f["spelling"] in kept],
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     if reasons:
@@ -363,6 +407,7 @@ def main(argv: list[str]) -> int:
         spellings = [e["model"] for e in C.census(REPO / "data" / "motodiag.db", make).get(make, [])]
     s = batch(make, spellings, hints)
     print(json.dumps({k: s[k] for k in ("make", "run", "stops")}, indent=1))
+    print(f"tokens: {s['tokens']['total']:,} (ceiling {s['tokens']['ceiling']:,})")
     print(f"ready to write: {[f['spelling'] for f in s['ready_to_write']]}")
     return 1 if s["stops"] else 0
 
