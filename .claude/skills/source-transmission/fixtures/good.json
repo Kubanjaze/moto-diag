@@ -1,0 +1,13 @@
+[
+ {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250", "trail250"], "outcome": "found",
+  "transmission": "manual", "quote": "Transmission 5-speed constant mesh, return type",
+  "document": "docs/zz_trail_om.txt", "page": 12, "evidence_kind": "owners_manual"},
+ {"make": "ZZ", "spelling": "Glide 125", "aliases": ["glide 125"], "outcome": "found",
+  "transmission": "cvt", "quote": "Transmission V-belt automatic (CVT)",
+  "document": "docs/zz_scoot_om.txt", "page": 8, "evidence_kind": "owners_manual"},
+ {"make": "ZZ", "spelling": "Glide 125 OCR", "aliases": ["glide 125"], "outcome": "found",
+  "transmission": "cvt", "quote": "Transmission V-belt automatic (CVT)", "ocr": true, "needs_page_image": true,
+  "document": "docs/zz_scoot_om.txt", "page": 8, "evidence_kind": "service_manual"},
+ {"make": "ZZ", "spelling": "Rally 700", "outcome": "blocked", "url_tried": "https://example.invalid/manuals"},
+ {"make": "ZZ", "spelling": "Rally 900", "outcome": "no_evidence"}
+]

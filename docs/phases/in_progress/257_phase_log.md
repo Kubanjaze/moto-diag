@@ -25,3 +25,18 @@ denial removed from the profile → the keychain test fails. Restored: 42 pass.
 
 v1.1 records the Subconscious route (operator's intent, measured before
 adopting).
+
+### 2026-09-22 23:55 — Build slice 2: census and entry_check, the two no-model steps
+
+`census.py` reproduces the figure of record on the live database: **605**
+unknown spellings. `entry_check.py` rejects eight evidence classes (E1–E8),
+each checked against the document text rather than the model's account —
+E3 catches a quote altered from 5-speed to 6-speed that reads perfectly.
+Hand-written fixtures: the bad set fires every class, the good set passes.
+`test_phase257_source_checks.py`: 13. Break-it: E3's document check
+disabled → 2 fail. All 257 tests: 55.
+
+**Noticed, not acted on:** SYM's unknowns include Jet 14, Fiddle 4 and
+SYMBA 110, whose owner's manuals are already on disk — CVT and centrifugal
+machines. Tranche 1 stays as the operator defined it (manual gearboxes); a
+make-level SYM batch picks these up.
