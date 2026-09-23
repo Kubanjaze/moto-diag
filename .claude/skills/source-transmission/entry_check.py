@@ -21,6 +21,7 @@ work (F141). Rejection classes, one per trap:
 | E8 | OCR-sourced evidence not flagged for a page-image check | the Grom: OCR is not evidence |
 | E9 | an evidence copy with no provenance: missing/invalid sidecar, unreadable original, a URL with no pinned fetch, or a sha256 that does not match | the saved copy is not the evidence; the original is (F141) |
 | E10 | (when the excerpts handed to the source stage are given) a document that is not one of them, or a quote that is not inside them | the source stage reads only `candidates.py`'s excerpts; E9 alone accepted "originals" the model wrote itself (F141, reopened) |
+| E11 | an acquired library file whose sidecar is missing, whose bytes changed, or that is neither on the make's own host nor linked from an unchanged maker-host page in the library | provenance is the script's record; makers host their own manuals elsewhere (SYM's Wolf 150 on Dropbox) |
 
 A document under `evidence/` must carry a sibling `<file>.provenance.json`:
 
@@ -258,6 +259,53 @@ def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[s
     return []
 
 
+def _sha256(path: pathlib.Path) -> str | None:
+    try:
+        return hashlib.sha256(path.read_bytes()).hexdigest()
+    except OSError:
+        return None
+
+
+def acquired_provenance(doc: pathlib.Path, library: pathlib.Path, make: str, tag: str) -> list[str]:
+    """E11: an acquired file's provenance, as acquire.py recorded it.
+
+    The sidecar `<file>.acquired.json` carries `url`, `final_url`, `sha256`,
+    `fetched_at` and `referrer` (`url`, `path` in the library, `sha256`, or
+    null). The file must still hash to `sha256`. It counts as the make's
+    document when `final_url` is on one of the make's own hosts, or — for a
+    file hosted elsewhere, like SYM's Dropbox-hosted Wolf 150 manual — when
+    its referrer is a page on a maker host, itself in the library, unchanged
+    since it was saved, and linking to `url`. No network: everything is on
+    disk.
+    """
+    side = doc.with_name(doc.name + ".acquired.json")
+    try:
+        prov = json.loads(side.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return [f"E11 {tag}: {doc.name} has no readable {side.name}"]
+    if not isinstance(prov, dict) or not prov.get("url") or not SHA_RE.match(str(prov.get("sha256", ""))):
+        return [f"E11 {tag}: {side.name} needs 'url' and a 64-hex 'sha256'"]
+    if _sha256(doc) != prov["sha256"]:
+        return [f"E11 {tag}: {doc.name} no longer hashes to the sha256 recorded when it was fetched"]
+    if library_index.maker_host(prov.get("final_url") or prov["url"], make):
+        return []
+    ref = prov.get("referrer")
+    if not isinstance(ref, dict) or not ref.get("url"):
+        return [f"E11 {tag}: {doc.name} is not on a {make} host and has no referrer on one"]
+    if not library_index.maker_host(ref["url"], make):
+        return [f"E11 {tag}: the referrer {ref['url']} is not on a {make} host"]
+    page = library / str(ref.get("path", ""))
+    if not ref.get("path") or not page.is_file():
+        return [f"E11 {tag}: the referrer page is not in the library at {ref.get('path')!r}"]
+    if _sha256(page) != ref.get("sha256"):
+        return [f"E11 {tag}: the referrer page {page.name} has changed since it was recorded"]
+    src = _html.unescape(page.read_bytes().decode("utf-8", errors="ignore"))
+    url = prov["url"]
+    if url not in src and url.replace(" ", "%20") not in src:
+        return [f"E11 {tag}: the referrer page {page.name} does not link to {url}"]
+    return []
+
+
 def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
               library: pathlib.Path = library_index.LIBRARY) -> list[str]:
     fails: list[str] = []
@@ -288,6 +336,8 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
         # A library file's kind is the index's; what the model declared is not consulted.
         if indexed not in library_index.MAKER_KINDS:
             fails.append(f"E2 {tag}: the library index classes {doc.name} as {indexed}, not a maker document")
+        elif indexed == "acquired":
+            fails += acquired_provenance(doc, library, f.get("make", ""), tag)
     elif f["evidence_kind"] not in MAKER_KINDS:
         fails.append(f"E2 {tag}: evidence kind {f['evidence_kind']!r} is not a maker document")
 
@@ -335,7 +385,7 @@ def check(findings: list[dict], docs_root: pathlib.Path, excerpts: dict | None =
     return [x for f in findings for x in check_one(f, docs_root, excerpts, library)]
 
 
-REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10")
+REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11")
 
 
 def main(argv: list[str]) -> int:

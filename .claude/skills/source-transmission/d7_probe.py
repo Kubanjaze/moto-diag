@@ -27,16 +27,18 @@ Each response body is saved under OUT/<stamp>/ with its sha256, the URL,
 the final URL and the fetch time — the script's record, not a model's.
 These saves are measurements; nothing here writes into the library.
 
-Usage:  d7_probe.py [--only MAKE ...]
+Usage:  d7_probe.py [--targets FILE.json] [--cookies] [--only MAKE ...]
 """
 from __future__ import annotations
 
 import datetime as dt
 import hashlib
+import http.cookiejar
 import json
 import pathlib
 import re
 import sys
+import time
 import urllib.error
 import urllib.request
 
@@ -138,10 +140,11 @@ def classify(status: int | None, body: bytes, error: str | None, final_url: str,
     return "html_no_evidence", info
 
 
-def fetch(url: str) -> tuple[int | None, bytes, str | None, str]:
-    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*"})
+def fetch(url: str, opener: urllib.request.OpenerDirector | None = None,
+          headers: dict | None = None) -> tuple[int | None, bytes, str | None, str]:
+    req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*", **(headers or {})})
     try:
-        with urllib.request.urlopen(req, timeout=TIMEOUT) as r:
+        with (opener.open(req, timeout=TIMEOUT) if opener else urllib.request.urlopen(req, timeout=TIMEOUT)) as r:
             return r.status, r.read(MAX_BYTES), None, r.geturl()
     except urllib.error.HTTPError as e:
         return e.code, e.read(MAX_BYTES) if e.fp else b"", None, e.geturl() or url
@@ -151,21 +154,34 @@ def fetch(url: str) -> tuple[int | None, bytes, str | None, str]:
 
 def main(argv: list[str]) -> int:
     only = set(argv[argv.index("--only") + 1:]) if "--only" in argv else None
+    # --targets FILE: a hand-written [[maker, role, url], ...] in place of TARGETS.
+    targets = (json.loads(pathlib.Path(argv[argv.index("--targets") + 1]).read_text(encoding="utf-8"))
+               if "--targets" in argv else TARGETS)
+    # --cookies: keep session cookies across a redirect chain and across the run,
+    # as any HTTP client does. Step 0 got Kawasaki's 200 this way (S0-2).
+    opener = (urllib.request.build_opener(urllib.request.HTTPCookieProcessor(http.cookiejar.CookieJar()))
+              if "--cookies" in argv else None)
     stamp = dt.datetime.now().strftime("%Y%m%d_%H%M%S")
     run = OUT / stamp
     run.mkdir(parents=True)
     rows = []
-    for i, (maker, role, url) in enumerate(TARGETS):
+    for i, (maker, role, url, *extra) in enumerate(targets):
         if only and maker not in only:
             continue
+        if i:
+            time.sleep(1)                        # 1 request per second
         at = dt.datetime.now().isoformat(timespec="seconds")
-        status, body, error, final = fetch(url)
+        # An optional 4th element: headers the maker's own page script sends
+        # (jQuery's X-Requested-With), recorded in the row.
+        headers = extra[0] if extra else None
+        status, body, error, final = fetch(url, opener, headers)
         method, info = classify(status, body, error, final)
         sha = hashlib.sha256(body).hexdigest() if body else None
         if body:
             (run / f"{i:02d}_{re.sub(r'[^A-Za-z0-9]+', '_', maker)}_{role}.bin").write_bytes(body)
         row = {"maker": maker, "role": role, "url": url, "final_url": final, "status": status,
-               "error": error, "bytes": len(body), "sha256": sha, "fetched_at": at, "method": method, **info}
+               "error": error, "bytes": len(body), "sha256": sha, "fetched_at": at, "method": method,
+               "headers": headers, "cookies": opener is not None, **info}
         rows.append(row)
         print(f"{maker:16s} {role:6s} {str(status):4s} {method:18s} {len(body):9d}  "
               f"{(info.get('transmission_line') or '')[:60]}", flush=True)

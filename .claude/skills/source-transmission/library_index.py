@@ -25,12 +25,36 @@ import re
 import sys
 
 LIBRARY = pathlib.Path.home() / "research" / "motodiag"
-MAKER_KINDS = {"maker_manual", "maker_spec_page", "maker_site_page"}
+MAKER_KINDS = {"maker_manual", "maker_spec_page", "maker_site_page", "acquired"}
 
 # (regex over the path relative to the library, kind, why). Order matters:
 # the not-evidence rules come first, so a mirror named like a manual is
 # still a mirror.
+# Each make's own web hosts (a host matches itself and its subdomains). An
+# acquired document from any other host counts only through a referrer: a
+# page on one of these hosts, itself acquired, that links to it (E11) — the
+# Wolf 150 manual is a Dropbox file linked from SYM USA's own page.
+MAKER_HOSTS: dict[str, tuple[str, ...]] = {
+    "SYM": ("sym-usa.com", "sym-global.com"), "Kymco": ("kymcousa.com", "kymco.com"),
+    "Genuine": ("genuinescooters.com",), "Honda": ("honda.com", "hondamotopub.com"),
+    "Kawasaki": ("kawasaki.com",), "Yamaha": ("yamahamotorsports.com", "yamaha-motor.com"),
+    "Suzuki": ("suzukicycles.com",), "KTM": ("ktm.com",), "Triumph": ("triumphmotorcycles.com",),
+    "MV Agusta": ("mvagusta.com",), "Zero": ("zeromotorcycles.com",),
+    "BMW": ("bmw-motorrad.com", "bmwmotorcycles.com"), "LiveWire": ("livewire.com",),
+    "Harley-Davidson": ("harley-davidson.com",), "Ducati": ("ducati.com",), "Aprilia": ("aprilia.com",),
+    "Piaggio": ("piaggio.com",), "Vespa": ("vespa.com",), "Moto Guzzi": ("motoguzzi.com",),
+    "Energica": ("energicamotor.com",), "Damon": ("damon.com",),
+}
+
+
+def maker_host(url: str, make: str) -> bool:
+    host = re.sub(r"^[a-z]+://([^/:?#]+).*$", r"\1", (url or "").strip().lower())
+    return any(host == h or host.endswith("." + h) for h in MAKER_HOSTS.get(make, ()))
+
+
 RULES: list[tuple[str, str, str]] = [
+    # --- acquired by acquire.py: provenance in the sidecar, checked by E11 ---
+    (r"^acquired/", "acquired", "fetched by acquire.py; its kind is its sidecar's, gated by E11"),
     # --- not evidence -------------------------------------------------------
     (r"(^|/)cyclepedia_", "third_party", "Cyclepedia: a third-party manual publisher"),
     (r"(^|/)txt_vespa_lx50_633416\.txt$", "third_party", "its own page 1 reads 'Downloaded from www.Manualslib.com'"),

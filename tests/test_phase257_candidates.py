@@ -152,3 +152,15 @@ class TestACommonWordIsReadOnlyAsAModel:
     def test_named_after_the_make_it_is_read(self):
         docs = [e["document"] for e in _one("Bolt", make="ZZ")]
         assert docs == [str(LIB / "pdfs" / "zz_range_om.txt")]
+
+
+class TestAcquiredFilesNeedProvenance:
+    """candidates.py applies E11 before the model is paid to read: of the
+    identical Wolf 150 copies under acquired/SYM/, only the one whose
+    sidecar traces it to SYM USA's page is read."""
+
+    def test_only_the_traced_copy_is_read(self):
+        """SYM USA's page itself is read too: it is on a SYM host and names
+        the Wolf 150. No untraced copy is."""
+        docs = {pathlib.Path(e["document"]).name for e in _one("Wolf 150", make="SYM")}
+        assert docs == {"wolf150_owner_manual.txt", "sym-usa_maintenance-guides.html"}

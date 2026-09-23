@@ -522,3 +522,81 @@ refute can use them. No model anywhere in acquire.
    make="Kymco")`); negatives (a redirect to a non-maker host is not
    indexed as maker; a tampered file fails E11); break-it per the house
    rule.
+
+### 2026-09-23 — D7 round 2: the unresolved makers, Kawasaki with cookies, the JS shells; E11
+
+Operator's decisions: measure before building; a cookie jar is ordinary
+HTTP (Step 0 got Kawasaki's 200 that way — "redirect_loop" was the
+probe's no-cookie policy, the same lesson as the wrong-URL rows); check
+each JS shell's own source for a JSON endpoint before any browser; an
+operator inbox for the 403 walls; cap 30 fetches/run, 1 req/s;
+MAKER_HOSTS with referrers for makers that host manuals elsewhere.
+
+`d7_probe.py` gains `--targets FILE` (a hand-written URL list), `--cookies`
+(one session cookie jar), an optional per-row header dict (what the
+maker's own page script sends), 1 request/second, and records headers and
+cookies in each row. URLs came from links in the makers' own saved pages
+(round 1's bodies), with one listing fetch where a page linked only to
+categories (Triumph, Zero). Runs: `~/.cache/motodiag/d7/20260923_0042*`,
+`_0043*`, `_0044*`, `_0045*`.
+
+| make | URL, found on the maker's own site | result |
+|---|---|---|
+| KTM | ktm.com …/2024-ktm-1290-superadventurer.html | **spec page**: "Transmission 6-speed" |
+| Suzuki | suzukicycles.com/sportbike/2027/gsx-r1000 | **spec page**: "…cassette-style, six-speed transmission" |
+| MV Agusta | mvagusta.com/us/en/product/brutale/800 | **spec page**: "Transmission Cassette style; six speed" |
+| Triumph | …/roadsters/street-triple/street-triple-765-rs-2023 (the family page has no spec) | **spec page**: "Gearbox 6-Speed" |
+| Kawasaki (cookies) | …/ninja-zx-10r/2026-ninja-zx-10r (the family page has no spec) | **spec page**: "Transmission 6-speed, return shift" |
+| Yamaha | yamahamotorsports.com/models/yzf-r1/specs | **spec page**: "Transmission 6-speed" — **not walled**; round 1's 403 was the manual library only, and its spec 404 was my URL |
+| Zero | zeromotorcycles.com/model/zero-srs | spec in the page's **embedded JSON**: `"entry_label":"Transmission" … "Clutchless direct drive"` — plain fetch; the probe's text rule missed it |
+| SYM | sym-global.com/jet14-e5 → its own PDF link | **document endpoint**: JET14_MANUAL.pdf, 1,173,227 B, on sym-global.com |
+| LiveWire | livewire.com/bike-comparison/s2-alpinista | readable, **no drive/transmission statement** in text or source (1 page tried) |
+| BMW | manuals.bmw-motorrad.com — its bundle builds `…/manuals/BA-Extern/IN/BA-INTERNET-COM/01/Nav.xml` | **static XML index**, 14,691 PDF references, "S 1000 RR" 46 times, PDFs under `…/BA-INTERNET-COM/PDF/<FILENAME>` — no browser needed |
+| Honda | hondamotopub.com/AHM — its page script calls `/ajax/get_model_names/AHM/<cc>` | **JSON endpoint**: empty without, and a model list with, the `X-Requested-With` header the page's jQuery sends (+ session cookie). The PDF hop is not measured |
+| H-D | serviceinfo.harley-davidson.com — its bundle | **login wall**: `service/oauth2/authorize`, `access_token`. Not pursued |
+
+**No headless browser is needed** for any maker measured: BMW and Honda
+motopub expose static/JSON endpoints in their own source; H-D is a login
+wall, not a rendering problem. The probe's classifier needs two new
+rules before acquire uses it — embedded-JSON specs (Zero) and JSON
+responses (Honda) — recorded, not built.
+
+**Machine names by measured route (506):** spec page or document by
+plain HTTP — Triumph 53, KTM 43, BMW 40, Kawasaki 39, Yamaha 39, Suzuki
+29, Honda 26 (motopub), MV Agusta 21, Zero 15, Kymco 10, Genuine 5, SYM 5
+= **325**; **walled (403) 145** — Ducati 61, Piaggio 28, Aprilia 24,
+Vespa 22, Moto Guzzi 10; login 16 (H-D); unreachable 13 (Energica
+expired certificate, Damon 522); no statement found 7 (LiveWire). A
+route is one page proving the method, not coverage of every model.
+
+**Library recall limit, measured:** Piaggio's machine names find the
+library's Vespa/Piaggio manuals no better under "Vespa" (4 as Piaggio, 3
+as Vespa, none only as Vespa). The miss is the strict name rule: the LX
+manual titles itself "Vespa LX 125 - 150", which is not "LX 150".
+Recorded, not changed.
+
+**E11, built and tested on the Wolf 150 case.** `library_index`: an
+`acquired/` rule and `MAKER_HOSTS` (each make's own domains; a host
+matches itself or a subdomain, never a suffix string). `entry_check.E11`
+reads `<file>.acquired.json` (url, final_url, sha256, fetched_at,
+referrer {url, path, sha256}): the file must still hash to its sha256;
+it counts when `final_url` is a maker host, or — for Dropbox and the like
+— when its referrer is a maker-host page, itself in the library,
+unchanged, and linking to the file's URL. `candidates.py` applies E11
+before the model reads. The real facts behind the fixture: SYM's
+maintenance-guide page (`sym_mg.html`) links
+`https://www.dropbox.com/s/cnzzt4veh3p7ra9/Wolf150 Owner Manual.pdf?dl=0`,
+and that PDF is byte-identical (sha256 728b0055…) to
+`v2/sympdf/Wolf150_Owner_Manual.pdf`; `sym_mg.html` itself carries no
+canonical URL — its origin was never recorded, which is why acquire.py
+must record it. Fixtures `fixtures/library/acquired/`: the traced copy
+passes; no referrer, a forum referrer, an unlinked Dropbox URL, a stale
+referrer hash, tampered bytes and a missing sidecar each fail with their
+own message; SYM's page does not vouch for a Kymco finding; a Genuine
+document on genuinescooters.com passes without a referrer. **Break-it,
+each seen to fail:** any host passes (7); referrer host unchecked (3);
+link unchecked (2); referrer hash unchecked (2); file hash unchecked (2);
+E11 not called (9); host matched as a substring (3); candidates skips E11
+(1 — a first version of that test was itself wrong: it failed at
+baseline because SYM's own page, correctly, is read too; corrected, then
+the mutation re-run). 275 pass across 257 + 255D; 244G clean.

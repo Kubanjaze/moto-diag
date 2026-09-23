@@ -40,7 +40,8 @@ class TestEntryCheckKnownBad:
     def fails(self):
         ex, bad, _ = _excerpt_fixture()
         return (check(json.loads((FIX / "bad.json").read_text(encoding="utf-8")), FIX)
-                + check(bad, FIX, ex))
+                + check(bad, FIX, ex)
+                + check([_wolf("wolf150_noreferrer.txt")], FIX, library=FIX / "library"))
 
     @pytest.mark.parametrize("rid", REJECTION_IDS)
     def test_this_rejection_fires(self, fails, rid):
@@ -284,3 +285,60 @@ class TestSpellingsThatCannotBeAMachine:
                             (3, "Ducati", "Panigale V4"), (4, "Ducati", "2020 service manual")])
         assert classes(db) == {"Ducati": {"bare_number": ["1000"], "other_marque": ["Gilera"],
                                           "machine": ["Panigale V4"], "prose": ["2020 service manual"]}}
+
+
+WOLF_QUOTE = ("Squeeze the clutch lever fully, operate change pedal to the proper position, "
+              "then release the clutch lever to make a gear change.")
+
+
+def _wolf(name, make="SYM"):
+    """A finding citing an acquired copy of the SYM Wolf 150 manual."""
+    return {"make": make, "spelling": "Wolf 150", "aliases": [], "outcome": "found", "transmission": "manual",
+            "quote": WOLF_QUOTE, "document": str(FIX / "library" / "acquired" / "SYM" / name), "page": 18,
+            "evidence_kind": "owners_manual"}
+
+
+class TestAcquiredProvenance:
+    """E11 — the Wolf 150 case. SYM USA's own maintenance-guide page links
+    the Wolf 150 owner's manual on Dropbox (the library's `sym_mg.html`;
+    the Dropbox PDF is byte-identical to `v2/sympdf/Wolf150_Owner_Manual.pdf`).
+    Dropbox is not a SYM host, so the file counts only through its referrer:
+    a page on a SYM host, itself in the library, unchanged, linking to it."""
+
+    LIB = FIX / "library"
+
+    def test_the_wolf_150_manual_counts_through_sym_usas_page(self):
+        assert check([_wolf("wolf150_owner_manual.txt")], FIX, library=self.LIB) == []
+
+    @pytest.mark.parametrize("name,why", [
+        ("wolf150_noreferrer.txt", "no referrer on one"),
+        ("wolf150_forumref.txt", "is not on a SYM host"),
+        ("wolf150_unlinked.txt", "does not link to"),
+        ("wolf150_staleref.txt", "has changed since it was recorded"),
+        ("wolf150_tampered.txt", "no longer hashes"),
+        ("wolf150_nosidecar.txt", "no readable"),
+    ])
+    def test_each_broken_provenance_is_rejected(self, name, why):
+        fails = check([_wolf(name)], FIX, library=self.LIB)
+        assert any(f.startswith("E11") and why in f for f in fails), fails
+
+    def test_the_referrer_must_be_the_findings_makes(self):
+        """SYM's page does not vouch for a Kymco finding."""
+        fails = check([_wolf("wolf150_owner_manual.txt", make="Kymco")], FIX, library=self.LIB)
+        assert any(f.startswith("E11") for f in fails), fails
+
+    def test_a_document_on_the_makers_own_host_needs_no_referrer(self):
+        f = {"make": "Genuine", "spelling": "Buddy 125", "aliases": [], "outcome": "found", "transmission": "cvt",
+             "quote": "Transmission: automatic, V-belt (CVT)",
+             "document": str(self.LIB / "acquired" / "Genuine" / "buddy125_owners_manual.txt"), "page": 1,
+             "evidence_kind": "owners_manual"}
+        assert check([f], FIX, library=self.LIB) == []
+
+    @pytest.mark.parametrize("url,make,ok", [
+        ("https://sym-usa.com/x", "SYM", True), ("https://www.sym-global.com/x", "SYM", True),
+        ("https://sym-usa.com.evil.example/x", "SYM", False), ("https://notsym-usa.com/", "SYM", False),
+        ("https://www.dropbox.com/s/x", "SYM", False),
+    ])
+    def test_maker_host_is_the_host_or_a_subdomain(self, url, make, ok):
+        from library_index import maker_host
+        assert maker_host(url, make) is ok

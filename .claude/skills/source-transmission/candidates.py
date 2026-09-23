@@ -47,7 +47,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import library_index  # noqa: E402
-from entry_check import _extract_text, _key, named_as_model, names_make, weak_spelling  # noqa: E402
+from entry_check import (_extract_text, _key, acquired_provenance, named_as_model,  # noqa: E402
+                         names_make, weak_spelling)
 
 LIBRARY = pathlib.Path.home() / "research" / "motodiag"
 CONTEXT = 40                 # lines either side of a hit
@@ -119,6 +120,9 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
         low = _key(text)
         if make and not names_make(low, make):
             continue                # a document that never names the make is not about its machines
+        if (library_index.kind(doc, library) == "acquired"
+                and (not make or acquired_provenance(doc, library, make, ""))):
+            continue                # an acquired file counts only with provenance for this make (E11)
         # A spelling that is an ordinary word or a bare number ("Bolt", "1000")
         # counts only where the document names it as a model — the same rule
         # as E4, applied before the model is paid to read the excerpt.
