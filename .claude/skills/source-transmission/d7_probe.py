@@ -18,6 +18,8 @@ Every classification is a rule over the response, in this file:
 | `blocked` | 401 / 403 / 429, or a bot wall or "Access Denied" body |
 | `not_found` | 404 / 410, or a redirect to a 404 page |
 | `document_endpoint` | the body is a PDF (%PDF) |
+| `json_endpoint` | the body is JSON (Honda motopub's /ajax/ answers) |
+| `spec_embedded_json` | HTML whose embedded JSON carries a transmission label/value (Zero) |
 | `spec_page_html` | HTML whose text carries a transmission line (TRANSMISSION_LINE) |
 | `document_links` | HTML with links to .pdf files, no transmission line |
 | `needs_browser` | HTML with under MIN_TEXT characters of text: the content is built by script |
@@ -44,7 +46,7 @@ import urllib.request
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
-from entry_check import _extract_text  # noqa: E402
+from entry_check import _extract_text, embedded_spec_pairs  # noqa: E402
 
 OUT = pathlib.Path.home() / ".cache" / "motodiag" / "d7"
 TIMEOUT = 25
@@ -121,6 +123,12 @@ def classify(status: int | None, body: bytes, error: str | None, final_url: str,
         return "not_found", {}
     if body[:5] == b"%PDF-":
         return "document_endpoint", {}
+    if body.lstrip()[:1] in (b"{", b"["):
+        try:
+            json.loads(body)
+            return "json_endpoint", {}           # Honda motopub's /ajax/ answers
+        except ValueError:
+            pass
     if text is None:
         tmp = OUT / ".probe.html"
         tmp.parent.mkdir(parents=True, exist_ok=True)
@@ -133,6 +141,11 @@ def classify(status: int | None, body: bytes, error: str | None, final_url: str,
             "transmission_line": m.group(0)[:120] if m else None}
     if m:
         return "spec_page_html", info
+    embedded = [f"{a}: {b}" for a, b in embedded_spec_pairs(body.decode("utf-8", "ignore"))
+                if re.search(r"transmission|gearbox", a, re.I)]
+    if embedded:
+        info["transmission_line"] = embedded[0][:120]
+        return "spec_embedded_json", info        # Zero: the spec table is JSON in the page
     if pdfs:
         return "document_links", info
     if len(text) < MIN_TEXT:

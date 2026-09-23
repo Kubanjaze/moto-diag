@@ -160,7 +160,8 @@ class TestAcquiredFilesNeedProvenance:
     sidecar traces it to SYM USA's page is read."""
 
     def test_only_the_traced_copy_is_read(self):
-        """SYM USA's page itself is read too: it is on a SYM host and names
-        the Wolf 150. No untraced copy is."""
+        """No untraced copy is read. SYM USA's page is not read either: an
+        acquired original is read only through its derived .txt, and this
+        fixture page has none (acquire.save writes one beside every original)."""
         docs = {pathlib.Path(e["document"]).name for e in _one("Wolf 150", make="SYM")}
-        assert docs == {"wolf150_owner_manual.txt", "sym-usa_maintenance-guides.html"}
+        assert docs == {"wolf150_owner_manual.txt"}

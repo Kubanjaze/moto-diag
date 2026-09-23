@@ -121,8 +121,8 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
         if make and not names_make(low, make):
             continue                # a document that never names the make is not about its machines
         if (library_index.kind(doc, library) == "acquired"
-                and (not make or acquired_provenance(doc, library, make, ""))):
-            continue                # an acquired file counts only with provenance for this make (E11)
+                and (doc.suffix != ".txt" or not make or acquired_provenance(doc, library, make, ""))):
+            continue                # acquired: read only its derived text, and only with provenance for this make (E11)
         # A spelling that is an ordinary word or a bare number ("Bolt", "1000")
         # counts only where the document names it as a model — the same rule
         # as E4, applied before the model is paid to read the excerpt.

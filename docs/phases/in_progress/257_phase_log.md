@@ -657,3 +657,65 @@ ceiling is the operator's; not changed.
   `osacompile` (nothing is displayed); the old escaping restored → 1
   fails; fixed → 32 pass.
 - **Commit:** this one.
+
+### 2026-09-23 — acquire.py built (not run); the inbox; Honda motopub measured to the PDF
+
+**Honda motopub, the last hop, measured** (cookies, the page's own
+`X-Requested-With`): `get_model_names/AHM/751-` → `get_model_years/AHM/
+CBR1000RR-RA-S1-S2` = `["2018"]` → `/om/AHM/CBR1000RR-RA-S1-S2/2018`, whose
+page links `https://2rom-prd-data.hondamotopub.com/om/AHM/…/CBR1000RR.RA.S1.S2_31MKF610_0.pdf`
+— a hondamotopub.com subdomain. The PDF itself was not fetched.
+
+**`acquire.py`** (no model): `fetch MAKE [--limit N]` and `ingest`. One
+`Fetcher` is the only network door — one cookie jar, CAP 30 fetches a run,
+1 request/second, robots.txt per host, TLS never bypassed, errors recorded
+and never retried. Routes (`ROUTES`), each from D7: spec pages via a
+maker listing (KTM, Suzuki, MV Agusta, Triumph ×4 categories, Yamaha
+`/specs`, Zero, Kymco `/scooters/`, Kawasaki with a hop to the newest
+model-year page); BMW's `Nav.xml` → the English rider's manual PDF; Honda
+motopub's JSON chain → the owner's-manual PDF; SYM (sym-global) and Genuine
+(`/pages/owners-manual`, found in its own navigation) product page → PDF.
+Every file lands in `acquired/<Make>/` with a script-written sidecar
+(url, final_url, status, bytes, sha256, fetched_at, supplied_by,
+referrer, for_spellings) and a **derived text** (`entry_check.derive_text`:
+PDF pages under `=== PAGE n ===`, HTML text plus embedded-JSON spec pairs,
+JSON sorted) whose sidecar names its parent. **E11 re-derives** that text
+from the parent's bytes and compares, so the text candidates reads is
+provably a function of the maker's bytes. `candidates.py` reads acquired
+files only through their `.txt`. `match()`: a strong spelling takes the
+shortest name containing it; a weak one ("CB") must equal a name. Link
+names are the visible text, the last path segment and the last two —
+the offline dry run showed why: KTM slugs run words together
+("superadventurer"), MV's last segment is "800" of "brutale/800", Zero's
+link text carries a "New" badge (named in `BADGES`).
+
+**Offline match estimate** — the routes' rules over listing pages saved
+in D7, no fetch; a live listing can differ: BMW 22/39, Kawasaki 16/39,
+Suzuki 10/29, Yamaha 9/39, Zero 7/15, KTM 5/41, MV Agusta 3/20, Triumph
+≥3/52 (1 of 4 categories saved), Kymco ≥2/10, Honda ≥1/26 (1 of 5 cc
+buckets saved); SYM and Genuine not estimated. **Of 320 machine names in
+routed makes, ~80–120 are likely to match**: current maker sites list
+current models; most census spellings are older machines (GSX-R1100,
+KZ1000, Vulcan 1500). Loose matches to judge downstream: BMW family
+spellings (F800, R1200, S1000) take one variant's manual; KTM "1290 Super
+Duke" takes the Super Duke GT page; MV "F3" the F3 R.
+
+**The inbox:** `~/research/motodiag/inbox/{Ducati,Aprilia,Piaggio,Vespa,Moto Guzzi}/`
+and `inbox/README.md` (= `acquire.INBOX_README`). Per document: the file;
+`<name>.url` with `document:` and `page:` lines; the page saved as
+`<name>.page.html`. `ingest` copies (the inbox is read-only), writes
+sidecars with `supplied_by: operator`, the page as the referrer. Inbox
+files are `unindexed` until ingested — nothing reads them before.
+
+Tests: `test_phase257_acquire.py` (19), a fake transport replaying
+hand-written pages shaped on D7's; `test_phase257_d7_probe.py` +3 (the two
+recorded rules; the real Zero page now classifies `spec_embedded_json`).
+**Break-it, each seen to fail:** cap ignored; robots ignored; a weak
+spelling takes the nearest name; no derived text (3); ingest skips the
+link check; ingest skips the page host; the badge kept; embedded pairs off
+(2); the JSON rule off; acquired originals read by candidates (2); derived
+text not re-derived — **survived** until a test forged text and sidecar
+hash together (every hash agreeing), then 1. Two defects found by the
+first run of the tests and fixed: candidates read acquired HTML
+originals as well as their text; a run with nothing to do still fetched
+its listing. 323 pass across 257 + 255D; 244G clean.

@@ -41,3 +41,27 @@ def test_a_transmission_word_without_a_gearbox_is_not_a_spec_page():
     """'Transmission' as a menu word (a service department) is not a spec line."""
     text = "Service Transmission repair specialists near you " + "z " * 900
     assert classify(200, b"<html></html>", None, "https://dealer/", text)[0] != "spec_page_html"
+
+
+ZERO_RSC = (b'<html><script>self.__next_f.push([1,"{\\"fields\\":[{\\"entry_id\\":[],'
+            b'\\"entry_label\\":\\"Transmission\\",\\"entry_tooltip\\":\\"\\",'
+            b'\\"model_type_option_1_value\\":\\"Clutchless direct drive\\"}]}"])</script>'
+            + b"<div>" + b"Zero SR/S " * 300 + b"</div></html>")
+
+
+class TestTheTwoRecordedRules:
+    """Round 2's two misses: Honda motopub's JSON answers and Zero's spec
+    table embedded as JSON in the page. Both shaped on the real bodies."""
+
+    def test_a_json_answer_is_a_json_endpoint(self):
+        assert classify(200, b'["CB1000RA","CBR1000RR-RA-S1-S2"]', None, "https://www.hondamotopub.com/ajax/x", None)[0] \
+            == "json_endpoint"
+
+    def test_an_embedded_spec_table_is_found(self):
+        method, info = classify(200, ZERO_RSC, None, "https://www.zeromotorcycles.com/model/zero-srs", None)
+        assert method == "spec_embedded_json"
+        assert info["transmission_line"] == "Transmission: Clutchless direct drive"
+
+    def test_an_embedded_label_that_is_not_a_gearbox_is_not_a_spec(self):
+        body = ZERO_RSC.replace(b"Transmission", b"Seat height")
+        assert classify(200, body, None, "https://z/", None)[0] != "spec_embedded_json"

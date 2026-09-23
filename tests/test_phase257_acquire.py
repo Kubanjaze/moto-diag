@@ -1,0 +1,199 @@
+"""Phase 257 — acquire.py, with no network.
+
+A fake transport answers from hand-written pages shaped on the real ones
+measured in D7 (phase log, 2026-09-23), so the real routes, matching,
+saving, sidecars, derived text and E11 all run; only the wire is absent.
+Pinned: every saved file passes E11 as saved and fails it when touched;
+the cap stops a run; robots.txt is honoured; a 403 is recorded, not
+retried; a weak spelling never takes the nearest name; the inbox ingests
+exactly the convention in INBOX_README and rejects each departure from it.
+"""
+from __future__ import annotations
+
+import json
+import pathlib
+import sys
+
+import pytest
+
+ROOT = pathlib.Path(__file__).resolve().parent.parent
+sys.path.insert(0, str(ROOT / ".claude" / "skills" / "source-transmission"))
+
+import acquire as A  # noqa: E402
+from candidates import candidates  # noqa: E402
+from entry_check import acquired_provenance  # noqa: E402
+
+KYMCO_LIST = (b'<html><a href="https://kymcousa.com/scooters/super-8-50x/">Super 8 50X</a>'
+              b'<a href="https://kymcousa.com/scooters/x-town-300i/">X-Town 300i</a>'
+              b'<a href="https://kymcousa.com/scooters/agility-50/">Agility 50</a></html>')
+KYMCO_SPEC = (b"<html><title>KYMCO Super 8 50X Specifications</title><body>KYMCO Super 8 50X"
+              b"<table><tr><td>Engine</td><td>49.5cc</td></tr><tr><td>Transmission</td><td>CVT Automatic</td></tr>"
+              b"</table>" + b"<p>ride</p>" * 400 + b"</body></html>")
+ZERO_HOME = (b'<html><a href="/model/zero-srs">SR/S <span>New</span></a>'
+             b'<a href="/model/zero-sr">SR</a><a href="/model/zero-dsrx">DSR/X New</a></html>')
+ZERO_SRS = (b'<html><title>Zero SR/S</title><script>self.__next_f.push([1,"{\\"entry_label\\":\\"Transmission\\",'
+            b'\\"entry_tooltip\\":\\"\\",\\"model_type_option_1_value\\":\\"Clutchless direct drive\\"}"])</script>'
+            + b"<div>Zero Motorcycles SR/S</div>" * 60 + b"</html>")
+PDF = b"%PDF-1.4\n% not a real PDF body, derive_text returns None for it\n"
+
+
+def site(pages: dict[str, tuple[int, bytes]]):
+    """A transport: url -> (status, body, error, final_url). robots.txt 404s unless given."""
+    calls: list[str] = []
+
+    def transport(url, headers):
+        calls.append(url)
+        status, body = pages.get(url, (404, b"<html>not found</html>"))
+        return status, body, None, url
+    transport.calls = calls
+    return transport
+
+
+@pytest.fixture
+def lib(tmp_path):
+    return tmp_path / "library"
+
+
+def _kymco(lib, transport, cap=30, spellings=("Super 8-50 X",)):
+    f = A.Fetcher(cap=cap, rate=0, transport=transport)
+    return A.fetch("Kymco", fetcher=f, library=lib, spellings=list(spellings)), f
+
+
+class TestASpecRoute:
+    PAGES = {"https://kymcousa.com/scooters/": (200, KYMCO_LIST),
+             "https://kymcousa.com/scooters/super-8-50x/": (200, KYMCO_SPEC)}
+
+    def test_the_spec_page_is_saved_with_its_provenance(self, lib):
+        r, _ = _kymco(lib, site(self.PAGES))
+        assert list(r["matched"]) == ["Super 8-50 X"]
+        path = lib / r["matched"]["Super 8-50 X"]["path"]
+        side = json.loads(path.with_name(path.name + ".acquired.json").read_text())
+        assert side["url"] == "https://kymcousa.com/scooters/super-8-50x/"
+        assert side["supplied_by"] == "acquire.py" and side["for_spellings"] == ["Super 8-50 X"]
+        assert side["referrer"]["url"] == "https://kymcousa.com/scooters/"
+
+    def test_what_it_saves_passes_e11_and_candidates_reads_the_derived_text(self, lib):
+        r, _ = _kymco(lib, site(self.PAGES))
+        path = lib / r["matched"]["Super 8-50 X"]["path"]
+        derived = path.with_name(path.name + ".txt")
+        assert acquired_provenance(path, lib, "Kymco", "t") == []
+        assert acquired_provenance(derived, lib, "Kymco", "t") == []
+        ex = candidates(["Super 8 50X"], lib, make="Kymco")["Super 8 50X"]
+        assert ex and all(e["document"].endswith(".txt") for e in ex)
+        assert any("CVT Automatic" in e["text"] for e in ex)
+
+    def test_a_touched_derived_text_fails_e11(self, lib):
+        r, _ = _kymco(lib, site(self.PAGES))
+        path = lib / r["matched"]["Super 8-50 X"]["path"]
+        derived = path.with_name(path.name + ".txt")
+        derived.write_text(derived.read_text().replace("CVT Automatic", "6-speed manual"))
+        assert any("no longer hashes" in x for x in acquired_provenance(derived, lib, "Kymco", "t"))
+
+    def test_a_forged_derived_text_with_a_matching_sidecar_fails_e11(self, lib):
+        """Text and sidecar hash rewritten together: every hash agrees, and
+        only re-deriving from the maker's bytes shows it is not theirs."""
+        import hashlib
+        r, _ = _kymco(lib, site(self.PAGES))
+        path = lib / r["matched"]["Super 8-50 X"]["path"]
+        derived = path.with_name(path.name + ".txt")
+        forged = derived.read_text().replace("CVT Automatic", "6-speed manual")
+        derived.write_text(forged)
+        side = derived.with_name(derived.name + ".acquired.json")
+        s = json.loads(side.read_text())
+        s["sha256"] = hashlib.sha256(forged.encode("utf-8")).hexdigest()
+        side.write_text(json.dumps(s))
+        assert any("is not what" in x for x in acquired_provenance(derived, lib, "Kymco", "t"))
+
+    def test_a_spelling_no_page_names_is_reported_not_guessed(self, lib):
+        r, _ = _kymco(lib, site(self.PAGES), spellings=("People S 150i",))
+        assert r["unmatched"] == ["People S 150i"] and r["matched"] == {}
+
+    def test_a_second_run_does_not_fetch_what_it_has(self, lib):
+        t = site(self.PAGES)
+        _kymco(lib, t)
+        before = len(t.calls)
+        r, _ = _kymco(lib, t)
+        assert r["asked"] == [] and len(t.calls) == before + 0
+
+
+class TestEmbeddedJsonSpecs:
+    def test_zero_s_spec_table_reaches_the_derived_text(self, lib):
+        t = site({"https://www.zeromotorcycles.com/": (200, ZERO_HOME),
+                  "https://www.zeromotorcycles.com/model/zero-srs": (200, ZERO_SRS)})
+        r = A.fetch("Zero", fetcher=A.Fetcher(rate=0, transport=t), library=lib, spellings=["SR/S"])
+        assert r["matched"]["SR/S"]["method"] == "spec_embedded_json"
+        path = lib / r["matched"]["SR/S"]["path"]
+        text = path.with_name(path.name + ".txt").read_text()
+        assert "Transmission: Clutchless direct drive" in text
+
+
+class TestTheDiscipline:
+    def test_the_cap_stops_the_run(self, lib):
+        pages = {**TestASpecRoute.PAGES,
+                 "https://kymcousa.com/scooters/x-town-300i/": (200, KYMCO_SPEC)}
+        r, f = _kymco(lib, site(pages), cap=2, spellings=("Super 8-50 X", "X-Town 300i"))
+        assert r["stopped"].startswith("cap reached") and f.count == 2
+
+    def test_robots_txt_is_honoured(self, lib):
+        pages = {**TestASpecRoute.PAGES,
+                 "https://kymcousa.com/robots.txt": (200, b"User-agent: *\nDisallow: /scooters/super-8-50x/\n")}
+        t = site(pages)
+        r, _ = _kymco(lib, t)
+        assert "https://kymcousa.com/scooters/super-8-50x/" not in t.calls
+        assert r["failed"]["Super 8-50 X"]["method"] == "robots_disallowed"
+
+    def test_a_403_is_recorded_once_and_nothing_saved(self, lib):
+        t = site({"https://kymcousa.com/scooters/": (200, KYMCO_LIST),
+                  "https://kymcousa.com/scooters/super-8-50x/": (403, b"<html>Access Denied</html>")})
+        r, _ = _kymco(lib, t)
+        assert r["failed"]["Super 8-50 X"]["method"] == "blocked"
+        assert t.calls.count("https://kymcousa.com/scooters/super-8-50x/") == 1
+        assert not list((lib / "acquired" / "Kymco").glob("*super-8-50x*"))
+
+    @pytest.mark.parametrize("spelling,expected", [
+        ("CB", None),                                    # weak: never the nearest CB
+        ("Super 8-50 X", "super 8 50x"), ("X-Town 300i", "x town 300i"),
+    ])
+    def test_matching(self, spelling, expected):
+        names = {"CB500F": "a", "CB650R": "b", "super 8 50x": "super 8 50x", "x town 300i": "x town 300i"}
+        assert A.match(spelling, names) == expected
+
+
+class TestTheInbox:
+    PAGE = (b'<html><title>Owner Manuals | Ducati</title>'
+            b'<a href="/content/dam/manuals/Panigale V4 OM.pdf">Panigale V4</a></html>')
+
+    def _drop(self, lib, *, url_text=None, page=True, make="Ducati", pdf=b"%PDF-1.4 hand-downloaded\n"):
+        d = lib / "inbox" / make
+        d.mkdir(parents=True)
+        (d / "panigale-v4-om.pdf").write_bytes(pdf)
+        (d / "panigale-v4-om.pdf.url").write_text(url_text if url_text is not None else
+            "document: https://www.ducati.com/content/dam/manuals/Panigale V4 OM.pdf\n"
+            "page: https://www.ducati.com/us/en/owners/owner-manuals\n")
+        if page:
+            (d / "panigale-v4-om.pdf.page.html").write_bytes(self.PAGE)
+
+    def test_the_convention_is_ingested_and_passes_e11(self, lib):
+        self._drop(lib)
+        r = A.ingest(lib)
+        assert r == {"ingested": ["Ducati/panigale-v4-om.pdf"], "rejected": {}}
+        doc = next((lib / "acquired" / "Ducati").glob("*.pdf"))
+        side = json.loads(doc.with_name(doc.name + ".acquired.json").read_text())
+        assert side["supplied_by"] == "operator"
+        assert side["referrer"]["url"] == "https://www.ducati.com/us/en/owners/owner-manuals"
+        assert acquired_provenance(doc, lib, "Ducati", "t") == []
+        assert (lib / "inbox" / "Ducati" / "panigale-v4-om.pdf").is_file(), "the inbox is read-only"
+
+    @pytest.mark.parametrize("kw,why", [
+        ({"page": False}, "needs"),
+        ({"url_text": "https://www.ducati.com/x.pdf\n"}, "'document:' line"),
+        ({"url_text": "document: https://www.ducati.com/content/dam/manuals/Panigale V4 OM.pdf\n"
+                      "page: https://www.ducati-forum.example/manuals\n"}, "not on a Ducati host"),
+        ({"url_text": "document: https://www.ducati.com/content/dam/manuals/Monster OM.pdf\n"
+                      "page: https://www.ducati.com/us/en/owners/owner-manuals\n"}, "does not link"),
+        ({"make": "Ducatti"}, "not a make"),
+    ])
+    def test_each_departure_is_rejected_with_its_reason(self, lib, kw, why):
+        self._drop(lib, **kw)
+        r = A.ingest(lib)
+        assert r["ingested"] == [] and why in next(iter(r["rejected"].values()))

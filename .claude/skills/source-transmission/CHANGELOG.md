@@ -63,3 +63,14 @@ comes back `no_evidence`. Refute is unchanged and keeps its tools.
 the model, set by the operator and not an option. Over it after the
 source stage, refute is not run. The runs did always record usage in
 `source.json`; nothing summed it or acted on it.
+
+## 2026-09-23 — acquire.py, the operator inbox, E11
+
+Maker documents now enter the library only through `acquire.py`: a
+measured route per make (spec pages, BMW's Nav.xml, Honda motopub's JSON,
+SYM and Genuine PDF links) or the operator's `inbox/`. The script writes
+every sidecar; each original gets a derived text that E11 re-derives from
+the maker's bytes. E11 accepts a file on the make's own host, or one
+linked — relative links resolved like a browser — from an unchanged
+maker-host page in the library (SYM's Dropbox-hosted Wolf 150).
+`candidates.py` reads acquired files only through their E11-checked text.

@@ -356,3 +356,24 @@ class TestAcquiredProvenance:
     def test_maker_host_is_the_host_or_a_subdomain(self, url, make, ok):
         from library_index import maker_host
         assert maker_host(url, make) is ok
+
+
+class TestTheReferrerLinkIsResolvedLikeABrowser:
+    """A page saved with 'Save Page As' keeps relative links; E11 resolves
+    each href/src against the page's own URL. The same page must not vouch
+    for a file it does not link."""
+
+    PAGE = (b'<html><a href="/content/dam/manuals/Panigale V4 OM.pdf">OM</a>'
+            b'<a href="../spec/v4s.pdf">spec</a><img src="https://cdn.ducati.com/x.png"></html>')
+    AT = "https://www.ducati.com/us/en/owners/owner-manuals"
+
+    @pytest.mark.parametrize("url,ok", [
+        ("https://www.ducati.com/content/dam/manuals/Panigale V4 OM.pdf", True),
+        ("https://www.ducati.com/content/dam/manuals/Panigale%20V4%20OM.pdf", True),
+        ("https://www.ducati.com/us/en/spec/v4s.pdf", True),
+        ("https://www.ducati.com/content/dam/manuals/Monster OM.pdf", False),
+        ("https://evil.example/content/dam/manuals/Panigale V4 OM.pdf", False),
+    ])
+    def test_relative_and_encoded_links(self, url, ok):
+        from entry_check import links_to
+        assert links_to(self.PAGE, self.AT, url) is ok

@@ -53,6 +53,7 @@ import json
 import pathlib
 import re
 import sys
+import urllib.parse
 
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
@@ -259,6 +260,52 @@ def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[s
     return []
 
 
+SPEC_LABEL = re.compile(r"transmission|gearbox|clutch|drive|gear|speed", re.I)
+
+
+def embedded_spec_pairs(raw: str) -> list[tuple[str, str]]:
+    """Label/value pairs from spec data a page embeds as JSON (Zero's
+    `"entry_label":"Transmission" … "model_type_option_1_value":"Clutchless
+    direct drive"`), gearbox labels only, in page order."""
+    s = raw.replace('\\"', '"')
+    pat = re.compile(r'"(?:entry_label|label|name)"\s*:\s*"([^"]{1,60})"(.{0,400}?)'
+                     r'"[a-z0-9_]*value[a-z0-9_]*"\s*:\s*"([^"]{1,200})"', re.S)
+    out: list[tuple[str, str]] = []
+    for m in pat.finditer(s):
+        if SPEC_LABEL.search(m.group(1)) and (m.group(1), m.group(3)) not in out:
+            out.append((m.group(1), m.group(3)))
+    return out
+
+
+def derive_text(path: pathlib.Path) -> str | None:
+    """The text candidates.py reads for an acquired original — a pure
+    function of its bytes, so E11 can re-derive it and compare. PDF: pypdf
+    per page under `=== PAGE n ===`; HTML: its text, then any embedded spec
+    pairs; JSON: sorted and indented."""
+    suffix = path.suffix.lower()
+    if suffix == ".pdf":
+        try:
+            import pypdf
+            pages = pypdf.PdfReader(path).pages
+            return "\n".join(f"=== PAGE {i} ===\n{p.extract_text() or ''}" for i, p in enumerate(pages, 1))
+        except Exception:
+            return None
+    if suffix in (".html", ".htm"):
+        text = _extract_text(path)
+        if text is None:
+            return None
+        pairs = embedded_spec_pairs(path.read_bytes().decode("utf-8", errors="ignore"))
+        if pairs:
+            text += "\n=== EMBEDDED SPEC DATA ===\n" + "\n".join(f"{a}: {b}" for a, b in pairs) + "\n"
+        return text
+    if suffix == ".json":
+        try:
+            return json.dumps(json.loads(path.read_bytes()), indent=1, sort_keys=True, ensure_ascii=False) + "\n"
+        except ValueError:
+            return None
+    return None
+
+
 def _sha256(path: pathlib.Path) -> str | None:
     try:
         return hashlib.sha256(path.read_bytes()).hexdigest()
@@ -287,6 +334,19 @@ def acquired_provenance(doc: pathlib.Path, library: pathlib.Path, make: str, tag
         return [f"E11 {tag}: {side.name} needs 'url' and a 64-hex 'sha256'"]
     if _sha256(doc) != prov["sha256"]:
         return [f"E11 {tag}: {doc.name} no longer hashes to the sha256 recorded when it was fetched"]
+    parent = prov.get("derived_from")
+    if parent:
+        # Derived text: its parent must pass E11, and re-deriving it must give these bytes.
+        src = library / str(parent.get("path", ""))
+        if not parent.get("path") or not src.is_file():
+            return [f"E11 {tag}: {doc.name} is derived from {parent.get('path')!r}, not in the library"]
+        fails = acquired_provenance(src, library, make, tag)
+        if fails:
+            return fails
+        text = derive_text(src)
+        if text is None or hashlib.sha256(text.encode("utf-8")).hexdigest() != prov["sha256"]:
+            return [f"E11 {tag}: {doc.name} is not what {src.name} derives to"]
+        return []
     if library_index.maker_host(prov.get("final_url") or prov["url"], make):
         return []
     ref = prov.get("referrer")
@@ -299,11 +359,25 @@ def acquired_provenance(doc: pathlib.Path, library: pathlib.Path, make: str, tag
         return [f"E11 {tag}: the referrer page is not in the library at {ref.get('path')!r}"]
     if _sha256(page) != ref.get("sha256"):
         return [f"E11 {tag}: the referrer page {page.name} has changed since it was recorded"]
-    src = _html.unescape(page.read_bytes().decode("utf-8", errors="ignore"))
-    url = prov["url"]
-    if url not in src and url.replace(" ", "%20") not in src:
-        return [f"E11 {tag}: the referrer page {page.name} does not link to {url}"]
+    if not links_to(page.read_bytes(), ref["url"], prov["url"]):
+        return [f"E11 {tag}: the referrer page {page.name} does not link to {prov['url']}"]
     return []
+
+
+def _same_url(a: str, b: str) -> bool:
+    n = lambda u: urllib.parse.unquote(u.strip()).rstrip("/")  # noqa: E731
+    return n(a) == n(b)
+
+
+def links_to(page_bytes: bytes, page_url: str, url: str) -> bool:
+    """Does this page link to url? Every href/src, resolved against the
+    page's own URL as a browser would — a page saved with 'Save Page As'
+    keeps its links relative ('/content/…/manual.pdf')."""
+    src = page_bytes.decode("utf-8", errors="ignore")
+    for ref in re.findall(r"""(?:href|src)\s*=\s*["']([^"']+)["']""", src, re.I):
+        if _same_url(urllib.parse.urljoin(page_url, _html.unescape(ref)), url):
+            return True
+    return False
 
 
 def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,

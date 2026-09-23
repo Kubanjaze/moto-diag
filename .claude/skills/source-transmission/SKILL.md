@@ -26,6 +26,7 @@ sees the summary and any stop — nothing else.
 | step | who | rule | the mistake it answers |
 |---|---|---|---|
 | census | `census.py` | every unknown pair, whole junction, no sampling | a model counting spellings produced 427 where ~600 was true (F139) |
+| acquire | `acquire.py`, no model | a make's measured route (D7) fetches maker pages/PDFs into `~/research/motodiag/acquired/<Make>/`, sidecar by the script; the operator's hand downloads go through `inbox/` (`inbox/README.md`); cap 30/run, 1 req/s, robots.txt | a model that writes its own "original" (F141) |
 | candidates | `candidates.py`, no model | library files that name the spelling, cut to ±40 lines with path and page; none → `no_evidence` **without a model call** | an agent-loop source stage browsed its way to 7.66M tokens for one spelling |
 | extract | GLM-5.3 Marathon via `subc`, sandboxed, **one turn, no tools** | from the excerpts in its prompt only; the **maker's own word**, quoted verbatim; model codes become aliases | V-matic is Honda's CVT; a search for `CVT` misses it |
 | classify | same | by mechanism; ambiguous → candidate set; no evidence → NULL | a model family is not a machine |
