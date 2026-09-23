@@ -230,9 +230,9 @@ class TestNotAMachineIsNotSearched:
         real = candidates.candidates
         monkeypatch.setattr(candidates, "candidates", lambda sp, *a, **k: asked.append(list(sp)) or real(sp, *a, **k))
         fake = Fake(findings=[_found()])
-        s = run_with(fake, ["Trail 250", "1000", "Gilera"])
+        s = run_with(fake, ["Trail 250", "2020 service manual", "Gilera"])
         assert asked == [["Trail 250"]]
-        assert s["not_a_machine"] == {"1000": "bare_number", "Gilera": "other_marque"}
+        assert s["not_a_machine"] == {"2020 service manual": "prose", "Gilera": "other_marque"}
         assert s["sent_to_model"] == ["Trail 250"]
         notes = {f["spelling"]: f.get("note", "") for f in s["findings"]}
-        assert "not a machine name (bare_number)" in notes["1000"]
+        assert "not a machine name (prose)" in notes["2020 service manual"]

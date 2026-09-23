@@ -263,6 +263,14 @@ class TestSpellingsThatCannotBeAMachine:
         ("Moto Guzzi", "Guzzi V85"), ("Yamaha", "Bolt"), ("Kawasaki", "ZX-10R"),
         ("SYM", "SYMBA 110"), ("Ducati", "1260 S"), ("Triumph", "Speed Triple"),
         ("MV Agusta", "Brutale"), ("KTM", "LC8"), ("Honda", "MVX250F"),
+        # Machines whose name IS a number (bug fix #1: db920bb's shape rule
+        # classed every one of these bare_number and never searched them).
+        ("Ducati", "916"), ("Ducati", "996"), ("Ducati", "998"), ("Ducati", "999"),
+        ("Ducati", "1098"), ("Ducati", "1198"), ("Ducati", "1299"), ("Ducati", "848"),
+        ("Ducati", "749"), ("Ducati", "959"), ("Ducati", "899"), ("Ducati", "748"),
+        ("Ducati", "851"), ("Ducati", "888"), ("Vespa", "946"), ("Piaggio", "946"),
+        ("MV Agusta", "675"), ("MV Agusta", "910"), ("MV Agusta", "982"), ("MV Agusta", "1078"),
+        ("MV Agusta", "750"), ("MV Agusta", "998"),
     ])
     def test_a_machine_name_is_not_classed(self, make, spelling):
         """Including a marque's own model under its own marque, and a

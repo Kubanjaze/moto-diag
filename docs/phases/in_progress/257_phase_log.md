@@ -376,3 +376,41 @@ could be SENT, not findings — several Honda hits are model-list pages.
 **The library can at most answer 17 of 484 machine names (3.5%).** The
 other ~467 — every Ducati, Triumph, Kawasaki, Suzuki, Aprilia — need a
 document the library does not have. Acquisition is the bottleneck.
+
+### 2026-09-23 — Bug fix #1: `bare_number` was a shape rule and dropped real machines
+
+- **Issue:** `db920bb`'s `census.not_a_machine` classed any spelling
+  matching `re.fullmatch(r"\d+\s*(cc)?")` as `bare_number` — never
+  searched, never sent. Measured on HEAD (by the operator, then here):
+  Ducati 916, 996, 998, 999, 1098, 1198, 1299, 848, 749, 959, 899; Vespa
+  and Piaggio 946; MV Agusta 675, 910, 982, 1078 — all `bare_number`. Also
+  Ducati 748, 851, 888 and MV Agusta 750, 998 (the same #1325 "model
+  numbers" row as 910/982/1078).
+- **Root cause:** an exclusion with no positive control. The workspace
+  rule "An exclusion is a claim and needs a control" was not loaded in
+  this repo (see the CLAUDE.md commit that follows), and the class was
+  written from the shape of the first examples (`06`, `20`, `1000`) — a
+  number is often exactly what a maker calls the machine.
+- **Fix:** `NOT_A_MODEL_NUMBER`, a named list of 24 `(make, spelling)`
+  entries, each with the junction rows (`known_issues.id`) that show it is
+  a year fragment, a slash-list fragment of another name, or a
+  displacement badge. A number not on the list is a machine name; strict
+  E4 then demands "Ducati 916" before a document counts.
+- **Files:** `.claude/skills/source-transmission/census.py`;
+  `tests/test_phase257_source_checks.py` (22 positive controls in
+  `test_a_machine_name_is_not_classed`); `tests/test_phase257_source_stage.py`
+  (its not-a-machine case now uses a prose spelling — a ZZ "1000" is no
+  longer classed, correctly).
+- **Verified:** the 22 controls added first and **seen to fail on the old
+  rule (22 failed)**; with the list, 246 pass across 257 + 255D. Break-it:
+  shape rule restored → 22 fail; the `06` entry removed → 1 fails.
+  Classes now: bare_number 24 (was 46), other_marque 39, prose 30,
+  marque_name 1 — **94 classed, 506 machine names**.
+- **The coverage figure is re-measured** (`~/.cache/motodiag/coverage_20260923_bugfix1.txt`)
+  and **supersedes the "17 of 484" table above, which excluded these
+  machines**: of **506** machine names, 33 get any excerpt and **17** an
+  excerpt with a gearbox word — the same 17 spellings. The restored 22 add
+  none: the library holds no Ducati, MV Agusta or Vespa 946 document.
+  Figure of record: **17 of 506 (3.4%)**, an upper bound on what a model
+  could be sent, not findings.
+- **Commit:** this one.
