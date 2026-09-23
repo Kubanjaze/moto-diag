@@ -82,8 +82,13 @@ ROUTES = {
                      "host": "api.subconscious.dev"},
     # Credential from the operator's file, passed by environment only.
     "anthropic": {"model": "claude-opus-5-5", "host": "api.anthropic.com"},
+    # The source stage's fallback while Subconscious is unavailable (operator,
+    # 2026-09-23): its own route, so refute stays on Opus and unchanged.
+    "anthropic-sonnet": {"model": "claude-sonnet-5", "host": "api.anthropic.com"},
 }
 SOURCE_ROUTE, REFUTE_ROUTE = "subconscious", "anthropic"
+# `--source-route` names -> routes. Switching back is this flag, never a code change.
+SOURCE_ROUTES = {"subconscious": "subconscious", "anthropic": "anthropic-sonnet"}
 CREDENTIAL_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
                    "SUBCONSCIOUS_API_KEY", "ANTHROPIC_BASE_URL")
 
@@ -133,7 +138,7 @@ def check_route(route: str, env: dict, gateway: str | None = None) -> None:
                              "subc supplies its own credential")
         if (gateway or subc_gateway()) != ROUTES["subconscious"]["host"]:
             raise GuardError(f"subc gateway is {gateway!r}, not Subconscious")
-    elif route == "anthropic":
+    elif route in ("anthropic", "anthropic-sonnet"):
         if present != {"CLAUDE_CODE_OAUTH_TOKEN"}:
             raise GuardError(f"anthropic route must carry exactly the OAuth token, got {sorted(present)}")
         if not env["CLAUDE_CODE_OAUTH_TOKEN"].startswith("sk-ant-"):
@@ -222,7 +227,7 @@ def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None,
     env = {"HOME": str(HOME), "PATH": f"{SUBC.parent}:/usr/bin:/bin:{CLAUDE.parent}",
            "USER": os.environ.get("USER", ""), "TERM": "dumb",
            "TMPDIR": str(r["tmp"]), "CLAUDE_CONFIG_DIR": str(r["tmp"] / "cfg")}
-    if route == "anthropic":
+    if route in ("anthropic", "anthropic-sonnet"):
         env["CLAUDE_CODE_OAUTH_TOKEN"] = load_anthropic_token()
     check_route(route, env)
     cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema, extra=extra,
@@ -448,14 +453,22 @@ def no_evidence(make: str, spelling: str, unnamed: str | None = None) -> dict:
     return {"make": make, "spelling": spelling, "outcome": "no_evidence", "transmission": None, "note": note}
 
 
-def batch(make: str, spellings: list[str], hints: str = "") -> dict:
-    """Run one make end to end. Returns the summary; never edits the repository."""
+def batch(make: str, spellings: list[str], hints: str = "", source_route: str = "subconscious") -> dict:
+    """Run one make end to end. Returns the summary; never edits the repository.
+
+    `source_route` picks the source stage's route by its `--source-route`
+    name; refute always runs on REFUTE_ROUTE."""
     import candidates
     import census
     import entry_check
+    if source_route not in SOURCE_ROUTES:
+        raise GuardError(f"--source-route must be one of {sorted(SOURCE_ROUTES)}, not {source_route!r}")
+    route = SOURCE_ROUTES[source_route]
     r = make_run(RUNS_ROOT, make)
     summary = {"make": make, "spellings": spellings, "run": str(r["run"]),
-               "started": dt.datetime.now().isoformat(timespec="seconds")}
+               "started": dt.datetime.now().isoformat(timespec="seconds"),
+               # Structured: which route and model sourced this batch.
+               "source_route": {"route": route, "model": ROUTES[route]["model"]}}
     # A spelling that cannot be a machine name is not searched for, let alone sent.
     unnamed = {s: c for s in spellings if (c := census.not_a_machine(make, s))}
     names = [s for s in spellings if s not in unnamed]
@@ -466,7 +479,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     summary["source_error"] = None
     stages: dict[str, dict] = {}
     if sent:
-        src = run_stage(r, SOURCE_ROUTE, SOURCE_PROMPT.format(
+        src = run_stage(r, route, SOURCE_PROMPT.format(
             make=make, spellings=json.dumps(sent),
             excerpts=json.dumps({s: cands[s] for s in sent}, indent=1),
             hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA, extra=SOURCE_FLAGS)
@@ -480,6 +493,8 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
             summary["source_error"] = src.get("result")
         else:
             findings += (src.get("structured_output") or {}).get("findings", [])
+    for f in findings:
+        f["source_route"] = route       # structured, per finding: carried into the write
     missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
     rejections = entry_check.check(findings, r["clone"], cands)
     passed = [f for f in findings if f.get("outcome") == "found"
@@ -563,16 +578,21 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
 
 def main(argv: list[str]) -> int:
     if len(argv) < 2 or argv[0] != "batch":
-        print("usage: orchestrate.py batch MAKE [SPELLING ...] [--hints TEXT]", file=sys.stderr)
+        print("usage: orchestrate.py batch MAKE [SPELLING ...] [--hints TEXT] "
+              "[--source-route subconscious|anthropic]", file=sys.stderr)
         return 2
     hints = ""
     if "--hints" in argv:
         i = argv.index("--hints"); hints = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
+    source_route = "subconscious"
+    if "--source-route" in argv:
+        i = argv.index("--source-route"); source_route = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
     make, spellings = argv[1], argv[2:]
     if not spellings:
         import census as C
         spellings = [e["model"] for e in C.census(REPO / "data" / "motodiag.db", make).get(make, [])]
-    s = batch(make, spellings, hints)
+    s = batch(make, spellings, hints, source_route)
+    print(f"source route: {s['source_route']['route']} ({s['source_route']['model']})")
     print(json.dumps({k: s[k] for k in ("make", "run", "stops")}, indent=1))
     print(f"tokens: {s['tokens']['total']:,} (ceiling {s['tokens']['ceiling']:,})")
     print(f"ready to write: {[f['spelling'] for f in s['ready_to_write']]}")

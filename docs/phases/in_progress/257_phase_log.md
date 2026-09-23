@@ -1250,3 +1250,25 @@ earlier showed 53.5M / 60M tokens, 6.5M remaining — so this is an account
 entitlement, not the daily quota. The stop fired as designed (source-stage
 error, usage unrecorded); ready_to_write empty. **Operator action needed
 on the Subconscious account** before SV650 or any further batch can run.
+
+### 2026-09-23 — Subconscious suspended: the source stage's fallback route (operator)
+
+**Step 0:** the written-entries guard, re-run: **15/15** manual entries pass
+(V-Strom 650's re-quote from `07cfc18` included). Nothing to pull.
+
+**Step 1:** `ROUTES["anthropic-sonnet"]` = claude-sonnet-5 on
+api.anthropic.com, its own route: refute stays `anthropic` (Opus) and
+unchanged. `--source-route subconscious|anthropic` (default subconscious)
+selects the source stage's route; switching back is the flag. Same guards:
+the route carries exactly the Anthropic OAuth token; the served-model check
+applies (a different model answering is a source-stage error and a stop);
+one turn, `--tools ""`. Recorded as structured fields: `summary.source_route
+{route, model}`, `source_route` on every finding, and
+`TransmissionEntry.source_route` (new optional field) — "subconscious" on
+the 14 entries this phase wrote from Subconscious batches (inserted at each
+call's end by AST position, diff reviewed), None on older entries,
+"anthropic-sonnet" on anything the fallback writes. Tests +10.
+**Break-it:** default flips to anthropic → 35; refute follows the source
+route → 21; route not recorded on findings → 2; the fallback not Sonnet →
+3; the CLI flag ignored → 1; one entry loses its route → 1. 640 pass across
+257 + 255D + the 255 axis suite; 244G clean.

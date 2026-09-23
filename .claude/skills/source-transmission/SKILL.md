@@ -16,7 +16,12 @@ answering a mistake that was actually made.
 .venv/bin/python -B .claude/skills/source-transmission/orchestrate.py batch MAKE [SPELLING ...]
 ```
 
-No spellings → every `unknown` spelling of that make from the census. The
+No spellings → every `unknown` spelling of that make from the census.
+`--source-route anthropic` sends the source stage to claude-sonnet-5 (one
+turn, no tools, the same guards) while Subconscious is unavailable; refute
+stays on Opus. The default is `subconscious`; switching back is the flag.
+Each summary records `source_route`, and each lookup entry a batch writes
+carries `source_route=` — so fallback entries can be selected and re-run. The
 run lives in `~/.cache/motodiag/source-runs/<make>_<stamp>/`: a fresh clone,
 a DB snapshot, `candidates.json`, `source.json`, `refute.json`, `summary.json`. The operator
 sees the summary and any stop — nothing else.

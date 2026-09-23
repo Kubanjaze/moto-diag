@@ -218,3 +218,23 @@ class TestEveryPhase257ManualEntryMeetsE12:
         # passed as a quote).
         quoted = re.findall(r"(?:(?<=\s)|(?<=\()|^)'(.{8,}?)'(?![A-Za-z])", e.source.replace("’", "'"))
         assert any(manual_evidence(q) for q in quoted), (canonical, quoted)
+
+
+class TestTheSourceRouteIsAField:
+    """Which route sourced an entry is a structured field, so the fallback's
+    entries can be selected mechanically and re-run once Subconscious is back."""
+
+    def test_the_subconscious_entries_say_so(self):
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        subc = {(e.make, e.canonical) for e in TRANSMISSION_LOOKUP if e.source_route == "subconscious"}
+        assert ("Kawasaki", "Ninja ZX-10R") in subc and ("SYM", "Wolf CR300i") in subc and len(subc) == 14
+
+    def test_older_entries_carry_no_route(self):
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        [pcx] = [e for e in TRANSMISSION_LOOKUP if e.make == "Honda" and e.canonical == "PCX"]
+        assert pcx.source_route is None
+
+    def test_the_fallback_is_one_filter(self):
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        fallback = [e for e in TRANSMISSION_LOOKUP if e.source_route == "anthropic-sonnet"]
+        assert all(e.source_route == "anthropic-sonnet" for e in fallback)

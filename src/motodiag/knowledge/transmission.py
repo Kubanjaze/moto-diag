@@ -80,6 +80,12 @@ class TransmissionEntry:
     transmission: VehicleTransmission
     aliases: tuple[str, ...]
     source: str
+    #: The source-transmission route whose source stage produced this entry
+    #: (Phase 257): "subconscious" (GLM-5.3 Marathon) or "anthropic-sonnet"
+    #: (claude-sonnet-5, the fallback while Subconscious is unavailable).
+    #: None for entries not sourced by a batch. A field, not prose, so the
+    #: fallback's entries can be selected and re-run mechanically.
+    source_route: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -196,7 +202,8 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "2020 page for the 124.9 cc Grom reads 'Transmission  Manual; four "
        "speeds'. The GROM125 service manual's OCR page 9 says the same "
        "(constant-mesh four-speed, wet multiplate clutch, 1-N-2-3-4) but "
-       "is OCR evidence and is not the citation."),
+       "is OCR evidence and is not the citation.",
+       source_route="subconscious"),
 
     # --- Yamaha ----------------------------------------------------------
     _E("Yamaha", "Zuma 125", CVT, ("zuma 125", "zuma125", "yw125", "yw125y"),
@@ -256,16 +263,19 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "rider's clutch pull. Re-quoted twice under E12: first from a gear "
        "count ('The six-speed transmission suits…'), then from an Easy Start "
        "sentence that names the clutch lever only in a negation ('without "
-       "pulling in the clutch lever'), which E12 no longer accepts."),
+       "pulling in the clutch lever'), which E12 no longer accepts.",
+       source_route="subconscious"),
     _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
        "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
        "five-speed transmission utilizes a cable-operated clutch with a "
-       "separate magnesium outer cover for simplified clutch maintenance.'"),
+       "separate magnesium outer cover for simplified clutch maintenance.'",
+       source_route="subconscious"),
     _E("Suzuki", "Boulevard C50", MANUAL, ("boulevard c50", "boulevard c 50"),
        "suzukicycles.com/cruiser/2025/boulevard-c50 (2025 Suzuki Boulevard "
        "C50): 'With a light pull, the clutch feeds engine power to the "
        "smooth-shifting five-speed transmission and out to the clean shaft "
-       "drive.'"),
+       "drive.'",
+       source_route="subconscious"),
 
     # --- Kawasaki --------------------------------------------------------
     # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year
@@ -276,34 +286,42 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     # ABS edition's page — the operator's one named exception — and say so.
     _E("Kawasaki", "Ninja ZX-10R", MANUAL, ("zx 10r", "zx10r", "ninja zx 10r", "ninja zx10r"),
        "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-10r/2026-ninja-zx-10r "
-       "(2026 Ninja ZX-10R), spec table: 'Transmission 6-speed, return shift'."),
+       "(2026 Ninja ZX-10R), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious"),
     _E("Kawasaki", "Ninja ZX-6R", MANUAL, ("zx 6r", "zx6r", "ninja zx 6r", "ninja zx6r"),
        "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-6r/2027-ninja-zx-6r "
-       "(2027 Ninja ZX-6R), spec table: 'Transmission 6-speed, return shift'."),
+       "(2027 Ninja ZX-6R), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious"),
     _E("Kawasaki", "Ninja H2", MANUAL, ("ninja h2", "ninjah2", "ninja h2 abs"),
        "From the ABS edition's page (the base model's only current page): "
        "kawasaki.com/en-us/motorcycle/ninja/hypersport/ninja-h2/2026-ninja-h2-abs "
        "(2026 Ninja H2 ABS), spec table: 'Transmission 6-speed, return shift, "
-       "dog-ring'."),
+       "dog-ring'.",
+       source_route="subconscious"),
     _E("Kawasaki", "KLR650", MANUAL, ("klr650", "klr 650"),
        "kawasaki.com/en-us/motorcycle/klr/dual-sport/klr650/2026-klr650 (2026 "
        "KLR650), spec table: 'Transmission 5-speed, return shift with wet "
-       "multi-disc manual clutch'."),
+       "multi-disc manual clutch'.",
+       source_route="subconscious"),
     _E("Kawasaki", "Z900", MANUAL, ("z900", "z 900", "z900 abs"),
        "From the ABS edition's page (the base model's only current page): "
        "kawasaki.com/en-us/motorcycle/z/supernaked/z900/2026-z900-abs (2026 Z900 "
-       "ABS), spec table: 'Transmission 6-speed, return shift'."),
+       "ABS), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious"),
     _E("Kawasaki", "Ninja 300", MANUAL, ("ninja 300", "ninja300", "ninja 300 abs"),
        "From the ABS edition's page (the base model's only current page): "
        "kawasaki.com/en-us/motorcycle/ninja/sport/ninja-300/2026-ninja-300-abs "
-       "(2026 Ninja 300 ABS), spec table: 'Transmission 6-speed, return shift'."),
+       "(2026 Ninja 300 ABS), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious"),
     _E("Kawasaki", "KLX300", MANUAL, ("klx300", "klx 300"),
        "kawasaki.com/en-us/motorcycle/klx/dual-sport/klx300/2026-klx300 (2026 "
        "KLX300), spec table: 'Transmission 6-speed, return shift with wet "
-       "multi-disc manual clutch'."),
+       "multi-disc manual clutch'.",
+       source_route="subconscious"),
     _E("Kawasaki", "Z650", MANUAL, ("z650", "z 650"),
        "kawasaki.com/en-us/motorcycle/z/supernaked/z650/2025-z650 (2025 Z650), "
-       "spec table: 'Transmission 6-speed, return shift'."),
+       "spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious"),
 
     # --- Kymco -----------------------------------------------------------
     _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",
@@ -334,7 +352,8 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Kymco K-Pipe 125 owner's manual (Version T300-KB25KA-A), spec table: "
        "'Transmission.......................... 4-speed, foot shift'. "
        "Corroborated by a rider clutch cable with 5-10 mm free play and an "
-       "N-1-2-3-4 gear pattern diagram."),
+       "N-1-2-3-4 gear pattern diagram.",
+       source_route="subconscious"),
 
     # --- SYM -------------------------------------------------------------
     # SYM is the marque that proves the table is not 'scooter maker means
@@ -368,7 +387,8 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "down to engage the 1st gear'. Re-quoted under E12 (2026-09-23): the "
        "first quote, 'Always use the clutch when changing gear.' (page 12), "
        "names no clutch lever or shift pedal. Spec table PDF page 24: 'Model "
-       "WOLF CR 300i / Specification PF30A3-EU', 278 cc."),
+       "WOLF CR 300i / Specification PF30A3-EU', 278 cc.",
+       source_route="subconscious"),
     _E("SYM", "Mio 50", CVT, ("mio", "mio 50", "mio50"),
        "SYM Mio 50 owner's manual: 'Clutch  Centrifugal type  "
        "Transmission  CVT'."),
