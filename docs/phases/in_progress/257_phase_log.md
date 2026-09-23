@@ -1651,3 +1651,21 @@ assertions are untouched:
 255's `OVER_REACHED` keeps the CBR1000RR: a manual machine still gets no
 CVT row, and it passes. Census 579 → **574**. The written-entries E12 guard
 now covers 28 manual entries.
+
+### 2026-09-23 — NCW50: an alias on the Metropolitan entry (operator decision)
+
+**Decision (operator):** yes to the alias, with its evidence on record, and
+no new entry. `om_AHM_NCW50_2018_Metropolitan_31GJB620` belongs to the same
+31GJB6x0 manual series the entry already cites (31GJB640 through 31GJB690),
+and prints the same "Primary reduction V-matic (2.85:1 - 0.86:1)" line.
+
+**Done:**
+- "ncw50" and "ncw 50" added to the Phase 255 `Honda Metropolitan` CVT
+  entry.
+- 31GJB620 (2018, run `Honda_20260923_155534`) added to the entry's source.
+- `test_ncw50_resolves_cvt_through_the_metropolitan_entry`: NCW50, "NCW 50"
+  and "Honda NCW50" resolve cvt through the entry whose canonical name is
+  Metropolitan, and the source cites 31GJB620.
+- NCW50 leaves the stays-unknown list.
+- Break-it: the aliases removed → 3 fail.
+- Census 574 → **573**.

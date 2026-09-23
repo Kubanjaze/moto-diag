@@ -307,9 +307,18 @@ class TestHondaMotopubWrite:
 
     @_pytest.mark.parametrize("model", ["CBR1000RR-R", "CBR1000RR SP", "CBR600F", "CBR600F4i", "CBR929RR",
                                         "CB500X", "CBR500R", "XR650R", "CRF250R", "CRF250 Rally",
-                                        "CB650R", "CB750", "NCW50"])
+                                        "CB650R", "CB750"])
     def test_what_the_run_did_not_prove_stays_unknown(self, model):
         """Siblings and variants of the five; the E-Clutch-flagged CB650R and
-        CB750 (no_evidence, not classified); NCW50, kept by refute but held
-        for an operator decision (the existing Metropolitan entry)."""
+        CB750 (no_evidence, not classified)."""
         assert resolve_transmission("Honda", model).provenance == "unknown", model
+
+    @_pytest.mark.parametrize("model", ["NCW50", "NCW 50", "Honda NCW50"])
+    def test_ncw50_resolves_cvt_through_the_metropolitan_entry(self, model):
+        """Operator decision 2026-09-23: NCW50 is the Metropolitan's model
+        code — its 2018 manual 31GJB620 is the same 31GJB6x0 series the entry
+        cites, with the same V-matic line. An alias on that entry, not a new one."""
+        r = resolve_transmission("Honda", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"cvt"}), model
+        assert r.entry.canonical == "Metropolitan"
+        assert "31GJB620" in r.entry.source

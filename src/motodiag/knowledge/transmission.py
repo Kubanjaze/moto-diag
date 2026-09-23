@@ -164,9 +164,11 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "continuously variable drive; a fixed primary reduction prints one "
        "number, as the same tables do for 'Final reduction 13.708'."),
     _E("Honda", "Metropolitan", CVT, ("metropolitan", "chf50", "chf 50",
-                                      "honda metropolitan"),
-       "Honda Metropolitan owner's manuals 31GJB640 (2020) through 31GJB690 "
-       "(2026): 'Primary reduction  V-matic (2.85:1 - 0.86:1)'. Corroborated "
+                                      "honda metropolitan", "ncw50", "ncw 50"),
+       "Honda Metropolitan owner's manuals 31GJB620 (2018, '2018 NCW50 "
+       "Owner's Manual' — NCW50 is the Metropolitan's model code; Phase 257 "
+       "run Honda_20260923_155534, motopub) and 31GJB640 (2020) through "
+       "31GJB690 (2026): 'Primary reduction  V-matic (2.85:1 - 0.86:1)'. Corroborated "
        "by the CHF50 SERVICE manual, whose specification table carries the "
        "full variator set -- 'Drive belt width', 'Movable drive face', "
        "'Driven pulley', 'Weight roller', 'Clutch outer I.D.', 'Lining "
