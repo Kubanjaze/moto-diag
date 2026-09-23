@@ -598,10 +598,30 @@ def _same_url(a: str, b: str) -> bool:
     return n(a) == n(b)
 
 
+def _json_strings(value) -> list[str]:
+    if isinstance(value, str):
+        return [value]
+    if isinstance(value, dict):
+        value = list(value.values())
+    if isinstance(value, list):
+        return [s for v in value for s in _json_strings(v)]
+    return []
+
+
 def links_to(page_bytes: bytes, page_url: str, url: str) -> bool:
     """Does this page link to url? Every href/src, resolved against the
     page's own URL as a browser would — a page saved with 'Save Page As'
-    keeps its links relative ('/content/…/manual.pdf')."""
+    keeps its links relative ('/content/…/manual.pdf').
+
+    A JSON referrer — a maker's own data endpoint, like ktm.com's
+    bikemanuals.manuals.json — links by a string value equal to url, exact
+    and never resolved (operator, 2026-09-23)."""
+    try:
+        data = json.loads(page_bytes)
+    except ValueError:
+        data = None
+    if isinstance(data, (dict, list)):
+        return any(_same_url(s, url) for s in _json_strings(data))
     src = page_bytes.decode("utf-8", errors="ignore")
     for ref in re.findall(r"""(?:href|src)\s*=\s*["']([^"']+)["']""", src, re.I):
         if _same_url(urllib.parse.urljoin(page_url, _html.unescape(ref)), url):

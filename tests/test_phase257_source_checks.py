@@ -375,7 +375,8 @@ class TestAcquiredProvenance:
     @pytest.mark.parametrize("url,make,ok", [
         # The hosts each maker's own owner's manual PDF was served from (operator, 2026-09-23).
         ("https://library.ymcapps.net/library/om/contents/pdf/10/5YR-F8199-15_02.pdf", "Yamaha", True),
-        ("https://azwecdnepstoragewebsiteuploads.azureedge.net/24_3214961_en_OM.pdf", "KTM", True),
+        # KTM's CDN is not a KTM host (operator): its PDFs pass only through ktm.com's JSON.
+        ("https://azwecdnepstoragewebsiteuploads.azureedge.net/24_3214961_en_OM.pdf", "KTM", False),
         # Lookalikes must still fail.
         ("https://yamaha-motor.co.jp.example.com/x.pdf", "Yamaha", False),
         ("https://library.ymcapps.net.example.com/x.pdf", "Yamaha", False),
@@ -406,6 +407,66 @@ class TestAcquiredProvenance:
             pytest.skip(f"{rel} is not in this machine's library")
         assert acquired_provenance(doc, LIBRARY, make, "t") == []
         assert acquired_provenance(doc.with_name(doc.name + ".txt"), LIBRARY, make, "t") == []
+
+
+class TestAJsonReferrerLinksByExactValue:
+    """Operator, 2026-09-23: KTM's owner's manuals live on a generic Azure
+    CDN host, which is not a KTM host. They pass E11 through ktm.com's own
+    bikemanuals.manuals.json, which names each PDF by exact URL — the way
+    SYM's Dropbox manual passes through SYM's page."""
+
+    CDN = "https://azwecdnepstoragewebsiteuploads.azureedge.net/"
+    AT = ("https://www.ktm.com/en-us/service/manuals/_jcr_content/root/responsivegrid_1_col/"
+          "bikemanuals.manuals.json?modelName=390+Duke+2024")
+    # The shape of ktm.com's response (two of its rows, verbatim).
+    PAGE = json.dumps({"status": {"success": True, "messages": []}, "data": {"manuals": [
+        {"modelName": "390 Duke 2024", "title": "390 Duke 2024 EU (en) - 2024",
+         "link": CDN + "24_3214960_en_OM.pdf"},
+        {"modelName": "390 Duke 2024", "title": "390 Duke 2024 US (en) - 2024",
+         "link": CDN + "24_3214961_en_OM.pdf"}]}}, indent=2).encode()
+
+    @pytest.mark.parametrize("url,ok", [
+        (CDN + "24_3214961_en_OM.pdf", True),
+        (CDN + "24_3214960_en_OM.pdf", True),
+        (CDN + "25_9999999_en_OM.pdf", False),                    # same CDN, not listed
+        ("https://azwecdnepstoragewebsiteuploads.azureedge.net.example.com/24_3214961_en_OM.pdf", False),
+        ("https://otherstorage.azureedge.net/24_3214961_en_OM.pdf", False),
+        ("24_3214961_en_OM.pdf", False),                          # exact: a value is never resolved
+    ])
+    def test_a_json_value_links_by_exact_url(self, url, ok):
+        from entry_check import links_to
+        assert links_to(self.PAGE, self.AT, url) is ok
+
+    def test_a_relative_json_value_is_not_resolved(self):
+        from entry_check import links_to
+        page = json.dumps({"link": "/files/manual.pdf"}).encode()
+        assert not links_to(page, "https://www.ktm.com/x.json", "https://www.ktm.com/files/manual.pdf")
+
+    def test_html_is_still_read_as_html(self):
+        from entry_check import links_to
+        page = b'<a href="/content/manual.pdf">Manual</a>'
+        assert links_to(page, "https://www.ktm.com/service.html", "https://www.ktm.com/content/manual.pdf")
+
+    def test_the_real_390_duke_manual_passes_and_an_unlisted_cdn_file_fails(self, tmp_path):
+        """On the real files: the saved PDF passes E11 through ktm.com's JSON;
+        the same PDF recorded under a CDN URL the JSON does not list fails."""
+        import shutil
+        from entry_check import acquired_provenance
+        from library_index import LIBRARY
+        doc = LIBRARY / "acquired" / "KTM" / "24_3214961_en_OM.pdf"
+        if not doc.is_file():
+            pytest.skip("the KTM manual is not in this machine's library")
+        assert acquired_provenance(doc, LIBRARY, "KTM", "t") == []
+        side = json.loads((doc.parent / (doc.name + ".acquired.json")).read_text())
+        ref = LIBRARY / side["referrer"]["path"]
+        lib = tmp_path / "lib"
+        for p in (doc, ref):
+            (lib / p.relative_to(LIBRARY)).parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy(p, lib / p.relative_to(LIBRARY))
+        moved = dict(side, url=self.CDN + "25_9999999_en_OM.pdf", final_url=self.CDN + "25_9999999_en_OM.pdf")
+        (lib / "acquired" / "KTM" / (doc.name + ".acquired.json")).write_text(json.dumps(moved))
+        fails = acquired_provenance(lib / "acquired" / "KTM" / doc.name, lib, "KTM", "t")
+        assert fails and "does not link to" in fails[0], fails
 
 
 class TestTheReferrerLinkIsResolvedLikeABrowser:

@@ -2166,3 +2166,39 @@ The real rows count three ways: "centrifugal", "V-belt", and "automatic"
 beside "transmission". So the break drops all three together, and the Zip
 50 test fails (1). Each word also has its own case in
 `test_each_named_mechanism_is_a_line`.
+
+### 2026-09-23 — KTM through the referrer, not the CDN host (operator decision)
+
+**Decision (operator):** `azwecdnepstoragewebsiteuploads.azureedge.net`
+is a generic Azure address. It may carry the group's other brands, and a
+lapsed endpoint name can be claimed by someone else. ktm.com's own manuals
+JSON already names each PDF by exact URL, and E11 failed it only because
+`links_to` reads HTML href/src.
+
+**Done:**
+- `links_to`: when the referrer parses as JSON (an object or a list), it
+  links to a URL only if one of its string values, at any depth, equals
+  that URL (`_same_url`). The value is never resolved against the page.
+  HTML is read as before.
+- `MAKER_HOSTS["KTM"]` is back to `("ktm.com",)`, with a comment saying
+  why the CDN host is not there.
+
+**Controls:**
+- The real 390 Duke 2024 PDF (`acquired/KTM/24_3214961_en_OM.pdf`) and
+  its derived text pass E11 through the saved ktm.com JSON.
+- The same bytes recorded under an unlisted CDN URL
+  (`…/25_9999999_en_OM.pdf`), with the same referrer, fail: "does not
+  link to".
+- These also fail: a lookalike CDN host, a sibling `otherstorage.azureedge.net`,
+  a bare file name, a relative JSON value, and the CDN host as a KTM host.
+
+**Tests:** `TestAJsonReferrerLinksByExactValue` (9); the flipped case in
+`test_the_owners_manual_hosts`. The real-file tests skip on a machine
+without the library.
+
+**Break-it**, each part reverted on its own; every one is caught:
+- the JSON branch removed → 4 fail;
+- JSON values resolved against the page → 1;
+- a substring match → 2;
+- top-level values only → 4;
+- the CDN host put back → 2.

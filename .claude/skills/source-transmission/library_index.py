@@ -42,11 +42,10 @@ MAKER_HOSTS: dict[str, tuple[str, ...]] = {
     # Yamaha's Owner's Manual Library from acquired/Yamaha/models_*_specs.html (yamahamotorsports.com).
     "Yamaha": ("yamahamotorsports.com", "yamaha-motor.com", "library.ymcapps.net"),
     "Suzuki": ("suzukicycles.com",),
-    # The Azure CDN host served the 390 Duke 2024 owner's manual PDF (24_3214961_en_OM.pdf, 2026-09-23).
-    # Listed as that manual's link by ktm.com's own bikemanuals.manuals.json
-    # (acquired/KTM/en-us_service_manuals__jcr_content_root_responsivegrid_1_col_bikemanuals.manuals.json),
-    # the data endpoint named by ktm.com/en-us/service/manuals.html.
-    "KTM": ("ktm.com", "azwecdnepstoragewebsiteuploads.azureedge.net"),
+    # Not KTM's Azure CDN host (azwecdnepstoragewebsiteuploads.azureedge.net): a generic address that
+    # may carry other brands. Its manuals pass as a referrer's link — ktm.com's own
+    # bikemanuals.manuals.json names each PDF by exact URL (operator, 2026-09-23).
+    "KTM": ("ktm.com",),
     "Triumph": ("triumphmotorcycles.com",),
     "MV Agusta": ("mvagusta.com",), "Zero": ("zeromotorcycles.com",),
     "BMW": ("bmw-motorrad.com", "bmwmotorcycles.com"), "LiveWire": ("livewire.com",),

@@ -134,3 +134,12 @@ and `azwecdnepstoragewebsiteuploads.azureedge.net` (KTM: it served the
 `bikemanuals.manuals.json`). Each is an exact host, not its parent
 domain. No Triumph host: its handbook download returned 403. Lookalikes
 still fail.
+
+## 2026-09-23 — KTM's manuals pass through ktm.com's JSON, not a CDN host (operator)
+
+The Azure CDN host comes back out of `MAKER_HOSTS`. It is a generic
+address that may carry other brands, and a lapsed endpoint name can be
+claimed by someone else. `links_to` now reads a JSON referrer: a string
+value equal to the URL, exact and never resolved, counts as a link. So
+ktm.com's own `bikemanuals.manuals.json` vouches for each PDF it names,
+the way SYM's page vouches for the Dropbox-hosted Wolf 150 manual.
