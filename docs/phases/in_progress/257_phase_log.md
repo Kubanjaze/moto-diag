@@ -1937,3 +1937,66 @@ and the Zip 50 page is sent.
 **Break-it:**
 - each word dropped on its own → its own case fails (1 each);
 - automatic and V-belt dropped together → the Zip 50 test fails.
+
+### 2026-09-23 — How each owner's-manual list is served: one script fetch per maker (Yamaha, Triumph, KTM), no model
+
+**Method.** `d7_probe.py --targets`, one GET per maker for the script
+named by the page fetched in the previous probe. No cookies, no model.
+Run `~/.cache/motodiag/d7/20260923_175344/`. All three returned 200.
+E11 was checked with `library_index.maker_host`, the function E11 calls.
+
+**Yamaha:** `https://library.ymcapps.net/library/om/app/index.js?v=1.8.0`
+(17,242 B).
+- The app calls an API at
+  `https://parts.yamaha-motor.co.jp/ypec_b2c/services/omb2c/`, through
+  `callAPI` (in `common.js`, not fetched; method and headers not
+  measured).
+- The model-name search is a chain: `product_list/` (with
+  `baseCode`/`langId`) → `model_name_list/` (productId, displacementType)
+  → `model_year_list/` → **`model_list/`**. The last is the manual list:
+  `calledCode=1`, modelName, nickname, modelYear, the user context from
+  `product_list`, and `publicationLang`. `model_list_pub/` searches by
+  LIT number instead.
+- Each result carries `pdffileURL` and `htmlfileURL`. **No PDF URL is in
+  the script**, and one needs the API chain.
+- E11: `parts.yamaha-motor.co.jp` is **not** a Yamaha maker host
+  (`MAKER_HOSTS` has yamahamotorsports.com and yamaha-motor.com). The PDF's
+  host is unknown. No maker page holds the PDF link, because the app builds
+  it, so the referrer route does not apply either. **E11 would refuse it
+  as it stands.**
+
+**Triumph:** `https://triumphtechnicalinformation.com/assets/index-C0_sI8-w.js`
+(371,837 B).
+- A Vue app. Its handbook store calls **`GET /handbooks/documents`**
+  (params) for the list, plus `/handbooks/products/model-names`,
+  `…/model-years`, `…/product-types`, `…/product-ranges`,
+  `/handbooks/product-details/{id}`, `/handbooks/products/search/{serial}`
+  and `/handbooks/single-product-details`.
+- Documents open at the route `/handbooks/document/:id`, and their content
+  is fetched as topics (`/documents/{id}/{topic}`, `/documents/{id}/toc`).
+  A document can have `format === "application/pdf"`.
+- The axios client's base URL is set in `assets/axios-Ce3DS95U.js`, not
+  fetched, so the list's absolute URL is not known. **No PDF URL is in the
+  script.**
+- E11: `triumphtechnicalinformation.com` is **not** a Triumph maker host
+  (only triumphmotorcycles.com). triumphmotorcycles.com/owners/manuals
+  links the `/handbooks` landing page, not a document. **E11 would refuse
+  it as it stands.**
+
+**KTM:** `https://www.ktm.com/etc.clientlibs/ktm-common/clientlibs/ktm-react.lc-…-lc.min.js`
+(157,377 B).
+- **The wrong script.** It is a webpack vendor chunk (React, react-helmet):
+  no "manual", no ".json", no `data-manualsurl`. The `react-bikemanuals`
+  component is in one of the page's other clientlibs, most likely
+  `ktm-common/clientlibs/ktm.lc-…` or `ktm-common/frontend2/brands/ktm.lc-…`.
+- **Not fetched:** the budget was one script per maker. The list endpoint
+  is still the page's own `data-manualsurl`
+  (`…/bikemanuals.manuals.json`), which answered "Bad Request" with no
+  parameters.
+- The same page links `https://print.ktm.com/` ("print on demand portal")
+  for older owner's manuals.
+- E11: `ktm.com` and `print.ktm.com` **are** KTM maker hosts, so a PDF
+  served from either would pass the host rule.
+
+**Nothing sourced.** Every open question above needs either a further
+fetch or an operator decision on `MAKER_HOSTS`, which would widen E11.
