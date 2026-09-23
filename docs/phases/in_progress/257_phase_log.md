@@ -1233,3 +1233,20 @@ has precise push rod actuation of the pressure plate for a light lever pull
 and a consistent release point." The six reverted Suzuki pages have 0
 qualifying sentences under the widened rule; they stay unknown. 492 pass;
 244G clean.
+
+### 2026-09-23 — SV650 blocked: Subconscious refused service (nothing run, nothing written)
+
+The source prompt now states E12 (commit "the source prompt states E12…" —
+its message says 49 source-stage tests passed; the run showed **44**; the
+message is wrong, the tests passed). SV650's excerpts do contain the
+qualifying sentence ("…for a light pull and consistent release point",
+spec excerpt lines 357–437 of the SV650 ABS page).
+
+Run `Suzuki_20260923_121034` **stopped systemically before any model
+served**: `subc` returned "Failed to authenticate. API Error: 403
+organization access is suspended; the entitlement must be restored before
+requests are served; check billing and limits." `subc usage` minutes
+earlier showed 53.5M / 60M tokens, 6.5M remaining — so this is an account
+entitlement, not the daily quota. The stop fired as designed (source-stage
+error, usage unrecorded); ready_to_write empty. **Operator action needed
+on the Subconscious account** before SV650 or any further batch can run.
