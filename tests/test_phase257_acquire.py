@@ -10,6 +10,7 @@ exactly the convention in INBOX_README and rejects each departure from it.
 """
 from __future__ import annotations
 
+import hashlib
 import json
 import pathlib
 import sys
@@ -298,3 +299,59 @@ class TestBMWIndex:
                   self.BASE + "/PDF/01408405040_ZBA_Zertifikate_01.pdf": (200, b"%PDF-1.4 certificates\n")})
         r = A.fetch("BMW", fetcher=A.Fetcher(rate=0, transport=t), library=lib, spellings=["F 750 GS"])
         assert r["matched"]["F 750 GS"]["url"].endswith("F_0B11_RM_0321_01.pdf")
+
+
+class TestAPostIsRecordedSoItCanBeRepeated:
+    """Operator, 2026-09-23: Yamaha's Owner's Manual Library lists manuals by
+    JSON POST. The fetcher sends it, and the sidecar records the method,
+    headers and body, so the list can be fetched again from its record."""
+
+    API = "https://parts.example-maker.test/omb2c/model_list/"
+    BODY = {"productId": "10", "modelYear": "2009", "publicationLang": "02"}
+    LIST = b'{"modelDataCollection": [{"pdffileURL": "//library.example.test/om/x.pdf"}]}'
+
+    def _post_site(self):
+        sent: list[tuple] = []
+
+        def transport(url, headers, data=None):
+            sent.append((url, dict(headers), data))
+            if url.endswith("/robots.txt"):
+                return 404, b"", None, url
+            if data is not None and json.loads(data) == self.BODY:
+                return 200, self.LIST, None, url
+            return 400, b'{"error": "bad request"}', None, url
+        transport.sent = sent
+        return transport
+
+    def test_the_body_is_sent_as_json(self):
+        t = self._post_site()
+        row = A.Fetcher(rate=0, transport=t).post_json(self.API, self.BODY, {"Origin": "https://library.example.test"})
+        assert row["status"] == 200 and row["body"] == self.LIST
+        url, headers, data = t.sent[-1]
+        assert json.loads(data) == self.BODY and headers["Content-Type"] == "application/json"
+        assert row["request"] == {"method": "POST", "body": self.BODY,
+                                  "headers": {"Content-Type": "application/json", "Origin": "https://library.example.test"}}
+
+    def test_the_sidecar_records_the_request_and_repeats_it(self, lib):
+        t = self._post_site()
+        f = A.Fetcher(rate=0, transport=t)
+        saved = A.save("Yamaha", f.post_json(self.API, self.BODY), referrer=None, for_spellings=["Vino 125"], library=lib)
+        side = json.loads((lib / (saved["path"] + ".acquired.json")).read_text())
+        assert side["request"]["method"] == "POST" and side["request"]["body"] == self.BODY
+        again = A.Fetcher(rate=0, transport=t).post_json(side["url"], side["request"]["body"], side["request"]["headers"])
+        assert hashlib.sha256(again["body"]).hexdigest() == side["sha256"]
+
+    def test_a_get_records_get(self, lib):
+        t = site({"https://www.ktm.com/manual.pdf": (200, PDF)})
+        saved = A.save("KTM", A.Fetcher(rate=0, transport=t).get("https://www.ktm.com/manual.pdf"),
+                       referrer=None, for_spellings=["390 Duke"], library=lib)
+        side = json.loads((lib / (saved["path"] + ".acquired.json")).read_text())
+        assert side["request"] == {"method": "GET", "headers": {}, "body": None}
+
+    def test_robots_still_gates_a_post(self):
+        def transport(url, headers, data=None):
+            if url.endswith("/robots.txt"):
+                return 200, b"User-agent: *\nDisallow: /omb2c/\n", None, url
+            raise AssertionError("a disallowed POST was sent")
+        row = A.Fetcher(rate=0, transport=transport).post_json(self.API, self.BODY)
+        assert row["method"] == "robots_disallowed" and row["request"]["method"] == "POST"

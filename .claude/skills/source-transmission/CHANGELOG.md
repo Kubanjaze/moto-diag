@@ -143,3 +143,11 @@ claimed by someone else. `links_to` now reads a JSON referrer: a string
 value equal to the URL, exact and never resolved, counts as a link. So
 ktm.com's own `bikemanuals.manuals.json` vouches for each PDF it names,
 the way SYM's page vouches for the Dropbox-hosted Wolf 150 manual.
+
+## 2026-09-23 — the fetcher POSTs, and every sidecar records its request (operator)
+
+`Fetcher.post_json` sends a JSON POST (Yamaha's Owner's Manual Library
+lists manuals that way) under the same robots.txt check, rate and cap as
+`get`. Every row, and so every sidecar `save()` writes, now carries
+`request` (method, headers, body as sent), so a POST-fetched list can be
+fetched again from its record alone.

@@ -15,7 +15,8 @@ Every file lands in `~/research/motodiag/acquired/<Make>/` with a sidecar
 `<file>.acquired.json` that this script writes: url, final_url,
 http_status, content_type, bytes, sha256, fetched_at, supplied_by,
 referrer (url, path, sha256 of the maker page that linked it, or null),
-for_spellings. Each original gets a derived text (`<file>.txt`,
+for_spellings, request (method, headers and JSON body as sent — a POST-fetched
+list can be repeated from its record). Each original gets a derived text (`<file>.txt`,
 `entry_check.derive_text`) whose sidecar names its parent; E11 re-derives
 it and compares. The sandbox denies every model stage writes here.
 
@@ -66,7 +67,8 @@ class Fetcher:
         self.robots: dict[str, urllib.robotparser.RobotFileParser | None] = {}
         self.log: list[dict] = []
 
-    def _raw(self, url: str, headers: dict | None) -> tuple[int | None, bytes, str | None, str]:
+    def _raw(self, url: str, headers: dict | None,
+             data: bytes | None = None) -> tuple[int | None, bytes, str | None, str]:
         if self.count >= self.cap:
             raise CapReached(f"{self.cap} fetches")
         wait = self.rate - (time.monotonic() - self._last)
@@ -75,8 +77,9 @@ class Fetcher:
         self.count += 1
         self._last = time.monotonic()
         if self.transport:
-            return self.transport(url, headers or {})
-        req = urllib.request.Request(url, headers={"User-Agent": UA, "Accept": "*/*", **(headers or {})})
+            return self.transport(url, headers or {}) if data is None else self.transport(url, headers or {}, data)
+        # With data, urllib sends a POST.
+        req = urllib.request.Request(url, data=data, headers={"User-Agent": UA, "Accept": "*/*", **(headers or {})})
         try:
             with self.opener.open(req, timeout=TIMEOUT) as r:
                 return r.status, r.read(MAX_BYTES), None, r.geturl()
@@ -101,13 +104,24 @@ class Fetcher:
         return rp is None or rp.can_fetch(UA, url)
 
     def get(self, url: str, headers: dict | None = None) -> dict:
+        return self._fetch(url, headers or {}, None)
+
+    def post_json(self, url: str, payload: dict, headers: dict | None = None) -> dict:
+        """A JSON POST, as a maker page's own script sends one (Yamaha's
+        Owner's Manual Library API)."""
+        return self._fetch(url, {"Content-Type": "application/json", **(headers or {})}, payload)
+
+    def _fetch(self, url: str, headers: dict, payload: dict | None) -> dict:
         if not self.allowed(url):
             row = {"url": url, "status": None, "method": "robots_disallowed", "body": b"", "final_url": url}
         else:
-            status, body, err, final = self._raw(url, headers)
+            data = None if payload is None else json.dumps(payload).encode("utf-8")
+            status, body, err, final = self._raw(url, headers, data)
             method, _ = classify(status, body, err, final, None if body[:5] != b"%PDF-" else "")
             row = {"url": url, "status": status, "error": err, "final_url": final, "body": body, "method": method,
                    "fetched_at": dt.datetime.now().isoformat(timespec="seconds")}
+        # The request as sent, so the sidecar can repeat it.
+        row["request"] = {"method": "GET" if payload is None else "POST", "headers": headers, "body": payload}
         self.log.append({k: v for k, v in row.items() if k != "body"})
         return row
 
@@ -175,7 +189,7 @@ def save(make: str, row: dict, *, referrer: dict | None, for_spellings: list[str
     side = {"url": row["url"], "final_url": row["final_url"], "http_status": row.get("status"),
             "bytes": len(row["body"]), "sha256": sha, "fetched_at": row.get("fetched_at"),
             "supplied_by": supplied_by, "referrer": referrer, "for_spellings": sorted(for_spellings),
-            "method": row["method"]}
+            "method": row["method"], "request": row.get("request")}
     (folder / (name + ".acquired.json")).write_text(json.dumps(side, indent=1) + "\n", encoding="utf-8")
     rel = path.relative_to(library).as_posix()
     text = derive_text(path)

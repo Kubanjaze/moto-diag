@@ -2202,3 +2202,54 @@ without the library.
 - a substring match → 2;
 - top-level values only → 4;
 - the CDN host put back → 2.
+
+### 2026-09-23 — POST in acquire.py; the Vino 125 list and manual re-fetched through it (operator decision)
+
+**Why.** The Yamaha sidecars said `supplied_by: acquire.py`, but the POST
+had run in a scratch subclass, and nothing recorded the request, so the
+list could not be repeated from its record.
+
+**Done:**
+- `acquire.Fetcher.post_json(url, payload, headers)`. It shares `_fetch`
+  with `get`: the same robots.txt check, rate and cap, and a 403 is still
+  never retried.
+- `_raw` passes the body to urllib, which makes the request a POST.
+- Every row carries `request` (`method`, `headers`, `body`), and `save()`
+  writes it into the sidecar. A GET records `{"method": "GET", "headers":
+  {...}, "body": null}`.
+- The module docstring lists the new field.
+
+**Re-fetch:**
+- The 8 scratch-era files (the list, the PDF, their derived texts and all
+  four sidecars) were **moved out of the library**, not deleted, to
+  `~/.cache/motodiag/om_probe/superseded_Yamaha_scratch_POST_20260923/`.
+  Nothing else referred to them. `save()` dedupes by content hash, so it
+  would otherwise have kept the old sidecars.
+- The Vino 125 chain was run through acquire only: `product_list` →
+  `model_year_list` (2009, 2005, 2004) → `model_list` (2009,
+  5YR-F8199-15) → the PDF. 6 fetches, robots.txt included.
+- **The PDF's sha256 is `3c14851382b799b13e58395945daee10967c2b215326e7402926f9486bcf6f66`,
+  unchanged.** The list's is `805a1811…ef9`, also unchanged.
+- The list's sidecar records `POST`, the Origin and Referer headers, and
+  the 14-field body.
+- **Repeated from that record alone**, the list came back 200 with the
+  same sha256.
+- The PDF and its derived text pass E11: host `library.ymcapps.net`,
+  referrer the saved list.
+
+**Tests** (`test_phase257_acquire.py::TestAPostIsRecordedSoItCanBeRepeated`,
+4):
+- the body is sent as JSON with its content type, and the row records it;
+- the sidecar records the request, and repeating it gives the same bytes;
+- a GET records GET;
+- robots.txt still gates a POST.
+
+**Break-it**, each part reverted on its own; every one is caught:
+- the body never passed on → 1 fail;
+- the body not JSON-encoded → 2;
+- the request not in the row → 4;
+- the method always GET → 3;
+- the request not in the sidecar → 2.
+
+The urllib path (`Request(data=…)`) is not reached by the tests, which
+use a fake transport. Its control is the live re-fetch above.
