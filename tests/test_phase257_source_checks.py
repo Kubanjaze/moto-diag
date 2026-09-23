@@ -255,6 +255,16 @@ class TestSpellingsThatCannotBeAMachine:
         ("Aprilia", "approximately 2016 to 2020", "prose"),
         ("Triumph", "positive earth through 1978", "prose"),
         ("KTM", "S 1000 RR by type code", "prose"),
+        # Ducati's engine families: an engine is not a machine (F135 group B).
+        ("Ducati", "Testastretta", "engine_family"), ("Ducati", "Desmoquattro", "engine_family"),
+        ("Ducati", "Superquadro", "engine_family"), ("Ducati", "Desmodue", "engine_family"),
+        ("Ducati", "Desmoquattro 16-valve", "engine_family"), ("Ducati", "Testastretta MY2010", "engine_family"),
+        ("Ducati", "998 Testastretta", "engine_family"),
+        # Another make's machine, attached by one shared row (#912, #886).
+        ("Ducati", "S 1000 XR", "other_make_model"), ("Aprilia", "S 1000 XR", "other_make_model"),
+        ("Moto Guzzi", "S 1000 XR", "other_make_model"), ("Triumph", "S 1000 XR", "other_make_model"),
+        ("KTM", "S 1000 XR", "other_make_model"), ("KTM", "Testastretta MY2010", "other_make_model"),
+        ("BMW", "Testastretta MY2010", "other_make_model"), ("MV Agusta", "Testastretta MY2010", "other_make_model"),
     ])
     def test_the_class(self, make, spelling, cls):
         from census import not_a_machine
@@ -272,6 +282,10 @@ class TestSpellingsThatCannotBeAMachine:
         ("Ducati", "851"), ("Ducati", "888"), ("Vespa", "946"), ("Piaggio", "946"),
         ("MV Agusta", "675"), ("MV Agusta", "910"), ("MV Agusta", "982"), ("MV Agusta", "1078"),
         ("MV Agusta", "750"), ("MV Agusta", "998"),
+        # The entries above are make-scoped: under its own make the BMW is a
+        # machine, and Ducati's own machines stay machines.
+        ("BMW", "S 1000 XR"), ("Ducati", "Panigale V4"), ("Ducati", "Multistrada 1200"),
+        ("Ducati", "Monster S4R"),
     ])
     def test_a_machine_name_is_not_classed(self, make, spelling):
         """Including a marque's own model under its own marque, and a

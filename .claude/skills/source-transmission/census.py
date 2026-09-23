@@ -16,6 +16,8 @@ the ones that cannot, by named lists (never by shape alone — see the
 | `other_marque` | starts with another marque's name | `Gilera` under six makes, Ducati `Guzzi V85` |
 | `marque_name` | the make's own name or short name | MV Agusta `MV` |
 | `prose` | junction prose (F135): a named non-model word | `2020 service manual`, `approximately 2016 to 2020` |
+| `engine_family` | named in NOT_A_MACHINE_NAMED: an engine, not a machine | Ducati `Testastretta`, `Superquadro` |
+| `other_make_model` | named: another make's machine attached by a shared row | Ducati `S 1000 XR` — not BMW's |
 
 They stay in the census count (the figure of record) and are reported as
 their own count; the orchestrator gives them `no_evidence` without a
@@ -95,6 +97,30 @@ NOT_A_MODEL_NUMBER: dict[tuple[str, str], str] = {
     ("Aprilia", "1099cc"): "displacement (#674)",
 }
 
+# Named, make-scoped, one reason each (operator decision 2026-09-23). The
+# same spelling under its own make is a machine: (BMW, "S 1000 XR") is not
+# listed and stays one.
+NOT_A_MACHINE_NAMED: dict[tuple[str, str], tuple[str, str]] = {
+    ("Ducati", "Testastretta"): ("engine_family", "Ducati's liquid-cooled twin family (#806–#810, #823–#825)"),
+    ("Ducati", "Desmoquattro"): ("engine_family", "Ducati's 4-valve twin family (#806–#810, #818, #819, #901)"),
+    ("Ducati", "Superquadro"): ("engine_family", "the 1199/1299/899/959 Panigale engine (#806–#810, #837, #841)"),
+    ("Ducati", "Desmodue"): ("engine_family", "Ducati's air-cooled 2-valve family (#806–#810)"),
+    ("Ducati", "Desmoquattro 16-valve"): ("engine_family", "'Desmoquattro 16-valve — 851, 888, 748, …' (#881)"),
+    ("Ducati", "Testastretta MY2010"): ("engine_family", "an engine generation (#886)"),
+    ("Ducati", "998 Testastretta"): ("engine_family", "the S4RS's engine: '996 Desmoquattro and 998 Testastretta' (#819)"),
+    # Row #912 reads 'BMW S 1000 R, S 1000 XR, S 1000 RR by type code; Ducati
+    # generally' and is attached to five other makes.
+    ("Ducati", "S 1000 XR"): ("other_make_model", "BMW's machine, from #912"),
+    ("Aprilia", "S 1000 XR"): ("other_make_model", "BMW's machine, from #912"),
+    ("Moto Guzzi", "S 1000 XR"): ("other_make_model", "BMW's machine, from #912"),
+    ("Triumph", "S 1000 XR"): ("other_make_model", "BMW's machine, from #912"),
+    ("KTM", "S 1000 XR"): ("other_make_model", "BMW's machine, from #912"),
+    # Row #886, a Ducati engine generation, is attached to three other makes.
+    ("KTM", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
+    ("BMW", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
+    ("MV Agusta", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
+}
+
 
 def _words(s: str) -> list[str]:
     return re.sub(r"[^a-z0-9]+", " ", s.lower()).split()
@@ -102,6 +128,9 @@ def _words(s: str) -> list[str]:
 
 def not_a_machine(make: str, spelling: str) -> str | None:
     """The class of a spelling that cannot be a machine name, or None."""
+    named = NOT_A_MACHINE_NAMED.get((make, spelling.strip()))
+    if named:
+        return named[0]
     w = _words(spelling)
     if not w:
         return "prose"
@@ -158,7 +187,8 @@ def main(argv: list[str]) -> int:
         print(json.dumps(result, indent=1))
     else:
         cls = classes(db, make)
-        kinds = ("machine", "bare_number", "other_marque", "marque_name", "prose")
+        kinds = ("machine", "bare_number", "other_marque", "marque_name", "prose", "engine_family",
+                 "other_make_model")
         print(f"{'':20s} {'total':>5s} " + " ".join(f"{k:>12s}" for k in kinds))
         for mk, entries in result.items():
             print(f"{mk:20s} {len(entries):5d} " + " ".join(f"{len(cls[mk].get(k, [])):12d}" for k in kinds))

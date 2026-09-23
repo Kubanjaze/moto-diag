@@ -600,3 +600,24 @@ E11 not called (9); host matched as a substring (3); candidates skips E11
 (1 — a first version of that test was itself wrong: it failed at
 baseline because SYM's own page, correctly, is read too; corrected, then
 the mutation re-run). 275 pass across 257 + 255D; 244G clean.
+
+### 2026-09-23 — census: engine families and other makes' machines, named (operator decision 1)
+
+`census.NOT_A_MACHINE_NAMED`, make-scoped, one reason and its junction
+rows each, never by shape. `engine_family` (7): Ducati Testastretta,
+Desmoquattro, Superquadro, Desmodue, Desmoquattro 16-valve, Testastretta
+MY2010, 998 Testastretta (the S4RS's engine, #819). `other_make_model`
+(8): "S 1000 XR" under Ducati, Aprilia, Moto Guzzi **and Triumph and KTM**
+— all five from the one row #912 ("BMW S 1000 R, S 1000 XR, S 1000 RR by
+type code; Ducati generally") — and "Testastretta MY2010" under KTM, BMW
+and MV Agusta (row #886, a Ducati engine). Triumph, KTM and the #886
+entries go beyond the operator's named list on the same evidence;
+flagged for review. Not classed, and scoped out by the decision: KTM
+LC8 / LC8c / LC8 V-twin, BMW Boxer / ShiftCam / Oilhead / hexhead — also
+engine families.
+
+Positive controls: (BMW, "S 1000 XR"), Ducati Panigale V4, Multistrada
+1200, Monster S4R stay machines. The 15 class tests were seen to fail
+before the entries existed (15 failed). Break-it: the lookup unscoped
+from the make → 4 fail, including the BMW control. Classed now 109 (was
+94); **machine names 491** (was 506). 294 pass across 257 + 255D.
