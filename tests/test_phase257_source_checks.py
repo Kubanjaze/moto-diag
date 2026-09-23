@@ -237,3 +237,42 @@ class TestCensus:
 
     def test_nothing_unknown_is_an_empty_census_not_an_error(self, tmp_path):
         assert census(_db(tmp_path, [(1, "Honda", "PCX 150")])) == {}
+
+
+class TestSpellingsThatCannotBeAMachine:
+    """Census classes (the operator's list): bare numbers, another marque's
+    name — "Gilera" is under six makes — the make's own name, and junction
+    prose (F135). Named lists, each case from the real junction."""
+
+    @pytest.mark.parametrize("make,spelling,cls", [
+        ("Ducati", "1000", "bare_number"), ("MV Agusta", "20", "bare_number"),
+        ("Aprilia", "1077cc", "bare_number"), ("Ducati", "06", "bare_number"),
+        ("Ducati", "Gilera", "other_marque"), ("KTM", "Husqvarna", "other_marque"),
+        ("Triumph", "Moto Morini", "other_marque"), ("Ducati", "Guzzi V85", "other_marque"),
+        ("Ducati", "MV", "other_marque"), ("MV Agusta", "MV", "marque_name"),
+        ("Harley-Davidson", "2020 service manual", "prose"),
+        ("Aprilia", "approximately 2016 to 2020", "prose"),
+        ("Triumph", "positive earth through 1978", "prose"),
+        ("KTM", "S 1000 RR by type code", "prose"),
+    ])
+    def test_the_class(self, make, spelling, cls):
+        from census import not_a_machine
+        assert not_a_machine(make, spelling) == cls
+
+    @pytest.mark.parametrize("make,spelling", [
+        ("Moto Guzzi", "Guzzi V85"), ("Yamaha", "Bolt"), ("Kawasaki", "ZX-10R"),
+        ("SYM", "SYMBA 110"), ("Ducati", "1260 S"), ("Triumph", "Speed Triple"),
+        ("MV Agusta", "Brutale"), ("KTM", "LC8"), ("Honda", "MVX250F"),
+    ])
+    def test_a_machine_name_is_not_classed(self, make, spelling):
+        """Including a marque's own model under its own marque, and a
+        spelling that merely starts with the letters of one (SYMBA)."""
+        from census import not_a_machine
+        assert not_a_machine(make, spelling) is None
+
+    def test_the_census_reports_them_as_their_own_count(self, tmp_path):
+        from census import classes
+        db = _db(tmp_path, [(1, "Ducati", "1000"), (2, "Ducati", "Gilera"),
+                            (3, "Ducati", "Panigale V4"), (4, "Ducati", "2020 service manual")])
+        assert classes(db) == {"Ducati": {"bare_number": ["1000"], "other_marque": ["Gilera"],
+                                          "machine": ["Panigale V4"], "prose": ["2020 service manual"]}}

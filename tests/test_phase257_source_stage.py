@@ -221,3 +221,18 @@ class TestTheTokenStop:
 
     def test_the_ceiling_is_the_operators(self):
         assert O.TOKEN_STOP_PER_SPELLING == 150_000
+
+
+class TestNotAMachineIsNotSearched:
+    def test_a_classed_spelling_costs_nothing_and_is_reported(self, run_with, monkeypatch):
+        import candidates
+        asked = []
+        real = candidates.candidates
+        monkeypatch.setattr(candidates, "candidates", lambda sp, *a, **k: asked.append(list(sp)) or real(sp, *a, **k))
+        fake = Fake(findings=[_found()])
+        s = run_with(fake, ["Trail 250", "1000", "Gilera"])
+        assert asked == [["Trail 250"]]
+        assert s["not_a_machine"] == {"1000": "bare_number", "Gilera": "other_marque"}
+        assert s["sent_to_model"] == ["Trail 250"]
+        notes = {f["spelling"]: f.get("note", "") for f in s["findings"]}
+        assert "not a machine name (bare_number)" in notes["1000"]

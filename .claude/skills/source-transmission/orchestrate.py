@@ -323,23 +323,28 @@ Findings:
 {findings}"""
 
 
-def no_evidence(make: str, spelling: str) -> dict:
-    """The finding for a spelling no library file names. No model is asked."""
-    return {"make": make, "spelling": spelling, "outcome": "no_evidence", "transmission": None,
-            "note": "candidates.py: no library document names this spelling; the model was not called"}
+def no_evidence(make: str, spelling: str, unnamed: str | None = None) -> dict:
+    """The finding for a spelling nothing is sent for. No model is asked."""
+    note = (f"census: not a machine name ({unnamed}); not searched, the model was not called" if unnamed
+            else "candidates.py: no library document names this spelling; the model was not called")
+    return {"make": make, "spelling": spelling, "outcome": "no_evidence", "transmission": None, "note": note}
 
 
 def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     """Run one make end to end. Returns the summary; never edits the repository."""
     import candidates
+    import census
     import entry_check
     r = make_run(RUNS_ROOT, make)
     summary = {"make": make, "spellings": spellings, "run": str(r["run"]),
                "started": dt.datetime.now().isoformat(timespec="seconds")}
-    cands = candidates.candidates(spellings, LIBRARY, make=make)
+    # A spelling that cannot be a machine name is not searched for, let alone sent.
+    unnamed = {s: c for s in spellings if (c := census.not_a_machine(make, s))}
+    names = [s for s in spellings if s not in unnamed]
+    cands = candidates.candidates(names, LIBRARY, make=make) if names else {}
     (r["run"] / "candidates.json").write_text(json.dumps(cands, indent=1), encoding="utf-8")
-    sent = [s for s in spellings if cands.get(s)]
-    findings = [no_evidence(make, s) for s in spellings if s not in sent]
+    sent = [s for s in names if cands.get(s)]
+    findings = [no_evidence(make, s, unnamed.get(s)) for s in spellings if s not in sent]
     summary["source_error"] = None
     stages: dict[str, dict] = {}
     if sent:
@@ -383,7 +388,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
-    summary.update({"sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
+    summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
                     "ready_to_write": [] if over else [f for f in passed if f["spelling"] in kept],
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")

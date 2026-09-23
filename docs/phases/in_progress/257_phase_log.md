@@ -316,3 +316,63 @@ was given real front matter); make-adjacency off (5); E2 trusts the
 model's kind (3); unindexed defaults to maker (2); Cyclepedia rule removed
 (2); the weak rule off in candidates (2). 199 pass across 257 + 255D
 contracts; 244G clean.
+
+### 2026-09-23 — census classes: spellings that cannot be a machine (fix 4); coverage re-measured
+
+`census.not_a_machine(make, spelling)` by named lists: `bare_number`
+(digits, optionally `cc`), `other_marque` (starts with another marque's
+name — `MARQUES`: the junction's makes plus Gilera, Husqvarna, Moto
+Morini, Cagiva, Benelli, Bimota), `marque_name` (the make's own name, MV
+Agusta `MV`), `prose` (F135: `PROSE_WORDS`, each seen in the junction).
+The census count stays the figure of record (600); `census.py` prints the
+classes per make. `batch` gives a classed spelling `no_evidence` with its
+class in the note, **searches nothing and calls nothing**, and lists it
+under `not_a_machine` in the summary.
+
+**Classed: 116 of 600** — bare_number 46, other_marque 39, prose 30,
+marque_name 1. **Operator decision needed:** `bare_number` takes real
+machines — Ducati's superbikes are *named* by number (916, 748, 749, 848,
+851, 888, 899, 959, 996, 998, 999, 1098, 1198, 1299) and Vespa/Piaggio
+`946` is a model. Built as specified; a named per-make exception list
+would return them to `machine`, where strict E4 already demands
+"Ducati 916" (make-adjacent) before anything counts.
+
+Tests: source checks 45 → 70, source stage 15 → 16. **Break-it:** bare
+numbers off (6); own marque as other (2); prose off (5); batch ignores
+the classes (1); marque matched as a prefix, not a word — **survived**
+until a test used Honda `MVX250F` (a real Honda that begins "MV"); then 1.
+
+**Coverage, re-measured with the classes separated and every filter
+above in place** (raw output `~/.cache/motodiag/coverage_20260923.txt`).
+"excerpt" = candidates.py returns at least one; "gearbox" = at least one
+excerpt carries a gearbox word. Both are upper bounds on what a model
+could be SENT, not findings — several Honda hits are model-list pages.
+
+| make | total | classed | names | excerpt | gearbox |
+|---|---|---|---|---|---|
+| Ducati | 76 | 29 | 47 | 0 | 0 |
+| Triumph | 72 | 19 | 53 | 0 | 0 |
+| KTM | 63 | 20 | 43 | 1 | 0 |
+| BMW | 49 | 9 | 40 | 4 | 0 |
+| Kawasaki | 39 | 0 | 39 | 0 | 0 |
+| Yamaha | 39 | 0 | 39 | 4 | 0 |
+| Aprilia | 37 | 13 | 24 | 0 | 0 |
+| MV Agusta | 30 | 15 | 15 | 1 | 0 |
+| Suzuki | 29 | 0 | 29 | 0 | 0 |
+| Piaggio | 28 | 1 | 27 | 4 | 2 |
+| Honda | 26 | 0 | 26 | 11 | 9 |
+| Vespa | 22 | 1 | 21 | 2 | 1 |
+| Harley-Davidson | 17 | 1 | 16 | 0 | 0 |
+| Zero | 16 | 1 | 15 | 0 | 0 |
+| Moto Guzzi | 15 | 5 | 10 | 0 | 0 |
+| Energica | 11 | 1 | 10 | 0 | 0 |
+| Kymco | 10 | 0 | 10 | 3 | 3 |
+| LiveWire | 8 | 1 | 7 | 0 | 0 |
+| Genuine | 5 | 0 | 5 | 0 | 0 |
+| SYM | 5 | 0 | 5 | 3 | 2 |
+| Damon | 3 | 0 | 3 | 0 | 0 |
+| **total** | **600** | **116** | **484** | **33** | **17** |
+
+**The library can at most answer 17 of 484 machine names (3.5%).** The
+other ~467 — every Ducati, Triumph, Kawasaki, Suzuki, Aprilia — need a
+document the library does not have. Acquisition is the bottleneck.
