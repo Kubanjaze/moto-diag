@@ -481,7 +481,7 @@ Electric motorcycle diagnostics — fundamentally different from ICE: HV safety,
 | 255C | The junction stores names the tier query cannot match | ✅ | **CLOSED 2026-09-22.** A row that NAMES a machine could not reach tier 0 for it: the junction stored whatever spelling the model column used, so six spellings of one PCX named one machine and the tier query matched none. **Corrects this row's framing** — not a marque prefix on 19% of rows, which Step 0 measured as the wrong fix (98 of 100 ARE the canonical), but **50 machines split across spellings**. The junction now stores a canonical `(make, model)` pair; the tier query matches both. PCX 150: tier `model` 2 → 11, retrieved unchanged at 166. Seven bug fixes, two migration-blocking, one indexed three rows as nothing. Schema 65 → 66, regression 8,088/0/0. Filed F135–F136. [`255C_implementation.md`](phases/completed/255C_implementation.md) · [log](phases/completed/255C_phase_log.md) |
 | 255D | Procedures as folders — closeout, finding, refute | ✅ | **CLOSED 2026-09-22.** Recurring procedures leave CLAUDE.md and become skills with assertions. **D1 ran the mechanism before anything was built on it, and halted the phase** — a skill created mid-session is not invocable, and `PreToolUse` ignores the hook's `if`, so the planned guard blocked *every* Bash command. Three folders — `closeout`, `finding`, `refute` — each with a hand-written known-bad fixture its assertion must fail on. Run against 255C, `closeout` found two real gaps and one bug in itself. CLAUDE.md 1,337 → 889 lines; 270 lines of agent-pool machinery archived after measuring that **nothing has invoked it since phase 191D**. Regression 8,130/0/0. [`255D_implementation.md`](phases/completed/255D_implementation.md) · [log](phases/completed/255D_phase_log.md) |
 | 256 | Scooter electrical (12V minimal) | 🔲 | Stator-to-battery, no FI on older carb scooters, simple wiring |
-| 257 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions |
+| 257 | The orchestrator and `/source-transmission` | 🔲 | A sandboxed headless procedure — census, acquire, extract, classify, refute, write — for the transmission lookup, one make per batch. First tranche: six spellings with maker manuals on disk. Carb service moved to 353. |
 | 258 | Gate 14 — Scooter / small displacement integration test | 🔲 | Query scooter/small bike → CVT + electrical + carb workflow |
 
 ## Track N — Specialized Workflows (Phases 259–272)
@@ -626,6 +626,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
 | 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
+| 353 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
 
 ---
 
