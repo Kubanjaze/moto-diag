@@ -4,11 +4,13 @@
 
 Planted defect for **A2**: the status line does not read Complete.
 
-### 2026-09-22 10:00 — Bug fix #1: the first one
+### 2099-01-01 10:00 — Bug fix #1: the first one
 
 **Issue.** Fabricated.
 
-Planted defect for **A4**: the Commit line is a non-answer. It names no
+Planted defect for **A4**, twice. The heading is dated 2099: later than
+the commit that recorded it, which no honest entry can be. And the Commit
+line is a non-answer. It names no
 commit, and until 255D's close-out fixes the check passed it.
 
 **Commit.** This one.

@@ -396,7 +396,7 @@ property through the projection.
 
 **Commit.** `0e438ca`.
 
-### 2026-09-22 18:05 — Bug fix #7: canonicalise stripped only the pool's own marque
+### 2026-09-22 16:25 — Bug fix #7: canonicalise stripped only the pool's own marque
 
 **Issue.** Raised by the operator's terminal check. **59 junction rows carry
 a model string that begins with a marque name**, which decision 3 forbids:

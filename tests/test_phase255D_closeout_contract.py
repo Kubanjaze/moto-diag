@@ -103,6 +103,48 @@ class TestA4RequiresTheCommitToResolve:
                 "f279533 (no-such-repo-255D)"]
 
 
+class TestA4HeadingsAreNotDatedAfterTheyWereRecorded:
+    """A bug-fix heading may not carry a time later than the commit that
+    wrote it. NOT "matches the fix commit": headings record when the entry
+    was written, often in a close-out batch, and that rule failed 11 of 13
+    honest entries across 255C and 255D."""
+
+    LOG = ROOT / "docs" / "phases" / "completed" / "255D_phase_log.md"
+
+    def test_the_known_bad_fixture_fires(self):
+        a4 = [f for f in check(BAD, "ZZZ") if f.startswith("A4")]
+        assert any("dated after" in f and "#1 heading 2099-01-01 10:00" in f
+                   for f in a4), a4
+
+    @pytest.mark.parametrize("heading", [
+        # As they were first committed, in 7b578af (20:17), fc1f8fc (20:18)
+        # and cf65268 (20:39). History is immutable, so this cannot drift.
+        "### 2026-09-22 21:40 — Bug fix #5: B2 could not tell describing a number from citing one",
+        "### 2026-09-22 21:55 — Bug fix #6: A7 could only ever be satisfied by the newest phase",
+        "### 2026-09-22 22:40 — Bug fix #7: A4 passed on a non-answer",
+    ])
+    def test_the_real_mis_dated_headings_fire(self, heading):
+        from closeout_check import dated_after_recording
+        assert dated_after_recording(self.LOG, heading), heading
+
+    def test_an_honest_batch_written_heading_passes(self):
+        """255D #1 was written at 20:10 in a close-out batch committed at
+        20:15, an hour after its fix. Late is honest; after is not."""
+        from closeout_check import dated_after_recording
+        assert dated_after_recording(
+            self.LOG, "### 2026-09-22 20:10 — Bug fix #1: the closeout "
+            "check's own A4 matched across a line boundary") is None
+
+    def test_an_uncommitted_heading_is_judged_against_now(self):
+        import datetime as dt
+        from closeout_check import dated_after_recording
+        head = "### 2026-09-22 12:00 — Bug fix #1: never committed ZZZ-255D"
+        assert dated_after_recording(
+            self.LOG, head, now=dt.datetime(2026, 9, 22, 11, 0))
+        assert dated_after_recording(
+            self.LOG, head, now=dt.datetime(2026, 9, 22, 13, 0)) is None
+
+
 class TestTheKnownGoodFixturePasses:
     def test_no_assertion_fires(self):
         fails = check(GOOD, "ZZZ")

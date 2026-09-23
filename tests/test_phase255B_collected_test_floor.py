@@ -73,7 +73,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Raised BEFORE the regression of record, so the green run covers it —
 #: the previous raise landed after, and check 2 reported it.
 #:
-COLLECTED_TEST_FLOOR = 8139
+#: 8145 (Phase 255D fix #9, 2026-09-22) — +6: A4's heading-time rule — the
+#: known-bad fixture, the three real mis-dated headings from history, an
+#: honest batch-written heading that must pass, and an uncommitted heading
+#: judged against now.
+#:
+COLLECTED_TEST_FLOOR = 8145
 
 
 def _collected_count() -> int:
