@@ -238,7 +238,7 @@ fixture still catches F139 where it matters.
 `test_b2_names_the_citation_one_past_the_end`, which is the one the global
 pin had silently disabled.
 
-**Commit.** This one.
+**Commit.** `7b578af`.
 
 **The lesson, since it is now three for three.** Every exclusion rule
 written in this phase removed a true positive along with the false ones:
@@ -270,8 +270,60 @@ the version-header requirement **only when the phase is the newest row** in
 **Verified.** 255C and 255D both pass; the known-bad fixture still fires A7,
 because its phase has no history row at all; 23 closeout tests green.
 
-**Commit.** This one.
+**Commit.** `fc1f8fc`.
 
 **Why it was found at all.** Because the contract is run against a phase it
 was **not written for**. A check exercised only on its own phase would have
 passed for exactly one phase and then rotted silently.
+
+### 2026-09-22 22:40 — Bug fix #7: A4 passed on a non-answer
+
+**Issue.** Raised by the operator after `/closeout` was run on this phase:
+fixes #5 and #6 above recorded their commit as `This one.`, and A4 passed
+them. So did 255C's fix #7, whose line read *"See the close-out commit for
+this fix."*
+
+**Root cause.** A4 checked that the words `**Commit.**` were present, not
+that they named anything. **A check that passes on a non-answer is the
+defect this folder exists to stop shipping**, and it was in the check that
+enforces the register.
+
+**Fix.** A4 takes the backticked hash on each Commit line and requires
+`git cat-file -e <hash>^{commit}` to succeed. `hash` (name) resolves in the
+sibling checkout `name` — #4's `e536740` (workspace-docs) is real and lives
+there — and an absent sibling is reported, not skipped. The known-bad
+fixture plants a `This one.` line and an unresolvable `aaaaaaa`; the good
+fixture now cites real commits. 255C #7 resolved to `f279533`.
+
+**Files.** `.claude/skills/closeout/closeout_check.py`, both fixtures,
+`tests/test_phase255D_closeout_contract.py`, `docs/phases/completed/255C_phase_log.md`.
+
+**Verified.** 28 closeout tests green. Break-it: with resolution neutered,
+three tests fail. The only phase newly failing A4 was 255D, for exactly the
+two lines corrected above; fifteen older phases (141–255) already failed A4
+on having no Commit line at all, and still do.
+
+**Commit.** `1cce592`.
+
+### 2026-09-22 22:55 — Bug fix #8: check 2 could not see `.claude/` (F137)
+
+**Issue.** `verify_phase.sh` check 2 — no code after the regression hash —
+reported only a floor-test bump for `b0ae748..3dfc78a`, although fixes #5
+and #6 changed two skill scripts in that range.
+
+**Root cause.** The check was `git diff -- src/ tests/`. Everything outside
+two directories was treated as documentation, and `.claude/` holds this
+phase's code. An exclusion that was never written down as one.
+
+**Fix.** `code_after_regression.py`, one implementation for script and
+test. A path is code unless positively documentation. Filed as **F137** and
+closed by this fix.
+
+**Files.** `.claude/skills/closeout/code_after_regression.py`,
+`verify_phase.sh`, `fixtures/check2/`, the contract test, `docs/FOLLOWUPS.md`.
+
+**Verified.** 32 closeout tests green. The real `b0ae748..3dfc78a` range now
+reports both skill scripts. Break-it: old scope restored, three tests fail.
+
+**Commit.** `b934926`.
+

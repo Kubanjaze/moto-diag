@@ -964,7 +964,7 @@ consumer — it is the one that fails the build. Cheap to do: the sixteen were
 found by AST; the seventeenth would have been found by the same pass with
 `tests/` in its roots.
 
-### F137 — CLOSED by Phase 255D fix #8 (2026-09-22)
+### F137 — CLOSED by Phase 255D fix #8, `b934926` (2026-09-22)
 
 **`verify_phase.sh` check 2 scoped "code" to `src/` and `tests/`, and could not see `.claude/`**
 
