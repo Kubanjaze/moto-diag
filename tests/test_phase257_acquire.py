@@ -269,3 +269,22 @@ class TestTheAbsYearPage:
 
     def test_special_editions_never_qualify(self, lib):
         assert self._hop(lib, ["2026-z900-se-abs", "2026-z900-carbon-abs", "2026-z900-krt-edition"]) is None
+
+
+class TestBMWIndex:
+    """BMW's rider-manual index, in the live file's own shape: attributes
+    separated by CRLF (the first live run matched 0 of 39 because the parser
+    expected single spaces, as in D7's copy)."""
+
+    NAV = ('<NAV-MODELL\r\nMARKT="EUR"\r\nTYPSCHL="0K51"\r\nT-BEZ="F 800 GS"\r\n><NAME\r\n>F 800 GS</NAME\r\n>'
+           '<MODELLJAHR\r\n><NAME\r\n>08.2024 onward</NAME\r\n><BA-SPRACHE\r\nLANGUAGE="00"\r\n'
+           'FILENAME="F_0K51_RM_0724_00.pdf"/><BA-SPRACHE\r\nLANGUAGE="01"\r\nFILENAME="F_0K51_RM_0724_01.pdf"/>'
+           '</MODELLJAHR\r\n></NAV-MODELL\r\n>').encode()
+    BASE = "https://manuals.bmw-motorrad.com/manuals/BA-Extern/IN/BA-INTERNET-COM"
+
+    def test_the_crlf_index_yields_the_english_pdf(self, lib):
+        t = site({self.BASE + "/01/Nav.xml": (200, self.NAV),
+                  self.BASE + "/PDF/F_0K51_RM_0724_01.pdf": (200, b"%PDF-1.4 F 800 GS rider's manual\n")})
+        r = A.fetch("BMW", fetcher=A.Fetcher(rate=0, transport=t), library=lib, spellings=["F800GS"])
+        assert r["matched"]["F800GS"]["url"].endswith("F_0K51_RM_0724_01.pdf")
+        assert r["matched"]["F800GS"]["match"] == {"name": "F 800 GS", "kind": "exact"}

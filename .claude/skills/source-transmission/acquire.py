@@ -328,7 +328,9 @@ def bmw_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Path
     xml = row["body"].decode("utf-8", "ignore")
     names: dict[str, str] = {}
     for m in re.finditer(r'<NAV-MODELL[^>]*T-BEZ="([^"]+)"[^>]*>(.*?)</NAV-MODELL', xml, re.S):
-        pdfs = re.findall(r'LANGUAGE="01" FILENAME="([^"]+\.pdf)"', m.group(2))
+        # Whitespace-tolerant: the live index breaks lines between attributes
+        # (LANGUAGE="01"\r\nFILENAME=…); D7's copy used single spaces.
+        pdfs = re.findall(r'LANGUAGE="01"\s+FILENAME="([^"]+\.pdf)"', m.group(2))
         if pdfs:
             names.setdefault(m.group(1), f"{base}/PDF/{pdfs[-1]}")
     return _fetch_matched(f, make, spellings, names, {u: ref for u in names.values()}, lambda u: u, library)
