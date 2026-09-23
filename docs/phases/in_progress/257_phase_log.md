@@ -1415,3 +1415,13 @@ still unknown, assertions untouched — as the Grom → CBR1000RR move in
 tranche 1. Census 586 → **582**. The written-entries guard covers 20
 manual entries. 1,206 pass across the 26 suites mentioning these machines
 + the 255 axis suite; 244G clean.
+
+**Correction to the BMW entry above (`d2bcc71`):** that commit went in with
+the Phase 255B test still failing. The Edit moving it to R1250 had been
+refused (the loop occurs twice in the file) and the commit ran regardless;
+the log's "moved … assertions untouched" and "1,206 pass" were written
+before either was true. Fixed in the next commit: only the occurrence in
+`test_4605_stays_unscoped_and_that_is_the_point` moves (the end-to-end
+test beside it keeps R1200GS — row 4605 is unscoped, so it reaches a
+sourced R1200GS too); 255B: 30 pass; the 26 related suites + the 255 axis
+suite re-run: **1,206 pass**.

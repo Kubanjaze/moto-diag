@@ -481,8 +481,11 @@ class TestF115TheVocabularyRowReachesTheOwnersItIsFor:
             row = _row(conn, T_4605)
         assert row["applicability"] is None
 
+        # BMW R1250, not the R1200GS this test first used: Phase 257 sourced
+        # the R 1200 GS as `manual` (its rider's manual). The claim is about
+        # an unknown BMW; the R1250 is still one. Assertions untouched.
         for make, model in (("Harley-Davidson", "Road King"),
-                            ("BMW", "R1200GS"),
+                            ("BMW", "R1250"),
                             ("LiveWire", "ONE")):
             res = resolve_transmission(make, model)
             assert res.provenance == "unknown", (make, model)
