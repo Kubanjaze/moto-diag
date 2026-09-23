@@ -1,6 +1,6 @@
 # Phase 257 — The orchestrator and `/source-transmission`
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-22
 
 Step 0: [`257_step0.md`](257_step0.md) (measurements, proofs). This plan is
 built on it and does not repeat it.
@@ -116,3 +116,46 @@ time.
   re-checked by a script or by refute, never taken from the model's text.
 - **Cost.** ~$0.05 floor per call, ~$0.13 for an eight-step run. Budget
   capped per call.
+
+---
+
+# v1.1 amendment (2026-09-22, during build) — the source stages run through Subconscious
+
+**D1 as written was wrong about the operator's intent.** "Just use Claude
+Code" meant *drive Claude Code through Subconscious*, not *drop GLM* — the
+orchestrator exists to spend the long, context-heavy source stages on
+Subconscious's gateway (GLM-5.3 Marathon, 3M-token context, managed
+compaction) and save Opus context. Corrected:
+
+| stages | route | how | credential |
+|---|---|---|---|
+| acquire, extract, classify | Subconscious, `subconscious/glm-5.3-marathon` | `subc claude --model … -- -p …`, sandboxed | held by `subc login`; the orchestrator never reads it |
+| refute | Anthropic, `claude-opus-5-5` | `claude -p`, sandboxed, budget-capped | `CLAUDE_CODE_OAUTH_TOKEN` from `anthropic.env`, by environment |
+| write | Opus in the repository | targeted edits, one make per commit | — |
+
+**Measured before adopting it:** a headless `/ping` through `subc claude`
+emitted the sentinel, served by `subconscious/glm-5.3-marathon`; and the
+planted-attempt run, repeated with `subc claude` inside the sandbox and all
+permissions bypassed, was denied on every escape (repo via Bash and Write,
+`~/.claude`, push to the repo, GitHub push, `gh` token read). `subc` needs
+no write outside the sandbox. Leak check independent of the model: clean.
+
+**D3 guards, corrected:** a credential may travel only on its own route.
+The Subconscious route carries **no** credential variable at all (subc
+supplies its own), and its gateway must be `api.subconscious.dev`; the
+Anthropic route carries exactly the OAuth token. `--max-budget-usd` applies
+to the Opus route only — Claude Code's cost for the Subconscious model is an
+estimate (`costBasis: unknown`); the real figure is on the Subconscious
+usage page.
+
+**Known and accepted:** inside the sandbox the model can *read*
+`~/.subconscious/profiles/default.env`, because `subc` must. The profile
+denies reading the Anthropic token file; the Anthropic token is only ever in
+the environment of an Anthropic-route process.
+
+**Observed in passing, and it is the design's premise:** in the sandboxed
+GLM run, one control step failed for a reason the model then explained
+wrongly (it guessed a hidden `.gitignore`; the file had simply been
+committed by an earlier run). No stage's outcome is taken from a model's
+account of itself.
+

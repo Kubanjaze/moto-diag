@@ -1,0 +1,30 @@
+(version 1)
+; source-transmission — the write boundary for every sandboxed stage.
+; Proven by planted attempts in Phase 257 Step 0 (S0-3) and re-proven by
+; tests/test_phase257_sandbox_boundary.py on every run of the suite.
+; Placeholders are filled by orchestrate.py; nothing here is hand-edited per run.
+(allow default)
+
+; Writes are denied everywhere ...
+(deny file-write*)
+; ... except the run's own clone, its own tmp (DB snapshot, CLAUDE_CONFIG_DIR),
+; Claude Code's per-cwd harness dir BY EXACT PATH (its parent also holds
+; other sessions' files), the harness's cwd-tracking file, and devices.
+(allow file-write*
+       (subpath "@CLONE@")
+       (subpath "@RUNTMP@")
+       (subpath "@HARNESS_DIR@")
+       (regex #"^/private/tmp/claude-[0-9a-f]+-cwd$")
+       (literal "/dev/null") (literal "/dev/tty") (regex #"^/dev/fd/") (regex #"^/dev/ttys"))
+
+; No credentials. A writes-only profile was NOT a boundary: a dry-run push
+; to GitHub authenticated through the keychain helper (S0-3). The model API
+; token arrives by environment, never from the keychain.
+(deny mach-lookup
+       (global-name "com.apple.SecurityServer") (global-name "com.apple.securityd.xpc")
+       (global-name "com.apple.security.agent") (global-name "com.apple.security.authhost"))
+(deny file-read*
+       (subpath "@HOME@/.ssh") (subpath "@HOME@/.config/gh") (subpath "@HOME@/.config/motodiag")
+       (literal "@HOME@/.git-credentials") (literal "@HOME@/.netrc") (subpath "@HOME@/Library/Keychains"))
+; No ssh-agent (launchd-provided unix socket).
+(deny network-outbound (regex #"^/private/tmp/com\.apple\.launchd\.[^/]+/Listeners$"))
