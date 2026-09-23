@@ -1312,3 +1312,51 @@ browsing, but the limit is a threshold: reported to the operator, not
 changed. Also flagged for the write: Yamaha sells the MT-07 and MT-09 in
 Y-AMT versions too — if the pages say so, those are ambiguous machines
 (like the Africa Twin), not `manual`.
+
+### 2026-09-23 — The fallback source route is claude-opus-5-5 at medium effort (operator)
+
+**Why the Yamaha batch needed a third turn — found, not guessed.** The
+first suspect was `139632a` (required citation fields forcing a retry on
+no_evidence): a Haiku probe with the real `SOURCE_SCHEMA` and two
+no_evidence findings answered with explicit nulls, validated first time,
+2 turns — not it. Replaying 3 of Yamaha's spellings on Sonnet with the
+stream kept (`source-runs/schema_repro_*`) showed the cause: Sonnet's
+first answer was `{"findings": {"findings": [...]}}` — the array nested
+inside a second `findings` — and the CLI replied "Output does not match
+required schema: /findings: must be array"; the second answer was right.
+**Fix:** the source prompt states the answer's shape exactly ("`findings`
+IS the array. Never nest it"), and the source stage now streams and keeps
+`source.stream.jsonl`, so any future retry shows its cause. The 2-turn limit
+stays.
+
+**The route:** `anthropic-opus-medium` — claude-opus-5-5, `--effort medium`,
+one turn, no tools, the same guards (exactly the Anthropic OAuth token;
+the served-model check). It replaces the first cut on claude-sonnet-5.
+`source_route` is now **model@effort** on the batch summary (with route,
+model, effort, label), every finding, and every lookup entry: 14 entries
+`subconscious/glm-5.3-marathon@default`, SV650 `claude-sonnet-5@default`
+until re-sourced. **Proven before any batch:** one call (the same Yamaha
+replay) → modelUsage `['claude-opus-5-5']`, 2 turns, 0 schema retries
+(`source-runs/route_proof_opus_*`).
+
+**The checker's independence, recorded.** With the source stage on the
+fallback, the source and refute stages are the same model
+(claude-opus-5-5; the source at medium effort, refute at default).
+Refute's independence from the source stage now rests on three things,
+not on a different model: (1) **a fresh context** — refute runs in a new
+sandboxed call that never sees the source stage's reasoning, only its
+findings; (2) **re-opening the original document itself** — refute reads
+the cited file (and page images where OCR is weak), not the source stage's
+excerpt or account; (3) **the model-free gates** — E3 (the quote is in the
+document), E10 (the document and quote are among the excerpts handed over)
+and E12 (a manual quote names the mechanism) run in code before refute and
+cannot be talked out of. Once Subconscious is back, the entries with a
+non-`subconscious/` source_route are one filter away from a re-run.
+
+Tests: route tests rewritten for Opus-medium (effort passed only on the
+source route; refute carries none; the label is model@effort; a different
+model answering is a stop; the prompt states the shape; the source stream
+is kept). **Break-it:** effort not passed → 3; refute gets an effort → 2;
+the label drops the effort → 2; the fallback back on Sonnet → 3; the shape
+phrase removed → 1; the source not streamed → **survived twice** (no test,
+then a test that accepted an empty file), then 1. 509 pass; 244G clean.
