@@ -516,3 +516,36 @@ fail first.
   function that still emits the defect its replacement removes is a loaded
   gun for the next caller. 244I's four assertions are about exclusion
   parsing, so they project the pair form and test the same thing.
+
+## Deviations from plan
+
+Added at close-out of Phase 255D, whose `closeout` check found this section
+missing. It is written from what the phase log records, not reconstructed
+from memory.
+
+1. **The single-token fork was not anticipated by v1.0.** `ONE` is
+   LiveWire's model and an English word, and v1.0 had no rule for it. Two
+   drafted branches were rejected, a marque-adjacency mechanism was built,
+   measured at **457 legitimate rows lost across 108 models**, and stripped
+   out. Decision 3's plain rule stood with nothing added. See D7.
+2. **Three bug fixes (#5, #6, #7) were found after the plan's scope was
+   written**, two of them by the full regression after a narrow run and a
+   commit were both green, and #7 by the operator's terminal check.
+   `extract_models` was **deleted** — a public function removal that v1.0
+   did not scope.
+3. **The first three commits were made on `master`**, against the
+   phase-branch convention every prior phase follows. Corrected mid-phase:
+   the branch was created at the tip and local `master` rewound to the
+   pushed v1.0. Nothing pushed was discarded.
+4. **D4's "every consumer" enumeration was scoped to `src/`** and missed a
+   canonical pinned in a test — a seventeenth where sixteen were named.
+   Filed as **F136**.
+5. **The plan claimed group (B) was "filed on the general-applicability
+   ticket" and it was not.** The claim was written; the entry never existed.
+   Found at close-out and filed properly as **F135**.
+6. **The first deploy verification table was not like-for-like.** Its
+   "before" column ran 255C's code against the pre-255C schema — the
+   degradation path. Re-measured from a worktree at `3a5fbdb` against the
+   pre-deploy backup, which changed the story: Grom and Damon HyperSport
+   were **flat**, not gains, and Energica Experia was **26 → 27**, not
+   0 → 27.

@@ -61,7 +61,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: with the reason in the commit message — a superseded module taking its
 #: tests with it is a legitimate reason; a refactor that "tidied" a file is
 #: not.
-COLLECTED_TEST_FLOOR = 8091
+#: 8130 (Phase 255D, 2026-09-22) — +39, the three procedure folders'
+#: contracts: 23 closeout, 9 finding, 7 refute. Each folder's known-bad
+#: fixture is asserted per-assertion, so a silently removed planted
+#: defect fails rather than passing quietly.
+#:
+COLLECTED_TEST_FLOOR = 8130
 
 
 def _collected_count() -> int:
