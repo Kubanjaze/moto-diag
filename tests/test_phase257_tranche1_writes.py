@@ -125,7 +125,8 @@ class TestHondaWrite:
         assert "cvt" not in r.candidates
 
     def test_a_honda_spelling_that_was_never_seen_stays_unknown(self):
-        r = resolve_transmission("Honda", "CBR1000RR")
+        # CBR929RR since run Honda_20260923_155534 sourced the CBR1000RR.
+        r = resolve_transmission("Honda", "CBR929RR")
         assert r.provenance == "unknown"
         assert r.candidates != frozenset({"manual"})
 
@@ -200,7 +201,9 @@ class TestEveryPhase257ManualEntryMeetsE12:
     PHASE_257 = [("SYM", "Wolf 150"), ("SYM", "Wolf CR300i"), ("Kymco", "K-Pipe"), ("Honda", "Grom 125"),
                  ("Suzuki", "SV650"), ("Suzuki", "V-Strom 650"),
                  ("BMW", "K 1200 GT"), ("BMW", "K 1200 RS"), ("BMW", "R 1200 GS"), ("BMW", "S 1000 R"),
-                 ("BMW", "K 1600 GT"), ("BMW", "K 1300 S"), ("BMW", "K 1200 S"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
+                 ("BMW", "K 1600 GT"), ("BMW", "K 1300 S"), ("BMW", "K 1200 S"),
+                 ("Honda", "CBR600RR"), ("Honda", "CBR1000RR"), ("Honda", "CB500F"), ("Honda", "XR650L"),
+                 ("Honda", "CRF250L"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
                  ("Kawasaki", "Ninja ZX-10R"), ("Kawasaki", "Ninja ZX-6R"), ("Kawasaki", "Ninja H2"),
                  ("Kawasaki", "KLR650"), ("Kawasaki", "Z900"), ("Kawasaki", "Ninja 300"),
                  ("Kawasaki", "KLX300"), ("Kawasaki", "Z650")]
@@ -287,3 +290,26 @@ class TestBMWWrite:
         (K1600GTL, K1300R, K1200R, the families K1600/K1300/K1200, and the
         census's "K1200S/R" slash-list, which names two machines)."""
         assert resolve_transmission("BMW", model).provenance == "unknown", model
+
+
+class TestHondaMotopubWrite:
+    """Run Honda_20260923_155534 on the fallback source route
+    (claude-opus-5-5@medium): American Honda's 2018 owner's manuals from
+    motopub, each quoting the side-stand check's 'pull the clutch lever in'."""
+
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("model", ["CBR600RR", "CBR 600RR", "CBR1000RR", "CB500F", "XR650L", "CRF250L"])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("Honda", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"manual"}), model
+        assert r.entry.source_route == "claude-opus-5-5@medium"
+
+    @_pytest.mark.parametrize("model", ["CBR1000RR-R", "CBR1000RR SP", "CBR600F", "CBR600F4i", "CBR929RR",
+                                        "CB500X", "CBR500R", "XR650R", "CRF250R", "CRF250 Rally",
+                                        "CB650R", "CB750", "NCW50"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """Siblings and variants of the five; the E-Clutch-flagged CB650R and
+        CB750 (no_evidence, not classified); NCW50, kept by refute but held
+        for an operator decision (the existing Metropolitan entry)."""
+        assert resolve_transmission("Honda", model).provenance == "unknown", model

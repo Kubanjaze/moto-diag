@@ -509,7 +509,10 @@ class TestPrecedence:
         assert r.provenance == "model-sourced" and r.value == "cvt"
 
     def test_unknown_is_all_six(self):
-        r = resolve_transmission("Honda", "CBR1000RR")
+        # CBR929RR, not CBR1000RR: Phase 257 sourced the CBR1000RR as
+        # `manual` from its own 2018 owner's manual. The claim is the unknown
+        # shape, not the machine; the CBR929RR is still unknown.
+        r = resolve_transmission("Honda", "CBR929RR")
         assert r.candidates == ALL_TRANSMISSIONS
         assert r.provenance == "unknown"
         assert r.value is None and r.certain is False
@@ -835,19 +838,20 @@ class TestTheCounter:
         import shutil
         from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
 
-        # CBR1000RR, not the Grom this test originally used: Phase 257
-        # tranche 1 sourced the Grom as `manual`, and a model-sourced
+        # CBR929RR, not the Grom this test originally used nor the
+        # CBR1000RR that replaced it: Phase 257 sourced both as `manual`
+        # (tranche 1; run Honda_20260923_155534), and a model-sourced
         # machine is deliberately absent from the report (see the Wolf
         # test above — recording it would bury the real gaps). The claim
-        # under test is the counter, not the machine; CBR1000RR is still
+        # under test is the counter, not the machine; CBR929RR is still
         # unknown, so it is still recorded.
         path = str(Path(db).parent / "accum.db")
         shutil.copy(db, path)
-        _, raw = known_issues_for_vehicle("Honda", "CBR1000RR", db_path=path, limit=400)
+        _, raw = known_issues_for_vehicle("Honda", "CBR929RR", db_path=path, limit=400)
         for _ in range(3):
-            rows_for_machine(raw, make="Honda", model="CBR1000RR",
+            rows_for_machine(raw, make="Honda", model="CBR929RR",
                              purpose="prompt", db_path=path)
-        row = [r for r in withheld_report(path) if r["model"] == "CBR1000RR"][0]
+        row = [r for r in withheld_report(path) if r["model"] == "CBR929RR"][0]
         assert row["retrievals"] == 3
 
     def test_the_chokepoint_persists_what_it_withheld(self, db):

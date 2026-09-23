@@ -226,10 +226,11 @@ class TestCensus:
         db = _db(tmp_path, [
             (1, "Honda", "PCX 150"), (2, "Honda", "PCX 150"),      # model-sourced: out
             (3, "Honda", "Africa Twin"),                           # ambiguous: out
-            (4, "Honda", "CBR1000RR"), (5, "Honda", "CBR1000RR"),  # unknown, 2 rows
+            (4, "Honda", "CBR929RR"), (5, "Honda", "CBR929RR"),    # unknown, 2 rows
             (6, "Ducati", "Panigale V4"),                          # unknown, 1 row
+            (7, "Honda", "CBR1000RR"),                             # model-sourced since 257: out
         ])
-        assert census(db) == {"Honda": [{"model": "CBR1000RR", "rows": 2}],
+        assert census(db) == {"Honda": [{"model": "CBR929RR", "rows": 2}],
                               "Ducati": [{"model": "Panigale V4", "rows": 1}]}
 
     def test_the_make_filter(self, tmp_path):

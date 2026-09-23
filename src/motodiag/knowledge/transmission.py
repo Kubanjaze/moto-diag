@@ -205,6 +205,37 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "(constant-mesh four-speed, wet multiplate clutch, 1-N-2-3-4) but "
        "is OCR evidence and is not the citation.",
        source_route="subconscious/glm-5.3-marathon@default"),
+    # Phase 257, run Honda_20260923_155534, source claude-opus-5-5@medium,
+    # refute on Opus: American Honda's 2018 owner's manuals from motopub,
+    # fetched by acquire.py into ~/research/motodiag/acquired/Honda/. Each
+    # kept, names_model true (the manual's own model line), each quote the
+    # side-stand check's "pull the clutch lever in" — a rider-operated clutch.
+    _E("Honda", "CBR600RR", MANUAL, ("cbr600rr", "cbr 600rr", "cbr 600 rr"),
+       "2rom-prd-data.hondamotopub.com …/CBR600RR-RA/2018/CBR600RR.RA_31MJC650_0.pdf "
+       "(2018 CBR600RR/RA owner's manual), p. 69: '4. Start the engine, pull "
+       "the clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CBR1000RR", MANUAL, ("cbr1000rr", "cbr 1000rr", "cbr 1000 rr"),
+       "2rom-prd-data.hondamotopub.com …/CBR1000RR-RA-S1-S2/2018/"
+       "CBR1000RR.RA.S1.S2_31MKF610_0.pdf (2018 CBR1000RR/RA/S1/S2 owner's "
+       "manual), p. 156: '4. Start the engine, pull the clutch lever in, and "
+       "shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CB500F", MANUAL, ("cb500f", "cb 500f", "cb 500 f"),
+       "2rom-prd-data.hondamotopub.com …/CB500F-FA/2018/CB500F.FA_31MJWB20_0.pdf "
+       "(2018 CB500F/FA owner's manual), p. 79: '4. Start the engine, pull "
+       "the clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "XR650L", MANUAL, ("xr650l", "xr 650l", "xr 650 l"),
+       "2rom-prd-data.hondamotopub.com …/XR650L/2018/XR650L_31MGW660_0.pdf "
+       "(2018 XR650L owner's manual), p. 71: '4. Start the engine, pull the "
+       "clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CRF250L", MANUAL, ("crf250l", "crf 250l", "crf 250 l"),
+       "2rom-prd-data.hondamotopub.com …/CRF250L/2018/CRF250L_31KZZA50_0.pdf "
+       "(2018 CRF250L owner's manual), p. 77: '4. Start the engine, pull the "
+       "clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
 
     # --- Yamaha ----------------------------------------------------------
     _E("Yamaha", "Zuma 125", CVT, ("zuma 125", "zuma125", "yw125", "yw125y"),

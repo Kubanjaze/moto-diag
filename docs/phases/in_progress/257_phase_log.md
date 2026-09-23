@@ -1592,3 +1592,62 @@ unknown and are pinned in `TestBMWWrite`: K1600GTL, K1300R, K1200R, the
 families K1600/K1300/K1200, and the census's "K1200S/R". Break-it: a
 family alias ("k1300") added to K 1300 S → 1 fails. Census 582 → **579**.
 The written-entries E12 guard now covers 23 manual entries.
+
+### 2026-09-23 — Honda: acquired from motopub, batched on claude-opus-5-5@medium, five written
+
+**Acquire** (no model): motopub's AHM index lists **103 names, all for model
+year 2018**. That is 6 fetches, the name list re-read to explain the
+unmatched spellings. Matched 6 of 26 census spellings: CBR600RR, CBR1000RR,
+CB500F, NCW50, XR650L, CRF250L. The other 20 are not in the 2018 list.
+Two are a near miss under the weak-spelling rule, reported and not
+loosened: Monkey 125 → `Monkey125-A` and CB1000R → `CB1000RA`, both
+`contains` matches that a weak spelling may not take.
+
+**Batch** `Honda_20260923_155534` (26 spellings):
+- 14 were sent and 12 had no excerpt. None was classed not-a-machine.
+- 259,884 tokens (source 99,805, refute 160,079; ceiling 2,100,000).
+- **No stops, no E12 rejections (so no reader misses to report), no
+  refute kills, no family evidence.**
+- Ready: CBR600RR, CBR1000RR, CB500F, XR650L, CRF250L (manual), and NCW50
+  (cvt: "Primary reduction V-matic (2.85:1 - 0.86:1)").
+- Each manual quote is the side-stand check's "4. Start the engine, pull the
+  clutch lever in, and shift the transmission into gear." Refute's
+  `model_line` comes from the manual itself (page 2's "… are USA models." or
+  the back matter's "31MGW660 2018 XR650L Owner's Manual").
+
+**E-Clutch, flagged and not classified:**
+- The library's only E-Clutch text is Honda UK's navigation page
+  (`manuals/honda_uk.html`). It names CB650R, CBR650R, CB750 Hornet and
+  XL750 Transalp E-Clutch editions.
+- Of the census spellings, **CB650R** and **CB750** are affected. Both came
+  back no_evidence: their only excerpt is that navigation menu, and the
+  CB650R note names the E-Clutch page. Nothing is written for either.
+- No E-Clutch text reached any quote. The E-Clutch placeholder in bug fix
+  #5's cases stays constructed, because no Honda E-Clutch wording has been
+  acquired: motopub's index stops at 2018, and E-Clutch dates from 2024.
+
+**NCW50 held for an operator decision.** NCW50 is the Metropolitan's model
+code (manual 31GJB620, "2018 NCW50 Owner's Manual", same V-matic line). The
+lookup already has a Phase 255 `Honda Metropolitan` CVT entry (31GJB640 to
+31GJB690) without an "ncw50" alias. The choice is to add the alias to that
+entry or to write a separate one. I have done neither.
+
+**Written:** Honda "CBR600RR", "CBR1000RR", "CB500F", "XR650L" and
+"CRF250L", `source_route="claude-opus-5-5@medium"`. Siblings stay unknown
+and are pinned in `TestHondaMotopubWrite`: CBR1000RR-R, CBR1000RR SP,
+CBR600F/F4i, CBR929RR, CB500X, CBR500R, XR650R, CRF250R and CRF250 Rally.
+Break-it: "cbr1000rr-r" added as an alias → 1 fails.
+
+**Unknown examples moved** (as Grom → CBR1000RR and R1200GS → R1250 before
+it): the CBR1000RR was the "unknown Honda" in four tests. The example
+moves to the **CBR929RR** (still unknown; no_evidence in this run) and the
+assertions are untouched:
+- 255 `test_unknown_is_all_six`;
+- 255 `test_repeated_retrievals_accumulate`;
+- 257 `TestCensus` (it also plants a CBR1000RR row, which must now be
+  left out);
+- tranche 1 `test_a_honda_spelling_that_was_never_seen_stays_unknown`.
+
+255's `OVER_REACHED` keeps the CBR1000RR: a manual machine still gets no
+CVT row, and it passes. Census 579 → **574**. The written-entries E12 guard
+now covers 28 manual entries.
