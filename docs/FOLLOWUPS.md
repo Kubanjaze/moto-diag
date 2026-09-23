@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F137** (this file); the mobile
+At the time of writing the highest assigned is **F138** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -989,4 +989,25 @@ directories, `LICENSE`, `.gitignore`, `.gitkeep`). Controls: a hand-written
 path-list fixture; the real `b0ae748..3dfc78a` range, which must report both
 skill scripts; and a census asserting every tracked script classifies as
 code. With the old scope restored, all three fail.
+
+### F138
+
+**The workspace `CLAUDE.md` is 926 lines, and shrinking it further is a decision about what stops being shared, not a tidy-up**
+
+Phase 255D split the workspace `CLAUDE.md` (in `workspace-docs`) from
+1,337 lines to 889, moving every project-specific line out. It has since
+grown to **926** with that phase's own additions. The phase's Deviations
+section records why 889 was not the ~174 estimated: 174 measured the rules
+*cited in a working session*, not what is legitimately cross-project.
+
+What remains is cross-project by content — the phase template, versioning,
+Lean API usage, Python standards, architecture, the failure-family taxonomy,
+prompt templates and a 149-line change log. Moving more means
+deciding that some of those stop being shared rules for every project, which
+is the operator's judgement and not a mechanical split.
+
+**What would close it:** a decision, per section, on whether it stays
+shared, moves to a project `CLAUDE.md` or a skill folder, or is archived —
+and for the change log, whether it moves to its own file. Filed as a
+follow-up by instruction; deliberately not done in 255D.
 
