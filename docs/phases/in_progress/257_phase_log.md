@@ -1721,3 +1721,33 @@ names only the sibling. Break-it: the scope not passed → 1 fails.
 - **Not misses (family pages):** R1150, R1100, K1200 and K1300.
 - The C table above said "6 of 7 were reader misses". Under this rule
   that figure is **3 of 7**.
+
+### 2026-09-23 — Triumph: batched on claude-opus-5-5@medium; nothing written
+
+**Library:** 6 Triumph pages from the spec-page route, all maker HTML: the
+adventure, classic, roadsters and sport listings, plus three model pages
+(Tiger Sport 660 2025, Speed Triple 1200 RS, Daytona 660).
+
+**Batch** `Triumph_20260923_172417`, `--source-route anthropic`
+(claude-opus-5-5@medium):
+- **72 spellings.** 20 were classed not-a-machine by the census, 37 had no
+  excerpt, and **15 were sent**.
+- **1 found:** Tiger Sport 660, manual.
+- **1 E12 rejection:** Tiger Sport 660. The quote is "The slip and assist
+  clutch further enhances rideability, reducing clutch effort …". The
+  reader note says **no passing line in its excerpts**, so this is not a
+  reader miss.
+- **0 written.** `ready_to_write` is empty, and no finding reached refute
+  (0 refuted).
+- 106,724 tokens, all at the source stage (ceiling 2,250,000).
+- No stops, and no family evidence.
+
+The other 14 sent spellings came back no_evidence. Where a model page
+exists (Speed Triple 1200 RS, and through it Speed Triple 1200, 1200 RS and
+RS), the notes say clutch type and gear count appear **only as table
+cells**: "Clutch Wet, multi-plate, slip and assist Gearbox 6-Speed". A
+quickshifter is mentioned, but no sentence names a clutch lever, a shift
+pedal or "manual". The listing and overview pages have no gearbox wording.
+
+**Conclusion:** Triumph's spec pages cannot pass E12. Like Yamaha, it needs
+owner's manuals before a re-run. The census is unchanged at 573.
