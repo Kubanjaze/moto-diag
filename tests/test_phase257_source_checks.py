@@ -265,6 +265,12 @@ class TestSpellingsThatCannotBeAMachine:
         ("Moto Guzzi", "S 1000 XR", "other_make_model"), ("Triumph", "S 1000 XR", "other_make_model"),
         ("KTM", "S 1000 XR", "other_make_model"), ("KTM", "Testastretta MY2010", "other_make_model"),
         ("BMW", "Testastretta MY2010", "other_make_model"), ("MV Agusta", "Testastretta MY2010", "other_make_model"),
+        # Multi-make rows #4593/#4596 ('Kymco, SYM') and #4603 ('Yamaha, Kymco,
+        # SYM, Genuine') pair every model with every make (F142).
+        ("Kymco", "Jet 14", "other_make_model"), ("Kymco", "Fiddle 4", "other_make_model"),
+        ("Kymco", "Wolf CR300i", "other_make_model"), ("SYM", "X-Town 300", "other_make_model"),
+        ("Kymco", "XC50", "other_make_model"), ("SYM", "XC50", "other_make_model"),
+        ("Genuine", "XC50", "other_make_model"),
     ])
     def test_the_class(self, make, spelling, cls):
         from census import not_a_machine
@@ -286,6 +292,9 @@ class TestSpellingsThatCannotBeAMachine:
         # machine, and Ducati's own machines stay machines.
         ("BMW", "S 1000 XR"), ("Ducati", "Panigale V4"), ("Ducati", "Multistrada 1200"),
         ("Ducati", "Monster S4R"),
+        # The true make keeps its machine (operator, 2026-09-23).
+        ("SYM", "Jet 14"), ("SYM", "Fiddle 4"), ("Kymco", "X-Town 300"), ("Yamaha", "XC50"),
+        ("SYM", "Wolf CR300i"),
     ])
     def test_a_machine_name_is_not_classed(self, make, spelling):
         """Including a marque's own model under its own marque, and a

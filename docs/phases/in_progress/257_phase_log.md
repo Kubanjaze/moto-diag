@@ -785,3 +785,25 @@ library copies (`v2/super850x_prod.*`). Found by the run: the run record
 logged 2 requests while the cap counted 3 — robots.txt fetches were
 counted but not logged. Fixed; a test pins that the log holds every
 request the cap counts (removing the log line fails it). 344 pass.
+
+### 2026-09-23 — refute budget approved; cross-make spellings classed; F142 filed
+
+**Refute's budget: 300,000 per finding refuted — approved by the
+operator.** Not to be raised to fit a batch: if the per-finding cost
+climbs, refute is split into groups of at most 5 findings, each a fresh
+context.
+
+**Classed (operator decision 3), named and make-scoped:** the multi-make
+rows #4593/#4596 (`'Kymco, SYM'`) and #4603 (`'Yamaha, Kymco, SYM,
+Genuine'`) put every model under every make. `other_make_model`: (Kymco,
+Jet 14), (Kymco, Fiddle 4), (SYM, X-Town 300), (Kymco, XC50), (SYM, XC50),
+(Genuine, XC50) — and **(Kymco, Wolf CR300i)**, on the same rows, beyond
+the operator's list, flagged. Positive controls, the true make keeps its
+machine: (SYM, Jet 14), (SYM, Fiddle 4), (Kymco, X-Town 300), (Yamaha,
+XC50), (SYM, Wolf CR300i). The 7 class tests were seen to fail first;
+unscoping the lookup fails the controls. Machine names 484 (was 491).
+
+**F142 filed** in `docs/FOLLOWUPS.md` (next free across both files:
+moto-diag F141, mobile F115): 69 multi-make rows → 1,129 junction rows,
+192 distinct (make, model) pairs; how many are wrong is not measured.
+Not fixed in 257. `finding_check.py`: exit 0.

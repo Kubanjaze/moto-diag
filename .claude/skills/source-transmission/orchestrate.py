@@ -64,9 +64,10 @@ SOURCE_MAX_TURNS = 2
 # changes it. Counted per spelling SENT to the model (a no_evidence spelling
 # costs nothing and must not dilute the rest), over every stage of the batch.
 TOKEN_STOP_PER_SPELLING = 150_000
-# Refute's own budget, per finding refuted. PROPOSED, awaiting the operator:
-# ~1.3x the largest refute measured (226,857 for one finding, Kymco
-# 2026-09-23; 165,071 before the redesign).
+# Refute's own budget, per finding refuted — approved by the operator
+# 2026-09-23: ~1.3x the largest refute measured (226,857 for one finding,
+# Kymco; 165,071 before the redesign). Not raised to fit a batch: if the
+# per-finding cost climbs, refute is split into groups (REFUTE_GROUP).
 REFUTE_STOP_PER_FINDING = 300_000
 USAGE_FIELDS = ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens")
 

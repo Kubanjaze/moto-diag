@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F141** (this file); the mobile
+At the time of writing the highest assigned is **F142** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -1112,4 +1112,31 @@ and E3 matches the library original itself. Planted: a document not
 handed over (the quote in it, the machine named — E3/E4 pass), and a
 quote from the right file outside its excerpt; break-it seen to fail for
 each. E9 stays for any path that still saves copies.
+
+### F142
+
+**Multi-make rows put every model under every make in the junction**
+
+69 `known_issues` rows carry more than one make in `make` (`'Kymco, SYM'`,
+`'Yamaha, Kymco, SYM, Genuine'`), and the junction `known_issue_models`
+pairs each of their models with each of their makes: 1,129 junction rows,
+192 distinct (make, model) pairs. Where a row names machines of several
+makes, most of those pairs are wrong. Measured instances (Phase 257, while
+classing census spellings): SYM's Jet 14, Fiddle 4 and Wolf CR300i filed
+under Kymco (#4593, #4596); Kymco's X-Town 300 under SYM (same rows);
+Yamaha's XC50 under Kymco, SYM and Genuine (#4603).
+
+What it affects: a row filed under the wrong make is found by that make's
+owners and may never reach the real make's owners — a Kymco query sees
+SYM's Jet 14, and whether a SYM owner's retrieval reaches the row depends
+on the make column, not on the machine. How many of the 192 pairs are
+wrong is **not measured**; 192 is the ceiling.
+
+Phase 257 only keeps these spellings out of the transmission census, by
+named `other_make_model` entries in
+`.claude/skills/source-transmission/census.py`. **Not fixed in 257.**
+What would close it: the junction built per (machine, its own make) —
+each model in a multi-make row assigned to the make that builds it — with
+a whole-junction count of the pairs that move, and a test that a
+multi-make row cannot produce a pair outside its models' own makes.
 

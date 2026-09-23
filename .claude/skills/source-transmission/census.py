@@ -119,6 +119,15 @@ NOT_A_MACHINE_NAMED: dict[tuple[str, str], tuple[str, str]] = {
     ("KTM", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
     ("BMW", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
     ("MV Agusta", "Testastretta MY2010"): ("other_make_model", "Ducati's engine, from #886"),
+    # Multi-make rows pair every model with every make in the junction (F142):
+    # #4593 and #4596 have make 'Kymco, SYM'; #4603 'Yamaha, Kymco, SYM, Genuine'.
+    ("Kymco", "Jet 14"): ("other_make_model", "SYM's scooter, from 'Kymco, SYM' rows #4593, #4596"),
+    ("Kymco", "Fiddle 4"): ("other_make_model", "SYM's scooter, from 'Kymco, SYM' row #4596"),
+    ("Kymco", "Wolf CR300i"): ("other_make_model", "SYM's motorcycle, from 'Kymco, SYM' rows #4593, #4596"),
+    ("SYM", "X-Town 300"): ("other_make_model", "Kymco's scooter, from 'Kymco, SYM' rows #4593, #4596"),
+    ("Kymco", "XC50"): ("other_make_model", "Yamaha's (Vino) scooter, from row #4603"),
+    ("SYM", "XC50"): ("other_make_model", "Yamaha's (Vino) scooter, from row #4603"),
+    ("Genuine", "XC50"): ("other_make_model", "Yamaha's (Vino) scooter, from row #4603"),
 }
 
 
