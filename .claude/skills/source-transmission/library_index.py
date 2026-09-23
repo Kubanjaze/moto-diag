@@ -37,8 +37,17 @@ MAKER_KINDS = {"maker_manual", "maker_spec_page", "maker_site_page", "acquired"}
 MAKER_HOSTS: dict[str, tuple[str, ...]] = {
     "SYM": ("sym-usa.com", "sym-global.com"), "Kymco": ("kymcousa.com", "kymco.com"),
     "Genuine": ("genuinescooters.com",), "Honda": ("honda.com", "hondamotopub.com"),
-    "Kawasaki": ("kawasaki.com",), "Yamaha": ("yamahamotorsports.com", "yamaha-motor.com"),
-    "Suzuki": ("suzukicycles.com",), "KTM": ("ktm.com",), "Triumph": ("triumphmotorcycles.com",),
+    "Kawasaki": ("kawasaki.com",),
+    # library.ymcapps.net served the Vino 125 owner's manual PDF (5YR-F8199-15, 2026-09-23). Linked as
+    # Yamaha's Owner's Manual Library from acquired/Yamaha/models_*_specs.html (yamahamotorsports.com).
+    "Yamaha": ("yamahamotorsports.com", "yamaha-motor.com", "library.ymcapps.net"),
+    "Suzuki": ("suzukicycles.com",),
+    # The Azure CDN host served the 390 Duke 2024 owner's manual PDF (24_3214961_en_OM.pdf, 2026-09-23).
+    # Listed as that manual's link by ktm.com's own bikemanuals.manuals.json
+    # (acquired/KTM/en-us_service_manuals__jcr_content_root_responsivegrid_1_col_bikemanuals.manuals.json),
+    # the data endpoint named by ktm.com/en-us/service/manuals.html.
+    "KTM": ("ktm.com", "azwecdnepstoragewebsiteuploads.azureedge.net"),
+    "Triumph": ("triumphmotorcycles.com",),
     "MV Agusta": ("mvagusta.com",), "Zero": ("zeromotorcycles.com",),
     "BMW": ("bmw-motorrad.com", "bmwmotorcycles.com"), "LiveWire": ("livewire.com",),
     "Harley-Davidson": ("harley-davidson.com",), "Ducati": ("ducati.com",), "Aprilia": ("aprilia.com",),

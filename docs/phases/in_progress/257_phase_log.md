@@ -2046,3 +2046,110 @@ sentences that also named a gearbox, so it missed the tyre line.
 - clutch → 1;
 - drive → 1;
 - reach 3 → 10 → 1.
+
+### 2026-09-23 — Owner's manuals fetched (Yamaha, KTM); Triumph's download refused; two hosts added to E11 (operator decision)
+
+**Decision (operator):** add E11 hosts, but only hosts seen serving a
+manual. First the fetches, then one real owner's-manual PDF per maker
+saved with its sidecar, then exactly the host each PDF came from. No
+model call anywhere.
+
+**Method.**
+- Script reads went through `d7_probe.py` (runs `d7/20260923_180930`,
+  `_181321`, `_181419`).
+- API calls went through acquire's `Fetcher`: robots.txt, 1 request per
+  second, the cap. Yamaha's calls are JSON POSTs, which `Fetcher` does not
+  do, so a scratch subclass added only the POST, with the rate, cap and
+  robots check unchanged. Responses are in
+  `~/.cache/motodiag/om_probe/{Yamaha_20260923_181033,Triumph_20260923_181240,KTM_20260923_181536}/`.
+- Each list response that names a PDF, and the PDF, were saved with
+  `acquire.save()`: original, sidecar, derived text and its sidecar. The
+  list is the PDF's recorded referrer.
+
+**Yamaha**
+- `common.js`: `callAPI` is a POST of JSON.
+- The chain on `parts.yamaha-motor.co.jp/ypec_b2c/services/omb2c/`:
+  `product_list` (baseCode 6150, langId 02 → destination USA, user group
+  AL01) → `model_name_list` (product 10, "Motorcycles & Scooters", 10
+  displacement buckets, **153 names**) → `model_year_list` (Vino 125:
+  2009, 2005, 2004) → `model_list` (2009 → 1 publication, 5YR-F8199-15).
+- **The PDF is on a different host from the API:**
+  `https://library.ymcapps.net/library/om/contents/pdf/10/5YR-F8199-15_02.pdf`.
+  200, 2,428,098 B, **88 pages**, sha256
+  `3c14851382b799b13e58395945daee10967c2b215326e7402926f9486bcf6f66`.
+- **Census: 20 of 39** Yamaha spellings match a list name (all exact).
+  - Weak-spelling refusals, reported and not loosened: "Zuma" (ZUMA
+    125/50…), "V-Star 650" and "V-Star 1100" (V STAR 650 CLASSIC…).
+  - Not in the list: VMAX, XS650, RD350, the XC50 codes and others.
+- The manual's page 8-1 (PDF p. 71) prints "Clutch type / Dry,
+  centrifugal automatic", "Transmission type / V-belt automatic" and
+  "Operation / Centrifugal automatic type".
+
+**Triumph**
+- The axios chunk sets the API base, `https://api.triumphtechnicalinformation.com`,
+  called with credentials. A 428 `captchaRequired` response triggers
+  reCAPTCHA Enterprise.
+- `/handbooks/system/product-options` → 6 product ranges →
+  `/handbooks/products/model-names?productRange=` → **306 names**.
+- `/handbooks/products/model-years?modelName=Tiger Sport 660` → a
+  product-details id per year → `/handbooks/product-details/{id}` (model
+  code LL2) → `/handbooks/documents?modelCode=LL2&modelYear=2025&state=published&onlyValid=true&handbook=true`
+  → **38 documents**, all `application/pdf`.
+- Among them is the Owner's Handbook 3850782-US (id
+  692733e3088d4f260364389e), covering Trident 660, Tiger Sport 660,
+  Tiger Sport 800 and Daytona 660. Its record carries a content id, not a
+  URL.
+- **The only file URL in the app, `/documents/{id}/download`, returned
+  403** (a JSON message, body not kept; not retried). The bundle gates the
+  download button behind `downloadEnabled`, which is unset for a public
+  visitor. **No Triumph PDF was served, so no Triumph host was added.**
+- **Census: 32 of 52** match a list name (25 exact, 7 contains).
+- Scripts read to get here: ResultsPage (it gives the documents call's
+  parameters) and DocumentPage, which turned out to be PDF.js.
+
+**KTM**
+- The main clientlib's `bikemanuals` component calls
+  `…bikemanuals.suggestions.json?query=` (model names with a year) and
+  `…bikemanuals.manuals.json?modelName=`. Each manual has a `link`.
+- "390 Duke 2024" → the US manual
+  `https://azwecdnepstoragewebsiteuploads.azureedge.net/24_3214961_en_OM.pdf`,
+  an Azure CDN host, not ktm.com. 200, 9,708,153 B, **143 pages**, sha256
+  `6bb8fc51338ed85a50bd8b5b69d8e427e7ba9694fc9f12b8f4e83f89c8d18aac`.
+- **Census: 28 of 41** match a suggested model name (year stripped; 178
+  names from one query per census spelling; 26 exact, 2 contains).
+  "Not Found" came back for LC8, LC8c, 350 SXF, 690 Duke 4, CAN Keihin
+  and LC8 V-twin.
+
+**E11 before the host change** (`acquired_provenance` on the saved files):
+- Yamaha fails: its referrer, the API host, is not a Yamaha host.
+- KTM fails: its referrer is on ktm.com, but `links_to` reads HTML links,
+  and a JSON response holds none.
+
+**Done:**
+- `MAKER_HOSTS["Yamaha"]` gains `library.ymcapps.net`.
+- `MAKER_HOSTS["KTM"]` gains `azwecdnepstoragewebsiteuploads.azureedge.net`.
+- Each carries a comment naming the manual it served and the maker page
+  on disk that links the portal: `acquired/Yamaha/models_*_specs.html`,
+  and ktm.com's `bikemanuals.manuals.json`
+  (`acquired/KTM/en-us_service_manuals__jcr_content_root_responsivegrid_1_col_bikemanuals.manuals.json`).
+- Exact hosts only, never `ymcapps.net` or `azureedge.net`.
+- Not added: `parts.yamaha-motor.co.jp` (it served lists, not a manual)
+  and any Triumph host.
+
+**Tests** (`test_phase257_source_checks.py::TestAcquiredProvenance`):
+- `test_the_owners_manual_hosts` (11): the two hosts pass. These fail:
+  - lookalikes `yamaha-motor.co.jp.example.com`,
+    `library.ymcapps.net.example.com`, `evillibrary.ymcapps.net`,
+    `ymcapps.net`, `…azureedge.net.example.com`,
+    `otherstorage.azureedge.net`;
+  - the Yamaha API host and Triumph's API host;
+  - the Yamaha host for KTM.
+- `test_the_fetched_manuals_pass_e11` (2): the real PDFs and their
+  derived texts pass E11. **It skips on a machine without the library.**
+
+**Break-it**, each part reverted on its own; every one is caught:
+- the Yamaha host removed → 2 fail;
+- the KTM host removed → 2;
+- the suffix match without the dot → 2;
+- the parent `ymcapps.net` instead → 2;
+- the parent `azureedge.net` instead → 1.

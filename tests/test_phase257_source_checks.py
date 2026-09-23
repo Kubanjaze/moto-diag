@@ -372,6 +372,41 @@ class TestAcquiredProvenance:
         from library_index import maker_host
         assert maker_host(url, make) is ok
 
+    @pytest.mark.parametrize("url,make,ok", [
+        # The hosts each maker's own owner's manual PDF was served from (operator, 2026-09-23).
+        ("https://library.ymcapps.net/library/om/contents/pdf/10/5YR-F8199-15_02.pdf", "Yamaha", True),
+        ("https://azwecdnepstoragewebsiteuploads.azureedge.net/24_3214961_en_OM.pdf", "KTM", True),
+        # Lookalikes must still fail.
+        ("https://yamaha-motor.co.jp.example.com/x.pdf", "Yamaha", False),
+        ("https://library.ymcapps.net.example.com/x.pdf", "Yamaha", False),
+        ("https://evillibrary.ymcapps.net/x.pdf", "Yamaha", False),
+        ("https://ymcapps.net/x.pdf", "Yamaha", False),
+        ("https://azwecdnepstoragewebsiteuploads.azureedge.net.example.com/x.pdf", "KTM", False),
+        ("https://otherstorage.azureedge.net/x.pdf", "KTM", False),
+        # Seen, but not serving a manual: the API host, Triumph's 403 portal.
+        ("https://parts.yamaha-motor.co.jp/ypec_b2c/services/omb2c/model_list/", "Yamaha", False),
+        ("https://api.triumphtechnicalinformation.com/documents/x/download", "Triumph", False),
+        # A host added for one make does not vouch for another.
+        ("https://library.ymcapps.net/x.pdf", "KTM", False),
+    ])
+    def test_the_owners_manual_hosts(self, url, make, ok):
+        from library_index import maker_host
+        assert maker_host(url, make) is ok
+
+    @pytest.mark.parametrize("make,rel", [
+        ("Yamaha", "acquired/Yamaha/library_om_contents_pdf_10_5YR-F8199-15_02.pdf"),
+        ("KTM", "acquired/KTM/24_3214961_en_OM.pdf"),
+    ])
+    def test_the_fetched_manuals_pass_e11(self, make, rel):
+        """The real PDFs and their derived texts, in the operator's library."""
+        from entry_check import acquired_provenance
+        from library_index import LIBRARY
+        doc = LIBRARY / rel
+        if not doc.is_file():
+            pytest.skip(f"{rel} is not in this machine's library")
+        assert acquired_provenance(doc, LIBRARY, make, "t") == []
+        assert acquired_provenance(doc.with_name(doc.name + ".txt"), LIBRARY, make, "t") == []
+
 
 class TestTheReferrerLinkIsResolvedLikeABrowser:
     """A page saved with 'Save Page As' keeps relative links; E11 resolves

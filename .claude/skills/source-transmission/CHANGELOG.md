@@ -124,3 +124,13 @@ belt (which also matches V-belt), clutch or drive, the same shape as E12's
 "manual" rule. It no longer counts Triumph's "automatic warnings if tyres
 fall", BMW's "Automatic Stability Control" or Honda's "automatic reset
 mode". Triumph's dry run is back to 0.
+
+## 2026-09-23 — E11: two owner's-manual hosts, each seen serving a manual (operator)
+
+Added to `MAKER_HOSTS`: `library.ymcapps.net` (Yamaha: it served the
+Vino 125 owner's manual; yamahamotorsports.com's spec pages link to it)
+and `azwecdnepstoragewebsiteuploads.azureedge.net` (KTM: it served the
+390 Duke 2024 owner's manual, the link given in ktm.com's own
+`bikemanuals.manuals.json`). Each is an exact host, not its parent
+domain. No Triumph host: its handbook download returned 403. Lookalikes
+still fail.
