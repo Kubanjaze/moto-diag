@@ -889,3 +889,37 @@ resolve `manual`; SV650, SV650 Gladius, GSX-R1100, GSX-S750, DR-Z400SM stay
 `unknown`; the make is the scope. The suites that mention these machines
 (Phases 57–65 Suzuki knowledge, 79–82, 95, 108, 155, 221, 227, 255, 255B,
 256): 541 pass. 244G clean.
+
+### 2026-09-23 — Bug fix #3: "kept" was read as "kept, and the page is about this model"
+
+- **Issue:** run `Suzuki_20260923_093052` put SV650 in `ready_to_write`.
+  Refute's own reason: "the page is for the SV650 ABS variant. The base
+  SV650 is named only historically ('first SV650 debuted in 1999') … This
+  is family evidence only and cannot write an entry." Its verdict: `kept`.
+  The D5 disagreement stop never fired. (Caught by the operator; SV650
+  was withheld from the Suzuki write.)
+- **Root cause:** the verdict schema had one axis, kept/killed — whether the
+  quote holds. It could not say "kept as family evidence", so the second
+  judgment lived only in free text, and `ready_to_write` trusted the label
+  over the reason. The script's own rule (`names_model`) also read the page
+  as naming the SV650: ABS is equipment, and the page mentions "the first
+  SV650". Two checks that could each say yes, and no place for refute to
+  say no.
+- **Fix:** refute's schema gains a required boolean `names_model` (is the
+  document about THIS exact model — not a variant, sibling, or passing
+  mention); the prompt separates it from `verdict`. A finding writes only
+  when refute's `names_model` is true AND the script's check agrees (the
+  page names the model, or refute's `model_line` verifiably does). A
+  missing field is not a yes. When they disagree the finding is family
+  evidence and the batch stops (D5).
+- **Files:** `orchestrate.py`; `fixtures/library/pdfs/zz_blade650abs_spec.txt`
+  (the SV650 ABS page's shape: an "…650 ABS" page naming the base model only
+  as "the first … debuted in 1999"); `tests/test_phase257_source_stage.py`.
+- **Verified:** the known-bad case added first and seen to fail (3 failed:
+  it reached ready_to_write, no stop, a missing field counted as yes).
+  Fixed: 31 pass. **Break-it:** the label trusted again → 3; a missing
+  field counted as yes → 1; no disagreement stop → 1; refute alone decides
+  (no script check) → 4. 387 pass across 257 + 255D; 244G clean. Runs made
+  before this fix carry no `names_model`, so none of their findings would
+  now pass the gate.
+- **Commit:** this one.

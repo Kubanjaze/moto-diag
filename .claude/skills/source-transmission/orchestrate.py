@@ -383,10 +383,11 @@ SOURCE_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["
 VERDICT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["verdicts"],
                   "properties": {"verdicts": {"type": "array", "items": {
                       "type": "object", "additionalProperties": False,
-                      "required": ["spelling", "verdict", "quote", "page", "model_line", "reason"],
+                      "required": ["spelling", "verdict", "quote", "page", "names_model", "model_line", "reason"],
                       "properties": {"spelling": {"type": "string"},
                                      "verdict": {"enum": ["kept", "killed"]},
                                      "quote": {"type": "string"}, "page": {"type": ["string", "integer"]},
+                                     "names_model": {"type": "boolean"},
                                      "model_line": {"type": "string"},
                                      "reason": {"type": "string"}}}}}}
 
@@ -406,6 +407,7 @@ REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings 
 If the cited document is under evidence/, it is a copy the source stage saved: its <file>.provenance.json names the ORIGINAL (and, for a URL, the pinned fetch in "fetched_as"). Check the quote against the ORIGINAL, not against the copy.
 Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
 Render page images ONLY for findings marked needs_page_image (weak OCR); for a digital text layer, read the text.
+`verdict` answers whether the quote is on the page and establishes the mechanism. `names_model` answers a separate question: true ONLY if the document is about THIS exact model — not a variant of it ("SV650 ABS" is not the SV650), not a sibling, not the model named in passing (history, comparison). "kept" with names_model false is family evidence and writes nothing.
 `model_line`: copy VERBATIM the line on the document that names THIS exact model (the finding's spelling) — not a sibling, a variant or the family: "1290 Super Duke GT" does not name the 1290 Super Duke R; "F 800 GS" does not name the F800. If the document names only a sibling or the family, return "" — the finding is then family evidence and cannot write an entry. The line is checked against the document by a script.
 Return one verdict per finding with the verbatim quote YOU saw and its page.
 Findings:
@@ -505,14 +507,26 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
+    # Bug fix #3: "kept" says the quote holds; it does not say the page is
+    # about THIS model. A finding writes only when refute's names_model is
+    # true AND the script agrees; a disagreement is a D5 stop.
     writable, family = [], []
+    disagree = []
     for f in (passed if not over else []):
         if f["spelling"] not in kept:
             continue
-        if f["scope"] == "model" or model_named(f, verdicts, r["clone"]):
+        v = next(x for x in verdicts if x.get("spelling") == f["spelling"])
+        refute_says = v.get("names_model") is True
+        script_says = f["scope"] == "model" or model_named(f, verdicts, r["clone"])
+        if refute_says and script_says:
             writable.append(f)
         else:
             family.append(f)
+            if refute_says != script_says:
+                disagree.append(f"{f['spelling']} (script {'named' if script_says else 'family'}, "
+                                f"refute {'named' if refute_says else 'family'})")
+    if disagree:
+        reasons.append(f"refute and the script disagree on whether the page names the model: {', '.join(disagree)}")
     summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
                     "family_evidence": family, "refute_per_finding": per_finding,
                     "ready_to_write": writable,

@@ -49,10 +49,10 @@ class Fake:
     """Stands in for subprocess.run. Records calls; answers per route."""
 
     def __init__(self, findings=(), turns=2, verdict="kept", source_usage=None, refute_usage=None,
-                 model_line=""):
+                 model_line="", names_model=True):
         self.calls: list[list[str]] = []
         self.findings, self.turns, self.verdict = list(findings), turns, verdict
-        self.model_line = model_line
+        self.model_line, self.names_model = model_line, names_model
         self.source_usage = source_usage if source_usage is not None else _usage(SUBC_MODEL)
         self.refute_usage = refute_usage if refute_usage is not None else _usage(OPUS_MODEL)
 
@@ -69,7 +69,8 @@ class Fake:
             out = {"type": "result", "is_error": False, "num_turns": 3,
                    "structured_output": {"verdicts": [
                        {"spelling": f["spelling"], "verdict": self.verdict, "quote": f["quote"],
-                        "page": f["page"], "model_line": self.model_line, "reason": "fake refute"}
+                        "page": f["page"], "model_line": self.model_line,
+                        "names_model": self.names_model, "reason": "fake refute"}
                        for f in findings]},
                    "modelUsage": self.refute_usage}
         return subprocess.CompletedProcess(cmd, 0, stdout="banner\n" + json.dumps(out) + "\n", stderr="")
@@ -355,3 +356,49 @@ class TestRefuteGroups:
         s = run_with(fake, ["Trail 250", "Sprint 900"])
         assert len(fake.refute_calls()) == 1, "after a group over budget, no further group runs"
         assert any(r.startswith("refute tokens") for r in s["stops"]) and s["ready_to_write"] == []
+
+
+BLADE_DOC = str(LIB / "pdfs" / "zz_blade650abs_spec.txt")
+
+
+def _blade():
+    return {"make": "ZZ", "spelling": "Blade 650", "aliases": [], "outcome": "found", "transmission": "manual",
+            "quote": "The close-ratio, six-speed transmission features carefully selected ratios.",
+            "document": BLADE_DOC, "page": 2, "evidence_kind": "maker_spec_page"}
+
+
+class TestBugFix3RefuteMustSayTheModelIsNamed:
+    """The SV650 ABS case (run Suzuki_20260923_093052), as a fixture: the
+    page is the ABS variant and names the base model only historically
+    ('the first … debuted in 1999'). The script's rule reads it as named;
+    refute's reason said family evidence, but its verdict said 'kept' — and
+    kept/killed could not say 'kept as family evidence', so ready_to_write
+    trusted the label. Refute now answers names_model, and both must agree."""
+
+    def test_the_sv650_abs_case_does_not_reach_ready_to_write(self, run_with):
+        fake = Fake(findings=[_blade()], names_model=False)
+        s = run_with(fake, ["Blade 650"])
+        assert s["ready_to_write"] == []
+        assert [f["spelling"] for f in s["family_evidence"]] == ["Blade 650"]
+
+    def test_the_disagreement_is_a_stop(self, run_with):
+        """D5: refute and the script disagree — the batch stops, it does not
+        quietly pick one."""
+        s = run_with(Fake(findings=[_blade()], names_model=False), ["Blade 650"])
+        assert any("disagree" in r and "Blade 650" in r for r in s["stops"])
+
+    def test_a_missing_names_model_is_not_a_yes(self, run_with):
+        s = run_with(Fake(findings=[_blade()], names_model=None), ["Blade 650"])
+        assert s["ready_to_write"] == []
+
+    def test_both_saying_named_still_writes(self, run_with):
+        s = run_with(Fake(findings=[_found()], names_model=True), ["Trail 250"])
+        assert [f["spelling"] for f in s["ready_to_write"]] == ["Trail 250"] and s["stops"] == []
+
+    def test_refute_saying_named_cannot_overrule_the_script(self, run_with):
+        """The sibling page (Sprint 900 GT): refute says named, the script
+        does not, and refute's line does not name the model."""
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")], names_model=True,
+                    model_line="ZZ Sprint 900 GT Owner's Manual")
+        s = run_with(fake, ["Sprint 900"])
+        assert s["ready_to_write"] == []
