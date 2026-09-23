@@ -1445,3 +1445,45 @@ operation." in sentences of their own (checked), so a one-sentence
 both documents (R 850 R / R 1150 R for R1150, R 1100 S for R1100 —
 checked): family evidence, zero entries either way. My report claimed a
 reach I had not measured.
+
+### 2026-09-23 — Bug fix #5: E12's negation and document-title rules read only plain-typed text
+
+**Issue.** Three things E12 read wrongly, each planted as a case that must
+fail E12 and watched passing on the old code (3 failed) before the fix:
+- `Rider’s Manual` (BMW's own text, typographic apostrophe) was not
+  recognised as a document title, so "Manual" counted as gearbox evidence;
+- `don't` is not in the negation list: "With Honda E-Clutch you don't have to
+  operate the clutch lever…" (constructed; to be replaced by Honda's own
+  E-Clutch wording once acquired);
+- a negation after the term: "The clutch lever is not required when
+  shifting."
+
+**Root cause.** `DOCUMENT_MANUAL` and `NEGATION` were written for `'` and
+bare words, and `_unnegated` looked only at the 5 words before the term. The
+cases were all hand-typed, so none of them contained the documents' own
+typography (see the shared-cause paragraph below).
+
+**Fix.** In `manual_evidence`, `’` and `‘` are read as `'` before any rule
+runs. `NEGATION` gains `cannot` and `n't`. `_unnegated` also checks the
+`NEGATION_AFTER = 4` words after the term. Every change only removes passes,
+so E12 can only get stricter.
+
+**Files.** `.claude/skills/source-transmission/entry_check.py`,
+`tests/test_phase257_source_checks.py` (`TestBugFix5E12ReadsRealTypography`,
+5 cases).
+
+**Verified.**
+- The E12 decisions snapshot (`e12_outcomes.py`, 35 decisions) is identical
+  before and after. The 20 written manual entries all still pass. No BMW
+  outcome changed (passing: F650, F900, K1200GT, K1200RS, R1200, R1200GS,
+  S 1000 R, S1000).
+- Break-it: each part of the fix was reverted on its own.
+  - The curly-apostrophe read: 2 cases fail.
+  - `n't`: 1 case fails.
+  - The after-window (set to 0): 1 case fails.
+  - `cannot`: survived on the first three cases, because `\bnot` never
+    matches inside "cannot". A fourth case was added and it now fails.
+  - The `‘` half of the read is not caught on its own: no case uses a left
+    quote as an apostrophe, and I have not found one in the documents.
+
+**Commit.** This entry's commit.

@@ -345,8 +345,10 @@ AUTOMATED = re.compile(r"\bdct\b|dual[- ]clutch|\by-?amt\b|\bautomated\b|\bautom
                        r"\bmanual (?:shift )?mode\b|\bpaddle", re.I)
 # A negation governing the clutch/shift term: "eliminates the clutch lever",
 # "without a clutch lever", "no clutch lever to pull", "no need to".
-NEGATION = re.compile(r"\b(?:no|not|without|eliminates?|eliminated|eliminating|never|nor|free of)\b", re.I)
+NEGATION = re.compile(r"\b(?:no|not|without|eliminates?|eliminated|eliminating|never|nor|free of|cannot)\b"
+                      r"|n't\b", re.I)
 NEGATION_REACH = 5                      # words before the term
+NEGATION_AFTER = 4                      # and after it: "the clutch lever is not required" (bug fix #5)
 
 
 def _sentences(q: str) -> list[str]:
@@ -358,7 +360,8 @@ def _sentences(q: str) -> list[str]:
 def _unnegated(pattern: re.Pattern, sentence: str) -> bool:
     for m in pattern.finditer(sentence):
         before = re.findall(r"[\w'-]+", sentence[:m.start()])[-NEGATION_REACH:]
-        if not NEGATION.search(" ".join(before)) and not NEGATION.search(m.group(0)):
+        after = re.findall(r"[\w'-]+", sentence[m.end():])[:NEGATION_AFTER]
+        if not any(NEGATION.search(" ".join(w)) for w in (before, after)) and not NEGATION.search(m.group(0)):
             return True
     return False
 
@@ -369,7 +372,9 @@ def manual_evidence(quote: str) -> bool:
     clutch, or a clutch pull — a noun pull, anywhere in the sentence), a
     foot-shift pattern, or the word "manual" — with no automated-transmission
     marker in that sentence and no negation governing the term."""
-    q = " ".join((quote or "").split())
+    # Typographic apostrophes read as plain ones (bug fix #5): BMW prints
+    # "Rider’s Manual", Honda "don’t" — the rules below were written for "'".
+    q = " ".join((quote or "").replace("’", "'").replace("‘", "'").split())
     for s in _sentences(q):
         if AUTOMATED.search(s):
             continue

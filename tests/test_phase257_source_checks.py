@@ -545,3 +545,26 @@ class TestTheWidenedPullOnTheRealPages:
     def test_suzuki_sentences(self, sentence, ok):
         from entry_check import manual_evidence
         assert manual_evidence(sentence) is ok
+
+
+class TestBugFix5E12ReadsRealTypography:
+    """Bug fix #5 (operator, 2026-09-23): E12's negation and document-title
+    rules read only plain-typed text. Each of these must fail E12."""
+
+    @pytest.mark.parametrize("quote", [
+        # Real BMW text, typographic apostrophe: "Rider’s Manual" names the
+        # document, not a gearbox (BMW prints it this way 55 times).
+        "Location of type plate On rear frame on left ( b Rider’s Manual, Chapter 1)",
+        # Constructed; to be replaced by Honda's own E-Clutch wording once acquired.
+        "With Honda E-Clutch you don't have to operate the clutch lever when starting or stopping.",
+        # The negation comes after the term.
+        "The clutch lever is not required when shifting.",
+        # Constructed; "cannot" has no word boundary before its "not", so the
+        # bare-word list never saw it (break-it survivor until this case).
+        "You cannot operate the clutch lever while the system is active.",
+        # Constructed; the same apostrophe in its typographic form.
+        "You don’t have to operate the clutch lever when starting.",
+    ])
+    def test_it_fails_e12(self, quote):
+        from entry_check import manual_evidence
+        assert not manual_evidence(quote)
