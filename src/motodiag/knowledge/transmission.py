@@ -291,6 +291,33 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "drive.'",
        source_route="subconscious/glm-5.3-marathon@default"),
 
+    # --- BMW -------------------------------------------------------------
+    # Phase 257, run BMW_20260923_142134, source claude-opus-5-5@medium
+    # (Subconscious suspended), refute on Opus: BMW Motorrad's own rider's
+    # manuals, fetched through its manuals site's static index by acquire.py
+    # into ~/research/motodiag/acquired/BMW/. Each kept, names_model true
+    # (the manual's title page names the model), each quote passing E12.
+    _E("BMW", "K 1200 GT", MANUAL, ("k1200gt", "k 1200 gt"),
+       "manuals.bmw-motorrad.com …/PDF/K_0587_RM_0414_K1200GT_01.pdf (Rider's "
+       "Manual K 1200 GT), p. 144: 'Clutch pulled when ignition was OFF "
+       "Switch on the ignition, then pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1200 RS", MANUAL, ("k1200rs", "k 1200 rs"),
+       "manuals.bmw-motorrad.com …/PDF/K_0547_WA_0504_K1200RS_01.pdf (K 1200 RS "
+       "maintenance manual), p. 64, technical data: 'Manual transmission "
+       "6-speed with claw shift and integral…'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "R 1200 GS", MANUAL, ("r1200gs", "r 1200 gs"),
+       "manuals.bmw-motorrad.com …/PDF/R_0A01_RM_0213_R1200GS_01.pdf (Rider's "
+       "Manual R 1200 GS), p. 83: 'Select neutral or, if a gear is engaged, "
+       "pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "S 1000 R", MANUAL, ("s 1000 r", "s1000r"),
+       "manuals.bmw-motorrad.com …/PDF/S_0D02_RM_0913_S1000R_01.pdf (Rider's "
+       "Manual S 1000 R), p. 59: 'Brake, pull the clutch lever or turn the "
+       "throttle twistgrip … to deactivate the cruise-control system.'",
+       source_route="claude-opus-5-5@medium"),
+
     # --- Kawasaki --------------------------------------------------------
     # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year
     # spec pages, fetched by acquire.py (cookie jar) into

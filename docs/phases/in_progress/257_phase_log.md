@@ -1370,3 +1370,48 @@ and consistent release point."), `manual`, model scope, `edition: ABS`,
 kept with `names_model: true`; no rejections, nothing withheld. The entry's
 text is unchanged; its `source_route` is now `claude-opus-5-5@medium` and
 its comment names this run.
+
+### 2026-09-23 — BMW: acquired, batched on claude-opus-5-5@medium, four written
+
+**Acquire:** the first live run matched 0 of 39 — the live Nav.xml breaks
+lines between attributes (`LANGUAGE="01"\r\nFILENAME=…`) where D7's copy
+had one space; parse made whitespace-tolerant (`c…` commit, tested). Re-run:
+**22 of 39 matched**, 22 fetches, 78 MB of rider's-manual PDFs; 10 exact,
+12 `contains` (family). A second defect: F 750 GS / F 850 GS took the
+block's certificates PDF (`…ZBA_Zertifikate_01.pdf`); the route now
+prefers `_RM_` and never takes a certificate (`c39a1aa`, tested; both were
+family matches, so nothing could have been written from them).
+
+**Batch** `BMW_20260923_142134`, source claude-opus-5-5@medium:
+
+| stage | tokens | turns |
+|---|---|---|
+| source (claude-opus-5-5@medium) | 349,842 | 2 |
+| refute (claude-opus-5-5) | 192,747 | 8 |
+
+25 sent, 17 found, 8 refuted, 0 killed. **Written (4):** K 1200 GT ("…then
+pull the clutch lever"), K 1200 RS ("Manual transmission 6-speed with claw
+shift…"), R 1200 GS ("Select neutral or, if a gear is engaged, pull the
+clutch lever"), S 1000 R ("Brake, pull the clutch lever … to deactivate the
+cruise-control system") — each kept, names_model true, `source_route`
+claude-opus-5-5@medium. **Family evidence (4), not written:** R1200 (the R
+1200 GS manual), F650 (F 650 GS), F900 (F 900 R), S1000 (S 1000 R).
+**Withheld by E12 (7 findings) + E10 (1):** K1200S / K1200 ("Only shift
+gear with the clutch disengaged." — no lever, pedal or "manual": a correct
+rejection); **K1600GT, K1300S, K1300 — "Gear engaged and clutch not
+disengaged Select neutral or pull the clutch lever."**: a troubleshooting
+table's condition and remedy cells run together without a full stop, so the
+"not" of the condition sits within E12's five-word negation window before
+"pull the clutch lever" — **an E12 false negative, reported, not
+loosened**; **R1150, R1100 — "…dry clutch … Hydraulic actuation /
+operation"**: the words in the reverse order of E12's "hydraulic … clutch"
+pattern — also reported. K1300 also E10 (its quote not in its excerpts).
+No evidence: F800GS, S 1000 XR, F700, F750, F800, F850, K100, K75, R1250,
+ShiftCam.
+
+A Phase 255B test used BMW R1200GS as its example of an unknown machine
+(`test_4605_stays_unscoped_and_that_is_the_point`); moved to BMW R1250,
+still unknown, assertions untouched — as the Grom → CBR1000RR move in
+tranche 1. Census 586 → **582**. The written-entries guard covers 20
+manual entries. 1,206 pass across the 26 suites mentioning these machines
++ the 255 axis suite; 244G clean.

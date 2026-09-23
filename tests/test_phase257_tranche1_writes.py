@@ -198,7 +198,8 @@ class TestEveryPhase257ManualEntryMeetsE12:
     import pytest as _pytest
 
     PHASE_257 = [("SYM", "Wolf 150"), ("SYM", "Wolf CR300i"), ("Kymco", "K-Pipe"), ("Honda", "Grom 125"),
-                 ("Suzuki", "SV650"), ("Suzuki", "V-Strom 650"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
+                 ("Suzuki", "SV650"), ("Suzuki", "V-Strom 650"),
+                 ("BMW", "K 1200 GT"), ("BMW", "K 1200 RS"), ("BMW", "R 1200 GS"), ("BMW", "S 1000 R"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
                  ("Kawasaki", "Ninja ZX-10R"), ("Kawasaki", "Ninja ZX-6R"), ("Kawasaki", "Ninja H2"),
                  ("Kawasaki", "KLR650"), ("Kawasaki", "Z900"), ("Kawasaki", "Ninja 300"),
                  ("Kawasaki", "KLX300"), ("Kawasaki", "Z650")]
@@ -259,3 +260,25 @@ class TestSV650Write:
 
     def test_the_gladius_is_another_machine(self):
         assert resolve_transmission("Suzuki", "SV650 Gladius").provenance == "unknown"
+
+
+class TestBMWWrite:
+    """Run BMW_20260923_142134 on the fallback source route
+    (claude-opus-5-5@medium): four rider's manuals whose title pages name
+    the model, each quote naming the clutch lever or 'Manual transmission'."""
+
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("model", ["K1200GT", "K 1200 GT", "K1200RS", "R1200GS", "R 1200 GS", "S 1000 R", "S1000R"])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("BMW", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"manual"}), model
+        assert r.entry.source_route == "claude-opus-5-5@medium"
+
+    @_pytest.mark.parametrize("model", ["R1200", "F650", "F900", "S1000", "K1600GT", "K1200S", "K1300S",
+                                        "R1150", "R1100", "R1200GS LC", "S 1000 XR", "F800GS"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """Family evidence (R1200, F650, F900, S1000); E12 rejections (K1600GT,
+        K1300S, K1200S, R1150, R1100); no evidence (F800GS, S 1000 XR); a
+        different spelling (R1200GS LC)."""
+        assert resolve_transmission("BMW", model).provenance == "unknown", model
