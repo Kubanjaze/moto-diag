@@ -266,9 +266,11 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "sentence that names the clutch lever only in a negation ('without "
        "pulling in the clutch lever'), which E12 no longer accepts.",
        source_route="subconscious/glm-5.3-marathon@default"),
-    # Live vehicle #8 is a 2019 SV650. Run Suzuki_20260923_123652 on the
-    # fallback source route (claude-sonnet-5; Subconscious suspended), refute
-    # on Opus: kept, names_model true. From the ABS edition's page — the
+    # Live vehicle #8 is a 2019 SV650. Run Suzuki_20260923_141812 on the
+    # fallback source route (claude-opus-5-5 at medium; Subconscious
+    # suspended), refute on Opus: kept, names_model true — the same
+    # document, quote and classification as the first cut's claude-sonnet-5
+    # run (Suzuki_20260923_123652). From the ABS edition's page — the
     # operator's one named exception.
     _E("Suzuki", "SV650", MANUAL, ("sv650", "sv 650", "sv650 abs", "sv 650 abs"),
        "From the ABS edition's page (the base model's only current page): "
@@ -276,7 +278,7 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "multi-plate clutch has precise push rod actuation of the pressure "
        "plate for a light pull and consistent release point.' — the rider's "
        "clutch pull.",
-       source_route="claude-sonnet-5@default"),
+       source_route="claude-opus-5-5@medium"),
     _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
        "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
        "five-speed transmission utilizes a cable-operated clutch with a "

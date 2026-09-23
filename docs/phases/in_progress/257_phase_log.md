@@ -1360,3 +1360,13 @@ is kept). **Break-it:** effort not passed → 3; refute gets an effort → 2;
 the label drops the effort → 2; the fallback back on Sonnet → 3; the shape
 phrase removed → 1; the source not streamed → **survived twice** (no test,
 then a test that accepted an empty file), then 1. 509 pass; 244G clean.
+
+### 2026-09-23 — SV650 re-sourced on claude-opus-5-5@medium: the result matches
+
+Run `Suzuki_20260923_141812`: source claude-opus-5-5@medium **18,564 tokens,
+2 turns** (Sonnet: 26,025, 2); refute claude-opus-5-5 63,816, 4 turns. Same
+document (`street_2026_sv650-abs.html.txt`), same quote ("…for a light pull
+and consistent release point."), `manual`, model scope, `edition: ABS`,
+kept with `names_model: true`; no rejections, nothing withheld. The entry's
+text is unchanged; its `source_route` is now `claude-opus-5-5@medium` and
+its comment names this run.
