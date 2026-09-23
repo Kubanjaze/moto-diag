@@ -366,3 +366,36 @@ which D1 measured as failing and which the rule exists to avoid; and, as the
 `ping` skill itself says, loading a skill is not the same as following it.
 The enforcement stays in the tests.
 
+### 2026-09-22 21:24 — Bug fix #9: A4 could not tell a true heading time from an impossible one
+
+**Issue.** The register's own times were wrong and nothing checked them:
+#5 and #6 read 21:40 and 21:55, both written in commits authored at
+20:17–20:18; #7 and #8 were first written as 22:40 and 22:55 in a commit
+authored at 20:39. 255C #7 read 18:05, written at 16:25.
+
+**Root cause.** A4 checked that each commit exists, never the time claimed
+beside it.
+
+**The rule requested, and why it was not the one built.** The operator asked
+for the heading compared to the *fix* commit. Measured over 255C and 255D,
+that fails **11 of 13 honest entries**: a heading records when the entry was
+written, often in a close-out batch an hour after the fix (255D #1–#4:
+fixed 19:14–19:23, written 20:10, committed 20:15). The rule would have
+required rewriting correct headings to make it pass. The operator chose
+instead: **a heading may not be later than the commit that recorded it**, +5
+minutes. It fires on exactly the five impossible headings above and nothing
+else.
+
+**Fix.** `dated_after_recording` in `closeout_check.py`, via the first
+commit whose diff adds that exact heading line (`git log -S`). 255C #7
+corrected to 16:25; #5/#6 corrected to 20:18 in `2509272`.
+
+**Files.** `.claude/skills/closeout/closeout_check.py`, the bad fixture, the
+contract test, `docs/phases/completed/255C_phase_log.md`, the floor.
+
+**Verified.** 38 closeout tests; the three historical headings fire, 255D
+#1 (late but honest) passes. Break-it: rule neutered, five fail.
+`COLLECTED_TEST_FLOOR` 8,139 → 8,145.
+
+**Commit.** `1e3da83`.
+
