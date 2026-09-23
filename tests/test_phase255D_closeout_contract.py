@@ -64,6 +64,45 @@ class TestTheKnownBadFixtureFailsEveryAssertion:
             f"expected at least {len(ASSERTION_IDS)} failures, got {len(fails)}")
 
 
+class TestA4RequiresTheCommitToResolve:
+    """A Commit line must name a commit that exists.
+
+    The first cut of A4 checked only that the words `**Commit.**` were
+    present, so `This one.` passed — 255D bug fixes #5 and #6 shipped that
+    way, and 255C #7 said "See the close-out commit". A check that passes on
+    a non-answer cannot fail on the thing it exists for.
+    """
+
+    @pytest.fixture(scope="class")
+    def a4(self):
+        return [f for f in check(BAD, "ZZZ") if f.startswith("A4")]
+
+    def test_a_non_hash_commit_line_fails(self, a4):
+        assert any("name no" in f and "#1 'This one.'" in f for f in a4), a4
+
+    def test_a_hash_that_is_not_a_commit_fails(self, a4):
+        assert any("do not resolve" in f and "#4 aaaaaaa" in f for f in a4), a4
+
+    def test_a_real_hash_resolves(self):
+        from closeout_check import unresolved_commits
+        assert unresolved_commits(ROOT, " `f279533`.") == []
+
+    def test_a_sibling_repository_is_resolved_there(self):
+        """`hash` (name) resolves in the sibling checkout `name`.
+
+        Positive control: this repository named as its own sibling, so the
+        test does not depend on any other checkout being present.
+        """
+        from closeout_check import unresolved_commits
+        assert unresolved_commits(ROOT, f" `f279533` ({ROOT.name}).") == []
+
+    def test_an_absent_sibling_is_reported_not_skipped(self):
+        from closeout_check import unresolved_commits
+        assert unresolved_commits(
+            ROOT, " `f279533` (no-such-repo-255D).") == [
+                "f279533 (no-such-repo-255D)"]
+
+
 class TestTheKnownGoodFixturePasses:
     def test_no_assertion_fires(self):
         fails = check(GOOD, "ZZZ")

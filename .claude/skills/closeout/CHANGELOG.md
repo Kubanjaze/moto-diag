@@ -1,5 +1,29 @@
 # closeout — changelog
 
+## 2026-09-22 — A4 resolves the commit, not the word (Phase 255D fix #7)
+
+**A4 passed on a non-answer.** It looked only for the words `**Commit.**`,
+so `This one.` (255D fixes #5 and #6) and `See the close-out commit for this
+fix.` (255C fix #7) both satisfied it. The operator's `/closeout` read caught
+it; the check did not.
+
+A4 now takes the backticked hash on the Commit line and requires
+`git cat-file -e <hash>^{commit}` to succeed. A line with no hash fails as a
+non-answer; a well-formed hash that is not a commit fails as unresolved. A
+trailing `(name)` resolves in the sibling checkout `name` —
+`e536740` (workspace-docs) is real and lives there — and a sibling that is
+not checked out is **reported, not skipped**.
+
+The known-bad fixture plants both new defects (#1 `This one.`, #4
+`aaaaaaa`); the known-good fixture now cites two real 255C commits, because a
+fabricated hash can no longer pass. Break-it: with resolution neutered, three
+tests fail.
+
+**Scope, stated so it is not mistaken for a regression:** fifteen phases
+from 141 to 255 already failed A4 on *no Commit line at all* — they predate
+the register format. That is unchanged. The only phase this change newly
+fails is 255D, for the two lines it was written to catch.
+
 ## 2026-09-22 — created (Phase 255D)
 
 First procedure folder. Replaces close-out instructions that were spread
