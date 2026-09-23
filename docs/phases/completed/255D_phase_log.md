@@ -399,3 +399,12 @@ contract test, `docs/phases/completed/255C_phase_log.md`, the floor.
 
 **Commit.** `1e3da83`.
 
+### 2026-09-22 22:02 — Regression of record, after fix #9
+
+**Regression 8,145 passed / 0 failed / 0 skipped / 36:52 at `486e847`.**
+This supersedes `2b24d39` as the regression of record: fix #9 changed
+`closeout_check.py`, and `2509272` changed the closeout `SKILL.md` — both
+under `.claude/`, which check 2 now counts as code. `COLLECTED_TEST_FLOOR`
+8,145, raised in `1e3da83` before this run. Everything after `486e847` is
+this log. The no-database note above still holds: 255D touched no database.
+
