@@ -241,6 +241,17 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "254 recorded that this PDF's internal Title metadata reads "
        "'DOWNTOWN 125i(ok)' — High confidence in the quotes, Medium that "
        "the document is authored as a Like 150i manual."),
+    # Phase 257 tranche 1, run Kymco_20260922_232607, refute verdict kept.
+    # The manual is a scanned PDF, so refute rendered the spec page itself
+    # (pypdfium2, PDF page 57, printed 56, landscape) and read the line from
+    # the image — the OCR layer was never the evidence.
+    _E("Kymco", "K-Pipe", MANUAL,
+       ("k-pipe", "k-pipe 125", "kpipe", "kpipe 125", "kpipe125",
+        "t300-kb25ka-a"),
+       "Kymco K-Pipe 125 owner's manual (Version T300-KB25KA-A), spec table: "
+       "'Transmission.......................... 4-speed, foot shift'. "
+       "Corroborated by a rider clutch cable with 5-10 mm free play and an "
+       "N-1-2-3-4 gear pattern diagram."),
 
     # --- SYM -------------------------------------------------------------
     # SYM is the marque that proves the table is not 'scooter maker means

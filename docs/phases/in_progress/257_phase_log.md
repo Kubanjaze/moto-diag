@@ -59,3 +59,20 @@ model-sourced/manual, the bare `wolf` alias is unmoved, and an unseen Wolf
 spelling stays unknown. 244G raw-source scan over the new file: 19 pass.
 Kymco and the D7 acquisition run were still in flight when this was
 written; Honda queued behind them.
+
+### 2026-09-22 23:38 — Tranche 1 write: Kymco (one make, one commit)
+
+Batch `Kymco_20260922_232607`: K-Pipe found in the K-Pipe 125 owner's
+manual (a **scanned** PDF), entry_check clean, refute verdict `kept` on
+refute's own pypdfium2 render of spec page 57 (printed 56, landscape) —
+the OCR layer was corroborating, not evidence, and its artifacts
+('K-PIPE 1 25', footer '5556') were read against the image. `stops` empty.
+
+| spelling | before | after | entry |
+|---|---|---|---|
+| K-Pipe | unknown | model-sourced, manual | new entry, aliases incl. T300-KB25KA-A |
+
+Census of record: **603 → 602** (Kymco 11 → 10). Tranche tests now 10
+(a Kymco class: the spelling, every alias, an unseen Kymco spelling
+stays unknown). 166 pass across the tranche file, 244G and the 255
+axis suite. Honda still in flight when this was written.

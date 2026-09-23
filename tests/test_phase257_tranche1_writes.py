@@ -66,3 +66,28 @@ class TestSYMWrite:
         r = resolve_transmission("SYM", "Wolf TX")
         assert r.provenance == "unknown"
         assert r.candidates != frozenset({"manual"})
+
+
+class TestKymcoWrite:
+    """Run Kymco_20260922_232607: one spelling, refute verdict kept.
+
+    The manual is a scanned PDF, so the verdict rests on refute's own
+    render of the spec page, not the OCR layer.
+    """
+
+    def test_k_pipe_resolves_manual(self):
+        r = resolve_transmission("Kymco", "K-Pipe")
+        assert r.provenance == "model-sourced"
+        assert r.candidates == frozenset({"manual"})
+
+    def test_every_k_pipe_alias_resolves(self):
+        for model in ("K-PIPE", "K-PIPE 125", "K-Pipe 125", "KPIPE",
+                      "KPipe 125", "KPIPE125", "T300-KB25KA-A"):
+            r = resolve_transmission("Kymco", model)
+            assert r.provenance == "model-sourced", model
+            assert r.candidates == frozenset({"manual"}), model
+
+    def test_a_kymco_spelling_that_was_never_seen_stays_unknown(self):
+        r = resolve_transmission("Kymco", "X-Town")
+        assert r.provenance == "unknown"
+        assert r.candidates != frozenset({"manual"})
