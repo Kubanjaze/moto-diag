@@ -250,9 +250,28 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "centrifugal clutch' and 'Transmission  4 - speed gear change'. "
        "This is the mechanism definition of semi_auto_centrifugal, in the "
        "maker's own words."),
-    _E("SYM", "Wolf 150", MANUAL, ("wolf", "wolf 150", "wolf150"),
-       "SYM Wolf 150 owner's manual: 'Clutch lever' in the controls list "
-       "and a 'Clutch lever free play' maintenance item."),
+    # The Classic 150 is the Wolf 150 wearing its spec-page name: the same
+    # owner's manual (page 6 'MODEL: WOLF SERIES', 149.5 cc) has its spec
+    # table headed 'Model Classic 150' (PA15C1-A / PA15C1-C). Phase 257
+    # tranche 1, run SYM_20260922_232240, refute verdict kept.
+    _E("SYM", "Wolf 150", MANUAL, ("wolf", "wolf 150", "wolf150",
+                                  "wolf classic 150", "wolfclassic150",
+                                  "wolf classic", "wolf series"),
+       "SYM Wolf 150 owner's manual: 'Squeeze the clutch lever fully, "
+       "operate change pedal to the proper position, then release the "
+       "clutch lever to make a gear change.' (TRANSMISSION OPERATION, PDF "
+       "page 18; spec table PDF page 35: 'Clutch Wet disk type / "
+       "Transmission Gear', five speeds). Earlier evidence: 'Clutch "
+       "lever' in the controls list and a 'Clutch lever free play' "
+       "maintenance item."),
+    # Phase 257 tranche 1, run SYM_20260922_232240, refute verdict kept.
+    _E("SYM", "Wolf CR300i", MANUAL,
+       ("wolf cr300i", "wolf cr 300i", "wolfcr300i", "cr300i", "cr 300i",
+        "pf30a3 eu"),
+       "SYM Wolf CR300i owner's manual: 'Always use the clutch when "
+       "changing gear.' (Changing Gears, PDF page 12, with 1st-to-2nd ... "
+       "5th-to-6th shift tables — six speeds); spec table PDF page 24: "
+       "'Model WOLF CR 300i / Specification PF30A3-EU', 278 cc."),
     _E("SYM", "Mio 50", CVT, ("mio", "mio 50", "mio50"),
        "SYM Mio 50 owner's manual: 'Clutch  Centrifugal type  "
        "Transmission  CVT'."),

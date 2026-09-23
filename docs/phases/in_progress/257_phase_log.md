@@ -40,3 +40,22 @@ disabled → 2 fail. All 257 tests: 55.
 SYMBA 110, whose owner's manuals are already on disk — CVT and centrifugal
 machines. Tranche 1 stays as the operator defined it (manual gearboxes); a
 make-level SYM batch picks these up.
+
+### 2026-09-22 23:35 — Tranche 1 write: SYM (one make, one commit)
+
+Batch `SYM_20260922_232240`: both spellings found in the maker's own
+manuals (digital-native PDFs, no OCR), entry_check clean, both refute
+verdicts `kept` — refute re-pulled the PDFs' own text layer with pypdf,
+quotes verbatim, spec tables matching the models. `stops` empty.
+
+| spelling | before | after | entry |
+|---|---|---|---|
+| Wolf Classic 150 | unknown | model-sourced, manual | alias on the existing Wolf 150 entry |
+| Wolf CR300i | unknown | model-sourced, manual | new entry, aliases incl. PF30A3-EU |
+
+Census of record: **605 → 603** unknown spellings (SYM 7 → 5). New test
+`tests/test_phase257_tranche1_writes.py` (7): every new spelling resolves
+model-sourced/manual, the bare `wolf` alias is unmoved, and an unseen Wolf
+spelling stays unknown. 244G raw-source scan over the new file: 19 pass.
+Kymco and the D7 acquisition run were still in flight when this was
+written; Honda queued behind them.
