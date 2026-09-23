@@ -628,6 +628,17 @@ class TestCTheReaderIsMeasured:
         assert any("[reader miss: 1 passing line]" in w for w in s["withheld"])
         assert fake.refute_calls() == [], "measured, not retried: nothing more is called"
 
+    def test_a_family_page_is_not_a_reader_miss(self, run_with):
+        """Operator fix 2 (2026-09-23): a miss counts only when the finding's
+        model_scope is 'model'. The Sprint 900 GT manual holds a passing line
+        ('… return shift') but names only the sibling — the R1100 case, whose
+        passing line is in the R 1100 S's manual."""
+        f = _sprint(GT_DOC, "Transmission  6-speed constant mesh")
+        s = run_with(Fake(findings=[f]), ["Sprint 900"])
+        note = "not a reader miss: its document names only a sibling or the family"
+        assert s["e12_reader"] == {"Sprint 900": note}
+        assert any(x.startswith("E12 ZZ | Sprint 900:") and x.endswith(f"[{note}]") for x in s["rejections"])
+
     def test_a_finding_e12_passes_is_not_measured(self, run_with):
         s = run_with(Fake(findings=[_blade()]), ["Blade 650"])
         assert s["e12_reader"] == {}

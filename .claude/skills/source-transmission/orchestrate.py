@@ -520,7 +520,8 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
     for x in rejections:
         f = next((f for f in findings if x.startswith(f"E12 {f.get('make')} | {f.get('spelling')}:")), None)
         if f is not None:
-            e12_reader[f["spelling"]] = entry_check.reader_note(cands.get(f["spelling"], []))
+            e12_reader[f["spelling"]] = entry_check.reader_note(
+                cands.get(f["spelling"], []), entry_check.model_scope(f, r["clone"]))
             x += f" [{e12_reader[f['spelling']]}]"
         noted.append(x)
     rejections = noted

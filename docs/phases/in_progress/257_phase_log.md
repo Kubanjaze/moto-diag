@@ -1703,3 +1703,21 @@ No other assertion was touched.
 
 **Not moved** (never moved, so outside the instruction, but the same
 exposure): 257 `TestCensus` still plants Ducati "Panigale V4" as an unknown.
+
+### 2026-09-23 — A reader miss counts only on a page that names the model (operator fix 2)
+
+`reader_note` now takes the finding's `model_scope`. When the scope is not
+"model", the note reads "not a reader miss: its document names only a
+sibling or the family". `orchestrate.batch` passes
+`entry_check.model_scope(f, clone)`.
+
+Test `test_a_family_page_is_not_a_reader_miss`: a Sprint 900 finding cites
+the Sprint 900 GT manual, which holds a passing "… return shift" line but
+names only the sibling. Break-it: the scope not passed → 1 fails.
+
+**Re-applied to `BMW_20260923_142134`:**
+- **3 reader misses**: K1600GT (4 lines), K1200S (6) and K1300S (9), exactly
+  the three re-sourced and written in D.
+- **Not misses (family pages):** R1150, R1100, K1200 and K1300.
+- The C table above said "6 of 7 were reader misses". Under this rule
+  that figure is **3 of 7**.

@@ -399,7 +399,12 @@ def passing_sentences(excerpts: list[dict]) -> list[str]:
     return list(seen)
 
 
-def reader_note(excerpts: list[dict]) -> str:
+def reader_note(excerpts: list[dict], scope: str = "model") -> str:
+    """A miss counts only when the finding's document names its own model
+    (operator, 2026-09-23): R1100's passing line is in the R 1100 S's
+    manual, which could never have written the R1100."""
+    if scope != "model":
+        return "not a reader miss: its document names only a sibling or the family"
     n = len(passing_sentences(excerpts))
     return f"reader miss: {n} passing line{'s' if n != 1 else ''}" if n else "no passing line in its excerpts"
 
