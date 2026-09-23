@@ -42,11 +42,51 @@ class TestEntryCheckKnownBad:
         """E3: 6-speed quoted, 5-speed printed. Only reading the document tells."""
         assert any(f.startswith("E3") and "does not contain the quote" in f for f in fails)
 
+    def test_a_doctored_copy_is_caught_by_the_original(self):
+        """E3, the F141 case, in isolation: the quote IS in the model's
+        saved copy (evidence/gl125_saved.txt) and is NOT in the original
+        that copy declares (gl125_spec.html, pinned by sha256). A check
+        that reads the copy passes this; only matching against the
+        original catches it. Run alone, so no other plant can answer."""
+        planted = [f for f in json.loads((FIX / "bad.json").read_text(encoding="utf-8"))
+                   if f.get("document") == "evidence/gl125_saved.txt"]
+        assert planted, "the doctored-copy plant is missing from bad.json"
+        fails = check(planted, FIX)
+        assert any(f.startswith("E3") and "does not contain the quote" in f for f in fails), (
+            "the doctored copy went through: E3 is reading the copy, not the original")
+
+    def test_a_copy_with_no_declared_original_is_rejected(self, fails):
+        """E9: evidence/nosidecar.txt has the quote and the machine name —
+        everything a check could want — but no provenance sidecar."""
+        assert any(f.startswith("E9") and "provenance.json" in f for f in fails), (
+            "a copy with no declared original was accepted")
+
+    def test_a_stale_original_hash_is_rejected(self, fails):
+        """E9: the sidecar exists and is well-formed, but its sha256 pins
+        the copy's bytes, not the original's."""
+        assert any(f.startswith("E9") and "sha256" in f for f in fails), (
+            "a provenance pin that does not match the original was accepted")
+
 
 class TestEntryCheckKnownGood:
     def test_the_good_fixture_passes(self):
         fails = check(json.loads((FIX / "good.json").read_text(encoding="utf-8")), FIX)
         assert fails == [], fails
+
+    def test_a_declared_on_disk_original_passes(self):
+        """The good evidence case with a library original: quote in the
+        original HTML (extracted to text by entry_check itself), hash
+        correct."""
+        findings = [f for f in json.loads((FIX / "good.json").read_text(encoding="utf-8"))
+                    if f.get("document") == "evidence/trail_saved.txt"]
+        assert check(findings, FIX) == []
+
+    def test_a_declared_url_original_passes_offline(self):
+        """A URL original verified through its pinned fetch (fetched_as):
+        entry_check never opens a network connection."""
+        findings = [f for f in json.loads((FIX / "good.json").read_text(encoding="utf-8"))
+                    if f.get("document") == "evidence/gl150_saved.txt"]
+        assert check(findings, FIX) == []
 
 
 def _db(tmp_path, pairs):

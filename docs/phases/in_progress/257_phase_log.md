@@ -104,4 +104,28 @@ over-reach machine) — the assertion is untouched. Tranche tests now 14.
 handed to the operator:** the Honda findings cite `./evidence/grom*.txt`
 — saved copies the model rendered from the on-disk HTML — and
 entry_check E3 verified the quotes against those copies, not the
-originals. A model that edits its own saved copy passes E3 today.
+originals.
+
+### 2026-09-22 23:55 — F141 filed and closed: E3 verifies against the original, E9 demands provenance
+
+The operator confirmed the gap noticed above and ordered the fix.
+`entry_check.py`: a document under `evidence/` must carry a
+`<file>.provenance.json` sidecar — `original` (on-disk path or URL) plus
+its `original_sha256`, and `fetched_as` for a URL (the pinned fetch the
+no-model check reads offline). New class **E9** rejects a copy with no
+sidecar, an unreadable original, or a hash that no longer matches. E3
+extracts the ORIGINAL's text inside entry_check (HTML→text in its own
+code, `.txt` raw, PDF via pypdf — 6.14.2 in the venv) and matches the
+quote against that, never against the saved copy; E4 runs against the
+same original-derived text. The source-stage prompt now instructs the
+model to write sidecars; refute's prompt tells it to check originals.
+
+Fixtures: `fixtures/evidence/` gains a doctored copy (quote in the
+copy, absent from its declared original — the F141 plant), a
+sidecar-less copy, a stale pin (sha256 of the copy's bytes), and two
+good cases (an on-disk HTML original; a URL original verified through
+its pinned fetch). Tests: 19 in `test_phase257_source_checks.py`
+(was 13). **Break-it, seen to fail:** (1) E3 made to read the saved
+copy again → the doctored-copy test fails; (2) E9's sidecar and hash
+gates removed → exactly the three E9 tests fail. Restored: all green.
+F141 filed and marked CLOSED in `docs/FOLLOWUPS.md` by this commit. A model that edits its own saved copy passes E3 today.

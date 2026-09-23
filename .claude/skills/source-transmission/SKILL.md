@@ -29,7 +29,7 @@ sees the summary and any stop — nothing else.
 | acquire | GLM-5.3 Marathon via `subc`, sandboxed | on-disk library first, then maker portals; blocked / not-found are outcomes | guessing past a 403 |
 | extract | same | the **maker's own word**, quoted verbatim; model codes become aliases | V-matic is Honda's CVT; a search for `CVT` misses it |
 | classify | same | by mechanism; ambiguous → candidate set; no evidence → NULL | a model family is not a machine |
-| reject | `entry_check.py` | E1–E8, checked against the document text | a quote that reads well but is not on the page |
+| reject | `entry_check.py` | E1–E9; quotes are checked against the **original** a copy declares (sidecar: original + sha256), never against the copy | a quote that reads well but is not on the page — including in a copy the model itself saved |
 | refute | Opus, sandboxed, fresh context | opens every cited page; **page images where OCR is weak** | OCR "Constanmesh,4speeds" is not evidence |
 | write | Opus in the repo | one entry per model, citation quoted; **one make per commit**; tests; before/after table | — |
 

@@ -1,30 +1,148 @@
 [
- {"make": "ZZ", "spelling": "E1 no citation", "aliases": ["trail 250"], "outcome": "found",
-  "transmission": "manual", "quote": "Transmission 5-speed constant mesh, return type"},
- {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found",
-  "transmission": "manual", "quote": "smooth 5-speed transmission for every adventure!",
-  "document": "docs/zz_brochure.txt", "page": 1, "evidence_kind": "marketing",
-  "_planted": "E2 marketing copy"},
- {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found",
-  "transmission": "manual", "quote": "Transmission 6-speed constant mesh, return type",
-  "document": "docs/zz_trail_om.txt", "page": 12, "evidence_kind": "owners_manual",
-  "_planted": "E3 the document says 5-speed; the quote was altered"},
- {"make": "ZZ", "spelling": "Streak 600", "aliases": ["streak 600"], "outcome": "found",
-  "transmission": "manual", "quote": "Transmission 5-speed constant mesh, return type",
-  "document": "docs/zz_trail_om.txt", "page": 12, "evidence_kind": "owners_manual",
-  "_planted": "E4 another model's manual — the recycled header"},
- {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found",
-  "transmission": "manual", "quote": "5-speed",
-  "document": "docs/zz_trail_om.txt", "page": 12, "evidence_kind": "owners_manual",
-  "_planted": "E5 a single table cell"},
- {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found",
-  "transmission": "manual-ish", "quote": "Transmission 5-speed constant mesh, return type",
-  "document": "docs/zz_trail_om.txt", "page": 12, "evidence_kind": "owners_manual",
-  "_planted": "E6 a value outside the six"},
- {"make": "ZZ", "spelling": "Rally 700", "outcome": "blocked", "transmission": "manual",
-  "_planted": "E7 guessed past a block, and names nothing tried"},
- {"make": "ZZ", "spelling": "Glide 125", "aliases": ["glide 125"], "outcome": "found",
-  "transmission": "cvt", "quote": "Transmission V-belt automatic (CVT)", "ocr": true,
-  "document": "docs/zz_scoot_om.txt", "page": 8, "evidence_kind": "service_manual",
-  "_planted": "E8 OCR evidence not sent for a page-image check"}
+ {
+  "make": "ZZ",
+  "spelling": "E1 no citation",
+  "aliases": [
+   "trail 250"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "Transmission 5-speed constant mesh, return type"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Trail 250",
+  "aliases": [
+   "trail 250"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "smooth 5-speed transmission for every adventure!",
+  "document": "docs/zz_brochure.txt",
+  "page": 1,
+  "evidence_kind": "marketing",
+  "_planted": "E2 marketing copy"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Trail 250",
+  "aliases": [
+   "trail 250"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "Transmission 6-speed constant mesh, return type",
+  "document": "docs/zz_trail_om.txt",
+  "page": 12,
+  "evidence_kind": "owners_manual",
+  "_planted": "E3 the document says 5-speed; the quote was altered"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Streak 600",
+  "aliases": [
+   "streak 600"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "Transmission 5-speed constant mesh, return type",
+  "document": "docs/zz_trail_om.txt",
+  "page": 12,
+  "evidence_kind": "owners_manual",
+  "_planted": "E4 another model's manual \u2014 the recycled header"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Trail 250",
+  "aliases": [
+   "trail 250"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "5-speed",
+  "document": "docs/zz_trail_om.txt",
+  "page": 12,
+  "evidence_kind": "owners_manual",
+  "_planted": "E5 a single table cell"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Trail 250",
+  "aliases": [
+   "trail 250"
+  ],
+  "outcome": "found",
+  "transmission": "manual-ish",
+  "quote": "Transmission 5-speed constant mesh, return type",
+  "document": "docs/zz_trail_om.txt",
+  "page": 12,
+  "evidence_kind": "owners_manual",
+  "_planted": "E6 a value outside the six"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Rally 700",
+  "outcome": "blocked",
+  "transmission": "manual",
+  "_planted": "E7 guessed past a block, and names nothing tried"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Glide 125",
+  "aliases": [
+   "glide 125"
+  ],
+  "outcome": "found",
+  "transmission": "cvt",
+  "quote": "Transmission V-belt automatic (CVT)",
+  "ocr": true,
+  "document": "docs/zz_scoot_om.txt",
+  "page": 8,
+  "evidence_kind": "service_manual",
+  "_planted": "E8 OCR evidence not sent for a page-image check"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Glide 125",
+  "aliases": [
+   "glide 125",
+   "gl125"
+  ],
+  "outcome": "found",
+  "transmission": "cvt",
+  "quote": "Transmission V-belt automatic (CVT)",
+  "document": "evidence/gl125_saved.txt",
+  "page": 1,
+  "evidence_kind": "maker_spec_page",
+  "_planted": "E3 the saved copy carries the quote; the declared original does not \u2014 a doctored copy"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Trail 250",
+  "aliases": [
+   "trail 250",
+   "trail250"
+  ],
+  "outcome": "found",
+  "transmission": "manual",
+  "quote": "Transmission 5-speed constant mesh, return type",
+  "document": "evidence/nosidecar.txt",
+  "page": 12,
+  "evidence_kind": "owners_manual",
+  "_planted": "E9 an evidence copy with no declared original"
+ },
+ {
+  "make": "ZZ",
+  "spelling": "Glide 125",
+  "aliases": [
+   "glide 125"
+  ],
+  "outcome": "found",
+  "transmission": "cvt",
+  "quote": "Transmission V-belt automatic (CVT)",
+  "document": "evidence/stale.txt",
+  "page": 1,
+  "evidence_kind": "maker_spec_page",
+  "_planted": "E9 the sidecar's sha256 pins the copy's bytes, not the original's"
+ }
 ]

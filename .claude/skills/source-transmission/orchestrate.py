@@ -255,7 +255,8 @@ VERDICT_SCHEMA = {"type": "object", "additionalProperties": False, "required": [
 SOURCE_PROMPT = """You are the SOURCE stage of the moto-diag transmission procedure (.claude/skills/source-transmission/SKILL.md — read it first). Make: {make}. Spellings to source, exactly these: {spellings}.
 For EACH spelling return one finding. Rules, each from a real mistake:
 - On-disk library FIRST: {library} (text extracts are *.txt next to the PDFs). Only then maker portals / spec pages on the web.
-- If you fetch a web document, save its text under ./evidence/ in this directory and cite that path as `document`. Cite on-disk files by absolute path.
+- If you fetch a web document, save it under ./evidence/ in this directory and cite that path as `document`. Cite on-disk library files by absolute path.
+- If you save anything under ./evidence/, you MUST also write a sidecar next to it, <file>.provenance.json, declaring where it came from: {{"original": "<absolute library path or URL>", "original_sha256": "<sha256 hex of those original bytes>"}} — and for a URL original also save the bytes you fetched and name that file in "fetched_as". entry_check verifies every quote against the ORIGINAL, never against your saved copy; a copy with no sidecar is rejected outright (E9).
 - `quote` must be copied VERBATIM from the document (it will be string-matched against it), a full statement, not a table cell alone. Use the maker's own word for the mechanism.
 - `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. No evidence -> outcome no_evidence and NULL. Never infer from the make or the model family.
 - Blocked or not found are outcomes: record `url_tried`, never guess past them.
@@ -264,6 +265,7 @@ For EACH spelling return one finding. Rules, each from a real mistake:
 - `aliases`: spellings and model codes the document itself uses for this machine.{hints}"""
 
 REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings and must not trust them. For each finding below, OPEN the cited document yourself at the cited page and decide kept or killed.
+If the cited document is under evidence/, it is a copy the source stage saved: its <file>.provenance.json names the ORIGINAL (and, for a URL, the pinned fetch in "fetched_as"). Check the quote against the ORIGINAL, not against the copy.
 Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
 Return one verdict per finding with the verbatim quote YOU saw and its page.
 Findings:

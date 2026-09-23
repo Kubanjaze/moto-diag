@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F140** (this file); the mobile
+At the time of writing the highest assigned is **F141** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -1062,4 +1062,37 @@ row in a fixture database and sees the check fail. Or, if Phase 257 lifts
 the rule, retire both seed tests in the same commit that lifts it, with the
 reason — a rule enforced in one place and lifted in another is how the two
 drift.
+
+### F141 — CLOSED by the entry_check provenance rule (E9), 2026-09-22
+
+**entry_check E3 verified quotes against the model's own saved copies, not against the originals they claim to come from**
+
+Phase 257's Honda batch cited `./evidence/grom2025.txt` and
+`./evidence/grom2020.txt` — text files the sandboxed source stage itself
+rendered from the on-disk HTML — and `entry_check.py`'s E3 string-matched
+the quotes against those saved copies. A model that edits its own copy
+(fabricates a quote, changes "4 speeds" to "5") passes E3 today, because
+the check and the copy are both under the model's control. The same
+shape was true of every document under `evidence/`: SYM's runs saved both
+the fetched PDF and a `.txt` extraction, and E3 read the `.txt`.
+
+Refute opens the cited document independently, so tranche 1's entries
+are not affected — the gap is in the gate, not in what it let through
+this time. Measured: `check_one` read `f["document"]` and nothing else;
+no check anywhere read an original behind a copy, and no field recorded
+which original a copy came from.
+
+**What closes it:** a document under `evidence/` must declare its
+original in a `<file>.provenance.json` sidecar — an on-disk library path
+or a URL, plus the original's sha256 (and, for a URL, the pinned fetch
+entry_check can read offline). E9 rejects a copy with no sidecar, an
+unreadable original, or a hash that no longer matches; E3 extracts the
+text from the ORIGINAL itself — HTML→text in entry_check's own code,
+`.txt` raw, PDF via pypdf — and matches the quote against that, never
+against the saved copy. Known-bad fixtures plant a doctored copy (quote
+in the copy, absent from its declared original), a missing sidecar and a
+stale hash; break-it tests verified each fires and that disabling the
+original-matching makes the doctored-copy test fail. The source-stage
+prompt now instructs the model to write the sidecars. Filed and closed
+by the same commit (Phase 257, branch `phase-257-orchestrator`).
 
