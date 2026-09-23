@@ -2354,3 +2354,65 @@ Measured over the 20 manual texts:
 contents-page lines and miss the 12 whose manuals the maker's own list
 ties to them. How an acquired manual's excerpts are chosen is a
 procedure decision for the operator; nothing was changed.
+
+### 2026-09-23 — Manual-route manuals read whole; identity from the list record (operator decision)
+
+**Session start (fresh, at the repo root):** census **573** (Yamaha 39).
+`acquire.py fetch Yamaha` re-run: 12 fetches (robots, product_list, 10
+name buckets), **0 new, 0 failed**, 20 PDFs on disk for the 20 exact
+matches; the same 19 unmatched. Run record `_run_Yamaha_20260923_191124`.
+Dry run unchanged from the last entry: 8 sent, Vino 125 not.
+
+**Decision (operator):**
+1. Excerpts for manual-route PDFs: cut around mechanism lines anywhere in
+   the manual, tied by the sidecar's `for_spellings`; skip table-of-contents
+   lines (dot leaders, a trailing page reference).
+2. Identity: `names_model` takes its model line from the hash-pinned list
+   record ("dispModelName": "VINO 125 - YJ125Y", this PDF's pdffileURL),
+   exact matches only; the model code is written as an alias.
+
+**Done:**
+- `candidates.py`: `anchor: "route"` excerpts for a manual-route PDF's
+  `for_spellings`, anchored on non-contents lines that pass
+  `entry_check.is_mechanism`.
+- `entry_check`: `TOC_LINE`/`toc_line`; `mechanism_lines` drops contents
+  lines before reading sentences; `manual_route_pdf`, `list_identity`;
+  `model_scope` is 'model' through `list_identity`.
+- **Beyond the letter of the decision, reported:** E4's weak-spelling rule
+  ("never names it as a Yamaha model") also accepts `list_identity`. The
+  batch test showed Vino 125 rejected there once names_model passed: it
+  is weak (one word and a number), as are MT-03/07/09/10, V-Star 250/1300,
+  Tenere 700, Vino 50 and Bolt. check_one recomputes the identity; it
+  never reads one from the finding.
+- `orchestrate.batch`: attaches `identity` (dropping any the model set),
+  adds its code to `aliases`, and runs entry_check against `LIBRARY` (the
+  library the excerpts came from; it had used the default). SOURCE_PROMPT
+  explains a "route" excerpt; REFUTE_PROMPT says how to check `identity`.
+- The list record's host (`parts.yamaha-motor.co.jp`) is still not in
+  `MAKER_HOSTS`: the record passes as the PDF's pinned referrer, not as
+  evidence.
+
+**Controls on real files** (`TestOnTheRealLibrary`, 4): Vino 125 is sent
+with "Transmission type V-belt automatic"; `list_identity` gives "VINO
+125 - YJ125Y", code YJ125Y, record sha256 `805a1811…ef9`; YZF-R1's "To
+shift the transmission to a higher gear, move the shift pedal up." is
+still sent; the real Vino files copied with `for_spellings: ["Vino"]`
+give no identity, and with `["Vino 125"]` give it.
+
+**Tests:** `tests/test_phase257_manual_route_excerpts.py`, 29 (the fixture
+manuals are real one-page PDFs, so save/derive_text/E11 run).
+
+**Break-it**, each alone, restored by hash; all 14 caught: route tie
+removed (4 fail; on real files 1); route anchors take contents lines (1);
+dry run keeps contents lines (3); no trailing page reference (4);
+identity by contains (2); record hash unchecked (2); pdffileURL
+unmatched (1); for_spellings unchecked (1); model_scope ignores identity
+(2); E4 ignores identity (1); code not an alias (1); identity not
+attached (1); checks read the default library (1).
+
+**Dry run after:** 25 of 39 spellings have excerpts, **20 sent**: all 20
+exact matches. Not sent: Zuma, XC50A, YJ125Y, XC50, XC50J (name hits
+only, no mechanism line). YJ125Y is the Vino 125's code; the alias would
+resolve it.
+
+244G scanner over `tests/`: 0. Related suites (257 + 244G + 255D): 704 passed.

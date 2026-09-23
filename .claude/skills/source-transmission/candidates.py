@@ -7,7 +7,11 @@ the file's absolute path and the page the hit sits on. A file whose own
 NAME names the spelling (`Wolf_CR300i_Owners_Manual.pdf.txt`) is about
 that machine throughout, so its gearbox lines are anchors too — an owner's
 manual rarely repeats the model name on its gear-change page. Those
-excerpts say `anchor: "file"`; the rest `anchor: "name"`. The source stage
+excerpts say `anchor: "file"`; the rest `anchor: "name"`. A manual that a
+manual route (`acquire.MANUAL_ROUTES`) fetched for a spelling is tied to it
+by its sidecar's `for_spellings`, named or not — Yamaha's Vino 125 manual
+prints only "YJ125Y" — and cut around its mechanism lines anywhere in the
+text, never a table-of-contents line: `anchor: "route"`. The source stage
 then gets those excerpts and nothing else — one turn, no tools — so what
 it costs is bounded by what this file hands it, not by how long a model
 chooses to browse. The agent-loop source stage it replaces measured
@@ -47,8 +51,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import library_index  # noqa: E402
-from entry_check import (_extract_text, _key, acquired_provenance,  # noqa: E402
-                         named_as_model, names_make, weak_spelling)
+from entry_check import (_extract_text, _key, acquired_provenance, is_mechanism,  # noqa: E402
+                         manual_route_pdf, named_as_model, names_make, toc_line, weak_spelling)
 
 LIBRARY = pathlib.Path.home() / "research" / "motodiag"
 CONTEXT = 40                 # lines either side of a hit
@@ -147,6 +151,13 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
         # as E4, applied before the model is paid to read the excerpt.
         wanted = [s for s in spellings if any(k in low for k in keys[s])
                   and not (make and weak_spelling(s) and not named_as_model(text, doc, make, s))]
+        # A manual a manual route fetched for a spelling is about that machine
+        # throughout, whether or not it prints the name (operator, 2026-09-23):
+        # the Vino 125 manual says only "YJ125Y". Its sidecar's for_spellings
+        # ties it; its anchors are its mechanism lines, never a contents line.
+        route = manual_route_pdf(doc, library, make, e11_passed=True) if make else None
+        fetched_for = [s for s in spellings if route and s in (route[1].get("for_spellings") or [])]
+        wanted += [s for s in fetched_for if s not in wanted]
         if not wanted:
             continue
         lines, pages = _lines(text)
@@ -164,6 +175,16 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
             # Its title is its FIRST line (HTML → text puts <title> first), not
             # the first few: a menu one line down names every machine the maker sells.
             title = _key(next((x for x in lines if not PAGE_MARK.match(x)), ""))
+            if s in fetched_for:
+                for i, line in enumerate(lines):
+                    if toc_line(line) or not is_mechanism(line):
+                        continue
+                    lo, hi = max(0, i - CONTEXT), min(len(lines), i + CONTEXT + 1)
+                    window = "\n".join(lines[lo:hi])
+                    terms = {t.lower() for t in GEARBOX.findall(window)}
+                    dense = sum(bool(GEARBOX.search(x)) for x in lines[lo:hi])
+                    hits[s].append(((0, -len(terms), -dense, str(doc), i), doc, i, lo, hi, window,
+                                    pages[i], "route"))
             if about or any(k in title for k in keys[s]):
                 for i in specs:
                     lo, hi = max(0, i - CONTEXT), min(len(lines), i + CONTEXT + 1)

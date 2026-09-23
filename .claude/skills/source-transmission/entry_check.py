@@ -440,15 +440,35 @@ def _beside(pattern: re.Pattern, sentence: str, near: re.Pattern) -> bool:
     return False
 
 
+# A table-of-contents line (operator, 2026-09-23): a dot leader, or a trailing
+# page reference — "6-16 Clutch lever ......", "Clutch lever......... 4-9",
+# "Shift pedal (page 5-29)". It names a page, not a mechanism: Yamaha's MT-09,
+# MT-07, XT250 and MT-10 were sent on such lines and nothing else.
+TOC_LINE = re.compile(r"(?:\.\s?){4,}|…{2,}|[A-Za-z)]\s*\(?(?:page\s+)?\d{1,2}-\d{1,3}\)?\s*$", re.I)
+
+
+def toc_line(line: str) -> bool:
+    return bool(TOC_LINE.search(line))
+
+
+def is_mechanism(sentence: str) -> bool:
+    """Passes E12, or names a non-manual mechanism in the maker's words."""
+    return bool(manual_evidence(sentence) or MECHANISM.search(sentence)
+                or _beside(AUTOMATIC_WORD, sentence, DRIVE_TERM))
+
+
 def mechanism_lines(excerpts: list[dict]) -> list[str]:
     """The dry run before the source call: the sentences in a spelling's
     excerpts that pass E12 or name a non-manual mechanism, deduplicated.
     None → nothing for the source stage to quote, and the spelling is not
-    sent (Yamaha and Triumph: spec pages whose gearbox is a table cell)."""
+    sent (Yamaha and Triumph: spec pages whose gearbox is a table cell).
+    Table-of-contents lines are dropped before the text is read as
+    sentences: they are not evidence."""
     seen: dict[str, None] = {}
     for e in excerpts or []:
-        for s in _sentences(" ".join(str(e.get("text", "")).split())):
-            if manual_evidence(s) or MECHANISM.search(s) or _beside(AUTOMATIC_WORD, s, DRIVE_TERM):
+        kept = [x for x in str(e.get("text", "")).split("\n") if not toc_line(x)]
+        for s in _sentences(" ".join(" ".join(kept).split())):
+            if is_mechanism(s):
                 seen.setdefault(s, None)
     return list(seen)
 
@@ -480,13 +500,21 @@ def model_edition(f: dict, docs_root: pathlib.Path) -> str | None:
     return "ABS" if text is not None and abs_edition(text, f.get("spelling", "")) else None
 
 
-def model_scope(f: dict, docs_root: pathlib.Path) -> str:
+def model_scope(f: dict, docs_root: pathlib.Path, library: pathlib.Path = library_index.LIBRARY) -> str:
     """'model' when the cited document names the finding's own model;
     'family' when it names only a sibling or the family. Family evidence is
     recorded and cannot write an entry unless refute shows the page names
-    the model (orchestrate.batch)."""
+    the model (orchestrate.batch). A manual-route PDF whose pinned list
+    record names the model exactly (`list_identity`) is 'model' too: the
+    maker's own catalogue gives its model line (operator, 2026-09-23)."""
     text = document_text(f, docs_root)
-    return "model" if text is not None and names_model(text, f.get("spelling", "")) else "family"
+    if text is not None and names_model(text, f.get("spelling", "")):
+        return "model"
+    doc = pathlib.Path(f.get("document") or "")
+    doc = doc if doc.is_absolute() else docs_root / doc
+    if list_identity(doc, library, f.get("make", ""), f.get("spelling", "")):
+        return "model"
+    return "family"
 
 
 SPEC_LABEL = re.compile(r"transmission|gearbox|clutch|drive|gear|speed", re.I)
@@ -629,6 +657,65 @@ def links_to(page_bytes: bytes, page_url: str, url: str) -> bool:
     return False
 
 
+def manual_route_pdf(doc: pathlib.Path, library: pathlib.Path, make: str,
+                     e11_passed: bool = False) -> tuple[pathlib.Path, dict] | None:
+    """(pdf, its sidecar) when doc is an owner's manual a manual route
+    fetched (acquire.MANUAL_ROUTES), or that PDF's derived text, and it
+    passes E11 (`e11_passed`: the caller has just checked). Else None."""
+    from acquire import MANUAL_ROUTES
+    if make not in MANUAL_ROUTES or library_index.kind(doc, library) != "acquired":
+        return None
+    if not e11_passed and acquired_provenance(doc, library, make, ""):
+        return None
+    try:
+        prov = json.loads(doc.with_name(doc.name + ".acquired.json").read_text(encoding="utf-8"))
+        pdf = library / prov["derived_from"]["path"] if prov.get("derived_from") else doc
+        side = json.loads(pdf.with_name(pdf.name + ".acquired.json").read_text(encoding="utf-8"))
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+    return (pdf, side) if pdf.suffix.lower() == ".pdf" else None
+
+
+def list_identity(doc: pathlib.Path, library: pathlib.Path, make: str, spelling: str) -> dict | None:
+    """The maker's own list record naming this manual's model (operator,
+    2026-09-23). Yamaha's Vino 125 manual prints only "YJ125Y"; the saved
+    model_list response the route fetched it from reads
+    "dispModelName": "VINO 125 - YJ125Y" beside this PDF's pdffileURL.
+
+    Holds only when: doc is a manual-route PDF (or its text) passing E11,
+    fetched for this spelling (for_spellings); its referrer record is in
+    the library and still hashes to the sha256 its sidecar pinned; one of
+    the record's entries has a pdffileURL equal to the PDF's url
+    (protocol-relative completed as https); and that entry's name — the
+    dispModelName before " - <code>" — IS the spelling (exact, by _key;
+    "Bonneville T100" is not "T100"). Returns the model line, the code
+    (an alias) and the record's path and sha256."""
+    got = manual_route_pdf(doc, library, make)
+    if got is None:
+        return None
+    pdf, side = got
+    ref = side.get("referrer") or {}
+    if spelling not in (side.get("for_spellings") or []) or not ref.get("path"):
+        return None
+    record = library / str(ref["path"])
+    if not record.is_file() or _sha256(record) != ref.get("sha256"):
+        return None
+    try:
+        rows = json.loads(record.read_bytes()).get("modelDataCollection") or []
+    except (ValueError, AttributeError):
+        return None
+    for row in rows:
+        url = str(row.get("pdffileURL") or "")
+        url = "https:" + url if url.startswith("//") else url
+        name, sep, code = str(row.get("dispModelName") or "").rpartition(" - ")
+        if not sep:
+            name, code = code, ""
+        if url and _same_url(url, side.get("url", "")) and name and _key(name) == _key(spelling):
+            return {"record": str(ref["path"]), "sha256": ref["sha256"], "model_line": row["dispModelName"],
+                    "code": code.strip(), "publication": row.get("publicationNo")}
+    return None
+
+
 def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
               library: pathlib.Path = library_index.LIBRARY) -> list[str]:
     fails: list[str] = []
@@ -698,7 +785,10 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
         if not _names(text, [f.get("spelling", "")] + list(f.get("aliases") or [])):
             fails.append(f"E4 {tag}: the document never names the machine")
         elif weak_spelling(f.get("spelling", "")) and not named_as_model(
-                text, doc, f.get("make", ""), f.get("spelling", "")):
+                text, doc, f.get("make", ""), f.get("spelling", "")) and not list_identity(
+                doc, library, f.get("make", ""), f.get("spelling", "")):
+            # The maker's own pinned list record naming this manual's model
+            # exactly names it as a model (operator, 2026-09-23): "VINO 125".
             fails.append(f"E4 {tag}: {f.get('spelling')!r} is a common word or bare number and the "
                          f"document never names it as a {f.get('make')} model (after the make, as a "
                          "lookup alias, in its title or its file name)")

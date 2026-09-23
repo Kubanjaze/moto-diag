@@ -428,6 +428,7 @@ You have no tools and one answer. Everything you may cite is in the EXCERPTS bel
 - For `manual`, the quote itself must name a rider-operated clutch (clutch lever, cable or hydraulic clutch, a clutch pull), a foot-shift pattern (return shift, shift pedal) or the word "manual" — in a sentence with no DCT, dual-clutch, Y-AMT, automated, automatic or clutchless wording, and not negated ("without a clutch lever"). A gear count, "constant mesh" or "close-ratio" is not enough (entry_check E12 rejects it). If no excerpt line qualifies, choose no_evidence.
 - When several lines qualify, choose one whose sentence has no negation word at all: a troubleshooting row whose condition says "not" fails even when its remedy names the lever.
 - An excerpt with anchor "file" comes from a document whose file name names the machine, but that passage does not name it: say so in `note`.
+- An excerpt with anchor "route" comes from the owner's manual the maker's own manual library listed for this spelling; it is about this machine throughout, even where it prints only a model code (Yamaha's Vino 125 manual says "YJ125Y"). The script checks that listing; you need not.
 - `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. If the excerpts do not establish the gearbox of THIS machine -> outcome no_evidence and transmission NULL. Never infer from the make or the model family, and never from anything but the excerpts.
 - If the text is OCR of a scanned page (garbled words, broken spacing), set ocr=true and needs_page_image=true.
 - evidence_kind: owners_manual | service_manual | workshop_manual | spec_sheet | maker_spec_page. Anything else (marketing, dealer, forum, mirror sites, recall notices) is not evidence.
@@ -442,6 +443,7 @@ A "manual" classification needs the quote itself to name a rider-operated clutch
 Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
 Render page images ONLY for findings marked needs_page_image (weak OCR); for a digital text layer, read the text.
 `verdict` answers whether the quote is on the page and establishes the mechanism. `names_model` answers a separate question: true ONLY if the document is about THIS exact model — not a variant ("SV650X", "ZX-10RR", "V-Strom 650XT", "Z900 SE"), not a sibling, not the model named in passing (history, comparison). ONE named exception: a page for "<exact model> ABS" (e.g. "SV650 ABS" for the SV650) IS about the model — ABS is braking equipment — so names_model is true. Nothing else qualifies, and NEVER a transmission variant: "Africa Twin DCT", "MT-09 Y-AMT", "E-Clutch" pages do not name the base model. "kept" with names_model false is family evidence and writes nothing.
+A finding carrying `identity` cites an owner's manual that may print only a model code ("YJ125Y"). The maker's own manual-library record ties it to the model: open {library}/<identity.record>, find the entry whose pdffileURL is this document's URL (the `url` in the document's .acquired.json; a derived .txt names its PDF under derived_from), and check that its dispModelName is identity.model_line. If both hold, and the manual shows no transmission variant of the model, names_model is true and model_line is identity.model_line. If either fails, names_model is false.
 `model_line`: copy VERBATIM the line on the document that names THIS exact model (the finding's spelling) — not a sibling, a variant or the family: "1290 Super Duke GT" does not name the 1290 Super Duke R; "F 800 GS" does not name the F800. If the document names only a sibling or the family, return "" — the finding is then family evidence and cannot write an entry. The line is checked against the document by a script.
 Return one verdict per finding with the verbatim quote YOU saw and its page.
 Findings:
@@ -518,8 +520,19 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
             findings += (src.get("structured_output") or {}).get("findings", [])
     for f in findings:
         f["source_route"] = route_label(route)   # structured, per finding: model@effort, carried into the write
-    missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
-    rejections = entry_check.check(findings, r["clone"], cands)
+        # A manual-route PDF's model line is the maker's list record, and its
+        # model code an alias (operator, 2026-09-23): "VINO 125 - YJ125Y".
+        f.pop("identity", None)                  # the script's to set, never the model's
+        if f.get("outcome") == "found" and f.get("document"):
+            doc = pathlib.Path(f["document"])
+            ident = entry_check.list_identity(doc if doc.is_absolute() else r["clone"] / doc,
+                                              LIBRARY, make, f.get("spelling", ""))
+            if ident:
+                f["identity"] = ident
+                if ident["code"] and ident["code"] not in (f.get("aliases") or []):
+                    f["aliases"] = [*(f.get("aliases") or []), ident["code"]]
+    missing =sorted(set(spellings) - {f.get("spelling") for f in findings})
+    rejections = entry_check.check(findings, r["clone"], cands, LIBRARY)   # the library the excerpts came from
     # C (operator, 2026-09-23): an E12 rejection is measured, not retried —
     # did that spelling's own excerpts hold a sentence that passes E12?
     e12_reader, noted = {}, []
@@ -527,14 +540,14 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
         f = next((f for f in findings if x.startswith(f"E12 {f.get('make')} | {f.get('spelling')}:")), None)
         if f is not None:
             e12_reader[f["spelling"]] = entry_check.reader_note(
-                cands.get(f["spelling"], []), entry_check.model_scope(f, r["clone"]))
+                cands.get(f["spelling"], []), entry_check.model_scope(f, r["clone"], LIBRARY))
             x += f" [{e12_reader[f['spelling']]}]"
         noted.append(x)
     rejections = noted
     passed = [f for f in findings if f.get("outcome") == "found"
-              and not entry_check.check_one(f, r["clone"], cands)]
+              and not entry_check.check_one(f, r["clone"], cands, LIBRARY)]
     for f in passed:
-        f["scope"] = entry_check.model_scope(f, r["clone"])     # the 4609 rule: model or family
+        f["scope"] = entry_check.model_scope(f, r["clone"], LIBRARY)     # the 4609 rule: model or family
         f["edition"] = entry_check.model_edition(f, r["clone"])  # 'ABS': the one named exception
     verdicts = []
     over = token_stop(stages, len(sent))

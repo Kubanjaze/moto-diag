@@ -160,3 +160,29 @@ model list as its referrer. A manual route counts a spelling done only
 when a PDF names it (`MANUAL_ROUTES`), so a spec page saved earlier does
 not hide it. At the cap the route keeps what it saved and names the rest
 `not_reached`, so a capped run is resumed, not repeated.
+
+## 2026-09-23 — a manual-route manual is read whole, and named by its list record (operator)
+
+The Yamaha dry run sent 8 spellings, 7 of them on contents lines ("6-16
+Clutch lever ......"), and missed Vino 125, the positive control: its
+manual prints only "YJ125Y", and `candidates.py` excerpted only around
+the spelling.
+
+- **Excerpts.** A PDF a manual route (`acquire.MANUAL_ROUTES`) fetched for
+  a spelling is tied to it by its sidecar's `for_spellings` and cut around
+  its mechanism lines anywhere in the text (`anchor: "route"`).
+- **Contents lines are not evidence.** A dot leader or a trailing page
+  reference (`entry_check.TOC_LINE`) is never a route anchor, and the dry
+  run drops such lines before reading sentences.
+- **Identity.** `entry_check.list_identity`: the PDF's referrer, the saved
+  model_list record, still hashing to its pinned sha256, lists this PDF's
+  URL beside a `dispModelName` whose name IS the spelling ("VINO 125 -
+  YJ125Y"; "Bonneville T100" is not "T100"). It makes `model_scope`
+  'model' and satisfies E4's "named as a model" for a weak spelling; the
+  orchestrator adds the code as an alias and hands the identity to
+  refute, whose prompt says how to check it. `batch()` now runs
+  entry_check against the library its excerpts came from.
+
+Real-file controls: Vino 125 is sent with its "V-belt automatic" rows and
+names its model through its record; YZF-R1's "move the shift pedal up" is
+still sent. The Yamaha dry run goes from 8 sent to 20.
