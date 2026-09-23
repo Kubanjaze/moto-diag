@@ -828,3 +828,42 @@ across a batch — then 5. Tests (5): attribution over hand-written stream
 events; groups are separate streamed calls; a group over budget stops the
 rest. Break-it: no dedupe by id; no carry-over; groups ignored (2); no stop
 between groups; not streamed — each seen to fail. 359 pass; 244G clean.
+
+### 2026-09-23 — Suzuki: acquire + batch (nothing written yet)
+
+**Acquire** (`fetch Suzuki`, 12 fetches): 10 of 29 machine names matched
+Suzuki's own current spec pages — 9 `exact`, SV650 → "SV650 ABS"
+`contains`. The 19 unmatched are older machines not on the current site
+(GSX-R1100, Bandit 1200/1250/600, GS750/1000/1100, Katana, Intruder 1500,
+SV1000, V-Strom 1000, …). All saved files pass E11.
+
+**Batch** `Suzuki_20260923_093052`, all 29 spellings: 12 sent to the model
+(10 acquired + DR-Z400SM and GSX-S750, which the pages mention), 17
+`no_evidence` with no call. **Stops: none. Rejections: none. Ready to
+write: 10** — GSX-R750, GSX-R1000, GSX-R600, SV650, V-Strom 650, GSX-S1000,
+DR-Z400S, Boulevard C50, Boulevard M109R, V-Strom 1050, all `manual`, all
+kept by refute. DR-Z400SM and GSX-S750 came back `no_evidence` (named in
+passing, no gearbox statement).
+
+| stage | tokens | turns | per unit |
+|---|---|---|---|
+| source (GLM) | 88,776 (79,208 in, 8,736 out) | 2 | 7,398 / spelling sent (ceiling 150,000) |
+| refute (Opus) | 203,844 (160,669 cache-read, 36,310 cache-write) | 8 | 20,384 / finding (budget 300,000) |
+
+**Per-finding attribution did not work on this batch, and the reason is
+recorded, not papered over:** refute checked all ten pages in each call
+(shell/Python loops over the files), so no call belongs to one finding —
+`refute_per_finding` put 2 calls on findings, 1 on setup and 4 on
+"(answer)". The per-call sequence is the measurement: 21,362 → 24,091 →
+24,738 → 25,483 → 31,206 → 33,846 → 36,336 (cache reads growing by the
+context each turn). **No climb that warrants groups:** 20K per finding
+here against 227K for Kymco's one (whose refute rendered and read page
+images — OCR); groups of 5 would each pay the ~21K setup again.
+`REFUTE_GROUP` stays None.
+
+**One disagreement to decide before writing:** SV650. The acquired page is
+the SV650 ABS; `names_model` rules it model-scope (ABS is equipment, not
+in VARIANT_TOKENS, and the page also names "the first SV650"); refute kept
+the gearbox but returned an empty `model_line`, saying the base SV650 is
+named only historically. The batch lists it ready because the script
+rule, not refute, decides scope. Flagged for the operator.
