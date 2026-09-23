@@ -1039,3 +1039,15 @@ recorded → 1; Carbon not a variant → 1. 410 pass; 244G clean.
   actually carries is this one).
 - **Verified:** made optional again → 6 fail. 40 pass in the file.
 - **Commit:** this one. SV650 re-runs after it.
+
+### 2026-09-23 — SV650 through the pipeline under the ABS exception (not written yet)
+
+Run `Suzuki_20260923_100556` (after bug fix #4): 1 spelling, source 11,383
+tokens (2 turns), refute 63,047 (4 turns). **Stops none, rejections none,
+ready to write: SV650, `edition: ABS`.** Document: Suzuki's own
+`suzukicycles.com/street/2026/sv650-abs` (acquired, E11), quote "The
+close-ratio, six-speed transmission features carefully selected ratios…";
+refute kept it with `names_model: true`, `model_line` "2026 SV650 ABS", and
+cites the page's spec row "Transmission 6-speed, constant mesh". The script
+agrees (model scope, `abs_edition`). The earlier run the same day
+(`Suzuki_20260923_100443`) stopped on E1 — bug fix #4.
