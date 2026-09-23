@@ -1487,3 +1487,27 @@ so E12 can only get stricter.
     quote as an apostrophe, and I have not found one in the documents.
 
 **Commit.** This entry's commit.
+
+### 2026-09-23 — The shared cause of 257's bugs (#1–#5 and the `d2bcc71` correction)
+
+The operator's candidate, that the checks were proven on hand-typed cases
+and not on the documents' own text, holds in its narrow form for three of
+the six. #1's `bare_number` was written from the shape of three typed
+examples and never run over the census of 600 spellings, where Ducati 916
+sat. #4's schema tests fed well-formed findings, typed by hand; the model's
+first real answer left out `document`. #5's rules were tested on typed
+`'`, while BMW prints `’` 55 times. It holds in a wider form for two more:
+each was checked against a string I wrote and not against the one the check
+meets in use. #2's alert was never compiled with the real STOP title, which
+carried an em dash. #3 trusted refute's `kept` label and never tested it
+against a real verdict whose reason said "family evidence only". The
+correction to `d2bcc71` does not fit the narrow form, but it is the same
+failure one level up: the log said "moved" and "1,206 pass" from what I
+expected, not from the tool's output, which showed a refused Edit and a
+failing test. **Confirmed, stated as: every one of the six was verified
+against something I had written (a typed case, an expected string, my own
+claim) and not against the artefact it meets in use: the census, the real
+title, the model's real answer, the document's typography, the run's own
+output.** Four of the six were caught downstream by gates or the operator,
+not by their own tests. Nothing new is built for this. It is the reason C
+below measures reader misses from the run's own `candidates.json`.
