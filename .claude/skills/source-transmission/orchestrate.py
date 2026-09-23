@@ -55,6 +55,7 @@ SUBC_PROFILE = HOME / ".subconscious" / "profiles" / "default.env"
 ANTHROPIC_TOKEN_FILE = HOME / ".config" / "motodiag" / "anthropic.env"
 BUDGET_USD = 3.0                    # per call; Opus route only (see run_stage)
 BLOCKED_STOP = 0.5                  # plan D5
+REFUTE_KILL_STOP = 0.25             # operator 2026-09-23: over a quarter killed is systemic
 # The source stage's flags: no tools, no MCP servers, no skills listing. With
 # --json-schema a no-tools call reports 2 turns (the structured answer, then
 # its acknowledgement) — measured 2026-09-23; more than that is a loop.
@@ -334,6 +335,12 @@ def token_stop(stages: dict[str, dict], sent: int, refuted: int = 0) -> str | No
 
 # --- stops (D5) ----------------------------------------------------------------
 def stops(findings: list[dict], verdicts: list[dict], tokens: dict | None = None) -> list[str]:
+    """The SYSTEMIC signals that stop a batch whole (operator, 2026-09-23):
+    a token ceiling, a blocked rate over 50%, a refute stage that errored
+    (the wrong model serving included), or refute killing more than a
+    quarter of what it checked. The source stage's own error is added by
+    batch(). One finding's kill or rejection is not here: it is withheld
+    (batch() records it) and the batch's other ready findings stand."""
     reasons = []
     if tokens and tokens.get("stop"):
         reasons.append(tokens["stop"])
@@ -341,9 +348,12 @@ def stops(findings: list[dict], verdicts: list[dict], tokens: dict | None = None
     blocked = sum(f.get("outcome") in ("blocked", "not_found") for f in findings)
     if n and blocked / n > BLOCKED_STOP:
         reasons.append(f"blocked rate {blocked}/{n} exceeds {BLOCKED_STOP:.0%}")
-    killed = [v["spelling"] for v in verdicts if v.get("verdict") != "kept"]
-    if killed:
-        reasons.append(f"refute disagreed on: {', '.join(killed)}")
+    if any(v.get("verdict") == "error" for v in verdicts):
+        reasons.append("refute stage error: " + str(next(v["reason"] for v in verdicts if v.get("verdict") == "error"))[:300])
+    judged = [v for v in verdicts if v.get("verdict") in ("kept", "killed")]
+    killed = [v["spelling"] for v in judged if v["verdict"] == "killed"]
+    if judged and len(killed) / len(judged) > REFUTE_KILL_STOP:
+        reasons.append(f"refute killed {len(killed)}/{len(judged)} (over {REFUTE_KILL_STOP:.0%}): {', '.join(killed)}")
     return reasons
 
 
@@ -506,12 +516,16 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
               "refute_ceiling": REFUTE_STOP_PER_FINDING * max(len(passed), 1) if "refute" in stages else None,
               "stop": over}
     reasons = stops(findings, verdicts, tokens)
-    if missing:
-        reasons.append(f"source returned no finding for: {', '.join(missing)}")
-    if rejections:
-        reasons.append(f"{len(rejections)} finding(s) rejected by entry_check")
     if summary["source_error"]:
         reasons.append(f"source stage error: {summary['source_error']}")
+    # Per-finding problems: recorded, withheld from the write, never a stop
+    # for the batch's other ready findings (operator, 2026-09-23).
+    withheld = []
+    if missing:
+        withheld.append(f"source returned no finding for: {', '.join(missing)}")
+    withheld += [f"entry_check: {x}" for x in rejections]
+    withheld += [f"refute killed {v['spelling']}: {str(v.get('reason'))[:200]}"
+                 for v in verdicts if v.get("verdict") == "killed"]
     kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
     # Bug fix #3: "kept" says the quote holds; it does not say the page is
     # about THIS model. A finding writes only when refute's names_model is
@@ -532,10 +546,11 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
                 disagree.append(f"{f['spelling']} (script {'named' if script_says else 'family'}, "
                                 f"refute {'named' if refute_says else 'family'})")
     if disagree:
-        reasons.append(f"refute and the script disagree on whether the page names the model: {', '.join(disagree)}")
+        withheld.append(f"refute and the script disagree on whether the page names the model: {', '.join(disagree)}")
     summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
                     "family_evidence": family, "refute_per_finding": per_finding,
-                    "ready_to_write": writable,
+                    # A systemic stop writes nothing; a withheld finding writes nothing itself.
+                    "ready_to_write": [] if reasons else writable, "withheld": withheld,
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
     if reasons:

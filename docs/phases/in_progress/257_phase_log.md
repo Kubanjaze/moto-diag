@@ -1163,3 +1163,28 @@ entries this phase wrote must carry an E12-qualifying quote in its own
 source string; putting V-Strom 650's gear-count quote back → 1 fails.
 895 pass across every suite mentioning these machines + the 255 axis suite;
 244G clean.
+
+### 2026-09-23 — SV650 held (no qualifying line); the standing rule for stops
+
+**SV650 (live vehicle #8): not written.** Its only page, the 2026 SV650
+ABS, carries no line that passes E12: the quote "The close-ratio, six-speed
+transmission…" and the spec row "Transmission 6-speed, constant mesh" are
+gear counts; its clutch sentence ("…push rod actuation of the pressure
+plate for a light pull and consistent release point") is outside the
+rule's clutch-pull window; its Easy Start sentence, unlike the V-Strom
+650's, does not mention the clutch lever. It stays `unknown` pending the
+operator's call on the clutch-pull window.
+
+**Standing rule (operator decision 4), built:** a batch stops whole only on
+systemic signals — source- or refute-stage error (wrong model serving
+included), a token ceiling, blocked rate over 50%, or refute killing more
+than a quarter of what it checked (`REFUTE_KILL_STOP = 0.25`). One
+finding's kill, entry_check rejection, names-the-model disagreement or a
+skipped spelling goes to `summary.withheld` and does not block the other
+ready findings; a systemic stop empties `ready_to_write`. SKILL.md updated.
+Tests: one kill in five → withheld, four ready; two in five → a stop,
+nothing ready; a rejection doesn't block the rest; a refute-stage error is
+a stop; the two tests pinned to the old rule (rejection stop,
+disagreement stop) rewritten to the new one. **Break-it:** any kill stops
+again → 1; the threshold off → 1; a systemic stop still writes → 1; a
+refute error not a stop → 1; rejections stop again → 2. 468 pass; 244G clean.

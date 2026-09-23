@@ -162,7 +162,7 @@ class TestTheExcerptsBindTheFindings:
         s = run_with(fake, ["Trail 250"])
         assert any(r.startswith("E10") for r in s["rejections"]), s["rejections"]
         assert fake.refute_calls() == [] and s["ready_to_write"] == []
-        assert any("rejected by entry_check" in r for r in s["stops"])
+        assert any(r.startswith("entry_check: E10") for r in s["withheld"]), s["withheld"]
 
 
 KYMCO = json.loads((SKILL / "fixtures" / "kymco_source_usage.json").read_text(encoding="utf-8"))
@@ -381,11 +381,14 @@ class TestBugFix3RefuteMustSayTheModelIsNamed:
         assert s["ready_to_write"] == []
         assert [f["spelling"] for f in s["family_evidence"]] == ["Blade 650"]
 
-    def test_the_disagreement_is_a_stop(self, run_with):
-        """D5: refute and the script disagree — the batch stops, it does not
-        quietly pick one."""
+    def test_the_disagreement_is_recorded_and_withheld(self, run_with):
+        """Refute and the script disagree: the finding is withheld and the
+        disagreement recorded — it does not quietly pick one. Since the
+        operator's standing rule (2026-09-23) one finding's disagreement is
+        not a stop for the batch's other findings."""
         s = run_with(Fake(findings=[_blade()], names_model=False), ["Blade 650"])
-        assert any("disagree" in r and "Blade 650" in r for r in s["stops"])
+        assert any("disagree" in r and "Blade 650" in r for r in s["withheld"])
+        assert s["ready_to_write"] == []
 
     def test_a_missing_names_model_is_not_a_yes(self, run_with):
         s = run_with(Fake(findings=[_blade()], names_model=None), ["Blade 650"])
@@ -437,3 +440,74 @@ class TestBugFix4TheCitationIsRequired:
         cmd = fake.source_calls()[0]
         sent = json.loads(cmd[cmd.index("--json-schema") + 1])
         assert "document" in sent["properties"]["findings"]["items"]["required"]
+
+
+class Verdicts(Fake):
+    """A refute that answers per spelling: killed where named."""
+
+    def __init__(self, findings, killed=(), **kw):
+        super().__init__(findings=findings, **kw)
+        self.killed = set(killed)
+
+    def __call__(self, cmd, **kw):
+        p = super().__call__(cmd, **kw)
+        if str(O.SUBC) in cmd:
+            return p
+        out = json.loads(p.stdout.strip().splitlines()[-1])
+        for v in out["structured_output"]["verdicts"]:
+            if v["spelling"] in self.killed:
+                v["verdict"] = "killed"
+        return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(out) + "\n", stderr="")
+
+
+def _many(n):
+    """n sound findings on one fixture page (the Trail 250's own manual)."""
+    return [_found(spelling="Trail 250")] + [dict(_found(), spelling=f"Trail 250 #{i}") for i in range(1, n)]
+
+
+def _judge_only_refute(monkeypatch):
+    """Five sound findings on one page, so only refute's verdicts decide:
+    every spelling gets the Trail 250 excerpt, every check passes, every
+    page names its model."""
+    import candidates as CD
+    import entry_check as EC
+    monkeypatch.setattr(CD, "candidates", lambda sp, *a, **k: {
+        s: [{"document": TRAIL_DOC, "page": 2, "lines": "1-6", "hit_line": 1, "anchor": "name",
+             "text": TRAIL_QUOTE}] for s in sp})
+    monkeypatch.setattr(EC, "check_one", lambda *a, **k: [])
+    monkeypatch.setattr(EC, "check", lambda *a, **k: [])
+    monkeypatch.setattr(EC, "model_scope", lambda *a, **k: "model")
+
+
+class TestTheStandingRule:
+    """Operator decision 2026-09-23: a kill or an entry_check rejection of
+    one finding does not block the batch's other ready findings. A batch
+    stops whole only on systemic signals — a source-stage error, the wrong
+    model serving, a token ceiling, a blocked rate over 50%, or refute
+    killing more than a quarter of what it checked."""
+
+    def test_one_kill_in_five_is_withheld_not_a_stop(self, run_with, monkeypatch):
+        _judge_only_refute(monkeypatch)
+        fake = Verdicts(_many(5), killed={"Trail 250 #1"})
+        s = run_with(fake, ["Trail 250"] + [f"Trail 250 #{i}" for i in range(1, 5)])
+        assert s["stops"] == []
+        assert any(w.startswith("refute killed Trail 250 #1") for w in s["withheld"])
+        assert len(s["ready_to_write"]) == 4 and "Trail 250 #1" not in {f["spelling"] for f in s["ready_to_write"]}
+
+    def test_over_a_quarter_killed_is_a_stop_and_writes_nothing(self, run_with, monkeypatch):
+        _judge_only_refute(monkeypatch)
+        fake = Verdicts(_many(5), killed={"Trail 250 #1", "Trail 250 #2"})
+        s = run_with(fake, ["Trail 250"] + [f"Trail 250 #{i}" for i in range(1, 5)])
+        assert any(r.startswith("refute killed 2/5") for r in s["stops"]) and s["ready_to_write"] == []
+
+    def test_a_rejection_does_not_block_the_rest(self, run_with):
+        """Sprint 900's quote is not on its page (E3/E10); Trail 250 is sound."""
+        fake = Fake(findings=[_found(), _sprint(GT_DOC, "a quote that is not on the page at all")])
+        s = run_with(fake, ["Trail 250", "Sprint 900"])
+        assert s["stops"] == [] and [f["spelling"] for f in s["ready_to_write"]] == ["Trail 250"]
+        assert any(w.startswith("entry_check:") and "Sprint 900" in w for w in s["withheld"])
+
+    def test_a_refute_stage_error_is_a_stop(self, run_with):
+        fake = Fake(findings=[_found()], refute_usage={})     # no modelUsage: 'served by nothing'
+        s = run_with(fake, ["Trail 250"])
+        assert any(r.startswith("refute stage error") for r in s["stops"]) and s["ready_to_write"] == []

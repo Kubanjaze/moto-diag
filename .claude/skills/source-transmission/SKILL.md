@@ -36,11 +36,19 @@ sees the summary and any stop — nothing else.
 
 ## Stops (alert + non-zero exit)
 
-Tokens above **150,000 per spelling sent** to the model, all stages
-together (refute is not spent once the source stage is over); a stage
-with no recorded usage; a refute verdict that is not `kept`; blocked rate above 50%; a spelling
-with no finding; any entry_check rejection; a stage served by the wrong
-model. **Never resolve a stop by editing the check.**
+A batch stops **whole** — writes nothing — only on a systemic signal
+(operator, 2026-09-23): a source- or refute-stage error, the wrong model
+serving, a stage with no recorded usage, a token ceiling (150,000 per
+spelling sent for every stage but refute; 300,000 per finding refuted for
+refute), a blocked rate above 50%, or refute killing more than a quarter
+of what it checked.
+
+One finding's refute kill, entry_check rejection, names-the-model
+disagreement, or a spelling the source skipped is **withheld**: recorded in
+`summary.withheld`, never written, and it does not block the batch's other
+ready findings. A `manual` finding needs a quote naming a rider-operated
+clutch, a foot-shift pattern or the word "manual" (E12). **Never resolve a
+stop by editing the check.**
 
 ## The boundary
 
