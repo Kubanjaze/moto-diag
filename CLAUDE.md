@@ -72,6 +72,11 @@ opening paragraph imports the lean index (9 KB) into every session started
 at this root. The first session after this change asks once to approve the
 external import.
 
+Proven 2026-09-23: before approval a headless `claude -p` at this root, all
+tools disabled, answered NOT LOADED; the operator approved the import in an
+interactive session, which quoted the first Evidence rule without opening a
+file; a headless session afterwards, tools disabled, quoted it verbatim.
+
 ### 2026-09-22 — created (Phase 255D)
 
 moto-diag had no `CLAUDE.md` of its own. Its rules sat in the workspace
