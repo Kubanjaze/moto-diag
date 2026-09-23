@@ -414,3 +414,111 @@ document the library does not have. Acquisition is the bottleneck.
   Figure of record: **17 of 506 (3.4%)**, an upper bound on what a model
   could be sent, not findings.
 - **Commit:** this one.
+
+### 2026-09-23 — D7 measured: one plain fetch per maker URL, no model
+
+`d7_probe.py` replaces `~/.cache/motodiag/d7_subc.py` (an open-ended
+agent loop). A fixed, hand-written list of 43 URLs over all 21 makes in
+the census — the owner's-manual portal, a spec page for a census model,
+and a known document endpoint where one exists — one GET each, Step 0's
+browser UA, no cookies, no JavaScript, no retries, no following of
+discovered links. Each response is classified by a rule in the file and
+saved with its sha256, URL, final URL and fetch time. Run
+`~/.cache/motodiag/d7/20260923_002937/` (`d7.json` raw; `d7_reclassified.json`
+after the classifier fix below — same saved bodies, no second fetch).
+
+**The first classification was wrong in three rows, by my rule, not by the
+makers:** Kawasaki's 302s were "needs_browser" (they are the S0-2 redirect
+loop — a cookie wall); Damon's Cloudflare 522 was "needs_browser" (the
+origin is down). Fixed: `redirect_loop` for a 3xx urllib abandons, 5xx is
+`unreachable`. `tests/test_phase257_d7_probe.py` (13), one hand-written
+response per method shaped on a real one; break-it: 5xx branch, 3xx
+branch and the spec-line branch each removed → 1 fails each.
+
+**Measure what produced the number: most `not_found` rows are my guessed
+URLs being wrong, not a maker without a page.** Suzuki redirected to its
+own `/404?item=…`, Harley and MV Agusta to their own not-found pages,
+Zero and Yamaha 404'd the paths I wrote. They say "this URL", nothing
+about the maker. SYM's `sym-usa.com` now redirects to
+`lancepowersports.com/404.html` — the US distributor changed.
+
+| make | machine names | portal | spec page | doc endpoint | method, measured |
+|---|---|---|---|---|---|
+| Ducati | 61 | 403 | 403 | — | **blocked** |
+| Triumph | 53 | 200, no PDF links, no spec line | 404 (my URL) | — | unresolved: readable HTML, right spec URL unknown |
+| KTM | 43 | 200, no evidence | 200 → redirected to a listing | — | unresolved |
+| BMW | 40 | 200, JS shell (22 chars of text) | timeout | — | **needs browser** (portal) |
+| Kawasaki | 39 | 302 loop | 302 loop | — | **redirect loop** (cookie wall) |
+| Yamaha | 39 | 403 | 404 (my URL) | — | **blocked** (portal) |
+| Suzuki | 29 | home 200, no evidence | → own /404 (my URL) | — | unresolved |
+| Piaggio | 28 | 403 | 403 | — | **blocked** |
+| Honda | 26 | 403 | 403 | hondamotopub: 200, JS (797 chars) | **blocked** / needs browser |
+| Aprilia | 24 | 403 | 403 | — | **blocked** |
+| Vespa | 22 | 403 | 403 | — | **blocked** |
+| MV Agusta | 21 | 200, no PDF links | → own /404 (my URL) | — | unresolved |
+| Harley-Davidson | 16 | → not-found (my URL) | → not-found (my URL) | serviceinfo: 200, JS (77 chars) | needs browser (doc) |
+| Zero | 15 | 404 (my URL) | 404 (my URL) | — | unresolved |
+| Moto Guzzi | 10 | 403 | 403 | — | **blocked** |
+| Energica | 10 | TLS: **certificate expired** (curl agrees) | same | — | **unreachable** |
+| Kymco | 10 | 404 (my URL) | **200, "Transmission CVT Automatic"** | — | **spec page HTML** |
+| LiveWire | 7 | 200, no evidence | 200, no evidence | — | unresolved |
+| Genuine | 5 | 404 (my URL) | — | **200, PDF, 2,931,891 B** | **document endpoint** (byte-identical to the library's Buddy 125) |
+| SYM | 5 | → lancepowersports 404 | same | — | distributor moved |
+| Damon | 3 | 522 (origin down) | — | — | **unreachable** |
+
+**By machine names (506):** a plain fetch works for **15** (Kymco 10,
+Genuine 5); **blocked 210** (Ducati, Yamaha, Piaggio, Honda, Aprilia,
+Vespa, Moto Guzzi — Aprilia, Piaggio, Vespa and Moto Guzzi share one
+Piaggio-group wall); redirect loop 39 (Kawasaki); needs browser /
+unreachable 69 (BMW, Harley, Energica, Damon); **unresolved 173** —
+Triumph, KTM, Suzuki, MV Agusta, Zero, LiveWire, SYM — readable HTML or my
+URL wrong, where a correct spec URL has not been tried.
+
+## Acquire — design (not built)
+
+**Goal:** put maker documents INTO `~/research/motodiag` with provenance
+the script records, so candidates → one-turn source → entry_check →
+refute can use them. No model anywhere in acquire.
+
+1. **`acquire.py MAKE`**, no model. A committed table `ROUTES[make]` holds
+   only methods measured to work: `document_endpoint` (explicit PDF URLs)
+   and `spec_page_html` (explicit spec-page URLs, or a URL pattern plus
+   ONE listing page whose links matching that pattern are taken — one hop,
+   never a crawl). A make with no measured route has no entry: its
+   outcome is its D7 method, reported, never guessed past. Per run: at most
+   N fetches (proposed 30), 1 request/second, robots.txt honoured, TLS
+   never bypassed (Energica stays unreachable).
+2. **Where it writes:** `~/research/motodiag/acquired/<make>/<file>` plus
+   `<file>.acquired.json` — `url`, `final_url`, `http_status`,
+   `content_type`, `bytes`, `sha256`, `fetched_at`, `route`, `probe_run` —
+   written by `acquire.py` only. Text for candidates is derived beside it
+   (`<file>.txt`, via `entry_check._extract_text` / pypdf) and its sidecar
+   records the source sha256. The sandbox already denies model writes
+   outside the run's clone (`sandbox.sb.tmpl`), so no model stage can
+   write into `acquired/` — the property E9 lacked (F141).
+3. **Kind from the host, not the filename:** `library_index` gains
+   `^acquired/`, whose kind comes from the sidecar: a maker kind only when
+   the final URL's host is on a named `MAKER_HOSTS` list (kymcousa.com,
+   genuinescooters.com, …) — so a redirect to a mirror or a distributor's
+   404 is not a maker document.
+4. **entry_check E11** for an acquired file: the sidecar exists, the file's
+   sha256 matches it, the host is a maker host. No network in the check.
+5. **Blocked / redirect loop / needs browser (318 of 506) are out of
+   scope** until the operator decides. Options, none built: (a) an
+   operator-supplied inbox — the operator downloads by hand into
+   `~/research/motodiag/inbox/` with the URL written beside it and the
+   script ingests it with provenance `operator-supplied`: a person, not a
+   model; (b) a headless browser for the JS shells (BMW, hondamotopub,
+   serviceinfo) — a new dependency, and **not** for the 403 walls, which
+   are refusals, not rendering problems; (c) leave them `unknown`.
+6. **The next measurement before building:** the 173 unresolved — one
+   correct spec URL per maker, found by hand from its own listing page,
+   probed the same way — so the route table is built from measured
+   routes, not from the Kymco and Genuine cases alone.
+7. **Tests (when built):** a local `http.server` fixture serving a PDF, a
+   spec page, a 403, a 302 loop, a redirect to another host, a 522; a
+   positive control (the Kymco Super 8 50X page is fetched, indexed as a
+   maker spec page, and returned by `candidates("Super 8-50 X",
+   make="Kymco")`); negatives (a redirect to a non-maker host is not
+   indexed as maker; a tampered file fails E11); break-it per the house
+   rule.
