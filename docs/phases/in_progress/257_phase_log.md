@@ -1816,3 +1816,35 @@ planted pages in the makers' own wording: Triumph's table cells
 A first `MECHANISM` break prefixed `(?!x)x|`, which left every
 alternative matching, and survived, so it was not a break. It was redone
 by replacing the search with `False`.
+
+### 2026-09-23 — Owner's-manual sources probed: Yamaha, Triumph, KTM (one fetch each, no model)
+
+**Method.** `d7_probe.py --targets`, Step 0's method: one GET per maker,
+Step 0's UA, no cookies, no retries, no model. Run
+`~/.cache/motodiag/d7/20260923_174220/`.
+
+**URLs.** Each URL was taken from the maker's own page already on disk,
+not guessed:
+- Yamaha: all 9 acquired yamahamotorsports.com spec pages link the library
+  URL below. D7 round 1 fetched only the host root and got an Incapsula 403.
+- Triumph: triumphmotorcycles.com/owners/manuals (D7 round 1 save) links
+  triumphtechnicalinformation.com/handbooks.
+- KTM: ktm.com/en-us/service/manuals.html (D7 round 1 save) names its own
+  `bikemanuals.manuals.json` data endpoint.
+
+| maker | URL fetched | status | what came back | reading |
+|---|---|---|---|---|
+| Yamaha | `https://library.ymcapps.net/library/om/app/index.html?baseCode=6150&langId=02` | 200 | 15,518 B: the "Yamaha Motor Owner's Manual Library" app, a search by manual number (LIT-…); jQuery plus `index.js`; an Incapsula script is present | **reachable**; the document hop is behind `index.js`, not measured |
+| Triumph | `https://triumphtechnicalinformation.com/handbooks` | 200 | 5,770 B: a JS app shell whose only text is "Triumph Technical Information" (one bundle, `/assets/index-C0_sI8-w.js`) | **reachable**; the handbook list is behind the bundle, not measured |
+| KTM | `https://www.ktm.com/en-us/service/manuals/_jcr_content/root/responsivegrid_1_col/bikemanuals.manuals.json` | 200 | 95 B JSON: `"success": false, "messages": ["Bad Request"]` | **reachable**; the endpoint wants parameters the page's script supplies, not measured. The same page says older owner's manuals are in a separate "Print on Demand portal" |
+
+None is blocked. None has yet produced a manual's URL. Each needs the same
+step BMW (Nav.xml) and Honda (motopub's `get_model_names`) needed: read the
+page's own script for the request it makes. That is one more fetch per
+maker, and it waits for the operator.
+
+**Open for E11 (not tested):** Triumph's handbooks are on
+triumphtechnicalinformation.com, not triumphmotorcycles.com. E11 accepts a
+file on the make's own host, or one linked from an unchanged maker-host
+page. A link that the app's script builds is not in any maker-host page's
+HTML.
