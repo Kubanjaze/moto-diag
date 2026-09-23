@@ -128,3 +128,30 @@ class TestHondaWrite:
         r = resolve_transmission("Honda", "CBR1000RR")
         assert r.provenance == "unknown"
         assert r.candidates != frozenset({"manual"})
+
+
+class TestSuzukiWrite:
+    """Run Suzuki_20260923_093052: Suzuki's own current spec pages, fetched
+    by acquire.py; nine spellings kept by refute and named on their pages.
+    Each spelling written down, not counted."""
+
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("model", [
+        "GSX-R750", "gsxr750", "GSX-R1000", "gsxr1000", "GSX-R600", "gsxr600",
+        "V-Strom 650", "vstrom650", "GSX-S1000", "gsxs1000", "DR-Z400S", "drz400s",
+        "Boulevard C50", "Boulevard M109R", "M109R", "V-Strom 1050", "vstrom1050",
+    ])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("Suzuki", model)
+        assert r.provenance == "model-sourced", model
+        assert r.candidates == frozenset({"manual"}), model
+
+    @_pytest.mark.parametrize("model", ["SV650", "SV650 Gladius", "GSX-R1100", "GSX-S750", "DR-Z400SM"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """SV650: its page is the ABS (bug fix #3). GSX-R1100: no current
+        page. GSX-S750, DR-Z400SM: named in passing, no gearbox statement."""
+        assert resolve_transmission("Suzuki", model).provenance == "unknown", model
+
+    def test_the_make_is_the_scope(self):
+        assert resolve_transmission("Kawasaki", "GSX-R750").provenance == "unknown"

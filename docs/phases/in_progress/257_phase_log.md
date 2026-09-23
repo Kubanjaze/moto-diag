@@ -867,3 +867,25 @@ in VARIANT_TOKENS, and the page also names "the first SV650"); refute kept
 the gearbox but returned an empty `model_line`, saying the base SV650 is
 named only historically. The batch lists it ready because the script
 rule, not refute, decides scope. Flagged for the operator.
+
+### 2026-09-23 — Suzuki write: nine entries (SV650 withheld)
+
+From run `Suzuki_20260923_093052`, one entry per model in
+`TRANSMISSION_LOOKUP` (new `# --- Suzuki` section), each citing Suzuki's
+own page URL and quoting it: GSX-R750, GSX-R1000, GSX-R600, V-Strom 650,
+GSX-S1000, DR-Z400S, Boulevard C50, Boulevard M109R, V-Strom 1050 — all
+`manual`. Aliases only as the pages spell the models (hyphen/space/joined
+forms); no model code the page does not carry. **SV650 withheld** (operator):
+refute's reason says family evidence while its verdict says kept — the
+gate defect fixed next (bug fix #3).
+
+| | before | after |
+|---|---|---|
+| census (unknown spellings) | 600 | **591** |
+| Suzuki unknown | 29 | 20 |
+
+`tests/test_phase257_tranche1_writes.py` gains `TestSuzukiWrite`: 17 spellings
+resolve `manual`; SV650, SV650 Gladius, GSX-R1100, GSX-S750, DR-Z400SM stay
+`unknown`; the make is the scope. The suites that mention these machines
+(Phases 57–65 Suzuki knowledge, 79–82, 95, 108, 155, 221, 227, 255, 255B,
+256): 541 pass. 244G clean.

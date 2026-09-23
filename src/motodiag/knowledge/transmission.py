@@ -238,6 +238,59 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "that XC155 is not an XMAX: Yamaha's XMAX codes are YP125RA, CZD250 "
        "and CZD300, and none of them is XC155 — which is correct, and incomplete: XC155 is the SMAX, sourced in its own entry above."),
 
+    # --- Suzuki ----------------------------------------------------------
+    # Phase 257, run Suzuki_20260923_093052: Suzuki's
+    # own current spec pages, fetched by acquire.py into
+    # ~/research/motodiag/acquired/Suzuki/ with script-written provenance;
+    # every refute verdict kept, every page names its model (model scope).
+    # The SV650 is deliberately absent: its page is the SV650 ABS, which
+    # refute read as family evidence (bug fix #3).
+    _E("Suzuki", "GSX-R750", MANUAL, ("gsx r750", "gsxr750", "gsx r 750", "gsxr 750"),
+       "suzukicycles.com/sportbike/2027/gsx-r750 (2027 GSX-R750): 'A "
+       "race-proven back-torque-limiting clutch contributes to smoother "
+       "downshifting and corner entry while the close-ratio six-speed "
+       "transmission features a taller first-gear ratio…'"),
+    _E("Suzuki", "GSX-R1000", MANUAL, ("gsx r1000", "gsxr1000", "gsx r 1000", "gsxr 1000"),
+       "suzukicycles.com/sportbike/2027/gsx-r1000 (2027 GSX-R1000): 'The "
+       "Suzuki Clutch Assist System (SCAS) multi-plate, wet clutch … The "
+       "Suzuki Bi-directional Quick Shift System enables smooth, clutchless "
+       "upshifts and downshifts of the cassette-style, six-speed "
+       "transmission.' A quick-shifter on a clutch-and-lever gearbox."),
+    _E("Suzuki", "GSX-R600", MANUAL, ("gsx r600", "gsxr600", "gsx r 600", "gsxr 600"),
+       "suzukicycles.com/sportbike/2027/gsx-r600 (2027 GSX-R600): 'A "
+       "race-proven back-torque-limiting clutch contributes to smoother "
+       "downshifting and corner entry while the close-ratio six-speed "
+       "transmission has Suzuki's legendary smooth and precise shifting "
+       "characteristics'."),
+    _E("Suzuki", "V-Strom 650", MANUAL, ("v strom 650", "vstrom 650", "vstrom650"),
+       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'The "
+       "six-speed transmission suits sporty rides with tight first through "
+       "fifth gear ratios and a tall top gear (sixth gear) for highway "
+       "cruising.'"),
+    _E("Suzuki", "GSX-S1000", MANUAL, ("gsx s1000", "gsxs1000", "gsx s 1000", "gsxs 1000"),
+       "suzukicycles.com/street/2027/gsx-s1000 (2027 GSX-S1000): 'Like a "
+       "GSX-R1000, the race-proven, six-speed, close-ratio transmission "
+       "features vertically staggered shafts to reduce overall engine "
+       "length.'"),
+    _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
+       "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
+       "five-speed transmission utilizes a cable-operated clutch with a "
+       "separate magnesium outer cover for simplified clutch maintenance.'"),
+    _E("Suzuki", "Boulevard C50", MANUAL, ("boulevard c50", "boulevard c 50"),
+       "suzukicycles.com/cruiser/2025/boulevard-c50 (2025 Suzuki Boulevard "
+       "C50): 'With a light pull, the clutch feeds engine power to the "
+       "smooth-shifting five-speed transmission and out to the clean shaft "
+       "drive.'"),
+    _E("Suzuki", "Boulevard M109R", MANUAL, ("boulevard m109r", "m109r", "boulevard m 109r"),
+       "suzukicycles.com/cruiser/2025/boulevard-m109r (2025 Suzuki Boulevard "
+       "M109R): 'A wide-ratio, constant-mesh five-speed transmission "
+       "features a high fifth gear ratio for relaxed highway cruising.'"),
+    _E("Suzuki", "V-Strom 1050", MANUAL, ("v strom 1050", "vstrom 1050", "vstrom1050"),
+       "suzukicycles.com/adventure/2027/v-strom-1050 (2027 V-STROM 1050): "
+       "'The six-speed, close-ratio transmission have high gear ratios in "
+       "first and sixth gear to smooth the shift action into second and "
+       "higher gears.'"),
+
     # --- Kymco -----------------------------------------------------------
     _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",
                                  "agility 125", "agility125"),
