@@ -46,7 +46,7 @@ folder exists to stop shipping.
 6. **Move both docs to `completed/`**, set the status line.
 7. **Merge, then deploy with a backup** — `~/backups/motodiag/`, retain 5,
    print the before-state, dry-run on a copy first.
-8. **`verify_phase.sh PHASE REG_HASH TIP`** and read all eleven checks.
+8. **`verify_phase.sh PHASE REG_HASH TIP`** and read all thirteen checks.
 
 ## When a step may be skipped
 

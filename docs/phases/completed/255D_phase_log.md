@@ -211,7 +211,7 @@ and a script for the parts that are "run this and check that".
 No schema change, no migration, no database touched — this phase is process
 files and tests only.
 
-### 2026-09-22 21:40 — Bug fix #5: B2 could not tell describing a number from citing one
+### 2026-09-22 20:18 — Bug fix #5: B2 could not tell describing a number from citing one
 
 **Issue.** `verify_phase.sh` run against **255D itself** failed check 13:
 three dangling F-numbers — F138, F139, F140 — cited by 255D's own
@@ -246,7 +246,7 @@ the ceiling, the global pin, and nearly the sub-brand narrowing in 255C.
 **An exclusion is a claim that something cannot be the thing you are looking
 for, and it needs a control like any other claim.**
 
-### 2026-09-22 21:55 — Bug fix #6: A7 could only ever be satisfied by the newest phase
+### 2026-09-22 20:18 — Bug fix #6: A7 could only ever be satisfied by the newest phase
 
 **Issue.** `verify_phase.sh`'s check 10 failed for 255D:
 `test_a_closed_phase_passes` reported **255C** — a phase that was correct
