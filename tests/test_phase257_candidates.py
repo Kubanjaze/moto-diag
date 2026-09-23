@@ -65,8 +65,8 @@ class TestThePage:
         assert e["page"] == 2
 
     def test_page_from_an_angle_marker_in_a_subfolder(self):
-        [e] = _one("Glide 125")
-        assert e["page"] == 7 and e["document"].endswith("sub/zz_glide_quickref.txt")
+        [e] = [e for e in _one("Glide 125") if e["document"].endswith("pdfs/zz_glide_quickref.txt")]
+        assert e["page"] == 7
 
     def test_html_has_no_page_and_no_markup(self):
         [e] = _one("Scout 50")
@@ -113,3 +113,42 @@ class TestTheCaps:
         ex = _one("Glider 300")
         assert ex and len(ex) < len(uncapped)
         assert sum(len(e["text"]) for e in ex) <= 1000
+
+
+class TestTheMakeIsAFilter:
+    """A document that never names the make is not about its machines.
+    The real cases: Harley "One" matched a dealer page; Ducati "1000"
+    matched SYM scooter manuals ('Clutch Centrifugal type')."""
+
+    def test_another_makers_manual_is_not_read(self):
+        """pdfs/qq_scoot_om.txt names 'Streak 600' and a centrifugal
+        clutch, and never names ZZ."""
+        assert _one("Streak 600") != []                 # control: it does match
+        assert _one("Streak 600", make="ZZ") == []
+
+    def test_the_makers_own_manual_still_is(self):
+        docs = [e["document"] for e in _one("Ranger 400", make="ZZ")]
+        assert docs == [str(LIB / "zz_ranger_om.pdf.txt")]
+
+
+class TestOnlyIndexedMakerDocumentsAreRead:
+    """library_index decides; each of these holds the Trail 250 quote."""
+
+    @pytest.mark.parametrize("name", ["cyclepedia_zz_trail.txt", "models_raw.txt"])
+    def test_third_party_and_crawl_files_are_not_read(self, name):
+        assert "5-speed constant mesh" in (LIB / name).read_text(encoding="utf-8")
+        assert all(e["document"] != str(LIB / name) for e in _one("Trail 250"))
+
+
+class TestACommonWordIsReadOnlyAsAModel:
+    """Yamaha "Bolt" matched Yamaha's own Zuma 125 manual — same make, so
+    the make filter passes it. E4's model-name rule applies here too."""
+
+    def test_the_fastener_is_not_the_machine(self):
+        """pdfs/zz_glide125_sm.txt: a ZZ manual full of bolts."""
+        docs = [e["document"] for e in _one("Bolt", make="ZZ")]
+        assert str(LIB / "pdfs" / "zz_glide125_sm.txt") not in docs
+
+    def test_named_after_the_make_it_is_read(self):
+        docs = [e["document"] for e in _one("Bolt", make="ZZ")]
+        assert docs == [str(LIB / "pdfs" / "zz_range_om.txt")]

@@ -14,10 +14,17 @@ chooses to browse. The agent-loop source stage it replaces measured
 ~2.4M tokens per spelling; Kymco's one spelling measured 7.66M.
 
 What is read: `*.txt` and HTML (HTML→text by `entry_check._extract_text`,
-the same code E3 verifies quotes with). What is not: the project's own
-artefacts that live in the library folder — phase notes (`250_*`), logs,
-past refute output, virtualenvs. They are the project talking to itself,
-not maker documents. Nor is anything over MAX_BYTES.
+the same code E3 verifies quotes with) that `library_index` classes as a
+maker document, and that **names the make** (`entry_check.MAKE_NAMES`).
+The make is a filter, not a rank: matching a spelling as a word in any
+file sent Yamaha "Bolt" to the Zuma 125 manual's fasteners, Harley "One"
+to a dealer page and Ducati "1000" to SYM scooter manuals. What is never
+read: third-party mirrors, crawl dumps, recalls, unindexed files, the
+project's own artefacts (phase notes `250_*`, logs, `refute/`,
+virtualenvs), and anything over MAX_BYTES. The make filter cannot stop
+"Bolt" in Yamaha's own Zuma manual; for a weak spelling (an ordinary word
+or bare number) a document is read only where it names the spelling as a
+model — `entry_check.named_as_model`, E4's rule.
 
 Pages come from the extract's own markers (`=== PAGE N ===`, `===PAGE N===`,
 `===== PAGE N =====`, `<<<PAGE N>>>`) or form feeds; an HTML page or an
@@ -39,7 +46,8 @@ import textwrap
 HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-from entry_check import _extract_text  # noqa: E402
+import library_index  # noqa: E402
+from entry_check import _extract_text, _key, named_as_model, names_make, weak_spelling  # noqa: E402
 
 LIBRARY = pathlib.Path.home() / "research" / "motodiag"
 CONTEXT = 40                 # lines either side of a hit
@@ -62,20 +70,15 @@ GEARBOX = re.compile(r"transmission|gearbox|gear ?shift|shift pedal|clutch|\d-sp
 PAGE_MARK = re.compile(r"^\s*(?:=+|<<<)\s*PAGE\s+(\d+)\s*(?:=+|>>>)\s*$", re.I)
 
 
-def _key(s: str) -> str:
-    """Lower-case words, letters split from digits: 'CR300i' ~ 'CR 300i'."""
-    s = re.sub(r"(?<=[a-z])(?=[0-9])|(?<=[0-9])(?=[a-z])", " ", s.lower())
-    return " " + " ".join(re.sub(r"[^a-z0-9]+", " ", s).split()) + " "
-
-
-def documents(library: pathlib.Path) -> list[pathlib.Path]:
+def documents(library: pathlib.Path, maker_only: bool = True) -> list[pathlib.Path]:
     out = []
     for p in library.rglob("*"):
         rel = p.relative_to(library)
         if (p.suffix.lower() in SUFFIXES and p.is_file()
                 and not SKIP_DIRS.intersection(rel.parts[:-1])
                 and not SKIP_NAME.search(p.name)
-                and p.stat().st_size <= MAX_BYTES):
+                and p.stat().st_size <= MAX_BYTES
+                and (not maker_only or library_index.kind(p, library) in library_index.MAKER_KINDS)):
             out.append(p)
     return sorted(out)
 
@@ -109,18 +112,22 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
     keys = {s: {_key(a) for a in [s, *((aliases or {}).get(s) or [])] if a.strip()}
             for s in spellings}
     hits: dict[str, list[tuple]] = {s: [] for s in spellings}
-    make_key = _key(make) if make else None
     for doc in documents(library):
         text = _extract_text(doc)
         if not text:
             continue
         low = _key(text)
-        wanted = [s for s in spellings if any(k in low for k in keys[s])]
+        if make and not names_make(low, make):
+            continue                # a document that never names the make is not about its machines
+        # A spelling that is an ordinary word or a bare number ("Bolt", "1000")
+        # counts only where the document names it as a model — the same rule
+        # as E4, applied before the model is paid to read the excerpt.
+        wanted = [s for s in spellings if any(k in low for k in keys[s])
+                  and not (make and weak_spelling(s) and not named_as_model(text, doc, make, s))]
         if not wanted:
             continue
         lines, pages = _lines(text)
         line_keys = [_key(x) for x in lines]
-        names_make = bool(make_key and make_key in low)
         file_key = _key(doc.name)
         for s in wanted:
             about = any(k in file_key for k in keys[s])
@@ -129,11 +136,11 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
                 if by_name or (about and GEARBOX.search(lines[i])):
                     lo, hi = max(0, i - CONTEXT), min(len(lines), i + CONTEXT + 1)
                     window = "\n".join(lines[lo:hi])
-                    # A file naming the make first, then the passage that says
-                    # most about a gearbox: a spec table beats a model list.
+                    # The passage that says most about a gearbox first: a spec
+                    # table beats a model list.
                     terms = {t.lower() for t in GEARBOX.findall(window)}
                     dense = sum(bool(GEARBOX.search(x)) for x in lines[lo:hi])
-                    rank = (not names_make, -len(terms), -dense, str(doc), i)
+                    rank = (-len(terms), -dense, str(doc), i)
                     hits[s].append((rank, doc, i, lo, hi, window, pages[i],
                                     "name" if by_name else "file"))
     out: dict[str, list[dict]] = {}

@@ -254,3 +254,65 @@ tokens; added). Restored: all pass.
 Handoff step 4 (fixtures + break-it) was done inside steps 1–3, each
 against its own hand-written fixtures. Step 5, the Kymco re-run, waits for
 the Subconscious reset.
+
+### 2026-09-23 — three leaks in what reaches the model, closed (operator's review of step 1)
+
+The operator measured real `candidates.py` output: Yamaha "Bolt" → eight
+excerpts from Yamaha's own Zuma 125 / YZ125 service manuals (the fastener
+word, one excerpt with "V-belt"); Harley-Davidson "One" → `cp.html`,
+`makes_raw.txt`; Ducati "1000" → SYM/Kymco scooter manuals, "Clutch
+Centrifugal type". A spelling matched as a word in ANY file; the make only
+ranked. Nothing behind it stopped the Bolt case — same make, a Yamaha
+manual (E2), "V-belt" (E5), the quote on the page (E3), inside the excerpt
+(E10); E4 passed on the fastener. Only refute stood between a GLM answer
+and a `cvt` entry for a manual cruiser. **My "220 of 600 have an excerpt,
+98 with a gearbox word" count from this morning was built on exactly this
+and is withdrawn** — the F139 trap in code.
+
+1. **The make is a filter.** `candidates.py` reads a document only if it
+   names the make (`entry_check.MAKE_NAMES`: full names where the bare one
+   is an ordinary word — "Genuine" is every manual's "genuine parts").
+2. **Strict E4 for weak spellings** — no token mixing letters and digits
+   and fewer than two real words (Bolt, One, 1000, RS, Monster 821,
+   K-Pipe): the document must name it AS A MODEL — right after the make
+   ("Yamaha Bolt"), as a strong alias of a lookup entry it already belongs
+   to, in the document's first three non-marker lines (its title), or in
+   its file name. `candidates.py` applies the same rule before paying the
+   model to read — the make filter alone cannot stop Bolt, which is the
+   make's own manual.
+3. **E2 from an index.** New `library_index.py`: an ordered, hand-written
+   table of path rules, first match wins; unmatched is `unindexed` and is
+   not evidence. Every library file was read and classed:
+   maker_site_page 697, maker_manual 579, crawl_artefact 54, recall 28,
+   maker_spec_page 26, third_party 4, regulation 2, **unindexed 0**. For a
+   library file E2 uses the index's kind and never consults the model's
+   `evidence_kind`; `candidates.py` reads maker kinds only.
+
+**Controls on the real library, after:**
+
+| | spelling | before | after |
+|---|---|---|---|
+| negative | Harley-Davidson "One" | cp.html, makes_raw.txt | **0** |
+| negative | Ducati "1000" | SYM/Kymco scooter manuals | **0** |
+| negative | Yamaha "Bolt" | 8 (Zuma/YZ125) | **0** |
+| positive | Kymco K-Pipe | cited excerpt (p57) | cited excerpt |
+| positive | SYM Wolf CR300i | cited excerpt (gear change) | cited excerpt |
+| positive | Honda Grom | grom2025 spec | grom2025 spec |
+| positive | SYM Wolf Classic 150 | **not present** | not present |
+| positive | Honda Grom 125 | **not present** | not present |
+
+The last two were not present before these fixes either (measured at step
+1): no library text contains "Wolf Classic 150" (the manual's spec page
+says "Model Classic 150" under "WOLF SERIES") or "Grom 125". The agent loop
+reached both by reasoning across names. A string rule should not, so a
+from-scratch re-run of those two would now be `no_evidence` — the price
+of not letting a model browse, recorded, not fixed.
+
+Tests: candidates 17 → 23, source checks 25 → 45 (index rules pinned
+against real paths without reading the library). **Break-it, each seen to
+fail:** make filter off (1); index filter off (5); strict E4 off (1); title
+window 15 lines (1 — the fixture had first been too short to tell, and
+was given real front matter); make-adjacency off (5); E2 trusts the
+model's kind (3); unindexed defaults to maker (2); Cyclepedia rule removed
+(2); the weak rule off in candidates (2). 199 pass across 257 + 255D
+contracts; 244G clean.

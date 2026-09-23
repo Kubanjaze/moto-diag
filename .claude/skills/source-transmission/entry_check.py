@@ -12,9 +12,9 @@ work (F141). Rejection classes, one per trap:
 | id | rejects | why it exists |
 |---|---|---|
 | E1 | a `found` finding without quote, document, page, or kind | a claim with no citation |
-| E2 | evidence that is not a maker document (marketing, forum, dealer, mirror) | the SOP's source ladder |
+| E2 | evidence that is not a maker document (marketing, forum, dealer, mirror); for a library file the kind is `library_index`'s, never the model's | the SOP's source ladder; a model's declared kind is its own account |
 | E3 | a quote the ORIGINAL does not contain, whitespace-normalised | fabricated or garbled-OCR quotes, and doctored copies: a quote present in the saved copy but absent from its declared original |
-| E4 | an original that never names the machine | recycled headers: another model's manual, or a template page |
+| E4 | an original that never names the machine — and for a common word or bare number ("Bolt", "One", "1000"), never names it AS A MODEL: after the make, as a lookup alias, in the title, or in the file name | recycled headers; Yamaha "Bolt" matched the Zuma 125 manual's fasteners |
 | E5 | a quote under four words, or with no transmission term | single table cells ("Manual") |
 | E6 | a transmission value outside the six, or both a value and a candidate set | classification contract |
 | E7 | a blocked / not-found outcome carrying a value, or without the URL tried | never guess past a block |
@@ -53,6 +53,10 @@ import pathlib
 import re
 import sys
 
+HERE = pathlib.Path(__file__).resolve().parent
+sys.path.insert(0, str(HERE))
+import library_index  # noqa: E402
+
 SIX = {"manual", "cvt", "dct", "semi_auto_centrifugal", "semi_auto_actuated", "direct_drive"}
 MAKER_KINDS = {"owners_manual", "service_manual", "workshop_manual", "spec_sheet", "maker_spec_page"}
 TRANSMISSION_TERMS = re.compile(
@@ -60,6 +64,85 @@ TRANSMISSION_TERMS = re.compile(
     r"dct|dual clutch|y-?amt|centrifugal|constant mesh|belt|drive", re.I)
 OUTCOMES = {"found", "blocked", "not_found", "no_evidence"}
 SHA_RE = re.compile(r"^[0-9a-f]{64}$")
+
+
+# How a document names each make. A make's bare name where it is a safe
+# word; otherwise its full name — "Genuine" alone is every manual's
+# "genuine parts", "Zero" and "One" are ordinary words.
+MAKE_NAMES: dict[str, tuple[str, ...]] = {
+    "Harley-Davidson": ("harley davidson", "harley"),
+    "MV Agusta": ("mv agusta",),
+    "Moto Guzzi": ("moto guzzi", "guzzi"),
+    "Genuine": ("genuine scooter", "genuine scooters", "genuinescooters", "genuine scooter co"),
+    "Zero": ("zero motorcycles", "zero motorcycle", "zeromotorcycles"),
+    "Damon": ("damon motorcycles", "damon motors", "damon"),
+    "SYM": ("sym", "sanyang"),
+    "Kymco": ("kymco", "kwang yang"),
+    "LiveWire": ("livewire", "live wire"),
+    "Vespa": ("vespa",),
+    "Piaggio": ("piaggio",),
+}
+
+
+def _key(s: str) -> str:
+    """Lower-case words, letters split from digits: 'CR300i' ~ 'CR 300i'."""
+    s = re.sub(r"(?<=[a-z])(?=[0-9])|(?<=[0-9])(?=[a-z])", " ", (s or "").lower())
+    return " " + " ".join(re.sub(r"[^a-z0-9]+", " ", s).split()) + " "
+
+
+def make_names(make: str) -> list[str]:
+    """The make's names as _key strings."""
+    return [_key(n) for n in MAKE_NAMES.get(make, (make,))]
+
+
+def names_make(text_key: str, make: str) -> bool:
+    """Does text (already through _key) name the make as a word?"""
+    return any(n in text_key for n in make_names(make))
+
+
+def weak_spelling(spelling: str) -> bool:
+    """A spelling that can be an ordinary word or a bare number.
+
+    Strong: a token mixing letters and digits (ZX-10R, CR300i) or two real
+    words (Speed Triple). Weak: everything else — Bolt, One, 1000, RS,
+    Monster 821, Tiger 900, K-Pipe.
+    """
+    toks = re.findall(r"[A-Za-z0-9]+", spelling or "")
+    mixed = any(re.search(r"[A-Za-z]", t) and re.search(r"\d", t) for t in toks)
+    words = [t for t in toks if t.isalpha() and len(t) >= 3]
+    return not mixed and len(words) < 2
+
+
+TITLE_LINES = 3                     # a document's title is its first lines, not its first page
+
+
+def _lookup_aliases(make: str, spelling: str) -> list[str]:
+    """Strong aliases of a lookup entry this spelling already belongs to."""
+    try:
+        sys.path.insert(0, str(HERE.parents[2] / "src"))
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+    except Exception:
+        return []
+    sk = _key(spelling)
+    out = []
+    for e in TRANSMISSION_LOOKUP:
+        names = [e.canonical, *e.aliases]
+        if e.make == make and any(_key(n) == sk for n in names):
+            out += [n for n in names if not weak_spelling(n)]
+    return out
+
+
+def named_as_model(text: str, doc: pathlib.Path, make: str, spelling: str) -> bool:
+    """The document names this spelling as a model of this make, not as a word."""
+    sk = _key(spelling)
+    tk = _key(text)
+    if any(n[:-1] + sk in tk for n in make_names(make)):
+        return True                                             # "Yamaha Bolt"
+    if any(_key(a) in tk for a in _lookup_aliases(make, spelling)):
+        return True                                             # a model code the lookup holds
+    title = [x for x in text.splitlines()
+             if x.strip() and not re.match(r"^\W*(PDF)?PAGE\W*\d+\W*$", x.strip(), re.I)][:TITLE_LINES]
+    return sk in _key(" ".join(title)) or sk in _key(doc.name)  # the document's own title or name
 
 
 def _norm(s: str) -> str:
@@ -175,7 +258,8 @@ def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[s
     return []
 
 
-def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None) -> list[str]:
+def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
+              library: pathlib.Path = library_index.LIBRARY) -> list[str]:
     fails: list[str] = []
     tag = f"{f.get('make')} | {f.get('spelling')}"
     outcome = f.get("outcome")
@@ -197,7 +281,14 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None) ->
     missing = [k for k in ("quote", "document", "page", "evidence_kind") if not f.get(k)]
     if missing:
         return [f"E1 {tag}: missing {missing}"]
-    if f["evidence_kind"] not in MAKER_KINDS:
+    doc = pathlib.Path(f["document"])
+    doc = doc if doc.is_absolute() else docs_root / doc
+    indexed = library_index.kind(doc, library)
+    if indexed != "not_library":
+        # A library file's kind is the index's; what the model declared is not consulted.
+        if indexed not in library_index.MAKER_KINDS:
+            fails.append(f"E2 {tag}: the library index classes {doc.name} as {indexed}, not a maker document")
+    elif f["evidence_kind"] not in MAKER_KINDS:
         fails.append(f"E2 {tag}: evidence kind {f['evidence_kind']!r} is not a maker document")
 
     value, cands = f.get("transmission"), f.get("candidates") or []
@@ -210,8 +301,6 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None) ->
     if len(quote.split()) < 4 or not TRANSMISSION_TERMS.search(quote):
         fails.append(f"E5 {tag}: quote is a fragment, not a statement: {quote!r}")
 
-    doc = pathlib.Path(f["document"])
-    doc = doc if doc.is_absolute() else docs_root / doc
     if excerpts is not None:
         fails += _in_excerpts(f, doc, excerpts, tag)
     if _is_evidence_copy(doc, docs_root):
@@ -231,13 +320,19 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None) ->
             fails.append(f"E3 {tag}: the document does not contain the quote")
         if not _names(text, [f.get("spelling", "")] + list(f.get("aliases") or [])):
             fails.append(f"E4 {tag}: the document never names the machine")
+        elif weak_spelling(f.get("spelling", "")) and not named_as_model(
+                text, doc, f.get("make", ""), f.get("spelling", "")):
+            fails.append(f"E4 {tag}: {f.get('spelling')!r} is a common word or bare number and the "
+                         f"document never names it as a {f.get('make')} model (after the make, as a "
+                         "lookup alias, in its title or its file name)")
     if f.get("ocr") and not f.get("needs_page_image"):
         fails.append(f"E8 {tag}: OCR-sourced evidence not flagged for a page-image check")
     return fails
 
 
-def check(findings: list[dict], docs_root: pathlib.Path, excerpts: dict | None = None) -> list[str]:
-    return [x for f in findings for x in check_one(f, docs_root, excerpts)]
+def check(findings: list[dict], docs_root: pathlib.Path, excerpts: dict | None = None,
+          library: pathlib.Path = library_index.LIBRARY) -> list[str]:
+    return [x for f in findings for x in check_one(f, docs_root, excerpts, library)]
 
 
 REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10")

@@ -105,7 +105,7 @@ class TestTheExcerptBinding:
         markup it fails; against the text candidates.py showed, it holds."""
         f = {"make": "ZZ", "spelling": "Scout 50", "aliases": ["scout 50"], "outcome": "found",
              "transmission": "cvt", "quote": "Transmission Automatic; V-Matic belt",
-             "document": "library/zz_scout_spec.html", "page": "spec table",
+             "document": "library/html/zz_scout_spec.html", "page": "spec table",
              "evidence_kind": "maker_spec_page"}
         assert check([f], FIX) == []
 
@@ -114,6 +114,80 @@ class TestTheExcerptBinding:
         otherwise sound findings."""
         _, bad, _ = _excerpt_fixture()
         assert check(bad, FIX) == []
+
+
+LIB = FIX / "library"
+
+
+def _lib_finding(spelling, document, quote, kind="owners_manual"):
+    return {"make": "ZZ", "spelling": spelling, "aliases": [], "outcome": "found",
+            "transmission": "cvt" if "CVT" in quote else "manual", "quote": quote,
+            "document": str(LIB / document), "page": 1, "evidence_kind": kind}
+
+
+class TestACommonWordMustBeNamedAsAModel:
+    """E4, strict for spellings that are ordinary words or bare numbers.
+    The real case: Yamaha "Bolt" → the Zuma 125 service manual, whose
+    fasteners are bolts and whose belt is a V-belt. Every other check
+    passes it: same make, Yamaha's own manual (E2), 'V-belt' (E5), the
+    quote on the page (E3), inside the excerpt (E10)."""
+
+    BOLT = ("Bolt", "pdfs/zz_glide125_sm.txt", "Transmission V-belt automatic (CVT)")
+
+    def test_the_bolt_in_a_scooter_manual_is_rejected(self):
+        fails = check([_lib_finding(*self.BOLT)], FIX, library=LIB)
+        assert fails and all(f.startswith("E4") for f in fails), fails
+        assert "as a ZZ model" in fails[0]
+
+    def test_after_the_make_it_is_a_model(self):
+        f = _lib_finding("Bolt", "pdfs/zz_range_om.txt", "Transmission  5-speed constant mesh, return type")
+        assert check([f], FIX, library=LIB) == []
+
+    def test_in_the_title_it_is_a_model(self):
+        f = _lib_finding("Scout 50", "html/zz_scout_spec.html", "Transmission Automatic; V-Matic belt",
+                         "maker_spec_page")
+        assert check([f], FIX, library=LIB) == []
+
+    @pytest.mark.parametrize("spelling,weak", [
+        ("Bolt", True), ("One", True), ("1000", True), ("RS", True), ("Monster 821", True),
+        ("K-Pipe", True), ("ZX-10R", False), ("Wolf CR300i", False), ("Speed Triple", False),
+    ])
+    def test_which_spellings_are_weak(self, spelling, weak):
+        from entry_check import weak_spelling
+        assert weak_spelling(spelling) is weak
+
+
+class TestTheKindComesFromTheIndex:
+    """E2 for a library file: library_index's kind, never the model's."""
+
+    @pytest.mark.parametrize("name,kind", [("cyclepedia_zz_trail.txt", "third_party"),
+                                           ("models_raw.txt", "crawl_artefact")])
+    def test_a_declared_owners_manual_that_is_not_one(self, name, kind):
+        f = _lib_finding("Trail 250", name, "Transmission  5-speed constant mesh, return type")
+        fails = check([f], FIX, library=LIB)
+        assert any(x.startswith("E2") and kind in x for x in fails), fails
+
+    def test_a_maker_manual_passes_whatever_kind_is_declared(self):
+        f = _lib_finding("Trail 250", "zz_trail_om.txt", "Transmission  5-speed constant mesh, return type",
+                         "forum_post")
+        assert check([f], FIX, library=LIB) == []
+
+    def test_an_unindexed_library_file_is_not_evidence(self):
+        from library_index import kind
+        assert kind(LIB / "zz_ranger.json", LIB) == "unindexed"
+
+    @pytest.mark.parametrize("rel,expected", [
+        ("v2/cyclepedia_kymco.txt", "third_party"), ("makes_raw.txt", "crawl_artefact"),
+        ("models_raw.txt", "crawl_artefact"), ("cp.html", "crawl_artefact"), ("kc.html", "crawl_artefact"),
+        ("txt_vespa_lx50_633416.txt", "third_party"), ("nhtsa/docs/15V066_part573.txt", "recall"),
+        ("v2/pdf/K-PIPE125-Owners-Manual-1.pdf.txt", "maker_manual"),
+        ("v2/sympdf/Wolf_CR300i_Owners_Manual.pdf.txt", "maker_manual"),
+        ("honda/grom2025.html", "maker_spec_page"), ("a_new_file_nobody_indexed.txt", "unindexed"),
+    ])
+    def test_the_real_librarys_rules(self, rel, expected):
+        """Pure path rules: these hold without the library on disk."""
+        from library_index import LIBRARY, kind
+        assert kind(LIBRARY / rel) == expected
 
 
 class TestEntryCheckKnownGood:
