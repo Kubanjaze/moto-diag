@@ -83,12 +83,22 @@ ROUTES = {
     # Credential from the operator's file, passed by environment only.
     "anthropic": {"model": "claude-opus-5-5", "host": "api.anthropic.com"},
     # The source stage's fallback while Subconscious is unavailable (operator,
-    # 2026-09-23): its own route, so refute stays on Opus and unchanged.
-    "anthropic-sonnet": {"model": "claude-sonnet-5", "host": "api.anthropic.com"},
+    # 2026-09-23): Opus at medium effort — the task is judgment under E12 in
+    # one no-tools turn. Its own route, so refute (`anthropic`, default
+    # effort) is unchanged. It replaced a first cut on claude-sonnet-5.
+    "anthropic-opus-medium": {"model": "claude-opus-5-5", "host": "api.anthropic.com", "effort": "medium"},
 }
 SOURCE_ROUTE, REFUTE_ROUTE = "subconscious", "anthropic"
 # `--source-route` names -> routes. Switching back is this flag, never a code change.
-SOURCE_ROUTES = {"subconscious": "subconscious", "anthropic": "anthropic-sonnet"}
+SOURCE_ROUTES = {"subconscious": "subconscious", "anthropic": "anthropic-opus-medium"}
+ANTHROPIC_ROUTES = {k for k, v in ROUTES.items() if v["host"] == "api.anthropic.com"}
+
+
+def route_label(route: str) -> str:
+    """What sourced a batch or an entry, as recorded: model@effort."""
+    return f"{ROUTES[route]['model']}@{ROUTES[route].get('effort', 'default')}"
+
+
 CREDENTIAL_VARS = ("ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN", "CLAUDE_CODE_OAUTH_TOKEN",
                    "SUBCONSCIOUS_API_KEY", "ANTHROPIC_BASE_URL")
 
@@ -138,7 +148,7 @@ def check_route(route: str, env: dict, gateway: str | None = None) -> None:
                              "subc supplies its own credential")
         if (gateway or subc_gateway()) != ROUTES["subconscious"]["host"]:
             raise GuardError(f"subc gateway is {gateway!r}, not Subconscious")
-    elif route in ("anthropic", "anthropic-sonnet"):
+    elif route in ANTHROPIC_ROUTES:
         if present != {"CLAUDE_CODE_OAUTH_TOKEN"}:
             raise GuardError(f"anthropic route must carry exactly the OAuth token, got {sorted(present)}")
         if not env["CLAUDE_CODE_OAUTH_TOKEN"].startswith("sk-ant-"):
@@ -164,7 +174,8 @@ def build_cmd(route: str, prompt: str, *, schema: dict | None = None,
     args += list(extra)
     if route == "subconscious":
         return [str(SUBC), "claude", "--model", model, "--", *args]
-    return [str(CLAUDE), "--model", model, "--max-budget-usd", str(BUDGET_USD), *args]
+    effort = ["--effort", ROUTES[route]["effort"]] if ROUTES[route].get("effort") else []
+    return [str(CLAUDE), "--model", model, *effort, "--max-budget-usd", str(BUDGET_USD), *args]
 
 
 # --- the sandbox -------------------------------------------------------------
@@ -227,7 +238,7 @@ def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None,
     env = {"HOME": str(HOME), "PATH": f"{SUBC.parent}:/usr/bin:/bin:{CLAUDE.parent}",
            "USER": os.environ.get("USER", ""), "TERM": "dumb",
            "TMPDIR": str(r["tmp"]), "CLAUDE_CONFIG_DIR": str(r["tmp"] / "cfg")}
-    if route in ("anthropic", "anthropic-sonnet"):
+    if route in ANTHROPIC_ROUTES:
         env["CLAUDE_CODE_OAUTH_TOKEN"] = load_anthropic_token()
     check_route(route, env)
     cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema, extra=extra,
@@ -420,6 +431,7 @@ You have no tools and one answer. Everything you may cite is in the EXCERPTS bel
 - If the text is OCR of a scanned page (garbled words, broken spacing), set ocr=true and needs_page_image=true.
 - evidence_kind: owners_manual | service_manual | workshop_manual | spec_sheet | maker_spec_page. Anything else (marketing, dealer, forum, mirror sites, recall notices) is not evidence.
 - `aliases`: spellings and model codes the document itself uses for this machine.{hints}
+- The answer's shape, exactly: {{"findings": [ {{...one finding...}}, ... ]}} — `findings` IS the array. Never nest it ({{"findings": {{"findings": [...]}}}} is rejected and costs a retry turn). A no_evidence finding sets transmission, quote, document, page and evidence_kind to null.
 EXCERPTS (JSON, by spelling):
 {excerpts}"""
 
@@ -468,7 +480,8 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
     summary = {"make": make, "spellings": spellings, "run": str(r["run"]),
                "started": dt.datetime.now().isoformat(timespec="seconds"),
                # Structured: which route and model sourced this batch.
-               "source_route": {"route": route, "model": ROUTES[route]["model"]}}
+               "source_route": {"route": route, "model": ROUTES[route]["model"],
+                                "effort": ROUTES[route].get("effort", "default"), "label": route_label(route)}}
     # A spelling that cannot be a machine name is not searched for, let alone sent.
     unnamed = {s: c for s in spellings if (c := census.not_a_machine(make, s))}
     names = [s for s in spellings if s not in unnamed]
@@ -482,7 +495,10 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
         src = run_stage(r, route, SOURCE_PROMPT.format(
             make=make, spellings=json.dumps(sent),
             excerpts=json.dumps({s: cands[s] for s in sent}, indent=1),
-            hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA, extra=SOURCE_FLAGS)
+            hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA, extra=SOURCE_FLAGS, stream=True)
+        # Kept, so a retry turn shows its cause (the Yamaha stop: a nested `findings`).
+        (r["run"] / "source.stream.jsonl").write_text(
+            "\n".join(json.dumps(e) for e in src.pop("_events", [])) + "\n", encoding="utf-8")
         if not src.get("is_error") and (src.get("num_turns") or 0) > SOURCE_MAX_TURNS:
             src["is_error"] = True
             src["result"] = (f"the no-tools source stage took {src.get('num_turns')} turns "
@@ -494,7 +510,7 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
         else:
             findings += (src.get("structured_output") or {}).get("findings", [])
     for f in findings:
-        f["source_route"] = route       # structured, per finding: carried into the write
+        f["source_route"] = route_label(route)   # structured, per finding: model@effort, carried into the write
     missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
     rejections = entry_check.check(findings, r["clone"], cands)
     passed = [f for f in findings if f.get("outcome") == "found"
@@ -592,7 +608,7 @@ def main(argv: list[str]) -> int:
         import census as C
         spellings = [e["model"] for e in C.census(REPO / "data" / "motodiag.db", make).get(make, [])]
     s = batch(make, spellings, hints, source_route)
-    print(f"source route: {s['source_route']['route']} ({s['source_route']['model']})")
+    print(f"source route: {s['source_route']['route']} ({s['source_route']['label']})")
     print(json.dumps({k: s[k] for k in ("make", "run", "stops")}, indent=1))
     print(f"tokens: {s['tokens']['total']:,} (ceiling {s['tokens']['ceiling']:,})")
     print(f"ready to write: {[f['spelling'] for f in s['ready_to_write']]}")

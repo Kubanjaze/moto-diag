@@ -226,7 +226,7 @@ class TestTheSourceRouteIsAField:
 
     def test_the_subconscious_entries_say_so(self):
         from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
-        subc = {(e.make, e.canonical) for e in TRANSMISSION_LOOKUP if e.source_route == "subconscious"}
+        subc = {(e.make, e.canonical) for e in TRANSMISSION_LOOKUP if e.source_route == "subconscious/glm-5.3-marathon@default"}
         assert ("Kawasaki", "Ninja ZX-10R") in subc and ("SYM", "Wolf CR300i") in subc and len(subc) == 14
 
     def test_older_entries_carry_no_route(self):
@@ -236,8 +236,8 @@ class TestTheSourceRouteIsAField:
 
     def test_the_fallback_is_one_filter(self):
         from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
-        fallback = [e for e in TRANSMISSION_LOOKUP if e.source_route == "anthropic-sonnet"]
-        assert all(e.source_route == "anthropic-sonnet" for e in fallback)
+        fallback = [e for e in TRANSMISSION_LOOKUP if e.source_route and not e.source_route.startswith("subconscious/")]
+        assert {e.source_route for e in fallback} <= {"claude-opus-5-5@medium", "claude-sonnet-5@default"}
 
 
 class TestSV650Write:
@@ -255,7 +255,7 @@ class TestSV650Write:
 
     def test_it_records_its_route_and_edition(self):
         e = resolve_transmission("Suzuki", "SV650").entry
-        assert e.source_route == "anthropic-sonnet" and "ABS edition" in e.source
+        assert e.source_route in ("claude-sonnet-5@default", "claude-opus-5-5@medium") and "ABS edition" in e.source
 
     def test_the_gladius_is_another_machine(self):
         assert resolve_transmission("Suzuki", "SV650 Gladius").provenance == "unknown"

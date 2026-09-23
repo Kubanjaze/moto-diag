@@ -513,65 +513,66 @@ class TestTheStandingRule:
         assert any(r.startswith("refute stage error") for r in s["stops"]) and s["ready_to_write"] == []
 
 
-class SonnetFake(Fake):
-    """Answers the anthropic-sonnet source call as claude-sonnet-5 would."""
+class OpusSourceFake(Fake):
+    """Answers the fallback source call (claude-opus-5-5 at --effort medium);
+    refute is the other claude-opus-5-5 call, with no --effort."""
+
+    served = "claude-opus-5-5"
 
     def __call__(self, cmd, **kw):
-        if str(O.CLAUDE) in cmd and "claude-sonnet-5" in cmd:
+        if str(O.CLAUDE) in cmd and "--effort" in cmd:
             self.calls.append(cmd)
             out = {"type": "result", "is_error": False, "num_turns": self.turns,
                    "structured_output": {"findings": self.findings},
-                   "modelUsage": _usage("claude-sonnet-5")}
+                   "modelUsage": _usage(self.served)}
             return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(out) + "\n", stderr="")
         return super().__call__(cmd, **kw)
 
-    def sonnet_calls(self):
-        return [c for c in self.calls if "claude-sonnet-5" in c]
+    def fallback_calls(self):
+        return [c for c in self.calls if "--effort" in c]
 
 
 class TestTheSourceRouteFallback:
     """Operator, 2026-09-23: Subconscious is suspended. `--source-route
-    anthropic` sends the source stage to claude-sonnet-5 — one turn, no
-    tools, the same guards — while refute stays on Opus. The default stays
-    subconscious; switching back is the flag."""
+    anthropic` sends the source stage to claude-opus-5-5 at medium effort —
+    one turn, no tools, the same guards — while refute stays on its own
+    Opus route. The default stays subconscious; switching back is the flag.
+    Recorded as model@effort on the batch and every finding."""
 
     def test_the_default_is_subconscious(self, run_with):
         fake = Fake(findings=[_found()])
         s = run_with(fake, ["Trail 250"])
-        assert s["source_route"] == {"route": "subconscious", "model": "subconscious/glm-5.3-marathon"}
+        assert s["source_route"]["route"] == "subconscious"
+        assert s["source_route"]["label"] == "subconscious/glm-5.3-marathon@default"
         assert len(fake.source_calls()) == 1 and str(O.SUBC) in fake.source_calls()[0]
-        assert s["ready_to_write"][0]["source_route"] == "subconscious"
+        assert s["ready_to_write"][0]["source_route"] == "subconscious/glm-5.3-marathon@default"
 
-    def test_the_anthropic_source_route_is_sonnet_one_turn_no_tools(self, run_with, monkeypatch):
-        fake = SonnetFake(findings=[_found()])
+    def test_the_fallback_is_opus_at_medium_one_turn_no_tools(self, run_with, monkeypatch):
+        fake = OpusSourceFake(findings=[_found()])
         monkeypatch.setattr(O.subprocess, "run", fake)
         s = O.batch("ZZ", ["Trail 250"], source_route="anthropic")
-        [cmd] = fake.sonnet_calls()
-        assert cmd[cmd.index("--model") + 1] == "claude-sonnet-5"
+        [cmd] = fake.fallback_calls()
+        assert cmd[cmd.index("--model") + 1] == "claude-opus-5-5"
+        assert cmd[cmd.index("--effort") + 1] == "medium"
         assert cmd[cmd.index("--tools") + 1] == "" and "--strict-mcp-config" in cmd
         assert fake.source_calls() == [], "nothing went to subc"
-        assert s["source_route"] == {"route": "anthropic-sonnet", "model": "claude-sonnet-5"}
-        assert s["ready_to_write"][0]["source_route"] == "anthropic-sonnet"
+        assert s["source_route"] == {"route": "anthropic-opus-medium", "model": "claude-opus-5-5",
+                                     "effort": "medium", "label": "claude-opus-5-5@medium"}
+        assert s["ready_to_write"][0]["source_route"] == "claude-opus-5-5@medium"
 
-    def test_refute_stays_on_opus(self, run_with, monkeypatch):
-        fake = SonnetFake(findings=[_found()])
+    def test_refute_stays_on_its_own_route(self, run_with, monkeypatch):
+        fake = OpusSourceFake(findings=[_found()])
         monkeypatch.setattr(O.subprocess, "run", fake)
         O.batch("ZZ", ["Trail 250"], source_route="anthropic")
-        refute = [c for c in fake.calls if "claude-sonnet-5" not in c and str(O.SUBC) not in c]
+        refute = [c for c in fake.calls if "--effort" not in c and str(O.SUBC) not in c]
         assert len(refute) == 1 and refute[0][refute[0].index("--model") + 1] == "claude-opus-5-5"
 
     def test_a_different_model_answering_is_an_error(self, run_with, monkeypatch):
-        """The served-model guard holds on the new route: Haiku answering a
-        claude-sonnet-5 call is a source-stage error and a stop."""
-        class Wrong(SonnetFake):
-            def __call__(self, cmd, **kw):
-                p = super().__call__(cmd, **kw)
-                if "claude-sonnet-5" in cmd:
-                    out = json.loads(p.stdout)
-                    out["modelUsage"] = _usage("claude-haiku-4-5")
-                    return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(out) + "\n", stderr="")
-                return p
-        monkeypatch.setattr(O.subprocess, "run", Wrong(findings=[_found()]))
+        """The served-model guard holds on the fallback: Sonnet answering a
+        claude-opus-5-5 call is a source-stage error and a stop."""
+        fake = OpusSourceFake(findings=[_found()])
+        fake.served = "claude-sonnet-5"
+        monkeypatch.setattr(O.subprocess, "run", fake)
         s = O.batch("ZZ", ["Trail 250"], source_route="anthropic")
         assert any("source stage error" in r and "served by" in r for r in s["stops"])
 
@@ -579,18 +580,31 @@ class TestTheSourceRouteFallback:
         with pytest.raises(O.GuardError):
             O.batch("ZZ", ["Trail 250"], source_route="sonnet")
 
-    def test_the_sonnet_route_carries_only_the_anthropic_token(self):
-        O.check_route("anthropic-sonnet", {"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-" + "x" * 40})
+    def test_the_fallback_carries_only_the_anthropic_token(self):
+        O.check_route("anthropic-opus-medium", {"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-" + "x" * 40})
         with pytest.raises(O.GuardError):
-            O.check_route("anthropic-sonnet", {"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-x",
-                                               "ANTHROPIC_BASE_URL": "https://api.subconscious.dev"})
+            O.check_route("anthropic-opus-medium", {"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-x",
+                                                    "ANTHROPIC_BASE_URL": "https://api.subconscious.dev"})
 
     def test_the_flag_reaches_batch(self, monkeypatch):
         seen = {}
         monkeypatch.setattr(O, "batch", lambda make, sp, hints, route: seen.update(route=route) or
                             {"make": make, "run": "r", "stops": [], "tokens": {"total": 0, "ceiling": 1},
-                             "ready_to_write": [], "source_route": {"route": "x", "model": "y"}})
+                             "ready_to_write": [], "source_route": {"route": "x", "label": "y"}})
         O.main(["batch", "ZZ", "Trail 250", "--source-route", "anthropic"])
         assert seen["route"] == "anthropic"
         O.main(["batch", "ZZ", "Trail 250"])
         assert seen["route"] == "subconscious"
+
+    def test_the_source_prompt_states_the_answer_shape(self):
+        """The Yamaha stop: Sonnet nested `findings` inside `findings`, the
+        CLI rejected it ('/findings: must be array'), a retry turn broke the
+        2-turn limit. The prompt now states the shape; the limit stays 2."""
+        assert "`findings` IS the array" in O.SOURCE_PROMPT and O.SOURCE_MAX_TURNS == 2
+
+    def test_the_source_stream_is_kept(self, run_with):
+        """So a retry turn shows its cause, as the Yamaha replay did."""
+        s = run_with(Fake(findings=[_found()]), ["Trail 250"])
+        lines = (pathlib.Path(s["run"]) / "source.stream.jsonl").read_text().split("\n")
+        events = [json.loads(x) for x in lines if x.strip()]
+        assert events and events[-1]["type"] == "result"
