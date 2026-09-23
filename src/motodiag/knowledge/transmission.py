@@ -250,12 +250,13 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     # name only a gear count, a slipper/assist clutch or a quick-shifter, none
     # of which shows a rider-operated clutch or a foot-shift pattern.
     _E("Suzuki", "V-Strom 650", MANUAL, ("v strom 650", "vstrom 650", "vstrom650"),
-       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'This "
-       "V-Strom also features the Suzuki Easy Start System, which lets the "
-       "rider start the motorcycle with a momentary press of the start button "
-       "without pulling in the clutch lever when the transmission is in "
-       "neutral.' — a rider's clutch lever. Re-quoted under E12: the first "
-       "quote named only a gear count ('The six-speed transmission suits…')."),
+       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'The "
+       "multi-plate clutch has precise push rod actuation of the pressure "
+       "plate for a light lever pull and a consistent release point.' — the "
+       "rider's clutch pull. Re-quoted twice under E12: first from a gear "
+       "count ('The six-speed transmission suits…'), then from an Easy Start "
+       "sentence that names the clutch lever only in a negation ('without "
+       "pulling in the clutch lever'), which E12 no longer accepts."),
     _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
        "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
        "five-speed transmission utilizes a cable-operated clutch with a "

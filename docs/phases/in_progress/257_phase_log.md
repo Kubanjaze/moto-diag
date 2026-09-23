@@ -1188,3 +1188,48 @@ a stop; the two tests pinned to the old rule (rejection stop,
 disagreement stop) rewritten to the new one. **Break-it:** any kill stops
 again → 1; the threshold off → 1; a systemic stop still writes → 1; a
 refute error not a stop → 1; rejections stop again → 2. 468 pass; 244G clean.
+
+### 2026-09-23 — E12 closes the automated-transmission gap; the clutch pull widened; re-check again
+
+Operator, before Yamaha (Y-AMT) and Honda (DCT): E12 had a gap they walk
+through. **Measured first:** of ten known-bad sentences, seven passed E12 —
+"Y-AMT eliminates the clutch lever and shift pedal", "Dual Clutch
+Transmission … without a clutch lever; manual mode …", "there's no clutch
+lever to pull", "The Yamaha Automated Manual Transmission …", "manual mode
+… paddle shifters on the DCT", "The clutchless Y-AMT has no shift pedal",
+and V-Strom 650's own re-quote "…without pulling in the clutch lever…".
+
+**Now:** E12 judges sentence by sentence (split at . ! ?, never at ";"). A
+sentence carrying an automated marker (DCT, dual clutch, Y-AMT, automated,
+automatic, clutchless, manual mode, paddle) never counts; a clutch/shift
+term with a negation (no, not, without, eliminate(s/d), never, nor, free of)
+in the five words before it never counts. The clutch pull widens to one
+sentence: "clutch" and a NOUN pull ("light (lever) pull", "pull of the
+clutch") — not the engine's "pulls hard", not "pull away". Honda E-Clutch
+models (manual per plan 255 D1) will fail E12 by design — flagged for a
+named decision when Honda comes up; E12 is not loosened for them.
+
+Tests: 12 known-bad (the operator's four; Automated Manual; manual mode ×2;
+clutchless; the V-Strom negation; a GSX-R slipper clutch and shift lever;
+a DCT sentence whose half after a ";" is clean), 7 known-good (the SV650
+and V-Strom "light pull" sentences, Kawasaki return shift, KLR650 manual
+clutch, Grom "Manual; 5 speeds", Wolf CR300i, Boulevard C50), and the real
+Suzuki sentences (SV650/V-Strom pass; GSX-R slipper, SCAS, "Clutch Wet,
+multi-plate type" fail). **Break-it:** marker ignored → 2; negation ignored
+→ 2; no wide pull → 2; the engine's "pulls" counted → 1; split at ";" and
+"manual mode" not a marker **both survived at first** (my DCT test sentence
+carried other markers) — two sentences added, then 1 each.
+
+**The guard had a hole too:** `TestEveryPhase257ManualEntryMeetsE12`
+extracted quotes by splitting on every apostrophe, so the commentary "a
+rider's clutch lever" in V-Strom 650's source counted as a quote. Fixed
+(a quote opens after whitespace/"(" and closes on "'" not followed by a
+letter); with the fix it failed V-Strom 650, as it should.
+
+**Re-check** (`~/.cache/motodiag/e12_recheck2_20260923.txt`): 14 of 15
+written manual entries pass. **V-Strom 650 fails** (its Easy Start quote is
+a negation) and is **re-quoted from its own page**: "The multi-plate clutch
+has precise push rod actuation of the pressure plate for a light lever pull
+and a consistent release point." The six reverted Suzuki pages have 0
+qualifying sentences under the widened rule; they stay unknown. 492 pass;
+244G clean.

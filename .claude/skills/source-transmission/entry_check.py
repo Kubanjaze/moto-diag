@@ -333,14 +333,53 @@ FOOT_SHIFT = re.compile(r"return shift|shift pedal|change pedal|gear ?shift peda
                         r"foot[- ]operated (?:return )?shift", re.I)
 MANUAL_WORD = re.compile(r"\bmanual\b", re.I)
 DOCUMENT_MANUAL = re.compile(r"(?:owner'?s?|owners|service|workshop|shop|repair|rider'?s?|user'?s?)\s+manual", re.I)
+# The clutch pull, widened to one sentence (operator, 2026-09-23): "clutch"
+# and a NOUN pull — "a light (lever) pull", "the pull of the clutch" — not
+# the engine's "pulls hard" or a machine that "pulls away".
+CLUTCH_PULL = re.compile(r"\b(?:lever|light|lighter|easy|easier|smooth|clutch)[- ]pull\b|"
+                         r"\bpull (?:on|of) the clutch\b", re.I)
+# A sentence carrying any of these is not manual evidence, whatever else it
+# says: Yamaha's "Automated Manual Transmission" (Y-AMT), a DCT's "manual
+# mode", "clutchless" (operator, 2026-09-23 — Yamaha and Honda are next).
+AUTOMATED = re.compile(r"\bdct\b|dual[- ]clutch|\by-?amt\b|\bautomated\b|\bautomatic\b|\bclutchless\b|"
+                       r"\bmanual (?:shift )?mode\b|\bpaddle", re.I)
+# A negation governing the clutch/shift term: "eliminates the clutch lever",
+# "without a clutch lever", "no clutch lever to pull", "no need to".
+NEGATION = re.compile(r"\b(?:no|not|without|eliminates?|eliminated|eliminating|never|nor|free of)\b", re.I)
+NEGATION_REACH = 5                      # words before the term
+
+
+def _sentences(q: str) -> list[str]:
+    """Sentences — split at . ! ?, never at ';' (a spec row reads
+    'Transmission Manual; 5 speeds', and a DCT sentence may continue past one)."""
+    return [s for s in re.split(r"(?<=[.!?])\s+", q) if s.strip()]
+
+
+def _unnegated(pattern: re.Pattern, sentence: str) -> bool:
+    for m in pattern.finditer(sentence):
+        before = re.findall(r"[\w'-]+", sentence[:m.start()])[-NEGATION_REACH:]
+        if not NEGATION.search(" ".join(before)) and not NEGATION.search(m.group(0)):
+            return True
+    return False
 
 
 def manual_evidence(quote: str) -> bool:
-    """Does the quote itself show a manual gearbox's mechanism?"""
+    """Does the quote itself show a manual gearbox's mechanism? One of its
+    sentences must name a rider-operated clutch (a lever, cable, hydraulic
+    clutch, or a clutch pull — a noun pull, anywhere in the sentence), a
+    foot-shift pattern, or the word "manual" — with no automated-transmission
+    marker in that sentence and no negation governing the term."""
     q = " ".join((quote or "").split())
-    if RIDER_CLUTCH.search(q) or FOOT_SHIFT.search(q):
-        return True
-    return bool(MANUAL_WORD.search(DOCUMENT_MANUAL.sub(" ", q)))
+    for s in _sentences(q):
+        if AUTOMATED.search(s):
+            continue
+        if _unnegated(RIDER_CLUTCH, s) or _unnegated(FOOT_SHIFT, s):
+            return True
+        if re.search(r"\bclutch", s, re.I) and _unnegated(CLUTCH_PULL, s):
+            return True
+        if _unnegated(MANUAL_WORD, DOCUMENT_MANUAL.sub(" ", s)):
+            return True
+    return False
 
 
 def document_text(f: dict, docs_root: pathlib.Path) -> str | None:

@@ -484,3 +484,64 @@ class TestE12ManualNeedsMechanismEvidence:
     def test_only_manual_is_held_to_it(self):
         f = _lib_finding("Glide 125", "pdfs/zz_glide_quickref.txt", "Transmission  V-belt automatic (CVT)")
         assert not [x for x in check([f], FIX, library=LIB) if x.startswith("E12")]
+
+
+SV650_PULL = ("The multi-plate clutch has precise push rod actuation of the pressure plate "
+              "for a light pull and consistent release point.")
+VSTROM_PULL = ("The multi-plate clutch has precise push rod actuation of the pressure plate "
+               "for a light lever pull and a consistent release point.")
+
+
+class TestE12ClosesTheAutomatedGap:
+    """Operator decision 2026-09-23, before Yamaha (Y-AMT) and Honda (DCT):
+    E12 must not accept a sentence that carries an automated-transmission
+    marker or a negation governing its clutch/shift term — and the clutch
+    pull window widens to one sentence (a noun 'pull', not the engine's)."""
+
+    @pytest.mark.parametrize("quote", [
+        "Y-AMT eliminates the clutch lever and shift pedal",
+        "Dual Clutch Transmission lets you pull away without a clutch lever; manual mode shifts with paddles",
+        "the slipper clutch smooths downshifts while the engine pulls hard from low rpm",
+        "there's no clutch lever to pull",
+        "The Yamaha Automated Manual Transmission shifts for you",
+        "Switch to manual mode and shift with the paddle shifters on the DCT",
+        "The clutchless Y-AMT has no shift pedal",
+        "lets the rider start the motorcycle without pulling in the clutch lever when the transmission is in neutral",
+        "A race-proven back-torque-limiting clutch contributes to smoother downshifting",   # GSX-R
+        "Three-way adjustable foot pegs, adjustable shift lever",                         # GSX-R
+        # A semicolon does not end the DCT's sentence: the half after it is clean.
+        "Honda's Dual Clutch Transmission shifts on its own; manual shifting uses the handlebar buttons",
+        # A DCT's "manual mode", with no other marker in the sentence.
+        "Switch to manual mode and shift with the handlebar buttons",
+    ])
+    def test_known_bad(self, quote):
+        from entry_check import manual_evidence
+        assert not manual_evidence(quote)
+
+    @pytest.mark.parametrize("quote", [
+        SV650_PULL, VSTROM_PULL,
+        "Transmission 6-speed, return shift Final Drive Sealed chain",
+        "Transmission 5-speed, return shift with wet multi-disc manual clutch",
+        "Transmission Manual; 5 speeds Clutch Multiplate wet",
+        "Start engine, squeeze the clutch lever fully, push shift pedal down to engage the 1st gear",
+        "With a light pull, the clutch feeds engine power to the smooth-shifting five-speed transmission",
+    ])
+    def test_known_good(self, quote):
+        from entry_check import manual_evidence
+        assert manual_evidence(quote)
+
+
+class TestTheWidenedPullOnTheRealPages:
+    """The widened clutch-pull window, on the saved Suzuki pages' own
+    sentences: SV650 and V-Strom 650 qualify; no GSX-R sentence does."""
+
+    @pytest.mark.parametrize("sentence,ok", [
+        (SV650_PULL, True), (VSTROM_PULL, True),
+        ("A race-proven, back-torque-limiting clutch contributes to smoother downshifting and corner entry.", False),
+        ("The Suzuki Clutch Assist System (SCAS) multi-plate, wet clutch functions like a slipper clutch "
+         "during downshifts while increasing plate pressure during acceleration.", False),
+        ("Clutch Wet, multi-plate type", False),
+    ])
+    def test_suzuki_sentences(self, sentence, ok):
+        from entry_check import manual_evidence
+        assert manual_evidence(sentence) is ok

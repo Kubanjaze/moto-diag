@@ -212,5 +212,9 @@ class TestEveryPhase257ManualEntryMeetsE12:
         from entry_check import manual_evidence
         from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
         [e] = [e for e in TRANSMISSION_LOOKUP if e.make == make and e.canonical == canonical]
-        quoted = re.findall(r"'([^']{8,})'", e.source.replace("’", "'"))
+        # A quote opens after whitespace, '(' or the start, and closes on a
+        # "'" not followed by a letter — so "rider's" and "Suzuki's" are not
+        # quote marks (they were, and the commentary "a rider's clutch lever"
+        # passed as a quote).
+        quoted = re.findall(r"(?:(?<=\s)|(?<=\()|^)'(.{8,}?)'(?![A-Za-z])", e.source.replace("’", "'"))
         assert any(manual_evidence(q) for q in quoted), (canonical, quoted)
