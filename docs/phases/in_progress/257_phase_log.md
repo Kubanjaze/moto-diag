@@ -1272,3 +1272,26 @@ call's end by AST position, diff reviewed), None on older entries,
 route → 21; route not recorded on findings → 2; the fallback not Sonnet →
 3; the CLI flag ignored → 1; one entry loses its route → 1. 640 pass across
 257 + 255D + the 255 axis suite; 244G clean.
+
+### 2026-09-23 — Route proven; SV650 (live vehicle #8) written on the fallback route
+
+**Step 2, the route proven before any batch:** one call through `make_run`
++ `run_stage` on `anthropic-sonnet` with the source flags
+(`~/.cache/motodiag/source-runs/route_proof_20260923_123635/proof.json`):
+`modelUsage` → **['claude-sonnet-5']**, 2 turns, no error.
+
+**SV650** — run `Suzuki_20260923_123652`, `--source-route anthropic`:
+
+| stage | model | tokens | turns |
+|---|---|---|---|
+| source | claude-sonnet-5 | 26,025 (2 in, 2,019 out, cache the rest) | 2 |
+| refute | claude-opus-5-5 | 63,794 | 4 |
+
+No stops, nothing withheld. The source quoted the qualifying sentence
+("The multi-plate clutch has precise push rod actuation of the pressure
+plate for a light pull and consistent release point."); refute kept it,
+`names_model: true`, reading the "light pull" as the rider's clutch pull;
+`edition: ABS`. **Written:** one entry, SV650 (aliases sv650, sv 650, sv650
+abs), `source_route="anthropic-sonnet"`, its source naming the ABS-edition
+page. Census 587 → **586**. SV650 Gladius stays unknown (a different
+machine). The written-entries guard now covers 16 manual entries.

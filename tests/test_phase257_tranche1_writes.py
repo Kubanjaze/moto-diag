@@ -145,11 +145,11 @@ class TestSuzukiWrite:
         assert r.provenance == "model-sourced", model
         assert r.candidates == frozenset({"manual"}), model
 
-    @_pytest.mark.parametrize("model", ["SV650", "SV650 Gladius", "GSX-R1100", "GSX-S750", "DR-Z400SM",
+    @_pytest.mark.parametrize("model", ["SV650 Gladius", "GSX-R1100", "GSX-S750", "DR-Z400SM",
                                         "GSX-R750", "GSX-R1000", "GSX-R600", "GSX-S1000",
                                         "Boulevard M109R", "V-Strom 1050"])
     def test_what_the_run_did_not_prove_stays_unknown(self, model):
-        """SV650: held (its page's quote is a gear count). GSX-R1100: no
+        """SV650 Gladius: a different machine (2009–15). GSX-R1100: no
         current page. GSX-S750, DR-Z400SM: named in passing. The six after:
         written in 9a02aa0, reverted under E12 — their pages show no
         rider-operated clutch or foot-shift pattern."""
@@ -198,7 +198,7 @@ class TestEveryPhase257ManualEntryMeetsE12:
     import pytest as _pytest
 
     PHASE_257 = [("SYM", "Wolf 150"), ("SYM", "Wolf CR300i"), ("Kymco", "K-Pipe"), ("Honda", "Grom 125"),
-                 ("Suzuki", "V-Strom 650"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
+                 ("Suzuki", "SV650"), ("Suzuki", "V-Strom 650"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
                  ("Kawasaki", "Ninja ZX-10R"), ("Kawasaki", "Ninja ZX-6R"), ("Kawasaki", "Ninja H2"),
                  ("Kawasaki", "KLR650"), ("Kawasaki", "Z900"), ("Kawasaki", "Ninja 300"),
                  ("Kawasaki", "KLX300"), ("Kawasaki", "Z650")]
@@ -238,3 +238,24 @@ class TestTheSourceRouteIsAField:
         from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
         fallback = [e for e in TRANSMISSION_LOOKUP if e.source_route == "anthropic-sonnet"]
         assert all(e.source_route == "anthropic-sonnet" for e in fallback)
+
+
+class TestSV650Write:
+    """Live vehicle #8, a 2019 SV650. Run Suzuki_20260923_123652: the source
+    stage on the fallback route (claude-sonnet-5), refute on Opus; from the
+    2026 SV650 ABS page under the ABS exception; the quote is its clutch
+    pull (E12, widened)."""
+
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("model", ["SV650", "SV 650", "SV650 ABS"])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("Suzuki", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"manual"}), model
+
+    def test_it_records_its_route_and_edition(self):
+        e = resolve_transmission("Suzuki", "SV650").entry
+        assert e.source_route == "anthropic-sonnet" and "ABS edition" in e.source
+
+    def test_the_gladius_is_another_machine(self):
+        assert resolve_transmission("Suzuki", "SV650 Gladius").provenance == "unknown"
