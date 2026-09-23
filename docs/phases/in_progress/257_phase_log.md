@@ -2153,3 +2153,16 @@ model call anywhere.
 - the suffix match without the dot → 2;
 - the parent `ymcapps.net` instead → 2;
 - the parent `azureedge.net` instead → 1.
+
+### 2026-09-23 — The planted "V-belt automatic" case is now Yamaha's own wording
+
+As the operator asked when it was planted: `fixtures/library/zz_zip50_om.txt`
+now carries the Vino 125 owner's manual's rows (5YR-F8199-15, p. 8-1),
+"Clutch type / Dry, centrifugal automatic" and "Transmission type /
+V-belt automatic", in place of the constructed "Transmission  V-belt
+automatic".
+
+The real rows count three ways: "centrifugal", "V-belt", and "automatic"
+beside "transmission". So the break drops all three together, and the Zip
+50 test fails (1). Each word also has its own case in
+`test_each_named_mechanism_is_a_line`.

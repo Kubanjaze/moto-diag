@@ -687,8 +687,9 @@ class TestTheDryRun:
         assert s["mechanism_lines"] == {"Putt 50": 1}
 
     def test_a_v_belt_automatic_scooter_is_sent(self, run_with):
-        """Constructed (`zz_zip50_om.txt`): swap for the first real Yamaha
-        scooter manual line once one is fetched."""
+        """`zz_zip50_om.txt` carries Yamaha's own rows from the Vino 125
+        owner's manual (5YR-F8199-15, p. 8-1): "Clutch type / Dry,
+        centrifugal automatic", "Transmission type / V-belt automatic"."""
         fake = Fake()
         s = run_with(fake, ["Zip 50"])
         assert s["sent_to_model"] == ["Zip 50"] and s["mechanism_lines"] == {"Zip 50": 1}

@@ -1,3 +1,6 @@
 ZZ Zip 50 Owner's Manual
-Specifications
-Transmission  V-belt automatic
+SPECIFICATIONS
+Clutch type
+Dry, centrifugal automatic
+Transmission type
+V-belt automatic
