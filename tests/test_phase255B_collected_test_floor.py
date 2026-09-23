@@ -66,7 +66,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: fixture is asserted per-assertion, so a silently removed planted
 #: defect fails rather than passing quietly.
 #:
-COLLECTED_TEST_FLOOR = 8130
+#: 8139 (Phase 255D close-out fixes, 2026-09-22) — +9: A4 resolving the
+#: commit (non-answer, unresolvable hash, real hash, sibling repo, absent
+#: sibling) and check 2's scope (skill script reported, docs-only not, the
+#: real b0ae748..3dfc78a miss, every tracked script classified as code).
+#: Raised BEFORE the regression of record, so the green run covers it —
+#: the previous raise landed after, and check 2 reported it.
+#:
+COLLECTED_TEST_FLOOR = 8139
 
 
 def _collected_count() -> int:
