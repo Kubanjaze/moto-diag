@@ -923,3 +923,16 @@ resolve `manual`; SV650, SV650 Gladius, GSX-R1100, GSX-S750, DR-Z400SM stay
   before this fix carry no `names_model`, so none of their findings would
   now pass the gate.
 - **Commit:** this one.
+
+### 2026-09-23 — SV650 (live vehicle #8, a 2019 SV650): no Suzuki document names the base model by plain fetch
+
+Tried, one GET each (`~/.cache/motodiag/d7/20260923_094919/`):
+suzukicycles.com's model listing and `/owners` link only `/street/2026/sv650-abs`
+("SV650 ABS"); a guessed `/street/2019/sv650` returns 200 with generic
+content and no SV650 — a soft 404, and a guess; Suzuki Motor USA's own
+manual store `genuinesuzukimanuals.com` (linked from suzukicycles.com)
+sells printed service manuals through a POST search form (`SearchReqs.asp`)
+and says owner's manuals come from dealers — a form submission, not
+pursued. **Reported to the operator for a decision** on whether equipment
+variants such as ABS become a named, tested exception. SV650 stays
+`unknown`.
