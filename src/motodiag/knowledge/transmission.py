@@ -317,6 +317,24 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Manual S 1000 R), p. 59: 'Brake, pull the clutch lever or turn the "
        "throttle twistgrip … to deactivate the cruise-control system.'",
        source_route="claude-opus-5-5@medium"),
+    # Re-sourced in run BMW_20260923_154333 (same route, refute unchanged)
+    # after the first run's source stage quoted lines E12 rejects from these
+    # same manuals: reader misses, 4 / 9 / 6 passing lines in their excerpts.
+    _E("BMW", "K 1600 GT", MANUAL, ("k1600gt", "k 1600 gt"),
+       "manuals.bmw-motorrad.com …/PDF/K_0601_RM_1210_K1600GT_01_1Auf.pdf "
+       "(Rider's Manual K 1600 GT), p. 84: 'Select neutral or, if a gear is "
+       "engaged, pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1300 S", MANUAL, ("k1300s", "k 1300 s"),
+       "manuals.bmw-motorrad.com …/PDF/K_0508_RM_1111_K1300S_01.pdf (Rider's "
+       "Manual K 1300 S), p. 70: 'Select neutral or, if a gear is engaged, "
+       "pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1200 S", MANUAL, ("k1200s", "k 1200 s"),
+       "manuals.bmw-motorrad.com …/PDF/K_0581_RM_0904_K1200S_01.pdf (Rider's "
+       "Manual K 1200 S), p. 58: 'Manual gearbox The motorcycle can be started "
+       "in the neutral position or with a gear engaged and the clutch pressed.'",
+       source_route="claude-opus-5-5@medium"),
 
     # --- Kawasaki --------------------------------------------------------
     # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year

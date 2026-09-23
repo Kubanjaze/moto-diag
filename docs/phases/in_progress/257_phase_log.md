@@ -1565,3 +1565,30 @@ overlapping excerpts; the prompt sentence).
 
 A first prompt break left the asserted text intact and survived, so it was
 not a break. Redone by removing the sentence.
+
+### 2026-09-23 — D: K1600GT, K1300S, K1200S re-sourced; all three written
+
+Run `BMW_20260923_154333`, `--source-route anthropic`
+(claude-opus-5-5@medium), refute unchanged (Opus): 3 spellings sent;
+104,567 tokens (source 35,610, refute 68,957; ceiling 450,000). No stops,
+**no rejections** (so `e12_reader` is empty), nothing withheld, no family
+evidence. Refute kept all three with `names_model: true`; each
+`model_line` is the rider's manual's cover.
+
+| spelling | quote (its own manual) | page |
+|---|---|---|
+| K1600GT | "Select neutral or, if a gear is engaged, pull the clutch lever." | 84 |
+| K1300S | the same sentence | 70 |
+| K1200S | "Manual gearbox The motorcycle can be started in the neutral position or with a gear engaged and the clutch pressed." | 58 |
+
+These are the lines the operator named for K1600GT (p. 84) and K1300S
+(p. 70). For K1200S the reader took a different passing line from the one
+the operator named ("Press the clutch lever.", p. 95); both are in its
+excerpts.
+
+Written as BMW "K 1600 GT", "K 1300 S" and "K 1200 S" (aliases, spaced
+and unspaced), `source_route="claude-opus-5-5@medium"`. Siblings stay
+unknown and are pinned in `TestBMWWrite`: K1600GTL, K1300R, K1200R, the
+families K1600/K1300/K1200, and the census's "K1200S/R". Break-it: a
+family alias ("k1300") added to K 1300 S → 1 fails. Census 582 → **579**.
+The written-entries E12 guard now covers 23 manual entries.
