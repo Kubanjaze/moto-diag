@@ -1020,3 +1020,22 @@ page and never a special edition. **Break-it:** DCT not a variant → 1;
 any suffix counts as an ABS edition → 6; no ABS edition ever → 4; any
 "-…abs" year page → 1; the ABS page beats the base → 1; edition not
 recorded → 1; Carbon not a variant → 1. 410 pass; 244G clean.
+
+### 2026-09-23 — Bug fix #4: the source schema let a finding omit its citation
+
+- **Issue:** the SV650 re-run (`Suzuki_20260923_100443`, 12,165 tokens) stopped
+  on `E1 Suzuki | SV650: missing ['document']`. The finding was otherwise
+  right — the SV650 ABS page's "The close-ratio, six-speed transmission…",
+  and the model's own note cites that page's "Transmission 6-speed,
+  constant mesh" row — but no `document` field was returned.
+- **Root cause:** `FINDING` required only make, spelling, outcome; the
+  citation fields were optional, so the schema the model answers to
+  permitted a found finding with nothing to cite. E1 caught it downstream,
+  as designed; the schema should never have allowed it.
+- **Fix:** transmission, quote, document, page, evidence_kind are required
+  on every finding, nullable for no_evidence.
+- **Files:** `orchestrate.py`; `tests/test_phase257_source_stage.py` (+7: the
+  fields are required, nulls allowed, and the schema the source call
+  actually carries is this one).
+- **Verified:** made optional again → 6 fail. 40 pass in the file.
+- **Commit:** this one. SV650 re-runs after it.

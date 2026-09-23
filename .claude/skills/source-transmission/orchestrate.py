@@ -365,14 +365,18 @@ LIBRARY = HOME / "research" / "motodiag"
 
 FINDING = {
     "type": "object", "additionalProperties": False,
-    "required": ["make", "spelling", "outcome"],
+    # Bug fix #4: the citation fields are required on every finding (null
+    # where there is nothing to cite). Optional, the SV650 re-run returned a
+    # found finding with no `document` — E1 stopped it, but the schema let the
+    # model omit the one field the whole procedure turns on.
+    "required": ["make", "spelling", "outcome", "transmission", "quote", "document", "page", "evidence_kind"],
     "properties": {
         "make": {"type": "string"}, "spelling": {"type": "string"},
         "outcome": {"enum": ["found", "blocked", "not_found", "no_evidence"]},
         "transmission": {"type": ["string", "null"]},
         "candidates": {"type": "array", "items": {"type": "string"}},
-        "quote": {"type": "string"}, "document": {"type": "string"},
-        "page": {"type": ["string", "integer"]}, "evidence_kind": {"type": "string"},
+        "quote": {"type": ["string", "null"]}, "document": {"type": ["string", "null"]},
+        "page": {"type": ["string", "integer", "null"]}, "evidence_kind": {"type": ["string", "null"]},
         "aliases": {"type": "array", "items": {"type": "string"}},
         "ocr": {"type": "boolean"}, "needs_page_image": {"type": "boolean"},
         "url_tried": {"type": "string"}, "note": {"type": "string"},

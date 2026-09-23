@@ -416,3 +416,24 @@ class TestTheAbsEditionIsRecorded:
     def test_a_plain_page_carries_no_edition(self, run_with):
         s = run_with(Fake(findings=[_found()]), ["Trail 250"])
         assert s["ready_to_write"][0]["edition"] is None
+
+
+class TestBugFix4TheCitationIsRequired:
+    """Run Suzuki_20260923_100443: the source stage returned a found SV650
+    finding with no `document`; E1 stopped the batch. The schema the model
+    answers to now requires the citation fields on every finding."""
+
+    @pytest.mark.parametrize("field", ["transmission", "quote", "document", "page", "evidence_kind"])
+    def test_the_schema_requires_it(self, field):
+        assert field in O.FINDING["required"]
+
+    def test_a_null_citation_is_allowed_for_no_evidence(self):
+        for field in ("quote", "document", "page", "evidence_kind"):
+            assert "null" in O.FINDING["properties"][field]["type"], field
+
+    def test_the_schema_the_source_call_carries_is_this_one(self, run_with):
+        fake = Fake(findings=[_found()])
+        run_with(fake, ["Trail 250"])
+        cmd = fake.source_calls()[0]
+        sent = json.loads(cmd[cmd.index("--json-schema") + 1])
+        assert "document" in sent["properties"]["findings"]["items"]["required"]
