@@ -355,3 +355,134 @@ class TestAPostIsRecordedSoItCanBeRepeated:
             raise AssertionError("a disallowed POST was sent")
         row = A.Fetcher(rate=0, transport=transport).post_json(self.API, self.BODY)
         assert row["method"] == "robots_disallowed" and row["request"]["method"] == "POST"
+
+
+class TestYamahaOwnersManualRoute:
+    """Yamaha's Owner's Manual Library (phase log, 2026-09-23), in the real
+    responses' shapes (~/.cache/motodiag/om_probe/Yamaha_20260923_181033):
+    POSTs for the user context, the names, the years and the newest year's
+    model list; the English PDF on library.ymcapps.net, its referrer the
+    saved model list."""
+
+    API = A.YAMAHA_OM_API
+    PRODUCTS = json.dumps({"userContext": {"destination": "USA", "useProdCategory": False, "userGroupCode": "AL01",
+                                           "destGroupCode": "", "greyModelSign": False},
+                           "productDataCollection": [{"productId": "10"}]}).encode()
+    NAMES = {"1": [{"nickname": "VINO 125", "modelName": "", "productId": "10", "dispModelName": "VINO 125"},
+                   {"nickname": "ZUMA 50", "modelName": "", "productId": "10", "dispModelName": "ZUMA 50"}],
+             "9": [{"nickname": "", "modelName": "MT-09", "productId": "10", "dispModelName": "MT-09"}]}
+    YEARS = {"VINO 125": ["2009", "2005", "2004"], "MT-09": ["2021", "2019", "2023"]}
+    PUBS = {("VINO 125", "2009"): [{"publicationNo": "5YR-F8199-15", "publicationLangId": "02",
+                                    "pdffileURL": "//library.ymcapps.net/library/om/contents/pdf/10/5YR-F8199-15_02.pdf"}],
+            ("MT-09", "2023"): [{"publicationNo": "B7N-F8199-E0", "publicationLangId": "01",
+                                 "pdffileURL": "//library.ymcapps.net/library/om/contents/pdf/10/B7N-F8199-E0_01.pdf"},
+                                {"publicationNo": "B7N-F8199-10", "publicationLangId": "02",
+                                 "pdffileURL": "//library.ymcapps.net/library/om/contents/pdf/10/B7N-F8199-10_02.pdf"}]}
+
+    def _api(self, pdf_status=200):
+        calls: list[tuple] = []
+
+        def transport(url, headers, data=None):
+            body = json.loads(data) if data else None
+            calls.append((url, body))
+            if url.endswith("/robots.txt"):
+                return 404, b"", None, url
+            if url.endswith("/product_list/"):
+                return 200, self.PRODUCTS, None, url
+            if url.endswith("/model_name_list/"):
+                return 200, json.dumps({"modelNameDataCollection": self.NAMES.get(body["displacementType"], [])}).encode(), None, url
+            key = body and (body["nickname"] or body["modelName"])
+            if url.endswith("/model_year_list/"):
+                assert body["destination"] == "USA" and body["userGroupCode"] == "AL01"
+                ys = [{"modelYear": y, "productId": "10"} for y in self.YEARS.get(key, [])]
+                return 200, json.dumps({"modelYearDataCollection": ys}).encode(), None, url
+            if url.endswith("/model_list/"):
+                assert body["publicationLang"] == "02" and body["calledCode"] == "1"
+                pubs = self.PUBS.get((key, body["modelYear"]), [])
+                return 200, json.dumps({"modelDataCollection": pubs}).encode(), None, url
+            if url.startswith("https://library.ymcapps.net/") and url.endswith(".pdf"):
+                return pdf_status, (b"%PDF-1.4 " + url.encode() + b"\n") if pdf_status == 200 else b"", None, url
+            return 404, b"not found", None, url
+        transport.calls = calls
+        return transport
+
+    def _fetch(self, lib, t, spellings, cap=30):
+        f = A.Fetcher(cap=cap, rate=0, transport=t)
+        return A.fetch("Yamaha", fetcher=f, library=lib, spellings=list(spellings)), f
+
+    def test_the_route_is_the_owners_manual_library(self):
+        assert A.ROUTES["Yamaha"] is A.yamaha_om_route and "Yamaha" in A.MANUAL_ROUTES
+
+    def test_the_english_pdf_of_the_newest_year_passes_e11(self, lib):
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["MT-09"])
+        m = r["matched"]["MT-09"]
+        assert m["year"] == "2023" and m["publication"] == "B7N-F8199-10"
+        assert m["url"] == "https://library.ymcapps.net/library/om/contents/pdf/10/B7N-F8199-10_02.pdf"
+        assert m["match"] == {"name": "MT-09", "kind": "exact"}
+        pdf = lib / m["path"]
+        side = json.loads(pdf.with_name(pdf.name + ".acquired.json").read_text())
+        assert side["referrer"]["url"] == self.API + "model_list/"
+        listed = json.loads((lib / side["referrer"]["path"]).read_bytes())
+        assert listed["modelDataCollection"][1]["pdffileURL"].endswith("B7N-F8199-10_02.pdf")
+        assert acquired_provenance(pdf, lib, "Yamaha", "t") == []
+
+    def test_the_model_list_request_is_recorded(self, lib):
+        r, _ = self._fetch(lib, self._api(), ["Vino 125"])
+        pdf = lib / r["matched"]["Vino 125"]["path"]
+        ref = json.loads(pdf.with_name(pdf.name + ".acquired.json").read_text())["referrer"]
+        side = json.loads((lib / (ref["path"] + ".acquired.json")).read_text())
+        assert side["request"]["method"] == "POST"
+        assert side["request"]["body"]["nickname"] == "VINO 125" and side["request"]["body"]["modelYear"] == "2009"
+        assert side["request"]["headers"]["Referer"] == A.YAMAHA_OM_PORTAL
+
+    def test_a_weak_spelling_takes_no_nearest_name(self, lib):
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["Zuma"])
+        assert r["unmatched"] == ["Zuma"] and r["matched"] == {}
+        assert not any(u.endswith("/model_year_list/") for u, _ in t.calls)
+
+    def test_a_spec_page_does_not_make_a_spelling_done_but_a_pdf_does(self, lib):
+        spec = {"url": "https://www.yamahamotorsports.com/models/mt-09/specs",
+                "final_url": "https://www.yamahamotorsports.com/models/mt-09/specs", "status": 200,
+                "body": b"<html>MT-09 specs</html>", "method": "spec_page_html", "fetched_at": "t"}
+        A.save("Yamaha", spec, referrer=None, for_spellings=["MT-09"], library=lib)
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["MT-09"])
+        assert "MT-09" in r["matched"]
+        before = len(t.calls)
+        r2, _ = self._fetch(lib, t, ["MT-09"])
+        assert r2["asked"] == [] and len(t.calls) == before
+
+    def test_a_list_response_does_not_make_a_spelling_done(self, lib):
+        t = self._api(pdf_status=403)
+        r, _ = self._fetch(lib, t, ["Vino 125"])
+        assert r["failed"]["Vino 125"]["method"] == "blocked"
+        r2, _ = self._fetch(lib, self._api(), ["Vino 125"])
+        assert "Vino 125" in r2["matched"]
+
+    def test_the_cap_keeps_what_was_saved_and_names_the_rest(self, lib):
+        # robots + product_list + 10 name lists = 12; + robots(library) + 3 for Vino 125 = 16
+        r, f = self._fetch(lib, self._api(), ["Vino 125", "MT-09"], cap=17)
+        assert r["stopped"].startswith("cap reached") and f.count == 17
+        assert list(r["matched"]) == ["Vino 125"] and r["not_reached"] == ["MT-09"]
+        assert "MT-09" not in r["match"]
+        r2, _ = self._fetch(lib, self._api(), ["Vino 125", "MT-09"])
+        assert r2["asked"] == ["MT-09"] and list(r2["matched"]) == ["MT-09"]
+
+    def test_a_contains_match_is_reported_not_fetched(self, lib):
+        """The 4609 rule: a longer name is a sibling or variant. Control: the
+        same spelling with its exact name listed is fetched."""
+        self.NAMES = {**self.NAMES, "8": [{"nickname": "", "modelName": "YZF-R1M", "productId": "10",
+                                            "dispModelName": "YZF-R1M"}]}
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["YZF-R1"])
+        assert r["match"]["YZF-R1"] == {"name": "YZF-R1M", "kind": "contains"}
+        assert r["failed"]["YZF-R1"]["method"] == "contains_match_not_fetched" and r["matched"] == {}
+        assert not any(u.endswith("/model_year_list/") for u, _ in t.calls)
+        self.YEARS, self.PUBS = {**self.YEARS, "YZF-R1": ["2024"]}, {**self.PUBS, ("YZF-R1", "2024"): [
+            {"publicationNo": "BX4-F8199-10", "publicationLangId": "02",
+             "pdffileURL": "//library.ymcapps.net/library/om/contents/pdf/10/BX4-F8199-10_02.pdf"}]}
+        self.NAMES = {**self.NAMES, "8": [{"nickname": "", "modelName": "YZF-R1", "productId": "10", "dispModelName": "YZF-R1"}]}
+        r2, _ = self._fetch(lib, self._api(), ["YZF-R1"])
+        assert r2["matched"]["YZF-R1"]["publication"] == "BX4-F8199-10"

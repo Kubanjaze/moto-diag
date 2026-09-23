@@ -2271,3 +2271,43 @@ a hard stop anyway.
 side is on record: 306 model names, and 32 of 52 census spellings match
 (25 exact). No Triumph host is in `MAKER_HOSTS` beyond
 triumphmotorcycles.com.
+
+### 2026-09-23 — Yamaha's owner's-manual route in acquire.py
+
+**Why.** The next step in the handoff: the Owner's Manual Library chain
+had run only as scratch drivers and one hand-driven Vino 125 re-fetch.
+`ROUTES["Yamaha"]` was still the spec-page route (9 spellings sent, 0
+written; the dry run now sends 0 of them).
+
+**Done:**
+- `acquire.yamaha_om_route`: `product_list` (user context) → 10
+  `model_name_list` buckets → per **exact** match `model_year_list` → the
+  newest year's `model_list` (saved; the PDF's referrer) → its first
+  English (`publicationLangId` 02) PDF. The report carries year,
+  publication number and any other English publications listed.
+- A `contains` match is reported `contains_match_not_fetched`, not
+  fetched (the 4609 rule; the operator decides those).
+- `ROUTES["Yamaha"]` is this route. The spec pages already saved stay.
+- **`already(..., pdf_only=True)` for `MANUAL_ROUTES` (Yamaha).** Without
+  it the 9 spellings with a saved spec page, and any with only a saved
+  list response, were "done" and never fetched.
+- **At the cap the route keeps its report**: what it saved, and the rest
+  `not_reached`, `stopped` set; `fetch` no longer overwrites a route's
+  `stopped`. Before, a capped run discarded its whole report, and
+  `--limit` would stall on unmatched spellings at the front of the list.
+
+**Tests** (`test_phase257_acquire.py::TestYamahaOwnersManualRoute`, 8),
+in the probe responses' shapes: the newest year's English PDF, its
+referrer the saved list, passes E11; the list's POST is recorded; a weak
+spelling takes no nearest name; a spec page does not make a spelling
+done, a PDF does; a list response does not; the cap keeps what was saved
+and a second run picks up `not_reached`; a `contains` match is not
+fetched, and the exact name is (the control).
+
+**Break-it**, each applied alone and reverted (hash checked); every one is caught:
+pdf_only ignored → 2 fail; oldest year → 5; first listed year → 3;
+language filter off → 1; contains fetched → 1; the cap not caught in the
+loop → 1; the route's `stopped` overwritten → 1; no referrer → 2; the
+spec route back → 7; pdf_only counting every sidecar → 2.
+
+244G scanner over `tests/`: 0. Related suites (257 + 244G + 255D): 675 passed.

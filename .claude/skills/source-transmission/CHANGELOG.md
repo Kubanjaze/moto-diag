@@ -151,3 +151,12 @@ lists manuals that way) under the same robots.txt check, rate and cap as
 `get`. Every row, and so every sidecar `save()` writes, now carries
 `request` (method, headers, body as sent), so a POST-fetched list can be
 fetched again from its record alone.
+
+## 2026-09-23 — Yamaha's route is the Owner's Manual Library
+
+`ROUTES["Yamaha"]` is `yamaha_om_route`: the portal's JSON POSTs to the
+newest year's English owner's manual for each exact match, the saved
+model list as its referrer. A manual route counts a spelling done only
+when a PDF names it (`MANUAL_ROUTES`), so a spec page saved earlier does
+not hide it. At the cap the route keeps what it saved and names the rest
+`not_reached`, so a capped run is resumed, not repeated.

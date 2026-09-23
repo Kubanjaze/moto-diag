@@ -397,6 +397,92 @@ def honda_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Pa
     return report
 
 
+YAMAHA_OM_API = "https://parts.yamaha-motor.co.jp/ypec_b2c/services/omb2c/"
+YAMAHA_OM_PORTAL = "https://library.ymcapps.net/library/om/app/index.html?baseCode=6150&langId=02"
+
+
+def yamaha_om_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Path) -> dict:
+    """Yamaha's Owner's Manual Library (phase log, 2026-09-23): JSON POSTs
+    sent with the portal's Origin and Referer. product_list gives the user
+    context; model_name_list, displacement buckets 1-10, the names; per
+    EXACT match, model_year_list, then the newest year's model_list (saved:
+    the PDF's referrer) and its English PDF on library.ymcapps.net. A
+    'contains' match is reported, not fetched (the 4609 rule; operator
+    decision pending). At the cap, what was saved is kept and the rest is
+    reported `not_reached`."""
+    hdr = {"Origin": "https://library.ymcapps.net", "Referer": YAMAHA_OM_PORTAL}
+    ctx = {"baseCode": "6150", "langId": "02"}
+    report: dict = {"matched": {}, "unmatched": [], "failed": {}, "match": {}, "not_reached": [], "stopped": None}
+    try:
+        prod = f.post_json(YAMAHA_OM_API + "product_list/", ctx, hdr)
+        if prod["method"] != "json_endpoint" or prod["status"] != 200:
+            return {**report, "unmatched": list(spellings), "failed": {"*": {"url": prod["url"], "method": prod["method"]}}}
+        user = json.loads(prod["body"])["userContext"]
+        entries: dict[str, dict] = {}
+        for bucket in range(1, 11):
+            row = f.post_json(YAMAHA_OM_API + "model_name_list/",
+                              {"productId": "10", "displacementType": str(bucket), **ctx}, hdr)
+            if row["method"] == "json_endpoint":
+                for e in json.loads(row["body"]).get("modelNameDataCollection", []):
+                    entries.setdefault(e["dispModelName"], e)
+    except CapReached as e:
+        return {**report, "not_reached": list(spellings), "stopped": f"cap reached: {e}"}
+    names = {n: n for n in entries}
+    todo = list(spellings)
+    while todo:
+        s = todo.pop(0)
+        d = match_detail(s, names)
+        if not d:
+            report["unmatched"].append(s)
+            continue
+        report["match"][s] = {"name": d[1], "kind": d[2]}
+        if d[2] != "exact":
+            report["failed"][s] = {"url": None, "method": "contains_match_not_fetched"}
+            continue
+        e = entries[d[0]]
+        who = {"productId": "10", "modelName": e["modelName"], "nickname": e["nickname"],
+               "userGroupCode": user["userGroupCode"], "destination": user["destination"],
+               "destGroupCode": user["destGroupCode"], **ctx}
+        try:
+            yrow = f.post_json(YAMAHA_OM_API + "model_year_list/", who, hdr)
+            years = ([y["modelYear"] for y in json.loads(yrow["body"]).get("modelYearDataCollection", [])]
+                     if yrow["method"] == "json_endpoint" else [])
+            if not years:
+                report["failed"][s] = {"url": yrow["url"], "method": yrow["method"]}
+                continue
+            year = max(years, key=int)
+            lrow = f.post_json(YAMAHA_OM_API + "model_list/",
+                               {**who, "calledCode": "1", "modelYear": year, "useProdCategory": user["useProdCategory"],
+                                "greyModelSign": user["greyModelSign"], "publicationLang": "02"}, hdr)
+            pubs = ([p for p in json.loads(lrow["body"]).get("modelDataCollection", [])
+                     if p.get("pdffileURL") and p.get("publicationLangId") == "02"]
+                    if lrow["method"] == "json_endpoint" else [])
+            if not pubs:
+                report["failed"][s] = {"url": lrow["url"], "method": lrow["method"], "year": year}
+                continue
+            ref = save(make, lrow, referrer=None, for_spellings=[s], library=library)
+            pdf = "https:" + pubs[0]["pdffileURL"] if pubs[0]["pdffileURL"].startswith("//") else pubs[0]["pdffileURL"]
+            doc = f.get(pdf)
+        except CapReached as e:
+            report["not_reached"] = [s, *todo]
+            report["match"].pop(s, None)
+            report["stopped"] = f"cap reached: {e}"
+            break
+        if doc["method"] != "document_endpoint":
+            report["failed"][s] = {"url": pdf, "method": doc["method"], "status": doc["status"]}
+            continue
+        saved = save(make, doc, referrer=ref, for_spellings=[s], library=library)
+        report["matched"][s] = {"url": doc["final_url"], "method": doc["method"], "path": saved["path"],
+                                "year": year, "publication": pubs[0].get("publicationNo"),
+                                "also_listed": [p.get("publicationNo") for p in pubs[1:]]}
+    return report
+
+
+# Routes whose documents are manuals: a spelling is done only when a PDF names
+# it, not a spec page an earlier route saved (Yamaha's 9, measured 2026-09-23).
+MANUAL_ROUTES = {"Yamaha"}
+
+
 def doc_links_route(listings: list[str], page_pattern: str, pdf_pattern: str):
     """A listing → product pages → the PDF each links (SYM, Genuine)."""
     def run(f: Fetcher, make: str, spellings: list[str], library: pathlib.Path) -> dict:
@@ -438,8 +524,10 @@ ROUTES = {
     "Triumph": spec_route([f"https://www.triumphmotorcycles.com/motorcycles/{c}"
                            for c in ("roadsters", "adventure", "classic", "sport")],
                           r"triumphmotorcycles\.com/motorcycles/[a-z0-9-]+/[a-z0-9-]+/[a-z0-9-]+-20\d\d$"),
-    "Yamaha": spec_route(["https://www.yamahamotorsports.com/"], r"yamahamotorsports\.com/models/[a-z0-9-]+$",
-                         to_spec=lambda u: u.rstrip("/") + "/specs"),
+    # Owner's manuals since 2026-09-23. The spec-page route it replaces
+    # (yamahamotorsports.com/models/<m>/specs) gave the gearbox only as table
+    # cells: 9 spellings sent, 0 written; the dry run now sends 0 of them.
+    "Yamaha": yamaha_om_route,
     "Zero": spec_route(["https://www.zeromotorcycles.com/"], r"zeromotorcycles\.com/model/[a-z0-9-]+$"),
     "Kymco": spec_route(["https://kymcousa.com/scooters/"], r"kymcousa\.com/scooters/[a-z0-9-]+/?$"),
     "Kawasaki": spec_route(["https://www.kawasaki.com/en-us/owner-center"],
@@ -457,9 +545,13 @@ def machine_names(make: str, db: pathlib.Path = C.REPO / "data" / "motodiag.db")
     return [e["model"] for e in C.census(db, make).get(make, []) if not C.not_a_machine(make, e["model"])]
 
 
-def already(make: str, library: pathlib.Path = LIBRARY) -> set[str]:
+def already(make: str, library: pathlib.Path = LIBRARY, pdf_only: bool = False) -> set[str]:
+    """Spellings a saved sidecar names. `pdf_only`: only a PDF's sidecar counts
+    (MANUAL_ROUTES) — a spec page or a list response does not make one done."""
     out: set[str] = set()
     for side in (library / "acquired" / make).glob("*.acquired.json"):
+        if pdf_only and not side.name.lower().endswith(".pdf.acquired.json"):
+            continue
         try:
             out.update(json.loads(side.read_text(encoding="utf-8")).get("for_spellings") or [])
         except ValueError:
@@ -490,7 +582,8 @@ def fetch(make: str, limit: int | None = None, *, fetcher: Fetcher | None = None
     outside_repo(library)
     if make not in ROUTES:
         return {"make": make, "error": "no measured route (D7)"}
-    todo = [s for s in (spellings if spellings is not None else machine_names(make)) if s not in already(make, library)]
+    have = already(make, library, pdf_only=make in MANUAL_ROUTES)
+    todo = [s for s in (spellings if spellings is not None else machine_names(make)) if s not in have]
     todo = todo[:limit] if limit else todo
     if not todo:
         return {"make": make, "asked": [], "matched": {}, "unmatched": [], "failed": {}, "stopped": None,
@@ -498,7 +591,7 @@ def fetch(make: str, limit: int | None = None, *, fetcher: Fetcher | None = None
     f = fetcher or Fetcher()
     try:
         report = ROUTES[make](f, make, todo, library)
-        report["stopped"] = None
+        report.setdefault("stopped", None)        # a route that stops at the cap says so itself
     except CapReached as e:
         report = {"matched": {}, "unmatched": [], "failed": {}, "stopped": f"cap reached: {e}"}
     for s, m in report.get("matched", {}).items():
@@ -594,7 +687,7 @@ def main(argv: list[str]) -> int:
         out = LIBRARY / "acquired" / f"_run_{argv[1].replace(' ', '_')}_{dt.datetime.now():%Y%m%d_%H%M%S}.json"
         out.parent.mkdir(parents=True, exist_ok=True)
         out.write_text(json.dumps(r, indent=1, default=str), encoding="utf-8")
-        print(json.dumps({k: r.get(k) for k in ("make", "fetches", "stopped", "unmatched", "failed")}, indent=1))
+        print(json.dumps({k: r.get(k) for k in ("make", "fetches", "stopped", "unmatched", "failed", "not_reached")}, indent=1))
         print(f"matched: {sorted(r.get('matched', {}))}\nrun record: {out}")
         return 0
     print(__doc__.split("Usage:")[1].strip(), file=sys.stderr)
