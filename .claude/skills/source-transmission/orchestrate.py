@@ -267,10 +267,16 @@ def stops(findings: list[dict], verdicts: list[dict], tokens: dict | None = None
     return reasons
 
 
+def notification_script(title: str, message: str) -> str:
+    """AppleScript for a notification. JSON string escaping is AppleScript's
+    for quotes and backslashes, but its \\uXXXX is not: non-ASCII stays literal
+    (bug fix #2 — the STOP title's em dash made every stop alert fail)."""
+    q = lambda s: json.dumps(s, ensure_ascii=False)  # noqa: E731
+    return f"display notification {q(message)} with title {q(title)}"
+
+
 def alert(title: str, message: str) -> None:
-    subprocess.run(["osascript", "-e",
-                    f'display notification {json.dumps(message)} with title {json.dumps(title)}'],
-                   check=False)
+    subprocess.run(["osascript", "-e", notification_script(title, message)], check=False)
 
 
 # --- the batch (one make) -----------------------------------------------------

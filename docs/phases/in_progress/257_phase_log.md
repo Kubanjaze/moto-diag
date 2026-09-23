@@ -621,3 +621,39 @@ Positive controls: (BMW, "S 1000 XR"), Ducati Panigale V4, Multistrada
 before the entries existed (15 failed). Break-it: the lookup unscoped
 from the make → 4 fail, including the BMW control. Classed now 109 (was
 94); **machine names 491** (was 506). 294 pass across 257 + 255D.
+
+### 2026-09-23 — Kymco re-run under the one-turn source stage (token redesign step 5)
+
+`subc usage` first: 53.2M of 60M used today, 6.8M left — headroom for
+one spelling. `batch Kymco "K-Pipe"`, run `Kymco_20260923_083848`:
+
+| stage | before (`Kymco_20260922_232607`, agent loop) | after |
+|---|---|---|
+| source (GLM, Subconscious) | 7,661,322 in + 18,077 out + 6,133,632 cache-read, 37 turns | **6,260 in + 2,967 out, 2 turns = 9,227** |
+| refute (Opus, tools) | 16 in + 1,904 out + 149,963 cache-read + 13,188 cache-write = 165,071 | 20 in + 3,373 out + 194,668 cache-read + 28,796 cache-write = **226,857** |
+| batch | — | **236,084 → STOP** (ceiling 150,000 × 1 sent) |
+
+The source stage fell ~830× (input) and returned the same finding: the
+page-57 spec line, `needs_page_image` set because the excerpt is OCR.
+entry_check passed it; refute kept it, rendering page 57 itself. **The
+batch stopped anyway, on refute's cost** — which the redesign left with
+its tools, as specified. Refute alone is 1.5× the ceiling, and before
+the redesign it was already 165K, so **no batch that reaches refute can
+pass the 150K-per-spelling stop as written.** Nothing was written. The
+ceiling is the operator's; not changed.
+
+### 2026-09-23 — Bug fix #2: every STOP alert was silent
+
+- **Issue:** the re-run's log shows `osascript` failing: `syntax error:
+  Expected """ but found unknown token (-2741)`.
+- **Root cause:** `alert()` quoted the title with `json.dumps`, which
+  writes the STOP title's em dash as `—`; AppleScript has no `\u`
+  escape. `check=False` swallowed the failure. Since `a8e236e`, every
+  STOP alert failed and every success alert (no em dash) worked.
+- **Fix:** `notification_script()` quotes with `ensure_ascii=False`.
+- **Files:** `orchestrate.py`; `tests/test_phase257_orchestrator_guards.py`.
+- **Verified:** reproduced with `osacompile` before the fix (exit 1). New
+  test compiles the real STOP title and a quoted/backslash message with
+  `osacompile` (nothing is displayed); the old escaping restored → 1
+  fails; fixed → 32 pass.
+- **Commit:** this one.

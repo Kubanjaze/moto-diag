@@ -127,3 +127,25 @@ class TestStops:
 
     def test_a_refute_disagreement_stops(self):
         assert O.stops([], [{"spelling": "K-Pipe", "verdict": "killed"}])
+
+
+class TestTheStopAlertCompiles:
+    """Bug fix #2: the STOP title carries an em dash; json.dumps wrote it as
+    \\u2014, which AppleScript cannot parse, and osascript's failure was
+    swallowed — every stop alert since a8e236e was silent. Compiled here by
+    osacompile, the same parser osascript uses; nothing is displayed."""
+
+    @pytest.mark.parametrize("title,message", [
+        ("moto-diag source-transmission — STOP", "Kymco: tokens 236,084 exceed 150,000 per spelling"),
+        ("moto-diag source-transmission", 'Honda: a "quoted" \\ message'),
+    ])
+    def test_the_script_compiles(self, tmp_path, title, message):
+        import shutil
+        import subprocess
+        if not shutil.which("osacompile"):
+            pytest.fail("osacompile missing: this check needs macOS")
+        src = tmp_path / "alert.applescript"
+        src.write_text(O.notification_script(title, message), encoding="utf-8")
+        p = subprocess.run(["osacompile", "-o", str(tmp_path / "alert.scpt"), str(src)],
+                           capture_output=True, text=True)
+        assert p.returncode == 0, p.stderr
