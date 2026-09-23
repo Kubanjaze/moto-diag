@@ -301,3 +301,57 @@ class TestADocumentSourcesOnlyTheModelItNames:
     def test_a_page_naming_the_model_is_model_scope(self, run_with):
         s = run_with(Fake(findings=[_found()]), ["Trail 250"])
         assert s["ready_to_write"][0]["scope"] == "model" and s["family_evidence"] == []
+
+
+def _call(mid, inputs, cache_read, out=100):
+    """A streamed assistant message: one event per content block, each
+    repeating the same usage (as `claude -p --output-format stream-json` does)."""
+    u = {"input_tokens": 2, "output_tokens": out, "cache_read_input_tokens": cache_read,
+         "cache_creation_input_tokens": 0}
+    return [{"type": "assistant", "message": {"id": mid, "usage": u,
+                                              "content": [{"type": "tool_use", "input": i}]}} for i in inputs] or \
+           [{"type": "assistant", "message": {"id": mid, "usage": u, "content": [{"type": "thinking"}]}}]
+
+
+class TestRefutePerFinding:
+    """Refute's tokens and turns attributed per finding from its stream —
+    the measurement behind the operator's rule: if the cost climbs across a
+    batch, split refute into groups of at most 5, fresh contexts."""
+
+    FINDINGS = [{"spelling": "GSX-R750", "document": "/lib/acquired/Suzuki/gsx-r750.html.txt"},
+                {"spelling": "SV650", "document": "/lib/acquired/Suzuki/sv650-abs.html.txt"}]
+
+    def test_calls_are_attributed_by_what_they_read(self):
+        events = (_call("m1", [], 20_000)
+                  + _call("m2", [{"file_path": "/lib/acquired/Suzuki/gsx-r750.html.txt"}], 25_000)
+                  + _call("m3", [{"command": "grep -n six-speed x"}], 30_000)          # continues GSX-R750
+                  + _call("m4", [{"file_path": "/lib/acquired/Suzuki/sv650-abs.html.txt"},
+                                 {"command": "grep SV650"}], 40_000)                    # two blocks, one call
+                  + _call("m5", [{"verdicts": [{"spelling": "GSX-R750"}, {"spelling": "SV650"}]}], 45_000))
+        rows = {r["spelling"]: r for r in O.refute_attribution(events, self.FINDINGS)}
+        assert [r["spelling"] for r in O.refute_attribution(events, self.FINDINGS)][:2] == ["GSX-R750", "SV650"]
+        assert rows["(setup)"]["turns"] == 1
+        assert rows["GSX-R750"]["turns"] == 2 and rows["GSX-R750"]["tokens"] == 25_102 + 30_102
+        assert rows["SV650"]["turns"] == 1 and rows["SV650"]["tokens"] == 40_102, "a message's blocks are one call"
+        assert rows["(answer)"]["turns"] == 1
+
+
+class TestRefuteGroups:
+    def test_groups_are_separate_fresh_calls(self, run_with, monkeypatch):
+        monkeypatch.setattr(O, "REFUTE_GROUP", 1)
+        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh")],
+                    model_line="ZZ Sprint 900")
+        s = run_with(fake, ["Trail 250", "Sprint 900"])
+        assert len(fake.refute_calls()) == 2
+        assert all("--output-format" in c and c[c.index("--output-format") + 1] == "stream-json"
+                   for c in fake.refute_calls())
+        assert sorted(f["spelling"] for f in s["ready_to_write"]) == ["Sprint 900", "Trail 250"]
+        assert {r["group"] for r in s["refute_per_finding"]} == {1, 2}
+
+    def test_a_group_over_budget_stops_the_rest(self, run_with, monkeypatch):
+        monkeypatch.setattr(O, "REFUTE_GROUP", 1)
+        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh")],
+                    refute_usage=_usage(OPUS_MODEL, O.REFUTE_STOP_PER_FINDING + 1, 0))
+        s = run_with(fake, ["Trail 250", "Sprint 900"])
+        assert len(fake.refute_calls()) == 1, "after a group over budget, no further group runs"
+        assert any(r.startswith("refute tokens") for r in s["stops"]) and s["ready_to_write"] == []

@@ -807,3 +807,24 @@ unscoping the lookup fails the controls. Machine names 484 (was 491).
 moto-diag F141, mobile F115): 69 multi-make rows → 1,129 junction rows,
 192 distinct (make, model) pairs; how many are wrong is not measured.
 Not fixed in 257. `finding_check.py`: exit 0.
+
+### 2026-09-23 — refute measured per finding; refute groups (off until the data say otherwise)
+
+Refute runs with `--output-format stream-json --verbose` (checked on one
+Haiku call first: each API call's usage arrives in its assistant events,
+repeated per content block — deduplicated by message id; the last line is
+the same result object, so parsing is unchanged). The raw stream is kept
+(`refute[_n].stream.jsonl`) and `refute_attribution` assigns each call to
+the finding whose spelling or document its tool inputs name; a call naming
+none continues the last; before any, `(setup)`; naming several (the final
+answer), `(answer)`. It is an attribution by what refute was reading, not
+a measurement inside the model. `summary.refute_per_finding` holds turns
+and tokens per finding, in order.
+
+`REFUTE_GROUP` (None = one call): findings per refute call, each a fresh
+context; the budget is checked after each group and a group over it stops
+the rest. Per the operator it stays None unless per-finding cost climbs
+across a batch — then 5. Tests (5): attribution over hand-written stream
+events; groups are separate streamed calls; a group over budget stops the
+rest. Break-it: no dedupe by id; no carry-over; groups ignored (2); no stop
+between groups; not streamed — each seen to fail. 359 pass; 244G clean.

@@ -69,6 +69,10 @@ TOKEN_STOP_PER_SPELLING = 150_000
 # Kymco; 165,071 before the redesign). Not raised to fit a batch: if the
 # per-finding cost climbs, refute is split into groups (REFUTE_GROUP).
 REFUTE_STOP_PER_FINDING = 300_000
+# Findings per refute call, each call a fresh context. None: one call for
+# all. Operator, 2026-09-23: if per-finding cost climbs across a batch,
+# groups of at most 5 — not a higher budget.
+REFUTE_GROUP: int | None = None
 USAGE_FIELDS = ("inputTokens", "outputTokens", "cacheReadInputTokens", "cacheCreationInputTokens")
 
 ROUTES = {
@@ -138,13 +142,16 @@ def check_route(route: str, env: dict, gateway: str | None = None) -> None:
 
 
 def build_cmd(route: str, prompt: str, *, schema: dict | None = None,
-              extra: tuple[str, ...] = ()) -> list[str]:
+              extra: tuple[str, ...] = (), stream: bool = False) -> list[str]:
     model = ROUTES[route]["model"]
     if not model:
         raise GuardError("every call names its model explicitly")
     if "--bare" in extra:
         raise GuardError("--bare skips hooks; never passed")
-    args = ["-p", prompt, "--output-format", "json", "--no-session-persistence",
+    # stream: one JSON event per line, each API call's usage in it — how refute's
+    # cost is attributed per finding. The last line is the same result object.
+    fmt = ["--output-format", "stream-json", "--verbose"] if stream else ["--output-format", "json"]
+    args = ["-p", prompt, *fmt, "--no-session-persistence",
             "--dangerously-skip-permissions"]
     if schema is not None:
         args += ["--json-schema", json.dumps(schema)]
@@ -208,18 +215,29 @@ def parse_result(stdout: str) -> dict:
 
 
 def run_stage(r: dict, route: str, prompt: str, *, schema: dict | None = None,
-              extra: tuple[str, ...] = ()) -> dict:
-    """One sandboxed call. The model's text is never acted on unchecked."""
+              extra: tuple[str, ...] = (), stream: bool = False) -> dict:
+    """One sandboxed call. The model's text is never acted on unchecked.
+    With stream, the parsed events are returned under `_events`."""
     env = {"HOME": str(HOME), "PATH": f"{SUBC.parent}:/usr/bin:/bin:{CLAUDE.parent}",
            "USER": os.environ.get("USER", ""), "TERM": "dumb",
            "TMPDIR": str(r["tmp"]), "CLAUDE_CONFIG_DIR": str(r["tmp"] / "cfg")}
     if route == "anthropic":
         env["CLAUDE_CODE_OAUTH_TOKEN"] = load_anthropic_token()
     check_route(route, env)
-    cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema, extra=extra)
+    cmd = ["sandbox-exec", "-f", str(r["profile"])] + build_cmd(route, prompt, schema=schema, extra=extra,
+                                                                stream=stream)
     p = subprocess.run(cmd, cwd=r["clone"], env=env, capture_output=True, text=True,
                        stdin=subprocess.DEVNULL, timeout=3600)
     out = parse_result(p.stdout)
+    if stream:
+        events = []
+        for line in p.stdout.splitlines():
+            if line.strip().startswith("{"):
+                try:
+                    events.append(json.loads(line))
+                except json.JSONDecodeError:
+                    pass
+        out["_events"] = events
     model = ROUTES[route]["model"]
     served = list((out.get("modelUsage") or {}).keys())
     if not served or served != [model]:
@@ -243,6 +261,55 @@ def usage(out: dict) -> dict:
         return {"known": False, "total": 0}
     u = {k: sum(int(m.get(k) or 0) for m in mu.values()) for k in USAGE_FIELDS}
     return {"known": True, **u, "total": sum(u.values())}
+
+
+def add_usage(a: dict | None, b: dict) -> dict:
+    """Two stages' usage summed (refute run in groups)."""
+    if a is None:
+        return dict(b)
+    if not (a["known"] and b["known"]):
+        return {"known": False, "total": 0}
+    return {"known": True, **{k: a[k] + b[k] for k in (*USAGE_FIELDS, "total")}}
+
+
+def refute_attribution(events: list[dict], findings: list[dict]) -> list[dict]:
+    """Refute's tokens and API calls ("turns") per finding, in order.
+
+    Each API call is one assistant message id (a message streams as several
+    events repeating its usage — deduplicated). A call is the finding's whose
+    spelling or document its tool inputs name; a call naming none continues
+    the previous finding; before any, '(setup)'; a call naming several
+    findings (the final structured answer) is '(answer)'. An attribution by
+    what refute was reading — not a measurement inside the model."""
+    calls: dict[str, dict] = {}
+    order: list[str] = []
+    for e in events:
+        m = e.get("message") or {}
+        if e.get("type") != "assistant" or not m.get("id"):
+            continue
+        if m["id"] not in calls:
+            calls[m["id"]] = {"usage": {}, "inputs": []}
+            order.append(m["id"])
+        calls[m["id"]]["usage"] = m.get("usage") or calls[m["id"]]["usage"]
+        calls[m["id"]]["inputs"] += [json.dumps(c.get("input"), ensure_ascii=False)
+                                     for c in m.get("content") or [] if c.get("type") == "tool_use"]
+    keys = {f["spelling"]: [k for k in (f["spelling"], f.get("document") or "",
+                                        pathlib.Path(f.get("document") or "").name) if k]
+            for f in findings}
+    rows = {s: {"spelling": s, "turns": 0, "tokens": 0} for s in [*keys, "(setup)", "(answer)"]}
+    current = "(setup)"
+    for mid in order:
+        text = " ".join(calls[mid]["inputs"])
+        hits = [s for s, ks in keys.items() if any(k in text for k in ks)]
+        who = hits[0] if len(hits) == 1 else ("(answer)" if hits else current)
+        if len(hits) == 1:
+            current = hits[0]
+        u = calls[mid]["usage"]
+        rows[who]["turns"] += 1
+        rows[who]["tokens"] += sum(int(u.get(k) or 0) for k in
+                                   ("input_tokens", "output_tokens", "cache_read_input_tokens",
+                                    "cache_creation_input_tokens"))
+    return [rows[s] for s in [*keys, "(setup)", "(answer)"]]
 
 
 def token_stop(stages: dict[str, dict], sent: int, refuted: int = 0) -> str | None:
@@ -403,15 +470,28 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
         f["scope"] = entry_check.model_scope(f, r["clone"])     # the 4609 rule: model or family
     verdicts = []
     over = token_stop(stages, len(sent))
+    per_finding: list[dict] = []
     if passed and not over:         # over budget already: refute is not spent
-        ref = run_stage(r, REFUTE_ROUTE, REFUTE_PROMPT.format(
-            library=LIBRARY, findings=json.dumps(passed, indent=1)), schema=VERDICT_SCHEMA)
-        (r["run"] / "refute.json").write_text(json.dumps(ref, indent=1), encoding="utf-8")
-        stages["refute"] = usage(ref)
-        over = token_stop(stages, len(sent), len(passed))
-        verdicts = (ref.get("structured_output") or {}).get("verdicts", []) if not ref.get("is_error") else [
-            {"spelling": f["spelling"], "verdict": "error", "quote": "", "page": "", "reason": ref.get("result")}
-            for f in passed]
+        size = REFUTE_GROUP or len(passed)
+        groups = [passed[i:i + size] for i in range(0, len(passed), size)]
+        refuted = 0
+        for n, group in enumerate(groups, 1):
+            if over:
+                break               # a stop: the remaining findings get no verdict and write nothing
+            ref = run_stage(r, REFUTE_ROUTE, REFUTE_PROMPT.format(
+                library=LIBRARY, findings=json.dumps(group, indent=1)), schema=VERDICT_SCHEMA, stream=True)
+            events = ref.pop("_events", [])
+            tag = "" if len(groups) == 1 else f"_{n}"
+            (r["run"] / f"refute{tag}.json").write_text(json.dumps(ref, indent=1), encoding="utf-8")
+            (r["run"] / f"refute{tag}.stream.jsonl").write_text(
+                "\n".join(json.dumps(e) for e in events) + "\n", encoding="utf-8")
+            per_finding += [dict(row, group=n) for row in refute_attribution(events, group)]
+            stages["refute"] = add_usage(stages.get("refute"), usage(ref))
+            refuted += len(group)
+            over = token_stop(stages, len(sent), refuted)
+            verdicts += (ref.get("structured_output") or {}).get("verdicts", []) if not ref.get("is_error") else [
+                {"spelling": f["spelling"], "verdict": "error", "quote": "", "page": "", "reason": ref.get("result")}
+                for f in group]
     tokens = {"stages": stages, "total": sum(u["total"] for u in stages.values()),
               "sent": len(sent), "ceiling": TOKEN_STOP_PER_SPELLING * max(len(sent), 1),
               "refuted": len(passed) if "refute" in stages else 0,
@@ -434,7 +514,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
         else:
             family.append(f)
     summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
-                    "family_evidence": family,
+                    "family_evidence": family, "refute_per_finding": per_finding,
                     "ready_to_write": writable,
                     "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
     (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
