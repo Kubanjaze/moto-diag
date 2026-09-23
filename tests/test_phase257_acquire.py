@@ -288,3 +288,13 @@ class TestBMWIndex:
         r = A.fetch("BMW", fetcher=A.Fetcher(rate=0, transport=t), library=lib, spellings=["F800GS"])
         assert r["matched"]["F800GS"]["url"].endswith("F_0K51_RM_0724_01.pdf")
         assert r["matched"]["F800GS"]["match"] == {"name": "F 800 GS", "kind": "exact"}
+
+    def test_the_riders_manual_not_the_certificate(self, lib):
+        nav = ('<NAV-MODELL\r\nT-BEZ="F 750 GS"\r\n><MODELLJAHR\r\n><BA-SPRACHE\r\nLANGUAGE="01"\r\n'
+               'FILENAME="F_0B11_RM_0321_01.pdf"/></MODELLJAHR\r\n><MODELLJAHR\r\n><BA-SPRACHE\r\nLANGUAGE="01"\r\n'
+               'FILENAME="01408405040_ZBA_Zertifikate_01.pdf"/></MODELLJAHR\r\n></NAV-MODELL\r\n>').encode()
+        t = site({self.BASE + "/01/Nav.xml": (200, nav),
+                  self.BASE + "/PDF/F_0B11_RM_0321_01.pdf": (200, b"%PDF-1.4 F 750 GS rider's manual\n"),
+                  self.BASE + "/PDF/01408405040_ZBA_Zertifikate_01.pdf": (200, b"%PDF-1.4 certificates\n")})
+        r = A.fetch("BMW", fetcher=A.Fetcher(rate=0, transport=t), library=lib, spellings=["F 750 GS"])
+        assert r["matched"]["F 750 GS"]["url"].endswith("F_0B11_RM_0321_01.pdf")

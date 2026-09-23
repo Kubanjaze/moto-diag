@@ -331,6 +331,11 @@ def bmw_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Path
         # Whitespace-tolerant: the live index breaks lines between attributes
         # (LANGUAGE="01"\r\nFILENAME=…); D7's copy used single spaces.
         pdfs = re.findall(r'LANGUAGE="01"\s+FILENAME="([^"]+\.pdf)"', m.group(2))
+        # A model's block also lists certificates (…ZBA_Zertifikate_01.pdf —
+        # the first live run took one for the F 750 GS); the rider's manual
+        # is _RM_. Prefer it; never a certificate.
+        pdfs = [p for p in pdfs if "zertifikat" not in p.lower()]
+        pdfs = [p for p in pdfs if "_RM_" in p] or pdfs
         if pdfs:
             names.setdefault(m.group(1), f"{base}/PDF/{pdfs[-1]}")
     return _fetch_matched(f, make, spellings, names, {u: ref for u in names.values()}, lambda u: u, library)
