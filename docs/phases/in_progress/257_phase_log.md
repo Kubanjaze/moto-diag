@@ -765,3 +765,23 @@ line end, the next line "S: …"). Break-it: variant words ignored → 7;
 family writes → 3; refute's line trusted → 2; line not checked on the page
 → 1; line not checked for the model → 1; dedupe off → 1; repo guard off →
 1; match kind not recorded → 1. 344 pass across 257 + 255D; 244G clean.
+
+### 2026-09-23 — acquire smoke test: `fetch Kymco --limit 3`
+
+The first three unsourced Kymco machine names: Super 8-50 X, Super 8-150 X,
+Jet 14. **3 fetches** (robots.txt, `kymcousa.com/scooters/`, one spec
+page), 1/s, no stop. Run record `~/research/motodiag/acquired/_run_Kymco_20260923_092034.json`.
+
+| spelling | result |
+|---|---|
+| Super 8-50 X | **matched `exact`** ("Super 8 50X") → `kymcousa.com/scooters/super-8-50x/`, `spec_page_html`; derived text carries "Transmission  CVT Automatic"; `names_model` → the page names the model |
+| Super 8-150 X | unmatched — not on Kymco USA's current listing |
+| Jet 14 | unmatched — a SYM model the junction also attaches to Kymco |
+
+Saved: `acquired/Kymco/scooters.html` (the listing, as referrer) and
+`scooters_super-8-50x.html`, each with a derived `.txt`; **all four pass
+E11**; `candidates.py` returns the acquired text alongside the older
+library copies (`v2/super850x_prod.*`). Found by the run: the run record
+logged 2 requests while the cap counted 3 — robots.txt fetches were
+counted but not logged. Fixed; a test pins that the log holds every
+request the cap counts (removing the log line fails it). 344 pass.

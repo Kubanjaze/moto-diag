@@ -133,6 +133,7 @@ class TestTheDiscipline:
                  "https://kymcousa.com/scooters/x-town-300i/": (200, KYMCO_SPEC)}
         r, f = _kymco(lib, site(pages), cap=2, spellings=("Super 8-50 X", "X-Town 300i"))
         assert r["stopped"].startswith("cap reached") and f.count == 2
+        assert len(r["log"]) == f.count, "every request the cap counts is in the run record"
 
     def test_robots_txt_is_honoured(self, lib):
         pages = {**TestASpecRoute.PAGES,

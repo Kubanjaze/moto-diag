@@ -90,6 +90,8 @@ class Fetcher:
         host = f"{parts.scheme}://{parts.netloc}"
         if host not in self.robots:
             status, body, err, _ = self._raw(host + "/robots.txt", None)
+            self.log.append({"url": host + "/robots.txt", "status": status, "error": err, "method": "robots",
+                             "fetched_at": dt.datetime.now().isoformat(timespec="seconds")})
             rp = None
             if status == 200 and body:
                 rp = urllib.robotparser.RobotFileParser()
