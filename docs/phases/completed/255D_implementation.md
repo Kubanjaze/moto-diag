@@ -391,3 +391,39 @@ closeout → finding → refute are all unchanged. The enforcement design —
 **a test that travels with the repository, plus a hook that catches the
 omission earlier** — survived D1 intact; what failed was the configuration
 detail and an assumption about where skills are read from.
+
+---
+
+## Deviations from plan
+
+1. **D1 halted the phase, which is what it was for.** v1.0 said run the
+   mechanism first and stop if either half failed. The skill half failed and
+   the phase stopped for re-planning. v1.1 amended four points from what D1
+   measured. **The `if` field specified in v1.0's own D2.6 does not work on
+   `PreToolUse`** — the plan contained the defect it was written to catch.
+2. **The push guard is narrower than v1.0 specified.** v1.0 said the guard
+   blocks a `git push` when close-out is incomplete. Implemented that way it
+   would have blocked **every work-in-progress push for the whole phase**,
+   including this phase's own. It engages only on a push that puts commits
+   on `master`. Found by noticing it would have blocked its own commit.
+3. **`closeout` is a skill that could not be invoked while it was built.**
+   Skills are enumerated at session start. Everything in the folder was
+   therefore exercised directly — `closeout_check.py`, `verify_phase.sh` and
+   the guard were run as programs, and the assertions as tests. **Whether
+   `/closeout` resolves is still unverified**; `ping/SKILL.md` remains the
+   one-step check in a fresh repo-rooted session.
+4. **The root CLAUDE.md is 889 lines, not the ~174 the plan targeted.** That
+   174 was a measure of the rules *cited in a working session*, not of what
+   is legitimately cross-project, and **conflating the two was an error in
+   D5's own table**. What remains is genuinely shared; moving more means
+   deciding what stops being a shared rule, which is a judgement call rather
+   than a tidy-up, and it is not made here.
+5. **Three assertions had to be corrected before they were trustworthy**,
+   each caught by running against real data rather than by review: A4's
+   cross-line match, B2's half-read denominator, and B2's ceiling — which
+   removed the false positives *and* the one true positive it exists to
+   find. Recorded as bug fixes #1–#3.
+6. **`verify_phase.sh` gained two checks beyond the supplied block** (12:
+   the refuter checklist when a phase ran one; 13: every cited F-number
+   resolves), because `finding` and `refute` produce artefacts a close-out
+   should confirm.

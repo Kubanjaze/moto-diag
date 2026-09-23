@@ -1,6 +1,6 @@
 # Phase 255D — Procedures as folders — phase log
 
-**Status:** ⏸ HALTED at D1 — the mechanism does not behave as documented
+**Status:** ✅ Complete
 **Opened:** 2026-09-22
 
 ---
@@ -108,3 +108,105 @@ it with a hook configured in a way that blocks every command.
 session-root copy of the skill were removed;
 `moto-diag/.claude/skills/ping/SKILL.md` is committed and kept, because it
 is the fixture for the restart test.
+
+### 2026-09-22 20:10 — Bug fix #1: the closeout check's own A4 matched across a line boundary
+
+**Issue.** Run against Phase 255C, `closeout_check.py` reported the bug-fix
+register as `[1, 2, 3, 4, 5, 5, 6, 7]` — a duplicate `#5` — against a log
+whose headings are a clean `#1`–`#7`.
+
+**Root cause.** A single `re.findall` with `re.S`, so the non-greedy `.*?`
+before `Bug fix #` ran **across a newline** and matched a later heading's
+number from an earlier heading's line. **The check was wrong, not the log.**
+Same DOTALL-across-a-line-boundary defect that deleted a guard in 255B.
+
+**Fix.** Heading detection is line-anchored: collect heading line indices
+first, then take each entry's body between consecutive headings.
+
+**Files.** `.claude/skills/closeout/closeout_check.py`.
+
+**Verified.** 255C's register reads `#1`–`#7`, contiguous, every entry
+carrying its commit. The known-bad fixture still reports `[1, 3]`.
+
+**Commit.** `1b82ace`.
+
+### 2026-09-22 20:10 — Bug fix #2: finding's B2 read one of the two F-number files
+
+**Issue.** 98 dangling F-number citations on the first run against the real
+repository.
+
+**Root cause.** F-numbers are **one global sequence across both
+repositories**, and the check resolved citations against moto-diag's
+`FOLLOWUPS.md` alone, so every mobile finding read as missing.
+
+**Fix.** Citations resolve against the union of both files.
+
+**Files.** `.claude/skills/finding/finding_check.py`.
+
+**Verified.** 98 → 9. The denominator was wrong, not the repository, which
+is why the first move was to check the denominator rather than weaken the
+assertion.
+
+**Commit.** `1bb3c3e`.
+
+### 2026-09-22 20:10 — Bug fix #3: the exclusion rule removed the one case it exists to catch
+
+**Issue.** Four of the nine remaining citations were not findings at all —
+`F650`, `F700`, `F750` are **BMW motorcycles**, `F401` is a **flake8 code**
+in a `# noqa:` comment, and `F48` is a **phase** whose documents cite their
+own name. A bare `F` plus digits is a model designation in this corpus at
+least as often as a finding.
+
+**Root cause of the FIX, which is the actual bug.** The first exclusion rule
+was a **ceiling**: ignore any citation above the highest assigned number. It
+removed all four false positives — and also skipped a citation of `F139` in
+a file that stops at `F138`, which is **exactly the failure the check exists
+to catch**. F135's shape is a phase citing a number that was never created,
+and that number is almost always one past the end.
+
+**Fix.** Named exclusions with a reason each (`NOT_FINDINGS`), plus a pinned
+`KNOWN_DANGLING` set for four historical citations. A named list cannot hide
+a citation one past the end.
+
+**Files.** `.claude/skills/finding/finding_check.py`;
+`fixtures/bad` cites `F139` deliberately.
+
+**Verified.** Real repository clean; the fixture's `F139` is caught; a test
+pins that the motorcycles are excluded **by name** and not by a ceiling.
+
+**Commit.** `1bb3c3e`.
+
+### 2026-09-22 20:10 — Bug fix #4: a push of three files the repo silently did not take
+
+**Issue.** The workspace `CLAUDE.md` was pushed pointing at `claude/cos.md`,
+`claude/drug-discovery.md` and `claude/coding-standards-jvm-and-node.md` —
+**none of which were in the repository.**
+
+**Root cause.** `workspace-docs/.gitignore` is an **allowlist** beginning
+with `/*`. `git add -A` added nothing and reported nothing; the commit
+succeeded and the push succeeded.
+
+**Fix.** `!/claude/` added to the allowlist; the three files committed.
+
+**Files.** `workspace-docs/.gitignore`.
+
+**Verified.** All three are tracked and pushed.
+
+**Note, because it is the point.** This is the **dangling-pointer failure
+this phase built `finding` to catch** — committed by the phase that built
+it, ten minutes later, in the other repository where the check does not run.
+Caught by reading `git status` output rather than trusting that `add -A` had
+done something.
+
+**Commit.** `e536740` (workspace-docs).
+
+### 2026-09-22 21:05 — Closing regression and final state
+
+**Regression 8,130 passed / 0 failed / 0 skipped / 49:50 at `b0ae748`.**
+`COLLECTED_TEST_FLOOR` 8,091 → 8,130 (+39: 23 closeout, 9 finding, 7
+refute). Three procedure folders, each with a hand-written known-bad fixture
+its assertion is required to fail on, a dated changelog in its own folder,
+and a script for the parts that are "run this and check that".
+
+No schema change, no migration, no database touched — this phase is process
+files and tests only.
