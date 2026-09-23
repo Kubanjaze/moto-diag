@@ -291,6 +291,44 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "first and sixth gear to smooth the shift action into second and "
        "higher gears.'"),
 
+    # --- Kawasaki --------------------------------------------------------
+    # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year
+    # spec pages, fetched by acquire.py (cookie jar) into
+    # ~/research/motodiag/acquired/Kawasaki/; each quote is the page's own
+    # spec row and names a foot-shift pattern ("return shift") or a manual
+    # clutch; refute kept each with names_model true. Three come from the
+    # ABS edition's page — the operator's one named exception — and say so.
+    _E("Kawasaki", "Ninja ZX-10R", MANUAL, ("zx 10r", "zx10r", "ninja zx 10r", "ninja zx10r"),
+       "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-10r/2026-ninja-zx-10r "
+       "(2026 Ninja ZX-10R), spec table: 'Transmission 6-speed, return shift'."),
+    _E("Kawasaki", "Ninja ZX-6R", MANUAL, ("zx 6r", "zx6r", "ninja zx 6r", "ninja zx6r"),
+       "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-6r/2027-ninja-zx-6r "
+       "(2027 Ninja ZX-6R), spec table: 'Transmission 6-speed, return shift'."),
+    _E("Kawasaki", "Ninja H2", MANUAL, ("ninja h2", "ninjah2", "ninja h2 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/ninja/hypersport/ninja-h2/2026-ninja-h2-abs "
+       "(2026 Ninja H2 ABS), spec table: 'Transmission 6-speed, return shift, "
+       "dog-ring'."),
+    _E("Kawasaki", "KLR650", MANUAL, ("klr650", "klr 650"),
+       "kawasaki.com/en-us/motorcycle/klr/dual-sport/klr650/2026-klr650 (2026 "
+       "KLR650), spec table: 'Transmission 5-speed, return shift with wet "
+       "multi-disc manual clutch'."),
+    _E("Kawasaki", "Z900", MANUAL, ("z900", "z 900", "z900 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/z/supernaked/z900/2026-z900-abs (2026 Z900 "
+       "ABS), spec table: 'Transmission 6-speed, return shift'."),
+    _E("Kawasaki", "Ninja 300", MANUAL, ("ninja 300", "ninja300", "ninja 300 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/ninja/sport/ninja-300/2026-ninja-300-abs "
+       "(2026 Ninja 300 ABS), spec table: 'Transmission 6-speed, return shift'."),
+    _E("Kawasaki", "KLX300", MANUAL, ("klx300", "klx 300"),
+       "kawasaki.com/en-us/motorcycle/klx/dual-sport/klx300/2026-klx300 (2026 "
+       "KLX300), spec table: 'Transmission 6-speed, return shift with wet "
+       "multi-disc manual clutch'."),
+    _E("Kawasaki", "Z650", MANUAL, ("z650", "z 650"),
+       "kawasaki.com/en-us/motorcycle/z/supernaked/z650/2025-z650 (2025 Z650), "
+       "spec table: 'Transmission 6-speed, return shift'."),
+
     # --- Kymco -----------------------------------------------------------
     _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",
                                  "agility 125", "agility125"),

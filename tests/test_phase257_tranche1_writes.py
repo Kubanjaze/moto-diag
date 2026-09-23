@@ -155,3 +155,32 @@ class TestSuzukiWrite:
 
     def test_the_make_is_the_scope(self):
         assert resolve_transmission("Kawasaki", "GSX-R750").provenance == "unknown"
+
+
+class TestKawasakiWrite:
+    """Run Kawasaki_20260923_100438: ten spellings, eight machines, each
+    quoting its page's spec row with 'return shift' or a manual clutch.
+    Ninja H2, Z900, Ninja 300 from the ABS edition's page (the one named
+    exception)."""
+
+    import pytest as _pytest
+
+    @_pytest.mark.parametrize("model", [
+        "ZX-10R", "Ninja ZX-10R", "ZX-6R", "Ninja ZX-6R", "Ninja H2", "KLR650", "KLR 650",
+        "Z900", "Ninja 300", "KLX300", "Z650",
+    ])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("Kawasaki", model)
+        assert r.provenance == "model-sourced", model
+        assert r.candidates == frozenset({"manual"}), model
+
+    @_pytest.mark.parametrize("model", ["Ninja 650", "ZX-14R", "Ninja H2 SX", "Z H2", "Versys 650",
+                                        "Vulcan 900", "ZX-10RR", "Z900RS", "KLX300SM"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """Ninja 650: refute killed its gear-count-only quote. The rest:
+        no qualifying page, or a different machine."""
+        assert resolve_transmission("Kawasaki", model).provenance == "unknown", model
+
+    def test_the_abs_entries_say_where_they_came_from(self):
+        for model in ("Ninja H2", "Z900", "Ninja 300"):
+            assert "ABS edition" in resolve_transmission("Kawasaki", model).entry.source, model

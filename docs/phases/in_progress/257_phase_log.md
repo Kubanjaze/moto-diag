@@ -1075,3 +1075,22 @@ Kept, `names_model` true from refute and the script, **not written** (a
 stop): ZX-10R, Ninja ZX-10R, ZX-6R, Ninja ZX-6R, KLR650, KLX300, Z650, and
 under the ABS exception Ninja H2, Z900, Ninja 300 (`edition: ABS`, refute
 naming the exception each time). no_evidence: ZX-14R, Ninja H2 SX, Z H2.
+
+### 2026-09-23 — Kawasaki write: ten spellings, eight entries
+
+From run `Kawasaki_20260923_100438` (operator: write the ten; Ninja 650's
+kill concerns only itself). One entry per model, each quoting the page's
+own spec row with "return shift" (KLR650 and KLX300 also "wet multi-disc
+manual clutch") — the standard refute applied to Ninja 650: Ninja ZX-10R
+(alias ZX-10R), Ninja ZX-6R (alias ZX-6R), KLR650, KLX300, Z650, and from
+the ABS edition's page, saying so in the source: Ninja H2, Z900, Ninja 300.
+
+| | before | after |
+|---|---|---|
+| census (unknown spellings) | 591 | **581** |
+| Kawasaki unknown | 39 | 29 |
+
+`TestKawasakiWrite`: 11 spellings resolve `manual`; Ninja 650, ZX-14R, Ninja
+H2 SX, Z H2, Versys 650, Vulcan 900, ZX-10RR, Z900RS, KLX300SM stay unknown;
+the ABS three name their edition. The 27 suites that mention these
+machines + Phase 255's axis suite: 995 pass.
