@@ -245,33 +245,17 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     # every refute verdict kept, every page names its model (model scope).
     # The SV650 is deliberately absent: its page is the SV650 ABS, which
     # refute read as family evidence (bug fix #3).
-    _E("Suzuki", "GSX-R750", MANUAL, ("gsx r750", "gsxr750", "gsx r 750", "gsxr 750"),
-       "suzukicycles.com/sportbike/2027/gsx-r750 (2027 GSX-R750): 'A "
-       "race-proven back-torque-limiting clutch contributes to smoother "
-       "downshifting and corner entry while the close-ratio six-speed "
-       "transmission features a taller first-gear ratio…'"),
-    _E("Suzuki", "GSX-R1000", MANUAL, ("gsx r1000", "gsxr1000", "gsx r 1000", "gsxr 1000"),
-       "suzukicycles.com/sportbike/2027/gsx-r1000 (2027 GSX-R1000): 'The "
-       "Suzuki Clutch Assist System (SCAS) multi-plate, wet clutch … The "
-       "Suzuki Bi-directional Quick Shift System enables smooth, clutchless "
-       "upshifts and downshifts of the cassette-style, six-speed "
-       "transmission.' A quick-shifter on a clutch-and-lever gearbox."),
-    _E("Suzuki", "GSX-R600", MANUAL, ("gsx r600", "gsxr600", "gsx r 600", "gsxr 600"),
-       "suzukicycles.com/sportbike/2027/gsx-r600 (2027 GSX-R600): 'A "
-       "race-proven back-torque-limiting clutch contributes to smoother "
-       "downshifting and corner entry while the close-ratio six-speed "
-       "transmission has Suzuki's legendary smooth and precise shifting "
-       "characteristics'."),
+    # E12 correction (2026-09-23): GSX-R750, GSX-R1000, GSX-R600, GSX-S1000,
+    # Boulevard M109R and V-Strom 1050 were reverted to unknown — their pages
+    # name only a gear count, a slipper/assist clutch or a quick-shifter, none
+    # of which shows a rider-operated clutch or a foot-shift pattern.
     _E("Suzuki", "V-Strom 650", MANUAL, ("v strom 650", "vstrom 650", "vstrom650"),
-       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'The "
-       "six-speed transmission suits sporty rides with tight first through "
-       "fifth gear ratios and a tall top gear (sixth gear) for highway "
-       "cruising.'"),
-    _E("Suzuki", "GSX-S1000", MANUAL, ("gsx s1000", "gsxs1000", "gsx s 1000", "gsxs 1000"),
-       "suzukicycles.com/street/2027/gsx-s1000 (2027 GSX-S1000): 'Like a "
-       "GSX-R1000, the race-proven, six-speed, close-ratio transmission "
-       "features vertically staggered shafts to reduce overall engine "
-       "length.'"),
+       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'This "
+       "V-Strom also features the Suzuki Easy Start System, which lets the "
+       "rider start the motorcycle with a momentary press of the start button "
+       "without pulling in the clutch lever when the transmission is in "
+       "neutral.' — a rider's clutch lever. Re-quoted under E12: the first "
+       "quote named only a gear count ('The six-speed transmission suits…')."),
     _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
        "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
        "five-speed transmission utilizes a cable-operated clutch with a "
@@ -281,15 +265,6 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "C50): 'With a light pull, the clutch feeds engine power to the "
        "smooth-shifting five-speed transmission and out to the clean shaft "
        "drive.'"),
-    _E("Suzuki", "Boulevard M109R", MANUAL, ("boulevard m109r", "m109r", "boulevard m 109r"),
-       "suzukicycles.com/cruiser/2025/boulevard-m109r (2025 Suzuki Boulevard "
-       "M109R): 'A wide-ratio, constant-mesh five-speed transmission "
-       "features a high fifth gear ratio for relaxed highway cruising.'"),
-    _E("Suzuki", "V-Strom 1050", MANUAL, ("v strom 1050", "vstrom 1050", "vstrom1050"),
-       "suzukicycles.com/adventure/2027/v-strom-1050 (2027 V-STROM 1050): "
-       "'The six-speed, close-ratio transmission have high gear ratios in "
-       "first and sixth gear to smooth the shift action into second and "
-       "higher gears.'"),
 
     # --- Kawasaki --------------------------------------------------------
     # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year
@@ -386,10 +361,13 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     _E("SYM", "Wolf CR300i", MANUAL,
        ("wolf cr300i", "wolf cr 300i", "wolfcr300i", "cr300i", "cr 300i",
         "pf30a3 eu"),
-       "SYM Wolf CR300i owner's manual: 'Always use the clutch when "
-       "changing gear.' (Changing Gears, PDF page 12, with 1st-to-2nd ... "
-       "5th-to-6th shift tables — six speeds); spec table PDF page 24: "
-       "'Model WOLF CR 300i / Specification PF30A3-EU', 278 cc."),
+       "SYM Wolf CR300i owner's manual (sha256 e50db79f…, the library's "
+       "v2/sympdf copy and the tranche's fetch are byte-identical), PDF page "
+       "22: 'Start engine, squeeze the clutch lever fully, push shift pedal "
+       "down to engage the 1st gear'. Re-quoted under E12 (2026-09-23): the "
+       "first quote, 'Always use the clutch when changing gear.' (page 12), "
+       "names no clutch lever or shift pedal. Spec table PDF page 24: 'Model "
+       "WOLF CR 300i / Specification PF30A3-EU', 278 cc."),
     _E("SYM", "Mio 50", CVT, ("mio", "mio 50", "mio50"),
        "SYM Mio 50 owner's manual: 'Clutch  Centrifugal type  "
        "Transmission  CVT'."),

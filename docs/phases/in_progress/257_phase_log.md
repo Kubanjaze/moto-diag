@@ -1122,3 +1122,44 @@ lever, cable-operated clutch, clutch pull, hydraulic clutch), six failing
 slipper clutch); only `manual` is held to it. **Break-it:** E12 off → 2;
 constant mesh counts → 3; the document's "manual" counts → 1; any clutch
 counts → 1; foot shift ignored → 9. 455 pass; 244G clean.
+
+### 2026-09-23 — E12 correction: every Phase 257 manual entry re-checked
+
+Each entry's quote, from its run's summary (`~/.cache/motodiag/e12_recheck_20260923.txt`),
+against E12; each failure's own page searched for a qualifying line.
+
+| entry | quote as written | E12 | action |
+|---|---|---|---|
+| SYM Wolf 150 (Classic 150 alias) | "Squeeze the clutch lever fully, operate change pedal…" | pass | — |
+| SYM Wolf CR300i | "Always use the clutch when changing gear." | **fail** | **re-quoted**, same manual (library copy byte-identical, sha256 e50db79f…), p. 22: "Start engine, squeeze the clutch lever fully, push shift pedal down to engage the 1st gear" |
+| Kymco K-Pipe | "Transmission……4-speed, foot shift" | pass | — |
+| Honda Grom 125 | "Transmission Manual; 5 speeds Clutch Multiplate wet" | pass | — |
+| Suzuki GSX-R750 | "…back-torque-limiting clutch … close-ratio six-speed…" | **fail** | **reverted to unknown** — page: slipper clutch, "Clutch Wet, multi-plate type", "adjustable shift lever" |
+| Suzuki GSX-R1000 | "…SCAS … wet clutch … clutchless upshifts … six-speed" | **fail** | **reverted** — page: SCAS, quick-shifter |
+| Suzuki GSX-R600 | "…back-torque-limiting clutch … close-ratio six-speed…" | **fail** | **reverted** — same as GSX-R750 |
+| Suzuki V-Strom 650 | "The six-speed transmission suits sporty rides…" | **fail** | **re-quoted**, same page: "…lets the rider start the motorcycle … without pulling in the clutch lever when the transmission is in neutral." |
+| Suzuki GSX-S1000 | "…six-speed, close-ratio transmission…" | **fail** | **reverted** — page: SCAS, quick-shifter |
+| Suzuki DR-Z400S | "…utilizes a cable-operated clutch…" | pass | — |
+| Suzuki Boulevard C50 | "With a light pull, the clutch feeds engine power…" | pass | — |
+| Suzuki Boulevard M109R | "A wide-ratio, constant-mesh five-speed transmission…" | **fail** | **reverted** — page: "Clutch Wet multi-plate type" only |
+| Suzuki V-Strom 1050 | "…close-ratio transmission … smooth the shift action…" | **fail** | **reverted** — page: SCAS, quick-shifter |
+| Kawasaki × 8 | "Transmission N-speed, return shift…" | pass | — |
+
+| | before | after |
+|---|---|---|
+| census (unknown spellings) | 581 | **587** |
+| Suzuki entries | 9 | 3 (V-Strom 650, DR-Z400S, Boulevard C50) |
+
+**At the rule's edge, flagged, not stretched:** the V-Strom 650 and SV650
+pages both say "The multi-plate clutch has precise push rod actuation of
+the pressure plate for a light (lever) pull and a consistent release
+point" — a clutch pull, ~10 words from "clutch", outside RIDER_CLUTCH's
+two-word window. Whether "clutch … pull" in one sentence counts is the
+operator's to decide. A shift *lever* (GSX-R) is not in the list either:
+DCT machines can carry one.
+
+A new guard, `TestEveryPhase257ManualEntryMeetsE12`: each of the 15 manual
+entries this phase wrote must carry an E12-qualifying quote in its own
+source string; putting V-Strom 650's gear-count quote back → 1 fails.
+895 pass across every suite mentioning these machines + the 255 axis suite;
+244G clean.

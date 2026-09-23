@@ -138,19 +138,21 @@ class TestSuzukiWrite:
     import pytest as _pytest
 
     @_pytest.mark.parametrize("model", [
-        "GSX-R750", "gsxr750", "GSX-R1000", "gsxr1000", "GSX-R600", "gsxr600",
-        "V-Strom 650", "vstrom650", "GSX-S1000", "gsxs1000", "DR-Z400S", "drz400s",
-        "Boulevard C50", "Boulevard M109R", "M109R", "V-Strom 1050", "vstrom1050",
+        "V-Strom 650", "vstrom650", "DR-Z400S", "drz400s", "Boulevard C50",
     ])
     def test_resolves_manual(self, model):
         r = resolve_transmission("Suzuki", model)
         assert r.provenance == "model-sourced", model
         assert r.candidates == frozenset({"manual"}), model
 
-    @_pytest.mark.parametrize("model", ["SV650", "SV650 Gladius", "GSX-R1100", "GSX-S750", "DR-Z400SM"])
+    @_pytest.mark.parametrize("model", ["SV650", "SV650 Gladius", "GSX-R1100", "GSX-S750", "DR-Z400SM",
+                                        "GSX-R750", "GSX-R1000", "GSX-R600", "GSX-S1000",
+                                        "Boulevard M109R", "V-Strom 1050"])
     def test_what_the_run_did_not_prove_stays_unknown(self, model):
-        """SV650: its page is the ABS (bug fix #3). GSX-R1100: no current
-        page. GSX-S750, DR-Z400SM: named in passing, no gearbox statement."""
+        """SV650: held (its page's quote is a gear count). GSX-R1100: no
+        current page. GSX-S750, DR-Z400SM: named in passing. The six after:
+        written in 9a02aa0, reverted under E12 — their pages show no
+        rider-operated clutch or foot-shift pattern."""
         assert resolve_transmission("Suzuki", model).provenance == "unknown", model
 
     def test_the_make_is_the_scope(self):
@@ -184,3 +186,31 @@ class TestKawasakiWrite:
     def test_the_abs_entries_say_where_they_came_from(self):
         for model in ("Ninja H2", "Z900", "Ninja 300"):
             assert "ABS edition" in resolve_transmission("Kawasaki", model).entry.source, model
+
+
+class TestEveryPhase257ManualEntryMeetsE12:
+    """Operator decision 2026-09-23: every entry this phase wrote as manual
+    carries, in its own source string, a quote that names a rider-operated
+    clutch, a foot-shift pattern or the word "manual" (entry_check E12).
+    A guard on the lookup itself: a later edit that swaps in a gear-count
+    quote fails here."""
+
+    import pytest as _pytest
+
+    PHASE_257 = [("SYM", "Wolf 150"), ("SYM", "Wolf CR300i"), ("Kymco", "K-Pipe"), ("Honda", "Grom 125"),
+                 ("Suzuki", "V-Strom 650"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
+                 ("Kawasaki", "Ninja ZX-10R"), ("Kawasaki", "Ninja ZX-6R"), ("Kawasaki", "Ninja H2"),
+                 ("Kawasaki", "KLR650"), ("Kawasaki", "Z900"), ("Kawasaki", "Ninja 300"),
+                 ("Kawasaki", "KLX300"), ("Kawasaki", "Z650")]
+
+    @_pytest.mark.parametrize("make,canonical", PHASE_257)
+    def test_its_quote_names_the_mechanism(self, make, canonical):
+        import re
+        import sys
+        from pathlib import Path
+        sys.path.insert(0, str(Path(__file__).resolve().parent.parent / ".claude" / "skills" / "source-transmission"))
+        from entry_check import manual_evidence
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        [e] = [e for e in TRANSMISSION_LOOKUP if e.make == make and e.canonical == canonical]
+        quoted = re.findall(r"'([^']{8,})'", e.source.replace("’", "'"))
+        assert any(manual_evidence(q) for q in quoted), (canonical, quoted)
