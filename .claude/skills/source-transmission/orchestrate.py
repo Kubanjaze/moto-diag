@@ -35,6 +35,7 @@ import pathlib
 import re
 import sqlite3
 import subprocess
+import sys
 
 HERE = pathlib.Path(__file__).resolve().parent
 REPO = HERE.parents[2]
@@ -219,3 +220,116 @@ def alert(title: str, message: str) -> None:
     subprocess.run(["osascript", "-e",
                     f'display notification {json.dumps(message)} with title {json.dumps(title)}'],
                    check=False)
+
+
+# --- the batch (one make) -----------------------------------------------------
+RUNS_ROOT = HOME / ".cache" / "motodiag" / "source-runs"
+LIBRARY = HOME / "research" / "motodiag"
+
+FINDING = {
+    "type": "object", "additionalProperties": False,
+    "required": ["make", "spelling", "outcome"],
+    "properties": {
+        "make": {"type": "string"}, "spelling": {"type": "string"},
+        "outcome": {"enum": ["found", "blocked", "not_found", "no_evidence"]},
+        "transmission": {"type": ["string", "null"]},
+        "candidates": {"type": "array", "items": {"type": "string"}},
+        "quote": {"type": "string"}, "document": {"type": "string"},
+        "page": {"type": ["string", "integer"]}, "evidence_kind": {"type": "string"},
+        "aliases": {"type": "array", "items": {"type": "string"}},
+        "ocr": {"type": "boolean"}, "needs_page_image": {"type": "boolean"},
+        "url_tried": {"type": "string"}, "note": {"type": "string"},
+    },
+}
+SOURCE_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["findings"],
+                 "properties": {"findings": {"type": "array", "items": FINDING}}}
+VERDICT_SCHEMA = {"type": "object", "additionalProperties": False, "required": ["verdicts"],
+                  "properties": {"verdicts": {"type": "array", "items": {
+                      "type": "object", "additionalProperties": False,
+                      "required": ["spelling", "verdict", "quote", "page", "reason"],
+                      "properties": {"spelling": {"type": "string"},
+                                     "verdict": {"enum": ["kept", "killed"]},
+                                     "quote": {"type": "string"}, "page": {"type": ["string", "integer"]},
+                                     "reason": {"type": "string"}}}}}}
+
+SOURCE_PROMPT = """You are the SOURCE stage of the moto-diag transmission procedure (.claude/skills/source-transmission/SKILL.md — read it first). Make: {make}. Spellings to source, exactly these: {spellings}.
+For EACH spelling return one finding. Rules, each from a real mistake:
+- On-disk library FIRST: {library} (text extracts are *.txt next to the PDFs). Only then maker portals / spec pages on the web.
+- If you fetch a web document, save its text under ./evidence/ in this directory and cite that path as `document`. Cite on-disk files by absolute path.
+- `quote` must be copied VERBATIM from the document (it will be string-matched against it), a full statement, not a table cell alone. Use the maker's own word for the mechanism.
+- `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. No evidence -> outcome no_evidence and NULL. Never infer from the make or the model family.
+- Blocked or not found are outcomes: record `url_tried`, never guess past them.
+- If the evidence is OCR of a scanned page, set ocr=true and needs_page_image=true.
+- evidence_kind: owners_manual | service_manual | workshop_manual | spec_sheet | maker_spec_page. Anything else (marketing, dealer, forum, mirror sites) is not evidence.
+- `aliases`: spellings and model codes the document itself uses for this machine.{hints}"""
+
+REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings and must not trust them. For each finding below, OPEN the cited document yourself at the cited page and decide kept or killed.
+Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
+Return one verdict per finding with the verbatim quote YOU saw and its page.
+Findings:
+{findings}"""
+
+
+def batch(make: str, spellings: list[str], hints: str = "") -> dict:
+    """Run one make end to end. Returns the summary; never edits the repository."""
+    import entry_check
+    r = make_run(RUNS_ROOT, make)
+    summary = {"make": make, "spellings": spellings, "run": str(r["run"]),
+               "started": dt.datetime.now().isoformat(timespec="seconds")}
+    src = run_stage(r, SOURCE_ROUTE, SOURCE_PROMPT.format(
+        make=make, spellings=json.dumps(spellings), library=LIBRARY,
+        hints=("\n- Hints: " + hints) if hints else ""), schema=SOURCE_SCHEMA)
+    (r["run"] / "source.json").write_text(json.dumps(src, indent=1), encoding="utf-8")
+    findings = (src.get("structured_output") or {}).get("findings", []) if not src.get("is_error") else []
+    summary["source_error"] = src.get("result") if src.get("is_error") else None
+    missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
+    rejections = entry_check.check(findings, r["clone"])
+    passed = [f for f in findings if f.get("outcome") == "found"
+              and not entry_check.check_one(f, r["clone"])]
+    verdicts = []
+    if passed:
+        ref = run_stage(r, REFUTE_ROUTE, REFUTE_PROMPT.format(
+            library=LIBRARY, findings=json.dumps(passed, indent=1)), schema=VERDICT_SCHEMA)
+        (r["run"] / "refute.json").write_text(json.dumps(ref, indent=1), encoding="utf-8")
+        verdicts = (ref.get("structured_output") or {}).get("verdicts", []) if not ref.get("is_error") else [
+            {"spelling": f["spelling"], "verdict": "error", "quote": "", "page": "", "reason": ref.get("result")}
+            for f in passed]
+    reasons = stops(findings, verdicts)
+    if missing:
+        reasons.append(f"source returned no finding for: {', '.join(missing)}")
+    if rejections:
+        reasons.append(f"{len(rejections)} finding(s) rejected by entry_check")
+    if summary["source_error"]:
+        reasons.append(f"source stage error: {summary['source_error']}")
+    kept = {v["spelling"] for v in verdicts if v.get("verdict") == "kept"}
+    summary.update({"findings": findings, "rejections": rejections, "verdicts": verdicts,
+                    "ready_to_write": [f for f in passed if f["spelling"] in kept],
+                    "stops": reasons, "finished": dt.datetime.now().isoformat(timespec="seconds")})
+    (r["run"] / "summary.json").write_text(json.dumps(summary, indent=1), encoding="utf-8")
+    if reasons:
+        alert("moto-diag source-transmission — STOP", f"{make}: {reasons[0]}")
+    else:
+        alert("moto-diag source-transmission", f"{make}: {len(kept)} ready to write")
+    return summary
+
+
+def main(argv: list[str]) -> int:
+    if len(argv) < 2 or argv[0] != "batch":
+        print("usage: orchestrate.py batch MAKE [SPELLING ...] [--hints TEXT]", file=sys.stderr)
+        return 2
+    hints = ""
+    if "--hints" in argv:
+        i = argv.index("--hints"); hints = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
+    make, spellings = argv[1], argv[2:]
+    if not spellings:
+        import census as C
+        spellings = [e["model"] for e in C.census(REPO / "data" / "motodiag.db", make).get(make, [])]
+    s = batch(make, spellings, hints)
+    print(json.dumps({k: s[k] for k in ("make", "run", "stops")}, indent=1))
+    print(f"ready to write: {[f['spelling'] for f in s['ready_to_write']]}")
+    return 1 if s["stops"] else 0
+
+
+if __name__ == "__main__":
+    sys.path.insert(0, str(HERE))
+    raise SystemExit(main(sys.argv[1:]))
