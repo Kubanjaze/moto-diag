@@ -108,3 +108,11 @@ gearbox", "Transmission Manual; 5 speeds"). Owner's manuals come next, and
 they say "manual choke", "manual fuel valve" and "manual adjustment".
 Triumph's "manual adjustment of compression and rebound damping" had made
 the dry run send five spellings. All 28 written manual entries still pass.
+
+## 2026-09-23 — the dry run's word list leans wide (operator)
+
+Added: automatic, V-belt, variator and single-speed. A miss drops a
+spelling silently; a false alarm costs one source call. On the five run
+artefacts, the new words bring back the six Triumph spellings through a
+tyre-pressure sentence ("automatic warnings"). BMW's "Automatic Stability
+Control" also matches, on a spelling already sent. No spelling is dropped.

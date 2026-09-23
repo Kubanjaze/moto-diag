@@ -686,6 +686,13 @@ class TestTheDryRun:
         assert s["sent_to_model"] == ["Putt 50"] and len(fake.source_calls()) == 1
         assert s["mechanism_lines"] == {"Putt 50": 1}
 
+    def test_a_v_belt_automatic_scooter_is_sent(self, run_with):
+        """Constructed (`zz_zip50_om.txt`): swap for the first real Yamaha
+        scooter manual line once one is fetched."""
+        fake = Fake()
+        s = run_with(fake, ["Zip 50"])
+        assert s["sent_to_model"] == ["Zip 50"] and s["mechanism_lines"] == {"Zip 50": 1}
+
     def test_only_spellings_with_a_line_are_sent(self, run_with):
         fake = Fake(findings=[_found()])
         s = run_with(fake, ["Trail 250", "Tempo 1200 RS", "Nowhere 999"])
@@ -704,6 +711,11 @@ class TestTheDryRun:
         "The AMT model has no clutch lever.",
         "A centrifugal clutch engages as revs rise.",
         "Direct drive from the motor to the wheel.",
+        # Added by the operator (2026-09-23): a miss drops a spelling silently.
+        "Transmission Automatic",
+        "Drive V-belt",
+        "The variator widens as revs rise.",
+        "Single-speed transmission",
     ])
     def test_each_named_mechanism_is_a_line(self, sentence):
         from entry_check import mechanism_lines

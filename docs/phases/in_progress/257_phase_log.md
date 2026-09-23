@@ -1904,3 +1904,36 @@ by operator decision.
 A first gear-count break left an empty alternative that matched
 everything. It went red for the wrong reason, so it was not a break. It
 was redone by removing the alternative.
+
+### 2026-09-23 — The dry run's word list: automatic, V-belt, variator, single-speed (operator decision)
+
+**Decision (operator):** add automatic, V-belt, variator and single-speed
+to `MECHANISM`. A miss here drops a spelling silently; a false alarm costs
+only one source call. The operator's measurement on today's library was
+two false alarms (BMW "Automatic Stability Control", Honda "automatic reset
+mode") and no misses.
+
+**Measured on the five run artefacts** (`candidates.json` of BMW 142134
+and 154333, Honda 155534, Yamaha 123945 and Triumph 172417; old and new
+`mechanism_lines` compared):
+- BMW K1300S: "… with Automatic Stability Control …". It was already sent,
+  so nothing flips.
+- **Triumph: 6 spellings flip back to sent**, all on one tyre-pressure
+  sentence: "This smart system generates convenient automatic warnings if
+  tyres fall below optimum levels." The six are Speed Triple, Street
+  Triple, RS, Speed Triple 1200, 1200 RS and Speed Triple 1200 RS. So after
+  this change, Triumph's dry run sends 6, not 0. That is a false alarm
+  under the stated trade-off, and it is reported.
+- Honda's "automatic reset mode" is not in these runs' excerpts.
+- No spelling flips from sent to skipped.
+
+**Planted:** `fixtures/library/zz_zip50_om.txt`, "Transmission  V-belt
+automatic". It is constructed, and it is to be swapped for a real line
+from the first Yamaha scooter manual fetched.
+
+**Tests** (`TestTheDryRun`, now 16): each new word has its own sentence,
+and the Zip 50 page is sent.
+
+**Break-it:**
+- each word dropped on its own → its own case fails (1 each);
+- automatic and V-belt dropped together → the Zip 50 test fails.

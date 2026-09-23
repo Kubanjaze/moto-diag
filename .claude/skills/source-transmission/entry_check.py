@@ -417,9 +417,11 @@ def passing_sentences(excerpts: list[dict]) -> list[str]:
 
 # The non-manual mechanisms in the maker's own words (operator, 2026-09-23):
 # a sentence naming one is something the source stage could classify from.
-# V-matic is Honda's CVT; Y-AMT is Yamaha's automated manual.
-MECHANISM = re.compile(r"\bv-?matic\b|\bcvt\b|\bdct\b|\by-amt\b|\bamt\b|\bcentrifugal\b|\bdirect[- ]drive\b",
-                       re.I)
+# V-matic is Honda's CVT; Y-AMT is Yamaha's automated manual. A miss here
+# drops a spelling silently; a false alarm costs one source call — so the
+# list leans wide (automatic, V-belt, variator, single-speed; operator).
+MECHANISM = re.compile(r"\bv-?matic\b|\bcvt\b|\bdct\b|\by-amt\b|\bamt\b|\bcentrifugal\b|\bdirect[- ]drive\b|"
+                       r"\bautomatic\b|\bv-belt\b|\bvariator\b|\bsingle[- ]speed\b", re.I)
 
 
 def mechanism_lines(excerpts: list[dict]) -> list[str]:
