@@ -266,7 +266,11 @@ def _in_excerpts(f: dict, doc: pathlib.Path, excerpts: dict, tag: str) -> list[s
 # 'V4 R', KTM '890 Adventure R Rally', '450 SX-F', '300 XC', 'RC 390', 'Evo'.
 # ABS is equipment, not a model, and is deliberately absent.
 VARIANT_TOKENS = {"gt", "r", "rr", "rs", "s", "sp", "se", "x", "xr", "gs", "sx", "xc", "f", "rc",
-                  "rally", "evo"}
+                  "rally", "evo", "carbon",
+                  # Transmissions — the variants that CHANGE the answer: Honda
+                  # 'Africa Twin DCT', Yamaha 'MT-09 Y-AMT' (y, amt), Honda
+                  # 'CB650R E-Clutch' (e). A DCT page never sources the manual.
+                  "dct", "y", "amt", "e"}
 
 
 def _words_of(text: str) -> list[str]:
@@ -296,6 +300,26 @@ def names_model(text: str, spelling: str) -> bool:
     return False
 
 
+def abs_edition(text: str, spelling: str) -> bool:
+    """Does text name '<exact model> ABS'? The operator's one named
+    exception (2026-09-23): ABS is braking equipment, so an ABS-edition page
+    sources its base model and the entry records that it did. Exactly the
+    model's words, then 'ABS' — 'Z900 SE ABS', 'Ninja H2 Carbon ABS' and
+    'SV650X ABS' are other machines and do not qualify."""
+    target = "".join(_words_of(spelling))
+    toks = _words_of(text)
+    for i, t in enumerate(toks):
+        if not target.startswith(t):
+            continue
+        acc, j = t, i
+        while len(acc) < len(target) and j + 1 < len(toks) and target.startswith(acc + toks[j + 1]):
+            j += 1
+            acc += toks[j]
+        if acc == target and j + 1 < len(toks) and toks[j + 1] == "abs":
+            return True
+    return False
+
+
 def document_text(f: dict, docs_root: pathlib.Path) -> str | None:
     """The text a finding's claims are checked against: the original behind
     an evidence copy, else the document itself (HTML as text)."""
@@ -304,6 +328,13 @@ def document_text(f: dict, docs_root: pathlib.Path) -> str | None:
     if _is_evidence_copy(doc, docs_root):
         return _original_text(doc, "", [])
     return _extract_text(doc) if doc.is_file() else None
+
+
+def model_edition(f: dict, docs_root: pathlib.Path) -> str | None:
+    """'ABS' when the cited document names '<model> ABS' — recorded on the
+    finding so the written entry says it came from the ABS edition."""
+    text = document_text(f, docs_root)
+    return "ABS" if text is not None and abs_edition(text, f.get("spelling", "")) else None
 
 
 def model_scope(f: dict, docs_root: pathlib.Path) -> str:

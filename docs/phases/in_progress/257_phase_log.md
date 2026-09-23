@@ -997,3 +997,26 @@ up top, spec row 100 lines down), `zz_nebula300_spec.txt` (another model's
 page naming the Comet in a menu, with its own CVT row). Tests +7.
 **Break-it:** no spec priority → 1; title = anywhere → 1; the next-line
 value ignored → 2; a label alone counted → 1. 394 pass; 244G clean.
+
+### 2026-09-23 — the ABS exception (operator decision), named and narrow
+
+A page for "<exact base model> ABS" may source the base model, and the
+finding records `edition: "ABS"` so the written entry says so. Nothing else
+qualifies. `entry_check.abs_edition(text, spelling)`: the model's exact
+words, then "ABS" — "Z900 SE ABS", "Ninja H2 Carbon ABS" are other
+machines. **Found while writing the negative controls: DCT was not a
+variant word**, so an "Africa Twin DCT" page would have named the Africa
+Twin — the one variant that changes the answer. `VARIANT_TOKENS` now
+carries the transmission variants (DCT; Y-AMT → y, amt; E-Clutch → e) and
+"carbon". Refute's prompt states the one exception and the DCT/Y-AMT/
+E-Clutch refusal. `acquire._newest_year_page`: the base model's year page;
+failing it, `<family>-abs`; never `-se-abs`, `-carbon-abs`, `-krt-edition`.
+
+Controls (tests): ABS pages source SV650, Z900, Ninja H2; "SV650X",
+"ZX-10RR", "V-Strom 650XT", "Africa Twin DCT", "MT-09 Y-AMT", "CB650R
+E-Clutch", "Z900 SE ABS", "Ninja H2 Carbon ABS" source nothing; the edition
+is recorded on the finding; the year hop takes -abs only without a base
+page and never a special edition. **Break-it:** DCT not a variant → 1;
+any suffix counts as an ABS edition → 6; no ABS edition ever → 4; any
+"-…abs" year page → 1; the ABS page beats the base → 1; edition not
+recorded → 1; Carbon not a variant → 1. 410 pass; 244G clean.

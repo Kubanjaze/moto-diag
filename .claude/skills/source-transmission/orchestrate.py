@@ -407,7 +407,7 @@ REFUTE_PROMPT = """You are the REFUTE stage. You did not produce these findings 
 If the cited document is under evidence/, it is a copy the source stage saved: its <file>.provenance.json names the ORIGINAL (and, for a URL, the pinned fetch in "fetched_as"). Check the quote against the ORIGINAL, not against the copy.
 Kill it if: the quote is not on that page; the page is about a different model; the quote does not actually establish the stated mechanism; or the evidence is OCR and the page IMAGE does not show it. When a finding is marked needs_page_image, find the scanned page image (PNG/JPG near the document; for the Grom: {library}/grom/out/ and {library}/grom/ocr.json maps page index -> OCR lines) and read the IMAGE with the Read tool. OCR text is never enough on its own.
 Render page images ONLY for findings marked needs_page_image (weak OCR); for a digital text layer, read the text.
-`verdict` answers whether the quote is on the page and establishes the mechanism. `names_model` answers a separate question: true ONLY if the document is about THIS exact model — not a variant of it ("SV650 ABS" is not the SV650), not a sibling, not the model named in passing (history, comparison). "kept" with names_model false is family evidence and writes nothing.
+`verdict` answers whether the quote is on the page and establishes the mechanism. `names_model` answers a separate question: true ONLY if the document is about THIS exact model — not a variant ("SV650X", "ZX-10RR", "V-Strom 650XT", "Z900 SE"), not a sibling, not the model named in passing (history, comparison). ONE named exception: a page for "<exact model> ABS" (e.g. "SV650 ABS" for the SV650) IS about the model — ABS is braking equipment — so names_model is true. Nothing else qualifies, and NEVER a transmission variant: "Africa Twin DCT", "MT-09 Y-AMT", "E-Clutch" pages do not name the base model. "kept" with names_model false is family evidence and writes nothing.
 `model_line`: copy VERBATIM the line on the document that names THIS exact model (the finding's spelling) — not a sibling, a variant or the family: "1290 Super Duke GT" does not name the 1290 Super Duke R; "F 800 GS" does not name the F800. If the document names only a sibling or the family, return "" — the finding is then family evidence and cannot write an entry. The line is checked against the document by a script.
 Return one verdict per finding with the verbatim quote YOU saw and its page.
 Findings:
@@ -470,6 +470,7 @@ def batch(make: str, spellings: list[str], hints: str = "") -> dict:
               and not entry_check.check_one(f, r["clone"], cands)]
     for f in passed:
         f["scope"] = entry_check.model_scope(f, r["clone"])     # the 4609 rule: model or family
+        f["edition"] = entry_check.model_edition(f, r["clone"])  # 'ABS': the one named exception
     verdicts = []
     over = token_stop(stages, len(sent))
     per_finding: list[dict] = []

@@ -273,14 +273,18 @@ def _newest_year_page(f: Fetcher, make: str, family_url: str, library: pathlib.P
     if row["status"] != 200:
         return None, None
     slug = family_url.rstrip("/").rsplit("/", 1)[-1]
-    years = {}
+    years: dict[int, str] = {}
+    abs_years: dict[int, str] = {}
     for href in re.findall(r"""href\s*=\s*["']([^"'#]+)["']""", row["body"].decode("utf-8", "ignore")):
-        m = re.search(rf"/{re.escape(slug)}/(20\d\d)-{re.escape(slug)}$", href)
+        m = re.search(rf"/{re.escape(slug)}/(20\d\d)-{re.escape(slug)}(-abs)?$", href)
         if m:
-            years[int(m.group(1))] = urllib.parse.urljoin(row["final_url"], href)
-    if not years:
+            (abs_years if m.group(2) else years)[int(m.group(1))] = urllib.parse.urljoin(row["final_url"], href)
+    # The base model's page; failing that, its '-abs' edition — the operator's
+    # one named exception. Never '-se-abs', '-carbon-abs', '-krt-edition'.
+    pick = years or abs_years
+    if not pick:
         return None, None
-    return years[max(years)], save(make, row, referrer=None, for_spellings=[], library=library)
+    return pick[max(pick)], save(make, row, referrer=None, for_spellings=[], library=library)
 
 
 def _fetch_matched(f, make, spellings, names, ref_for, to_spec, library, year_hop=False) -> dict:

@@ -407,3 +407,33 @@ class TestNamesModel:
     def test_named(self, text, spelling, named):
         from entry_check import names_model
         assert names_model(text, spelling) is named
+
+
+class TestTheAbsException:
+    """Operator decision 2026-09-23, named and narrow: a page for
+    '<exact base model> ABS' may source the base model, and the entry
+    records that it came from the ABS edition. Nothing else qualifies —
+    above all DCT, a transmission: the one variant that changes the answer."""
+
+    @pytest.mark.parametrize("text,spelling", [
+        ("2026 SV650 ABS specifications", "SV650"),
+        ("2026 Kawasaki Z900 ABS", "Z900"),
+        ("Ninja H2 ABS | Hypersport", "Ninja H2"),
+    ])
+    def test_an_abs_edition_page_sources_its_base_model(self, text, spelling):
+        from entry_check import abs_edition, names_model
+        assert names_model(text, spelling) and abs_edition(text, spelling)
+
+    @pytest.mark.parametrize("text,spelling", [
+        ("2019 Suzuki SV650X specifications", "SV650"),
+        ("2026 Ninja ZX-10RR", "ZX-10R"),
+        ("2025 V-Strom 650XT Adventure", "V-Strom 650"),
+        ("2026 CRF1100L Africa Twin DCT", "Africa Twin"),
+        ("MT-09 Y-AMT specifications", "MT-09"),
+        ("CB650R E-Clutch", "CB650R"),
+        ("2026 Z900 SE ABS", "Z900"),
+        ("2026 Ninja H2 Carbon ABS", "Ninja H2"),
+    ])
+    def test_nothing_else_sources_its_base(self, text, spelling):
+        from entry_check import abs_edition, names_model
+        assert not names_model(text, spelling) and not abs_edition(text, spelling)

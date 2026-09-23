@@ -246,3 +246,26 @@ class TestOperatorDecisions:
         path = lib / m["path"]
         side = json.loads(path.with_name(path.name + ".acquired.json").read_text())
         assert side["matches"]["X-Town 300i"]["kind"] == "contains"
+
+
+class TestTheAbsYearPage:
+    """Kawasaki's 2026 Z900 exists only as '2026-z900-abs' and
+    '2026-z900-se-abs' (measured). The base model's page wins; failing it,
+    the '-abs' edition; never the SE, Carbon or KRT editions."""
+
+    FAMILY = "https://www.kawasaki.com/en-us/motorcycle/z/supernaked/z900"
+
+    def _hop(self, lib, links):
+        body = "".join(f'<a href="/en-us/motorcycle/z/supernaked/z900/{l}">x</a>' for l in links).encode()
+        f = A.Fetcher(rate=0, transport=site({self.FAMILY: (200, body)}))
+        url, _ = A._newest_year_page(f, "Kawasaki", self.FAMILY, lib)
+        return url and url.rsplit("/", 1)[-1]
+
+    def test_the_abs_edition_when_it_is_the_only_one(self, lib):
+        assert self._hop(lib, ["2026-z900-se-abs", "2026-z900-abs", "build-your-kawasaki"]) == "2026-z900-abs"
+
+    def test_the_base_model_page_wins(self, lib):
+        assert self._hop(lib, ["2026-z900-abs", "2025-z900"]) == "2025-z900"
+
+    def test_special_editions_never_qualify(self, lib):
+        assert self._hop(lib, ["2026-z900-se-abs", "2026-z900-carbon-abs", "2026-z900-krt-edition"]) is None

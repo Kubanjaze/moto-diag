@@ -402,3 +402,17 @@ class TestBugFix3RefuteMustSayTheModelIsNamed:
                     model_line="ZZ Sprint 900 GT Owner's Manual")
         s = run_with(fake, ["Sprint 900"])
         assert s["ready_to_write"] == []
+
+
+class TestTheAbsEditionIsRecorded:
+    def test_an_abs_edition_finding_carries_its_edition(self, run_with):
+        """The Blade 650 ABS page, now under the exception: both refute and
+        the script say it names the Blade 650, and the entry-to-be records
+        that it came from the ABS edition."""
+        s = run_with(Fake(findings=[_blade()], names_model=True), ["Blade 650"])
+        [f] = s["ready_to_write"]
+        assert f["edition"] == "ABS" and s["stops"] == []
+
+    def test_a_plain_page_carries_no_edition(self, run_with):
+        s = run_with(Fake(findings=[_found()]), ["Trail 250"])
+        assert s["ready_to_write"][0]["edition"] is None
