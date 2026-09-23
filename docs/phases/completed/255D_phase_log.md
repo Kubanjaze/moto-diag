@@ -245,3 +245,33 @@ written in this phase removed a true positive along with the false ones:
 the ceiling, the global pin, and nearly the sub-brand narrowing in 255C.
 **An exclusion is a claim that something cannot be the thing you are looking
 for, and it needs a control like any other claim.**
+
+### 2026-09-22 21:55 — Bug fix #6: A7 could only ever be satisfied by the newest phase
+
+**Issue.** `verify_phase.sh`'s check 10 failed for 255D:
+`test_a_closed_phase_passes` reported **255C** — a phase that was correct
+and unchanged — failing A7.
+
+**Root cause.** A7 required `implementation.md`'s version header to name the
+phase. That header names the phase that closed **most recently**, so it can
+only ever name one. A7 was therefore unpassable for every phase except the
+newest, and **it broke the moment the next phase landed** — the test pinned
+255C, 255D closed, and 255C began failing on a document nobody had touched.
+
+**An assertion that only the newest artefact can satisfy is not a property
+of a closed phase.** It is a property of being last.
+
+**Fix.** A7 keeps the history-row requirement for every phase, and applies
+the version-header requirement **only when the phase is the newest row** in
+`implementation.md`.
+
+**Files.** `.claude/skills/closeout/closeout_check.py`.
+
+**Verified.** 255C and 255D both pass; the known-bad fixture still fires A7,
+because its phase has no history row at all; 23 closeout tests green.
+
+**Commit.** This one.
+
+**Why it was found at all.** Because the contract is run against a phase it
+was **not written for**. A check exercised only on its own phase would have
+passed for exactly one phase and then rotted silently.

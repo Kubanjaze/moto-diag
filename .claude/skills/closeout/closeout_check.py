@@ -120,14 +120,24 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
 
     # A7 — implementation.md carries a row, and its header names the phase
     hist = _read(repo / "implementation.md")
-    if not any(ln.startswith(f"| **{phase}** |") for ln in hist.splitlines()):
+    rows = [ln for ln in hist.splitlines() if ln.startswith("| **")]
+    if not any(ln.startswith(f"| **{phase}** |") for ln in rows):
         fails.append(f"A7 implementation.md has no history row for {phase}")
     else:
-        ver = next((ln for ln in hist.splitlines()
-                    if ln.startswith("**Version:**")), "")
-        if phase not in ver:
-            fails.append("A7 implementation.md version header does not name "
-                         f"phase {phase}: {ver[:80]!r}")
+        # The version header names the phase that closed MOST RECENTLY, so
+        # it can only ever name one. Asserting it for every phase made A7
+        # unpassable for all but the newest — it broke the moment the next
+        # phase landed, which is how this was found: the test pinned 255C,
+        # 255D closed, and 255C's A7 started failing on a document that was
+        # correct. **An assertion that only the newest artefact can satisfy
+        # is not a property of a closed phase.**
+        newest = rows[0].split("|")[1].strip().strip("*")
+        if phase == newest:
+            ver = next((ln for ln in hist.splitlines()
+                        if ln.startswith("**Version:**")), "")
+            if phase not in ver:
+                fails.append("A7 implementation.md version header does not "
+                             f"name the newest phase {phase}: {ver[:80]!r}")
     return fails
 
 
