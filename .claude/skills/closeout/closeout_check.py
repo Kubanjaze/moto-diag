@@ -19,6 +19,7 @@ from __future__ import annotations
 
 import pathlib
 import re
+import subprocess
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
@@ -35,6 +36,40 @@ def _read(p: pathlib.Path) -> str:
         return p.read_text(encoding="utf-8")
     except OSError:
         return ""
+
+
+def _git_root(path: pathlib.Path) -> pathlib.Path | None:
+    r = subprocess.run(["git", "-C", str(path), "rev-parse", "--show-toplevel"],
+                       capture_output=True, text=True)
+    return pathlib.Path(r.stdout.strip()) if r.returncode == 0 else None
+
+
+def unresolved_commits(repo: pathlib.Path, line: str) -> list[str] | None:
+    """The hashes on a `**Commit.**` line that do not name a real commit.
+
+    Returns None when the line names no hash at all — `This one.`, `See the
+    close-out commit` — which is a non-answer, not a citation. A trailing
+    `(name)` after a hash means the commit is in the sibling repository
+    `name` beside this one (`e536740` (workspace-docs)); a sibling that is
+    not checked out cannot be resolved, and that is reported, not skipped.
+
+    Resolution is `git cat-file -e <hash>^{commit}` — the only test of
+    "names its commit" that a fabricated hash cannot pass.
+    """
+    hashes = list(re.finditer(r"`([0-9a-f]{7,40})`(?:\s*\(([\w.-]+)\))?", line))
+    if not hashes:
+        return None
+    root = _git_root(repo)
+    bad = []
+    for m in hashes:
+        h, sibling = m.group(1), m.group(2)
+        where = (root.parent / sibling) if (root and sibling) else root
+        ok = where is not None and where.is_dir() and subprocess.run(
+            ["git", "-C", str(where), "cat-file", "-e", f"{h}^{{commit}}"],
+            capture_output=True).returncode == 0
+        if not ok:
+            bad.append(f"{h}" + (f" ({sibling})" if sibling else ""))
+    return bad
 
 
 def check(repo: pathlib.Path, phase: str) -> list[str]:
@@ -90,11 +125,31 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
         if sorted(nums) != expected:
             fails.append(f"A4 bug-fix numbering is not contiguous from #1: "
                          f"found {sorted(nums)}, expected {expected}")
-        no_commit = [n for n, body in entries
-                     if not re.search(r"\*\*Commit\.?\*\*", body, re.I)]
+        # A Commit line must NAME a commit, and the commit must exist. The
+        # first cut only looked for the words `**Commit.**`, so `This one.`
+        # and `See the close-out commit for this fix.` both passed — 255C #7
+        # and 255D #5/#6 shipped that way. A check that passes on a
+        # non-answer is the defect this folder exists to stop shipping.
+        no_commit, non_answer, unresolved = [], [], []
+        for n, body in entries:
+            m = re.search(r"^\*\*Commit\.?\*\*(.*)$", body, re.I | re.M)
+            if not m:
+                no_commit.append(int(n))
+                continue
+            bad = unresolved_commits(repo, m.group(1))
+            if bad is None:
+                non_answer.append(f"#{n} {m.group(1).strip()!r}")
+            elif bad:
+                unresolved.append(f"#{n} {', '.join(bad)}")
         if no_commit:
             fails.append(f"A4 bug-fix entries with no Commit line: "
-                         f"{sorted(int(n) for n in no_commit)}")
+                         f"{sorted(no_commit)}")
+        if non_answer:
+            fails.append("A4 bug-fix Commit lines that name no `backticked` commit hash: "
+                         + "; ".join(non_answer))
+        if unresolved:
+            fails.append("A4 bug-fix commits that do not resolve "
+                         "(git cat-file -e): " + "; ".join(unresolved))
     # No bug fixes at all is legitimate — a phase may have found none.
 
     # A5 — a regression line carrying BOTH a commit hash and a count

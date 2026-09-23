@@ -460,7 +460,9 @@ containment directly, which is what its docstring always claimed it did.
 **Measure what produced the number** applies to assertions as well as to
 counts.
 
-**Commit.** See the close-out commit for this fix.
+**Commit.** `f279533`. *(Was "See the close-out commit for this fix" — a
+non-answer that A4 passed until Phase 255D's close-out fixes made it resolve
+the hash.)*
 
 ### 2026-09-22 19:30 — Closing regression and final state
 

@@ -10,6 +10,11 @@
 #   that would have passed a 122-word row. Decision 6 says one
 #   implementation, so check 6 calls roadmap_words.py.
 #
+#   Check 2 was  git diff -- src/ tests/  and could not see .claude/, so a
+#   skill-script change after the regression hash passed as "docs only"
+#   (F137). It calls code_after_regression.py, which treats every path as
+#   code unless it is positively documentation.
+#
 #   Check 5 is tightened to the register format the 255C log uses: not merely
 #   that "bug fix #" appears somewhere, but that the numbering is contiguous
 #   from #1 and every entry names its commit. closeout_check.py decides that,
@@ -34,7 +39,10 @@ $GIT log origin/master --oneline | grep -E "$TIP" || echo "MISSING"
 $GIT status --short; echo "--- unpushed (empty) ---"; $GIT log origin/master..master --oneline
 
 echo "=== 2. no code after regression hash ==="
-$GIT diff "$REG_HASH".."$TIP" --stat -- src/ tests/ | tail -3; echo "(empty = docs only)"
+# Was `git diff -- src/ tests/`, which could not see .claude/ (F137). The
+# scope is code_after_regression.py's, so the test and this cannot drift.
+"$PY" -B "$DIR/code_after_regression.py" "$REPO" "$REG_HASH" "$TIP" \
+  && echo "  none (docs only)"
 
 echo "=== 3. docs in completed ==="
 ls docs/phases/completed/ | grep "^${PHASE}_"

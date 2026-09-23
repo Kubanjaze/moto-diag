@@ -18,7 +18,7 @@ and each is a file fact rather than a claim:
 | A1 | Both phase docs in `docs/phases/completed/`, neither left in `in_progress/` |
 | A2 | The phase log's status line reads Complete |
 | A3 | The implementation doc has a **Deviations** section |
-| A4 | Bug fixes are a contiguous dated register from `#1`, each naming its commit |
+| A4 | Bug fixes are a contiguous dated register from `#1`, each naming a commit that **resolves** (`git cat-file -e`) |
 | A5 | A regression line carrying **both** a commit hash and a passed-test count |
 | A6 | A ROADMAP row whose **body cell** is within 120 words |
 | A7 | An `implementation.md` history row, and a version header naming the phase |
@@ -63,8 +63,10 @@ check.
 | `closeout_check.py` | the seven assertions; the single implementation |
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
+| `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
+| `fixtures/check2` | hand-written path lists for check 2 |
 | `CHANGELOG.md` | what changed here and why |
 
 ## Two things that will bite you

@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F136** (this file); the mobile
-file's highest is **F114**.
+At the time of writing the highest assigned is **F138** (this file); the mobile
+file's highest is **F115**.
 
 ---
 
@@ -963,3 +963,51 @@ scopes over `src/` **and** `tests/`, because a pinned literal in a test is a
 consumer — it is the one that fails the build. Cheap to do: the sixteen were
 found by AST; the seventeenth would have been found by the same pass with
 `tests/` in its roots.
+
+### F137 — CLOSED by Phase 255D fix #8, `b934926` (2026-09-22)
+
+**`verify_phase.sh` check 2 scoped "code" to `src/` and `tests/`, and could not see `.claude/`**
+
+Check 2 asks whether any code changed between the regression hash and the
+tip — whether the green run describes the tree that shipped. It was
+`git diff REG..TIP -- src/ tests/`. Phase 255D's bug fixes #5 and #6 changed
+`.claude/skills/closeout/closeout_check.py` and
+`.claude/skills/finding/finding_check.py` **after** the closing regression
+at `b0ae748`, and check 2 printed only the floor-test bump.
+
+Measured over the tracked tree: code lives outside those two directories in
+`.claude/` (six scripts, the hook settings, the fixtures the checks read),
+`scripts/`, `data/pricing/`, `main.py`, `pyproject.toml`, the Docker files
+and `.pre-commit-config.yaml`. **The two-directory scope was an exclusion
+nobody had written down as one** — everything else was silently treated as
+documentation. It is F136's shape again: a census scoped to where the author
+expected the thing to be.
+
+**Closed by** `code_after_regression.py`, which inverts the rule: a path is
+code unless it is positively documentation (`docs/`, `.md` outside the code
+directories, `LICENSE`, `.gitignore`, `.gitkeep`). Controls: a hand-written
+path-list fixture; the real `b0ae748..3dfc78a` range, which must report both
+skill scripts; and a census asserting every tracked script classifies as
+code. With the old scope restored, all three fail.
+
+### F138
+
+**The workspace `CLAUDE.md` is 926 lines, and shrinking it further is a decision about what stops being shared, not a tidy-up**
+
+Phase 255D split the workspace `CLAUDE.md` (in `workspace-docs`) from
+1,337 lines to 889, moving every project-specific line out. It has since
+grown to **926** with that phase's own additions. The phase's Deviations
+section records why 889 was not the ~174 estimated: 174 measured the rules
+*cited in a working session*, not what is legitimately cross-project.
+
+What remains is cross-project by content — the phase template, versioning,
+Lean API usage, Python standards, architecture, the failure-family taxonomy,
+prompt templates and a 149-line change log. Moving more means
+deciding that some of those stop being shared rules for every project, which
+is the operator's judgement and not a mechanical split.
+
+**What would close it:** a decision, per section, on whether it stays
+shared, moves to a project `CLAUDE.md` or a skill folder, or is archived —
+and for the change log, whether it moves to its own file. Filed as a
+follow-up by instruction; deliberately not done in 255D.
+
