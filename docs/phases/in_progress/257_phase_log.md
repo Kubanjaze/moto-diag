@@ -936,3 +936,35 @@ and says owner's manuals come from dealers — a form submission, not
 pursued. **Reported to the operator for a decision** on whether equipment
 variants such as ABS become a named, tested exception. SV650 stays
 `unknown`.
+
+### 2026-09-23 — Kawasaki: acquire + batch — STOPPED on a real miscitation (nothing written)
+
+**Acquire** (`fetch Kawasaki`, 22 fetches, cookie jar): 8 spellings matched
+Kawasaki's own model-year spec pages — KLR650, KLX300, Ninja 650, Z650,
+Ninja ZX-6R / ZX-6R, Ninja ZX-10R / ZX-10R (6 machines). 23 unmatched
+(older machines: KZ, GPz, ZX-7R/9R/12R, Vulcan 500–2000, …). **8 failed
+`no_model_year_link`** — Ninja H2, H2 SX, Z H2, ZX-14R, Z900, Ninja 300,
+Versys 650, Vulcan 900: their current year pages exist only as ABS or
+special editions (`2026-z900-abs`, `2026-ninja-h2-carbon-abs`, measured
+on two). Not fetched: the same question as SV650 ABS, pending the
+operator's decision on equipment variants.
+
+**Batch** `Kawasaki_20260923_095107`: 13 sent, source 95,192 tokens (2
+turns, 7,322 per spelling), refute 230,502 (8 turns, 38,417 per finding —
+6 refuted). **Stop: 4 entry_check rejections, all ZX-10R / Ninja ZX-10R
+(E3 + E10).** Diagnosed: the source stage quoted "The dual-direction
+Kawasaki Quick Shifter (KQS) system …" from the excerpt of the *family*
+page (`…ninja-zx-10r.html.txt`) but cited the *model-year* page
+(`…ninja-zx-10r_2026-ninja-zx-10r.html.txt`), which does not contain it.
+The gate did its job — a quote attributed to the wrong document never
+reached refute. Also noted: the year page's own spec line ("Transmission
+6-speed, return shift", measured in D7) was not among its excerpts —
+candidates' ranking/caps left it out; recorded, not changed.
+
+The other six — ZX-6R, Ninja ZX-6R, KLR650, Ninja 650, KLX300, Z650 — were
+each kept by refute with `names_model: true` and model-scope by the
+script (bug fix #3's gate, first live run): each cites its own page's spec
+table ("Transmission 6-speed, return shift"; KLR650 "5-speed"). Under the
+standing rule a stop means **no write**; reported to the operator.
+Refute's per-finding attribution again collapsed to "(answer)" — refute
+reads all pages per call.
