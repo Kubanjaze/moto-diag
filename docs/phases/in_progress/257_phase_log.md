@@ -1425,3 +1425,23 @@ before either was true. Fixed in the next commit: only the occurrence in
 test beside it keeps R1200GS — row 4605 is unscoped, so it reaches a
 sourced R1200GS too); 255B: 30 pass; the 26 related suites + the 255 axis
 suite re-run: **1,206 pass**.
+
+### 2026-09-23 — Operator decisions on BMW's two E12 questions: both NO
+
+**1. No clause-boundary rule for the negation window.** What I reported as
+E12 false negatives (K1600GT, K1300S, K1300) were **reader misses**: each
+spelling's own excerpts held lines that pass E12, and the source stage
+quoted a troubleshooting row instead. Checked against the run's
+`candidates.json` with E12's own `_sentences()`: K1600GT 4 passing lines,
+K1300S 9, K1200S 7. The operator's instances: K1600GT p. 84 and K1300S
+p. 70 carry "Select neutral or, if a gear is engaged, pull the clutch
+lever." — the very line that wrote R 1200 GS; K1200S p. 95 carries "Press
+the clutch lever."
+
+**2. No reversed-hydraulic rule.** A proposal is run before its reach is
+claimed: E12's `_sentences()` puts "Hydraulic actuation" and "Hydraulic
+operation." in sentences of their own (checked), so a one-sentence
+"clutch … hydraulic" rule qualifies neither; and `names_model` is False for
+both documents (R 850 R / R 1150 R for R1150, R 1100 S for R1100 —
+checked): family evidence, zero entries either way. My report claimed a
+reach I had not measured.
