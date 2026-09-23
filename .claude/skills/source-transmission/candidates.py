@@ -47,8 +47,8 @@ HERE = pathlib.Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
 import library_index  # noqa: E402
-from entry_check import (_extract_text, _key, acquired_provenance, named_as_model,  # noqa: E402
-                         names_make, weak_spelling)
+from entry_check import (_extract_text, _key, acquired_provenance,  # noqa: E402
+                         named_as_model, names_make, weak_spelling)
 
 LIBRARY = pathlib.Path.home() / "research" / "motodiag"
 CONTEXT = 40                 # lines either side of a hit
@@ -69,6 +69,25 @@ SKIP_NAME = re.compile(r"^\d{3}[A-Z]?_|(^|[_.-])log[_.-]|fetchlog", re.I)
 GEARBOX = re.compile(r"transmission|gearbox|gear ?shift|shift pedal|clutch|\d-speed|speeds?\b|"
                      r"v-?matic|cvt|variator|dct|dual clutch|centrifugal|constant mesh", re.I)
 PAGE_MARK = re.compile(r"^\s*(?:=+|<<<)\s*PAGE\s+(\d+)\s*(?:=+|>>>)\s*$", re.I)
+
+
+# A spec-table row: the label alone or first on its line, its value on the
+# same line or the next non-empty one ("Transmission / 6-speed, return shift",
+# "Transmission  CVT Automatic", "Gearbox 6-Speed").
+SPEC_LABEL = re.compile(r"^\s*(?:transmission|gearbox)\b\W*(.*)$", re.I)
+SPEC_VALUE = re.compile(r"\d\s*-?\s*speed|\bspeeds?\b|\bcvt\b|automatic|\bmanual\b|\bdct\b|dual.clutch|"
+                        r"direct drive|single.speed|constant.mesh", re.I)
+
+
+def spec_lines(lines: list[str]) -> list[int]:
+    """Indexes of spec-table rows naming the gearbox."""
+    out = []
+    for i, line in enumerate(lines):
+        m = SPEC_LABEL.match(line)
+        if m and (SPEC_VALUE.search(m.group(1)) or (i + 1 < len(lines) and not m.group(1).strip()
+                                                    and SPEC_VALUE.search(lines[i + 1]))):
+            out.append(i)
+    return out
 
 
 def documents(library: pathlib.Path, maker_only: bool = True) -> list[pathlib.Path]:
@@ -133,8 +152,22 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
         lines, pages = _lines(text)
         line_keys = [_key(x) for x in lines]
         file_key = _key(doc.name)
+        specs = spec_lines(lines)
         for s in wanted:
             about = any(k in file_key for k in keys[s])
+            # A document about this machine (its file name or its title
+            # names it) gives its own spec line first,
+            # ahead of every ranked window: the 2026 ZX-10R page's "Transmission
+            # / 6-speed, return shift" sat 97 lines from any mention of the name
+            # and lost on rank. Not "names it anywhere": every Suzuki page's menu
+            # says "Suzuki GSX-R750", and the V-Strom's spec row is not the GSX-R's.
+            # Its title is its FIRST line (HTML → text puts <title> first), not
+            # the first few: a menu one line down names every machine the maker sells.
+            title = _key(next((x for x in lines if not PAGE_MARK.match(x)), ""))
+            if about or any(k in title for k in keys[s]):
+                for i in specs:
+                    lo, hi = max(0, i - CONTEXT), min(len(lines), i + CONTEXT + 1)
+                    hits[s].append(((0,), doc, i, lo, hi, "\n".join(lines[lo:hi]), pages[i], "spec"))
             for i, lk in enumerate(line_keys):
                 by_name = any(k in lk for k in keys[s])
                 if by_name or (about and GEARBOX.search(lines[i])):
@@ -144,7 +177,7 @@ def candidates(spellings: list[str], library: pathlib.Path = LIBRARY, *,
                     # table beats a model list.
                     terms = {t.lower() for t in GEARBOX.findall(window)}
                     dense = sum(bool(GEARBOX.search(x)) for x in lines[lo:hi])
-                    rank = (-len(terms), -dense, str(doc), i)
+                    rank = (1, -len(terms), -dense, str(doc), i)
                     hits[s].append((rank, doc, i, lo, hi, window, pages[i],
                                     "name" if by_name else "file"))
     out: dict[str, list[dict]] = {}

@@ -165,3 +165,34 @@ class TestAcquiredFilesNeedProvenance:
         fixture page has none (acquire.save writes one beside every original)."""
         docs = {pathlib.Path(e["document"]).name for e in _one("Wolf 150", make="SYM")}
         assert docs == {"wolf150_owner_manual.txt"}
+
+
+class TestAPagesOwnSpecLineIsAlwaysRead:
+    """The 2026 ZX-10R page: its spec row 'Transmission / 6-speed, return
+    shift' sat 97 lines from any mention of the name and lost to name
+    windows on rank and the character cap; the source stage then quoted
+    another page and the batch stopped. A document whose file name or title
+    names the machine now gives its own spec line first."""
+
+    def test_the_spec_line_survives_a_tight_cap(self, monkeypatch):
+        monkeypatch.setattr(C, "MAX_CHARS", 6000)
+        ex = _one("Comet 700", make="ZZ")
+        own = [e for e in ex if e["document"].endswith("zz_comet700_om.txt") and e["anchor"] == "spec"]
+        assert own and "6-speed, return shift" in own[0]["text"]
+        assert sum(len(e["text"]) for e in ex) <= 6000
+
+    def test_another_models_spec_row_is_not_given_priority(self):
+        """zz_nebula300_spec.txt names 'ZZ Comet 700' in its menu, not its
+        title; its CVT row is the Nebula's, not the Comet's."""
+        ex = _one("Comet 700", make="ZZ")
+        assert not [e for e in ex if e["document"].endswith("zz_nebula300_spec.txt") and e["anchor"] == "spec"]
+
+    @pytest.mark.parametrize("lines,found", [
+        (["Transmission", "6-speed, return shift"], [0]),
+        (["Transmission  CVT Automatic"], [0]),
+        (["Gearbox 6-Speed"], [0]),
+        (["Transmission Features", "Suzuki's six-speed is great"], []),
+        (["The transmission is smooth"], []),
+    ])
+    def test_spec_lines(self, lines, found):
+        assert C.spec_lines(lines) == found

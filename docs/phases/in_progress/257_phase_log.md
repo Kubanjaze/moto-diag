@@ -968,3 +968,32 @@ table ("Transmission 6-speed, return shift"; KLR650 "5-speed"). Under the
 standing rule a stop means **no write**; reported to the operator.
 Refute's per-finding attribution again collapsed to "(answer)" — refute
 reads all pages per call.
+
+### 2026-09-23 — candidates.py: a page's own spec line is always among its excerpts
+
+The Kawasaki stop's root in candidates: on the 2026 ZX-10R page the spec
+row ("Transmission" / "6-speed, return shift", line 1516) sat 97 lines from
+any mention of the name, so no ±40 name window covered it; the file-name
+anchor did, but ranked behind five name windows that had used 38.5K of the
+40K cap. **Fix:** `spec_lines()` finds spec-table rows (a "Transmission"
+or "Gearbox" label first on its line, its value on the same line or the
+next — N-speed, CVT, automatic, manual, DCT, direct drive…; "Transmission
+Features" is not one); a document **about** the machine — its file name
+or its title (its FIRST line) names it — contributes each spec-row window
+first, ahead of every ranked window, inside the same caps. A first cut
+counted "names it anywhere" (via `named_as_model`) as about: every Suzuki
+page's menu says "Suzuki GSX-R750", the V-Strom's spec row took the
+GSX-R750's slots, and six Suzuki controls failed; a second cut took the
+first three lines as the title, and a fixture with a menu on line 2
+caught it. Both corrected before commit.
+
+**Controls on the real library** (`~/.cache/motodiag/candidates_controls_20260923.txt`):
+the 2026 ZX-10R spec line is present (39,755 chars, under the cap); **20/20**
+previously cited quotes are still inside their cited document's excerpts
+— tranche 1 (K-Pipe, Wolf CR300i, Grom), Kymco (Super 8-50 X), the ten
+Suzuki findings and the six clean Kawasaki findings; every spelling ≤ 8
+excerpts and ≤ 40,000 chars. Fixtures: `zz_comet700_om.txt` (name mentions
+up top, spec row 100 lines down), `zz_nebula300_spec.txt` (another model's
+page naming the Comet in a menu, with its own CVT row). Tests +7.
+**Break-it:** no spec priority → 1; title = anywhere → 1; the next-line
+value ignored → 2; a label alone counted → 1. 394 pass; 244G clean.
