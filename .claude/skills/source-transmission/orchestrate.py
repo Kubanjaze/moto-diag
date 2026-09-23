@@ -426,6 +426,7 @@ You have no tools and one answer. Everything you may cite is in the EXCERPTS bel
 - `document` is an excerpt's `document` path, exactly as given. `page` is the page of the quoted line: the nearest PAGE marker above it inside the excerpt text, else the excerpt's `page`, else its `lines` range.
 - `quote` must be copied VERBATIM from that excerpt's text (it is string-matched against the excerpt and against the document), a full statement, not a table cell alone. Use the maker's own word for the mechanism.
 - For `manual`, the quote itself must name a rider-operated clutch (clutch lever, cable or hydraulic clutch, a clutch pull), a foot-shift pattern (return shift, shift pedal) or the word "manual" — in a sentence with no DCT, dual-clutch, Y-AMT, automated, automatic or clutchless wording, and not negated ("without a clutch lever"). A gear count, "constant mesh" or "close-ratio" is not enough (entry_check E12 rejects it). If no excerpt line qualifies, choose no_evidence.
+- When several lines qualify, choose one whose sentence has no negation word at all: a troubleshooting row whose condition says "not" fails even when its remedy names the lever.
 - An excerpt with anchor "file" comes from a document whose file name names the machine, but that passage does not name it: say so in `note`.
 - `transmission` is one of: manual, cvt, dct, semi_auto_centrifugal, semi_auto_actuated, direct_drive. Ambiguous variants -> `candidates` instead. If the excerpts do not establish the gearbox of THIS machine -> outcome no_evidence and transmission NULL. Never infer from the make or the model family, and never from anything but the excerpts.
 - If the text is OCR of a scanned page (garbled words, broken spacing), set ocr=true and needs_page_image=true.
@@ -513,6 +514,16 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
         f["source_route"] = route_label(route)   # structured, per finding: model@effort, carried into the write
     missing = sorted(set(spellings) - {f.get("spelling") for f in findings})
     rejections = entry_check.check(findings, r["clone"], cands)
+    # C (operator, 2026-09-23): an E12 rejection is measured, not retried —
+    # did that spelling's own excerpts hold a sentence that passes E12?
+    e12_reader, noted = {}, []
+    for x in rejections:
+        f = next((f for f in findings if x.startswith(f"E12 {f.get('make')} | {f.get('spelling')}:")), None)
+        if f is not None:
+            e12_reader[f["spelling"]] = entry_check.reader_note(cands.get(f["spelling"], []))
+            x += f" [{e12_reader[f['spelling']]}]"
+        noted.append(x)
+    rejections = noted
     passed = [f for f in findings if f.get("outcome") == "found"
               and not entry_check.check_one(f, r["clone"], cands)]
     for f in passed:
@@ -579,7 +590,7 @@ def batch(make: str, spellings: list[str], hints: str = "", source_route: str = 
                                 f"refute {'named' if refute_says else 'family'})")
     if disagree:
         withheld.append(f"refute and the script disagree on whether the page names the model: {', '.join(disagree)}")
-    summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "verdicts": verdicts,
+    summary.update({"not_a_machine": unnamed, "sent_to_model": sent, "tokens": tokens, "findings": findings, "rejections": rejections, "e12_reader": e12_reader, "verdicts": verdicts,
                     "family_evidence": family, "refute_per_finding": per_finding,
                     # A systemic stop writes nothing; a withheld finding writes nothing itself.
                     "ready_to_write": [] if reasons else writable, "withheld": withheld,

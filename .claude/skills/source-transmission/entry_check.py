@@ -387,6 +387,23 @@ def manual_evidence(quote: str) -> bool:
     return False
 
 
+def passing_sentences(excerpts: list[dict]) -> list[str]:
+    """The sentences in a spelling's excerpts that pass E12, deduplicated.
+    Measures the reader, not the rule (operator C, 2026-09-23): when E12
+    rejects a finding, were there lines it could have quoted instead?"""
+    seen: dict[str, None] = {}
+    for e in excerpts or []:
+        for s in _sentences(" ".join(str(e.get("text", "")).split())):
+            if manual_evidence(s):
+                seen.setdefault(s, None)
+    return list(seen)
+
+
+def reader_note(excerpts: list[dict]) -> str:
+    n = len(passing_sentences(excerpts))
+    return f"reader miss: {n} passing line{'s' if n != 1 else ''}" if n else "no passing line in its excerpts"
+
+
 def document_text(f: dict, docs_root: pathlib.Path) -> str | None:
     """The text a finding's claims are checked against: the original behind
     an evidence copy, else the document itself (HTML as text)."""

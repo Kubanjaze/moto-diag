@@ -608,3 +608,42 @@ class TestTheSourceRouteFallback:
         lines = (pathlib.Path(s["run"]) / "source.stream.jsonl").read_text().split("\n")
         events = [json.loads(x) for x in lines if x.strip()]
         assert events and events[-1]["type"] == "result"
+
+
+class TestCTheReaderIsMeasured:
+    """Operator C (2026-09-23): for every E12 rejection the summary states
+    whether that spelling's own excerpts held a sentence passing E12 — the
+    BMW rejections were reader misses (K1600GT 4 lines, K1300S 9), not a
+    rule defect, and the summary did not say so. Script only; no model."""
+
+    def test_a_reader_miss_is_counted_beside_the_rejection(self, run_with):
+        """The Blade page's gear-count sentence fails E12; its own
+        'Transmission  6-speed, return shift' row passes."""
+        f = dict(_blade(), quote="The close-ratio, six-speed transmission features carefully selected ratios.")
+        fake = Fake(findings=[f])
+        s = run_with(fake, ["Blade 650"])
+        assert s["e12_reader"] == {"Blade 650": "reader miss: 1 passing line"}
+        assert any(x.startswith("E12 ZZ | Blade 650:") and x.endswith("[reader miss: 1 passing line]")
+                   for x in s["rejections"])
+        assert any("[reader miss: 1 passing line]" in w for w in s["withheld"])
+        assert fake.refute_calls() == [], "measured, not retried: nothing more is called"
+
+    def test_a_finding_e12_passes_is_not_measured(self, run_with):
+        s = run_with(Fake(findings=[_blade()]), ["Blade 650"])
+        assert s["e12_reader"] == {}
+
+    def test_no_passing_line_is_said_so(self):
+        from entry_check import reader_note
+        excerpts = [{"text": "The close-ratio, six-speed transmission.\nWithout a clutch lever the\nbike shifts itself."},
+                    {"text": "The clutch lever is not required when shifting."}]
+        assert reader_note(excerpts) == "no passing line in its excerpts"
+
+    def test_passing_lines_are_counted_once_across_overlapping_excerpts(self):
+        from entry_check import reader_note
+        row = "Select neutral or, if a gear is engaged, pull the clutch\nlever."
+        excerpts = [{"text": row}, {"text": "Intro. " + row}, {"text": "Remember to pull the clutch at the same time."}]
+        assert reader_note(excerpts) == "reader miss: 2 passing lines"
+
+    def test_the_source_prompt_says_to_prefer_an_unnegated_sentence(self):
+        assert ("choose one whose sentence has no negation word at all: a troubleshooting row whose "
+                "condition says \"not\" fails even when its remedy names the lever") in O.SOURCE_PROMPT

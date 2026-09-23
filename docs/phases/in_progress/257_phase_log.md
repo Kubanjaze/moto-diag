@@ -1511,3 +1511,57 @@ title, the model's real answer, the document's typography, the run's own
 output.** Four of the six were caught downstream by gates or the operator,
 not by their own tests. Nothing new is built for this. It is the reason C
 below measures reader misses from the run's own `candidates.json`.
+
+### 2026-09-23 — C: the reader is measured beside every E12 rejection; one sentence added to the source prompt
+
+**What.** For every E12 rejection, the batch now looks at that spelling's own
+excerpts, the same `candidates.json` the model was handed. It counts the
+distinct sentences (E12's `_sentences()`, whitespace-normalised) that pass
+`manual_evidence`. Script only; no model call and no retry.
+- The count is recorded in the summary as `e12_reader`
+  (`{spelling: "reader miss: N passing lines" | "no passing line in its
+  excerpts"}`).
+- It is also appended to the rejection line, and so to the `withheld`
+  line, in brackets.
+- `entry_check.passing_sentences()` and `reader_note()` hold the rule.
+  `orchestrate.batch` only applies it.
+
+The source prompt gains one sentence after the E12 rule: "When several
+lines qualify, choose one whose sentence has no negation word at all: a
+troubleshooting row whose condition says "not" fails even when its remedy
+names the lever."
+
+**Applied after the fact to BMW run `BMW_20260923_142134`** (not re-run;
+under today's E12):
+
+| E12 rejection | its excerpts |
+|---|---|
+| K1600GT | reader miss: 4 passing lines |
+| K1300S | reader miss: 9 passing lines |
+| K1200S | reader miss: 6 passing lines (7 before bug fix #5, which made one stricter) |
+| K1300 | reader miss: 2 passing lines |
+| K1200 | reader miss: 1 passing line |
+| R1100 | reader miss: 1 passing line |
+| R1150 | no passing line in its excerpts |
+
+A passing line is not a writable entry. The line still has to be on a page
+that names the model: R1100's document is the R 1100 S's (family evidence,
+checked in the BMW E12 decision above).
+
+**Files.** `entry_check.py`, `orchestrate.py`,
+`tests/test_phase257_source_stage.py` (`TestCTheReaderIsMeasured`, 5 tests:
+counted beside the rejection and in `withheld`; nothing more is called; a
+finding E12 passes is not measured; "no passing line", including a line
+negated before the term and one negated after it; counted once across
+overlapping excerpts; the prompt sentence).
+
+**Break-it**, each part reverted on its own; every one is caught:
+- no bracket on the rejection → 1 fails;
+- no `e12_reader` in the summary → 2 fail;
+- every sentence counted as passing → 3 fail;
+- no dedupe → 1 fails;
+- the "no passing line" wording dropped → 1 fails;
+- the prompt sentence removed → 1 fails.
+
+A first prompt break left the asserted text intact and survived, so it was
+not a break. Redone by removing the sentence.
