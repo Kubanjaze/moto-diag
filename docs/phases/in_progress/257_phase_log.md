@@ -2311,3 +2311,46 @@ loop → 1; the route's `stopped` overwritten → 1; no referrer → 2; the
 spec route back → 7; pdf_only counting every sidecar → 2.
 
 244G scanner over `tests/`: 0. Related suites (257 + 244G + 255D): 675 passed.
+
+### 2026-09-23 — Yamaha owner's manuals fetched; the dry run finds the excerpts miss them (stopped before the source call)
+
+**Fetch** (`acquire.py fetch Yamaha`, 4 runs, 30/30/30/25 fetches, 1 req/s,
+run records `acquired/_run_Yamaha_20260923_184656`, `_184849`, `_185117`,
+`_185737`): **19 PDFs saved, 0 failed**; with Vino 125, 20 of the 20 exact
+matches. Every PDF and derived text passes E11. No model list offered a
+second English publication. Newest years: 2026 for YZF-R1, YZF-R7,
+Tenere 700, MT-07, MT-09, MT-03, MT-10, V-Star 250; older for the rest
+(YZF600R 2007 … XT250 2025).
+Unmatched, 19: VMAX, V-Star 650, XS650, RD350, Vino, Zuma, GQX125N, XC50A,
+YJ125Y, YW125M, FZ-09/MT-09, Riva, V-Star 1100, XC50, XC50J, XC50V,
+XC50W, XF50, YW50A.
+
+**Dry run** (the lines `batch()` runs: `candidates` → `mechanism_lines`,
+no model): 15 of 39 spellings have excerpts, **8 would be sent** (YZF-R1,
+MT-09, SR400, XT250, MT-07, FZ8, MT-03, MT-10).
+
+**The positive control fails.** Vino 125 is not sent and has **no
+excerpt**, although its manual's text carries "Clutch type / Dry,
+centrifugal automatic" and "V-belt automatic" (text lines 4132–4146).
+The manual calls the machine **YJ125Y** and never prints "Vino 125".
+`candidates.py` excerpts only around places the document names the
+spelling.
+
+Measured over the 20 manual texts:
+- **10 never contain their spelling's key**: Vino Classic, WR250R,
+  Vino 50, V-Star 1300, FZ6, YZF600R, Vino 125, V-Star 250, YZF-R6
+  ("YZFR6"), Tenere 700 ("Ténéré 700"), YZF-R7. They get no excerpt from
+  their own manual.
+- **Every one has mechanism lines in its full text**: 18 have the shift
+  and clutch operation text ("To shift the transmission to a higher gear,
+  move the shift pedal up", "The transmission is in gear with the clutch
+  lever pulled"); Vino 125 and Vino 50 have the spec rows.
+- For the 8 that would be sent, the lines in their ±40-line excerpts are
+  mostly contents entries ("6-16 Clutch lever ....") and page headers,
+  not the operation text.
+- MT-07 and MT-09 (2026): 0 mentions of Y-AMT in either manual.
+
+**Not run: source, refute, write.** Running now would send 8 spellings on
+contents-page lines and miss the 12 whose manuals the maker's own list
+ties to them. How an acquired manual's excerpts are chosen is a
+procedure decision for the operator; nothing was changed.
