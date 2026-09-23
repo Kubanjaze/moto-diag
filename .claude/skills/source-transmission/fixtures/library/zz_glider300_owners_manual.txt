@@ -123,4 +123,4 @@ maintenance note 119
 maintenance note 120
 === PAGE 9 ===
 Changing gear
-Always use the clutch when changing gear.
+Always pull in the clutch lever when changing gear.

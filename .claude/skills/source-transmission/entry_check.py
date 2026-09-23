@@ -21,6 +21,7 @@ work (F141). Rejection classes, one per trap:
 | E8 | OCR-sourced evidence not flagged for a page-image check | the Grom: OCR is not evidence |
 | E9 | an evidence copy with no provenance: missing/invalid sidecar, unreadable original, a URL with no pinned fetch, or a sha256 that does not match | the saved copy is not the evidence; the original is (F141) |
 | E10 | (when the excerpts handed to the source stage are given) a document that is not one of them, or a quote that is not inside them | the source stage reads only `candidates.py`'s excerpts; E9 alone accepted "originals" the model wrote itself (F141, reopened) |
+| E12 | a `manual` finding whose quote names no rider-operated clutch, foot-shift pattern or the word "manual" | a gear count is not a mechanism: a DCT is a constant-mesh six-speed too (Ninja 650, killed; the standard had drifted) |
 | E11 | an acquired library file whose sidecar is missing, whose bytes changed, or that is neither on the make's own host nor linked from an unchanged maker-host page in the library | provenance is the script's record; makers host their own manuals elsewhere (SYM's Wolf 150 on Dropbox) |
 
 A document under `evidence/` must carry a sibling `<file>.provenance.json`:
@@ -320,6 +321,28 @@ def abs_edition(text: str, spelling: str) -> bool:
     return False
 
 
+# E12 (operator, 2026-09-23): what makes a quote evidence of a MANUAL gearbox.
+# A rider-operated clutch, a foot-shift pattern, or the word "manual". A gear
+# count, "constant mesh" or "close-ratio" is not: a DCT or Y-AMT is a
+# constant-mesh six-speed too (Ninja 650 was killed on "6-speed" alone).
+RIDER_CLUTCH = re.compile(
+    r"clutch lever|clutch cable|cable[- ]operated clutch|cable[- ]actuated clutch|"
+    r"hydraulic(?:ally)?(?:[- ](?:operated|actuated))? clutch|manual clutch|"
+    r"(?:pull|squeeze|pulling|squeezing)\W+(?:\w+\W+){0,3}clutch|clutch\W+(?:\w+\W+){0,2}pull", re.I)
+FOOT_SHIFT = re.compile(r"return shift|shift pedal|change pedal|gear ?shift pedal|foot[- ]shift|"
+                        r"foot[- ]operated (?:return )?shift", re.I)
+MANUAL_WORD = re.compile(r"\bmanual\b", re.I)
+DOCUMENT_MANUAL = re.compile(r"(?:owner'?s?|owners|service|workshop|shop|repair|rider'?s?|user'?s?)\s+manual", re.I)
+
+
+def manual_evidence(quote: str) -> bool:
+    """Does the quote itself show a manual gearbox's mechanism?"""
+    q = " ".join((quote or "").split())
+    if RIDER_CLUTCH.search(q) or FOOT_SHIFT.search(q):
+        return True
+    return bool(MANUAL_WORD.search(DOCUMENT_MANUAL.sub(" ", q)))
+
+
 def document_text(f: dict, docs_root: pathlib.Path) -> str | None:
     """The text a finding's claims are checked against: the original behind
     an evidence copy, else the document itself (HTML as text)."""
@@ -510,6 +533,10 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
     quote = f["quote"]
     if len(quote.split()) < 4 or not TRANSMISSION_TERMS.search(quote):
         fails.append(f"E5 {tag}: quote is a fragment, not a statement: {quote!r}")
+    if value == "manual" and not manual_evidence(quote):
+        fails.append(f"E12 {tag}: a manual classification needs a quote naming a rider-operated clutch, "
+                     f"a foot-shift pattern or the word 'manual' — a gear count, 'constant mesh' or "
+                     f"'close-ratio' alone is not mechanism evidence: {quote!r}")
 
     if excerpts is not None:
         fails += _in_excerpts(f, doc, excerpts, tag)
@@ -545,7 +572,7 @@ def check(findings: list[dict], docs_root: pathlib.Path, excerpts: dict | None =
     return [x for f in findings for x in check_one(f, docs_root, excerpts, library)]
 
 
-REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11")
+REJECTION_IDS = ("E1", "E2", "E3", "E4", "E5", "E6", "E7", "E8", "E9", "E10", "E11", "E12")
 
 
 def main(argv: list[str]) -> int:

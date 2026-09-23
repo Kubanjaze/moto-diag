@@ -3,4 +3,4 @@ S: standard seat height 800 mm
 === PAGE 4 ===
 Specifications
 S: sport mode
-Transmission  5-speed constant mesh
+Transmission  5-speed constant mesh, return shift

@@ -122,7 +122,7 @@ LIB = FIX / "library"
 
 def _lib_finding(spelling, document, quote, kind="owners_manual"):
     return {"make": "ZZ", "spelling": spelling, "aliases": [], "outcome": "found",
-            "transmission": "cvt" if "CVT" in quote else "manual", "quote": quote,
+            "transmission": "cvt" if ("CVT" in quote or "V-Matic" in quote) else "manual", "quote": quote,
             "document": str(LIB / document), "page": 1, "evidence_kind": kind}
 
 
@@ -141,7 +141,7 @@ class TestACommonWordMustBeNamedAsAModel:
         assert "as a ZZ model" in fails[0]
 
     def test_after_the_make_it_is_a_model(self):
-        f = _lib_finding("Bolt", "pdfs/zz_range_om.txt", "Transmission  5-speed constant mesh, return type")
+        f = _lib_finding("Bolt", "pdfs/zz_range_om.txt", "Transmission  5-speed constant mesh, return shift")
         assert check([f], FIX, library=LIB) == []
 
     def test_in_the_title_it_is_a_model(self):
@@ -164,12 +164,12 @@ class TestTheKindComesFromTheIndex:
     @pytest.mark.parametrize("name,kind", [("cyclepedia_zz_trail.txt", "third_party"),
                                            ("models_raw.txt", "crawl_artefact")])
     def test_a_declared_owners_manual_that_is_not_one(self, name, kind):
-        f = _lib_finding("Trail 250", name, "Transmission  5-speed constant mesh, return type")
+        f = _lib_finding("Trail 250", name, "Transmission  5-speed constant mesh, return shift")
         fails = check([f], FIX, library=LIB)
         assert any(x.startswith("E2") and kind in x for x in fails), fails
 
     def test_a_maker_manual_passes_whatever_kind_is_declared(self):
-        f = _lib_finding("Trail 250", "zz_trail_om.txt", "Transmission  5-speed constant mesh, return type",
+        f = _lib_finding("Trail 250", "zz_trail_om.txt", "Transmission  5-speed constant mesh, return shift",
                          "forum_post")
         assert check([f], FIX, library=LIB) == []
 
@@ -437,3 +437,50 @@ class TestTheAbsException:
     def test_nothing_else_sources_its_base(self, text, spelling):
         from entry_check import abs_edition, names_model
         assert not names_model(text, spelling) and not abs_edition(text, spelling)
+
+
+class TestE12ManualNeedsMechanismEvidence:
+    """Operator decision 2026-09-23. Refute killed Ninja 650's 'Transmission
+    6-speed' (a DCT or Y-AMT is a six-speed too) and had kept the same kind
+    of quote the batch before: the standard drifted, so it is a rule. A
+    `manual` classification needs a quote naming a rider-operated clutch, a
+    foot-shift pattern, or the word 'manual'. A gear count, 'constant mesh'
+    or 'close-ratio' alone is not mechanism evidence."""
+
+    @pytest.mark.parametrize("quote", [
+        "Transmission 6-speed, return shift Final Drive Sealed chain",          # ZX-6R (known-good)
+        "Transmission 5-speed, return shift with wet multi-disc manual clutch",  # KLR650
+        "Transmission.......................... 4-speed, foot shift",           # K-Pipe
+        "Transmission Manual; 5 speeds Clutch Multiplate wet",                   # Grom
+        "Squeeze the clutch lever fully, operate change pedal to the proper position",
+        "Compact, five-speed transmission utilizes a cable-operated clutch",    # DR-Z400S
+        "With a light pull, the clutch feeds engine power to the smooth-shifting five-speed transmission",
+        "a hydraulically actuated clutch and a six-speed gearbox",
+    ])
+    def test_mechanism_evidence_passes(self, quote):
+        from entry_check import manual_evidence
+        assert manual_evidence(quote)
+
+    @pytest.mark.parametrize("quote", [
+        "Transmission 6-speed Final Drive Sealed chain",                         # Ninja 650 (known-bad)
+        "The close-ratio, six-speed transmission features carefully selected ratios",   # SV650, V-Strom 650
+        "A wide-ratio, constant-mesh five-speed transmission features a high fifth gear ratio",  # M109R
+        "The six-speed, close-ratio transmission have high gear ratios in first and sixth gear to smooth the shift action",  # V-Strom 1050
+        "See the owner's manual for the six-speed transmission",                # 'manual' as a document
+        "A back-torque-limiting clutch contributes to smoother downshifting",   # a clutch, not rider-operated
+    ])
+    def test_a_gear_count_is_not_mechanism_evidence(self, quote):
+        from entry_check import manual_evidence
+        assert not manual_evidence(quote)
+
+    def test_e12_rejects_the_ninja_650_shape_and_passes_the_zx6r_shape(self):
+        bad = _lib_finding("Comet 700", "pdfs/zz_comet700_om.txt", "Transmission")
+        bad["quote"] = "The Comet 700 clutch lever and gear shift pedal, item 1."
+        assert not [x for x in check([bad], FIX, library=LIB) if x.startswith("E12")]
+        f = _lib_finding("Blade 650", "pdfs/zz_blade650abs_spec.txt",
+                         "The close-ratio, six-speed transmission features carefully selected ratios.")
+        assert any(x.startswith("E12") for x in check([f], FIX, library=LIB))
+
+    def test_only_manual_is_held_to_it(self):
+        f = _lib_finding("Glide 125", "pdfs/zz_glide_quickref.txt", "Transmission  V-belt automatic (CVT)")
+        assert not [x for x in check([f], FIX, library=LIB) if x.startswith("E12")]

@@ -1094,3 +1094,31 @@ the ABS edition's page, saying so in the source: Ninja H2, Z900, Ninja 300.
 H2 SX, Z H2, Versys 650, Vulcan 900, ZX-10RR, Z900RS, KLX300SM stay unknown;
 the ABS three name their edition. The 27 suites that mention these
 machines + Phase 255's axis suite: 995 pass.
+
+### 2026-09-23 — E12: a manual classification needs mechanism evidence (operator rule)
+
+Refute killed Ninja 650's "Transmission 6-speed" and had kept the same
+kind of quote the batch before; the standard drifted, so it is a rule.
+**E12** (entry_check, and refute's prompt): a `manual` finding's quote must
+name a rider-operated clutch (clutch lever, cable/hydraulic clutch, clutch
+pull, manual clutch), a foot-shift pattern (return shift, shift/change
+pedal, foot shift), or the word "manual" — "owner's/service/workshop
+manual" excluded, since that names the document. A gear count, "constant
+mesh", "close-ratio" or an unqualified "clutch" is not mechanism evidence.
+
+Fixtures: 16 fixture quotes of my own were gear-count-only by this rule
+("…constant mesh, return type", "5-speed constant mesh"); replaced by the
+exact phrase "…, return shift" (diff reviewed; the one pinned evidence
+original, `trail_spec.html`, re-hashed). The Glider 300 fixture, modelled
+on the Wolf CR300i's "Always use the clutch when changing gear.", now reads
+"pull in the clutch lever" — **the real Wolf CR300i quote fails E12**
+(handled in the re-check). The Blade 650 fixture gained a real spec row. A
+test helper labelled "V-Matic belt" as manual; fixed.
+
+Tests +17: Ninja 650's quote known-bad, ZX-6R's known-good; eight passing
+shapes (return shift, manual clutch, foot shift, the word manual, clutch
+lever, cable-operated clutch, clutch pull, hydraulic clutch), six failing
+(gear count, close-ratio, constant-mesh, "shift action", owner's manual, a
+slipper clutch); only `manual` is held to it. **Break-it:** E12 off → 2;
+constant mesh counts → 3; the document's "manual" counts → 1; any clutch
+counts → 1; foot shift ignored → 9. 455 pass; 244G clean.

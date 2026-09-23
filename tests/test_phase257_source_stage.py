@@ -29,7 +29,7 @@ import orchestrate as O  # noqa: E402
 
 LIB = SKILL / "fixtures" / "library"
 TRAIL_DOC = str(LIB / "zz_trail_om.txt")
-TRAIL_QUOTE = "Transmission  5-speed constant mesh, return type"
+TRAIL_QUOTE = "Transmission  5-speed constant mesh, return shift"
 SUBC_MODEL = O.ROUTES["subconscious"]["model"]
 OPUS_MODEL = O.ROUTES["anthropic"]["model"]
 
@@ -135,7 +135,7 @@ class TestOneTurnNoTools:
         prompt = fake.source_calls()[0][fake.source_calls()[0].index("-p") + 1]
         excerpts = json.loads(prompt.split("EXCERPTS (JSON, by spelling):\n", 1)[1])
         assert [e["document"] for e in excerpts["Trail 250"]] == [TRAIL_DOC]
-        assert "5-speed constant mesh" in excerpts["Trail 250"][0]["text"]
+        assert "5-speed constant mesh, return shift" in excerpts["Trail 250"][0]["text"]
         for gone in ("read it first", "on the web", "evidence/", "url_tried"):
             assert gone not in prompt, gone
 
@@ -158,7 +158,7 @@ class TestTheExcerptsBindTheFindings:
         """The F141 shape: a file that holds the quote and names the
         machine, but that the stage was never shown."""
         planted = str(SKILL / "fixtures" / "docs" / "zz_trail_om.txt")
-        fake = Fake(findings=[_found(document=planted, quote="Transmission 5-speed constant mesh, return type")])
+        fake = Fake(findings=[_found(document=planted, quote="Transmission 5-speed constant mesh, return shift")])
         s = run_with(fake, ["Trail 250"])
         assert any(r.startswith("E10") for r in s["rejections"]), s["rejections"]
         assert fake.refute_calls() == [] and s["ready_to_write"] == []
@@ -274,19 +274,19 @@ class TestADocumentSourcesOnlyTheModelItNames:
     returns a line that names the model and that line is on the page."""
 
     def test_a_sibling_page_is_family_evidence_and_writes_nothing(self, run_with):
-        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")])
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh, return shift")])
         s = run_with(fake, ["Sprint 900"])
         assert len(fake.refute_calls()) == 1
         assert s["ready_to_write"] == [] and [f["scope"] for f in s["family_evidence"]] == ["family"]
 
     def test_refute_naming_only_the_sibling_does_not_promote_it(self, run_with):
-        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")],
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh, return shift")],
                     model_line="ZZ Sprint 900 GT Owner's Manual")
         s = run_with(fake, ["Sprint 900"])
         assert s["ready_to_write"] == []
 
     def test_refute_cannot_promote_it_with_a_line_the_page_does_not_have(self, run_with):
-        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")],
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh, return shift")],
                     model_line="ZZ Sprint 900 specifications")
         s = run_with(fake, ["Sprint 900"])
         assert s["ready_to_write"] == []
@@ -295,7 +295,7 @@ class TestADocumentSourcesOnlyTheModelItNames:
         """'ZZ Sprint 900' ends a line and the next begins 'S:' — the text
         rule reads 'Sprint 900 S'. Refute's line names the model and is on
         the page: the finding is written."""
-        fake = Fake(findings=[_sprint(S_DOC, "Transmission  5-speed constant mesh")], model_line="ZZ Sprint 900")
+        fake = Fake(findings=[_sprint(S_DOC, "Transmission  5-speed constant mesh, return shift")], model_line="ZZ Sprint 900")
         s = run_with(fake, ["Sprint 900"])
         assert [f["spelling"] for f in s["ready_to_write"]] == ["Sprint 900"]
 
@@ -340,7 +340,7 @@ class TestRefutePerFinding:
 class TestRefuteGroups:
     def test_groups_are_separate_fresh_calls(self, run_with, monkeypatch):
         monkeypatch.setattr(O, "REFUTE_GROUP", 1)
-        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh")],
+        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh, return shift")],
                     model_line="ZZ Sprint 900")
         s = run_with(fake, ["Trail 250", "Sprint 900"])
         assert len(fake.refute_calls()) == 2
@@ -351,7 +351,7 @@ class TestRefuteGroups:
 
     def test_a_group_over_budget_stops_the_rest(self, run_with, monkeypatch):
         monkeypatch.setattr(O, "REFUTE_GROUP", 1)
-        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh")],
+        fake = Fake(findings=[_found(), _sprint(S_DOC, "Transmission  5-speed constant mesh, return shift")],
                     refute_usage=_usage(OPUS_MODEL, O.REFUTE_STOP_PER_FINDING + 1, 0))
         s = run_with(fake, ["Trail 250", "Sprint 900"])
         assert len(fake.refute_calls()) == 1, "after a group over budget, no further group runs"
@@ -363,7 +363,7 @@ BLADE_DOC = str(LIB / "pdfs" / "zz_blade650abs_spec.txt")
 
 def _blade():
     return {"make": "ZZ", "spelling": "Blade 650", "aliases": [], "outcome": "found", "transmission": "manual",
-            "quote": "The close-ratio, six-speed transmission features carefully selected ratios.",
+            "quote": "Transmission  6-speed, return shift",
             "document": BLADE_DOC, "page": 2, "evidence_kind": "maker_spec_page"}
 
 
@@ -398,7 +398,7 @@ class TestBugFix3RefuteMustSayTheModelIsNamed:
     def test_refute_saying_named_cannot_overrule_the_script(self, run_with):
         """The sibling page (Sprint 900 GT): refute says named, the script
         does not, and refute's line does not name the model."""
-        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh")], names_model=True,
+        fake = Fake(findings=[_sprint(GT_DOC, "Transmission  6-speed constant mesh, return shift")], names_model=True,
                     model_line="ZZ Sprint 900 GT Owner's Manual")
         s = run_with(fake, ["Sprint 900"])
         assert s["ready_to_write"] == []

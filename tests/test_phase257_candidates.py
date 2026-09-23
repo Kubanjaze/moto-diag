@@ -81,7 +81,7 @@ class TestAFileNamedForTheMachine:
         names the machine; the file's own name does."""
         ex = _one("Glider 300")
         by_file = [e for e in ex if e["anchor"] == "file"]
-        assert any("Always use the clutch when changing gear." in e["text"] for e in by_file)
+        assert any("Always pull in the clutch lever when changing gear." in e["text"] for e in by_file)
         assert any(e["page"] == 9 for e in by_file)
 
 
@@ -136,7 +136,7 @@ class TestOnlyIndexedMakerDocumentsAreRead:
 
     @pytest.mark.parametrize("name", ["cyclepedia_zz_trail.txt", "models_raw.txt"])
     def test_third_party_and_crawl_files_are_not_read(self, name):
-        assert "5-speed constant mesh" in (LIB / name).read_text(encoding="utf-8")
+        assert "5-speed constant mesh, return shift" in (LIB / name).read_text(encoding="utf-8")
         assert all(e["document"] != str(LIB / name) for e in _one("Trail 250"))
 
 
