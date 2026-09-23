@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F138** (this file); the mobile
+At the time of writing the highest assigned is **F140** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -1010,4 +1010,56 @@ is the operator's judgement and not a mechanical split.
 shared, moves to a project `CLAUDE.md` or a skill folder, or is archived —
 and for the change log, whether it moves to its own file. Filed as a
 follow-up by instruction; deliberately not done in 255D.
+
+### F139
+
+**A parallel session's manual-coverage Step 0 was directionally right and numerically loose**
+
+Before Phase 257, another session drafted a Step 0 for sourced
+manual-transmission coverage. Cross-checked read-only on 2026-09-22 against
+the live database (schema 66, 1,046 issues, junction 2,795). **The
+cross-check's figures are the numbers of record:**
+
+| claim | other session | of record | why they differ |
+|---|---|---|---|
+| spellings resolving `unknown` | 605 | **605** | agree (689 junction pairs; 38 are EV marques that resolve `powertrain-default` once `powertrain='electric'` is passed) |
+| unknowns with no on-disk manual naming the transmission | 427 | **~600** | spelling-match noise: junction strings such as `'1000'`, `'One'`, `'Bolt'`, `'20'`, `'Gilera'` occur as ordinary words in scooter manuals. Only **5** unknown spellings have a maker manual on disk stating a manual gearbox (SYM Wolf Classic 150, Wolf CR300i, Kymco K-Pipe, Honda Grom, Grom 125) |
+| unscoped manual-side rows | 70 | **78** (75 without EV regen rows 4557/4560/4562) | vocabulary; 206 is the positive control in both. A keyword count is not a verdict count — read in context, about half of the hits reaching scooters are shaft-drive, DCT or scooter rows |
+| manual-side rows a PCX 150 retrieves | 13 | **13** | agree |
+| why 255B saw "3 clutch + 2 shifting" | the pre-256 25-row cap | **a narrower vocabulary** | under a 25-row cap the PCX keeps **1** such row (4605); 255B's own S0-4 records 165 rows retrieved, so the cap was not in play |
+| cost of declaring `{manual}` | 517 machines / 2,959 losses | **531 / 3,186** | universe (694 = junction ∪ vehicles) and row set; the 79 CVT scooters' 337 losses are the intended effect, not cost, so only `unknown` machines count |
+
+**Shape of the error:** every loose figure came from counting what a search
+matched rather than what the matched thing was — the "measure what produced
+the number" rule, and the reason 257's SOP forbids spelling-match counting.
+
+**What closes it:** Phase 257's census and cost table are built on the
+figures of record, with the method stated. Note for readers: 255D's own
+documents mention F138–F140 as the `finding` fixture's fabricated numbers;
+those mentions describe the fixture and do not cite this entry or F140.
+
+### F140
+
+**The no-`{manual}` sequencing rule is enforced on seed JSON only; nothing checks the live table**
+
+Phase 255's A1 forbids any row declaring a transmission set containing
+`manual` until manual coverage is sourced — a `{manual}` row is withheld
+from every machine resolving `unknown` (531 of 694 machines today). The rule
+is enforced by exactly two tests, both of which read seed files:
+`tests/test_phase255_transmission_axis.py::test_no_shipped_row_declares_manual`
+(every `known_issues_*.json`) and
+`tests/test_phase255B_twist_and_go.py::test_no_row_in_the_file_declares_a_set_containing_manual`
+(the CVT seed). `knowledge/applicability.py` lists `manual` as a valid value,
+so the loader accepts it, and a migration hook, `post_apply` backfill or
+direct write would put one in the live table with no test failing.
+
+Measured: the live table holds **11** scoped rows, all
+`{"transmission": ["cvt"]}`. **Clean by content, not by enforcement.**
+
+**What closes it:** an assertion over the database the loader and the
+migrations actually build, with a positive control that plants a `{manual}`
+row in a fixture database and sees the check fail. Or, if Phase 257 lifts
+the rule, retire both seed tests in the same commit that lifts it, with the
+reason — a rule enforced in one place and lifted in another is how the two
+drift.
 
