@@ -2253,3 +2253,21 @@ list could not be repeated from its record.
 
 The urllib path (`Request(data=…)`) is not reached by the tests, which
 use a fake transport. Its control is the live re-fetch above.
+
+### 2026-09-23 — Triumph's owner's handbooks: blocked (operator decision)
+
+**Recorded as blocked.** `GET https://api.triumphtechnicalinformation.com/documents/692733e3088d4f260364389e/download`
+(Owner's Handbook 3850782-US) returned **403** at 2026-09-23T18:15:02,
+not retried. The app gates its download behind `downloadEnabled`, unset
+for a public visitor: **the maker has switched downloads off.**
+
+**Not tried, by decision:** the page-by-page viewer
+(`/documents/{id}/toc`, `/documents/{id}/{topic}`). Its client handles
+a 428 `captchaRequired` with reCAPTCHA Enterprise, and a CAPTCHA would be
+a hard stop anyway.
+
+**Triumph waits for the inbox route:** the operator's own downloads into
+`~/research/motodiag/inbox/Triumph/`, then `acquire.py ingest`. The list
+side is on record: 306 model names, and 32 of 52 census spellings match
+(25 exact). No Triumph host is in `MAKER_HOSTS` beyond
+triumphmotorcycles.com.
