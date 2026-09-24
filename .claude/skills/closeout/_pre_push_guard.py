@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 """Phase 255D push guard. Blocks `git push` when closeout is incomplete.
 
+Since 2026-09-24 it also blocks ANY `git push` while the ROADMAP has drifted
+from docs/phases/ (`roadmap_check.py`). Close-out is guarded on `master`
+only because it cannot be complete mid-phase; continuity can always be true
+mid-phase — a phase's row exists before its Step 0 — so a work-in-progress
+push is no reason to let the ledger lie.
+
 **This script filters itself, and that is not a stylistic choice.** Phase
 255D measured that `PreToolUse` ignores the `if` field in this build, while
 `PostToolUse` honours it — same field, same value, same matcher, opposite
@@ -111,6 +117,21 @@ def main() -> int:
     command = (payload.get("tool_input") or {}).get("command", "")
     if not is_git_push(command):
         return 0                                   # THE early exit
+
+    try:
+        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parent))
+        import roadmap_check                       # the SAME function the test calls
+        drift = roadmap_check.check_tree()
+    except Exception:
+        drift = []                                 # never lock out the shell
+    if drift:
+        print("the ROADMAP has drifted from docs/phases/; push blocked.\n"
+              + "\n".join("  " + f for f in drift)
+              + "\n\nUpdate docs/ROADMAP.md (CLAUDE.md: a phase's row exists before "
+                "its Step 0 and changes with the work), then push again. "
+                "tests/test_roadmap_continuity.py is the guarantee, and it calls "
+                "the same function.", file=sys.stderr)
+        return 2
 
     try:
         repo = pathlib.Path(__file__).resolve().parents[3]

@@ -64,9 +64,11 @@ check.
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
-| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard |
+| `roadmap_check.py` | the ROADMAP ledger holds: R1–R5 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting); run with every suite and on every push |
+| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check on every push, close-out on a push to `master` |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
 | `fixtures/check2` | hand-written path lists for check 2 |
+| `fixtures/roadmap_bad`, `fixtures/roadmap_good` | hand-written trees: every R-rule fires on the first; the second holds what each rule must not remove |
 | `CHANGELOG.md` | what changed here and why |
 
 ## Two things that will bite you
