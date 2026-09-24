@@ -66,6 +66,8 @@ NOT_FINDINGS = {
     800: "BMW F800GS — a motorcycle",
     850: "BMW F850GS — a motorcycle",
     900: "BMW F900GS — a motorcycle",
+    8199: "Yamaha owner's-manual publication numbers, 'BRG-F8199-11' "
+          "(Phase 257's citations) — a document number",
 }
 
 #: Citations that are known not to resolve, each with its reason. Anything

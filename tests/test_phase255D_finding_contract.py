@@ -87,6 +87,18 @@ class TestTheExclusionsAreNamedNotNumericRanges:
                 f"F{n} is a BMW model and must be excluded BY NAME, not by a "
                 "ceiling — a ceiling also hides a citation one past the end")
 
+    def test_yamahas_publication_numbers_are_excluded_by_name(self, tmp_path):
+        """257 cites Yamaha manuals by number ("BRG-F8199-11"). Control: in
+        the same document, a citation one past the highest entry still fails."""
+        (tmp_path / "docs" / "phases" / "completed").mkdir(parents=True)
+        (tmp_path / "docs" / "FOLLOWUPS.md").write_text(
+            "highest assigned is **F11**\n\n### F10\n\nx\n\n### F11\n\ny\n")
+        doc = tmp_path / "docs" / "phases" / "completed" / "999_phase_log.md"
+        doc.write_text("Yamaha OM BRG-F8199-11 (2026), PDF p. 85\n")
+        assert [x for x in check(tmp_path, sibling=None) if x.startswith("B2")] == []
+        doc.write_text("Yamaha OM BRG-F8199-11 (2026), PDF p. 85; filed as F12\n")
+        assert any("F12 " in x for x in check(tmp_path, sibling=None) if x.startswith("B2"))
+
 
 class TestTheAllocationScript:
     def test_it_reports_a_number_above_both_files(self):

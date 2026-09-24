@@ -85,7 +85,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: never added to the floor; the whole count is what is pinned here.
 #: Raised before the regression of record.
 #:
-COLLECTED_TEST_FLOOR = 8958
+#: 8959 (Phase 257 close-out, 2026-09-24) — +1: B2 excludes Yamaha's
+#: publication numbers ("BRG-F8199-11") by name, with a control that a
+#: real citation in the same document still fails (bug fix #9).
+#:
+COLLECTED_TEST_FLOOR = 8959
 
 
 def _collected_count() -> int:
