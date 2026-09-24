@@ -212,7 +212,14 @@ class TestEveryPhase257ManualEntryMeetsE12:
                  ("Kawasaki", "KLX300"), ("Kawasaki", "Z650"),
                  ("Yamaha", "YZF-R1"), ("Yamaha", "YZF600R"), ("Yamaha", "SR400"), ("Yamaha", "WR250R"),
                  ("Yamaha", "XT250"), ("Yamaha", "Bolt"), ("Yamaha", "V-Star 1300"), ("Yamaha", "V-Star 250"),
-                 ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10"), ("Yamaha", "Tenere 700")]
+                 ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10"), ("Yamaha", "Tenere 700"),
+                 *[("KTM", m) for m in ("125 Duke", "390 Duke", "690 Duke", "790 Duke", "890 Duke",
+                                        "1290 Super Duke R", "RC 390", "1190 RC8", "390 Adventure",
+                                        "390 Adventure R", "790 Adventure", "790 Adventure R", "890 Adventure",
+                                        "890 Adventure R", "890 Adventure R Rally", "1090 Adventure R",
+                                        "1190 Adventure", "1290 Super Adventure", "1290 Super Adventure R",
+                                        "690 Enduro", "690 SMC", "950 Super Enduro R", "250 EXC TPI", "300 EXC",
+                                        "500 EXC-F", "450 SX-F")]]
 
     @_pytest.mark.parametrize("make,canonical", PHASE_257)
     def test_its_quote_names_the_mechanism(self, make, canonical):
@@ -373,3 +380,40 @@ class TestYamahaOwnersManualWrite:
         """E4's three; Tenere 700's variants; XC50, the code of both the Vino 50 and the Vino Classic
         (so on neither); variants, and the weak spellings no route matched."""
         assert resolve_transmission("Yamaha", model).provenance == "unknown", model
+
+
+class TestKTMOwnersManualWrite:
+    """Run KTM_20260923_215704 on the fallback source route
+    (claude-opus-5-5@medium): KTM's owner's manuals from ktm.com's manual
+    list, each the newest year's US English edition or, with no US row, the
+    first English one. 26 sent, 26 kept with names_model true, 0 withheld.
+    No manual names an AMT (phase log, "KTM: no AMT in its manuals")."""
+
+    import pytest as _pytest
+
+    MANUAL = ["125 Duke", "390 Duke", "690 Duke", "790 Duke", "890 Duke", "1290 Super Duke R", "RC 390",
+              "1190 RC8", "390 Adventure", "390 Adventure R", "790 Adventure", "790 Adventure R", "890 Adventure",
+              "890 Adventure R", "890 Adventure R Rally", "1090 Adventure R", "1190 Adventure",
+              "1290 Super Adventure", "1290 Super Adventure R", "690 Enduro", "690 SMC", "950 Super Enduro R",
+              "250 EXC TPI", "300 EXC", "500 EXC-F", "450 SX-F"]
+
+    @_pytest.mark.parametrize("model", MANUAL + ["KTM 390 Duke", "450 SX F", "500 exc-f"])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("KTM", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"manual"}), model
+        assert r.entry.source_route == "claude-opus-5-5@medium" and "ktm.com's manual list" in r.entry.source
+
+    @_pytest.mark.parametrize("model", ["1290 Super Duke", "Super Adventure S",     # contains matches, not fetched (4609)
+                                        "EXC", "Enduro R",                         # no manual of their own; not sent
+                                        "Adventure", "Adventure R", "LC8", "GT", "350 SXF", "690 Duke 4",
+                                        "1290 Super Duke GT", "390 Duke R2R", "1390 Super Adventure S EVO",
+                                        "690 Enduro R", "1190 RC8 R"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """The two 'contains' matches; the two held from the send; the spellings
+        KTM's list does not name; siblings and variants of what was written,
+        including the AMT-equipped 1390 Super Adventure S EVO."""
+        assert resolve_transmission("KTM", model).provenance == "unknown", model
+
+    def test_the_make_is_exactly_the_run(self):
+        from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP
+        assert sorted(e.canonical for e in TRANSMISSION_LOOKUP if e.make == "KTM") == sorted(self.MANUAL)

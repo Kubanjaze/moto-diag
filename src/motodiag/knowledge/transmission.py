@@ -366,6 +366,166 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "'Transmission type: V-belt automatic'.",
        source_route="claude-opus-5-5@medium"),
 
+    # --- KTM -------------------------------------------------------------
+    # Phase 257, run KTM_20260923_215704, source claude-opus-5-5@medium,
+    # refute on Opus: KTM's owner's manuals from ktm.com's manual list
+    # (bikemanuals.manuals.json, saved as each PDF's referrer), fetched by
+    # acquire.py into ~/research/motodiag/acquired/KTM/, each the newest
+    # year's US English edition, or the first English one where the list
+    # has no US row (the market is named). Each kept, names_model true, the
+    # model line the manual's own title. Pages are PDF pages. No manual
+    # names an AMT (0 of 26; the 1390 Super Adventure S EVO manual, not a
+    # census spelling, names it 11 times).
+    _E("KTM", "125 Duke", MANUAL, ("125 duke",),
+       "KTM owner's manual 26_3240318_en_BA.pdf (2026, JP English, '125 "
+       "DUKE'), listed by ktm.com's manual list, p. 61: 'Pull the clutch "
+       "when performing emergency braking or braking on slippery surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Duke", MANUAL, ("390 duke",),
+       "KTM owner's manual 24_3214961_en_OM.pdf (2024, US English, '390 "
+       "DUKE'), listed by ktm.com's manual list, p. 64: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 Duke", MANUAL, ("690 duke",),
+       "KTM owner's manual 19_3213923_en_OM.pdf (2019, EU English, '690 "
+       "Duke'), listed by ktm.com's manual list, p. 76: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Duke", MANUAL, ("790 duke",),
+       "KTM owner's manual 27_3240428_en_BA.pdf (2027, US English, '790 "
+       "DUKE'), listed by ktm.com's manual list, p. 80: 'Pull the clutch "
+       "when performing emergency braking or braking on slippery surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Duke", MANUAL, ("890 duke",),
+       "KTM owner's manual 22_3214543_en_OM.pdf (2022, US English, '890 "
+       "DUKE'), listed by ktm.com's manual list, p. 64: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Duke R", MANUAL, ("1290 super duke r",),
+       "KTM owner's manual 23_3214761_en_OM.pdf (2023, JP English, '1290 "
+       "SUPER DUKE R'), listed by ktm.com's manual list, p. 86: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "RC 390", MANUAL, ("rc 390",),
+       "KTM owner's manual 24_3214955_en_OM.pdf (2024, US English, 'RC "
+       "390'), listed by ktm.com's manual list, p. 55: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1190 RC8", MANUAL, ("1190 rc8",),
+       "KTM owner's manual 10_3211524_en_OM.pdf (2010, US English, '1190 RC8 "
+       "USA'), listed by ktm.com's manual list, p. 101: 'Pull the clutch "
+       "lever, shift into first gear, release the clutch slowly and at the "
+       "same time open the throttle.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Adventure", MANUAL, ("390 adventure",),
+       "KTM owner's manual 24_3214964_en_OM.pdf (2024, US English, '390 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 59: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Adventure R", MANUAL, ("390 adventure r",),
+       "KTM owner's manual 26_3240325_en_BA.pdf (2026, US English, '390 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 75: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Adventure", MANUAL, ("790 adventure",),
+       "KTM owner's manual 26_3240313_en_BA.pdf (2026, US English, '790 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 85: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Adventure R", MANUAL, ("790 adventure r",),
+       "KTM owner's manual 26_3240314_en_BA.pdf (2026, CN English, '790 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 80: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure", MANUAL, ("890 adventure",),
+       "KTM owner's manual 24_3214931_en_OM.pdf (2024, EU English, '890 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 81: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure R", MANUAL, ("890 adventure r",),
+       "KTM owner's manual 26_3240297_en_BA.pdf (2026, US English, '890 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 84: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure R Rally", MANUAL, ("890 adventure r rally",),
+       "KTM owner's manual 27_3240371_en_BA.pdf (2027, US English, '890 "
+       "ADVENTURE R RALLY'), listed by ktm.com's manual list, p. 84: 'Pull "
+       "the clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1090 Adventure R", MANUAL, ("1090 adventure r",),
+       "KTM owner's manual 19_3213917_en_OM.pdf (2019, US English, '1090 "
+       "Adventure R'), listed by ktm.com's manual list, p. 115: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1190 Adventure", MANUAL, ("1190 adventure",),
+       "KTM owner's manual 16_3213388_en_OM.pdf (2016, US English, '1190 "
+       "Adventure'), listed by ktm.com's manual list, p. 91: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Adventure", MANUAL, ("1290 super adventure",),
+       "KTM owner's manual 16_3213393_en_OM.pdf (2016, US English, '1290 "
+       "Super Adventure'), listed by ktm.com's manual list, p. 97: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Adventure R", MANUAL, ("1290 super adventure r",),
+       "KTM owner's manual 24_3214941_en_OM.pdf (2024, US English, '1290 "
+       "SUPER ADVENTURE R'), listed by ktm.com's manual list, p. 86: 'Pull "
+       "in the clutch, if you perform emergency or full braking, or if you "
+       "brake on a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 Enduro", MANUAL, ("690 enduro",),
+       "KTM owner's manual 10_3211511_en_OM.pdf (2010, AU, GB English, '690 "
+       "ENDURO EU'), listed by ktm.com's manual list, p. 51: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 SMC", MANUAL, ("690 smc",),
+       "KTM owner's manual 11_3211659_en_OM.pdf (2011, EU English, '690 SMC "
+       "EU'), listed by ktm.com's manual list, p. 45: 'Pull the clutch "
+       "lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "950 Super Enduro R", MANUAL, ("950 super enduro r",),
+       "KTM owner's manual 08_3211240_OM_EN.pdf (2009, US English, '950 "
+       "SUPER ENDURO R'), listed by ktm.com's manual list, p. 26: 'Pull the "
+       "clutch lever and engage 1st gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "250 EXC TPI", MANUAL, ("250 exc tpi",),
+       "KTM owner's manual 22_3214421_en_OM.pdf (2022, EU English, '250 EXC "
+       "TPI'), listed by ktm.com's manual list, p. 39: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "300 EXC", MANUAL, ("300 exc",),
+       "KTM owner's manual 27_3240387_en_BA.pdf (2027, EU English, '300 "
+       "EXC'), listed by ktm.com's manual list, p. 42: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "500 EXC-F", MANUAL, ("500 exc-f",),
+       "KTM owner's manual 27_3240392_en_BA.pdf (2027, US English, '500 "
+       "EXC-F'), listed by ktm.com's manual list, p. 43: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "450 SX-F", MANUAL, ("450 sx-f",),
+       "KTM owner's manual 27_3240384_en_BA.pdf (2027, US English, '450 "
+       "SX-F'), listed by ktm.com's manual list, p. 27: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+
     # --- Suzuki ----------------------------------------------------------
     # Phase 257, run Suzuki_20260923_093052: Suzuki's
     # own current spec pages, fetched by acquire.py into

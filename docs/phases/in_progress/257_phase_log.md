@@ -2692,3 +2692,69 @@ Local check on the real manuals: YZF-R6, YZF-R7 and MT-03 print no name
 (`_names` false) and their records give "YZF-R6 - YZF600", "YZF-R7 -
 YZF690", "MT-03 - MTN320-A". MT-09 and MT-07 would pass too; by operator
 rule 2 they are **not** re-run and stay unknown.
+
+### 2026-09-23 — KTM: batched on claude-opus-5-5@medium; 26 written
+
+**Run** `KTM_20260923_215704` (`orchestrate.py batch KTM <26 spellings>
+--source-route anthropic`). Dry run: all 26 sent. The source stage found
+26, all manual, one call, 2 turns. **No stops.** Tokens 572,940 (source
+335,663, refute 237,277; ceiling 3,900,000). entry_check: 0 rejections,
+0 withheld. Refute: **26 of 26 kept**, names_model true, each model line
+the manual's own title. 0 family evidence, 0 kills.
+
+**My own check of every citation** (refute skill, fetched, not
+remembered): each PDF re-derived from its bytes equals the saved text;
+each quote is on its cited page (790 Duke's also on p. 79); no quoted line
+is a contents line; each passes E12. Several quotes are the weaker
+"Pull the clutch when performing emergency braking" or "Adjust the basic
+position of the clutch lever": each names a rider-operated clutch lever,
+which E12 accepts, and no manual names an AMT.
+
+**Written (26), manual:** 125 Duke, 390 Duke, 690 Duke, 790 Duke, 890
+Duke, 1290 Super Duke R, RC 390, 1190 RC8, 390 Adventure, 390 Adventure R,
+790 Adventure, 790 Adventure R, 890 Adventure, 890 Adventure R, 890
+Adventure R Rally, 1090 Adventure R, 1190 Adventure, 1290 Super Adventure,
+1290 Super Adventure R, 690 Enduro, 690 SMC, 950 Super Enduro R, 250 EXC
+TPI, 300 EXC, 500 EXC-F, 450 SX-F. Aliases: the canonical form only
+(punctuation is normalised by the resolver); none invented.
+
+**Tests:** `TestKTMOwnersManualWrite` (46); the E12 guard covers the 26.
+Break-it, each alone, restored by hash: 450 SX-F aliases emptied → 2
+fail; 690 SMC written cvt → 1; "1290 super duke" slipped onto RC 390 → 1;
+450 SX-F's quote swapped for a gear count → 1. A first swap ("Six gears,
+return shift, …") passed: "return shift" is a foot-shift pattern, which E12
+rightly accepts. Not a real break; the recorded one is "Six gears, wet
+multi-disc clutch."
+
+Census 557 → **531** (KTM 63 → 37). `TRANSMISSION_LOOKUP` 92 → 118.
+
+## Refuter pass
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| 790 Adventure is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 26_3240313_en_BA.pdf (2026, US), PDF p. 85 |
+| 890 Adventure is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214931_en_OM.pdf (2024, EU), PDF p. 81 |
+| 790 Adventure R is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 26_3240314_en_BA.pdf (2026, CN), PDF p. 80 |
+| 890 Adventure R is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 26_3240297_en_BA.pdf (2026, US), PDF p. 84 |
+| 300 EXC is manual | kept | "Adjust the basic position of the clutch lever." | KTM OM 27_3240387_en_BA.pdf (2027, EU), PDF p. 42 |
+| 390 Adventure is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214964_en_OM.pdf (2024, US), PDF p. 59 |
+| 1290 Super Adventure is manual | kept | "Pull the clutch lever, engage 1st gear, release the clutch lever slowly and simultaneously open the throttle carefully." | KTM OM 16_3213393_en_OM.pdf (2016, US), PDF p. 97 |
+| 390 Duke is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214961_en_OM.pdf (2024, US), PDF p. 64 |
+| 790 Duke is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 27_3240428_en_BA.pdf (2027, US), PDF p. 80 |
+| 1190 RC8 is manual | kept | "Pull the clutch lever, shift into first gear, release the clutch slowly and at the same time open the throttle." | KTM OM 10_3211524_en_OM.pdf (2010, US), PDF p. 101 |
+| 1290 Super Adventure R is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214941_en_OM.pdf (2024, US), PDF p. 86 |
+| 1290 Super Duke R is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 23_3214761_en_OM.pdf (2023, JP), PDF p. 86 |
+| 500 EXC-F is manual | kept | "Adjust the basic position of the clutch lever." | KTM OM 27_3240392_en_BA.pdf (2027, US), PDF p. 43 |
+| 690 Duke is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 19_3213923_en_OM.pdf (2019, EU), PDF p. 76 |
+| 690 Enduro is manual | kept | "Pull the clutch lever, engage 1st gear, release the clutch lever slowly and simultaneously open the throttle carefully." | KTM OM 10_3211511_en_OM.pdf (2010, AU, GB), PDF p. 51 |
+| 890 Duke is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 22_3214543_en_OM.pdf (2022, US), PDF p. 64 |
+| 1090 Adventure R is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 19_3213917_en_OM.pdf (2019, US), PDF p. 115 |
+| 1190 Adventure is manual | kept | "Pull the clutch lever, engage 1st gear, release the clutch lever slowly and simultaneously open the throttle carefully." | KTM OM 16_3213388_en_OM.pdf (2016, US), PDF p. 91 |
+| 125 Duke is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 26_3240318_en_BA.pdf (2026, JP), PDF p. 61 |
+| 250 EXC TPI is manual | kept | "Adjust the basic position of the clutch lever." | KTM OM 22_3214421_en_OM.pdf (2022, EU), PDF p. 39 |
+| 390 Adventure R is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 26_3240325_en_BA.pdf (2026, US), PDF p. 75 |
+| 450 SX-F is manual | kept | "Adjust the basic position of the clutch lever." | KTM OM 27_3240384_en_BA.pdf (2027, US), PDF p. 27 |
+| 690 SMC is manual | kept | "Pull the clutch lever, engage 1st gear, release the clutch lever slowly and simultaneously open the throttle carefully." | KTM OM 11_3211659_en_OM.pdf (2011, EU), PDF p. 45 |
+| 890 Adventure R Rally is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 27_3240371_en_BA.pdf (2027, US), PDF p. 84 |
+| 950 Super Enduro R is manual | kept | "Pull the clutch lever and engage 1st gear." | KTM OM 08_3211240_OM_EN.pdf (2009, US), PDF p. 26 |
+| RC 390 is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214955_en_OM.pdf (2024, US), PDF p. 55 |
