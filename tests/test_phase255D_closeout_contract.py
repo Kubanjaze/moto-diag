@@ -153,6 +153,41 @@ class TestTheKnownGoodFixturePasses:
             f"input is as useless as one that passes on bad: {fails}")
 
 
+class TestA7TakesTheNewestRowByDate:
+    """F148: A7 took the first bold history row as the newest phase. The
+    table is not in date order and its first row is 244M, so the
+    version-header half of A7 could fire for no other phase."""
+
+    A7_BAD = SKILL / "fixtures" / "a7_newest_bad"
+    A7_GOOD = SKILL / "fixtures" / "a7_newest_good"
+
+    def test_a_stale_header_on_a_later_row_fires(self):
+        fails = check(self.A7_BAD, "ZZZ")
+        assert fails and all(f.startswith("A7") for f in fails), fails
+        assert "does not name the newest phase ZZZ" in fails[0], fails
+
+    def test_a_bumped_header_on_a_later_row_passes(self):
+        assert check(self.A7_GOOD, "ZZZ") == []
+
+    def test_the_first_row_is_not_held_to_the_header(self):
+        """244M leads the fixture table but is not the newest, so a header
+        naming ZZZ is no A7 failure for it (master's A7 reported one)."""
+        fails = check(self.A7_GOOD, "244M")
+        assert not any(f.startswith("A7") for f in fails), fails
+
+    @pytest.mark.parametrize("order", [1, -1])
+    def test_a_same_day_tie_goes_to_the_row_committed_later(self, order):
+        """257 and 257B both closed 2026-09-24; 257B's row was committed
+        in f3ef2fb (13:17), 257's in b8382b5 (00:07). History is
+        immutable, so this cannot drift. Either table order gives 257B."""
+        from closeout_check import newest_phase
+        hist = ROOT / "implementation.md"
+        rows = [ln for ln in hist.read_text(encoding="utf-8").splitlines()
+                if ln.startswith(("| **257** |", "| **257B** |"))]
+        assert len(rows) == 2, rows
+        assert newest_phase(hist, rows[::order]) == "257B"
+
+
 class TestAgainstTheRealRepository:
     def test_a_closed_phase_passes(self):
         """D6: run it against a phase it was not written for."""
