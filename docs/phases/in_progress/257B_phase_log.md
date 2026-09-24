@@ -37,3 +37,50 @@ column. Straight on to v1.0.
 **Decision:** `powertrain` stays unwired in `/ask` (D5). Wiring it would
 change the answer for an unset electric vehicle, which item 2 of the
 finish line forbids. To be filed.
+
+### 2026-09-24 — v1.0 committed before any code
+
+`f4889a9`, pushed on `phase-257B-transmission-field`. F144 allocated with
+`next_f_number.sh` (both files: moto-diag F143, mobile F115) and filed
+before the code comment that cites it.
+
+### 2026-09-24 — Backend build: the API writes it, `/ask` reads it
+
+`70c3f23`. Registry inserts and the update whitelist; `TransmissionLiteral`
+on create, update and response; PATCH honours an explicit `null` for
+transmission only; `VehicleContext.transmission` filled from the live row
+and passed by `/ask`. `tests/test_phase257B_transmission_field.py`, 24
+tests, including the E2E (set → `/ask` explicit → clear → `/ask`
+model-sourced) and the CLI diagnose wiring test.
+
+**Decision:** dropped the enum-to-value conversion I had added to
+`update_vehicle` for `transmission`. Measured: sqlite binds the `str` enum
+member as `'cvt'` unaided, so the line did nothing and no mutation of it
+could go red (S9). The existing four conversions are untouched.
+
+**Break-it:** 10 mutations, one per new line of code, each against the 257B
+file with `-B` and `__pycache__` cleared: **10/10 killed**.
+
+**Related suites + gates** (26 files: everything touching the vehicle API,
+`VehicleContext`, `_build_vehicle_context`, `update_vehicle`,
+`rows_for_machine`, plus 255*, 256*, 191C, 244G, roadmap continuity):
+1 failed, 1032 passed → bug fix #1.
+
+## Bug-fix register
+
+### Bug fix #1 — 2026-09-24
+
+- **Issue:** `test_phase244B_guidance::…live_vehicle_row_wins_over_a_stale_session_snapshot`
+  failed: make stayed `'Homda'`.
+- **Root cause:** `70c3f23` widened `_build_vehicle_context`'s live-row
+  SELECT to include `transmission`. On a `vehicles` table without the
+  column the SELECT raised, and its except clause dropped make, model and
+  mileage with it: a best-effort read turned all-or-nothing.
+- **Fix:** the original SELECT restored verbatim; `transmission` read by a
+  separate best-effort query.
+- **Files:** `src/motodiag/media/analysis_worker.py`,
+  `tests/test_phase257B_transmission_field.py`.
+- **Verified:** new guard red without the fix, green with it; mutations
+  10/10; related suites + gates **1034 passed**; 244G tree 0 hits;
+  `finding_check` exit 0.
+- **Commit:** `8e039e7`
