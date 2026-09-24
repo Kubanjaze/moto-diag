@@ -2416,3 +2416,72 @@ only, no mechanism line). YJ125Y is the Vino 125's code; the alias would
 resolve it.
 
 244G scanner over `tests/`: 0. Related suites (257 + 244G + 255D): 704 passed.
+
+### 2026-09-23 — Yamaha: batched on claude-opus-5-5@medium; 14 written, MT-09 and MT-07 held (operator)
+
+**Run** `Yamaha_20260923_194048` (`orchestrate.py batch Yamaha --source-route
+anthropic`, 9 min 57 s). 39 spellings; the dry run sent **20**; the source
+stage found 20 (17 manual, 3 cvt), one call, 2 turns. **No stops.** Tokens
+477,001 (source 180,483, refute 296,518; ceiling 3,000,000). entry_check
+withheld **6**, all E4 "the document never names the machine": YZF-R6
+(the manual prints "YZFR6"), Tenere 700 ("Ténéré 700"), YZF-R7, MT-09,
+MT-07, MT-03. `list_identity` serves the weak branch of E4 only, not this
+one; no check was changed. Refute: 14 of 14 **kept**, names_model true,
+each model_line the record's dispModelName. 0 family evidence, 0 kills.
+
+**Written (14):** manual: YZF-R1, YZF600R, SR400, WR250R, XT250, Bolt,
+V-Star 1300, V-Star 250, FZ6, FZ8, MT-10, each "Pull the clutch lever to
+disengage the clutch."; cvt: Vino 50, Vino 125, Vino Classic, each
+"Transmission type V-belt automatic". The record's model codes are
+aliases (YZF1000, XVS950CU, XVS1300A, XV250, YJ125Y, FZ6-SHG, FZ8-N,
+MTN1000). **XC50 is on neither Vino entry**: the Vino 50 and the Vino
+Classic records both give it. The source's publication prefixes (5AH, 2RD,
+…) are not aliases: they name a document, not a machine.
+
+**Held (operator):** MT-09 and MT-07. The operator's premise: Yamaha's spec
+page on disk says "Y-AMT eliminates the clutch lever and shift pedal".
+**Measured: it does not.** 0 mentions of AMT in `models_mt-09_specs.html`
+and `models_mt-07_specs.html` (control: "MT-09" 13 times in its own
+page's text); 0 in the 2026 MT-09 and MT-07 manuals; the Owner's Manual
+Library's 155 model names list MT-09 and MT-09 SP, no Y-AMT
+(`om_probe/Yamaha_20260923_181033`). The sentence is one of this phase's
+own E12 known-bad fixtures (`tests/test_phase257_source_checks.py:604`,
+log "E12 closes the automated-transmission gap"). Across `~/research`,
+`~/.cache/motodiag` and the repo, "y-amt" matches only non-Yamaha PDFs
+(compressed bytes) and our own code. The search fails its positive
+control (the MT-09 Y-AMT is sold), so its "no MT-07 Y-AMT" is not
+evidence either: both held, and next is one fetch each for Yamaha's own
+pages.
+
+**My own check of every citation** (refute skill: fetched, not
+remembered): each PDF re-derived from its bytes equals the saved text,
+byte for byte; each quote is on its cited page; no quoted line is a
+contents line; each manual quote passes E12.
+
+## Refuter pass
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| YZF-R1 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM D45-28199-11 (2026), PDF p. 78 |
+| YZF600R is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 5AH-28199-1B (2007), PDF p. 39 |
+| SR400 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 2RD-28199-13 (2018), PDF p. 38 |
+| Vino 50 is cvt | kept | "Transmission type V-belt automatic" | Yamaha OM 3D1-F8199-15 (2011), PDF p. 69 |
+| WR250R is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 2CF-28199-17 (2020), PDF p. 44 |
+| XT250 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM B1U-28199-16 (2025), PDF p. 38 |
+| Bolt is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM BP6-28199-13 (2020), PDF p. 40 |
+| V-Star 1300 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 3D8-28199-18 (2015), PDF p. 39 |
+| V-Star 250 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM BJP-28199-15 (2026), PDF p. 35 |
+| Vino 125 is cvt | kept | "Transmission type V-belt automatic" | Yamaha OM 5YR-F8199-15 (2009), PDF p. 71 |
+| FZ6 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 4S8-28199-12 (2009), PDF p. 41 |
+| FZ8 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM 39P-28199-12 (2013), PDF p. 45 |
+| MT-10 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM B5Y-28199-14 (2026), PDF p. 73 |
+| Vino Classic is cvt | kept | "Transmission type: V-belt automatic" | Yamaha OM 1TS-F8199-15 (2018), PDF p. 67 |
+| Yamaha's MT-09 spec page on disk names a Y-AMT | killed | "MT-09" (13 hits; 0 for "AMT") | acquired/Yamaha/models_mt-09_specs.html.txt, p. 1 of 1 (an HTML page; the whole text searched) |
+
+**Tests:** `TestYamahaOwnersManualWrite` (35); the E12 guard covers 11
+more manual entries (39). Break-it, each alone, restored by hash: the
+YJ125Y alias removed → 2 fail; Bolt written cvt → 2; "mt-09" slipped
+onto MT-10 → 1; FZ8's quote swapped for a gear count → 1.
+
+Census 573 → **558** (Yamaha 39 → 24; YJ125Y resolves through the Vino
+125 alias). `TRANSMISSION_LOOKUP` 77 → 91.

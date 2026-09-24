@@ -278,6 +278,85 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "carries the bare form 'XMAX'. These covers are ALSO the evidence "
        "that XC155 is not an XMAX: Yamaha's XMAX codes are YP125RA, CZD250 "
        "and CZD300, and none of them is XC155 — which is correct, and incomplete: XC155 is the SMAX, sourced in its own entry above."),
+    # Phase 257, run Yamaha_20260923_194048, source claude-opus-5-5@medium,
+    # refute on Opus: Yamaha's owner's manuals from its Owner's Manual
+    # Library (library.ymcapps.net), fetched by acquire.py into
+    # ~/research/motodiag/acquired/Yamaha/, each the newest US English
+    # edition. Each kept, names_model true; the model line is the maker's
+    # model_list record ("dispModelName"), pinned by hash as the PDF's
+    # referrer, and its model code is an alias. Pages are PDF pages. "XC50"
+    # is the code of both the Vino 50 and the Vino Classic, so it is on neither.
+    _E("Yamaha", "YZF-R1", MANUAL, ("yzf-r1", "yzf r1", "yzfr1", "yzf1000"),
+       "Yamaha owner's manual D45-28199-11 (2026, 'YZF-R1 - YZF1000'), "
+       "library.ymcapps.net …/D45-28199-11_02.pdf, p. 78: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "YZF600R", MANUAL, ("yzf600r", "yzf 600r", "yzf 600 r"),
+       "Yamaha owner's manual 5AH-28199-1B (2007, 'YZF600R'), "
+       "library.ymcapps.net …/5AH-28199-1B_02.pdf, p. 39: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "SR400", MANUAL, ("sr400", "sr 400"),
+       "Yamaha owner's manual 2RD-28199-13 (2018, 'SR400'), "
+       "library.ymcapps.net …/2RD-28199-13_02.pdf, p. 38: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino 50", CVT, ("vino 50", "vino50"),
+       "Yamaha owner's manual 3D1-F8199-15 (2011, 'VINO 50 - XC50'), "
+       "library.ymcapps.net …/3D1-F8199-15_02.pdf, p. 69 (specifications): "
+       "'Transmission type V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "WR250R", MANUAL, ("wr250r", "wr 250r", "wr 250 r"),
+       "Yamaha owner's manual 2CF-28199-17 (2020, 'WR250R'), "
+       "library.ymcapps.net …/2CF-28199-17_02.pdf, p. 44: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "XT250", MANUAL, ("xt250", "xt 250"),
+       "Yamaha owner's manual B1U-28199-16 (2025, 'XT250'), "
+       "library.ymcapps.net …/B1U-28199-16_02.pdf, p. 38: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Bolt", MANUAL, ("bolt", "xvs950cu", "xvs 950cu"),
+       "Yamaha owner's manual BP6-28199-13 (2020, 'BOLT - XVS950CU'), "
+       "library.ymcapps.net …/BP6-28199-13_02.pdf, p. 40: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "V-Star 1300", MANUAL, ("v-star 1300", "v star 1300", "vstar 1300", "xvs1300a", "xvs 1300a"),
+       "Yamaha owner's manual 3D8-28199-18 (2015, 'V STAR 1300 - XVS1300A'), "
+       "library.ymcapps.net …/3D8-28199-18_02.pdf, p. 39: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "V-Star 250", MANUAL, ("v-star 250", "v star 250", "vstar 250", "xv250", "xv 250"),
+       "Yamaha owner's manual BJP-28199-15 (2026, 'V STAR 250 - XV250'), "
+       "library.ymcapps.net …/BJP-28199-15_02.pdf, p. 35: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino 125", CVT, ("vino 125", "vino125", "yj125y"),
+       "Yamaha owner's manual 5YR-F8199-15 (2009, 'VINO 125 - YJ125Y'; the "
+       "manual itself prints only 'YJ125Y'), library.ymcapps.net "
+       "…/5YR-F8199-15_02.pdf, p. 71 (specifications): 'Transmission type "
+       "V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "FZ6", MANUAL, ("fz6", "fz 6", "fz6-shg", "fz6 shg"),
+       "Yamaha owner's manual 4S8-28199-12 (2009, 'FZ6 - FZ6-SHG'), "
+       "library.ymcapps.net …/4S8-28199-12_02.pdf, p. 41: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "FZ8", MANUAL, ("fz8", "fz 8", "fz8-n", "fz8 n"),
+       "Yamaha owner's manual 39P-28199-12 (2013, 'FZ8 - FZ8-N'), "
+       "library.ymcapps.net …/39P-28199-12_02.pdf, p. 45: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "MT-10", MANUAL, ("mt-10", "mt 10", "mt10", "mtn1000"),
+       "Yamaha owner's manual B5Y-28199-14 (2026, 'MT-10 - MTN1000'), "
+       "library.ymcapps.net …/B5Y-28199-14_02.pdf, p. 73: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino Classic", CVT, ("vino classic",),
+       "Yamaha owner's manual 1TS-F8199-15 (2018, 'VINO CLASSIC - XC50'), "
+       "library.ymcapps.net …/1TS-F8199-15_02.pdf, p. 67 (specifications): "
+       "'Transmission type: V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
 
     # --- Suzuki ----------------------------------------------------------
     # Phase 257, run Suzuki_20260923_093052: Suzuki's

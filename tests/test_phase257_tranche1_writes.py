@@ -209,7 +209,10 @@ class TestEveryPhase257ManualEntryMeetsE12:
                  ("Honda", "CRF250L"), ("Suzuki", "DR-Z400S"), ("Suzuki", "Boulevard C50"),
                  ("Kawasaki", "Ninja ZX-10R"), ("Kawasaki", "Ninja ZX-6R"), ("Kawasaki", "Ninja H2"),
                  ("Kawasaki", "KLR650"), ("Kawasaki", "Z900"), ("Kawasaki", "Ninja 300"),
-                 ("Kawasaki", "KLX300"), ("Kawasaki", "Z650")]
+                 ("Kawasaki", "KLX300"), ("Kawasaki", "Z650"),
+                 ("Yamaha", "YZF-R1"), ("Yamaha", "YZF600R"), ("Yamaha", "SR400"), ("Yamaha", "WR250R"),
+                 ("Yamaha", "XT250"), ("Yamaha", "Bolt"), ("Yamaha", "V-Star 1300"), ("Yamaha", "V-Star 250"),
+                 ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10")]
 
     @_pytest.mark.parametrize("make,canonical", PHASE_257)
     def test_its_quote_names_the_mechanism(self, make, canonical):
@@ -325,3 +328,45 @@ class TestHondaMotopubWrite:
         assert r.provenance == "model-sourced" and r.candidates == frozenset({"cvt"}), model
         assert r.entry.canonical == "Metropolitan"
         assert "31GJB620" in r.entry.source
+
+
+class TestYamahaOwnersManualWrite:
+    """Run Yamaha_20260923_194048 on the fallback source route
+    (claude-opus-5-5@medium): Yamaha's owner's manuals from its Owner's
+    Manual Library, each model line the maker's pinned model_list record.
+    14 ready, all kept with names_model true."""
+
+    import pytest as _pytest
+
+    MANUAL = ["YZF-R1", "YZF600R", "SR400", "WR250R", "XT250", "Bolt", "V-Star 1300", "V-Star 250",
+              "FZ6", "FZ8", "MT-10"]
+    CVT = ["Vino 50", "Vino 125", "Vino Classic"]
+
+    @_pytest.mark.parametrize("model", MANUAL + ["XVS950CU", "XVS1300A", "XV250", "YZF1000", "MTN1000"])
+    def test_resolves_manual(self, model):
+        r = resolve_transmission("Yamaha", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"manual"}), model
+        assert r.entry.source_route == "claude-opus-5-5@medium"
+
+    @_pytest.mark.parametrize("model", CVT + ["YJ125Y"])
+    def test_resolves_cvt(self, model):
+        r = resolve_transmission("Yamaha", model)
+        assert r.provenance == "model-sourced" and r.candidates == frozenset({"cvt"}), model
+
+    def test_yj125y_is_the_vino_125_through_its_list_record(self):
+        """The manual prints only 'YJ125Y'; the maker's record pairs it with VINO 125."""
+        e = resolve_transmission("Yamaha", "YJ125Y").entry
+        assert e.canonical == "Vino 125" and "'VINO 125 - YJ125Y'" in e.source
+
+    @_pytest.mark.parametrize("model", ["MT-09", "MT-07"])
+    def test_held_for_y_amt_stays_unknown(self, model):
+        """Operator, 2026-09-23: held from the write pending what Yamaha's own
+        pages say about a Y-AMT version (and E4 withheld both in this run)."""
+        assert resolve_transmission("Yamaha", model).provenance == "unknown", model
+
+    @_pytest.mark.parametrize("model", ["YZF-R6", "YZF-R7", "Tenere 700", "MT-03",   # withheld by E4
+                                        "XC50", "XC50A", "YZF-R1M", "MT-10 SP", "Vino", "Zuma", "V-Star 650"])
+    def test_what_the_run_did_not_prove_stays_unknown(self, model):
+        """E4's four; XC50, the code of both the Vino 50 and the Vino Classic
+        (so on neither); variants, and the weak spellings no route matched."""
+        assert resolve_transmission("Yamaha", model).provenance == "unknown", model
