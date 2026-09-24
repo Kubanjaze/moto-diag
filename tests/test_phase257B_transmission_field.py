@@ -301,6 +301,43 @@ class TestTheCliDoorReadsIt:
         assert MANUAL_ROW in seen["titles"] and CVT_ROW not in seen["titles"]
 
 
+class TestTheVideoContextStaysBestEffort:
+    def test_a_table_without_the_column_keeps_everything_else(
+            self, tmp_path, monkeypatch):
+        """Bug fix #1. Widening the live-row SELECT to carry `transmission`
+        made it fail on a table without the column, and its except clause
+        then dropped make, model and mileage with it. The value must cost
+        only itself."""
+        import contextlib
+
+        import motodiag.core.database as db_mod
+        import motodiag.core.session_repo as sr
+        from motodiag.media.analysis_worker import _build_vehicle_context
+
+        p = tmp_path / "pre063.db"
+        conn = sqlite3.connect(p)
+        conn.execute("CREATE TABLE vehicles (id INTEGER PRIMARY KEY, make TEXT, "
+                     "model TEXT, year INTEGER, mileage INTEGER)")
+        conn.execute("INSERT INTO vehicles VALUES (10, 'Honda', 'PCX150', 2019, 4100)")
+        conn.commit(); conn.close()
+
+        @contextlib.contextmanager
+        def _conn(path=None):
+            c = sqlite3.connect(p); c.row_factory = sqlite3.Row
+            try:
+                yield c
+            finally:
+                c.close()
+
+        monkeypatch.setattr(sr, "get_session", lambda *a, **k: {
+            "vehicle_make": "Homda", "vehicle_model": "pcx", "vehicle_year": 2019,
+            "vehicle_id": 10, "symptoms": [], "notes": ""})
+        monkeypatch.setattr(db_mod, "get_connection", _conn)
+        vc = _build_vehicle_context({"session_id": 1}, db_path=str(p))
+        assert (vc.make, vc.model, vc.mileage) == ("Honda", "PCX150", 4100)
+        assert vc.transmission is None
+
+
 # ---------------------------------------------------------------------------
 # Finish line 4: end to end through the real API
 # ---------------------------------------------------------------------------
