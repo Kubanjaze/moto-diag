@@ -164,6 +164,33 @@ v1.1 written; ROADMAP row closed ✅; `implementation.md` history row added
 and version 0.13.78 → 0.13.79; both documents moved to `completed/`. The
 live load follows the merge.
 
+### 2026-09-24 — Merged and deployed
+
+Merged `78fbc67`, pushed; the push guard's close-out check passed. (The
+first attempt, `git merge -F -`, is not supported by git and did nothing;
+master stayed at `0b0ac2c` and the merge was re-run with a message file.)
+
+**Live load**, on `master` at `78fbc67`, `bash` with `set -euo pipefail`:
+
+| | before | after |
+|---|---|---|
+| `known_issues` | 1,053 (max id 5343) | **1,060** (ids 6397–6403) |
+| schema / vehicles | 66 / 10 | 66 / 10 |
+| hash of the 1,053 existing rows | `4ee85e6eb1af3e06` | `4ee85e6eb1af3e06` |
+
+Backup `~/backups/motodiag/motodiag_pre353_20260924_183635.db`, taken by
+`sqlite3 .backup` and touched to its creation time (354's retention
+lesson). `integrity_check` was run on a scratch copy of it (354's WAL
+lesson) and read `ok`. Retention to five removed
+`motodiag_pre256_20260921_195822.db`, the oldest.
+
+**Smoke, on the live database:** Ruckus, Agility 50, Fly 50 and Zuma 50
+each get their row at tier `model`; a Gold Wing sees the two Honda rows
+only at `make_other_model`.
+
+`verify_phase.sh 353 fb4a76d 78fbc67`: checks 1–13 clean (check 2: no
+code after the regression hash).
+
 ## Refuter pass
 
 Four refuters on Opus, one per maker group, each opening every cited page itself (text, and rendered page images where the text layer was doubtful). Reports: `~/research/motodiag/353_step0/refute_*.md`. `uncertain` claims are recorded as killed as written: each was rewritten or dropped.
