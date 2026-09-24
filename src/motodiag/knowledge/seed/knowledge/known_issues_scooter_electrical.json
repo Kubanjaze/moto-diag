@@ -1,0 +1,171 @@
+[
+ {
+  "title": "On a Honda PCX150 the alternator is also the starter, and the regulator/rectifier is inside the ECM",
+  "description": "Honda's PCX150 service manual (PGM-FI; it covers the '13 model and the 'After '13 model') lists 'Charging system Triple phase output alternator' and 'Lighting system Battery' (p. 1-6), and its charging chapter states 'The scooter has alternator/starter. The alternator/starter has alternator and starter functions.' and 'The regulator/rectifier is built into the ECM.' (p. 20-4). There is no separate regulator part anywhere in the manual. The troubleshooting tree for a damaged or weak battery isolates it by disconnecting the ECM 3P (Black) and ECM 5P connectors, and if the leakage then falls below 0.1 mA the verdict is 'YES - Faulty regulator/rectifier in ECM.' (p. 20-6); the tree's other endings are the battery, the starter/charging relay, the wiring harness and the ignition switch. The charging standard is set against the battery's own reading with a fixed ceiling: 'Measured BV < Measured CV < 15.5 V', taken at 5,000 rpm with the headlight on high beam (p. 20-9). The charging tree has no stator step; the starter troubleshooting checks the stator at the ECM 3P (Black) connector across Red/yellow - Red/white, Red/yellow - Red/blue and Red/white - Red/blue, 0.03 - 0.20 ohm at 20 C, and a failure there means 'Replace the alternator/starter with a new one' (p. 6-6). The specifications give 'Alternator Capacity 0.343 kW/5,000 rpm'. Because the stator is also the starter motor, the manual warns: 'The alternator/starter could suddenly start when the ignition switch is turned ON, causing serious injury.' A generic procedure that expects a yellow stator connector, a fixed charging-voltage window and a stand-alone regulator does not describe this machine. The window is 2013 to 2015 because that is what a document ties to this manual: the 2015 PCX150 owner's manual prints 'Type KF18' and 153 cm3, as this manual does, while the 2020 PCX150 owner's manual prints 149 cm3 and a 57.3 mm bore, a different engine whose service manual was not read. Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Honda",
+  "model": "PCX150, PCX 150",
+  "year_start": 2013,
+  "year_end": 2015,
+  "severity": "medium",
+  "symptoms": [
+   "pcx battery not charging",
+   "pcx regulator rectifier",
+   "pcx stator test",
+   "scooter charging voltage",
+   "battery keeps going flat",
+   "alternator starter"
+  ],
+  "causes": [
+   "Faulty regulator/rectifier in the ECM",
+   "Faulty alternator/starter (stator)",
+   "Faulty starter/charging relay",
+   "Faulty battery",
+   "Shorted wire harness or faulty ignition switch"
+  ],
+  "fix_procedure": "1. Turn the ignition OFF before touching the alternator/starter; it can turn the engine when the ignition is switched ON. 2. Check the battery first, then current leakage: 0.1 mA max. on the '13 model and 0.4 mA max. after '13 (p. 20-8); the p. 20-6 flow chart asks 'below 0.1 mA?' for both. 3. If leakage is high, disconnect the ECM 3P (Black) and ECM 5P connectors and re-check: if it falls below 0.1 mA, the regulator/rectifier in the ECM is faulty. 4. Measure battery voltage, then charging voltage at 5,000 rpm with the headlight on high beam; the standard is battery voltage < charging voltage < 15.5 V. 5. The charging chart has no stator step; the starter chart (p. 6-6) checks the stator at the ECM 3P (Black) connector across its three red-striped wires: 0.03 - 0.20 ohm. 6. Do not order a separate regulator for this machine: Honda's charging chart ends at the battery, the ECM, the starter/charging relay or the wiring (p. 20-6).",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Honda's carburetted CHF50 charges through a three-phase alternator/starter that its ECM controls",
+  "description": "Carburettor versus fuel injection does not predict how a Honda scooter charges. The CHF50 service manual (covering the '02 - '05 model and 'After '05' editions, with a CV carburettor) lists 'Starter ACG', 'Triple phase output alternator' and a lighting system on the battery (p. 1-5). Its technical-features page describes a 'combined alternator/starter' in which 'The alternator operates as a 3-phase AC generator' and 'The ECM adjusts current to the stator coil to turn the flywheel when starting, and to increase charging current under 3,500 rpm to enhance charging capability' (p. 20-3). So the carburetted machine has an ECM, and its charging troubleshooting ends there: after the charging coil passes (0.05 - 0.5 ohm at 20 C), a correct regulator/rectifier system inspection on the ECM side means 'Faulty ECM' (p. 15-5). The standard has the same form as the injected PCX150's: 'Measured battery voltage < Measured charging voltage < 15.5 V' (p. 15-5), read at 5,000 rpm with the headlight on high beam (p. 15-8). Output is 190 W at 5,000 rpm (p. 15-4). The manual prints the model only as CHF50, and it names no end year. The later NCW50 Metropolitan owner's manuals read for this entry (2018, 2020 and 2023 to 2026) state no charging system at all, so nothing here transfers to them. Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Honda",
+  "model": "CHF50",
+  "year_start": 2002,
+  "severity": "medium",
+  "symptoms": [
+   "chf50 battery not charging",
+   "chf50 charging system",
+   "chf50 stator",
+   "scooter charging voltage",
+   "starter acg"
+  ],
+  "causes": [
+   "Faulty ECM (regulator/rectifier side)",
+   "Faulty charging coil",
+   "Faulty battery",
+   "Faulty main relay or wiring"
+  ],
+  "fix_procedure": "1. Turn the ignition OFF before servicing the alternator/starter. 2. Test the battery, then current leakage (below 0.1 mA); if high, disconnect the ECM 6P connector and re-test - a fall means a faulty ECM. 3. Measure charging voltage at 5,000 rpm with the headlight on high beam; the standard is battery voltage < charging voltage < 15.5 V. 4. Check the charging coil: 0.05 - 0.5 ohm. 5. Inspect the regulator/rectifier system on the ECM side; if its results are correct, the ECM is faulty. 6. Do not apply this to an NCW50 without that machine's own service manual.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Two Kymco service manuals, two opposite charging systems: the Agility 50 lights its headlight from its own AC coil",
+  "description": "Kymco's Agility 50 service manual specifies a regulator/rectifier of 'Type Single-phase half-wave SCR' with two separate outputs, 'Lighting 13.1±0.5V' (the same cell also gives '13.1～13.9V/5000rpm') and 'Charging 14.5±0.5V/5000rpm', and an A.C. generator with two coils: 'Lighting coil resistance (20C) Yellow～Green 0.1 ～1.0' ohm and 'Charging coil resistance (20C) White～Green 0.2 ～1.2' ohm, capacity 0.144 kW at 5,000 rpm, battery 12V-4Ah (p. 14-2). The lighting side is measured as alternating current - 'Measure the voltage with the electric tester in the AC range' at the headlight wire coupler, limit 12 - 14 V at 5,000 rpm maximum (p. 14-4) - so a DC reading there says nothing about the lighting coil. Kymco's People S 250 service manual describes a different machine: no lighting coil anywhere in its 243 pages, an A.C. generator whose fault list names an 'Open circuit between AC generator 3 yellow wires' (p. 1-30), 'Charging coil resistance (20C) Yellow ～Yellow 1.6 ～2.5' ohm, 'Capacity 180W/5000rpm', 'Regulator/Rectifier Limit voltage 14.5±0.5V' and a 12V10AH battery (p. 16-2). The two books share a maker and a carburetted fuel system and almost nothing in this chapter: the Agility's yellow wire is its lighting coil (pp. 14-5, 14-6), the People's three yellow wires are its generator. Page headers in the Agility 50 manual carry other names in places - Phase 254 found FILLY LX 50 headers, and five pages of this chapter read AGIKITY 50 - so every figure quoted here is from pages headed AGILITY 50 (14-2, 14-4). Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Kymco",
+  "model": "Agility 50, People S 250",
+  "severity": "medium",
+  "symptoms": [
+   "agility 50 headlight dim",
+   "scooter battery not charging",
+   "lighting coil test",
+   "kymco regulator rectifier",
+   "yellow wire stator"
+  ],
+  "causes": [
+   "Faulty regulator/rectifier",
+   "Faulty A.C. generator lighting or charging coil",
+   "Loose or broken wire or connector",
+   "Faulty battery"
+  ],
+  "fix_procedure": "1. Identify the machine before choosing a test: the Agility 50 has a separate lighting coil, the People S 250 has a three-wire generator. 2. Agility 50: measure the lighting output on the AC range at the headlight coupler (12 - 14 V, 5,000 rpm max, p. 14-4; the specification table on p. 14-2 gives 13.1 - 13.9 V at 5,000 rpm and 13.1 +/- 0.5 V) and the charging output at 5,000 rpm (14.5 +/- 0.5 V); lighting coil Yellow-Green 0.1 - 1.0 ohm, charging coil White-Green 0.2 - 1.2 ohm. 3. People S 250: charging coil Yellow-Yellow 1.6 - 2.5 ohm, limit voltage 14.5 +/- 0.5 V. 4. Do not carry a yellow-wire reading from one book to the other.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "One SYM manual gives the Jet 50/100 an illumination coil and the Jet Euro 50/100 an SCR with a Y-Y charging coil",
+  "description": "SYM's service manual for the JET 50/100 series and JET EURO 50/100 series (7326249) specifies a headlight output of its own - 'Control voltage in headlight 12.6 - 13.6 V / 5000 rpm (JET 50/100)' beside 'Control voltage in charging 14.0 - 15.0 V / 5000 rpm', battery 12V3Ah (p. 15-2); the headlight test on p. 15-7 prints 'Control voltage: 12.0~14.0 V / 5000 rpm'. For the Jet 50/100 the generator test gives two coils, 'Charging coil (white - green): 0.2~1.0' ohm and 'Illumination coil (yellow - green): 0.1~0.8' ohm, while the same page's regulator table calls the yellow winding the 'charging /illumination coil (yellow to ground)' at 0.2~0.8 ohm (p. 15-8). The same manual gives the Jet Euro 50/100 a different arrangement: 'Inspection on SCR - JET EURO 50/100', 'Charging coil Y - Y 0.4~0.8' ohm, measured 'between each yellow wire of the SCR' (p. 15-9), and a 'Head Light Control Unit (Jet Euro only)'. SYM's Fiddle 50 service manual repeats the Jet 50/100 pattern - a white charging coil, a yellow illumination coil and a 12.6 ~ 13.6 V headlight control voltage (p. 15-2, p. 15-8). The Joyride 125/150/200 manual (7429958, which Phase 254 also cited) has the Y-Y form and no lighting coil in its 203 pages: 'Charging coil Y - Y 0.4 - 0.8' ohm and 'Control Charging Voltage: 15.0 + 0.5 V / 2000 rpm' (p. 17-6, 17-7). So what the yellow wire is depends on the model, sometimes within one book: on a Jet 50/100 or Fiddle 50 there is a separate white charging coil and yellow is the illumination coil; on a Jet Euro or Joyride the yellow pair is the charging coil. Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "SYM",
+  "model": "Jet 50, Jet 100, Jet Euro 50, Jet Euro 100, Fiddle 50, Joyride 125, Joyride 150, Joyride 200",
+  "severity": "medium",
+  "symptoms": [
+   "sym headlight dim",
+   "illumination coil",
+   "scooter battery not charging",
+   "sym regulator rectifier",
+   "scr regulator",
+   "yellow wire stator"
+  ],
+  "causes": [
+   "Faulty regulator rectifier or SCR",
+   "Faulty charging or illumination coil",
+   "Wiring fault",
+   "Faulty battery"
+  ],
+  "fix_procedure": "1. Establish the exact model and its manual before reading a yellow wire. 2. Jet 50/100, Fiddle 50: charging coil white-green 0.2 - 1.0 ohm; illumination coil yellow-green 0.1 - 0.8 ohm in the p. 15-8 generator test (the p. 15-8 regulator table prints 0.2 - 0.8); headlight control voltage 12.6 - 13.6 V in the p. 15-2 table (the p. 15-7 headlight test prints 12.0 - 14.0 V) and charging control voltage 14.0 - 15.0 V at 5,000 rpm. 3. Jet Euro 50/100 and Joyride: charging coil yellow-yellow 0.4 - 0.8 ohm at the SCR or regulator connector. 4. If parts and wiring are normal on a Jet Euro or Joyride, the manual says replace the SCR.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Piaggio's Fly 50 is single-phase, while the Fly 125, Beverly 125 and MP3 400 charge through a three-phase alternator wired to the battery",
+  "description": "Piaggio's workshop manual for the Fly 50 4T (633212) lists 'Generator single-phase alternating current' and a 12V-9Ah battery (CHAR - 10), and tests the stator as 'Black-earth ~ 1' ohm with an open output of 'approx. 25 - 35V' at 2,000 rpm; with a charged battery and the lights and choke excluded it expects at least 13 V at idle with 1.5 - 2 A of recharge current, and with the lights, choke, stop light and horn working, 14 - 14.5 V as the regulator threshold (ELE SYS - 54 to 57). The Fly 125 - 150 4T (633225) and Beverly 125 (664603) manuals describe the other design in the same words: 'The recharge system is provided with a three phase alternator with permanent flywheel.' 'The alternator is directly connected to the voltage regulator.' It is connected to earth and to the battery positive through a 15A fuse, and 'This system therefore requires no connection to the key switch.' The stator is 0.7 - 0.9 ohm between yellow cables, every yellow cable insulated from ground, and with a charged battery and lights off the voltage 'should not exceed 15.2 Volt.' (Fly 125 ELE SYS - 73, 74; Beverly ELE SYS - 72, 73). The injected MP3 400 (664503) uses 'a three-phase generator with permanent magneto flywheel' and a regulator of 'Type Non-adjustable three-phase transistor', 14 - 15 V at 5,000 rpm, stator 0.2 - 1 ohm between each yellow terminal and the other two, and a 30A fuse (ELE SYS - 76 to 78). The Fly 125 - 150 and Beverly 125 manuals also say why idle matters: the three-phase generator gives 'a good compromise ... between generated power and idle stability. For this reason, it is very important that the idle speed is adjusted as prescribed.' The MP3 400 manual carries only the first half of that sentence. Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Piaggio",
+  "model": "Fly 50, Fly 125, Fly 150, Beverly 125, MP3 400",
+  "severity": "medium",
+  "symptoms": [
+   "piaggio battery not charging",
+   "fly 50 charging",
+   "three phase stator test",
+   "voltage regulator scooter",
+   "scooter charging voltage"
+  ],
+  "causes": [
+   "Faulty voltage regulator",
+   "Faulty stator",
+   "Idle speed set below specification",
+   "Blown main fuse",
+   "Faulty battery"
+  ],
+  "fix_procedure": "1. Check which generator the machine has: the Fly 50 4T is single-phase; the Fly 125/150, Beverly 125 and MP3 400 are three-phase. 2. Three-phase machines: stator between yellow cables (0.7 - 0.9 ohm on the Fly 125/150 and Beverly 125, 0.2 - 1 ohm on the MP3 400) and each yellow cable insulated from ground. 3. With a charged battery and lights off, the Fly 125/150 and Beverly 125 must not exceed 15.2 V; the MP3 400 reads 14 - 15 V at 5,000 rpm. 4. Fly 50 4T: stator black to earth about 1 ohm, open output about 25 - 35 V at 2,000 rpm, regulator threshold 14 - 14.5 V with the lights, choke, stop light and horn working. 5. Set idle to specification before judging the Fly 125/150 or Beverly 125 at low rpm.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Vespa's 50 cc regulator is tested with the lights on and off; the LX 125-150 and GTS 300 use a three-phase alternator wired to the battery through a fuse",
+  "description": "Piaggio's workshop manual for the two-stroke Vespa LX 50 (633416, with its 'oil mixer tank') lists the generator as 'In alternate current with three output sections' - separate windings, not three-phase - and a 12V-4Ah battery (CHAR - 10), and tests the regulator twice: 'at 5000 rpm with the lights on that the regulation voltage is between 13V and 14.5V' and, with the lights off, at most 16 V, above which the regulator is replaced; at the battery it expects 1.5 - 2 A and 13 V at 3,000 rpm (ELE SYS - 52). The Vespa S 50 2T service station manual repeats the pair - 'between 13V and 14.5V at 5000 rpm with the lights on' and '16V at 5000 rpm with the lights off' - and adds 'Replace the voltage regulator if control voltages are over >16V.' (ELE SYS - 54). The 16 V figure is the regulation voltage checked for burnt-out bulbs, with no measuring point stated; it is a different test from the 125's battery-pole ceiling below, and neither figure stands in for the other. The Vespa LX 125 - 150 4T Euro 3 manual (633976) and the Vespa GTS Super 300 ie (2008) manual describe the three-phase design: 'The recharge system is provided with a three phase alternator with permanent flywheel', 'The alternator is directly connected to the voltage regulator', which goes to the battery positive through a fuse, 15A on the LX and 30A on the GTS. The LX manual adds 'This system therefore requires no connection to the key switch.' (ELE SYS - 23); the GTS manual does not say it. The LX 125 - 150 stator is 0.7 - 0.9 ohm between yellow cables and must not exceed 15.2 V measured at the battery poles with a fully charged battery and lights off (ELE SYS - 24). The GTS 300's regulator is 'Non-adjustable three-phase transistor', its stator 0.2 - 1 ohm and 450 W (CHAR - 14), and its charging voltage 14 - 15 V at 5,000 rpm with lights off (ELE SYS - 91, 92). Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Vespa",
+  "model": "LX 50, S 50, LX 125, LX 150, GTS 300",
+  "severity": "medium",
+  "symptoms": [
+   "vespa battery not charging",
+   "vespa voltage regulator",
+   "vespa stator test",
+   "lights on lights off voltage",
+   "scooter charging voltage"
+  ],
+  "causes": [
+   "Faulty voltage regulator",
+   "Faulty stator",
+   "Blown fuse",
+   "Faulty battery"
+  ],
+  "fix_procedure": "1. On a two-stroke LX 50 or S 50, read the regulation voltage at 5,000 rpm twice: 13 - 14.5 V with lights on, and with lights off replace the regulator above 16 V; this checks the lighting regulation, so also check 13 V and 1.5 - 2 A at the battery at 3,000 rpm. 2. On an LX 125 - 150, check the stator between yellow cables (0.7 - 0.9 ohm), each yellow cable insulated from ground, and a ceiling of 15.2 V at the battery poles with a fully charged battery and lights off. 3. On a GTS 300, expect 14 - 15 V at 5,000 rpm with lights off and a stator of 0.2 - 1 ohm. 4. Do not apply the 125's 15.2 V battery-pole ceiling or the 50s' 16 V regulation figure to the other machine; they are different measurements.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Yamaha's YW125 service manual gives two stator resistances a factor of two apart",
+  "description": "Yamaha's 2009 service manual for the fuel-injected YW125Y - the name Zuma appears on none of its 338 pages; it identifies the machine by the code on its wiring diagram, 'YW125Y', and the link to the Zuma 125 name is Phase 253's cover-code record, not this manual - lists the charging system as 'System type AC magneto', model 5S9 (T-MORIC), 'Nominal output 14V 170W/5000r/min', a rectifier/regulator SH640E-11 (TAIGENE) with 'No load regulated voltage 14.1 ~ 14.9V' and 'Rectifier capacity 25A', and a YT7B-BS battery, 12V 6.5AH (p. 2-15). The same page gives 'Stator coil resistance/color 0.56 ~ 0.84' ohm between white and white. The charging-system troubleshooting has the tester placed across three pairs - white 1 to white 2, white 1 to white 3, white 2 to white 3 - and states 'Stator coil resistance 0.28 ~ 0.42' ohm (p. 7-28). Both are white to white, for one stator and one model year, and no third figure appears anywhere in the manual. A stator that reads 0.6 ohm passes the specification page and fails the troubleshooting page, and a failed reading there means 'Replace the crankshaft position sensor/stator coil assembly' - one part. The manual does not say which figure is right, and this entry does not choose. It also names a fixed order for 'The battery is not being charged': main fuse, battery, charging voltage (14 V at 5,000 r/min), stator coil resistance, then the wiring of the entire charging system (p. 7-27), and ends in 'Replace the rectifier/regulator.' (p. 7-28). Read from copies held in the project's research library; this entry did not fetch them from the maker.",
+  "make": "Yamaha",
+  "model": "YW125, YW125Y, Zuma 125",
+  "severity": "medium",
+  "symptoms": [
+   "zuma 125 battery not charging",
+   "zuma stator resistance",
+   "yamaha scooter stator test",
+   "rectifier regulator",
+   "scooter charging voltage"
+  ],
+  "causes": [
+   "Faulty rectifier/regulator",
+   "Faulty crankshaft position sensor/stator coil assembly",
+   "Blown main fuse",
+   "Faulty battery",
+   "Wiring fault"
+  ],
+  "fix_procedure": "1. Follow Yamaha's order: main fuse, battery, charging voltage, stator coil resistance, wiring. 2. Measure the stator across all three white-wire pairs. 3. A reading of 0.28 - 0.42 ohm passes the troubleshooting page and fails the specification page; 0.56 - 0.84 ohm passes the specification page and fails the troubleshooting page. In either band, do not condemn the crankshaft position sensor/stator coil assembly on one page's figure alone. A reading between 0.42 and 0.56 ohm fails both. 4. No-load regulated voltage is 14.1 - 14.9 V; the troubleshooting check measures charging voltage at 5,000 r/min against 14 V (p. 7-27). 5. If fuse, battery, stator and wiring are good, replace the rectifier/regulator.",
+  "parts_needed": [],
+  "source": "service-manual"
+ }
+]

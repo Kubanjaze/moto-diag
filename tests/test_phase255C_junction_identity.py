@@ -347,9 +347,13 @@ class TestOneCanonicalPerMachine:
             tiers = collections.Counter(r["match_tier"] for r in raw)
             assert len(kept) <= len(raw)
             if (make, model) == ("Honda", "PCX 150"):
-                assert tiers["model"] == 11, (
-                    f"the PCX should reach 11 rows at tier model, got {tiers['model']}")
-                assert len(raw) == 166 and len(kept) == 166, (len(raw), len(kept))
+                # Phase 354 moved this pin: its PCX150 charging row reaches the
+                # PCX at tier `model` (11 -> 12), and with its CHF50 row, which
+                # reaches it at `make_other_model`, retrieved and kept rise
+                # together, 166 -> 168. Kept still equals retrieved.
+                assert tiers["model"] == 12, (
+                    f"the PCX should reach 12 rows at tier model, got {tiers['model']}")
+                assert len(raw) == 168 and len(kept) == 168, (len(raw), len(kept))
 
     def test_the_degradation_path_still_binds(self, tmp_path):
         """A database with no model junction must degrade, not crash.
