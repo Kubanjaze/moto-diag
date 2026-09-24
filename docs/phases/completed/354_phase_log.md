@@ -1,6 +1,6 @@
 # Phase 354 — Scooter electrical (12V minimal) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-24)
 **Opened:** 2026-09-24
 
 ---
@@ -141,6 +141,43 @@ commit (1,941 passed, 1 failed, 13:09) failed
 +1 its CHF50 row at `make_other_model`. The pin records 255C's result and
 was moved with that reason in the test, as 252–254 moved 250C's. Not a
 bug fix: the rows did what they were written to do.
+
+### 2026-09-24 — Deploy dry run on a copy of the live database
+
+**First attempt was void, and is recorded because it looked like a
+result.** zsh aborted an `&&` chain at an unmatched `rm -f copy.db*` glob,
+so the backup copy was never taken and the before-mtime never set; the
+commands after `;` still ran, `sqlite3` created an empty scratch file and
+`motodiag db init` initialised that empty file, and the final comparison
+against an unset variable printed "live mtime unchanged: NO". Checked
+directly: the live `data/motodiag.db` was untouched — mtime 2026-09-22
+16:25:43, 1,046 rows, max id 4616, an empty WAL. Re-run as a
+`set -euo pipefail` bash script.
+
+**Dry run** (fresh `.backup` copy, `MOTODIAG_DB_PATH=<copy> motodiag db
+init`, the deploy's own entry point):
+
+| | before | after | second load |
+|---|---|---|---|
+| `known_issues` | 1,046 (max id 4616) | **1,053** (ids 5337–5343, the seven rows) | 1,053 (`Loaded 0`) |
+| schema | 66 | 66 | 66 |
+| vehicles | 10 | 10 | 10 |
+| hash of the 1,046 existing rows | `0c2d160326e766f4` | `0c2d160326e766f4` | `0c2d160326e766f4` |
+
+Live file's mtime unchanged by the dry run. The live load follows the
+merge, per the closeout sequence, with a backup to `~/backups/motodiag/`.
+
+### 2026-09-24 — Close-out
+
+Regression of record: **9089 passed, 0 failed, 0 skipped** at `c79ddec`
+(52:16; 8 warnings, all `utcnow` deprecations in Phase 171's tests). The
+collected count equals the floor raised at that commit. No bug fixes in
+this phase: the census and sweep errors were caught in Step 0 before
+anything they produced was used, and nothing committed later failed.
+
+v1.1 written; ROADMAP row closed ✅ (104 words by `roadmap_words.py`);
+`implementation.md` history row added and version 0.13.77 → 0.13.78; both
+documents moved to `completed/`. The live load follows the merge.
 
 ## Refuter pass
 
