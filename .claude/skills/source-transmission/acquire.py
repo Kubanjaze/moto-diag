@@ -478,9 +478,79 @@ def yamaha_om_route(f: Fetcher, make: str, spellings: list[str], library: pathli
     return report
 
 
+KTM_MANUALS = "https://www.ktm.com/en-us/service/manuals/_jcr_content/root/responsivegrid_1_col/bikemanuals"
+KTM_MANUALS_PAGE = "https://www.ktm.com/en-us/service/manuals.html"
+
+
+def _ktm_year_names(body: bytes) -> dict[str, dict[int, str]]:
+    """{model name: {year: the name as KTM lists it}} from a suggestions
+    response: "390 DUKE 2017" and "390 Duke 2024" are one model, two years."""
+    out: dict[str, dict[int, str]] = {}
+    for b in json.loads(body).get("data", {}).get("bikes", []):
+        m = re.fullmatch(r"\s*(.+?)\s+((?:19|20)\d\d)\s*", str(b.get("name") or ""))
+        if m:
+            out.setdefault(m.group(1), {})[int(m.group(2))] = b["name"]
+    return out
+
+
+def ktm_om_route(f: Fetcher, make: str, spellings: list[str], library: pathlib.Path) -> dict:
+    """ktm.com's owner's-manual list (named by KTM_MANUALS_PAGE's
+    data-suggestionsurl and data-manualsurl; phase log, 2026-09-23): per
+    spelling, `.suggestions.json?query=<spelling>` gives "<model> <year>"
+    names; for an EXACT match, `.manuals.json?modelName=<model> <newest
+    year>` (saved: the PDF's referrer, which vouches for the CDN link, E11)
+    and its US English PDF; with no US row, the first English one, its
+    market recorded. A 'contains' match is reported, not fetched (the 4609
+    rule). At the cap, what was saved is kept and the rest is `not_reached`."""
+    hdr = {"Referer": KTM_MANUALS_PAGE}
+    report: dict = {"matched": {}, "unmatched": [], "failed": {}, "match": {}, "not_reached": [], "stopped": None}
+    todo = list(spellings)
+    while todo:
+        s = todo.pop(0)
+        try:
+            srow = f.get(f"{KTM_MANUALS}.suggestions.json?query={urllib.parse.quote_plus(s)}", hdr)
+            if srow["method"] != "json_endpoint":
+                report["failed"][s] = {"url": srow["url"], "method": srow["method"], "status": srow["status"]}
+                continue
+            years = _ktm_year_names(srow["body"])
+            d = match_detail(s, {n: n for n in years})
+            if not d:
+                report["unmatched"].append(s)
+                continue
+            report["match"][s] = {"name": d[1], "kind": d[2]}
+            if d[2] != "exact":
+                report["failed"][s] = {"url": None, "method": "contains_match_not_fetched"}
+                continue
+            # "390 DUKE 2017" and "390 Duke 2024": every spelling of the name, newest year.
+            listed = {y: n for name, ys in years.items() if _key(name) == _key(s) for y, n in ys.items()}
+            year = max(listed)
+            lrow = f.get(f"{KTM_MANUALS}.manuals.json?modelName={urllib.parse.quote_plus(listed[year])}", hdr)
+            rows = (json.loads(lrow["body"]).get("data", {}).get("manuals", [])
+                    if lrow["method"] == "json_endpoint" else [])
+            en = [r for r in rows if re.search(r"\(en\)", str(r.get("title"))) and str(r.get("link", "")).endswith(".pdf")]
+            pick = next((r for r in en if re.search(r"\bUS \(en\)", r["title"])), en[0] if en else None)
+            if pick is None:
+                report["failed"][s] = {"url": lrow["url"], "method": lrow["method"], "year": year}
+                continue
+            ref = save(make, lrow, referrer=None, for_spellings=[s], library=library)
+            doc = f.get(pick["link"])
+        except CapReached as e:
+            report["not_reached"] = [s, *todo]
+            report["match"].pop(s, None)
+            report["stopped"] = f"cap reached: {e}"
+            break
+        if doc["method"] != "document_endpoint":
+            report["failed"][s] = {"url": pick["link"], "method": doc["method"], "status": doc["status"]}
+            continue
+        saved = save(make, doc, referrer=ref, for_spellings=[s], library=library)
+        report["matched"][s] = {"url": doc["final_url"], "method": doc["method"], "path": saved["path"],
+                                "year": year, "title": pick["title"]}
+    return report
+
+
 # Routes whose documents are manuals: a spelling is done only when a PDF names
 # it, not a spec page an earlier route saved (Yamaha's 9, measured 2026-09-23).
-MANUAL_ROUTES = {"Yamaha"}
+MANUAL_ROUTES = {"Yamaha", "KTM"}
 
 
 def doc_links_route(listings: list[str], page_pattern: str, pdf_pattern: str):
@@ -516,8 +586,9 @@ def doc_links_route(listings: list[str], page_pattern: str, pdf_pattern: str):
 
 
 ROUTES = {
-    "KTM": spec_route(["https://www.ktm.com/en-us/service/manuals.html"],
-                      r"ktm\.com/en-us/models/.+/20\d\d-ktm-[a-z0-9-]+\.html$"),
+    # Owner's manuals since 2026-09-23 (ktm.com's manual list), replacing the
+    # spec-page route that read model links off the manuals page.
+    "KTM": ktm_om_route,
     "Suzuki": spec_route(["https://suzukicycles.com/"],
                          r"suzukicycles\.com/(?:sportbike|street|adventure|crossover|cruiser|dualsport|offroad)/20\d\d/[a-z0-9-]+$"),
     "MV Agusta": spec_route(["https://www.mvagusta.com/us/en/manuals"], r"mvagusta\.com/us/en/product/[a-z0-9-]+/[a-z0-9-]+$"),

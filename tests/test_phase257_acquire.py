@@ -14,6 +14,7 @@ import hashlib
 import json
 import pathlib
 import sys
+import urllib.parse
 
 import pytest
 
@@ -486,3 +487,94 @@ class TestYamahaOwnersManualRoute:
         self.NAMES = {**self.NAMES, "8": [{"nickname": "", "modelName": "YZF-R1", "productId": "10", "dispModelName": "YZF-R1"}]}
         r2, _ = self._fetch(lib, self._api(), ["YZF-R1"])
         assert r2["matched"]["YZF-R1"]["publication"] == "BX4-F8199-10"
+
+
+class TestKTMOwnersManualRoute:
+    """ktm.com's manual list (phase log, 2026-09-23), in the real responses'
+    shapes (~/.cache/motodiag/om_probe/KTM_20260923_181536): GET
+    suggestions ("<model> <year>", KTM's own casing varies by year), then
+    the newest year's manuals.json, one row per market and language; the
+    US English PDF on the Azure CDN, its referrer the saved manuals.json."""
+
+    CDN = "https://azwecdnepstoragewebsiteuploads.azureedge.net/"
+    BIKES = {"390 Duke": ["390 Duke 2024", "390 DUKE 2017", "390 Duke R2R 2022", "1390 Super Duke R 2025"],
+             "1290 Super Duke": ["1290 Super Duke R 2020", "1290 Super Duke GT 2022"],
+             "690 SMC": ["690 SMC R 2023"]}
+    MANUALS = {"390 Duke 2024": [("EU (en)", "24_3214960_en_OM.pdf"), ("US (de)", "24_3214961_de_OM.pdf"),
+                                 ("US (en)", "24_3214961_en_OM.pdf"), ("GB (en)", "24_3214960_en_OM.pdf")]}
+
+    def _api(self):
+        calls: list[str] = []
+
+        def transport(url, headers, data=None):
+            calls.append(url)
+            q = urllib.parse.parse_qs(urllib.parse.urlsplit(url).query)
+            if url.endswith("/robots.txt"):
+                return 404, b"", None, url
+            if ".suggestions.json" in url:
+                bikes = [{"name": n} for n in self.BIKES.get(q["query"][0], [])]
+                return 200, json.dumps({"status": {"success": True}, "data": {"bikes": bikes}}).encode(), None, url
+            if ".manuals.json" in url:
+                name = q["modelName"][0]
+                rows = [{"modelName": name, "title": f"{name} {m} - {name[-4:]}", "link": self.CDN + p}
+                        for m, p in self.MANUALS.get(name, [])]
+                return 200, json.dumps({"status": {"success": True},
+                                        "data": {"manuals": rows, "modelname": name}}).encode(), None, url
+            if url.startswith(self.CDN) and url.endswith(".pdf"):
+                return 200, b"%PDF-1.4 " + url.encode() + b"\n", None, url
+            return 404, b"not found", None, url
+        transport.calls = calls
+        return transport
+
+    def _fetch(self, lib, t, spellings, cap=30):
+        f = A.Fetcher(cap=cap, rate=0, transport=t)
+        return A.fetch("KTM", fetcher=f, library=lib, spellings=list(spellings)), f
+
+    def test_the_route_is_the_manual_list(self):
+        assert A.ROUTES["KTM"] is A.ktm_om_route and "KTM" in A.MANUAL_ROUTES
+
+    def test_the_us_english_pdf_of_the_newest_year_passes_e11(self, lib):
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["390 Duke"])
+        m = r["matched"]["390 Duke"]
+        assert m["year"] == 2024 and m["title"] == "390 Duke 2024 US (en) - 2024"
+        assert m["url"] == self.CDN + "24_3214961_en_OM.pdf"
+        assert m["match"] == {"name": "390 Duke", "kind": "exact"}
+        pdf = lib / m["path"]
+        side = json.loads(pdf.with_name(pdf.name + ".acquired.json").read_text())
+        assert side["referrer"]["url"] == A.KTM_MANUALS + ".manuals.json?modelName=390+Duke+2024"
+        assert acquired_provenance(pdf, lib, "KTM", "t") == []
+
+    def test_no_us_row_takes_the_first_english_one(self, lib):
+        self.MANUALS = {"390 Duke 2024": [("EU (de)", "24_3214960_de_OM.pdf"), ("EU (en)", "24_3214960_en_OM.pdf")]}
+        r, _ = self._fetch(lib, self._api(), ["390 Duke"])
+        assert r["matched"]["390 Duke"]["title"] == "390 Duke 2024 EU (en) - 2024"
+
+    def test_a_sibling_is_not_an_exact_match(self, lib):
+        """"390 Duke R2R" and "1390 Super Duke R" come back for "390 Duke";
+        neither is taken, and neither is its year."""
+        self.BIKES = {"390 Duke": ["390 Duke R2R 2026", "1390 Super Duke R 2026", "390 Duke 2024"]}
+        r, _ = self._fetch(lib, self._api(), ["390 Duke"])
+        assert r["matched"]["390 Duke"]["year"] == 2024
+
+    def test_a_contains_match_is_reported_not_fetched(self, lib):
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["1290 Super Duke"])
+        assert r["match"]["1290 Super Duke"]["kind"] == "contains"
+        assert r["failed"]["1290 Super Duke"]["method"] == "contains_match_not_fetched"
+        assert not any(".manuals.json" in u for u in t.calls)
+
+    def test_a_weak_spelling_takes_no_nearest_name(self, lib):
+        t = self._api()
+        r, _ = self._fetch(lib, t, ["690 SMC"])
+        assert r["unmatched"] == ["690 SMC"] and not any(".manuals.json" in u for u in t.calls)
+
+    def test_the_cap_keeps_what_was_saved_and_names_the_rest(self, lib):
+        self.BIKES = {**self.BIKES, "790 Duke": ["790 Duke 2023"]}
+        self.MANUALS = {**self.MANUALS, "790 Duke 2023": [("US (en)", "23_3213711_en_OM.pdf")]}
+        # robots(ktm) + suggestions + manuals + robots(cdn) + pdf = 5 for 390 Duke; one more is 790's suggestions
+        r, f = self._fetch(lib, self._api(), ["390 Duke", "790 Duke"], cap=6)
+        assert r["stopped"].startswith("cap reached") and list(r["matched"]) == ["390 Duke"]
+        assert r["not_reached"] == ["790 Duke"] and "790 Duke" not in r["match"]
+        r2, _ = self._fetch(lib, self._api(), ["390 Duke", "790 Duke"])
+        assert r2["asked"] == ["790 Duke"] and list(r2["matched"]) == ["790 Duke"]
