@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F144** (this file); the mobile
-file's highest is **F115**.
+At the time of writing the highest assigned is **F147** (the mobile file, Phase
+257B); this file's highest is **F144**.
 
 ---
 
@@ -230,7 +230,12 @@ A documentation hazard rather than a runtime one, because nothing in the code
 reads document text to classify anything. Recorded in the ADR and in the lookup
 entry itself so the next author does not resolve it the wrong way.
 
-### F121
+### F121 — CLOSED by Phase 257B (moto-diag `70c3f23`, mobile `0e1ed53`), 2026-09-24
+
+**Closed:** the rider sets, changes or clears the transmission on the
+vehicle screen, the API stores it, and every retrieval door uses it first
+(provenance `explicit`). The create screen still posts none; that
+remainder is F147 (mobile file).
 
 **Mobile has no transmission field, and the residual gap is user machines**
 

@@ -66,6 +66,33 @@ file with `-B` and `__pycache__` cleared: **10/10 killed**.
 `rows_for_machine`, plus 255*, 256*, 191C, 244G, roadmap continuity):
 1 failed, 1032 passed → bug fix #1.
 
+### 2026-09-24 — Mobile build: the vehicle screen
+
+Mobile branch `phase-257B-transmission-field`, `0e1ed53`, pushed. Backend
+served on **127.0.0.1:8757** only, against a scratchpad copy of the live
+DB, to refresh `api-schema/openapi.json`; the schema diff is the
+transmission field and nothing else. `TransmissionLiteral` is derived from
+the generated type. `VehicleDetailScreen` shows the value (or "Not sure")
+and edits it with the six values plus "Not sure", which sends an explicit
+`null`. Tests: `VehicleDetail.transmission.test.tsx` (7, the real screen
+with `api` mocked at the network boundary), `vehicleEnums.test.ts` +3.
+**Break-it: 6/6 mutations killed**, including the one that matters most:
+`transmission ?? undefined`, the idiom the screen uses for its other
+nullable field, which would drop the key and never clear. jest **1174
+passed / 96 suites**, tsc 0, eslint 0 errors on the changed files (two
+pre-existing `no-void` warnings, not in changed lines).
+
+**Decision:** the create screen is not changed (D7); filed as F147.
+
+### 2026-09-24 — Follow-ups filed; F121 closed
+
+`next_f_number.sh` → F145. Filed in the **mobile** file, where the code
+is: F145 (the lookup's value as a suggestion; spans both, filed where the
+rider-facing part lands), F146 (bulk editing), F147 (the create screen).
+Mobile `0a339d1`. F121 closed in this file, remainder pointed at F147.
+Filing them flipped which file leads, and the finding contract's pin on
+that went red → bug fix #2.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-09-24
@@ -84,3 +111,23 @@ file with `-B` and `__pycache__` cleared: **10/10 killed**.
   10/10; related suites + gates **1034 passed**; 244G tree 0 hits;
   `finding_check` exit 0.
 - **Commit:** `8e039e7`
+
+### Bug fix #2 — 2026-09-24
+
+- **Issue:** `test_phase255D_finding_contract::…test_both_followups_files_are_read`
+  failed, `assert 144 > 147`, once F145–F147 were in the mobile file.
+- **Root cause:** the test pinned `max(backend) > max(mobile)`, a snapshot
+  of which file was ahead, and asked for the allocation's assumptions to be
+  revisited if it flipped. Revisited: `next_f_number.sh` takes the max over
+  both files and B1 compares the header with that same global max. Nothing
+  depends on which file leads.
+- **Fix:** the pin is replaced by `test_the_next_number_clears_both_files`
+  (the script's next number is `max(both) + 1`). The findings stay in the
+  mobile file; moving them to satisfy the pin would break the contract.
+- **Files:** `tests/test_phase255D_finding_contract.py`,
+  `.claude/skills/finding/CHANGELOG.md`.
+- **Verified:** the new test is red with the script narrowed to one file,
+  green restored (script diff empty); gates (191C, 244G, 255D
+  finding/closeout/refute contracts, roadmap continuity) **106 passed**;
+  `finding_check` exit 0.
+- **Commit:** `df82a21`
