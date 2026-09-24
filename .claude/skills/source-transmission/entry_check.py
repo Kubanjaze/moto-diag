@@ -469,10 +469,17 @@ def _beside(pattern: re.Pattern, sentence: str, near: re.Pattern) -> bool:
 # "Shift pedal (page 5-29)". It names a page, not a mechanism: Yamaha's MT-09,
 # MT-07, XT250 and MT-10 were sent on such lines and nothing else.
 TOC_LINE = re.compile(r"(?:\.\s?){4,}|…{2,}|[A-Za-z)]\s*\(?(?:page\s+)?\d{1,2}-\d{1,3}\)?\s*$", re.I)
+# A trailing "N-N" after one of these is a range in a wrapped sentence, not a
+# page: KTM's "Press and / hold the SET / button for 3-5 / seconds."; after
+# "see page" it is a sentence's cross-reference, Yamaha's "or equipment
+# damage. See page 5-1" (bug fix #7). A callout's "Shift pedal (page 6-31)"
+# is still a contents line.
+RANGE_WORD = re.compile(r"\b(?:for|to|from|between|within|of|in|at|by|about|approx\.?|approximately|every|after|"
+                        r"and|or|than|see\s+page)\s+\d{1,2}-\d{1,3}\s*$", re.I)
 
 
 def toc_line(line: str) -> bool:
-    return bool(TOC_LINE.search(line))
+    return bool(TOC_LINE.search(line)) and not RANGE_WORD.search(line)
 
 
 def is_mechanism(sentence: str) -> bool:

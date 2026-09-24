@@ -22,6 +22,7 @@ from __future__ import annotations
 
 import json
 import pathlib
+import re
 import shutil
 import subprocess
 import sys
@@ -112,6 +113,48 @@ class TestTableOfContentsLines:
 
     def test_control_the_same_excerpt_with_the_operation_line_is(self):
         assert mechanism_lines([{"text": "\n".join([*TOC_LINES[2:5], SHIFT_LINE])}]) == [SHIFT_LINE]
+
+
+# KTM's own lines (bug fix #7): its contents shapes, and a sentence the PDF
+# wraps so that a line ends in a range (23_3214761, 1290 Super Duke R).
+KTM_TOC = ["6.1 Clutch lever..................................... 16", "Clutch lever. . . . . . . . . . . . . . . 16",
+           "6.1 Clutch lever .................................... 21", "hydraulic clutch............................ 117"]
+KTM_WRAPPED = ["Press and", "hold theSET", "button for 3-5", "seconds."]
+KTM_CLUTCH_WRAPPED = ["Pull the clutch lever and shift", "into first gear. Wait for 2-3", "seconds."]
+
+
+class TestKTMContentsLines:
+    @pytest.mark.parametrize("line", KTM_TOC)
+    def test_ktm_contents_lines_are_contents_lines(self, line):
+        assert toc_line(line)
+
+    @pytest.mark.parametrize("line", ["button for 3-5", "into first gear. Wait for 2-3", "tighten to 8-10",
+                                      "between 1-2", "approx. 2-3", "or equipment damage. See page 5-1",
+                                      "self-diagnosis system. (See page 4-8"])
+    def test_a_range_in_a_wrapped_sentence_is_not(self, line):
+        assert not toc_line(line)
+
+    @pytest.mark.parametrize("line", ["6. Shift pedal (page 6-31)", "1. Spring preload adjuster (page 5-29)",
+                                      "Shift pedal page 6-31", "Replacing the tail/brake light bulb6-26",
+                                      "LOCATION OF IMPORTANT LABELS1-1"])
+    def test_control_a_callout_page_reference_still_is(self, line):
+        assert toc_line(line)
+
+    def test_a_wrapped_operation_line_is_still_a_dry_run_line(self):
+        got = mechanism_lines([{"text": "\n".join([*KTM_TOC, *KTM_CLUTCH_WRAPPED])}])
+        assert got == ["Pull the clutch lever and shift into first gear."]
+
+    @pytest.mark.skipif(not (REAL / "acquired" / "KTM").is_dir(), reason="needs the on-disk library")
+    def test_on_every_real_ktm_manual_only_dot_leader_lines_and_headings_are_dropped(self):
+        """Every line of the 26 real KTM texts the filter drops has a dot
+        leader, or is a heading or label (no sentence ends on it): measured
+        2026-09-23, 4 such lines before the fix, 2 after."""
+        texts = sorted((REAL / "acquired" / "KTM").glob("*.pdf.txt"))
+        assert len(texts) >= 26
+        dot_leader = re.compile(r"(?:\.\s?){4,}|…{2,}")
+        other = [ln for t in texts for ln in t.read_text(encoding="utf-8").splitlines()
+                 if toc_line(ln) and not dot_leader.search(ln)]
+        assert sorted(other) == ["7.23.27 Favourites indicator 1-4", "FCC ID: T8VCL9-904"]
 
 
 class TestAManualRoutePdfIsReadWhole:

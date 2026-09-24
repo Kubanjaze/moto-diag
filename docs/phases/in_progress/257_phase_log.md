@@ -2576,3 +2576,70 @@ It was not a real break; the one recorded is the emptied aliases.
 | Tenere 700 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM BRL-28199-11 (2026), PDF p. 67 |
 
 Census 558 → **557** (Yamaha 24 → 23). `TRANSMISSION_LOOKUP` 91 → 92.
+
+### 2026-09-23 — Operator: no stops to ask until 257 closes
+
+The operator's rules, recorded verbatim in substance: finish KTM (a model
+whose own KTM pages show an AMT version stays unknown and goes on the
+follow-up list); Yamaha E4 accepts the list record (no year letters;
+YZFR1M is the R1M), then re-run and write YZF-R6, YZF-R7, MT-03; MT-09 and
+MT-07 stay unknown, follow-up list; KTM is the last make, everything else
+goes into one follow-up finding with counts; then close 257. Stop only for
+a test that cannot be made to pass, a batch stop, refute killing more than
+a quarter of a batch, or a login wall. Each decision below is logged.
+
+### 2026-09-23 — KTM route: ktm.com's owner's-manual list (`49d880d`)
+
+`acquire.ROUTES["KTM"] = ktm_om_route`: suggestions → the exact match's
+newest year → manuals.json (saved; the PDF's referrer) → the US English
+PDF, else the first English row, its market recorded. KTM joins
+`MANUAL_ROUTES`. `TestKTMOwnersManualRoute` (7); break-it 5 of 5 caught
+(one first attempt matched the Yamaha route too and did not apply; redone
+scoped to KTM).
+
+**Fetch** (4 capped runs, 119 requests, 1 req/s, robots.txt;
+`_run_KTM_20260923_214451` … `_214810`): **25 PDFs saved**, plus the 390
+Duke PDF already on disk: 26 KTM manuals. No download failed. Not US
+(no US English row in the newest year): 125 Duke (JP), 1290 Super Duke R
+(JP), 250 EXC TPI (EU), 300 EXC (EU), 690 Duke (EU), 690 Enduro (AU, GB),
+690 SMC (EU), 790 Adventure R (CN), 890 Adventure (EU). **Contains, not
+fetched (4609):** 1290 Super Duke, Super Adventure S. **Unmatched (13):**
+350 SXF, 690 Duke 4, Adventure, Adventure 1050, Adventure R, CAN Keihin,
+EXC, Enduro R, GT, LC8, LC8 V-twin, LC8c, Super Duke 1290.
+
+### 2026-09-23 — Bug fix #7: the contents-line filter dropped wrapped prose
+
+**Issue.** Checked against the 26 real KTM texts before the source call
+(operator): of 12,027 lines the filter drops, 100 are mechanism lines,
+every one a dot-leader contents line ("6.1 Clutch lever..... 16"). But
+4 dropped lines have no dot leader, and one is prose: 23_3214761 wraps
+"Press and / hold theSET / button for 3-5 / seconds." and "button for 3-5"
+was read as a page reference. The same check on Yamaha's texts found 13
+more: "…or equipment damage. See page 5-1".
+
+**Root cause.** `TOC_LINE`'s trailing-reference branch was written for
+Yamaha's contents ("Clutch lever 4-9", "(page 5-29)") and verified only on
+Yamaha's contents pages: the shared cause of #1–#6, a rule checked against
+the case it was written for, not the artefact it meets.
+
+**Fix.** `toc_line`: a trailing "N-N" after a preposition or "see page"
+(`RANGE_WORD`) is a range or cross-reference in a sentence, not a page.
+Callouts ("6. Shift pedal (page 6-31)") and glued contents ("…light
+bulb6-26") are still contents lines.
+
+**Files.** `entry_check.py` (`RANGE_WORD`, `toc_line`);
+`tests/test_phase257_manual_route_excerpts.py::TestKTMContentsLines` (18,
+one on the 26 real KTM texts).
+
+**Verified.** Old code: 8 of the new tests fail. Per make, lines dropped:
+Yamaha 4,362 → 4,349, KTM 12,027 → 12,025, Honda 1,120 and BMW 3,503
+unchanged. On KTM the only non-dot-leader lines still dropped are a
+heading ("7.23.27 Favourites indicator 1-4") and a label ("FCC ID:
+T8VCL9-904"). Break-it, each alone, restored by hash: guard removed → 8
+fail; guard takes "page" → 7; "see page" removed → 2. Not real breaks,
+recorded: a dot-leader short-circuit (dead: `TOC_LINE` already matches a
+dot leader; removed); an optional closing paren in the guard (no real line
+ends "see page N-N)"; removed); the guard taking "lever" (no real contents
+line ends "<noun> N-N" with a space; measured over the whole acquired
+library). Seen, not changed (BMW is done): BMW prints its page glyph as
+"b", so "the auxiliary stand (b 24-27)" is still dropped.
