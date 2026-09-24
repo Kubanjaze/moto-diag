@@ -1,5 +1,17 @@
 # finding — changelog
 
+## 2026-09-24 — the "this repo leads" pin replaced (Phase 257B bug fix #2)
+
+`test_both_followups_files_are_read` also asserted `max(backend) >
+max(mobile)`, saying the allocation's assumptions needed revisiting if it
+flipped. Phase 257B filed F145–F147 in the mobile file (app code; the
+contract puts a finding with its code) and it flipped. Revisited:
+`next_f_number.sh` takes the max over both files and B1 compares the
+header with that same global max, so nothing depends on which file leads.
+The pin is replaced by `test_the_next_number_clears_both_files`: the
+script's next number is `max(both) + 1`, whichever file leads. Seen red
+with the script narrowed to one file.
+
 ## 2026-09-22 — created (Phase 255D)
 
 Second procedure folder. The F-number discipline was **not written down
