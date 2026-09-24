@@ -2758,3 +2758,47 @@ Census 557 → **531** (KTM 63 → 37). `TRANSMISSION_LOOKUP` 92 → 118.
 | 890 Adventure R Rally is manual | kept | "Pull the clutch when performing emergency braking or braking on slippery surfaces." | KTM OM 27_3240371_en_BA.pdf (2027, US), PDF p. 84 |
 | 950 Super Enduro R is manual | kept | "Pull the clutch lever and engage 1st gear." | KTM OM 08_3211240_OM_EN.pdf (2009, US), PDF p. 26 |
 | RC 390 is manual | kept | "Pull in the clutch, if you perform emergency or full braking, or if you brake on a slippery ground." | KTM OM 24_3214955_en_OM.pdf (2024, US), PDF p. 55 |
+
+### 2026-09-23 — Yamaha re-run after the E4 list-record rule: YZF-R6, YZF-R7, MT-03 written
+
+**Run** `Yamaha_20260923_221633` (`batch Yamaha YZF-R6 YZF-R7 MT-03
+--source-route anthropic`): no stops, 122,575 tokens (ceiling 450,000).
+YZF-R6 found, E4 passed through its record, refute **kept**. YZF-R7 and
+MT-03 **withheld** on E3/E10: the source stage quoted "…pull the clutch
+lever toward to the handlebar." where the manual prints "toward to the
+han- / dlebar" across a line break. The check is right: the quote is not
+the text as printed. **Not a check change.** Decision: re-run the two with
+a hint to quote as printed or end before a hyphenated word.
+
+**Run** `Yamaha_20260923_222030` (`--hints "Quote exactly as the excerpt
+prints it…"`): no stops, 172,806 tokens (ceiling 300,000). Both found
+manual on "6. Open the throttle part way and / gradually release the
+clutch lever.", 0 rejections, refute **kept** both, names_model true,
+model lines "YZF-R7 - YZF690" and "MT-03 - MTN320-A".
+
+**My own check:** each quote is on its cited page and is no contents
+line; each passes E12. D42-28199-10's re-derived text first compared
+unequal: my comparison read the saved file with `read_text`, which folds
+its 35 carriage returns. The file's bytes equal the fresh derivation
+exactly; the saved text is intact.
+
+**Written (3), manual:** YZF-R6, YZF-R7, MT-03; aliases the canonical
+forms and the record's codes (YZF600, YZF690, MTN320-A). The model-year
+codes the manuals print (YZFR6L, YZFR7T, MT03T) are **not** aliases.
+MT-09 and MT-07 stay unknown (operator rule 2; F143).
+
+**Tests:** `TestYamahaOwnersManualWrite` +6 manual, the three E4 names
+replaced by their model-year codes and variants (6) as stay-unknown; E12
+guard +3. Break-it, each alone, restored by hash: YZF-R6 aliases emptied
+→ 2 fail; "mt03t" slipped onto MT-03 → 1; YZF-R7 written cvt → 2;
+MT-03's quote swapped for a gear count → 1.
+
+Census 531 → **528** (Yamaha 23 → 20). `TRANSMISSION_LOOKUP` 118 → 121.
+
+## Refuter pass
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| YZF-R6 is manual | kept | "The clutch lever is located on the left side of the handlebar. To disengage the clutch, pull the lever toward the handlebar grip." | Yamaha OM BN6-28199-13 (2020), PDF p. 36 |
+| YZF-R7 is manual | kept | "6. Open the throttle part way and gradually release the clutch lever." | Yamaha OM D42-28199-10 (2026), PDF p. 98 |
+| MT-03 is manual | kept | "6. Open the throttle part way and gradually release the clutch lever." | Yamaha OM BRG-F8199-11 (2026), PDF p. 85 |

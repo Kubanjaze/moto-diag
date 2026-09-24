@@ -352,6 +352,30 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "library.ymcapps.net …/B5Y-28199-14_02.pdf, p. 73: 'Pull the clutch "
        "lever to disengage the clutch.'",
        source_route="claude-opus-5-5@medium"),
+    # Runs Yamaha_20260923_221633 (YZF-R6) and Yamaha_20260923_222030 (YZF-R7,
+    # MT-03), after E4 accepted the pinned list record (operator,
+    # 2026-09-23): each manual prints only model-year codes (YZFR6L, YZFR7T,
+    # MT03T), and the record names the model exactly. Those codes are not
+    # aliases: a year letter is not read off (YZFR1M is the R1M).
+    _E("Yamaha", "YZF-R6", MANUAL, ("yzf-r6", "yzf r6", "yzfr6", "yzf600"),
+       "Yamaha owner's manual BN6-28199-13 (2020, 'YZF-R6 - YZF600'; the "
+       "manual prints 'YZFR6L/YZFR6LC'), library.ymcapps.net "
+       "…/BN6-28199-13_02.pdf, p. 36: 'The clutch lever is located on the "
+       "left side of the handlebar. To disengage the clutch, pull the lever "
+       "toward the handlebar grip.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "YZF-R7", MANUAL, ("yzf-r7", "yzf r7", "yzfr7", "yzf690"),
+       "Yamaha owner's manual D42-28199-10 (2026, 'YZF-R7 - YZF690'; the "
+       "manual prints 'YZFR7T/YZFR7TC'), library.ymcapps.net "
+       "…/D42-28199-10_02.pdf, p. 98: '6. Open the throttle part way and "
+       "gradually release the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "MT-03", MANUAL, ("mt-03", "mt 03", "mt03", "mtn320-a"),
+       "Yamaha owner's manual BRG-F8199-11 (2026, 'MT-03 - MTN320-A'; the "
+       "manual prints 'MT03T/MT03TC'), library.ymcapps.net "
+       "…/BRG-F8199-11_02.pdf, p. 85: '6. Open the throttle part way and "
+       "gradually release the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
     # Run Yamaha_20260923_210233 (the re-run after bug fix #6: its manual
     # prints "Ténéré 700", which E4 had read as another name).
     _E("Yamaha", "Tenere 700", MANUAL, ("tenere 700", "ténéré 700", "tenere700", "xtz690"),

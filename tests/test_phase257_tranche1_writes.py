@@ -213,6 +213,7 @@ class TestEveryPhase257ManualEntryMeetsE12:
                  ("Yamaha", "YZF-R1"), ("Yamaha", "YZF600R"), ("Yamaha", "SR400"), ("Yamaha", "WR250R"),
                  ("Yamaha", "XT250"), ("Yamaha", "Bolt"), ("Yamaha", "V-Star 1300"), ("Yamaha", "V-Star 250"),
                  ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10"), ("Yamaha", "Tenere 700"),
+                 ("Yamaha", "YZF-R6"), ("Yamaha", "YZF-R7"), ("Yamaha", "MT-03"),
                  *[("KTM", m) for m in ("125 Duke", "390 Duke", "690 Duke", "790 Duke", "890 Duke",
                                         "1290 Super Duke R", "RC 390", "1190 RC8", "390 Adventure",
                                         "390 Adventure R", "790 Adventure", "790 Adventure R", "890 Adventure",
@@ -348,7 +349,9 @@ class TestYamahaOwnersManualWrite:
 
     MANUAL = ["YZF-R1", "YZF600R", "SR400", "WR250R", "XT250", "Bolt", "V-Star 1300", "V-Star 250",
               "FZ6", "FZ8", "MT-10",
-              "Tenere 700", "Ténéré 700", "XTZ690"]   # run Yamaha_20260923_210233, after bug fix #6
+              "Tenere 700", "Ténéré 700", "XTZ690",   # run Yamaha_20260923_210233, after bug fix #6
+              # runs Yamaha_20260923_221633 / _222030, after E4 accepted the list record
+              "YZF-R6", "YZF-R7", "MT-03", "YZF600", "YZF690", "MTN320-A"]
     CVT = ["Vino 50", "Vino 125", "Vino Classic"]
 
     @_pytest.mark.parametrize("model", MANUAL + ["XVS950CU", "XVS1300A", "XV250", "YZF1000", "MTN1000"])
@@ -369,15 +372,17 @@ class TestYamahaOwnersManualWrite:
 
     @_pytest.mark.parametrize("model", ["MT-09", "MT-07"])
     def test_held_for_y_amt_stays_unknown(self, model):
-        """Operator, 2026-09-23: held from the write pending what Yamaha's own
-        pages say about a Y-AMT version (and E4 withheld both in this run)."""
+        """Operator, 2026-09-23: they stay unknown and go on the follow-up list
+        (F143) — whether Yamaha sells a Y-AMT version in the market a vehicle
+        was bought in is not settled by the US pages alone."""
         assert resolve_transmission("Yamaha", model).provenance == "unknown", model
 
-    @_pytest.mark.parametrize("model", ["YZF-R6", "YZF-R7", "MT-03",   # E4: their manuals print only YZFR6L, YZFR7T, MT03T
+    @_pytest.mark.parametrize("model", ["YZFR6L", "YZFR7T", "MT03T",   # model-year codes are not read as names
+                                        "YZF-R6S", "MT-03 SP", "YZF-R7 World GP",
                                         "Tenere 700 Rally", "Tenere 700 World Raid",
                                         "XC50", "XC50A", "YZF-R1M", "MT-10 SP", "Vino", "Zuma", "V-Star 650"])
     def test_what_the_run_did_not_prove_stays_unknown(self, model):
-        """E4's three; Tenere 700's variants; XC50, the code of both the Vino 50 and the Vino Classic
+        """The model-year codes the three manuals print, and their variants; Tenere 700's variants; XC50, the code of both the Vino 50 and the Vino Classic
         (so on neither); variants, and the weak spellings no route matched."""
         assert resolve_transmission("Yamaha", model).provenance == "unknown", model
 
