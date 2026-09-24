@@ -212,7 +212,7 @@ class TestEveryPhase257ManualEntryMeetsE12:
                  ("Kawasaki", "KLX300"), ("Kawasaki", "Z650"),
                  ("Yamaha", "YZF-R1"), ("Yamaha", "YZF600R"), ("Yamaha", "SR400"), ("Yamaha", "WR250R"),
                  ("Yamaha", "XT250"), ("Yamaha", "Bolt"), ("Yamaha", "V-Star 1300"), ("Yamaha", "V-Star 250"),
-                 ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10")]
+                 ("Yamaha", "FZ6"), ("Yamaha", "FZ8"), ("Yamaha", "MT-10"), ("Yamaha", "Tenere 700")]
 
     @_pytest.mark.parametrize("make,canonical", PHASE_257)
     def test_its_quote_names_the_mechanism(self, make, canonical):
@@ -334,12 +334,14 @@ class TestYamahaOwnersManualWrite:
     """Run Yamaha_20260923_194048 on the fallback source route
     (claude-opus-5-5@medium): Yamaha's owner's manuals from its Owner's
     Manual Library, each model line the maker's pinned model_list record.
-    14 ready, all kept with names_model true."""
+    14 ready, all kept with names_model true; Tenere 700 added by the re-run
+    after bug fix #6 (Yamaha_20260923_210233)."""
 
     import pytest as _pytest
 
     MANUAL = ["YZF-R1", "YZF600R", "SR400", "WR250R", "XT250", "Bolt", "V-Star 1300", "V-Star 250",
-              "FZ6", "FZ8", "MT-10"]
+              "FZ6", "FZ8", "MT-10",
+              "Tenere 700", "Ténéré 700", "XTZ690"]   # run Yamaha_20260923_210233, after bug fix #6
     CVT = ["Vino 50", "Vino 125", "Vino Classic"]
 
     @_pytest.mark.parametrize("model", MANUAL + ["XVS950CU", "XVS1300A", "XV250", "YZF1000", "MTN1000"])
@@ -364,9 +366,10 @@ class TestYamahaOwnersManualWrite:
         pages say about a Y-AMT version (and E4 withheld both in this run)."""
         assert resolve_transmission("Yamaha", model).provenance == "unknown", model
 
-    @_pytest.mark.parametrize("model", ["YZF-R6", "YZF-R7", "Tenere 700", "MT-03",   # withheld by E4
+    @_pytest.mark.parametrize("model", ["YZF-R6", "YZF-R7", "MT-03",   # E4: their manuals print only YZFR6L, YZFR7T, MT03T
+                                        "Tenere 700 Rally", "Tenere 700 World Raid",
                                         "XC50", "XC50A", "YZF-R1M", "MT-10 SP", "Vino", "Zuma", "V-Star 650"])
     def test_what_the_run_did_not_prove_stays_unknown(self, model):
-        """E4's four; XC50, the code of both the Vino 50 and the Vino Classic
+        """E4's three; Tenere 700's variants; XC50, the code of both the Vino 50 and the Vino Classic
         (so on neither); variants, and the weak spellings no route matched."""
         assert resolve_transmission("Yamaha", model).provenance == "unknown", model

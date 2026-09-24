@@ -352,6 +352,14 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "library.ymcapps.net …/B5Y-28199-14_02.pdf, p. 73: 'Pull the clutch "
        "lever to disengage the clutch.'",
        source_route="claude-opus-5-5@medium"),
+    # Run Yamaha_20260923_210233 (the re-run after bug fix #6: its manual
+    # prints "Ténéré 700", which E4 had read as another name).
+    _E("Yamaha", "Tenere 700", MANUAL, ("tenere 700", "ténéré 700", "tenere700", "xtz690"),
+       "Yamaha owner's manual BRL-28199-11 (2026, 'TENERE 700 - XTZ690'; "
+       "the manual prints 'Ténéré 700'), library.ymcapps.net "
+       "…/BRL-28199-11_02.pdf, p. 67: 'Pull the clutch lever to disengage "
+       "the clutch.'",
+       source_route="claude-opus-5-5@medium"),
     _E("Yamaha", "Vino Classic", CVT, ("vino classic",),
        "Yamaha owner's manual 1TS-F8199-15 (2018, 'VINO CLASSIC - XC50'), "
        "library.ymcapps.net …/1TS-F8199-15_02.pdf, p. 67 (specifications): "

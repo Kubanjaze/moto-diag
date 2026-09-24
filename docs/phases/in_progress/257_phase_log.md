@@ -2544,3 +2544,35 @@ was dead and is removed, and the NFKD break is the one recorded.
 YZF-R7, MT-03), E4 now passes only Tenere 700. Re-running the other three
 would spend source and refute on a rejection the local check already
 shows (the lean-API rule), so the re-run is Tenere 700 alone.
+
+### 2026-09-23 — Yamaha re-run after bug fix #6: Tenere 700 written
+
+**Run** `Yamaha_20260923_210233` (`batch Yamaha "Tenere 700" --source-route
+anthropic`). The first attempt, `Yamaha_20260923_202956`, **stopped** on
+"API Error: Can't reach the API server (ENOTFOUND)", with no usage
+recorded and nothing written; the operator said to try again. Second
+attempt: no stops, 80,364 tokens (source 16,068, refute 64,296; ceiling
+150,000). Found manual; E4 passes ("Ténéré 700"); refute **kept**,
+names_model true, model_line "TENERE 700 - XTZ690". Checked myself: the
+PDF re-derives to the saved text byte for byte, the quote is on PDF p. 67
+(section 7-3, "To start out and accelerate"), not a contents line, and
+passes E12.
+
+Only Tenere 700 was re-run: YZF-R6, YZF-R7 and MT-03 still fail E4 locally
+(model-year codes only; see bug fix #6). MT-09 and MT-07 stay held.
+
+**Written:** Tenere 700, manual; aliases "ténéré 700", "tenere700" and the
+record's code XTZ690. **Tests:** `TestYamahaOwnersManualWrite` (+3; Rally
+and World Raid stay unknown); the E12 guard (+1). **Break-it**, each alone,
+restored by hash: aliases emptied → 3 fail; the accented alias removed →
+1; a "tenere 700 rally" alias slipped in → 1. A first "entry removed"
+break renamed the canonical but kept the aliases, so it still resolved.
+It was not a real break; the one recorded is the emptied aliases.
+
+## Refuter pass
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| Tenere 700 is manual | kept | "Pull the clutch lever to disengage the clutch." | Yamaha OM BRL-28199-11 (2026), PDF p. 67 |
+
+Census 558 → **557** (Yamaha 24 → 23). `TRANSMISSION_LOOKUP` 91 → 92.
