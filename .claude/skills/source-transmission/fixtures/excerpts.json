@@ -1,0 +1,28 @@
+{
+ "_why": "E10 plants. Documents are relative to fixtures/; the test makes them absolute, as candidates.py does. Hand-written, not produced by candidates.py (255D decision 5).",
+ "excerpts": {
+  "Trail 250": [
+   {"document": "library/zz_trail_om.txt", "page": 2, "lines": "1-6", "anchor": "name",
+    "text": "ZZ Motors Owner's Manual\ncover page\nSpecifications\nZZ TRAIL 250 engine: single cylinder\nClutch  Wet multi-plate, cable operated\nTransmission  5-speed constant mesh, return shift"}
+  ],
+  "Glider 300": [
+   {"document": "library/zz_glider300_owners_manual.txt", "page": null, "lines": "1-4", "anchor": "name",
+    "text": "ZZ Glider 300 Owner's Manual\n=== PAGE 1 ===\nWelcome.\nmaintenance note 001"}
+  ]
+ },
+ "bad": [
+  {"_plant": "a document it was not handed: the quote IS in docs/zz_trail_om.txt and that file names the machine, so E3 and E4 pass; only E10 knows the source stage never saw it",
+   "make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found", "transmission": "manual",
+   "quote": "Transmission 5-speed constant mesh, return shift", "document": "docs/zz_trail_om.txt", "page": 12,
+   "evidence_kind": "owners_manual"},
+  {"_plant": "a quote from the right file but outside the excerpt it was handed: E3 passes on the whole file",
+   "make": "ZZ", "spelling": "Glider 300", "aliases": ["glider 300"], "outcome": "found", "transmission": "manual",
+   "quote": "Always pull in the clutch lever when changing gear.", "document": "library/zz_glider300_owners_manual.txt", "page": 9,
+   "evidence_kind": "owners_manual"}
+ ],
+ "good": [
+  {"make": "ZZ", "spelling": "Trail 250", "aliases": ["trail 250"], "outcome": "found", "transmission": "manual",
+   "quote": "Transmission 5-speed constant mesh, return shift", "document": "library/zz_trail_om.txt", "page": 2,
+   "evidence_kind": "owners_manual"}
+ ]
+}

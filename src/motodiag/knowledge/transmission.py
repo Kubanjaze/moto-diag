@@ -80,6 +80,13 @@ class TransmissionEntry:
     transmission: VehicleTransmission
     aliases: tuple[str, ...]
     source: str
+    #: What produced this entry's source stage (Phase 257), as model@effort:
+    #: "subconscious/glm-5.3-marathon@default", or the fallback while
+    #: Subconscious is unavailable — "claude-opus-5-5@medium" (and one entry
+    #: from its first cut, "claude-sonnet-5@default"). None for entries not
+    #: sourced by a batch. A field, not prose, so the fallback's entries can
+    #: be selected and re-run mechanically.
+    source_route: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -157,9 +164,11 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "continuously variable drive; a fixed primary reduction prints one "
        "number, as the same tables do for 'Final reduction 13.708'."),
     _E("Honda", "Metropolitan", CVT, ("metropolitan", "chf50", "chf 50",
-                                      "honda metropolitan"),
-       "Honda Metropolitan owner's manuals 31GJB640 (2020) through 31GJB690 "
-       "(2026): 'Primary reduction  V-matic (2.85:1 - 0.86:1)'. Corroborated "
+                                      "honda metropolitan", "ncw50", "ncw 50"),
+       "Honda Metropolitan owner's manuals 31GJB620 (2018, '2018 NCW50 "
+       "Owner's Manual' — NCW50 is the Metropolitan's model code; Phase 257 "
+       "run Honda_20260923_155534, motopub) and 31GJB640 (2020) through "
+       "31GJB690 (2026): 'Primary reduction  V-matic (2.85:1 - 0.86:1)'. Corroborated "
        "by the CHF50 SERVICE manual, whose specification table carries the "
        "full variator set -- 'Drive belt width', 'Movable drive face', "
        "'Driven pulley', 'Weight roller', 'Clutch outer I.D.', 'Lining "
@@ -181,6 +190,54 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "Co., Ltd. 2020): the same three groups as the C125 — 'WEIGHT SET, "
        "PRIMARY CLUTCH' in E-7 'ONE WAY CLUTCH', 'DISK, CLUTCH FRICTION' "
        "in E-8, 'LEVER COMP., CLUTCH' in E-6."),
+    # Phase 257 tranche 1, run Honda_20260922_233404, both refute verdicts
+    # kept. The plan expected the GROM125 service manual's page images to
+    # carry this entry, because its text layer is OCR; the batch found a
+    # strictly better source first — Honda's own spec pages, digital
+    # text. The OCR corroborates and is deliberately not the citation.
+    _E("Honda", "Grom 125", MANUAL,
+       ("grom", "grom 125", "grom125", "grom abs", "grom sp",
+        "grom (msx125s)", "grom abs (msx125as)", "grom sp (msx125ss)",
+        "msx125", "msx 125", "msx125s", "msx125as", "msx125ss"),
+       "Honda's own Grom specifications pages: 2025 (Model 'Grom ABS "
+       "(MSX125AS) / Grom SP (MSX125SS) / Grom (MSX125S)') reads "
+       "'Transmission  Manual; 5 speeds' and 'Clutch  Multiplate wet'; the "
+       "2020 page for the 124.9 cc Grom reads 'Transmission  Manual; four "
+       "speeds'. The GROM125 service manual's OCR page 9 says the same "
+       "(constant-mesh four-speed, wet multiplate clutch, 1-N-2-3-4) but "
+       "is OCR evidence and is not the citation.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    # Phase 257, run Honda_20260923_155534, source claude-opus-5-5@medium,
+    # refute on Opus: American Honda's 2018 owner's manuals from motopub,
+    # fetched by acquire.py into ~/research/motodiag/acquired/Honda/. Each
+    # kept, names_model true (the manual's own model line), each quote the
+    # side-stand check's "pull the clutch lever in" — a rider-operated clutch.
+    _E("Honda", "CBR600RR", MANUAL, ("cbr600rr", "cbr 600rr", "cbr 600 rr"),
+       "2rom-prd-data.hondamotopub.com …/CBR600RR-RA/2018/CBR600RR.RA_31MJC650_0.pdf "
+       "(2018 CBR600RR/RA owner's manual), p. 69: '4. Start the engine, pull "
+       "the clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CBR1000RR", MANUAL, ("cbr1000rr", "cbr 1000rr", "cbr 1000 rr"),
+       "2rom-prd-data.hondamotopub.com …/CBR1000RR-RA-S1-S2/2018/"
+       "CBR1000RR.RA.S1.S2_31MKF610_0.pdf (2018 CBR1000RR/RA/S1/S2 owner's "
+       "manual), p. 156: '4. Start the engine, pull the clutch lever in, and "
+       "shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CB500F", MANUAL, ("cb500f", "cb 500f", "cb 500 f"),
+       "2rom-prd-data.hondamotopub.com …/CB500F-FA/2018/CB500F.FA_31MJWB20_0.pdf "
+       "(2018 CB500F/FA owner's manual), p. 79: '4. Start the engine, pull "
+       "the clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "XR650L", MANUAL, ("xr650l", "xr 650l", "xr 650 l"),
+       "2rom-prd-data.hondamotopub.com …/XR650L/2018/XR650L_31MGW660_0.pdf "
+       "(2018 XR650L owner's manual), p. 71: '4. Start the engine, pull the "
+       "clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Honda", "CRF250L", MANUAL, ("crf250l", "crf 250l", "crf 250 l"),
+       "2rom-prd-data.hondamotopub.com …/CRF250L/2018/CRF250L_31KZZA50_0.pdf "
+       "(2018 CRF250L owner's manual), p. 77: '4. Start the engine, pull the "
+       "clutch lever in, and shift the transmission into gear.'",
+       source_route="claude-opus-5-5@medium"),
 
     # --- Yamaha ----------------------------------------------------------
     _E("Yamaha", "Zuma 125", CVT, ("zuma 125", "zuma125", "yw125", "yw125y"),
@@ -221,6 +278,413 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "carries the bare form 'XMAX'. These covers are ALSO the evidence "
        "that XC155 is not an XMAX: Yamaha's XMAX codes are YP125RA, CZD250 "
        "and CZD300, and none of them is XC155 — which is correct, and incomplete: XC155 is the SMAX, sourced in its own entry above."),
+    # Phase 257, run Yamaha_20260923_194048, source claude-opus-5-5@medium,
+    # refute on Opus: Yamaha's owner's manuals from its Owner's Manual
+    # Library (library.ymcapps.net), fetched by acquire.py into
+    # ~/research/motodiag/acquired/Yamaha/, each the newest US English
+    # edition. Each kept, names_model true; the model line is the maker's
+    # model_list record ("dispModelName"), pinned by hash as the PDF's
+    # referrer, and its model code is an alias. Pages are PDF pages. "XC50"
+    # is the code of both the Vino 50 and the Vino Classic, so it is on neither.
+    _E("Yamaha", "YZF-R1", MANUAL, ("yzf-r1", "yzf r1", "yzfr1", "yzf1000"),
+       "Yamaha owner's manual D45-28199-11 (2026, 'YZF-R1 - YZF1000'), "
+       "library.ymcapps.net …/D45-28199-11_02.pdf, p. 78: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "YZF600R", MANUAL, ("yzf600r", "yzf 600r", "yzf 600 r"),
+       "Yamaha owner's manual 5AH-28199-1B (2007, 'YZF600R'), "
+       "library.ymcapps.net …/5AH-28199-1B_02.pdf, p. 39: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "SR400", MANUAL, ("sr400", "sr 400"),
+       "Yamaha owner's manual 2RD-28199-13 (2018, 'SR400'), "
+       "library.ymcapps.net …/2RD-28199-13_02.pdf, p. 38: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino 50", CVT, ("vino 50", "vino50"),
+       "Yamaha owner's manual 3D1-F8199-15 (2011, 'VINO 50 - XC50'), "
+       "library.ymcapps.net …/3D1-F8199-15_02.pdf, p. 69 (specifications): "
+       "'Transmission type V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "WR250R", MANUAL, ("wr250r", "wr 250r", "wr 250 r"),
+       "Yamaha owner's manual 2CF-28199-17 (2020, 'WR250R'), "
+       "library.ymcapps.net …/2CF-28199-17_02.pdf, p. 44: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "XT250", MANUAL, ("xt250", "xt 250"),
+       "Yamaha owner's manual B1U-28199-16 (2025, 'XT250'), "
+       "library.ymcapps.net …/B1U-28199-16_02.pdf, p. 38: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Bolt", MANUAL, ("bolt", "xvs950cu", "xvs 950cu"),
+       "Yamaha owner's manual BP6-28199-13 (2020, 'BOLT - XVS950CU'), "
+       "library.ymcapps.net …/BP6-28199-13_02.pdf, p. 40: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "V-Star 1300", MANUAL, ("v-star 1300", "v star 1300", "vstar 1300", "xvs1300a", "xvs 1300a"),
+       "Yamaha owner's manual 3D8-28199-18 (2015, 'V STAR 1300 - XVS1300A'), "
+       "library.ymcapps.net …/3D8-28199-18_02.pdf, p. 39: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "V-Star 250", MANUAL, ("v-star 250", "v star 250", "vstar 250", "xv250", "xv 250"),
+       "Yamaha owner's manual BJP-28199-15 (2026, 'V STAR 250 - XV250'), "
+       "library.ymcapps.net …/BJP-28199-15_02.pdf, p. 35: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino 125", CVT, ("vino 125", "vino125", "yj125y"),
+       "Yamaha owner's manual 5YR-F8199-15 (2009, 'VINO 125 - YJ125Y'; the "
+       "manual itself prints only 'YJ125Y'), library.ymcapps.net "
+       "…/5YR-F8199-15_02.pdf, p. 71 (specifications): 'Transmission type "
+       "V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "FZ6", MANUAL, ("fz6", "fz 6", "fz6-shg", "fz6 shg"),
+       "Yamaha owner's manual 4S8-28199-12 (2009, 'FZ6 - FZ6-SHG'), "
+       "library.ymcapps.net …/4S8-28199-12_02.pdf, p. 41: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "FZ8", MANUAL, ("fz8", "fz 8", "fz8-n", "fz8 n"),
+       "Yamaha owner's manual 39P-28199-12 (2013, 'FZ8 - FZ8-N'), "
+       "library.ymcapps.net …/39P-28199-12_02.pdf, p. 45: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "MT-10", MANUAL, ("mt-10", "mt 10", "mt10", "mtn1000"),
+       "Yamaha owner's manual B5Y-28199-14 (2026, 'MT-10 - MTN1000'), "
+       "library.ymcapps.net …/B5Y-28199-14_02.pdf, p. 73: 'Pull the clutch "
+       "lever to disengage the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    # Runs Yamaha_20260923_221633 (YZF-R6) and Yamaha_20260923_222030 (YZF-R7,
+    # MT-03), after E4 accepted the pinned list record (operator,
+    # 2026-09-23): each manual prints only model-year codes (YZFR6L, YZFR7T,
+    # MT03T), and the record names the model exactly. Those codes are not
+    # aliases: a year letter is not read off (YZFR1M is the R1M).
+    _E("Yamaha", "YZF-R6", MANUAL, ("yzf-r6", "yzf r6", "yzfr6", "yzf600"),
+       "Yamaha owner's manual BN6-28199-13 (2020, 'YZF-R6 - YZF600'; the "
+       "manual prints 'YZFR6L/YZFR6LC'), library.ymcapps.net "
+       "…/BN6-28199-13_02.pdf, p. 36: 'The clutch lever is located on the "
+       "left side of the handlebar. To disengage the clutch, pull the lever "
+       "toward the handlebar grip.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "YZF-R7", MANUAL, ("yzf-r7", "yzf r7", "yzfr7", "yzf690"),
+       "Yamaha owner's manual D42-28199-10 (2026, 'YZF-R7 - YZF690'; the "
+       "manual prints 'YZFR7T/YZFR7TC'), library.ymcapps.net "
+       "…/D42-28199-10_02.pdf, p. 98: '6. Open the throttle part way and "
+       "gradually release the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "MT-03", MANUAL, ("mt-03", "mt 03", "mt03", "mtn320-a"),
+       "Yamaha owner's manual BRG-F8199-11 (2026, 'MT-03 - MTN320-A'; the "
+       "manual prints 'MT03T/MT03TC'), library.ymcapps.net "
+       "…/BRG-F8199-11_02.pdf, p. 85: '6. Open the throttle part way and "
+       "gradually release the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    # Run Yamaha_20260923_210233 (the re-run after bug fix #6: its manual
+    # prints "Ténéré 700", which E4 had read as another name).
+    _E("Yamaha", "Tenere 700", MANUAL, ("tenere 700", "ténéré 700", "tenere700", "xtz690"),
+       "Yamaha owner's manual BRL-28199-11 (2026, 'TENERE 700 - XTZ690'; "
+       "the manual prints 'Ténéré 700'), library.ymcapps.net "
+       "…/BRL-28199-11_02.pdf, p. 67: 'Pull the clutch lever to disengage "
+       "the clutch.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("Yamaha", "Vino Classic", CVT, ("vino classic",),
+       "Yamaha owner's manual 1TS-F8199-15 (2018, 'VINO CLASSIC - XC50'), "
+       "library.ymcapps.net …/1TS-F8199-15_02.pdf, p. 67 (specifications): "
+       "'Transmission type: V-belt automatic'.",
+       source_route="claude-opus-5-5@medium"),
+
+    # --- KTM -------------------------------------------------------------
+    # Phase 257, run KTM_20260923_215704, source claude-opus-5-5@medium,
+    # refute on Opus: KTM's owner's manuals from ktm.com's manual list
+    # (bikemanuals.manuals.json, saved as each PDF's referrer), fetched by
+    # acquire.py into ~/research/motodiag/acquired/KTM/, each the newest
+    # year's US English edition, or the first English one where the list
+    # has no US row (the market is named). Each kept, names_model true, the
+    # model line the manual's own title. Pages are PDF pages. No manual
+    # names an AMT (0 of 26; the 1390 Super Adventure S EVO manual, not a
+    # census spelling, names it 11 times).
+    _E("KTM", "125 Duke", MANUAL, ("125 duke",),
+       "KTM owner's manual 26_3240318_en_BA.pdf (2026, JP English, '125 "
+       "DUKE'), listed by ktm.com's manual list, p. 61: 'Pull the clutch "
+       "when performing emergency braking or braking on slippery surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Duke", MANUAL, ("390 duke",),
+       "KTM owner's manual 24_3214961_en_OM.pdf (2024, US English, '390 "
+       "DUKE'), listed by ktm.com's manual list, p. 64: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 Duke", MANUAL, ("690 duke",),
+       "KTM owner's manual 19_3213923_en_OM.pdf (2019, EU English, '690 "
+       "Duke'), listed by ktm.com's manual list, p. 76: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Duke", MANUAL, ("790 duke",),
+       "KTM owner's manual 27_3240428_en_BA.pdf (2027, US English, '790 "
+       "DUKE'), listed by ktm.com's manual list, p. 80: 'Pull the clutch "
+       "when performing emergency braking or braking on slippery surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Duke", MANUAL, ("890 duke",),
+       "KTM owner's manual 22_3214543_en_OM.pdf (2022, US English, '890 "
+       "DUKE'), listed by ktm.com's manual list, p. 64: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Duke R", MANUAL, ("1290 super duke r",),
+       "KTM owner's manual 23_3214761_en_OM.pdf (2023, JP English, '1290 "
+       "SUPER DUKE R'), listed by ktm.com's manual list, p. 86: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "RC 390", MANUAL, ("rc 390",),
+       "KTM owner's manual 24_3214955_en_OM.pdf (2024, US English, 'RC "
+       "390'), listed by ktm.com's manual list, p. 55: 'Pull in the clutch, "
+       "if you perform emergency or full braking, or if you brake on a "
+       "slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1190 RC8", MANUAL, ("1190 rc8",),
+       "KTM owner's manual 10_3211524_en_OM.pdf (2010, US English, '1190 RC8 "
+       "USA'), listed by ktm.com's manual list, p. 101: 'Pull the clutch "
+       "lever, shift into first gear, release the clutch slowly and at the "
+       "same time open the throttle.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Adventure", MANUAL, ("390 adventure",),
+       "KTM owner's manual 24_3214964_en_OM.pdf (2024, US English, '390 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 59: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "390 Adventure R", MANUAL, ("390 adventure r",),
+       "KTM owner's manual 26_3240325_en_BA.pdf (2026, US English, '390 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 75: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Adventure", MANUAL, ("790 adventure",),
+       "KTM owner's manual 26_3240313_en_BA.pdf (2026, US English, '790 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 85: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "790 Adventure R", MANUAL, ("790 adventure r",),
+       "KTM owner's manual 26_3240314_en_BA.pdf (2026, CN English, '790 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 80: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure", MANUAL, ("890 adventure",),
+       "KTM owner's manual 24_3214931_en_OM.pdf (2024, EU English, '890 "
+       "ADVENTURE'), listed by ktm.com's manual list, p. 81: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure R", MANUAL, ("890 adventure r",),
+       "KTM owner's manual 26_3240297_en_BA.pdf (2026, US English, '890 "
+       "ADVENTURE R'), listed by ktm.com's manual list, p. 84: 'Pull the "
+       "clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "890 Adventure R Rally", MANUAL, ("890 adventure r rally",),
+       "KTM owner's manual 27_3240371_en_BA.pdf (2027, US English, '890 "
+       "ADVENTURE R RALLY'), listed by ktm.com's manual list, p. 84: 'Pull "
+       "the clutch when performing emergency braking or braking on slippery "
+       "surfaces.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1090 Adventure R", MANUAL, ("1090 adventure r",),
+       "KTM owner's manual 19_3213917_en_OM.pdf (2019, US English, '1090 "
+       "Adventure R'), listed by ktm.com's manual list, p. 115: 'Pull in the "
+       "clutch, if you perform emergency or full braking, or if you brake on "
+       "a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1190 Adventure", MANUAL, ("1190 adventure",),
+       "KTM owner's manual 16_3213388_en_OM.pdf (2016, US English, '1190 "
+       "Adventure'), listed by ktm.com's manual list, p. 91: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Adventure", MANUAL, ("1290 super adventure",),
+       "KTM owner's manual 16_3213393_en_OM.pdf (2016, US English, '1290 "
+       "Super Adventure'), listed by ktm.com's manual list, p. 97: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "1290 Super Adventure R", MANUAL, ("1290 super adventure r",),
+       "KTM owner's manual 24_3214941_en_OM.pdf (2024, US English, '1290 "
+       "SUPER ADVENTURE R'), listed by ktm.com's manual list, p. 86: 'Pull "
+       "in the clutch, if you perform emergency or full braking, or if you "
+       "brake on a slippery ground.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 Enduro", MANUAL, ("690 enduro",),
+       "KTM owner's manual 10_3211511_en_OM.pdf (2010, AU, GB English, '690 "
+       "ENDURO EU'), listed by ktm.com's manual list, p. 51: 'Pull the "
+       "clutch lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "690 SMC", MANUAL, ("690 smc",),
+       "KTM owner's manual 11_3211659_en_OM.pdf (2011, EU English, '690 SMC "
+       "EU'), listed by ktm.com's manual list, p. 45: 'Pull the clutch "
+       "lever, engage 1st gear, release the clutch lever slowly and "
+       "simultaneously open the throttle carefully.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "950 Super Enduro R", MANUAL, ("950 super enduro r",),
+       "KTM owner's manual 08_3211240_OM_EN.pdf (2009, US English, '950 "
+       "SUPER ENDURO R'), listed by ktm.com's manual list, p. 26: 'Pull the "
+       "clutch lever and engage 1st gear.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "250 EXC TPI", MANUAL, ("250 exc tpi",),
+       "KTM owner's manual 22_3214421_en_OM.pdf (2022, EU English, '250 EXC "
+       "TPI'), listed by ktm.com's manual list, p. 39: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "300 EXC", MANUAL, ("300 exc",),
+       "KTM owner's manual 27_3240387_en_BA.pdf (2027, EU English, '300 "
+       "EXC'), listed by ktm.com's manual list, p. 42: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "500 EXC-F", MANUAL, ("500 exc-f",),
+       "KTM owner's manual 27_3240392_en_BA.pdf (2027, US English, '500 "
+       "EXC-F'), listed by ktm.com's manual list, p. 43: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("KTM", "450 SX-F", MANUAL, ("450 sx-f",),
+       "KTM owner's manual 27_3240384_en_BA.pdf (2027, US English, '450 "
+       "SX-F'), listed by ktm.com's manual list, p. 27: 'Adjust the basic "
+       "position of the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+
+    # --- Suzuki ----------------------------------------------------------
+    # Phase 257, run Suzuki_20260923_093052: Suzuki's
+    # own current spec pages, fetched by acquire.py into
+    # ~/research/motodiag/acquired/Suzuki/ with script-written provenance;
+    # every refute verdict kept, every page names its model (model scope).
+    # The SV650 is deliberately absent: its page is the SV650 ABS, which
+    # refute read as family evidence (bug fix #3).
+    # E12 correction (2026-09-23): GSX-R750, GSX-R1000, GSX-R600, GSX-S1000,
+    # Boulevard M109R and V-Strom 1050 were reverted to unknown — their pages
+    # name only a gear count, a slipper/assist clutch or a quick-shifter, none
+    # of which shows a rider-operated clutch or a foot-shift pattern.
+    _E("Suzuki", "V-Strom 650", MANUAL, ("v strom 650", "vstrom 650", "vstrom650"),
+       "suzukicycles.com/adventure/2025/v-strom-650 (2025 V-Strom 650): 'The "
+       "multi-plate clutch has precise push rod actuation of the pressure "
+       "plate for a light lever pull and a consistent release point.' — the "
+       "rider's clutch pull. Re-quoted twice under E12: first from a gear "
+       "count ('The six-speed transmission suits…'), then from an Easy Start "
+       "sentence that names the clutch lever only in a negation ('without "
+       "pulling in the clutch lever'), which E12 no longer accepts.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    # Live vehicle #8 is a 2019 SV650. Run Suzuki_20260923_141812 on the
+    # fallback source route (claude-opus-5-5 at medium; Subconscious
+    # suspended), refute on Opus: kept, names_model true — the same
+    # document, quote and classification as the first cut's claude-sonnet-5
+    # run (Suzuki_20260923_123652). From the ABS edition's page — the
+    # operator's one named exception.
+    _E("Suzuki", "SV650", MANUAL, ("sv650", "sv 650", "sv650 abs", "sv 650 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "suzukicycles.com/street/2026/sv650-abs (2026 SV650 ABS): 'The "
+       "multi-plate clutch has precise push rod actuation of the pressure "
+       "plate for a light pull and consistent release point.' — the rider's "
+       "clutch pull.",
+       source_route="claude-opus-5-5@medium"),
+    _E("Suzuki", "DR-Z400S", MANUAL, ("dr z400s", "drz400s", "dr z 400s", "drz 400s"),
+       "suzukicycles.com/dualsport/2024/dr-z400s (2024 DR-Z400S): 'Compact, "
+       "five-speed transmission utilizes a cable-operated clutch with a "
+       "separate magnesium outer cover for simplified clutch maintenance.'",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Suzuki", "Boulevard C50", MANUAL, ("boulevard c50", "boulevard c 50"),
+       "suzukicycles.com/cruiser/2025/boulevard-c50 (2025 Suzuki Boulevard "
+       "C50): 'With a light pull, the clutch feeds engine power to the "
+       "smooth-shifting five-speed transmission and out to the clean shaft "
+       "drive.'",
+       source_route="subconscious/glm-5.3-marathon@default"),
+
+    # --- BMW -------------------------------------------------------------
+    # Phase 257, run BMW_20260923_142134, source claude-opus-5-5@medium
+    # (Subconscious suspended), refute on Opus: BMW Motorrad's own rider's
+    # manuals, fetched through its manuals site's static index by acquire.py
+    # into ~/research/motodiag/acquired/BMW/. Each kept, names_model true
+    # (the manual's title page names the model), each quote passing E12.
+    _E("BMW", "K 1200 GT", MANUAL, ("k1200gt", "k 1200 gt"),
+       "manuals.bmw-motorrad.com …/PDF/K_0587_RM_0414_K1200GT_01.pdf (Rider's "
+       "Manual K 1200 GT), p. 144: 'Clutch pulled when ignition was OFF "
+       "Switch on the ignition, then pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1200 RS", MANUAL, ("k1200rs", "k 1200 rs"),
+       "manuals.bmw-motorrad.com …/PDF/K_0547_WA_0504_K1200RS_01.pdf (K 1200 RS "
+       "maintenance manual), p. 64, technical data: 'Manual transmission "
+       "6-speed with claw shift and integral…'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "R 1200 GS", MANUAL, ("r1200gs", "r 1200 gs"),
+       "manuals.bmw-motorrad.com …/PDF/R_0A01_RM_0213_R1200GS_01.pdf (Rider's "
+       "Manual R 1200 GS), p. 83: 'Select neutral or, if a gear is engaged, "
+       "pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "S 1000 R", MANUAL, ("s 1000 r", "s1000r"),
+       "manuals.bmw-motorrad.com …/PDF/S_0D02_RM_0913_S1000R_01.pdf (Rider's "
+       "Manual S 1000 R), p. 59: 'Brake, pull the clutch lever or turn the "
+       "throttle twistgrip … to deactivate the cruise-control system.'",
+       source_route="claude-opus-5-5@medium"),
+    # Re-sourced in run BMW_20260923_154333 (same route, refute unchanged)
+    # after the first run's source stage quoted lines E12 rejects from these
+    # same manuals: reader misses, 4 / 9 / 6 passing lines in their excerpts.
+    _E("BMW", "K 1600 GT", MANUAL, ("k1600gt", "k 1600 gt"),
+       "manuals.bmw-motorrad.com …/PDF/K_0601_RM_1210_K1600GT_01_1Auf.pdf "
+       "(Rider's Manual K 1600 GT), p. 84: 'Select neutral or, if a gear is "
+       "engaged, pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1300 S", MANUAL, ("k1300s", "k 1300 s"),
+       "manuals.bmw-motorrad.com …/PDF/K_0508_RM_1111_K1300S_01.pdf (Rider's "
+       "Manual K 1300 S), p. 70: 'Select neutral or, if a gear is engaged, "
+       "pull the clutch lever.'",
+       source_route="claude-opus-5-5@medium"),
+    _E("BMW", "K 1200 S", MANUAL, ("k1200s", "k 1200 s"),
+       "manuals.bmw-motorrad.com …/PDF/K_0581_RM_0904_K1200S_01.pdf (Rider's "
+       "Manual K 1200 S), p. 58: 'Manual gearbox The motorcycle can be started "
+       "in the neutral position or with a gear engaged and the clutch pressed.'",
+       source_route="claude-opus-5-5@medium"),
+
+    # --- Kawasaki --------------------------------------------------------
+    # Phase 257, run Kawasaki_20260923_100438: Kawasaki's own model-year
+    # spec pages, fetched by acquire.py (cookie jar) into
+    # ~/research/motodiag/acquired/Kawasaki/; each quote is the page's own
+    # spec row and names a foot-shift pattern ("return shift") or a manual
+    # clutch; refute kept each with names_model true. Three come from the
+    # ABS edition's page — the operator's one named exception — and say so.
+    _E("Kawasaki", "Ninja ZX-10R", MANUAL, ("zx 10r", "zx10r", "ninja zx 10r", "ninja zx10r"),
+       "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-10r/2026-ninja-zx-10r "
+       "(2026 Ninja ZX-10R), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "Ninja ZX-6R", MANUAL, ("zx 6r", "zx6r", "ninja zx 6r", "ninja zx6r"),
+       "kawasaki.com/en-us/motorcycle/ninja/supersport/ninja-zx-6r/2027-ninja-zx-6r "
+       "(2027 Ninja ZX-6R), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "Ninja H2", MANUAL, ("ninja h2", "ninjah2", "ninja h2 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/ninja/hypersport/ninja-h2/2026-ninja-h2-abs "
+       "(2026 Ninja H2 ABS), spec table: 'Transmission 6-speed, return shift, "
+       "dog-ring'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "KLR650", MANUAL, ("klr650", "klr 650"),
+       "kawasaki.com/en-us/motorcycle/klr/dual-sport/klr650/2026-klr650 (2026 "
+       "KLR650), spec table: 'Transmission 5-speed, return shift with wet "
+       "multi-disc manual clutch'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "Z900", MANUAL, ("z900", "z 900", "z900 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/z/supernaked/z900/2026-z900-abs (2026 Z900 "
+       "ABS), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "Ninja 300", MANUAL, ("ninja 300", "ninja300", "ninja 300 abs"),
+       "From the ABS edition's page (the base model's only current page): "
+       "kawasaki.com/en-us/motorcycle/ninja/sport/ninja-300/2026-ninja-300-abs "
+       "(2026 Ninja 300 ABS), spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "KLX300", MANUAL, ("klx300", "klx 300"),
+       "kawasaki.com/en-us/motorcycle/klx/dual-sport/klx300/2026-klx300 (2026 "
+       "KLX300), spec table: 'Transmission 6-speed, return shift with wet "
+       "multi-disc manual clutch'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
+    _E("Kawasaki", "Z650", MANUAL, ("z650", "z 650"),
+       "kawasaki.com/en-us/motorcycle/z/supernaked/z650/2025-z650 (2025 Z650), "
+       "spec table: 'Transmission 6-speed, return shift'.",
+       source_route="subconscious/glm-5.3-marathon@default"),
 
     # --- Kymco -----------------------------------------------------------
     _E("Kymco", "Agility", CVT, ("agility", "agility 50", "agility50",
@@ -241,6 +705,18 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "254 recorded that this PDF's internal Title metadata reads "
        "'DOWNTOWN 125i(ok)' — High confidence in the quotes, Medium that "
        "the document is authored as a Like 150i manual."),
+    # Phase 257 tranche 1, run Kymco_20260922_232607, refute verdict kept.
+    # The manual is a scanned PDF, so refute rendered the spec page itself
+    # (pypdfium2, PDF page 57, printed 56, landscape) and read the line from
+    # the image — the OCR layer was never the evidence.
+    _E("Kymco", "K-Pipe", MANUAL,
+       ("k-pipe", "k-pipe 125", "kpipe", "kpipe 125", "kpipe125",
+        "t300-kb25ka-a"),
+       "Kymco K-Pipe 125 owner's manual (Version T300-KB25KA-A), spec table: "
+       "'Transmission.......................... 4-speed, foot shift'. "
+       "Corroborated by a rider clutch cable with 5-10 mm free play and an "
+       "N-1-2-3-4 gear pattern diagram.",
+       source_route="subconscious/glm-5.3-marathon@default"),
 
     # --- SYM -------------------------------------------------------------
     # SYM is the marque that proves the table is not 'scooter maker means
@@ -250,9 +726,32 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
        "centrifugal clutch' and 'Transmission  4 - speed gear change'. "
        "This is the mechanism definition of semi_auto_centrifugal, in the "
        "maker's own words."),
-    _E("SYM", "Wolf 150", MANUAL, ("wolf", "wolf 150", "wolf150"),
-       "SYM Wolf 150 owner's manual: 'Clutch lever' in the controls list "
-       "and a 'Clutch lever free play' maintenance item."),
+    # The Classic 150 is the Wolf 150 wearing its spec-page name: the same
+    # owner's manual (page 6 'MODEL: WOLF SERIES', 149.5 cc) has its spec
+    # table headed 'Model Classic 150' (PA15C1-A / PA15C1-C). Phase 257
+    # tranche 1, run SYM_20260922_232240, refute verdict kept.
+    _E("SYM", "Wolf 150", MANUAL, ("wolf", "wolf 150", "wolf150",
+                                  "wolf classic 150", "wolfclassic150",
+                                  "wolf classic", "wolf series"),
+       "SYM Wolf 150 owner's manual: 'Squeeze the clutch lever fully, "
+       "operate change pedal to the proper position, then release the "
+       "clutch lever to make a gear change.' (TRANSMISSION OPERATION, PDF "
+       "page 18; spec table PDF page 35: 'Clutch Wet disk type / "
+       "Transmission Gear', five speeds). Earlier evidence: 'Clutch "
+       "lever' in the controls list and a 'Clutch lever free play' "
+       "maintenance item."),
+    # Phase 257 tranche 1, run SYM_20260922_232240, refute verdict kept.
+    _E("SYM", "Wolf CR300i", MANUAL,
+       ("wolf cr300i", "wolf cr 300i", "wolfcr300i", "cr300i", "cr 300i",
+        "pf30a3 eu"),
+       "SYM Wolf CR300i owner's manual (sha256 e50db79f…, the library's "
+       "v2/sympdf copy and the tranche's fetch are byte-identical), PDF page "
+       "22: 'Start engine, squeeze the clutch lever fully, push shift pedal "
+       "down to engage the 1st gear'. Re-quoted under E12 (2026-09-23): the "
+       "first quote, 'Always use the clutch when changing gear.' (page 12), "
+       "names no clutch lever or shift pedal. Spec table PDF page 24: 'Model "
+       "WOLF CR 300i / Specification PF30A3-EU', 278 cc.",
+       source_route="subconscious/glm-5.3-marathon@default"),
     _E("SYM", "Mio 50", CVT, ("mio", "mio 50", "mio50"),
        "SYM Mio 50 owner's manual: 'Clutch  Centrifugal type  "
        "Transmission  CVT'."),

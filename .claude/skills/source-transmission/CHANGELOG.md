@@ -1,0 +1,218 @@
+# source-transmission — changelog
+
+## 2026-09-22 — created (Phase 257)
+
+A sandboxed, headless procedure for the transmission lookup. Built boundary
+first: the sandbox profile and its planted-attempt test before any stage
+that runs a model, because the Step 0 finding that shaped everything was
+that **a writes-only profile was not a boundary** — a dry-run push to
+GitHub authenticated through the macOS keychain helper.
+
+**Two routes.** The source stages run through Subconscious (`subc claude`,
+GLM-5.3 Marathon) — the operator's reason for the orchestrator is to spend
+the long, context-heavy reading there. Refute runs on Opus. A credential
+only ever travels on its own route; the Subconscious route carries none
+(subc holds its own). The guard exists because it happened: the operator's
+first key file pointed the Anthropic token at a third-party host.
+
+**The model's account is never the evidence.** entry_check matches every
+quote against the document text; refute re-opens every page; the leak
+checks in Step 0 were run independently of what the model reported. In the
+first sandboxed GLM run a control failed for a reason the model then
+explained wrongly — the premise, observed.
+
+## 2026-09-22 — E9: evidence copies must declare their originals (F141)
+
+The Honda batch saved text renders under `evidence/` and E3 verified the
+quotes against those renders — files the source stage itself wrote. A
+model that edits its own copy passed the check, because the check read
+the copy. Now a document under `evidence/` must carry a
+`<file>.provenance.json` sidecar (original — an on-disk library path or
+a URL — plus its sha256, and `fetched_as` for a URL). E9 rejects a copy
+with no sidecar, an unreadable original, or a hash that no longer
+matches; E3 extracts the ORIGINAL's text in entry_check's own code
+(HTML→text there, `.txt` raw, PDF via pypdf) and matches the quote
+against that, never against the copy. Known-bad fixtures plant a
+doctored copy, a missing sidecar and a stale hash; both breaks were
+seen to fail before the check was trusted. Filed and closed as F141 in
+the same commit.
+
+## 2026-09-23 — the source stage is one turn with no tools (token redesign)
+
+As an agent loop the source stage cost ~2.4M tokens a spelling; Kymco's
+one spelling was 7,661,322 input tokens. It browsed. Now `candidates.py`
+(no model) cuts the library to excerpts per spelling — ±40 lines, path,
+page — and the source stage gets those in its prompt, with `--tools ""`,
+and answers once. A spelling with no excerpt is `no_evidence` and the
+model is not called. More than two turns is an error.
+
+This also closes what E9 left open (F141): a sandboxed model with tools
+could write the "original" a sidecar declares. The stage now writes
+nothing, and **E10** rejects a finding whose document is not one of the
+excerpts it was handed, or whose quote is not inside them. E3 reads a
+library original through `_extract_text`, so an HTML page is matched as
+the text the stage saw.
+
+Web acquire left the source stage with this change: a manual not on disk
+comes back `no_evidence`. Refute is unchanged and keeps its tools.
+
+## 2026-09-23 — every stage's tokens are recorded; 150K per spelling is a stop
+
+`summary.json` carries `tokens`: each stage's usage from `claude -p`'s
+`modelUsage`, the total, and the ceiling — 150,000 × spellings sent to
+the model, set by the operator and not an option. Over it after the
+source stage, refute is not run. The runs did always record usage in
+`source.json`; nothing summed it or acted on it.
+
+## 2026-09-23 — acquire.py, the operator inbox, E11
+
+Maker documents now enter the library only through `acquire.py`: a
+measured route per make (spec pages, BMW's Nav.xml, Honda motopub's JSON,
+SYM and Genuine PDF links) or the operator's `inbox/`. The script writes
+every sidecar; each original gets a derived text that E11 re-derives from
+the maker's bytes. E11 accepts a file on the make's own host, or one
+linked — relative links resolved like a browser — from an unchanged
+maker-host page in the library (SYM's Dropbox-hosted Wolf 150).
+`candidates.py` reads acquired files only through their E11-checked text.
+
+## 2026-09-23 — refute's own budget; a document sources only the model it names
+
+Refute is budgeted apart (per finding refuted; the figure awaits the
+operator) and is never trimmed or skipped — over budget is a stop. A
+finding whose document names only a sibling or the family (the 4609
+over-claim: "1290 Super Duke GT" for the 1290 Super Duke) is family
+evidence: recorded, refuted, and it writes nothing unless refute's quoted
+line names the model and is on the page. acquire.py dedupes by content
+hash, never overwrites a pinned referrer, and refuses a library inside the
+repository.
+
+## 2026-09-23 — a dry run before the source call (operator, after Triumph)
+
+Triumph sent 15 spellings and Yamaha 9, and wrote nothing, because their
+spec pages give clutch type and gear count only as table cells. Now, before
+the source call, `entry_check.mechanism_lines` counts each spelling's
+excerpt sentences that pass E12 or name a non-manual mechanism (V-matic,
+CVT, DCT, Y-AMT, AMT, centrifugal, direct drive). A spelling with none is
+`no_evidence`, "no mechanism line in the fetched pages", and costs no call.
+The counts are in `summary.mechanism_lines`.
+
+Controls on the real runs: every written BMW and Honda spelling (13 of 13)
+would still be sent, and none of Yamaha's 9. Triumph would still send 5,
+all on one suspension sentence that passes E12's word-"manual" rule.
+
+## 2026-09-23 — E12: the word "manual" needs a gearbox beside it (operator)
+
+"Manual" now counts only within three words of transmission, gearbox,
+gear shift or a gear count ("Manual transmission", "6-speed manual
+gearbox", "Transmission Manual; 5 speeds"). Owner's manuals come next, and
+they say "manual choke", "manual fuel valve" and "manual adjustment".
+Triumph's "manual adjustment of compression and rebound damping" had made
+the dry run send five spellings. All 28 written manual entries still pass.
+
+## 2026-09-23 — the dry run's word list leans wide (operator)
+
+Added: automatic, V-belt, variator and single-speed. A miss drops a
+spelling silently; a false alarm costs one source call. On the five run
+artefacts, the new words bring back the six Triumph spellings through a
+tyre-pressure sentence ("automatic warnings"). BMW's "Automatic Stability
+Control" also matches, on a spelling already sent. No spelling is dropped.
+
+## 2026-09-23 — "automatic" in the dry run needs a drive term beside it (operator)
+
+"Automatic" now counts only within three words of transmission, gearbox,
+belt (which also matches V-belt), clutch or drive, the same shape as E12's
+"manual" rule. It no longer counts Triumph's "automatic warnings if tyres
+fall", BMW's "Automatic Stability Control" or Honda's "automatic reset
+mode". Triumph's dry run is back to 0.
+
+## 2026-09-23 — E11: two owner's-manual hosts, each seen serving a manual (operator)
+
+Added to `MAKER_HOSTS`: `library.ymcapps.net` (Yamaha: it served the
+Vino 125 owner's manual; yamahamotorsports.com's spec pages link to it)
+and `azwecdnepstoragewebsiteuploads.azureedge.net` (KTM: it served the
+390 Duke 2024 owner's manual, the link given in ktm.com's own
+`bikemanuals.manuals.json`). Each is an exact host, not its parent
+domain. No Triumph host: its handbook download returned 403. Lookalikes
+still fail.
+
+## 2026-09-23 — KTM's manuals pass through ktm.com's JSON, not a CDN host (operator)
+
+The Azure CDN host comes back out of `MAKER_HOSTS`. It is a generic
+address that may carry other brands, and a lapsed endpoint name can be
+claimed by someone else. `links_to` now reads a JSON referrer: a string
+value equal to the URL, exact and never resolved, counts as a link. So
+ktm.com's own `bikemanuals.manuals.json` vouches for each PDF it names,
+the way SYM's page vouches for the Dropbox-hosted Wolf 150 manual.
+
+## 2026-09-23 — the fetcher POSTs, and every sidecar records its request (operator)
+
+`Fetcher.post_json` sends a JSON POST (Yamaha's Owner's Manual Library
+lists manuals that way) under the same robots.txt check, rate and cap as
+`get`. Every row, and so every sidecar `save()` writes, now carries
+`request` (method, headers, body as sent), so a POST-fetched list can be
+fetched again from its record alone.
+
+## 2026-09-23 — Yamaha's route is the Owner's Manual Library
+
+`ROUTES["Yamaha"]` is `yamaha_om_route`: the portal's JSON POSTs to the
+newest year's English owner's manual for each exact match, the saved
+model list as its referrer. A manual route counts a spelling done only
+when a PDF names it (`MANUAL_ROUTES`), so a spec page saved earlier does
+not hide it. At the cap the route keeps what it saved and names the rest
+`not_reached`, so a capped run is resumed, not repeated.
+
+## 2026-09-23 — a manual-route manual is read whole, and named by its list record (operator)
+
+The Yamaha dry run sent 8 spellings, 7 of them on contents lines ("6-16
+Clutch lever ......"), and missed Vino 125, the positive control: its
+manual prints only "YJ125Y", and `candidates.py` excerpted only around
+the spelling.
+
+- **Excerpts.** A PDF a manual route (`acquire.MANUAL_ROUTES`) fetched for
+  a spelling is tied to it by its sidecar's `for_spellings` and cut around
+  its mechanism lines anywhere in the text (`anchor: "route"`).
+- **Contents lines are not evidence.** A dot leader or a trailing page
+  reference (`entry_check.TOC_LINE`) is never a route anchor, and the dry
+  run drops such lines before reading sentences.
+- **Identity.** `entry_check.list_identity`: the PDF's referrer, the saved
+  model_list record, still hashing to its pinned sha256, lists this PDF's
+  URL beside a `dispModelName` whose name IS the spelling ("VINO 125 -
+  YJ125Y"; "Bonneville T100" is not "T100"). It makes `model_scope`
+  'model' and satisfies E4's "named as a model" for a weak spelling; the
+  orchestrator adds the code as an alias and hands the identity to
+  refute, whose prompt says how to check it. `batch()` now runs
+  entry_check against the library its excerpts came from.
+
+Real-file controls: Vino 125 is sent with its "V-belt automatic" rows and
+names its model through its record; YZF-R1's "move the shift pedal up" is
+still sent. The Yamaha dry run goes from 8 sent to 20.
+
+## 2026-09-23 — E4 reads the name as the maker prints it (bug fix #6)
+
+`_names` now matches a run of whole words whose letters and digits, after
+NFKD, are the spelling's: "Ténéré 700" names Tenere 700, "CR 300i" names
+CR300i. Never part of a word: "YZFR1M" is not the YZF-R1, and "MT03T" is not
+the MT-03. Yamaha's model-year codes (YZFR6L, YZFR7T, MT03T) are not read
+as names; that is an operator decision.
+
+## 2026-09-23 — KTM's route is ktm.com's owner's-manual list
+
+`ROUTES["KTM"]` is `ktm_om_route`: suggestions, then the exact match's
+newest year's `manuals.json` (saved as the PDF's referrer, which vouches
+for the Azure CDN link under E11), then its US English PDF, else the first
+English one, market recorded. KTM joins `MANUAL_ROUTES`. No KTM identity
+reader: every KTM manual prints its model's name (measured on all 26).
+
+## 2026-09-23 — a range or "see page" ending a wrapped sentence is not a contents line (bug fix #7)
+
+`toc_line` excludes a trailing "N-N" after a preposition or "see page":
+KTM's "hold the SET / button for 3-5 / seconds." and Yamaha's "…damage.
+See page 5-1" are prose. Checked on the real KTM manuals before their
+source call; every KTM mechanism line still dropped has a dot leader.
+
+## 2026-09-23 — E4 accepts the pinned list record (operator)
+
+"The document never names the machine" passes when `list_identity` holds:
+Yamaha's YZF-R6, YZF-R7 and MT-03 manuals print only model-year codes
+(YZFR6L, YZFR7T, MT03T), and the record names each exactly. No year-letter
+parsing: "YZFR1M" is the R1M.

@@ -481,8 +481,15 @@ class TestF115TheVocabularyRowReachesTheOwnersItIsFor:
             row = _row(conn, T_4605)
         assert row["applicability"] is None
 
+        # The unknown BMW is a spelling absent from the junction, so no batch
+        # can ever source it. It was the R1200GS (sourced by Phase 257), then
+        # the R1250 — not safe either: names_model("R 1250 RT", "R1250") is
+        # True, because "rt" is not a variant token (measured 2026-09-23).
+        # The claim is about an unknown BMW. Assertions untouched.
+        assert resolve_transmission("BMW", "ZZ-0 unlisted").provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         for make, model in (("Harley-Davidson", "Road King"),
-                            ("BMW", "R1200GS"),
+                            ("BMW", "ZZ-0 unlisted"),
                             ("LiveWire", "ONE")):
             res = resolve_transmission(make, model)
             assert res.provenance == "unknown", (make, model)

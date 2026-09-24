@@ -1,0 +1,7 @@
+ZZ Motors Glide 125 Service Manual
+Model code ZG125
+Contents: general information, engine, chassis
+=== PAGE 40 ===
+Tighten the bolt to 22 N-m.
+Replace the bolt and washer.
+Transmission V-belt automatic (CVT)

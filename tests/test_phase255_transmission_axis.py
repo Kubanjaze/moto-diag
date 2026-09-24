@@ -509,7 +509,13 @@ class TestPrecedence:
         assert r.provenance == "model-sourced" and r.value == "cvt"
 
     def test_unknown_is_all_six(self):
-        r = resolve_transmission("Honda", "CBR1000RR")
+        # A spelling absent from the junction, so no batch can ever source
+        # it. It was the CBR1000RR, then the CBR929RR; each real machine
+        # broke this test the day it was sourced (Phase 257). The claim is
+        # the unknown shape, not the machine.
+        r = resolve_transmission("Honda", "ZZ-0 unlisted")
+        assert r.provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         assert r.candidates == ALL_TRANSMISSIONS
         assert r.provenance == "unknown"
         assert r.value is None and r.certain is False
@@ -835,13 +841,23 @@ class TestTheCounter:
         import shutil
         from motodiag.knowledge.retrieval import rows_for_machine, withheld_report
 
+        # A spelling absent from the junction, so no batch can ever source
+        # it. It was the Grom, then the CBR1000RR, then the CBR929RR; each
+        # broke this test when Phase 257 sourced it, because a model-sourced
+        # machine is deliberately absent from the report (see the Wolf test
+        # above — recording it would bury the real gaps). It needs no
+        # junction rows of its own: the make-wide tier withholds 8 rows from
+        # it, as from the CBR929RR (measured). The claim is the counter.
+        machine = "ZZ-0 unlisted"
+        assert resolve_transmission("Honda", machine).provenance == "unknown", (
+            "the example machine has been sourced: pick another spelling absent from the junction")
         path = str(Path(db).parent / "accum.db")
         shutil.copy(db, path)
-        _, raw = known_issues_for_vehicle("Honda", "Grom", db_path=path, limit=400)
+        _, raw = known_issues_for_vehicle("Honda", machine, db_path=path, limit=400)
         for _ in range(3):
-            rows_for_machine(raw, make="Honda", model="Grom",
+            rows_for_machine(raw, make="Honda", model=machine,
                              purpose="prompt", db_path=path)
-        row = [r for r in withheld_report(path) if r["model"] == "Grom"][0]
+        row = [r for r in withheld_report(path) if r["model"] == machine][0]
         assert row["retrievals"] == 3
 
     def test_the_chokepoint_persists_what_it_withheld(self, db):

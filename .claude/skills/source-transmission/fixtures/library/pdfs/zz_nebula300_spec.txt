@@ -1,0 +1,23 @@
+ZZ Nebula 300 specifications
+Menu: ZZ Comet 700 | ZZ Nebula 300
+nebula 0
+nebula 1
+nebula 2
+nebula 3
+nebula 4
+nebula 5
+nebula 6
+nebula 7
+nebula 8
+nebula 9
+Transmission  CVT automatic
+nebula more 0
+nebula more 1
+nebula more 2
+nebula more 3
+nebula more 4
+nebula more 5
+nebula more 6
+nebula more 7
+nebula more 8
+nebula more 9

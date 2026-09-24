@@ -32,3 +32,10 @@ Replaced with named exclusions carrying a reason each.
 
 That is three wrong rules in one afternoon, each caught by a control rather
 than by review, which is the argument for the control.
+
+## 2026-09-24 — Yamaha's publication numbers are not findings (Phase 257, bug fix #9)
+
+`NOT_FINDINGS` names 8199: Yamaha owner's-manual numbers ("BRG-F8199-11")
+that Phase 257's citations carry. Excluded by name, as the BMW models are,
+with a control that a real dangling citation in the same document still
+fails.

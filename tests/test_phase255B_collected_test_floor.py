@@ -78,7 +78,18 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: honest batch-written heading that must pass, and an uncommitted heading
 #: judged against now.
 #:
-COLLECTED_TEST_FLOOR = 8145
+#: 8958 (Phase 257 close-out, 2026-09-23) — +813 over 8145, measured at
+#: ebdc7a9: `tests/test_phase257_*.py` collects 813 (the sandbox boundary,
+#: the orchestrator's guards and stops, entry_check E1–E12, acquire.py's
+#: routes, the manual-route excerpts, and every write). Phase 256's 69 were
+#: never added to the floor; the whole count is what is pinned here.
+#: Raised before the regression of record.
+#:
+#: 8959 (Phase 257 close-out, 2026-09-24) — +1: B2 excludes Yamaha's
+#: publication numbers ("BRG-F8199-11") by name, with a control that a
+#: real citation in the same document still fails (bug fix #9).
+#:
+COLLECTED_TEST_FLOOR = 8959
 
 
 def _collected_count() -> int:
