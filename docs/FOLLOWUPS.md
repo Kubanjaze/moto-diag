@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F147** (the mobile file, Phase
-257B); this file's highest is **F144**.
+At the time of writing the highest assigned is **F148** (this file); the mobile
+file's highest is **F147**.
 
 ---
 
@@ -1206,3 +1206,19 @@ the previous behaviour. Exposure today: the live `vehicles` table holds 10
 machines, all `ice`, so zero. What would close it: a `powertrain` field on
 `VehicleContext` filled by `_build_vehicle_context`, and a test that an
 unset electric vehicle resolves `powertrain-default` through `/ask`.
+
+### F148
+
+**closeout_check A7's version-header half can only fire for Phase 244M**
+
+`closeout_check.py` A7 takes the newest phase as the first `| **` row of
+`implementation.md`'s history table (`rows[0]`) and checks the version
+header only when the phase under check equals it. The table is not in
+date order: its first bold row is **244M** (line 473 on 2026-09-24), and
+257 sits at line 499. So for every phase but 244M the header half of A7 is
+skipped, and a close-out that forgets the version bump passes it. Seen in
+Phase 257B's close-out, reading A7 to learn what it needs. Not fixed there
+(a change to the close-out's own checks is outside a transmission-field
+phase). What would close it: take "newest" by the Date column (or by the
+header's own phase), with a known-bad fixture where the newest row is not
+first.

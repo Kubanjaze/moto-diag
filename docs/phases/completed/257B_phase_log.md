@@ -1,6 +1,6 @@
 # Phase 257B — The per-vehicle transmission field — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-24)
 **Opened:** 2026-09-24
 
 ---
@@ -93,6 +93,40 @@ Mobile `0a339d1`. F121 closed in this file, remainder pointed at F147.
 Filing them flipped which file leads, and the finding contract's pin on
 that went red → bug fix #2.
 
+### 2026-09-24 — Regression of record, both repos
+
+`COLLECTED_TEST_FLOOR` 8959 → 8999 first (`d91c243`; +40 reconciled: 25
+from this phase's file, +1 from bug fix #2, 14 from
+`test_roadmap_continuity.py`, added by `76edc69` and never added to the
+floor). 244G scanner over `tests/`: 0. `__pycache__` cleared, `-B`. The
+FOLLOWUPS edits for F148 were stashed in both repos for the length of the
+run, because the finding contract reads both files: the run saw
+`d91c243`'s tree and nothing else.
+
+- **Backend regression of record at `d91c243`: 8999 passed, 0 failed,
+  0 skipped, 8 warnings, 48:31** (floor 8999).
+- **Mobile regression of record at `0a339d1` (code at `0e1ed53`): jest 1174
+  passed / 96 suites; tsc exit 0.**
+
+### 2026-09-24 — F148 filed; Step 0 re-verified; deploy
+
+**F148:** reading A7 to learn what the close-out needs showed its
+version-header half is keyed to the history table's first bold row, which
+is 244M, so it cannot fire for any other phase. Filed, not fixed.
+
+**Step 0 re-verified on a fresh copy of the live DB:** schema 66, 10
+vehicles, 0 transmissions, 1,046 `known_issues`; main file mtime
+2026-09-22 16:25, unchanged. A 0-byte `-wal` and a `-shm` carry 12:15
+today, the time of my Step 0 read, most likely the failed `sqlite3 -readonly`
+open; the WAL is empty, so nothing was written.
+
+**Deploy:** 257B has no migration and writes no database, so, as in 257,
+no backup was taken: backing up would have meant deleting the oldest of
+the five in `~/backups/motodiag/` for a database this phase does not touch.
+No motodiag backend process or launchd job is running; the API change
+takes effect at the next `motodiag serve`. Deploy is the merge and push of
+both branches.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-09-24
@@ -110,7 +144,8 @@ that went red → bug fix #2.
 - **Verified:** new guard red without the fix, green with it; mutations
   10/10; related suites + gates **1034 passed**; 244G tree 0 hits;
   `finding_check` exit 0.
-- **Commit:** `8e039e7`
+
+**Commit.** `8e039e7`
 
 ### Bug fix #2 — 2026-09-24
 
@@ -130,4 +165,5 @@ that went red → bug fix #2.
   green restored (script diff empty); gates (191C, 244G, 255D
   finding/closeout/refute contracts, roadmap continuity) **106 passed**;
   `finding_check` exit 0.
-- **Commit:** `df82a21`
+
+**Commit.** `df82a21`
