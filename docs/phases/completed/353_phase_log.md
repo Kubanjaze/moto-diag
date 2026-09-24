@@ -1,6 +1,6 @@
 # Phase 353 — Small-engine carb service (single/twin-barrel) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-24)
 **Opened:** 2026-09-24
 
 ---
@@ -138,6 +138,31 @@ whole `tests/` tree: 0 hits. **A 255C pin moved**: the PCX tier table
 a PCX at `make_other_model`; tier `model` is unchanged at 12. Related
 suites plus the four whole-tree gates: 946 passed and that one pin failed
 before the move; 255C then passed 92/92.
+
+### 2026-09-24 — Deploy dry run on a copy of the live database
+
+`bash` with `set -euo pipefail` (354's lesson): a fresh `.backup` copy, then
+`MOTODIAG_DB_PATH=<copy> motodiag db init`, the deploy's own entry point.
+
+| | before | after | second load |
+|---|---|---|---|
+| `known_issues` | 1,053 (max id 5343) | **1,060** (ids 6397–6403, the seven rows) | 1,060 |
+| schema / vehicles | 66 / 10 | 66 / 10 | 66 / 10 |
+| hash of the 1,053 existing rows | `4ee85e6eb1af3e06` | `4ee85e6eb1af3e06` | — |
+
+The live file's mtime was unchanged by the dry run.
+
+### 2026-09-24 — Close-out
+
+Regression of record: **9188 passed, 0 failed, 0 skipped** at `fb4a76d`
+(52:35; 8 warnings, all `utcnow` deprecations in Phase 171's tests). The
+collected count equals the floor raised at that commit. No bug fixes in
+this phase: the Step 0 and draft errors were caught before commit, and
+nothing committed later failed.
+
+v1.1 written; ROADMAP row closed ✅; `implementation.md` history row added
+and version 0.13.78 → 0.13.79; both documents moved to `completed/`. The
+live load follows the merge.
 
 ## Refuter pass
 
