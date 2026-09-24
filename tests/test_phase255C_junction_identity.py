@@ -351,9 +351,12 @@ class TestOneCanonicalPerMachine:
                 # PCX at tier `model` (11 -> 12), and with its CHF50 row, which
                 # reaches it at `make_other_model`, retrieved and kept rise
                 # together, 166 -> 168. Kept still equals retrieved.
+                # Phase 353 moved it again: its CHF50 and Ruckus carburettor
+                # rows reach the PCX at `make_other_model`, 168 -> 170; tier
+                # `model` is unchanged at 12.
                 assert tiers["model"] == 12, (
                     f"the PCX should reach 12 rows at tier model, got {tiers['model']}")
-                assert len(raw) == 168 and len(kept) == 168, (len(raw), len(kept))
+                assert len(raw) == 170 and len(kept) == 170, (len(raw), len(kept))
 
     def test_the_degradation_path_still_binds(self, tmp_path):
         """A database with no model junction must degrade, not crash.
