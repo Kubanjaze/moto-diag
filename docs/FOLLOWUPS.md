@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F148** (this file); the mobile
+At the time of writing the highest assigned is **F150** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1228,3 +1228,55 @@ Phase 257B's close-out, reading A7 to learn what it needs. Not fixed there
 phase). What would close it: take "newest" by the Date column (or by the
 header's own phase), with a known-bad fixture where the newest row is not
 first.
+
+### F149
+
+**Three unverified Honda `model = All` charging rows reach every Honda scooter at tier 1, and two of them prescribe a procedure the scooters' own manuals do not use**
+
+Rows #263 ("Regulator/rectifier failure — the universal Honda problem"),
+#264 ("Stator failure diagnosis and replacement — all Honda models") and
+#270 ("Charging system preventive testing — annual check protocol") are
+`source = unverified`, `model = All`, with no applicability. Measured in
+Phase 354's Step 0 on a copy of the live database: they reach a Ruckus, a
+PCX150 and a Metropolitan at `make_wide`, ranked above every other-model
+row. #263 tests a "3-pin yellow connector" against a fixed 13.5-14.5 V
+window and replaces the regulator with a separate MOSFET unit ("fits 90% of
+Hondas"). Honda's PCX150 service manual puts the regulator/rectifier inside
+the ECM (p. 20-4), names the stator leads Red/yellow, Red/white and
+Red/blue (p. 6-6), and sets the standard relative to the battery's own
+voltage (p. 20-9); the CHF50's manual ends its tree at "Faulty ECM"
+(p. 15-5).
+
+What it affects: every Honda scooter whose own row does not reach it at
+tier 0. Phase 354's PCX150 and CHF50 rows outrank the three for those two
+machines (tested); a Ruckus, a current Metropolitan and a PCX125 or PCX160
+still see them first among charging rows.
+
+Not fixed in 354: row identity is (make, model, title) (F129), so scoping
+or rewording them needs a migration, and they cite no document to correct
+against. What would close it: source the three against Honda motorcycle
+service manuals and scope them to the machines those manuals cover, or
+narrow their `model` from `All`, by migration, with a test that a Honda
+scooter no longer receives them at `make_wide`.
+
+### F150
+
+**The manual the corpus calls the SYM Symply 125 never names a model beyond "MODEL ABA"**
+
+`manuals/service/sym_symply125.pdf` in the research library says "SYM
+series" and "MODEL ABA" (52.4 × 57.8 mm, about 125 cc); the string
+"symply" appears 0 times in its extracted text, and the cover badge is not
+legible. Only the file name says Symply. Measured by Phase 354's SYM
+refuter. Phase 254's CVT rows nonetheless attribute a figure to it by
+name — "SYM's Symply 125 gives a 19.0 mm limit" — and list "SYM Symply
+125" in the model column of every row in `known_issues_cvt.json`, so a
+Symply 125 owner reaches that figure at tier 0 on an identity no document
+establishes.
+
+Phase 354 kept the Symply out of its SYM row for this reason, and its
+test forbids the name there. Not fixed in 354: the 254 rows are another
+phase's content, and their titles are part of their identity (F129). What
+would close it: a SYM document that ties model ABA to the Symply 125 (a
+parts catalogue, a VIN decoder page, SYM's own spec sheet), or the name
+removed from 254's rows by migration with the figure re-attributed to
+"a SYM 125 cc service manual (model ABA)".
