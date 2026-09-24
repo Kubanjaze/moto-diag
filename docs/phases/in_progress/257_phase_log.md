@@ -2849,4 +2849,4 @@ pinned to the literal IDs, not to `ROUTES` (which would be tautological).
 102 passed. Break-it: the pinned Opus ID changed to another model → 2
 fail; restored by hash.
 
-**Commit.** (this entry's commit, named below)
+**Commit.** `f6241ac`

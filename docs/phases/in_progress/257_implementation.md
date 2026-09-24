@@ -1,6 +1,12 @@
 # Phase 257 — The orchestrator and `/source-transmission`
 
-**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-22
+**Version:** 1.2 | **Tier:** Standard | **Date:** 2026-09-23 (close-out)
+
+History: 1.0 the plan (2026-09-22); 1.1 the during-build amendment below
+(source stages on Subconscious); **1.2 the close-out** — every section
+annotated *As built*, the checklist ticked with its evidence, and
+Deviations and Results added. (The close-out would ordinarily be v1.1;
+that number was taken by the amendment.)
 
 Step 0: [`257_step0.md`](257_step0.md) (measurements, proofs). This plan is
 built on it and does not repeat it.
@@ -15,6 +21,10 @@ per-make batch summaries and stops, nothing else.
 Its first real job is coverage for the ~600 spellings that resolve
 `unknown`. **This phase ships the machine and its first tranche, not the
 coverage.** Later makes are batches of the same tool, not new phases.
+
+*As built:* the machine shipped, and its batches ran well past tranche 1 —
+nine makes batched, **71 lookup entries** written (census 605 → 528).
+Coverage stopped where acquisition did; the rest is F143.
 
 ## Why a procedure and not a model's judgement
 
@@ -86,6 +96,21 @@ rule is enforced on seed JSON only) is untouched here.
 that held 257 (*Small-engine carb service*) moves to **353**, the next free
 number, unchanged.
 
+*As built, per decision:* D1 — the model stages run sandboxed in a fresh
+clone as planned; the route changed twice (v1.1: Subconscious; then the
+operator's fallback, `claude-opus-5-5@medium`, while Subconscious was
+suspended), and every entry records its route in a `source_route` field.
+D2, D3 — as planned, each a test. D4 — the procedure grew three no-model
+steps the table does not show: `candidates.py` (excerpts, so the source
+stage is one turn with no tools), `acquire.py` (maker documents enter the
+library only through the script, with provenance, E11) and the dry run;
+entry_check grew from its classes to E1–E12. D5 — stops as planned plus
+token ceilings and refute's kill rate; a single finding's failure is
+withheld, not a stop (operator). D6 — tranche 1 written as planned; the
+Grom was carried by Honda's spec pages, not page images (a better source
+came first). D7 — measured per make, then built into `acquire.ROUTES`.
+D8 — unchanged: the `{manual}` rule stays; F140 untouched. D9 — done.
+
 ## Non-goals
 
 Lifting A1; coverage beyond tranche 1; the mobile per-vehicle transmission
@@ -93,18 +118,27 @@ field (the phase after this one); GLM or any second provider; any
 scheduling or daemon — the orchestrator is run by hand, one batch at a
 time.
 
+*As built:* "coverage beyond tranche 1" and "GLM" were both crossed, each
+by operator decision (Deviations). A1 was not lifted; the mobile field was
+not touched; no scheduling was added.
+
 ## Verification checklist
 
-- [ ] `test_phase257_sandbox_boundary.py` — every planted attempt fails,
-      controls pass; break-it: loosen the profile and it fails
-- [ ] guard tests for D3, each with a planted violation
-- [ ] `entry_check.py` fails its known-bad fixture per rejection class
-- [ ] census reproduces **605** unknown pairs on the live snapshot
-- [ ] tranche 1: five spellings resolve `model-sourced` / `manual`; each
-      entry quotes the maker and names the page
-- [ ] Grom refuted from page images, not OCR
-- [ ] one end-to-end orchestrator run on tranche 1 with its batch summary
-- [ ] D7 table: ten makes, method per make, one real fetch each
+- [x] `test_phase257_sandbox_boundary.py` — every planted attempt fails,
+      controls pass; break-it: loosen the profile and it fails (build slice 1)
+- [x] guard tests for D3, each with a planted violation (build slice 1)
+- [x] `entry_check.py` fails its known-bad fixture per rejection class
+      (E1–E12, `test_phase257_source_checks.py`)
+- [x] census reproduces **605** unknown pairs on the live snapshot (build
+      slice 2)
+- [x] tranche 1: five spellings resolve `model-sourced` / `manual`; each
+      entry quotes the maker and names the page (605 → 600)
+- [x] Grom refuted — **from Honda's spec pages, digital text, not page
+      images**: the batch found a better source than the OCR (Deviations)
+- [x] one end-to-end orchestrator run on tranche 1 with its batch summary
+      (`Honda_20260922_233404` and the SYM and Kymco runs)
+- [x] D7 table: all 21 census makes, 43 URLs, method per make, one real
+      fetch each (`~/.cache/motodiag/d7/20260923_002937/`)
 - [ ] full regression with hash and count; floor raised before it
 
 ## Risks
@@ -116,6 +150,14 @@ time.
   re-checked by a script or by refute, never taken from the model's text.
 - **Cost.** ~$0.05 floor per call, ~$0.13 for an eight-step run. Budget
   capped per call.
+
+*As built:* the sandbox held; the boundary test runs every suite. A model
+did report success it did not have, more than once — a quote de-hyphenated
+across a line break, a miscitation in Kawasaki's first batch, a finding
+omitting its citation — and each was caught by a script or refute, never
+by the model. Cost was the risk that bit: an agent-loop source stage
+measured 7.66M tokens for one spelling, which forced the one-turn,
+no-tools redesign and per-stage token ceilings.
 
 ---
 
@@ -159,3 +201,44 @@ wrongly (it guessed a hidden `.gitignore`; the file had simply been
 committed by an earlier run). No stage's outcome is taken from a model's
 account of itself.
 
+
+---
+
+# v1.2 — close-out (2026-09-23)
+
+## Deviations
+
+- **Coverage stopped where acquisition did.** The plan shipped the machine
+  and tranche 1; the phase kept batching, make by make, by operator
+  decision, until the operator named KTM the last make. Nine makes were
+  batched (SYM, Kymco, Honda, Suzuki, Kawasaki, BMW, Triumph, Yamaha, KTM)
+  and eight wrote entries; Triumph wrote none (its handbook downloads
+  return 403). What stopped coverage was never the procedure: it was a
+  maker site refusing a script, a make with no measured route, or a route
+  never batched. All of it is **F143**, with counts: 528 unknown census
+  spellings, 412 of them machine names.
+- **The source route changed twice.** v1.1 moved the source stages to
+  Subconscious (GLM-5.3 Marathon). Subconscious was then suspended, and the
+  operator set a fallback: `claude-opus-5-5@medium`, one turn, the same
+  guards. 57 of the 71 entries carry that route in `source_route`, so they
+  can be re-sourced once Subconscious is back (F143).
+- **The source stage is not an agent.** As planned it browsed; it spent
+  7.66M tokens on one spelling. It became one turn with no tools, reading
+  only `candidates.py`'s excerpts, with per-stage token ceilings and E10
+  binding every quote to an excerpt it was handed.
+- **Acquisition was built, not only measured.** D7 said "measured, not
+  built out". `acquire.py` was built: maker routes (spec pages, BMW's
+  index, Honda motopub, Yamaha's Owner's Manual Library, ktm.com's manual
+  list), an operator inbox, provenance sidecars and E11.
+- **Owner's manuals replaced spec pages** for Yamaha and KTM: spec pages
+  give the gearbox only as table cells, and a table cell is not E12
+  mechanism evidence. A manual-route PDF is read whole, and a manual that
+  prints only a code ("YJ125Y", "YZFR6L") is named by its pinned list
+  record (operator decisions).
+- **Grom:** refuted from Honda's spec pages, not the service manual's page
+  images. A better source came first.
+- **Seven bug fixes**, one shared cause, recorded in the phase log: each
+  rule was verified against the case it was written for, not the artefact
+  it meets in use.
+- **Held unknown by operator decision:** Yamaha MT-09 and MT-07; KTM's two
+  contains matches, EXC and Enduro R; Honda's E-Clutch CB650R and CB750.
