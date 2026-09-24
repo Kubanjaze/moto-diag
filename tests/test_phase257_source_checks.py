@@ -158,6 +158,75 @@ class TestACommonWordMustBeNamedAsAModel:
         assert weak_spelling(spelling) is weak
 
 
+YAMAHA = pathlib.Path.home() / "research" / "motodiag" / "acquired" / "Yamaha"
+
+
+def _om(pub: str) -> str:
+    return (YAMAHA / f"library_om_contents_pdf_10_{pub}_02.pdf.txt").read_bytes().decode("utf-8")
+
+
+class TestE4ReadsTheNameAsTheMakerPrintsIt:
+    """Bug fix #6 (operator, 2026-09-23): E4 matched the typed form. Yamaha
+    prints "Ténéré 700"; E4 withheld Tenere 700 as "never names the
+    machine" (and would have read "CR 300i" apart from "CR300i"). The name is now read as a
+    run of whole words whose letters and digits, accents folded, are the
+    spelling's — never part of a word ("YZFR1M" does not name YZF-R1)."""
+
+    @pytest.mark.parametrize("text,spelling", [
+        ("the Yamaha YZFR6 owner's manual", "YZF-R6"),
+        ("Congratulations on your purchase of the Yamaha YZFR7.", "YZF-R7"),
+        ("Yamaha Ténéré 700 owner's manual", "Tenere 700"),
+        ("Honda CR 300i", "CR300i"),
+        ("the YZF-R6 manual", "YZF-R6"),
+    ])
+    def test_the_printed_form_names_the_typed_spelling(self, text, spelling):
+        from entry_check import _names
+        assert _names(text, [spelling])
+
+    @pytest.mark.parametrize("text,spelling", [
+        ("the Yamaha YZFR1M owner's manual", "YZF-R1"),       # a variant is another word
+        ("the Yamaha MT07 owner's manual", "MT-09"),
+        ("the Yamaha MT03T/MT03TC", "MT-03"),                 # measured: the MT-03 manual's own form
+        ("Jetstream 50", "Jet"),
+        ("Tenere 7000", "Tenere 700"),
+    ])
+    def test_part_of_a_word_is_not_the_name(self, text, spelling):
+        from entry_check import _names
+        assert not _names(text, [spelling])
+
+    def test_end_to_end_the_check_passes_the_printed_form(self, tmp_path):
+        doc = tmp_path / "om.txt"
+        doc.write_text("Yamaha YZFR6 owner's manual\nPull the clutch lever to disengage the clutch.\n")
+        f = {"make": "Yamaha", "spelling": "YZF-R6", "aliases": [], "outcome": "found", "transmission": "manual",
+             "quote": "Pull the clutch lever to disengage the clutch.", "document": str(doc), "page": 1,
+             "evidence_kind": "owners_manual"}
+        assert check([f], tmp_path) == []
+
+    def test_bolt_still_needs_the_common_word_check(self):
+        fails = check([_lib_finding(*TestACommonWordMustBeNamedAsAModel.BOLT)], FIX, library=LIB)
+        assert fails and all(f.startswith("E4") and "as a ZZ model" in f for f in fails), fails
+
+    real = pytest.mark.skipif(not YAMAHA.is_dir(), reason="needs the on-disk library")
+
+    @real
+    @pytest.mark.parametrize("pub,spelling,named", [
+        ("BRL-28199-11", "Tenere 700", True),     # prints "Ténéré 700"
+        ("D45-28199-11", "YZF-R1", True),         # prints "YZF-R1" (the control for the rule's reach)
+        ("D45-28199-11", "YZF-R6", False),        # the YZF-R1 manual
+        ("BLW-28199-11", "MT-09", False),         # the MT-07 manual
+        # Measured: each prints only a model-year code, never the name —
+        # "YZFR6L/YZFR6LC", "YZFR7T/YZFR7TC (R7)", "MT03T/MT03TC". Reading
+        # the year letter off is an operator decision, not this fix: "M" is
+        # a year letter and "YZFR1M" is also the R1M, another machine.
+        ("BN6-28199-13", "YZF-R6", False),
+        ("D42-28199-10", "YZF-R7", False),
+        ("BRG-F8199-11", "MT-03", False),
+    ])
+    def test_on_yamahas_own_manuals(self, pub, spelling, named):
+        from entry_check import _names
+        assert _names(_om(pub), [spelling]) is named
+
+
 class TestTheKindComesFromTheIndex:
     """E2 for a library file: library_index's kind, never the model's."""
 

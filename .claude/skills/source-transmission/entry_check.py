@@ -54,6 +54,7 @@ import json
 import pathlib
 import re
 import sys
+import unicodedata
 import urllib.parse
 
 HERE = pathlib.Path(__file__).resolve().parent
@@ -152,9 +153,32 @@ def _norm(s: str) -> str:
     return re.sub(r"\s+", " ", s or "").strip().lower()
 
 
+def _folded_words(s: str) -> list[str]:
+    """Words after NFKD, so an accent is split off its letter: 'Ténéré' →
+    ['te', 'ne', 're'], which _names joins back to 'tenere'."""
+    return re.findall(r"[a-z0-9]+", unicodedata.normalize("NFKD", s or "").lower())
+
+
 def _names(text: str, aliases: list[str]) -> bool:
-    t = " " + re.sub(r"[^a-z0-9]+", " ", text.lower()) + " "
-    return any(" " + re.sub(r"[^a-z0-9]+", " ", a.lower()).strip() + " " in t for a in aliases if a.strip())
+    """E4: does the text name one of these spellings as the maker prints it?
+
+    A run of whole words whose letters and digits are the spelling's
+    (bug fix #6): Yamaha prints 'YZFR6', 'YZFR7' and 'Ténéré 700' for the
+    typed 'YZF-R6', 'YZF-R7' and 'Tenere 700'. Never part of a word:
+    'YZFR1M' does not name the YZF-R1, nor 'MT03T' the MT-03."""
+    words = _folded_words(text)
+    for a in aliases:
+        target = "".join(_folded_words(a))
+        if not target:
+            continue
+        for i, w in enumerate(words):
+            acc, j = w, i
+            while len(acc) < len(target) and target.startswith(acc) and j + 1 < len(words):
+                j += 1
+                acc += words[j]
+            if acc == target:
+                return True
+    return False
 
 
 def _extract_text(path: pathlib.Path) -> str | None:

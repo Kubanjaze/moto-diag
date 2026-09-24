@@ -2485,3 +2485,62 @@ onto MT-10 → 1; FZ8's quote swapped for a gear count → 1.
 
 Census 573 → **558** (Yamaha 39 → 24; YJ125Y resolves through the Vino
 125 alias). `TRANSMISSION_LOOKUP` 77 → 91.
+
+### 2026-09-23 — Y-AMT: one fetch each on Yamaha's own pages (operator); MT-09 and MT-07 still held
+
+`acquire.Fetcher` (robots.txt, 1 req/s), 3 fetches with robots.txt, no
+model: `https://www.yamahamotorsports.com/models/mt-09` and `/models/mt-07`,
+each 200, saved through `acquire.save` with no spelling as
+`acquired/Yamaha/models_mt-09.html` and `models_mt-07.html` (both linked
+from the spec pages already saved). Raw HTML and text: **0** matches for
+Y-AMT, "automated manual" or "clutchless" in either (control: "MT-09" 23
+times on its page, "MT-07" 22 on its). Both pages are the 2026 models. The
+site's own MT line, from both pages' links: mt-03, mt-07, mt-09, mt-09-sp,
+mt-10, mt-10-sp. The Owner's Manual Library list (US, 155 names) has no
+Y-AMT name either. **Yamaha's US pages name no Y-AMT for either model.**
+Only US pages were searched; the decision stays with the operator.
+
+### 2026-09-23 — Bug fix #6: E4 matched the typed name, not the name as the maker prints it
+
+**Issue.** Run `Yamaha_20260923_194048` withheld six findings as E4 "the
+document never names the machine". The operator's reading: Yamaha prints
+"YZFR6", "YZFR7", "MT03", "MT09", "MT07" and "Ténéré 700". **Measured,
+the premise holds for one:** BRL-28199-11 prints "Ténéré 700". The others
+print only model-year codes: BN6-28199-13 "YZFR6L/YZFR6LC", D42-28199-10
+"YZFR7T/YZFR7TC (R7)", BRG-F8199-11 "MT03T/MT03TC", BLW-28199-11
+"MT07T/MT07TC", DW9-28199-10 "MT09T/MT09TC". My own first measurement
+said "YZFR6" and "YZFR7": the grep had no word boundary and counted the
+prefix of "YZFR6L". Corrected before any code relied on it.
+
+**Root cause.** `_names` lowercased and turned non-alphanumerics into
+spaces, then looked for the typed form as a phrase. "Ténéré" became
+"t n r", and "CR 300i" never matched "CR300i". The same class as bug fix
+#5: the rule was written for the typed form.
+
+**Fix.** `_names` reads a run of whole words whose letters and digits,
+after NFKD, are the spelling's (the `names_model` run, without its
+variant exclusion; E4 asks "named", not "this exact model"). Never part
+of a word: "YZFR1M" does not name the YZF-R1, and "MT03T" does not name
+the MT-03. The weak-spelling ("Bolt") branch is unchanged.
+
+**Not done, an operator decision:** reading Yamaha's model-year letter off
+("YZFR6L" → YZF-R6). "M" is a year letter, and "YZFR1M" is also the R1M, a
+different machine.
+
+**Files.** `entry_check.py` (`_folded_words`, `_names`),
+`tests/test_phase257_source_checks.py::TestE4ReadsTheNameAsTheMakerPrintsIt` (19).
+
+**Verified.** On the old `_names`, 6 of the 19 fail. Real-file controls:
+BRL-28199-11 names Tenere 700; D45-28199-11 names YZF-R1 and not YZF-R6;
+the MT-07 manual does not name MT-09; BN6, D42 and BRG do not name YZF-R6,
+YZF-R7 and MT-03; Bolt in a scooter manual is still an E4 rejection.
+Break-it, each alone, restored by hash: part of a word accepted → 7 fail;
+words not joined → 6; the typed form only → 3; NFKD removed → 2. A first
+accent break (dropping the combining-mark filter) **survived**. It was not
+a real break: NFKD plus the word join already folds accents. The filter
+was dead and is removed, and the NFKD break is the one recorded.
+
+**Re-run scope.** Of the four named for the re-run (YZF-R6, Tenere 700,
+YZF-R7, MT-03), E4 now passes only Tenere 700. Re-running the other three
+would spend source and refute on a rejection the local check already
+shows (the lean-API rule), so the re-run is Tenere 700 alone.

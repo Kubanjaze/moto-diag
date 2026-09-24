@@ -186,3 +186,11 @@ the spelling.
 Real-file controls: Vino 125 is sent with its "V-belt automatic" rows and
 names its model through its record; YZF-R1's "move the shift pedal up" is
 still sent. The Yamaha dry run goes from 8 sent to 20.
+
+## 2026-09-23 — E4 reads the name as the maker prints it (bug fix #6)
+
+`_names` now matches a run of whole words whose letters and digits, after
+NFKD, are the spelling's: "Ténéré 700" names Tenere 700, "CR 300i" names
+CR300i. Never part of a word: "YZFR1M" is not the YZF-R1, and "MT03T" is not
+the MT-03. Yamaha's model-year codes (YZFR6L, YZFR7T, MT03T) are not read
+as names; that is an operator decision.
