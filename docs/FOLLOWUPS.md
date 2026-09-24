@@ -1463,30 +1463,33 @@ and a 2018 Metropolitan does not. Pinned by
 
 ### F157
 
-**No adapter compatibility row exists for any scooter make, while the corpus documents scooter diagnostic surfaces**
+**No adapter compatibility row exists for any scooter make; a Honda scooter's only answer is the make-level dev/test mock, while the corpus documents scooter diagnostic surfaces**
 
 `compat_matrix.json` holds eleven makes — aprilia, bmw, ducati, harley,
 honda, kawasaki, ktm, mv-agusta, suzuki, triumph, yamaha — and no row
-names a scooter: measured in Phase 258's Step 0, `hardware compat
-recommend --make …` answers "No compat entries known for this bike" for
-the Ruckus, CHF50, Kymco Agility 50, SYM Jet Euro 50, Piaggio Fly 50,
-Vespa LX 50, Yamaha Zuma 125 and Genuine Buddy 125. Track M's own rows
-document diagnostic surfaces: 251's six-pin Piaggio connector row
+names a scooter. Measured in Phase 258's Step 0 on a seeded catalogue
+(the first pass measured against an unseeded store and said "none known"
+for every machine; this corrects it): `hardware compat recommend` answers
+"No compat entries known for this bike" for the Kymco Agility 50, SYM
+Jet Euro 50, Piaggio Fly 50, Vespa LX 50, Yamaha Zuma 125 and Genuine
+Buddy 125 — Yamaha's ten rows are model-scoped to its big bikes — while
+a Honda scooter (Ruckus, CHF50) inherits the make-level **"Mock Adapter
+(dev/test only)"**, because Honda's 13 rows carry no model. Track M's own
+rows document diagnostic surfaces: 251's six-pin Piaggio connector row
 ("Piaggio calls it the OBD port, but it is a six-pin Piaggio connector"),
 253's "Kymco and SYM do show fault codes on the dash — under names no
 standard diagnostic…" — so the gate cannot assert an adapter per scooter
 make the way Gate 12 could per European make.
 
 What it affects: a scooter shop asking the product which scan tool reads
-a customer's machine gets "none known" for every machine Track M
-covered, which is honest but is also the whole of the track's hardware
-answer.
+a customer's machine gets a dev/test mock (Honda) or "none known" (every
+other make) for every machine Track M covered — honest, but it is also
+the whole of the track's hardware answer.
 
 Not fixed in 258: a gate writes no production code, and which adapters
 actually read these machines is a sourcing question, not a guess to
 write down. What would close it: compat rows sourced from adapter
-vendors' coverage lists for at least the makes with documented
-diagnostic surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's
-honest-gap tests failing the day they land. Pinned by
-`tests/test_phase258_gate14.py`, the same shape as Gate 13's F99 for
-electric makes.
+vendors' coverage lists for at least the makes with documented diagnostic
+surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's honest-gap tests
+failing the day they land. Pinned by `tests/test_phase258_gate14.py`, the
+same shape as Gate 13's F99 for electric makes.
