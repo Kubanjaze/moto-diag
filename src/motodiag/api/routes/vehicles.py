@@ -23,7 +23,7 @@ from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user
 from motodiag.core.models import (
     BatteryChemistry, EngineType, PowertrainType,
-    ProtocolType, VehicleBase,
+    ProtocolType, VehicleBase, VehicleTransmission,
 )
 from motodiag.vehicles.registry import (
     TIER_VEHICLE_LIMITS,
@@ -62,6 +62,13 @@ EngineTypeLiteral = Literal[
     "four_stroke", "two_stroke", "rotary", "diesel", "none",
 ]
 
+# Phase 257B: the six `VehicleTransmission` values. A Literal rather than
+# the enum so OpenAPI carries the list and the app's types are generated.
+TransmissionLiteral = Literal[
+    "manual", "cvt", "dct", "semi_auto_centrifugal",
+    "semi_auto_actuated", "direct_drive",
+]
+
 
 class VehicleCreateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
@@ -79,6 +86,7 @@ class VehicleCreateRequest(BaseModel):
     motor_kw: Optional[float] = Field(None, ge=0)
     bms_present: bool = False
     mileage: Optional[int] = Field(None, ge=0)
+    transmission: Optional[TransmissionLiteral] = None
 
 
 class VehicleUpdateRequest(BaseModel):
@@ -99,6 +107,14 @@ class VehicleUpdateRequest(BaseModel):
     motor_kw: Optional[float] = Field(None, ge=0)
     bms_present: Optional[bool] = None
     mileage: Optional[int] = Field(None, ge=0)
+    transmission: Optional[TransmissionLiteral] = Field(
+        None,
+        description=(
+            "Unlike every other field here, an explicit null is honoured: "
+            "it clears the value back to unset. Omit the key to leave it "
+            "alone."
+        ),
+    )
 
 
 class VehicleResponse(BaseModel):
@@ -119,6 +135,7 @@ class VehicleResponse(BaseModel):
     motor_kw: Optional[float] = None
     bms_present: Optional[bool] = None
     mileage: Optional[int] = None
+    transmission: Optional[TransmissionLiteral] = None
     created_at: Optional[str] = None
     updated_at: Optional[str] = None
 
@@ -163,6 +180,7 @@ def _row_to_response(row: dict) -> VehicleResponse:
         motor_kw=row.get("motor_kw"),
         bms_present=bool(row.get("bms_present") or 0),
         mileage=row.get("mileage"),
+        transmission=row.get("transmission"),
         created_at=row.get("created_at"),
         updated_at=row.get("updated_at"),
     )
@@ -247,6 +265,10 @@ def create_vehicle_endpoint(
         ),
         motor_kw=req.motor_kw,
         bms_present=req.bms_present,
+        transmission=(
+            VehicleTransmission(req.transmission)
+            if req.transmission else None
+        ),
     )
     vid = add_vehicle_for_owner(
         vehicle, owner_user_id=user.id, db_path=db_path,
@@ -294,10 +316,12 @@ def update_vehicle_endpoint(
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
 ) -> VehicleResponse:
-    updates = {
-        k: v for k, v in req.model_dump(exclude_unset=True).items()
-        if v is not None
-    }
+    sent = req.model_dump(exclude_unset=True)
+    updates = {k: v for k, v in sent.items() if v is not None}
+    # Phase 257B: a sent null clears the transmission ("Not sure" in the
+    # app). Every other field keeps "null means not sent".
+    if "transmission" in sent:
+        updates["transmission"] = sent["transmission"]
     if not updates:
         # No-op update — return current state.
         row = get_vehicle_for_owner(

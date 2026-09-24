@@ -283,6 +283,25 @@ def _build_vehicle_context(
         except Exception:
             mileage = None
 
+    # Phase 257B: the rider's answer, for retrieval's explicit rung. Its own
+    # query, so a table without the column (pre-migration 063) costs only
+    # this value -- widening the SELECT above lost make, model and mileage
+    # with it (257B bug fix #1).
+    transmission = None
+    if vehicle_id:
+        try:
+            from motodiag.core.database import get_connection
+
+            with get_connection(db_path) as conn:
+                trow = conn.execute(
+                    "SELECT transmission FROM vehicles WHERE id = ?",
+                    (vehicle_id,),
+                ).fetchone()
+            if trow is not None:
+                transmission = trow[0]
+        except Exception:
+            transmission = None
+
     # Phase 244C: resolve the name against the corpus vocabulary. A user typed
     # "Homda cbrf4i" and every knowledge lookup returned zero rows while the
     # corpus held entries for the Honda CBR600F4i — silently, with no way for
@@ -326,4 +345,5 @@ def _build_vehicle_context(
         identity_note=identity_note,
         notes=session.get("notes") or "",
         history=history,
+        transmission=transmission,
     )

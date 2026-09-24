@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F143** (this file); the mobile
-file's highest is **F115**.
+At the time of writing the highest assigned is **F148** (this file); the mobile
+file's highest is **F147**.
 
 ---
 
@@ -230,7 +230,12 @@ A documentation hazard rather than a runtime one, because nothing in the code
 reads document text to classify anything. Recorded in the ADR and in the lookup
 entry itself so the next author does not resolve it the wrong way.
 
-### F121
+### F121 — CLOSED by Phase 257B (moto-diag `70c3f23`, mobile `0e1ed53`), 2026-09-24
+
+**Closed:** the rider sets, changes or clears the transmission on the
+vehicle screen, the API stores it, and every retrieval door uses it first
+(provenance `explicit`). The create screen still posts none; that
+remainder is F147 (mobile file).
 
 **Mobile has no transmission field, and the residual gap is user machines**
 
@@ -1180,3 +1185,40 @@ row; 412 machine spellings do today. What would close it: the inbox run
 for the 403 makes, routes for the four without one, batches for the three
 with one, a re-source of the 57 fallback entries on Subconscious, and a
 census back under a figure the operator sets.
+
+
+### F144
+
+**Video `/ask` never passes a vehicle's powertrain to retrieval**
+
+`api/routes/videos.py` calls `rows_for_machine(...,
+powertrain=getattr(context, "powertrain", None))`, and `VehicleContext`
+has no `powertrain` field, so the value is `None` for every vehicle. The
+resolver's third rung (`electric` ⇒ `direct_drive`, minus the listed
+exceptions) is therefore unreachable from the API: an electric machine the
+lookup does not name resolves `unknown` in `/ask` and `powertrain-default`
+in `motodiag diagnose`. Found in Phase 257B Step 0, where the same shape
+hid the vehicle's `transmission` (fixed there).
+
+Not fixed in 257B on purpose: wiring it changes the answer for an unset
+electric vehicle, and 257B's finish line requires unset to mean exactly
+the previous behaviour. Exposure today: the live `vehicles` table holds 10
+machines, all `ice`, so zero. What would close it: a `powertrain` field on
+`VehicleContext` filled by `_build_vehicle_context`, and a test that an
+unset electric vehicle resolves `powertrain-default` through `/ask`.
+
+### F148
+
+**closeout_check A7's version-header half can only fire for Phase 244M**
+
+`closeout_check.py` A7 takes the newest phase as the first `| **` row of
+`implementation.md`'s history table (`rows[0]`) and checks the version
+header only when the phase under check equals it. The table is not in
+date order: its first bold row is **244M** (line 473 on 2026-09-24), and
+257 sits at line 499. So for every phase but 244M the header half of A7 is
+skipped, and a close-out that forgets the version bump passes it. Seen in
+Phase 257B's close-out, reading A7 to learn what it needs. Not fixed there
+(a change to the close-out's own checks is outside a transmission-field
+phase). What would close it: take "newest" by the Date column (or by the
+header's own phase), with a known-bad fixture where the newest row is not
+first.

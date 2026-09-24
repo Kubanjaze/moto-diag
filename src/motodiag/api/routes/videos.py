@@ -548,7 +548,11 @@ def ask_about_video(
     issues = rows_for_machine(
         issues,
         make=context.make, model=context.model,
-        transmission=getattr(context, "transmission", None),
+        # Phase 257B: a real field now. Before it, getattr on a context with
+        # no such attribute made this None for every vehicle. `powertrain`
+        # is still that shape (VehicleContext has none) -- left as is, so
+        # an unset vehicle resolves exactly as before (F144).
+        transmission=context.transmission,
         powertrain=getattr(context, "powertrain", None),
         purpose="prompt", db_path=db_path,
     ).rows[:_ASK_ROW_LIMIT]

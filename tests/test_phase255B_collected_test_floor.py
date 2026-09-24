@@ -89,7 +89,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: publication numbers ("BRG-F8199-11") by name, with a control that a
 #: real citation in the same document still fails (bug fix #9).
 #:
-COLLECTED_TEST_FLOOR = 8959
+#: 8999 (Phase 257B close-out, 2026-09-24) — +40, measured at 26b5007:
+#: `test_phase257B_transmission_field.py` 25; the finding contract +1
+#: (257B bug fix #2 replaced one test with two); and
+#: `test_roadmap_continuity.py` 14, added by 76edc69 (a rule change
+#: between 257 and 257B, not a phase) and never added to the floor.
+#: Raised before the regression of record.
+#:
+COLLECTED_TEST_FLOOR = 8999
 
 
 def _collected_count() -> int:

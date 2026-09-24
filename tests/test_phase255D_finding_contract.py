@@ -69,9 +69,23 @@ class TestAgainstTheRealRepository:
         assert here and there, (
             "both files must contribute; if the sibling is missing the check "
             "silently narrows and reports mobile findings as dangling")
-        assert max(here) > max(there), (
-            "this repo holds the higher numbers; if that flips, the "
-            "allocation script's assumptions need revisiting")
+
+    def test_the_next_number_clears_both_files(self):
+        """Phase 257B replaced `max(here) > max(there)` with this. The old
+        assertion pinned which file happened to be ahead and asked for the
+        allocation's assumptions to be revisited if it flipped; 257B filed
+        three app findings in the mobile file and it flipped. Revisited: the
+        script takes the max over both files and B1 compares the header with
+        that same global max, so neither cares which file leads. What must
+        hold in either direction is that the next number clears both."""
+        here = entries(ROOT / "docs" / "FOLLOWUPS.md")
+        there = entries(ROOT / ".." / "moto-diag-mobile" / "docs" / "FOLLOWUPS.md")
+        out = subprocess.run(
+            ["sh", str(SKILL / "next_f_number.sh")],
+            capture_output=True, text=True, check=True,
+        ).stdout
+        nxt = int(out.rsplit("next free: F", 1)[1].split()[0])
+        assert nxt == max(here | there) + 1, out
 
 
 class TestTheExclusionsAreNamedNotNumericRanges:
