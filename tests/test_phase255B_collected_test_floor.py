@@ -96,7 +96,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: between 257 and 257B, not a phase) and never added to the floor.
 #: Raised before the regression of record.
 #:
-COLLECTED_TEST_FLOOR = 8999
+#: 9089 (Phase 354 close-out, 2026-09-24) — +90, measured at ebcfe4d:
+#: `test_phase354_scooter_electrical_content.py` 85; and the closeout
+#: contract +5, added by the F148 fix (bac634d, close-out tooling, not a
+#: phase) and never added to the floor. Raised before the regression of
+#: record.
+#:
+COLLECTED_TEST_FLOOR = 9089
 
 
 def _collected_count() -> int:
