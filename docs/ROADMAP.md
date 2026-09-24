@@ -628,7 +628,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
 | 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
 | 353 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
-| 354 | Scooter electrical (12V minimal) | 🚧 | **OPENED 2026-09-24; Step 0 next.** Stator-to-battery, no FI on older carb scooters, simple wiring. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
+| 354 | Scooter electrical (12V minimal) | 🚧 | **OPENED 2026-09-24; Step 0 done, v1.0 committed: per-make charging rows from service manuals; carb vs FI does not predict the design.** Stator-to-battery, no FI on older carb scooters, simple wiring. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
 
 ---
 
