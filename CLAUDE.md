@@ -26,7 +26,8 @@ working-rules index load by themselves; then read:
   status key is in its header)
 - `ROADMAP_AUTHORITY.md`: which repo's ROADMAP owns a phase (185–204 are the
   mobile repo's; every other number is this repo's)
-- the newest file in `docs/handoffs/`
+- the newest handoff in `docs/handoffs/`. Two can share a date, so let git
+  name it: `git log -1 --name-only --format= -- docs/handoffs/`
 - `docs/FOLLOWUPS.md`: open findings that touch the work
 - the phase's own documents in `docs/phases/in_progress/`, and the previous
   phase's `implementation.md` (what it locked)
@@ -38,7 +39,8 @@ the end:**
 - A phase gets its row **before its Step 0**: the next free number (or a
   letter for a follow-on, like 255B), a title, and 🚧.
 - The row changes with the work (v1.0 committed, a batch written, a pause as
-  ⏸️ with the reason) and closes as ✅ with the regression line at close-out.
+  ⏸️ with the reason) and closes as ✅ at close-out, with
+  `**CLOSED YYYY-MM-DD.**` and the regression line.
 - A number is never reused. A displaced row moves to the next free number and
   says what it was ("Was 256; …").
 - Work that is not a phase, such as a rule change like this one, goes in
@@ -46,10 +48,57 @@ the end:**
 
 `.claude/skills/closeout/roadmap_check.py` holds the ledger to this: a reused
 number, a phase with documents but no row, a row whose status disagrees with
-where its documents are, a number no authority range covers, and the two
-copies of the authority contract drifting apart.
+where its documents are, a number no authority range covers, the two
+copies of the authority contract drifting apart, and a phase closed with no
+handoff (R6).
 `tests/test_roadmap_continuity.py` runs it with every suite, and the push
 guard refuses any `git push` while it fails.
+
+## How a phase runs: five standing rules
+
+Standing since 2026-09-24. The operator had to give each of these more than
+once.
+
+1. **A phase runs to its finish line.** It stops for the operator only for:
+   - a real fork, meaning two plans that would ship different things
+     (present the options; the operator picks);
+   - a change to a threshold or to a rule's definition;
+   - a test it cannot make green;
+   - a login or a credential;
+   - a live-database change that alters or deletes existing rows.
+
+   Loading new rows after a backup is not a stop. Anything else it decides,
+   and it writes the decision and the reason in the phase log.
+2. **Bulk reading goes through Subconscious (GLM-5.3); judgment stays on
+   Opus.**
+   - GLM does census, acquisition, extraction and first-pass classification,
+     through `subc claude` or the orchestrator's `--source-route subconscious`.
+   - Opus does refute, writing entries and merging.
+   - While Subconscious is down, `--source-route anthropic` is the fallback,
+     and every entry records its `source_route`.
+   - An unattended GLM run must be technically unable to write outside its
+     own worktree, proven by a planted write that fails. An instruction to
+     stay inside is not a boundary.
+3. **Four whole-tree checks run before every commit**, whatever the commit
+   touches:
+   - `tests/test_phase191c_f9_lint.py`
+   - `tests/test_phase244G_guard_shapes.py`
+   - `tests/test_roadmap_continuity.py`
+   - `python3 .claude/skills/finding/finding_check.py`
+
+   B2 reads only `completed/`. Before the regression of record, also run
+   `finding_check.check(Path("."), phase_docs="docs/phases/in_progress")`.
+   A suite chosen by subject misses these checks. In 257 the F9 lint went
+   red only at the full regression, and B2 only once the documents had moved
+   to `completed/`, which cost a second 45-minute regression.
+4. **Every close-out writes a handoff:**
+   `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`, saying what shipped, what
+   is open and what is next. It goes in the close-out commit, before the
+   merge; the deploy's outcome is added after it runs. `roadmap_check.py`
+   R6 refuses any push while a phase closed since 2026-09-24 has none.
+5. **One writing session at a time on this checkout.** Any other session
+   only reads: no commits, branch switches or edits while a builder works.
+   A second writer gets its own worktree.
 
 ## Procedure folders
 
@@ -100,6 +149,42 @@ and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 ---
 
 ## Change log
+
+### 2026-09-24 — five standing rules, and R6: every close-out leaves its handoff
+
+The operator had given each of these rules in session prompts, some of them
+several times, and none was in a file a new session loads. They are now in
+"How a phase runs" above. What else changed:
+- The read list names the newest handoff with a git command, because
+  `2026-09-24_353_closed.md` and `2026-09-24_354_closed.md` share a date.
+- The ledger bullet asks for `**CLOSED YYYY-MM-DD.**`.
+- `roadmap_check.py` gained R6.
+
+R6 was proposed as "the newest handoff is at least as new as the newest
+close", and measured before it was written. Four phases closed on
+2026-09-24; two wrote a close-out handoff, and 257 and 257B, which predate
+the rule, are exempt by name. A date-only rule passes that day, and would
+still pass it with 353's handoff deleted, because 354's has the same date.
+So R6 is per phase: every close needs its own `_closed` handoff, dated no
+earlier than the close. It sees a close through the ✅ row's date or
+through `implementation.md`'s history row.
+
+The push guard now refuses a close-out push that has no handoff, so the
+handoff is written before the merge, not after the deploy as 353 and 354
+did.
+
+Proven:
+- R6 fires on exactly the five planted cases in `fixtures/roadmap_bad`.
+- `fixtures/roadmap_good` passes; it holds the exemption's control and a
+  second close on one day with its own handoff.
+- On the real ledger, deleting 353's handoff is caught.
+- Five deliberate breaks each turned `tests/test_roadmap_continuity.py` red,
+  and all five were reverted: ignoring the date, the date-only rule, dropping
+  the history source, accepting a mid-phase handoff, and removing 257 from
+  the exemption.
+
+Rules 1, 2, 3 and 5 are text. Rule 4 is enforced on every push. An operator
+request made between Phase 353 and 258; not a phase.
 
 ### 2026-09-24 — the ROADMAP moves with the work, and a check holds it there
 
