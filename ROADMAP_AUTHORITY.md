@@ -5,6 +5,9 @@ and `Kubanjaze/moto-diag-mobile`. This file is a contract, not project state —
 its duplication across both repos is intentional and correct.
 
 **Established:** 2026-05-17
+**Amended:** 2026-09-24 (operator decision) — the backend range is open-ended,
+205+. Rows 353 and 354 exist and no range covered them. The boundary between
+the repos (185–204 mobile) is unchanged.
 **Reason:** Track I (Phases 185–204) status was being mirrored in two roadmaps
 with no sync mechanism, producing recurring drift (the 195/195B miss being the
 triggering instance). This contract removes the drift class structurally rather
@@ -21,7 +24,7 @@ in **exactly one** authoritative place:
 |-------------|----------|------------------|----------------------------------|
 | 01–184 | A–H | **Backend repo** | backend `docs/ROADMAP.md`, backend `phase_log.md`, backend `implementation.md` Phase History table |
 | 185–204 | I (Mobile) | **Mobile repo** | mobile `docs/ROADMAP.md`, mobile `implementation.md` Phase History/status table, mobile `phase_log.md` |
-| 205–352 | J–T | **Backend repo** | backend `docs/ROADMAP.md`, backend `phase_log.md`, backend `implementation.md` Phase History table |
+| 205+ | J–T, and every number added after the plan (353 on) | **Backend repo** | backend `docs/ROADMAP.md`, backend `phase_log.md`, backend `implementation.md` Phase History table |
 
 Track I is the only mobile-owned track. Backend commits that land inside a
 Track I phase (e.g., 191B's `efb0b7e`/`32ac5c2`, 195B's Whisper pipeline) are
@@ -74,6 +77,10 @@ correct; do not reconcile them.
 None required. The contract removes the drift class by construction: each
 phase's status lives in exactly one authoritative surface. There is no sync
 mechanism to maintain because there is nothing to sync.
+
+Checked since 2026-09-24: the backend repo's
+`.claude/skills/closeout/roadmap_check.py` fails if the two copies of this file
+differ (R5) or a backend ROADMAP row falls outside every range above (R4).
 
 ## Changing this contract
 

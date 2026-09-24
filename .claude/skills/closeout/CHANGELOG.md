@@ -1,5 +1,34 @@
 # closeout — changelog
 
+## 2026-09-24 — roadmap_check.py: the ROADMAP ledger holds, on every suite and every push
+
+The phase after 257 was about to start with no ROADMAP row, and looking for
+its place found a reused number (two rows read 256) and a row (353) outside
+every range of the authority contract. The close-out checked a phase's row
+only at the end, and only that it existed. Nothing checked the ledger while
+work ran, or checked it against `docs/phases/` at all.
+
+**Measured before it was written:** the rules were run over the real ledger
+first. 371 rows, 370 numbers: the duplicate was 256. Of 298 phases with
+documents, 27 had no backend row, and all 27 were Track I, whose rows the
+contract puts in the mobile ROADMAP (all 27 are there), so R2 looks them up
+there instead of exempting them. One phase has documents in `completed/`
+and a ⏸️ row: 245, Damon, whose record was archived when it paused. So R3
+accepts ⏸️ as well as ✅, and the good fixture carries a paused phase as that
+exclusion's control.
+
+**The guard now covers every push, not just `master`.** The narrowing below
+(2026-09-22) was right for close-out, which cannot be complete mid-phase.
+Continuity can always be true mid-phase, because a phase's row exists before
+its Step 0. So a work-in-progress push is refused only when the ledger lies,
+and the fix is one edit to the row.
+
+Proven: on `master`'s ROADMAP before this change, the check reports exactly
+R1 (256) and R4 (353). Each rule fires on `fixtures/roadmap_bad`, and
+`fixtures/roadmap_good` passes. Breaking R1 (`c > 1` → `c > 9`), or the guard's
+refusal (`return 2` → `return 0`), turned `tests/test_roadmap_continuity.py`
+red, and both were reverted.
+
 ## 2026-09-22 — A4: a heading may not be dated after it was recorded (Phase 255D fix #9)
 
 The operator asked for A4 to compare each bug-fix heading's time with its

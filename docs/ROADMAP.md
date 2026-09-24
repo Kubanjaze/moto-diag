@@ -2,11 +2,12 @@
 
 **Project:** moto-diag — AI-Powered Motorcycle Diagnostic Tool (Hybrid: Software + Hardware)
 **Repo:** `Kubanjaze/moto-diag`
-**Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
+**Local:** `~/Projects/moto-diag`
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 352
+**Total Phases:** 354 numbered, plus follow-on phases with a letter (255B)
+**Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
 
@@ -480,7 +481,6 @@ Electric motorcycle diagnostics — fundamentally different from ICE: HV safety,
 | 255B | Twist-and-go vs manual small bikes | ✅ | **CLOSED 2026-09-22 — zero twist-and-go content rows shipped.** Seven content subjects died to the documents across two adversarial cycles; an eighth, already committed, died in audit. **The distinction lives in the transmission axis and the filter, not in content: no further twist-and-go content phase is scheduled.** Shipped: one general row, three data repairs, F115 closed, F132 fixed, F129–F134 filed, schema 64 → 65. The 4611 split was made and backed out, closed as wrong. **Corrects this row's earlier framing:** the PCX question is not a reserved slot — the junction stores marque-prefixed model strings the tier query cannot match, which is 255C. [`255B_implementation.md`](phases/completed/255B_implementation.md) · [log](phases/completed/255B_phase_log.md) |
 | 255C | The junction stores names the tier query cannot match | ✅ | **CLOSED 2026-09-22.** A row that NAMES a machine could not reach tier 0 for it: the junction stored whatever spelling the model column used, so six spellings of one PCX named one machine and the tier query matched none. **Corrects this row's framing** — not a marque prefix on 19% of rows, which Step 0 measured as the wrong fix (98 of 100 ARE the canonical), but **50 machines split across spellings**. The junction now stores a canonical `(make, model)` pair; the tier query matches both. PCX 150: tier `model` 2 → 11, retrieved unchanged at 166. Seven bug fixes, two migration-blocking, one indexed three rows as nothing. Schema 65 → 66, regression 8,088/0/0. Filed F135–F136. [`255C_implementation.md`](phases/completed/255C_implementation.md) · [log](phases/completed/255C_phase_log.md) |
 | 255D | Procedures as folders — closeout, finding, refute | ✅ | **CLOSED 2026-09-22.** Recurring procedures leave CLAUDE.md and become skills with assertions. **D1 ran the mechanism before anything was built on it, and halted the phase** — a skill created mid-session is not invocable, and `PreToolUse` ignores the hook's `if`, so the planned guard blocked *every* Bash command. Three folders — `closeout`, `finding`, `refute` — each with a hand-written known-bad fixture its assertion must fail on. Run against 255C, `closeout` found two real gaps and one bug in itself. CLAUDE.md 1,337 → 889 lines; 270 lines of agent-pool machinery archived after measuring that **nothing has invoked it since phase 191D**. Regression 8,130/0/0. [`255D_implementation.md`](phases/completed/255D_implementation.md) · [log](phases/completed/255D_phase_log.md) |
-| 256 | Scooter electrical (12V minimal) | 🔲 | Stator-to-battery, no FI on older carb scooters, simple wiring |
 | 257 | The orchestrator and `/source-transmission` | ✅ | **CLOSED 2026-09-24.** A sandboxed, headless procedure sources transmission-lookup entries only from the maker's own documents: census, acquire, excerpts, a one-turn source stage, entry_check E1–E12, refute on Opus, write. One make per commit. Nine makes batched, **71 entries** written (KTM 26, Yamaha 18), census **605 → 528**. Coverage stopped where acquisition did; the rest is F143. Nine bug fixes, one shared cause. Regression **8959 passed / 0 failed / 0 skipped** at `b8382b5`. Full write-up: [`257_implementation.md`](phases/completed/257_implementation.md) |
 | 258 | Gate 14 — Scooter / small displacement integration test | 🔲 | Query scooter/small bike → CVT + electrical + carb workflow |
 
@@ -627,6 +627,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
 | 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
 | 353 | Small-engine carb service (single/twin-barrel) | 🔲 | Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
+| 354 | Scooter electrical (12V minimal) | 🔲 | Stator-to-battery, no FI on older carb scooters, simple wiring. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
 
 ---
 
