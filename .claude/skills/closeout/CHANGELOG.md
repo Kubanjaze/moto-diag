@@ -1,5 +1,31 @@
 # closeout — changelog
 
+## 2026-09-24 — A7: the newest phase is the row with the latest Date (F148)
+
+A7 took the first bold row of `implementation.md`'s history table as the
+newest phase. The table is not in date order: its first row is 244M
+(2026-09-10), and 257B (2026-09-24) sits near the bottom. So the
+version-header half of A7 ran only for 244M. A close-out that forgot the
+version bump passed it, and 244M itself carried a false A7 failure, because
+the header correctly names 257B.
+
+**Measured first:** all 112 bold history rows carry one bold ISO date in
+their third cell, so the Date is a total key except for same-day closes.
+257 and 257B both closed on 2026-09-24. Their rows were first committed in
+`b8382b5` (00:07) and `f3ef2fb` (13:17), so a tie goes to the row committed
+later (`git log -S` on its `| **phase** |` prefix, the way A4's
+`recorded_at` dates a heading), then to table position. A row not yet
+committed counts as later than any committed row.
+
+Proven: `fixtures/a7_newest_bad` puts 244M first and a ZZZ row, dated later,
+under a stale header. Master's A7 returned `[]` on it. The fix returns
+exactly the A7 header failure, and `fixtures/a7_newest_good` (header bumped)
+passes. Of the five new tests, four failed on master's check. Changing the
+tie-break to table order turned the reversed-order tie test red, and it was
+reverted. On the real repo the newest phase is now 257B, and 244M no longer
+fails A7. Its A5 and A6 failures come from older phases and are unchanged.
+Commit `bac634d`. Close-out tooling; not a phase.
+
 ## 2026-09-24 — roadmap_check.py: the ROADMAP ledger holds, on every suite and every push
 
 The phase after 257 was about to start with no ROADMAP row, and looking for

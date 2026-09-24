@@ -1207,7 +1207,13 @@ machines, all `ice`, so zero. What would close it: a `powertrain` field on
 `VehicleContext` filled by `_build_vehicle_context`, and a test that an
 unset electric vehicle resolves `powertrain-default` through `/ask`.
 
-### F148
+### F148 — CLOSED by `bac634d` (close-out tooling, not a phase), 2026-09-24
+
+**Closed:** A7 now takes the newest phase as the history row with the
+latest Date, with same-day rows ordered by the commit that first added
+each row. Known-bad fixture `fixtures/a7_newest_bad` (A7 was silent on it on
+master, and fires now) and `fixtures/a7_newest_good` (passes). Recorded in
+the closeout skill's `CHANGELOG.md`.
 
 **closeout_check A7's version-header half can only fire for Phase 244M**
 

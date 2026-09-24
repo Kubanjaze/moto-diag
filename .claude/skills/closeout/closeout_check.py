@@ -122,6 +122,50 @@ def unresolved_commits(repo: pathlib.Path, line: str) -> list[str] | None:
     return bad
 
 
+_ROW_DATE = re.compile(r"\*\*(\d{4}-\d{2}-\d{2})\*\*")
+
+
+def row_committed_at(hist: pathlib.Path, phase: str) -> float:
+    """Epoch of the first commit that added this phase's history row.
+
+    Searched on the row's `| **phase** |` prefix, not the whole line, so an
+    edit to the notes later does not move it. A row no commit holds yet is
+    later than any committed one, as `recorded_at` treats a heading.
+    """
+    root = _git_root(hist.parent)
+    if root is not None:
+        rel = hist.resolve().relative_to(root.resolve())
+        r = subprocess.run(
+            ["git", "-C", str(root), "log", "--reverse", "--format=%at",
+             "-S", f"| **{phase}** |", "--", str(rel)],
+            capture_output=True, text=True)
+        first = r.stdout.split()[:1]
+        if first:
+            return float(first[0])
+    return float("inf")
+
+
+def newest_phase(hist: pathlib.Path, rows: list[str]) -> str:
+    """The phase whose history row carries the latest Date.
+
+    NOT the first row: the table is not in date order, and taking `rows[0]`
+    made the version-header half of A7 fire only for 244M, its first bold
+    row (F148). Same-day rows (257 and 257B both closed 2026-09-24) are
+    ordered by when each row was committed, then by table position.
+    """
+    dated = []
+    for ln in rows:
+        cells = ln.split("|")
+        m = _ROW_DATE.search(cells[3]) if len(cells) > 3 else None
+        if m:
+            dated.append((m.group(1), cells[1].strip().strip("*")))
+    if not dated:
+        return ""
+    latest = max(d for d, _ in dated)
+    tied = [(i, p) for i, (d, p) in enumerate(dated) if d == latest]
+    return max(tied, key=lambda ip: (row_committed_at(hist, ip[1]), ip[0]))[1]
+
+
 def check(repo: pathlib.Path, phase: str) -> list[str]:
     """Return a list of failure strings. Empty means closeout is complete."""
     repo = pathlib.Path(repo)
@@ -243,7 +287,7 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
         # 255D closed, and 255C's A7 started failing on a document that was
         # correct. **An assertion that only the newest artefact can satisfy
         # is not a property of a closed phase.**
-        newest = rows[0].split("|")[1].strip().strip("*")
+        newest = newest_phase(repo / "implementation.md", rows)
         if phase == newest:
             ver = next((ln for ln in hist.splitlines()
                         if ln.startswith("**Version:**")), "")
