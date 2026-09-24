@@ -194,3 +194,25 @@ NFKD, are the spelling's: "Ténéré 700" names Tenere 700, "CR 300i" names
 CR300i. Never part of a word: "YZFR1M" is not the YZF-R1, and "MT03T" is not
 the MT-03. Yamaha's model-year codes (YZFR6L, YZFR7T, MT03T) are not read
 as names; that is an operator decision.
+
+## 2026-09-23 — KTM's route is ktm.com's owner's-manual list
+
+`ROUTES["KTM"]` is `ktm_om_route`: suggestions, then the exact match's
+newest year's `manuals.json` (saved as the PDF's referrer, which vouches
+for the Azure CDN link under E11), then its US English PDF, else the first
+English one, market recorded. KTM joins `MANUAL_ROUTES`. No KTM identity
+reader: every KTM manual prints its model's name (measured on all 26).
+
+## 2026-09-23 — a range or "see page" ending a wrapped sentence is not a contents line (bug fix #7)
+
+`toc_line` excludes a trailing "N-N" after a preposition or "see page":
+KTM's "hold the SET / button for 3-5 / seconds." and Yamaha's "…damage.
+See page 5-1" are prose. Checked on the real KTM manuals before their
+source call; every KTM mechanism line still dropped has a dot leader.
+
+## 2026-09-23 — E4 accepts the pinned list record (operator)
+
+"The document never names the machine" passes when `list_identity` holds:
+Yamaha's YZF-R6, YZF-R7 and MT-03 manuals print only model-year codes
+(YZFR6L, YZFR7T, MT03T), and the record names each exactly. No year-letter
+parsing: "YZFR1M" is the R1M.

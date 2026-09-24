@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F142** (this file); the mobile
+At the time of writing the highest assigned is **F143** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -1140,3 +1140,43 @@ each model in a multi-make row assigned to the make that builds it — with
 a whole-junction count of the pairs that move, and a test that a
 multi-make row cannot produce a pair outside its models' own makes.
 
+
+### F143
+
+**Transmission coverage stopped where acquisition did: 528 census spellings still resolve unknown**
+
+Phase 257 built the sourcing machine and ran it make by make until the
+operator named KTM the last make (2026-09-23). At close the census
+(`census.py`, whole junction) is **528** unknown (make, spelling) pairs,
+**412** of them machine names; it was 605 when 257 opened.
+`TRANSMISSION_LOOKUP` holds 121 entries, 71 of them written in 257. What
+remains, by why it remains (machine-name counts from the census):
+
+- **Maker site refuses a script (403), waits for the operator inbox**
+  (`~/research/motodiag/inbox/<Make>/`, then `acquire.py ingest`; its
+  smoke test has never run): Ducati 53, Aprilia 23, Piaggio 28, Vespa 22,
+  Moto Guzzi 9. **Triumph 52**: its handbook list is reachable but the
+  download returns 403 (downloads switched off); inbox too.
+- **No measured route in `acquire.ROUTES`**: Harley-Davidson 16 (also
+  inbox, operator), Energica 10, LiveWire 7, Damon 3.
+- **A route exists, never batched**: MV Agusta 20, Zero 15, Genuine 4.
+- **Batched, remainder unresolved**: BMW 32 (family pages write nothing),
+  Kawasaki 29, Suzuki 25, Honda 20 (12 never sent; the E-Clutch CB650R
+  and CB750 await a decision on an E-Clutch value), Yamaha 20, KTM 15,
+  Kymco 6, SYM 3.
+- **Held unknown by operator decision**: Yamaha MT-09 and MT-07 (whether a
+  Y-AMT version is sold where a vehicle was bought; Yamaha's US pages name
+  none, Europe's were never fetched). KTM "1290 Super Duke" and "Super
+  Adventure S" (list matches only a longer name, the 4609 rule); KTM "EXC"
+  and "Enduro R" (no manual of their own; not sent).
+- **Sourced on the fallback route, to re-source when Subconscious is
+  back**: 57 entries carry `source_route="claude-opus-5-5@medium"`
+  (KTM 26, Yamaha 18, BMW 7, Honda 5, Suzuki 1); one filter on the field.
+- **Seen, not fixed**: `toc_line` still drops BMW's prose cross-references
+  printed with a "b" page glyph ("the auxiliary stand (b 24-27)").
+
+What it affects: every unknown machine loses every transmission-scoped
+row; 412 machine spellings do today. What would close it: the inbox run
+for the 403 makes, routes for the four without one, batches for the three
+with one, a re-source of the 57 fallback entries on Subconscious, and a
+census back under a figure the operator sets.

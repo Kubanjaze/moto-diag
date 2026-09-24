@@ -2802,3 +2802,14 @@ Census 531 → **528** (Yamaha 23 → 20). `TRANSMISSION_LOOKUP` 118 → 121.
 | YZF-R6 is manual | kept | "The clutch lever is located on the left side of the handlebar. To disengage the clutch, pull the lever toward the handlebar grip." | Yamaha OM BN6-28199-13 (2020), PDF p. 36 |
 | YZF-R7 is manual | kept | "6. Open the throttle part way and gradually release the clutch lever." | Yamaha OM D42-28199-10 (2026), PDF p. 98 |
 | MT-03 is manual | kept | "6. Open the throttle part way and gradually release the clutch lever." | Yamaha OM BRG-F8199-11 (2026), PDF p. 85 |
+
+### 2026-09-23 — KTM was the last make; the rest is F143 (operator rule 3)
+
+Filed **F143** in `docs/FOLLOWUPS.md`: 528 census spellings (412 machine
+names) remain unknown, grouped by why — the inbox makes (Ducati 53,
+Aprilia 23, Piaggio 28, Vespa 22, Moto Guzzi 9, Triumph 52), no route
+(Harley-Davidson 16, Energica 10, LiveWire 7, Damon 3), a route never
+batched (MV Agusta 20, Zero 15, Genuine 4), batched remainders, the
+operator's holds (MT-09, MT-07; KTM's two contains matches and EXC, Enduro
+R), and the 57 fallback entries to re-source on Subconscious. The skill's
+CHANGELOG records the route, bug fix #7 and the E4 rule.
