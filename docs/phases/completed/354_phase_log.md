@@ -179,6 +179,37 @@ v1.1 written; ROADMAP row closed ✅ (104 words by `roadmap_words.py`);
 `implementation.md` history row added and version 0.13.77 → 0.13.78; both
 documents moved to `completed/`. The live load follows the merge.
 
+### 2026-09-24 — Merged and deployed
+
+Merged `8d1e29a`, pushed; the push guard's close-out check passed.
+
+**Live load**, on `master` at `8d1e29a`, `bash` `set -euo pipefail`:
+
+| | before | after |
+|---|---|---|
+| `known_issues` | 1,046 (max id 4616) | **1,053** (ids 5337–5343) |
+| schema / vehicles | 66 / 10 | 66 / 10 |
+| hash of the 1,046 existing rows | `0c2d160326e766f4` | `0c2d160326e766f4` |
+
+Backup `~/backups/motodiag/motodiag_pre354_20260924_163732.db`, md5
+`2169f020e84919b86c4af0b1302ba04f` equal to the live file before the load.
+The script's `integrity_check` did not run — `sqlite3 -readonly` cannot
+create the `-shm` a WAL-mode file needs (error 14), and a failure inside a
+command substitution does not trip `set -e` — so it was run on a scratch
+copy of the backup: `ok`, 1,046 rows, md5 unchanged. `cp -p` had kept the
+live file's 2026-09-22 mtime on the backup, which would make retention
+(by mtime) prune the newest backup first; touched to its creation time,
+md5 unchanged. Retention to five removed `motodiag_pre255_143025.db`
+(2026-09-21), the oldest.
+
+**Smoke, on the live database:** PCX150, Agility 50 and Zuma 125 each get
+their row at tier `model`; a Gold Wing sees the two Honda rows only at
+`make_other_model`.
+
+`verify_phase.sh 354 c79ddec 8d1e29a`: checks 2–13 clean; check 1's only
+open item was this handoff, committed with this entry; check 4's three
+hits are prose about the sweep's placeholder answers, not stubs.
+
 ## Refuter pass
 
 Four refuters on Opus, one per maker group, each opening every cited page itself (text and, where
