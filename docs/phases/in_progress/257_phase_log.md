@@ -415,6 +415,8 @@ document the library does not have. Acquisition is the bottleneck.
   could be sent, not findings.
 - **Commit:** this one.
 
+**Commit.** `6639490`
+
 ### 2026-09-23 — D7 measured: one plain fetch per maker URL, no model
 
 `d7_probe.py` replaces `~/.cache/motodiag/d7_subc.py` (an open-ended
@@ -657,6 +659,8 @@ ceiling is the operator's; not changed.
   `osacompile` (nothing is displayed); the old escaping restored → 1
   fails; fixed → 32 pass.
 - **Commit:** this one.
+
+**Commit.** `fbfd5ca`
 
 ### 2026-09-23 — acquire.py built (not run); the inbox; Honda motopub measured to the PDF
 
@@ -924,6 +928,8 @@ resolve `manual`; SV650, SV650 Gladius, GSX-R1100, GSX-S750, DR-Z400SM stay
   now pass the gate.
 - **Commit:** this one.
 
+**Commit.** `1273bec`
+
 ### 2026-09-23 — SV650 (live vehicle #8, a 2019 SV650): no Suzuki document names the base model by plain fetch
 
 Tried, one GET each (`~/.cache/motodiag/d7/20260923_094919/`):
@@ -1039,6 +1045,8 @@ recorded → 1; Carbon not a variant → 1. 410 pass; 244G clean.
   actually carries is this one).
 - **Verified:** made optional again → 6 fail. 40 pass in the file.
 - **Commit:** this one. SV650 re-runs after it.
+
+**Commit.** `139632a`
 
 ### 2026-09-23 — SV650 through the pipeline under the ABS exception (not written yet)
 
@@ -1486,7 +1494,7 @@ so E12 can only get stricter.
   - The `‘` half of the read is not caught on its own: no case uses a left
     quote as an apostrophe, and I have not found one in the documents.
 
-**Commit.** This entry's commit.
+**Commit.** `34bcc8f`
 
 ### 2026-09-23 — The shared cause of 257's bugs (#1–#5 and the `d2bcc71` correction)
 
@@ -2545,6 +2553,8 @@ YZF-R7, MT-03), E4 now passes only Tenere 700. Re-running the other three
 would spend source and refute on a rejection the local check already
 shows (the lean-API rule), so the re-run is Tenere 700 alone.
 
+**Commit.** `ced9562`
+
 ### 2026-09-23 — Yamaha re-run after bug fix #6: Tenere 700 written
 
 **Run** `Yamaha_20260923_210233` (`batch Yamaha "Tenere 700" --source-route
@@ -2643,6 +2653,8 @@ ends "see page N-N)"; removed); the guard taking "lever" (no real contents
 line ends "<noun> N-N" with a space; measured over the whole acquired
 library). Seen, not changed (BMW is done): BMW prints its page glyph as
 "b", so "the auxiliary stand (b 24-27)" is still dropped.
+
+**Commit.** `efa830c`
 
 ### 2026-09-23 — KTM: no AMT in its manuals; dry run; 26 sent (decisions)
 
@@ -2813,3 +2825,28 @@ batched (MV Agusta 20, Zero 15, Genuine 4), batched remainders, the
 operator's holds (MT-09, MT-07; KTM's two contains matches and EXC, Enduro
 R), and the 57 fallback entries to re-source on Subconscious. The skill's
 CHANGELOG records the route, bug fix #7 and the E4 rule.
+
+### 2026-09-23 — Bug fix #8: a 257 test hard-coded model IDs the 191C lint forbids
+
+**Issue.** The full regression at `751ef06` failed
+`test_phase191c_f9_lint.py::TestCheckModelIds::test_clean_main_has_zero_findings`:
+five literal model IDs ("claude-opus-5-5", "claude-sonnet-5") in
+`tests/test_phase257_source_stage.py`, from the fallback-route tests.
+
+**Root cause.** The fallback-route commits ran "related suites" chosen by
+subject (255*–257*, the lookup), and the lint is a whole-tree gate in an
+unrelated file, so no run between them and the full regression could see
+it. The shared cause again, one level up: the check was chosen for the
+change, not for the tree it lands in.
+
+**Fix.** The two IDs live in a module-level `KNOWN_GOOD_MODEL_IDS` (the
+lint's exempt source-of-truth container) and the tests name them. Still
+pinned to the literal IDs, not to `ROUTES` (which would be tautological).
+
+**Files.** `tests/test_phase257_source_stage.py`.
+
+**Verified.** `test_phase191c_f9_lint.py` + `test_phase257_source_stage.py`:
+102 passed. Break-it: the pinned Opus ID changed to another model → 2
+fail; restored by hash.
+
+**Commit.** (this entry's commit, named below)

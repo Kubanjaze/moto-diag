@@ -32,6 +32,10 @@ TRAIL_DOC = str(LIB / "zz_trail_om.txt")
 TRAIL_QUOTE = "Transmission  5-speed constant mesh, return shift"
 SUBC_MODEL = O.ROUTES["subconscious"]["model"]
 OPUS_MODEL = O.ROUTES["anthropic"]["model"]
+# The fallback route is pinned to these literal IDs, not to what ROUTES says
+# (that would be tautological); the 191C lint's source-of-truth container.
+KNOWN_GOOD_MODEL_IDS = {"opus": "claude-opus-5-5", "sonnet": "claude-sonnet-5"}
+PINNED_OPUS = KNOWN_GOOD_MODEL_IDS["opus"]
 
 
 def _usage(model, n_in=1000, n_out=100):
@@ -517,7 +521,7 @@ class OpusSourceFake(Fake):
     """Answers the fallback source call (claude-opus-5-5 at --effort medium);
     refute is the other claude-opus-5-5 call, with no --effort."""
 
-    served = "claude-opus-5-5"
+    served = PINNED_OPUS
 
     def __call__(self, cmd, **kw):
         if str(O.CLAUDE) in cmd and "--effort" in cmd:
@@ -552,11 +556,11 @@ class TestTheSourceRouteFallback:
         monkeypatch.setattr(O.subprocess, "run", fake)
         s = O.batch("ZZ", ["Trail 250"], source_route="anthropic")
         [cmd] = fake.fallback_calls()
-        assert cmd[cmd.index("--model") + 1] == "claude-opus-5-5"
+        assert cmd[cmd.index("--model") + 1] == PINNED_OPUS
         assert cmd[cmd.index("--effort") + 1] == "medium"
         assert cmd[cmd.index("--tools") + 1] == "" and "--strict-mcp-config" in cmd
         assert fake.source_calls() == [], "nothing went to subc"
-        assert s["source_route"] == {"route": "anthropic-opus-medium", "model": "claude-opus-5-5",
+        assert s["source_route"] == {"route": "anthropic-opus-medium", "model": PINNED_OPUS,
                                      "effort": "medium", "label": "claude-opus-5-5@medium"}
         assert s["ready_to_write"][0]["source_route"] == "claude-opus-5-5@medium"
 
@@ -565,13 +569,13 @@ class TestTheSourceRouteFallback:
         monkeypatch.setattr(O.subprocess, "run", fake)
         O.batch("ZZ", ["Trail 250"], source_route="anthropic")
         refute = [c for c in fake.calls if "--effort" not in c and str(O.SUBC) not in c]
-        assert len(refute) == 1 and refute[0][refute[0].index("--model") + 1] == "claude-opus-5-5"
+        assert len(refute) == 1 and refute[0][refute[0].index("--model") + 1] == PINNED_OPUS
 
     def test_a_different_model_answering_is_an_error(self, run_with, monkeypatch):
         """The served-model guard holds on the fallback: Sonnet answering a
         claude-opus-5-5 call is a source-stage error and a stop."""
         fake = OpusSourceFake(findings=[_found()])
-        fake.served = "claude-sonnet-5"
+        fake.served = KNOWN_GOOD_MODEL_IDS["sonnet"]
         monkeypatch.setattr(O.subprocess, "run", fake)
         s = O.batch("ZZ", ["Trail 250"], source_route="anthropic")
         assert any("source stage error" in r and "served by" in r for r in s["stops"])
