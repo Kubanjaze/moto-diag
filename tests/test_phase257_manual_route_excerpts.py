@@ -36,7 +36,7 @@ sys.path.insert(0, str(SKILL))
 import acquire as A  # noqa: E402
 import orchestrate as O  # noqa: E402
 from candidates import candidates  # noqa: E402
-from entry_check import list_identity, mechanism_lines, model_scope, toc_line  # noqa: E402
+from entry_check import check_one, list_identity, mechanism_lines, model_scope, toc_line  # noqa: E402
 
 API = A.YAMAHA_OM_API + "model_list/"
 PDF_URL = "https://library.ymcapps.net/library/om/contents/pdf/10/5YR-F8199-15_02.pdf"
@@ -237,6 +237,54 @@ def _verdict_fake(findings: list[dict]):
         return subprocess.CompletedProcess(cmd, 0, stdout=json.dumps(out) + "\n", stderr="")
     run.calls = calls
     return run
+
+
+# The YZF-R6 manual (BN6-28199-13) prints only its model-year codes.
+R6_LINES = ["YZFR6L/YZFR6LC", *["Keep this manual with the motorcycle."] * 50, SHIFT_LINE]
+R6_URL = "https://library.ymcapps.net/library/om/contents/pdf/10/BN6-28199-13_02.pdf"
+
+
+class TestE4AcceptsTheListRecord:
+    """Operator, 2026-09-23: E4's "the document never names the machine"
+    accepts the pinned list record naming the model exactly. No year-letter
+    parsing: "YZFR1M" is the R1M, never the YZF-R1."""
+
+    @staticmethod
+    def _e4(lib, txt, spelling):
+        f = {"make": "Yamaha", "spelling": spelling, "aliases": [], "outcome": "found", "transmission": "manual",
+             "quote": SHIFT_LINE, "document": str(txt), "page": 1, "evidence_kind": "owners_manual"}
+        return [x for x in check_one(f, lib, library=lib) if x.startswith("E4")]
+
+    def test_a_code_only_manual_is_named_by_its_record(self, lib):
+        txt = plant(lib, R6_LINES, ["YZF-R6"], disp="YZF-R6 - YZF600", pdf_url=R6_URL)
+        assert self._e4(lib, txt, "YZF-R6") == []
+
+    def test_control_the_same_manual_without_its_record_is_not(self, lib):
+        txt = plant(lib, R6_LINES, ["YZF-R6"], disp="YZF-R6 - YZF600", pdf_url=R6_URL)
+        record = lib / list_identity(txt, lib, "Yamaha", "YZF-R6")["record"]
+        record.write_bytes(record.read_bytes() + b" ")           # the pin no longer holds
+        assert self._e4(lib, txt, "YZF-R6") == ["E4 Yamaha | YZF-R6: the document never names the machine"]
+
+    def test_the_r1m_record_does_not_name_the_r1(self, lib):
+        txt = plant(lib, ["YZFR1M", *R6_LINES[1:]], ["YZF-R1"], disp="YZF-R1M - YZF1000D",
+                    pdf_url=R6_URL.replace("BN6", "B67"))
+        assert self._e4(lib, txt, "YZF-R1") == ["E4 Yamaha | YZF-R1: the document never names the machine"]
+
+    def test_a_weak_spelling_is_named_as_a_model_by_its_record(self, lib):
+        """"XT 660" is weak and in no lookup entry: the manual prints it, but
+        not after the make, in its title or its file name. Since Vino 125 was
+        written, its YJ125Y alias names it without the record, so this is the
+        case that still reaches the record. Control: the pin broken."""
+        lines = [*R6_LINES[1:4], "Ride your XT 660 carefully.", *R6_LINES[4:]]
+        txt = plant(lib, lines, ["XT 660"], disp="XT 660 - XT660Z", pdf_url=R6_URL.replace("BN6", "10S"))
+        assert self._e4(lib, txt, "XT 660") == []
+        record = lib / list_identity(txt, lib, "Yamaha", "XT 660")["record"]
+        record.write_bytes(record.read_bytes() + b" ")
+        assert [x[:20] for x in self._e4(lib, txt, "XT 660")] == ["E4 Yamaha | XT 660: "]
+
+    def test_a_record_for_another_spelling_does_not_name_this_one(self, lib):
+        txt = plant(lib, R6_LINES, ["YZF-R7"], disp="YZF-R6 - YZF600", pdf_url=R6_URL)
+        assert self._e4(lib, txt, "YZF-R7") == ["E4 Yamaha | YZF-R7: the document never names the machine"]
 
 
 class TestTheBatchCarriesTheIdentity:

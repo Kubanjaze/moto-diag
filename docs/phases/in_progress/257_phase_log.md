@@ -2643,3 +2643,52 @@ ends "see page N-N)"; removed); the guard taking "lever" (no real contents
 line ends "<noun> N-N" with a space; measured over the whole acquired
 library). Seen, not changed (BMW is done): BMW prints its page glyph as
 "b", so "the auxiliary stand (b 24-27)" is still dropped.
+
+### 2026-09-23 — KTM: no AMT in its manuals; dry run; 26 sent (decisions)
+
+**AMT (operator rule 1).** 0 hits for "AMT", "automated manual",
+"automated shift" or "auto shift" (whole words) in all 26 KTM manual
+texts; each has 12–39 "clutch lever" lines. **Positive control:** the same
+search over KTM's own 1390 Super Adventure S EVO 2027 US manual
+(27_3240286_en_BA.pdf, fetched through `acquire.Fetcher` from KTM's list,
+6 requests, saved to the session scratchpad, **not** the library) finds 11
+("If there is no AMT, the correct gear must be engaged…"). KTM's
+suggestions endpoint answers "Not Found" for the query "AMT". Scope: the
+newest-year manual of each exact match. **No KTM model flagged.**
+
+**Dry run** (local, no model): 41 machine spellings; 32 with excerpts; 28
+with a mechanism line. Not sent, no mechanism line: Adventure, LC8, 1290
+Super Duke, Adventure R. No excerpts: LC8c, Super Adventure S, 350 SXF,
+690 Duke 4, Adventure 1050, CAN Keihin, GT, LC8 V-twin, Super Duke 1290.
+
+**Decision: send 26, not 28.** "EXC" and "Enduro R" matched nothing in
+KTM's list and have no manual of their own; their only excerpts are other
+models' manuals (300 EXC, 250 EXC TPI; 950 Super Enduro R), and
+`names_model("Enduro R")` passes on "950 Super Enduro R" — the 4609
+over-claim. Sending them buys only family evidence at the risk of a
+mis-scoped write.
+
+**Local E4 before the call:** all 26 pass `_names` and `names_model` on
+their own manual; the 16 weak ones pass `named_as_model`. **No KTM identity
+reader was written: measured unnecessary.**
+
+### 2026-09-23 — E4 accepts the pinned list record (operator rule 2)
+
+`check_one`: "the document never names the machine" now also passes when
+`list_identity` holds (the pinned record names the model exactly). No
+year-letter parsing. Tests: `TestE4AcceptsTheListRecord` (5): the YZF-R6
+code-only manual passes through "YZF-R6 - YZF600"; the pin broken, it
+fails; an R1M record does not name the YZF-R1; a record for another
+spelling does not pass; a weak spelling ("XT 660", in no lookup entry) is
+named as a model by its record, and not once the pin is broken.
+
+Break-it, each alone, restored by hash: main branch ignores identity → 1
+fail; identity by contains → 3; weak branch ignores identity → **first
+survived**: the batch test's Vino 125 now passes through its written
+YJ125Y alias, so it no longer reaches the record. The XT 660 test was
+added for it; the same break then fails 1.
+
+Local check on the real manuals: YZF-R6, YZF-R7 and MT-03 print no name
+(`_names` false) and their records give "YZF-R6 - YZF600", "YZF-R7 -
+YZF690", "MT-03 - MTN320-A". MT-09 and MT-07 would pass too; by operator
+rule 2 they are **not** re-run and stay unknown.

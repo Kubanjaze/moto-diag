@@ -813,11 +813,14 @@ def check_one(f: dict, docs_root: pathlib.Path, excerpts: dict | None = None,
     if text is not None:
         if _norm(quote) not in _norm(text):
             fails.append(f"E3 {tag}: the document does not contain the quote")
-        if not _names(text, [f.get("spelling", "")] + list(f.get("aliases") or [])):
+        identity = list_identity(doc, library, f.get("make", ""), f.get("spelling", ""))
+        # A manual that prints only model-year codes ("YZFR6L/YZFR6LC") is named
+        # by its pinned list record ("YZF-R6 - YZF600"), exactly (operator,
+        # 2026-09-23). The code is never read for a name: "YZFR1M" is the R1M.
+        if not _names(text, [f.get("spelling", "")] + list(f.get("aliases") or [])) and not identity:
             fails.append(f"E4 {tag}: the document never names the machine")
         elif weak_spelling(f.get("spelling", "")) and not named_as_model(
-                text, doc, f.get("make", ""), f.get("spelling", "")) and not list_identity(
-                doc, library, f.get("make", ""), f.get("spelling", "")):
+                text, doc, f.get("make", ""), f.get("spelling", "")) and not identity:
             # The maker's own pinned list record naming this manual's model
             # exactly names it as a model (operator, 2026-09-23): "VINO 125".
             fails.append(f"E4 {tag}: {f.get('spelling')!r} is a common word or bare number and the "
