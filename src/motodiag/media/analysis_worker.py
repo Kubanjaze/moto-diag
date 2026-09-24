@@ -255,6 +255,7 @@ def _build_vehicle_context(
     # what the machine IS; the session snapshot is only a fallback for rows
     # with no vehicle_id, or whose vehicle has since been deleted.
     mileage = None
+    transmission = None
     make = session.get("vehicle_make") or ""
     model = session.get("vehicle_model") or ""
     year = session.get("vehicle_year")
@@ -266,12 +267,15 @@ def _build_vehicle_context(
 
             with get_connection(db_path) as conn:
                 row = conn.execute(
-                    "SELECT make, model, year, mileage FROM vehicles WHERE id = ?",
+                    "SELECT make, model, year, mileage, transmission "
+                    "FROM vehicles WHERE id = ?",
                     (vehicle_id,),
                 ).fetchone()
             if row is not None:
                 keyed = not isinstance(row, tuple)
                 mileage = row["mileage"] if keyed else row[3]
+                # Phase 257B: the rider's answer, for retrieval's explicit rung.
+                transmission = row["transmission"] if keyed else row[4]
                 live_make = (row["make"] if keyed else row[0]) or ""
                 live_model = (row["model"] if keyed else row[1]) or ""
                 live_year = row["year"] if keyed else row[2]
@@ -282,6 +286,7 @@ def _build_vehicle_context(
                 year = live_year if live_year is not None else year
         except Exception:
             mileage = None
+            transmission = None
 
     # Phase 244C: resolve the name against the corpus vocabulary. A user typed
     # "Homda cbrf4i" and every knowledge lookup returned zero rows while the
@@ -326,4 +331,5 @@ def _build_vehicle_context(
         identity_note=identity_note,
         notes=session.get("notes") or "",
         history=history,
+        transmission=transmission,
     )

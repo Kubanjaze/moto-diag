@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F143** (this file); the mobile
+At the time of writing the highest assigned is **F144** (this file); the mobile
 file's highest is **F115**.
 
 ---
@@ -1180,3 +1180,24 @@ row; 412 machine spellings do today. What would close it: the inbox run
 for the 403 makes, routes for the four without one, batches for the three
 with one, a re-source of the 57 fallback entries on Subconscious, and a
 census back under a figure the operator sets.
+
+
+### F144
+
+**Video `/ask` never passes a vehicle's powertrain to retrieval**
+
+`api/routes/videos.py` calls `rows_for_machine(...,
+powertrain=getattr(context, "powertrain", None))`, and `VehicleContext`
+has no `powertrain` field, so the value is `None` for every vehicle. The
+resolver's third rung (`electric` ⇒ `direct_drive`, minus the listed
+exceptions) is therefore unreachable from the API: an electric machine the
+lookup does not name resolves `unknown` in `/ask` and `powertrain-default`
+in `motodiag diagnose`. Found in Phase 257B Step 0, where the same shape
+hid the vehicle's `transmission` (fixed there).
+
+Not fixed in 257B on purpose: wiring it changes the answer for an unset
+electric vehicle, and 257B's finish line requires unset to mean exactly
+the previous behaviour. Exposure today: the live `vehicles` table holds 10
+machines, all `ice`, so zero. What would close it: a `powertrain` field on
+`VehicleContext` filled by `_build_vehicle_context`, and a test that an
+unset electric vehicle resolves `powertrain-default` through `/ask`.

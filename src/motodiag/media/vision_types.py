@@ -298,6 +298,16 @@ class VehicleContext(BaseModel):
             "and saying nothing is not."
         ),
     )
+    transmission: Optional[str] = Field(
+        default=None,
+        description=(
+            "Phase 257B: the vehicle row's own transmission, when the rider "
+            "set one. Read by retrieval (`rows_for_machine(transmission=)`), "
+            "not by the prompt text. Until 257B `/ask` read this attribute "
+            "with getattr on a model that did not have it, so every vehicle "
+            "was resolved from the lookup alone."
+        ),
+    )
 
     def to_context_string(self) -> str:
         """Format vehicle context as a text block for prompt injection."""

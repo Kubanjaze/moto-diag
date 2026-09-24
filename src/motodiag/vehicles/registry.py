@@ -59,8 +59,9 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
         cursor = conn.execute(
             """INSERT INTO vehicles (
                 make, model, year, engine_cc, vin, protocol, notes, created_at,
-                powertrain, engine_type, battery_chemistry, motor_kw, bms_present
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                powertrain, engine_type, battery_chemistry, motor_kw, bms_present,
+                transmission
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
@@ -70,6 +71,7 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
                 vehicle.battery_chemistry.value if vehicle.battery_chemistry else None,
                 vehicle.motor_kw,
                 1 if vehicle.bms_present else 0,
+                vehicle.transmission.value if vehicle.transmission else None,
             ),
         )
         return cursor.lastrowid
@@ -130,6 +132,9 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
         # Phase 152: persistent mileage source-of-truth. Added by migration
         # 020; update_vehicle is the only non-add_service_event writer.
         "mileage",
+        # Phase 257B: the rider's own answer. None is a real value here —
+        # it clears the column back to "nobody recorded it".
+        "transmission",
     }
     filtered = {k: v for k, v in updates.items() if k in allowed}
     if not filtered:
@@ -202,8 +207,8 @@ def add_vehicle_for_owner(
                 make, model, year, engine_cc, vin, protocol, notes,
                 created_at, powertrain, engine_type,
                 battery_chemistry, motor_kw, bms_present,
-                owner_user_id
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                owner_user_id, transmission
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
@@ -215,6 +220,7 @@ def add_vehicle_for_owner(
                 vehicle.motor_kw,
                 1 if vehicle.bms_present else 0,
                 owner_user_id,
+                vehicle.transmission.value if vehicle.transmission else None,
             ),
         )
         return cursor.lastrowid
