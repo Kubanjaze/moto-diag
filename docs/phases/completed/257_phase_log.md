@@ -2858,8 +2858,11 @@ over `tests/`: 0. `__pycache__` cleared, `-B`.
 
 - Diagnostic run at `751ef06`: 1 failed, 8,957 passed (38:44). The one
   failure is bug fix #8, fixed at `f6241ac`.
-- **Regression of record at `c2c0e78`: 8958 passed, 0 failed, 0 skipped,
-  8 warnings, 42:59.** Collected equals the floor.
+- Run at `c2c0e78`: 8958 passed, 0 failed, 0 skipped, 8 warnings, 42:59.
+  Superseded: bug fix #9 then changed `finding_check.py` (code), so it was
+  run again.
+- **Regression of record at `b8382b5`: 8959 passed, 0 failed, 0 skipped,
+  8 warnings, 50:42** (floor 8959; 244G scanner 0; caches cleared, `-B`).
 
 ### 2026-09-24 — Deploy: nothing to back up, nothing running
 

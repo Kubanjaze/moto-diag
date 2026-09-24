@@ -140,7 +140,7 @@ not touched; no scheduling was added.
 - [x] D7 table: all 21 census makes, 43 URLs, method per make, one real
       fetch each (`~/.cache/motodiag/d7/20260923_002937/`)
 - [x] full regression with hash and count; floor raised before it
-      (8145 → 8958 at `751ef06`; **8958 passed, 0 failed** at `c2c0e78`)
+      (8145 → 8958 at `751ef06`, 8959 at `cfe706c`; **8959 passed, 0 failed, 0 skipped** at `b8382b5`)
 
 ## Risks
 
@@ -238,7 +238,7 @@ account of itself.
   record (operator decisions).
 - **Grom:** refuted from Honda's spec pages, not the service manual's page
   images. A better source came first.
-- **Eight bug fixes**, one shared cause, recorded in the phase log: each
+- **Nine bug fixes**, one shared cause, recorded in the phase log: each
   rule was verified against the case it was written for, not the artefact
   it meets in use. #8 is the same cause one level up: suites chosen for the
   change, not for the tree it lands in, so a whole-tree lint in an
@@ -256,10 +256,10 @@ account of itself.
 | by make | — | KTM 26, Yamaha 18, Kawasaki 8, BMW 7, Honda 6, Suzuki 4, Kymco 1, SYM 1 |
 | by source route | — | 57 `claude-opus-5-5@medium`, 14 Subconscious GLM-5.3 Marathon |
 | `AMBIGUOUS_MODELS` | 4 | 4 |
-| Phase 257 tests collected | 0 | 813 in `tests/test_phase257_*.py` |
-| `COLLECTED_TEST_FLOOR` | 8145 | 8958 |
-| regression | 7,964 at `c8a0e16` (256) | **8958 passed, 0 failed, 0 skipped** at `c2c0e78` |
-| bug fixes | — | 8, one register, each naming its commit |
+| Phase 257 tests collected | 0 | 813 in `tests/test_phase257_*.py`, +1 in the finding contract |
+| `COLLECTED_TEST_FLOOR` | 8145 | 8959 |
+| regression | 7,964 at `c8a0e16` (256) | **8959 passed, 0 failed, 0 skipped** at `b8382b5` |
+| bug fixes | — | 9, one register, each naming its commit |
 | findings | — | F141 (filed and closed), F142, F143 |
 
 Every entry quotes the maker's own document and names its page; every one
