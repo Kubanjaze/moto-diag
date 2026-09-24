@@ -102,7 +102,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: phase) and never added to the floor. Raised before the regression of
 #: record.
 #:
-COLLECTED_TEST_FLOOR = 9089
+#: 9188 (Phase 353 close-out, 2026-09-24) — +99, measured at 92ee13f:
+#: `test_phase353_small_engine_carb_content.py` 99. Raised before the
+#: regression of record.
+#:
+COLLECTED_TEST_FLOOR = 9188
 
 
 def _collected_count() -> int:

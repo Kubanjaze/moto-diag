@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F150** (this file); the mobile
+At the time of writing the highest assigned is **F152** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1280,3 +1280,60 @@ would close it: a SYM document that ties model ABA to the Symply 125 (a
 parts catalogue, a VIN decoder page, SYM's own spec sheet), or the name
 removed from 254's rows by migration with the figure re-attributed to
 "a SYM 125 cc service manual (model ABA)".
+
+### F151
+
+**The 80 `cross_platform_*` rows state general advice but are each filed under one make and one large model, so they reach no machine of another make and every other model of their make only at `make_other_model`**
+
+The eight `known_issues_cross_platform_*.json` files (brakes, carbs,
+charging, cooling, drivetrain, fi, ignition, starting) hold 10 rows each, all
+`source` null. Each row's text is general — one is titled "CV carburetor
+diaphragm failure — all makes and models" — but carries a single `make` and
+`model` (Honda CB750, Yamaha V-Star 650, Kawasaki KZ1000, Suzuki GSX-R750 …)
+and a 1969–2015 window. Measured in Phase 353's Step 0 on a copy of the live
+database: a Kymco, SYM, Piaggio, Vespa or Genuine scooter receives none of the
+ten carburettor rows; a Honda Ruckus or CHF50 receives 18–19 carburettor rows
+at `make_other_model` and a Zuma 50 or Vino 22, headed by rows about a
+CBR600F4i float bowl and a V-Star petcock. Eight of the 80 rows use universal
+wording in their title or opening.
+
+What it affects: the advice is either unreachable (other makes) or reaches a
+machine as another model's row, beneath that machine's own rows; nothing is
+anchored to a document.
+
+Not fixed in 353: the rows are another phase's content and their identity is
+(make, model, title) (F129). What would close it: decide per row whether it is
+general (and then how a general row is represented — the transmission-axis
+contract's "absent key means no claim" suggests an explicit all-makes scope,
+not a borrowed model) or specific to the model it names; source it or label
+it; migrate; and test that a row titled "all makes" either reaches other
+makes or no longer says so.
+
+### F152
+
+**Phase 354's CHF50 charging row says the manual "prints the model only as CHF50, and it names no end year"; the manual's cover prints both a name and an end year**
+
+The CHF50 service manual's cover (`honda/chf50_service_mirror.pdf`, PDF p. 1)
+has no text layer. Rendered, it reads "2002–2006", "SERVICE MANUAL",
+"CHF50/P/S" and "METROPOLITAN™". Phase 354 searched only the text layer, where
+"metropolitan" occurs 0 times in 319 pages, and ran no positive control on the
+image-only page. It then shipped the sentence "The manual prints the model
+only as CHF50, and it names no end year" in the row "Honda's carburetted CHF50
+charges through a three-phase alternator/starter that its ECM controls", and
+`test_the_chf50_is_not_called_the_metropolitan` in
+`tests/test_phase354_scooter_electrical_content.py`, whose docstring repeats
+the 0-in-319 count as a fact about the document. Found by Phase 353's Honda
+refuter, which rendered the cover; confirmed by rendering it again.
+
+What it affects: one sentence of one row, and the reason a test gives. The
+row's modelling is unaffected and still right. It is modelled `CHF50`, so a
+current fuel-injected NCW50 Metropolitan does not reach it at tier 0. The
+cover's 2002–2006 does not bound the manual either, because its
+specification tables also cover "After '07 model NVK00K".
+
+Not fixed in 353: the row is 354's content, and its title is part of its
+identity (F129), although this sentence is in the description, not the title.
+What would close it: reword the sentence to what the document shows (the
+cover names the CHF50/P/S Metropolitan, 2002–2006; the tables reach after '07),
+change the test to pin the modelling rather than the absence, and re-load.
+Phase 353's own CHF50 row states the cover as rendered.

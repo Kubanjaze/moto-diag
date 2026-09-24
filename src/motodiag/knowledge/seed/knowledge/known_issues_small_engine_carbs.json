@@ -1,0 +1,162 @@
+[
+ {
+  "title": "Honda's CHF50 carburettor: a factory pre-set pilot screw, reset two different ways by edition, and a high-altitude setting that is not undone by reversing it",
+  "description": "The CHF50 service manual's cover, an image with no text layer, reads CHF50/P/S METROPOLITAN and 2002-2006; its tables also reach 'After '07 model NVK00K' (p. 1-6). It prints two fuel-system tables (p. 1-6). '02 - '05 model: carburettor NVK00E ([P type] NVK00F), main jet #72, slow jet #35, pilot screw initial opening 2-3/4 turns out ([P type] 2-1/8), float level 13 mm, idle 2,000 +/- 100 rpm, 'Starting enrichment (SE) valve resistance (20 C/68 F) 2.8 - 5.2 ohm'. After '05 model: the same except the carburettor (NVK00J for '06 - '07, NVK00K after '07) and an initial opening of 2-1/4 turns out. It names no carburettor maker. Both editions say 'The pilot screw is factory pre-set and no adjustment is necessary unless the pilot screw is replaced' (pp. 5-18, 5-19), and reset it differently. '02 - '05: seat it lightly, back out to the initial opening, warm up, set idle, then 'Turn the pilot screw in or out slowly to obtain the highest engine speed' (pp. 5-18, 5-19). After '05, an idle drop: from the highest engine speed, turn it in 'until the engine speed drops by 50 rpm', then out to a 'FINAL OPENING: 1/4 turns out' (pp. 5-19, 5-20), with a tachometer graduated in 50 rpm or finer. Altitude, after '05 only: 'When the vehicle is to be operated continuously above 2,000 m (6,500 feet), the carburetor must be readjusted' - 'HIGH ALTITUDE MAIN JET: #70' and 'HIGH ALTITUDE PILOT SCREW OPENING: 1/2 turn in from the factory preset position', an adjustment that 'must be made at high altitude' (p. 5-20). Coming back below 1,500 m the manual says 'Turn the pilot screw out 1/4 turn from the high altitude setting' and refit the #72 (p. 5-21) - a quarter turn out, not the half turn that went in, as printed. Its notice: sustained running below 1,500 m on the high-altitude setting 'may cause the engine to idle roughly and stall in traffic. It may also cause engine damage due to overheating' (p. 5-21). Cleaning: count the turns until the pilot screw 'seats lightly' before removing it, since 'Damage to the pilot screw seat will occur if the pilot screw is tightened against the seat' (p. 5-12), and blow the passages with compressed air, because 'a piece of wire will damage the carburetor body' (p. 5-13). Read from a copy held in the project's research library; this entry did not fetch it from Honda.",
+  "make": "Honda",
+  "model": "CHF50",
+  "year_start": 2002,
+  "severity": "medium",
+  "symptoms": [
+   "chf50 carburetor",
+   "chf50 pilot screw",
+   "chf50 idle",
+   "chf50 high altitude",
+   "chf50 hard cold start"
+  ],
+  "causes": [
+   "Pilot screw moved from its factory pre-set position",
+   "Standard jetting used continuously above 2,000 m",
+   "High-altitude setting left in below 1,500 m",
+   "Starting enrichment (SE) valve out of its 2.8 - 5.2 ohm range",
+   "Carburettor body passages damaged by cleaning with wire"
+  ],
+  "fix_procedure": "1. Identify the edition: the '02 - '05 and after '05 tables differ in carburettor number, pilot screw opening and reset method. 2. Measure the SE valve: 2.8 - 5.2 ohm at 20 C. 3. When disassembling, turn the pilot screw in until it seats lightly and record the turns; never tighten it against the seat. Clean passages with compressed air, never wire. 4. '02 - '05 with a replaced pilot screw: seat lightly, back out 2-3/4 turns (P type 2-1/8), warm up, set idle 2,000 +/- 100 rpm, turn the pilot screw to the highest engine speed, reset idle, repeat until the speed rises smoothly. 5. After '05 with a replaced pilot screw: seat lightly, back out 2-1/4 turns, warm up (10 minutes of stop-and-go riding), set a tentative idle of 2,000 +/- 100 rpm, turn the pilot screw to the highest engine speed, open the throttle lightly 2 or 3 times and reset idle, turn the pilot screw in until the speed drops 50 rpm, then out 1/4 turn, and reset idle. 6. After '05, continuous riding above 2,000 m: at altitude, fit the #70 main jet and turn the pilot screw 1/2 turn in from the factory preset position. Back below 1,500 m: turn it out 1/4 turn from the high-altitude setting and refit the #72, as the manual prints.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Honda Ruckus owner's manuals: idle speed is the only carburettor adjustment the emission section allows, a high-altitude setting must come back out, and methanol was dropped by 2022",
+  "description": "Four Honda Ruckus (NPS50) owner's manuals were read: 31GGA6300 (2012), 31GGA720 (2022), 31GJP600 (2024) and 31GJP610 (2025). The 2022 to 2025 editions say 'The exhaust emission control system consists of appropriate carburetor settings, and no adjustment should be made except idle speed adjustment with the throttle stop screw' (2025, PDF p. 89); the 2012 edition says instead that the components 'should not need adjustment, although periodic inspection by your Honda dealer is recommended' (PDF p. 95). Idle is '2,000 +/- 100 rpm' in every edition read (2012, PDF p. 66; 2025, PDF p. 104). Only the 2012 edition gives the owner an idle procedure: warm the engine, since 'The engine must be at normal operating temperature', and 'Do not attempt to compensate for faults in other systems by adjusting idle speed' (PDF p. 66); the 2022 - 2025 editions list 'Engine Idle Speed' in the maintenance schedule with no page of their own (2025, PDF p. 42). High altitude, with the same content in all four editions: 'Above 6,500 ft (2,000 m), a rich mixture can cause driveability problems'; 'you can have the carburetor adjusted for high altitude riding. See your dealer'; it 'must be returned to standard factory specifications before riding again at lower altitudes (below 5,000 ft (1,500 m))', because 'Sustained riding at lower altitudes with the lean high-altitude setting may cause rough idling, stalling, or engine damage from overheating' (2025, PDF p. 93; 2012, PDF p. 99, in feet). The fuel rule changed. 2012 lists 'Ethanol (ethyl alcohol) 10% by volume (max)', MTBE '15% by volume (max)' and 'Methanol (methyl alcohol) 5% by volume (max) that contain cosolvents and corrosion inhibitors' (PDF p. 100); 2022, 2024 and 2025 keep ethanol 'up to 10% by volume', drop MTBE, and say 'Do not use gasoline containing methanol (methyl alcohol)' (2025, PDF p. 94). Editions between 2012 and 2022 were not read, so the change is dated only to 2022 or earlier. Read from copies held in the project's research library.",
+  "make": "Honda",
+  "model": "Ruckus, NPS50",
+  "year_start": 2012,
+  "year_end": 2025,
+  "severity": "low",
+  "symptoms": [
+   "ruckus idle adjustment",
+   "ruckus high altitude",
+   "ruckus methanol fuel",
+   "ruckus ethanol",
+   "ruckus runs rough after altitude"
+  ],
+  "causes": [
+   "High-altitude carburettor setting left in below 1,500 m",
+   "Idle speed adjusted to mask a fault elsewhere",
+   "Fuel blend outside the edition's approved list"
+  ],
+  "fix_procedure": "1. Idle is 2,000 +/- 100 rpm, set with the throttle stop screw on a warm engine; the 2012 manual gives the owner that procedure and warns against using idle to cover another fault, and the 2022 - 2025 manuals give none of their own. 2. Riding above 6,500 ft (2,000 m): have the dealer adjust the carburettor, and have it returned to factory specification before riding below 5,000 ft (1,500 m). 3. Fuel: ethanol up to 10%. The 2022 - 2025 editions allow no methanol; the 2012 edition allowed 5% with cosolvents and MTBE up to 15%.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Kymco Agility 50 and People S 250 carburettors: record the pilot screw's turns, test the bystarter hot and cold, and drain the float chamber after a month unused",
+  "description": "Two Kymco service manuals were read, one for the Agility 50 (pages headed AGILITY 50) and one for the People / People S 250. Both give the carburettor type as CVK and neither names its maker. Agility 50: 'Type CVK', main jet #85, slow jet #35, float level 17 mm, 'Pilot screw opening 2 +/-1/2' (p. 5-2). That manual gives two idle speeds, 1900 rpm (pp. 5-2, 5-12) and '1700 +/- 100rpm' (p. 1-2), and two venturi figures, 20 mm (p. 5-2) and 'phi17 equivalent' (p. 1-2), all on pages headed AGILITY 50. People S 250, in its own column beside the People 250: main jet 104#, pilot screw opening 1-1/4 +/- 3/4, idle 1600; the People 250's column reads 108#, 2-1/2 +/- 1/2 and 1700 (p. 13-5). The Agility 50 manual says 'The pilot screw is factory pre-set and no adjustment is necessary. During carburetor disassembly, note the number of turns of the pilot screw' (p. 5-12); the People S 250 manual says 'Before removing the pilot screw, turn the pilot screw clockwise until it seats lightly and record the rotating turns' (p. 13-10). The auto bystarter's resistance, taken 10 minutes minimum after stopping the engine, is '10 ohm max.' on the Agility 50 (p. 5-4) and '14 - 20 ohm' on the People / People S 250 (p. 13-11). Both manuals give the same two-step test: power it from a battery, 'Wait 5 minutes and blow the hose' - 'If the passage is blocked, the auto bystarter is normal'; disconnect, 'Wait 30 minutes' - 'If air can be blown into the hose, the auto bystarter is normal' (Agility 50, p. 5-5; People S 250, p. 13-11). The People S 250 manual says 'Do not try to disassemble the auto bystarter' (p. 13-5). Storage: 'When the motorcycle is not used for over one month, drain the residual gasoline from the float chamber to avoid erratic idling and clogged slow jet due to deteriorated fuel' (Agility 50, p. 5-2). Kymco's Agility 50/125 owner's manual goes further: 'Drain the carburetor (if equipped) and empty the fuel tank' (PDF p. 49). Read from copies held in the project's research library.",
+  "make": "Kymco",
+  "model": "Agility 50, People S 250, People 250",
+  "severity": "medium",
+  "symptoms": [
+   "kymco erratic idle after storage",
+   "agility 50 clogged slow jet",
+   "kymco auto bystarter",
+   "kymco hard cold start",
+   "kymco pilot screw"
+  ],
+  "causes": [
+   "Deteriorated fuel left in the float chamber over a month",
+   "Auto bystarter out of its resistance range or not closing when heated",
+   "Pilot screw not returned to its recorded turns after cleaning"
+  ],
+  "fix_procedure": "1. If the scooter sat unused for over a month, drain the float chamber through its drain screw; the Agility 50 manual names erratic idling and a clogged slow jet as what old fuel causes. 2. Bystarter: 10 minutes or more after stopping, measure resistance (Agility 50 10 ohm max; People / People S 250 14 - 20 ohm). 3. Power it from a battery 5 minutes: the enriching passage must be blocked. Disconnect 30 minutes: air must pass. Replace it if either fails; do not disassemble it. 4. Before removing the pilot screw, seat it lightly and record the turns; reinstall to the same count. 5. On the Agility 50, note that the manual prints two idle speeds (1900 and 1700 +/- 100 rpm).",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "SYM carburetted scooters: the auto by-starter is checked by resistance and by air through its circuit hot and cold, and the pilot screw is set at the factory and trimmed to CO",
+  "description": "Four SYM service manuals were read: Jet 50/100 and Jet Euro 50/100 (two-stroke), Fiddle 50 (model FA05U, two-stroke), Joyride 125/150/200 (LA12W, LA15W, LA18W), and a manual whose only model name is 'MODEL XA05W-6', a 49 cc four-stroke, filed in the research library as the Fiddle III. They give carburettor identification numbers - Joyride 'CVK039 CVK034 CVK066' (p. 4-2), Fiddle 50 'PB2BE' (p. 10-2) - and none names the carburettor's maker. Auto by-starter resistance: 10 ohm maximum, 'Measured after engine stopped for more than 10 minutes', in the Joyride manual, which says to 'Replace the auto starter with a new one if resistance value exceeds standard' (p. 4-5); 'Max. 10 ohm (at cold engine)' in the Jet and Fiddle 50 manuals, which add 'If the resistance value exceeds the standard a little bit, the auto by-starter may still in normal. However, it is necessary to check other relative components for damage' (Jet, p. 10-4). The circuit test: cooled 30 minutes, air must flow through the fuel-rich circuit; powered, it must not - after 5 minutes on 12 V in the Joyride manual (p. 4-5), after 'several minutes' on a battery in the Jet manual (p. 10-5). The Jet circuit also has a resistor, 'Resistance value: 10.2 ohm'; if it shorts, the fuel-rich circuit closes rapidly and the scooter is 'difficult to start' (p. 10-5). Pilot screw: 'Pilot screw was set at factory, so no adjustment is needed. Note the number of turns it takes to screw it all the way in' (Joyride, p. 4-10). When it is set, it is set on an exhaust analyser: 'CO standard value: 1.0~1.5 %' at 1600 +/- 100 rpm on the Joyride (p. 4-10) and at 2100 +/- 100 rpm on the XA05W-6 (p. 4-9); 'CO: 1.8-2.6%' on the two-stroke Jet and Fiddle 50 (Jet, p. 2-13; Fiddle 50, p. 2-11). The Joyride manual prints its pilot-screw turns two ways: 2-1/4, 2-1/2 and 1-1/2 turns (p. 4-2) against '2 +/- 1/4', '2 +/- 1/2' and '1 +/- 1/2' (p. 4-10). The Joyride and XA05W-6 schedules explain their star marks: the marks 'are emission control items. According to EPA regulations' they 'are prohibited to be adjusted or repaired by unauthorized people' (Joyride, p. 2-2); the Jet and Fiddle 50 schedules print the stars without that note. All four manuals have a drain screw in the float chamber (Joyride, p. 4-2). The XA05W-6 manual alone has a chapter headed 'ECS (Electronically controlled carburetor system)', whose ECU reads an 'O2 Sensor' among its inputs (its chapter 4). Read from copies held in the project's research library.",
+  "make": "SYM",
+  "model": "Jet 50, Jet 100, Jet Euro 50, Jet Euro 100, Fiddle 50, Joyride 125, Joyride 150, Joyride 200",
+  "severity": "medium",
+  "symptoms": [
+   "sym auto by-starter",
+   "sym hard cold start",
+   "sym pilot screw",
+   "sym idle co adjustment",
+   "joyride carburetor"
+  ],
+  "causes": [
+   "Auto by-starter PTC element failed (resistance well above 10 ohm cold)",
+   "Fuel-rich circuit clogged, or not closing when powered",
+   "Shorted by-starter resistor closing the circuit too fast (Jet: hard starting)",
+   "Pilot screw disturbed without an exhaust analyser to reset it"
+  ],
+  "fix_procedure": "1. By-starter resistance, engine cold or stopped over 10 minutes: 10 ohm max. (the Jet and Fiddle 50 manuals allow a little over, if other parts are checked). 2. Cooled 30 minutes, air must pass the fuel-rich circuit; powered from the battery (Joyride: 12 V, 5 minutes; Jet: several minutes), it must not. 3. Jet: check the 10.2 ohm resistor; a short makes starting difficult. 4. Before removing the pilot screw, count the turns to seat it; reinstall to that count. 5. If it must be set: warm engine, idle to specification, exhaust analyser, CO 1.0 - 1.5 % (Joyride, XA05W-6) or 1.8 - 2.6 % (Jet, Fiddle 50). 6. On the Joyride and XA05W-6 the star-marked schedule items are emission items that, under EPA regulations as the manual puts it, are not to be adjusted or repaired by unauthorized people.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Piaggio's small carburetted scooters: the mixture screw is set on an exhaust analyser, and each automatic starter has its own resistance and time",
+  "description": "Piaggio's own workshop manuals name the carburettor. Fly 50 4T: a Keihin CVK 18 (printed 'KEHIN' and 'Kehin'), idle mixture screw initial opening 1-3/4 (CHAR - 12). Fly 125 - 150 4T: Keihin CVEK26 (CHAR - 12). Beverly 125: Keihin CVEK 30 (CHAR - 9). Typhoon 50, a two-stroke: 'DELL'ORTO PHVA 17.5' (CHAR - 8). Mixture: 'The screw final position should be determined by an exhaust fume analysis' (Fly 125, ENG - 149; Beverly 125, ENG - 162). On the Fly 50: oil at 70 - 80 C, idle 'about 1900/2000 rpm', then 'When the screw is loosened the CO value rises (rich mix). Tightening the screw decreases the CO (lean mix)', target 'CO adjustment 3,2% +/- 0,5' (ENG - 123). On the Fly 125 - 150: idle 1600 - 1700 rpm and CO 3.1 - 4.5 % (ENG - 154, 155); its adjustment page says to turn the screw 'twice from the close position' (ENG - 149) where its settings table gives an initial opening of 1-3/4 (CHAR - 12). The automatic starters differ. Fly 50: 'Automatic starter resistance 6 ohm +/- 5 %', protrusion 11 mm at 24 C (ENG - 120, 121), 'max. protrusion 15 mm', 'max. time 15 min' (ENG - 121). Fly 125 - 150: 'Starter resistance 20 Ohm (at 24 deg)', 'Starter pin travel 10 mm (at 24 deg)' (CHAR - 12), and 'Check the automatic starter: Keihin maximum time 5 min' (ENG - 154); powered from a 12 V battery the piston must protrude as far as it can (ENG - 153). That manual prints its protrusion values as 'XX / XX mm at approx. 20 C' and 'XXX / XXX mm' - blanks, printed so on the page (ENG - 154). The Beverly 125 manual notes 'TAMPERPROOF SCREWS ARE SUPPLIED WITH 125 CC MODELS' where it removes the intake manifold (ENG - 111). Read from copies held in the project's research library; this entry did not fetch them from Piaggio.",
+  "make": "Piaggio",
+  "model": "Fly 50, Fly 125, Fly 150, Beverly 125, Typhoon 50",
+  "severity": "medium",
+  "symptoms": [
+   "piaggio automatic choke",
+   "fly 50 co adjustment",
+   "fly 125 idle mixture",
+   "beverly 125 carburetor",
+   "piaggio hard cold start"
+  ],
+  "causes": [
+   "Automatic starter outside its own model's resistance, protrusion or time",
+   "Mixture screw set by ear instead of by exhaust analysis",
+   "Figures taken from another model's manual (the Fly 50 and Fly 125 starters differ by more than a factor of three in resistance)"
+  ],
+  "fix_procedure": "1. Use the manual for the exact model: the Fly 50's automatic starter is 6 ohm +/- 5 % with a 15 minute maximum time; the Fly 125 - 150's is 20 ohm at 24 C with a 5 minute maximum. 2. Powered from 12 V, the starter piston must protrude as far as it can; replace the starter if protrusion, resistance or timing is out. 3. Four-strokes: warm the engine (Fly 50: oil at 70 - 80 C), set idle, then set the flow screw on an exhaust analyser (Fly 50 CO 3.2 +/- 0.5 %; Fly 125 - 150 CO 3.1 - 4.5 %); loosening richens, tightening leans.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Vespa's small carburetted scooters: Dell'Orto on the two-stroke 50s, Keihin on the LX 125-150, and an LX 50 manual that gives two idle speeds",
+  "description": "Three Piaggio workshop manuals for Vespa. The two-stroke Vespa LX 50 and Vespa S 50 print 'DELL'ORTO PHVA 17.5' (LX 50, CHAR - 9; S 50, CHAR - 9) with the same settings: maximum nozzle 53, tapered pin A22 in notch 1, minimum nozzle 32, 'Initial minimum mix screw opening: 1 1/2', starter jet 50, 'Stroke of starter pin: 11 mm' (LX 50, CHAR - 12; S 50, CHAR - 11 - 12). The Vespa LX 125 - 150 4T prints 'KEIHIN CVEK26' (CHAR - 4); its 125 and 150 columns differ in setting stamping (270C, 271B), maximum jet (82, 80), minimum jet (42, 35), tapered pin (NJHA, NELA), starter jet (35, 42) and idle mixture screw initial opening (2-1/2, 1-3/4) (CHAR - 6, 7), and its automatic starter reads 'Starter resistance 20 Ohm (at 24 deg)' with 'Keihin maximum time 5 min' (CHAR - 6; ENG - 72). The LX 50 manual gives two idle speeds: its characteristics table reads idle '1800 to 2000 r.p.m.' and 'CO adjustment 3.5% +/- 0.5' (CHAR - 9), and its CO check says 'adjust the idle speed to 1,700 +/- 100 rpm and check the CO value is equal 3.5 +/- 1%', with the gas probe sealed to the secondary air manifold 'in order to guarantee accurate CO readings' (MAIN - 36). The S 50 manual prints no CO figure. On both two-strokes the intake manifold's clamping screws come off with 'an anti-tampering TORX spanner' (LX 50, ENG - 78; S 50, ENG - 84). Read from copies held in the project's research library, the LX 50 copy marked as downloaded from Manualslib.",
+  "make": "Vespa",
+  "model": "LX 50, S 50, LX 125, LX 150",
+  "severity": "medium",
+  "symptoms": [
+   "vespa lx 50 carburetor",
+   "vespa co adjustment",
+   "vespa automatic choke",
+   "vespa idle mixture",
+   "vespa s 50 carburetor"
+  ],
+  "causes": [
+   "Settings taken from the wrong column (125 versus 150, or two-stroke versus four-stroke)",
+   "CO read without the probe sealed to the secondary air manifold",
+   "Automatic starter out of specification"
+  ],
+  "fix_procedure": "1. Identify the carburettor: Dell'Orto PHVA 17.5 on the two-stroke LX 50 / S 50, Keihin CVEK26 on the LX 125 - 150 (use the 125 or 150 column). 2. Two-stroke 50: minimum mix screw initial opening 1-1/2. On the LX 50, the manual's CO check sets idle to 1,700 +/- 100 rpm and reads CO 3.5 +/- 1 % with the probe sealed to the secondary air manifold; its table gives idle 1,800 - 2,000 rpm. 3. LX 125 - 150: automatic starter about 20 ohm at 24 C, Keihin maximum time 5 minutes. 4. Intake manifold screws on the two-strokes need an anti-tampering TORX tool.",
+  "parts_needed": [],
+  "source": "service-manual"
+ },
+ {
+  "title": "Yamaha's carburetted scooters: owner's manuals leave carburettor adjustment to the dealer, drain the float chamber back into the tank for storage, allow E10 and do not recommend methanol",
+  "description": "Seven Yamaha owner's manuals were read: XC50V and XC50W (3D1-F8199-10, -11), which name the machine 'VINO'; XC50A (3D1-F8199-15); YJ125S (5YR-F8199-10), which names it 'VINO125'; YJ125Y (5YR-F8199-15); and YW50T and YW50A (5PJ-F8199-13, -17). None prints 'Zuma'; the corpus's row on the three Yamaha engines ties the YW50A to the Zuma 50, and it already carries the carburettor makers and types, which are not repeated here. Adjustment: 'all carburetor adjustments should be left to a Yamaha dealer, who has the necessary professional knowledge and experience' (YW50T, PDF p. 48); the other editions say carburettor adjustments should be left to a Yamaha dealer. The owner checks idle and has it 'corrected by a Yamaha dealer' if needed - 1800 - 1900 r/min on the YW50A (PDF p. 47), 2000 - 2200 r/min on the XC50A (PDF p. 50), 1600 - 1700 r/min on the YJ125Y (PDF p. 51); the XC50V, XC50W, YW50T and YJ125S manuals give no idle figure. Storage, 'Before storing your scooter for several months': 'Drain the carburetor float chamber by loosening the drain bolt; this will prevent fuel deposits from building up. Pour the drained fuel into the fuel tank', then 'Fill up the fuel tank and add fuel stabilizer (if available) to prevent the fuel tank from rusting and the fuel from deteriorating' (YJ125S, PDF p. 64; the same in all seven). Fuel: 'Gasohol containing ethanol can be used if the ethanol content does not exceed 10% (E10)', and 'Gasohol containing methanol is not recommended by Yamaha because it can cause damage to the fuel system or vehicle performance problems' (YW50A, PDF p. 25; XC50A, PDF p. 25). Read from copies held in the project's research library.",
+  "make": "Yamaha",
+  "model": "Vino 50, Vino 125, Zuma 50, XC50, YJ125Y",
+  "severity": "low",
+  "symptoms": [
+   "vino carburetor storage",
+   "zuma 50 carburetor",
+   "yamaha scooter winter storage",
+   "vino ethanol fuel",
+   "yamaha scooter idle speed"
+  ],
+  "causes": [
+   "Fuel deposits in an undrained float chamber after months of storage",
+   "Methanol-blended gasohol",
+   "Owner adjustment of a carburettor Yamaha leaves to the dealer"
+  ],
+  "fix_procedure": "1. Before storing for several months: drain the float chamber through its drain bolt, pour that fuel back into the tank, fill the tank and add fuel stabiliser if available. 2. Use unleaded fuel; gasohol up to 10% ethanol is acceptable, methanol blends are not recommended. 3. Check idle where the manual gives a figure (YW50A 1800 - 1900 r/min; XC50A 2000 - 2200 r/min; YJ125Y 1600 - 1700 r/min) and have a Yamaha dealer correct it or any other carburettor setting.",
+  "parts_needed": [],
+  "source": "service-manual"
+ }
+]
