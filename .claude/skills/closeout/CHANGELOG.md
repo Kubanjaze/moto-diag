@@ -1,5 +1,36 @@
 # closeout — changelog
 
+## 2026-09-24 — R6: every close-out leaves its handoff; the handoff is a step
+
+Closing a phase never required a handoff. 353 and 354 each wrote one, and
+257 and 257B wrote none, so the next session's "newest handoff" depended on
+the builder remembering to write it. R6 in `roadmap_check.py` requires
+`docs/handoffs/YYYY-MM-DD_<phase>_closed.md`, dated no earlier than the
+close, for every phase closed since 2026-09-24. 257 and 257B are exempt by
+name, because they closed that day before the rule existed.
+
+**Per phase, because the date rule was measured first.** The rule as
+proposed compared only the newest handoff's date with the newest close. The
+real ledger has four closes and two handoffs on one date, so that rule passes
+it with 353's handoff deleted. R6 also reads `implementation.md`'s history
+row, which A7 requires, so a ✅ row written without its CLOSED date is still
+a close.
+
+**The sequence changed with it.** The guard runs R6 on every push, so the
+handoff is step 7, written before the merge (353 and 354 wrote theirs after
+the deploy). Step 8 now warns that `git merge -F -` does nothing: it exits
+129 ("could not read file '-'", checked on git 2.54), and it happened twice
+on 2026-09-24.
+
+Proven:
+- R6 fires on exactly the five planted cases in `fixtures/roadmap_bad`: no
+  handoff, only a mid-phase handoff, a handoff dated before the close, a
+  second close on the same day, and a close seen only through the history
+  row. It does not fire on the same day's close that has its handoff.
+- `fixtures/roadmap_good` holds 257 as the exemption's control.
+- Five deliberate breaks each turned `tests/test_roadmap_continuity.py` red
+  (22 tests), and all five were reverted.
+
 ## 2026-09-24 — A7: the newest phase is the row with the latest Date (F148)
 
 A7 took the first bold row of `implementation.md`'s history table as the

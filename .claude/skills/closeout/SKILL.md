@@ -44,9 +44,15 @@ folder exists to stop shipping.
    it is executed.
 5. **`implementation.md`** — history row and version bump.
 6. **Move both docs to `completed/`**, set the status line.
-7. **Merge, then deploy with a backup** — `~/backups/motodiag/`, retain 5,
-   print the before-state, dry-run on a copy first.
-8. **`verify_phase.sh PHASE REG_HASH TIP`** and read all thirteen checks.
+7. **Handoff** — `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`: what
+   shipped, what is open, what is next. Write it in the close-out commit,
+   before the merge: `roadmap_check.py` R6 refuses any push while a closed
+   row has no handoff. Add the deploy's outcome to it after step 8.
+8. **Merge, then deploy with a backup** — `~/backups/motodiag/`, retain 5,
+   print the before-state, dry-run on a copy first. `git merge` takes `-m`
+   or `-F <file>`. `-F -` exits 129 ("could not read file '-'") and
+   `master` does not move; that happened twice on 2026-09-24.
+9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all thirteen checks.
 
 ## When a step may be skipped
 
@@ -64,7 +70,7 @@ check.
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
-| `roadmap_check.py` | the ROADMAP ledger holds: R1–R5 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting); run with every suite and on every push |
+| `roadmap_check.py` | the ROADMAP ledger holds: R1–R6 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff); run with every suite and on every push |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check on every push, close-out on a push to `master` |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
 | `fixtures/check2` | hand-written path lists for check 2 |

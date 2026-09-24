@@ -1,4 +1,4 @@
-"""The ROADMAP stays true while phases are worked (roadmap_check.py R1-R5).
+"""The ROADMAP stays true while phases are worked (roadmap_check.py R1-R6).
 
 The guarantee behind the CLAUDE.md rule "a phase gets its row before Step 0,
 and the row changes with the work": it runs with every suite, and the push
@@ -49,9 +49,38 @@ class TestEachRuleFiresOnTheKnownBadTree:
         ("R4 phase 190 is mobile-owned", "a Track I row in the backend ledger"),
         ("R4 phase 400 is in no range", "a row no authority range covers (the real 353)"),
         ("R5 the two copies", "the contract's copies drifting apart"),
+        ("R6 phase 260 closed 2026-09-25", "a close with no handoff"),
+        ("R6 phase 261 closed 2026-09-25", "a close with only a mid-phase handoff"),
+        ("R6 phase 262 closed 2026-09-26", "a handoff dated before the close"),
+        ("R6 phase 263 closed 2026-09-26", "the day's second close, which a date-only rule passes"),
+        ("R6 phase 265 closed 2026-09-26", "a close seen only through implementation.md's history row"),
     ])
     def test_it_fires(self, fails, rule, case):
         assert any(f.startswith(rule) for f in fails), (case, fails)
+
+    def test_a_close_with_its_handoff_is_not_reported(self, fails):
+        """264 closed the same day as 263 and wrote its handoff."""
+        assert not [f for f in fails if f.startswith("R6 phase 264")]
+
+
+class TestR6OnTheRealLedger:
+    def test_353_without_its_handoff_is_seen_though_354s_shares_the_date(self):
+        """The real 2026-09-24: four closes, two handoffs, one date. A rule
+        comparing only the newest dates passes this ledger with 353's
+        handoff deleted; R6 must not."""
+        names = [p.name for p in (R.ROOT / "docs" / "handoffs").glob("*.md")
+                 if p.name != "2026-09-24_353_closed.md"]
+        fails = R.check((R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8"),
+                        (R.ROOT / "ROADMAP_AUTHORITY.md").read_text(encoding="utf-8"),
+                        R.phase_docs(R.ROOT / "docs" / "phases"),
+                        handoffs=names,
+                        history=(R.ROOT / "implementation.md").read_text(encoding="utf-8"))
+        assert len(fails) == 1 and fails[0].startswith("R6 phase 353 closed 2026-09-24"), fails
+
+    def test_the_exemption_is_frozen(self):
+        """257 and 257B closed on 2026-09-24 before R6 existed. The list may
+        not grow: a new close answers R6 with its handoff."""
+        assert (R.R6_SINCE, R.R6_BEFORE) == ("2026-09-24", frozenset({"257", "257B"}))
 
 
 class TestTheGoodTreePasses:
