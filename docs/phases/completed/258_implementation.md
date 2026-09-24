@@ -1,6 +1,6 @@
 # Phase 258 — Gate 14: the scooter / small-displacement track through the real front doors
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-24
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-24
 
 ---
 
@@ -149,12 +149,131 @@ check: (a) each pinned "today's truth" matches the seed, (b) each
 honest-gap test would actually fail if the gap were filled (the mutation
 list below), and (c) the S0 measurements reproduce on a fresh seed.
 
-## Verification Checklist (v1.0)
+## Results (v1.1)
 
-- [ ] The new test file scanned by 244G's raw-source guard before the regression
-- [ ] Every honest-gap test fails when its absence is filled
-- [ ] Mutations caught
-- [ ] The four whole-tree checks green
-- [ ] Roadmap row 258 updated; findings F153–F157 filed
-- [ ] `implementation.md` history row and `phase_log.md` entry
+**Shipped:** `tests/test_phase258_gate14.py` — 125 tests in nine classes,
+and **no production code**, as D1 said. No seed row was written or
+corrected; no schema, no migration. The fixture builds its own database
+from the packaged seed the way `db init` does and seeds the adapter
+catalogue; nothing touches the live database, the network or an LLM key.
+
+- 125 tests, of which 1 re-runs Gate 13 as a subprocess (which transitively
+  re-runs Gates 8, 9, 11 and 12 — the deviation Gate 13 itself recorded).
+- **11/11 mutations caught** (the list under Verification).
+- The four whole-tree checks green before the close-out commit:
+  191C F9 lint + 244G + roadmap continuity **58 passed**; `finding_check`
+  exit 0, both variants (completed/ and in_progress/).
+- `COLLECTED_TEST_FLOOR` raised 9188 → **9321** (collected count with the
+  gate file present), raised before the regression of record per the
+  floor's own rule.
+- **The regression of record did not run** — the standing arrangement for
+  this session; it is pending for the Opus session, and `closeout_check`
+  A5 stays red until it lands. Every other close-out assertion passes.
+
+### What the gate confirmed
+
+Every Step 0 measurement reproduced on a **freshly seeded** database,
+which is the stronger claim: the fresh seed loads to exactly 1,060 rows,
+the count the live snapshot and the 353 handoff both carry.
+
+The row's path carries the track's content. The five full-coverage
+machines (CHF50, Agility 50, People S 250, Fly 50, LX 50) reach CVT,
+electrical and carburettor rows in one 12-row prompt; the composition
+250B built answers the symptom (a charging complaint rescues the Zuma
+125's crowded-out tier-0 electrical row; a belt complaint reaches the
+belt rows on every machine); the transmission axis withholds all scoped
+CVT rows from a manual Grom while its own eight tier-0 rows arrive; a
+CBR1000RR reaches none of the three layers at tier 0 or 1; the chokepoint
+records the Fiddle 50's cost in `retrieval_withheld` (≥ 8 rows). The
+12-row prompt census is pinned per machine, so the next retrieval change
+names itself.
+
+### What the gate found that Step 0 had not — and what it corrected in Step 0
+
+- **The adapter bullet in Step 0's S0-9 was measured against an unseeded
+  catalogue** (the Step 0 harness never ran `seed_all`), so its "No
+  compat entries known" answer for the Ruckus and CHF50 was the answer of
+  an empty store. Re-measured on a seeded catalogue: a Honda scooter
+  inherits the make-level **"Mock Adapter (dev/test only)"** — no real
+  adapter is named for any scooter, which is F157's corrected statement.
+  Step 0's doc and the finding both restated.
+- **"No scooter row carries a DTC code" was false as written**: 252's
+  GROM125 code-table row carries eleven Honda blink codes in Honda's own
+  pair format (7-1 … 54-2), reachable through `kb by-code 9-1` — the
+  positive control the negative claim lacked. The true negative, now
+  pinned: no Track M row carries an SAE OBD code, so `kb by-code P0300`
+  reaches no scooter row.
+- **Genuine is the Damon shape on Track M**: a make with no electrical
+  or carburettor row of its own, covered only by 253's rows and the
+  multi-make CVT rows. Recorded as the honest gap it is.
+
+These were the build's own bugs (the register is in the phase log), and
+their shared cause is the F9 family again: Step 0 wrote universals and
+negatives from ad-hoc queries — a `!= ''` filter that passes `'[]'`, a
+DB built without the catalogue, titles recalled rather than copied — and
+the first `pytest` run was the control those claims never had.
+
+### Findings filed
+
+| F | What | Where it goes |
+|---|---|---|
+| F153 | The CVT rows pair SYM under spellings the other layers do not use; no SYM scooter reaches a CVT row at tier 0 | Follow-up (migration) |
+| F154 | `fiddle 50` is missing from `TRANSMISSION_LOOKUP`; the machine 354's own tests name at tier 0 resolves unknown and loses the scoped CVT layer | Follow-up (one line + evidence) |
+| F155 | `relevance_tokens` does not stem plurals, and symptom relevance displaced a tier-0 carburettor row for tier-2 rows sharing one word | Follow-up |
+| F156 | A 2002–2006 Metropolitan is a CHF50 that reaches no CHF50 row under its own name — and reaches the CVT recall rows at tier 0 | Follow-up (content decision with a year dimension) |
+| F157 | No adapter compatibility row exists for any scooter make; a Honda scooter's only answer is the make-level dev/test mock | Follow-up (sourcing question) |
+
+F149, F151 and F132 are cited where the gate measured their reach, not
+re-filed; their entries record what 258 added — F149's three rows are
+the Ruckus's only charging content at tier 1 (pinned), and the F151
+rows reach none of the five scooter makes on either surface (pinned).
+
+### Deviations
+
+- **The regression of record, the refute pass, the merge, the deploy and
+  the live backup/load did not run** — the operator's standing
+  arrangement for this Subconscious session: everything to "ready to
+  merge" commits on `phase-258` in this clone; the rest is the Opus
+  session's and is marked pending in the phase log. A5 is expected red
+  until the regression line lands.
+- **Gates 8, 9, 11 and 12 are not re-run directly** — Gate 13 is, and it
+  re-runs them, so they are guarded transitively (Gate 13's own recorded
+  deviation for 5, 6 and 7).
+- **The sandbox refused heredocs and `/tmp`** (Operation not permitted),
+  so commit messages went through `-F` files in the session tmp — the
+  message-file form of the working rule and the same form the 353
+  handoff records for merges. Noted in the phase log, not worked around.
+- **The root `implementation.md` header names Phase 258** while the
+  regression line is pending; the A7 rule names the newest phase, and
+  258 is the newest close.
+
+### Verification
+
+- The 16 machines walked through the real `diagnose quick` with the AI
+  call replaced, never through the retrieval helper; the API half used a
+  key minted in-process and revoked by id when the module finished.
+- The four whole-tree checks green on the close-out tree:
+  `test_phase191c_f9_lint.py` + `test_phase244G_guard_shapes.py` +
+  `test_roadmap_continuity.py` (58 passed) and `finding_check.py` exit 0,
+  including the in_progress/ variant.
+- Mutations, all caught: an SYM pair added to a CVT row (tier-0 counts
+  and the SYM tier labels); `fiddle 50` added to the lookup (the Fiddle's
+  four pins); a compat row for Kymco; a `kymco.json` DTC file; F149's
+  reg/rec row scoped to Shadow; Kymco added to a cross-platform carburettor
+  row's make; the Ruckus carburettor window opened to 2008; Metropolitan
+  added to the CHF50 carburettor row's models; plural stemming in
+  `relevance_tokens` (the LX 50 displacement); the transmission scope
+  removed from the roller-wear row (the Grom and the census); the prompt
+  cap raised 12 → 16. **11/11.**
+- Full gate file: **125 passed** (215 s; the Gate 13 subprocess is 3:30 of
+  it). Regression of record: **pending, Opus.**
+
+## Verification Checklist (v1.1)
+
+- [x] The new test file scanned by 244G's raw-source guard before the regression
+- [x] Every honest-gap test fails when its absence is filled — 11/11 mutations
+- [x] Mutations caught — 11/11
+- [x] The four whole-tree checks green
+- [x] Roadmap row 258 updated; findings F153–F157 filed
+- [x] `implementation.md` history row and `phase_log.md` entry
 - [ ] Regression of record, refute, merge, deploy — pending, Opus

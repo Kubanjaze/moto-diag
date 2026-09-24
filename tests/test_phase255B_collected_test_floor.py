@@ -106,7 +106,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: `test_phase353_small_engine_carb_content.py` 99. Raised before the
 #: regression of record.
 #:
-COLLECTED_TEST_FLOOR = 9188
+#: 9321 (Phase 258 close-out, 2026-09-24) — +133 over the tree 353 closed
+#: with: `test_phase258_gate14.py` 125, and 8 that earlier phases added
+#: without raising the floor (254's F148 closeout-contract batch among
+#: them). Measured in the GLM builder clone before the regression of
+#: record, which is pending on Opus. Raised before that regression, per
+#: the rule above.
+#:
+COLLECTED_TEST_FLOOR = 9321
 
 
 def _collected_count() -> int:
