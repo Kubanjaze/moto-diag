@@ -1,6 +1,6 @@
 # Phase 257 — The orchestrator and `/source-transmission` — phase log
 
-**Status:** 🔄 In progress
+**Status:** ✅ Complete (2026-09-24)
 **Opened:** 2026-09-22
 
 ---
@@ -1630,7 +1630,7 @@ loosened: Monkey 125 → `Monkey125-A` and CB1000R → `CB1000RA`, both
 - Of the census spellings, **CB650R** and **CB750** are affected. Both came
   back no_evidence: their only excerpt is that navigation menu, and the
   CB650R note names the E-Clutch page. Nothing is written for either.
-- No E-Clutch text reached any quote. The E-Clutch placeholder in bug fix
+- No E-Clutch text reached any quote. The E-Clutch stand-in text in bug fix
   #5's cases stays constructed, because no Honda E-Clutch wording has been
   acquired: motopub's index stops at 2018, and E-Clutch dates from 2024.
 
@@ -2555,7 +2555,7 @@ shows (the lean-API rule), so the re-run is Tenere 700 alone.
 
 **Commit.** `ced9562`
 
-### 2026-09-23 — Yamaha re-run after bug fix #6: Tenere 700 written
+### 2026-09-23 — Yamaha re-run after the E4 name fix (the sixth bug fix): Tenere 700 written
 
 **Run** `Yamaha_20260923_210233` (`batch Yamaha "Tenere 700" --source-route
 anthropic`). The first attempt, `Yamaha_20260923_202956`, **stopped** on
@@ -2850,3 +2850,48 @@ pinned to the literal IDs, not to `ROUTES` (which would be tautological).
 fail; restored by hash.
 
 **Commit.** `f6241ac`
+
+### 2026-09-24 — Regression of record
+
+`COLLECTED_TEST_FLOOR` raised 8145 → 8958 first (`751ef06`). 244G scanner
+over `tests/`: 0. `__pycache__` cleared, `-B`.
+
+- Diagnostic run at `751ef06`: 1 failed, 8,957 passed (38:44). The one
+  failure is bug fix #8, fixed at `f6241ac`.
+- **Regression of record at `c2c0e78`: 8958 passed, 0 failed, 0 skipped,
+  8 warnings, 42:59.** Collected equals the floor.
+
+### 2026-09-24 — Deploy: nothing to back up, nothing running
+
+257 changes no schema and writes no database: `data/motodiag.db` was last
+modified 2026-09-22 16:25, before 257 opened (schema 66, 1,046
+`known_issues` rows, unchanged), and the branch has no migration. So no
+`pre257` backup was taken, for the reason 255D gave. No motodiag backend
+process or launchd job is running; the lookup is code, read at the next
+start. Deploy is the merge and push to `master`.
+
+### 2026-09-24 — Bug fix #9: B2 read Yamaha's publication numbers as finding citations
+
+**Issue.** With the 257 documents moved to `completed/`, `finding_check.py`
+B2 failed: "F8199 (cited by 257_phase_log.md)". F8199 is a segment of
+Yamaha owner's-manual publication numbers the citations must carry
+("BRG-F8199-11", "5YR-F8199-15"): 9 occurrences, none a finding.
+
+**Root cause.** The same trap the finding skill names for BMW's F800:
+`\bF\d{2,4}\b` reads a document number as a citation. The vocabulary was
+written before this phase cited Yamaha manuals.
+
+**Fix.** `NOT_FINDINGS` names 8199 with its reason, by name, not a range.
+
+**Files.** `.claude/skills/finding/finding_check.py`,
+`.claude/skills/finding/CHANGELOG.md`,
+`tests/test_phase255D_finding_contract.py` (+1),
+`tests/test_phase255B_collected_test_floor.py` (8958 → 8959).
+
+**Verified.** The new test: a document citing "BRG-F8199-11" passes B2,
+and the same document adding "F12" (one past the highest entry) fails.
+Break-it: the exclusion renamed to 8198 → 2 fail; restored by hash.
+Because this is code after the regression hash `c2c0e78`, the full
+regression is run again on the tree that includes it.
+
+**Commit.** `cfe706c`
