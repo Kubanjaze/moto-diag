@@ -627,7 +627,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 350 | A/B testing framework | 🔲 | Experiment tracking, conversion metrics, feature comparison |
 | 351 | Admin panel for support staff | 🔲 | Customer lookup, account management, subscription changes, impersonation for debugging |
 | 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
-| 353 | Small-engine carb service (single/twin-barrel) | 🚧 | **OPENED 2026-09-24; Step 0 next.** Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
+| 353 | Small-engine carb service (single/twin-barrel) | 🚧 | **OPENED 2026-09-24.** v1.0 `7cb9a75`; seven rows and their test `f79379d`, refuted (178 claims, 32 killed); F151, F152 filed. Close-out next. Keihin/Mikuni small-bore carbs, seasonal cleaning, emission restrictions. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
 | 354 | Scooter electrical (12V minimal) | ✅ | **CLOSED 2026-09-24.** Track M had no charging content: 251–254's files held 0 stator or rectifier rows, and every "regulator" meant the US regulator. Seven service-manual rows, one make each, reach their machines at tier 0: Honda PCX150 (2013–15) and CHF50, Kymco, SYM, Piaggio, Vespa, Yamaha YW125. Carb versus injection does not predict the design: the carburetted CHF50 is three-phase with an ECM regulator. Four refuters killed 30 of 170 claims. F149, F150 filed. Regression 9,089 passed, 0 failed, 0 skipped at `c79ddec`. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
 
 ---
