@@ -185,6 +185,36 @@ regression line.
 
 **Commit.** `7dab6d3`
 
+### Bug fix #4 — 2026-09-24
+
+- **Issue:** the regression of record on `f6bf40b` failed 2 of 9,344, both
+  in `test_phase209B_integration_gaps.py`:
+  - `motodiag.workflows`, `.models` and `.template_repo` are now
+    reachable, so their `UNREACHABLE_MODULES` entries are stale;
+  - six public write functions in `workflows/template_repo.py` are live
+    orphans.
+- **Root cause:** 259's `motodiag workflow` command imports the Phase 114
+  substrate, and the substrate classification is built to fail when a
+  phase wires it. The sandbox run did not include this gate.
+  **Shared cause with #2:** the whole-tree gates a builder must run are a
+  hand-kept list. CLAUDE.md names four, and the Opus prompt named 13. This
+  gate walks `src/` by import graph and matched neither list. Two of this
+  build's four fixes trace to that list being incomplete.
+- **Fix:**
+  - the three module entries are removed;
+  - the six functions are listed as substrate orphans awaiting Phase 316
+    (259 wired only list/show);
+  - `test_the_known_scale` goes 37 → 34, with the reason in its waiver;
+  - `COLLECTED_TEST_FLOOR` goes 9344 → 9346 (the gate's per-entry tests,
+    +6 −3 −1).
+- **Files:** `tests/support/integration_gaps_allowlist.py`,
+  `tests/test_phase209B_integration_gaps.py`,
+  `tests/test_phase255B_collected_test_floor.py`.
+- **Verified:** the 13 whole-tree tests, this gate, 259's tests and the
+  floor: 521 passed. The F9 and SSOT lints accept the updated waiver.
+
+**Commit.** `bd19fa5`
+
 ### 2026-09-24 — Close-out
 
 v1.1, Deviations and Results in the implementation doc; both phase
