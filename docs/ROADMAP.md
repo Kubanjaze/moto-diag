@@ -491,7 +491,7 @@ Non-diagnostic workflows that shops perform: pre-purchase inspection, tire servi
 
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
-| 259 | Pre-purchase inspection (PPI) — engine | 🔲 | Compression test, leak-down, oil sample, fuel quality, starter/charging health, visual inspection checklist |
+| 259 | Pre-purchase inspection (PPI) — engine | 🚧 | Compression test, leak-down, oil sample, fuel quality, starter/charging health, visual inspection checklist |
 | 260 | Pre-purchase inspection — chassis | 🔲 | Frame straightness, fork seals, steering head bearings, swingarm, wheel bearings, brake/tire condition, accident history |
 | 261 | Tire service workflow | 🔲 | Wear patterns (cupping, squaring, feathering), DOT date decoding, age cracking, balance, TPMS |
 | 262 | Crash / insurance claim support | 🔲 | Photo documentation standards, damage estimation, frame-straightness measurement, salvage vs repair decision |
