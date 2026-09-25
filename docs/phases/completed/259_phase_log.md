@@ -299,3 +299,8 @@ regression of record.
     because it is true of the plain search it describes.
 - **Operator census, F158.** Option 1 prompted it. It is filed on master
   (`632497a`) and not fixed here.
+- **Regression of record: 9346 passed, 0 failed, 0 skipped** at `cac0330`
+  (30 min 6 s, the canonical venv, outside the sandbox). Two earlier runs
+  are not records: `f6bf40b` failed 2 (fix #4) and `c5a1f4f` failed 2
+  (fix #5). The live database's SHA-256 was the same before and after
+  all three runs (`bab844bb…`), so no test touched it.
