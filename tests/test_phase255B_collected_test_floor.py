@@ -128,7 +128,21 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Measured with the same command before the second regression of
 #: record, which ran on the Opus side.
 #:
-COLLECTED_TEST_FLOOR = 9346
+#: 9372 (Phase 260 close-out, 2026-09-25) — +26 over the tree 259 left:
+#: `test_phase260_ppi_chassis.py` 26, nothing else moved. Measured
+#: the way this file itself measures (`python -m pytest
+#: --collect-only -q`, repo root): 9,372 = 9,346 + 26, clean
+#: collection (a first run reported 1 transient collection error on a
+#: tree where a re-run collects clean — 260's phase log). Raised before
+#: the regression of record, per the rule above.
+#:
+#: 9375 (Phase 260, Opus review, 2026-09-25) — +3 over the builder's
+#: count, all in `test_phase260_ppi_chassis.py`: bug fix #1's guard
+#: (every migration keeps its rollback) and the refute pass's two pins
+#: (the swingarm bushing pages; the swinging-arm clearance C16's kill
+#: put in the content). Measured with `--collect-only -q`: 9,375.
+#:
+COLLECTED_TEST_FLOOR = 9375
 
 
 def _collected_count() -> int:

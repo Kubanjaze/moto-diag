@@ -39,7 +39,7 @@ from motodiag.core.migrations import (
     apply_pending_migrations,
     get_current_version,
     get_migration_by_version,
-    rollback_migration,
+    rollback_to_version,
 )
 from motodiag.workflows import (
     WorkflowCategory,
@@ -151,14 +151,17 @@ class TestMigration067:
         init_db(path)
         # F124: at-head is asserted against the constant, never a literal.
         assert get_current_version(path) == SCHEMA_VERSION
-        rollback_migration(get_migration_by_version(67), path)
+        # A rollback peels every successor (Phase 260 bug fix #2: rolling
+        # back 67 alone left 68 applied once 68 existed).
+        rollback_to_version(66, path)
         assert get_current_version(path) == 66
         assert get_template_by_slug("ppi_engine_v1", path) is None
         old_desc = get_template_by_slug("generic_ppi_v1", path)["description"]
         assert "ppi_engine_v1" not in old_desc
         assert "Track N phase 259 expands" in old_desc
         # And forward again: the migration is re-appliable after rollback.
-        assert apply_pending_migrations(path) == [67]
+        assert apply_pending_migrations(path)[0] == 67
+        assert get_current_version(path) == SCHEMA_VERSION
         assert get_template_by_slug("ppi_engine_v1", path) is not None
 
     def test_upgrade_from_66_alters_only_the_approved_row(self, tmp_path):
@@ -194,7 +197,10 @@ class TestMigration067:
             return templates, items
 
         templates_66, items_66 = rows()
-        assert apply_pending_migrations(path) == [67]
+        # 067 alone: applying everything pending also applies 067's
+        # successors and measures their rows as 067's (260 bug fix #2).
+        apply_migration(get_migration_by_version(67), path)
+        assert get_current_version(path) == 67
         templates_67, items_67 = rows()
         assert set(templates_67) - set(templates_66) == {"ppi_engine_v1"}
         assert {s for s in templates_66 if templates_66[s] != templates_67[s]} == {"generic_ppi_v1"}
