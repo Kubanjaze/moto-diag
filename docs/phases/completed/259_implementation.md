@@ -1,6 +1,6 @@
 # Phase 259 — Pre-purchase inspection (PPI) — engine
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-24
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-24
 
 **Branch:** `phase-259` (GLM builder session in the sandbox clone; finish
 line "ready to merge" — the regression of record, the refute pass, the
@@ -145,31 +145,87 @@ templates, 9 items; migration 067 raises a fresh `db init` database to
 
 ## Verification Checklist
 
-- [ ] Migration 067 applies on a copy of the snapshot (66 → 67) and on a
+- [x] Migration 067 applies on a copy of the snapshot (66 → 67) and on a
       fresh `db init` database; `SCHEMA_VERSION >= 67`
-- [ ] 067's rollback peels it: no `ppi_engine_v1`, items gone via
+- [x] 067's rollback peels it: no `ppi_engine_v1`, items gone via
       cascade, `generic_ppi_v1`'s description restored; schema back at 66
-- [ ] Template: category `ppi`, powertrains exactly `["ice","hybrid"]`,
+- [x] Template: category `ppi`, powertrains exactly `["ice","hybrid"]`,
       active, tier `individual`; not offered under
       `list_templates(powertrain="electric")`
-- [ ] Seven items, `sequence_number` 1–7 contiguous, every item has
+- [x] Seven items, `sequence_number` 1–7 contiguous, every item has
       instruction / expected pass / expected fail; figures pinned: C1's
       figures in the compression item, C2/C3's in the battery item, C5's
       in the oil item, C6's in the fuel item
-- [ ] The leak-down item contains **no** percentage figure (a regex any
+- [x] The leak-down item contains **no** percentage figure (a regex any
       number+`%` must miss) and names where the threshold belongs
-- [ ] `motodiag workflow list` shows both PPI templates;
+- [x] `motodiag workflow list` shows both PPI templates;
       `--category ppi` hides winterization; `motodiag workflow show
       ppi_engine_v1` prints all seven item titles and the template
       description; unknown slug exits non-zero
-- [ ] `generic_ppi_v1` still holds its 5 items, still active,
+- [x] `generic_ppi_v1` still holds its 5 items, still active,
       description now points at `ppi_engine_v1`
-- [ ] Wiring: the click group is registered from `main.py` (the tests
+- [x] Wiring: the click group is registered from `main.py` (the tests
       drive the real registered group, not a private import)
-- [ ] The four whole-tree checks (191C F9 lint, 244G, roadmap continuity,
+- [x] The four whole-tree checks (191C F9 lint, 244G, roadmap continuity,
       `finding_check`) plus the sandbox list's whole-tree tests all pass
+      (306 passed; the one exception, 209's clean-venv tests, is
+      environmental and reproduces at the base commit — phase log)
 
-## Risks
+## Deviations from Plan
+
+- **The regression of record, the refute pass, the merge, the deploy and
+  the live load did not run** — the operator's standing arrangement for
+  this Subconscious session: everything to "ready to merge" commits on
+  `phase-259` in this clone; the rest is the Opus session's and is
+  pending in the phase log. `closeout_check` A5 is red by design until
+  the regression line lands.
+- **The first content pin was weaker than its purpose** — it joined the
+  item's fields, so a planted figure corruption in the description passed
+  while the instruction still carried the figure. Fixed before the
+  build commit landed (bug fix #1); the pins now demand each needle in
+  each field that states it.
+- **`sqlite3` does not concatenate adjacent string literals** — the
+  migration's first shape (PostgreSQL-style `'…' '…' continuation) is a
+  syntax error in SQLite. Every text value is one literal per line.
+  Caught by the first test run, folded into the build commit; recorded
+  because the same shape will tempt any future long-item migration.
+- **The Step 0 document was committed after the v1.0 commit, not with
+  it** — the measurements were all taken before the plan (they decided
+  it), but the write-up lagged; `259_step0.md` and this log's opening
+  entries follow the build commit. Recorded rather than reordered.
+- **`test_phase209_packaging.py` could not run clean in this sandbox**
+  — the session exports `PYTHONPATH=<clone>/src`, which leaks into the
+  file's clean venv (pip sees motodiag "already installed" and installs
+  no `motodiag` script). **7 failures, identical at the base commit**
+  `3528e90` in a worktree under the same invocation — environmental,
+  not the branch's. The Opus regression of record runs outside the
+  sandbox and is expected green; noted in the phase log and the handoff.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Template added | 1 (`ppi_engine_v1`, 7 items, 6 subjects) |
+| Migration | 067, schema 66 → 67; rollback peels it round-trip |
+| Production code | `cli/workflow.py` (95 lines) + 1 registration line in `cli/main.py` |
+| Tests added | 23 (`tests/test_phase259_ppi_engine.py`) |
+| Known-bad controls | 3 planted, seen red, reverted (leak-down %, registration removal, corrupted figure) |
+| Bug fixes | 2 (content pin too weak; F124 head-literal pins) |
+| Whole-tree checks | 306 passed + `finding_check` exit 0 (209: 26/33, environmental, identical at base) |
+| Collected count | 9,344 (= floor 9,321 + 23); floor raised with the close-out commit |
+| Findings filed | none |
+| Regression of record | pending — Opus session, outside the sandbox |
+
+Key finding: the Phase 114 substrate was a reference with no reader —
+eight phases of tables, models and CRUD that no command, route or test
+entry point could reach. The front door (244V's pattern, one click group
+plus the repo's existing accessors) is 95 lines and makes the substrate,
+its 5-item stub and this phase's content user-reachable in the same
+commit the content lands. The claims table below is the refute
+contract; C7's leak-down census is the one thing a refute pass must
+re-derive rather than re-read.
+
+## Risks (as written in the v1.0, unchanged)
 
 - **Item identity is prose** (S0-2/F129's shape): a later phase that
   rewrites a seeded item on a live database will duplicate it. Mitigated
