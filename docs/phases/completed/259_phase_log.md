@@ -18,7 +18,7 @@ index.
 Branch `phase-259` from **`3528e90`** (HEAD of `phase-258` as the Opus
 session reviewed it — the handoff's instruction, not `master`, which
 moves tonight when 258 merges). ROADMAP row 259 🔲 → 🚧 **before
-Step 0** at `0342ba2`, per CLAUDE.md.
+Step 0** at `08228dd`, per CLAUDE.md.
 
 **The operator's eight sandbox differences, acknowledged:** this clone and
 the session tmp are writable; everything else is not. Any live step runs
@@ -53,8 +53,12 @@ front door (a reference with no entry point is dead weight the day it
 ships), and 244Z's rule for figures (invent nothing; cite or defer). A
 new template `ppi_engine_v1` rather than editing `generic_ppi_v1`
 (identity: the generic stays the quick check, 260 owns chassis); the
-generic's stale forward pointer re-pointed by the same migration. v1.0
-committed at `0342ba2` before any code was written.
+generic's stale forward pointer re-pointed by the same migration. **Step
+0 committed at `ce2adb9`, then v1.0 at `7cd0737`** — before any code was
+written. (The first draft of this log and the handoff wrote a hash from
+memory, `0342ba2`, that resolves to nothing; corrected in the docs-fix
+commit after the close-out — the S8 lesson, relearned by this phase
+itself.)
 
 ### 2026-09-24 — Build: migration 067, the CLI front door, 23 tests
 

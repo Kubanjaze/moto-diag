@@ -189,10 +189,15 @@ templates, 9 items; migration 067 raises a fresh `db init` database to
   syntax error in SQLite. Every text value is one literal per line.
   Caught by the first test run, folded into the build commit; recorded
   because the same shape will tempt any future long-item migration.
-- **The Step 0 document was committed after the v1.0 commit, not with
-  it** — the measurements were all taken before the plan (they decided
-  it), but the write-up lagged; `259_step0.md` and this log's opening
-  entries follow the build commit. Recorded rather than reordered.
+- **The first draft of the close-out docs wrote a commit hash from
+  memory** — `0342ba2` for "row 🚧 + v1.0", in the phase log and the
+  handoff, a hash that resolves to nothing. The real sequence is the
+  textbook one: `08228dd` (row 🚧, before Step 0) → `ce2adb9` (Step 0)
+  → `7cd0737` (v1.0). Found by re-verifying every hash the documents
+  cite with `git cat-file -e` after the close-out commit; corrected in
+  the docs-fix commit. Recorded because it is S8 in this project's own
+  clothes: a commit claimed from recall rather than from `git log`, in
+  the very documents the refute pass reads.
 - **`test_phase209_packaging.py` could not run clean in this sandbox**
   — the session exports `PYTHONPATH=<clone>/src`, which leaks into the
   file's clean venv (pip sees motodiag "already installed" and installs
