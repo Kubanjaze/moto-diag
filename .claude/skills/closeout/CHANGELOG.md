@@ -1,5 +1,27 @@
 # closeout — changelog
 
+## 2026-09-25 — the regression of record runs in parallel (Phase 355)
+
+Step 1 ran the full suite serially: 30 to 55 minutes on this Mac, at least
+once per phase. It now runs `regression.sh`: `python -m pytest -n auto
+--dist load` on a clean tree, under `caffeinate` because pytest's clock
+stops while the Mac sleeps. The script prints the line the phase log
+records, with the counts, the hash, the wall time and the command.
+`regression.sh --serial` (`-p no:xdist`) is the documented fallback.
+
+- `verify_phase.sh` check 10 runs its targeted tests with the same flags.
+  The new check 14 shows whether the phase log's regression line names
+  its command. It prints and enforces nothing. A5 is unchanged, because
+  requiring the command there would change an artefact's definition.
+- Every test that spawns pytest passes `-p no:xdist`, and
+  `test_phase355_parallel_suite.py` fails when one does not. It also fails
+  when `addopts` gains a worker count: each spawned gate run would inherit
+  it and start a worker pool inside a worker.
+
+Proven: the parallel run's passed IDs equal the serial run's (junit diff),
+a planted failing test is reported by a two-worker run, and the `addopts`
+guard went red on a planted `-n auto`. The phase log has the rest.
+
 ## 2026-09-24 — R6: every close-out leaves its handoff; the handoff is a step
 
 Closing a phase never required a handoff. 353 and 354 each wrote one, and

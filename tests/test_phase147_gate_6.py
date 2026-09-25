@@ -830,7 +830,7 @@ class TestRegression:
         """
         test_file = Path(__file__).parent / "test_phase133_gate_5.py"
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(test_file), "-q"],
+            [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
             capture_output=True, text=True, timeout=60,
         )
         assert result.returncode == 0, (
@@ -849,7 +849,7 @@ class TestRegression:
         """
         test_file = Path(__file__).parent / "test_phase121_gate_r.py"
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(test_file), "-q"],
+            [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
             capture_output=True, text=True, timeout=60,
         )
         assert result.returncode == 0, (

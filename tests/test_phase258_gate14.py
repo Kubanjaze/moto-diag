@@ -885,7 +885,7 @@ class TestRegression:
         to every regression for a guarantee already held."""
         result = subprocess.run(
             [sys.executable, "-m", "pytest", "tests/test_phase250_gate13.py",
-             "-q", "-p", "no:cacheprovider"],
+             "-q", "-p", "no:cacheprovider", "-p", "no:xdist"],
             cwd=REPO_ROOT, capture_output=True, text=True, timeout=1800,
         )
         assert result.returncode == 0, f"Gate 13 regressed:\n{result.stdout[-2000:]}"

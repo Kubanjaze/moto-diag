@@ -99,6 +99,16 @@ once.
    A suite chosen by subject misses these checks. In 257 the F9 lint went
    red only at the full regression, and B2 only once the documents had moved
    to `completed/`, which cost a second 45-minute regression.
+
+   **The regression of record runs in parallel** (Phase 355):
+   `.claude/skills/closeout/regression.sh` runs
+   `python -m pytest -n auto --dist load` on a clean tree and prints the
+   line the phase log records, with the counts, the hash, the wall time and
+   the command. `regression.sh --serial` is the fallback, for a machine
+   without pytest-xdist or for bisecting a failure seen only in parallel.
+   A test that fails only in parallel is a bug to fix, never a reason to
+   record the serial run. Never put `-n` in `addopts`: the gate tests spawn
+   pytest, and each spawned run would start its own worker pool.
 4. **Every close-out writes a handoff:**
    `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`, saying what shipped, what
    is open and what is next. It goes in the close-out commit, before the
