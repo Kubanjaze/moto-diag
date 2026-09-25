@@ -105,7 +105,9 @@ TITLES = {
 OPTIONAL = {
     "tire_service_v1": {4},
     "brake_service_v1": {3, 4},
-    "suspension_service_v1": {5},
+    # 3: the fork-oil item is for oil-damped forks; the Honda CHF50's is
+    # greased (SM p. 227), found by the refute pass.
+    "suspension_service_v1": {3, 5},
     "drivetrain_service_v1": {1, 2, 3, 4, 5, 6, 7},
 }
 
@@ -119,53 +121,76 @@ FIELDS = (
 # it). Keyed (slug, sequence_number, field) -> needles that field must hold.
 PINS = {
     # tire
-    ("tire_service_v1", 1, "description"): ["abnormal wear and overheating", "PDF p. 116", "PDF p. 60"],
+    ("tire_service_v1", 1, "description"): [
+        "abnormal wear and overheating", "PDF p. 116", "PDF p. 60",
+        # Refute: N1 killed as first written; Kymco names flat spots.
+        "significant flat spots", "PDF p. 27",
+    ],
     ("tire_service_v1", 1, "instruction_text"): [
         "CB500F owner's manual sets 1.5 mm front and 2.0 mm rear (PDF p. 134)",
-        "Honda PCX service manual the same, measured at the centre of the tread (PDF p. 97)",
+        "Honda PCX150 (2013–2017) service manual the same, measured at the centre of the tread (PDF p. 97)",
         "at least 2 mm (PDF p. 115)", "TI or TWI", "(PDF p. 100)",
+        "Kymco People S 50/125/200 owner's manual (PDF p. 27)",
     ],
+    ("tire_service_v1", 1, "diagnosis_if_fail"): ["Start with pressure", "uneven tire wear (PDF p. 53)"],
+    ("tire_service_v1", 2, "diagnosis_if_fail"): ["(PDF p. 55)", "(PDF p. 115)", "checked by tire specialists", "(PDF p. 56)"],
     ("tire_service_v1", 2, "description"): ["exposes fabric or cords", "PDF p. 60", "evidence of ageing", "PDF p. 56", "SR400"],
     ("tire_service_v1", 3, "description"): ["last four digits of the DOT number", "5 years at the latest", "PDF p. 116", '"22 09"', "PDF p. 63", "10 years", "PDF p. 62"],
     ("tire_service_v1", 3, "instruction_text"): ["week 22 of 2009 (PDF p. 63", "after 5 years at the latest", "after 10 years from manufacture"],
     ("tire_service_v1", 4, "description"): ["20 °C", "PDF p. 76", "approximately 30 km/h", "PDF p. 100", "PDF p. 103"],
-    ("tire_service_v1", 4, "instruction_text"): ["approximately 30 km/h", "20 °C", "PDF p. 101"],
+    ("tire_service_v1", 4, "instruction_text"): ['"--" for each tyre', "approximately 30 km/h", "20 °C", "PDF p. 101"],
+    ("tire_service_v1", 4, "diagnosis_if_fail"): ["30 km/h threshold", "(F800R manual, PDF p. 37)", "PDF p. 103", "PDF p. 38", "specialist workshop (PDF p. 39)"],
     ("tire_service_v1", 5, "instruction_text"): [
         "same size, construction, speed rating and load range (PDF p. 61)",
-        "direction-of-rotation arrow", "PDF p. 178",
+        "direction-of-rotation arrow", "front wheel installed the wrong way round", "PDF p. 178",
         "half the total indicator reading",
         "2.0 mm axial and 2.0 mm radial (PDF p. 326)", "PDF p. 188",
     ],
     ("tire_service_v1", 6, "description"): ["front max 5 g (PDF p. 205)", "rear max 45 g (PDF p. 206)", "max 80 g"],
     ("tire_service_v1", 6, "instruction_text"): ["5 g at the front and 45 g at the rear", "80 g", "PDF pp. 205–206"],
-    ("tire_service_v1", 7, "instruction_text"): ["2.5 bar front and 2.9 bar rear", "PDF p. 206", "PDF p. 67", "PDF p. 85"],
+    ("tire_service_v1", 7, "instruction_text"): ["2.5 bar front and 2.9 bar rear, tyre cold", "PDF p. 134", "PDF p. 67", "PDF p. 85"],
     # brake
     ("brake_service_v1", 1, "instruction_text"): [
-        "KTM EXC at least 1 mm (PDF p. 102)", "BMW F800R 1.0 mm", "(PDF p. 94)",
-        "Yamaha Zuma 125 0.8 mm (PDF p. 134)", "Piaggio Beverly 125 1.5 mm (PDF p. 196)",
+        "KTM EXC TPI's at least 1 mm (PDF p. 102)", "BMW F800R's 1.0 mm is friction material only", "(PDF p. 94)",
+        "Yamaha YW125Y's 0.8 mm (PDF p. 134)", "Piaggio Beverly 125's 1.5 mm (PDF p. 196)",
         "(PDF p. 104)", "(PDF p. 77)",
     ],
     ("brake_service_v1", 2, "instruction_text"): [
         "2.5 mm front and 3.5 mm rear (PDF p. 100)",
-        "Honda PCX disc to 3.0 mm, with 0.30 mm warpage (PDF p. 371)",
-        "Zuma 125 disc to 3.5 mm, with 0.15 mm deflection (PDF p. 119)",
+        "Honda PCX150 disc to 3.0 mm, with 0.30 mm warpage (PDF p. 371)",
+        "YW125Y disc to 3.5 mm, with 0.15 mm deflection (PDF p. 119)",
         "from 4.0 mm new to 3.0 mm, with 0.30 mm runout (PDF p. 184)",
     ],
+    # Round 2: the Beverly replaces a disc over its run-out limit and
+    # repeats the test; cleaning the hub seat is an installation step.
+    ("brake_service_v1", 2, "diagnosis_if_fail"): ["excessive play (PDF p. 371)", "replaces a disc over its run-out limit and repeats the test", "(PDF p. 196)"],
     ("brake_service_v1", 3, "instruction_text"): [
-        "25.460 mm and 22.710 mm", "25.31 mm and 22.56 mm", "(PDF p. 384)",
+        # Refute: the PCX150's three-piston caliper limits carry their bores.
+        "25.460 mm (upper) and 22.710 mm (centre/lower)",
+        "25.31 mm (upper) and 22.56 mm (centre/lower)", "(PDF p. 384)",
         "25.30 mm", "PDF p. 194", "PDF p. 145", "PDF p. 146", "PDF p. 147", "PDF p. 193",
+        "denatured alcohol", "(PDF p. 190)",
     ],
-    ("brake_service_v1", 4, "instruction_text"): ["12.755 mm", "12.645 mm", "(PDF p. 373)", "12.75 mm", "PDF p. 191", "PDF p. 374", "PDF p. 201"],
+    ("brake_service_v1", 3, "diagnosis_if_fail"): ["new caliper assembly", "PDF p. 146", "PDF p. 192"],
+    ("brake_service_v1", 4, "instruction_text"): [
+        "front brake master cylinder I.D. 12.755 mm and piston O.D. 12.645 mm (PDF p. 373)",
+        "11.055 mm and 10.945 mm (PDF p. 363)",
+        "12.75 mm", "PDF p. 191", "PDF p. 374", "PDF p. 201",
+    ],
     ("brake_service_v1", 5, "instruction_text"): [
         "DOT 4 / DOT 5.1", "PDF pp. 102, 170", "PDF p. 363", "PDF p. 48", "PDF p. 89",
         "every 2 years on the Honda CB500F (PDF p. 49)",
-        "every 20,000 km or two years on the Beverly (PDF p. 49)",
+        "every 20,000 km or two years under normal conditions, and more often under intense or harsh use (PDF pp. 49, 190)",
     ],
-    ("brake_service_v1", 6, "instruction_text"): ["half a turn", "5.4 N·m on the Honda PCX (PDF p. 367)", "6 Nm on the Yamaha Zuma 125 (PDF p. 92)", "PDF p. 91", "PDF p. 199"],
+    ("brake_service_v1", 6, "instruction_text"): [
+        "half a turn", "no air bubbles in the bleed hose",
+        "5.4 N·m on the Honda PCX150 (PDF p. 367)", "6 Nm on the Yamaha YW125Y (PDF p. 92)", "PDF p. 91",
+    ],
+    ("brake_service_v1", 6, "diagnosis_if_fail"): ["examine every fitting", "(Piaggio Beverly, PDF p. 199)"],
     ("brake_service_v1", 7, "instruction_text"): [
         "25 Nm with Loctite 243 (PDF p. 69)", "30 Nm (PDF p. 106)",
         "30 N·m, and its ALOC bolts are replaced with new ones (PDF p. 21)",
-        "29–35 N·m", "PDF p. 195", "PDF p. 109", "PDF p. 67",
+        "29–35 N·m", "PDF p. 195", "PDF pp. 104, 109", "PDF p. 67",
     ],
     # suspension
     ("suspension_service_v1", 1, "instruction_text"): [
@@ -173,32 +198,48 @@ PINS = {
         "25 mm and 70–80 mm (PDF pp. 73–74)", "PDF pp. 57–58", "PDF p. 55", "PDF p. 60",
     ],
     ("suspension_service_v1", 2, "instruction_text"): [
-        "4.2, 4.4 and 4.6 N/mm", "57–63, 60–66 and 63–69 N/mm",
-        "65–75, 75–85 and 85–95 kg (PDF pp. 60, 166)",
-        "5.2, 5.4 and 5.6 N/mm", "(PDF p. 183)",
+        # Refute: the fork table is p. 166 only; p. 60 is the shock's.
+        "4.2, 4.4 and 4.6 N/mm (PDF p. 166)",
+        "57–63, 60–66 and 63–69 N/mm (PDF pp. 60, 166)",
+        "65–75, 75–85 and 85–95 kg",
+        "690 Enduro's (not the Enduro R's) fork springs 5.2, 5.4 and 5.6 N/mm (PDF p. 183)",
+        "a small difference outside it is taken up by preload, a large one by changing the springs (PDF p. 55)",
         "fork spring as two rates, 7.1 N/mm (K1) and 15.4 N/mm (K2), with no optional spring available (PDF p. 34)",
     ],
+    ("suspension_service_v1", 3, "description"): ["For oil-damped forks", "Honda CHF50", "no fork-oil figure (PDF pp. 226–227)"],
     ("suspension_service_v1", 3, "instruction_text"): [
-        "636 ± 10 ml of SAE 4", "(PDF p. 166)", "620 ml of SAE 5", "(PDF p. 183)",
-        "122.0 ± 2.5 cm³", "75 mm (PDF p. 335)", "0.104 L of 10W", "(PDF p. 160)",
-        "PDF p. 155", "PDF p. 158",
+        "636 ± 10 ml of SAE 4", "(PDF p. 166)", "620 ml of SAE 5", "PDF p. 183",
+        "635 ml on the Enduro R, PDF p. 184",
+        "122.0 ± 2.5 cm³", "75 mm from the top of the fork pipe with the leg fully compressed (PDF p. 335)",
+        "0.104 L of 10W", "(PDF p. 160)", "PDF p. 155", "PDF p. 158",
     ],
     ("suspension_service_v1", 4, "instruction_text"): [
         "252.1 mm standard and 247 mm limit (PDF p. 157)", "125.9 mm limit (PDF p. 227)",
         "PDF p. 156", "PDF p. 159", "PDF p. 334", "PDF p. 67",
     ],
-    ("suspension_service_v1", 5, "instruction_text"): ["PDF p. 75", "PDF p. 69"],
-    ("suspension_service_v1", 6, "instruction_text"): ["10 bar with SAE 2.5 shock fluid (PDF pp. 55, 167)", "(PDF p. 85)", "(PDF p. 175)", "PDF p. 95"],
+    # Refute: the EXC's bleed is p. 66 (lift stand), not p. 69.
+    ("suspension_service_v1", 5, "instruction_text"): ["neither wheel touching the ground (PDF p. 66)", "PDF p. 75", "PDF p. 76"],
+    ("suspension_service_v1", 6, "instruction_text"): [
+        "schedules a shock absorber service (PDF p. 53)",
+        "10 bar with SAE 2.5 fluid (PDF pp. 55, 167)",
+        # Refute: the XR650L's notice is to the owner, not a workshop ban.
+        "tells the owner not to disassemble", "(PDF p. 85)",
+        "(PDF p. 175)", "PDF p. 95",
+    ],
     ("suspension_service_v1", 7, "instruction_text"): [
         "15 clicks low-speed compression, 2 turns high-speed compression (PDF p. 56)",
         "15 clicks rebound (PDF p. 57)", "9 mm spring preload (PDF p. 59)",
-        "position 4 of 9", "(PDF p. 92)", "± 40 % (PDF p. 64)",
+        "position 4 of 9", "(PDF p. 92)",
+        "± 40 % from the guideline settings in the table under its seat (PDF p. 64)",
     ],
     # drivetrain
     ("drivetrain_service_v1", 1, "instruction_text"): [
-        "55–58 mm on the KTM EXC (PDF p. 90)",
-        "35–45 mm on the Honda CB500F with 60 mm as the do-not-ride limit (PDF p. 80)",
-        "30–40 mm on the BMW F800R (PDF p. 101)",
+        # Refute: each figure travels with its own way of measuring.
+        "raised on a lift stand (PDF p. 89)",
+        "at the end of the chain sliding piece with the lower run taut, at several chain positions: 55–58 mm (PDF p. 90)",
+        "midway between the sprockets at several points: 35–45 mm, and never ridden over 60 mm (PDF p. 80)",
+        "push the chain up and down: 30–40 mm deflection (PDF p. 101)",
+        "cannot be compared across machines",
     ],
     ("drivetrain_service_v1", 2, "instruction_text"): ["10–15 kg", "18 rollers", "272 mm at most (PDF p. 92)", "(PDF p. 83)", "(PDF p. 102)", "PDF pp. 92–93", "PDF p. 58"],
     ("drivetrain_service_v1", 3, "instruction_text"): ["(PDF p. 89)", "(PDF p. 59)", "every 1000 km at the latest", "(PDF p. 100)"],
@@ -210,19 +251,23 @@ PINS = {
     ],
     ("drivetrain_service_v1", 5, "description"): ["45 N (4.5 kgf, 10 lbf)", "6.0–8.0 mm", "2500 mi (4000 km)", "5.0–7.0 mm", "5.0 mm apart"],
     ("drivetrain_service_v1", 5, "instruction_text"): [
-        "6.0–8.0 mm under 45 N on the Yamaha XVS950 (PDF pp. 65–66)",
-        "5.0–7.0 mm on the XVS1300, whose marks are 5.0 mm apart (PDF p. 64)",
-        "every 2500 mi (4000 km) on the XVS950 (PDF p. 48)", "(XVS1300, PDF p. 82)",
+        "6.0–8.0 mm under 45 N on the Yamaha XVS95CL (PDF pp. 65–66)",
+        "5.0–7.0 mm on the XVS13AF, whose marks are 5.0 mm apart (PDF p. 64)",
+        "every 2500 mi (4000 km) on the XVS95CL (PDF p. 48)", "(XVS13AF, PDF p. 82)",
     ],
     ("drivetrain_service_v1", 6, "description"): [
         "every 40,000 km (24,000 miles) or at the latest every 2 years (PDF p. 8)",
-        "API class GL 5", "approx. 0.25 l", "SAE 90 above 5 °C and SAE 80 below (PDF p. 87)",
-        "PDF p. 67", "PDF p. 70",
+        "API class GL 5", "approx. 0.25 l",
+        "SAE 90 above 5 °C and SAE 80 below, alternatively SAE 80 W 90 (PDF p. 87)",
+        "EPX 90 alternatively SAE 90 (PDF p. 67)", "Castrol EPX 90 or SAE 90 (PDF p. 70)",
     ],
     ("drivetrain_service_v1", 6, "instruction_text"): [
-        "(PDF p. 6)", "approximately 0.25 l", "SAE 90 above 5 °C and SAE 80 below (PDF p. 87)",
-        "R 850 R / R 1150 R, PDF p. 67; K 1200 RS, PDF p. 70",
+        "(PDF p. 6)", "approximately 0.25 l",
+        "SAE 90 above 5 °C and SAE 80 below, alternatively SAE 80 W 90 (PDF p. 87)",
+        # Refute: the other two BMWs give EPX 90 / SAE 90 only.
+        "EPX 90 or SAE 90 (PDF p. 67)", "0.25 l of Castrol EPX 90 or SAE 90 (PDF p. 70)",
         "every 40,000 km or at the latest every 2 years on the R 1100 S (PDF p. 8)",
+        "the template's own, not from the cited booklets",
     ],
     ("drivetrain_service_v1", 7, "description"): ["two universal joints", "PDF p. 81", "PDF p. 7"],
 }
@@ -231,16 +276,18 @@ PINS = {
 # names that machine (the items say whose figure it is, never a universal).
 MACHINE_OF = {
     "272 mm": "KTM", "55–58 mm": "KTM", "35–45 mm": "CB500F", "30–40 mm": "F800R",
-    "6.0–8.0 mm": "XVS950", "5.0–7.0 mm": "XVS1300", "0.25 l": "R 1100 S",
-    "45 g": "S 1000 XR", "12.755 mm": "PCX", "25.460 mm": "PCX", "0.15 mm": "Zuma 125",
-    "636 ± 10 ml": "EXC", "75 mm": "PCX", "37 mm": "EXC", "252.1 mm": "Zuma 125",
+    "6.0–8.0 mm": "XVS95CL", "5.0–7.0 mm": "XVS13AF", "0.25 l": "R 1100 S",
+    "45 g": "S 1000 XR", "12.755 mm": "PCX150", "25.460 mm": "PCX150", "0.15 mm": "YW125Y",
+    "636 ± 10 ml": "EXC", "75 mm": "PCX150", "37 mm": "EXC", "252.1 mm": "YW125Y",
 }
 
 # N1-N3, the negatives with their controls (261_step0.md): the sentence that
-# says where no document sets a figure.
+# says where no document sets a figure. N1 as first written ("names wear
+# patterns such as ...") was killed by the refute pass: Kymco names flat
+# spots. This is the narrowed sentence that survived.
 NEGATIVE_SENTENCES = {
     ("tire_service_v1", 1, "description"):
-        "No maker's document in the research library names wear patterns such as cupping, feathering or squaring",
+        "No maker's document in the research library names cupping, feathering or squaring",
     ("drivetrain_service_v1", 5, "description"):
         "No document in the research library sets a belt alignment figure",
     ("drivetrain_service_v1", 5, "instruction_text"):
@@ -416,12 +463,28 @@ class TestContentPins:
                             )
         assert seen == set(MACHINE_OF), "a machine-bound figure is no longer seeded"
 
-    def test_zuma_spring_rates_are_its_fork_spring(self, db):
-        """Refute-before-ship: the Zuma 125 SM lists K1/K2 under Front
+    def test_yw125y_spring_rates_are_its_fork_spring(self, db):
+        """Refute-before-ship: the YW125Y SM lists K1/K2 under Front
         suspension (PDF p. 34). A draft called them rear spring rates."""
         text = _item(db, "suspension_service_v1", 2)["instruction_text"]
         assert "fork spring as two rates" in text
         assert "rear spring rates" not in text
+
+    def test_machines_are_named_as_their_documents_name_them(self, db):
+        """The refute pass: a model name comes from the document's title
+        page. The Yamaha service manual calls its machine "YW125Y" and
+        the word "Zuma" is on none of its pages; the Honda one covers the
+        PCX150, not every PCX; the Yamaha belt manuals are the XVS95CL and
+        XVS13AF. None of the names the documents do not carry may appear."""
+        for slug in TEMPLATES:
+            t = get_template_by_slug(slug, db)
+            texts = [t["description"]] + [
+                item[f] or "" for item in _items(db, slug) for f in FIELDS
+            ]
+            for text in texts:
+                for wrong in ("Zuma", "XVS950", "XVS1300"):
+                    assert wrong not in text, f"{slug} names '{wrong}'"
+                assert not re.search(r"\bPCX(?!150)\b", text), f"{slug} names a bare PCX"
 
     def test_pcx_warpage_cited_in_millimetres_only(self, db):
         """The PCX SM prints "0.30 mm (0.001 in)"; the inch figure is its
