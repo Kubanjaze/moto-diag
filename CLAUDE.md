@@ -69,6 +69,14 @@ once.
 
    Loading new rows after a backup is not a stop. Anything else it decides,
    and it writes the decision and the reason in the phase log.
+
+   **Only the operator grants a stop's approval, in their own words.** An
+   agent never grants it to itself, to another session, or to a later step
+   of its own plan. A prompt can carry a pre-approval only as the
+   operator's scoped wording, and the agent applies that scope literally.
+   Take 068's live row as the example: "apply live only if the dry run on
+   a copy changes exactly the named row plus the phase's own new rows; show
+   the diff; anything else changes, stop and ask."
 2. **Bulk reading goes through Subconscious (GLM-5.3); judgment stays on
    Opus.**
    - GLM does census, acquisition, extraction and first-pass classification,
@@ -149,6 +157,18 @@ and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 ---
 
 ## Change log
+
+### 2026-09-25 — only the operator grants a rule-1 approval
+
+On 2026-09-25 the advisor session asked the operator to pre-approve
+migration 068's rewrite of one live row, and phrased the question as
+"approving it now lets the builder run straight through". The operator
+answered with a scoped approval and a rule: "an agent never grants itself
+a CLAUDE.md rule-1 approval — you nearly did … asking was right; record
+that it has to stay that way." Rule 1 now says so, and says that a
+pre-approval travels only as the operator's scoped wording, applied
+literally. Text only; there is no check an agent could run on itself for
+this.
 
 ### 2026-09-24 — five standing rules, and R6: every close-out leaves its handoff
 
