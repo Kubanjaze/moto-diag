@@ -147,7 +147,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: `-p no:xdist`, which leaves the count unchanged): 9,388. Raised before
 #: the regression of record.
 #:
-COLLECTED_TEST_FLOOR = 9388
+#: 9415 (Phase 261, 2026-09-25) — +27: `test_phase261_service_workflows.py`
+#: 27 (migration 069's four templates, their per-field pins, the three
+#: negatives, the F158 pins, bug fix #1's full-slug list, and the refute
+#: pass's title-page names pin), nothing else moved. Measured with
+#: `--collect-only -q -p no:xdist`: 9,415 (9,414 before the refute pin).
+#:
+COLLECTED_TEST_FLOOR = 9415
 
 
 def _collected_count() -> int:

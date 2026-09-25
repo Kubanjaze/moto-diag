@@ -65,10 +65,14 @@ def list_cmd(category: str | None) -> None:
         raise SystemExit(1)
 
     table = Table(show_header=True, header_style="bold cyan")
-    table.add_column("Slug", style="green")
-    table.add_column("Category")
-    table.add_column("Name")
-    table.add_column("Powertrains")
+    # The slug is what `workflow show` takes and the category what
+    # `--category` takes: both must print whole. Rich elides a column that
+    # does not fit ("suspension_se…" at 80 columns), so these two never
+    # shrink, and the free-text columns fold rather than elide.
+    table.add_column("Slug", style="green", no_wrap=True)
+    table.add_column("Category", no_wrap=True)
+    table.add_column("Name", overflow="fold")
+    table.add_column("Powertrains", overflow="fold")
     table.add_column("Minutes", justify="right")
     for t in templates:
         table.add_row(

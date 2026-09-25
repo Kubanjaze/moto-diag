@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F159** (this file); the mobile
+At the time of writing the highest assigned is **F160** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1636,3 +1636,24 @@ documents and scope them per-machine, or replace the numbers with the
 deferral pattern 260's items use (name the check, defer the figure to
 the machine's own manual), by migration, with a pin that no uncited
 figure returns.
+
+### F160
+
+**`ppi_chassis_v1` names the Yamaha YW125Y service manual "Zuma 125", a name that document does not carry**
+
+Migration 068's seeded text (the chassis pre-purchase protocol, live
+since 2026-09-25) cites `pdf/yamaha_zuma125_2009_sm.pdf` as the "Yamaha
+Zuma 125 2009 service manual" and "the Zuma 125" in 9 places across the
+steering, fork and wheel items. The document's title page reads "2009
+MOTORCYCLE SERVICE MANUAL Model : YW125Y", and a whitespace-proof search
+finds "Zuma" on **0 of its 338 pages**. The market name comes from the
+file name and outside knowledge, which is the failure the title-page rule
+exists for (354's Symply/Zuma, 353's Fiddle III). The figures themselves
+are the document's own and were kept by 260's refute pass. Found by
+Phase 261's refute pass, whose new templates name the machine YW125Y and
+carry a test that no "Zuma" appears in their text. Not fixed there: the
+text is in live rows, and changing live rows is a rule-1 stop. What would
+close it: a migration that re-points the nine mentions to the document's
+own name, with the operator's approval for the live row change, and a
+pin like `test_machines_are_named_as_their_documents_name_them` over
+`ppi_chassis_v1`.
