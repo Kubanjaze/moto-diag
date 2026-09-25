@@ -381,3 +381,89 @@ guidance with no citation, and this pass does not vouch for it: "a drum
 at its limit cannot be machined back", "a notch at straight-ahead is
 brinelled races", and "run a finger round each bead". None of these
 states a figure.
+
+## Deploy — 2026-09-25, 05:04–05:05
+
+**Merged** as `e1d53c3` (`master`, pushed `b3285f3..e1d53c3`). There is
+no code after the regression hash (`code_after_regression.py`).
+
+**Authority.** This is the operator's scoped pre-approval, quoted
+verbatim in the session prompt and applied literally, per CLAUDE.md
+rule 1: "apply 068 live without asking ONLY if the dry run on the copy
+changes exactly the rows you've described — this one description
+rewrite plus 260's own new rows — and nothing else. show the dry-run
+diff (rows changed, before/after text) in the report. if the copy shows
+any other existing row changing, stop before the live apply and ask.
+backup to ~/backups/motodiag/ first, retain 5."
+
+1. **Before-state** (live `data/motodiag.db`): schema 67, 1,060
+   `known_issues`, 3 templates, 16 items, integrity ok, `known_issues`
+   content hash `5932cd02c78ae850`. `ppi_engine_v1`'s description ends
+   "…the chassis protocol is Phase 260. …". Nothing had the file open,
+   and no server was running.
+2. **Backup:** `~/backups/motodiag/motodiag_pre260_20260925_050437.db`
+   (SQLite backup API; schema 67; integrity ok; same content hash).
+   Retain 5: the oldest, `motodiag_pre255C_20260922_150946.db`, was
+   removed.
+3. **Dry run** on a copy of that backup, with the merged code:
+   - applied `[68]`;
+   - `checklist_items`: +7 (ids 17–23, all under the new template), 0
+     changed, 0 removed;
+   - `workflow_templates`: +1 (`ppi_chassis_v1`), and 1 changed:
+     `ppi_engine_v1` (id 3), columns `description` and `updated_at`
+     only;
+   - `schema_version`: +1 (68);
+   - every other table unchanged, and the `known_issues` hash the same.
+
+   The description, before: "…Companion to generic_ppi_v1 (the quick
+   check); the chassis protocol is Phase 260. Figures in the item text
+   …". After: "…Companion to generic_ppi_v1 (the quick check); for the
+   full chassis-side protocol see ppi_chassis_v1. Figures in the item
+   text …". `updated_at`: `None` → the apply time.
+
+   This is the same set of rows the advisor's 01:46 dry run changed. The
+   new rows' *text* differs from what that run saw, because of the
+   refute corrections (`20426ff`, `7de9fbe`); the rows are 260's own. A
+   scripted scope assertion (only these tables, only these rows, only
+   these two columns) passed.
+4. **F158 census** on the dry-run copy, before the live apply. Every
+   TEXT column of every table was searched for `\bPhase \d+`,
+   `\bTrack [A-Z]\b` and `\bF\d{2,3}\b`:
+   - 69 hits in 47 rows overall;
+   - in rendered text, **33 Phase/Track references in 24 rows**. None
+     is in a 260 row. The only workflow hit is
+     `generic_winterization_v1`'s "Track N";
+   - the **7 rendered F-number hits are all BMW model names** (F750,
+     F800, F900);
+   - the rest is user data (`customer_notifications.body` 4,
+     `shops.name` 1) and model columns (24 BMW names).
+
+   Control: a "Phase 999" planted in item 20 of a second copy was found
+   exactly once, in that row. The result matches the advisor's run.
+5. **Live apply** at 05:05:07: `apply_pending_migrations` → `[68]`. Live
+   vs the backup shows the same diff, and the same scope assertion
+   passes on live. Every content value is identical to the dry run; only
+   `applied_at` / `created_at` / `updated_at` differ, stamped 30 s
+   later.
+6. **After-state:** schema 68, 1,060 `known_issues` (hash unchanged), 4
+   templates, 23 items, integrity ok, SHA-256 `195bd383ee083f6d…`.
+   `motodiag workflow list --category ppi` shows all three PPI
+   templates. `workflow show ppi_chassis_v1` renders the seven items,
+   with the Vespa clearance in the swingarm item, and
+   `workflow show ppi_engine_v1` carries no "Phase".
+
+**A slip while recording this, and what it did.** The script that
+wrote the handoff's deploy section went through an *unquoted* heredoc,
+so the shell ran each backticked span in the text as a command. Every
+one failed:
+- "command not found" for most of them (`motodiag` is not on the
+  shell's PATH);
+- "permission denied" for the backup's path, a mode-600 file that is
+  not executable;
+- no match for the glob `[68]`.
+
+Nothing ran. Afterwards the backup read integrity ok at schema 67, with
+its size unchanged. The blanked handoff text was rewritten through a
+quoted heredoc. This is the working-rules failure the commit-message
+rule names ("a backtick inside … executes"), and it applies to any
+heredoc carrying backticks, not only commit messages.
