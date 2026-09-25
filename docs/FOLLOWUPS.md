@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F152** (this file); the mobile
+At the time of writing the highest assigned is **F157** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1337,3 +1337,159 @@ What would close it: reword the sentence to what the document shows (the
 cover names the CHF50/P/S Metropolitan, 2002–2006; the tables reach after '07),
 change the test to pin the modelling rather than the absence, and re-load.
 Phase 353's own CHF50 row states the cover as rendered.
+
+### F153
+
+**The CVT rows pair SYM under spellings the track's other layers do not use, so no SYM scooter reaches a CVT row at tier 0**
+
+Phase 254's multi-make CVT rows name SYM machines in their `model` columns
+as `SYM JET 50`, `SYM JET 100`, `SYM Joyride`, `SYM Symply 125` and
+`SYM Symba`; the junction (250C attribution, 255C canonical pairs) stores
+those as `(SYM, Jet 50)`, `(SYM, Joyride)`, `(SYM, Symply 125)` — bare
+spellings no query for the machines 353 and 354 cover would resolve to.
+The electrical and carburettor layers pair the same machines under
+`Jet Euro 50`, `Joyride 125`, `Fiddle 50`. Measured in Phase 258's Step 0
+on a freshly seeded 1,060-row database: `(SYM, Jet Euro 50)`,
+`(SYM, Joyride 125)` and `(SYM, Fiddle 50)` each hold exactly 2 tier-0
+pairs (the electrical and carburettor rows), where `(Kymco, Agility 50)`
+holds 11, 9 of them CVT. Every SYM machine reaches its CVT content at
+tier 2 (`make_other_model`) only, and it reaches the 12-row prompt only
+because rank order happens to admit tier-2 rows.
+
+What it affects: a SYM owner's diagnosis presents the CVT layer — content
+254 wrote for their machine — labelled as another model's rows, beneath
+any tier-0 content that arrives later; and the day a SYM tier-0 row is
+added, it will crowd the CVT layer out of the cap entirely (Gate 13's
+mechanism, on the SYM half of the track).
+
+Not fixed in 258: a gate writes no content, and the rows' identity is
+(make, model, title) (F129). What would close it: a migration adding the
+machines' own spellings (`Jet Euro 50`, `Joyride 125`, `Fiddle 50`) to
+the CVT rows' model columns — or junction pairs for them — with a test
+that a SYM query reaches a CVT row at tier 0. Pinned by
+`tests/test_phase258_gate14.py`, whose SYM tests are written to fail
+when this closes.
+
+### F154
+
+**"Fiddle 50" is missing from TRANSMISSION_LOOKUP, so the machine 354 and 353 name at tier 0 resolves transmission `unknown` and loses the scoped CVT layer entirely**
+
+`knowledge/transmission.py`'s SYM Fiddle entry carries the spellings
+`("fiddle", "fiddle iii", "fiddle 3", "fiddle3")` — the Fiddle III the
+257 census sourced — but not `fiddle 50`, the spelling the corpus's own
+rows use: `known_issues_scooter_electrical.json` and
+`known_issues_small_engine_carbs.json` both list "Fiddle 50", and 354's
+tier-0 test machines name it. Measured in Phase 258's Step 0: a
+`(SYM, "Fiddle 50")` retrieval resolves provenance `unknown`; the
+applicability filter (255, through the 256 chokepoint) then withholds
+**8 rows** — every `{"transmission": ["cvt"]}` row in the corpus — and
+the Fiddle 50's 12-row prompt holds none of 254's roller, belt or clutch
+content, only the two unscoped naming/recall rows. The withheld count is
+recorded in `retrieval_withheld`.
+
+What it affects: the one machine the electrical and carburettor layers
+both cover at tier 0 that cannot see the CVT layer at all; its owner's
+belt-squeal diagnosis carries no CVT content, and the corpus row that
+would explain the Fiddle's own belt-and-roller maintenance (257's
+census source for the Fiddle III) never reaches them.
+
+Not fixed in 258: a gate writes no production code. What would close it:
+add `fiddle 50` to the Fiddle entry's spellings in `TRANSMISSION_LOOKUP`
+— one line, evidenced by the same SYM Fiddle III owner's manual the
+entry cites (a combined "Drive belt/roller I R" maintenance row) — with a
+test that the machine resolves `model-sourced`/`cvt`. Pinned by
+`tests/test_phase258_gate14.py`, written to fail when this closes.
+
+### F155
+
+**Symptom relevance does not stem plurals, and it can displace a machine's own tier-0 row for a tier-2 row that shares one symptom word**
+
+`knowledge/prompt_rows.py::relevance_tokens` tokenises on whitespace and
+punctuation with no plural handling, and `relevance_score` counts shared
+raw tokens. Measured in Phase 258's Step 0: the symptom "scooter jerks
+at low speed, belt squeal, won't pull away" tokenises to
+`{away, belt, jerks, pull, scooter, speed, squeal}`; the Vespa LX 50's
+tier-0 carburettor row — titled "Vespa's small carburetted **scooters**:
+Dell'Orto on the two-stroke 50s…" — scores **0** ("scooter" ≠
+"scooters"), while a tier-2 CVT row sharing the word "belt" scores 1 and
+takes a reserved slot. With the symptom, the LX 50's prompt loses its
+carburettor row (CVT 10, ELEC 1, CARB 0); without it, the prompt holds
+all three layers.
+
+What it affects: 250B's composition reserves four slots for what the
+rider reported, and the ranking that fills them ranks a tier-2 row above
+the machine's own tier-0 row whenever the symptom words miss by a
+plural. Any corpus row whose title pluralises the machine class
+("scooters", "twins", "singles") is invisible to a symptom that uses the
+singular.
+
+Not fixed in 258: a gate writes no production code, and 250B's choice to
+let symptom relevance outrank tier is a design decision, not a defect —
+the defect is the tokeniser's plural blindness making the ranking wrong
+about what the rider reported. What would close it: stem plurals in
+`relevance_tokens` (or score title+description, which for that row does
+contain the singular), with the LX 50 displacement as the regression:
+a belt-shaped symptom must not cost a machine its own tier-0 row.
+Pinned by `tests/test_phase258_gate14.py`.
+
+### F156
+
+**A 2002–2006 Metropolitan is a CHF50, but the query "Metropolitan" reaches none of the CHF50 rows — and reaches the CVT recall rows at tier 0**
+
+Phase 252 measured that the Metropolitan and the Ruckus are Honda's two
+50 cm3 scooters and that the 2002–2006 Metropolitan is the CHF50 (F152's
+cover: "CHF50/P/S METROPOLITAN™, 2002–2006"); 354 and 353 model their
+CHF50 rows `CHF50` only. Measured in Phase 258's Step 0: `(Honda,
+Metropolitan)` holds 0 junction pairs on the CHF50 carburettor and
+electrical rows, while the CVT multi-make rows — which list "Honda
+Metropolitan" — do pair it. A 2005 Metropolitan query therefore reaches
+CVT regulator-record rows at tier 0, the three unverified F149 charging
+rows at tier 1, and **none** of the carburettor or charging rows written
+for the machine the owner has. The current fuel-injected NCW50
+Metropolitan correctly reaches nothing (354's modelling, F152); the
+2005 case is the gap.
+
+What it affects: every owner who typed their scooter's name as Honda
+printed it on the machine, for the four years the name and the model code
+were the same bike.
+
+Not fixed in 258: a gate writes no content, and bridging a name to a
+model code is a content decision with a year dimension (the bridge must
+not carry the injected NCW50 forward). What would close it: junction
+pairs or model-column spellings for the 2002–2006 window, with a test
+that a 2005 Metropolitan reaches the CHF50 carburettor row at tier 0
+and a 2018 Metropolitan does not. Pinned by
+`tests/test_phase258_gate14.py`.
+
+### F157
+
+**No adapter compatibility row exists for any scooter make; a Honda scooter's only answer is the make-level dev/test mock, while the corpus documents scooter diagnostic surfaces**
+
+`compat_matrix.json` holds eleven makes — aprilia, bmw, ducati, harley,
+honda, kawasaki, ktm, mv-agusta, suzuki, triumph, yamaha — and no row
+names a scooter. Measured in Phase 258's Step 0 on a seeded catalogue
+(the first pass measured against an unseeded store and said "none known"
+for every machine; this corrects it): `hardware compat recommend` answers
+"No compat entries known for this bike" for the Kymco Agility 50, SYM
+Jet Euro 50, Piaggio Fly 50, Vespa LX 50, Yamaha Zuma 125 and Genuine
+Buddy 125 — Yamaha's ten rows are model-scoped to its big bikes — while
+a Honda scooter (Ruckus, CHF50) inherits the make-level **"Mock Adapter
+(dev/test only)"**, because Honda's 13 rows carry no model. Track M's own
+rows document diagnostic surfaces: 251's six-pin Piaggio connector row
+("Piaggio calls it the OBD port, but it is a six-pin Piaggio connector"),
+253's "Kymco and SYM do show fault codes on the dash — under names no
+standard diagnostic…" — so the gate cannot assert an adapter per scooter
+make the way Gate 12 could per European make.
+
+What it affects: a scooter shop asking the product which scan tool reads
+a customer's machine gets a dev/test mock (Honda) or "none known" (every
+other make) for every machine Track M covered — honest, but it is also
+the whole of the track's hardware answer.
+
+Not fixed in 258: a gate writes no production code, and which adapters
+actually read these machines is a sourcing question, not a guess to
+write down. What would close it: compat rows sourced from adapter
+vendors' coverage lists for at least the makes with documented diagnostic
+surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's honest-gap tests
+failing the day they land. Pinned by `tests/test_phase258_gate14.py`, the
+same shape as Gate 13's F99 for electric makes.
