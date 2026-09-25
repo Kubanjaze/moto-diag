@@ -233,8 +233,11 @@ class TestMigration068:
         templates_67, items_67 = rows()
         # 068 alone, so a successor's rows are never measured as 068's
         # (bug fix #2).
-        apply_migration(get_migration_by_version(68), path)
-        assert get_current_version(path) == 68
+        m068 = get_migration_by_version(68)
+        apply_migration(m068, path)
+        # Against the migration just applied, never a literal equal to
+        # the head (bug fix #3: F124's guard caught `== 68` here).
+        assert get_current_version(path) == m068.version
         templates_68, items_68 = rows()
         assert set(templates_68) - set(templates_67) == {"ppi_chassis_v1"}
         assert {
