@@ -4948,17 +4948,135 @@ MIGRATIONS: list[Migration] = [
              'Bad fuel means the whole path is suspect — tank, tap or pump, lines, carburettor or injectors. Water plus long storage means rust in a steel tank; price the tank, not just a flush.',
              1, '["clear jar","funnel"]', 5);
         """,
+    ),
+    # Migration 068 — Phase 260: the chassis-side pre-purchase inspection
+    # template on the Phase 114 substrate, plus the one-row F158 re-point:
+    # ppi_engine_v1's seeded description ends with a build reference
+    # ("the chassis protocol is Phase 260") that no user-visible text may
+    # carry. The chassis protocol this phase seeds is what it now points
+    # at, by name. Rollback restores the seeded text verbatim.
+    Migration(
+        version=68,
+        name="ppi_chassis_workflow",
+        description=(
+            "Phase 260: seed the chassis-side pre-purchase inspection "
+            "template on the Phase 114 substrate. One template "
+            "(ppi_chassis_v1, category 'ppi', powertrains ice+electric"
+            "+hybrid — chassis subjects are powertrain-agnostic, unlike "
+            "259's engine subjects) and seven checklist items covering "
+            "the row's subjects: frame straightness and crash evidence, "
+            "steering head bearings, front fork, swingarm, wheel "
+            "bearings, brakes, tires. Every figure in the item text "
+            "cites the document it comes from (KTM 250/300 EXC TPI "
+            "owner's manual; Yamaha Zuma 125 2009 service manual; Honda "
+            "CHF50 service manual; Honda Metropolitan 2025 owner's "
+            "manual; BMW F800R owner's manual, with PDF pages); where no "
+            "document sets a figure — frame alignment, swingarm play, "
+            "wheel-bearing play, per three whitespace-proof library "
+            "censuses with positive controls — the item says where the "
+            "figure belongs and invents nothing. Also re-points "
+            "ppi_engine_v1's description at the new template by name, "
+            "removing the 'the chassis protocol is Phase 260' build "
+            "reference (the F158 review miss recorded 2026-09-25). "
+            "Seeded inside the one-shot migration journal like 007 and "
+            "067: checklist_items has no unique constraint, so an item "
+            "insert re-run outside the journal would duplicate rows."
+        ),
+        upgrade_sql="""
+            INSERT OR IGNORE INTO workflow_templates
+                (slug, name, description, category, applicable_powertrains,
+                 estimated_duration_minutes, required_tier, created_by_user_id)
+            VALUES
+                ('ppi_chassis_v1', 'Pre-purchase inspection — chassis',
+                 'Chassis-side protocol for buying a used motorcycle: frame and crash evidence, steering head bearings, front fork, swingarm, wheel bearings, brakes and tires. Companion to generic_ppi_v1 (the quick check) and ppi_engine_v1 (the engine-side protocol). Figures in the item text cite the document they come from; where no document sets a figure the item says where the figure belongs — nothing here is invented.',
+                 'ppi', '["ice","electric","hybrid"]', 80, 'individual', 1);
+
+            -- The F158 re-point: the engine template's seeded description
+            -- promised the chassis protocol by phase number; name it instead.
+            UPDATE workflow_templates
+               SET description = 'Engine-side protocol for buying a used ICE motorcycle: compression, leak-down, oil, fuel, starter/charging health and the visual checks. Companion to generic_ppi_v1 (the quick check); for the full chassis-side protocol see ppi_chassis_v1. Figures in the item text cite the document they come from; where no document sets a figure the item says where the figure belongs — nothing here is invented.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'ppi_engine_v1';
+
+            INSERT OR IGNORE INTO checklist_items
+                (template_id, sequence_number, title, description, instruction_text,
+                 expected_pass, expected_fail, diagnosis_if_fail, required,
+                 tools_needed, estimated_minutes)
+            VALUES
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 1,
+             'Frame, straightness and crash evidence',
+             'The one component whose damage ends the deal rather than pricing it. Cited: the KTM 250/300 EXC owner''s manual directs "Check the frame for damage, cracks, and deformation" and adds the guideline "Repairs on the frame are not permitted" (PDF p. 94); the Honda CHF50 service manual lists a bent frame as a cause of steering pull and wheel wobble (PDF pp. 217, 318).',
+             'Walk the whole frame front to back: every weld seam (fresh or amateur welds, grind marks, repaint that does not match the factory finish), the steering-head area for hairline cracks, the peg and lever mounts for bent brackets, and the bar-ends, engine covers and exhaust for slide evidence. Sight down the steering head to the rear axle: the CHF50 service manual names a bent frame behind a machine that steers to one side or will not track straight (PDF p. 217). Ask for the service records, any crash story and the title status, and read the machine against them — new OEM plastics on a "never dropped" seller story is a question, not an answer. No document in the research library sets a frame-alignment measurement or a straightening tolerance, so none is invented here: a frame suspected of bending goes to the machine''s own service manual or a specialist jig, and the KTM manual''s position on repairs to its own frames is that they are not permitted — a damaged frame is a replaced frame (PDF p. 94).',
+             'Seams and paint consistent throughout, no welded repair outside factory joints, no bent mounts, history and title clean.',
+             'Cracks, non-factory welds, repainted sections hiding damage, bent peg or lever mounts, a crash story that does not match the machine.',
+             'A repaired frame is a salvage decision, not a price adjustment: the KTM owner''s manual''s rule for its own machines is that a damaged frame is changed, not repaired (PDF p. 94). Cosmetic scuffs price themselves; cracks at the steering head or the rear-arm pivot area end the inspection.',
+             1, '["flashlight","inspection mirror"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 2,
+             'Steering head bearings',
+             'Feel, not figures — the cited manuals give the procedure and the adjustment torques, not a play tolerance. Cited: the Yamaha Zuma 125 2009 service manual (PDF p. 93): "Grasp the bottom of the front fork legs and gently rock the front fork"; the KTM 250/300 EXC owner''s manual (PDF p. 76): "Play should not be detectable on the steering head bearing."',
+             'Raise the front wheel clear of the ground. Grasp the bottom of the fork legs and rock them to and fro in the direction of travel: the KTM manual''s standard is that play should not be detectable (PDF p. 76); the Zuma 125 service manual calls the same movement binding or looseness (PDF p. 93). Then turn the bars slowly lock to lock — they must move easily over the entire range with no detent position. A notch at the straight-ahead position is dented bearing races. The Zuma manual''s adjustment is made on the lower ring nut, 38 N·m initial tightening torque and 14 N·m final (PDF p. 94) — freshly adjusted but unchanged bearings only hide the notch until the grease settles.',
+             'No detectable play rocked; bars swing freely lock to lock, no notch at straight-ahead.',
+             'A knock when rocked; a notch or heavy spot through the range; bars that feel heavy or notch anywhere through the range.',
+             'Rocking play is loose adjustment or worn bearings; a notch at straight-ahead is brinelled races from an impact or years of load in one position — and the KTM manual warns that running with play damages the bearing seats in the frame as well (PDF p. 76). Adjustment is cheap; dented races mean a steering-stem strip, and seats damaged at the frame belong to the frame item''s walk-away.',
+             1, '[]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 3,
+             'Front fork — seals, stanchions and action',
+             'Cited: the Yamaha Zuma 125 2009 service manual''s front-fork check (PDF p. 95): inner tube "Damage/scratches → Replace", oil seal "Oil leakage → Replace", and "Push down hard on the handlebar several times and check if the front fork rebounds smoothly. Rough movement → Repair." Its chassis specifications (PDF p. 34) give that machine''s fork spring a 252.1 mm standard free length with a 247 mm limit, and the inner tube a 0.2 mm bending limit.',
+             'Hold the machine upright, pull the front brake, and push down hard on the bars several times: the fork must rebound smoothly — the Zuma 125 service manual''s check is exactly this, and rough movement is a repair (PDF p. 95). Then look at each leg: run a gloved finger or a thin plastic card over the chrome above the seal line for nicks and pitting, and inspect the seal lips and the back of the dust wipers for an oil ring — oil on the stanchion or a film on the slider is a seal already weeping, and the manual''s rule for a weeping oil seal is replace, and for a damaged or scratched inner tube, replace (PDF p. 95). A leg that has been weeping a while feels dry and sticky on the first compression. Sight along both legs from the side for a bend: a twisted or bent fork is crash evidence, and the frame item gets the story.',
+             'Smooth rebound, dry stanchions and wipers, no nicks in the travel zone, straight legs.',
+             'An oil ring or wet film on the stanchion, pitting or scratches where the seal runs, notched or uneven damping, a visible bend.',
+             'Weeping seals mean a seal and oil service at minimum; a nick in the chrome tears new seals, so a nicked stanchion prices a tube. For spring and straightness figures, the machine''s own manual owns the numbers: the Zuma 125''s fork spring measures 252.1 mm free against a 247 mm limit and its inner tube''s bending limit is 0.2 mm (PDF p. 34); the CHF50''s fork spring is 128.5 mm against a 125.9 mm service limit (PDF p. 12).',
+             1, '[]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 4,
+             'Swingarm, linkage and rear suspension',
+             'Cited: the KTM 250/300 EXC owner''s manual checks its "link fork" — the rear arm — "for damage, cracks, and deformation", with the guideline "Repairs on the link fork are not permitted" (PDF p. 94); the Honda CHF50 service manual names "worn or damaged engine mounting bushings" as a cause of steering pull and wheel wobble on its unit-mounted engine (PDF pp. 217, 318) and "oil leakage from damper unit" as a cause of soft suspension (PDF p. 241).',
+             'Grab the rear wheel firmly at the sides and push it left and right while watching and feeling the pivot: anything beyond tyre flex is play at the rear-arm bearings or the engine hanger — the CHF50 manual names those mounting bushings as a cause of wobble and pull (PDF p. 217). On a linkage machine, check every linkage bearing and heim joint for play and dryness; on a unit-construction scooter, feel at the engine mounts. Inspect the rear arm, the linkage and the shock absorbers for cracks, dents and an oil film at the damper shaft — the CHF50 manual lists oil leakage from the damper unit as a cause of soft suspension (PDF p. 241). No document in the research library sets a play tolerance for a swingarm or an engine hanger, so none is invented here: where a figure would decide a borderline case, the machine''s own service manual owns the figure — and any detectable knock at a pivot on a used machine is a service item now, not a negotiating point later.',
+             'No side-to-side movement beyond tyre flex at the pivot; linkage joints tight and lubricated; dry damper shafts; no cracks.',
+             'A clunk or visible movement at the pivot, dry or rusted linkage bearings, oil mist or weeping at a damper, cracks or dents.',
+             'Pivot or linkage play means the machine has been ridden loose: bearing replacement at the arm, or engine-mount bushings on a unit scooter. A weeping damper is a shock service or replacement. The KTM manual''s rule for its own rear arm is the frame''s rule — damaged means changed, not repaired (PDF p. 94).',
+             1, '[]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 5,
+             'Wheel bearings and rims',
+             'Cited: the Yamaha Zuma 125 2009 service manual''s maintenance table (PDF p. 55): wheels — check runout and for damage; wheel bearings — "Check bearings for smooth operation. Replace if necessary." The Honda CHF50 service manual gives axle runout a 0.20 mm service limit (PDF p. 218) and wheel rim runout 2.0 mm radial and 2.0 mm axial service limits (PDF pp. 12, 242), and names worn or damaged wheel bearings and a bent axle as causes of a front wheel that turns hard (PDF p. 314).',
+             'Raise each wheel in turn and spin it: it must turn freely and quietly — the CHF50 manual''s drag causes are brake dragging, worn or damaged wheel bearings, and a bent axle (PDF p. 314). Grasp the wheel at opposite sides and rock it hard: any movement you can feel is bearing play (a drum-brake machine drags lightly through its shoes — feel past it); the Zuma 125 manual''s table check is bearings for smooth operation, replace if necessary (PDF p. 55). Watch the rim at the valve while it spins for hop and wobble, and check the rim for dents, flat spots and cracked or missing spokes on a laced wheel. No document in the research library sets a wheel-bearing play figure, so none is invented here: the hand test is the standard — smooth and silent passes, any grinding, rumble or knock fails — and a borderline case belongs to the machine''s own manual, whose runout limits for its own parts are figures like the CHF50''s 0.20 mm axle and 2.0 mm rim limits (PDF pp. 12, 218, 242).',
+             'Wheels spin freely and quietly, no rock at the bearings, rims run true, spokes intact where fitted.',
+             'Grinding or rumbling while spinning, a knock when rocked, visible hop or wobble, a dented or flat-spotted rim, missing or loose spokes.',
+             'Bearing noise or play means bearings now, and how long it has been ridden that way measures what else has been skipped. A wheel that still will not run true after new bearings follows the CHF50 manual''s diagnosis path — axle runout against its 0.20 mm service limit, rim runout against its 2.0 mm limits (PDF pp. 218, 242) — and an impact hard enough to dent a rim belongs in the frame item''s crash story.',
+             1, '[]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 6,
+             'Brakes — pads or shoes, drums, discs and levers',
+             'Figures are the cited machine''s own. Cited: Honda CHF50 service manual — front and rear brake drum I.D. 95.0 mm standard, 95.5 mm service limit; lining thickness 3.5 mm standard, 1.0 mm service limit; lever free play 10-20 mm; "Always replace the brake shoes as a set" (PDF pp. 12, 241, 243). BMW F800R owner''s manual — brake pad wear limit, front and rear: "min 1.0 mm (Friction pad only, without backing plate. The wear indicators (grooves) must be clearly visible.)" (PDF pp. 94-95). KTM 250/300 EXC owner''s manual — brake disc wear limits, front 2.5 mm, rear 3.5 mm (PDF p. 164); hand brake lever free travel at least 3 mm (PDF p. 99).',
+             'Drum machines: pull the inspection covers where the machine has them and read the shoe linings, then measure what the covers will let you reach against the machine''s own manual — the CHF50''s drum measures 95.0 mm standard with a 95.5 mm service limit and its linings 3.5 mm against a 1.0 mm limit (PDF pp. 12, 243), and a drum at its limit cannot be machined back. Disc machines: read the friction material on both pads through the caliper — the F800R manual''s pad limit is a minimum 1.0 mm of friction pad only, without backing plate, and the wear grooves must still be clearly visible (PDF p. 94) — then measure the disc thickness against the machine''s own manual (the KTM''s discs wear to 2.5 mm front, 3.5 mm rear, PDF p. 164), sighting for scoring, a wear lip and blue heat spots. Pull each lever and press the pedal: free play should be small and definite (the CHF50''s levers specify 10-20 mm, PDF p. 12; the KTM''s hand lever at least 3 mm free travel, PDF p. 99) and the pressure point must be firm and hold under a hard steady pull. On hydraulic machines, read the fluid level and its colour: the KTM manual''s reading of a level below the marking is that the system is leaking or the linings are worn down, and old brake fluid reduces the braking effect (PDF p. 101).',
+             'Pads or shoes above their limits with indicators or grooves visible, discs and drums within thickness, firm holding pressure point, clean fluid at its level.',
+             'Pads at or past their grooves, a drum past its limit, scored or blued discs, a lever that pumps up or sinks, black fluid.',
+             'Worn pads are cheap; a disc or drum at its limit prices the friction surface and sometimes the caliper or the whole drum, and shoes always go as a set (CHF50 manual, PDF p. 243). A lever that needs pumping on a used machine means air, a leak or a failing master cylinder — the KTM manual''s leak-or-worn-linings reading of a falling fluid level (PDF p. 101). Grabbing, dragging or pulsing brakes tell of a bent disc or an out-of-round drum; take the machine''s own figures from its manual before pricing any of it.',
+             1, '["flashlight"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 7,
+             'Tires — tread, pressure, damage and age',
+             'Cited: Honda CHF50 service manual — minimum tire tread depth 0.8 mm service limit, cold pressures 125 kPa (18 psi) front, 200 kPa (28 psi) rear (PDF p. 12). Honda Metropolitan 2025 owner''s manual — the same pressures, front 18 psi (125 kPa), rear 29 psi (200 kPa) (PDF p. 121); tread wear indicators: "If they become visible, replace the tires immediately" (PDF p. 65); and the damage list — cuts, slits, cracks that expose fabric or cords, embedded objects, sidewall bumps and bulges (PDF p. 64). KTM 250/300 EXC owner''s manual — minimum tread depth at least 2 mm (PDF p. 115); tire age: the last four digits of the DOT number are week and year of manufacture, and "KTM recommends that the tires be changed after 5 years at the latest, regardless of the actual state of wear" (PDF p. 116).',
+             'Check the pressures cold against the machine''s own manual — the Metropolitan 2025 owner''s manual specifies 18 psi (125 kPa) front and 29 psi (200 kPa) rear (PDF p. 121), and the CHF50 service manual the same shape (PDF p. 12). Measure tread depth at the centre and both shoulders and find the wear indicators in the grooves: if they are visible the tire is finished — the Metropolitan manual''s word is replace immediately (PDF p. 65). Minimum tread depth is each manual''s own figure: the CHF50''s service limit is 0.8 mm, the KTM''s minimum is 2 mm (PDF pp. 12, 115). Inspect the whole carcass of both tires for the Metropolitan manual''s damage list — cuts, slits and cracks that expose fabric or cords, nails and other embedded objects, and any bump or bulge in the sidewall (PDF p. 64) — and for dry-checking in the grooves and sidewall. Read the date: the DOT moulding''s last four digits are week then year of manufacture (PDF p. 116), and the KTM manual draws the age line itself — changed after 5 years at the latest, regardless of wear. Run a finger round each bead and match the pair: different tread patterns front and rear is the KTM manual''s handling warning (PDF p. 39).',
+             'Tread above the machine''s minimum with indicators not visible, correct cold pressures, no cuts or bulges, date codes within 5 years, a matched pair.',
+             'Indicators showing, tread at the limit, exposed cords, a sidewall bump, date codes older than 5 years, mismatched patterns.',
+             'A sidewall bump is a carcass failure — replace before riding the machine home (the Metropolitan manual''s damage list, PDF p. 64). Tread older than the 5-year line is a negotiating point the KTM manual sets itself (PDF p. 116). Uneven wear — cupping, flat-centre, one-sided — points past the tire at the pressure history, the wheel item''s bearings or the frame item''s alignment story.',
+             1, '["tread depth gauge","tire pressure gauge"]', 10);
+        """,
         rollback_sql="""
             DELETE FROM checklist_items
              WHERE template_id = (SELECT id FROM workflow_templates
-                                   WHERE slug = 'ppi_engine_v1');
+                                   WHERE slug = 'ppi_chassis_v1');
 
-            DELETE FROM workflow_templates WHERE slug = 'ppi_engine_v1';
+            DELETE FROM workflow_templates WHERE slug = 'ppi_chassis_v1';
 
             UPDATE workflow_templates
-               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. Track N phase 259 expands with engine-specific content.',
+               SET description = 'Engine-side protocol for buying a used ICE motorcycle: compression, leak-down, oil, fuel, starter/charging health and the visual checks. Companion to generic_ppi_v1 (the quick check); the chassis protocol is Phase 260. Figures in the item text cite the document they come from; where no document sets a figure the item says where the figure belongs — nothing here is invented.',
                    updated_at = CURRENT_TIMESTAMP
-             WHERE slug = 'generic_ppi_v1';
+             WHERE slug = 'ppi_engine_v1';
         """,
     ),
 ]
