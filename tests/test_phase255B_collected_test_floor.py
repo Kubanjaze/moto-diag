@@ -107,11 +107,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: regression of record.
 #:
 #: 9321 (Phase 258 close-out, 2026-09-24) — +133 over the tree 353 closed
-#: with: `test_phase258_gate14.py` 125, and 8 that earlier phases added
-#: without raising the floor (254's F148 closeout-contract batch among
-#: them). Measured in the GLM builder clone before the regression of
-#: record, which is pending on Opus. Raised before that regression, per
-#: the rule above.
+#: with: `test_phase258_gate14.py` 125, and 8 in
+#: `test_roadmap_continuity.py` from roadmap_check R6 (c1b3ed7, a rule
+#: change between 353 and 258, not a phase), which did not raise the
+#: floor. (As first written this line credited the 8 to F148's batch,
+#: which 354's line above already counts; corrected by the Opus review.)
+#: Measured in the GLM builder clone before the regression of record,
+#: which ran on Opus outside the sandbox. Raised before that regression,
+#: per the rule above.
 #:
 COLLECTED_TEST_FLOOR = 9321
 
