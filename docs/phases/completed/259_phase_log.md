@@ -304,3 +304,14 @@ regression of record.
   are not records: `f6bf40b` failed 2 (fix #4) and `c5a1f4f` failed 2
   (fix #5). The live database's SHA-256 was the same before and after
   all three runs (`bab844bb…`), so no test touched it.
+- **Merged** as `6e7e841`.
+- **Deployed** at 00:48 on 2026-09-25, in this order: backup
+  (`motodiag_pre259_20260925_004849.db`), dry run on a copy, then live.
+  - Live went from schema 66 to 67. It has 3 templates and 16 items, and
+    the `known_issues` content hash is unchanged (`60fec9b4e4e1dfb1`).
+    The integrity check reads ok, and the state is identical to the dry
+    run.
+  - `motodiag workflow list/show` works against live.
+  - The new template's description still carries "the chassis protocol
+    is Phase 260", which the review missed. It is recorded under F158 and
+    not fixed here, as the operator instructed.

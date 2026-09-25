@@ -1576,3 +1576,17 @@ existing references are left for a repair phase.
   can land with the repair phase, or land now as a ratchet: the 25 known
   rows go in a frozen list that may only shrink, so new content is
   guarded from the start.
+
+**Re-measured after 259's deploy (2026-09-25, schema 67).** Still **34
+hits in 25 rendered rows**, but not the same ones:
+- **Gone:** `generic_ppi_v1`'s "Track N phase 259 expands", rewritten
+  under the operator's option 1.
+- **New:** "the chassis protocol is Phase 260", in 259's own new template
+  (`ppi_engine_v1`'s description, `workflow_templates` #3). The Opus
+  review missed it: option 1 was applied to the rewritten description,
+  and the same phrase in the new template's text was not checked until
+  `motodiag workflow show` printed it live.
+
+The seven new checklist items carry none. This is the case the proposed
+guard exists for: without the check, new content brings references in
+at the same rate old ones are cleaned out.
