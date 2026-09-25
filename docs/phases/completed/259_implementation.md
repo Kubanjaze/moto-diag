@@ -143,6 +143,26 @@ claims): the substrate has no CLI/API consumer (grep over `cli/`, `api/`
 templates, 9 items; migration 067 raises a fresh `db init` database to
 67 with `ppi_engine_v1` + 7 items.
 
+### Refute results (Opus session, 2026-09-24)
+
+Each cited page was opened with `pypdf` outside the sandbox.
+
+- **C1–C6: confirmed.** The figures and quotes stand on the cited PDF
+  pages.
+- **Identity.** The Metropolitan manual's cover reads "OWNER'S MANUAL
+  2025 METROPOLITAN / GIORNO". The CHF50 manual's cover is an image; 353
+  rendered it as "CHF50/P/S METROPOLITAN 2002–2006" (F152).
+- **C7: the conclusion is confirmed and the control is corrected.** With
+  the whitespace removed from each page's text:
+  - 0 of 260 files describe a cylinder leak-down test;
+  - the wider vocabulary matches only six battery "current leakage
+    test" pages;
+  - `compression` is found in 181 files, C1's page 11 among them.
+
+  The plain search behind the table's "178 … including C1's exact page"
+  cannot see page 11, where the text layer spaces the word out. So 178
+  is true of the plain search, and "including C1's exact page" is not.
+
 ## Verification Checklist
 
 - [x] Migration 067 applies on a copy of the snapshot (66 → 67) and on a
@@ -205,6 +225,15 @@ templates, 9 items; migration 067 raises a fresh `db init` database to
   `3528e90` in a worktree under the same invocation — environmental,
   not the branch's. The Opus regression of record runs outside the
   sandbox and is expected green; noted in the phase log and the handoff.
+- **The Opus review changed two things before the regression of
+  record.**
+  - Operator's option 1: 067's re-pointed `generic_ppi_v1` description
+    names no phases (`669a316`).
+  - Bug fix #3: the upgrade test read the live database. It now builds
+    its own 66 database (`7dab6d3`).
+
+  The refute confirmed C1–C6 and C7's conclusion. C7's stated control was
+  wrong; see "Refute results" under the claims table.
 
 ## Results
 

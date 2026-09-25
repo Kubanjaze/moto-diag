@@ -158,6 +158,33 @@ regression line.
 
 **Commit.** `f47cc81`
 
+### Bug fix #3 — 2026-09-24
+
+- **Issue:** outside the sandbox,
+  `test_upgrade_dry_run_on_a_copy_of_the_live_snapshot` failed in the
+  Opus review's worktree (`assert 0 == 66`). It copied
+  `data/motodiag.db`, which a fresh checkout does not have.
+- **Root cause:** the test read the live database's state, schema 66 and
+  1,060 rows. It passed in the sandbox clone only because that clone
+  held a snapshot. It would also have failed the first regression after
+  this phase's own deploy moved the live database to 67.
+- **Fix:** `test_upgrade_from_66_alters_only_the_approved_row` builds its
+  own 66 database by applying migrations up to 66, never 067. It then
+  asserts the change the operator approved:
+  - one template and seven items are added;
+  - exactly one existing row, `generic_ppi_v1`, is altered;
+  - that row's description names no phase.
+
+  A first rewrite built the baseline by rolling 067 back. It passed a
+  mutation that widened the UPDATE to every generic template, because
+  the rollback does not undo the extra row. The baseline built up from 66
+  catches it.
+- **Files:** `tests/test_phase259_ppi_engine.py`.
+- **Verified:** 23 passed. Mutations: phase numbers restored to the
+  text, red; UPDATE widened to `generic_%`, red. Both reverted.
+
+**Commit.** `7dab6d3`
+
 ### 2026-09-24 — Close-out
 
 v1.1, Deviations and Results in the implementation doc; both phase
@@ -190,3 +217,32 @@ regression of record.
   the rule.
 - Findings: none filed by this phase; F149, F153–F157 remain open from
   earlier phases.
+
+### 2026-09-24 22:21 — Opus session: review and refute
+
+- **Operator decision (option 1).** 067's re-pointed description names
+  no phases; it ends "For the full engine-side protocol see
+  ppi_engine_v1." (`669a316`). The operator approved the alteration of
+  that one live row.
+- **Refute of C1–C7.** These are the claims table in the implementation
+  doc. Each cited page was opened with `pypdf`.
+  - **C1–C6 are confirmed** at the cited PDF pages, with the figures and
+    quotes as written.
+  - **Identity.** The Metropolitan manual's cover text reads "OWNER'S
+    MANUAL 2025 METROPOLITAN / GIORNO". The CHF50 service manual's cover
+    has no text layer; 353 rendered it as "CHF50/P/S METROPOLITAN
+    2002–2006" (F152).
+  - **C7: the conclusion is confirmed and the control is corrected.** The
+    re-run removed the whitespace from each page's text, so letter-spaced
+    OCR cannot hide a hit:
+    - 260 files, 16 of them unparseable;
+    - 0 describe a cylinder leak-down test. The only matches for the
+      wider vocabulary are six battery "current leakage test" pages.
+
+    The claims table states the control wrongly. The plain `compression`
+    search finds 178 files and does **not** find C1's page, whose text
+    layer spaces the word out. The whitespace-proof control finds 181
+    files, C1's page among them. Item 5's "finds 178" stays as written,
+    because it is true of the plain search it describes.
+- **Operator census, F158.** Option 1 prompted it. It is filed on master
+  (`632497a`) and not fixed here.
