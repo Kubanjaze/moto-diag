@@ -168,6 +168,19 @@ and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 
 ## Change log
 
+### 2026-09-25 — the regression of record runs in parallel (Phase 355)
+
+Rule 3 gained a paragraph. The regression of record is
+`.claude/skills/closeout/regression.sh`, which runs
+`python -m pytest -n auto --dist load` and prints the line to record,
+with its command. `--serial` is the fallback. Never put `-n` in
+`addopts`. The reason is the gate tests that spawn pytest: each spawned
+run would start a worker pool inside a worker. Held by
+`tests/test_phase355_parallel_suite.py`, which went red on a planted
+`-n auto`. Proven in Phase 355: the parallel run's passed IDs equal the
+serial run's. Serial took 30:33 and parallel 13:28 on comparable
+conditions.
+
 ### 2026-09-25 — only the operator grants a rule-1 approval
 
 On 2026-09-25 the advisor session asked the operator to pre-approve

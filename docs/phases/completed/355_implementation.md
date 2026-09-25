@@ -1,6 +1,6 @@
 # Phase 355 — Parallel test suite (pytest-xdist)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-25 (v1.1: close-out, with Deviations and Results)
 
 **Branch:** `phase-355` (Opus session, the canonical checkout).
 
@@ -114,19 +114,85 @@ corpus loads); Low Power Mode and Spotlight settings; CI.
 
 ## Verification Checklist
 
-- [ ] Every file passes when run alone (the per-file sweep)
-- [ ] The parallel run has exact parity with serial: collected count,
-      passed set, 0 failed, 0 skipped (junit diff)
-- [ ] Two consecutive parallel runs, both at parity
-- [ ] A planted failing test is reported by the parallel run, then removed
-- [ ] SKILL.md step 1, `verify_phase.sh`, CLAUDE.md and the spawning tests
-      state or run the new command
-- [ ] The regression of record runs in parallel and records its command
-- [ ] Before-and-after wall times, measured under the same conditions
+- [x] Every file passes when run alone (the per-file sweep): 325 files,
+      9,386 + 2 = 9,388 tests, the 2 the known red before the spawn edits
+- [x] The parallel run has exact parity with serial: every serial pass
+      passes in parallel, and the only extra IDs are this phase's 13
+      (junit diff)
+- [x] Two consecutive parallel runs, both at parity: P1 and P2 identical;
+      the regression of record identical to P2
+- [x] A planted failing test is reported by the parallel run, then
+      removed (a small `-n auto` run, per the operator's trim)
+- [x] SKILL.md step 1, `verify_phase.sh`, CLAUDE.md and the spawning tests
+      state or run the new command, held by `test_phase355_parallel_suite.py`
+- [x] The regression of record runs in parallel and records its command
+- [x] Before-and-after wall times, measured under the same conditions:
+      back to back this morning; see Results for the afternoon spread
 
 ## Deviations from Plan
 
+- **Bug fix #1 was committed before v1.0.** Step 0's measurement found
+  it, and the fix is self-contained.
+- **The proof was trimmed by the operator.** The plan ran a full
+  parallel run with a planted failure and a second serial run. The
+  operator replaced both: a small `-n auto` run over the plant plus three
+  real files; parity diffed against this morning's serial junit; one
+  serial run of the changed files. Their wording is in the phase log.
+- **The small planted run found bug fix #2**, a race that three full
+  parallel runs had not shown. Bug fix #2 is code after P2, so the
+  regression of record is a third parallel run on the final tree, per
+  the operator's rule.
+- **The before-and-after time is not one number.** The serial "before" is
+  this morning's 30:33 by pytest's clock. The Mac slept 21 minutes of a
+  49:40 wall, and pytest's clock does not count sleep. The parallel
+  "after" ranged from 13:26 to 26:50 on one tree as the machine's state
+  changed. Both are reported, with the conditions.
+- **`regression.sh` is a new file** the plan did not name. It is the one
+  implementation of the canonical command, and it puts the command into
+  the line it prints. Without it, "the regression line records its
+  command" would depend on each session remembering to add it.
+- **A5 is unchanged.** Making the command part of A5 is a rule-1 stop
+  (an artefact's definition). The handoff proposes it.
+- **The serial file set is 12 files, not 8.** "The 8 files you fixed"
+  matched no file set exactly, so every file the phase changed ran.
+
 ## Results
+
+**Canonical command:** `.claude/skills/closeout/regression.sh`, which runs
+`python -m pytest -n auto --dist load` on a clean tree under `caffeinate`.
+Fallback: `regression.sh --serial` (`-p no:xdist`).
+
+**Regression of record: 9388 passed, 0 failed, 0 skipped at `003058c`**
+(13 min 28 s wall, `python -m pytest -n auto --dist load`, exit 0).
+
+| run | tree | wall | result |
+|---|---|---|---|
+| serial baseline, before xdist | `c6d3f3a` | **30:33** by pytest's clock (49:40 wall, 21 min asleep) | 9,375 / 0 / 0 |
+| 260's regression of record, serial | `b22b715` | 54:46 | 9,375 / 0 / 0 |
+| parallel, Step 0 (back to back with the serial run) | `c6d3f3a`, xdist installed | **13:26** | 9,375 / 0 / 0 |
+| P1 | `5c2c4b3` | 24:37 | 9,388 / 0 / 0 |
+| P2 | `5c2c4b3` | 26:50 | 9,388 / 0 / 0 |
+| regression of record | `003058c` | **13:28** | 9,388 / 0 / 0 |
+
+**Speed-up:** 30:33 → 13:26–13:28, **2.3×** in comparable conditions,
+and 2–4× against 260's 54:46. On the throttled afternoon machine (P1/P2)
+it fell to 1.1–1.2×. During P1 `kernel_task` held 63% CPU and each worker
+25–35%: the workers wait, they do not compute. Low Power Mode is on for
+AC power, and `corespotlightd`/`mediaanalysisd` hold CPU at idle. Those
+settings are the operator's; this phase changed neither.
+
+**Parity:** every serial pass passes in parallel, and the only extra IDs
+are this phase's 13 tests. P1, P2 and the regression of record have the
+same 9,388 passed IDs. A planted failure is reported by a 10-worker run.
+All 325 files pass alone.
+
+**Fixed:** bug fix #1: 8 tests in 146/143 read an uninitialised default
+DB (order dependence). Bug fix #2: the F124 and 256 controls planted
+files into the real `tests/` and `src/` (a race). No test was skipped or
+marked serial-only.
+
+Floor 9375 → 9388. 13 new tests. No `src/` change, no migration, nothing
+to deploy.
 
 ## Risks
 
