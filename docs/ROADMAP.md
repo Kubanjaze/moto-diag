@@ -492,7 +492,7 @@ Non-diagnostic workflows that shops perform: pre-purchase inspection, tire servi
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 259 | Pre-purchase inspection (PPI) — engine | ✅ | **CLOSED 2026-09-24.** The Phase 114 substrate gets its first content and its first front door: migration 067 seeds `ppi_engine_v1` — seven items over the row's six subjects, every figure cited to a held document (CHF50 SM pp. 11/13/79; Metropolitan 2025 OM pp. 17/62), electric excluded via `applicable_powertrains` — and `motodiag workflow list/show` (95 lines) makes the eight-phase-old tables user-reachable for the first time. The leak-down item ships with no figure: a whole-library census (260 PDFs; control "compression" = 178) found none. 23 tests, 3 known-bad controls, 2 bug fixes (F124's guard caught the head-literal pins inside the sandbox this time). Floor 9321 → 9344. **Regression pending — Opus to run it, refute, merge and deploy.** |
-| 260 | Pre-purchase inspection — chassis | 🔲 | Frame straightness, fork seals, steering head bearings, swingarm, wheel bearings, brake/tire condition, accident history |
+| 260 | Pre-purchase inspection — chassis | 🚧 | Frame straightness, fork seals, steering head bearings, swingarm, wheel bearings, brake/tire condition, accident history |
 | 261 | Tire service workflow | 🔲 | Wear patterns (cupping, squaring, feathering), DOT date decoding, age cracking, balance, TPMS |
 | 262 | Crash / insurance claim support | 🔲 | Photo documentation standards, damage estimation, frame-straightness measurement, salvage vs repair decision |
 | 263 | Track-day / race prep checklist | 🔲 | Safety wire, lockwire torque, brake bleed, coolant swap, tech inspection, number plate prep |
