@@ -215,6 +215,29 @@ regression line.
 
 **Commit.** `bd19fa5`
 
+### Bug fix #5 — 2026-09-25
+
+- **Issue:** the second regression of record, on `c5a1f4f`, failed 2 of
+  9,346:
+  - `test_phase244U_gate_blind_spot.py` pins `len(ORPHANS) == 96`, now
+    102;
+  - `test_phase244Y_delete_pass.py` pins `len(UNREACHABLE_MODULES) == 37`,
+    now 34.
+- **Root cause:** fix #4 changed both lists but updated only the pin it
+  had seen, in `test_phase209B`. The same counts are pinned in three
+  files, the duplication F124 retired for the schema head. Fix #4 did not
+  search for the other pins before the rerun.
+- **Fix:** both pins updated, each with a history note. Before this
+  change, grep found every pin of `ORPHANS`, `UNREACHABLE_MODULES` and
+  `MODULE_ISLANDS`: five pins in five files. The three `MODULE_ISLANDS`
+  pins do not move.
+- **Files:** `tests/test_phase244U_gate_blind_spot.py`,
+  `tests/test_phase244Y_delete_pass.py`.
+- **Verified:** every allowlist test, the 13 whole-tree tests, 259's tests
+  and the floor: 664 passed; 9,346 collected.
+
+**Commit.** `8264bfa`
+
 ### 2026-09-24 — Close-out
 
 v1.1, Deviations and Results in the implementation doc; both phase
