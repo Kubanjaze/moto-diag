@@ -151,7 +151,7 @@ class TestTheListsLetGo:
 
     def test_the_known_scale(self):
         assert len(MODULE_ISLANDS) == 14  # f9-noqa: ssot-pin fixture-data: 19 → 13 at Phase 244Y (six superseded modules deleted) → 14 (inventory/models surfaced as a third-order island once its last live import went; substrate). The new/stale tests in test_phase244W hold the tree to the list; this literal records the drop.
-        assert len(UNREACHABLE_MODULES) == 37  # f9-noqa: ssot-pin fixture-data: 38 → 37 at Phase 244Y (cli/registry deleted).
+        assert len(UNREACHABLE_MODULES) == 34  # f9-noqa: ssot-pin fixture-data: 38 → 37 at Phase 244Y (cli/registry deleted) → 34 at Phase 259 (motodiag.workflows wired: three modules).
 
 
 class TestTheGatesSayWhatChanged:

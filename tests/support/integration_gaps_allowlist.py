@@ -101,12 +101,6 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
         "(advanced/scheduler.py, shop bay tables)."),
     "motodiag.scheduling.appointment_repo": ("substrate", "Part of the Phase 118 scheduling substrate; see motodiag.scheduling."),
     "motodiag.scheduling.models": ("substrate", "Part of the Phase 118 scheduling substrate; see motodiag.scheduling."),
-
-    "motodiag.workflows": ("substrate",
-        "Phase 114 workflow-template substrate, awaiting Phase 316 "
-        "(Workflow recording, train-by-example)."),
-    "motodiag.workflows.models": ("substrate", "Part of the Phase 114 workflows substrate; see motodiag.workflows."),
-    "motodiag.workflows.template_repo": ("substrate", "Part of the Phase 114 workflows substrate; see motodiag.workflows."),
 }
 
 _TEST_RESET = "Resets module-level state between tests; production has no reason to call it."
@@ -467,6 +461,24 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Repository helper kept as library surface. Only shop/__init__.py "
         "names it; hidden until Phase 244X blanked parenthesised multi-line "
         "re-exports."),
+    # -- the Phase 114 workflows substrate's write side ----------------------
+    # Phase 259 wired the read side (`motodiag workflow list/show`), which
+    # took motodiag.workflows off UNREACHABLE_MODULES; templates are seeded
+    # by migrations (067). Authoring at run time awaits Phase 316.
+    "workflows/template_repo.py::create_template": ("substrate",
+        "Write side of the Phase 114 substrate; awaits Phase 316 (Workflow "
+        "recording, train-by-example). 259 wired only list/show."),
+    "workflows/template_repo.py::deactivate_template": ("substrate",
+        "Write side of the Phase 114 substrate; awaits Phase 316."),
+    "workflows/template_repo.py::add_checklist_item": ("substrate",
+        "Write side of the Phase 114 substrate; awaits Phase 316."),
+    "workflows/template_repo.py::update_checklist_item": ("substrate",
+        "Write side of the Phase 114 substrate; awaits Phase 316."),
+    "workflows/template_repo.py::delete_checklist_item": ("substrate",
+        "Write side of the Phase 114 substrate; awaits Phase 316."),
+    "workflows/template_repo.py::count_templates": ("substrate",
+        "Phase 114 substrate query with no caller yet; list/show (259) "
+        "does not count. Awaits Phase 316."),
 }
 
 # Dotted module name -> (classification, reason). Phase 244W.

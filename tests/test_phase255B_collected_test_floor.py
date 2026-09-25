@@ -116,7 +116,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: which ran on Opus outside the sandbox. Raised before that regression,
 #: per the rule above.
 #:
-COLLECTED_TEST_FLOOR = 9321
+#: 9344 (Phase 259 close-out, 2026-09-24) — +23 over the tree 258 raised
+#: the floor to: `test_phase259_ppi_engine.py` 23, nothing else moved.
+#: Measured the way this file itself measures (`python -m pytest
+#: --collect-only -q`, repo root): 9,344 = 9,321 + 23, clean collection.
+#: Raised before the regression of record, per the rule above.
+#:
+#: 9346 (Phase 259 bug fix #4, 2026-09-24) — +2. The integration-gap
+#: allowlist lost three motodiag.workflows module entries and gained six
+#: substrate orphans, and its per-entry tests moved with it: +6 - 3 - 1.
+#: Measured with the same command before the second regression of
+#: record, which ran on the Opus side.
+#:
+COLLECTED_TEST_FLOOR = 9346
 
 
 def _collected_count() -> int:

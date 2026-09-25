@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 66  # Phase 255C: the model junction carries the marque (migration 066)
+SCHEMA_VERSION = 67  # Phase 259: engine-side pre-purchase inspection template (migration 067)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """
