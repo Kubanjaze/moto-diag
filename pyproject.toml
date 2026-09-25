@@ -32,6 +32,8 @@ push = [
 dev = [
     "pytest>=8.0",
     "pytest-cov>=5.0",
+    # Phase 355: the regression of record runs in parallel (`-n auto`).
+    "pytest-xdist>=3.6",
     "ruff>=0.4",
     # Phase 191C: F9 mock-vs-runtime-drift pattern lint via
     # scripts/check_f9_patterns.py wired through .pre-commit-config.yaml.
