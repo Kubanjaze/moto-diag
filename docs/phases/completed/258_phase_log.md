@@ -179,6 +179,28 @@ pending below, and the handoff says so.
 
 **Commit.** `f08640a`
 
+### Bug fix #5 — 2026-09-24
+
+- **Issue:** the regression of record on `b10f6f9` failed at 0%. F124's
+  guard (`test_no_test_pins_the_head_with_a_literal`) named
+  `test_phase258_gate14.py:898`, which asserted `SCHEMA_VERSION == 66`.
+- **Root cause:** a head pin by a literal, the kind F124 retired in favour
+  of the one canonical pin (`test_phase240c_severity_ordering.py`) and
+  floor pins. The sandbox run checked the four whole-tree tests that
+  CLAUDE.md's rule 3 lists. F124's guard is a fifth that the list does not
+  name, so the first run to meet it was the full regression. Found by the
+  Opus session, outside the sandbox.
+- **Fix:** the assertion is a floor, `SCHEMA_VERSION >= 66`. The test is
+  renamed `test_the_schema_is_at_least_the_one_the_gate_ran_on`, and its
+  docstring says what it asserts and why. The gate still collects 125
+  tests, so the floor stays 9321.
+- **Files:** `tests/test_phase258_gate14.py`.
+- **Verified:** F124's guard, the floor test, the F9 lint and 244G: 48
+  passed. All 13 tests that scan the whole tree, run on the tree before the
+  fix: 1 failed (this one), 338 passed. This was the only whole-tree miss.
+
+**Commit.** `0533038`
+
 ### 2026-09-24 — Close-out
 
 v1.1, Deviations and Results in the implementation doc; both phase
