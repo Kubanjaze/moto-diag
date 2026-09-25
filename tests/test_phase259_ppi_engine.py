@@ -94,11 +94,15 @@ class TestMigration067:
         """F124's floor-pin pattern: never a literal equality to the head."""
         assert SCHEMA_VERSION >= 67
 
-    def test_migration_067_exists_and_is_the_head(self):
+    def test_migration_067_exists_and_is_at_least_the_head(self):
+        """F124: no equality against a literal equal to the head — head-ness
+        is the genuine pin's job (240c); this asserts only what is this
+        phase's: migration 067 exists, by name, and the head is at least
+        at it."""
         m = get_migration_by_version(67)
         assert m is not None
         assert m.name == "ppi_engine_workflow"
-        assert max(mig.version for mig in MIGRATIONS) == 67
+        assert SCHEMA_VERSION >= 67
 
     def test_fresh_init_seeds_the_template(self, db):
         t = get_template_by_slug("ppi_engine_v1", db)
@@ -147,7 +151,8 @@ class TestMigration067:
         schema at 66."""
         path = str(tmp_path / "rollback.db")
         init_db(path)
-        assert get_current_version(path) == 67
+        # F124: at-head is asserted against the constant, never a literal.
+        assert get_current_version(path) == SCHEMA_VERSION
         rollback_migration(get_migration_by_version(67), path)
         assert get_current_version(path) == 66
         assert get_template_by_slug("ppi_engine_v1", path) is None
