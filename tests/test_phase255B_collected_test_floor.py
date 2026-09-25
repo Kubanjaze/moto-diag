@@ -142,14 +142,19 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (the swingarm bushing pages; the swinging-arm clearance C16's kill
 #: put in the content). Measured with `--collect-only -q`: 9,375.
 #:
-COLLECTED_TEST_FLOOR = 9375
+#: 9388 (Phase 355, 2026-09-25) — +13: `test_phase355_parallel_suite.py`
+#: 13, nothing else moved. Measured the way this file measures (now with
+#: `-p no:xdist`, which leaves the count unchanged): 9,388. Raised before
+#: the regression of record.
+#:
+COLLECTED_TEST_FLOOR = 9388
 
 
 def _collected_count() -> int:
     """Ask pytest how many tests it can see. Collection only, never execution."""
     out = subprocess.run(
         [sys.executable, "-B", "-m", "pytest", "--collect-only", "-q",
-         "-p", "no:cacheprovider", str(ROOT / "tests")],
+         "-p", "no:cacheprovider", "-p", "no:xdist", str(ROOT / "tests")],
         cwd=str(ROOT), capture_output=True, text=True, timeout=600,
     )
     m = re.search(r"(\d+) tests? collected", out.stdout)

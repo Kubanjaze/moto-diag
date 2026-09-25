@@ -538,7 +538,7 @@ class TestRegression:
         """Subprocess re-run of Gate 6's hardware workflow."""
         test_file = Path(__file__).parent / "test_phase147_gate_6.py"
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(test_file), "-q"],
+            [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
             capture_output=True, text=True, timeout=120,
         )
         assert result.returncode == 0, (
@@ -551,7 +551,7 @@ class TestRegression:
         """Subprocess re-run of Gate 5's mechanic workflow."""
         test_file = Path(__file__).parent / "test_phase133_gate_5.py"
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", str(test_file), "-q"],
+            [sys.executable, "-m", "pytest", str(test_file), "-q", "-p", "no:xdist"],
             capture_output=True, text=True, timeout=60,
         )
         assert result.returncode == 0, (

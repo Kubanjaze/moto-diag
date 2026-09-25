@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 354 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 355 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -629,6 +629,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 352 | Gate 21 — Operational readiness | 🔲 | Telemetry → support → backup → multi-location → audit log → admin panel end-to-end |
 | 353 | Small-engine carb service (single/twin-barrel) | ✅ | **CLOSED 2026-09-24.** No carburetted scooter reached a carburettor row about its own carburettor; the corpus had ten unsourced big-bike rows (F151). Seven maker-document rows, one make each, reach their machines at tier 0: Honda CHF50 and Ruckus, Kymco, SYM, Piaggio, Vespa, Yamaha. "Keihin/Mikuni" holds for part of the class: the two-strokes carry Dell'Orto or Teikei, and Kymco, SYM and CHF50 manuals name no maker. Four refuters killed 32 of 178 claims. F151, F152 filed. Regression 9,188 passed, 0 failed, 0 skipped at `fb4a76d`. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
 | 354 | Scooter electrical (12V minimal) | ✅ | **CLOSED 2026-09-24.** Track M had no charging content: 251–254's files held 0 stator or rectifier rows, and every "regulator" meant the US regulator. Seven service-manual rows, one make each, reach their machines at tier 0: Honda PCX150 (2013–15) and CHF50, Kymco, SYM, Piaggio, Vespa, Yamaha YW125. Carb versus injection does not predict the design: the carburetted CHF50 is three-phase with an ECM regulator. Four refuters killed 30 of 170 claims. F149, F150 filed. Regression 9,089 passed, 0 failed, 0 skipped at `c79ddec`. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
+| 355 | Parallel test suite (pytest-xdist) | ✅ | **CLOSED 2026-09-25.** The regression of record runs in parallel: `.claude/skills/closeout/regression.sh`, `python -m pytest -n auto --dist load`; `--serial` is the fallback. Back to back, serial 30:33 against parallel 13:26 (2.3×); the throttled afternoon machine gave 24–27 min. Parity by junit diff: every serial pass passes in parallel, and two consecutive runs match exactly; a planted failure is reported; all 325 files pass alone. Two bug fixes: 8 hardware tests read an uninitialised default DB; the F124 and 256 controls planted files into the real tree. Floor 9375 → 9388; regression 9388/0/0 at `003058c`. |
 
 ---
 

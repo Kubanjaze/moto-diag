@@ -424,17 +424,20 @@ KNOWN_SELF_EXCLUDING = {
 }
 
 
-def _sql_offenders() -> list[str]:
+def _sql_offenders(src_root: Path = ROOT / "src" / "motodiag") -> list[str]:
     """Modules naming known_issues in SQL, read via AST.
 
     AST, not grep: Phase 256's Step 0 positive control showed a grep misses
     dynamic table names, split string literals and multi-line SQL. `ast`
     joins adjacent literals for free.
+
+    `src_root` is a parameter so the controls plant into a tmp dir (Phase
+    355 bug fix #2): a module planted in the real package is seen, or
+    vanishes mid-read, in every other test that walks `src/` in parallel.
     """
     import ast
     import re
 
-    src_root = ROOT / "src" / "motodiag"
     pat = re.compile(r"\b(FROM|JOIN|INTO|UPDATE)\s+known_issues\b", re.I)
     out = []
     for f in sorted(src_root.rglob("*.py")):
@@ -473,7 +476,7 @@ class TestNothingBypassesTheChokepoint:
         Plants a real module inside the package — the shape door 4 had for
         its whole existence — and asserts the scanner reports it.
         """
-        planted = ROOT / "src" / "motodiag" / "zz_planted_bypass.py"
+        planted = tmp_path / "zz_planted_bypass.py"
         planted.write_text(
             "def leak(conn, make):\n"
             "    return conn.execute(\n"
@@ -481,12 +484,10 @@ class TestNothingBypassesTheChokepoint:
             "    ).fetchall()\n",
             encoding="utf-8",
         )
-        try:
-            assert any(o.startswith("zz_planted_bypass.py") for o in _sql_offenders()), (
-                "the scanner did not see a planted raw query"
-            )
-        finally:
-            planted.unlink()
+        assert any(o.startswith("zz_planted_bypass.py")
+                   for o in _sql_offenders(tmp_path)), (
+            "the scanner did not see a planted raw query"
+        )
 
     def test_the_scanner_sees_the_shapes_a_grep_would_miss(self, tmp_path):
         """The three blind spots Step 0's grep had, each planted."""
@@ -499,12 +500,11 @@ class TestNothingBypassesTheChokepoint:
                          '        FROM\n      known_issues""")\n',
         }
         for name, body in shapes.items():
-            planted = ROOT / "src" / "motodiag" / f"zz_shape_{name}.py"
-            planted.write_text(body, encoding="utf-8")
-            try:
-                seen = any(o.startswith(f"zz_shape_{name}.py") for o in _sql_offenders())
-            finally:
-                planted.unlink()
+            shape_dir = tmp_path / name
+            shape_dir.mkdir()
+            (shape_dir / f"zz_shape_{name}.py").write_text(body, encoding="utf-8")
+            seen = any(o.startswith(f"zz_shape_{name}.py")
+                       for o in _sql_offenders(shape_dir))
             if name == "dynamic":
                 # An AST scan cannot see a table name that only exists at
                 # runtime. Recorded rather than papered over: the dynamic

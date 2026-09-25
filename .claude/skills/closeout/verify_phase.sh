@@ -70,8 +70,8 @@ print('schema', q('select max(version) from schema_version'), '| rows', q('selec
 
 echo "=== 9. backup ==="; ls -lh ~/backups/motodiag/
 
-echo "=== 10. targeted tests ==="
-PYTHONUTF8=1 "$PY" -m pytest -k "$PHASE" -q 2>&1 | tail -3
+echo "=== 10. targeted tests (parallel, as the regression runs since 355) ==="
+PYTHONUTF8=1 "$PY" -m pytest -n auto --dist load -k "$PHASE" -q 2>&1 | tail -3
 
 echo "=== 11. closeout contract (all seven artefacts) ==="
 "$PY" -B "$DIR/closeout_check.py" "$REPO" "$PHASE" && echo "  closeout complete"
@@ -86,3 +86,10 @@ fi
 
 echo "=== 13. findings resolve ==="
 "$PY" -B "$DIR/../finding/finding_check.py" "$REPO" && echo "  every cited F-number resolves"
+
+echo "=== 14. the regression line names its command ==="
+# Since 355 the line regression.sh prints ends with the command it ran:
+# `python -m pytest -n auto --dist load`, or `-p no:xdist` for the serial
+# fallback. A phase closed before 355 shows none.
+grep -n -i "regression of record" docs/phases/completed/${PHASE}_phase_log.md \
+  | grep "python -m pytest" || echo "  no regression line names its command"

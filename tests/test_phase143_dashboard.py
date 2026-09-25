@@ -106,7 +106,16 @@ def _patch_init_db(monkeypatch, tmp_path):
         return original_init_db(db_path)
 
     monkeypatch.setattr(hw_mod, "init_db", _patched)
+    # Phase 355 bug fix #1: `hardware scan` reads DTCs through
+    # get_connection() with no path, i.e. the process default DB, so the
+    # default must point here too or the test depends on an earlier one.
+    from motodiag.core.config import reset_settings
+
+    monkeypatch.setenv("MOTODIAG_DB_PATH", db_path)
+    reset_settings()
     yield db_path
+    monkeypatch.undo()
+    reset_settings()
 
 
 class _FakeReading:

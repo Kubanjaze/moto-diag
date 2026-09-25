@@ -569,7 +569,8 @@ class TestRegression:
     ])
     def test_earlier_gate_still_passes(self, gate_file):
         result = subprocess.run(
-            [sys.executable, "-m", "pytest", gate_file, "-q", "-p", "no:cacheprovider"],
+            [sys.executable, "-m", "pytest", gate_file, "-q", "-p", "no:cacheprovider",
+             "-p", "no:xdist"],
             cwd=REPO_ROOT, capture_output=True, text=True, timeout=900,
         )
         assert result.returncode == 0, f"{gate_file} regressed:\n{result.stdout[-2000:]}"

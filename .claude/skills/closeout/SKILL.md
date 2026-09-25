@@ -32,9 +32,18 @@ folder exists to stop shipping.
 
 ## The sequence
 
-1. **Regression, with hash and count.** Full suite. Record both numbers in
-   the phase log — A5 checks for them together, because a count without a
-   commit does not say *which tree* was green.
+1. **Regression, with hash and count.** Full suite, in parallel:
+   `.claude/skills/closeout/regression.sh` runs
+   `python -m pytest -n auto --dist load` on a clean tree and prints the
+   line to record. The line carries the counts, the hash, the wall time
+   and the command. Copy it into the phase log as printed. A5 checks for
+   the hash and the count together, because a count without a commit
+   does not say *which tree* was green.
+   **Fallback:** `regression.sh --serial` runs the same suite in one
+   process (`-p no:xdist`). Use it on a machine without pytest-xdist, or
+   to bisect a failure that appears only in parallel. Phase 355 proved
+   both give the same passed set. A test that fails only in parallel is a
+   bug to fix, not a reason to record the serial result instead.
 2. **Deviations.** Write what the phase did that the plan did not say. If
    nothing deviated, say that; an empty section is a claim, not an absence.
 3. **Bug-fix register.** One dated entry per fix: Issue / Root cause / Fix /
@@ -52,7 +61,7 @@ folder exists to stop shipping.
    print the before-state, dry-run on a copy first. `git merge` takes `-m`
    or `-F <file>`. `-F -` exits 129 ("could not read file '-'") and
    `master` does not move; that happened twice on 2026-09-24.
-9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all thirteen checks.
+9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all fourteen checks.
 
 ## When a step may be skipped
 
@@ -69,6 +78,7 @@ check.
 | `closeout_check.py` | the seven assertions; the single implementation |
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
+| `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
 | `roadmap_check.py` | the ROADMAP ledger holds: R1–R6 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff); run with every suite and on every push |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check on every push, close-out on a push to `master` |

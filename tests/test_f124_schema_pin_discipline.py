@@ -75,10 +75,15 @@ def _is_version_expr(node: ast.AST) -> bool:
     return False
 
 
-def _head_equality_pins() -> list[str]:
-    """Every `<version> == <literal>` where the literal is the current head."""
+def _head_equality_pins(directory: pathlib.Path = TESTS) -> list[str]:
+    """Every `<version> == <literal>` where the literal is the current head.
+
+    `directory` is a parameter so the controls plant into a tmp dir (Phase
+    355 bug fix #2): a probe planted in the real tests/ vanished mid-read
+    in a parallel worker's scan (FileNotFoundError).
+    """
     found = []
-    for path in sorted(TESTS.glob("test_*.py")):
+    for path in sorted(directory.glob("test_*.py")):
         if path.name == SELF:
             continue
         try:
@@ -203,7 +208,7 @@ class TestOnlyOneGenuinePin:
             "    assert {v} == get_current_version(db_path)\n",
         ),
     ])
-    def test_the_guard_detects_a_planted_head_pin(self, label, body):
+    def test_the_guard_detects_a_planted_head_pin(self, label, body, tmp_path):
         """Break-it/see-it-fail, inline, once per spelling.
 
         Both forms existed in this repo and both had to be deleted:
@@ -214,17 +219,14 @@ class TestOnlyOneGenuinePin:
         The reversed form is included because nothing stops someone
         writing the literal on the left.
         """
-        planted = TESTS / f"test_zz_f124_planted_probe_{label.replace('-', '_')}.py"
+        planted = tmp_path / f"test_zz_f124_planted_probe_{label.replace('-', '_')}.py"
         planted.write_text(body.format(v=SCHEMA_VERSION), encoding="utf-8")
-        try:
-            assert f"{planted.name}:5" in _head_equality_pins(), (
-                f"the scanner did not see a planted head pin spelled as a "
-                f"{label} — it is not measuring that spelling"
-            )
-        finally:
-            planted.unlink()
+        assert f"{planted.name}:5" in _head_equality_pins(tmp_path), (
+            f"the scanner did not see a planted head pin spelled as a "
+            f"{label} — it is not measuring that spelling"
+        )
 
-    def test_the_guard_ignores_a_floor_and_a_lower_literal(self):
+    def test_the_guard_ignores_a_floor_and_a_lower_literal(self, tmp_path):
         """The other half: it must not fire on what stays legal.
 
         A `>=` floor at the head (six phases use one) and an equality
@@ -236,15 +238,12 @@ class TestOnlyOneGenuinePin:
             "intermediate": "    assert get_current_version(db_path) == 38\n",
         }
         for label, line in probes.items():
-            planted = TESTS / f"test_zz_f124_legal_probe_{label}.py"
+            planted = tmp_path / f"test_zz_f124_legal_probe_{label}.py"
             planted.write_text(
                 "from motodiag.core.database import SCHEMA_VERSION\n"
                 "from motodiag.core.migrations import get_current_version\n\n\n"
                 "def test_probe(db_path):\n" + line,
                 encoding="utf-8",
             )
-            try:
-                hits = [h for h in _head_equality_pins() if h.startswith(planted.name)]
-                assert hits == [], f"the guard fired on a legal {label} pin: {hits}"
-            finally:
-                planted.unlink()
+            hits = [h for h in _head_equality_pins(tmp_path) if h.startswith(planted.name)]
+            assert hits == [], f"the guard fired on a legal {label} pin: {hits}"
