@@ -289,6 +289,8 @@ class TestContentPins:
         item = _items(db)[4]
         for needle in (
             "0.20 mm", "2.0 mm", "PDF p. 55", "PDF p. 218", "PDF p. 314",
+            # Refute: "turns hard" is p. 217; p. 314 is "spin freely".
+            "turns hard (PDF p. 217)",
         ):
             assert needle in (item["description"] or ""), (
                 f"wheels item's description lost '{needle}'"
@@ -305,6 +307,9 @@ class TestContentPins:
         for needle in (
             "95.0 mm", "95.5 mm", "3.5 mm", "1.0 mm", "10-20 mm",
             "2.5 mm", "PDF p. 164", "PDF p. 99",
+            # Refute: the title page says "Rider's Manual", and the
+            # 2.5/3.5 mm disc limits are the standard models' only.
+            "F800R rider's manual", "for the standard models",
         ):
             assert needle in (item["description"] or ""), (
                 f"brakes item's description lost '{needle}'"
@@ -333,6 +338,11 @@ class TestContentPins:
             assert needle in (item["instruction_text"] or ""), (
                 f"tires item's instruction lost '{needle}'"
             )
+
+    def test_swingarm_item_cites_both_bushing_pages(self, db):
+        """Refute: p. 217 carries the pull, p. 318 the wobble."""
+        item = _items(db)[3]
+        assert "pull and of wobble (PDF pp. 217, 318)" in item["instruction_text"]
 
     def test_no_figure_items_carry_no_figure(self, db):
         """C15/C16: no document in the library sets a frame-alignment
