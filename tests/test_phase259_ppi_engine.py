@@ -27,7 +27,6 @@ is removed from `main.py`.
 import re
 import shutil
 import sqlite3
-from pathlib import Path
 
 import pytest
 from click.testing import CliRunner
@@ -36,6 +35,7 @@ from motodiag.cli.main import cli as main_cli
 from motodiag.core.database import SCHEMA_VERSION, init_db
 from motodiag.core.migrations import (
     MIGRATIONS,
+    apply_migration,
     apply_pending_migrations,
     get_current_version,
     get_migration_by_version,
@@ -48,8 +48,6 @@ from motodiag.workflows import (
     list_templates,
 )
 
-REPO_ROOT = Path(__file__).resolve().parents[1]
-SNAPSHOT = REPO_ROOT / "data" / "motodiag.db"
 
 ITEM_TITLES = [
     "Static visual inspection — engine cold, off",
@@ -163,22 +161,46 @@ class TestMigration067:
         assert apply_pending_migrations(path) == [67]
         assert get_template_by_slug("ppi_engine_v1", path) is not None
 
-    def test_upgrade_dry_run_on_a_copy_of_the_live_snapshot(self, tmp_path):
-        """The live step, as a dry run (S0-5): 66 -> 67 on a copy."""
-        path = str(tmp_path / "snapshot_copy.db")
-        src = sqlite3.connect(str(SNAPSHOT))
-        dst = sqlite3.connect(path)
-        src.backup(dst)
-        dst.close()
-        src.close()
+    def test_upgrade_from_66_alters_only_the_approved_row(self, tmp_path):
+        """66 -> 67 on a database built here, not the live one. As first
+        written this copied data/motodiag.db and asserted it stood at 66
+        with 1,060 rows: it failed wherever that file is absent, and would
+        have failed the first regression after this phase's own deploy
+        moved the live database to 67. The live dry run is a deploy step,
+        recorded in the phase log. What the test keeps is the claim the
+        operator approved: the migration alters exactly one existing row,
+        generic_ppi_v1's description, without naming a phase, and adds
+        one template and seven items.
+
+        The 66 baseline is built by applying migrations up to 66, never
+        067. A baseline made by rolling 067 back inherits whatever the
+        rollback does not undo: with the UPDATE widened to every generic
+        template, that version of this test still passed."""
+        path = str(tmp_path / "at_66.db")
+        init_db(path, apply_migrations=False)
+        for m in sorted(MIGRATIONS, key=lambda m: m.version):
+            if get_current_version(path) < m.version <= 66:
+                apply_migration(m, path)
         assert get_current_version(path) == 66
-        assert get_template_by_slug("ppi_engine_v1", path) is None
+
+        def rows():
+            conn = sqlite3.connect(path)
+            templates = {r[0]: r[1:] for r in conn.execute(
+                "SELECT slug, name, description, category FROM workflow_templates")}
+            items = conn.execute(
+                "SELECT id, template_id, sequence_number, title, instruction_text "
+                "FROM checklist_items ORDER BY id").fetchall()
+            conn.close()
+            return templates, items
+
+        templates_66, items_66 = rows()
         assert apply_pending_migrations(path) == [67]
-        assert len(_items(path)) == 7
-        # No existing content row was touched by the migration.
-        conn = sqlite3.connect(path)
-        assert conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0] == 1060
-        conn.close()
+        templates_67, items_67 = rows()
+        assert set(templates_67) - set(templates_66) == {"ppi_engine_v1"}
+        assert {s for s in templates_66 if templates_66[s] != templates_67[s]} == {"generic_ppi_v1"}
+        assert not re.search(r"\bPhase \d+", templates_67["generic_ppi_v1"][1])
+        assert items_67[:len(items_66)] == items_66
+        assert len(items_67) - len(items_66) == 7
 
 
 # --- Content pins (the figure discipline) ---
