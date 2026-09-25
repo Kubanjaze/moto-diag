@@ -45,7 +45,7 @@ from motodiag.core.migrations import (
     apply_pending_migrations,
     get_current_version,
     get_migration_by_version,
-    rollback_migration,
+    rollback_to_version,
 )
 from motodiag.workflows import (
     get_checklist_items,
@@ -189,14 +189,17 @@ class TestMigration068:
         init_db(path)
         # F124: at-head is asserted against the constant, never a literal.
         assert get_current_version(path) == SCHEMA_VERSION
-        rollback_migration(get_migration_by_version(68), path)
+        # A rollback peels every successor (bug fix #2): rolling back 68
+        # alone stops leaving the schema at 67 the day 69 exists.
+        rollback_to_version(67, path)
         assert get_current_version(path) == 67
         assert get_template_by_slug("ppi_chassis_v1", path) is None
         engine = get_template_by_slug("ppi_engine_v1", path)
         assert engine is not None
         assert "the chassis protocol is Phase 260" in engine["description"]
         # And forward again: the migration is re-appliable after rollback.
-        assert apply_pending_migrations(path) == [68]
+        assert apply_pending_migrations(path)[0] == 68
+        assert get_current_version(path) == SCHEMA_VERSION
         assert get_template_by_slug("ppi_chassis_v1", path) is not None
         assert len(_items(path)) == 7
 
@@ -225,7 +228,10 @@ class TestMigration068:
             return templates, items
 
         templates_67, items_67 = rows()
-        assert apply_pending_migrations(path) == [68]
+        # 068 alone, so a successor's rows are never measured as 068's
+        # (bug fix #2).
+        apply_migration(get_migration_by_version(68), path)
+        assert get_current_version(path) == 68
         templates_68, items_68 = rows()
         assert set(templates_68) - set(templates_67) == {"ppi_chassis_v1"}
         assert {
