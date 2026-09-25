@@ -4982,10 +4982,11 @@ MIGRATIONS: list[Migration] = [
             "cites the document it comes from (KTM 250/300 EXC TPI "
             "owner's manual; Yamaha Zuma 125 2009 service manual; Honda "
             "CHF50 service manual; Honda Metropolitan 2025 owner's "
-            "manual; BMW F800R rider's manual, with PDF pages); where no "
-            "document sets a figure — frame alignment, swingarm play, "
-            "wheel-bearing play, per three whitespace-proof library "
-            "censuses with positive controls — the item says where the "
+            "manual; BMW F800R rider's manual; Vespa GTS Super 300 ie "
+            "(2008) service station manual, with PDF pages); where no "
+            "document sets a figure — frame alignment, wheel-bearing "
+            "play, per whitespace-proof library censuses with positive "
+            "controls — the item says where the "
             "figure belongs and invents nothing. Also re-points "
             "ppi_engine_v1's description at the new template by name, "
             "removing the 'the chassis protocol is Phase 260' build "
@@ -5044,8 +5045,8 @@ MIGRATIONS: list[Migration] = [
 
             ((SELECT id FROM workflow_templates WHERE slug='ppi_chassis_v1'), 4,
              'Swingarm, linkage and rear suspension',
-             'Cited: the KTM 250/300 EXC owner''s manual checks its "link fork" — the rear arm — "for damage, cracks, and deformation", with the guideline "Repairs on the link fork are not permitted" (PDF p. 94); the Honda CHF50 service manual names "worn or damaged engine mounting bushings" as a cause of steering pull and wheel wobble on its unit-mounted engine (PDF pp. 217, 318) and "oil leakage from damper unit" as a cause of soft suspension (PDF p. 241).',
-             'Grab the rear wheel firmly at the sides and push it left and right while watching and feeling the pivot: anything beyond tyre flex is play at the rear-arm bearings or the engine hanger — the CHF50 manual names those mounting bushings as a cause of pull and of wobble (PDF pp. 217, 318). On a linkage machine, check every linkage bearing and heim joint for play and dryness; on a unit-construction scooter, feel at the engine mounts. Inspect the rear arm, the linkage and the shock absorbers for cracks, dents and an oil film at the damper shaft — the CHF50 manual lists oil leakage from the damper unit as a cause of soft suspension (PDF p. 241). No document in the research library sets a play tolerance for a swingarm or an engine hanger, so none is invented here: where a figure would decide a borderline case, the machine''s own service manual owns the figure — and any detectable knock at a pivot on a used machine is a service item now, not a negotiating point later.',
+             'Cited: the KTM 250/300 EXC owner''s manual checks its "link fork" — the rear arm — "for damage, cracks, and deformation", with the guideline "Repairs on the link fork are not permitted" (PDF p. 94); the Honda CHF50 service manual names "worn or damaged engine mounting bushings" as a cause of steering pull and wheel wobble on its unit-mounted engine (PDF pp. 217, 318) and "oil leakage from damper unit" as a cause of soft suspension (PDF p. 241); the Vespa GTS Super 300 ie (2008) service station manual sets the axial clearance between its two swinging arms, and of the frame-side arm, at 0.40–0.60 mm standard with a 1.5 mm allowable limit after use, measured with a feeler gauge (PDF p. 227).',
+             'Grab the rear wheel firmly at the sides and push it left and right while watching and feeling the pivot: anything beyond tyre flex is play at the rear-arm bearings or the engine hanger — the CHF50 manual names those mounting bushings as a cause of pull and of wobble (PDF pp. 217, 318). On a linkage machine, check every linkage bearing and heim joint for play and dryness; on a unit-construction scooter, feel at the engine mounts. Inspect the rear arm, the linkage and the shock absorbers for cracks, dents and an oil film at the damper shaft — the CHF50 manual lists oil leakage from the damper unit as a cause of soft suspension (PDF p. 241). A play figure is a workshop measurement on the removed arm, not a roadside check, and it is the machine''s own: the Vespa GTS Super 300 ie (2008) service station manual takes the swinging arm off and sets the axial clearance between its two arms at 0.40–0.60 mm standard, 1.5 mm allowable limit after use, by feeler gauge (PDF pp. 226–227). Where a figure would decide a borderline case, the machine''s own service manual owns it — and any detectable knock at a pivot on a used machine is a service item now, not a negotiating point later.',
              'No side-to-side movement beyond tyre flex at the pivot; linkage joints tight and lubricated; dry damper shafts; no cracks.',
              'A clunk or visible movement at the pivot, dry or rusted linkage bearings, oil mist or weeping at a damper, cracks or dents.',
              'Pivot or linkage play means the machine has been ridden loose: bearing replacement at the arm, or engine-mount bushings on a unit scooter. A weeping damper is a shock service or replacement. The KTM manual''s rule for its own rear arm is the frame''s rule — damaged means changed, not repaired (PDF p. 94).',

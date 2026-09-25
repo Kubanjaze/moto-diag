@@ -18,10 +18,13 @@ What these tests pin:
 - the powertrain applicability is ALL THREE powertrains — chassis
   subjects are powertrain-agnostic, unlike 259's ICE-only engine protocol;
 - every figure in the content cites the document it came from, per field;
-- the frame and swingarm items carry NO measurement figure — S0-3's
-  censuses found no document that sets one (frame alignment, swingarm
-  play, wheel-bearing play), and an invented threshold is what F149
-  documented for corpus rows;
+- the frame item carries NO measurement figure — S0-3's censuses found
+  no document that sets a frame-alignment figure, and an invented
+  threshold is what F149 documented for corpus rows. The swingarm item
+  was a second no-figure item until the refute pass killed its negative
+  (C16): Piaggio's manuals say "swinging arm", which the census
+  vocabulary missed, and set a clearance — it now cites that figure as
+  the Vespa GTS Super 300's own;
 - no text this phase touches carries a build reference (F158), and the
   regex is exercised against a planted "Phase 999" so it cannot be S4.
 
@@ -64,11 +67,11 @@ ITEM_TITLES = [
     "Tires — tread, pressure, damage and age",
 ]
 
-# The no-figure items: nothing in the library sets a tolerance for these
-# two subjects (step 0's C15/C16), so the content must not carry one.
+# The no-figure item: nothing in the library sets a frame-alignment
+# tolerance (C15, kept by the refute pass), so the content must not carry
+# one. The swingarm item left this set when C16 was killed.
 NO_FIGURE_TITLES = {
     "Frame, straightness and crash evidence",
-    "Swingarm, linkage and rear suspension",
 }
 
 
@@ -344,11 +347,27 @@ class TestContentPins:
         item = _items(db)[3]
         assert "pull and of wobble (PDF pp. 217, 318)" in item["instruction_text"]
 
+    def test_swingarm_item_carries_the_cited_clearance(self, db):
+        """Refute C16, killed: the Vespa GTS Super 300 ie (2008) service
+        station manual sets the swinging-arm axial clearance (PDF p. 227),
+        so the item cites it as that machine's figure, per field, and the
+        false "no document ... sets a play tolerance" sentence is gone."""
+        item = _items(db)[3]
+        for field in ("description", "instruction_text"):
+            for needle in (
+                "Vespa GTS Super 300", "0.40–0.60 mm", "1.5 mm", "feeler gauge",
+            ):
+                assert needle in (item[field] or ""), (
+                    f"swingarm item's {field} lost '{needle}'"
+                )
+        assert "PDF p. 227" in item["description"]
+        assert "PDF pp. 226–227" in item["instruction_text"]
+        assert "research library sets a play tolerance" not in _whole_item(item)
+
     def test_no_figure_items_carry_no_figure(self, db):
-        """C15/C16: no document in the library sets a frame-alignment
-        figure or a swingarm/engine-hanger play tolerance, so neither item
-        carries a measurement figure. This is the assertion a planted
-        '0.5 mm' breaks (phase log)."""
+        """C15: no document in the library sets a frame-alignment figure,
+        so the frame item carries no measurement figure. This is the
+        assertion a planted '0.5 mm' breaks (phase log)."""
         for item in _items(db):
             if item["title"] in NO_FIGURE_TITLES:
                 whole = _whole_item(item)
