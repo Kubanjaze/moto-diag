@@ -890,9 +890,14 @@ class TestRegression:
         )
         assert result.returncode == 0, f"Gate 13 regressed:\n{result.stdout[-2000:]}"
 
-    def test_schema_version_is_pinned(self):
-        """No migration in this phase — zero production code. The pin holds
-        the door: a gate that accidentally shipped a migration would fail
-        here first."""
+    def test_the_schema_is_at_least_the_one_the_gate_ran_on(self):
+        """A floor, not a head pin (F124). As first written this asserted
+        `SCHEMA_VERSION == 66`, and F124's guard failed the regression of
+        record: a literal equal to the head must be edited by every later
+        migration and catches nothing the canonical pin in
+        test_phase240c_severity_ordering.py does not. That this phase
+        shipped no migration is shown by its diff (no src/ change), not by
+        a test. This asserts only that the head never drops below the
+        schema Gate 14 ran against."""
         from motodiag.core.database import SCHEMA_VERSION
-        assert SCHEMA_VERSION == 66
+        assert SCHEMA_VERSION >= 66
