@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F157** (this file); the mobile
+At the time of writing the highest assigned is **F158** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1493,3 +1493,86 @@ vendors' coverage lists for at least the makes with documented diagnostic
 surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's honest-gap tests
 failing the day they land. Pinned by `tests/test_phase258_gate14.py`, the
 same shape as Gate 13's F99 for electric makes.
+
+### F158
+
+**Text the product shows users carries internal build references: 34 "Phase N" / "Track N" mentions in 25 rendered rows, 23 of them known issues**
+
+Measured on 2026-09-24 by the Opus session, on a copy of the live
+database (schema 66, 1,060 `known_issues` rows). The census read every
+text column of every table with the three patterns the operator gave:
+`\bPhase \d+`, `\bTrack [A-Z]\b` and `\bF\d{2,3}\b`. The positive control
+planted "Phase 999" in one `known_issues.description` on a second copy,
+and the census found it exactly once, in that row.
+
+| rendered column | pattern | hits | rows |
+|---|---|---|---|
+| `known_issues.description` and `.fix_procedure` | Phase N | 32 (23 + 9) | 23 |
+| `workflow_templates.description` | Track N | 2 | 2 |
+| **total** | | **34** | **25** |
+
+- **The rows.** `known_issues` 252, 266, 713, 714, 859, 885, 892, 893,
+  894, 898, 899, 901, 902, 903, 904, 905, 1284, 1288, 1332, 1475, 5339,
+  5340 and 5343; `workflow_templates` 1 (`generic_ppi_v1`) and 2
+  (`generic_winterization_v1`).
+- **The tokens.** Phase 238 ×6; 237 ×5; 225/225B ×4; 234 ×3; 233, 236
+  and 254 ×2; 212, 215, 231, 240, 247, 253, 31 and 33 ×1; Track N ×2.
+- **Examples:**
+  - "the reduced-magnet flywheel that Phase 237 names as the first
+    suspect" (#899);
+  - "Read blink code (see Phase 33 issue #1 for procedure)" (#266);
+  - "Track N phase 264 expands." (the winterization template).
+- **The F-number pattern finds no finding numbers in rendered text.** All
+  7 of its rendered hits are BMW model names: F650, F700, F750, F800,
+  F850 and F900.
+- **Outside the rendered columns:** `customer_notifications.body` (4) and
+  `shops.name` (1), both user data, and 24 BMW model names in the model
+  columns.
+
+**Where they come from:**
+- 13 seed files in `src/motodiag/knowledge/seed/knowledge/`, led by
+  `known_issues_european_parts.json` (9), `known_issues_european_intervals.json`
+  (7), `known_issues_ktm_adventure.json` (4) and
+  `known_issues_scooter_electrical.json` (3);
+- the two templates' seed in `migrations.py`, the Phase 114 substrate.
+
+**The census's limits, stated so its count is not over-read:**
+- The patterns miss prose without a number. 9 `known_issues` rows say
+  "this phase".
+- Three data files the app may read without passing through the database
+  also carry the patterns: `advanced/data/parts.json` (10),
+  `hardware/compat_data/adapters.json` (3) and `compat_matrix.json` (1).
+  Whether those fields are rendered was not checked.
+
+**What it affects.** A rider or mechanic reading a description or a fix
+procedure, in the CLI, the API or the app, meets "corrected at Phase
+238" or "see Phase 33 issue #1". Those are references to this project's
+build history that they cannot follow. Two procedures (#252, #266) point
+at another entry by phase number instead of by name.
+
+**Not fixed in 259**, by the operator's decision on 2026-09-24. 259's own
+re-pointed description was written without phase numbers. The 34
+existing references are left for a repair phase.
+
+**Proposed guard test** (not written): `tests/test_rendered_text_has_no_build_references.py`.
+- **What it reads.** A freshly initialised and seeded database, so it
+  checks what ships rather than the live state. It reads every rendered
+  column:
+  - `known_issues`: title, description, symptoms, causes,
+    fix_procedure, parts_needed;
+  - `checklist_items`: all its text;
+  - `workflow_templates`: name and description;
+  - `dtc_codes`, `dtc_category_meta`, `symptoms`,
+    `technical_service_bulletins`, `parts` and `translations`;
+  - `permissions` and `roles` descriptions.
+
+  It also reads the seed and data JSON for the same fields.
+- **What fails it:** `\bPhase \d+` (any case), `\bTrack [A-Z]\b`, "this
+  phase", and `\bF\d{2,3}\b` except for an explicit allowlist of the six
+  BMW model names, each marked as a model.
+- **Controls.** A planted "Phase 999" in a scratch copy must be caught,
+  and a BMW F800 row must not be.
+- **When it lands.** It is red on landing, with 34 known offenders. It
+  can land with the repair phase, or land now as a ratchet: the 25 known
+  rows go in a frozen list that may only shrink, so new content is
+  guarded from the start.

@@ -226,3 +226,29 @@ regression of record.
 - Backup of the live database before any load (none is expected — this
   gate writes no content; confirm and record).
 - Refile or close findings as decided: F153–F157 are all open.
+
+### 2026-09-24 22:09 — Opus session: review, regression of record, merge
+
+The pending list above, done outside the sandbox:
+
+- **Review.** Two defects found, both fixed before the regression:
+  - the floor comment credited 8 tests to F148's batch, which 354's line
+    already counts (they are R6's; `b10f6f9`);
+  - bug fix #5, the literal schema pin (`0533038`).
+
+  All 13 tests that scan the whole tree were run: F124's guard was the
+  only one the sandbox run had skipped. The first regression, on
+  `b10f6f9`, was stopped at 0%, when F124's guard failed. It is not a
+  record.
+- **Regression of record: 9321 passed, 0 failed, 0 skipped** at `3528e90`
+  (58 min 45 s, the canonical venv, outside the sandbox).
+- **Refute.** There are no document claims to check. The three checks in
+  the list hold:
+  - the pins pass on the canonical seed;
+  - GLM's mutation run went red 11/11;
+  - the S0 measurements reproduce, because the gate's own fixtures seed
+    afresh.
+- **Deploy: none.** The phase changed nothing under `src/`: no migration
+  and no content. The live database was not touched (schema 66, 1,060
+  rows), so no backup was taken.
+- **Findings.** F153–F157 stay open.
