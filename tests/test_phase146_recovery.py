@@ -87,7 +87,17 @@ def _patch_init_db(monkeypatch, tmp_path):
         )
 
     monkeypatch.setattr(hw_mod, "init_db", _patched)
+    # Phase 355 bug fix #1: `hardware diagnose` step 5 reads DTCs through
+    # get_connection() with no path, i.e. the process default DB. Patching
+    # init_db alone left that pointing at whatever an earlier test had
+    # initialised, so these tests failed when run first in a process.
+    from motodiag.core.config import reset_settings
+
+    monkeypatch.setenv("MOTODIAG_DB_PATH", db_path)
+    reset_settings()
     yield db_path
+    monkeypatch.undo()
+    reset_settings()
 
 
 @pytest.fixture(autouse=True)
