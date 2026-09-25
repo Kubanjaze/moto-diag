@@ -1,6 +1,6 @@
 # Phase 260 — Pre-purchase inspection — chassis
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-25
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-25
 
 **Branch:** `phase-260` (GLM builder session in the sandbox clone; finish
 line "ready to merge" — the regression of record, the refute pass, the
@@ -163,6 +163,7 @@ the page and checks the claim against it.
 | C15 | **Negative:** no document in the library sets a frame-alignment or straightening figure. Vocabulary `frame` within 30 chars of alignment/tolerance/limit/straighten/gauge (and the reverse), whitespace-proof, scope every `*.pdf` under `~/research/motodiag` minus the venvs (260 files; 16 yield no text — F127's debris and the image-only documents); 13 hits in 7 files, all installation prose or parts-diagram labels, zero figures. Control: `frame` alone finds 1,279 pages in 162 files including C1's page; the figure-regex catches real limit tables where they exist (SYM 7429958 p. 61). `census_negatives.py` in the session tmp | whole library | — |
 | C16 | **Negative:** no document in the library sets a swingarm or engine-hanger play tolerance. Vocabulary `swing[- ]?arm`/`engine hanger`/`pivot` within 40 chars of limit/tolerance/play: 6 hits in 3 files, all BMW top-case lid prose ("pivot lever at top limit position"), zero figures. Control: the subject vocabulary finds 448 pages in 78 files | whole library | — |
 | C17 | **Negative:** no document in the library sets a wheel-bearing play figure. Vocabulary `wheel bearing` within 40 chars of limit/tolerance/clearance/play, and `bearing…clearance/play…digit`: 29 hits in 16 files, all checklist lines ("check the wheel bearing for play"); the only play figures the search found anywhere are a *crankshaft* bearing's (`pdf/kymco_people_s250_sm.pdf` p. 140, axial 0.20 / radial 0.05 mm) — proof the regex catches figures, none for a wheel. Control: `wheel bearing` finds 340 pages in 95 files | whole library | — |
+| C18 | KTM owner's manual: "Different tire tread patterns on the front and rear wheel impair the handling characteristic. Different tire tread patterns can make the vehicle significantly more difficult to control. — Make sure that only tires with a similar tire tread pattern are fitted to the front and rear wheel." | `acquired/KTM/22_3214421_en_OM.pdf` | 39 (printed 37) |
 
 Measurements of this repo the refute pass reproduces (not document
 claims): the snapshot stands at schema 67 with 1,060 `known_issues`, 3
@@ -174,39 +175,112 @@ through the real registered group.
 
 ## Verification Checklist
 
-- [ ] Migration 068 applies on a fresh `db init` database;
+- [x] Migration 068 applies on a fresh `db init` database;
       `SCHEMA_VERSION >= 68`
-- [ ] 068's rollback peels it: no `ppi_chassis_v1`, items gone via
+- [x] 068's rollback peels it: no `ppi_chassis_v1`, items gone via
       cascade, `ppi_engine_v1`'s description restored verbatim; the
       schema back at 67
-- [ ] The upgrade-from-67 test builds its own 67 baseline (never
+- [x] The upgrade-from-67 test builds its own 67 baseline (never
       touching `data/motodiag.db`) and asserts exactly one existing row
       is altered, naming no phase
-- [ ] Template: category `ppi`, powertrains exactly
+- [x] Template: category `ppi`, powertrains exactly
       `["ice","electric","hybrid"]`, active, tier `individual`; offered
       under `list_templates(powertrain="electric")` — the deliberate
       difference from 259's engine protocol
-- [ ] Seven items, `sequence_number` 1–7 contiguous, every item has
+- [x] Seven items, `sequence_number` 1–7 contiguous, every item has
       instruction / expected pass / expected fail, all required
-- [ ] Figures pinned per field: C3/C4 in the steering item, C5/C6 in the
+- [x] Figures pinned per field: C3/C4 in the steering item, C5/C6 in the
       fork item, C7/C8 in the wheels item, C9/C10/C11 in the brakes item,
-      C12/C13/C14 in the tires item — each needle demanded in each field
-      that states it (259's bug fix #1 lesson)
-- [ ] The frame and swingarm items carry no measurement figure (regex for
+      C12/C13/C14/C18 in the tires item — each needle demanded in each
+      field that states it (259's bug fix #1 lesson)
+- [x] The frame and swingarm items carry no measurement figure (regex for
       mm/%/N·m numbers must miss) and name where the figure belongs
-- [ ] F158 pin: the new template's description, its items, and the
+- [x] F158 pin: the new template's description, its items, and the
       re-pointed `ppi_engine_v1` description contain no `Phase N`,
-      `Track X`, finding number or "this phase"
-- [ ] `motodiag workflow list` shows all four templates;
+      `Track X`, finding number or "this phase"; the pattern is seen to
+      catch a planted "Phase 999"
+- [x] `motodiag workflow list` shows all four templates;
       `workflow show ppi_chassis_v1` prints all seven item titles and
       the description with its citations
-- [ ] Known-bad controls planted, seen red, reverted (phase log)
-- [ ] The whole-tree checks and the FULL suite green (the one expected
-      red file: `tests/test_phase209_packaging.py`, environmental —
-      instruction 5)
-- [ ] The dry run on a copy of the snapshot recorded in the phase log
+- [x] Known-bad controls planted, seen red, reverted (four; phase log)
+- [x] The whole-tree gates pass (521 across 191C/244G/244U/244V/244T/
+      244J/244Y/256/209B/114/F124/240c/191D/roadmap continuity) and
+      `finding_check` exit 0 in both variants; the FULL suite green
+      except the expected environmental file (the phase log's line)
+- [x] The dry run on a copy of the snapshot recorded in the phase log
       (one template + seven items + one description UPDATE; the
       `known_issues` content hash unchanged)
+
+## Deviations from Plan
+
+- **The regression of record, the refute pass, the merge, the deploy and
+  the live load did not run** — the operator's standing arrangement for
+  this Subconscious session: everything to "ready to merge" commits on
+  `phase-260` in this clone; the rest is the Opus session's and is
+  pending in the phase log. `closeout_check` A5 is red by design until
+  the regression line lands.
+- **The claims table grew one row between v1.0 and the build**: the
+  tires item cites the KTM manual's mismatched-pattern warning (PDF
+  p. 39), which v1.0's C1–C17 did not name. Added as C18 in this v1.1
+  so the refute table matches the content that shipped.
+- **Three authoring defects were caught by the first test run and folded
+  into the build commit, never committed broken** (the 259 precedent
+  for first-run catches): the insertion dropped migration 067's closing
+  parenthesis (a SyntaxError at collection — the Edit replaced 067's
+  tail including its `),`); the fork pin over-demanded its needle,
+  asking the instruction to cite PDF p. 34 where the figures it covers
+  live in the description and diagnosis; and the CLI pins asserted
+  spaced phrases ("for the full chassis-side protocol see
+  ppi_chassis_v1") that rich wraps at the 80-column test terminal —
+  the needles are now single tokens where the screen is asserted, and
+  the DB-level pins carry the exact text.
+- **One transient collection error** in the first `--collect-only`
+  measurement (9,372 collected, 1 error) that a re-run immediately did
+  not reproduce (9,372 collected, clean, twice); the suite was running
+  concurrently in the background at the time. The floor was raised on
+  the clean count.
+- **The ROADMAP row's 🚧 flip is an external commit** (`b1a3e70`,
+  00:59:21): this session created the branch and then — before its own
+  first commit — someone on the operator's side committed the row
+  change onto it, the ledger step this session should have made first.
+  It is the correct change in the correct place (`roadmap_check.py` ok),
+  so it stays; recorded here and in the phase log because standing rule
+  5 says a second session on this checkout only reads, and the operator
+  should know a writer touched the branch.
+- **A finding was filed rather than an edit made** (F159): the
+  substrate's own starter item carries uncited figures. v1.0 planned the
+  finding ("recorded for a finding, not edited"); F159 is it.
+- **No bug-fix register**: nothing that left this session needed a fix
+  in its own commit — the authoring defects above were caught before
+  the build commit, the four known-bad controls were probes by design,
+  and the full suite's only red file is the expected environmental
+  one. A phase with no bug fixes writes no register (the close-out
+  skill's skip rule); the reason is stated here.
+
+## Results
+
+| Metric | Value |
+|--------|-------|
+| Template added | 1 (`ppi_chassis_v1`, 7 items, the row's 7 subjects) |
+| Migration | 068, schema 67 → 68; rollback peels it round-trip |
+| Production code | `migrations.py` (+123 lines, all migration 068) + 1 line in `database.py` |
+| Tests added | 26 (`tests/test_phase260_ppi_chassis.py`) |
+| Known-bad controls | 4 planted, seen red, reverted (frame figure; per-field corruption; planted Phase 999; the UPDATE disabled) |
+| Bug fixes | 0 — three first-run authoring catches folded into the build commit (Deviations) |
+| Whole-tree gates | 521 passed + `finding_check` exit 0, both variants |
+| Dry run (snapshot copy) | 67 → 68; 3+16 → 4+23 templates+items; one description updated; `known_issues` hash `5932cd02c78ae850` unchanged; integrity ok |
+| Collected count | 9,372 (= floor 9,346 + 26); floor raised with the close-out commit |
+| Findings filed | 1 (F159 — the substrate's starter item carries uncited figures) |
+| Regression of record | pending — Opus session, outside the sandbox |
+
+Key finding: a content phase on a door that already opens is one
+migration and its pins. The 259 pattern held exactly — per-field
+figure pins, no-figure negatives with censuses behind them, the journal
+seed — and cost no new production surface at all. The step 0 census
+also found what the door shows next to the new content: the substrate's
+own starter item carries uncited figures on the same screen as a
+figure-disciplined protocol (F159), which is the workflow-side shape of
+what F149 documented for the corpus.
 
 ## Risks
 

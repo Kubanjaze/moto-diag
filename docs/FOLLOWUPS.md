@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F158** (this file); the mobile
+At the time of writing the highest assigned is **F159** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1590,3 +1590,49 @@ hits in 25 rendered rows**, but not the same ones:
 The seven new checklist items carry none. This is the case the proposed
 guard exists for: without the check, new content brings references in
 at the same rate old ones are cleaned out.
+
+### F159
+
+**`generic_ppi_v1`'s starter "Brake and tire condition" item carries uncited figures the library's documents contradict or do not support**
+
+Migration 007's seed (the Phase 114 substrate) puts figures in
+user-visible checklist text that no held document supports — the exact
+defect class F149 documented for corpus rows, now on the workflow
+screen, one `motodiag workflow show generic_ppi_v1` away from the
+rider:
+
+> "Measure pad thickness, rotor thickness, tire tread depth, DOT date."
+> Pass: "Pads >3mm, rotors >min spec, tires <5 years old, adequate tread"
+
+Measured in Phase 260's Step 0 against the library:
+
+- **"Pads >3mm" is nobody's number.** The BMW F800R owner's manual
+  (pp. 94–95) sets its pad wear limit at a minimum **1.0 mm** of
+  friction pad only, without backing plate, with the wear-indicator
+  grooves still visible; the CHF50 service manual gives its brake-shoe
+  linings a **1.0 mm** service limit (p. 243). No document in the
+  library states 3 mm for any pad.
+- **"tires <5 years old" happens to match KTM's recommendation** —
+  changed "after 5 years at the latest, regardless of the actual state of
+  wear" (KTM 250/300 EXC TPI OM, p. 116) — but the item cites nothing,
+  so the one right number it carries is right by coincidence, and
+  presented as a universal when the library's figures are per-manual
+  (CHF50 tread 0.8 mm service limit, KTM minimum 2 mm).
+- The item's five siblings carry no figures; the other Phase-114
+  workflow items are clean.
+
+What it affects: a buyer or mechanic told "pads >3mm" fails healthy
+brakes (the F800R's own grooves say 1.0 mm is fine) or, worse, accepts
+pads a worn machine's manual would condemn, and the "5 years" line is
+uncited where the same screen's new chassis protocol
+(`ppi_chassis_v1`, 260) shows what a cited figure looks like.
+
+Not fixed in 260: the item is the substrate's seed content, not the
+phase's, and its row is the migration journal's — the fix is not a
+content edit but a sourcing decision (whose figures, if anyone's, does a
+*generic* PPI carry?) plus a migration keyed on the old text, per F129's
+shape. What would close it: either source the starter item's figures to
+documents and scope them per-machine, or replace the numbers with the
+deferral pattern 260's items use (name the check, defer the figure to
+the machine's own manual), by migration, with a pin that no uncited
+figure returns.
