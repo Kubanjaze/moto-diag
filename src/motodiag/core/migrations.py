@@ -4948,6 +4948,18 @@ MIGRATIONS: list[Migration] = [
              'Bad fuel means the whole path is suspect — tank, tap or pump, lines, carburettor or injectors. Water plus long storage means rust in a steel tank; price the tank, not just a flush.',
              1, '["clear jar","funnel"]', 5);
         """,
+        rollback_sql="""
+            DELETE FROM checklist_items
+             WHERE template_id = (SELECT id FROM workflow_templates
+                                   WHERE slug = 'ppi_engine_v1');
+
+            DELETE FROM workflow_templates WHERE slug = 'ppi_engine_v1';
+
+            UPDATE workflow_templates
+               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. Track N phase 259 expands with engine-specific content.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'generic_ppi_v1';
+        """,
     ),
     # Migration 068 — Phase 260: the chassis-side pre-purchase inspection
     # template on the Phase 114 substrate, plus the one-row F158 re-point:

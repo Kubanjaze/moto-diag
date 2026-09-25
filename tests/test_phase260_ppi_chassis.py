@@ -119,6 +119,15 @@ class TestMigration068:
         assert m.name == "ppi_chassis_workflow"
         assert SCHEMA_VERSION >= 68
 
+    def test_every_migration_keeps_its_rollback(self):
+        """Bug fix #1: inserting 068 moved 067's rollback into 068 and
+        left 067 with none. Every migration in the registry has one;
+        a new entry must not take its predecessor's."""
+        missing = [m.version for m in MIGRATIONS if not m.rollback_sql.strip()]
+        assert missing == []
+        assert "'ppi_engine_v1'" in get_migration_by_version(67).rollback_sql
+        assert "'ppi_chassis_v1'" in get_migration_by_version(68).rollback_sql
+
     def test_fresh_init_seeds_the_template(self, db):
         t = get_template_by_slug("ppi_chassis_v1", db)
         assert t is not None
