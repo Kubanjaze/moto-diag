@@ -4876,7 +4876,7 @@ MIGRATIONS: list[Migration] = [
             -- inside the generic template; this phase ships it as a separate
             -- protocol, so re-point the pointer at what shipped.
             UPDATE workflow_templates
-               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. For the full engine-side protocol see ppi_engine_v1 (Phase 259); the chassis protocol is Phase 260.',
+               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. For the full engine-side protocol see ppi_engine_v1.',
                    updated_at = CURRENT_TIMESTAMP
              WHERE slug = 'generic_ppi_v1';
 
