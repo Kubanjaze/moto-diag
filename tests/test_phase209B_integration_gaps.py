@@ -116,7 +116,7 @@ class TestTheTreeMatchesTheAllowlist:
     def test_the_known_scale(self):
         """The number this phase found. Pinned so a change to it is a
         deliberate edit someone has to explain, not drift."""
-        assert len(UNREACHABLE_MODULES) == 37  # f9-noqa: 244Y deleted cli/registry;: ssot-pin fixture-data: Phase 209B's finding — 38 of 256 modules unreachable from any entry point on 2026-09-17. The literal is the record of what was found; the stale/new-entry tests above are what actually hold the tree to the list.
+        assert len(UNREACHABLE_MODULES) == 34  # f9-noqa: 244Y deleted cli/registry; 259 wired motodiag.workflows (3 modules);: ssot-pin fixture-data: Phase 209B's finding — 38 of 256 modules unreachable from any entry point on 2026-09-17. The literal is the record of what was found; the stale/new-entry tests above are what actually hold the tree to the list.
 
 
 class TestEveryEntryExplainsItself:
