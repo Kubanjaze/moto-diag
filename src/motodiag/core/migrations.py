@@ -4836,6 +4836,131 @@ MIGRATIONS: list[Migration] = [
             PRAGMA foreign_keys=ON;
         """,
     ),
+    # Migration 067 — Phase 259: the engine-side pre-purchase inspection
+    Migration(
+        version=67,
+        name="ppi_engine_workflow",
+        description=(
+            "Phase 259 (Track N opener): seed the engine-side "
+            "pre-purchase inspection template on the Phase 114 substrate. "
+            "One template (ppi_engine_v1, category 'ppi', powertrains "
+            "ice+hybrid — the six subjects are ICE subjects, so the "
+            "substrate's all-powertrains default is deliberately not used) "
+            "and seven checklist items covering the row's subjects: "
+            "static visual inspection, battery/charging health, "
+            "starter/cold start/running check, compression test, leak-down "
+            "test, oil level/condition/sample, fuel quality. Every figure "
+            "in the item text cites the document it comes from (Honda "
+            "CHF50 service manual; Honda Metropolitan 2025 owner's "
+            "manual, with PDF pages); where no document sets a figure — "
+            "leak-down, per Phase 259's census of 260 library PDFs — the "
+            "item defers to the machine's own manual and invents nothing. "
+            "Also re-points generic_ppi_v1's stale forward pointer "
+            "('Track N phase 259 expands with engine-specific content') "
+            "at the new template: this phase ships a new template "
+            "alongside the generic quick check rather than editing it. "
+            "Seeded inside the one-shot migration journal like 007: "
+            "checklist_items has no unique constraint, so an item insert "
+            "re-run outside the journal would duplicate rows."
+        ),
+        upgrade_sql="""
+            INSERT OR IGNORE INTO workflow_templates
+                (slug, name, description, category, applicable_powertrains,
+                 estimated_duration_minutes, required_tier, created_by_user_id)
+            VALUES
+                ('ppi_engine_v1', 'Pre-purchase inspection — engine',
+                 'Engine-side protocol for buying a used ICE motorcycle: compression, leak-down, oil, fuel, starter/charging health and the visual checks. Companion to generic_ppi_v1 (the quick check); the chassis protocol is Phase 260. Figures in the item text cite the document they come from; where no document sets a figure the item says where the figure belongs — nothing here is invented.',
+                 'ppi', '["ice","hybrid"]', 70, 'individual', 1);
+
+            -- generic_ppi_v1's description promised this phase's expansion
+            -- inside the generic template; this phase ships it as a separate
+            -- protocol, so re-point the pointer at what shipped.
+            UPDATE workflow_templates
+               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. For the full engine-side protocol see ppi_engine_v1 (Phase 259); the chassis protocol is Phase 260.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'generic_ppi_v1';
+
+            INSERT OR IGNORE INTO checklist_items
+                (template_id, sequence_number, title, description, instruction_text,
+                 expected_pass, expected_fail, diagnosis_if_fail, required,
+                 tools_needed, estimated_minutes)
+            VALUES
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 1,
+             'Static visual inspection — engine cold, off',
+             'The walk-around before any key is turned. Cited: the Honda CHF50 service manual''s troubleshooting table (PDF p. 79, printed 4-3) lists an external oil leak as the first cause of oil consumption.',
+             'With the engine cold and untouched, look over the whole engine for oil weeping at gaskets and case seams, coolant residue on liquid-cooled engines, and fresh oil on the frame, swingarm or tyre walls traced to its highest point. Check hoses and wiring for hardening, chafing, and improvised repairs (tape, zip ties). Look under the machine where it has been parked — a stain on the floor is a leak you will inherit. An external oil leak is the first cause of oil consumption in the Honda CHF50 service manual''s troubleshooting table (PDF p. 79).',
+             'Engine and cases dry or lightly dusty; no fresh residue; no improvised repairs.',
+             'Fresh oil at a gasket or seal, coolant residue, chafed wiring, taped hoses.',
+             'An external leak means at minimum a gasket or seal job; weeping at a cylinder-head joint or behind a cover points deeper than a gasket.',
+             1, '["flashlight","inspection mirror"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 2,
+             'Battery condition and charging output',
+             'Worked example figures: Honda CHF50 service manual, BATTERY/CHARGING SYSTEM SPECIFICATIONS (PDF p. 13): battery 12V-6Ah; current leakage 0.1 mA max; voltage 13.0-13.2 V fully charged at 20 °C/68 °F; below 12.3 V needs charging; alternator capacity 190 W at 5,000 rpm; charging coil resistance 0.05-0.5 Ω at 20 °C/68 °F.',
+             'Measure the battery''s open-circuit voltage before starting (ignition off, ideally after the machine has stood). Read the machine''s own manual for its numbers: the CHF50 service manual (PDF p. 13) gives 13.0-13.2 V fully charged at 20 °C/68 °F and below 12.3 V needs charging for its 12V-6Ah battery, with 0.1 mA maximum current leakage. Then start the engine and measure the voltage at the battery terminals with the engine running — the CHF50''s alternator is rated 190 W at 5,000 rpm. Compare against the machine''s own manual: a voltage that does not rise with RPM points at the charging system, not the battery.',
+             'Rest voltage within the manual''s fully-charged window; voltage at the battery rises when the engine runs.',
+             'Rest voltage below the manual''s needs-charging line (12.3 V on the CHF50 example); no rise with RPM.',
+             'A flat battery is cheap to re-test on a known-good unit; no rise with RPM points at the stator, regulator/rectifier or their connectors (the CHF50 manual''s charging chapter tests the coil at 0.05-0.5 Ω and ends its tree at the ECM).',
+             1, '["multimeter"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 3,
+             'Starter, cold start and running check',
+             'How it cranks, catches and settles. No document sets a universal figure for this — the item observes behaviour, not numbers.',
+             'From cold, watch and listen: crank speed (sluggish cranking separates a weak battery or starter from everything else), whether it catches within a normal few seconds, and how it settles to idle. Let it warm up, blip the throttle, and watch the exhaust: smoke that persists after warm-up, or a haze that grows with RPM, means the engine is burning oil — the CHF50 service manual''s oil-consumption table (PDF p. 79) attributes that to a worn or mis-installed piston ring, worn cylinder, or worn valve guide or seal. Listen for top-end tick, bottom-end knock, and smoke from the crankcase breather.',
+             'Crisp crank, starts without tricks, settles to a steady idle, no persistent smoke, no mechanical noise.',
+             'Slow crank, hard catch, stalls at idle, persistent blue-grey smoke, audible knock.',
+             'A knock or a deep tick under load prices an engine rebuild into the deal. Persistent oil smoke matches the manual''s worn-ring / worn-cylinder / worn-valve-guide causes — confirm with the compression and leak-down items before negotiating.',
+             1, '[]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 4,
+             'Compression test',
+             'The single most telling engine measurement on a used machine. Worked example figure: Honda CHF50 service manual, CYLINDER HEAD/VALVES SPECIFICATIONS (PDF p. 11): cylinder compression 1,393 kPa (14.2 kgf/cm2, 202 psi) at 1,500 rpm.',
+             'Warm the engine, then kill the ignition and fuel delivery per the machine''s manual (pull the fuel-pump fuse or disconnect the injectors or coils so the engine is not firing during the test). Remove the spark plug, screw the gauge into the plug hole, hold the throttle wide open, and crank until the gauge stops rising. Compare the peak against the machine''s own service-manual spec — the CHF50 service manual gives 1,393 kPa (202 psi) at 1,500 rpm (PDF p. 11). On a multi-cylinder engine test every cylinder and compare them: one cylinder well below its siblings points at that cylinder, not at the engine''s age.',
+             'Peak reading at or near the machine''s manual spec; cylinders in a close spread.',
+             'Peak well below the manual spec, one cylinder far below its siblings, or the needle fluttering.',
+             'Low on all cylinders: worn rings or cylinder (the CHF50 manual''s oil-consumption causes, PDF p. 79). Low on one: valve seal or gasket on that cylinder — follow with the leak-down item to localise.',
+             1, '["compression gauge","spark plug socket"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 5,
+             'Leak-down test (when compression is low or marginal)',
+             'No document in the research library (260 PDFs searched; the control term "compression" finds 178) describes a leak-down test or sets a leak-down percentage, so this item carries no figure. Where a figure would appear, it defers to the machine''s own manual or the gauge''s own scale.',
+             'Bring the cylinder to top dead centre on the compression stroke (both valves closed), lock the engine against rotation, connect a leak-down gauge to the plug hole at the gauge''s specified input pressure, and read the loss on the gauge''s own scale — interpret it against the machine''s service manual, which is where a threshold belongs. Then listen for where the air escapes: hissing at the intake or air box is the intake valve; at the exhaust pipe, the exhaust valve; bubbling in a liquid-cooled engine''s radiator or reservoir, the head gasket; breath from the crankcase breather or oil filler, the rings and cylinder. This test tells you WHERE compression went; the compression item tells you WHETHER it went.',
+             'Low loss on the gauge''s scale, and no strong flow at any of the four escape routes.',
+             'High loss, or a strong hiss or bubbles at one route.',
+             'The escape route names the seal: intake valve, exhaust valve, head gasket (coolant path), or rings and cylinder wall. A head-gasket route on a liquid-cooled machine also means the coolant system has been pressurised — check the oil item for coolant contamination.',
+             0, '["leak-down gauge","compressed air source","spark plug socket"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 6,
+             'Oil level, condition and sample',
+             'The oil tells you how the machine was kept. Guidance cited: Honda Metropolitan 2025 owner''s manual (PDF p. 62): "Check the engine oil level regularly, and add the recommended engine oil if necessary. Dirty oil or old oil should be changed as soon as possible."',
+             'Check the oil level the way the machine''s manual says (usually upright and level, engine off, after a minute). Read the dipstick or sight glass: level between the marks, and the oil''s colour and clarity — the Metropolitan owner''s manual (PDF p. 62) says oil quality deteriorates with use and time, and that dirty or old oil should be changed as soon as possible. Pull the dipstick and smell: a strong fuel smell is fuel dilution (short trips or leaking injectors); a milky, chocolate-milk colour is water or coolant — stop and walk, or price a rebuild. On a purchase that matters, take a sample for laboratory oil analysis: fuel, coolant and wear metals name the engine''s health with figures no visual check can.',
+             'Level between the marks; amber-to-dark oil, no milkiness, no fuel smell.',
+             'Level below the lower mark, milky oil, or a strong fuel smell.',
+             'Milky oil on a liquid-cooled machine matches the leak-down item''s head-gasket route — price it as such. Fuel dilution means tune, trim or injector trouble; a low level means the seller has not been checking (the manual says to check regularly).',
+             1, '["clean rag","sample bottle"]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='ppi_engine_v1'), 7,
+             'Fuel quality',
+             'Guidance cited: Honda Metropolitan 2025 owner''s manual (PDF p. 17): "Do not use stale or contaminated gasoline or an oil/gasoline mixture. Avoid getting dirt or water in the fuel tank."',
+             'Ask how long the machine has stood and when the tank was last filled. Open the filler: smell for varnish (old fuel) and look for cloudiness, stratification or debris. If the machine stood with a low or empty tank, suspect rust or condensation inside — the Metropolitan owner''s manual''s fuel guidelines (PDF p. 17) warn against stale or contaminated gasoline, an oil/gasoline mixture, and dirt or water in the fuel tank. On a carburetted machine, pull the float-bowl drain into a clear jar: water or sediment settles out in seconds. Budget a tank drain, line flush and carb or injector service when the fuel is doubtful — it is never just the fuel.',
+             'Fresh, clear fuel; dry bowl; no water line in the jar.',
+             'Varnish smell, cloudy fuel, visible water or sediment, or rust inside the filler neck.',
+             'Bad fuel means the whole path is suspect — tank, tap or pump, lines, carburettor or injectors. Water plus long storage means rust in a steel tank; price the tank, not just a flush.',
+             1, '["clear jar","funnel"]', 5);
+        """,
+        rollback_sql="""
+            DELETE FROM checklist_items
+             WHERE template_id = (SELECT id FROM workflow_templates
+                                   WHERE slug = 'ppi_engine_v1');
+
+            DELETE FROM workflow_templates WHERE slug = 'ppi_engine_v1';
+
+            UPDATE workflow_templates
+               SET description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. Track N phase 259 expands with engine-specific content.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'generic_ppi_v1';
+        """,
+    ),
 ]
 
 

@@ -29,6 +29,7 @@ from motodiag.cli.costs import register_costs
 from motodiag.cli.memory import register_memory
 from motodiag.cli.capture import register_capture
 from motodiag.cli.reference import register_reference
+from motodiag.cli.workflow import register_workflow
 
 console = get_console()
 
@@ -829,6 +830,12 @@ register_capture(cli)
 # clearances, service intervals and wiring circuit references. Phases 92
 # and 93 built all four tables and shipped no way to read them.
 register_reference(cli)
+
+# Phase 259: register the `workflow` subgroup — template browsing for the
+# Phase 114 substrate (`motodiag workflow list`, `motodiag workflow show
+# <slug>`). Phase 114 built the tables, the models and the CRUD; no
+# command or route ever called any of it until now.
+register_workflow(cli)
 
 # Phase 130: register shell completion scripts + dynamic completers.
 register_completion(cli)
