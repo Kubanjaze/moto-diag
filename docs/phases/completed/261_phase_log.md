@@ -1,6 +1,6 @@
 # Phase 261 — Track N batch 1: tire, brake, suspension and drivetrain service — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-25)
 **Branch:** `phase-261` (Opus session, main checkout)
 
 ---
@@ -157,7 +157,8 @@ since is by the Edit tool.
   `test_list_by_each_new_category`, red on the old code (both seen) and
   green after; the first also asserts no "…" anywhere on the screen, which
   caught a first cut that stopped eliding slugs but elided "Powertr…".
-- **Commit:** `6b98b4c`.
+
+**Commit.** `6b98b4c`
 
 ## Deploy preparation — 2026-09-25: the scope check, controlled before the merge
 
@@ -385,3 +386,80 @@ drawn from the refuters' own quotes) and retired 3 (T32, B42, S33) whose
 sentences left the content. All 320 anchors are on their pages. The
 cross-check reads 353 cited pages with 0 unclaimed, and a new test pins
 the title-page names; its control, a planted "Zuma", went red.
+
+### Round 2 — 2026-09-25: the 53 claims round 1's corrections added, and the corrected text
+
+One fresh-context Opus refuter. Identity of the two documents new in this round from their own pages: the rendered cover of `pdf/PeopleS-50-125-200.pdf` reads "KYMCO PEOPLE S 50 & 125 & 200 OWNER'S MANUAL"; `pdf/kymco_like_150i_50i_om.pdf` has no cover (its PDF metadata title is a leftover, "DOWNTOWN 125i"), and its pp. 2 and 5 name the KYMCO LIKE 150i/50i.
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| T35 | kept | "Check for damage (blisters or cuts) in the side wall, or for significant flat spots on the tires' tread. Replace the tire immediately if any damage of this type is present." | Kymco People S 50 & 125 & 200 Owner's Manual, PDF p. 27 |
+| T36 | kept | "Proper wheel balance is important to avoid variable contact between tire and ground, and to avoid uneven tire wear." | KYMCO LIKE 150i/50i Owner's Manual (no cover; name from p. 2), PDF p. 53 |
+| T37 | kept | "if the sidewall is cracked, have a Yamaha dealer replace the tire immediately" | Yamaha SR400 (SR400J/SR400JC) Owner's Manual, PDF p. 55 |
+| T38 | kept | "Old and aged tires shall be checked by tire specialists to ascertain their suitability for further use." | Yamaha SR400 (SR400J/SR400JC) Owner's Manual, PDF p. 56 |
+| T39 | kept | "If the tires have cuts, run-in objects, or other damage: – Change the tires." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 115 |
+| T40 | kept | "The display shows -- for each tyre until the tyre-pressure signal is received for the first time." | BMW Rider's Manual R 1200 GS, PDF p. 100 |
+| T41 | kept | "The motorcycle has not yet ac- celerated past the threshold of approximately 30 km/h." | BMW Rider's Manual F800R, PDF p. 37 |
+| T42 | kept | "Possible cause: A system error has occurred." | BMW Rider's Manual F800R, PDF p. 38 |
+| T43 | kept | "The integral battery in the tyre- pressure sensor has lost a sig- nificant proportion of its original capacity. … Seek the advice of a specialist workshop" | BMW Rider's Manual F800R, PDF p. 39 |
+| T44 | kept | "Tyre pressure, front 2.5 bar, Tyre cold Tyre pressure, rear 2.9 bar, Tyre cold" | BMW Rider's Manual F800R, PDF p. 134 |
+| T45 | kept | "New tyres do not provide full grip straight away. Wet roads and extremely sharp in- clines pose a risk of accident." (the item's paraphrase of this line is defect 8) | BMW Rider's Manual R 1200 GS, PDF p. 85 |
+| T46 | kept | "ATTENTION Front wheel installed wrong way round Risk of accident Note direction-of-rotation arrows on tyre or rim." | BMW Rider's Manual F 800 GS, PDF p. 178 |
+| B46 | kept | "If the warpage exceeds the service limit, check the wheel bearings for excessive play." | Honda 2013–2017 PCX150 Service Manual, PDF p. 371 |
+| B47 | kept | "Remove the wheel and check using the appro- priate tools that the axial run-out of the brake surface is within the prescribed limits. … WHEN INSTALLING, THOROUGHLY CLEAN THE DISC AND ITS SEAT ON THE HUB." (the item's use of this line is defect 1) | Piaggio Beverly 125 Service Station Manual, PDF p. 196 |
+| B48 | kept | "Measure the caliper cylinder I.D. SERVICE LIMIT: Upper: Center/lower: 25.460 mm (1.0024 in) 22.710 mm (0.8941 in) … Measure the caliper piston O.D. SERVICE LIMIT: Upper: Center/lower: 25.31 mm (0.996 in) 22.56 mm" | Honda 2013–2017 PCX150 Service Manual, PDF p. 384 |
+| B49 | kept | "IT IS THEREFORE NECESSARY TO CLEAN THEM THOROUGH WITH DENATURED ALCOHOL. … RUBBER PARTS SHOULD NEVER BE LEFT IN ALCOHOL LONGER THAN 20 SECONDS." | Piaggio Beverly 125 Service Station Manual, PDF p. 190 |
+| B50 | kept | "Apply silicon grease to the piston and oil seal." | Kymco People / People S 250 Service Manual, PDF p. 194 |
+| B51 | kept | "brake caliper cylinder 2 Scratches/wear J Replace the brake caliper assembly." | Yamaha 2009 Service Manual, Model YW125Y, PDF p. 146 |
+| B52 | kept | "that the cylinder and the floating body of the cal- liper do not show signs of scratches or erosion, otherwise replace the entire calliper" | Piaggio Beverly 125 Service Station Manual, PDF p. 192 |
+| B53 | kept | "CBS master Cylinder I.D. 11.000 - 11.043 (0.4331 - 0.4348) 11.055 (0.4352) cylinder Piston O.D. 10.957 - 10.984 (0.4314 - 0.4324) 10.945 (0.4309)" | Honda 2013–2017 PCX150 Service Manual, PDF p. 363 |
+| B54 | kept | "During assembly, the main piston and spring must be installed as a unit without exchange." | Kymco People / People S 250 Service Manual, PDF p. 191 |
+| B55 | kept | "Immediately clean up any brake fluid that has over- flowed or spilled using water." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 102 |
+| B56 | kept | "UNDER NORMAL DRIVING AND CLIMATIC CONDITIONS YOU SHOULD CHANGE THE FLUID EVERY TWO YEARS. IF BRAKES ARE USED INTENSELY AND/OR IN HARSH CON- DITIONS, CHANGE THE FLUID MORE FREQUENTLY." | Piaggio Beverly 125 Service Station Manual, PDF p. 190 |
+| B57 | kept | "UNDER NORMAL CLIMATIC CONDITIONS, THE FLUID MUST BE CHANGED EVERY 20,000 KM OR ANYWAY EV- ERY TWO YEARS." | Piaggio Beverly 125 Service Station Manual, PDF p. 49 |
+| B58 | kept | "Use only the designated brake fluid. Other brake fluids may cause the rub- ber seals to deteriorate, causing leakage and poor brake performance." | Yamaha 2009 Service Manual, Model YW125Y, PDF p. 89 |
+| B59 | kept | "Check the fluid level often while bleeding the brake to prevent air from being pumped into the system. … Repeat the steps 1 and 2 until there are no air bubbles in the bleed hose." | Honda 2013–2017 PCX150 Service Manual, PDF p. 367 |
+| B60 | kept | "IF AIR CONTINUES TO COME OUT DURING THE BLEED OPERATION, EXAMINE ALL THE FITTINGS. IF SAID FIT- TINGS DO NOT SHOW SIGNS OF BEING FAULTY, LOOK FOR THE AIR INPUT AMONG THE VARIOUS SEALS ON THE PUMP AND CALLIPER PISTONS." | Piaggio Beverly 125 Service Station Manual, PDF p. 199 |
+| B61 | kept | "Operate the hand brake lever repeatedly until the brake lin- ings are in contact with the brake disc and there is a pressure point." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 104 |
+| S36 | kept | "11.10 Adjusting the riding sag … – Choose and mount a suitable spring." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 60 |
+| S37 | kept | "» If the static sag is less or more than the specified value: – Adjust the spring preload of the shock absorber." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 58 |
+| S38 | kept | "18.2690 Enduro R … Spring rate Weight of rider: 75… 85 kg (165… 187 lb.) 5.2 N/mm (29.7 lb/in) … Fork oil per fork leg 635 ml (21.47 fl. oz.)" | KTM Owner's Manual 2010 690 Enduro / 690 Enduro R (3211511en), PDF p. 184 |
+| S39 | kept | "18.1690 Enduro … Weight of rider: 65… 75 kg (143… 165 lb.) 5.2 N/mm … 75… 85 kg … 5.4 N/mm … 85… 95 kg … 5.6 N/mm … Fork oil per fork leg 620 ml" | KTM Owner's Manual 2010 690 Enduro / 690 Enduro R (3211511en), PDF p. 183 |
+| S40 | kept | "Appl y 6 .5 - 8 g of greas e to th e followin g p a r t s. - r e b o u nd s p r i ng - g u i d e bushin g inne r s u r f a ce - f o r k sprin g tightl y woun d e nd" (the item's citation for "no oil" is defect 7) | Honda CHF50 Service Manual, PDF p. 227 |
+| S41 | kept | "Pro Honda Suspension Fluid SS-8 (1 OW) or equivalent FORK FLUID CAPACITY: 122.0 ± 2.5 cm3 … Compress the fork leg fully and measure the fluid level … from the top of the fork pipe. FORK FLUID LEVEL: 75 mm … Be sure the oil level … is same in the both forks." | Honda 2013–2017 PCX150 Service Manual, PDF p. 335 |
+| S42 | kept | "Make sure the oil levels in both front fork legs are equal. … Uneven oil levels can result in poor han- dling and a loss of stability." | Yamaha 2009 Service Manual, Model YW125Y, PDF p. 158 |
+| S43 | kept | "inner tube 1 8outer tube 2 Bends/damage/scratches J Replace. WARNING Do not attempt to straighten a bent inner tube" (the item's narrowing of this is defect 5) | Yamaha 2009 Service Manual, Model YW125Y, PDF p. 157 |
+| S44 | kept | "12.3 Bleeding the fork legs Preparatory work – Raise the motorcycle with a lift stand. … – Release bleeder screws1. Any excess pressure escapes from the interior of the fork." ("Neither wheel is in contact with the ground." is on the same page, §12.1) | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 66 |
+| S45 | kept | "(690 Enduro) – Remove bleeder screws briefly. Any excess pressure escapes from the interior of the fork." | KTM Owner's Manual 2010 690 Enduro / 690 Enduro R (3211511en), PDF p. 76 |
+| S46 | kept | "Perform the shock absorber service." | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 53 |
+| S47 | kept | "The shock absorber is filled with highly compressed nitrogen. – Please follow the description provided. (Your authorized KTM workshop will be glad to help.)" | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 55 |
+| S48 | kept | "You can find the table on the underside of the seat. These adjustments should be understood as a guideline … Do not change the adjustments at random or by more than ± 40%" | KTM Owner's Manual 2010 690 Enduro / 690 Enduro R (3211511en), PDF p. 64 |
+| S49 | kept | "The preload adjuster has 9 positions. The standard position is 4 when the index mark on the adjuster is aligned with the left end of the rear shock absorber lower mounting bolt." | Honda CB500F/CB500FA Owner's Manual, PDF p. 92 |
+| S50 | kept | "Turn adjusting screw1 clockwise with a screwdriver as far as the last perceptible click. … – Turn counterclockwise by the number of clicks" | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 56 |
+| D44 | kept | "Pull the chain at the end of the chain sliding piece upward to measure chain tensionA. Info Lower chain section1 must be taut." (the item leaves out this page's lift-stand condition: defect 3) | KTM Owner's Manual 2022 250/300 EXC TPI (3214421en), PDF p. 90 |
+| D45 | kept | "If the slack is not constant at all points, some links may be kinked and binding. … 2. Place your motorcycle on its side stand … 3. Check the slack in the lower half of the drive chain midway between the sprockets." | Honda CB500F/CB500FA Owner's Manual, PDF p. 80 |
+| D46 | kept | "Chain deflection 30...40 mm (Motorcycle with no weight applied, supported on its side stand)" (the item's "once" is defect 4) | BMW Rider's Manual F800R, PDF p. 101 |
+| D47 | kept | "Drive belt • Check belt condition. • Replace if damaged. • Check belt tension. • Adjust if necessary. √ Every 2500 mi (4000 km)" (rendered: √ at the initial 600 mi, then every 2500 mi) | Yamaha XVS95CL/XVS95CLC Owner's Manual, PDF p. 48 |
+| D48 | kept | "5. If the drive belt slack is incorrect, have a Yamaha dealer adjust it." | Yamaha XVS13AF/XVS13AFC Owner's Manual, PDF p. 65 |
+| D49 | kept | "Viscosity class at outside temperature: above 5 °C SAE 90 below 5 °C SAE 80 alternatively SAE 80 W 90" | BMW Service and Technical Booklet R 1100 S, PDF p. 87 |
+| D50 | kept | "Final drive approx. 0.25 l (to bottom edge of filler opening) Viscosity class EPX 90 alternatively SAE 90" | BMW Maintenance Instructions R 1150 R / R 850 R, PDF p. 67 |
+| D51 | kept | "Final drive 0.25 l (to bottom edge of filler opening) Viscosity class Castrol EPX 90 or SAE 90" | BMW Maintenance Instructions K 1200 RS, PDF p. 70 |
+| D52 | kept | "BP6-28199-13 XVS95CL XVS95CLC OWNER'S MANUAL" | Yamaha XVS95CL/XVS95CLC Owner's Manual, PDF p. 1 |
+| D53 | kept | "3D8-28199-18 XVS13AF XVS13AFC OWNER'S MANUAL" | Yamaha XVS13AF/XVS13AFC Owner's Manual, PDF p. 1 |
+
+**Round 2 result: 53 kept, 0 killed.** Every round-1 fix held. It found 8 wording defects in the corrected text, all fixed in `87566dd`. One was substantive: the brake item's diagnosis had the hub seat cleaned "before condemning the disc", but the Beverly replaces a disc over its run-out limit and repeats the test, and cleans the seat only when installing (PDF p. 196). The other seven:
+- "not honing" removed;
+- the KTM chain check's lift stand added (p. 89), and "neutral" scoped to the Honda;
+- "once" removed from the F800R's check;
+- the tube check widened to both tubes anywhere, never straightened (YW125Y p. 157);
+- the KTM fork bleed cited to its before-every-trip list (p. 46);
+- the CHF50's greased fork cited to pp. 226–227;
+- the R 1200 GS quoted as written.
+
+Five claims came from round 2's own quotes and are mechanically verified only: B62, D54, S51, S52, S53.
+
+## Regression of record
+
+Regression of record: 9415 passed, 0 failed, 0 skipped, 0 errors at `87566dd` (15 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The tree was clean at `87566dd`. The floor is 9415, and 9,415 were collected. The log is `~/.cache/motodiag/regressions/87566dd_parallel_20260925_142827.log`.
