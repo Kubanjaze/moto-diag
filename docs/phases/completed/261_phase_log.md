@@ -463,3 +463,14 @@ Five claims came from round 2's own quotes and are mechanically verified only: B
 Regression of record: 9415 passed, 0 failed, 0 skipped, 0 errors at `87566dd` (15 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
 
 The tree was clean at `87566dd`. The floor is 9415, and 9,415 were collected. The log is `~/.cache/motodiag/regressions/87566dd_parallel_20260925_142827.log`.
+
+## Deploy — 2026-09-26, 12:01
+
+Merged as `2720643`. Backup `~/backups/motodiag/motodiag_pre261_20260926_120114.db`
+(retain 5; `motodiag_pre255Cfix7_20260922_162542.db` removed). Dry run
+on a copy: `[69]`, with `workflow_templates` +4, `checklist_items` +28
+and `schema_version` +1; 0 changed and 0 removed in any table;
+`known_issues` hash `dfae941ba742d03f` unchanged. Inserts only, so the
+operator's stop condition was not met. Live apply `[69]`, identical
+scope. Live now: schema 69, 8 templates, 51 items, integrity ok. The
+full record is in the handoff's Deploy outcome.
