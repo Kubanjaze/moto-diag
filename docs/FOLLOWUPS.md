@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F160** (this file); the mobile
+At the time of writing the highest assigned is **F161** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1657,3 +1657,51 @@ close it: a migration that re-points the nine mentions to the document's
 own name, with the operator's approval for the live row change, and a
 pin like `test_machines_are_named_as_their_documents_name_them` over
 `ppi_chassis_v1`.
+
+### F161
+
+**`generic_winterization_v1`'s starter items carry storage figures the library's documents do not support**
+
+Migration 007's seed (the Phase 114 substrate) puts three figures in
+user-visible checklist text that no maker's document supports. It is
+F159's defect class, on the winterization screen. Measured in Phase
+264's Step 0 (`264_step0.md`, N6), whitespace-proof over the 260-PDF
+library:
+
+- **"Change engine oil and filter with recommended winter weight
+  (typically 10W-40)."** No storage procedure in the library names an
+  oil grade. Storage or laying-up within 300 characters of SAE, xW-y or
+  viscosity finds 12 pages in 8 files, every one an under-seat "storage
+  compartment". The control, `10w-40`, hits the Honda CHF50 service
+  manual p. 58, a specification table.
+- **"Battery on tender, reading float voltage (13.2V-13.6V)."** No
+  document in the library gives a float-charge voltage. Of the 19 pages
+  with 13.2–13.6 V, the figures are:
+  - a fully charged battery's resting voltage at 20 °C, 13.0–13.2 V
+    (Honda PCX150 (2013–2017) service manual p. 394, Kymco People /
+    People S 250 service manual p. 213, the SYM service manuals);
+  - a headlight control voltage, 12.6–13.6 V (SYM);
+  - bulb ratings.
+
+  A battery on a charger is not at its resting voltage. The makers'
+  storage figures are different ones: BMW's gel battery on a charger limited to 14.4 V (R 850
+  R / R 1150 R Maintenance Instructions p. 48), and Piaggio's 12.60 V
+  open-circuit check before a stored battery is refitted (Beverly 125
+  service station manual p. 78).
+- **"Run engine 5 minutes to circulate", stated as universal.** It is
+  Yamaha's step, with stabilized fuel, before long-term storage
+  (XVS95CL owner's manual p. 81). The KTM 690 Enduro 2010 owner's manual
+  stores with the tank as empty as possible (p. 172), and the Kymco People
+  S owner's manual empties it (p. 60).
+
+What it affects: `motodiag workflow show generic_winterization_v1`
+shows those figures uncited, and they are presented as universal. The
+same screen's `winterization_v1` (Phase 264) gives each maker's own
+figure with its page.
+
+Not fixed in 264: the operator scoped 264's live change to the
+description's build reference, and rewriting the four items is a
+live-row change of its own (rule 1). What would close it is the F159
+shape: a migration keyed on the old text that either cites the figures
+per machine or defers them to `winterization_v1`, with a pin that no
+uncited figure returns.
