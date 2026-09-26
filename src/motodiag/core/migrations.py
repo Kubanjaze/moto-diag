@@ -5406,6 +5406,361 @@ MIGRATIONS: list[Migration] = [
                             'suspension_service_v1', 'drivetrain_service_v1');
         """,
     ),
+    # Migration 070 — Phase 264 (Track N batch 2): four protocols on the
+    # Phase 114 substrate, one per ROADMAP row — winterization (264),
+    # de-winterization (265), engine break-in (266), valve adjustment
+    # (268) — plus two re-points of live rows the operator scoped in:
+    # generic_winterization_v1's description loses its build reference
+    # (F158) and names winterization_v1, and ppi_chassis_v1's items name
+    # the Yamaha service manual by its title page's model code, YW125Y,
+    # not "Zuma" (F160). The rollback restores both verbatim.
+    Migration(
+        version=70,
+        name="seasonal_breakin_valve_workflows",
+        description=(
+            "Phase 264, Track N batch 2: seed four protocols on the Phase "
+            "114 substrate — winterization_v1 and de_winterization_v1 (all "
+            "three powertrains), engine_break_in_v1 and valve_adjustment_v1 "
+            "(ICE and hybrid). Every figure in the item text names its "
+            "machine and cites the maker's document with its PDF page "
+            "(the claims table in 264_implementation.md); where no "
+            "document sets a figure (heat cycles, a rebuild break-in in a "
+            "service manual, inline-four, boxer and desmodromic valve "
+            "clearances — negatives with positive controls in "
+            "264_step0.md) the item says so and invents none. Also "
+            "re-points two live rows: generic_winterization_v1's "
+            "description names winterization_v1 instead of a build "
+            "reference, and ppi_chassis_v1's items name the Yamaha "
+            "service manual YW125Y, as its title page does. Seeded inside "
+            "the one-shot journal like 007 and 067-069."
+        ),
+        upgrade_sql="""
+            INSERT OR IGNORE INTO workflow_templates
+                (slug, name, description, category, applicable_powertrains,
+                 estimated_duration_minutes, required_tier, created_by_user_id)
+            VALUES
+                ('winterization_v1', 'Winterization — seasonal storage',
+                 'Seasonal storage protocol: service and clean before storage, fuel, carburetor float chambers, engine oil and cylinders, the 12-V battery, an electric machine''s traction battery, and the stand, tires, cover and place. The makers disagree on fuel, cylinder oil and battery intervals: each item gives each named machine''s own figure with the document and PDF page it comes from, and invents none. Its companion for the spring is de_winterization_v1.',
+                 'winterization', '["ice","electric","hybrid"]', 90, 'individual', 1),
+                ('de_winterization_v1', 'De-winterization — return to service',
+                 'Return-to-service protocol after storage: uncover and clean, the 12-V battery, an electric machine''s traction battery, fuel and engine oil, the maker''s before-use checks, brakes and tire pressures, and a test ride. Its companion for the autumn is winterization_v1. Figures in the item text are the named machine''s own and cite the document and PDF page they come from.',
+                 'de_winterization', '["ice","electric","hybrid"]', 75, 'individual', 1),
+                ('engine_break_in_v1', 'Engine break-in',
+                 'Protocol for running in a new engine or new engine parts: which break-in applies, the limits by distance, how to ride it, cool-down, the first oil change and first service, and trouble during break-in. Each maker limits its break-in its own way — by engine speed, by throttle opening or by engine performance — so every figure names its machine and cites its document and PDF page, and none is turned into a universal.',
+                 'break_in', '["ice","hybrid"]', 30, 'individual', 1),
+                ('valve_adjustment_v1', 'Valve clearance check and adjustment',
+                 'Protocol for checking and adjusting valve clearance: the engine cold by its maker''s definition, the piston at TDC on the compression stroke, measuring with a feeler gauge, adjusting by screw and lock nut or by shims, rechecking and closing up, and the per-engine-type items — V-twin; inline-four, boxer and desmodromic engines, for which the research library holds no clearance figure. Figures are the named machine''s own and cite the document and PDF page they come from.',
+                 'valve_service', '["ice","hybrid"]', 120, 'individual', 1);
+
+            -- The F158 re-point: the generic template's description promised
+            -- this phase by number; name the protocol instead.
+            UPDATE workflow_templates
+               SET description = 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. For the full protocol, with each maker''s own figures cited, see winterization_v1.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'generic_winterization_v1'
+               AND description = 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. Track N phase 264 expands.';
+
+            -- The F160 re-point: the Yamaha service manual's title page
+            -- reads "Model : YW125Y"; "Zuma" is on none of its pages. The
+            -- one bare "Zuma" first, then "Zuma 125", in every text field.
+            UPDATE checklist_items
+               SET title = replace(replace(title, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y'),
+                   description = replace(replace(description, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y'),
+                   instruction_text = replace(replace(instruction_text, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y'),
+                   expected_pass = replace(replace(expected_pass, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y'),
+                   expected_fail = replace(replace(expected_fail, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y'),
+                   diagnosis_if_fail = replace(replace(diagnosis_if_fail, 'The Zuma manual''s', 'The YW125Y manual''s'), 'Zuma 125', 'YW125Y')
+             WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1')
+               AND (title || description || instruction_text || expected_pass
+                    || expected_fail || diagnosis_if_fail) LIKE '%Zuma%';
+
+            INSERT OR IGNORE INTO checklist_items
+                (template_id, sequence_number, title, description, instruction_text,
+                 expected_pass, expected_fail, diagnosis_if_fail, required,
+                 tools_needed, estimated_minutes)
+            VALUES
+            -- ---------------------------------------------------- winterization_v1
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 1,
+             'Before storage: service, clean and protect',
+             'Cited: the KTM 690 Enduro 2010 owner''s manual checks all parts for function and wear before storage and does any service, repairs or replacements during the storage period (PDF p. 172). The Honda CB500F owner''s manual washes the machine, waxes painted surfaces except matte ones, coats chrome with rust-inhibiting oil and lubricates the drive chain (PDF p. 117). The BMW F800R rider''s manual sprays the brake and clutch lever pivots and the stand pivots with a suitable lubricant and coats bright metal and chrome with an acid-free grease such as Vaseline (PDF p. 124).',
+             'Check every part for function and wear now. The makers differ on when the work is done: the KTM 690 Enduro manual does service, repairs or replacements during the storage period, to avoid long workshop waits when the season starts (PDF p. 172); the Yamaha XVS95CL owner''s manual makes all necessary repairs step 1 before long-term storage, 60 days or more (PDF pp. 80–81), and the Kymco People S 50/125/200 does any necessary periodic maintenance or repairs before storage, whenever possible (PDF p. 60). Wash the machine and let it dry completely before it is covered: the XVS95CL manual warns that a tarp over a wet machine lets water and humidity cause rust (PDF p. 80). Wax painted surfaces except matte ones and coat chrome with rust-inhibiting oil (Honda CB500F, PDF p. 117) or an acid-free grease (BMW F800R, PDF p. 124). Lubricate the control cables, the lever and pedal pivots and the side and centre stands (Yamaha XVS95CL, PDF p. 81) and, on a chain drive, the chain (Honda CB500F, PDF p. 117).',
+             'Faults listed or repaired, machine clean and dry, paint waxed, bright metal protected, pivots and cables lubricated, no wax or lubricant on the brakes or tires.',
+             'Machine stored dirty or wet, repairs left for the spring, wax or lubricant on a brake disc or tire.',
+             'Wax or lubricant on the brakes or tires costs control. In its care section the Yamaha XVS95CL manual makes sure there is none there and, if necessary, washes the tires with warm water and a mild detergent and cleans the brake discs and pads with brake cleaner or acetone; it tests braking and cornering before riding at higher speeds (PDF p. 80).',
+             1, '["wash kit","wax","lubricant"]', 30),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 2,
+             'Fuel — full and stabilized, or empty: the machine''s own way',
+             'The makers disagree, and the item keeps them apart. The Yamaha XVS95CL owner''s manual fills the tank, adds fuel stabilizer to the product''s instructions and runs the engine for 5 minutes to carry treated fuel through the fuel system (PDF p. 81). The KTM 1290 Super Duke R / RR 2023 owner''s manual adds fuel additive at the last refuel and fills the tank completely with the lowest-ethanol fuel available (PDF p. 157). The KTM 690 Enduro 2010 owner''s manual leaves the tank as empty as possible, so it can be filled with fresh fuel after storage (PDF p. 172). The Kymco People S 50/125/200 owner''s manual empties the tank into an approved container and sprays its inside with aerosol rust-inhibiting oil (PDF p. 60).',
+             'Follow the machine''s own manual: the four positions cannot be averaged. Where it says full and treated, add the additive at the last refuel and fill the tank (KTM 1290 Super Duke R / RR, PDF p. 157); the KTM 2022 250/300 EXC TPI also adds 2-stroke oil after that refuel (PDF p. 154). Only the Yamaha XVS95CL then runs the engine, for 5 minutes, to carry the treated fuel through the fuel system (PDF p. 81); the KTM manuals run no engine at this step. The makers pull different ways on engine runs: the KTM EXC TPI manual warns against running the engine for a short time only, because it cannot warm up and the water vapour from combustion condenses and rusts engine parts and the exhaust (PDF p. 155). Neither page says whether the Yamaha''s 5-minute run is short in KTM''s sense, so each machine follows its own manual. Where the manual says empty, drain the tank into an approved gasoline container and treat it as that manual says; the Kymco People S refuels outdoors with heat, sparks and flame kept away (PDF p. 60).',
+             'Fuel left in the state the machine''s own manual asks for, with the maker''s additive where the manual names one.',
+             'A part-filled tank of untreated fuel; on a KTM whose manual warns against it, the engine started and run for a short time only.',
+             'The Yamaha XV250T1 owner''s manual fills the tank and adds fuel stabilizer (if available) to keep the fuel tank from rusting and the fuel from deteriorating (PDF p. 81). On the KTM 1290 Super Duke R / RR, short engine runs, in which the engine cannot warm up properly, are the named cause of rusted valves and exhaust (PDF p. 157); the KTM 690 Enduro (PDF p. 173) and the KTM EXC TPI (PDF p. 155) warn the same.',
+             0, '["fuel stabilizer","approved fuel container"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 3,
+             'Carburetor float chambers (carbureted machines)',
+             'For carbureted machines. Cited: the Yamaha XV250T1 owner''s manual turns the fuel cock lever to "ON" (PDF p. 80), then drains the carburetor float chambers by loosening the drain bolts, which keeps fuel deposits from building up, and pours the drained fuel into the tank (PDF p. 81). The Kymco People S 50/125/200 owner''s manual drains the carburetor, if equipped, before emptying the tank (PDF p. 60).',
+             'Set the fuel cock where the machine''s own manual puts it: the Yamaha XV250T1 turns it to "ON" before draining (PDF p. 80). Put a clean container under each float chamber, loosen its drain bolt, let the chamber empty and retighten the bolt; that wording is Yamaha''s generic step for vehicles with a carburetor, printed in the fuel-injected XVS95CL''s owner''s manual (PDF p. 81). The Yamaha XV250T1 pours that fuel back into the tank (PDF p. 81); the Kymco People S empties the tank as well (PDF p. 60).',
+             'Every float chamber empty, drain bolts tight and dry, fuel cock where the machine''s manual puts it.',
+             'Fuel left standing in a float chamber; a drain bolt weeping.',
+             'Fuel left in the float chambers is what the Yamaha XV250T1 manual drains to stop fuel deposits building up (PDF p. 81).',
+             0, '["drain pan","screwdriver"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 4,
+             'Engine oil and cylinder protection',
+             'Cited: the KTM 690 Enduro 2010 owner''s manual changes the engine oil and filter and cleans the oil screens before storage (PDF p. 172); the BMW F800R rider''s manual has the oil and filter changed before laying up (PDF p. 124); the Kymco People S 50/125/200 owner''s manual makes the oil and filter change step 1 (PDF p. 60). No storage procedure in the research library names an oil grade for storage: the oil is the one the machine''s own manual specifies. For the cylinders, the Yamaha XVS95CL owner''s manual uses engine fogging oil or, without it, a teaspoonful of engine oil in each spark plug bore (PDF p. 81); the Kymco People S pours a tablespoon (15 - 20 cc) into the cylinder (PDF p. 60).',
+             'Change the engine oil and filter before storage, with the oil the machine''s own manual specifies (KTM 690 Enduro, PDF p. 172; Kymco People S, PDF p. 60); the Kymco People S changes it again after storage if more than 1 month has passed (PDF p. 61). The storage list of the KTM 2022 250/300 EXC TPI changes the gear oil and adds 2-stroke oil (PDF p. 154). Then protect the cylinders the maker''s way: fogging oil to its product instructions, or the plug out and the maker''s measure in — a teaspoonful per cylinder on the Yamaha XVS95CL (PDF p. 81), a tablespoon (15 - 20 cc) on the Kymco People S (PDF p. 60) — and the engine turned over several times. The Yamaha XVS95CL grounds the plug electrodes on the cylinder head while it turns the engine (PDF p. 81); the Kymco People S keeps the plug cap secured away from the plug and covers the plug hole with a cloth (PDF p. 60). Refit the plugs, and cover the muffler outlet with a plastic bag against moisture (Yamaha XVS95CL, PDF p. 81).',
+             'Fresh oil and filter in, cylinders oiled by the maker''s measure, plugs refitted, exhaust outlet covered.',
+             'Used oil left in over the winter; cylinders left dry; on the Yamaha XVS95CL, a plug left ungrounded while the engine was turned over.',
+             'The two cylinder measures differ (a teaspoonful on the Yamaha XVS95CL, PDF p. 81; 15 - 20 cc on the Kymco People S, PDF p. 60): take the machine''s own. The Yamaha XVS95CL grounds the electrodes to prevent damage or injury from sparking (PDF p. 81).',
+             0, '["drain pan","oil filter wrench","spark plug socket"]', 30),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 5,
+             '12-V battery — charge it, and keep it charged',
+             'The makers agree on a full charge and disagree on how often. Cited: the Honda CB500F owner''s manual removes the battery, charges it fully and keeps it shaded and ventilated, or disconnects the negative terminal if it stays in (PDF p. 117). Recharge intervals, each with its condition: a removed, stored battery every two weeks in the Honda PCX150 (2013–2017) service manual (PDF p. 390); a removed battery once a month in the Yamaha XVS95CL owner''s manual (PDF p. 81); about every 4 months in store, and every 2 months at the latest if left connected, in the BMW R 850 R / R 1150 R Maintenance Instructions (PDF p. 49); a sealed battery''s charge checked and, if necessary, recharged every six months while the vehicle is stored in open circuit in the Piaggio Beverly 125 service station manual (PDF pp. 77–78); the same manual says that if the vehicle is not used for some time (1 month or more) the battery needs periodic recharging, and runs down completely in the course of three months (PDF p. 78).',
+             'Charge the battery fully, then do what the machine''s own manual says: remove it; or leave it in with the earth lead off — the BMW R 850 R / R 1150 R instructions say the on-board electronics (the clock) otherwise run it flat, and then warranty claims are not accepted (PDF p. 49); or keep it on a maintenance charger (Yamaha XVS95CL, PDF p. 81); the BMW F800R, out of use for more than four weeks, disconnects the battery or connects a suitable trickle charger, and BMW offers a float charger for it (PDF p. 117). Charge with the charger its manual names: the BMW gel battery only with an electronically controlled charger limited to 14.4 V (R 850 R / R 1150 R, PDF p. 48); the Yamaha never charges a VRLA battery with a conventional charger (XVS95CL, PDF p. 81). Store it where its manual says: 0–30 °C for the Yamaha XVS95CL (PDF p. 81), 0–35 °C out of direct sunshine for the KTM 690 Enduro (PDF p. 172), 10–20 °C, the ideal charging and storage temperature for the lithium-ion battery of the KTM 2022 250/300 EXC TPI (PDF p. 154). Then recharge on the machine''s own interval from the description.',
+             'Battery fully charged, stored or connected as its manual says, the next recharge dated to its interval.',
+             'Battery left connected with no charger all winter; charged with the wrong charger; stored frozen or in the sun.',
+             'A battery left connected and run flat by the on-board electronics is the case the BMW instructions exclude from warranty (R 850 R / R 1150 R, PDF p. 49). The Piaggio Beverly 125 manual says that if the vehicle is not used for some time (1 month or more) the battery needs periodic recharging, and that it runs down completely in three months (PDF p. 78).',
+             1, '["battery charger","voltmeter"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 6,
+             'Electric machine — the traction battery',
+             'For electric machines. Cited: the Vespa Elettrica service station manual, for prolonged periods with the vehicle not in use, charges the traction battery completely at least once every three months (PDF p. 9). A sealed 12-V battery is checked and, if necessary, recharged every six months while the vehicle is stored in open circuit (PDF p. 163).',
+             'Charge the traction battery completely at least once every three months while the machine stands, from a public charging station or a household socket with an earth connection and a differential circuit breaker (Vespa Elettrica, PDF p. 9). Mind the cold: if the vehicle is exposed for a prolonged period to 0 °C to -10 °C, the Elettrica''s electronics allow only a slow, partial charge of about 6 hours to a 60 % state of charge (PDF p. 9). Charging it full before storage, and storing it where it can take a normal charge, are the template''s own advice. For any other electric machine, its own manual owns the figure.',
+             'Traction battery charged completely at least once every three months, the next charge dated.',
+             'Stored discharged, or left more than three months without a charge.',
+             'A partial charge in the cold is the Elettrica protecting its battery, not a fault: after a prolonged period at 0 °C to -10 °C it charges slowly to about 60 % (PDF p. 9).',
+             0, '["charging cable"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='winterization_v1'), 7,
+             'Stand, tires, cover and place',
+             'Cited: the Honda CB500F owner''s manual puts the machine on a maintenance stand with a block so both tires are off the ground (PDF p. 117); the BMW F800R rider''s manual stands it in a dry room with no load on either wheel (PDF p. 124); the Yamaha XVS95CL owner''s manual corrects the tire pressure first and, without a stand, turns the wheels a little once a month so the tires do not degrade in one spot (PDF p. 81). The cover lets humidity out: the KTM 2022 250/300 EXC TPI owner''s manual uses an air-permeable tarp, because non-porous materials trap humidity and cause corrosion (PDF pp. 154–155).',
+             'Set the tires to the machine''s own pressure, then take the weight off both wheels on a stand, a lift stand or blocks (Honda CB500F, PDF p. 117; KTM EXC TPI, PDF p. 154). If it must stand on its tires, turn the wheels a little once a month (Yamaha XVS95CL, PDF p. 81). Choose the place: cool and dry, not a damp cellar, a stable (ammonia) or where strong chemicals are kept (XVS95CL, PDF p. 80), and not subject to large swings in temperature (KTM EXC TPI, PDF p. 154). Let the engine and exhaust cool before covering (XVS95CL, PDF p. 80). Stored outdoors under a full-body cover, the Honda takes the cover off after rain and lets the machine dry (CB500F, PDF p. 117).',
+             'Tires at pressure and off the ground, or a monthly turn dated; a cool, dry place; a breathable cover over a cool machine.',
+             'Standing on its tires all winter with no monthly turn; a non-porous cover; a damp or chemical-laden place.',
+             'Corrosion found in the spring points back at the cover or the place: the Yamaha XVS95CL names damp rooms and a tarp over a wet machine (PDF p. 80), the KTM EXC TPI non-porous covers (PDF p. 155). A tire flattened on one spot goes to tire_service_v1.',
+             1, '["paddock stand","breathable cover","tire pressure gauge"]', 15),
+
+            -- ------------------------------------------------- de_winterization_v1
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 1,
+             'Uncover, clean and take it off the stand',
+             'Cited: the BMW F800R rider''s manual restores a machine to use by removing the protective wax coating, cleaning it and installing a charged battery, then working through its checklist before starting (PDF p. 124); the Kymco People S 50/125/200 owner''s manual starts by uncovering and cleaning the scooter (PDF p. 61); the KTM 2022 250/300 EXC TPI owner''s manual by taking the motorcycle off the lift stand (PDF p. 155).',
+             'Take the cover off and clean the machine (Kymco People S 50/125/200, PDF p. 61), take it off its stand (KTM 2022 250/300 EXC TPI, PDF p. 155), and remove the protective wax coating if necessary (BMW R 850 R / R 1150 R Maintenance Instructions, PDF p. 59). If a plastic bag was put over the muffler outlet for storage, as the Yamaha XVS95CL owner''s manual does (PDF p. 81), take it off; that step is the template''s own, since the manual names only the bag. Then look for what the winter did — rust on bright metal, debris in the intake or the exhaust, a tire flattened on one spot; that list is the template''s own, not a cited document''s.',
+             'Cover, bag and wax off; machine clean; nothing blocked or corroded.',
+             'Exhaust outlet still bagged; wax left on; corrosion or debris found.',
+             'Corrosion under the cover points back at the storage place or the cover (winterization_v1, item 7). A muffler bag left on blocks the exhaust — the template''s own warning.',
+             1, '["wash kit"]', 20),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 2,
+             '12-V battery — check the voltage, charge, install',
+             'Cited: the Piaggio Beverly 125 service station manual checks the open-circuit voltage before a stored battery goes in: above 12.60 V it is installed without a recharge; below 12.60 V it gets a renewal recharge at a constant 14.40 ÷ 14.70 V, 10 to 12 hours recommended (PDF p. 78). The BMW R 1100 S Service and Technical Booklet installs a charged battery and greases its terminals (PDF p. 79).',
+             'Measure the open-circuit voltage with a tester before the battery goes in. On the Piaggio Beverly 125, above 12.60 V it is installed as it is; below 12.60 V it is charged first, in the constant-voltage mode at 14.40 ÷ 14.70 V, 10 to 12 hours recommended, 6 minimum and 24 maximum; the manual''s other mode is a constant current of 1/10 of the battery''s capacity for 5 hours, and for a really flat battery (well below 12.6 V) it warns never to exceed 8 hours of continuous recharging (PDF p. 78). Other machines charge by their own manual: the BMW R 850 R / R 1150 R instructions always fully recharge before restoring to use (PDF p. 49). Connect it the right way round — the Beverly warns not to reverse the connections (PDF p. 78) — grease the terminals (BMW R 1100 S, PDF p. 79; the Beverly coats them with Vaseline, PDF p. 78), and reset what lost power: the KTM 1190 Adventure 2016 owner''s manual sets the time and date if the battery was removed (PDF p. 206).',
+             'Battery above its manual''s voltage (on the Beverly, over 12.60 V) or recharged, fitted the right way round, terminals greased, clock set.',
+             'Battery fitted flat; fitted reversed; a completely flat battery jump-started where the manual says to recharge it.',
+             'Do not jump-start a completely flat battery on the BMW R 850 R / R 1150 R: its instructions recharge it instead, because of the risk of damaging the control units (PDF p. 48). A battery that will not hold a charge after the refresh may be worn out: the Honda PCX150 (2013–2017) service manual says a maintenance-free battery''s performance deteriorates after 2-3 years even in normal use (PDF p. 390).',
+             1, '["voltmeter","battery charger"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 3,
+             'Electric machine — the traction battery',
+             'For electric machines. Cited: the Vespa Elettrica service station manual''s pre-delivery procedure charges the traction battery to 100 % state of charge, and runs the normal charge to 100 % only at battery temperatures above 0 °C; below 0 °C it runs a slow, partial charge (PDF p. 9). For prolonged periods out of use, the same page charges the traction battery completely at least once every three months (PDF p. 9).',
+             'Charge the traction battery to 100 % before the first ride. The Elettrica''s pre-delivery procedure charges it to 100 %; using that step for a machine coming out of storage is the template''s own (PDF p. 9). If it charges only part of the way, look at the battery''s temperature first: the Elettrica runs the normal charge only above 0 °C (PDF p. 9). With the traction battery full, the Elettrica''s ancillary battery may still not be fully charged; it is charged while the vehicle is running (PDF p. 9).',
+             'Traction battery at 100 %, charged above 0 °C.',
+             'A charge that stops short in the cold taken for a battery fault.',
+             'A short charge in the cold is the Elettrica protecting its battery (PDF p. 9). On the Elettrica''s 70 km/h version, below a 10 % state of charge the battery icon flashes and the speed is limited (PDF p. 90).',
+             0, '["charging cable"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 4,
+             'Fuel and engine oil',
+             'Cited: the Kymco People S 50/125/200 owner''s manual changes the engine oil if more than 1 month has passed since the start of storage, drains any excess aerosol rust-inhibiting oil from the fuel tank and fills it with fresh gasoline (PDF p. 61); the KTM 690 Enduro 2010 owner''s manual refuels as it puts the machine back into operation (PDF p. 173).',
+             'Drain any excess rust-inhibiting oil from the tank and fill it with fresh gasoline: those are the Kymco People S''s steps (PDF p. 61), and doing them only where the tank was emptied and oiled for storage is the template''s own condition. The KTM 690 Enduro refuels as it goes back into operation (PDF p. 173). Oil: the Kymco People S changes it if more than 1 month has passed since storage began (PDF p. 61); other machines follow their own manual. Check the oil level and look for leaks, as the Kymco People S pre-ride inspection does (PDF p. 25).',
+             'Fresh fuel, no rust-inhibiting oil left in the tank, engine oil changed or checked by the manual''s rule, no leaks.',
+             'Stale fuel; the tank still holding rust-inhibiting oil; oil not changed after more than a month on a machine whose manual asks for it.',
+             'An oil level below its mark or a leak is a repair before the ride: the Kymco People S pre-ride inspection adds oil if required and checks for leaks (PDF p. 25).',
+             0, '["approved fuel container","drain pan"]', 20),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 5,
+             'The maker''s before-use checks',
+             'Cited: the KTM 2022 250/300 EXC TPI owner''s manual prepares a stored machine for use with its checks and maintenance measures (PDF p. 155), which include brake fluid levels, brake linings, brake function, coolant level, the chain, tire condition and pressure, spoke tension, the controls, and the screws, nuts and hose clamps (PDF p. 46). The Honda CB500F owner''s manual inspects every item on its Maintenance Schedule after storage (PDF p. 117).',
+             'Work through the machine''s own before-use list, not a generic one. The KTM EXC TPI''s includes brake fluid level front and rear, the brake linings, that the brake system works, coolant level, the chain for dirt, the chain, sprockets and chain guide, chain tension, tire condition and pressure, spoke tension, every control for smooth operation, and screws, nuts and hose clamps for tightness, besides the gear oil, electrical system, fork, air filter, fuel and 2-stroke oil checks on the same list (PDF p. 46). The Kymco People S 50/125/200''s is engine oil, tires, fuel, front and rear brakes, steering, instruments, lights and horn, and the chassis (PDF p. 25). The Honda CB500F''s is every item on its Maintenance Schedule (PDF p. 117). The BMW R 850 R / R 1150 R instructions perform the rider''s manual''s safety checks (PDF p. 59).',
+             'Every item on the machine''s own list checked and passed.',
+             'A fluid below its mark, a loose fastener, a control that binds.',
+             'A brake fluid level below its marking is a leak or worn linings in the KTM EXC TPI manual''s reading, and the machine is not ridden until the problem is eliminated (PDF p. 101).',
+             1, '["flashlight","tire pressure gauge"]', 25),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 6,
+             'Brakes and tire pressures',
+             'Cited: the BMW R 850 R / R 1150 R Maintenance Instructions restore a machine to use with "Check the brakes" and "Check/correct tyre pressures" (PDF p. 59), and the BMW R 1100 S Service and Technical Booklet the same (PDF p. 79). No maker''s document in the research library asks for the brakes to be exercised after storage; what they ask is a check. The Yamaha XVS95CL owner''s manual sets tire pressure on cold tires, at ambient temperature (PDF p. 58).',
+             'Brakes: fluid levels and linings from item 5, then check that the brake system works (KTM 2022 250/300 EXC TPI, PDF p. 46). If wax or lubricant is on the discs or pads, clean them with brake cleaner or acetone, as the Yamaha XVS95CL''s care section does after cleaning and waxing (PDF p. 80). Tires: check and correct the pressure cold, with the tires at ambient temperature (XVS95CL, PDF p. 58), to the machine''s own figure.',
+             'Brakes working with fluid and linings in order; tires at the machine''s own cold pressure.',
+             'A lever that sinks or feels spongy; contamination on a disc or pad; a tire below its pressure.',
+             'A spongy lever after storage goes to brake_service_v1, and a tire that lost pressure or flattened on one spot to tire_service_v1, before the machine is ridden (the template''s own routing).',
+             1, '["tire pressure gauge","brake cleaner"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='de_winterization_v1'), 7,
+             'Test ride',
+             'Cited: the Kymco People S 50/125/200 owner''s manual test-rides the scooter at low speeds in a safe riding area, away from traffic (PDF p. 61); the KTM 2022 250/300 EXC TPI owner''s manual ends its return to use with a test ride (PDF p. 155), as the KTM 690 Enduro 2010 owner''s manual does (PDF p. 173).',
+             'Ride first at low speed, away from traffic (Kymco People S, PDF p. 61). Test braking and cornering before higher speeds, as the Yamaha XVS95CL owner''s manual does after cleaning (PDF p. 80). Listen and feel for what the stationary checks could not show — a dragging brake, a pull, a misfire, a warning light; that list is the template''s own.',
+             'Brakes, steering and engine behave normally at low speed and then at road speed.',
+             'A dragging or weak brake, a pull, a misfire or a warning light.',
+             'Anything the test ride finds routes to its own protocol — brake_service_v1, tire_service_v1, suspension_service_v1 or drivetrain_service_v1 (the template''s own routing).',
+             1, '[]', 15),
+
+            -- -------------------------------------------------- engine_break_in_v1
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 1,
+             'Which break-in applies — new engine or new parts',
+             'Cited: the Genuine Buddy 125 owner''s manual applies its run-in "When your engine is new or when you have installed new engine components" (PDF p. 25). The Yamaha SR400 owner''s manual gives the reason for a new engine: over the first 1600 km (1000 mi) its parts wear and polish themselves to the correct operating clearances (PDF p. 39). The SYM T2 250i owner''s manual, for a replaced engine, says it is better to drive in low speed, with no distance given; for a new engine it drives at low speed for the first 1,000 km and changes the engine oil and cleans the oil filter element after the first 300 km (PDF p. 17). No service manual in the research library gives a separate break-in after an engine or top-end rebuild.',
+             'Find the break-in in the machine''s own owner''s manual and use it for a new engine. After a rebuild or new parts, Genuine speaks to it: its run-in covers newly installed engine components (Buddy 125, PDF p. 25). SYM speaks to a replaced engine: its T2 250i owner''s manual says it is better to drive in low speed after replacing the engine, with no distance given (PDF p. 17). For any other machine its own service manual owns the post-rebuild procedure; where that says nothing, following the owner''s-manual break-in is the template''s own recommendation, not a cited document''s. Record the odometer reading at the start: every limit below is counted from it.',
+             'The machine''s own break-in found and the start odometer reading recorded.',
+             'A generic break-in used in place of the maker''s; no start reading.',
+             'One manual can carry two schedules: the Genuine Buddy 125''s gives 0 - 100 miles and a 500-mile run-in on PDF p. 25, and 0~95 miles and a 620-mile run-in on PDF p. 27. Where they differ, follow the stricter (the template''s own rule).',
+             1, '[]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 2,
+             'The limits, by distance — each maker''s own measure',
+             'Each maker''s limit, with its measure. Engine speed: the KTM 690 Enduro 2010 owner''s manual, 6,000 rpm for the first 1,000 km and 7,800 rpm after (PDF p. 46); the KTM 1190 Adventure 2016 owner''s manual, 6,500 rpm and then 10,250 rpm (PDF p. 86); the Yamaha SR400 owner''s manual, no prolonged operation above 3500 r/min from 0 to 1000 km and above 4200 r/min from 1000 to 1600 km (PDF p. 39); the BMW R 1200 GS rider''s manual, running-in speeds below 5000 rpm until the running-in check (PDF p. 85). Throttle: the Yamaha XVS95CL owner''s manual, no prolonged operation above 1/3 throttle from 0 to 1000 km and above 1/2 throttle from 1000 to 1600 km (PDF p. 41); the Kymco People S 50/125/200 owner''s manual, less than 1/2 throttle for the initial 300 miles (600 km) and less than 3/4 up to 600 miles (1,000 km), in its own printed conversions (PDF p. 23). Engine performance: the KTM 2022 250/300 EXC TPI owner''s manual, under 70 % for the first 3 operating hours and under 100 % for the first 5 (PDF p. 40).',
+             'Take the machine''s own limits in their own measure, and do not convert one into another: a throttle fraction is not an engine speed, and operating hours are not kilometres. The Honda CB500F owner''s manual sets no engine speed: for the first 300 miles (500 km) it avoids full-throttle starts and rapid acceleration, hard braking and rapid down-shifts (PDF p. 14). The Kymco People S also keeps the road speed below 25 MPH (40 KPH) for its first 600 miles (1,000 km) (PDF p. 40). The Yamaha SR400 keeps the engine speed out of the tachometer red zone (PDF p. 39).',
+             'Every limit the machine''s manual sets kept, in its own measure, to its own distance or time.',
+             'Full throttle or high engine speed inside the break-in distance; one maker''s figure used on another machine.',
+             'Exceeding the running-in engine speeds leads to increased engine wear, in the BMW F800R rider''s manual''s words (PDF p. 66).',
+             1, '[]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 3,
+             'How to ride it — vary the load',
+             'Cited: the BMW R 1200 GS rider''s manual varies the throttle opening and engine-speed range frequently, avoids constant engine rpm for prolonged periods, and does most of its riding on twisting, fairly hilly roads (PDF p. 85). The BMW F800R rider''s manual avoids low engine speeds at full load (PDF p. 67). The Kymco People S 50/125/200 owner''s manual varies the engine speed so the parts are loaded, then unloaded and allowed to cool (PDF p. 23).',
+             'Ride it with a changing load: vary throttle and engine speed and avoid long stretches at one engine speed (BMW R 1200 GS, PDF p. 85); the BMW F800R avoids high-speed main roads and highways where possible and makes no full-load acceleration (PDF p. 66), and does not labour the engine at low speed under full load (PDF p. 67). The Yamaha SR400 avoids prolonged full-throttle operation and any condition that might overheat the engine (PDF p. 39). Some stress is part of it: the Kymco People S says some stress must be placed on the components, but not excessive load on the drive line (PDF p. 23).',
+             'Riding with varied throttle and engine speed, no labouring, no long constant-speed runs, and no full-load acceleration on a machine whose manual forbids it.',
+             'Long constant-speed or highway runs, full-throttle acceleration, labouring the engine at low speed.',
+             'Constant low speed is not the gentle choice: the Kymco People S warns that constant low speed (light load) can glaze parts (PDF p. 23).',
+             1, '[]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 4,
+             'Cool-down between runs (where the maker asks for it)',
+             'Two makers in the research library prescribe a cool-down, and no document names heat cycles. The Genuine Buddy 125 owner''s manual prints two schedules: cool the engine for 10 minutes after every 30 minutes of operation for the first 100 miles (PDF p. 25), and 5-10 minutes per hour for the first 95 miles (PDF p. 27). The Yamaha XC50J owner''s manual stops the engine after every hour of operation and lets it cool for five to ten minutes, from 0 to 150 km (PDF p. 34).',
+             'On a machine whose manual prescribes a cool-down, stop and let the engine cool on its schedule: on the Genuine Buddy 125, where its two pages differ, 10 minutes after every 30 for the first 100 miles (PDF p. 25) is the stricter; on the Yamaha XC50J, five to ten minutes after every hour for the first 150 km (PDF p. 34). No other maker''s document in the research library asks for cool-downs, so none is invented for other machines.',
+             'Cool-downs kept on the manual''s schedule, where the manual has one.',
+             'Long first rides with no stop on a machine whose manual asks for cool-downs.',
+             'High engine temperature is what the Genuine Buddy 125''s run-in avoids through its first 500 miles (PDF p. 25).',
+             0, '[]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 5,
+             'First oil change and first service',
+             'Cited: the Yamaha XVS95CL owner''s manual changes the engine oil and replaces the oil filter after 1000 km (600 mi) (PDF p. 41). The Honda PCX150 (2013–2017) service manual changes the engine oil first at 600 mi (1,000 km) or 1 month (PDF p. 77), and says the first scheduled maintenance compensates for the initial wear of the break-in period (PDF p. 3). The Kymco People S 50/125/200 owner''s manual has the initial service done after one month or 200 miles (300 km), whichever comes first (PDF p. 25). The BMW F800R rider''s manual has its running-in check done between 500 km and 1200 km (PDF p. 141).',
+             'Book the first oil change and the first service at the machine''s own distance, counted from the start reading: 1000 km on the Yamaha XVS95CL, oil and filter (PDF p. 41); 600 mi (1,000 km) or 1 month on the Honda PCX150 (PDF p. 77); one month or 200 miles (300 km) on the Kymco People S (PDF p. 25), where all fasteners are tightened and the contaminated engine oil is replaced (PDF p. 23); between 500 km and 1200 km for the BMW F800R''s running-in check (PDF p. 141). The Genuine Buddy 125 changes its gear oil after 200 miles (PDF p. 27). On the F800R, do not skip it: its manual says not to omit the first inspection after 500 - 1200 km (PDF p. 67).',
+             'First oil change and first service done at the machine''s own distance, and recorded.',
+             'The first service skipped or pushed past its distance.',
+             'The Kymco People S replaces the contaminated engine oil at the initial service and tightens all fasteners (PDF p. 23).',
+             1, '["drain pan","oil filter wrench"]', 30),
+
+            ((SELECT id FROM workflow_templates WHERE slug='engine_break_in_v1'), 6,
+             'Trouble during break-in',
+             'Cited: the Yamaha XVS95CL owner''s manual has a Yamaha dealer check the vehicle immediately if any engine trouble occurs during the break-in period (PDF p. 42); the Genuine Buddy 125 owner''s manual refers any problem during the initial run-in to the dealer (PDF p. 27).',
+             'At the first sign of trouble have the machine checked: Yamaha''s word is immediately (XVS95CL, PDF p. 42), and Genuine''s is to contact the dealer (Buddy 125, PDF p. 27). What counts as trouble here is the template''s own list: an unfamiliar noise, smoke, overheating, a warning light, oil where it should not be. On the KTM 2022 250/300 EXC TPI, check the idle speed regularly: it may change during the run-in time, its guideline is 1,400 … 1,500 rpm, and it is adjusted if it changes (PDF p. 40).',
+             'No trouble during break-in, or trouble stopped and checked at once.',
+             'Riding on through a noise, overheating or a warning light during break-in.',
+             'The makers send trouble during break-in to the dealer (Yamaha XVS95CL, PDF p. 42; Genuine Buddy 125, PDF p. 27); not riding on in the meantime is the template''s own advice.',
+             1, '[]', 5),
+
+            -- ------------------------------------------------- valve_adjustment_v1
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 1,
+             'Engine cold — by the maker''s definition',
+             '"Cold" is two definitions in the makers'' own documents: below 35 °C (95 °F) in the Honda PCX150 (2013–2017) service manual (PDF p. 82) and the Honda CHF50 service manual (PDF p. 64), and below 35 °C in the Kymco People / People S 250 service manual (PDF p. 59); "a cold engine, at room temperature" in the Yamaha YW125Y 2009 service manual (PDF p. 62). The KTM 1190 Adventure 2016 owner''s manual does not say cold: it gives its figures at 20 °C (68 °F) (PDF p. 209).',
+             'Let the engine cool to its own manual''s definition before measuring: a clearance read warm is not the clearance in the book. On the KTM 1190 Adventure, measure at the 20 °C its figures are given at (PDF p. 209). Where the manual says only that the service must be performed when the engine is cold — the Yamaha XVS95CL owner''s manual''s wording (PDF p. 58) — reading that as room temperature after the engine has stood is the template''s own.',
+             'Engine at or below its manual''s temperature.',
+             'Measured on a warm engine.',
+             'A clearance read warm cannot be compared with the figures in item 3, which are given cold, at a stated temperature or, on the Vespa GTS Super 300 ie, with no temperature at all: let the engine cool and measure again (the template''s own rule).',
+             1, '[]', 5),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 2,
+             'Piston at TDC on the compression stroke',
+             'Cited: the Yamaha YW125Y 2009 service manual measures with the piston at top dead center on the compression stroke: the punch mark on the camshaft sprocket on the stationary mark on the cylinder head, and the TDC mark on the AC magneto rotor on the pointer on the crankcase, turning the crankshaft counterclockwise (PDF pp. 62–63). The Honda PCX150 (2013–2017) service manual confirms the compression stroke by slack in the rocker arm (PDF p. 82).',
+             'Remove what the machine''s manual lists to reach the valves, then turn the crankshaft in its own direction (counterclockwise on the Yamaha YW125Y, PDF p. 62) until the flywheel TDC mark and the camshaft marks line up. They line up on the exhaust stroke too: on the Honda PCX150, slack in the rocker arm confirms the compression stroke, and no slack means one more full turn (PDF p. 82); on the Honda CHF50 the camshaft lobe faces the cylinder side at compression TDC, and if it does not, the crankshaft turns one more revolution (PDF p. 64).',
+             'Flywheel and camshaft marks aligned on the compression stroke, confirmed by the machine''s own test (rocker-arm slack on the Honda PCX150, the camshaft lobe toward the cylinder on the Honda CHF50).',
+             'Marks aligned on the exhaust stroke.',
+             'No slack in the rocker arm means the piston is on the exhaust stroke, in the Honda PCX150 manual''s reading: turn one full turn and align again (PDF p. 82).',
+             1, '["socket set"]', 10),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 3,
+             'Measure with a feeler gauge',
+             'Clearances, each the named machine''s own, given cold unless noted: the Yamaha YW125Y 2009 service manual, intake 0.10 ~ 0.14 mm and exhaust 0.16 ~ 0.20 mm (PDF p. 62); the Honda PCX150 (2013–2017) service manual, intake 0.10 ± 0.02 mm and exhaust 0.24 ± 0.02 mm (PDF p. 82); the Honda CHF50 service manual, intake 0.10 ± 0.03 mm and exhaust 0.19 ± 0.03 mm (PDF p. 64); the Kymco People / People S 250 service manual, intake 0.1 mm and exhaust 0.1 mm (PDF p. 59); the KTM 690 Enduro 2010 owner''s manual, valve play cold 0.07… 0.13 mm (PDF p. 174); the Vespa GTS Super 300 ie (2008) service station manual, intake 0.10 mm and exhaust 0.15 mm, with no temperature stated (PDF p. 9).',
+             'On a screw-adjusted rocker the gauge goes between the adjusting screw and the valve stem (Honda PCX150, PDF p. 82); on a shim engine, between the valve lifter and the shim (Honda CHF50, PDF p. 64). The right clearance gives a slight drag on the feeler gauge (PCX150, PDF p. 83). Measure every valve, intake and exhaust apart: on most machines above their figures differ, though the Kymco People / People S 250 gives 0.1 mm for both (PDF p. 59) and the KTM 690 Enduro one valve-play figure (PDF p. 174). Writing each reading down is the template''s own step; on a shim engine the reading is the B of the shim formula (Honda CHF50, PDF p. 65).',
+             'Every valve within its own machine''s figure for its side.',
+             'Any valve outside its figure, or a reading that could not be taken.',
+             'Too small a clearance is a cause of low compression in the Kymco People / People S 250 service manual (PDF p. 60). Unadjusted valves lead to an improper air-fuel mixture, engine noise and eventually engine damage in the Yamaha XVS95CL owner''s manual (PDF p. 58).',
+             1, '["feeler gauge"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 4,
+             'Adjust — adjusting screw and lock nut',
+             'For rocker arms with an adjusting screw. Cited: the Yamaha YW125Y 2009 service manual loosens the locknut, sets the gauge between the adjusting screw and the valve tip, turns the screw to the clearance, holds it and tightens the locknut to 7 Nm (PDF p. 63), then measures again and repeats until the clearance is in specification (PDF p. 64). The Honda PCX150 (2013–2017) service manual oils the lock nut threads and seat and tightens it to 10 N·m (PDF p. 83). The Kymco People / People S 250 service manual tightens the adjusting nut to 8.8 N-m with engine oil on the threads (PDF p. 81) and checks the clearance again after the lock nut is tightened (PDF p. 59).',
+             'Loosen the lock nut, turn the screw until the gauge slides with a slight drag (Honda PCX150, PDF p. 83), hold the screw still and tighten the lock nut to the machine''s own torque: 7 Nm on the Yamaha YW125Y (PDF p. 63), 10 N·m on the Honda PCX150 (PDF p. 83), 8.8 N-m with the threads oiled on the Kymco People / People S 250, whose torque table names the valve clearance adjusting nut rather than a lock nut (PDF p. 81), 6 ÷ 8 Nm for the tappet set screw lock nut on the Vespa GTS Super 300 ie (PDF p. 16). Measure again after tightening, as the Kymco People / People S 250 does (PDF p. 59); the YW125Y repeats every step until the clearance is in specification (PDF p. 64). Use the maker''s tool where it names one: the YW125Y''s valve adjusting tool 90890-01311 (PDF p. 63).',
+             'Every adjusted valve within its figure after the lock nut is at torque.',
+             'A clearance that moved when the lock nut was tightened; a lock nut left below its torque.',
+             'Measure again with the lock nut at torque and repeat until the clearance is in specification (Yamaha YW125Y, PDF p. 64); that a clearance can move as the nut is tightened is the template''s own reading of why.',
+             0, '["feeler gauge","valve adjusting tool","torque wrench"]', 20),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 5,
+             'Adjust — shims',
+             'For engines with shims. Cited: the Honda CHF50 service manual removes the shim, measures it and calculates the new one as A = (B - C) + D, where A is the new shim thickness, B the recorded valve clearance, C the specified valve clearance and D the old shim thickness; sixty-nine thicknesses are available from 1.200 mm to 2.900 mm in 0.025 mm increments (PDF p. 65).',
+             'Mark every shim to its valve so each goes back in its original place, and do not let one fall into the crankcase; tweezers or a magnet lift them out (Honda CHF50, PDF p. 65). Measure the old shim, calculate A = (B - C) + D, and check the new shim with a micrometer before it goes in. Turn the crankshaft counterclockwise several times and check the clearance again (PDF p. 65).',
+             'Every valve within its figure with the new shims, rechecked after the crankshaft has turned.',
+             'A shim dropped into the crankcase; a shim fitted to the wrong valve; a calculated shim outside the range.',
+             'The Honda CHF50 manual refaces the valve seat if carbon deposits result in a calculated shim over 2.900 mm (PDF p. 65).',
+             0, '["feeler gauge","micrometer","magnet"]', 40),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 6,
+             'Recheck, close up and set the next interval',
+             'Cited: the Yamaha YW125Y 2009 service manual refits the breather and valve covers at 7 Nm and the spark plug at 13 Nm (PDF p. 64); the Honda PCX150 (2013–2017) service manual checks the left crankcase cover duct''s rubber seal and replaces it if necessary (PDF p. 83). The interval is each machine''s own schedule: every 16000 mi (25000 km) on the Yamaha XVS95CL, checked when the engine is cold (PDF p. 45).',
+             'Check the clearance once more with everything tight, then refit what was removed — the Honda PCX150 checks the left crankcase cover duct rubber seal and replaces it if necessary (PDF p. 83) — with the covers and spark plug at the manual''s torque (Yamaha YW125Y: covers 7 Nm, plug 13 Nm, PDF p. 64). Recording every reading with the date and odometer is the template''s own step; set the next check from the machine''s own schedule.',
+             'Readings recorded, covers and plug at torque, next check scheduled.',
+             'A damaged seal reused; no record of the readings.',
+             'Oil at the valve cover after the job points at the cover or its gasket (the template''s own reading): refit the cover to the manual''s torque, 7 Nm on the Yamaha YW125Y (PDF p. 64).',
+             1, '["torque wrench"]', 15),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 7,
+             'V-twin — both cylinders, each at its own figure',
+             'Cited: the KTM 1190 Adventure 2016 owner''s manual — a 2-cylinder engine in a 75° V arrangement, DOHC with 4 valves per cylinder — gives valve clearance at 20 °C (68 °F): intake 0.10… 0.15 mm, exhaust 0.25… 0.30 mm (PDF p. 209); the KTM 1290 Super Duke R / RR 2023 owner''s manual gives the same figures at 20 °C (PDF p. 161). The Yamaha XVS95CL owner''s manual, for its V-type 2-cylinder (PDF p. 82), gives the owner no figure: the clearance is checked and adjusted when the engine is cold every 16000 mi (25000 km), by a Yamaha dealer (PDF p. 45).',
+             'Treat each cylinder as its own job: bring each to TDC on its own compression stroke and measure its valves against the figure for that side — that method is the template''s own; the KTM manuals give one figure set for all valves (KTM 1190 Adventure, PDF p. 209). The KTM 1190 Adventure''s service schedule checks the clearance with the air filter and spark plugs removed (PDF p. 103). On the Yamaha XVS95CL, the owner''s manual sends the job to a Yamaha dealer (PDF p. 58).',
+             'Both cylinders'' valves within the machine''s own figures.',
+             'One cylinder measured and the other assumed; a figure from another V-twin used.',
+             'The two KTM V-twins share one figure set (KTM 1190 Adventure, PDF p. 209; KTM 1290 Super Duke R / RR, PDF p. 161); other V-twins take theirs from their own manual.',
+             0, '["feeler gauge","socket set"]', 60),
+
+            ((SELECT id FROM workflow_templates WHERE slug='valve_adjustment_v1'), 8,
+             'Inline-four, boxer twin and desmodromic engines — no figure in the library',
+             'No document in the research library gives a valve clearance figure for an inline-four or a boxer twin, and none covers a desmodromic valve train. What the documents do give: the Yamaha YZFR6L owner''s manual checks and adjusts the clearance when the engine is cold every 26600 mi (42000 km), by a Yamaha dealer (PDF p. 60); the BMW K 1200 RS Maintenance Instructions describe bucket-type tappets under two chain-driven overhead camshafts (PDF p. 63); the BMW R 1100 S Service and Technical Booklet describes tappets and short pushrods (PDF p. 80) and schedules "Check/adjust valve clearances" (PDF p. 7).',
+             'Items 1 to 6 are the shape of the job on any engine, but the figures, the timing marks and the adjustment method are the machine''s own, and for these engine types they are not in the research library: take them from the machine''s own service manual. Do not use a single-cylinder or V-twin figure from this template on these engines.',
+             'The machine''s own service manual in hand before the valve cover comes off.',
+             'A clearance figure borrowed from another machine.',
+             'Without the maker''s figure there is no pass or fail reading: the job waits for the manual (the template''s own rule).',
+             0, '[]', 5);
+        """,
+        rollback_sql="""
+            DELETE FROM checklist_items
+             WHERE template_id IN (SELECT id FROM workflow_templates
+                                    WHERE slug IN ('winterization_v1', 'de_winterization_v1',
+                                                   'engine_break_in_v1', 'valve_adjustment_v1'));
+
+            DELETE FROM workflow_templates
+             WHERE slug IN ('winterization_v1', 'de_winterization_v1',
+                            'engine_break_in_v1', 'valve_adjustment_v1');
+
+            UPDATE workflow_templates
+               SET description = 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. Track N phase 264 expands.',
+                   updated_at = CURRENT_TIMESTAMP
+             WHERE slug = 'generic_winterization_v1';
+
+            -- The F160 text back: the specific phrase first, then the rest.
+            UPDATE checklist_items
+               SET title = replace(replace(title, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125'),
+                   description = replace(replace(description, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125'),
+                   instruction_text = replace(replace(instruction_text, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125'),
+                   expected_pass = replace(replace(expected_pass, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125'),
+                   expected_fail = replace(replace(expected_fail, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125'),
+                   diagnosis_if_fail = replace(replace(diagnosis_if_fail, 'The YW125Y manual''s', 'The Zuma manual''s'), 'YW125Y', 'Zuma 125')
+             WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1');
+        """,
+    ),
 ]
 
 

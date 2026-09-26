@@ -392,9 +392,11 @@ class TestContentPins:
             by_title["Front fork — seals, stanchions and action"][k] or ""
             for k in ("description", "diagnosis_if_fail")
         )
-        assert "Zuma 125" in fork_text and "CHF50" in fork_text
+        # F160 (fixed by migration 070): the Yamaha service manual's title
+        # page names the YW125Y; "Zuma" is on none of its pages.
+        assert "YW125Y" in fork_text and "CHF50" in fork_text
         steering_text = by_title["Steering head bearings"]["instruction_text"]
-        assert "KTM" in steering_text and "Zuma 125" in steering_text
+        assert "KTM" in steering_text and "YW125Y" in steering_text
         brakes_text = by_title[
             "Brakes — pads or shoes, drums, discs and levers"
         ]["instruction_text"]
@@ -406,7 +408,11 @@ class TestContentPins:
         for machine in ("Metropolitan", "CHF50", "KTM"):
             assert machine in tires_text
         wheels_text = by_title["Wheel bearings and rims"]["instruction_text"]
-        assert "CHF50" in wheels_text and "Zuma 125" in wheels_text
+        assert "CHF50" in wheels_text and "YW125Y" in wheels_text
+        for item in by_title.values():
+            for k in ("title", "description", "instruction_text",
+                      "expected_pass", "expected_fail", "diagnosis_if_fail"):
+                assert "Zuma" not in (item[k] or "")
 
 
 # --- F158: no build references in text users see ---

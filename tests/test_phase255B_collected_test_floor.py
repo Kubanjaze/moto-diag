@@ -153,7 +153,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: pass's title-page names pin), nothing else moved. Measured with
 #: `--collect-only -q -p no:xdist`: 9,415 (9,414 before the refute pin).
 #:
-COLLECTED_TEST_FLOOR = 9415
+#: 9446 (Phase 264, 2026-09-26) — +31: `test_phase264_seasonal_breakin_valve.py`
+#: 31 (migration 070's four templates, the two live re-points and their
+#: round trip, per-field pins, the negatives, the F158 pins, the CLI).
+#: The 114 and 260 pins that moved with F160 and the electric
+#: winterization template changed no count. Measured with
+#: `--collect-only -q -p no:xdist`: 9,446.
+#:
+COLLECTED_TEST_FLOOR = 9446
 
 
 def _collected_count() -> int:

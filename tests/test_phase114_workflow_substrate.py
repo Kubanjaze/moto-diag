@@ -235,10 +235,13 @@ class TestTemplateCRUD:
         assert all(t["category"] == "ppi" for t in ppi_templates)
 
     def test_list_by_powertrain(self, db):
-        # Winterization is ICE/hybrid only — electric should not match
-        electric = list_templates(db, powertrain="electric")
-        winterization_in_electric = [t for t in electric if t["category"] == "winterization"]
-        assert winterization_in_electric == []
+        # The generic winterization template is ICE/hybrid only — electric
+        # should not match it. Phase 264's winterization_v1 is marked for
+        # electric too (an electric machine's storage: its 12-V and
+        # traction batteries), so the pin is on the generic slug.
+        electric = {t["slug"] for t in list_templates(db, powertrain="electric")}
+        assert "generic_winterization_v1" not in electric
+        assert "winterization_v1" in electric
 
     def test_update_template(self, db):
         tid = create_template(
