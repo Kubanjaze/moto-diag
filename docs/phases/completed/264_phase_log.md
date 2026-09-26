@@ -1,6 +1,6 @@
 # Phase 264 — Track N batch 2: winterization, de-winterization, engine break-in and valve adjustment — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-26; the live apply awaits the operator)
 **Branch:** `phase-264` (Opus session, main checkout)
 
 ---
@@ -340,3 +340,68 @@ short-run warning, but the warning is on its p. 173 (claim W23). The
 cross-check's control, withdrawing W23, reddened exactly that citation.
 **W30**, added from round 3's own quote, is checked mechanically on its
 page but has had no fourth round.
+
+## Bug fixes
+
+None. The phase changed no production code beyond migration 070's
+content and the `SCHEMA_VERSION` line. Two red first runs were
+test-authoring errors, recorded in the build entry, and the refute's
+changes were content corrections, recorded in the Refuter pass.
+
+## Regression of record
+
+Regression of record: 9446 passed, 0 failed, 0 skipped, 0 errors at `717dc47` (34 min 41 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- The tree was clean at `717dc47`.
+- The floor is 9446, and 9,446 were collected.
+- pytest's own time was 19 min 0 s. The wall time is longer because the
+  operator's network dropped mid-run; the log kept growing throughout.
+- The log is `~/.cache/motodiag/regressions/717dc47_parallel_20260926_131826.log`.
+
+## Deploy preparation — 2026-09-26: backup, dry run, diff; the live apply waits for the operator
+
+`s0/deploy264.py` (session scratchpad) works in two steps:
+- **`dryrun`** takes the before-state from live (read only), backs up
+  with SQLite's backup API (retain 5), migrates a copy of the backup,
+  diffs every table by rowid, prints every changed row's before and after
+  text, and checks the scope;
+- **`apply-live`** is a separate step, run only on the operator's
+  answer. It diffs live against the backup and runs the same scope check.
+
+**The scope check:**
+- `workflow_templates`: 1 changed (`generic_winterization_v1`) and 4
+  added;
+- `checklist_items`: 3 changed, each a "Zuma" re-point, and 28 added;
+- `schema_version`: +1;
+- nothing else changed, added or removed.
+
+Its control, on scratch databases built at 069: the real migration gave
+"none"; a copy with one extra item changed gave "checklist_items 4
+changed" and "rowid 2: not a Zuma re-point".
+
+**Dry run, 13:19:**
+- **Before (live, read only):** schema 69, 1,060 `known_issues`, 8
+  templates, 51 items, integrity ok, `known_issues` sha256 prefix
+  `5932cd02c78ae850` (this script's own row hash). No process had the
+  file open.
+- **Backup:** `~/backups/motodiag/motodiag_pre264_20260926_131946.db`,
+  identical before-state. Retain 5 removed
+  `motodiag_pre354_20260924_163732.db`.
+- **On the copy:** applied `[70]`. Schema 70, 12 templates, 79 items,
+  integrity ok, `known_issues` unchanged. **Scope problems: none.**
+- **The diff:**
+  - `checklist_items` rowids 18, 19 and 21: 8 "Zuma" mentions become
+    "YW125Y" across 7 fields;
+  - rowids 52–79 added;
+  - `workflow_templates` rowid 2: the description re-pointed, and
+    `updated_at` set from NULL;
+  - rowids 9–12 added;
+  - `schema_version` +1.
+
+  The full before and after text is `s0/dryrun_diff.md`, shown to the
+  operator.
+
+**The merge to `master` waits with the live apply.** `init_db` applies
+pending migrations, so a merged 070 would reach the live rows the first
+time any command opened `data/motodiag.db`. Both wait for the
+operator's answer.

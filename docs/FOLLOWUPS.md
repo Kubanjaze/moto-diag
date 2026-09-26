@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F161** (this file); the mobile
+At the time of writing the highest assigned is **F162** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1705,3 +1705,28 @@ live-row change of its own (rule 1). What would close it is the F159
 shape: a migration keyed on the old text that either cites the figures
 per machine or defers them to `winterization_v1`, with a pin that no
 uncited figure returns.
+
+### F162
+
+**`ppi_chassis_v1`'s steering item misreads the YW125Y service manual's p. 93, and one KTM citation cannot tell its manual apart**
+
+Found by Phase 264's valve refuter while it checked F160's re-pointed
+chassis text, and outside that change's scope, which was the name only:
+
+- **Steering head bearings, instruction_text:** "the YW125Y service
+  manual calls the same movement binding or looseness (PDF p. 93)". On
+  p. 93, binding or looseness is the fault the check finds, not the name
+  of the movement. The sentence should say that the manual checks for
+  binding or looseness.
+- **The "KTM 250/300 EXC owner's manual (PDF p. 76)" citation** in the
+  same item: the library holds two KTM EXC owner's manuals, the 2022
+  250/300 EXC TPI (`acquired/KTM/22_3214421_en_OM.pdf`) and the 2027 250
+  XC-W / 300 EXC (`acquired/KTM/27_3240387_en_BA.pdf`), and the sentence
+  is on p. 76 of both. The text should name the one it means, as 261's
+  templates do ("KTM 2022 250/300 EXC TPI").
+
+What it affects: one sentence of live text on the chassis pre-purchase
+screen reads the Yamaha page loosely, and one citation is ambiguous.
+Neither changes a figure. What would close it: a migration keyed on the
+old text that rewords both, with the operator's approval for the
+live-row change (rule 1).
