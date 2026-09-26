@@ -160,7 +160,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: winterization template changed no count. Measured with
 #: `--collect-only -q -p no:xdist`: 9,446.
 #:
-COLLECTED_TEST_FLOOR = 9446
+#: 9476 (Phase 262, 2026-09-26) — +30: `test_phase262_crash_track_emissions.py`
+#: 30 (migration 071's three templates, the F161 and F162 fixes and their
+#: round trip, per-field pins, figure-beside-machine and rule-beside-
+#: regulator, the negatives, the F158 pins, the CLI). The 259 and 264 pins
+#: that moved with this phase changed no count. Measured with
+#: `--collect-only -q -p no:xdist`: 9,476.
+#:
+COLLECTED_TEST_FLOOR = 9476
 
 
 def _collected_count() -> int:

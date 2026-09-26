@@ -535,7 +535,8 @@ class TestRepoints:
         steering = by_title["Steering head bearings"]
         assert "the Yamaha YW125Y 2009 service manual (PDF p. 93)" in steering["description"]
         assert "The YW125Y manual's adjustment" in steering["instruction_text"]
-        assert "the YW125Y service manual calls" in steering["instruction_text"]
+        # Phase 262 (F162): p. 93 names the fault the check finds.
+        assert "the YW125Y service manual checks the same movement for binding or looseness" in steering["instruction_text"]
         fork = by_title["Front fork — seals, stanchions and action"]
         assert "the YW125Y's fork spring measures 252.1 mm" in fork["diagnosis_if_fail"]
         wheels = by_title["Wheel bearings and rims"]
