@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F164** (this file); the mobile
+At the time of writing the highest assigned is **F166** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1821,3 +1821,75 @@ The last proposed wording, which no refuter has read, is in
 another, through one adversarial read that kills nothing, then a
 migration keyed on item 7's text. The live change of a shipped row
 would be a rule-1 stop.
+
+### F165
+
+**No workflow can be run: the workflow door only lists and shows templates, and nothing records a run or an item's result**
+
+Found by Phase 272 (Gate 15) at Step 0 (`272_step0.md`, S0-1), measured
+2026-09-26 at schema 71. ROADMAP row 272 read "Run PPI → tire service →
+winterization → valve adjust → brake service end-to-end", and nothing in
+the tree can do that:
+- `motodiag workflow` has two commands: `list` (one option,
+  `--category`) and `show <slug>`.
+- No table stores a run or an item's result. Of 89 tables, the four
+  whose names hold run, result, workflow, checklist, step or inspection
+  are `workflow_templates`, `checklist_items`, `workflow_rules` and
+  `workflow_rule_runs`; the last is Phase 173's shop rules (`rule_id`,
+  `work_order_id`, `triggered_event`, `matched`), not a template run.
+- Phase 82's step engine (`DiagnosticWorkflow`,
+  `src/motodiag/engine/workflows.py`) is not connected to the templates.
+  It imports nothing from `motodiag.workflows`; the 4 files that name
+  the template tables are `core/migrations.py`, `workflows/__init__.py`,
+  `workflows/template_repo.py` and `cli/workflow.py`.
+- Powertrain applicability is per template (`applicable_powertrains`).
+  `checklist_items` has no powertrain column, so a run would have to
+  choose one.
+- The CLI is the only door. The API's one "workflow" is Phase 173's shop
+  rules (`api/errors.py` imports `shop.workflow_*`). In
+  `../moto-diag-mobile/src`, 0 files mention workflow or checklist,
+  against 34 that mention vehicle or garage.
+
+What it affects: every one of the 15 seeded templates (100 items) can be
+read, not worked through. A mechanic cannot record which items passed.
+Gate 15's row was corrected to what the door does (walk through `list`
+and `show`, per powertrain, with every template link resolving).
+
+What would close it, as the operator scoped it on 2026-09-26: **row 356**,
+an in-memory runner (`motodiag workflow run <slug>` over Phase 82's step
+engine, pass or fail per item, a printed summary, nothing saved, no
+schema change); then **row 357**, saved runs, with its own migration for
+runs and per-item results tied to a bike or work order.
+
+### F166
+
+**`generic_ppi_v1` covers electric machines but requires an engine compression test, and asks every machine for its engine oil**
+
+Found by Phase 272 (Gate 15) at Step 0 (`272_step0.md`, S0-4),
+measured 2026-09-26 at schema 71. `generic_ppi_v1` (migration 007's
+starter) prints "for ice, electric, hybrid". Its item 3, **"Engine
+compression test"**, is required (`required = 1`): "Warm engine,
+remove spark plug, crank and read compression gauge. Repeat all
+cylinders." An electric machine has no engine, spark plug or cylinder,
+so the electric pre-purchase walk prints a required step it cannot do.
+
+Every other template that covers powertrains with and without an engine
+carries its engine-only steps as optional: `winterization_v1` items 2, 3
+and 4 and `de_winterization_v1` item 4, and, the other way round, the
+traction-battery items (`winterization_v1` 6, `de_winterization_v1` 3).
+Over every item title, with the engine and traction-battery vocabularies
+in S0-4, this is the only required step whose title names work a
+powertrain the template covers does not have.
+
+Beside it, outside the title rule: item 4, "Fluid inspection" (also
+required), says "Check oil color/level, coolant color/level" for every
+machine. The gate's rule does not catch it, since its title names no
+engine work.
+
+What it affects: `motodiag workflow show generic_ppi_v1`, on the
+electric walk of Gate 15. The gate pins item 3 as its rule's one
+measured exception (`tests/test_phase272_gate15.py`), so the gate fails
+the day it is fixed and must be updated with it. What would close it: a
+migration making item 3 optional with an engine-only condition in its
+text (or narrowing the template's powertrains), and item 4's oil check
+conditioned the same way. The change to a live row is a rule-1 stop.
