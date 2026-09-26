@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 69  # Phase 261: tire, brake, suspension and drivetrain service templates (migration 069)
+SCHEMA_VERSION = 70  # Phase 264: winterization, de-winterization, break-in and valve templates (migration 070)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

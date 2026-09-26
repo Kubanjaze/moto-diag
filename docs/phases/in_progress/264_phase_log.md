@@ -76,3 +76,64 @@ The measurements are in `264_step0.md`. In short:
   calls in a sandbox proven by planted writes. It took 3–5 turns where 2
   is the measured norm, and one call looped. Its `machine` field
   reintroduced "Zuma". Nothing from the model is used unchecked.
+
+### 2026-09-26 — Build: migration 070, four templates, two re-points, 31 tests
+
+What shipped:
+- **Migration 070 `seasonal_breakin_valve_workflows`** (schema 69 → 70):
+  - `winterization_v1` (7 items, all powertrains);
+  - `de_winterization_v1` (7, all powertrains);
+  - `engine_break_in_v1` (6, ICE and hybrid);
+  - `valve_adjustment_v1` (8, ICE and hybrid).
+
+  Also the two live re-points: `generic_winterization_v1`'s description
+  (keyed on its old text) and the F160 text in `ppi_chassis_v1`'s items.
+  The rollback deletes the new rows and reverses both re-points in the
+  opposite order.
+- **Claims before text** (`s0/claims.py`, session scratchpad): 86 claims,
+  257 verbatim anchors, all on their cited pages. The checker was seen to
+  fail on a wrong page and a corrupted figure.
+- **The cross-check** (`s0/xcheck.py`) maps every "PDF p." in the seeded
+  text to a claim for the machine named before it: 221 cited pages, 0
+  unclaimed. It found three real attribution gaps before any test ran:
+  "The Yamaha grounds…" twice and "the Kymco keeps…" once, each after
+  another machine had been named. All three now name the machine. Its
+  control: withdrawing V13, the only claim on People S 250 SM p. 81,
+  turned exactly that citation red.
+- **31 tests** in `tests/test_phase264_seasonal_breakin_valve.py`. Two
+  failed at first run, both test-authoring errors: a pin said "check"
+  where the text says "checks", and `winterization_v1` is a substring of
+  `de_winterization_v1`, so the other-slug check needed a boundary.
+- **Two existing pins moved with the phase's own changes:**
+  - `test_phase260_ppi_chassis.py::test_figures_name_their_machines`
+    asserted "Zuma 125" on a fresh database. It now asserts "YW125Y",
+    plus no "Zuma" in any chassis field.
+  - `test_phase114_workflow_substrate.py::test_list_by_powertrain`
+    asserted no winterization template for electric machines. That was a
+    head-state assumption from the one generic template. The pin is now
+    on the generic's slug, plus the positive that `winterization_v1` is
+    offered for electric (S0-5, Vespa Elettrica p. 9).
+- **Floor** 9415 → 9446 (+31, this file only; `--collect-only -q -p
+  no:xdist` measured 9,446).
+
+**Known-bad controls**, each planted with the Edit tool, run with
+`__pycache__` cleared and `-B`, seen red, and reverted:
+
+| # | plant | red tests |
+|---|---|---|
+| 1 | "start from 0.15 mm" in the no-figure valve item | `test_no_figure_item_carries_no_clearance` |
+| 2 | 7,800 → 7,900 rpm in one field | `test_every_pinned_figure_is_in_its_field`, `test_figures_sit_beside_their_machine` |
+| 3 | "(Phase 999)" in a template description | `test_all_four_templates_are_clean` |
+| 4 | the bare-"Zuma" replace dropped from one field | the upgrade-scope test, both F160 tests, and 260's moved pin |
+| 5 | `engine_break_in_v1` dropped from the rollback's template `DELETE` | both round-trip tests; the rollback guard stayed green, as in 261 |
+| 6 | an extra `UPDATE` of an unrelated live item inside 070 | `test_upgrade_from_69_changes_exactly_the_scoped_rows`, the round trip |
+
+After the reverts: `grep` finds none of the plants, 60 passed over the
+264 and 260 files, and the cross-check still reads 0 unclaimed.
+
+**Whole-tree gates before the build commit:**
+- rule 3's four, plus the F124 guard, 240c, 209B, 244U, 244Y, 244V, 355,
+  the floor, and the 114, 259, 260, 261 and 264 files: **514 passed**
+  (`-n auto`);
+- `finding_check` exit 0, and `check(phase_docs="docs/phases/in_progress")`
+  returns [].
