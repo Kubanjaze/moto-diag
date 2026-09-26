@@ -1,6 +1,6 @@
 # Phase 262 — Track N batch 3: crash support, track-day preparation, and emissions compliance — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-26; the live apply awaits the operator)
 **Branch:** `phase-262` (Opus session, main checkout)
 
 ---
@@ -756,3 +756,70 @@ pages and 12 regulator citations, 0 unclaimed.
 (T16) and corrected; one sentence dropped (F164); every other sentence
 changed in a fix round was re-read by the next round, and round 5's
 sentences were either kept or dropped.
+
+## Bug fixes
+
+None. The phase changed no production code beyond migration 071's
+content and the `SCHEMA_VERSION` line. The red first runs were
+test-authoring errors (two pin needles, two titles too long for the
+80-column `workflow show`), recorded in the build entry, and the refute's
+changes were content corrections, recorded in the Refuter pass.
+
+## Regression of record
+
+Regression of record: 9478 passed, 0 failed, 0 skipped, 0 errors at `8d65a3e` (13 min 53 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- The tree was clean at `8d65a3e`.
+- The floor is 9478, and 9,478 were collected.
+- The log is `~/.cache/motodiag/regressions/8d65a3e_parallel_20260926_163212.log`.
+
+## Deploy preparation — 2026-09-26: backup, dry run, census, diff; the live apply waits for the operator
+
+`s0/deploy262.py` (session scratchpad), 264's two-step shape:
+- **`dryrun`**: before-state from live (read only), backup with SQLite's
+  backup API (retain 5), migrate a copy of the backup, diff every table
+  by rowid, print every changed row's before and after text, run the F158
+  census on the copy, check the scope;
+- **`apply-live`**: a separate step, run only on the operator's answer.
+  It first proves live row-for-row equal to the backup, re-runs 071 on a
+  fresh copy of the backup with the code about to run live, and refuses
+  unless that is in scope. Then it migrates live, diffs live against the
+  backup, runs the same scope check and the census.
+
+**The scope check** (as strict as the operator's words): templates, 0
+changed and 3 added; checklist items, exactly the five scoped rows, each
+changed only in its named fields — generic winterization item 1
+{instruction_text, expected_pass, expected_fail}, item 2
+{instruction_text}, item 3 {expected_pass}; chassis "Steering head
+bearings" {description, instruction_text}; winterization_v1 item 5
+{description} — and 21 added; `schema_version` +1; nothing else changed,
+added or removed. **Its control**, on scratch databases built at 070: the
+real migration gave "none"; one extra changed row gave "changed rowids
+[1, 6, 7, 8, 18], not [6, 7, 8, 18]"; one extra changed field in a scoped
+row gave "rowid 6 changed [..., 'title'], allowed [...]".
+
+**Dry run, 16:32:**
+- **Before (live, read only):** schema 70, 1,060 `known_issues`, 12
+  templates, 79 items, integrity ok, `known_issues` sha256 prefix
+  `5932cd02c78ae850`. No process had the file open.
+- **Backup:** `~/backups/motodiag/motodiag_pre262_20260926_163221.db`,
+  identical before-state. Retain 5 removed
+  `motodiag_pre353_20260924_183635.db`.
+- **On the copy:** applied `[71]`. Schema 71, 15 templates, 100 items,
+  integrity ok, `known_issues` unchanged. **Scope problems: none.**
+- **F158 census on the copy:** 79 hits in 47 rows, **0 in any workflow
+  row** — identical to live before 071. Its control on the copy, "Phase
+  999" planted in one `known_issues` description, was found exactly once.
+- **The diff:**
+  - `checklist_items` rowids 6, 7, 8 (F161), 18 (F162) and 56 (W30):
+    changed, each only in its scoped fields;
+  - rowids 80–100 added (21 items);
+  - `workflow_templates` rowids 13–15 added, none changed;
+  - `schema_version` +1.
+
+  The full before and after text is `s0/dryrun_diff.md`, shown to the
+  operator.
+
+**The merge to `master` waits with the live apply.** `init_db` applies
+pending migrations, so a merged 071 would reach the live rows the first
+time any command opened `data/motodiag.db`.
