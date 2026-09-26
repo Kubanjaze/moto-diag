@@ -1637,7 +1637,7 @@ deferral pattern 260's items use (name the check, defer the figure to
 the machine's own manual), by migration, with a pin that no uncited
 figure returns.
 
-### F160
+### F160 — CLOSED by migration 070 (Phase 264, live 2026-09-26)
 
 **`ppi_chassis_v1` names the Yamaha YW125Y service manual "Zuma 125", a name that document does not carry**
 
@@ -1657,6 +1657,13 @@ close it: a migration that re-points the nine mentions to the document's
 own name, with the operator's approval for the live row change, and a
 pin like `test_machines_are_named_as_their_documents_name_them` over
 `ppi_chassis_v1`.
+
+**Closed 2026-09-26 by Phase 264's migration 070, applied live under the
+operator's scoped approval.** The live count was 8 mentions in 3 items
+(ids 18, 19, 21). The ninth mention is in migration 068's Python
+description, which is never seeded. All 8 now read "YW125Y", and
+`test_no_zuma_in_any_workflow_row` and 260's moved pin keep the word
+out. Two further defects the refuter found in the same item are F162.
 
 ### F161
 
