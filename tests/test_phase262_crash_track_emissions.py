@@ -176,7 +176,7 @@ PINS = {
     ("emissions_v1", 4, "diagnosis_if_fail"): ['"shall not be liable for malfunctions'],
     ("emissions_v1", 7, "diagnosis_if_fail"): ["What a missing receipt costs depends on the machine's own warranty statement", "(PDF p. 17)"],
     ("crash_support_v1", 7, "description"): ["requires a written estimate in accordance with the Automotive Repair Act", "(PDF pp. 27, 32)"],
-    ("crash_support_v1", 7, "diagnosis_if_fail"): ["KTM 2019 690 Duke", "(PDF p. 54)", "(PDF p. 2)"],
+    ("crash_support_v1", 7, "diagnosis_if_fail"): ["they mostly say where to keep the insurance papers.", "type-approval and recall paperwork"],
     ("track_prep_v1", 4, "description"): ["(PDF p. 107)", '"There is a possibility of the motorcycle flipping over backwards" (PDF p. 133)', '"is intended for track use on closed circuit race tracks only" (PDF p. 23)'],
     ("track_prep_v1", 5, "description"): ["(PDF p. 175)", '"If motorcycle is used for competition 7500 km service should be carried out after every race" (PDF p. 30)', '"Every 10 operating hours when used for motorsports" (PDF pp. 52–53)', "(PDF pp. 53–54)"],
     ("track_prep_v1", 5, "instruction_text"): ["the manual gives no figure", "brake_service_v1"],
@@ -453,7 +453,7 @@ class TestFixes:
         # Refute round 3: the pointer claims only what it points at.
         assert "winterization_v1 gives the fuel steps of the makers it cites" in generic[1]["instruction_text"]
         assert "winterization_v1 gives the oil steps of the makers it cites" in generic[2]["instruction_text"]
-        assert "winterization_v1 gives the battery steps of the makers it cites" in generic[3]["expected_pass"]
+        assert "winterization_v1 compares several makers' battery steps, with their pages" in generic[3]["expected_pass"]
         for s in (1, 2, 3):
             assert "each maker's" not in " ".join(generic[s][f] or "" for f in FIELDS)
         # Refute rounds 1-2: each enumeration of the makers here was wrong
@@ -461,7 +461,7 @@ class TestFixes:
         assert "after it, or both" not in generic[2]["instruction_text"]
         assert "some makers" not in generic[2]["instruction_text"]
         assert "the makers differ on whether and when" in generic[2]["instruction_text"]
-        assert generic[3]["expected_pass"].startswith("Battery kept as the machine's own manual says:")
+        assert generic[3]["expected_pass"].startswith("Battery kept as the machine's own manual says;")
         # The untouched starter titles and the fourth item stay as seeded.
         assert [generic[s]["title"] for s in (1, 2, 3, 4)] == [
             "Add fuel stabilizer", "Oil change", "Connect battery tender", "Storage position and cover",
@@ -538,6 +538,13 @@ class TestContentPins:
         item = _item(db, "crash_support_v1", 2)
         for field in FIELDS:
             assert not re.search(r"\d\s*mm\b", item[field] or ""), field
+
+    def test_the_unresolved_insurance_sentence_is_not_shipped(self, db):
+        """Refute round 5, the operator's last: the sentence calling KTM's
+        ABS notes and EPA's line "warnings" was killed and dropped (F164)."""
+        text = _item(db, "crash_support_v1", 7)["diagnosis_if_fail"]
+        for gone in ("warning", "690 Duke", "1090 Adventure R", "EPA", "DMV"):
+            assert gone not in text, gone
 
     def test_no_race_rule_is_invented(self, db):
         """N10-N12: the event-rules item names no torque, no coolant and no

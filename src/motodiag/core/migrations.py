@@ -5824,7 +5824,7 @@ MIGRATIONS: list[Migration] = [
                AND instruction_text = 'Change engine oil and filter with recommended winter weight (typically 10W-40).';
 
             UPDATE checklist_items
-               SET expected_pass = 'Battery kept as the machine''s own manual says: winterization_v1 gives the battery steps of the makers it cites, each with its document and page.'
+               SET expected_pass = 'Battery kept as the machine''s own manual says; winterization_v1 compares several makers'' battery steps, with their pages.'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
                AND sequence_number = 3
                AND expected_pass = 'Battery on tender, reading float voltage (13.2V-13.6V)';
@@ -5914,7 +5914,7 @@ MIGRATIONS: list[Migration] = [
              'Record what items 1 to 6 found: each part, its condition and, where a figure was measured, the reading beside the machine''s own limit and the page it comes from. Photograph the machine and each damaged part before anything is removed or repaired. This record is the template''s own practice, not a cited standard; where the insurer asks for more, its requirements govern.',
              'Every finding recorded with its measured figure and its limit, before any repair; the insurer''s requirements met.',
              'A part repaired or discarded before its damage was recorded.',
-             'The research library holds no such standard. Where its owner''s manuals say "insurance" they mostly say where to keep the insurance papers; elsewhere it appears as a warning in two documents — the KTM 2019 690 Duke owner''s manual: switching the ABS off completely voids the road approval and the insurance coverage (PDF p. 54); EPA''s fact sheet: "Tampering can void manufacturer warranties and insurance agreements" (PDF p. 2) — and in the California DMV pages item 8 cites, as the insurance company''s part in a total loss. Its "photograph" pages are workshop and owner''s-manual illustrations, manual front-matter disclaimers, or type-approval and recall paperwork.',
+             'The research library holds no such standard. Where its owner''s manuals say "insurance" they mostly say where to keep the insurance papers. Its "photograph" pages are workshop and owner''s-manual illustrations, manual front-matter disclaimers, or type-approval and recall paperwork.',
              0, '["camera"]', 20),
 
             ((SELECT id FROM workflow_templates WHERE slug='crash_support_v1'), 8,
@@ -6085,7 +6085,7 @@ MIGRATIONS: list[Migration] = [
                SET expected_pass = 'Battery on tender, reading float voltage (13.2V-13.6V)'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
                AND sequence_number = 3
-               AND expected_pass LIKE 'Battery kept as the machine''s own manual says:%';
+               AND expected_pass LIKE 'Battery kept as the machine''s own manual says;%';
         """,
     ),
 ]

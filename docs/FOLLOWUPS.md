@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F163** (this file); the mobile
+At the time of writing the highest assigned is **F164** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1794,3 +1794,30 @@ A replacement for each is drafted, with its page quote, in
 `262_phase_log.md` (Refuter pass, round 1, "Outside the scope: F163").
 What would close it: a migration keyed on the old text, with the
 operator's approval for the live-row change (rule 1).
+
+### F164
+
+**`crash_support_v1` item 7 ships without the sentence on where "insurance" appears besides the papers: it was still unresolved after the operator's last refute round, and was dropped**
+
+Phase 262 wrote, in item 7's diagnosis, where the library's
+"insurance" pages point besides "where to keep the insurance papers":
+KTM's note on switching the ABS off, EPA's warranty sentence, and the
+California DMV's total-loss pages. The sentence was reworded in refute
+rounds 1–4, and each rewrite was refuted. Round 5, the last under the
+operator's stopping rule, killed "warnings": KTM prints the passage as a
+"Note", which its own key defines apart from a "Warning", and on p. 183 a
+separate Warning box follows it (KTM 2019 1090 Adventure R OM pp. 15,
+183; the same note in the KTM 2019 690 Duke OM p. 54). EPA's line sits
+under "WARRANTY ISSUES" (fact sheet, March 2020, p. 2). Under the
+operator's rule the sentence was dropped from migration 071, not
+shipped.
+
+What ships in its place: "Where its owner's manuals say "insurance"
+they mostly say where to keep the insurance papers" — kept by round 5,
+25 of 28 owner's-manual pages.
+
+The last proposed wording, which no refuter has read, is in
+`262_phase_log.md` (Round 5). What would close it: that wording, or
+another, through one adversarial read that kills nothing, then a
+migration keyed on item 7's text. The live change of a shipped row
+would be a rule-1 stop.

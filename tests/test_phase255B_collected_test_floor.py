@@ -166,9 +166,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: regulator, the negatives, the F158 pins, the CLI). The 259 and 264 pins
 #: that moved with this phase changed no count. Measured with
 #: `--collect-only -q -p no:xdist`: 9,476 at the build, 9,477 after the
-#: refute's W30 test.
+#: refute's W30 test, 9,478 after the guard on the sentence round 5
+#: dropped (F164).
 #:
-COLLECTED_TEST_FLOOR = 9477
+COLLECTED_TEST_FLOOR = 9478
 
 
 def _collected_count() -> int:

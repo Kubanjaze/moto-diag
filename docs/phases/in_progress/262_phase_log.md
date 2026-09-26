@@ -643,3 +643,116 @@ replacements.
 3 claims anchor the new wording (C48, T51, T52): 153 claims, 292
 anchors, all on their pages. Cross-check: 136 cited pages and 12
 regulator citations, 0 unclaimed.
+
+**The operator's stopping rule for the refute loop, 2026-09-26, recorded
+as given:** "Carry on to the dry run once round 3 is clean. Stopping rule
+for the refute loop: if round 3 finds only wording defects, fix them,
+re-read just those sentences once, and move on. If it finds a factual
+defect (wrong figure, page, name or source), fix it and run one more
+round on only the changed sentences. No more than one round after that:
+any claim still unresolved gets dropped from the migration and filed as
+a finding, not shipped. Then stop at the live apply with the F161/F162
+diff, as planned."
+
+Applied literally: round 3 found factual defects (a misattributed source
+— the estimate rule is the Automotive Repair Act's — and an incomplete
+count), so round 4 runs on only round 3's changed sentences and new
+claims. If round 4 finds defects, they are fixed and round 5, the last,
+reads only those sentences; anything still unresolved after round 5 is
+dropped from migration 071 and filed as a finding.
+
+### Round 4 — 2026-09-26: round 3's changed sentences and its 3 claims (the operator's "one more round")
+
+One fresh-context Opus refuter over `s0/refute/round3_changed_sentences.md`
+and C48, T51, T52.
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| C48 | kept | "A written estimate must be provided in accordance with the Automotive Repair Act before the inspection and/or repair can be conducted." | BAR Smog Check Reference Guide 2025 p. 27 |
+| T51 | kept | "If the encoding plug for the DYNAMIC PROriding mode is not inserted, accelerating the motorcycle to a defined minimum speed after switching the ignition off and then on again reactivates the DTC. Minimum speed for ac- tivation of DTC min 10 km/h" | BMW S 1000 XR RM p. 126 |
+| T52 | kept (K 1200 RS title page rendered: "…enance Instructions … 0 RS") | "Nor is approval by an official technical inspection authority, or even the granting of a gen- eral operating permit necessar- ily a sufficient guarantee, since these test procedures are not always adequate." | BMW R 850 R / R 1150 R Maintenance Instructions p. 4 |
+| crash item 5 instr.: "on the Honda pages the actual runout is half the total indicator reading" | kept (CHF50 pp. 219, 242; PCX150 pp. 326, 355 all say so) | "Check the wheel rim runout using dial indicators. Actual runout is 1 /2 the total indicator readings. SERVICE LIMITS: Radial: 2 .0 mm (0.08 in) Axial: 2 . 0 mm (0.08 in)" | Honda CHF50 SM p. 242 |
+| crash item 5 instr.: "the Kymco rim pages draw two dial indicators on the rim but do not say whether their limit is on the full indicator reading or half of it" | kept (rendered; the text on both pages has no "1/2" and no "total indicator") | "WHEEL RIM Check the wheel rim runout. Service Limits: Radial: 2.0mm replace if over Axial: 2.0mm replace if over" (p. 188); "INSPECTION Measure the rear wheel rim runout." (p. 206) | Kymco People / People S 250 SM pp. 188, 206 |
+| crash item 7 descr.: "The one estimate rule it holds is in BAR's Smog Check Reference Guide 2025, which for Smog Check inspections and repairs requires a written estimate in accordance with the Automotive Repair Act (B&P section 9884.9 and CCR section 3353) (PDF pp. 27, 32)" | kept. p. 27 covers "the inspection and/or repair" and p. 32 the repair estimate, so both statutes are cited on the pages | "In accordance with B&P section 9884.9 and CCR section 3353, prepare an estimate for the specific work needed to bring the vehicle into compliance." | BAR Smog Check Reference Guide 2025 p. 32 (and p. 27) |
+| crash item 7 diag.: "elsewhere it appears as a warning in two documents — the KTM 2019 690 Duke owner's manual … (PDF p. 54); EPA's fact sheet …" | **killed**. The KTM warning is also in a second KTM manual, the 2019 1090 Adventure R (rendered p. 183), so the warning is in three documents, not two (defect 1) | "Voiding of the government approval for road use and the insurance coverage If the ABS is switched off completely, the vehicle's approval for road use is invalidated." | KTM 2019 1090 Adventure R OM p. 183 |
+| crash item 7 diag.: "the KTM 2019 690 Duke owner's manual: switching the ABS off completely voids the road approval and the insurance coverage (PDF p. 54)" | kept | "Note Voiding of the government approval for road use and the insurance coverage If the ABS is switched off completely, the vehicle's approval for road use is invalidated." | KTM 2019 690 Duke OM p. 54 |
+| crash item 7 diag.: "and in the California DMV pages item 8 cites, as the insurance company's part in a total loss" | kept, incomplete. It is true of all four pages item 8 cites (19.015, 19.075, Total Loss, Junk/Revived). Two further DMV pages (19.040, notice of retention) and, in passing, EU 168/2013 p. 36 and BAR p. 8 go unmentioned; they are folded into defect 1 | "19.075 Salvage Certificate (VC §11515) The insurance company or its designee (salvage pool or registration service) or the owner must apply for the salvage certificate within 10 da[ys]" | California DMV VIRPM 19.075 Salvage Certificate p. 1 |
+| generic winterization item 1 instr.: "winterization_v1 gives the fuel steps of the makers it cites, each with its document and page" | kept. winterization_v1 item 2 cites Yamaha XVS95CL p. 81, KTM 1290 p. 157, KTM 690 p. 172, KTM EXC TPI p. 154 and Kymco People S p. 60. The cited Honda CB500F p. 117 and BMW F800R p. 124 storage lists have no fuel step | "Make sure the tank is as empty as possible so that you can fill up with fresh fuel when you put the motorcycle back into operation." | KTM 690 Enduro 2010 OM p. 172 |
+| generic winterization item 2 instr.: "Change the oil for storage as the machine's own manual lists it, with the oil it specifies; the makers differ on whether and when." | kept. The machine's own manual governs, and the sentence admits there may be no oil change | "– Clean the motorcycle. ( p. 150) – Change the gear oil. ( p. 148)" | KTM 2022 250/300 EXC TPI OM p. 154 |
+| generic winterization item 2 instr.: "winterization_v1 gives the oil steps of the makers it cites, each with its document and page" | kept at the maker level. winterization_v1 item 4 gives KTM (690 p. 172; EXC TPI gear oil p. 154), BMW (F800R p. 124), Kymco (pp. 60–61) and the Yamaha fogging oil (p. 81). The BMW R 850 R step on p. 58 is the same as the F800R step | "Before laying the vehicle up out of use, have the en- gine oil and the oil filter element changed by a specialist work- shop" | BMW F800R RM p. 124 |
+| generic winterization item 3 exp_pass: "winterization_v1 gives the battery steps of the makers it cites, each with its document and page" | **killed**. winterization_v1 cites the Kymco People S 50/125/200 OM on p. 60 four times (fuel, carburetor, oil, cylinder). Its battery step on that same page (remove, store frost- and sun-free, slow-charge monthly) is in no winterization_v1 item. Also not given with a page: the BMW F800R "Remove the battery" (p. 124, a cited page), the KTM 690 "Remove the battery / Recharge the battery" (p. 172, cited only for its temperature) and the Piaggio charger (p. 78, a cited page) (defect 2) | "4. Remove the battery. Store it in an area protected from freez- ing temperatures and direct sunlight. Slow charge the bat- tery once a month (use a quality charger designed for use on a maintenance-free type battery)." | Kymco People S 50/125/200 OM p. 60 |
+| track item 4 instr.: "without the coding plug, switching the ignition off and on switches DTC back on once the motorcycle passes 10 km/h, PDF pp. 62, 126" | kept (T51). p. 62 agrees: "in excess of the minimum" | "DTC is switched on. If the coding plug is not inser- ted, you have the alternative of switching the ignition off and then on again." | BMW S 1000 XR RM p. 62 (and p. 126) |
+| track item 6 diag.: "a parts-and-accessories approval note in two BMW booklets (the K 1200 RS and the R 850 R / R 1150 R Maintenance Instructions, PDF p. 4 of each)" | kept (census `technicalinspection`: exactly these 2 pages) | "Nor is approval by an official technical inspection authority, or even the granting of a gen- eral operating permit or a certif- icate issued by the tyre manufacturer necessarily a suf- ficient guarantee" | BMW K 1200 RS Maintenance Instructions p. 4 |
+
+**Round 4 result.** 3 of 3 new claims kept; 12 changed sentences with a
+factual claim tested, **2 killed**, both factual and both introduced by
+round 3's rewrite:
+- crash item 7: "a warning in two documents" — the same KTM ABS warning
+  is also in the KTM 2019 1090 Adventure R owner's manual (p. 183). Now
+  "in warnings — among them" both KTM manuals and EPA, with no count.
+- generic winterization item 3, expected_pass: "winterization_v1 gives
+  the battery steps of the makers it cites" — it does not give every
+  cited page's battery step (Kymco p. 60, BMW F 800 R p. 124, KTM 690
+  p. 172). Now "winterization_v1 compares several makers' battery steps,
+  with their pages", which its item 5 does (five makers, 17 citations).
+- Carried over, not changed: generic items 2 and 3's untouched
+  expected_pass, expected_fail and instruction — F163.
+
+C49 and C50 anchor the 1090 Adventure R page: 155 claims, 294 anchors,
+all on their pages. Cross-check: 137 cited pages and 12 regulator
+citations, 0 unclaimed. Under the operator's rule, round 5 is the last:
+it reads only these two sentences and C49, C50.
+
+### Round 5 — 2026-09-26: the last round under the operator's rule
+
+One fresh-context Opus refuter over round 4's two rewritten sentences and
+C49, C50.
+
+| claim | verdict | quote | source |
+|---|---|---|---|
+| C49: 1090 Adventure R, the ABS-off note about insurance | kept | "Voiding of the government approval for road use and the insurance coverage  If the ABS is switched off completely, the vehicle's approval for road use is invalidated." | KTM 2019 1090 Adventure R owner's manual (19_3213917_en_OM.pdf) p. 183 (printed 181). on_page True, and False on p. 182 |
+| C50: title page of 19_3213917 | kept | "OWNER'S MANUAL2019 1090 Adventure R Art. no. 3213917en" (the render shows the same) | 19_3213917_en_OM.pdf p. 1 |
+| S1a: 690 Duke, PDF p. 54 | kept | "7.16 "TC/ABS" … Note Voiding of the government approval for road use and the insurance coverage  If the ABS is switched off completely, the vehicle's approval for road use is invalidated." | KTM 2019 690 Duke owner's manual (19_3213923_en_OM.pdf) p. 54 |
+| S1b: title page of 19_3213923 is the 2019 690 Duke | kept | "OWNER'S MANUAL2019 690 Duke Art. no. 3213923en" (the render shows the same) | 19_3213923_en_OM.pdf p. 1 |
+| S1c: "switching the ABS off completely voids the road approval and the insurance coverage" | kept, see defect 1 | "Voiding of the government approval for road use and the insurance coverage  If the ABS is switched off completely…". The word "insurance" appears only in the note's bold heading. The body sentence names only road approval. | 19_3213917_en_OM.pdf p. 183; 19_3213923_en_OM.pdf p. 54 |
+| S1d: the KTM passages are "warnings" | killed | "Note Voiding of the government approval … insurance coverage". The rendered p. 183 shows this as a plain "Note". Directly below it on the same page is a separate grey "Warning" box ("Danger of accidents  Driving aids can only prevent a rollover…") that does not mention insurance. KTM's own key keeps the two apart: "Warning Identifies a danger that is likely to lead to fatal or serious injury…", "Note Identifies a danger that will lead to considerable machine and material damage…" | 19_3213917_en_OM.pdf p. 183 (render) and p. 15 (2.4 Degrees of risk and symbols) |
+| S1e: EPA quote and page | kept | "WARRANTY ISSUES Tampering can void manufacturer warranties and insurance agreements." It sits under a "WARRANTY ISSUES" heading; the fact sheet does not call it a warning. | EPA Fact Sheet "Defeat Device and Tampering", March 2020 (system_files_documents_2021-11_epafactsheetreaftermarketddsandtampering.pdf) p. 2 |
+| S1f: the DMV pages item 8 cites describe the insurance company's part in a total loss | kept | "The insurance company or its designee (salvage pool or registration service) or the owner must apply for the salvage certificate within 10 days from the date the insurance company makes a total loss settlement with the owner." Also on the other cited pages: "considers it uneconomical to repair" (19.015); "If you receive a settlement from your insurance company, then the insurance company is responsible for getting the certificate within 10 days" (Total Loss page); "previously reported to DMV as a total loss by the owner or insurance company" (Junk/Revived page) | California DMV VIRP manual 19.075 Salvage Certificate (HTML) p. 1; 19.015 Definitions p. 1; Total Loss Salvage & Non-Repairable Vehicles p. 1; Junk/Revived Salvage Vehicles p. 1 |
+| S1g: "mostly" for owner's manuals | kept | "The owner's manual, registration, and insurance information can be stored in the plastic document bag". The census (libcensus.hits('insurance'), whitespace-stripped and case-insensitive over pages.json) found 29 pages in 28 files. One is not an owner's manual (eu168.pdf p. 36, the EU regulation). That leaves 28 owner's-manual pages: 24 Honda document-bag pages, 1 Yamaha page ("When storing the owner's manual or vehicle registration and insurance documents in the document storage space…", D45-28199-11 p. 62), and 3 KTM ABS notes (690 Duke pp. 54 and 110, 1090 Adventure R p. 183). So 25 of 28 are about where to keep the papers, and 24 of those use the document-bag sentence. | Honda CB500F owner's manual (om_AHM_CB500F-FA_2018) p. 113, and 23 more pages |
+| S2a: winterization_v1 compares several makers' battery steps | kept | "The makers agree on a full charge and disagree on how often." Item 5 covers five makers: Honda (CB500F, PCX150), Yamaha (XVS95CL), BMW (R 850 R / R 1150 R, F800R), Piaggio (Beverly 125) and KTM (690 Enduro, 2022 250/300 EXC TPI). | smoke71.db winterization_v1 item 5, description; its citations include Piaggio Beverly 125 SSM p. 78 |
+| S2b: "with their pages" | kept | "a removed battery once a month in the Yamaha XVS95CL owner's manual (PDF p. 81)". Every maker step in item 5 carries a PDF page, and item 6 (Vespa Elettrica, PDF p. 9) does too. | smoke71.db winterization_v1 items 5 and 6; its citations include Piaggio Beverly 125 SSM p. 78 |
+| S2c: "Battery kept as the machine's own manual says" | kept | "Charge the battery fully, then do what the machine's own manual says". This is consistent with winterization_v1 item 5; the expected_pass makes no claim about any one maker. | smoke71.db winterization_v1 item 5, instruction_text; its citations include Piaggio Beverly 125 SSM p. 78 |
+**Round 5 result.** C49, C50 kept; the generic battery pointer kept
+("compares several makers' battery steps, with their pages": five makers
+in winterization_v1 item 5, each with a PDF page); "mostly" kept (25 of
+28 owner's-manual "insurance" pages are about keeping the papers).
+**Killed: calling KTM's ABS passages "warnings"** — KTM prints them as a
+"Note", a category its own key (p. 15) defines apart from a Warning, and
+a separate Warning box follows on p. 183; EPA's line is under "WARRANTY
+ISSUES".
+
+**Applied under the operator's rule:** the claim is unresolved after the
+last round, so it is **dropped from migration 071 and filed as F164**,
+not shipped. Item 7's diagnosis now ends at the parts round 5 kept:
+"Where its owner's manuals say "insurance" they mostly say where to
+keep the insurance papers. Its "photograph" pages are …" (the photograph
+sentence was kept in round 4). A deletion adds no claim. A guard test
+pins that the dropped words do not return. The refuter's last proposed
+wording, unread by any refuter, recorded for F164:
+
+> elsewhere it appears where cover can be lost — among them the KTM 2019
+> 690 Duke owner's manual (PDF p. 54) and the KTM 2019 1090 Adventure R
+> owner's manual (PDF p. 183), in a note on switching the ABS off
+> completely headed "Voiding of the government approval for road use and
+> the insurance coverage", and EPA's fact sheet, under "WARRANTY ISSUES":
+> "Tampering can void manufacturer warranties and insurance agreements"
+> (PDF p. 2) — and in regulator pages,
+
+Claims C39, C40, C46, C49 and C50 stay in the claims table as checked,
+but no shipped sentence cites them now. The cross-check reads 135 cited
+pages and 12 regulator citations, 0 unclaimed.
+
+**The refute loop is closed.** Across five rounds: 155 claims, one killed
+(T16) and corrected; one sentence dropped (F164); every other sentence
+changed in a fix round was re-read by the next round, and round 5's
+sentences were either kept or dropped.
