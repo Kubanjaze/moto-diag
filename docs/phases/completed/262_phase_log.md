@@ -823,3 +823,49 @@ row gave "rowid 6 changed [..., 'title'], allowed [...]".
 **The merge to `master` waits with the live apply.** `init_db` applies
 pending migrations, so a merged 071 would reach the live rows the first
 time any command opened `data/motodiag.db`.
+
+## Deploy — 2026-09-26: migration 071 live, exactly the dry run's scope
+
+**The operator's approval, recorded as given:** "go ahead, and say in the
+report why the fourth generic winterization item needed no change".
+Given in answer to the dry-run diff, which listed every changed row with
+its before and after text. The approval covers that diff, and the apply
+step was built to refuse anything outside it.
+
+- **Before the commit, `apply-live` checked three things:**
+  1. live was row-for-row identical to the backup, in every table;
+  2. 071 re-run on a fresh copy of that backup with the merged-to-be code
+     gave `[71]`;
+  3. on that copy, the scope check gave none.
+- **Live apply:** `[71]`. Scope problems after the apply: none. The live
+  diff against the backup is identical to the dry-run diff, timestamps
+  aside.
+  - **Changed:** checklist items 6, 7 and 8 (F161), 18 (F162) and 56
+    (W30), each only in its scoped fields.
+  - **Added:** 3 templates (rowids 13–15), 21 items (80–100) and 1
+    `schema_version` row.
+- **After:** schema 71, 1,060 `known_issues` (hash `5932cd02c78ae850`
+  unchanged), 15 templates, 100 items, integrity ok. No process had the
+  live file open.
+- **F158 census on live:** 79 hits in 47 rows, 0 in any workflow row, the
+  same as before 071.
+- **Against live:**
+  - `motodiag workflow list --category crash_support` (and `track_prep`,
+    `emissions`) each lists its new template;
+  - `workflow show generic_winterization_v1` prints "10W-40", "13.2",
+    "Sta-Bil" and "5 minutes" 0 times;
+  - `workflow show ppi_chassis_v1` prints "checks the same movement for
+    binding" once.
+
+**Why the fourth generic winterization item (live id 9, "Storage position
+and cover") was not changed.** F161's scope, in the operator's words, is
+the items' unsupported figures: "remove each unsupported figure or
+replace it with a pointer". Item 4 carries no figure. Its text — "Move to
+storage, put on centerstand/jackstand to unload suspension, cover with
+breathable cover" — states no number, grade, voltage or duration, as
+Step 0 measured (S0-6, "Id 9 carries no figure"). Its breathable cover
+and its "plastic tarp" fail are supported (KTM 1290 Super Duke R / RR OM
+p. 157; Kymco People S OM p. 60). The refuters did find one wording
+defect in it — the makers lift the machine to take the load off the
+tires, and none says "unload suspension" — and that is recorded in F163,
+not changed, because it is not a figure.

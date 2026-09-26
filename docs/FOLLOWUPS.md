@@ -1665,7 +1665,7 @@ description, which is never seeded. All 8 now read "YW125Y", and
 `test_no_zuma_in_any_workflow_row` and 260's moved pin keep the word
 out. Two further defects the refuter found in the same item are F162.
 
-### F161
+### F161 — CLOSED by migration 071 (Phase 262, live 2026-09-26)
 
 **`generic_winterization_v1`'s starter items carry storage figures the library's documents do not support**
 
@@ -1713,7 +1713,7 @@ shape: a migration keyed on the old text that either cites the figures
 per machine or defers them to `winterization_v1`, with a pin that no
 uncited figure returns.
 
-### F162
+### F162 — CLOSED by migration 071 (Phase 262, live 2026-09-26)
 
 **`ppi_chassis_v1`'s steering item misreads the YW125Y service manual's p. 93, and one KTM citation cannot tell its manual apart**
 
