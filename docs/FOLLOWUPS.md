@@ -1762,6 +1762,14 @@ so these were recorded, not changed.
   battery stays in: "If you leave the battery in place, disconnect the
   negative - terminal to prevent discharge" (p. 117). Since 262 the same
   item's expected_pass allows it.
+- **Item 2's "Change engine oil and filter", stated as every machine's
+  storage step, and its expected_pass "Fresh oil and filter":** the Honda
+  CB500F/FA 2018 OM (p. 117) and Yamaha XVS95CL OM (p. 81) storage lists
+  name no oil change, and the KTM 2022 250/300 EXC TPI, a two-stroke,
+  changes the gear oil (p. 154). 262 removed the figure and points to
+  `winterization_v1`, whose item 4 gives each maker's step; two attempts
+  to list the makers in the starter text itself were each wrong once
+  (262's refute rounds 1 and 2).
 - **Item 4's "centerstand/jackstand to unload suspension":** every maker
   checked lifts the machine to take the load off both tires (Yamaha
   XVS95CL OM p. 81; BMW F 800 R RM p. 124; Honda CB500F/FA OM p. 117;

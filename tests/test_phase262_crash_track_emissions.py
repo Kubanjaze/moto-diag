@@ -165,17 +165,17 @@ PINS = {
         "position 1 comfortable, 3 normal and 7 sports, with an 85 kg rider (PDF p. 82)",
         "(rear wheel PDF p. 78, front wheel PDF p. 80)", "75 … 85 kg (PDF p. 55)",
         "for the rear shock absorber a static sag of 37 mm and a riding sag of 110 mm (PDF p. 58)",
-        "racing slick tires (PDF p. 42)",
+        "T-2 and M-2 for track use with street tires (PDF pp. 41–42)",
     ],
     ("track_prep_v1", 3, "instruction_text"): ["an increase in preload requiring firmer damping (PDF p. 81)", "suspension_service_v1"],
     # Refute round 1: each figure keeps its model, equipment and condition.
     ("track_prep_v1", 1, "description"): ['"This vehicle is not suitable for use on race tracks" (PDF p. 10)', "continental United States", "for its EXC models"],
-    ("track_prep_v1", 4, "instruction_text"): ["the mode last selected returns (PDF p. 106)", "a deactivated DTC stays off (PDF p. 132)"],
+    ("track_prep_v1", 4, "instruction_text"): ["the mode last selected returns (PDF p. 106)", "with the coding plug inserted, a deactivated DTC stays off", "(PDF p. 132;", "switches DTC back on, PDF p. 62)"],
     ("track_prep_v1", 6, "diagnosis_if_fail"): ["rear axle nut (PDF p. 129)", "parts-and-accessories approval note", "(PDF p. 4)"],
     ("emissions_v1", 3, "instruction_text"): ["secondary air injection system", '"to reduce or defeat"', "U.S. federal law"],
     ("emissions_v1", 4, "diagnosis_if_fail"): ['"shall not be liable for malfunctions'],
     ("emissions_v1", 7, "diagnosis_if_fail"): ["What a missing receipt costs depends on the machine's own warranty statement", "(PDF p. 17)"],
-    ("crash_support_v1", 7, "description"): ["(B&P section 9884.9), is written for Smog Check repairs", "PDF p. 32)"],
+    ("crash_support_v1", 7, "description"): ["(B&P section 9884.9 and CCR section 3353), is written for Smog Check repairs", "PDF p. 32)"],
     ("crash_support_v1", 7, "diagnosis_if_fail"): ["KTM 2019 690 Duke", "(PDF p. 54)", "(PDF p. 2)"],
     ("track_prep_v1", 4, "description"): ["(PDF p. 107)", '"There is a possibility of the motorcycle flipping over backwards" (PDF p. 133)', '"is intended for track use on closed circuit race tracks only" (PDF p. 23)'],
     ("track_prep_v1", 5, "description"): ["(PDF p. 175)", '"If motorcycle is used for competition 7500 km service should be carried out after every race" (PDF p. 30)', '"Every 10 operating hours when used for motorsports" (PDF pp. 52–53)', "(PDF pp. 53–54)"],
@@ -452,14 +452,13 @@ class TestFixes:
         generic = {i["sequence_number"]: i for i in _items(db, "generic_winterization_v1")}
         assert "winterization_v1 gives each maker's step" in generic[1]["instruction_text"]
         assert "winterization_v1 gives each maker's step" in generic[2]["instruction_text"]
-        assert "winterization_v1 gives each maker's charger and interval" in generic[3]["expected_pass"]
-        # Refute round 1: no maker changes the oil only after storage, and a
-        # two-stroke's list changes the gear oil; a maker may leave the
-        # battery in place, disconnected.
-        assert "before storage" in generic[2]["instruction_text"]
+        assert "winterization_v1 gives each maker's charger, connection and interval" in generic[3]["expected_pass"]
+        # Refute rounds 1-2: each enumeration of the makers here was wrong
+        # once; the fix is a pointer and states no maker's step itself.
         assert "after it, or both" not in generic[2]["instruction_text"]
-        assert "A two-stroke's storage list may change the gear oil instead" in generic[2]["instruction_text"]
-        assert "removed or disconnected as its manual says" in generic[3]["expected_pass"]
+        assert "some makers" not in generic[2]["instruction_text"]
+        assert "Which makers change the oil for storage, and when, differs" in generic[2]["instruction_text"]
+        assert generic[3]["expected_pass"].startswith("Battery kept as the machine's own manual says:")
         # The untouched starter titles and the fourth item stay as seeded.
         assert [generic[s]["title"] for s in (1, 2, 3, 4)] == [
             "Add fuel stabilizer", "Oil change", "Connect battery tender", "Storage position and cover",
@@ -470,7 +469,10 @@ class TestFixes:
         assert "the same manual says that if the vehicle" not in text
         assert "in a caution box on the same page, which also warns about a low electrolyte level before first use" in text
         assert "runs down completely in the course of three months (PDF p. 78; the same words are in its troubleshooting table, PDF p. 55)" in text
-        assert text.endswith("The manual gives both figures and does not say which applies to a stored vehicle.")
+        assert text.endswith(
+            "The manual gives both figures and does not reconcile them: the six-month check is for a "
+            "vehicle stored in open circuit, and the caution does not say whether the battery is connected."
+        )
 
     def test_f162_the_two_sentences(self, db):
         steering = next(

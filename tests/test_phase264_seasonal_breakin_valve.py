@@ -190,7 +190,7 @@ PINS = {
         # and gains its context, the first-use caution box.
         "runs down completely in the course of three months (PDF p. 78;",
         "in a caution box on the same page",
-        "does not say which applies to a stored vehicle",
+        "does not reconcile them",
     ],
     ("winterization_v1", 5, "instruction_text"): [
         "limited to 14.4 V (R 850 R / R 1150 R, PDF p. 48)",
