@@ -339,7 +339,15 @@ class TestCliFrontDoor:
         assert "winterization" not in result.output
 
     def test_workflow_list_empty_category_fails_loudly(self, db):
-        result = CliRunner().invoke(main_cli, ["workflow", "list", "--category", "track_prep"])
+        # Phase 262 filled track_prep, the category this pinned first. The
+        # empty category is found at run time, so the next content phase
+        # cannot turn this red by filling it.
+        from motodiag.workflows.models import WorkflowCategory
+
+        seeded = {t["category"] for t in list_templates(db)}
+        empty = [c.value for c in WorkflowCategory if c.value not in seeded]
+        assert empty, "every category has a template; the empty path needs another probe"
+        result = CliRunner().invoke(main_cli, ["workflow", "list", "--category", empty[0]])
         assert result.exit_code == 1
         assert "No active workflow templates" in result.output
 

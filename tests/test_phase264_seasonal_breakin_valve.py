@@ -186,7 +186,11 @@ PINS = {
         "(PDF pp. 77–78)",
         # Round 3: the three months carries its condition.
         "if the vehicle is not used for some time (1 month or more)",
-        "runs down completely in the course of three months (PDF p. 78)",
+        # Phase 262 (W30's adversarial read): the sentence keeps its words
+        # and gains its context, the first-use caution box.
+        "runs down completely in the course of three months (PDF p. 78;",
+        "in a caution box on the same page",
+        "does not reconcile them",
     ],
     ("winterization_v1", 5, "instruction_text"): [
         "limited to 14.4 V (R 850 R / R 1150 R, PDF p. 48)",
@@ -535,7 +539,8 @@ class TestRepoints:
         steering = by_title["Steering head bearings"]
         assert "the Yamaha YW125Y 2009 service manual (PDF p. 93)" in steering["description"]
         assert "The YW125Y manual's adjustment" in steering["instruction_text"]
-        assert "the YW125Y service manual calls" in steering["instruction_text"]
+        # Phase 262 (F162): p. 93 names the fault the check finds.
+        assert "the YW125Y service manual checks the same movement for binding or looseness" in steering["instruction_text"]
         fork = by_title["Front fork — seals, stanchions and action"]
         assert "the YW125Y's fork spring measures 252.1 mm" in fork["diagnosis_if_fail"]
         wheels = by_title["Wheel bearings and rims"]
