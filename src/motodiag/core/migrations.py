@@ -5809,7 +5809,7 @@ MIGRATIONS: list[Migration] = [
             -- F161: the generic starter's uncited figures become pointers to
             -- winterization_v1, each keyed on its exact old text.
             UPDATE checklist_items
-               SET instruction_text = 'Fuel before storage differs by maker — a full tank with stabilizer and the engine run, a full tank with additive and no run, or an empty tank — and the makers'' positions cannot be averaged. Follow the machine''s own manual: winterization_v1 gives each maker''s step with its document and page.',
+               SET instruction_text = 'Fuel before storage differs by maker — a full tank with stabilizer and the engine run, a full tank with additive and no run, or an empty tank — and the makers'' positions cannot be averaged. Follow the machine''s own manual: winterization_v1 gives the fuel steps of the makers it cites, each with its document and page.',
                    expected_pass = 'Fuel left as the machine''s own manual asks, with stabilizer where it names one.',
                    expected_fail = 'Fuel left in a state the machine''s own manual does not ask for.'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
@@ -5818,13 +5818,13 @@ MIGRATIONS: list[Migration] = [
                AND expected_fail = 'Engine not run after adding — stabilizer did not reach carbs/injectors';
 
             UPDATE checklist_items
-               SET instruction_text = 'Change engine oil and filter with the oil the machine''s own manual specifies. Which makers change the oil for storage, and when, differs: winterization_v1 gives each maker''s step with its document and page.'
+               SET instruction_text = 'Change the oil for storage as the machine''s own manual lists it, with the oil it specifies; the makers differ on whether and when. winterization_v1 gives the oil steps of the makers it cites, each with its document and page.'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
                AND sequence_number = 2
                AND instruction_text = 'Change engine oil and filter with recommended winter weight (typically 10W-40).';
 
             UPDATE checklist_items
-               SET expected_pass = 'Battery kept as the machine''s own manual says: winterization_v1 gives each maker''s charger, connection and interval with its document and page.'
+               SET expected_pass = 'Battery kept as the machine''s own manual says: winterization_v1 gives the battery steps of the makers it cites, each with its document and page.'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
                AND sequence_number = 3
                AND expected_pass = 'Battery on tender, reading float voltage (13.2V-13.6V)';
@@ -5893,7 +5893,7 @@ MIGRATIONS: list[Migration] = [
             ((SELECT id FROM workflow_templates WHERE slug='crash_support_v1'), 5,
              'Axles and wheels — runout against the machine''s own limit',
              'Figures are the named machine''s own, and the axle figures are for the front axle. Front-axle runout, measured with the axle in V-blocks and a dial indicator, the actual runout being half the total indicator reading: 0.20 mm in the Honda CHF50/P/S Metropolitan (2002–2006) service manual (PDF p. 218), 0.2 mm in the Honda PCX150 (2013–2017) service manual (PDF p. 326) and 0.2 mm in the Kymco People / People S 250 service manual (PDF p. 187). For the front wheel axle the Yamaha YW125Y 2009 service manual rolls the axle on a flat surface, sets a 0.25 mm bending limit and warns "Do not attempt to straighten a bent wheel axle" (PDF p. 117).',
-             'Remove the front axle, and any other axle its manual gives a limit for, and measure it as that manual says, against its own limit (see the description). Spin each wheel and read rim runout with a dial indicator; on the Honda pages the actual runout is half the total indicator reading, and the Kymco rim pages give their limit without saying how the reading is taken. Radial and axial 2.0 mm on the Honda CHF50 (front PDF p. 219, rear PDF p. 242), the Honda PCX150 (front PDF p. 326, rear PDF p. 355) and the Kymco People / People S 250 (front PDF p. 188, rear PDF p. 206); radial and lateral 1.0 mm for the Yamaha YW125Y front wheel (PDF p. 117). Check the rim for cracks and dents — the template''s own addition.',
+             'Remove the front axle, and any other axle its manual gives a limit for, and measure it as that manual says, against its own limit (see the description). Spin each wheel and read rim runout with a dial indicator; on the Honda pages the actual runout is half the total indicator reading, and the Kymco rim pages draw two dial indicators on the rim but do not say whether their limit is on the full indicator reading or half of it. Radial and axial 2.0 mm on the Honda CHF50 (front PDF p. 219, rear PDF p. 242), the Honda PCX150 (front PDF p. 326, rear PDF p. 355) and the Kymco People / People S 250 (front PDF p. 188, rear PDF p. 206); radial and lateral 1.0 mm for the Yamaha YW125Y front wheel (PDF p. 117). Check the rim for cracks and dents — the template''s own addition.',
              'Each axle and rim within its own machine''s limit.',
              'An axle or rim over its limit, or a bent axle straightened.',
              'Over the limit means replace: "replace if over" (Kymco People / People S 250, PDF pp. 187–188, 206); replace, and do not straighten a bent axle (Yamaha YW125Y, PDF p. 117).',
@@ -5910,11 +5910,11 @@ MIGRATIONS: list[Migration] = [
 
             ((SELECT id FROM workflow_templates WHERE slug='crash_support_v1'), 7,
              'The claim record — no photo or claim standard in the library',
-             'No maker''s or regulator''s document in the research library sets a photo documentation standard, a damage-estimating method or an insurance-claim procedure for a crash. The one estimate rule it holds, California BAR''s repair estimate (B&P section 9884.9 and CCR section 3353), is written for Smog Check repairs (Smog Check Reference Guide 2025, PDF p. 32). This template sets none: the claim follows the insurer''s own requirements.',
+             'No maker''s or regulator''s document in the research library sets a photo documentation standard, a damage-estimating method or an insurance-claim procedure for a crash. The one estimate rule it holds is in BAR''s Smog Check Reference Guide 2025, which for Smog Check inspections and repairs requires a written estimate in accordance with the Automotive Repair Act (B&P section 9884.9 and CCR section 3353) (PDF pp. 27, 32). This template sets none: the claim follows the insurer''s own requirements.',
              'Record what items 1 to 6 found: each part, its condition and, where a figure was measured, the reading beside the machine''s own limit and the page it comes from. Photograph the machine and each damaged part before anything is removed or repaired. This record is the template''s own practice, not a cited standard; where the insurer asks for more, its requirements govern.',
              'Every finding recorded with its measured figure and its limit, before any repair; the insurer''s requirements met.',
              'A part repaired or discarded before its damage was recorded.',
-             'The research library holds no such standard. Where its owner''s manuals say "insurance" they mostly say where to keep the insurance papers; elsewhere it appears mostly as a warning — the KTM 2019 690 Duke owner''s manual: switching the ABS off completely voids the road approval and the insurance coverage (PDF p. 54); EPA''s fact sheet: "Tampering can void manufacturer warranties and insurance agreements" (PDF p. 2). Its "photograph" pages are workshop and owner''s-manual illustrations, manual front-matter disclaimers, or type-approval and recall paperwork.',
+             'The research library holds no such standard. Where its owner''s manuals say "insurance" they mostly say where to keep the insurance papers; elsewhere it appears as a warning in two documents — the KTM 2019 690 Duke owner''s manual: switching the ABS off completely voids the road approval and the insurance coverage (PDF p. 54); EPA''s fact sheet: "Tampering can void manufacturer warranties and insurance agreements" (PDF p. 2) — and in the California DMV pages item 8 cites, as the insurance company''s part in a total loss. Its "photograph" pages are workshop and owner''s-manual illustrations, manual front-matter disclaimers, or type-approval and recall paperwork.',
              0, '["camera"]', 20),
 
             ((SELECT id FROM workflow_templates WHERE slug='crash_support_v1'), 8,
@@ -5957,7 +5957,7 @@ MIGRATIONS: list[Migration] = [
             ((SELECT id FROM workflow_templates WHERE slug='track_prep_v1'), 4,
              'Rider aids on a closed track',
              'Cited: the BMW S 1000 R rider''s manual — its DYNAMIC PRO mode (Pro riding modes, optional equipment) cannot be activated unless the coding plug is inserted, and was developed for surfaces with the high level of grip "generally encountered only on race tracks"; in it, ABS control is not active at the rear wheel when the footbrake lever is pressed, so the rear wheel can lock up (PDF p. 107). The BMW S 1000 XR rider''s manual: with DTC (Dynamic Traction Control, optional equipment) switched off, drifts and wheelies are possible and "There is a possibility of the motorcycle flipping over backwards" (PDF p. 133). The Yamaha YZFR7T owner''s manual: its launch control "is intended for track use on closed circuit race tracks only" (PDF p. 23), and, for its rear-wheel ABS switch, "Turn the ABS off only when riding on a closed circuit course" (PDF p. 71).',
-             'Choose track modes and reduce or switch off rider aids only on a closed track, only as the machine''s own manual describes, and know what each setting removes before riding (the pages above). Put the machine back in its road mode before it leaves the track: switching the ignition off does not always do it — on the BMW S 1000 R the mode last selected returns (PDF p. 106), and on the BMW S 1000 XR, with the coding plug inserted, a deactivated DTC stays off after the ignition is switched off and on (PDF p. 132; without the coding plug, switching the ignition off and on switches DTC back on, PDF p. 62).',
+             'Choose track modes and reduce or switch off rider aids only on a closed track, only as the machine''s own manual describes, and know what each setting removes before riding (the pages above). Put the machine back in its road mode before it leaves the track: switching the ignition off does not always do it — on the BMW S 1000 R the mode last selected returns (PDF p. 106), and on the BMW S 1000 XR, with the coding plug inserted, a deactivated DTC stays off after the ignition is switched off and on (PDF p. 132; without the coding plug, switching the ignition off and on switches DTC back on once the motorcycle passes 10 km/h, PDF pp. 62, 126).',
              'Each track setting chosen from the manual with its consequences known; road mode restored after the session.',
              'Rider aids reduced or off on a public road; a track-only mode used on the street.',
              'The manuals name the consequences: a rear wheel that can lock up under the footbrake in DYNAMIC PRO mode (BMW S 1000 R, PDF p. 107); with DTC off, drifts, wheelies and flipping over backwards (BMW S 1000 XR, PDF p. 133).',
@@ -5978,7 +5978,7 @@ MIGRATIONS: list[Migration] = [
              'Get the event''s current technical rules before preparing the machine, and prepare to them: which fasteners must be secured and how, what coolant is allowed, what the technical inspection checks and how numbers are shown. None of it comes from this template. Where the event''s coolant rule differs from the machine''s own coolant specification — the KTM 2022 250/300 EXC TPI owner''s manual: "Do not use pure water" (PDF p. 170) — record the difference and the choice made.',
              'The event''s current technical rules in hand, and the machine prepared to them.',
              'The machine prepared from memory or from another event''s rules.',
-             'The research library holds no organiser''s rulebook: its "lock wire" hits are a seat lock wire (Kymco Agility 50 service manual, PDF p. 32) and the locking wires that secure the KTM 1290 Super Duke R / RR rear axle nut (PDF p. 129), not a safety-wire procedure; its coolant pages are specifications; and its "technical inspection" is a parts-and-accessories approval note in the BMW K 1200 RS Maintenance Instructions (PDF p. 4).',
+             'The research library holds no organiser''s rulebook: its "lock wire" hits are a seat lock wire (Kymco Agility 50 service manual, PDF p. 32) and the locking wires that secure the KTM 1290 Super Duke R / RR rear axle nut (PDF p. 129), not a safety-wire procedure; its coolant pages are specifications; and its "technical inspection" is a parts-and-accessories approval note in two BMW booklets (the K 1200 RS and the R 850 R / R 1150 R Maintenance Instructions, PDF p. 4 of each).',
              1, '[]', 10),
 
             -- ---------------------------------------------------- emissions_v1
@@ -6079,7 +6079,7 @@ MIGRATIONS: list[Migration] = [
                SET instruction_text = 'Change engine oil and filter with recommended winter weight (typically 10W-40).'
              WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'generic_winterization_v1')
                AND sequence_number = 2
-               AND instruction_text LIKE 'Change engine oil and filter with the oil the machine''s own manual specifies.%';
+               AND instruction_text LIKE 'Change the oil for storage as the machine''s own manual lists it%';
 
             UPDATE checklist_items
                SET expected_pass = 'Battery on tender, reading float voltage (13.2V-13.6V)'
