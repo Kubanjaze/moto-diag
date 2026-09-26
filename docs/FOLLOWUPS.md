@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F162** (this file); the mobile
+At the time of writing the highest assigned is **F163** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1737,3 +1737,52 @@ screen reads the Yamaha page loosely, and one citation is ambiguous.
 Neither changes a figure. What would close it: a migration keyed on the
 old text that rewords both, with the operator's approval for the
 live-row change (rule 1).
+
+### F163
+
+**Live starter and chassis text keeps defects outside F161's and F162's scope: an unsourced title, two unsourced steps, a fail criterion one maker prescribes, and three unsupported steering-bearing sentences**
+
+Found by Phase 262's round-1 refuters (`262_phase_log.md`, Refuter
+pass) while they read F161's and F162's fixes. The operator scoped those
+fixes to the unsupported figures (F161) and the two named defects (F162),
+so these were recorded, not changed.
+
+`generic_winterization_v1` (migration 007's starter), untouched by 262:
+- **Item 1's title, "Add fuel stabilizer",** contradicts the makers who
+  empty the tank: "Make sure the tank is as empty as possible" (KTM 2010
+  690 Enduro OM p. 172); "empty the fuel tank into an approved gasoline
+  container" (Kymco People S OM p. 60). The item's own instruction, since
+  262, allows an empty tank.
+- **Item 3's instruction, "Disconnect negative terminal, clean terminals,
+  connect battery tender",** joins what the makers give as alternatives:
+  "disconnect the battery or connect a suitable trickle charger" (BMW F
+  800 R RM p. 117). No storage page checked says to clean the terminals.
+- **Item 3's expected_fail, "Battery left disconnected with no
+  maintenance",** is what the Honda CB500F/FA 2018 OM prescribes when the
+  battery stays in: "If you leave the battery in place, disconnect the
+  negative - terminal to prevent discharge" (p. 117). Since 262 the same
+  item's expected_pass allows it.
+- **Item 4's "centerstand/jackstand to unload suspension":** every maker
+  checked lifts the machine to take the load off both tires (Yamaha
+  XVS95CL OM p. 81; BMW F 800 R RM p. 124; Honda CB500F/FA OM p. 117;
+  Kymco People S OM p. 60). None mentions the suspension.
+
+`ppi_chassis_v1`, "Steering head bearings" (live id 18), outside F162's
+two sentences:
+- "A notch at the straight-ahead position is dented bearing races",
+  "freshly adjusted but unchanged bearings only hide the notch until the
+  grease settles", and the diagnosis's "brinelled races from an impact
+  or years of load in one position" have no support. "brinell" is on 0
+  of the library's 26,228 pages, and the 16 notch/detent pages support
+  none of them. The KTM 2022 250/300 EXC TPI OM adjusts first: "If detent
+  positions are detected: – Adjust the steering head bearing play. –
+  Check the steering head bearing and change if necessary" (p. 76). The
+  nearest support names recessed seats or flattened balls only after
+  adjustment fails, with no cause (Piaggio Beverly 125 SSM p. 56).
+
+What it affects: `motodiag workflow show generic_winterization_v1` and
+`… show ppi_chassis_v1` print these sentences uncited or contradicted.
+A replacement for each is drafted, with its page quote, in
+`262_phase_log.md` (Refuter pass, round 1, "Outside the scope: F163").
+What would close it: a migration keyed on the old text, with the
+operator's approval for the live-row change (rule 1).

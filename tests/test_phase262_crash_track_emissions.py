@@ -74,8 +74,8 @@ TEMPLATES = {
 TITLES = {
     "crash_support_v1": [
         "Safety, the law and the first look",
-        "Frame — inspect it; the maker's rule is change, not repair",
-        "Handlebar and controls — replace bent parts, never straighten",
+        "Frame — inspect it; KTM's rule is change, not repair",
+        "Handlebar and controls — a bent handlebar is replaced, not straightened",
         "Front fork — tubes and legs",
         "Axles and wheels — runout against the machine's own limit",
         "Hidden damage — the full check before the machine is trusted",
@@ -129,7 +129,8 @@ PINS = {
     ("crash_support_v1", 4, "description"): ["inner tube bending limit is 0.2 mm (PDF p. 34)", "(PDF p. 157)", "(PDF p. 35)"],
     ("crash_support_v1", 4, "instruction_text"): ["0.2 mm on the Yamaha YW125Y (PDF p. 34)", "do not straighten it (PDF p. 157)"],
     ("crash_support_v1", 5, "description"): [
-        "0.20 mm in the Honda CHF50 service manual (PDF p. 218)",
+        "the axle figures are for the front axle",
+        "0.20 mm in the Honda CHF50/P/S Metropolitan (2002–2006) service manual (PDF p. 218)",
         "0.2 mm in the Honda PCX150 (2013–2017) service manual (PDF p. 326)",
         "0.2 mm in the Kymco People / People S 250 service manual (PDF p. 187)",
         "0.25 mm bending limit",
@@ -137,12 +138,13 @@ PINS = {
         "half the total indicator reading",
     ],
     ("crash_support_v1", 5, "instruction_text"): [
-        "radial and axial 2.0 mm on the Honda CHF50 (PDF p. 219)",
-        "on the Honda PCX150 rear wheel (PDF p. 355)",
-        "Kymco People / People S 250 (PDF p. 188)",
-        "radial and lateral 1.0 mm on the Yamaha YW125Y (PDF p. 117)",
+        "Radial and axial 2.0 mm on the Honda CHF50 (front PDF p. 219, rear PDF p. 242)",
+        "the Honda PCX150 (front PDF p. 326, rear PDF p. 355)",
+        "Kymco People / People S 250 (front PDF p. 188, rear PDF p. 206)",
+        "radial and lateral 1.0 mm for the Yamaha YW125Y front wheel (PDF p. 117)",
+        "the actual runout is half the total indicator reading",
     ],
-    ("crash_support_v1", 5, "diagnosis_if_fail"): ['"replace if over"', "People S 250, PDF pp. 187–188)", "(Yamaha YW125Y, PDF p. 117)"],
+    ("crash_support_v1", 5, "diagnosis_if_fail"): ['"replace if over"', "People S 250, PDF pp. 187–188, 206)", "(Yamaha YW125Y, PDF p. 117)"],
     ("crash_support_v1", 8, "description"): [
         "Vehicle Industry Registration Procedures Manual, 19.015 Definitions",
         "(VC §544)", "uneconomical to repair", "(VC §431)", "cannot be titled or reregistered",
@@ -156,20 +158,30 @@ PINS = {
     ],
     # track prep
     ("track_prep_v1", 1, "description"): ['"to meet the normal demands of regular road and race track operation"', "(PDF p. 10)", "(PDF p. 9)", '"Competition or racing use" (PDF p. 135)'],
-    ("track_prep_v1", 2, "description"): ["(PDF p. 65)", "20 Nm on refitting (PDF p. 85)", "EQIPWARNLAMP", "(PDF p. 86)", "(PDF p. 88)"],
+    ("track_prep_v1", 2, "description"): ["(PDF p. 65)", "20 Nm with Multi-wax spray as joining compound (PDF p. 85)","EQIPWARNLAMP", "(PDF p. 86)", "(PDF p. 88)"],
     ("track_prep_v1", 3, "description"): [
-        "6...10 mm at the front with an 85 kg rider (PDF p. 81)",
+        "on machines with Dynamic Damping Control (optional equipment), 6...10 mm at the front with an 85 kg rider (PDF pp. 80–81)",
+        '("ERS (YZF-R1M)", PDF p. 41)',
         "position 1 comfortable, 3 normal and 7 sports, with an 85 kg rider (PDF p. 82)",
-        "(PDF p. 78)", "(PDF p. 55)",
-        "static sag 37 mm and riding sag 110 mm (PDF p. 58)",
+        "(rear wheel PDF p. 78, front wheel PDF p. 80)", "75 … 85 kg (PDF p. 55)",
+        "for the rear shock absorber a static sag of 37 mm and a riding sag of 110 mm (PDF p. 58)",
         "racing slick tires (PDF p. 42)",
     ],
     ("track_prep_v1", 3, "instruction_text"): ["an increase in preload requiring firmer damping (PDF p. 81)", "suspension_service_v1"],
+    # Refute round 1: each figure keeps its model, equipment and condition.
+    ("track_prep_v1", 1, "description"): ['"This vehicle is not suitable for use on race tracks" (PDF p. 10)', "continental United States", "for its EXC models"],
+    ("track_prep_v1", 4, "instruction_text"): ["the mode last selected returns (PDF p. 106)", "a deactivated DTC stays off (PDF p. 132)"],
+    ("track_prep_v1", 6, "diagnosis_if_fail"): ["rear axle nut (PDF p. 129)", "parts-and-accessories approval note", "(PDF p. 4)"],
+    ("emissions_v1", 3, "instruction_text"): ["secondary air injection system", '"to reduce or defeat"', "U.S. federal law"],
+    ("emissions_v1", 4, "diagnosis_if_fail"): ['"shall not be liable for malfunctions'],
+    ("emissions_v1", 7, "diagnosis_if_fail"): ["What a missing receipt costs depends on the machine's own warranty statement", "(PDF p. 17)"],
+    ("crash_support_v1", 7, "description"): ["(B&P section 9884.9), is written for Smog Check repairs", "PDF p. 32)"],
+    ("crash_support_v1", 7, "diagnosis_if_fail"): ["KTM 2019 690 Duke", "(PDF p. 54)", "(PDF p. 2)"],
     ("track_prep_v1", 4, "description"): ["(PDF p. 107)", '"There is a possibility of the motorcycle flipping over backwards" (PDF p. 133)', '"is intended for track use on closed circuit race tracks only" (PDF p. 23)'],
-    ("track_prep_v1", 5, "description"): ["(PDF p. 175)", '"If motorcycle is used for competition 7500 km service should be carried out after every race" (PDF p. 30)', '"Every 10 operating hours when used for motorsports"', "(PDF p. 53)"],
+    ("track_prep_v1", 5, "description"): ["(PDF p. 175)", '"If motorcycle is used for competition 7500 km service should be carried out after every race" (PDF p. 30)', '"Every 10 operating hours when used for motorsports" (PDF pp. 52–53)', "(PDF pp. 53–54)"],
     ("track_prep_v1", 5, "instruction_text"): ["the manual gives no figure", "brake_service_v1"],
     # emissions
-    ("emissions_v1", 1, "description"): ["Smog Check Reference Guide 2025", "H&S §§ 44011 (section 1.1.5, PDF p. 9)", '"Smog Check Required: None" (PDF p. 10)'],
+    ("emissions_v1", 1, "description"): ["Smog Check Reference Guide 2025", "H&S §§ 44011, 44011(a)(6), VC § 4000.1 and CCR §§ 3340.5, 3340.42 (section 1.1.5, PDF p. 9)", '"Smog Check Required: None" (PDF p. 10)'],
     ("emissions_v1", 2, "description"): ['"ONMC - Executive Order Introduction"', "make, model and model year", "left side of the swingarm (PDF p. 121)", "(PDF p. 32)", "rear fender (PDF p. 109)", '"AC 50 state (meets California)" (PDF p. 8)'],
     ("emissions_v1", 3, "description"): ["Vehicle Code section 27156", "since the 1979 model year", "since the 1997 model year", "(PDF p. 45)", "(PDF p. 41)", "$4,819 per violative vehicle, engine or defeat device", "(PDF p. 2)"],
     ("emissions_v1", 3, "instruction_text"): ["(PDF pp. 122–123)", "(PDF p. 123)", "(PDF p. 124)"],
@@ -274,8 +286,16 @@ def _snapshot(path):
 
 def _scoped_item_ids(path):
     """The live rows 071 is allowed to change: the generic winterization
-    items that carried F161's figures, and the chassis steering item."""
+    items that carried F161's figures, the chassis steering item (F162), and
+    winterization_v1's battery item, whose W30 sentence gains its context."""
     conn = sqlite3.connect(path)
+    w30 = {
+        r[0] for r in conn.execute(
+            "SELECT i.id FROM checklist_items i JOIN workflow_templates t "
+            "ON t.id = i.template_id WHERE t.slug = 'winterization_v1' "
+            "AND i.sequence_number = 5"
+        )
+    }
     generic = {
         r[0] for r in conn.execute(
             "SELECT i.id FROM checklist_items i JOIN workflow_templates t "
@@ -291,7 +311,7 @@ def _scoped_item_ids(path):
         )
     }
     conn.close()
-    return generic, steering
+    return generic, steering, w30
 
 
 # --- Migration 071 ---
@@ -348,8 +368,8 @@ class TestMigration071:
         path = str(tmp_path / "at_70.db")
         _build_at_70(path)
         templates_70, items_70 = _snapshot(path)
-        generic, steering = _scoped_item_ids(path)
-        assert len(generic) == 3 and len(steering) == 1
+        generic, steering, w30 = _scoped_item_ids(path)
+        assert len(generic) == 3 and len(steering) == 1 and len(w30) == 1
         m071 = get_migration_by_version(71)
         apply_migration(m071, path)
         assert get_current_version(path) == m071.version
@@ -359,7 +379,7 @@ class TestMigration071:
         assert set(templates_71) - set(templates_70) == set(TEMPLATES)
 
         changed = {k for k in items_70 if items_71[k] != items_70[k]}
-        assert changed == generic | steering
+        assert changed == generic | steering | w30
         assert len(items_71) - len(items_70) == sum(len(t) for t in TITLES.values())
 
     def test_upgrade_changes_only_the_named_fields(self, tmp_path):
@@ -372,14 +392,15 @@ class TestMigration071:
         conn = sqlite3.connect(path)
         cols = [r[1] for r in conn.execute("PRAGMA table_info(checklist_items)")]
         conn.close()
-        generic, steering = _scoped_item_ids(path)
+        generic, steering, w30 = _scoped_item_ids(path)
         moved = {}
-        for k in generic | steering:
+        for k in generic | steering | w30:
             moved[k] = {cols[i] for i, (a, b) in enumerate(zip(before[k], after[k])) if a != b}
         assert set().union(*(moved[k] for k in generic)) == {
             "instruction_text", "expected_pass", "expected_fail",
         }
         assert moved[next(iter(steering))] == {"description", "instruction_text"}
+        assert moved[next(iter(w30))] == {"description"}
 
     def test_rollback_restores_every_changed_row(self, tmp_path):
         """Rollback to 70 on a database built at 70 and taken to 71 gives
@@ -432,10 +453,24 @@ class TestFixes:
         assert "winterization_v1 gives each maker's step" in generic[1]["instruction_text"]
         assert "winterization_v1 gives each maker's step" in generic[2]["instruction_text"]
         assert "winterization_v1 gives each maker's charger and interval" in generic[3]["expected_pass"]
+        # Refute round 1: no maker changes the oil only after storage, and a
+        # two-stroke's list changes the gear oil; a maker may leave the
+        # battery in place, disconnected.
+        assert "before storage" in generic[2]["instruction_text"]
+        assert "after it, or both" not in generic[2]["instruction_text"]
+        assert "A two-stroke's storage list may change the gear oil instead" in generic[2]["instruction_text"]
+        assert "removed or disconnected as its manual says" in generic[3]["expected_pass"]
         # The untouched starter titles and the fourth item stay as seeded.
         assert [generic[s]["title"] for s in (1, 2, 3, 4)] == [
             "Add fuel stabilizer", "Oil change", "Connect battery tender", "Storage position and cover",
         ]
+
+    def test_w30_keeps_its_words_and_gains_its_context(self, db):
+        text = _item(db, "winterization_v1", 5)["description"]
+        assert "the same manual says that if the vehicle" not in text
+        assert "in a caution box on the same page, which also warns about a low electrolyte level before first use" in text
+        assert "runs down completely in the course of three months (PDF p. 78; the same words are in its troubleshooting table, PDF p. 55)" in text
+        assert text.endswith("The manual gives both figures and does not say which applies to a stored vehicle.")
 
     def test_f162_the_two_sentences(self, db):
         steering = next(
