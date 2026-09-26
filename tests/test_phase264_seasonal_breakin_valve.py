@@ -141,7 +141,8 @@ GENERIC_NEW = (
 PINS = {
     # winterization
     ("winterization_v1", 1, "description"): ["checks all parts for function and wear", "(PDF p. 172)", "(PDF p. 117)", "(PDF p. 124)"],
-    ("winterization_v1", 1, "instruction_text"): ["60 days or more (PDF pp. 80–81)", "water and humidity cause rust (PDF p. 80)"],
+    # Round 2: KTM works during storage; Yamaha and Kymco before it.
+    ("winterization_v1", 1, "instruction_text"): ["The makers differ on when the work is done", "during the storage period", "60 days or more (PDF pp. 80–81)", "repairs before storage, whenever possible (PDF p. 60)", "water and humidity cause rust (PDF p. 80)"],
     ("winterization_v1", 1, "diagnosis_if_fail"): ["brake cleaner or acetone", "(PDF p. 80)"],
     ("winterization_v1", 2, "description"): [
         "The makers disagree",
@@ -153,53 +154,88 @@ PINS = {
     ],
     ("winterization_v1", 2, "instruction_text"): [
         "the four positions cannot be averaged",
-        "5 minutes is the Yamaha XVS95CL's figure (PDF p. 81)",
-        "2-stroke oil after it (PDF p. 154)",
-        "That run is before storage, not during it",
+        # Refute: only the Yamaha runs the engine; KTM's short-run warning
+        # is stated beside it, not reconciled by the template.
+        "Only the Yamaha XVS95CL then runs the engine, for 5 minutes",
+        "(PDF p. 81)",
+        "the KTM manuals run no engine at this step",
+        "also adds 2-stroke oil after that refuel (PDF p. 154)",
+        "Neither page says whether the Yamaha's 5-minute run is short in KTM's sense",
         "(PDF p. 155)",
     ],
-    ("winterization_v1", 2, "diagnosis_if_fail"): ["the fuel from deteriorating (PDF p. 81)", "(KTM 1290 Super Duke R, PDF p. 157)"],
+    ("winterization_v1", 2, "diagnosis_if_fail"): ["adds fuel stabilizer (if available)", "the fuel from deteriorating (PDF p. 81)", "On the KTM 1290 Super Duke R / RR", "cannot warm up properly", "(PDF p. 157)", "the KTM 690 Enduro (PDF p. 173) and the KTM EXC TPI (PDF p. 155) warn the same"],
+    # Refute: the XVS95CL is fuel-injected; the carbureted XV250T1 sets its
+    # fuel cock to ON before draining.
+    ("winterization_v1", 3, "instruction_text"): ['the Yamaha XV250T1 turns it to "ON" before draining (PDF p. 80)', "(PDF p. 81)", "(PDF p. 60)"],
     ("winterization_v1", 3, "description"): ["fuel deposits from building up", "(PDF p. 81)", "(PDF p. 60)"],
     ("winterization_v1", 4, "description"): [
         "No storage procedure in the research library names an oil grade for storage",
         "a teaspoonful of engine oil in each spark plug bore (PDF p. 81)",
         "a tablespoon (15 - 20 cc) into the cylinder (PDF p. 60)",
     ],
-    ("winterization_v1", 4, "instruction_text"): ["changes the gear oil instead (PDF p. 154)", "a teaspoonful per cylinder on the Yamaha XVS95CL (PDF p. 81)", "a tablespoon (15 - 20 cc) on the Kymco People S (PDF p. 60)"],
+    ("winterization_v1", 4, "instruction_text"): ["changes it again after storage if more than 1 month has passed (PDF p. 61)", "changes the gear oil and adds 2-stroke oil (PDF p. 154)", "a teaspoonful per cylinder on the Yamaha XVS95CL (PDF p. 81)", "a tablespoon (15 - 20 cc) on the Kymco People S (PDF p. 60)"],
     ("winterization_v1", 5, "description"): [
-        "every two weeks in the Honda PCX150 (2013–2017) service manual (PDF p. 390)",
-        "once a month in the Yamaha XVS95CL owner's manual (PDF p. 81)",
+        # Refute: each interval keeps its condition.
+        "a removed, stored battery every two weeks in the Honda PCX150 (2013–2017) service manual (PDF p. 390)",
+        "a removed battery once a month in the Yamaha XVS95CL owner's manual (PDF p. 81)",
         "about every 4 months in store, and every 2 months at the latest if left connected",
         "(PDF p. 49)",
-        "every six months for a sealed battery stored in open circuit",
-        "(PDF p. 78)",
+        # Round 2: a check "and, if necessary, recharged", beside the
+        # same page's three months to run down.
+        "a sealed battery's charge checked and, if necessary, recharged every six months while the vehicle is stored in open circuit",
+        "(PDF pp. 77–78)",
+        # Round 3: the three months carries its condition.
+        "if the vehicle is not used for some time (1 month or more)",
+        "runs down completely in the course of three months (PDF p. 78)",
     ],
     ("winterization_v1", 5, "instruction_text"): [
         "limited to 14.4 V (R 850 R / R 1150 R, PDF p. 48)",
         "0–30 °C for the Yamaha XVS95CL (PDF p. 81)",
         "0–35 °C out of direct sunshine for the KTM 690 Enduro (PDF p. 172)",
-        "10–20 °C for the lithium-ion battery of the KTM 2022 250/300 EXC TPI (PDF p. 154)",
-        "(PDF p. 117)",
+        "10–20 °C, the ideal charging and storage temperature for the lithium-ion battery of the KTM 2022 250/300 EXC TPI (PDF p. 154)",
+        "connects a suitable trickle charger, and BMW offers a float charger for it (PDF p. 117)",
     ],
+    ("winterization_v1", 5, "diagnosis_if_fail"): ["left connected and run flat by the on-board electronics", "PDF p. 49"],
     ("winterization_v1", 6, "description"): ["at least once every three months (PDF p. 9)", "(PDF p. 163)"],
-    ("winterization_v1", 6, "instruction_text"): ["about 6 hours to a 60 % state of charge (PDF p. 9)", "at 0 °C to -10 °C"],
+    ("winterization_v1", 6, "instruction_text"): ["about 6 hours to a 60 % state of charge (PDF p. 9)", "exposed for a prolonged period to 0 °C to -10 °C", "are the template's own advice"],
     ("winterization_v1", 7, "description"): ["both tires are off the ground (PDF p. 117)", "no load on either wheel (PDF p. 124)", "once a month", "(PDF pp. 154–155)"],
     ("winterization_v1", 7, "instruction_text"): ["a stable (ammonia)", "(XVS95CL, PDF p. 80)", "(KTM EXC TPI, PDF p. 154)"],
     # de-winterization
-    ("de_winterization_v1", 1, "instruction_text"): ["(BMW R 850 R / R 1150 R Maintenance Instructions, PDF p. 59)", "the template's own, not a cited document's"],
+    ("de_winterization_v1", 1, "instruction_text"): [
+        "(Kymco People S 50/125/200, PDF p. 61)", "(KTM 2022 250/300 EXC TPI, PDF p. 155)",
+        "(BMW R 850 R / R 1150 R Maintenance Instructions, PDF p. 59)",
+        "since the manual names only the bag", "the template's own, not a cited document's",
+    ],
     ("de_winterization_v1", 2, "description"): ["above 12.60 V", "below 12.60 V", "14.40 ÷ 14.70 V, 10 to 12 hours recommended (PDF p. 78)", "(PDF p. 79)"],
-    ("de_winterization_v1", 2, "instruction_text"): ["6 minimum and 24 maximum (PDF p. 78)", "(PDF p. 49)", "time and date if the battery was removed (PDF p. 206)"],
-    ("de_winterization_v1", 2, "diagnosis_if_fail"): ["(PDF p. 48)", "deteriorates after 2-3 years even in normal use (PDF p. 390)"],
-    ("de_winterization_v1", 3, "instruction_text"): ["to 100 %", "only above 0 °C (PDF p. 9)"],
-    ("de_winterization_v1", 3, "diagnosis_if_fail"): ["Below a 10 % state of charge", "(PDF p. 90)"],
+    ("de_winterization_v1", 2, "instruction_text"): [
+        "in the constant-voltage mode at 14.40 ÷ 14.70 V", "6 minimum and 24 maximum",
+        "a constant current of 1/10 of the battery's capacity for 5 hours",
+        "never to exceed 8 hours of continuous recharging (PDF p. 78)",
+        "not to reverse the connections (PDF p. 78)",
+        "(PDF p. 49)", "time and date if the battery was removed (PDF p. 206)",
+    ],
+    ("de_winterization_v1", 2, "diagnosis_if_fail"): ["a completely flat battery", "(PDF p. 48)", "deteriorates after 2-3 years even in normal use (PDF p. 390)"],
+    # Refute: p. 9's 100 % charge is the pre-delivery procedure.
+    ("de_winterization_v1", 3, "description"): ["pre-delivery procedure", "at least once every three months (PDF p. 9)"],
+    ("de_winterization_v1", 3, "instruction_text"): ["to 100 %", "is the template's own (PDF p. 9)", "only above 0 °C (PDF p. 9)"],
+    ("de_winterization_v1", 3, "diagnosis_if_fail"): ["70 km/h version, below a 10 % state of charge", "(PDF p. 90)"],
+    ("de_winterization_v1", 4, "instruction_text"): ["(PDF p. 61)", "is the template's own condition", "(PDF p. 173)", "(PDF p. 25)"],
     ("de_winterization_v1", 4, "description"): ["if more than 1 month has passed since the start of storage", "(PDF p. 61)", "(PDF p. 173)"],
     ("de_winterization_v1", 5, "instruction_text"): ["(PDF p. 46)", "(PDF p. 25)", "(PDF p. 117)", "(PDF p. 59)"],
     ("de_winterization_v1", 5, "diagnosis_if_fail"): ["a leak or worn linings", "(PDF p. 101)"],
     ("de_winterization_v1", 6, "description"): ['"Check the brakes"', '"Check/correct tyre pressures" (PDF p. 59)', "(PDF p. 79)", "at ambient temperature (PDF p. 58)"],
     ("de_winterization_v1", 7, "description"): ["at low speeds in a safe riding area, away from traffic (PDF p. 61)", "(PDF p. 155)", "(PDF p. 173)"],
     # break-in
-    ("engine_break_in_v1", 1, "description"): ['"When your engine is new or when you have installed new engine components" (PDF p. 25)', "the first 1600 km (1000 mi)", "(PDF p. 39)"],
-    ("engine_break_in_v1", 1, "diagnosis_if_fail"): ["0 - 100 miles on PDF p. 25", "0~95 miles on PDF p. 27"],
+    ("engine_break_in_v1", 1, "description"): [
+        '"When your engine is new or when you have installed new engine components" (PDF p. 25)',
+        "the first 1600 km (1000 mi)", "(PDF p. 39)",
+        # Round 2: SYM's replaced-engine sentence beside its new-engine one.
+        "for a replaced engine", "the first 1,000 km", "after the first 300 km (PDF p. 17)",
+    ],
+    ("engine_break_in_v1", 1, "diagnosis_if_fail"): ["0 - 100 miles and a 500-mile run-in on PDF p. 25", "0~95 miles and a 620-mile run-in on PDF p. 27"],
+    # Refute: SYM also speaks to a replaced engine, without a schedule.
+    # Round 3: SYM speaks to a replaced engine, not to new parts.
+    ("engine_break_in_v1", 1, "instruction_text"): ["After a rebuild or new parts, Genuine speaks to it", "SYM speaks to a replaced engine", "(Buddy 125, PDF p. 25)", "better to drive in low speed after replacing the engine, with no distance given (PDF p. 17)"],
     ("engine_break_in_v1", 2, "description"): [
         "6,000 rpm for the first 1,000 km and 7,800 rpm after (PDF p. 46)",
         "6,500 rpm and then 10,250 rpm (PDF p. 86)",
@@ -208,7 +244,7 @@ PINS = {
         "above 1/3 throttle from 0 to 1000 km and above 1/2 throttle from 1000 to 1600 km (PDF p. 41)",
         "less than 1/2 throttle for the initial 300 miles (600 km) and less than 3/4 up to 600 miles (1,000 km)",
         "(PDF p. 23)",
-        "under 70 % for the first 3 operating hours (PDF p. 40)",
+        "under 70 % for the first 3 operating hours and under 100 % for the first 5 (PDF p. 40)",
     ],
     ("engine_break_in_v1", 2, "instruction_text"): [
         "a throttle fraction is not an engine speed",
@@ -218,7 +254,13 @@ PINS = {
     ],
     ("engine_break_in_v1", 2, "diagnosis_if_fail"): ["increased engine wear", "(PDF p. 66)"],
     ("engine_break_in_v1", 3, "instruction_text"): ["(BMW R 1200 GS, PDF p. 85)", "(PDF p. 66)", "(PDF p. 67)", "(PDF p. 39)", "(PDF p. 23)"],
-    ("engine_break_in_v1", 4, "description"): ["no document names heat cycles", "10 minutes after every 30 minutes of operation for the first 100 miles (PDF p. 25)", "5-10 minutes per hour for the first 95 miles (PDF p. 27)"],
+    ("engine_break_in_v1", 4, "description"): [
+        "no document names heat cycles",
+        "10 minutes after every 30 minutes of operation for the first 100 miles (PDF p. 25)",
+        "5-10 minutes per hour for the first 95 miles (PDF p. 27)",
+        # Refute: N2 narrowed — Yamaha's small-scooter manuals cool down too.
+        "lets it cool for five to ten minutes, from 0 to 150 km (PDF p. 34)",
+    ],
     ("engine_break_in_v1", 5, "instruction_text"): [
         "1000 km on the Yamaha XVS95CL, oil and filter (PDF p. 41)",
         "600 mi (1,000 km) or 1 month on the Honda PCX150 (PDF p. 77)",
@@ -229,7 +271,7 @@ PINS = {
         "(PDF p. 67)",
     ],
     ("engine_break_in_v1", 5, "description"): ["(PDF p. 3)"],
-    ("engine_break_in_v1", 6, "instruction_text"): ["immediately (Yamaha XVS95CL, PDF p. 42)", "1,400 … 1,500 rpm", "(PDF p. 40)"],
+    ("engine_break_in_v1", 6, "instruction_text"): ["Yamaha's word is immediately (XVS95CL, PDF p. 42)", "Genuine's is to contact the dealer (Buddy 125, PDF p. 27)", "check the idle speed regularly", "1,400 … 1,500 rpm", "(PDF p. 40)"],
     # valve adjustment
     ("valve_adjustment_v1", 1, "description"): ["below 35 °C (95 °F)", "(PDF p. 82)", "(PDF p. 64)", "(PDF p. 59)", '"a cold engine, at room temperature"', "(PDF p. 62)", "20 °C (68 °F)", "(PDF p. 209)"],
     ("valve_adjustment_v1", 2, "instruction_text"): ["counterclockwise on the Yamaha YW125Y, PDF p. 62", "no slack means one more full turn (PDF p. 82)", "one more revolution (PDF p. 64)"],
@@ -240,7 +282,7 @@ PINS = {
         "intake 0.10 ± 0.03 mm and exhaust 0.19 ± 0.03 mm (PDF p. 64)",
         "intake 0.1 mm and exhaust 0.1 mm (PDF p. 59)",
         "valve play cold 0.07… 0.13 mm (PDF p. 174)",
-        "intake 0.10 mm and exhaust 0.15 mm (PDF p. 9)",
+        "intake 0.10 mm and exhaust 0.15 mm, with no temperature stated (PDF p. 9)",
     ],
     ("valve_adjustment_v1", 3, "instruction_text"): ["(Honda PCX150, PDF p. 82)", "(Honda CHF50, PDF p. 64)", "slight drag on the feeler gauge (PCX150, PDF p. 83)"],
     ("valve_adjustment_v1", 3, "diagnosis_if_fail"): ["low compression", "(PDF p. 60)", "(PDF p. 58)"],
@@ -252,8 +294,12 @@ PINS = {
         "90890-01311 (PDF p. 63)",
     ],
     ("valve_adjustment_v1", 5, "description"): ["A = (B - C) + D", "sixty-nine thicknesses", "from 1.200 mm to 2.900 mm in 0.025 mm increments (PDF p. 65)"],
-    ("valve_adjustment_v1", 5, "diagnosis_if_fail"): ["over 2.900 mm", "(PDF p. 65)"],
-    ("valve_adjustment_v1", 6, "description"): ["7 Nm and the spark plug at 13 Nm (PDF p. 64)", "(PDF p. 83)", "every 16000 mi (25000 km) on the Yamaha XVS95CL", "(PDF p. 45)"],
+    # Refute: the page's condition, not reversed.
+    ("valve_adjustment_v1", 5, "diagnosis_if_fail"): ["if carbon deposits result in a calculated shim over 2.900 mm (PDF p. 65)"],
+    # Refute: p. 83's seal is the crankcase cover duct's, not the valve cover's.
+    ("valve_adjustment_v1", 6, "description"): ["7 Nm and the spark plug at 13 Nm (PDF p. 64)", "left crankcase cover duct's rubber seal", "(PDF p. 83)", "every 16000 mi (25000 km) on the Yamaha XVS95CL", "(PDF p. 45)"],
+    ("valve_adjustment_v1", 6, "diagnosis_if_fail"): ["the template's own reading", "7 Nm on the Yamaha YW125Y (PDF p. 64)"],
+    ("valve_adjustment_v1", 1, "instruction_text"): ["measure at the 20 °C its figures are given at (PDF p. 209)", "(PDF p. 58)"],
     ("valve_adjustment_v1", 7, "description"): [
         "75° V arrangement",
         "intake 0.10… 0.15 mm, exhaust 0.25… 0.30 mm (PDF p. 209)",
@@ -270,7 +316,8 @@ MACHINE_OF = {
     "7,800 rpm": "690 Enduro", "10,250 rpm": "1190 Adventure", "4200 r/min": "SR400",
     "1/3 throttle": "XVS95CL", "3/4 up to": "People S", "70 %": "EXC TPI",
     "0.16 ~ 0.20 mm": "YW125Y", "0.24 ± 0.02 mm": "PCX150", "0.19 ± 0.03 mm": "CHF50",
-    "0.07… 0.13 mm": "690 Enduro", "0.25… 0.30 mm": "1190 Adventure", "0.15 mm (PDF p. 9)": "GTS Super 300",
+    "0.07… 0.13 mm": "690 Enduro", "0.25… 0.30 mm": "1190 Adventure", "0.15 mm, with no temperature stated": "GTS Super 300",
+    "five to ten minutes": "XC50J",
     "8.8 N-m": "People S 250", "10 N·m": "PCX150", "12.60 V": "Beverly", "14.4 V": "R 850 R / R 1150 R",
     "10–20 °C": "EXC TPI", "0–30 °C": "XVS95CL", "every two weeks": "PCX150", "60 %": "Elettrica",
     "15 - 20 cc": "People S", "26600 mi": "YZFR6L", "16000 mi": "XVS95CL", "13 Nm": "YW125Y",
@@ -285,7 +332,7 @@ NEGATIVE_SENTENCES = {
     ("engine_break_in_v1", 1, "description"):
         "No service manual in the research library gives a separate break-in after an engine or top-end rebuild",
     ("engine_break_in_v1", 4, "description"):
-        "Only one maker in the research library prescribes a cool-down, and no document names heat cycles",
+        "Two makers in the research library prescribe a cool-down, and no document names heat cycles",
     ("valve_adjustment_v1", 8, "description"):
         "No document in the research library gives a valve clearance figure for an inline-four or a boxer twin, and none covers a desmodromic valve train",
 }
