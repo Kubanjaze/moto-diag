@@ -1,0 +1,71 @@
+Do this: start Phase 272, Gate 15, the Track N integration test, and run it to its finish line as CLAUDE.md sets out. The last session's state is batch 3's handoff, docs/handoffs/2026-09-26_262_closed.md.
+
+Gate 15 is a test-only gate, the shape of Gates 5-14: tests and documents only. No production code, no migration, no change to the live database.
+
+The row presupposes something nothing does. Measured 2026-09-26; re-verify every point at Step 0. The row reads "Run PPI → tire service → winterization → valve adjust → brake service end-to-end", but no workflow can be run:
+- `motodiag workflow` has two commands: `list` (one option, `--category`) and `show <slug>`.
+- No table stores a run or an item's result.
+- Phase 82's step engine (`DiagnosticWorkflow`, src/motodiag/engine/workflows.py) is not connected to workflow_templates or checklist_items.
+- Powertrain applicability is per template (`applicable_powertrains`). Checklist items carry none.
+- The CLI is the only door. No API route serves workflow templates: the API's one "workflow" is Phase 173's shop rules. The mobile app has no workflow screen: 0 files in ../moto-diag-mobile/src mention workflow or checklist, against 34 that mention vehicle or garage.
+
+The operator's decision, verbatim:
+> option 1, test-only gate, with three conditions:
+> 1. correct gate 15's roadmap row: it verifies the five workflows walk through end-to-end via workflow list/show, per powertrain, with every template link resolving — it does not claim they "run". the row can't say something nothing does.
+> 2. positive control on the walk: plant a broken template link and a wrong-powertrain step (valve adjustment on an electric), show the gate fails on each, then remove them.
+> 3. "a workflow can't be run" is filed as a finding AND named as a specific phase on the roadmap (the in-memory runner, option 2's scope), not left as "future". saved runs (option 3) come after that, as their own phase with the migration.
+
+The options, as they were put to the operator:
+1. Test-only gate: walk the five workflows through `workflow list/show` in the row's order, on a freshly migrated database, once per powertrain; check that every link between templates resolves; roll migrations 067-071 back; file "a workflow can't be run" as a finding with a proposed row.
+2. In-memory runner: `motodiag workflow run <slug>` connects a template to Phase 82's step engine, with pass/fail per item and a printed summary. Nothing is saved and there is no schema change.
+3. Saved runs: a migration adding tables for runs and per-item results, tied to a bike or work order, plus the commands to start, record and finish a run.
+
+Build:
+- The walk. On a freshly migrated database, one CliRunner walk through `workflow list` and `workflow show`, in the row's order:
+  - PPI: generic_ppi_v1 → ppi_engine_v1 → ppi_chassis_v1;
+  - tire service: tire_service_v1;
+  - winterization: generic_winterization_v1 → winterization_v1 → de_winterization_v1;
+  - valve adjustment: valve_adjustment_v1;
+  - brake service: brake_service_v1.
+  Walk it once per powertrain (ice, electric, hybrid), reading applicability from what `list` and `show` print. There is no `--powertrain` option, and the gate does not add one. State the per-powertrain rule the walk asserts as a rule, not as a pinned list of today's slugs.
+- The links. At Step 0, census every form in which one template's text refers to another (slug, name, or any other wording), with counts. Every reference must resolve to an active template. First show the check finding the known links; de_winterization_v1, for example, names five templates. Only then trust it to find none broken.
+- Breadth: every live template is reachable through `list --category` and `show`.
+- Migrations 067-071:
+  - two fresh databases are identical in the workflow tables;
+  - rolling back each migration peels every successor;
+  - neither check pins 71, because saved runs will add the next migration.
+- The walk's printed output names no phase, track or F-number (F158). This check gets its own planted control.
+
+Controls, per condition 2:
+- Plant a broken template link, then a wrong-powertrain step (valve adjustment on an electric).
+- Run the gate on each and show it fails, with the failing output.
+- Remove each plant, and record both in the phase log.
+
+The ledger:
+- Row 272 goes 🚧 before Step 0, with its text corrected per condition 1, saying what it read before (as row 240 does). It closes ✅ with the regression line.
+- Two new rows take the next free numbers (confirm 356 and 357 are free) and are appended after 355, both 🔲:
+  - 356: the in-memory workflow runner, option 2's scope;
+  - 357: saved workflow runs, option 3's scope with its own migration, after 356.
+- File "a workflow can't be run" with the finding skill: the evidence above, naming 356 and 357. Add the rows first, so the numbers resolve.
+- One handoff at close-out.
+
+Carry forward:
+- no test reads data/motodiag.db;
+- no literal pin of the schema head (F124);
+- the whole-tree gates before every commit (CLAUDE.md rule 3), including the 244G scanner over the new test file;
+- the Edit tool for source edits;
+- scratch files out of /tmp;
+- commit messages through a quoted heredoc.
+
+If Step 0 finds the walk cannot be written without production code, or anything else that needs a decision, stop and give me the options.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+End with a short report:
+- each powertrain's walk;
+- the link census and its control;
+- the three planted controls, each red, then removed;
+- the corrected row 272, and rows 356 and 357;
+- the finding's number;
+- the regression line;
+- the next step: Track N is complete, and what comes next is my call.

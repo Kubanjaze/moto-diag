@@ -1,0 +1,18 @@
+Do this: start Phase 355 (the test suite runs in parallel) and run it to its finish line, as CLAUDE.md sets out.
+
+This is an operator request from 2026-09-25, and every later phase is gated on it. The full suite, about 9,370 tests, runs serially in 30-60 minutes. Every phase needs at least one run, and late failures cost more: 259 needed three runs, 131 minutes in all. This Mac has 10 cores.
+
+1. Give it row 355 in docs/ROADMAP.md, 🚧, before Step 0. Place it with Track T (operational infrastructure).
+2. Step 0, measured:
+   - The serial baseline: the wall time and the passed/failed/skipped counts at a named commit. 260's regression of record counts if it ran on the same tree.
+   - Add pytest-xdist to the venv and to pyproject's dev dependencies.
+   - Run the full suite in parallel. Compare -n auto with at least one smaller worker count, and --dist load with --dist loadfile. List every failure or error the serial run does not have.
+3. Fix each parallel-unsafe test until the parallel run matches the serial run exactly: the same collected count, the same passed set, 0 failed, 0 skipped. Each fix is a numbered bug fix with its own commit. Skipping a test, or marking one serial-only, changes what the regression of record proves, so it is a rule-1 stop: ask me first.
+4. Prove parity, don't assert it:
+   - The parallel run's passed test IDs equal the serial run's; diff the -rA or junit output.
+   - It is stable across two consecutive runs.
+   - A planted failing test is reported by the parallel run, then removed.
+5. Make the parallel run the canonical regression, with the serial run kept as a documented fallback. Update every place that states or runs the regression command: the closeout skill's SKILL.md step 1, verify_phase.sh, CLAUDE.md where it describes regressions, and any test that spawns pytest (the floor test and the gates that re-run other gates). The regression line records the command it used.
+6. Close out as usual: the regression of record run in parallel, the before and after wall times in Results, and a handoff that names the next step, Track N in three batches.
+
+End with a short report: the speed-up (the serial time against the parallel time), the tests you fixed, the parity proof, and the new canonical command.

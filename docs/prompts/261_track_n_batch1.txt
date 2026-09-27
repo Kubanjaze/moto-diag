@@ -1,0 +1,33 @@
+Do this: start Phase 261, Track N batch 1 of 3, and run it to its finish line as CLAUDE.md sets out.
+
+On 2026-09-25 the operator approved doing Track N's eleven remaining checklist rows in three batches instead of eleven phases. Each batch has one Step 0, one migration, one regression, one close-out and one handoff. Every ROADMAP row still gets closed.
+
+Batch 1 is chassis and drivetrain service, four rows:
+- 261, tire service;
+- 269, brake service;
+- 270, suspension service;
+- 271, chain, belt and shaft service.
+
+Build each as 259 and 260 did: a workflow template on the Phase 114 substrate, seeded by one migration, reachable through `motodiag workflow list/show`, and tested. Every figure comes from the makers' own documents in ~/research/motodiag, and a claims table lists each fact with its file and page for the refute pass. If Step 0 finds a real fork (for example, one row that is not a checklist at all), stop and give me the options.
+
+Ledger convention (write it down in the phase log): phase 261 carries the batch. Row 261 closes with **CLOSED date** and the regression line. Rows 269, 270 and 271 close ✅ "folded into 261" with no CLOSED date of their own. implementation.md gets one history row, 261, and the close-out writes one handoff, docs/handoffs/<date>_261_closed.md. This keeps roadmap_check R6 asking for exactly one handoff per close-out.
+
+Carry forward what 258–260 learned:
+- no literal pin of the schema head (F124);
+- no test reads data/motodiag.db (build test databases from migrations);
+- wiring a listed module means updating tests/support/integration_gaps_allowlist.py and every test that pins its sizes;
+- no internal references ("Phase N", "Track X", finding numbers, "this phase") in any text a user sees (F158);
+- a negative claim needs a whitespace-proof search and a control that hits the cited page;
+- 260's handoff adds three more: search with each maker's own words, write migration tests that survive the next migration, and keep the rollback guard.
+
+Use the canonical parallel regression from Phase 355.
+
+Deploy under rule 1. If the dry run on a copy shows the migration altering or deleting any existing live row, stop before the live apply and ask me, showing the diff. Back up to ~/backups/motodiag/ first and keep 5.
+
+End with a short report:
+- the four templates;
+- the refute verdicts;
+- the regression line;
+- the dry-run diff;
+- the deploy;
+- the next step: batch 2 is phase 264, rows 264 (winterization), 265 (de-winterization), 266 (engine break-in) and 268 (valve adjustment).

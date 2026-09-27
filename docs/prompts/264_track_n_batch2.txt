@@ -1,0 +1,42 @@
+Do this: start Phase 264, Track N batch 2 of 3, and run it to its finish line as CLAUDE.md sets out. Batch 1 (Phase 261) set the pattern and the ledger convention, so follow its handoff, docs/handoffs/2026-09-25_261_closed.md.
+
+Batch 2 is four rows:
+- 264, winterization protocol;
+- 265, de-winterization protocol;
+- 266, engine break-in procedures;
+- 268, valve adjustment workflow.
+
+Build them the way 259–261 were built:
+- One migration seeds one workflow template per row on the Phase 114 substrate, reachable through `motodiag workflow list/show`, and tested.
+- Every figure comes only from the makers' own documents, with each document's identity taken from its title page.
+- A claims table (file and page) goes to the refute pass.
+- The ledger convention is 261's: 264 carries the batch; 265, 266 and 268 close ✅ "folded into 264" with no CLOSED date; one history row; one handoff.
+
+Two changes to rows that are already live, both in scope:
+1. The substrate already seeds generic_winterization_v1, and its description says "Track N phase 264 expands" (F158). Decide at Step 0 whether 264 extends that template or adds a new one. Either way, the internal reference goes, and nothing a user sees names a phase.
+2. F160: ppi_chassis_v1 names the Yamaha YW125Y service manual "Zuma 125" in nine places. Correct each one, in the same migration, to what the document's title page carries.
+
+Both alter existing live rows, which is a rule-1 stop. Back up to ~/backups/motodiag/ first and keep 5. Dry-run on a copy, then show me the diff: every changed row, with before and after text. Wait for my answer before the live apply.
+
+Subconscious is available again (the daily allowance reset), so use it for bulk reading per rule 2. If it fails, use the fallback route and record the route per entry.
+
+Carry forward what 258–261 learned:
+- no literal pin of the schema head (F124);
+- no test reads data/motodiag.db;
+- migration tests must survive the next migration;
+- keep the rollback guard;
+- update the integration-gap allowlist and every test that pins its sizes;
+- no internal references in any text a user sees (F158);
+- a negative claim needs a whitespace-proof search and a control that hits the cited page;
+- name each document from its title page;
+- use the Edit tool for source edits, and keep scratch files out of /tmp.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+End with a short report:
+- the templates;
+- the refute verdicts;
+- the regression line;
+- the dry-run diff;
+- the deploy;
+- the next step: batch 3 is phase 262, rows 262 (crash and insurance claim support), 263 (track-day and race prep) and 267 (emissions and smog compliance, California first), followed by gate 272.

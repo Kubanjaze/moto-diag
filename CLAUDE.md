@@ -133,6 +133,13 @@ and a hand-written known-bad fixture its assertion must fail on.
 The enforcement is a test, never the skill's own text: a skill is a prompt
 and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 
+## Phase prompts live in `docs/prompts/`
+
+The prompt that starts a phase session, a GLM builder run or a landing
+session is written to `docs/prompts/<phase>_<slug>.txt` and committed. It is
+never kept only in `~/.cache` or a temp folder. A GLM run's `start.sh`
+reads its prompt from there.
+
 ---
 
 ## MotoDiag-Specific Context
@@ -167,6 +174,16 @@ and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 ---
 
 ## Change log
+
+### 2026-09-27 — phase prompts live in the repo (Phase 358)
+
+The operator, 2026-09-27: "phase prompts move from ~/.cache/motodiag/prompts/
+and ~/.cache/motodiag/glm-builder/*/ into the repo under docs/prompts/, and
+future ones are written there." Ten prompts moved, byte for byte, and
+`docs/prompts/README.md` lists each one's source and sha256. The section
+"Phase prompts live in `docs/prompts/`" above is new. It is text only, with no
+check yet. It is the same rule as "nothing canonical lives only in
+~/Documents", applied to prompts.
 
 ### 2026-09-25 — the regression of record runs in parallel (Phase 355)
 

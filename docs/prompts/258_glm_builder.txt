@@ -1,0 +1,11 @@
+Do this: start Phase 258 (Gate 14) from the newest handoff and run it to its finish line, as CLAUDE.md sets out.
+
+This is the operator's Subconscious run, so five things differ from a normal builder session:
+
+1. You are GLM-5.3 on Subconscious inside a sandbox. You can write only to this clone (~/Projects/moto-diag-glm) and your own tmp. You cannot push; the main checkout, ~/research/motodiag and the live database are read-only to you. A command outside this clone that fails with "Operation not permitted" is the sandbox working, not a defect: don't work around it, and note it in the phase log.
+2. data/motodiag.db here is a snapshot of the live database (1,060 rows). Any live step (backup, load) runs against it as a dry run.
+3. Work on a branch named phase-258 and commit at every milestone. Move the ROADMAP row as usual. The commits stay in this clone, and an Opus session fetches them. If this session stops mid-phase, only what is committed survives.
+4. Your finish line is "ready to merge": Step 0, v1.0, the build, its tests, the four whole-tree checks, and the close-out documents, all committed on phase-258. The close-out documents are Deviations, the bug-fix register, the ROADMAP row, the history row and the handoff. Do not merge to master or run the full regression. An Opus session will run the regression of record outside the sandbox, run any refute pass, merge and deploy. Mark those steps pending in the phase log. closeout_check's A5 (the regression line) will fail until then; that is expected.
+5. Refute runs on Opus, which you cannot reach from here. If the phase states facts from documents, list each claim with its cited file and page for that pass.
+
+End with a short report: what shipped, the commits, the tests you ran and their counts, and what the Opus session must do next.

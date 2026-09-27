@@ -1,0 +1,30 @@
+Do this: land Phase 260 (Pre-purchase inspection — chassis). GLM-5.3 built it on Subconscious in the sandboxed clone ~/Projects/moto-diag-glm, branch phase-260: five commits with the close-out committed, 01:39 on 2026-09-25. Subconscious ran out before GLM's own full-suite run finished. You are the Opus session its phase log names as pending: review, refute, regression of record, merge, deploy. Run it to its finish line per CLAUDE.md.
+
+1. git fetch ~/Projects/moto-diag-glm phase-260:phase-260, check it out, and merge master into it. Master has gained a CLAUDE.md rule-1 addition since the branch forked; read it.
+2. Review the whole diff (git diff master...phase-260). Check it against the five traps 258 and 259 hit:
+   - F124: a literal pin of the schema head;
+   - any test that reads data/motodiag.db;
+   - tests/support/integration_gaps_allowlist.py, and every test that pins its sizes (grep len(ORPHANS), len(UNREACHABLE_MODULES), len(MODULE_ISLANDS));
+   - F158: internal references in text a user sees;
+   - a negative claim without a whitespace-proof search and a control shown to hit the exact cited page.
+   Fix what you find, each as a numbered bug fix with its own commit in 260's register.
+3. Refute every claim in 260_implementation.md's claims table. Open each cited page (pypdf; render the page image where the text layer is weak) and record a verdict per claim in the phase log. Correct or drop any claim that fails.
+4. Regression of record: the full suite outside the sandbox, green, with the line recorded so A5 passes.
+5. Merge phase-260 to master and push.
+6. Deploy migration 068 under the operator's scoped pre-approval, quoted verbatim:
+   "apply 068 live without asking ONLY if the dry run on the copy changes exactly the rows you've described — this one description rewrite plus 260's own new rows — and nothing else. show the dry-run diff (rows changed, before/after text) in the report. if the copy shows any other existing row changing, stop before the live apply and ask. backup to ~/backups/motodiag/ first, retain 5."
+   The rows described are:
+   - workflow_templates ppi_engine_v1: its description (and that row's updated_at) is rewritten from "…(the quick check); the chassis protocol is Phase 260. …" to "…(the quick check); for the full chassis-side protocol see ppi_chassis_v1. …";
+   - 260's own new rows: template ppi_chassis_v1, its 7 checklist items, and the schema_version row.
+   The advisor's dry run on a copy at 01:46 changed exactly that. Yours must match it; if it does not, stop and ask.
+7. Before the live apply, run the F158 census over your dry-run copy. Read every text column of every table for "Phase \d+", "Track [A-Z]" and "F\d{2,3}", with a planted control that must be found, and report the count. The advisor's run on the post-068 copy found 33 references in 24 rendered rows, none of them from 260, with the 7 "F" hits all BMW model names.
+8. Record the deploy in docs/handoffs/2026-09-25_260_closed.md and in the phase log. Run verify_phase.sh 260 and read all 13 checks. The handoff names 261 next.
+
+End with a short report:
+- the review's fixes;
+- the refute verdicts;
+- the regression line;
+- the dry-run diff;
+- the census count;
+- the deploy;
+- what's next.

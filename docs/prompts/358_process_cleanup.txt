@@ -1,0 +1,117 @@
+Do this: start Phase 358, "Process clean-up", and run it to its finish line as CLAUDE.md sets out. Read these first:
+- docs/reports/2026-09-27_process_kinks_triage.md: the triage, with the operator's decision verbatim at its top. The evidence for every item is there.
+- the newest handoff: docs/handoffs/2026-09-27_272_closed.md.
+
+What 358 is: tooling, checks and rule text only. No code under src/, no migration, and no change to the live database. Every check it adds is seen red on a planted known-bad case before it is trusted.
+
+Done before this phase started (merge 4ffecec, 2026-09-27). Record both in the 358 log:
+- The triage was moved into docs/reports/.
+- The 071 dry-run diff the operator approved survived in Phase 262's builder scratchpad. It was recovered to docs/phases/completed/262_dryrun_diff.md with a dated note, and the original is kept byte for byte (sha256 13a22578...). Nothing was lost.
+
+The operator's decision, verbatim:
+> approved: 358 = K1–K8. order after: content phase (F159/F163/F166 templates + F158's 27 rows) → 356 → 357 → Track O.
+>
+> 358 requirements:
+> - K1: the whole-tree command is what the push guard runs. rule 3's list points at the command instead of listing checks. positive control: plant each of the four checks behind the 257–260 failures and show the command fails on each.
+> - K3: deploy script in the repo. it writes the approved dry-run diff into the phase folder, and the live apply refuses to run without that file. no more temp copies.
+> - K6 and K7 are closeout checks, not prose. K6: the regression line must parse to command + hash + count. K7: a log mentioning refute without a refute checklist fails. each has a known-bad fixture.
+> - K8: step0 checklist item — every action the row promises has a way for a user to do it, or the row is rewritten before v1.0.
+> - K9, amended: max 3 refute rounds. after round 3, remaining wording defects go to one finding; remaining factual or citation defects mean the row doesn't ship. fixes delete a sentence rather than rewrite it where possible. rounds 2+ refute the diff plus its surrounding sentences, not the whole row.
+>
+> content phase: decide "retire vs repair" for the two old starter templates at its step 0, with a count of every template and row that references them. not before.
+
+K2, K4 and K5 are in scope as the triage describes them. K9 is in scope as amended above.
+
+The work, item by item. The facts below were measured on 2026-09-27; re-verify each at Step 0.
+
+K1. One whole-tree command.
+- At Step 0, census every whole-tree check by a stated rule: a check whose verdict depends on the whole tree, not on the files a commit touches. Give the count.
+- Before trusting the census to be complete, show the rule finding:
+  - rule 3's four checks;
+  - the four checks behind 257–260's red regressions: the F9 lint (257), F124's head-pin guard (258 and 260), 209B's allowlist (259) and 244U's pinned count (259).
+- The command runs every check the census finds. Rule 3's other step (finding_check over docs/phases/in_progress before the regression of record) goes in too, if it can.
+- The push guard runs the command. The guard is `.claude/settings.json` → `pre_push_guard.sh`, with a 120-second hook timeout. Measure the command's time. If it cannot finish inside the timeout, stop and ask: that is a threshold.
+- Rule 3 in CLAUDE.md points at the command instead of listing checks.
+- The operator's control:
+  - plant a known-bad case for each of the four checks: a literal model ID in a test, a literal schema-head pin, a stale allowlist entry and a wrong pinned count;
+  - show the command fails on each;
+  - remove each plant.
+
+K2. One pin per count.
+- `len(UNREACHABLE_MODULES) == 34` is pinned twice: test_phase209B_integration_gaps.py:119 and test_phase244Y_delete_pass.py:154.
+- `ORPHANS == 102` (244U:213) and `MODULE_ISLANDS == 14` (244Y:153) are pins of the same kind.
+- Give each count one canonical pin, which other tests import.
+- Add a guard in the shape of F124's that fails on a second literal pin, with a planted control.
+
+K3. The deploy script, in the repo.
+- As the operator set it:
+  - it writes the approved dry-run diff into the phase folder;
+  - the live apply refuses to run without that file;
+  - no more temp copies.
+- From the triage:
+  - the scope is given as data;
+  - backups go to ~/backups/motodiag/, 5 retained;
+  - the K4 census runs on the copy;
+  - the apply also refuses if live no longer equals the backup, or if a fresh dry run leaves the scope.
+- Build it from the existing copies. The latest is Phase 262's `deploy262.py`, at /private/tmp/claude-501/-Users-lilquant-Projects-moto-diag/1f9f79a3-ddb3-422e-9ddd-52a4075ab5c9/scratchpad/s0/. It lives under /private/tmp, so read it early.
+- Test it only on fixture databases. 358 never runs it against live; its first real use is the content phase.
+- Known-bad controls, each refused:
+  - an apply with no diff file;
+  - an apply after live changed since the backup;
+  - a dry run that leaves the scope.
+
+K4. One F158 census, and its guard.
+- One census in the repo with four patterns: "Phase N", "Track X", F-numbers and "this phase".
+- A ratchet test: the count may only fall, and no workflow row may have any. It gets a planted control.
+- No test may read data/motodiag.db. So at Step 0, measure whether a database a test can build carries the same hits as live (39 rendered hits in 27 rows on three patterns), and say what the guard can and cannot see.
+
+K5. roadmap_check R7.
+- A "Folded into NNN" row must name a phase that exists and is ✅ CLOSED.
+- It gets a known-bad fixture in roadmap_bad.
+- The real ledger's folded rows (263, 265–271) pass.
+
+K6 and K7. Closeout checks, each with a known-bad fixture.
+- K6: the regression line parses to command + hash + count.
+- K7: a log that records a refute without the refute checklist fails.
+  - A log that says in one line that no refute ran must pass. This is the trap of a guard that fails on the honest sentence naming what it bans.
+- Phases closed before these checks are exempt by a stated rule, as R6 does, with a control that the exemption drops nothing it shouldn't.
+
+K8. The Step 0 checklist item, in the operator's words.
+- Step 0 is stated in the workspace CLAUDE.md ("Step 0 — Existing-code overlap audit", line 147) and indexed in claude/working-rules.md. moto-diag has no Step 0 checklist file of its own.
+- Put the item where Step 0 is stated, and follow the CLAUDE.md change rules for that file: a dated change-log entry, the index updated in the same commit, and workspace-docs committed and pushed.
+
+K9, amended. The refute skill.
+- The skill is `.claude/skills/refute/`: SKILL.md, CHANGELOG.md and refute_check.py. It takes the operator's rule.
+- Per CLAUDE.md's procedure folders, a rule is held by a check, not by the skill's text. At Step 0, say which parts of K9 a check can hold, for example a fourth round, or a factual or citation kill still open at close-out. Hold those with known-bad fixtures.
+
+Rule 1:
+- This phase changes rules' definitions: rule 3's list, the regression line, the refute rules and Step 0.
+- The operator's words above are the approval, applied literally.
+- Any rule change beyond them, or any threshold change, is a stop.
+
+The ledger:
+- Row 358 goes 🚧 before Step 0. It is the next free number; confirm that.
+- Each rule change gets a dated entry in CLAUDE.md's change log, and in each changed skill's CHANGELOG.md.
+- One handoff at close-out. Its "next" is the operator's order:
+  - first, the content phase. Its Step 0 decides retire or repair for the two starter templates, with a count of every template and row that references them, and not before;
+  - then 356, 357 and Track O.
+
+Carry forward:
+- no test reads data/motodiag.db;
+- no literal pin of the schema head (F124);
+- the whole-tree checks before every commit, and once K1's command exists, the command;
+- the Edit tool for source edits;
+- scratch files out of /tmp;
+- commit messages through a quoted heredoc;
+- every check seen red on a planted case before it is trusted.
+
+If Step 0 finds anything that needs a decision, stop and give me the options.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+End with a short report:
+- K1–K9, each with its control, seen red and then removed;
+- the whole-tree census, and the command's run time;
+- the regression line;
+- the rule changes made, file by file;
+- the next step: the content phase.
