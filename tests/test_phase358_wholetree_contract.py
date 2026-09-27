@@ -326,6 +326,25 @@ class TestTheWiring:
         assert self._main(monkeypatch, "git commit -m x") == 2
         assert "planted refusal" in capsys.readouterr().err
 
+    @pytest.mark.parametrize("command,mover", [
+        ("git commit -m x && git push", "commit"),
+        ("git add -A; git commit -q -F - <<'M'\nmsg; it's\nM\ngit push origin b", "commit"),
+        ("git rebase master && git push -f", "rebase"),
+        ("git push", None),
+        ("git push && git commit -m after", None),
+        ("git log -1; git push", None),
+    ])
+    def test_a_push_after_a_head_move_in_one_command_is_seen(self, command, mover):
+        """Found live in 358: the hook judges the whole command line before
+        it runs, so a commit and a push together would push an unchecked
+        commit on the strength of the old HEAD's record."""
+        assert guard.moves_head_before_push(command) == mover
+
+    def test_a_commit_and_push_together_are_blocked(self, monkeypatch, capsys):
+        monkeypatch.setattr(guard, "wholetree_gate", lambda *a, **k: [])
+        assert self._main(monkeypatch, "git commit -m x && git push") == 2
+        assert "separate commands" in capsys.readouterr().err
+
     def test_an_error_in_the_whole_tree_gate_blocks(self, monkeypatch, capsys):
         import roadmap_check
         monkeypatch.setattr(roadmap_check, "check_tree", lambda *a, **k: [])

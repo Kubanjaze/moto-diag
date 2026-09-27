@@ -121,6 +121,22 @@ def is_git_commit(command: str) -> bool:
     return any(sub == "commit" for sub, _ in _git_invocations(command))
 
 
+#: git subcommands that can move HEAD or a branch. The hook judges a command
+#: line BEFORE any of it runs, so `git commit … && git push` would have its
+#: push checked against the old HEAD and then push a commit nobody checked.
+_MOVES_HEAD = {"commit", "merge", "rebase", "reset", "cherry-pick", "revert", "pull",
+               "am", "checkout", "switch", "stash", "branch", "update-ref"}
+
+
+def moves_head_before_push(command: str) -> str | None:
+    """The first HEAD-moving git subcommand that precedes a push in the same
+    command line, or None."""
+    subs = [s for s, _ in _git_invocations(command)]
+    if "push" not in subs:
+        return None
+    return next((s for s in subs[:subs.index("push")] if s in _MOVES_HEAD), None)
+
+
 def _push_args(command: str) -> list[str] | None:
     for sub, args in _git_invocations(command):
         if sub == "push":
@@ -363,6 +379,14 @@ def main() -> int:
         return 0
     if not is_git_push(command):
         return 0                                   # THE early exit
+
+    mover = moves_head_before_push(command)
+    if mover:
+        print(f"whole-tree check: push blocked. This command runs `git {mover}` before "
+              "`git push`, and the guard judges the push before any of it runs, so it "
+              f"would push a commit it never saw. Run `git {mover}` and `git push` as "
+              "separate commands.", file=sys.stderr)
+        return 2
 
     try:
         import roadmap_check                       # the SAME function the test calls
