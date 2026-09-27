@@ -32,7 +32,9 @@ folder exists to stop shipping.
 
 ## The sequence
 
-1. **Regression, with hash and count.** Full suite, in parallel:
+1. **Regression, with hash and count.** First `wholetree.sh --full` on the
+   commit to be tested: `regression.sh` refuses to start without its
+   record for HEAD. Then the full suite, in parallel:
    `.claude/skills/closeout/regression.sh` runs
    `python -m pytest -n auto --dist load` on a clean tree and prints the
    line to record. The line carries the counts, the hash, the wall time
@@ -81,7 +83,8 @@ check.
 | `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
 | `roadmap_check.py` | the ROADMAP ledger holds: R1–R6 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff); run with every suite and on every push |
-| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check on every push, close-out on a push to `master` |
+| `wholetree.sh` / `wholetree.py` | the whole-tree command (rule 3): fast mode, or `--full`; members found by rule; a pass on a clean tree writes a signed record bound to commit, tree and script |
+| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check and the whole-tree command on every push (a valid record, else fast mode under its own limit; fails closed), `--full` on a commit to seed data or migrations, close-out on a push to `master` |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
 | `fixtures/check2` | hand-written path lists for check 2 |
 | `fixtures/roadmap_bad`, `fixtures/roadmap_good` | hand-written trees: every R-rule fires on the first; the second holds what each rule must not remove |

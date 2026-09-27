@@ -1,5 +1,31 @@
 # closeout — changelog
 
+## 2026-09-27 — one whole-tree command, and a push guard that fails closed (Phase 358, K1)
+
+Rule 3 listed four checks by hand, the GLM prompt thirteen, and five red
+regressions in 257–260 came from checks neither list ran. `wholetree.sh`
+finds its members by rule on every run (a test that enumerates a repo
+directory, or loads a helper that does) and runs them in two modes: fast
+(the code-and-ledger class minus gates and the wheel build, plus
+finding_check over both folders; 27 files, about 30 s) and `--full`
+(every member; 74 files, about 6.5 min).
+
+- The push guard runs fast mode on every push unless a record shows it
+  passed on exactly the commit, tree and script being pushed. Records are
+  signed with a key only the command creates. With no record, the guard
+  runs fast mode itself on the checked-out clean commit, under its own
+  96 s limit, and blocks on a failure or a timeout.
+- The hook timeout went from 120 s to 600 s. A `PreToolUse` hook that
+  outruns its timeout is killed and the command proceeds (measured, and
+  documented by Claude Code), so the guard keeps its own clock far inside.
+- A commit that changes seed data or `migrations.py` needs a `--full`
+  record for the tree it commits. `regression.sh` needs one for HEAD.
+- `git -C path push` was invisible to the guard; it is now seen.
+- Controls, each in 358's phase log: the four 257–260 plants red in fast
+  mode; a plant in an excluded file passes fast and fails `--full`; an
+  amended commit, a hand-written record and a check sleeping past the
+  limit are each refused at the push.
+
 ## 2026-09-25 — the regression of record runs in parallel (Phase 355)
 
 Step 1 ran the full suite serially: 30 to 55 minutes on this Mac, at least

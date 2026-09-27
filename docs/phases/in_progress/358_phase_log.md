@@ -148,3 +148,109 @@ written.** K2 does not touch the guard and was built first, as v1.0 orders.
     The plant was reverted.
 - The K2 files plus rule 3's checks, 191d and F124: 393 passed.
   `finding_check` exit 0.
+
+### 2026-09-27 — The operator's answer on the guard's design, verbatim
+
+> option 3, raise hook timeout to 600, AC measurement only. three additions:
+> 1. the record binds to the exact tree: commit hash AND git tree hash of what's being pushed, plus a hash of wholetree.sh itself. amend, rebase or a changed check script = no matching record = the guard runs fast mode. control: record a pass, amend the commit, push — the guard must not accept the old record.
+> 2. only the command writes the record. a record written by hand or by any other script is rejected — control: hand-write a "passed" record for an unchecked commit and show the push is blocked.
+> 3. set the guard's own limit at ~3× the AC time, not 2×. Low Power Mode measured ~2.5× slower on the regression, and battery wasn't measured. note that in the log as a known limit.
+
+### 2026-09-27 — K1 built (`367d26a`)
+
+- **`wholetree.py` + `wholetree.sh`.** Members are found by Step 0's rule
+  on every run. Today fast mode has 27 files and `--full` 74: Step 0's 25
+  and 72, plus 358's two new whole-tree tests.
+  - **Two corrections before the first run.** A name containing "gate"
+    dropped 244U (`_gate_blind_spot`), so gates are now matched by
+    `_gate<N>`, `_gate_<N>` or `_gate_<letter>`, which gives exactly the
+    16 gate files. The two outside-the-repo files had been classed as
+    code; a file that enumerates is now classed by its own lines, as in
+    Step 0.
+- **The record.** It is bound to the commit, the tree and the sha256 of
+  `wholetree.sh` + `wholetree.py`, and signed with HMAC-SHA256. The key is
+  `~/.config/motodiag/wholetree.key`, mode 600, created by the command.
+  **The ceiling, stated:** a process that reads the key can forge a
+  record. The signature stops a record written by hand or by a script
+  without the key.
+- **Records are keyed by tree.** Two commits with one tree share a file,
+  and the later pass replaces the earlier. A push of the other commit
+  just runs fast mode again.
+- **The guard.**
+  - On a push: a valid record for every pushed commit; else fast mode on
+    the checked-out clean commit, under `FAST_LIMIT_S`; else a block. An
+    error blocks.
+  - On a commit: a change to seed data or `migrations.py` needs a
+    `--full` record for the exact tree committed. The staged, `-a` and
+    pathspec shapes are all computed on a temporary index.
+  - Heredoc bodies are stripped before parsing, and a newline separates
+    commands. The first parse joined a commit to the next line's `git
+    log`, which would have blocked this session's own commits.
+  - `git -C path push` was invisible to the guard before 358; it is now
+    seen.
+  - An alarm at `FAST_LIMIT_S` + 60 s blocks a guard that hangs.
+- **The hook timeout** is 600 s, and **`regression.sh`** refuses without a
+  `--full` record for HEAD.
+- **Fast mode measured** at 29.5 s and 31.9 s (26 files). **The Mac was on
+  battery,** 23% and discharging, with Low Power Mode off; no AC run was
+  possible. `FAST_LIMIT_S` = 3 × 31.9 = 96 s. **Known limit, per the
+  operator:** it is not an AC measurement, and Low Power Mode measured
+  about 2.5× slower on a regression. Later fast runs took 29.5–41.1 s as
+  the battery fell. If fast mode outgrows 96 s, the push blocks.
+- **`tests/test_phase358_wholetree_contract.py`:** 40 tests. Five
+  mutations were each seen red and reverted:
+
+  | mutation | red tests |
+  |---|---|
+  | commit binding off | the amend test |
+  | signature check off | all 3 forgery shapes |
+  | timeout branch removed | the timeout test (a timeout still blocked, under the wrong message) |
+  | content detection off | 5 |
+  | seed class leaking into fast | 2 |
+- **Two existing tests were changed on purpose.** 255D's "a phase-branch
+  push is let through" now asserts that close-out does not engage on a
+  phase branch; the whole-tree gate may block it. The roadmap guard tests
+  stub the whole-tree gate so they see only the ledger's verdict.
+- **Side effect, noted.** During the guard's own fast run, 255D's
+  subprocess test drives the real guard with a push of a local branch.
+  The guard blocks it and logs a line to `.git/motodiag_wholetree/guard.log`.
+  Nothing else is written.
+
+### 2026-09-27 — K1 controls, each seen, then removed
+
+Fast mode is `wholetree.sh`; each plant is run with the working tree dirty
+and no record written:
+
+| plant (the 257–260 check behind it) | fast mode |
+|---|---|
+| a literal model ID, `claude-sonnet-4-5-20241022`, in a new test file (F9 lint, 257) | FAILED `test_phase191c_f9_lint.py::…::test_clean_main_has_zero_findings` (1 failed, 1397 passed, 31.0 s) |
+| `assert SCHEMA_VERSION == 71` in a new test file (F124, 258/260) | FAILED `test_f124_schema_pin_discipline.py::…::test_no_test_pins_the_head_with_a_literal` (29.9 s) |
+| a stale `UNREACHABLE_MODULES` entry, `motodiag.cli.main` (209B, 259) | FAILED `test_no_stale_unreachable_entry` and `test_the_known_scale` (32.4 s) |
+| `ORPHAN_COUNT = 101` (244U's count, 259) | FAILED `test_phase244U_gate_blind_spot.py::…::test_the_orphan_list_is_the_running_count` (30.5 s) |
+
+**The split.** A failing test was planted in
+`tests/test_phase244D_known_issues_dedup.py`, one of the 47 excluded files.
+- Fast mode PASSED: 27 files, 1398 passed, 31.4 s.
+- `--full` FAILED on exactly that test: 74 files, 1 failed, 3735 passed,
+  18 skipped (the wheel build, in this shell), 6 min 32 s.
+
+**The guard.** Pushes went to a local bare repository, on throwaway
+branches; nothing reached GitHub. The guard log for each:
+- **Amend (the operator's control 1).** A pass was recorded for
+  `1978985`, then amended to `0e0df6f` (the same tree). The guard logged
+  "38eb4f…_fast.json records commit 1978985876cf, not 0e0df6f89841; …
+  running fast mode". Fast mode passed in 41.1 s, and only then was the
+  push allowed.
+- **A hand-written record (the operator's control 2).** An unchecked
+  commit `eea9e88` (not checked out) was given a `passed` record with a
+  made-up signature. **Blocked:** "…_fast.json was not written by
+  wholetree.sh (bad signature); … The guard can only test the checked-out
+  commit on a clean tree."
+- **A check sleeping past the limit.** A committed whole-tree test sleeps
+  150 s, on a checked-out clean branch. The guard started fast mode at
+  11:22:02. **Blocked** at 11:23:38, 96 s later: "the whole-tree fast mode
+  ran out of time (96 s) and the push is blocked: the guard fails closed."
+  No pytest process was left behind.
+- **The bare repository** afterwards held only `ctl-amend`.
+
+The branches, the forged record and the bare repository were deleted.

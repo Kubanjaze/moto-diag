@@ -87,18 +87,12 @@ once.
    - An unattended GLM run must be technically unable to write outside its
      own worktree, proven by a planted write that fails. An instruction to
      stay inside is not a boundary.
-3. **Four whole-tree checks run before every commit**, whatever the commit
-   touches:
-   - `tests/test_phase191c_f9_lint.py`
-   - `tests/test_phase244G_guard_shapes.py`
-   - `tests/test_roadmap_continuity.py`
-   - `python3 .claude/skills/finding/finding_check.py`
-
-   B2 reads only `completed/`. Before the regression of record, also run
-   `finding_check.check(Path("."), phase_docs="docs/phases/in_progress")`.
-   A suite chosen by subject misses these checks. In 257 the F9 lint went
-   red only at the full regression, and B2 only once the documents had moved
-   to `completed/`, which cost a second 45-minute regression.
+3. **The whole-tree command runs before every commit**, whatever the commit
+   touches: `.claude/skills/closeout/wholetree.sh`, in two modes.
+   - `wholetree.sh`: before every commit, and on every push (the push
+     guard runs it).
+   - `wholetree.sh --full`: before the regression of record, and before
+     every commit in a content phase.
 
    **The regression of record runs in parallel** (Phase 355):
    `.claude/skills/closeout/regression.sh` runs
@@ -174,6 +168,30 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-09-27 — rule 3 names one command in two modes (Phase 358, K1)
+
+The operator, 2026-09-27: "K1: option 3 — one command, two modes. guard
+runs the fast set … --full runs all 72, required before the regression of
+record and before commits in content phases. rule 3 names the command and
+both modes, nothing else."
+
+Rule 3's list of four checks, and its paragraph on `finding_check` over
+`in_progress/`, are replaced by `.claude/skills/closeout/wholetree.sh`. The
+command finds its members by rule and runs `finding_check` over both
+folders itself. What holds it:
+- the push guard runs fast mode on every push, and fails closed on time;
+- `regression.sh` refuses to start without a `--full` record for HEAD;
+- the guard refuses a commit to seed data or `migrations.py` without one;
+- `tests/test_phase358_wholetree_contract.py`.
+
+The hook timeout in `.claude/settings.json` is now 600 s. A `PreToolUse`
+hook that outruns its timeout is killed and the command runs. That was
+measured, and the hooks documentation says the same. So the guard's own
+limit, 96 s, sits far inside the timeout. **Known limit:** the 96 s is 3×
+fast mode measured on battery, since no AC run was possible. Low Power Mode
+measured about 2.5× slower on a regression. If fast mode ever outgrows the
+limit, a push blocks; it is not let through.
 
 ### 2026-09-27 — phase prompts live in the repo (Phase 358)
 
