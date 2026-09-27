@@ -7,12 +7,12 @@ reimplemented the checks could pass while the test failed, and the push
 would sail through the thing meant to stop it.
 
 **What this asserts, and what it refuses to assert.** It checks the
-ARTEFACTS a close-out is defined to produce — seven file facts, each one
+ARTEFACTS a close-out is defined to produce — eight file facts, each one
 something a skipped close-out leaves undone. It does NOT assert "closeout
 ran", because that is unfalsifiable from inside a repository, and a check
 that cannot fail is the defect this phase exists to stop shipping.
 
-Each assertion has a stable id (A1..A7) so a failure names itself and the
+Each assertion has a stable id (A1..A8) so a failure names itself and the
 known-bad fixture can require that each one fires.
 """
 from __future__ import annotations
@@ -253,11 +253,15 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
                          "recorded them: " + "; ".join(late))
     # No bug fixes at all is legitimate — a phase may have found none.
 
-    # A5 — a regression line carrying BOTH a commit hash and a count
-    reg = [ln for ln in log_txt.splitlines() if re.search(r"regression", ln, re.I)]
-    if not any(_HASH.search(ln) and _COUNT.search(ln) for ln in reg):
-        fails.append("A5 no regression line carrying both a commit hash and a "
-                     f"passed-test count (found {len(reg)} regression line(s))")
+    # A5 — the regression line parses to count + hash + command (K6, Phase
+    # 358); the ten phases closed before that carry the older, looser line.
+    if phase in A5_COMMAND_EXEMPT:
+        if not legacy_regression_line(log_txt):
+            fails.append("A5 no regression line carrying both a commit hash and a "
+                         "passed-test count")
+    elif not regression_line(log_txt):
+        fails.append("A5 no regression line that parses as regression.sh prints it: "
+                     "'Regression of record: N passed … at `HASH` (…, `… pytest …`, …)'")
 
     # A6 — a ROADMAP row exists and its body cell is within the cap
     roadmap = repo / "docs" / "ROADMAP.md"
@@ -294,10 +298,77 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
             if phase not in ver:
                 fails.append("A7 implementation.md version header does not "
                              f"name the newest phase {phase}: {ver[:80]!r}")
+
+    # A8 — a log that mentions refute carries the checklist, or says in one
+    # line that no refute pass ran (K7, Phase 358)
+    if phase not in A8_REFUTE_EXEMPT:
+        fails += [f"A8 {f}" for f in refute_record(log_txt, phase)]
     return fails
 
 
-ASSERTION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7")
+#: K6. `regression.sh` prints: "Regression of record: 9507 passed, 0 failed,
+#: 0 skipped, 0 errors at `5750985` (11 min 15 s wall, `python -m pytest -n
+#: auto --dist load`, exit 0)". A5 requires that shape: the count, the hash
+#: in backticks, and a backticked command that runs pytest.
+_REGRESSION = re.compile(r"Regression of record:\s*(\d[\d,]*) passed\b.*?\bat `([0-9a-f]{7,40})`"
+                         r".*?`([^`]*\bpytest\b[^`]*)`")
+
+#: The phases whose close-out passed the old A5 (a hash and a count on a line
+#: saying "regression") with no command on it, measured 2026-09-27 over all
+#: 312 completed logs. Pinned; `test_phase358_closeout_k6_k7.py` recomputes
+#: the set and requires equality, so it can neither grow nor quietly shrink.
+A5_COMMAND_EXEMPT = frozenset({"255B", "255C", "255D", "257B", "257", "258", "259", "260",
+                               "353", "354"})
+
+#: K7. The closed logs that mention refute and carry neither the checklist nor
+#: a one-line "no refute pass ran", measured 2026-09-27 over all 312. Pinned,
+#: with the same equality control.
+A8_REFUTE_EXEMPT = frozenset({
+    "212", "213", "214", "215", "216", "217", "225B", "225", "226", "227", "228", "229",
+    "230", "231", "232", "233", "234", "235", "236", "237", "238", "239", "242", "243",
+    "244G", "244M", "244", "245", "246", "247", "248", "249", "254", "255B", "255D",
+    "255", "256", "257B", "258", "259"})
+
+_MENTION = re.compile(r"refut", re.I)
+_NO_REFUTE = re.compile(r"^\s*(?:[-*]\s+)?\**no refute pass ran\b", re.I | re.M)
+
+
+def regression_line(log_txt: str) -> tuple[str, str, str] | None:
+    """(count, hash, command) from the log's regression line, or None."""
+    m = _REGRESSION.search(log_txt)
+    return m.groups() if m else None
+
+
+def legacy_regression_line(log_txt: str) -> bool:
+    """The pre-358 A5: a line saying "regression" with a hash and a count."""
+    return any(_HASH.search(ln) and _COUNT.search(ln) for ln in log_txt.splitlines()
+               if re.search(r"regression", ln, re.I))
+
+
+def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
+    """Why a log that mentions refute does not record it; [] when it does.
+
+    The operator's words, applied literally: "a log mentioning refute
+    without a refute checklist fails." The one way out is a line saying no
+    refute pass ran, so the honest sentence naming what is absent passes.
+    A checklist must pass refute_check, including the round column (K9)
+    unless the phase is one of refute_check.OLD_FORMAT.
+    """
+    if not _MENTION.search(log_txt):
+        return []
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
+    import refute_check
+    if refute_check.find_block(log_txt):
+        rounds = phase not in refute_check.OLD_FORMAT
+        return [f"refuter checklist: {f}"
+                for f in refute_check.check(log_txt, require_rounds=rounds)]
+    if _NO_REFUTE.search(log_txt):
+        return []
+    return ["the log mentions refute but has no '## Refuter pass' checklist, and no "
+            "line saying 'No refute pass ran'"]
+
+
+ASSERTION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8")
 
 
 def main() -> int:

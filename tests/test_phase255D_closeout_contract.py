@@ -247,7 +247,7 @@ class TestThePushGuardNeverBlocksANonPushCommand:
         "git push origin phase-255D-procedures-as-folders",
         "git push -u origin some-feature-branch",
     ])
-    def test_a_phase_branch_push_is_let_through(self, command):
+    def test_a_phase_branch_push_is_not_held_to_close_out(self, command):
         """Close-out is what must happen before work reaches `master`.
 
         A phase branch is pushed many times while the phase is still open;
@@ -255,10 +255,16 @@ class TestThePushGuardNeverBlocksANonPushCommand:
         push would block every work-in-progress push for the whole phase,
         and the only way to work would be to turn the guard off — which is
         worse than not having one.
+
+        Since Phase 358 (K1) every push must also pass the whole-tree
+        command, so this asserts what it always meant: the CLOSE-OUT gate
+        does not engage on a phase branch. These branches are not checked
+        out, so the whole-tree gate blocks them, fast, and says why.
         """
         r = self._run(command)
-        assert r.returncode == 0, (
-            f"the guard blocked a phase-branch push: {command!r}\n{r.stderr}")
+        assert "closeout is not complete" not in r.stderr, (
+            f"close-out blocked a phase-branch push: {command!r}\n{r.stderr}")
+        assert r.returncode == 0 or "whole-tree check" in r.stderr, r.stderr
 
     def test_master_is_recognised_as_guarded(self):
         from _pre_push_guard import targets_master

@@ -19,4 +19,6 @@ would fail, which is the point.
 
 ### 2026-09-22 11:00 — The regression
 
-Fixes **A5**: regression 1,234 passed / 0 failed / 0 skipped at `ccccccc`.
+Fixes **A5**, the line as regression.sh prints it:
+
+Regression of record: 1234 passed, 0 failed, 0 skipped, 0 errors at `ccccccc` (12 min 0 s wall, `python -m pytest -n auto --dist load`, exit 0)

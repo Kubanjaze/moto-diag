@@ -49,8 +49,9 @@ the end:**
 `.claude/skills/closeout/roadmap_check.py` holds the ledger to this: a reused
 number, a phase with documents but no row, a row whose status disagrees with
 where its documents are, a number no authority range covers, the two
-copies of the authority contract drifting apart, and a phase closed with no
-handoff (R6).
+copies of the authority contract drifting apart, a phase closed with no
+handoff (R6), and a row "Folded into" a phase that is not ✅ with a CLOSED
+date (R7).
 `tests/test_roadmap_continuity.py` runs it with every suite, and the push
 guard refuses any `git push` while it fails.
 
@@ -87,18 +88,12 @@ once.
    - An unattended GLM run must be technically unable to write outside its
      own worktree, proven by a planted write that fails. An instruction to
      stay inside is not a boundary.
-3. **Four whole-tree checks run before every commit**, whatever the commit
-   touches:
-   - `tests/test_phase191c_f9_lint.py`
-   - `tests/test_phase244G_guard_shapes.py`
-   - `tests/test_roadmap_continuity.py`
-   - `python3 .claude/skills/finding/finding_check.py`
-
-   B2 reads only `completed/`. Before the regression of record, also run
-   `finding_check.check(Path("."), phase_docs="docs/phases/in_progress")`.
-   A suite chosen by subject misses these checks. In 257 the F9 lint went
-   red only at the full regression, and B2 only once the documents had moved
-   to `completed/`, which cost a second 45-minute regression.
+3. **The whole-tree command runs before every commit**, whatever the commit
+   touches: `.claude/skills/closeout/wholetree.sh`, in two modes.
+   - `wholetree.sh`: before every commit, and on every push (the push
+     guard runs it).
+   - `wholetree.sh --full`: before the regression of record, and before
+     every commit in a content phase.
 
    **The regression of record runs in parallel** (Phase 355):
    `.claude/skills/closeout/regression.sh` runs
@@ -126,12 +121,20 @@ and a hand-written known-bad fixture its assertion must fail on.
 
 | folder | what it covers |
 |---|---|
-| `closeout` | finishing a phase; the seven artefacts; `verify_phase.sh` |
+| `closeout` | finishing a phase; the eight artefacts; `verify_phase.sh` |
 | `finding` | filing an F-number; every cited number must resolve |
 | `refute` | an adversarial pass, and the checklist it must emit |
+| `deploy` | a migration to the live database: the dry run, the approved diff committed in the phase folder, the apply that refuses without it |
 
 The enforcement is a test, never the skill's own text: a skill is a prompt
 and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
+
+## Phase prompts live in `docs/prompts/`
+
+The prompt that starts a phase session, a GLM builder run or a landing
+session is written to `docs/prompts/<phase>_<slug>.txt` and committed. It is
+never kept only in `~/.cache` or a temp folder. A GLM run's `start.sh`
+reads its prompt from there.
 
 ---
 
@@ -167,6 +170,71 @@ and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
 ---
 
 ## Change log
+
+### 2026-09-27 — a refute stops after three rounds (Phase 358, K9)
+
+The operator, amended: "max 3 refute rounds. after round 3, remaining
+wording defects go to one finding; remaining factual or citation defects
+mean the row doesn't ship. fixes delete a sentence rather than rewrite it
+where possible. rounds 2+ refute the diff plus its surrounding sentences,
+not the whole row."
+- The refute skill quotes the rule.
+- The checklist has a fifth column, `round · kind · outcome`.
+- `refute_check.py` C5–C7 hold the first three sentences. The last two are
+  judgement, and the skill says so.
+- The seven older checklists are a pinned exemption from the column.
+
+### 2026-09-27 — close-out checks the regression command and the refute record (Phase 358, K6 and K7)
+
+The operator: "K6 and K7 are closeout checks, not prose. K6: the regression
+line must parse to command + hash + count. K7: a log mentioning refute
+without a refute checklist fails."
+- **A5 now parses** `regression.sh`'s line: the count, the hash and the
+  pytest command.
+- **A8 is new:** a log that mentions refute carries the `## Refuter pass`
+  checklist, or one line reading "No refute pass ran".
+- **The exemptions are pinned lists of phase ids,** not a cutoff: 10 for A5
+  and 40 for A8. `tests/test_phase358_closeout_k6_k7.py` recomputes both
+  from the closed logs and requires equality.
+- The closeout skill now has eight artefacts.
+
+### 2026-09-27 — rule 3 names one command in two modes (Phase 358, K1)
+
+The operator, 2026-09-27: "K1: option 3 — one command, two modes. guard
+runs the fast set … --full runs all 72, required before the regression of
+record and before commits in content phases. rule 3 names the command and
+both modes, nothing else."
+
+Rule 3's list of four checks, and its paragraph on `finding_check` over
+`in_progress/`, are replaced by `.claude/skills/closeout/wholetree.sh`. The
+command finds its members by rule and runs `finding_check` over both
+folders itself. What holds it:
+- the push guard runs fast mode on every push, and fails closed on time;
+- `regression.sh` refuses to start without a `--full` record for HEAD;
+- the guard refuses a commit to seed data or `migrations.py` without one;
+- `tests/test_phase358_wholetree_contract.py`.
+
+The hook timeout in `.claude/settings.json` is now 600 s. A `PreToolUse`
+hook that outruns its timeout is killed and the command runs. That was
+measured, and the hooks documentation says the same. So the guard keeps its
+own limit, `FAST_LIMIT_S` in `wholetree.py`, inside the timeout.
+- **It is 3× fast mode's AC time.** AC was measured at 94.9 s, on the
+  70 W adapter while charging from 6%, so the limit is 285 s. A first value
+  of 96 s came from a battery run (31.9 s), before any AC run was possible.
+- **Known limit:** the AC figure was taken while charging and is about 3×
+  the battery figure. Low Power Mode measured about 2.5× slower on a
+  regression. If fast mode ever outgrows the limit, the push blocks; it is
+  not let through.
+
+### 2026-09-27 — phase prompts live in the repo (Phase 358)
+
+The operator, 2026-09-27: "phase prompts move from ~/.cache/motodiag/prompts/
+and ~/.cache/motodiag/glm-builder/*/ into the repo under docs/prompts/, and
+future ones are written there." Ten prompts moved, byte for byte, and
+`docs/prompts/README.md` lists each one's source and sha256. The section
+"Phase prompts live in `docs/prompts/`" above is new. It is text only, with no
+check yet. It is the same rule as "nothing canonical lives only in
+~/Documents", applied to prompts.
 
 ### 2026-09-25 — the regression of record runs in parallel (Phase 355)
 

@@ -104,7 +104,9 @@ class TestTheTreeMatchesTheTable:
         assert not (_current() & set(UNREACHABLE_MODULES))
 
     def test_the_known_scale(self):
-        assert len(MODULE_ISLANDS) == 14  # f9-noqa: → 13 (244Y deleted six superseded modules) → 14 (244Y: inventory/models surfaced as substrate once its last live import went);: ssot-pin fixture-data: Phase 244W's finding — 19 modules / 4,270 lines invisible to the gate on 2026-09-17, converged on by four independent designs. The new/stale tests above are what hold the tree to the list; this literal is the record of what was found.
+        from support.integration_gaps_counts import MODULE_ISLAND_COUNT
+
+        assert len(MODULE_ISLANDS) == MODULE_ISLAND_COUNT
 
 
 # ---------------------------------------------------------------------------

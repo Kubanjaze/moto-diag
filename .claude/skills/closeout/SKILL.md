@@ -10,7 +10,7 @@ by someone who was not there** — which, a week later, includes you.
 
 ## What "done" means
 
-Seven artefacts. Each one is something a skipped close-out leaves undone,
+Eight artefacts. Each one is something a skipped close-out leaves undone,
 and each is a file fact rather than a claim:
 
 | | artefact |
@@ -19,11 +19,12 @@ and each is a file fact rather than a claim:
 | A2 | The phase log's status line reads Complete |
 | A3 | The implementation doc has a **Deviations** section |
 | A4 | Bug fixes are a contiguous dated register from `#1`, each naming a commit that **resolves** (`git cat-file -e`) |
-| A5 | A regression line carrying **both** a commit hash and a passed-test count |
+| A5 | A regression line that parses as `regression.sh` prints it: count, commit hash **and** the pytest command (since 358; ten earlier closes are a pinned exemption and keep the hash-and-count rule) |
 | A6 | A ROADMAP row whose **body cell** is within 120 words |
 | A7 | An `implementation.md` history row, and a version header naming the phase |
+| A8 | A log that mentions refute carries the `## Refuter pass` checklist (which must pass `refute_check`), or one line reading "No refute pass ran" (since 358; forty earlier closes are a pinned exemption) |
 
-`closeout_check.py` decides all seven. The test and the push guard both call
+`closeout_check.py` decides all eight. The test and the push guard both call
 it, so they cannot drift apart.
 
 **"Closeout ran" is deliberately not one of them.** It is unfalsifiable from
@@ -32,7 +33,9 @@ folder exists to stop shipping.
 
 ## The sequence
 
-1. **Regression, with hash and count.** Full suite, in parallel:
+1. **Regression, with hash and count.** First `wholetree.sh --full` on the
+   commit to be tested: `regression.sh` refuses to start without its
+   record for HEAD. Then the full suite, in parallel:
    `.claude/skills/closeout/regression.sh` runs
    `python -m pytest -n auto --dist load` on a clean tree and prints the
    line to record. The line carries the counts, the hash, the wall time
@@ -57,8 +60,10 @@ folder exists to stop shipping.
    shipped, what is open, what is next. Write it in the close-out commit,
    before the merge: `roadmap_check.py` R6 refuses any push while a closed
    row has no handoff. Add the deploy's outcome to it after step 8.
-8. **Merge, then deploy with a backup** — `~/backups/motodiag/`, retain 5,
-   print the before-state, dry-run on a copy first. `git merge` takes `-m`
+8. **Merge, then deploy** with the `deploy` skill
+   (`.claude/skills/deploy/deploy.py`): backup to `~/backups/motodiag/`
+   with 5 kept, the dry run on a copy, the committed diff, and the apply
+   that refuses without it. `git merge` takes `-m`
    or `-F <file>`. `-F -` exits 129 ("could not read file '-'") and
    `master` does not move; that happened twice on 2026-09-24.
 9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all fourteen checks.
@@ -75,13 +80,15 @@ check.
 
 | file | what it is |
 |---|---|
-| `closeout_check.py` | the seven assertions; the single implementation |
+| `closeout_check.py` | the eight assertions; the single implementation |
+| `fixtures/k6_k7` | hand-written logs: the regression lines A5 must reject and accept, and the refute records A8 must reject and accept |
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
 | `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |
 | `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
-| `roadmap_check.py` | the ROADMAP ledger holds: R1–R6 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff); run with every suite and on every push |
-| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check on every push, close-out on a push to `master` |
+| `roadmap_check.py` | the ROADMAP ledger holds: R1–R7 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff, a fold into a phase that is not closed); run with every suite and on every push |
+| `wholetree.sh` / `wholetree.py` | the whole-tree command (rule 3): fast mode, or `--full`; members found by rule; a pass on a clean tree writes a signed record bound to commit, tree and script |
+| `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check and the whole-tree command on every push (a valid record, else fast mode under its own limit; fails closed), `--full` on a commit to seed data or migrations, close-out on a push to `master` |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
 | `fixtures/check2` | hand-written path lists for check 2 |
 | `fixtures/roadmap_bad`, `fixtures/roadmap_good` | hand-written trees: every R-rule fires on the first; the second holds what each rule must not remove |

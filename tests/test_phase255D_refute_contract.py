@@ -34,8 +34,9 @@ class TestTheKnownBadFixturesFailEveryAssertion:
     @pytest.fixture(scope="class")
     def fails(self):
         # C1 needs a log with no block at all; C2-C4 need a block with
-        # defective rows. Two fixtures, one per shape.
-        return check(_read("missing_log.md")) + check(_read("bad_log.md"))
+        # defective rows; C5-C7 (Phase 358) a block breaking the round rule.
+        return (check(_read("missing_log.md")) + check(_read("bad_log.md"))
+                + check(_read("bad_rounds_log.md")))
 
     @pytest.mark.parametrize("aid", ASSERTION_IDS)
     def test_this_assertion_fires(self, fails, aid):

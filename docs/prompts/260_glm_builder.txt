@@ -1,0 +1,19 @@
+Do this: start Phase 260 (Pre-purchase inspection — chassis) from the newest handoff and run it to its finish line, as CLAUDE.md sets out. The newest handoff is docs/handoffs/2026-09-24_259_closed.md; 259 is merged, so branch phase-260 from master.
+
+This is the operator's third Subconscious run. What differs from a normal builder session:
+
+1. You are GLM-5.3 on Subconscious inside a sandbox. You can write only to this clone (~/Projects/moto-diag-glm) and your own tmp. You cannot push; the main checkout, ~/research/motodiag and the live database are read-only to you. A write outside this clone that fails with "Operation not permitted" is the sandbox working: don't work around it, note it in the phase log. zsh heredocs fail here (they write to /tmp), so write commit messages to a file in your tmp and use git commit -F.
+2. data/motodiag.db here is a snapshot of the live database (schema 67, 1,060 known_issues, 3 workflow templates). Any live step runs against it as a dry run.
+3. Commit on phase-260 at every milestone, moving the ROADMAP row as usual. If this session stops mid-phase, only what is committed survives.
+4. Citations point into ~/research/motodiag. A document that is not there may be fetched, saved in your tmp under acquired/ with its source URL beside it, cited as pending filing, and listed for the Opus session.
+5. Before the close-out, run the FULL test suite (python -B -m pytest -q -p no:cacheprovider -rfEs, in the background; about 45 minutes) and make it green. That replaces any hand-kept list of whole-tree checks: in 259 two defects reached the Opus side because the list missed the gates that caught them. The only expected failures are the 7 in tests/test_phase209_packaging.py, caused by this sandbox's PYTHONPATH; record them, don't fix them. Anything else red is yours to fix before the close-out.
+6. Traps 258 and 259 hit, so you don't:
+   - F124: never assert the schema head with a literal. Use SCHEMA_VERSION >= N, or equality only for a fixture's state below the head.
+   - No test may read data/motodiag.db. Build test databases from init_db and the migrations (init_db(path, apply_migrations=False) and then apply_migration up to a version gives an exact older schema).
+   - Wiring a module that tests/support/integration_gaps_allowlist.py lists as unreachable or orphaned means updating that file and every test that pins its sizes: grep len(ORPHANS), len(UNREACHABLE_MODULES) and len(MODULE_ISLANDS) across tests/.
+   - F158: no internal references in any text a user sees (template and item descriptions, known_issues text): no "Phase N", "Track X", finding numbers or "this phase". Refer to other content by its name.
+   - A negative claim ("no document says X") needs a whitespace-proof search (remove all whitespace from each page's text before matching, because OCR spaces letters out) and a positive control that is shown to hit the exact page it cites.
+7. Your finish line is "ready to merge": Step 0, v1.0, the build, its tests, the full suite green (item 5), and the close-out documents (Deviations, the bug-fix register, the ROADMAP row, the history row and the handoff), all committed on phase-260. Do not merge. The Opus session runs the regression of record outside the sandbox, the refute pass, the merge and the deploy. Mark those steps pending in the phase log; closeout_check's A5 fails until then, as expected.
+8. Refute runs on Opus, which you cannot reach. For every fact the phase takes from a document, list the claim with its cited file and page, as a table in the implementation doc.
+
+End with a short report: what shipped, the commits, the full-suite result, the claims awaiting refute, and what the Opus session must do next.

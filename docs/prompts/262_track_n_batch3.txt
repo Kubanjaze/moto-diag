@@ -1,0 +1,44 @@
+Do this: start Phase 262, Track N batch 3 of 3, and run it to its finish line as CLAUDE.md sets out. Follow batch 2's handoff, docs/handoffs/2026-09-26_264_closed.md, and the ledger convention batches 1 and 2 used: 262 carries the batch; 263 and 267 close ✅ "folded into 262" with no CLOSED date; one history row; one handoff.
+
+Batch 3 is three rows:
+- 262, crash and insurance claim support;
+- 263, track-day and race prep checklist;
+- 267, emissions and smog compliance, California first.
+
+Build them as 259–264 were built:
+- one migration seeds one workflow template per row, reachable through `motodiag workflow list/show`, and tested;
+- every figure comes from primary documents: makers' manuals, each named from its title page, or, for 267, the regulator's own text, with provenance `regulation` where it applies;
+- a claims table (file and page) goes to the refute pass.
+
+If Step 0 finds a row that cannot be sourced from primary documents, stop and give me the options. Row 262 especially may not be a manual topic.
+
+Also in scope, all in the same migration:
+1. F161: generic_winterization_v1's four live items carry figures no maker's document supports (for example "winter weight (typically 10W-40)"). Remove each unsupported figure or replace it with a pointer to the cited winterization_v1.
+2. F162: fix the two further defects the batch-2 reviewers found in ppi_chassis_v1.
+3. W30: the one claim added in batch 2's third refute round that has had no adversarial read. Give it one, and fix or drop it on the verdict.
+
+Items 1 and 2 alter existing live rows, which is a rule-1 stop:
+- back up to ~/backups/motodiag/ first and keep 5;
+- dry-run on a copy;
+- run the F158 census on the copy;
+- show me every changed row with before and after text, and wait for my answer before the live apply.
+
+Carry forward what 258–264 learned, especially:
+- F124, and migration tests that survive the next migration;
+- no test reads data/motodiag.db;
+- no internal references in any text a user sees (F158);
+- whitespace-proof negatives with a control on the cited page;
+- names from title pages;
+- the Edit tool for source edits, and nothing in /tmp;
+- batch 2's own lesson: every refute round's fixes introduced defects the next round found. After the last fix round, re-read every claim whose text changed.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+End with a short report:
+- the templates;
+- the refute verdicts;
+- the regression line;
+- the dry-run diff;
+- the census count;
+- the deploy (after my answer);
+- the next step: gate 272, the Track N integration test.

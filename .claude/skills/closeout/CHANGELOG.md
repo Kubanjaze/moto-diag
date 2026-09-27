@@ -1,5 +1,76 @@
 # closeout — changelog
 
+## 2026-09-27 — A5 parses the regression line, and A8 asks for the refute checklist (Phase 358, K6 and K7)
+
+The operator: "K6 and K7 are closeout checks, not prose. K6: the regression
+line must parse to command + hash + count. K7: a log mentioning refute
+without a refute checklist fails. each has a known-bad fixture."
+
+- **A5** now needs the line as `regression.sh` prints it: "Regression of
+  record: N passed … at \`HASH\` (…, \`… pytest …\`, …)". Ten closes passed
+  the old A5 with no command (255B, 255C, 255D, 257B, 257, 258, 259, 260,
+  353, 354). They are `A5_COMMAND_EXEMPT` and keep the old rule.
+- **A8** is new. A log that mentions refute must carry the `## Refuter
+  pass` checklist, which must pass `refute_check`, or one line opening
+  "No refute pass ran". The forty closed logs that fail it are
+  `A8_REFUTE_EXEMPT`. They include the three known prose refutes: 255B,
+  258, and 259, whose refute ran under a heading and left no checklist.
+- **Both exemptions are pinned lists** (the operator: "not a cutoff").
+  `tests/test_phase358_closeout_k6_k7.py` recomputes each set from the 312
+  closed logs and requires equality.
+- **Mutations.** Dropping the command from A5 inside `check()` first
+  **survived**, because no test ran `check()` on a log with a hash and a
+  count but no command. That test was added, and the mutation went red.
+  Accepting any "no refute" sentence went red on four tests.
+- **Fixture changes.** The good ZZZ log and both A7 fixtures now print the
+  `regression.sh` line. The bad ZZZ log gained a prose refute for A8.
+- verify_phase checks 12 and 14 still print what they did. A5 and A8 now
+  enforce what they only showed.
+
+## 2026-09-27 — R7: a folded row must fold into a closed phase (Phase 358, K5)
+
+Track N closed eleven rows through three batch phases. The eight rows that
+did not carry a batch read "✅ | Folded into NNN", with no date and no
+documents, and nothing checked them. A fold into a number with no row, or
+into a phase that never closed, passed. R7 fails those.
+
+- **Only notes that open with "Folded into NNN" count as a fold.** The good
+  tree holds a ✅ row whose prose says "folded into 258" (an open phase),
+  and R7 must pass it.
+- **Two mutations were each seen red:** ignoring the CLOSED date, and
+  reading "folded into" anywhere in the notes. The second survived at
+  first, because the prose row pointed at a closed phase; the control was
+  strengthened.
+- **The real ledger's eight folds pass.** With 261 set back to 🚧, R7 names
+  exactly 269, 270 and 271.
+
+## 2026-09-27 — one whole-tree command, and a push guard that fails closed (Phase 358, K1)
+
+Rule 3 listed four checks by hand, the GLM prompt thirteen, and five red
+regressions in 257–260 came from checks neither list ran. `wholetree.sh`
+finds its members by rule on every run (a test that enumerates a repo
+directory, or loads a helper that does) and runs them in two modes: fast
+(the code-and-ledger class minus gates and the wheel build, plus
+finding_check over both folders; 27 files, about 30 s) and `--full`
+(every member; 74 files, about 6.5 min).
+
+- The push guard runs fast mode on every push unless a record shows it
+  passed on exactly the commit, tree and script being pushed. Records are
+  signed with a key only the command creates. With no record, the guard
+  runs fast mode itself on the checked-out clean commit, under its own
+  limit (`FAST_LIMIT_S`: first 96 s from a battery run, then 285 s,
+  3× the AC time of 94.9 s), and blocks on a failure or a timeout.
+- The hook timeout went from 120 s to 600 s. A `PreToolUse` hook that
+  outruns its timeout is killed and the command proceeds (measured, and
+  documented by Claude Code), so the guard keeps its own clock far inside.
+- A commit that changes seed data or `migrations.py` needs a `--full`
+  record for the tree it commits. `regression.sh` needs one for HEAD.
+- `git -C path push` was invisible to the guard; it is now seen.
+- Controls, each in 358's phase log: the four 257–260 plants red in fast
+  mode; a plant in an excluded file passes fast and fails `--full`; an
+  amended commit, a hand-written record and a check sleeping past the
+  limit are each refused at the push.
+
 ## 2026-09-25 — the regression of record runs in parallel (Phase 355)
 
 Step 1 ran the full suite serially: 30 to 55 minutes on this Mac, at least
