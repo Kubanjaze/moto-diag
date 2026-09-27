@@ -1,6 +1,6 @@
 # Phase 272 — Gate 15: Track N's five workflows walked end-to-end through the workflow door — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-27)
 **Branch:** `phase-272` (Opus session, main checkout)
 
 ---
@@ -204,3 +204,16 @@ A first M2 attempt split the SQL on `;` and broke a string literal
 `--collect-only -q`: 9,507. `COLLECTED_TEST_FLOOR` 9478 → 9507 (+29,
 this file). The floor test, the four whole-tree checks and B2 over
 `in_progress/` were green (60 passed; finding exit 0; 244G 0; B2 `[]`).
+
+### 2026-09-27 — Regression of record, and close-out
+
+`.claude/skills/closeout/regression.sh` on a clean tree:
+
+Regression of record: 9507 passed, 0 failed, 0 skipped, 0 errors at `5750985` (11 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+v1.1 written (no open boxes). Row 272 ✅, `**CLOSED 2026-09-27.**`, with
+the regression line; history row and version header in
+`implementation.md`; both documents moved to `completed/`; handoff
+`docs/handoffs/2026-09-27_272_closed.md`. No deploy step: the phase
+changed no production code, no migration and no live row, so the merge
+applies nothing to the live database.

@@ -1,6 +1,6 @@
 # Phase 272 — Gate 15: Track N's five workflows walked end-to-end through the workflow door
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-26
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-27 (v1.0 2026-09-26)
 
 ---
 
@@ -146,18 +146,67 @@ finding's row numbers resolve.
 
 ## Verification Checklist
 
-- [ ] Row 272 🚧 before Step 0; corrected text within 120 words
-- [ ] Rows 356 and 357 added; `roadmap_check.py` green
-- [ ] F165 and F166 filed; `finding_check.py` green
-- [ ] Each powertrain's walk green, with its visited and skipped templates recorded
-- [ ] The link check finds the known links before finding none broken
-- [ ] Broken-link plant red, removed
-- [ ] Wrong-powertrain plant red (both shapes), removed
-- [ ] Build-reference plant red, removed
-- [ ] Migrations: fresh databases identical; every rollback from 66 on peels its successors; no literal 71
-- [ ] 244G scanner over the new test file; the four whole-tree checks green
-- [ ] Regression of record by `regression.sh`
-- [ ] Handoff written
+- [x] Row 272 🚧 before Step 0; corrected text within 120 words (56 at v1.0)
+- [x] Rows 356 and 357 added; `roadmap_check.py` green
+- [x] F165 and F166 filed; `finding_check.py` green, B2 over `in_progress/` `[]`
+- [x] Each powertrain's walk green, with its visited and skipped templates recorded (phase log, Build)
+- [x] The link check finds the 16 known links, de_winterization_v1's five among them, before finding none broken
+- [x] Broken-link plant red (2 failed), removed
+- [x] Wrong-powertrain plant red in both shapes (W4), removed
+- [x] Build-reference plant red, removed
+- [x] Migrations: fresh databases identical; every rollback from 66 to the head peels its successors, equal to a database built to it; no literal 71
+- [x] 244G scanner over `tests/` (0); the four whole-tree checks green; F124 guard green
+- [x] Mutations 7/7 red
+- [x] Regression of record by `regression.sh`: 9507 passed at `5750985`
+- [x] Handoff written
+
+## Deviations from Plan
+
+- **Planned item 6 (floor) and the planted controls ran as planned.** No
+  production code, no migration, no live change.
+- **The CLI helper sets the environment before resetting settings**, not
+  through `CliRunner(env=…)`: `reset_settings()` rebuilds the settings at
+  once, so the first draft read conftest's default database (10 failed,
+  10 errors, before the file's first commit). Not a bug-fix entry: the
+  file had never been committed.
+- **W3 grew two assertions** not in v1.0: each parsed title and required
+  flag equals the repository's row, because W4 reads both from the
+  print. Mutation M5 shows why: with "(optional)" ignored, W4 alone
+  would report a false violation set.
+- **The walk runs at a wide console** (`COLUMNS=10000`, the documented
+  test hook in `theme.get_console`) so item titles do not wrap; one test
+  reads `list` at 80 columns and proves the wrapped table parses to the
+  same powertrains. v1.0 said the parser joins wrapped lines; it does,
+  and that is now the 80-column test.
+- **Mutations were added** (7, v1.0 listed only the plants): M1–M6 in
+  the phase log.
+- **Plant 2b catches `valve_adjustment_v1` items 1 and 2 only**: the
+  other six titles name the method, not the engine. The gate still
+  fails; the title vocabulary's reach was a v1.0 risk, now measured.
+
+## Results
+
+| | |
+|---|---|
+| Test file | `tests/test_phase272_gate15.py`, 29 tests |
+| Walks | ice 9 of 9; electric 6 of 9 (skips `ppi_engine_v1`, `generic_winterization_v1`, `valve_adjustment_v1`); hybrid 9 of 9 |
+| W4 | exactly `('electric', 'generic_ppi_v1', 3)`, F166 |
+| Links | 22 slug references, 16 distinct links, 8 source templates; 13 item references, 1 cross-template; 0 broken |
+| Breadth | 15 live templates = the union of `list --category` over 13 categories = `list` = the repository |
+| F158 | 57 outputs, 318,015 characters, 0 build references |
+| Migrations | fresh databases identical; rollbacks to 66–70 each equal a database built to that version |
+| Planted controls | 4 runs, each red, each removed (`git diff` 0 lines) |
+| Mutations | 7/7 red |
+| Findings | F165 (a workflow can't be run; rows 356, 357), F166 (`generic_ppi_v1`'s engine steps on electric) |
+| Floor | 9478 → 9507 |
+| Regression of record | **9507 passed, 0 failed, 0 skipped, 0 errors** at `5750985` (11 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0) |
+
+Key finding: **the row asked for a run, and the door only reads.** The
+walk proves every Track N protocol on the row's path can be read in
+order, per powertrain, with its links intact; it cannot prove a
+mechanic can work one through. And reading per powertrain found the one
+step no earlier phase had looked at from the electric side: the starter
+PPI's required compression test.
 
 ## Risks
 
