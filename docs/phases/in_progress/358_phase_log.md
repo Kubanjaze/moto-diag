@@ -107,3 +107,44 @@ can only guard while it finishes inside 120 s.
 `358_implementation.md` v1.0. Before build, it is reported to the
 operator, with one open question: whether the guard enforces its own
 time limit.
+
+### 2026-09-27 — The operator's answer on v1.0, verbatim
+
+> K7: your reading is right — K7 gets its own pinned list, the 40 you measured, separate from K6's 10. accepted, including the 3 prose-refute cases.
+> K9: the 7 old-format checklists exempt — accepted.
+> K2 first, K3 as described, --full record gating seed/migration commits — all accepted.
+>
+> time limit: whatever the hook allows, a timeout must fail closed — block the push, never pass it. set the limit to ~2× fast mode's measured time on this machine (on battery too, if you can measure it). positive control: plant a check that sleeps past the limit and show the push is blocked, not allowed. if the hook runner can't be made to fail closed on timeout, tell me before building — that changes the design.
+>
+> go: build.
+
+### 2026-09-27 — The hook runner cannot fail closed: stopped before the guard
+
+The Claude Code hooks documentation (`code.claude.com/docs/en/hooks.md`,
+read through the docs agent) says of a timed-out standard hook:
+"`PreToolUse`: A timed-out standard hook (command, HTTP, MCP tool) doesn't
+block the tool call — it continues through normal permission flow." Only an
+Agent SDK callback hook blocks on timeout. The docs name no setting that
+changes this for a command hook, and they give 600 s as the default
+timeout. This agrees with the probe above. **Per the operator's condition,
+the guard's design goes back to the operator before any guard code is
+written.** K2 does not touch the guard and was built first, as v1.0 orders.
+
+### 2026-09-27 — K2 built: one pin per count
+
+- `tests/support/integration_gaps_counts.py` holds `UNREACHABLE_COUNT`
+  (34), `MODULE_ISLAND_COUNT` (14) and `ORPHAN_COUNT` (102). The six pins'
+  history is merged into its comments.
+- The canonical assertions are in 209B, 244W and 244U, all fast-mode
+  files. 244Y's two pins and 244Z's one now compare with the imported
+  constants.
+- `tests/test_phase358_one_pin_per_count.py` is an AST scan of `tests/`
+  for any comparison of the three sizes with an integer literal. It has 9
+  tests:
+  - **controls in tmp_path:** three planted shapes found; a comment, a
+    docstring, the constant and another table's size all passed;
+  - **seen red on the real tree:** 244Z's line was put back to `== 14`,
+    and the guard failed naming `test_phase244Z_shelved_content.py:194`.
+    The plant was reverted.
+- The K2 files plus rule 3's checks, 191d and F124: 393 passed.
+  `finding_check` exit 0.

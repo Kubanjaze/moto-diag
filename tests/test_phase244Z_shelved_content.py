@@ -189,4 +189,6 @@ class TestStillShelved:
         assert f"motodiag.engine.{name}" in MODULE_ISLANDS
 
     def test_the_table_did_not_move(self):
-        assert len(MODULE_ISLANDS) == 14  # f9-noqa: ssot-pin fixture-data: unchanged by Phase 244Z, on purpose — content fixed, reachability untouched.
+        from support.integration_gaps_counts import MODULE_ISLAND_COUNT
+
+        assert len(MODULE_ISLANDS) == MODULE_ISLAND_COUNT

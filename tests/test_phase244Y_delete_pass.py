@@ -150,8 +150,10 @@ class TestTheListsLetGo:
             assert "45 tests" in reason
 
     def test_the_known_scale(self):
-        assert len(MODULE_ISLANDS) == 14  # f9-noqa: ssot-pin fixture-data: 19 → 13 at Phase 244Y (six superseded modules deleted) → 14 (inventory/models surfaced as a third-order island once its last live import went; substrate). The new/stale tests in test_phase244W hold the tree to the list; this literal records the drop.
-        assert len(UNREACHABLE_MODULES) == 34  # f9-noqa: ssot-pin fixture-data: 38 → 37 at Phase 244Y (cli/registry deleted) → 34 at Phase 259 (motodiag.workflows wired: three modules).
+        from support.integration_gaps_counts import MODULE_ISLAND_COUNT, UNREACHABLE_COUNT
+
+        assert len(MODULE_ISLANDS) == MODULE_ISLAND_COUNT
+        assert len(UNREACHABLE_MODULES) == UNREACHABLE_COUNT
 
 
 class TestTheGatesSayWhatChanged:
