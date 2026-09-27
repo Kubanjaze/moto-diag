@@ -259,3 +259,53 @@ no page to cite. They sit outside the checklist, which requires one. The full ta
 | C40 | 1288 KTM Duke: "This covers" ambiguous | killed | 1 · wording · fixed, 2 · none · kept |
 | C42 | 1332 MV triple: "the European intervals file" | killed | 1 · wording · deleted, 2 · none · kept |
 | C48 | 4615 CVT regulator: "a corpus-wide sweep" | killed | 1 · wording · open F171 |
+
+### 2026-09-27 — `--full`, the regression of record, and the dry run
+
+- **The first `wholetree.sh --full`: 4 failed, 3859 passed.**
+  - `wholetree.py` keeps only the last 1500 characters of pytest's output,
+    so two of the four FAILED lines were cut. A direct pytest run over the
+    same 80 member files gave the whole list.
+  - Three were pins on text this phase removed:
+    - `test_phase354…::test_the_zuma_name_is_attributed_not_asserted`
+      ("Phase 253's cover-code record");
+    - two in `test_phase238…::TestThe225BCorrection` ("corrected here",
+      "corrected at Phase 238").
+
+    Each now asserts the same claim without the build reference.
+  - The fourth, `test_phase78_gate2_integration.py::…::test_cross_platform_brakes`
+    (a search for "brake fluid" must find at least 5; a seed build finds
+    18), **failed once in parallel and has not reproduced.** It passed
+    alone, in the direct run over all 80 files, in the next two `--full`
+    runs and in the regression below. Its traceback was lost to the
+    truncation. Nothing in 359's diff touches brake-fluid text. Every test
+    that writes a known-issue JSON writes it under `tmp_path`, not the seed
+    directory, and the search is plain SQL. A test that fails only in
+    parallel is a bug to fix, but this one can't be fixed without a
+    reproduction. It is recorded here and in the handoff; if it recurs, the
+    regression's junit will carry its traceback.
+- **`wholetree.sh --full` at `953c329`:** 3863 passed (80 files).
+- **The build commit:** `953c329`.
+
+Regression of record: 9676 passed, 0 failed, 0 skipped, 0 errors at `953c329` (25 min 53 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- **Dry run** (`deploy.py dryrun 359`, the skill's first real use; live was
+  only read):
+  - before: 5841 rows, 88 tables, integrity ok;
+  - backup: `~/backups/motodiag/motodiag_pre359_20260927_172347.db`
+    (sha256 `791af9a2…edd34`). Retain-5 removed
+    `motodiag_pre259_20260925_004849.db`;
+  - on the copy, only 072 was applied: `known_issues` 26 changed,
+    `workflow_templates` 4 changed, `checklist_items` 2 changed,
+    `schema_version` +1. Nothing added or removed elsewhere;
+  - **scope problems: none.** Every changed field in the scope carries its
+    `to` value, so the dry run also checked that each field changed to that
+    exact text;
+  - the operator's 4615 condition: row 4615 changed in `description`,
+    `symptoms`, `causes` and `fix_procedure` only, each equal to the seed
+    build's value;
+  - F158 census on the copy: **36** = 31 BMW model names + 5 in shop data.
+
+  The diff is `359_dryrun_diff.md`, committed for the operator. Applying it
+  alters existing live rows, which is a rule-1 stop: wait for the
+  operator's words.
