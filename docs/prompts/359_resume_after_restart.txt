@@ -1,0 +1,55 @@
+Do this: resume Phase 359, the content clean-up, and run it to its finish line as CLAUDE.md sets out.
+
+What happened: the machine was shut down and restarted on 2026-09-27 while 359 was at a rule-1 stop, waiting for my approval to apply migration 072 live. The session that built it is gone. So is its scratchpad, because a restart clears /private/tmp.
+
+Where it stands, measured after the restart (2026-09-27 19:23). Re-verify each point before acting:
+- Branch phase-359 is at 5ffb999, pushed and clean. Its last commit is "the dry-run diff for migration 072, for the operator's approval; regression of record".
+- The diff awaiting approval is docs/phases/in_progress/359_dryrun_diff.md. It is committed, with its scope file 359_deploy_scope.json, and its header names the backup ~/backups/motodiag/motodiag_pre359_20260927_172347.db and that backup's sha256.
+- Live has not been touched. data/motodiag.db is still schema 71, last modified 2026-09-26 17:37:12, so migration 072 has not run.
+- The advisor session ran its own dry run before the restart, and it matched the committed diff exactly:
+  - 2 checklist items, 26 known_issues rows and 4 templates changed;
+  - one schema_version row added and nothing removed;
+  - all 46 changed fields identical;
+  - after 072, live's known_issues equal a fresh build;
+  - census 36.
+
+Read these first:
+- the 359 phase log, v1.0, Step 0 and the dry-run diff;
+- the deploy skill (.claude/skills/deploy/SKILL.md);
+- the closeout skill.
+
+Then, in this order:
+1. Record the restart in the phase log, with what the lost scratchpad held that the documents cite:
+   - the library parse (phase log, line 100);
+   - the helper at line 145;
+   - Step 0's measurement scripts (359_step0.md, line 5).
+
+   Check that each one's results or logic are already in the documents, and that nothing the diff or the refute depends on lived only there. The refute verdicts were copied into the phase folder. Name anything that was lost.
+
+   This prompt, docs/prompts/359_resume_after_restart.txt, was written before the session started but not committed. Commit it in the same commit as the restart record, after `wholetree.sh --full`.
+2. Do not re-run the dry run: the committed diff is the one I approve. apply-live checks the rest itself: that the diff is committed and unchanged, the backup's hash, that live still equals the backup, and that a fresh dry run stays in scope.
+3. Stop and ask me for the live apply, in one short message with the diff's summary. Under rule 1, only my words approve it.
+4. After my approval, run `deploy.py apply-live 359`. Check its live diff against the committed dry-run diff, timestamps aside, and record the outcome.
+5. Close out with the closeout skill:
+   - write v1.1;
+   - mark row 359 ✅, with its CLOSED date and the regression line;
+   - close F159, F166 and F163 as retired or handled;
+   - close F158's fixed set, naming the wording that stays open;
+   - leave F170 and F171 open;
+   - write the handoff, whose next is 356;
+   - move the documents to completed/;
+   - merge, push, and run verify_phase.sh.
+
+Carry forward:
+- `wholetree.sh --full` before every commit in this content phase (rule 3);
+- commit and push as separate commands;
+- commit messages through a quoted heredoc;
+- the Edit tool for edits;
+- no scratch files in /tmp.
+
+End with a short report:
+- the apply's outcome: the live diff against the approved diff;
+- the findings closed;
+- the regression line of record;
+- verify_phase.sh's result;
+- the next step: 356.

@@ -309,3 +309,53 @@ Regression of record: 9676 passed, 0 failed, 0 skipped, 0 errors at `953c329` (2
   The diff is `359_dryrun_diff.md`, committed for the operator. Applying it
   alters existing live rows, which is a rule-1 stop: wait for the
   operator's words.
+
+### 2026-09-27 — The restart, and what the lost scratchpad held
+
+The machine was shut down and restarted while 359 waited at the rule-1
+stop. The building session is gone, and so is its scratchpad: a restart
+clears `/private/tmp`. A new session resumes from
+`docs/prompts/359_resume_after_restart.txt`, which is committed with this
+entry.
+
+**Re-verified before acting (about 19:25):**
+- `phase-359` at `5ffb999`, equal to `origin/phase-359`; the only
+  untracked file was the resume prompt;
+- live `data/motodiag.db` at schema 71, last modified 2026-09-26 17:37:12,
+  so 072 has not run;
+- the backup named in the diff's header exists.
+
+The only session folders under `/private/tmp/claude-501/…` are three
+created at 19:22:26, after the restart, including this one; their
+scratchpads are empty. The builder's is not among them.
+
+**What the documents cite from the scratchpad, and what survives:**
+
+| cited | where | results or logic in the documents? | lost |
+|---|---|---|---|
+| the library parse, `s0/parse.py` | this log, "The VIN source" | yes: the counts (262 files, 244 opened, 26,220 pages, 14 image-only) and the census counts are written above | the script, the parsed text, and `s0/libcensus.py` |
+| the sandbox proof and the GLM runs, `s0/extract359.py` | the same entry | yes: route, pages, facts, tokens and time per run are in the table. The run directory is in `~/.cache/motodiag/source-runs/359_step0/…` and survives, including the proof's control write (`clone/planted_ok.txt`) | the script, and the runs' JSON outputs: the 20 and 14 extracted facts. Only the two chosen quotes survive, in the log and in the checklist item |
+| `gen072.py` | this log, "The build" | partly. The module `migration_072_live_rows.py` holds all its output (26 rows, 35 fields, each old and new value), and the dry run checked that output: after 072, live `known_issues` equal a fresh seed build | the generator. **The module's docstring says "the generator is kept in 359_phase_log.md". It is not; that pointer is false.** Fixed after the apply as bug fix #3 |
+| Step 0's measurement scripts and its two databases | `359_step0.md`, line 5 | yes: every count, table and id mapping is written in `359_step0.md` | the scripts and the two databases |
+| `mutate.py` | this log, "The build" | the method and all 8 mutations are named | the script and each mutation's exact replacement text |
+| the refuters' verdicts | `359_refute_verdicts.md` | copied in full before the restart | nothing |
+
+**Nothing the diff or the refute depends on lived only there.**
+- The diff was written by `deploy.py`, which is in the repo, from the
+  committed scope, and `apply-live` re-derives it with a fresh dry run.
+- The refute's inputs (`359_refute_input*.md`) and verdicts are in this
+  folder.
+- The four PDFs the refute read are on disk under `~/research/motodiag/`:
+  the Vespa GTS 300, the Honda CB500F/FA, the KTM 250/300 EXC TPI and the
+  YW125Y.
+
+The dry run was not repeated, as the prompt directs. The advisor session
+had run its own before the restart, and it matched the committed diff.
+
+### 2026-09-27 — The operator's approval of the live apply, verbatim
+
+> approved: apply 072 live. scope as the committed diff: 2 checklist items, 26 known_issues rows, 4 templates changed, one schema_version row added, nothing removed. if apply-live's fresh dry run differs from that in any row or field, stop and ask.
+
+Applied literally: `apply-live`'s fresh dry run and its live diff are
+compared with `359_dryrun_diff.md`, row for row and field for field,
+timestamps aside. Any difference stops the deploy.
