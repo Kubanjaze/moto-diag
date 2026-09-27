@@ -34,6 +34,10 @@ if [ -n "$(git status --porcelain)" ]; then
   exit 2
 fi
 
+# Phase 358 (K1): the whole-tree command's --full mode must have passed on
+# exactly this commit first, as a record only wholetree.sh can write.
+"$PY" -B "$DIR/wholetree.py" verify || exit 2
+
 HASH=$(git rev-parse --short HEAD)
 if [ "$MODE" = parallel ]; then
   ARGS="-n auto --dist load"

@@ -96,6 +96,9 @@ class TestThePushGuardCallsIt:
     @staticmethod
     def _push(monkeypatch, capsys, fails, command="git push origin phase-branch"):
         monkeypatch.setattr(R, "check_tree", lambda *a, **k: list(fails))
+        # The whole-tree gate (Phase 358) is held by its own contract test;
+        # here it passes, so these tests see only the ledger's verdict.
+        monkeypatch.setattr(guard, "wholetree_gate", lambda *a, **k: [])
         monkeypatch.setattr(sys, "stdin", _Stdin(json.dumps({"tool_input": {"command": command}})))
         return guard.main(), capsys.readouterr().err
 
