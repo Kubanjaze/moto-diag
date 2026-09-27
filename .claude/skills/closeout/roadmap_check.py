@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """ROADMAP continuity: the phase ledger stays true while phases are worked.
 
-Six rules, each a claim about what the two repos hold:
+Seven rules, each a claim about what the two repos hold:
 
   R1  no two rows in docs/ROADMAP.md share a phase number
   R2  every phase with documents under docs/phases/ has a row in the ROADMAP
@@ -17,6 +17,9 @@ Six rules, each a claim about what the two repos hold:
       close. A close is a ✅ row's CLOSED date or implementation.md's
       history row (A7 requires one), so a row closed without its date is
       still seen.
+  R7  a row that is ✅ "Folded into NNN" names a row that is ✅ with a CLOSED
+      date (Phase 358, K5): a fold into a missing or unclosed phase closes
+      nothing.
 
 **R6 is per phase, not "the newest handoff is as new as the newest close"
 (2026-09-24).** That was the rule as first proposed, and it was measured
@@ -67,6 +70,10 @@ HANDOFF = re.compile(r"^(\d{4}-\d{2}-\d{2})_(\d{2,3}[A-Z]?)_closed\.md$")
 #: it, and the good fixture holds 257 as the exemption's control.
 R6_SINCE = "2026-09-24"
 R6_BEFORE = frozenset({"257", "257B"})
+#: R7. A batch phase closes several rows: the carrier gets the CLOSED date and
+#: the others read "✅ | Folded into 261 (…)". Only a row whose notes OPEN with
+#: the phrase is a fold; prose that mentions folding elsewhere is not.
+FOLDED = re.compile(r"^\s*Folded into (\d{2,3}[A-Z]?)\b")
 
 
 def _number(phase: str) -> int:
@@ -164,6 +171,19 @@ def check(roadmap: str, authority: str, docs: dict[str, set[str]],
         if d >= R6_SINCE and n not in R6_BEFORE and not any(h >= d for h in handed.get(n, [])):
             fails.append(f"R6 phase {n} closed {d} but docs/handoffs/ has no {d}_{n}_closed.md "
                          "(or one dated later) naming what is next")
+
+    full = {n: (s.strip(), rest) for n, s, rest in reversed(ROW_REST.findall(roadmap))}
+    for n, (s, rest) in sorted(full.items()):
+        m = FOLDED.match(rest)
+        if s != DONE or not m:
+            continue
+        into = m.group(1)
+        target = full.get(into)
+        if target is None:
+            fails.append(f"R7 phase {n} is folded into {into}, which has no row")
+        elif target[0] != DONE or not CLOSED.search(target[1]):
+            fails.append(f"R7 phase {n} is folded into {into}, whose row is not {DONE} with a "
+                         "CLOSED date")
     return fails
 
 
@@ -194,7 +214,7 @@ def self_test() -> int:
         return 1
     bad = check_tree(HERE / "fixtures" / "roadmap_bad", HERE / "fixtures" / "roadmap_bad" / "sibling")
     ok = True
-    for rule in ("R1", "R2", "R3", "R4", "R5", "R6"):
+    for rule in ("R1", "R2", "R3", "R4", "R5", "R6", "R7"):
         fired = any(f.startswith(rule) for f in bad)
         ok &= fired
         print(f"  {rule} fires on the known-bad tree: {fired}")

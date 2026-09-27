@@ -54,6 +54,9 @@ class TestEachRuleFiresOnTheKnownBadTree:
         ("R6 phase 262 closed 2026-09-26", "a handoff dated before the close"),
         ("R6 phase 263 closed 2026-09-26", "the day's second close, which a date-only rule passes"),
         ("R6 phase 265 closed 2026-09-26", "a close seen only through implementation.md's history row"),
+        ("R7 phase 266 is folded into 299, which has no row", "a fold into nothing"),
+        ("R7 phase 267 is folded into 258", "a fold into a phase still open"),
+        ("R7 phase 268 is folded into 256", "a fold into a ✅ row with no CLOSED date"),
     ])
     def test_it_fires(self, fails, rule, case):
         assert any(f.startswith(rule) for f in fails), (case, fails)
@@ -81,6 +84,32 @@ class TestR6OnTheRealLedger:
         """257 and 257B closed on 2026-09-24 before R6 existed. The list may
         not grow: a new close answers R6 with its handoff."""
         assert (R.R6_SINCE, R.R6_BEFORE) == ("2026-09-24", frozenset({"257", "257B"}))
+
+
+class TestR7OnTheRealLedger:
+    """Phase 358, K5. Track N closed eleven rows through three batch phases;
+    the eight that did not carry their batch read "✅ | Folded into NNN"."""
+
+    def _folds(self, roadmap: str) -> dict[str, str]:
+        return {n: R.FOLDED.match(rest).group(1) for n, s, rest in R.ROW_REST.findall(roadmap)
+                if s.strip() == R.DONE and R.FOLDED.match(rest)}
+
+    def test_the_eight_folds_are_seen_and_pass(self):
+        roadmap = (R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        assert self._folds(roadmap) == {
+            "263": "262", "265": "264", "266": "264", "267": "262",
+            "268": "264", "269": "261", "270": "261", "271": "261"}
+        assert not [f for f in R.check_tree() if f.startswith("R7")]
+
+    def test_a_fold_into_a_reopened_carrier_is_seen(self):
+        """The real ledger, with 261's row set back to 🚧: its three folds
+        now close nothing, and R7 names all three."""
+        roadmap = (R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        row = next(ln for ln in roadmap.splitlines() if ln.startswith("| 261 |"))
+        reopened = roadmap.replace(row, row.replace("| ✅ |", "| 🚧 |", 1))
+        fails = [f for f in R.check(reopened, (R.ROOT / "ROADMAP_AUTHORITY.md").read_text(
+            encoding="utf-8"), {}) if f.startswith("R7")]
+        assert sorted(f.split()[2] for f in fails) == ["269", "270", "271"], fails
 
 
 class TestTheGoodTreePasses:

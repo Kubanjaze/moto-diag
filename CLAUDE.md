@@ -49,8 +49,9 @@ the end:**
 `.claude/skills/closeout/roadmap_check.py` holds the ledger to this: a reused
 number, a phase with documents but no row, a row whose status disagrees with
 where its documents are, a number no authority range covers, the two
-copies of the authority contract drifting apart, and a phase closed with no
-handoff (R6).
+copies of the authority contract drifting apart, a phase closed with no
+handoff (R6), and a row "Folded into" a phase that is not ✅ with a CLOSED
+date (R7).
 `tests/test_roadmap_continuity.py` runs it with every suite, and the push
 guard refuses any `git push` while it fails.
 

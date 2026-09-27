@@ -1,5 +1,22 @@
 # closeout — changelog
 
+## 2026-09-27 — R7: a folded row must fold into a closed phase (Phase 358, K5)
+
+Track N closed eleven rows through three batch phases. The eight rows that
+did not carry a batch read "✅ | Folded into NNN", with no date and no
+documents, and nothing checked them. A fold into a number with no row, or
+into a phase that never closed, passed. R7 fails those.
+
+- **Only notes that open with "Folded into NNN" count as a fold.** The good
+  tree holds a ✅ row whose prose says "folded into 258" (an open phase),
+  and R7 must pass it.
+- **Two mutations were each seen red:** ignoring the CLOSED date, and
+  reading "folded into" anywhere in the notes. The second survived at
+  first, because the prose row pointed at a closed phase; the control was
+  strengthened.
+- **The real ledger's eight folds pass.** With 261 set back to 🚧, R7 names
+  exactly 269, 270 and 271.
+
 ## 2026-09-27 — one whole-tree command, and a push guard that fails closed (Phase 358, K1)
 
 Rule 3 listed four checks by hand, the GLM prompt thirteen, and five red

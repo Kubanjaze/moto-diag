@@ -14,3 +14,6 @@
 | 263 | The day's second close | ✅ | **CLOSED 2026-09-26.** R6: 264's handoff carries the same date, so a date-only rule passes it (the real 2026-09-24: four closes, two handoffs) |
 | 264 | The day's first close | ✅ | **CLOSED 2026-09-26.** Has 2026-09-26_264_closed.md; must not be reported |
 | 265 | Closed without the date in its row | ✅ | R6: implementation.md's history row dates the close, and there is no handoff |
+| 266 | A fold into nothing | ✅ | Folded into 299 (batch 9). R7: there is no row 299 |
+| 267 | A fold into an open phase | ✅ | Folded into 258 (batch 1). R7: 258 is not closed |
+| 268 | A fold into a row without its date | ✅ | Folded into 256 (batch 2). R7: 256 is ✅ but carries no CLOSED date |

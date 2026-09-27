@@ -6,6 +6,8 @@
 | 256 | The retrieval chokepoint | ✅ | **CLOSED 2026-09-21.** Documents in completed/; closed before R6, so no handoff is asked of it |
 | 257 | Closed the day R6 began, before it existed | ✅ | **CLOSED 2026-09-24.** No close-out handoff: exempt (R6_BEFORE), the exemption's control |
 | 258 | The next phase | 🚧 | in progress, documents in in_progress/ |
+| 259 | A row folded into a closed batch | ✅ | Folded into 256 (a batch): R7 passes, 256 is ✅ with its CLOSED date |
+| 260 | A closed row whose prose mentions folding | ✅ | **CLOSED 2026-09-20.** Its follow-up was folded into 258, which is still open. R7 must not read this as a fold: the notes do not open with it |
 | 266 | Handoff written after midnight | ✅ | **CLOSED 2026-09-25.** Its handoff is dated 2026-09-26: later is fine |
 | 353 | A row added after the plan | 🔲 | covered by the open-ended backend range |
 | 354 | Closed with its handoff | ✅ | **CLOSED 2026-09-24.** docs/handoffs/2026-09-24_354_closed.md |
