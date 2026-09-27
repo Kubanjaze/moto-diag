@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 358 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 359 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -633,6 +633,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 356 | In-memory workflow runner | 🔲 | Proposed by Gate 15 (272), which found no workflow can be run (F165). `motodiag workflow run <slug>` connects a template's checklist to Phase 82's step engine: each item in order, pass or fail recorded as the mechanic answers, the template's diagnosis printed on a fail, a summary at the end. Nothing is saved and there is no schema change. Decides how a run chooses its powertrain, since items carry none. |
 | 357 | Saved workflow runs | 🔲 | After 356. A migration adds tables for a workflow run and its per-item results, tied to a bike or a work order, with the commands to start, record and finish a run; a run can be resumed and read back. Proposed by Gate 15 (272) with 356 (F165). |
 | 358 | Process clean-up | ✅ | **CLOSED 2026-09-27.** The 2026-09-27 triage's K1–K9 became checks. `wholetree.sh` finds whole-tree tests by rule, fast or `--full`; the push guard needs a signed record or runs fast mode, failing closed on time. One pin per count; a deploy skill refusing a live apply without the committed diff; an F158 ratchet at 75; R7 for folded rows; A5 parses the command, A8 needs the refute checklist; refute rounds capped at 3; Step 0 checks a row's verbs. Every check seen red; 21 mutations. F167–F169 filed. Regression 9639 passed / 0 failed at `d93d8de`. |
+| 359 | Content clean-up: starter templates and build references | 🚧 | The content phase the operator ordered after 358 (2026-09-27). Step 0 decides "retire vs repair" for migration 007's two starter templates, `generic_ppi_v1` and `generic_winterization_v1` (F159, F166, part of F163), with a count of everything that references them; the operator picks. Then one migration carries every live change: the starters, `ppi_chassis_v1`'s steering sentences (F163), F158's build references in text users see, and live's thermostat row (id 31). `F158_CEILING` falls to the measured count. First live use of the `deploy` skill. |
 
 ---
 
