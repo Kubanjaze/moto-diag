@@ -169,7 +169,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: refute's W30 test, 9,478 after the guard on the sentence round 5
 #: dropped (F164).
 #:
-COLLECTED_TEST_FLOOR = 9478
+#: 9507 (Phase 272, 2026-09-26) — +29: `test_phase272_gate15.py` (Gate 15:
+#: the five workflows walked per powertrain through `workflow list/show`,
+#: W1–W4, the template links, breadth, F158 on the walk's output, and the
+#: migrations from 067 on, each checker with its planted control). Measured
+#: with `--collect-only -q`: 9,507.
+#:
+COLLECTED_TEST_FLOOR = 9507
 
 
 def _collected_count() -> int:
