@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 357 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 358 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -632,6 +632,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 355 | Parallel test suite (pytest-xdist) | ✅ | **CLOSED 2026-09-25.** The regression of record runs in parallel: `.claude/skills/closeout/regression.sh`, `python -m pytest -n auto --dist load`; `--serial` is the fallback. Back to back, serial 30:33 against parallel 13:26 (2.3×); the throttled afternoon machine gave 24–27 min. Parity by junit diff: every serial pass passes in parallel, and two consecutive runs match exactly; a planted failure is reported; all 325 files pass alone. Two bug fixes: 8 hardware tests read an uninitialised default DB; the F124 and 256 controls planted files into the real tree. Floor 9375 → 9388; regression 9388/0/0 at `003058c`. |
 | 356 | In-memory workflow runner | 🔲 | Proposed by Gate 15 (272), which found no workflow can be run (F165). `motodiag workflow run <slug>` connects a template's checklist to Phase 82's step engine: each item in order, pass or fail recorded as the mechanic answers, the template's diagnosis printed on a fail, a summary at the end. Nothing is saved and there is no schema change. Decides how a run chooses its powertrain, since items carry none. |
 | 357 | Saved workflow runs | 🔲 | After 356. A migration adds tables for a workflow run and its per-item results, tied to a bike or a work order, with the commands to start, record and finish a run; a run can be resumed and read back. Proposed by Gate 15 (272) with 356 (F165). |
+| 358 | Process clean-up | 🚧 | The operator's approval of the 2026-09-27 triage (`docs/reports/2026-09-27_process_kinks_triage.md`), K1–K9. Tooling, checks and rule text only: no `src/`, no migration, no live change. One whole-tree command that the push guard runs (K1); one pin per count (K2); the deploy script in the repo, refusing a live apply without the approved diff (K3); one F158 census and its ratchet (K4); roadmap_check R7 for folded rows (K5); close-out checks on the regression line and the refute checklist (K6, K7); a Step 0 item for promised actions (K8); at most three refute rounds (K9). Phase prompts moved to `docs/prompts/`. |
 
 ---
 
