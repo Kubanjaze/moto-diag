@@ -10,9 +10,9 @@ here.
 
 Skills and hooks under `.claude/` are discovered **from the directory the
 session was started in, at the moment it starts.** A session opened in the
-parent directory does not see them, and a skill added part-way through a
-session is not available until the next one. Measured in Phase 255D, at
-both candidate roots, before this rule was written.
+parent directory does not see them. Measured in Phase 255D, at both
+candidate roots, before this rule was written. On 2026-09-27 a skill added
+mid-session (358's `deploy`) appeared at once in two running sessions.
 
 No symlinks and no `.claude/` at the parent: both work, and both hide where
 the mechanism is actually reading from.
@@ -170,6 +170,29 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-09-27 — a skill added mid-session does load (255D's clause removed)
+
+The operator: "make the dated CLAUDE.md change on the skill-loading rule,
+as you worded it."
+
+"Start sessions at this repository root" said that a skill added part-way
+through a session is not available until the next one, as measured in
+Phase 255D. On 2026-09-27, Phase 358 wrote `.claude/skills/deploy/SKILL.md`,
+and the `deploy` skill appeared at once in the skill lists of two sessions
+already running at this root:
+- the 358 builder's, recorded in its handoff
+  (`docs/handoffs/2026-09-27_358_closed.md`, "What is open");
+- the advisor session's.
+
+That clause is removed, and the observation is added. The rest of the rule
+stands, and was not re-measured: start sessions at the repository root,
+because a session opened in the parent directory does not see these skills.
+
+`README.md` ("Start the session in this directory") still carries the
+removed clause. It lies outside the change the operator approved.
+
+An operator request made between Phase 358 and 359; not a phase.
 
 ### 2026-09-27 — a refute stops after three rounds (Phase 358, K9)
 
