@@ -1,5 +1,19 @@
 # closeout — changelog
 
+## 2026-09-27 — A5 judges the last regression line (Phase 359, bug fix #1)
+
+358's A5 took the first line that parsed. After a re-run, that is the
+superseded run: 358 recorded 9636 at `8a205ee`, then 9639 at `d93d8de`
+after its bug fix #2 (`docs/handoffs/2026-09-27_358_closed.md`, "What is
+open"). `regression_line` now reads the last line carrying "Regression of
+record:" and parses that one. The rule is unchanged.
+- Fixtures: `k6_k7/a5_bad_last_line_superseded.md` (the first line parses,
+  the last does not: must fail) and `k6_k7/a5_good_last_line.md` (the last
+  parses: passes with the last run's count and hash).
+- `tests/test_phase359_a5_last_line.py`: 3 of its 4 tests went red on the
+  old A5, including the `check()` wiring test.
+- 358's two exemption controls still recompute to 10 and 40.
+
 ## 2026-09-27 — A5 parses the regression line, and A8 asks for the refute checklist (Phase 358, K6 and K7)
 
 The operator: "K6 and K7 are closeout checks, not prose. K6: the regression
