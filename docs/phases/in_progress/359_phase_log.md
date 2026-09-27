@@ -43,3 +43,19 @@ was 358, the mobile ROADMAP has no 359, and `ROADMAP_AUTHORITY.md` gives
   recompute to 10 and 40. Fast whole-tree: 1472 passed.
 
 **Commit.** `5bc40c8`.
+
+### 2026-09-27 — Step 0, stopped for the operator's pick
+
+Recorded in `359_step0.md`. It ends at the fork the prompt names, retire
+or repair, plus one scope question: live row 4615 lags its seed just as
+row 31 does.
+
+Decided without a stop, with the reason:
+- **F158's fixed set** is every "Phase N", "Track X" and "this phase" hit
+  in seed- or migration-written tables: 44 hits in 25 seed rows. The 31
+  F-number hits are all BMW F-series model names and stay. Reason: the
+  prompt's own exclusion ("a model name … stays").
+- **The `known_issue_models` difference is not a finding.** Live equals
+  a rebuild of its own content. The gap is in 358's ratchet fixture, which
+  omits `db init`'s last step. It is fixed at the build as a bug fix to
+  358's check.
