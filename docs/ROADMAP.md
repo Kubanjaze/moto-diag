@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 355 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 357 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -504,7 +504,7 @@ Non-diagnostic workflows that shops perform: pre-purchase inspection, tire servi
 | 269 | Brake service workflow | ✅ | Folded into 261 (Track N batch 1): `brake_service_v1`, seven items — pads, discs, caliper and master-cylinder overhaul, fluid, bleeding, reassembly and bedding-in. See row 261. |
 | 270 | Suspension service workflow | ✅ | Folded into 261 (Track N batch 1): `suspension_service_v1`, seven items — sag, spring rate for the rider, fork oil, seals and springs, fork air bleed, rear shock, damping and preload. See row 261. |
 | 271 | Chain / belt / shaft service workflow | ✅ | Folded into 261 (Track N batch 1): `drivetrain_service_v1`, seven items, each optional by drive type — chain slack, wear, cleaning and adjustment; belt slack; shaft final-drive oil; universal joints. See row 261. |
-| 272 | Gate 15 — Specialized workflows integration test | 🔲 | Run PPI → tire service → winterization → valve adjust → brake service end-to-end |
+| 272 | Gate 15 — Specialized workflows integration test | ✅ | **Row corrected** (operator, 2026-09-26): it read "Run PPI → tire service → winterization → valve adjust → brake service end-to-end", but no workflow can be run (F165; rows 356, 357). **CLOSED 2026-09-27.** The five workflows walked through `workflow list/show` per powertrain: ice and hybrid 9 templates, electric 6. 22 template links, 13 item references, 0 broken. One required engine step on the electric walk (F166). Three plants red, then removed; 7/7 mutations. Regression 9507 passed / 0 failed at `5750985`. |
 
 ## Track O — Business Infrastructure (Phases 273–292)
 
@@ -630,6 +630,8 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 353 | Small-engine carb service (single/twin-barrel) | ✅ | **CLOSED 2026-09-24.** No carburetted scooter reached a carburettor row about its own carburettor; the corpus had ten unsourced big-bike rows (F151). Seven maker-document rows, one make each, reach their machines at tier 0: Honda CHF50 and Ruckus, Kymco, SYM, Piaggio, Vespa, Yamaha. "Keihin/Mikuni" holds for part of the class: the two-strokes carry Dell'Orto or Teikei, and Kymco, SYM and CHF50 manuals name no maker. Four refuters killed 32 of 178 claims. F151, F152 filed. Regression 9,188 passed, 0 failed, 0 skipped at `fb4a76d`. Was 257; renumbered when 257 was assigned to the orchestrator (2026-09-22). |
 | 354 | Scooter electrical (12V minimal) | ✅ | **CLOSED 2026-09-24.** Track M had no charging content: 251–254's files held 0 stator or rectifier rows, and every "regulator" meant the US regulator. Seven service-manual rows, one make each, reach their machines at tier 0: Honda PCX150 (2013–15) and CHF50, Kymco, SYM, Piaggio, Vespa, Yamaha YW125. Carb versus injection does not predict the design: the carburetted CHF50 is three-phase with an ECM regulator. Four refuters killed 30 of 170 claims. F149, F150 filed. Regression 9,089 passed, 0 failed, 0 skipped at `c79ddec`. Was 256; the retrieval chokepoint took 256 on 2026-09-21 and this row kept the number, so two rows read 256 until 2026-09-24. |
 | 355 | Parallel test suite (pytest-xdist) | ✅ | **CLOSED 2026-09-25.** The regression of record runs in parallel: `.claude/skills/closeout/regression.sh`, `python -m pytest -n auto --dist load`; `--serial` is the fallback. Back to back, serial 30:33 against parallel 13:26 (2.3×); the throttled afternoon machine gave 24–27 min. Parity by junit diff: every serial pass passes in parallel, and two consecutive runs match exactly; a planted failure is reported; all 325 files pass alone. Two bug fixes: 8 hardware tests read an uninitialised default DB; the F124 and 256 controls planted files into the real tree. Floor 9375 → 9388; regression 9388/0/0 at `003058c`. |
+| 356 | In-memory workflow runner | 🔲 | Proposed by Gate 15 (272), which found no workflow can be run (F165). `motodiag workflow run <slug>` connects a template's checklist to Phase 82's step engine: each item in order, pass or fail recorded as the mechanic answers, the template's diagnosis printed on a fail, a summary at the end. Nothing is saved and there is no schema change. Decides how a run chooses its powertrain, since items carry none. |
+| 357 | Saved workflow runs | 🔲 | After 356. A migration adds tables for a workflow run and its per-item results, tied to a bike or a work order, with the commands to start, record and finish a run; a run can be resumed and read back. Proposed by Gate 15 (272) with 356 (F165). |
 
 ---
 
