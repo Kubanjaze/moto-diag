@@ -124,6 +124,7 @@ and a hand-written known-bad fixture its assertion must fail on.
 | `closeout` | finishing a phase; the eight artefacts; `verify_phase.sh` |
 | `finding` | filing an F-number; every cited number must resolve |
 | `refute` | an adversarial pass, and the checklist it must emit |
+| `deploy` | a migration to the live database: the dry run, the approved diff committed in the phase folder, the apply that refuses without it |
 
 The enforcement is a test, never the skill's own text: a skill is a prompt
 and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.

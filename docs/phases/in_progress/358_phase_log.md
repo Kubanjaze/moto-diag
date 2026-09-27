@@ -421,3 +421,40 @@ blocked.
   every text column with four patterns, because that is what the guard
   can see without deciding which columns render. The content phase fixes
   rows and lowers the ceiling.
+
+### 2026-09-27 — K3 built: the deploy skill
+
+- **`.claude/skills/deploy/`:**
+  - `deploy.py` (from 262's `deploy262.py`);
+  - `SKILL.md` and `CHANGELOG.md`;
+  - `fixtures/scope_262.json` (262's hand-coded scope, as data);
+  - `fixtures/scope_bad_ambiguous.json` (the known-bad scope: an entry
+    that matches two rows).
+- **`dryrun`** writes `docs/phases/in_progress/<phase>_dryrun_diff.md`,
+  headed with the backup's path and sha256, the scope file's sha256, the
+  census count and the scope problems.
+- **`apply-live`** refuses, before touching live, unless:
+  - the file exists, is committed and is unchanged;
+  - it records no scope problem;
+  - the backup still hashes as recorded;
+  - the scope file is unchanged;
+  - live equals the backup;
+  - a fresh dry run stays in scope.
+- **Copies** go to `data/deploy_scratch/`, now in `.gitignore`, and are
+  deleted after use.
+- **`tests/test_phase358_deploy_contract.py`:** 18 tests on fixture
+  databases in a tmp git repository. They cover each refusal (8), a clean
+  apply, retain-5, the census on the copy, the ambiguous scope, and
+  defaults that name no temp path.
+- **Four mutations, each red and reverted** (the source compared byte for
+  byte): committed, unchanged, live equals backup, fresh scope. Under
+  each, the fixture's "live" was migrated. That is the harm each refusal
+  prevents.
+- **358 never ran it against live.** The closeout skill's step 8 and
+  CLAUDE.md's procedure table now name the skill.
+- **Observed, against CLAUDE.md.** Right after `SKILL.md` was written, this
+  session's skill list included `deploy`. CLAUDE.md's "Start sessions at
+  this repository root" says a skill added part-way through a session is
+  not available until the next one (measured in 255D). This build appears
+  to pick new skills up mid-session. It was not measured further, and the
+  rule's text is left for the operator.

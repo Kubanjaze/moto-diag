@@ -1,0 +1,5 @@
+{"tables": {
+  "checklist_items": {"changed": [{
+    "where": "template_id = (select id from workflow_templates where slug = ?)",
+    "params": ["tpl_a"],
+    "fields": ["instruction_text"]}]}}}

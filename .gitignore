@@ -25,6 +25,8 @@ env/
 # Data (keep structure, ignore large files)
 data/motodiag.db
 output/
+# Phase 358: deploy.py's working copies of the database, deleted after use.
+data/deploy_scratch/
 
 # Phase 191B uploaded video files + per-session frame extracts.
 # Keep the data/videos/.gitkeep so the directory persists for fresh

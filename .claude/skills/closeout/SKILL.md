@@ -60,8 +60,10 @@ folder exists to stop shipping.
    shipped, what is open, what is next. Write it in the close-out commit,
    before the merge: `roadmap_check.py` R6 refuses any push while a closed
    row has no handoff. Add the deploy's outcome to it after step 8.
-8. **Merge, then deploy with a backup** — `~/backups/motodiag/`, retain 5,
-   print the before-state, dry-run on a copy first. `git merge` takes `-m`
+8. **Merge, then deploy** with the `deploy` skill
+   (`.claude/skills/deploy/deploy.py`): backup to `~/backups/motodiag/`
+   with 5 kept, the dry run on a copy, the committed diff, and the apply
+   that refuses without it. `git merge` takes `-m`
    or `-F <file>`. `-F -` exits 129 ("could not read file '-'") and
    `master` does not move; that happened twice on 2026-09-24.
 9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all fourteen checks.

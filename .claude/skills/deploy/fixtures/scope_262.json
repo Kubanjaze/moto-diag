@@ -1,0 +1,14 @@
+{"tables": {
+  "workflow_templates": {"added": 3},
+  "checklist_items": {"added": 21, "changed": [
+    {"where": "template_id = (select id from workflow_templates where slug = ?) and sequence_number = ?",
+     "params": ["generic_winterization_v1", 1], "fields": ["instruction_text", "expected_pass", "expected_fail"]},
+    {"where": "template_id = (select id from workflow_templates where slug = ?) and sequence_number = ?",
+     "params": ["generic_winterization_v1", 2], "fields": ["instruction_text"]},
+    {"where": "template_id = (select id from workflow_templates where slug = ?) and sequence_number = ?",
+     "params": ["generic_winterization_v1", 3], "fields": ["expected_pass"]},
+    {"where": "template_id = (select id from workflow_templates where slug = ?) and title = ?",
+     "params": ["ppi_chassis_v1", "Steering head bearings"], "fields": ["description", "instruction_text"]},
+    {"where": "template_id = (select id from workflow_templates where slug = ?) and sequence_number = ?",
+     "params": ["winterization_v1", 5], "fields": ["description"]}]},
+  "schema_version": {"added": 1}}}
