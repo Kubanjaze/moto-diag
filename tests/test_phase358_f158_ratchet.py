@@ -41,6 +41,7 @@ def built(tmp_path_factory) -> pathlib.Path:
     from motodiag.knowledge.loader import (load_dtc_directory, load_known_issues_file,
                                            load_symptom_file)
     from motodiag.knowledge.marques import rebuild_make_index_at
+    from motodiag.knowledge.models import rebuild_model_index_at
 
     db = tmp_path_factory.mktemp("f158") / "built.db"
     init_db(str(db))
@@ -49,6 +50,7 @@ def built(tmp_path_factory) -> pathlib.Path:
     for f in sorted((SEED_DATA_DIR / "knowledge").glob("known_issues_*.json")):
         load_known_issues_file(f, str(db))
     rebuild_make_index_at(str(db))
+    rebuild_model_index_at(str(db))
     return db
 
 
@@ -72,6 +74,24 @@ class TestTheRatchet:
         c = sqlite3.connect(built)
         assert c.execute("select count(*) from known_issues").fetchone()[0] >= 1060
         assert c.execute("select count(*) from checklist_items").fetchone()[0] >= 100
+        c.close()
+
+    def test_the_build_is_db_inits_build(self, built, tmp_path):
+        """`db init` ends by rebuilding the model junction. A second rebuild
+        of the built database must change nothing (Phase 359, bug fix #2:
+        the fixture skipped it, and its junction differed from live's by
+        116 and 327 rows)."""
+        from motodiag.knowledge.models import rebuild_model_index_at
+
+        q = "select issue_id, make, model from known_issue_models order by 1, 2, 3"
+        c = sqlite3.connect(built)
+        before = c.execute(q).fetchall()
+        c.close()
+        again = tmp_path / "again.db"
+        shutil.copy(built, again)
+        rebuild_model_index_at(str(again))
+        c = sqlite3.connect(again)
+        assert c.execute(q).fetchall() == before
         c.close()
 
 
