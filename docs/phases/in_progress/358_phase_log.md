@@ -352,3 +352,36 @@ blocked.
   tests, 62 passed before the mutations.
 - **358's own log mentions refute throughout,** and 358 runs no refute
   pass. So its close-out records the one line A8 accepts.
+
+### 2026-09-27 — K9 built: at most three refute rounds
+
+- **The checklist's fifth column,** `round · kind · outcome`, is parsed
+  by `refute_check.py`:
+  - **C5:** every row has the column, and no round is above 3;
+  - **C6:** no open factual or citation defect;
+  - **C7:** open wording defects cite one and the same F-number.
+- **`OLD_FORMAT` pins the seven old checklists** (257, 260, 261, 262,
+  264, 353, 354). Its control: the set equals every closed log with a
+  block, and each passes with the exemption.
+- **Where the exemption is applied:** the CLI (which verify_phase check 12
+  calls) by the log's file name, and close-out A8 by the phase.
+- **SKILL.md** quotes the operator's rule verbatim, and says no check can
+  see "delete rather than rewrite" or "rounds 2+ read the diff and its
+  neighbours".
+- **Fixtures:**
+  - `good_log.md` now has five columns;
+  - `old_format_log.md` keeps the four-column shape. It was created with
+    `git show` from the old good log, and its title line was changed
+    with `sed -i`, on a fixture file I had just made;
+  - `bad_rounds_log.md` plants a fourth round, an open factual defect,
+    open wording with no finding, two findings, and an unparseable cell.
+    Each is named.
+- **Tests:** `tests/test_phase358_refute_rounds.py` has 15. 255D's refute
+  contract now includes `bad_rounds_log.md` in its "every assertion
+  fires" fixture. K7's tests pass the phase to `refute_record`.
+- **Verified:** 90 passed across the four refute and close-out test files.
+- **Mutations, each red and reverted** (the source compared byte for byte
+  with the pre-mutation copy):
+  - four rounds allowed;
+  - an open citation defect allowed to ship;
+  - several findings allowed.

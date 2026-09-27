@@ -302,7 +302,7 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
     # A8 — a log that mentions refute carries the checklist, or says in one
     # line that no refute pass ran (K7, Phase 358)
     if phase not in A8_REFUTE_EXEMPT:
-        fails += [f"A8 {f}" for f in refute_record(log_txt)]
+        fails += [f"A8 {f}" for f in refute_record(log_txt, phase)]
     return fails
 
 
@@ -345,19 +345,23 @@ def legacy_regression_line(log_txt: str) -> bool:
                if re.search(r"regression", ln, re.I))
 
 
-def refute_record(log_txt: str) -> list[str]:
+def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
     """Why a log that mentions refute does not record it; [] when it does.
 
     The operator's words, applied literally: "a log mentioning refute
     without a refute checklist fails." The one way out is a line saying no
     refute pass ran, so the honest sentence naming what is absent passes.
+    A checklist must pass refute_check, including the round column (K9)
+    unless the phase is one of refute_check.OLD_FORMAT.
     """
     if not _MENTION.search(log_txt):
         return []
     if "## Refuter pass" in log_txt:
         sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
         import refute_check
-        return [f"refuter checklist: {f}" for f in refute_check.check(log_txt)]
+        rounds = phase not in refute_check.OLD_FORMAT
+        return [f"refuter checklist: {f}"
+                for f in refute_check.check(log_txt, require_rounds=rounds)]
     if _NO_REFUTE.search(log_txt):
         return []
     return ["the log mentions refute but has no '## Refuter pass' checklist, and no "

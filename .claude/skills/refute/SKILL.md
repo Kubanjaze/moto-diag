@@ -37,18 +37,42 @@ A `## Refuter pass` block in the phase log:
 ```markdown
 ## Refuter pass
 
-| claim | verdict | quote | source |
-|---|---|---|---|
-| Honda names no transmission in US scooter manuals | killed | "Primary reduction V-matic" | Ruckus owner's manual p. 96 |
+| claim | verdict | quote | source | round · kind · outcome |
+|---|---|---|---|---|
+| Honda names no transmission in US scooter manuals | killed | "Primary reduction V-matic" | Ruckus owner's manual p. 96 | 1 · factual · deleted |
 ```
 
-Every row: a **verdict of kept or killed**, a **verbatim quote**, and a
-**document plus page**.
+Every row: a **verdict of kept or killed**, a **verbatim quote**, a
+**document plus page**, and since Phase 358 the **round** it was last
+refuted in, the **kind** of defect found (`none`, `wording`, `factual`,
+`citation`) and its **outcome** (`kept`, `fixed`, `deleted`, or
+`open F<n>`).
+
+## When a refute stops (Phase 358, K9)
+
+The operator's rule, verbatim (2026-09-27):
+
+> max 3 refute rounds. after round 3, remaining wording defects go to one
+> finding; remaining factual or citation defects mean the row doesn't ship.
+> fixes delete a sentence rather than rewrite it where possible. rounds 2+
+> refute the diff plus its surrounding sentences, not the whole row.
+
+Why: in 264 and 262 each round's fixes added claims and new defects, which
+the next round found; 262 ran five rounds.
+
+What `refute_check.py` holds (C5–C7): no round above 3; no factual or
+citation defect left `open`; every `open` wording defect names the same
+single F-number. **No check can see the last two sentences.** Whether a fix
+deleted rather than rewrote, and whether rounds 2+ were given the diff and
+its neighbours rather than the whole row, are the refuter's instruction and
+the reviewer's judgement. They are stated here, not enforced.
 
 ## The ceiling of what this can enforce — stated, not implied
 
 `refute_check.py` asserts C1–C4: the block exists, every row has a verdict,
-every row has a quote in quotation marks, every row cites a page.
+every row has a quote in quotation marks, every row cites a page. Since
+Phase 358 it also asserts C5–C7 over the round column (see above). The seven
+checklists written before that column are exempt from it by name.
 
 **That checks the report, not the work.** A complete block is entirely
 consistent with a lazy pass. No script can tell whether the PDF was opened.

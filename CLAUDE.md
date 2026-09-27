@@ -170,6 +170,19 @@ reads its prompt from there.
 
 ## Change log
 
+### 2026-09-27 — a refute stops after three rounds (Phase 358, K9)
+
+The operator, amended: "max 3 refute rounds. after round 3, remaining
+wording defects go to one finding; remaining factual or citation defects
+mean the row doesn't ship. fixes delete a sentence rather than rewrite it
+where possible. rounds 2+ refute the diff plus its surrounding sentences,
+not the whole row."
+- The refute skill quotes the rule.
+- The checklist has a fifth column, `round · kind · outcome`.
+- `refute_check.py` C5–C7 hold the first three sentences. The last two are
+  judgement, and the skill says so.
+- The seven older checklists are a pinned exemption from the column.
+
 ### 2026-09-27 — close-out checks the regression command and the refute record (Phase 358, K6 and K7)
 
 The operator: "K6 and K7 are closeout checks, not prose. K6: the regression

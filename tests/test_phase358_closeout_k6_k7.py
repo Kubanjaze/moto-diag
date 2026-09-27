@@ -90,7 +90,7 @@ class TestK7ARefuteNeedsItsChecklist:
         assert C.refute_record(_logs()["259"])
 
     def test_the_exemption_is_exactly_the_logs_that_fail(self):
-        measured = {p for p, t in _logs().items() if C.refute_record(t)}
+        measured = {p for p, t in _logs().items() if C.refute_record(t, p)}
         assert measured == C.A8_REFUTE_EXEMPT
         assert len(C.A8_REFUTE_EXEMPT) == 40
         assert {"255B", "258", "259"} <= C.A8_REFUTE_EXEMPT
@@ -98,7 +98,7 @@ class TestK7ARefuteNeedsItsChecklist:
     def test_the_seven_old_checklists_pass(self):
         logs = _logs()
         for phase in ("257", "260", "261", "262", "264", "353", "354"):
-            assert C.refute_record(logs[phase]) == [], phase
+            assert C.refute_record(logs[phase], phase) == [], phase
 
 
 class TestTheWiring:

@@ -20,6 +20,21 @@ Assertions:
   C2  every claim row states a verdict of kept or killed
   C3  every claim row carries a verbatim quote, in quotation marks
   C4  every claim row cites a document AND a page
+
+and, since Phase 358 (K9, the operator's three-round rule), over a fifth
+column `round · kind · outcome` — `2 · factual · fixed`, `3 · wording ·
+open F163`, `1 · none · kept`:
+
+  C5  every row carries the column, and no round is above 3
+  C6  no factual or citation defect is still open: the row does not ship
+  C7  open wording defects all cite one and the same F-number (the one
+      finding they go to; finding_check B2 resolves it)
+
+The seven checklists written before the column existed are a pinned
+exemption from it (`OLD_FORMAT`), with an equality control in
+`tests/test_phase358_refute_rounds.py`. What no check can see, and the
+skill states as text: that a fix deleted a sentence rather than rewrote
+it, and that rounds 2+ refuted the diff and its neighbours, not the row.
 """
 from __future__ import annotations
 
@@ -28,15 +43,22 @@ import re
 import sys
 
 HEADER = "## Refuter pass"
-#: A row: | claim | kept/killed | "quote" | document p.N |
+#: A row: | claim | kept/killed | "quote" | document p.N | round · kind · outcome |
 _ROW = re.compile(r"^\|(?P<claim>[^|]+)\|(?P<verdict>[^|]+)\|"
-                  r"(?P<quote>[^|]+)\|(?P<source>[^|]+)\|\s*$")
+                  r"(?P<quote>[^|]+)\|(?P<source>[^|]+)\|(?:(?P<rko>[^|]*)\|)?\s*$")
+_RKO = re.compile(r"^\s*(\d+)\s*[·/]\s*(none|wording|factual|citation)\s*[·/]\s*"
+                  r"(kept|fixed|deleted|open)(?:\s+(F\d{2,4}))?\s*$", re.I)
+MAX_ROUNDS = 3
+#: The checklists written before the fifth column, measured 2026-09-27: every
+#: closed log with a `## Refuter pass` block. Pinned; the test recomputes it.
+OLD_FORMAT = frozenset({"257", "260", "261", "262", "264", "353", "354"})
 _VERDICT = re.compile(r"\b(kept|killed)\b", re.I)
 _QUOTED = re.compile(r"[\"“”']\s*\S")
 _PAGE = re.compile(r"\bp{1,2}\.?\s*\d+|\bpage\s*\d+", re.I)
 
 
-def check(text: str) -> list[str]:
+def check(text: str, require_rounds: bool = True) -> list[str]:
+    """`require_rounds=False` only for a phase in OLD_FORMAT."""
     fails: list[str] = []
     if HEADER not in text:
         return [f"C1 no '{HEADER}' block in the phase log"]
@@ -48,7 +70,7 @@ def check(text: str) -> list[str]:
         m = _ROW.match(line)
         if not m:
             continue
-        cells = {k: v.strip() for k, v in m.groupdict().items()}
+        cells = {k: (v or "").strip() for k, v in m.groupdict().items()}
         if set(cells["claim"]) <= set("-: ") or not cells["claim"]:
             continue                                   # separator / header
         if cells["claim"].lower() in ("claim",):
@@ -69,10 +91,40 @@ def check(text: str) -> list[str]:
         if not _PAGE.search(r["source"]):
             fails.append(f"C4 row {i} ({r['claim'][:34]!r}) cites no page: "
                          f"{r['source'][:40]!r}")
+    if require_rounds:
+        fails += _rounds(rows)
     return fails
 
 
-ASSERTION_IDS = ("C1", "C2", "C3", "C4")
+def _rounds(rows: list[dict]) -> list[str]:
+    fails, findings = [], set()
+    for i, r in enumerate(rows, 1):
+        name = repr(r["claim"][:34])
+        m = _RKO.match(r["rko"])
+        if not m:
+            fails.append(f"C5 row {i} ({name}) has no 'round · kind · outcome' cell "
+                         f"that parses: {r['rko']!r}")
+            continue
+        rnd, kind, outcome, finding = int(m.group(1)), m.group(2).lower(), \
+            m.group(3).lower(), m.group(4)
+        if rnd > MAX_ROUNDS:
+            fails.append(f"C5 row {i} ({name}) is round {rnd}; at most {MAX_ROUNDS} "
+                         "refute rounds")
+        if outcome == "open" and kind in ("factual", "citation"):
+            fails.append(f"C6 row {i} ({name}) has an open {kind} defect: the row "
+                         "does not ship")
+        if outcome == "open" and kind == "wording":
+            if finding is None:
+                fails.append(f"C7 row {i} ({name}) leaves a wording defect open with "
+                             "no finding")
+            else:
+                findings.add(finding.upper())
+    if len(findings) > 1:
+        fails.append(f"C7 open wording defects go to ONE finding, not {sorted(findings)}")
+    return fails
+
+
+ASSERTION_IDS = ("C1", "C2", "C3", "C4", "C5", "C6", "C7")
 
 
 def main() -> int:
@@ -80,7 +132,9 @@ def main() -> int:
     if p is None:
         print("usage: refute_check.py <phase_log.md>", file=sys.stderr)
         return 2
-    fails = check(p.read_text(encoding="utf-8", errors="replace"))
+    phase = re.match(r"(\d+[A-Z]?)_", p.name)
+    fails = check(p.read_text(encoding="utf-8", errors="replace"),
+                  require_rounds=not (phase and phase.group(1) in OLD_FORMAT))
     for f in fails:
         print(f)
     return 1 if fails else 0
