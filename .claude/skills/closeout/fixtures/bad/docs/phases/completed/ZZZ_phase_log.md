@@ -31,3 +31,8 @@ repository. Only resolving it can tell it from a real one.
 
 Planted defect for **A5**: this regression line has a count but no commit
 hash — regression 1,234 passed / 0 failed.
+
+### 2026-09-22 11:30 — Review and refute
+
+Planted defect for **A8**: the claims were refuted here in prose, round by
+round, and the log carries no refuter checklist.

@@ -10,7 +10,7 @@ by someone who was not there** — which, a week later, includes you.
 
 ## What "done" means
 
-Seven artefacts. Each one is something a skipped close-out leaves undone,
+Eight artefacts. Each one is something a skipped close-out leaves undone,
 and each is a file fact rather than a claim:
 
 | | artefact |
@@ -19,11 +19,12 @@ and each is a file fact rather than a claim:
 | A2 | The phase log's status line reads Complete |
 | A3 | The implementation doc has a **Deviations** section |
 | A4 | Bug fixes are a contiguous dated register from `#1`, each naming a commit that **resolves** (`git cat-file -e`) |
-| A5 | A regression line carrying **both** a commit hash and a passed-test count |
+| A5 | A regression line that parses as `regression.sh` prints it: count, commit hash **and** the pytest command (since 358; ten earlier closes are a pinned exemption and keep the hash-and-count rule) |
 | A6 | A ROADMAP row whose **body cell** is within 120 words |
 | A7 | An `implementation.md` history row, and a version header naming the phase |
+| A8 | A log that mentions refute carries the `## Refuter pass` checklist (which must pass `refute_check`), or one line reading "No refute pass ran" (since 358; forty earlier closes are a pinned exemption) |
 
-`closeout_check.py` decides all seven. The test and the push guard both call
+`closeout_check.py` decides all eight. The test and the push guard both call
 it, so they cannot drift apart.
 
 **"Closeout ran" is deliberately not one of them.** It is unfalsifiable from
@@ -77,7 +78,8 @@ check.
 
 | file | what it is |
 |---|---|
-| `closeout_check.py` | the seven assertions; the single implementation |
+| `closeout_check.py` | the eight assertions; the single implementation |
+| `fixtures/k6_k7` | hand-written logs: the regression lines A5 must reject and accept, and the refute records A8 must reject and accept |
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
 | `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |

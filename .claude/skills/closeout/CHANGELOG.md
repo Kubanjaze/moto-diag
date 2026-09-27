@@ -1,5 +1,32 @@
 # closeout — changelog
 
+## 2026-09-27 — A5 parses the regression line, and A8 asks for the refute checklist (Phase 358, K6 and K7)
+
+The operator: "K6 and K7 are closeout checks, not prose. K6: the regression
+line must parse to command + hash + count. K7: a log mentioning refute
+without a refute checklist fails. each has a known-bad fixture."
+
+- **A5** now needs the line as `regression.sh` prints it: "Regression of
+  record: N passed … at \`HASH\` (…, \`… pytest …\`, …)". Ten closes passed
+  the old A5 with no command (255B, 255C, 255D, 257B, 257, 258, 259, 260,
+  353, 354). They are `A5_COMMAND_EXEMPT` and keep the old rule.
+- **A8** is new. A log that mentions refute must carry the `## Refuter
+  pass` checklist, which must pass `refute_check`, or one line opening
+  "No refute pass ran". The forty closed logs that fail it are
+  `A8_REFUTE_EXEMPT`. They include the three known prose refutes: 255B,
+  258, and 259, whose refute ran under a heading and left no checklist.
+- **Both exemptions are pinned lists** (the operator: "not a cutoff").
+  `tests/test_phase358_closeout_k6_k7.py` recomputes each set from the 312
+  closed logs and requires equality.
+- **Mutations.** Dropping the command from A5 inside `check()` first
+  **survived**, because no test ran `check()` on a log with a hash and a
+  count but no command. That test was added, and the mutation went red.
+  Accepting any "no refute" sentence went red on four tests.
+- **Fixture changes.** The good ZZZ log and both A7 fixtures now print the
+  `regression.sh` line. The bad ZZZ log gained a prose refute for A8.
+- verify_phase checks 12 and 14 still print what they did. A5 and A8 now
+  enforce what they only showed.
+
 ## 2026-09-27 — R7: a folded row must fold into a closed phase (Phase 358, K5)
 
 Track N closed eleven rows through three batch phases. The eight rows that

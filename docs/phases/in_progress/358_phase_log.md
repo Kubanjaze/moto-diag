@@ -316,3 +316,39 @@ blocked.
 - **Verified:** 117 passed across the guard's three test files. A
   mutation that unwired the check from `main` turned
   `test_a_commit_and_push_together_are_blocked` red; it was reverted.
+
+**Commit.** `3bd7e08`.
+
+### 2026-09-27 — K6 and K7 built: A5 parses, A8 is new
+
+- **A5 (K6).** The line must parse to count + backticked hash + a
+  backticked command containing `pytest`. `A5_COMMAND_EXEMPT` is the 10
+  measured phases, which keep the old hash-and-count rule.
+  - The five `regression.sh` lines (355, 261, 264, 262, 272) parse.
+  - Fixtures: `a5_bad_no_command` and `a5_bad_command_is_not_pytest`
+    (both pass the OLD A5), and `a5_good`.
+- **A8 (K7).** Any mention of "refut" needs the `## Refuter pass` block,
+  which must pass `refute_check`, or one line opening "No refute pass
+  ran". `A8_REFUTE_EXEMPT` is the 40.
+  - Fixtures: a 259-shaped prose refute, and a block whose row cites no
+    page (both fail, the second naming C4); the one-line none, a good
+    block, and a log with no mention (all pass). "We refuted nothing; no
+    refutes were needed." fails: the escape is the one line.
+- **The controls.** Both pinned sets equal their recomputation over 312
+  closed logs (10 and 40). 259's real log fails A8 when taken off the
+  list. The seven old checklists (257, 260, 261, 262, 264, 353, 354) pass.
+- **Mutations.**
+  - A5 inside `check()` falling back to the old rule: **survived at
+    first.** No test ran `check()` on a hash-and-count line with no
+    command. `test_check_fires_a5_on_a_line_with_no_command` was added;
+    the mutation then went red.
+  - The none-line accepting any "no refute": 4 red.
+  - Both reverted; the source was compared byte for byte with the
+    pre-mutation copy.
+- **Fixtures edited so they test only their own rule:** the good ZZZ log
+  and both A7 fixtures now print the `regression.sh` line (A5 had fired on
+  the A7 fixtures); the bad ZZZ log gained a prose refute so A8 fires.
+- `test_phase358_closeout_k6_k7.py`: 19 tests. With the 255D contract
+  tests, 62 passed before the mutations.
+- **358's own log mentions refute throughout,** and 358 runs no refute
+  pass. So its close-out records the one line A8 accepts.

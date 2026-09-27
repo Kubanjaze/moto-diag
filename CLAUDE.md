@@ -121,7 +121,7 @@ and a hand-written known-bad fixture its assertion must fail on.
 
 | folder | what it covers |
 |---|---|
-| `closeout` | finishing a phase; the seven artefacts; `verify_phase.sh` |
+| `closeout` | finishing a phase; the eight artefacts; `verify_phase.sh` |
 | `finding` | filing an F-number; every cited number must resolve |
 | `refute` | an adversarial pass, and the checklist it must emit |
 
@@ -169,6 +169,20 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-09-27 — close-out checks the regression command and the refute record (Phase 358, K6 and K7)
+
+The operator: "K6 and K7 are closeout checks, not prose. K6: the regression
+line must parse to command + hash + count. K7: a log mentioning refute
+without a refute checklist fails."
+- **A5 now parses** `regression.sh`'s line: the count, the hash and the
+  pytest command.
+- **A8 is new:** a log that mentions refute carries the `## Refuter pass`
+  checklist, or one line reading "No refute pass ran".
+- **The exemptions are pinned lists of phase ids,** not a cutoff: 10 for A5
+  and 40 for A8. `tests/test_phase358_closeout_k6_k7.py` recomputes both
+  from the closed logs and requires equality.
+- The closeout skill now has eight artefacts.
 
 ### 2026-09-27 — rule 3 names one command in two modes (Phase 358, K1)
 
