@@ -458,3 +458,60 @@ blocked.
   not available until the next one (measured in 255D). This build appears
   to pick new skills up mid-session. It was not measured further, and the
   rule's text is left for the operator.
+
+### 2026-09-27 — The operator's question on the signing key, answered
+
+> where does the record-signing key live, and can this session read it? if yes, an agent could sign a "passed" record without running the checks — the hand-written control doesn't cover that. don't try to fix it; state it as a known limit with where the key lives and who can read it.
+
+**Answer: yes, this session can read it.** It was checked with `stat`
+and `test -r`; its contents were not printed.
+- **Where:** `/Users/lilquant/.config/motodiag/wholetree.key`, 64 bytes,
+  created by `wholetree.sh` at 11:07 on 2026-09-27.
+- **Who can read it:** owner `lilquant`, group `staff`, mode `600`. Only
+  the `lilquant` account can read it. Every process that account runs can:
+  - this Claude Code session;
+  - any subagent;
+  - any script, and any `claude -p` run.
+
+  The GLM sandbox profile lets its runs write only to their own clone and
+  tmp. Whether it also stops them *reading* `~/.config` was not measured.
+- **Known limit, not fixed (the operator: "don't try to fix it"):** an
+  agent running as `lilquant` can read the key, compute the HMAC, and
+  write a `passed` record for a commit no check ran on. The push guard
+  would accept it.
+  - The hand-written-record control covers a record forged **without**
+    the key. It does not cover one signed **with** it.
+  - The record proves "made by something holding the key". It does not
+    prove "made by `wholetree.sh` after a passing run".
+  - `wholetree.py`'s docstring and the closeout CHANGELOG already state
+    this ceiling.
+
+### 2026-09-27 — Known limits of what 358 built, in one place
+
+1. **The signing key is readable by this account** (above).
+2. **The guard sees only Claude Code's Bash tool.** It is a `PreToolUse`
+   hook, not a git hook. A push from a terminal, or from any tool other
+   than Bash, is not checked.
+3. **The guard judges only this checkout.** A `git push` in another
+   repository is checked against moto-diag's HEAD and records. Seen
+   live: the workspace-docs push at 12:33 was "accepted" on moto-diag
+   commit `63494b7`'s record.
+4. **A script that commits and then pushes inside itself** is not visible
+   on the command line (bug fix #1's ceiling).
+5. **`FAST_LIMIT_S` (285 s) comes from an AC run made while charging from
+   6%,** and the first value (96 s) from a battery run. Neither is a
+   steady-state AC measurement. A limit that is too low blocks; it never
+   lets a push through.
+6. **The F158 ratchet sees the seed, not live.** It cannot see live's
+   operational rows, or live rows older than the seed.
+7. **The deploy script cannot see an approval.** It sees only that the
+   diff is committed and unchanged. The approval is the operator's words
+   in the log.
+8. **Two parts of K9 are text only:** "delete rather than rewrite" and
+   "rounds 2+ read the diff and its neighbours".
+9. **K7 reads the word "refut" literally.** A log that says it in passing
+   needs the one-line none. That is the operator's rule, applied as
+   written.
+
+No refute pass ran: 358 changed tooling, tests and rule text, and took no
+claim from a document.
