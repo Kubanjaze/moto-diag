@@ -385,3 +385,39 @@ blocked.
   - four rounds allowed;
   - an open citation defect allowed to ship;
   - several findings allowed.
+
+### 2026-09-27 — K4 built: one census, and its ratchet
+
+- **`scripts/f158_census.py`** is Phase 262's `f158.py`, made importable.
+  - It uses four patterns ("Phase N", "Track X", F-numbers, "this
+    phase") over every text column, and opens the database read-only.
+  - `--plant` is its own control.
+  - `ratchet()` fails when:
+    - a workflow row carries a hit;
+    - the count is above the ceiling;
+    - the count is below it, saying "lower F158_CEILING to N".
+- **`tests/test_phase358_f158_ratchet.py`** builds a database the way `db
+  init` does. It never reads data/motodiag.db.
+  - **`F158_CEILING = 75`,** re-measured at the build: exactly 75, as at
+    Step 0.
+  - **Controls:**
+    - a planted "Phase 999" is found alone;
+    - a planted "Track Q" in known_issues breaks the ceiling;
+    - "F158" in a checklist item trips the workflow rule;
+    - one fewer hit asks for the ceiling to be lowered;
+    - each pattern is seen once on its own.
+  - 10 tests, 40 s. The test walks the seed JSON, so the census rule puts
+    it in `--full` only.
+- **What it cannot see** is stated in the test's docstring:
+  - live's operational rows (`shops`, `customer_notifications`: 5 hits);
+  - live rows older than the seed (the thermostat row, 1 hit).
+
+  Those are for the deploy script's census, on a copy.
+- **Two mutations, each red and reverted:**
+  - "this phase" dropped: 4 red;
+  - the workflow rule off: 1 red.
+- **Not yet reconciled:** the triage's "39 rendered hits in 27 rows"
+  counts three patterns over the text a user sees. The ratchet counts
+  every text column with four patterns, because that is what the guard
+  can see without deciding which columns render. The content phase fixes
+  rows and lowers the ceiling.
