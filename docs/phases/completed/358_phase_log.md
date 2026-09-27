@@ -579,3 +579,22 @@ Bug fix #2's commit also carries the three phase documents' moves to
 `completed/`. They are pure renames, with no content change, staged by
 `git mv` before the fix was committed. It is recorded here rather than
 rewritten, because the log already cites `9292450`.
+
+### 2026-09-27 — The regression of record, after the second fix
+
+**`wholetree.sh --full` on `d93d8de`:** PASSED. 78 test files, 3833
+passed, 12 min 51 s (772.5 s wall), and a record written.
+
+Regression of record: 9639 passed, 0 failed, 0 skipped, 0 errors at `d93d8de` (25 min 49 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+This supersedes the run at `8a205ee` (9636), which came before bug fix
+#2's code. The documents that cited that run were moved to this one.
+
+**The mutation count, recounted from this log: 21.** K1 5, K2 1, K3 4,
+K4 2, K5 2, K6/K7 2, K9 3, and bug fixes #1 and #2 one each. The close-out
+documents said 22 at first; that was a miscount, corrected everywhere.
+
+**A5 reads the first regression line, not the last.** In this log, that
+is the superseded run at `8a205ee`. Both runs passed; the one of record is
+`d93d8de`. Changing A5 to take the last line is code after the regression,
+so it is left open and named in the handoff.

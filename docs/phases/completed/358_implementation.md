@@ -309,8 +309,9 @@ Evidence for each is in `358_phase_log.md`.
       7.
 - [x] K8: `check_working_rules.py` passes; workspace-docs is pushed at
       `4a5ca20`.
-- [x] Mutations: every new check was broken on purpose and seen red; 22
-      in all. Two survived at first and forced a stronger test: R7's
+- [x] Mutations: every new check was broken on purpose and seen red; 21
+      in all (K1 5, K2 1, K3 4, K4 2, K5 2, K6/K7 2, K9 3, bug fixes #1
+      and #2 one each). Two survived at first and forced a stronger test: R7's
       "anywhere", and A5 inside `check()`.
 - [x] The regression of record, through `regression.sh`, after
       `wholetree.sh --full` passed on the same commit.
@@ -332,6 +333,10 @@ Evidence for each is in `358_phase_log.md`.
 3. **Bug fix #1, not in the plan.** The guard now blocks a push that
    follows a HEAD-moving git command in the same command line. Found when
    this session's own `git commit … && git push` was blocked.
+   **Bug fix #2, at close-out:** A8 and `refute_check` took a sentence
+   naming the `## Refuter pass` block for the block itself. The block is
+   now a heading on its own line. It was code after the first regression,
+   so `--full` and the regression ran again (9639 at `d93d8de`).
 4. **Two corrections to the census before its first run:**
    - 244U's `_gate_blind_spot` matched "gate", so gates are now matched by
      their numbered names;
@@ -371,8 +376,12 @@ Evidence for each is in `358_phase_log.md`.
   are 10 and 40.
 - **K8:** Step 0's item 6, in workspace-docs `4a5ca20`.
 - **K9:** refute_check C5–C7 and the fifth column; `OLD_FORMAT` pins 7.
-- **Test floor** 9507 → 9636.
-- Regression of record: 9636 passed, 0 failed, 0 skipped, 0 errors at `8a205ee` (28 min 26 s wall, `python -m pytest -n auto --dist load`, exit 0)
+- **Test floor** 9507 → 9639.
+- Regression of record: 9639 passed, 0 failed, 0 skipped, 0 errors at `d93d8de` (25 min 49 s wall, `python -m pytest -n auto --dist load`, exit 0)
+  - It follows bug fix #2. The first run (9636 at `8a205ee`) was
+    superseded.
+  - `wholetree.sh --full` passed on `d93d8de` first: 3833 passed, in
+    12 min 51 s.
 - **Findings:** F167, F168, F169.
 
 ## Risks
