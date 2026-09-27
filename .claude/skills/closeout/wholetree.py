@@ -59,13 +59,14 @@ HERE = pathlib.Path(__file__).resolve().parent
 
 #: The guard's own limit for a fast run it starts itself: 3x fast mode's
 #: measured wall time (the operator: "~3x the AC time, not 2x"; Low Power
-#: Mode measured ~2.5x slower on the regression). Measured 2026-09-27, 26
-#: files: 29.5 s and 31.9 s, Low Power Mode off, ON BATTERY (23%): no AC run
-#: was possible, and battery is not the faster case, so 3 x 31.9 s = 96 s.
-#: The hook timeout in .claude/settings.json is 600 s, well above this,
-#: because a hook that outruns ITS timeout is killed and the command
-#: proceeds (fails open). See 358_phase_log.md.
-FAST_LIMIT_S = 96
+#: Mode measured ~2.5x slower on the regression). Measured 2026-09-27: on
+#: battery, 29.5-41.1 s (26-27 files), which first set 96 s; then on AC (the
+#: 70 W adapter, charging up from 6%), 93.2 s and 94.9 s (28 files). The
+#: formula takes the AC time: 3 x 94.9 s = 285 s. The hook timeout in
+#: .claude/settings.json is 600 s, above this plus the guard's 60 s alarm
+#: margin, because a hook that outruns ITS timeout is killed and the
+#: command proceeds (fails open). See 358_phase_log.md.
+FAST_LIMIT_S = 285
 
 #: Paths whose change makes a commit a content commit, which needs --full.
 CONTENT_PATHS = ("src/motodiag/knowledge/seed/", "src/motodiag/core/migrations.py")

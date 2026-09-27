@@ -31,7 +31,8 @@ finding_check over both folders; 27 files, about 30 s) and `--full`
   passed on exactly the commit, tree and script being pushed. Records are
   signed with a key only the command creates. With no record, the guard
   runs fast mode itself on the checked-out clean commit, under its own
-  96 s limit, and blocks on a failure or a timeout.
+  limit (`FAST_LIMIT_S`: first 96 s from a battery run, then 285 s,
+  3× the AC time of 94.9 s), and blocks on a failure or a timeout.
 - The hook timeout went from 120 s to 600 s. A `PreToolUse` hook that
   outruns its timeout is killed and the command proceeds (measured, and
   documented by Claude Code), so the guard keeps its own clock far inside.

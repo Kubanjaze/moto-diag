@@ -188,11 +188,15 @@ folders itself. What holds it:
 
 The hook timeout in `.claude/settings.json` is now 600 s. A `PreToolUse`
 hook that outruns its timeout is killed and the command runs. That was
-measured, and the hooks documentation says the same. So the guard's own
-limit, 96 s, sits far inside the timeout. **Known limit:** the 96 s is 3×
-fast mode measured on battery, since no AC run was possible. Low Power Mode
-measured about 2.5× slower on a regression. If fast mode ever outgrows the
-limit, a push blocks; it is not let through.
+measured, and the hooks documentation says the same. So the guard keeps its
+own limit, `FAST_LIMIT_S` in `wholetree.py`, inside the timeout.
+- **It is 3× fast mode's AC time.** AC was measured at 94.9 s, on the
+  70 W adapter while charging from 6%, so the limit is 285 s. A first value
+  of 96 s came from a battery run (31.9 s), before any AC run was possible.
+- **Known limit:** the AC figure was taken while charging and is about 3×
+  the battery figure. Low Power Mode measured about 2.5× slower on a
+  regression. If fast mode ever outgrows the limit, the push blocks; it is
+  not let through.
 
 ### 2026-09-27 — phase prompts live in the repo (Phase 358)
 
