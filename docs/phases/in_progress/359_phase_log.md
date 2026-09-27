@@ -359,3 +359,52 @@ had run its own before the restart, and it matched the committed diff.
 Applied literally: `apply-live`'s fresh dry run and its live diff are
 compared with `359_dryrun_diff.md`, row for row and field for field,
 timestamps aside. Any difference stops the deploy.
+
+### 2026-09-27 — The live apply
+
+**Checked before live was touched.** `apply-live`'s preflight checks that a
+fresh dry run stays in scope, then migrates live at once. It does not
+compare the fresh run with the committed diff, and the operator's condition
+asks for that. So the same computation ran first, inline, with `deploy.py`'s
+own functions: the recorded backup (hash confirmed) was copied into
+`data/deploy_scratch/`, migrated and reported. Nothing was written to the
+diff file or to live.
+- Live still equalled the backup.
+- The fresh run changes the same rows as the committed diff:
+  `checklist_items` 2, `known_issues` 26, `workflow_templates` 4, and
+  `schema_version` +1, with nothing removed. It changes the same fields to
+  the same text. The report has the same length (70,669 characters).
+- It differs in 5 lines, each a clock value: the new `schema_version`
+  row's `applied_at` and the four templates' `updated_at`.
+
+**`deploy.py apply-live 359`:** preflight passed; applied `[72]`; live
+after: 5842 rows, 88 tables, integrity ok; scope problems: none; exit 0.
+Live is at schema 72.
+
+**The live diff against the approved diff** (`359_live_diff.md` against
+`359_dryrun_diff.md`, below each header): **identical once timestamps are
+masked.** Unmasked, they differ in 10 lines, the same five clock values
+(21:23:47 in the dry run, 23:38:26 live). The F158 census on live is 36,
+as the dry run said.
+
+### 2026-09-27 — Bug fix #3: the 072 data module named a generator that was never committed
+
+- **Issue:** `migration_072_live_rows.py`'s docstring says "the generator
+  is kept in 359_phase_log.md". It is not: `gen072.py` ran in the session
+  scratchpad and was lost at the restart (above).
+- **Root cause:** the docstring was written to a plan to keep the
+  generator in the log, and the plan was not carried out. No check reads a
+  docstring's pointer.
+- **Fix:** the docstring says where the generator ran, that it was lost,
+  and where the record is. It keeps the logic, which the docstring already
+  stated, and the check that verified the output: after 072, live's
+  `known_issues` equal a fresh seed build.
+- **Files:** `src/motodiag/core/migration_072_live_rows.py` (docstring
+  only; `LIVE_ROWS_072` is unchanged).
+- **Shared cause, the third bug in one build:** #1 and #2 were defects in
+  358's checks, found by using them (A5's regex, the ratchet fixture's
+  build). #3 is a record pointing at a file that lived in `/private/tmp`,
+  the failure that "reports live in the repo" exists to stop. No cause is
+  common to all three. #3 is the prompts rule's failure again, this time
+  for a generator: a script whose output ships is committed with it, or
+  its loss is written where it is cited.
