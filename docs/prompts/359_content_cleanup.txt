@@ -1,0 +1,84 @@
+Do this: start Phase 359, the content phase the operator ordered after 358, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-27_358_closed.md, especially "What is open" and "Next";
+- docs/reports/2026-09-27_process_kinks_triage.md, with the operator's decision at its top;
+- F158, F159, F163 and F166 in docs/FOLLOWUPS.md.
+
+The operator's order and condition, verbatim (2026-09-27):
+> order after: content phase (F159/F163/F166 templates + F158's 27 rows) → 356 → 357 → Track O.
+> content phase: decide "retire vs repair" for the two old starter templates at its step 0, with a count of every template and row that references them. not before.
+
+Scope:
+1. The two starter templates that migration 007 seeded in Phase 114: generic_ppi_v1 and generic_winterization_v1. They carry F159, F166 and part of F163; F163's other part is ppi_chassis_v1.
+2. F158, internal build references in text the product shows. The operator's "27 rows" and 358's ratchet are different counts:
+   - "27 rows" is the triage's count: 39 hits in 27 rows, three patterns, the columns a user sees, on live;
+   - F158_CEILING = 75 is 358's ratchet: four patterns, every text column, on a database built from the seed.
+
+   At Step 0, reconcile the two by a stated rule and name the set this phase fixes. Exclusions:
+   - User and operational data (shops, customer_notifications) is not content this phase rewrites. Report its hits; don't edit them.
+   - A hit that is not an internal reference, such as a model name or a fault code, stays. List each exclusion with its reason, and give the exclusion rule a control.
+3. Live's thermostat row (id 31), which lags the seed (358's handoff).
+
+The first commit after row 359 goes 🚧, before Step 0's work, is a bug fix to 358's A5:
+- It reads a log's first "Regression of record" line, so after a re-run it judges the superseded run.
+- Make it read the last line. Add a known-bad fixture (a log whose first line parses and whose last does not must fail) and a good one.
+- This fixes 358's check; it does not change its rule. Log it as this phase's bug fix #1, with a pointer to 358's handoff.
+
+Step 0, before v1.0:
+- K8's checklist item: every action row 359 promises has a way for a user to do it, or the row is rewritten first.
+- Count every template, checklist item, test and document that references either starter: by slug, by name, or by any other wording.
+- Account for Gate 15:
+  - it walks both starters;
+  - it pins F166's step as its rule's one exception;
+  - its link rule fails any link to an inactive template.
+- Retire or repair is a real fork: the two ship different things. Give me both options, with the count and what each changes (links, Gate 15, what `workflow list/show` prints). I pick. Stop there for my answer.
+
+The build, after my pick:
+- One migration, the next number, carries every live change. The seed JSON changes to match, so a fresh database and live agree.
+- Every figure that goes into template text comes from a primary document named from its title page, with file and page. A claims table goes to the refute pass, under K9's rule:
+  - at most 3 rounds;
+  - after round 3, wording defects that remain go to one finding;
+  - factual or citation defects that remain mean the row doesn't ship;
+  - delete a sentence rather than rewrite it where possible;
+  - rounds 2 and later refute the diff plus its neighbouring sentences.
+- If the pick is retire:
+  - every link to a retired template is re-pointed;
+  - Gate 15's walk and its F166 exception change with it;
+  - nothing a user sees names a retired template.
+- Lower F158_CEILING to the count measured after the fixes; the ratchet asks for it.
+
+The live apply is the deploy skill's first real use (.claude/skills/deploy/SKILL.md):
+1. Write the scope file, run the dry run, and commit the diff to the phase folder. The diff records the F158 census on the copy.
+2. This alters existing live rows, which is a rule-1 stop. Show me the diff and wait for my words.
+3. Then run apply-live. It refuses unless the committed diff is unchanged.
+
+Carry forward, from 358's handoff and before it:
+- `wholetree.sh` before every commit. `--full` before the regression, and before any commit to seed data or migrations; the push guard refuses those without it.
+- Commit and push as separate commands.
+- A log that mentions refute needs the checklist, or "No refute pass ran".
+- The refute checklist has five columns.
+- No test reads data/motodiag.db.
+- No literal pin of the schema head (F124). Migration tests must survive the next migration (357 adds one).
+- Name each document from its title page.
+- A negative needs a whitespace-proof search and a control on the cited page.
+- Use the Edit tool for source edits, keep scratch files out of /tmp, and write commit messages through a quoted heredoc.
+- Rule 2: bulk reading goes through Subconscious, with the fallback route recorded per entry.
+
+The ledger:
+- Row 359 goes 🚧 before Step 0. It is the next free number; confirm that.
+- F159 and F166 close when live matches. So does F158's fixed set, with what stays open named.
+- F163 closes if every item in it is handled; otherwise say which remain.
+- One handoff, whose next is 356.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report twice:
+- At Step 0: the counts and the retire-or-repair options. Then stop.
+- At the end:
+  - what changed in the templates;
+  - the F158 counts before and after, and the new ceiling;
+  - the refute verdicts;
+  - the regression line;
+  - the dry-run diff, for my approval;
+  - the deploy outcome;
+  - the findings closed;
+  - the next step: 356.
