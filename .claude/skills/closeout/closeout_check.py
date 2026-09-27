@@ -356,9 +356,9 @@ def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
     """
     if not _MENTION.search(log_txt):
         return []
-    if "## Refuter pass" in log_txt:
-        sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
-        import refute_check
+    sys.path.insert(0, str(pathlib.Path(__file__).resolve().parents[1] / "refute"))
+    import refute_check
+    if refute_check.find_block(log_txt):
         rounds = phase not in refute_check.OLD_FORMAT
         return [f"refuter checklist: {f}"
                 for f in refute_check.check(log_txt, require_rounds=rounds)]

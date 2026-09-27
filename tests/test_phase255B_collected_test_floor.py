@@ -181,7 +181,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: F158 ratchet (10), one pin per count (9) and R7 (5 + 3 parametrized).
 #: Measured with `--collect-only -q`: 9,636.
 #:
-COLLECTED_TEST_FLOOR = 9636
+#: 9639 (Phase 358 bug fix #2, 2026-09-27) — +3: the refute block is a
+#: heading on its own line, not a substring (`TestTheBlockIsAHeading`).
+#: Measured with `--collect-only -q`: 9,639.
+#:
+COLLECTED_TEST_FLOOR = 9639
 
 
 def _collected_count() -> int:

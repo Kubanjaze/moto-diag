@@ -81,7 +81,7 @@ class TestTheOldFormat:
         fails."""
         done = ROOT / "docs" / "phases" / "completed"
         with_block = {p.name.split("_")[0] for p in done.glob("*_phase_log.md")
-                      if "## Refuter pass" in p.read_text(encoding="utf-8")}
+                      if R.find_block(p.read_text(encoding="utf-8"))}
         assert with_block == R.OLD_FORMAT
         for phase in R.OLD_FORMAT:
             text = (done / f"{phase}_phase_log.md").read_text(encoding="utf-8")
@@ -94,6 +94,27 @@ class TestTheOldFormat:
             p.write_text(_read("old_format_log.md"))
             monkeypatch.setattr(sys, "argv", ["refute_check.py", str(p)])
             assert R.main() == code, name
+
+
+class TestTheBlockIsAHeading:
+    """Bug fix #2. 358's own log said A8 needs "the `## Refuter pass`
+    block"; a substring match took that sentence for an empty block and
+    failed the close-out with C1."""
+
+    NAMED = ("A8 needs the `## Refuter pass` block, or one line.\n\n"
+             "No refute pass ran: tooling only.\n")
+
+    def test_a_sentence_naming_the_block_is_not_the_block(self):
+        assert R.find_block(self.NAMED) is None
+        assert R.check(self.NAMED) == ["C1 no '## Refuter pass' block in the phase log"]
+
+    def test_a8_passes_a_log_that_names_the_block_and_ran_none(self):
+        import closeout_check as C
+        assert C.refute_record(self.NAMED, "999") == []
+
+    def test_the_heading_on_its_own_line_is_the_block(self):
+        assert R.find_block("x\n## Refuter pass\n\n| a |") is not None
+        assert R.find_block("x\n## Refuter pass   \n") is not None
 
 
 class TestTheCloseOutUsesIt:

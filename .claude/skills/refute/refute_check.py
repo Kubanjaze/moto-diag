@@ -43,6 +43,15 @@ import re
 import sys
 
 HEADER = "## Refuter pass"
+#: The block is the HEADING, on a line of its own. A sentence that names the
+#: block in backticks is not the block (Phase 358 bug fix #2: 358's own log
+#: described A8 as needing "the `## Refuter pass` block", and a substring
+#: match read that as an empty block).
+_HEADING = re.compile(r"^## Refuter pass[ \t]*$", re.M)
+
+
+def find_block(text: str) -> re.Match | None:
+    return _HEADING.search(text)
 #: A row: | claim | kept/killed | "quote" | document p.N | round · kind · outcome |
 _ROW = re.compile(r"^\|(?P<claim>[^|]+)\|(?P<verdict>[^|]+)\|"
                   r"(?P<quote>[^|]+)\|(?P<source>[^|]+)\|(?:(?P<rko>[^|]*)\|)?\s*$")
@@ -60,10 +69,11 @@ _PAGE = re.compile(r"\bp{1,2}\.?\s*\d+|\bpage\s*\d+", re.I)
 def check(text: str, require_rounds: bool = True) -> list[str]:
     """`require_rounds=False` only for a phase in OLD_FORMAT."""
     fails: list[str] = []
-    if HEADER not in text:
+    head = find_block(text)
+    if head is None:
         return [f"C1 no '{HEADER}' block in the phase log"]
 
-    block = text.split(HEADER, 1)[1]
+    block = text[head.end():]
     block = block.split("\n## ", 1)[0]
     rows = []
     for line in block.splitlines():
