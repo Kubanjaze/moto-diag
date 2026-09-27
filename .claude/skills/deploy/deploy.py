@@ -36,7 +36,9 @@ and unchanged."
        "schema_version": {"added": 1}}}
 
 Each `changed` entry must match exactly one row of the database BEFORE the
-migration, and that row may change only in its `fields`. A table the scope
+migration, and that row may change only in its `fields`. An entry may also
+carry `"to": {field: value}`: that field must then hold exactly that value
+after the migration (Phase 359). A table the scope
 does not name may not change at all; no row may be removed unless the table
 says `"removed": N`.
 
@@ -140,8 +142,32 @@ def resolve(scope: dict, before: pathlib.Path) -> dict[str, dict[int, set[str]]]
     return out
 
 
-def check_scope(d: dict, scope: dict, allowed: dict) -> list[str]:
+def expected(scope: dict, before: pathlib.Path) -> dict[str, dict[int, dict[str, object]]]:
+    """{table: {rowid: {field: value}}} from the `to` of each `changed` entry
+    that has one: the value the field must hold after the migration (Phase
+    359: the operator approved row 4615 changing "only to its seed text")."""
+    c, out = _ro(before), {}
+    for t, spec in scope["tables"].items():
+        for entry in spec.get("changed", []):
+            if entry.get("to"):
+                (rowid,), = c.execute(f"select rowid from '{t}' where {entry['where']}",
+                                      entry.get("params", [])).fetchall()
+                out.setdefault(t, {})[rowid] = dict(entry["to"])
+    c.close()
+    return out
+
+
+def check_scope(d: dict, scope: dict, allowed: dict, to: dict | None = None) -> list[str]:
     probs = []
+    for t, rows in (to or {}).items():
+        x = d.get(t)
+        for k, values in rows.items():
+            for field, value in values.items():
+                if x is None or k not in x["b"]:
+                    probs.append(f"{t} rowid {k}: absent after the migration, scope expects {field}")
+                elif x["b"][k][1 + x["cols"].index(field)] != value:
+                    # No backticks: the diff header's parser reads values between them.
+                    probs.append(f"{t} rowid {k}: {field} is not the scope's 'to' value")
     for t, x in d.items():
         spec = scope["tables"].get(t)
         if spec is None:
@@ -242,10 +268,10 @@ def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKU
     copy = _scratch(repo, f"{phase}_dryrun_copy.db")
     backup(bk, copy)
     try:
-        allowed = resolve(scope, copy)
+        allowed, to = resolve(scope, copy), expected(scope, copy)
         applied = migrate(copy)
         d = diff(dump(bk), dump(copy))
-        probs = check_scope(d, scope, allowed)
+        probs = check_scope(d, scope, allowed, to)
         hits = census(copy)
     finally:
         _drop(copy)
@@ -300,9 +326,9 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
     backup(bk, fresh)
     try:
         scope = json.loads(scope_path(repo, phase).read_text())
-        allowed = resolve(scope, fresh)
+        allowed, to = resolve(scope, fresh), expected(scope, fresh)
         migrate(fresh)
-        probs = check_scope(diff(dump(bk), dump(fresh)), scope, allowed)
+        probs = check_scope(diff(dump(bk), dump(fresh)), scope, allowed, to)
     finally:
         _drop(fresh)
     if probs:
@@ -319,10 +345,10 @@ def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT
         return 2
     bk = pathlib.Path(head["Backup"])
     scope = json.loads(scope_path(repo, phase).read_text())
-    allowed = resolve(scope, bk)
+    allowed, to = resolve(scope, bk), expected(scope, bk)
     print("preflight passed; applying live:", migrate(db))
     d = diff(dump(bk), dump(db))
-    probs = check_scope(d, scope, allowed)
+    probs = check_scope(d, scope, allowed, to)
     diff_path(repo, phase, "live").write_text(
         f"# Phase {phase}: live after the apply, against the backup\n\n"
         f"- **Scope problems:** `{'; '.join(probs) or 'none'}`\n"

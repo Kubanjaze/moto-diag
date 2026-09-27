@@ -1,5 +1,24 @@
 # deploy — changelog
 
+## 2026-09-27 — a scope entry's `to` (Phase 359)
+
+The operator's condition on live row 4615: "the dry-run diff shows 4615
+changing only to its seed text, field for field, and nothing else." A
+scope entry's `fields` already hold "nothing else". A new optional `to`
+(`{field: value}`) holds "only to": after the migration the field must
+equal that value. Otherwise it is a scope problem, so the dry run records
+it and apply-live refuses.
+- **Checked** in the dry run, the pre-apply fresh run, and after the live
+  apply (`expected()`, and `check_scope`'s new argument).
+- **The problem message has no backticks:** the diff header's parser reads
+  a value between them, and a backtick in the message broke it (found by
+  the new test).
+- `tests/test_phase359_deploy_to.py` holds the known-bad case: the allowed
+  field changes, but to other text. Ignoring `to` turned it red (Phase 359
+  mutation M4).
+- First real use: Phase 359's scope gives every changed field its value:
+  26 known-issue rows, 4 templates, 2 items.
+
 ## 2026-09-27 — created (Phase 358, K3)
 
 The operator: "deploy script in the repo. it writes the approved dry-run

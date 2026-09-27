@@ -22,6 +22,7 @@ from pydantic import BaseModel, Field
 
 from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection
+from motodiag.core.migration_072_live_rows import LIVE_ROWS_072
 
 
 class Migration(BaseModel):
@@ -46,6 +47,149 @@ class Migration(BaseModel):
             "and the data behind it does not."
         ),
     )
+
+
+# --- Migration 072's text (Phase 359) ---
+# The workflow half is written here; the known-issue half is generated data
+# (migration_072_live_rows.py), turned into SQL by _known_issue_sql_072.
+
+_WORKFLOW_072_UP = """
+    -- The starters retire: inactive, and a description naming what replaces
+    -- them, which `workflow show` prints for a retired slug.
+    UPDATE workflow_templates
+       SET is_active = 0,
+           description = 'Retired. For a pre-purchase inspection use ppi_chassis_v1, and ppi_engine_v1 on a machine with an engine.',
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'generic_ppi_v1'
+       AND description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. For the full engine-side protocol see ppi_engine_v1.';
+
+    UPDATE workflow_templates
+       SET is_active = 0,
+           description = 'Retired. For seasonal storage use winterization_v1.',
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'generic_winterization_v1'
+       AND description = 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. For the full protocol, with each maker''s own figures cited, see winterization_v1.';
+
+    -- The two links to generic_ppi_v1 go, by deleting the clause.
+    UPDATE workflow_templates
+       SET description = replace(description, 'Companion to generic_ppi_v1 (the quick check); for the full chassis-side protocol see ppi_chassis_v1.', 'For the chassis-side protocol see ppi_chassis_v1.'),
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'ppi_engine_v1'
+       AND instr(description, 'Companion to generic_ppi_v1 (the quick check); for the full chassis-side protocol see ppi_chassis_v1.') > 0;
+
+    UPDATE workflow_templates
+       SET description = replace(description, 'Companion to generic_ppi_v1 (the quick check) and ppi_engine_v1 (the engine-side protocol).', 'Companion to ppi_engine_v1 (the engine-side protocol).'),
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'ppi_chassis_v1'
+       AND instr(description, 'Companion to generic_ppi_v1 (the quick check) and ppi_engine_v1 (the engine-side protocol).') > 0;
+
+    -- F163: three unsupported sentences on a notch, deleted; the diagnosis
+    -- gives the KTM manual's own step for a detent instead, and its warning
+    -- as the page words it ("can become damaged over time").
+    UPDATE checklist_items
+       SET instruction_text = replace(replace(instruction_text,
+               'with no detent position. A notch at the straight-ahead position is dented bearing races. The YW125Y',
+               'with no detent position. The YW125Y'),
+               '14 N·m final (PDF p. 94) — freshly adjusted but unchanged bearings only hide the notch until the grease settles.',
+               '14 N·m final (PDF p. 94).'),
+           diagnosis_if_fail = replace(replace(diagnosis_if_fail,
+               'Rocking play is loose adjustment or worn bearings; a notch at straight-ahead is brinelled races from an impact or years of load in one position — and the KTM manual warns that running with play damages the bearing seats in the frame as well (PDF p. 76).',
+               'Rocking play is loose adjustment; the KTM manual notes that running with play can damage the bearings and the bearing seats in the frame over time (PDF p. 76). For a detent position the same manual says to adjust the steering head bearing play, then check the bearing and change it if necessary (PDF p. 76).'),
+               'Adjustment is cheap; dented races mean a steering-stem strip, and seats damaged',
+               'Adjustment is cheap; seats damaged')
+     WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1')
+       AND title = 'Steering head bearings'
+       AND instr(instruction_text, 'A notch at the straight-ahead position is dented bearing races.') > 0
+       AND instr(diagnosis_if_fail, 'brinelled races') > 0;
+
+    -- The VIN check, cited (the operator: ships only if it survives the refute).
+    UPDATE checklist_items
+       SET instruction_text = replace(instruction_text,
+               'is a question, not an answer. No document in the research library',
+               'is a question, not an answer. Find the frame''s stamped identification number and compare it with the number on the title or registration: the Vespa GTS 300 i.e. ABS manual recommends "checking that the chassis registration number stamped on the vehicle corresponds with that on the vehicle documentation" (PDF p. 34), and the Honda 2018 CB500F/FA owner''s manual says the VIN is "required in order to register your motorcycle" (PDF p. 119). Take the number''s position from the machine''s own manual. No document in the research library'),
+           expected_pass = replace(expected_pass,
+               'no bent mounts, history and title clean.',
+               'no bent mounts, history and title clean, and the stamped frame number matching the title or registration.'),
+           expected_fail = replace(expected_fail,
+               'a crash story that does not match the machine.',
+               'a crash story that does not match the machine, a stamped frame number that does not match the title or registration, or that has been altered.')
+     WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1')
+       AND title = 'Frame, straightness and crash evidence'
+       AND instr(instruction_text, 'stamped identification number') = 0;
+"""
+
+_WORKFLOW_072_DOWN = """
+    UPDATE checklist_items
+       SET instruction_text = replace(instruction_text,
+               ' Find the frame''s stamped identification number and compare it with the number on the title or registration: the Vespa GTS 300 i.e. ABS manual recommends "checking that the chassis registration number stamped on the vehicle corresponds with that on the vehicle documentation" (PDF p. 34), and the Honda 2018 CB500F/FA owner''s manual says the VIN is "required in order to register your motorcycle" (PDF p. 119). Take the number''s position from the machine''s own manual.',
+               ''),
+           expected_pass = replace(expected_pass,
+               ', and the stamped frame number matching the title or registration.', '.'),
+           expected_fail = replace(expected_fail,
+               ', a stamped frame number that does not match the title or registration, or that has been altered.', '.')
+     WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1')
+       AND title = 'Frame, straightness and crash evidence';
+
+    UPDATE checklist_items
+       SET instruction_text = replace(replace(instruction_text,
+               'with no detent position. The YW125Y',
+               'with no detent position. A notch at the straight-ahead position is dented bearing races. The YW125Y'),
+               '14 N·m final (PDF p. 94).',
+               '14 N·m final (PDF p. 94) — freshly adjusted but unchanged bearings only hide the notch until the grease settles.'),
+           diagnosis_if_fail = replace(replace(diagnosis_if_fail,
+               'Rocking play is loose adjustment; the KTM manual notes that running with play can damage the bearings and the bearing seats in the frame over time (PDF p. 76). For a detent position the same manual says to adjust the steering head bearing play, then check the bearing and change it if necessary (PDF p. 76).',
+               'Rocking play is loose adjustment or worn bearings; a notch at straight-ahead is brinelled races from an impact or years of load in one position — and the KTM manual warns that running with play damages the bearing seats in the frame as well (PDF p. 76).'),
+               'Adjustment is cheap; seats damaged',
+               'Adjustment is cheap; dented races mean a steering-stem strip, and seats damaged')
+     WHERE template_id = (SELECT id FROM workflow_templates WHERE slug = 'ppi_chassis_v1')
+       AND title = 'Steering head bearings'
+       AND instr(instruction_text, 'A notch at the straight-ahead position') = 0;
+
+    UPDATE workflow_templates
+       SET description = replace(description, 'Companion to ppi_engine_v1 (the engine-side protocol).', 'Companion to generic_ppi_v1 (the quick check) and ppi_engine_v1 (the engine-side protocol).'),
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'ppi_chassis_v1'
+       AND instr(description, 'generic_ppi_v1') = 0;
+
+    UPDATE workflow_templates
+       SET description = replace(description, 'For the chassis-side protocol see ppi_chassis_v1.', 'Companion to generic_ppi_v1 (the quick check); for the full chassis-side protocol see ppi_chassis_v1.'),
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'ppi_engine_v1'
+       AND instr(description, 'generic_ppi_v1') = 0;
+
+    UPDATE workflow_templates
+       SET is_active = 1,
+           description = 'Seasonal storage: fuel stabilization, battery tender, oil change, storage position. For the full protocol, with each maker''s own figures cited, see winterization_v1.',
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'generic_winterization_v1'
+       AND description = 'Retired. For seasonal storage use winterization_v1.';
+
+    UPDATE workflow_templates
+       SET is_active = 1,
+           description = 'Quick pre-purchase inspection covering engine, chassis, fluids, electrical. For the full engine-side protocol see ppi_engine_v1.',
+           updated_at = CURRENT_TIMESTAMP
+     WHERE slug = 'generic_ppi_v1'
+       AND description = 'Retired. For a pre-purchase inspection use ppi_chassis_v1, and ppi_engine_v1 on a machine with an engine.';
+"""
+
+
+def _sql_text(value: Optional[str]) -> str:
+    """A string as an SQL literal: quotes doubled, NULL for None."""
+    return "NULL" if value is None else "'" + value.replace("'", "''") + "'"
+
+
+def _known_issue_sql_072(reverse: bool) -> str:
+    """One UPDATE per (row, field) in LIVE_ROWS_072, keyed on the row's
+    identity and the field's exact old text (the new text, reversed)."""
+    statements = []
+    for _live_id, make, model, title, field, old, new in LIVE_ROWS_072:
+        before, after = (new, old) if reverse else (old, new)
+        statements.append(
+            f"UPDATE known_issues SET {field} = {_sql_text(after)}"
+            f" WHERE make = {_sql_text(make)} AND model IS {_sql_text(model)}"
+            f" AND title = {_sql_text(title)} AND {field} = {_sql_text(before)};"
+        )
+    return "\n".join(statements) + "\n"
 
 
 # --- Migration registry ---
@@ -6087,6 +6231,35 @@ MIGRATIONS: list[Migration] = [
                AND sequence_number = 3
                AND expected_pass LIKE 'Battery kept as the machine''s own manual says;%';
         """,
+    ),
+    # Migration 072 — Phase 359 (content clean-up): the operator's pick at
+    # Step 0, B. The two starter templates migration 007 seeded (Phase 114)
+    # are retired — inactive, with a description naming what replaces them —
+    # and the two sourced templates stop naming them. ppi_chassis_v1 loses
+    # F163's three unsupported steering sentences and gains a cited VIN
+    # step. Live known-issue rows become their seed text, field by field:
+    # 24 rows lose F158's build references, and rows 31 and 4615 catch up
+    # with seed edits that never reached a database already holding them
+    # (F129). On a fresh database those rows do not exist yet when this runs;
+    # the loaders write them from the edited seed. Every statement is keyed
+    # on the exact old text; the rollback is keyed on the new.
+    Migration(
+        version=72,
+        name="content_cleanup_starters_f158",
+        description=(
+            "Phase 359: retire generic_ppi_v1 and generic_winterization_v1 "
+            "(is_active = 0, a description naming their replacements) and "
+            "remove the two links to them from ppi_engine_v1 and "
+            "ppi_chassis_v1; delete F163's three unsupported steering "
+            "sentences in ppi_chassis_v1 item 2; add a VIN check to its item "
+            "1, cited to the Vespa GTS 300 i.e. ABS manual (PDF p. 34) and "
+            "the Honda 2018 CB500F/FA owner's manual (PDF p. 119); and set "
+            "26 live known_issues rows to their seed text, field by field "
+            "(migration_072_live_rows.py): 24 lose F158's build references, "
+            "rows 31 and 4615 catch up with their seed."
+        ),
+        upgrade_sql=_WORKFLOW_072_UP + _known_issue_sql_072(reverse=False),
+        rollback_sql=_known_issue_sql_072(reverse=True) + _WORKFLOW_072_DOWN,
     ),
 ]
 

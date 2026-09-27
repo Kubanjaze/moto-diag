@@ -98,6 +98,11 @@ def show_cmd(slug: str) -> None:
         console.print(f"[red]No workflow template with slug '{slug}'.[/red]")
         console.print("[dim]Run 'motodiag workflow list' to see what exists.[/dim]")
         raise SystemExit(1)
+    if not template["is_active"]:
+        # Phase 359: a retired template's checklist is not shown. Its
+        # description says it is retired and names what replaces it.
+        console.print(f"[yellow]{slug}[/yellow]: {template['description'] or 'Retired.'}")
+        raise SystemExit(1)
 
     console.print()
     console.print(f"[bold]{template['name']}[/bold]")

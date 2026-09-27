@@ -171,7 +171,7 @@
       "Weak battery dropping voltage below the ABS threshold",
       "Contaminated fluid from missed flush intervals"
     ],
-    "fix_procedure": "1. Check battery voltage and charging first — the ABS unit is voltage-sensitive and a weak battery mimics a failed pump. 2. Check both control-circuit and wheel-circuit fluid levels per the manual; these systems have separate circuits and must be bled in the correct sequence. 3. Read stored faults with a BMW-capable tool (see the Phase 215 dealer-mode entry) to distinguish a pressure fault from an electrical one. 4. If the pump is confirmed dead, options are a replacement or rebuilt unit, or — as many owners have done — conversion to a conventional non-servo system. Both are significant jobs; quote accordingly.",
+    "fix_procedure": "1. Check battery voltage and charging first — the ABS unit is voltage-sensitive and a weak battery mimics a failed pump. 2. Check both control-circuit and wheel-circuit fluid levels per the manual; these systems have separate circuits and must be bled in the correct sequence. 3. Read stored faults with a BMW-capable tool to distinguish a pressure fault from an electrical one. 4. If the pump is confirmed dead, options are a replacement or rebuilt unit, or — as many owners have done — conversion to a conventional non-servo system. Both are significant jobs; quote accordingly.",
     "parts_needed": [
       "Brake fluid (DOT 4)",
       "ABS servo pump unit (or conversion kit)",
@@ -182,7 +182,7 @@
   },
   {
     "title": "Fuel-level strip sensor failure — hexhead R1200 and F800-family (2007–2012)",
-    "description": "The hexhead R1200 range and the 798cc F-series twins (F800GS, F650GS twin, F800S/ST) of the same era use a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. Phase 212 widened this entry from R1200GS-only after an audit found the same part fails the same way on the F800 family — on the F800GS the tank is under the seat and the sensor is reached from the pump plate above. Written from general knowledge — verify against the manual.",
+    "description": "The hexhead R1200 range and the 798cc F-series twins (F800GS, F650GS twin, F800S/ST) of the same era use a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. The same part fails the same way on the F800 family — on the F800GS the tank is under the seat and the sensor is reached from the pump plate above. Written from general knowledge — verify against the manual.",
     "make": "BMW",
     "model": "R1200GS / F800GS / F650GS twin (strip sensor)",
     "year_start": 2006,

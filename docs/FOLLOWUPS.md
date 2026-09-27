@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F169** (this file); the mobile
+At the time of writing the highest assigned is **F171** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1955,3 +1955,62 @@ session started at moto-diag's root. What would close it: resolve the
 push's repository from the command (`cd`, `git -C`) and gate only
 moto-diag's pushes, letting others through unjudged. That is a change to
 what the guard guards, so the scope is the operator's call.
+
+### F170
+
+**Known issue 902 (Triumph idle-valve hoses) applies owner reports about the Sagem-managed T595 and 955i to the Street Triple 675, and nothing on disk says the 675 is Sagem-managed**
+
+Found by Phase 359's refute round 2 (`359_phase_log.md`, Refuter pass),
+2026-09-27. Row 902's model reads "Street Triple 675 2007–2016; the same
+layout on other Sagem-era triples". Its title names the Street Triple.
+Since 359 its description reads "Owner reports say warm high idle on the
+Sagem-era triples is usually the rubber hoses from the idle air control
+valve to the intake ports perishing, not the valve". 359 made that one
+change: the claim had read as if the parts fiche said it, and it now names
+its source.
+
+That source is the entry "Triumph 955i warm high idle or stalling is
+usually an air leak at the idle valve hoses, not the stepper" ("Drawn from
+owner reports on Triumph forums"). It covers the T595 and 955i (Sagem,
+1997–2010) and the 1050 Speed Triple, not the Street Triple 675.
+
+A search of the seed data for "sagem" or "keihin" within reach of "675",
+"Street Triple" or "Daytona" found only row 902 itself. So no document on
+disk says which engine management the 675 uses. The refuter recalled,
+without a source, that the 675 platform used Keihin management.
+
+What it affects: `motodiag kb show` for row 902. A Street Triple 675 owner
+is told a Sagem-era failure is "usually" theirs.
+
+Not fixed in 359: the scope was build references and the lagging rows, and
+the question needs a document. What would close it: a Triumph document for
+the Street Triple 675's engine management, and then either narrowing row
+902's model and wording to the machines the owner reports cover, or
+sourcing the claim for the 675.
+
+### F171
+
+**Two wording defects left open by Phase 359's refute: "Rocking play is loose adjustment" (ppi_chassis_v1 item 2), and "a corpus-wide sweep" (known issue 4615)**
+
+Phase 359's refute pass ran its three rounds (`359_phase_log.md`, Refuter
+pass). Under the operator's rule (Phase 358, K9), a wording defect left
+after round 3 goes to one finding, and this is that finding. Neither is a
+factual or citation defect.
+
+- **`ppi_chassis_v1` item 2's diagnosis**, killed as wording in round 3:
+  it opens "Rocking play is loose adjustment; …". The page cited
+  beside it, the KTM 2022 250/300 EXC TPI owner's manual, gives only the
+  remedy: "If there is detectable play: – Adjust the steering head bearing
+  play." (PDF p. 76). It names no cause. The fix is to delete "is loose
+  adjustment", but a fourth round is not allowed. Round 2 had already
+  deleted "or worn bearings" from the same sentence.
+- **Known issue 4615's fix_procedure**, killed as wording in round 1:
+  "conclude only that a corpus-wide sweep found one". "Corpus" is this
+  project's word for its own knowledge base. The text is Phase 255B's seed,
+  which 072 carries to live unchanged, because the operator's condition for
+  4615 was that it change "only to its seed text". The fix is to delete
+  "corpus-wide " in the seed and the live row together.
+
+What it affects: `motodiag workflow show ppi_chassis_v1` and `motodiag kb
+show` for the CVT regulator row. What would close it: the two deletions,
+in the next content migration, refuted as their own diff.

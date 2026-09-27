@@ -30,8 +30,9 @@ import f158_census as F  # noqa: E402
 #: The count on a database built from this tree's seed. Measured 2026-09-27
 #: (Phase 358 Step 0 and build): 75 hits over every text column, four
 #: patterns. It may only fall; when a content phase removes references, it
-#: lowers this in the same commit.
-F158_CEILING = 75
+#: lowers this in the same commit. Phase 359 removed the 44 build references
+#: ("Phase N", "this phase"): 75 -> 31, every one a BMW F-series model name.
+F158_CEILING = 31
 
 
 @pytest.fixture(scope="module")
@@ -93,6 +94,59 @@ class TestTheRatchet:
         c = sqlite3.connect(again)
         assert c.execute(q).fetchall() == before
         c.close()
+
+
+class TestTheExclusions:
+    """Phase 359: what the ceiling still counts is model names, not build
+    references. The rule excludes an F-number hit only when its token is a
+    BMW F-series name in a BMW row; each exclusion has a control."""
+
+    def test_the_seed_carries_no_build_reference(self, built):
+        assert F.build_references(built) == []
+
+    def test_every_remaining_hit_is_a_bmw_model_name(self, built):
+        hits = F.census(built)
+        assert len(hits) == F158_CEILING
+        assert {h[3] for h in hits} == {"F-number"}
+        assert {h[4] for h in hits} <= F.BMW_F_MODELS
+
+    def test_a_finding_number_in_a_bmw_row_is_kept(self, built, tmp_path):
+        db = _planted(built, tmp_path, "update known_issues set description = description"
+                      " || ' See F158.' where rowid = (select min(rowid) from known_issues"
+                      " where make like '%BMW%')")
+        assert [h[4] for h in F.build_references(db)] == ["F158"]
+
+    def test_a_bmw_model_name_is_excluded(self, built, tmp_path):
+        db = _planted(built, tmp_path, "update known_issues set description = description"
+                      " || ' Fits the F800 too.' where rowid = (select min(rowid) from known_issues"
+                      " where make like '%BMW%')")
+        # The census sees the plant ("F800GS" would not do: no word boundary
+        # before the G, so the pattern never matches it), and the rule drops it.
+        assert len(F.census(db)) == F158_CEILING + 1
+        assert F.build_references(db) == []
+
+    def test_a_model_name_outside_a_bmw_row_is_kept(self, built, tmp_path):
+        db = _planted(built, tmp_path, "update known_issues set description = description"
+                      " || ' Like an F800.' where rowid = (select min(rowid) from known_issues"
+                      " where make not like '%BMW%')")
+        assert [h[4] for h in F.build_references(db)] == ["F800"]
+
+    def test_an_operational_row_is_reported_not_counted_as_content(self, built, tmp_path):
+        """Live's 'Phase 199 Smoke Shop' is a shop's name, user data: the
+        census sees it, and the content rule leaves it out."""
+        c = sqlite3.connect(built)
+        cols = [r for r in c.execute("pragma table_info(shops)")]
+        c.close()
+        required = [r[1] for r in cols if r[3] and r[4] is None and not r[5]]
+        values = ", ".join("'Phase 199 Smoke Shop'" if n == "name" else "'x'" for n in required)
+        db = _planted(built, tmp_path, f"insert into shops ({', '.join(required)}) values ({values})")
+        assert len(F.census(db)) == F158_CEILING + 1
+        assert F.build_references(db) == []
+
+    def test_a_phase_reference_is_caught(self, built, tmp_path):
+        db = _planted(built, tmp_path, "update known_issues set fix_procedure = fix_procedure"
+                      " || ' (Phase 999)' where rowid = (select min(rowid) from known_issues)")
+        assert [h[4] for h in F.build_references(db)] == ["Phase 999"]
 
 
 class TestItsControls:

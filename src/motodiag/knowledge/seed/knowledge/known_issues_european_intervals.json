@@ -26,7 +26,7 @@
   },
   {
     "title": "KTM's 390 valve interval difference is 373cc versus 399cc, not Duke versus Adventure",
-    "description": "Drawn from eleven KTM owner's manuals, the schedule tables read visually and confirmed by two independent passes. Phase 225B recorded that the 390 Adventure and 390 Duke carry different valve intervals; the figures it saw are real, but the difference is between **engines**, not between the naked bike and the adventure bike. The 373cc engine — 390 Duke MY2022 and 390 Adventure MY2021 and MY2023 — schedules the valve check with a spark-plug change every **15,000 km**. The 399cc LC4c engine — 390 Duke MY2024–25 and 390 Adventure R MY2025 — schedules it every **20,000 km**. On each engine the Duke and the Adventure agree. What genuinely differs between siblings is the row's contents — the Adventure R row is the valve check alone, the Duke row bundles the plug — and the dusty-conditions qualifier on the Adventure air filter, both of which Phase 225B also recorded and which stand. Its 'shorter interval than the Duke' sentence does not, and is corrected here.",
+    "description": "Drawn from eleven KTM owner's manuals, the schedule tables read visually and confirmed by two independent passes. Where the 390 Adventure and 390 Duke carry different valve intervals, the difference is between **engines**, not between the naked bike and the adventure bike. The 373cc engine — 390 Duke MY2022 and 390 Adventure MY2021 and MY2023 — schedules the valve check with a spark-plug change every **15,000 km**. The 399cc LC4c engine — 390 Duke MY2024–25 and 390 Adventure R MY2025 — schedules it every **20,000 km**. On each engine the Duke and the Adventure agree. What genuinely differs between siblings is the row's contents — the Adventure R row is the valve check alone, the Duke row bundles the plug — and the dusty-conditions qualifier on the Adventure air filter.",
     "make": "KTM",
     "model": "390 Duke and 390 Adventure, 373cc (to MY2023) versus 399cc (MY2024 on)",
     "year_start": 2021,
@@ -43,7 +43,7 @@
       "Both engines carry the Duke and the Adventure at the same interval in KTM's own tables",
       "No KTM valve row carries a time trigger — the check is distance-only"
     ],
-    "fix_procedure": "Identify the engine — 373cc or 399cc — before reading the interval, using the model year as the discriminator, and apply 15,000 km to the earlier engine and 20,000 km to the later one on Duke and Adventure alike. Do not schedule the valve check by age on any KTM: none of the eleven manuals marks the valve row in a month column. Keep the Adventure-specific items Phase 225B records — the dusty-conditions air-filter qualifier and the Adventure-only rows — which are where the schedules genuinely differ.",
+    "fix_procedure": "Identify the engine — 373cc or 399cc — before reading the interval, using the model year as the discriminator, and apply 15,000 km to the earlier engine and 20,000 km to the later one on Duke and Adventure alike. Do not schedule the valve check by age on any KTM: none of the eleven manuals marks the valve row in a month column. Keep the Adventure-specific items — the dusty-conditions air-filter qualifier and the Adventure-only rows — which are where the schedules genuinely differ.",
     "parts_needed": [],
     "estimated_hours": 0.2,
     "dtc_codes": [],
@@ -201,7 +201,7 @@
   },
   {
     "title": "Aprilia's 'Trust Aprilia Maintenance' sheets omit the valve check, and using them as a schedule drops it",
-    "description": "Drawn from Aprilia's own published maintenance sheets for the RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900 and Shiver 900. These sheets list oil, filter, plugs, air filter, fork oil and fluids at 1,000, 10,000, 20,000, 30,000 and 40,000 km — and **no valve row at all**. They are a consumables list, not the schedule, and a shop that treats one as the schedule drops the valve check from the machine's service life entirely. The valve interval itself could not be opened from an Aprilia schedule page in this phase; the figure this project carries — 20,000 and 40,000 km, halved for track, wet or dust — rests on the service manual cited at Phase 231 and on index snippets, and is recorded as unconfirmed here rather than restated as verified.",
+    "description": "Drawn from Aprilia's own published maintenance sheets for the RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900 and Shiver 900. These sheets list oil, filter, plugs, air filter, fork oil and fluids at 1,000, 10,000, 20,000, 30,000 and 40,000 km — and **no valve row at all**. They are a consumables list, not the schedule, and a shop that treats one as the schedule drops the valve check from the machine's service life entirely. The valve interval itself could not be opened from an Aprilia schedule page; the figure of 20,000 and 40,000 km, halved for track, wet or dust, rests on a service manual and on index snippets, and is recorded as unconfirmed here rather than restated as verified.",
     "make": "Aprilia",
     "model": "RSV4 1100 Factory, Tuono V4 1100, Dorsoduro 900, Shiver 900 — the sheets; RS 660 / Tuono 660 / Tuareg 660 intervals unverified",
     "year_start": 2017,
@@ -215,7 +215,7 @@
     "causes": [
       "The official maintenance sheets are consumables lists with no valve row",
       "Their column structure looks like a schedule, so they are read as one",
-      "The valve interval sits in the use-and-maintenance manual, which was not openable this phase",
+      "The valve interval sits in the use-and-maintenance manual, which could not be opened",
       "Aggregator figures for the 660 family have no Aprilia document behind them"
     ],
     "fix_procedure": "Do not schedule an Aprilia from the maintenance sheet; open the use-and-maintenance manual for the model and take the valve row from there. Treat the 20,000 / 40,000 km figure as the best available rather than as confirmed, and halve it for track, wet or dusty use per the manual's own rule. For the 660 family, quote nothing until the manual is opened — the figure in circulation is an aggregator's.",
@@ -226,7 +226,7 @@
   },
   {
     "title": "MV Agusta's coupon ladder starts with a merged cell, and reading it shifted by one sends you to the wrong coupon",
-    "description": "Drawn from the Turismo Veloce 800 user's manual MY2018–20, the coupon table read visually after a refuter caught a misread. MV schedules by lettered coupons rather than by a row of jobs, and the manual's table has a trap in its first cell: coupon **A** spans both the 1,000 km column and the 'every year' column as one merged cell. Read as two cells, every letter shifts by one — B becomes the annual coupon instead of 15,000 km, and the 105,000 km coupon loses its letter — which sends a mechanic to the wrong coupon in the maintenance manual. The correct ladder is A at 1,000 km and annually, then B 15,000, C 30,000, D 45,000, E 60,000, F 75,000, G 90,000, H 105,000 km, with the mileage coupons carried along with the mandatory annual one. On this ladder the valve check falls at C, E and G — every 30,000 km. The F3 675/800 MY2020 maintenance manual carries the same 30,000 km valve figure, which resolves the interval Phase 234 could not confirm.",
+    "description": "Drawn from the Turismo Veloce 800 user's manual MY2018–20, the coupon table read visually after a refuter caught a misread. MV schedules by lettered coupons rather than by a row of jobs, and the manual's table has a trap in its first cell: coupon **A** spans both the 1,000 km column and the 'every year' column as one merged cell. Read as two cells, every letter shifts by one — B becomes the annual coupon instead of 15,000 km, and the 105,000 km coupon loses its letter — which sends a mechanic to the wrong coupon in the maintenance manual. The correct ladder is A at 1,000 km and annually, then B 15,000, C 30,000, D 45,000, E 60,000, F 75,000, G 90,000, H 105,000 km, with the mileage coupons carried along with the mandatory annual one. On this ladder the valve check falls at C, E and G — every 30,000 km. The F3 675/800 MY2020 maintenance manual carries the same 30,000 km valve figure.",
     "make": "MV Agusta",
     "model": "Turismo Veloce 800 MY2015–20; F3 675/800 MY2020 on the same ladder",
     "year_start": 2015,
@@ -251,7 +251,7 @@
   },
   {
     "title": "The MV Agusta F4 shim diameter is still in no manufacturer document — the measure-first rule stands",
-    "description": "Drawn from the MV Agusta Brutale ORO/S workshop manual and the maintenance manuals on disk, plus owner reports labelled as such. Phase 234 deliberately did not print a shim diameter because sources disagreed. This phase opened the workshop manual for the early four: it gives the clearances, names the part an adjustment pad under the valve cup, sends pad replacement to the F4 engine manual — and prints **no diameter**. Owner reports give 7.48 mm, the small Japanese size, with a thickness range; that is an owner report, and other sizes circulate. The instruction from Phase 234 is therefore confirmed rather than replaced: measure a shim already in the engine before ordering, and do it before the camshafts are out.",
+    "description": "Drawn from the MV Agusta Brutale ORO/S workshop manual and the maintenance manuals on disk, plus owner reports labelled as such. The workshop manual for the early four gives the clearances, names the part an adjustment pad under the valve cup, sends pad replacement to the F4 engine manual — and prints **no diameter**. Owner reports give 7.48 mm, the small Japanese size, with a thickness range; that is an owner report, and other sizes circulate. So measure a shim already in the engine before ordering, and do it before the camshafts are out.",
     "make": "MV Agusta",
     "model": "F4 and four-cylinder Brutale",
     "year_start": 1998,

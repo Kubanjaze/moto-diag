@@ -42,7 +42,7 @@ class WorkflowTemplate(BaseModel):
     tier='shop' or higher, created_by_user_id = shop owner's user id).
     """
     id: Optional[int] = Field(None, description="Primary key")
-    slug: str = Field(..., description="Unique stable identifier (e.g., 'generic_ppi_v1')")
+    slug: str = Field(..., description="Unique stable identifier (e.g., 'ppi_engine_v1')")
     name: str = Field(..., description="Human-readable template name")
     description: Optional[str] = Field(None, description="What this workflow does")
     category: WorkflowCategory = Field(..., description="Workflow type")

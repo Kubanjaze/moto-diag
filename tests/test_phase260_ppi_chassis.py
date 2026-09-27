@@ -164,7 +164,8 @@ class TestMigration068:
         named the chassis protocol by phase number; it now names it by
         slug, and the phase number is gone."""
         desc = get_template_by_slug("ppi_engine_v1", db)["description"]
-        assert "for the full chassis-side protocol see ppi_chassis_v1" in desc
+        # Phase 359 deleted the clause before it and the word "full".
+        assert "chassis-side protocol see ppi_chassis_v1" in desc
         assert "Phase 260" not in desc
         # The rest of the description is 067's text, unchanged.
         assert desc.startswith("Engine-side protocol for buying a used ICE")
@@ -173,13 +174,12 @@ class TestMigration068:
     def test_generic_templates_untouched(self, db):
         """The migration's UPDATE is scoped to ppi_engine_v1: the generic
         PPI keeps 259's re-pointed description, and the winterization
-        template keeps its own (F158's known offender — not this phase's)."""
+        template keeps its own (F158's known offender — not this phase's).
+        Phase 359 retired both starters: their items stay, and the generic
+        PPI's description still sends the reader to ppi_engine_v1."""
         generic = get_template_by_slug("generic_ppi_v1", db)
         assert len(get_checklist_items(generic["id"], db)) == 5
-        assert (
-            "For the full engine-side protocol see ppi_engine_v1."
-            in generic["description"]
-        )
+        assert "ppi_engine_v1" in generic["description"]
         winter = get_template_by_slug("generic_winterization_v1", db)
         assert len(get_checklist_items(winter["id"], db)) == 4
 
@@ -487,7 +487,8 @@ class TestCliFrontDoor:
         assert result.exit_code == 0, result.output
         assert "ppi_chassis_v1" in result.output
         assert "ppi_engine_v1" in result.output
-        assert "generic_ppi_v1" in result.output
+        # Phase 359 retired the generic PPI: `list` no longer prints it.
+        assert "generic_ppi_v1" not in result.output
         # The slug column can wrap at the narrow test terminal, so the
         # winterization row is asserted by its category, not its slug.
         assert "winterization" in result.output
@@ -513,7 +514,9 @@ class TestCliFrontDoor:
         # the 80-column test terminal, so a spaced phrase can break
         # between its words.
         assert "Companion" in result.output
-        assert "generic_ppi_v1" in result.output
+        assert "ppi_engine_v1" in result.output
+        # Phase 359 deleted the pointer to the retired generic PPI.
+        assert "generic_ppi_v1" not in result.output
 
     def test_show_engine_now_points_at_chassis_by_name(self, db):
         """The user-visible surface F158 was filed over: what the engine

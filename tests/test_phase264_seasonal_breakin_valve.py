@@ -514,9 +514,13 @@ class TestMigration070:
 
 class TestRepoints:
     def test_generic_winterization_names_the_protocol(self, db):
-        """F158: the build reference goes, and the text names the slug."""
+        """F158: the build reference goes, and the text names the slug.
+        070 wrote GENERIC_NEW; Phase 359 retired the template, and its
+        retirement line still names winterization_v1."""
         t = get_template_by_slug("generic_winterization_v1", db)
-        assert t["description"] == GENERIC_NEW
+        assert t["description"] != GENERIC_NEW
+        assert "winterization_v1" in t["description"]
+        assert "Track N" not in t["description"]
         assert len(get_checklist_items(t["id"], db)) == 4
 
     def test_no_zuma_in_any_workflow_row(self, db):

@@ -96,14 +96,18 @@ class TestThe225BCorrection:
         e = next(x for x in raw if "373cc versus 399cc" in x["title"])
         text = _claims(e)
         assert "15,000 km" in text and "20,000 km" in text
-        assert re.search(r"corrected here", text)
+        # Phase 359 removed the build history ("Phase 225B recorded …
+        # corrected here"); the correction itself stands in the text.
+        assert "not Duke versus Adventure" in e["title"]
+        assert "the difference is between **engines**" in text
 
     def test_the_225b_entry_no_longer_claims_a_shorter_sibling_interval(self):
         raw225b = json.loads(KTM_ADV.read_text(encoding="utf-8"))
         e = next(x for x in raw225b if "service schedule" in x["title"])
         text = " ".join([e["title"], e["description"], e["fix_procedure"]] + e["causes"])
         assert not re.search(r"shorter interval than the 390 Duke", text)
-        assert re.search(r"corrected at Phase 238", text)
+        # Phase 359: the row no longer names the phase that corrected it.
+        assert not re.search(r"\bPhase \d+", text)
         assert "share an engine and its valve interval" in e["title"]
 
     def test_the_225b_entry_keeps_what_was_true(self):
