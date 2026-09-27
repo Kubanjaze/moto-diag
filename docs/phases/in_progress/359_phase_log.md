@@ -59,3 +59,17 @@ Decided without a stop, with the reason:
   a rebuild of its own content. The gap is in 358's ratchet fixture, which
   omits `db init`'s last step. It is fixed at the build as a bug fix to
   358's check.
+
+### 2026-09-27 — The operator's pick, verbatim
+
+> B, with the show change. Add the VIN step to ppi_chassis_v1 item 1 from a primary document named from its title page; if it doesn't survive the refute, that change doesn't ship and the loss is recorded. Yes to 4615 in 072, on one condition: the dry-run diff shows 4615 changing only to its seed text, field for field, and nothing else.
+
+How it is applied, literally:
+- The starters are retired (`is_active = 0`), and `workflow show` on a
+  retired slug prints that it is retired, with no items.
+- The VIN step is its own change, and it ships only if it survives the
+  refute. If it does not, 072 ships without it, and the loss is recorded
+  as a finding.
+- Row 4615: the dry run compares the copy's row, field by field, with
+  the row a seed build produces. Any other change to 4615 stops the
+  deploy.
