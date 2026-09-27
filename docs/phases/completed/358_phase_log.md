@@ -1,6 +1,6 @@
 # Phase 358 — Process clean-up — phase log
 
-**Status:** 🚧 In progress — v1.0 written, awaiting the operator before build
+**Status:** ✅ Complete (2026-09-27)
 **Branch:** `phase-358` (Opus session, main checkout; the only writer since
 the operator stopped the other session on 2026-09-27)
 
@@ -515,3 +515,67 @@ and `test -r`; its contents were not printed.
 
 No refute pass ran: 358 changed tooling, tests and rule text, and took no
 claim from a document.
+
+### 2026-09-27 — The regression of record, and the close-out
+
+**`wholetree.sh --full` on `8a205ee`:** PASSED. It ran 78 test files:
+3830 passed, 0 skipped, in 12 min 52 s (773.6 s wall). The command wrote
+the `--full` record that `regression.sh` then required.
+
+Regression of record: 9636 passed, 0 failed, 0 skipped, 0 errors at `8a205ee` (28 min 26 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The machine ran at about a third of this morning's speed throughout: on
+AC, charging up from 6%. 272's regression took 11 min 15 s.
+
+**The operator's close-out instructions, verbatim:**
+
+> ok, finish the close-out and report, once the regression is done. Two additions: file known limits 1–3 (the signing key any agent on this account can read, terminal pushes the guard never sees, and pushes in other repos judged on moto-diag's record) as findings, so they're tracked in FOLLOWUPS and named in the handoff. And push 8a205ee with the close-out: origin is still at 63494b7, though the 12:47 recap said everything was pushed.
+
+- **Findings filed:**
+  - **F167:** the signing key is readable by every process on this
+    account;
+  - **F168:** a terminal push is never checked;
+  - **F169:** pushes in other repositories are judged on moto-diag's
+    state.
+
+  `next_f_number.sh` gave F167 (moto-diag F166, mobile F147).
+  `finding_check` exit 0.
+- **`8a205ee` was committed at 12:47 and not pushed:** origin stayed at
+  `63494b7`. It goes out with the close-out.
+
+**Code after the regression:** none. The close-out commit touches only
+`docs/`, `implementation.md` and the ROADMAP.
+
+### 2026-09-27 — Bug fix #2: a sentence naming the refute block was read as the block
+
+- **Issue:** at close-out, `closeout_check` failed 358 with "A8 refuter
+  checklist: C1 the block has a header but no claim rows". 358 ran no
+  refute and records the one line A8 accepts.
+- **Root cause:** `refute_check` (since 255D) and A8 (since K7) found the
+  block by the substring `## Refuter pass`. 358's log describes A8 as
+  needing "the `## Refuter pass` block", so that sentence was read as an
+  empty block. It is the trap the prompt named for K7: a guard failing on
+  the honest sentence that names what it bans.
+- **Fix:** `refute_check.find_block` matches the heading on a line of its
+  own (`^## Refuter pass$`). A8 and the `OLD_FORMAT` equality control use
+  it. The log was not reworded to dodge the check.
+- **Files:** `.claude/skills/refute/refute_check.py`,
+  `.claude/skills/closeout/closeout_check.py`,
+  `tests/test_phase358_refute_rounds.py` (+3), and the test floor
+  (9636 → 9639).
+- **Verified:**
+  - 93 passed across the refute and close-out tests;
+  - `closeout_check` 358: complete;
+  - a mutation restoring the substring match turned 3 tests red, and was
+    reverted;
+  - fast mode passed (33.1 s; the machine's speed had recovered).
+- **Consequence:** this is code after the first regression of record
+  (9636 at `8a205ee`). `--full` and the regression run again on the
+  close-out commit, and that run is the one of record.
+
+**Commit.** `9292450`.
+
+Bug fix #2's commit also carries the three phase documents' moves to
+`completed/`. They are pure renames, with no content change, staged by
+`git mv` before the fix was committed. It is recorded here rather than
+rewritten, because the log already cites `9292450`.

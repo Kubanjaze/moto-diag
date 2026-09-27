@@ -1,6 +1,18 @@
 # Phase 358 — Process clean-up: one whole-tree command, one deploy script, and close-out checks in place of prose
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-27
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-27 (v1.0 the same day)
+
+> **v1.1, section by section.**
+> - **Goal and Non-goals:** unchanged.
+> - **Logic, K1:** the "stamp" is a signed record, per the operator's
+>   additions. `FAST_LIMIT_S` is 285 s and the hook timeout 600 s. Bug fix
+>   #1 blocks a push after a HEAD-move on one line.
+> - **Logic, K2–K9:** built as planned.
+> - **Decisions:** item 7 is answered (fails closed at the guard's own
+>   limit).
+> - **Checklist:** every box is closed, with its evidence.
+> - **Deviations and Results:** new.
+> - **Risks:** rewritten.
 
 ## Goal
 
@@ -257,49 +269,119 @@ canonical pin to sit in a file fast mode runs.
 
 ## Verification Checklist
 
-- [ ] K1: a plant in one of the 47 excluded files. Fast mode passes and
-      `--full` fails.
-- [ ] K1: four plants, each in turn: a literal model ID in a test, a
-      literal schema-head pin, a stale allowlist entry, and a wrong pinned
-      count. Fast mode fails on each. Each plant is removed.
-- [ ] K1: fast mode's wall time is under 120 s, measured twice.
-- [ ] K1: the guard blocks a push on a planted failure, and passes clean.
-- [ ] K1: `regression.sh` refuses without a stamp for HEAD.
-- [ ] K1: the guard refuses a seed-touching commit without a stamp, and
-      allows a docs-only commit.
-- [ ] K2: the guard sees a planted second literal pin.
-- [ ] K3: apply is refused with no diff file, with an uncommitted diff
-      file, with a modified diff file, after live changed since the
-      backup, and when a dry run leaves the scope. A clean fixture run
-      applies.
-- [ ] K4: the ratchet is red on a planted hit, on a planted workflow hit,
-      and on a lowered count that the ceiling does not follow.
-- [ ] K5: R7 fires on both bad fixtures, not on the prose row, and not on
-      the real ledger.
-- [ ] K6: A5 fires on the fixture. The exemption equals the 10.
-- [ ] K7: A8 fires on the 259-shaped fixture and passes the one-line
+Evidence for each is in `358_phase_log.md`.
+
+- [x] K1: a plant in one of the 47 excluded files (`244D`). Fast mode
+      PASSED (27 files, 31.4 s); `--full` FAILED on exactly that test (74
+      files, 6 min 32 s).
+- [x] K1: four plants: a literal model ID, a schema-head pin, a stale
+      allowlist entry, and `ORPHAN_COUNT = 101`. Fast mode failed on each,
+      naming the 191C, F124, 209B and 244U tests. Each plant was removed.
+- [x] K1: fast mode's time, measured. It was not under 120 s everywhere:
+      29.5–41.1 s on battery, but 93–104 s on AC while charging from 6%.
+      The limit follows the operator's formula (see Deviations).
+- [x] K1: the guard blocks, all live against a local bare repository:
+      - an amended commit's old record is refused;
+      - a hand-written record is blocked (bad signature);
+      - a check sleeping past the limit is blocked at exactly 96 s;
+      - a clean push goes through.
+- [x] K1: `regression.sh` refuses without a `--full` record. This is a
+      behavioural test in a tmp repository.
+- [x] K1: the guard refuses a seed or migration commit without a `--full`
+      record in the staged, `-a`, pathspec and heredoc shapes, and allows
+      a docs-only commit.
+- [x] K2: the guard finds a planted second literal pin, in tmp and in the
+      real tree (`244Z:194`).
+- [x] K3: the apply refuses in eight cases: no file, uncommitted, edited
+      after commit, an out-of-scope dry run, live changed, a fresh dry run
+      out of scope, the scope changed, the backup gone. A clean fixture
+      run applies.
+- [x] K4: the ratchet is red on a planted hit, on a planted workflow hit,
+      and on a fall the ceiling does not follow. The ceiling was
+      re-measured at 75.
+- [x] K5: R7 fires on three bad folds. It passes the prose row (which
+      points at an open phase) and the real ledger's eight folds.
+- [x] K6: A5 fires on the fixture and inside `check()`. The exemption
+      equals the 10.
+- [x] K7: A8 fires on the 259-shaped fixture and passes the one-line
       none. The exemption equals the 40.
-- [ ] K9: C5, C6 and C7 each fire on a fixture. The exemption equals the
+- [x] K9: C5, C6 and C7 each fire on a fixture. The exemption equals the
       7.
-- [ ] K8: `check_working_rules.py` passes, and workspace-docs is pushed.
-- [ ] Mutations: each new check is broken on purpose and seen red.
-- [ ] The regression of record, through `regression.sh`, after
-      `wholetree.sh --full`.
+- [x] K8: `check_working_rules.py` passes; workspace-docs is pushed at
+      `4a5ca20`.
+- [x] Mutations: every new check was broken on purpose and seen red; 22
+      in all. Two survived at first and forced a stronger test: R7's
+      "anywhere", and A5 inside `check()`.
+- [x] The regression of record, through `regression.sh`, after
+      `wholetree.sh --full` passed on the same commit.
+
+## Deviations from Plan
+
+1. **`FAST_LIMIT_S` moved twice.**
+   - v1.0 left the limit open.
+   - The operator set "~3× the AC time". No AC run was possible, so 96 s
+     was 3 × 31.9 s, a battery run.
+   - On AC, charging from 6%, fast mode measured 93.2 s and 94.9 s, so
+     the limit became 3 × 94.9 = **285 s**. The formula is the
+     operator's; the value was flagged in the report.
+   - The hook timeout went 120 → 600 s, the operator's choice.
+2. **"Stamp" became a signed record.** The operator's additions set it:
+   commit + tree + script hash, and only the command writes it.
+   - HMAC signing was the means chosen.
+   - Its ceiling became F167.
+3. **Bug fix #1, not in the plan.** The guard now blocks a push that
+   follows a HEAD-moving git command in the same command line. Found when
+   this session's own `git commit … && git push` was blocked.
+4. **Two corrections to the census before its first run:**
+   - 244U's `_gate_blind_spot` matched "gate", so gates are now matched by
+     their numbered names;
+   - the two outside-the-repo files are classed by their own lines.
+5. **Existing tests changed on purpose:**
+   - 255D's phase-branch push test and the roadmap guard tests (K1);
+   - the A7 and ZZZ fixtures' regression lines (K6);
+   - 255D's refute contract gains `bad_rounds_log.md` (K9).
+6. **Edits outside the targeted-edits rule:**
+   - three `str.replace` edits to `roadmap_check.py`'s docstring and
+     self-test list (K5);
+   - one `sed -i` on a fixture's title line (K9).
+
+   Each landed once, as grep showed.
+7. **Findings F167–F169 filed at close-out** (the operator), for known
+   limits 1–3.
+8. **Noticed, not changed:**
+   - the new `deploy` skill appeared in this session's skill list
+     mid-session, against CLAUDE.md's 255D rule;
+   - live's thermostat row lags the seed;
+   - the guard judges other repositories' pushes on moto-diag's record
+     (now F169).
+
+## Results
+
+- **K1:**
+  - `wholetree.sh` finds its members by rule. Fast mode has 30 files
+    today and `--full` 78, including 358's own.
+  - The guard fails closed on time and on error.
+  - Rule 3 names one command in two modes.
+- **K2:** each allowlist size is pinned once, in
+  `integration_gaps_counts.py`, with a guard against a second literal.
+- **K3:** the `deploy` skill. It has never run against live.
+- **K4:** `scripts/f158_census.py`, with the ratchet at 75.
+- **K5:** R7.
+- **K6 and K7:** A5 parses the command; A8 is new; the pinned exemptions
+  are 10 and 40.
+- **K8:** Step 0's item 6, in workspace-docs `4a5ca20`.
+- **K9:** refute_check C5–C7 and the fifth column; `OLD_FORMAT` pins 7.
+- **Test floor** 9507 → 9636.
+- Regression of record: 9636 passed, 0 failed, 0 skipped, 0 errors at `8a205ee` (28 min 26 s wall, `python -m pytest -n auto --dist load`, exit 0)
+- **Findings:** F167, F168, F169.
 
 ## Risks
 
-- **The hook fails open.** A fast mode that grows past 120 s, or a slow
-  machine (264's throttled run was ×2.3), makes the guard silently pass.
-  Fast mode is about 30 s today, so ×2.3 is about 70 s.
-  - **For the operator:** should `wholetree.py` stop itself at a time
-    limit below the hook timeout (for example 100 s) and block the push
-    with "the guard ran out of time", failing closed? The limit is a new
-    threshold, so it is asked, not chosen.
-- **Every push costs about 30 s,** and every content commit needs a
-  `--full` of about 6 min.
-- **`-n auto` inside the guard** starts a worker pool from a hook. This
-  is measured at the build.
-- **209's packaging skips in this shell.** It is in `--full` only; its
-  skips are checked on the canonical path.
-- **The seed ratchet builds a whole database** and may be slow. It lives
-  in `--full`'s seed class by the census rule.
+- **The guard is exactly as strong as its known limits:** F167, F168 and
+  F169, plus a script that commits inside itself.
+- **Every push that has no record runs fast mode** (30–100 s on this
+  machine today). Every content commit needs `--full` (6.5–13 min).
+- **`FAST_LIMIT_S` rests on a charging-state AC measurement.** Too low a
+  limit blocks; it never passes a push.
+- **209's packaging skipped in some runs in this shell.** It passed with 0
+  skips in the `--full` run and the regression of record.

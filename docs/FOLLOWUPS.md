@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F166** (this file); the mobile
+At the time of writing the highest assigned is **F169** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1893,3 +1893,65 @@ the day it is fixed and must be updated with it. What would close it: a
 migration making item 3 optional with an engine-only condition in its
 text (or narrowing the template's powertrains), and item 4's oil check
 conditioned the same way. The change to a live row is a rule-1 stop.
+
+### F167
+
+**The whole-tree record's signing key is readable by every process the `lilquant` account runs, so an agent can sign a "passed" record without running the checks**
+
+Found by Phase 358 (K1), measured 2026-09-27 (`358_phase_log.md`, "The
+operator's question on the signing key, answered"). `wholetree.sh` signs
+each record with HMAC-SHA256 under
+`/Users/lilquant/.config/motodiag/wholetree.key` (owner `lilquant`, mode
+600, 64 bytes). The key's mode stops other accounts. It does not stop
+this one, and every Claude Code session, subagent, script and `claude -p`
+run as `lilquant`. `test -r` succeeded from the building session. Whether
+the GLM sandbox profile blocks reading `~/.config` was not measured.
+
+What it affects: the push guard accepts any record whose signature
+verifies. So a record forged *with* the key lets a push through with no
+check run. Phase 358's hand-written-record control covered a forgery
+*without* the key. The record proves "written by something holding the
+key", not "written by `wholetree.sh` after a passing run". The operator
+chose to state this as a known limit, not to fix it in 358. What would
+close it: a key the agent's account cannot read. Examples: an OS keychain
+item gated by user presence, a separate account that runs the command, or
+recording the run somewhere the agent cannot write.
+
+### F168
+
+**The push guard sees only pushes made through Claude Code's Bash tool; a push from a terminal is never checked**
+
+Found by Phase 358 (K1). The guard is a `PreToolUse` hook
+(`.claude/settings.json` → `pre_push_guard.sh`), not a git hook. A
+`git push` typed in a terminal, run by an IDE, or run by any tool other
+than Claude Code's Bash tool reaches the remote with no whole-tree check,
+no ROADMAP check and no close-out check.
+
+What it affects: every guarantee the guard gives (358's whole-tree
+record, R1–R7, the close-out contract on master) holds only for pushes an
+agent makes through Bash. The contract tests still run with the suite, so
+a red check surfaces at the next regression, but not at the push. What
+would close it: a git `pre-push` hook (or a server-side check) calling
+the same functions. It would need its own lockout-safety design, since a
+git hook cannot be edited around with the Write tool the way
+`settings.json` can.
+
+### F169
+
+**The push guard judges every `git push` against moto-diag's own checkout, whichever repository the push is in**
+
+Found by Phase 358, seen live on 2026-09-27. The guard resolves the
+pushed commits and records in the repository it lives in (`HERE.parents[2]`),
+not in the directory the push runs in. The workspace-docs push of `4a5ca20`
+(12:33) was logged as "push 63494b7ca4cb: accepted fast record", the
+record of moto-diag's HEAD. That makes two errors possible:
+- a push in another repository is **blocked** for moto-diag's state (a
+  dirty moto-diag tree, or no record);
+- it is **let through** on moto-diag's record, although nothing about the
+  other repository was checked.
+
+What it affects: pushes of workspace-docs and moto-diag-mobile made from a
+session started at moto-diag's root. What would close it: resolve the
+push's repository from the command (`cd`, `git -C`) and gate only
+moto-diag's pushes, letting others through unjudged. That is a change to
+what the guard guards, so the scope is the operator's call.
