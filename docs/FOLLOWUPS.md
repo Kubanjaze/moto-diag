@@ -1494,7 +1494,7 @@ surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's honest-gap tests
 failing the day they land. Pinned by `tests/test_phase258_gate14.py`, the
 same shape as Gate 13's F99 for electric makes.
 
-### F158
+### F158 — fixed set CLOSED by migration 072 (Phase 359, live 2026-09-27); open for the wording its patterns do not match
 
 **Text the product shows users carries internal build references: 34 "Phase N" / "Track N" mentions in 25 rendered rows, 23 of them known issues**
 
@@ -1591,7 +1591,41 @@ The seven new checklist items carry none. This is the case the proposed
 guard exists for: without the check, new content brings references in
 at the same rate old ones are cleaned out.
 
-### F159
+**Fixed set closed 2026-09-27 by Phase 359's migration 072, applied live
+under the operator's scoped approval.** Phase 358 had landed the guard as
+a ratchet (`scripts/f158_census.py`, `F158_CEILING` 75).
+- **The fixed set:** every "Phase N", "Track X" and "this phase" hit in a
+  table the seed or a migration writes. That is 44 hits in 25 seed rows,
+  and 43 in 24 live rows (`359_step0.md`, S0-5). The two starter
+  templates' references went with their retirement.
+- **All are removed, from the seed and from live.** A seed build's census
+  is 75 → **31**, and each of the 31 is a BMW F-series model name
+  (F650–F900 in a BMW row), which the exclusion rule
+  (`f158_census.build_references`, with controls) keeps as content.
+  `F158_CEILING` is 31. On live the census is 79 → **36**: the 31, plus 5
+  hits in shop data (`shops.name` 1, `customer_notifications.body` 4),
+  which are user data and were not edited.
+- **Measured on live `known_issues` after 072,** over title, description,
+  symptoms, causes, fix_procedure and parts_needed, against the pre-359
+  backup: "Phase N" 32 → 0, "this phase" 11 → 0.
+
+**Still open.** Internal wording the four patterns do not match, counted
+on live `known_issues` in the same columns:
+- "this project": 13 hits in 10 rows;
+- "corpus": 30 in 23;
+- "census": 6 in 4;
+- "refut…": 4 in 4;
+- "this file": 2 in 2.
+
+One "corpus" hit is 4615's "corpus-wide", which is F171. The three data
+files named above (`advanced/data/parts.json`,
+`hardware/compat_data/adapters.json` and `compat_matrix.json`) were
+outside 359's scope, and whether they are rendered is still not checked.
+What would close the rest: a wording pass over those rows and a decision
+on each data file. Each is refuted as its own diff, with the census
+widened to the words it removes.
+
+### F159 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
 **`generic_ppi_v1`'s starter "Brake and tire condition" item carries uncited figures the library's documents contradict or do not support**
 
@@ -1636,6 +1670,16 @@ documents and scope them per-machine, or replace the numbers with the
 deferral pattern 260's items use (name the check, defer the figure to
 the machine's own manual), by migration, with a pin that no uncited
 figure returns.
+
+**Closed 2026-09-27 by Phase 359's migration 072, applied live under the
+operator's scoped approval, by retirement:**
+- `generic_ppi_v1` is inactive, so `workflow list` does not print it.
+- `workflow show generic_ppi_v1` prints only its retirement line, naming
+  `ppi_chassis_v1` and `ppi_engine_v1`, and exits 1.
+- No active template names it; Gate 15's link rule holds that.
+
+The item's rows are kept, inactive, as history. The rollback restores
+them. `tests/test_phase359_content_cleanup.py` pins the retirement.
 
 ### F160 — CLOSED by migration 070 (Phase 264, live 2026-09-26)
 
@@ -1738,7 +1782,7 @@ Neither changes a figure. What would close it: a migration keyed on the
 old text that rewords both, with the operator's approval for the
 live-row change (rule 1).
 
-### F163
+### F163 — CLOSED by migration 072 (Phase 359, live 2026-09-27): the starter part retired, the chassis sentences deleted
 
 **Live starter and chassis text keeps defects outside F161's and F162's scope: an unsourced title, two unsourced steps, a fail criterion one maker prescribes, and three unsupported steering-bearing sentences**
 
@@ -1794,6 +1838,20 @@ A replacement for each is drafted, with its page quote, in
 `262_phase_log.md` (Refuter pass, round 1, "Outside the scope: F163").
 What would close it: a migration keyed on the old text, with the
 operator's approval for the live-row change (rule 1).
+
+**Closed 2026-09-27 by Phase 359's migration 072, applied live under the
+operator's scoped approval.**
+- **The starter part is closed by retirement.** `generic_winterization_v1`
+  is inactive. `workflow show` prints only its retirement line, naming
+  `winterization_v1`, and exits 1.
+- **The chassis part is closed by deletion.** In `ppi_chassis_v1` item 2
+  (live id 18), the notch sentence, "freshly adjusted … grease settles"
+  and the "brinelled races" clause are gone. The diagnosis now follows the
+  KTM 2022 250/300 EXC TPI OM p. 76: adjust the play, then check the
+  bearing and change it if necessary.
+
+The refute's remaining wording defect in that item, "Rocking play is loose
+adjustment", is F171.
 
 ### F164
 
@@ -1861,7 +1919,7 @@ engine, pass or fail per item, a printed summary, nothing saved, no
 schema change); then **row 357**, saved runs, with its own migration for
 runs and per-item results tied to a bike or work order.
 
-### F166
+### F166 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
 **`generic_ppi_v1` covers electric machines but requires an engine compression test, and asks every machine for its engine oil**
 
@@ -1893,6 +1951,14 @@ the day it is fixed and must be updated with it. What would close it: a
 migration making item 3 optional with an engine-only condition in its
 text (or narrowing the template's powertrains), and item 4's oil check
 conditioned the same way. The change to a live row is a rule-1 stop.
+
+**Closed 2026-09-27 by Phase 359's migration 072, applied live under the
+operator's scoped approval, by retirement.**
+- `generic_ppi_v1` is inactive, and `workflow show` refuses it.
+- Gate 15 no longer walks it, and W4's exception set is ∅, so the gate
+  now allows no required engine step on an electric walk.
+- The electric pre-purchase walk is `ppi_chassis_v1`, since
+  `ppi_engine_v1` covers ICE and hybrid only.
 
 ### F167
 

@@ -1,6 +1,12 @@
 # Phase 359 — Content clean-up: the starter templates retired, F158's build references removed, two lagging live rows brought to their seed
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-27
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-27 (v1.0 the same day)
+
+**Outcome (v1.1).** Shipped as planned. Migration 072 is live (schema 72),
+applied under the operator's scoped approval, and its live diff equals the
+approved dry-run diff once timestamps are masked. The VIN step survived the
+refute and shipped. Regression of record: 9676 passed, 0 failed at
+`32d281a`. Deviations and Results are at the end.
 
 ## Goal
 
@@ -164,28 +170,102 @@ description (which names the replacements), then exits 1, with no items.
     for the operator; apply-live.
 12. Close-out: v1.1, the row, the findings, the handoff (next: 356).
 
+**v1.1:** all twelve done, with commits in the log. Item 2 is `2973d1a`;
+items 3–10 are `953c329`; item 11's dry run is `5ffb999` and its live apply
+`ccdc9ae`. Bug fixes #3 and #4, which were not planned, are `9e8e753`
+and `32d281a`.
+
 ## Claims for the refute pass
 
-Filled at the build: the VIN sentence with its document, file and page,
-and every changed sentence with its old and new text.
+Filled at the build. The checklist is in `359_phase_log.md` ("Refuter
+pass", 11 rows, five columns), and the verdicts are in
+`359_refute_verdicts.md`. The inputs, generated from the data, are
+`359_refute_input.md` (51 blocks), `_r2` (8) and `_r3` (1).
+- **The VIN step:** the Vespa GTS 300 i.e. ABS manual, PDF p. 34, and the
+  Honda 2018 CB500F/FA owner's manual, PDF p. 119, each named from its
+  rendered title page. Kept in round 1.
+- **The known-issue edits:** 42 blocks, old text against new. 5 were
+  killed in round 1: 4 fixed, and C48 left open as F171.
+- **Three rounds** under K9's cap. After round 3, one wording defect
+  ("Rocking play is loose adjustment") went to F171.
 
 ## Verification Checklist
 
-- [ ] Bug fix #2 red before, green after
-- [ ] `workflow list` prints 13 templates; `show` on each retired slug
+- [x] Bug fix #2 red before, green after
+- [x] `workflow list` prints 13 templates; `show` on each retired slug
   prints "retired" and exits 1
-- [ ] Gate 15 green with ∅ exceptions; its link rule finds no active
+- [x] Gate 15 green with ∅ exceptions; its link rule finds no active
   template naming a retired one
-- [ ] The census on a seed build is 31, all BMW names; `F158_CEILING` = 31
-- [ ] The exclusion rule's controls fire
-- [ ] The 4615 and 31 fields equal the seed build's, field for field, on
+- [x] The census on a seed build is 31, all BMW names; `F158_CEILING` = 31
+- [x] The exclusion rule's controls fire
+- [x] The 4615 and 31 fields equal the seed build's, field for field, on
   the built-database test
-- [ ] The rollback round trip restores every changed row
-- [ ] The refute checklist passes `refute_check`
-- [ ] `wholetree.sh --full` passes; the regression of record at a hash
-- [ ] The dry-run diff is committed and approved; apply-live matches it
-- [ ] F159, F166 and F158's fixed set closed; F163 closed or its remainder
+- [x] The rollback round trip restores every changed row
+- [x] The refute checklist passes `refute_check`
+- [x] `wholetree.sh --full` passes; the regression of record at a hash
+- [x] The dry-run diff is committed and approved; apply-live matches it
+- [x] F159, F166 and F158's fixed set closed; F163 closed or its remainder
   named
+
+## Deviations from Plan
+
+1. **Four bug fixes, where the plan named two.**
+   - #1 (A5 reads the last regression line) and #2 (the ratchet fixture's
+     model rebuild) were planned.
+   - #3 was not planned. `migration_072_live_rows.py`'s docstring pointed
+     at a generator "kept in 359_phase_log.md". It lived in the scratchpad
+     and was lost at the restart. The docstring now says so (`9e8e753`),
+     and `LIVE_ROWS_072` is unchanged.
+   - #4 was not planned. 358's refute-rounds exemption control compared
+     every closed checklist with `OLD_FORMAT`, so 359's new-format log
+     failed it at close-out (`32d281a`).
+   - **Shared cause** of #1, #2 and #4: 358's checks, proven only on
+     hand-written fixtures, failed on their first real use. #3 is separate.
+     Both regressions ran again: `9e8e753`, then `32d281a`.
+2. **The machine restarted at the rule-1 stop.**
+   - A new session resumed from `docs/prompts/359_resume_after_restart.txt`.
+   - The log records what the lost scratchpad held: the library parse,
+     `gen072.py`, Step 0's scripts, `mutate.py` and the GLM runs' JSON
+     outputs. Every result the documents cite is written in them, and
+     nothing the diff or the refute depends on was lost.
+3. **The exact-match check before the live apply, not in the plan.**
+   `apply-live`'s preflight checks only the scope. The operator's approval
+   asked for a stop on any row or field difference. So the same
+   computation ran first with `deploy.py`'s own functions, and matched
+   except for five clock values.
+4. **Existing tests changed on purpose.**
+   - Gate 15, 259, 260 ×3, 261 and 264 pinned the starters' pre-359
+     state.
+   - Three pins in 354 and 238 asserted text that carried a removed build
+     reference. Each now asserts the same claim without it.
+5. **Refute outcomes.** "Rocking play is loose adjustment" and 4615's
+   "corpus-wide" ship as wording defects, under F171. The operator's 4615
+   condition allows only seed text, and round 3 was the last.
+6. **`COLLECTED_TEST_FLOOR` stays at 9639,** with 9676 collected. Raising
+   it at close-out would change a test after the regression of record and
+   force a third regression. A floor rises at no cost later; nothing here
+   let it fall.
+7. **One `--full` run failed once in parallel and has not reproduced:**
+   `test_phase78_gate2_integration.py::…::test_cross_platform_brakes`, 4 of
+   3863. It passed in every run since, including three `--full` runs and
+   both regressions. The record is in the log and the handoff.
+
+## Results
+
+| | |
+|---|---|
+| Migration | 072, schema 71 → 72, live since 2026-09-27 19:38 |
+| Live change | `checklist_items` 2, `known_issues` 26, `workflow_templates` 4 changed; `schema_version` +1; nothing removed; 5841 → 5842 rows, integrity ok |
+| Live diff against the approved diff | identical with timestamps masked; 10 lines differ unmasked, five clock values |
+| Backup | `~/backups/motodiag/motodiag_pre359_20260927_172347.db`, sha256 `791af9a2…edd34` |
+| `workflow list` on live | 13 templates, neither starter; `show` on each starter prints its retirement line and exits 1 |
+| F158 census | seed build 75 → 31, all BMW F-series names; live 79 → 36 (31 + 5 in shop data); `F158_CEILING` 31 |
+| Build-reference hits in live `known_issues` | "Phase N" 32 → 0, "this phase" 11 → 0 |
+| Refute | 3 rounds; VIN step kept; 5 + 1 + 1 killed; F170 and F171 filed |
+| Mutations | 8 of 8 red |
+| New tests | `test_phase359_content_cleanup.py` (17 functions), `test_phase359_deploy_to.py`, `test_phase359_a5_last_line.py` (4) |
+| Findings | closed F159, F163, F166 and F158's fixed set; filed F170, F171 |
+| Regression of record | 9676 passed, 0 failed, 0 skipped, 0 errors at `32d281a` (23 min 52 s wall, `python -m pytest -n auto --dist load`) |
 
 ## Risks
 
@@ -195,3 +275,8 @@ and every changed sentence with its old and new text.
   any row outside the scope stops it.
 - **A content test pins a sentence this phase removes.** The regression
   finds it; the test is updated to the new text, with the reason.
+
+**v1.1, how they fell:**
+- The VIN sentence survived.
+- Live had not drifted: `apply-live` found live equal to the backup.
+- Three content pins did fire, and were updated (Deviation 4).

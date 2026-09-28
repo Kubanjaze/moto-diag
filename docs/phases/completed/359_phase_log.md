@@ -1,6 +1,6 @@
 # Phase 359 — Content clean-up: starter templates and build references — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-27)
 **Branch:** `phase-359` (Opus session, main checkout, the only writer)
 
 ---
@@ -408,3 +408,97 @@ as the dry run said.
   common to all three. #3 is the prompts rule's failure again, this time
   for a generator: a script whose output ships is committed with it, or
   its loss is written where it is cited.
+
+**Commit.** `9e8e753`.
+
+### 2026-09-27 — The regression of record, run again after the docstring fix
+
+Bug fix #3 changed a file under `src/` after the run at `953c329`, so
+`--full` and the regression ran again.
+
+**`wholetree.sh --full` on `9e8e753`:** PASSED, 80 test files, 3863 passed,
+516.0 s wall, and a record written
+(`0f81aa49…_full.json`).
+
+Regression of record: 9676 passed, 0 failed, 0 skipped, 0 errors at `9e8e753` (20 min 56 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+This supersedes the run at `953c329` (also 9676), which came before bug
+fix #3's docstring. `test_cross_platform_brakes`, the one failure seen
+once in parallel, passed again. It is itself superseded below, after bug
+fix #4.
+
+### 2026-09-27 — Bug fix #4: 358's refute-rounds exemption control failed the first new-format close
+
+- **Issue:** the close-out's `wholetree.sh --full`, with 359's documents
+  moved to `completed/`, failed 1 of 3863:
+  `test_phase358_refute_rounds.py::TestTheOldFormat::test_the_exemption_is_exactly_the_checklists_written_before_358`.
+  It reported the extra item `'359'`.
+- **Root cause:** the control compared **every** closed log carrying a
+  `## Refuter pass` checklist with `OLD_FORMAT`. Its docstring says the
+  set is the logs that **lack** the fifth column. 358's own log has no
+  checklist, so 359 is the first close written in the new format, and the
+  first to reach the gap.
+- **Fix:** the closed logs that fail the full check (rounds required) must
+  be exactly `OLD_FORMAT`, and each of them passes the old-format check.
+  For a new close this is stricter than before: it must pass the full
+  check. `OLD_FORMAT` and `refute_check.py` are unchanged, so no rule or
+  threshold moved.
+- **Files:** `tests/test_phase358_refute_rounds.py`.
+- **Verified:**
+  - the old test was red on the real tree, and the fixed file passes
+    (20 tests);
+  - in memory, 359's log with its fifth column stripped fails C5, and
+    would break the equality;
+  - the 244G scanner over `tests/` found 0;
+  - `--full`: 3863 passed.
+- **Shared cause, four bugs in one build.** #1 (A5 read the first
+  regression line), #2 (the F158 ratchet's fixture) and #4 are all 358's
+  checks failing on their first real use. Each had been proven on
+  hand-written fixtures, but never on a real close in the format it
+  introduced. #3 is separate (above). For the next check that introduces
+  a format, the control should include one real document in that format,
+  or say that none exists yet.
+
+**Commit.** `32d281a`.
+
+### 2026-09-27 — The regression of record, run again after the exemption control's fix
+
+The close-out documents were stashed, so the tree was clean at `32d281a`.
+
+**`wholetree.sh --full` on `32d281a`:** PASSED, 80 test files, 3863 passed,
+618.7 s wall, and a record written (`e9ed375f…_full.json`).
+
+Regression of record: 9676 passed, 0 failed, 0 skipped, 0 errors at `32d281a` (23 min 52 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+This supersedes the run at `9e8e753`.
+
+### 2026-09-27 — Close-out decisions
+
+- **Live, checked through the CLI after the apply** (read-only commands;
+  the database's mtime stayed at the apply, 19:38:26):
+  - `workflow list` prints 13 templates, and neither starter;
+  - `workflow show generic_ppi_v1` and `… generic_winterization_v1` each
+    print the retirement line and exit 1;
+  - `workflow show ppi_chassis_v1` carries the VIN sentence.
+- **F158's open remainder, re-measured on live after 072.** The count
+  covers `known_issues` title, description, symptoms, causes,
+  fix_procedure and parts_needed, and the backup is the control:
+
+  | pattern | pre-359 backup | live |
+  |---|---|---|
+  | "Phase N" | 32 in 23 rows | 0 |
+  | "this phase" | 11 in 9 | 0 |
+  | "this project" | 15 in 12 | 13 in 10 |
+  | "corpus" | 29 in 22 | 30 in 23 |
+  | "census" | 7 in 4 | 6 in 4 |
+  | "refut…" | 5 in 4 | 4 in 4 |
+  | "this file" | 2 in 2 | 2 in 2 |
+
+  "Corpus" rose by one, because 4615's seed text reached live with
+  "corpus-wide" (F171). F158 stays open for this wording, and for the
+  three data JSON files its census named, which were not in 359's scope.
+- **`COLLECTED_TEST_FLOOR` stays 9639** (9676 collected). Raising it now
+  would be a test change after the regression of record, and would cost a
+  third regression. It only ever needs to not fall.
+- **Findings:** F159, F166 and F163 are closed. F158's fixed set is
+  closed, and F158 stays open for its remainder. F170 and F171 stay open.
