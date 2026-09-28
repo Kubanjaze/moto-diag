@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F171** (this file); the mobile
+At the time of writing the highest assigned is **F174** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1919,6 +1919,13 @@ engine, pass or fail per item, a printed summary, nothing saved, no
 schema change); then **row 357**, saved runs, with its own migration for
 runs and per-item results tied to a bike or work order.
 
+**Phase 356 (closed 2026-09-28) met the first half and not the second.**
+`motodiag workflow run <slug>` works a template's checklist through the
+step engine, one item at a time, with pass, fail or skip per item and a
+printed summary. Nothing records the run or an item's result: the answers
+end with the terminal session, by the row's scope. So F165 stays open
+until row 357 saves a run and its per-item results.
+
 ### F166 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
 **`generic_ppi_v1` covers electric machines but requires an engine compression test, and asks every machine for its engine oil**
@@ -2080,3 +2087,130 @@ factual or citation defect.
 What it affects: `motodiag workflow show ppi_chassis_v1` and `motodiag kb
 show` for the CVT regulator row. What would close it: the two deletions,
 in the next content migration, refuted as their own diff.
+
+### F172
+
+**`deploy.py apply-live` does not compare its fresh dry run with the committed diff the operator approved; it checks only that the fresh run stays inside the scope**
+
+Named open by Phase 359's handoff (`docs/handoffs/2026-09-27_359_closed.md`,
+"What is open"), filed by Phase 356 on 2026-09-27. In
+`.claude/skills/deploy/deploy.py`, `preflight()` refuses when the diff file
+is missing, uncommitted or changed, when it records a scope problem, when
+the backup or scope file no longer hashes as recorded, and when live has
+drifted from the backup. Its last check migrates a fresh copy and passes
+it to `check_scope()`. Nothing compares that fresh diff with the rows and
+fields in `<phase>_dryrun_diff.md`. A migration edited after the dry run,
+whose new changes still fall inside the scope's tables, counts and named
+fields, would be applied without a refusal.
+
+What it affects: every live apply. The operator's approval of migration
+072 asked for exactness ("stop if the fresh dry run differs in any row or
+field"). 359 met that by hand, running the same computation with
+`deploy.py`'s functions before live was touched and comparing it with the
+committed diff: identical except for five clock values. The skill did not
+enforce it.
+
+**This is a gap to close before the next live apply, which is Phase 357's
+migration.** What would close it: `apply-live` refuses unless the fresh dry
+run's diff equals the committed one, with timestamp columns masked as 359
+masked them, and a planted edit to a migration's row values is seen red.
+Where the fix goes (a K-list item, its own phase, or 357's Step 0) is the
+operator's call.
+
+### F173
+
+**`test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_cross_platform_brakes` failed once in a parallel run and has not reproduced**
+
+Recorded by Phase 359 (`docs/phases/completed/359_phase_log.md`, the
+first `wholetree.sh --full`), filed by Phase 356 on 2026-09-27. The test
+builds a database under `tmp_path`, loads every
+`data/knowledge/known_issues_*.json` from `SEED_DATA_DIR`, and asserts that
+`search_known_issues(query="brake fluid")` returns at least 5 rows; a seed
+build returns 18. In 359's first `--full` (4 failed, 3859 passed) it was
+one of the four failures. The other three were pins on text 359 removed.
+
+What 359 recorded:
+- its traceback was lost: `wholetree.py` keeps only the last 1500
+  characters of pytest's output (`wholetree.py:259`), which cut two of the
+  four FAILED lines;
+- it passed alone, in a direct run over the same 80 member files, in the
+  next two `--full` runs and in the regressions at `953c329`, `9e8e753`
+  and `32d281a`;
+- nothing in 359's diff touches brake-fluid text; every test that writes
+  a known-issue JSON writes it under `tmp_path`; the search is plain SQL.
+
+Phase 356 checked the tests that write near the seed directory (256,
+255C, 358's F158 ratchet, 255B, 255): each writes under `tmp_path`. Not
+excluded: a `--full` run while the working tree's seed JSON was being
+edited. `wholetree.py` records only on a clean tree but will run on a
+dirty one, and 359's log does not say whether the tree was clean or
+still being edited at that run. If a seed file was rewritten during it,
+the count would have been read from a file mid-edit. This is a
+hypothesis, not a finding of cause.
+
+Rule 3 says a test that fails only in parallel is a bug to fix. What would
+reproduce it:
+- run the test repeatedly under `-n auto --dist load` beside the rest of
+  the `--full` member set at 359's first-run commit, keeping the junit
+  whole (`--junitxml`), until it fails or a stated number of runs pass;
+- rerun that set while a seed file is rewritten in place during the run,
+  to test the dirty-tree hypothesis;
+- `wholetree.py` keeping every FAILED line, so the next occurrence carries
+  its traceback.
+
+What would close it: a reproduction and its fix, or a stated run count
+with no failure and the truncation fixed so a recurrence is not lost.
+
+### F174
+
+**`motodiag garage add` stores a bike as `ice` when `--powertrain` is not given, so an electric bike added without the flag is recorded as an engine machine**
+
+Measured by Phase 356's Step 0 (`356_step0.md`, S0-4, option B) and
+filed at the operator's request on 2026-09-28. Not fixed in 356. The
+default is set in three places, all of them `ice`:
+- `garage add`'s `--powertrain` option, `default="ice"`
+  (`src/motodiag/cli/main.py:442`);
+- `VehicleBase.powertrain`, `Field(PowertrainType.ICE, …)`
+  (`src/motodiag/core/models.py:149`);
+- the `vehicles.powertrain` column, `TEXT DEFAULT 'ice'`
+  (`src/motodiag/core/migrations.py:211`, Phase 110's migration, whose
+  description says "Existing rows get ICE/4-stroke defaults"; a
+  rollback's rebuilt `vehicles` table at `:2916` carries the same
+  default).
+
+So the stored value cannot tell "the mechanic said ice" from "nobody
+said". The readers of that value (grep of `src/motodiag` for the
+vehicle's `powertrain`):
+- **diagnose** (`cli/diagnose.py:466`, `:542`) passes it to
+  `_load_known_issues`. There, retrieval gives it to
+  `resolve_transmission` (`knowledge/transmission.py`, rung 3: an
+  electric machine with no gearbox defaults to `direct_drive`), and
+  `prompt_rows` puts electric rows first only when it reads `electric`.
+- **the predictor** (`advanced/predictor.py:243`) passes it to
+  `rows_for_machine`, as above.
+- **the priority scorer** (`shop/priority_scorer.py:321`) reads the same
+  column.
+- **the safety scoping** (`cli/diagnose.py:721` into `SafetyChecker`,
+  `engine/safety.py:398–417`). `None` shows every rule, but `ice` is not
+  `None`. Seven rules are scoped `("ice", "hybrid")`, so an electric bike
+  stored as ice gets those alerts as well. No rule is hidden by the wrong
+  value, since no rule is scoped to electric alone. The checker's
+  docstring says "a blank or wrong value must not be able to hide a
+  fuel-leak warning", and that still holds.
+
+What it affects: an electric bike added with `garage add` and no
+`--powertrain` loses rung 3's `direct_drive` default and the electric-first
+ordering, and is scored and alerted as an engine machine. Phase 357's bike
+link would inherit the value: a saved run tied to a bike would read `ice`.
+The garage's photo path (`garage_add_from_photo`) stores a vision guess
+instead and is not affected by this default.
+
+Not measured: how many live garage rows are electric machines stored as
+`ice`. That needs a read of the live database, which no phase has
+scoped.
+
+What would close it: the operator's choice between two fixes. One is to
+require the powertrain at `garage add`, or ask for it when it is missing.
+The other is to store unknown (`NULL`), which the readers above already
+treat as "show everything". That second fix changes a column default,
+which needs a migration. A census of live rows would come with either.

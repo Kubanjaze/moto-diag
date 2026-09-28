@@ -148,7 +148,8 @@ class TestEveryEntryExplainsItself:
         number, not a mood."""
         engine = {k: v for k, v in MODULE_ISLANDS.items()
                   if k.startswith("motodiag.engine.") and k != "motodiag.engine.history"}
-        assert len(engine) == 6  # 244Y deleted cost, evaluation, retrieval
+        # 244Y deleted cost, evaluation, retrieval; Phase 356 wired workflows.
+        assert len(engine) == 5
         scored = [v[1] for v in engine.values() if "onsensus" in v[1]]
         assert len(scored) == len(engine), "every remaining engine entry carries its audit score"
 

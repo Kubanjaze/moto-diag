@@ -21,6 +21,10 @@ from support.source_guards import code_of
 
 SRC = Path(__file__).resolve().parent.parent / "src" / "motodiag" / "engine"
 SHELVED = ["repair", "parts", "workflows", "intermittent", "correlation", "confidence"]
+# Phase 356 wired `workflows`: row 356, as the operator scoped it, connects the
+# templates' checklists to its DiagnosticWorkflow. None of this file's four
+# content pins is about it; its predefined scripts stay unreached (ORPHANS).
+STILL_ISLANDS = [name for name in SHELVED if name != "workflows"]
 
 
 # ---------------------------------------------------------------------------
@@ -182,7 +186,7 @@ class TestStillShelved:
     def test_the_module_imports(self, name):
         importlib.import_module(f"motodiag.engine.{name}")
 
-    @pytest.mark.parametrize("name", SHELVED)
+    @pytest.mark.parametrize("name", STILL_ISLANDS)
     def test_the_module_is_still_on_the_islands_table(self, name):
         """Nothing here made anything reachable. The wire-or-delete decision
         is the operator's, and it is cleaner now."""
