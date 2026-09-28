@@ -93,3 +93,15 @@ ask."
 and what changes. The schema: `workflow_runs`, `workflow_run_items`,
 three indexes; the migration only adds. The powertrain is a fork:
 A, A+ (recommended), B, C.
+
+### 2026-09-28 — The operator's pick, verbatim
+
+> A+.
+
+Option A+ of `357_step0.md` S0-4: the powertrain from `--powertrain` or
+the prompt; a bike whose stored value disagrees is refused; `garage
+update` gains `--powertrain`. F174 stays open.
+
+### 2026-09-28 — v1.0
+
+`357_implementation.md` v1.0, committed and pushed before code.
