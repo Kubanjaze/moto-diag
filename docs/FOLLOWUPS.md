@@ -1880,7 +1880,7 @@ another, through one adversarial read that kills nothing, then a
 migration keyed on item 7's text. The live change of a shipped row
 would be a rule-1 stop.
 
-### F165
+### F165 — CLOSED by Phase 357 (migration 073, live 2026-09-28): a run and its per-item results are saved and read back
 
 **No workflow can be run: the workflow door only lists and shows templates, and nothing records a run or an item's result**
 
@@ -1925,6 +1925,17 @@ step engine, one item at a time, with pass, fail or skip per item and a
 printed summary. Nothing records the run or an item's result: the answers
 end with the terminal session, by the row's scope. So F165 stays open
 until row 357 saves a run and its per-item results.
+
+**Closed by Phase 357 (2026-09-28).** Migration 073 adds
+`workflow_runs` (tied to a bike always, and optionally a work order) and
+`workflow_run_items` (one row per checklist item, with its result, notes
+and the diagnosis printed at a fail). `motodiag workflow start`, `record`,
+`resume`, `finish`, `runs` and `report` save a run as it is worked and
+read it back. The proof is
+`tests/test_phase357_saved_runs.py::TestF165::test_a_run_and_its_results_are_saved_and_read_back`:
+a run started on a bike, every answer given, the rows read back with
+plain SQL and through `report`. Live at schema 73; the live diff equals
+the approved exact diff.
 
 ### F166 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 

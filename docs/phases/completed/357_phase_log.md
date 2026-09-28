@@ -1,6 +1,6 @@
 # Phase 357 — Saved workflow runs — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-28)
 **Branch:** `phase-357` (Opus session, main checkout, the only writer)
 
 ---
@@ -180,3 +180,26 @@ The diff, `357_dryrun_diff.md`: five schema objects added, one
 No existing row changes, so this is not a rule-1 stop, as the prompt
 states: "Adding tables alters no existing row, so rule 1 does not stop
 it." The diff is committed before `apply-live`.
+
+### 2026-09-28 — The live apply
+
+The diff committed and pushed (`61af72c`), then `deploy.py apply-live
+357`. Its preflight now includes F172's check, so it compared a fresh dry
+run with the committed exact diff and found them equal before touching
+live. `preflight passed; applying live: [73]`; live after: 5843 rows, 90
+tables, integrity ok; scope problems none; exit 0. `357_live_diff.md`:
+**Equals the approved exact diff: yes**; F158 census on live 36. Live is
+at schema 73, with `workflow_runs`, `workflow_run_items` and their three
+indexes.
+
+### 2026-09-28 — Close-out
+
+- **No bug-fix register.** Nothing failed after it was committed. The
+  build's test errors were found before its commit, and the checkout
+  slip above was undone before anything was lost. Neither changed
+  committed code.
+- No refute pass ran: the phase ships code, a schema and tooling, and no
+  content row; no claim rests on a document (v1.0 D6).
+- F165 closed by `TestF165::test_a_run_and_its_results_are_saved_and_read_back`
+  and the live apply. F174 stays open, as A+ intends; F176 is open.
+- Gate 15 (`test_phase272_gate15.py`) green in the regression of record.

@@ -1,6 +1,15 @@
 # Phase 357 — Saved workflow runs: start, record, finish, resume, read back
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-28
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-28 (v1.0 the same day)
+
+**Outcome (v1.1).** Shipped as planned. Migration 073 adds
+`workflow_runs` and `workflow_run_items`, and it is live (schema 73). Its
+live diff equals the approved exact diff, which F172's check now
+enforces. Six commands (`start`, `record`, `resume`, `finish`, `runs`,
+`report`) and `garage update --powertrain`. F165 closed; F172 and F175
+closed before Step 0; F176 filed. No bug fixes. Regression of record:
+9772 passed, 0 failed at `9c56f28`. Deviations and Results are at the
+end.
 
 ## Goal
 
@@ -142,17 +151,59 @@ update" still refuses when no field is given.
 
 ## Verification Checklist
 
-- [ ] v1.0 committed and pushed before code
-- [ ] Migration 073 adds only; rollback peels it; no literal head pin
-- [ ] Each of the five verbs driven by a CliRunner test
-- [ ] Retired and unknown slugs refused by `start`
-- [ ] Powertrain disagreement refused; `garage update --powertrain` fixes it
-- [ ] Each assertion helper red on its planted output
-- [ ] F165's proof test named and green
-- [ ] Gate 15 green
-- [ ] Mutations all red
-- [ ] 244G scanner over `tests/`
-- [ ] `wholetree.sh` before each commit; `--full` before the regression and the migration commit
-- [ ] Regression of record by `regression.sh`; floor raised
-- [ ] Dry-run diff committed; apply-live passes F172's exact check
-- [ ] Handoff written; `verify_phase.sh` green
+- [x] v1.0 committed and pushed before code (`92f65c0`)
+- [x] Migration 073 adds only; rollback peels it; no literal head pin
+- [x] Each of the five verbs driven by a CliRunner test
+- [x] Retired and unknown slugs refused by `start`
+- [x] Powertrain disagreement refused; `garage update --powertrain` fixes it
+- [x] Each assertion helper red on its planted output
+- [x] F165's proof test named and green
+- [x] Gate 15 green
+- [x] Mutations all red (26/26)
+- [x] 244G scanner over `tests/`
+- [x] `wholetree.sh` before each commit; `--full` before the regression and the migration commit
+- [x] Regression of record by `regression.sh`; floor raised
+- [x] Dry-run diff committed; apply-live passes F172's exact check
+- [x] Handoff written; `verify_phase.sh` run after the merge (its result is in the handoff)
+
+## Deviations from Plan
+
+- **The deploy ran before the merge**, on the phase branch. The closeout
+  skill puts it after the merge; the prompt put it inside the phase
+  ("The live apply uses the deploy skill ... Show me the dry-run diff and
+  the deploy outcome in the report"). The migration applied live is the
+  one in `9c56f28`, the commit the regression tested, and nothing in
+  `src/` changed after it.
+- **`deploy.py` gained schema objects**, beyond F172's field-for-field
+  rows: a rows-only diff of 073 would have shown one `schema_version` row
+  and not the tables. Scopes name schema objects under `"schema"`.
+- **The six commands were appended with one heredoc**, not the Edit tool
+  the prompt asks for on source. It was an append of new code, not an
+  exact-match edit; the phase log says so.
+- **The walk became `_walk`**, shared by `run`, `start` and `resume`. v1.0
+  said this; it also kept the exact text of the line 356's mutation M5
+  targets, so `356_mutate.py` still finds it.
+- **A mutant was inert on its first pass** (M15: two `title` columns, and
+  `sqlite3.Row` returns the first). It was rewritten and went red. Not a
+  test gap.
+- **A mistaken `git checkout b0ff03a -- .`** while counting tests, undone
+  from HEAD before anything was lost (phase log).
+- **Step 0's collected count was one short** (9723; 9724 re-measured).
+- **Fast whole-tree mode is 32 files**, not 31: this phase's ledger test
+  imports `wholetree` and joins by 358's rule. Reported at Step 0.
+
+## Results
+
+| | |
+|---|---|
+| Migration | 073: `workflow_runs`, `workflow_run_items`, 3 indexes; schema 72 → 73; no existing row changed |
+| Commands | `workflow start`, `record`, `resume`, `finish`, `runs`, `report`; `garage update --powertrain` |
+| Tests | `test_phase357_saved_runs.py` 48; `test_phase357_deploy_exact.py` 8 (F172); `test_phase357_wholetree_ledger.py` 5 (F175) |
+| F165's proof | `TestF165::test_a_run_and_its_results_are_saved_and_read_back` |
+| Mutations | 26/26 red (`357_mutate.py`: F172 6, F175 4, RUN 16) |
+| Whole tree | `--full` at `9c56f28`: 83 files, 3945 passed |
+| Regression | 9772 passed, 0 failed, 0 skipped at `9c56f28` (20 min 17 s, `-n auto --dist load`) |
+| Floor | `COLLECTED_TEST_FLOOR` 9710 → 9772 |
+| Deploy | dry run committed `61af72c`; apply-live exit 0; live 5842 → 5843 rows, 88 → 90 tables; equals the approved exact diff; F158 census 36 |
+| Findings | F165 closed; F172, F175 closed; F176 filed; F174 amended and open |
+| Bug fixes | none |
