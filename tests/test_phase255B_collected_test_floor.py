@@ -185,7 +185,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: heading on its own line, not a substring (`TestTheBlockIsAHeading`).
 #: Measured with `--collect-only -q`: 9,639.
 #:
-COLLECTED_TEST_FLOOR = 9639
+#: 9711 (Phase 356, 2026-09-28) — +72 over 9639, of which 37 were already
+#: collected at Phase 359's close (9,676; its floor was not raised) and 35
+#: are 356's: `test_phase356_workflow_run.py` (32: `workflow run` through
+#: CliRunner, the engine's stop_on_fail, and each helper's planted output)
+#: and +3 in the 209B/244W gates' parametrized entries (four orphans in,
+#: one module island out). Measured with `--collect-only -q`: 9,711.
+#:
+COLLECTED_TEST_FLOOR = 9711
 
 
 def _collected_count() -> int:
