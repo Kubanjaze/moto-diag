@@ -192,7 +192,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: and +3 in the 209B/244W gates' parametrized entries (four orphans in,
 #: one module island out). Measured with `--collect-only -q`: 9,711.
 #:
-COLLECTED_TEST_FLOOR = 9711
+#: 9710 (Phase 356 bug fix #1, 2026-09-28) — −1, deliberately: 244Z's
+#: `test_the_module_is_still_on_the_islands_table[workflows]` no longer
+#: exists, because 356 wired the module; the other five parametrized cases
+#: remain. Measured with `--collect-only -q`: 9,710.
+#:
+COLLECTED_TEST_FLOOR = 9710
 
 
 def _collected_count() -> int:

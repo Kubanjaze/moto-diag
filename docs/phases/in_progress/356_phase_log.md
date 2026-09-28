@@ -93,3 +93,39 @@ v1.0 and this log committed and pushed before code: `23ea56a`.
   occurrence each, not the Edit tool; the diff was read after, and it
   changes only the two counts and their history lines.
   Then `wholetree.sh`: 1475 passed.
+
+### 2026-09-28 — The floor, `--full`, and the first regression
+
+- `COLLECTED_TEST_FLOOR` 9639 → 9711, measured (`3e9b93d`).
+- `wholetree.sh --full` at `3e9b93d`: 3866 passed, 80 files, 536.8 s
+  wall.
+- `regression.sh` at `3e9b93d`: 9710 passed, 1 failed, 20 min 51 s
+  wall, `python -m pytest -n auto --dist load`. The failure is below.
+  `test_cross_platform_brakes` (F173) passed.
+
+### 2026-09-28 — Bug fix #1: 244Z still pinned engine.workflows as an island
+
+- **Issue:** the regression at `3e9b93d` failed
+  `test_phase244Z_shelved_content.py::TestStillShelved::test_the_module_is_still_on_the_islands_table[workflows]`:
+  `motodiag.engine.workflows` is no longer in `MODULE_ISLANDS`.
+- **Root cause:** a third pin on the module's shelved state, beside the
+  two (244W, 209B) the fast whole-tree run caught before the build
+  commit. 244Z is in neither `wholetree` mode's member set, so only the
+  full suite reaches it. The build removed the island entry and did not
+  search `tests/` for every other assertion naming the module.
+- **Fix:** 244Z keeps its import test for all six shelved modules and
+  asserts the island entry for five (`STILL_ISLANDS`). Its docstring
+  says the wire-or-delete decision is the operator's. Row 356, as the
+  operator scoped it on 2026-09-26, is that decision for
+  `DiagnosticWorkflow`, and none of 244Z's four content pins (repair,
+  correlation, intermittent, parts) is about `workflows.py`. The
+  predefined scripts stay unreached, listed in ORPHANS.
+  `COLLECTED_TEST_FLOOR` 9711 → 9710, deliberately: the removed
+  parametrized case.
+- **Files:** `tests/test_phase244Z_shelved_content.py`,
+  `tests/test_phase255B_collected_test_floor.py`.
+- **Verified:** the 244Z file is 24 passed with the fix; with the fix
+  stashed it is 1 failed, 24 passed. A search of `tests/` for
+  `motodiag.engine.workflows` or `"workflows"` finds 244Z, 356, 82 and
+  95; none of the others asserts the island. Collected: 9,710.
+- **Commit:** recorded in the close-out.
