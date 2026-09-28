@@ -157,3 +157,26 @@ Collected in worktrees: `b0ff03a` 9711 (one over its floor already),
 `67be350` 9719, `5a4e821` 9724, the build 9772 (+48, all
 `test_phase357_saved_runs.py`). Step 0's "9723" was one short and is
 corrected there.
+
+### 2026-09-28 — The regression of record
+
+Regression of record: 9772 passed, 0 failed, 0 skipped, 0 errors at `9c56f28` (20 min 17 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Before it, `wholetree.sh --full` on the same commit: 83 files, 3945
+passed (501.4 s). F173's `test_cross_platform_brakes` passed in parallel
+again.
+
+### 2026-09-28 — The dry run
+
+`357_deploy_scope.json`: `schema_version` +1; under `schema`, the two
+tables and three indexes; every other table unchanged.
+`deploy.py dryrun 357`: live before 5842 rows, 88 tables, integrity ok;
+backup `~/backups/motodiag/motodiag_pre357_20260928_144754.db`
+(retain-5 removed `motodiag_pre260_20260925_050437.db`); migration
+`[73]` on the copy; scope problems none; F158 census 36, as 359 left it.
+The diff, `357_dryrun_diff.md`: five schema objects added, one
+`schema_version` row added (73), no existing row changed or removed.
+
+No existing row changes, so this is not a rule-1 stop, as the prompt
+states: "Adding tables alters no existing row, so rule 1 does not stop
+it." The diff is committed before `apply-live`.
