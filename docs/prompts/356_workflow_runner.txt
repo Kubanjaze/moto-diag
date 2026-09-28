@@ -1,0 +1,54 @@
+Do this: start Phase 356, the in-memory workflow runner, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-27_359_closed.md, especially "What is open" and "What is next";
+- F165 in docs/FOLLOWUPS.md;
+- Gate 15's documents (docs/phases/completed/272_*).
+
+The operator's order (2026-09-27), verbatim: "content phase (F159/F163/F166 templates + F158's 27 rows) → 356 → 357 → Track O." 359 closed the content phase, so 356 is next.
+
+Row 356 as the ledger has it:
+> `motodiag workflow run <slug>` connects a template's checklist to Phase 82's step engine: each item in order, pass or fail recorded as the mechanic answers, the template's diagnosis printed on a fail, a summary at the end. Nothing is saved and there is no schema change. Decides how a run chooses its powertrain, since items carry none.
+
+First commit, after row 356 goes 🚧 and before Step 0's work. Use the finding skill to file the two items 359's handoff left open without an F-number:
+1. apply-live does not compare its fresh dry run with the committed diff; it checks only the scope. 359's apply was compared by hand. Name it as a gap to close before the next live apply, which is 357's migration. Where the fix goes is my call.
+2. `test_phase78_gate2_integration.py::…::test_cross_platform_brakes` failed once in parallel, in 359's first `--full`, and has not reproduced since. Rule 3 says a test that fails only in parallel is a bug to fix. File it with what 359 recorded, and say what would reproduce it.
+
+Step 0, before v1.0:
+- K8: every action row 356 promises has a way for a user to do it. `workflow run <slug>` is that way, and a test must drive it.
+- Read Phase 82's engine, `DiagnosticWorkflow` in src/motodiag/engine/workflows.py: its steps, `StepResult`, `report_result`, `is_complete` and `get_results_summary`. Say how a template's checklist items become its steps, including optional items, and whether any engine change is needed.
+- The powertrain question is a real fork, and its options ship different things. Give me the options with what each prints and what each tests. Candidates:
+  - the run asks for a powertrain, or takes a flag, and refuses a template that does not cover it;
+  - a bike from the garage supplies it.
+
+  Stop there for my pick.
+- A retired template (both starters, since 359) must be refused, the way `workflow show` refuses it.
+- Gate 15's walk and link rules must still pass.
+
+The build, after my pick:
+- The command is interactive: one item at a time, the mechanic's answer recorded, the template's `diagnosis_if_fail` printed on a fail, and a summary at the end.
+- Nothing is saved and there is no migration. 357 adds saved runs.
+- Tests drive the command through CliRunner with input: a full pass, a fail showing its diagnosis, an optional item, a retired slug and an unknown slug. Each gets a planted known-bad case its assertion must fail on.
+- F165 stays open until 357 unless you show that 356 alone meets it. Say which.
+
+There is no live-database change in this phase. If one turns out to be needed, stop and ask.
+
+Carry forward:
+- `wholetree.sh` before every commit; `--full` before the regression of record.
+- Commit and push as separate commands.
+- Raise `COLLECTED_TEST_FLOOR` (9639 against 9676 collected) at this phase's regression, with the reason in the commit message.
+- A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it: 359 lost `gen072.py` and `mutate.py` at the restart.
+- No test reads data/motodiag.db.
+- Use the Edit tool for source edits, and write commit messages through a quoted heredoc.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report twice:
+- At Step 0: the engine mapping and the powertrain options. Then stop.
+- At the end:
+  - what `workflow run` does, with a sample session;
+  - the tests and their controls;
+  - the two findings filed;
+  - the regression line;
+  - verify_phase.sh's result;
+  - F165's status;
+  - the next step: 357.
