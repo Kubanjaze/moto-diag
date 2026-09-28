@@ -20,9 +20,26 @@ and unchanged."
                                    its backup still hashes as recorded; the
                                    scope file is the one it was made with; live
                                    equals the backup; and a fresh dry run on a
-                                   new copy stays in scope. Then it migrates
-                                   live, writes <phase>_live_diff.md and checks
-                                   the scope again.
+                                   new copy stays in scope and EQUALS the
+                                   committed diff, field for field, clock
+                                   values masked (F172, Phase 357). Then it
+                                   migrates live, writes <phase>_live_diff.md
+                                   and checks the scope and the equality again.
+
+**The exact diff** (F172). The dry-run file ends with the whole diff as JSON:
+every field of every added and removed row, the before and after of every
+changed field, and every schema object (table, index, trigger, view) added,
+removed or rewritten. The markdown report above it is for reading; the JSON
+is what apply-live compares. A value is masked as `<clock>` when it is
+shaped like a timestamp and lies within one day of the run's own UTC clock:
+that is a value the migration's clock wrote (359's five `applied_at` and
+`updated_at` values). A fixed date a migration writes is not masked.
+**The ceiling:** a migration edited to write a different timestamp that also
+falls within a day of the run is not told apart.
+
+**Schema objects are scoped too** (Phase 357): a scope names each one the
+migration adds, removes or rewrites, as `"schema": {"added": ["table t",
+"index i"]}`. Any other schema change is a scope problem.
 
 **The scope is data**, `docs/phases/in_progress/<phase>_deploy_scope.json`:
 
@@ -65,6 +82,9 @@ LIVE = ROOT / "data" / "motodiag.db"
 BACKUPS = pathlib.Path.home() / "backups" / "motodiag"
 KEEP = 5
 MARK = "<!-- dry-run diff below; everything above is its header -->"
+EXACT = "<!-- the exact diff, clock values masked: apply-live compares a fresh dry run with it -->"
+CLOCK = "<clock>"
+_TIMESTAMP = re.compile(r"^\d{4}-\d{2}-\d{2}[ T]\d{2}:\d{2}(:\d{2}(\.\d+)?)?(Z|[+-]\d{2}:?\d{2})?$")
 
 
 class Refused(Exception):
@@ -106,6 +126,86 @@ def diff(a: dict, b: dict) -> dict:
             res[t] = {"cols": cols, "added": added, "removed": removed, "changed": changed,
                       "a": ra, "b": rb}
     return res
+
+
+def schema(path: pathlib.Path) -> dict[str, str]:
+    """{"table t": its SQL, "index i": …} for every object SQLite did not make."""
+    c = _ro(path)
+    out = {f"{kind} {name}": sql for kind, name, sql in c.execute(
+        "select type, name, sql from sqlite_master where name not like 'sqlite_%'")}
+    c.close()
+    return out
+
+
+def schema_diff(a: dict[str, str], b: dict[str, str]) -> dict[str, list[str]]:
+    return {"added": sorted(set(b) - set(a)), "removed": sorted(set(a) - set(b)),
+            "changed": sorted(k for k in set(a) & set(b) if a[k] != b[k])}
+
+
+def _clock_masked(v: object, clock: dt.datetime) -> object:
+    """`<clock>` for a timestamp within a day of the run's UTC clock."""
+    if not (isinstance(v, str) and _TIMESTAMP.match(v)):
+        return v
+    try:
+        t = dt.datetime.fromisoformat(v.replace("Z", "+00:00"))
+    except ValueError:
+        return v
+    if t.tzinfo is not None:
+        t = t.astimezone(dt.timezone.utc).replace(tzinfo=None)
+    return CLOCK if abs(t - clock) <= dt.timedelta(days=1) else v
+
+
+def _json_value(v: object) -> object:
+    return f"x'{v.hex()}'" if isinstance(v, bytes) else v
+
+
+def exact(d: dict, sch: dict[str, list[str]], new_schema: dict[str, str],
+          clock: dt.datetime) -> dict:
+    """The whole diff as JSON-ready data, with the run's clock values masked.
+    Only what the migration wrote is masked: added rows and changed fields'
+    after-values. Before-values come from the backup both runs share."""
+    rows = {}
+    for t, x in d.items():
+        cols = x["cols"]
+        rows[t] = {
+            "added": {str(k): {c: _json_value(_clock_masked(v, clock))
+                               for c, v in zip(cols, x["b"][k][1:])} for k in x["added"]},
+            "removed": {str(k): {c: _json_value(v) for c, v in zip(cols, x["a"][k][1:])}
+                        for k in x["removed"]},
+            "changed": {str(k): {c: [_json_value(va), _json_value(_clock_masked(vb, clock))]
+                                 for c, va, vb in zip(["rowid"] + cols, x["a"][k], x["b"][k])
+                                 if va != vb} for k in x["changed"]},
+        }
+    objects = {k: new_schema[k] for k in sch["added"] + sch["changed"]}
+    return json.loads(json.dumps({"rows": rows, "schema": {**sch, "sql": objects}},
+                                 sort_keys=True))
+
+
+def _leaves(x: object, path: str = "") -> dict[str, object]:
+    if isinstance(x, dict):
+        out: dict[str, object] = {}
+        for k, v in x.items():
+            out.update(_leaves(v, f"{path}/{k}"))
+        return out or {path: {}}
+    return {path: x}
+
+
+def exact_gaps(approved: dict, fresh: dict) -> list[str]:
+    """Every field where two exact diffs disagree, by its path."""
+    a, b = _leaves(approved), _leaves(fresh)
+    return [f"{p}: approved {a.get(p, '(absent)')!r}, fresh {b.get(p, '(absent)')!r}"
+            for p in sorted(set(a) | set(b)) if a.get(p, "(absent)") != b.get(p, "(absent)")]
+
+
+def _approved_exact(text: str) -> dict | None:
+    if EXACT not in text:
+        return None
+    body = text.split(EXACT, 1)[1].strip()
+    return json.loads(body.removeprefix("```json").removesuffix("```"))
+
+
+def _utc_now() -> dt.datetime:
+    return dt.datetime.now(dt.timezone.utc).replace(tzinfo=None)
 
 
 def state(path: pathlib.Path) -> dict:
@@ -157,8 +257,13 @@ def expected(scope: dict, before: pathlib.Path) -> dict[str, dict[int, dict[str,
     return out
 
 
-def check_scope(d: dict, scope: dict, allowed: dict, to: dict | None = None) -> list[str]:
+def check_scope(d: dict, scope: dict, allowed: dict, to: dict | None = None,
+                sch: dict[str, list[str]] | None = None) -> list[str]:
     probs = []
+    for kind, names in (sch or {}).items():
+        named = sorted(scope.get("schema", {}).get(kind, []))
+        if names != named:
+            probs.append(f"schema {kind}: {names}, scope names {named}")
     for t, rows in (to or {}).items():
         x = d.get(t)
         for k, values in rows.items():
@@ -192,8 +297,14 @@ def check_scope(d: dict, scope: dict, allowed: dict, to: dict | None = None) -> 
     return probs
 
 
-def report(d: dict) -> str:
+def report(d: dict, sch: dict[str, list[str]] | None = None,
+           new_schema: dict[str, str] | None = None) -> str:
     out = []
+    for kind, names in (sch or {}).items():
+        for name in names:
+            out.append(f"## schema {kind}: {name}\n\n")
+            if new_schema and name in new_schema:
+                out.append(f"```sql\n{new_schema[name].strip()}\n```\n\n")
     for t, x in d.items():
         out.append(f"## {t}: +{len(x['added'])} added, {len(x['changed'])} changed, "
                    f"{len(x['removed'])} removed\n")
@@ -269,9 +380,12 @@ def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKU
     backup(bk, copy)
     try:
         allowed, to = resolve(scope, copy), expected(scope, copy)
+        clock = _utc_now()
         applied = migrate(copy)
         d = diff(dump(bk), dump(copy))
-        probs = check_scope(d, scope, allowed, to)
+        new_schema = schema(copy)
+        sch = schema_diff(schema(bk), new_schema)
+        probs = check_scope(d, scope, allowed, to, sch)
         hits = census(copy)
     finally:
         _drop(copy)
@@ -287,10 +401,16 @@ def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKU
         f"- **F158 census on the copy:** `{hits}`",
         f"- **Scope problems:** `{'; '.join(probs) or 'none'}`",
         "",
-        "The live apply refuses to run unless this file is committed and unchanged.",
+        "The live apply refuses to run unless this file is committed and unchanged,",
+        "and unless a fresh dry run equals the exact diff at its end.",
         "",
         MARK,
-        report(d)]))
+        report(d, sch, new_schema),
+        EXACT,
+        "```json",
+        json.dumps(exact(d, sch, new_schema, clock), indent=1, sort_keys=True),
+        "```",
+        ""]))
     print("scope problems:", probs or "none")
     print("F158 census on the copy:", hits)
     print("wrote", out.relative_to(repo))
@@ -322,17 +442,29 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
     if drift:
         raise Refused(f"live differs from the backup in {sorted(drift)}: it changed since "
                       "the dry run. Stop and ask.")
+    approved = _approved_exact(f.read_text())
+    if approved is None:
+        raise Refused(f"{rel} has no exact diff: it was written before F172's fix. "
+                      "Run `deploy.py dryrun` again and commit its diff.")
     fresh = _scratch(repo, f"{phase}_preapply_copy.db")
     backup(bk, fresh)
     try:
         scope = json.loads(scope_path(repo, phase).read_text())
         allowed, to = resolve(scope, fresh), expected(scope, fresh)
+        clock = _utc_now()
         migrate(fresh)
-        probs = check_scope(diff(dump(bk), dump(fresh)), scope, allowed, to)
+        d = diff(dump(bk), dump(fresh))
+        new_schema = schema(fresh)
+        sch = schema_diff(schema(bk), new_schema)
+        probs = check_scope(d, scope, allowed, to, sch)
     finally:
         _drop(fresh)
     if probs:
         raise Refused(f"a fresh dry run leaves the scope: {probs}. Stop and ask.")
+    gaps = exact_gaps(approved, exact(d, sch, new_schema, clock))
+    if gaps:
+        raise Refused(f"a fresh dry run differs from the approved diff in {len(gaps)} "
+                      f"field(s): {gaps[:10]}. Stop and ask.")
     return head
 
 
@@ -346,13 +478,20 @@ def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT
     bk = pathlib.Path(head["Backup"])
     scope = json.loads(scope_path(repo, phase).read_text())
     allowed, to = resolve(scope, bk), expected(scope, bk)
+    clock = _utc_now()
     print("preflight passed; applying live:", migrate(db))
     d = diff(dump(bk), dump(db))
-    probs = check_scope(d, scope, allowed, to)
+    new_schema = schema(db)
+    sch = schema_diff(schema(bk), new_schema)
+    probs = check_scope(d, scope, allowed, to, sch)
+    gaps = exact_gaps(_approved_exact(diff_path(repo, phase).read_text()),
+                      exact(d, sch, new_schema, clock))
+    probs += [f"live differs from the approved diff: {g}" for g in gaps]
     diff_path(repo, phase, "live").write_text(
         f"# Phase {phase}: live after the apply, against the backup\n\n"
         f"- **Scope problems:** `{'; '.join(probs) or 'none'}`\n"
-        f"- **F158 census on live:** `{census(db)}`\n\n" + report(d))
+        f"- **Equals the approved exact diff:** `{'no' if gaps else 'yes'}`\n"
+        f"- **F158 census on live:** `{census(db)}`\n\n" + report(d, sch, new_schema))
     print("after (live):", json.dumps(state(db)), "scope problems:", probs or "none")
     return 1 if probs else 0
 

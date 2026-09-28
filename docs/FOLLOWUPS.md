@@ -2088,7 +2088,7 @@ What it affects: `motodiag workflow show ppi_chassis_v1` and `motodiag kb
 show` for the CVT regulator row. What would close it: the two deletions,
 in the next content migration, refuted as their own diff.
 
-### F172
+### F172 — CLOSED by Phase 357 (2026-09-28): apply-live compares a fresh dry run with the approved exact diff
 
 **`deploy.py apply-live` does not compare its fresh dry run with the committed diff the operator approved; it checks only that the fresh run stays inside the scope**
 
@@ -2116,6 +2116,18 @@ run's diff equals the committed one, with timestamp columns masked as 359
 masked them, and a planted edit to a migration's row values is seen red.
 Where the fix goes (a K-list item, its own phase, or 357's Step 0) is the
 operator's call.
+
+**Closed by Phase 357, before its live apply, as the operator placed it**
+("Close F172 before this phase's live apply"). The dry-run file now ends
+with the exact diff as JSON: every field of every added and removed row,
+before and after of every changed field, and every schema object added or
+rewritten. A timestamp within a day of the run's own clock is masked as
+`<clock>`; a fixed date is compared. `apply-live` refuses when a fresh dry
+run differs in any field, and names each one. The known-bad case, a fresh
+run differing in one allowed field, is refused, and the same edit passes
+the scope check alone; the good case, differing only in its clock, applies
+(`tests/test_phase357_deploy_exact.py`). Six mutations red
+(`357_mutate.py F172`). The deploy skill's `CHANGELOG.md` has the rest.
 
 ### F173
 
