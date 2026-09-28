@@ -626,6 +626,14 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None
     help="Set or replace the bike's VIN.",
 )
 @click.option(
+    "--powertrain", default=None,
+    type=click.Choice(["ice", "electric", "hybrid"]),
+    help=(
+        "Correct the bike's powertrain. Phase 357: a saved workflow run "
+        "is refused when the garage disagrees with the mechanic."
+    ),
+)
+@click.option(
     "--yes", is_flag=True, default=False,
     help="Confirm a non-monotonic mileage change (required for decreases).",
 )
@@ -634,9 +642,10 @@ def garage_update(
     mileage: int | None,
     notes: str | None,
     vin: str | None,
+    powertrain: str | None,
     yes: bool,
 ) -> None:
-    """Update a bike's mileage, notes, or VIN.
+    """Update a bike's mileage, notes, VIN or powertrain.
 
     Mileage is the Phase 152 source-of-truth. The monotonic guard
     refuses to write a value lower than what's already on the row
@@ -659,9 +668,10 @@ def garage_update(
     vehicle_id = int(resolved["id"])
     existing = get_vehicle(vehicle_id) or resolved
 
-    if mileage is None and notes is None and vin is None:
+    if mileage is None and notes is None and vin is None and powertrain is None:
         raise click.ClickException(
-            "Nothing to update — pass at least one of --mileage, --notes, --vin."
+            "Nothing to update — pass at least one of --mileage, --notes, "
+            "--vin, --powertrain."
         )
 
     updates: dict = {}
@@ -678,6 +688,8 @@ def garage_update(
         updates["notes"] = notes
     if vin is not None:
         updates["vin"] = vin
+    if powertrain is not None:
+        updates["powertrain"] = powertrain
 
     if not update_vehicle(vehicle_id, updates):
         raise click.ClickException(

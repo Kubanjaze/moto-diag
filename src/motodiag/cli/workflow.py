@@ -16,6 +16,16 @@ This module is that front door:
 `run` (Phase 356) walks a checklist through Phase 82's step engine, one
 item at a time, and saves nothing.
 
+Saved runs (Phase 357, migration 073) walk the same way and write each
+answer as it is given:
+
+    motodiag workflow start ppi_chassis_v1 --bike srf-2021 --powertrain electric
+    motodiag workflow record 4 3 fail --notes "front pads at 2 mm"
+    motodiag workflow resume 4
+    motodiag workflow finish 4
+    motodiag workflow runs --bike srf-2021
+    motodiag workflow report 4
+
 **On provenance** (the 244V rule): the content behind these screens is
 authored per item, and every figure an item states cites the document it
 came from, in the item's own description and instruction text. Where no
@@ -25,6 +35,8 @@ invents nothing. Nothing in this module computes; it reads and prints.
 """
 
 from __future__ import annotations
+
+import json
 
 import click
 from rich.table import Table
@@ -38,6 +50,7 @@ from motodiag.workflows import (
     get_template_by_slug,
     list_templates,
 )
+from motodiag.workflows import run_repo
 from motodiag.workflows.runner import checklist_workflow
 
 
@@ -157,6 +170,32 @@ POWERTRAINS = ["ice", "electric", "hybrid"]
 _ANSWERS = {"p": StepResult.PASS, "f": StepResult.FAIL, "s": StepResult.SKIPPED}
 
 
+def _walk(console, template: dict, items: list[dict], save=None):
+    """Ask each item in order through the step engine; return the engine.
+
+    `save(item, result)` is called after each answer, before the next item
+    is shown: `run` passes none, the saved commands (Phase 357) write it.
+    """
+    run = checklist_workflow(template, items)
+    for item in items:
+        _print_item(console, item)
+        if item.get("tools_needed"):
+            console.print(f"  [dim]Tools: {', '.join(item['tools_needed'])}[/dim]")
+        choices = ["p", "f"] if item["required"] else ["p", "f", "s"]
+        answer = click.prompt(
+            f"  Result ({'/'.join(choices)})",
+            type=click.Choice(choices, case_sensitive=False),
+            show_choices=False,
+        )
+        result = _ANSWERS[answer.lower()]
+        run.report_result(result)
+        if answer.lower() == "f" and item.get("diagnosis_if_fail"):
+            console.print(f"  [yellow]Diagnosis:[/yellow] {item['diagnosis_if_fail']}")
+        if save is not None:
+            save(item, result)
+    return run
+
+
 @workflow.command("run")
 @click.argument("slug")
 @click.option(
@@ -187,24 +226,11 @@ def run_cmd(slug: str, powertrain: str | None) -> None:
         raise SystemExit(1)
 
     items = get_checklist_items(template["id"], get_db_path())
-    run = checklist_workflow(template, items)
     console.print()
     console.print(f"[bold]{template['name']}[/bold]")
     console.print(f"[dim]{slug} · for {powertrain} · {len(items)} items[/dim]")
 
-    for item in items:
-        _print_item(console, item)
-        if item.get("tools_needed"):
-            console.print(f"  [dim]Tools: {', '.join(item['tools_needed'])}[/dim]")
-        choices = ["p", "f"] if item["required"] else ["p", "f", "s"]
-        answer = click.prompt(
-            f"  Result ({'/'.join(choices)})",
-            type=click.Choice(choices, case_sensitive=False),
-            show_choices=False,
-        )
-        run.report_result(_ANSWERS[answer.lower()])
-        if answer.lower() == "f" and item.get("diagnosis_if_fail"):
-            console.print(f"  [yellow]Diagnosis:[/yellow] {item['diagnosis_if_fail']}")
+    run = _walk(console, template, items)
 
     results = [step.result for step in run.steps]
     console.print()
@@ -222,3 +248,273 @@ def run_cmd(slug: str, powertrain: str | None) -> None:
             )
     console.print("[dim]Nothing was saved: this run exists only in this terminal.[/dim]")
     console.print()
+
+
+# ---------------------------------------------------------------------------
+# Saved runs (Phase 357, F165): start, record, resume, finish, runs, report
+# ---------------------------------------------------------------------------
+
+_RESULT_WORDS = {"pass": "pass", "fail": "fail", "skip": "skipped"}
+
+
+def _bike_label(row: dict) -> str:
+    return f"{row['vehicle_year']} {row['vehicle_make']} {row['vehicle_model']}"
+
+
+def _refuse(console, message: str) -> None:
+    console.print(f"[red]{message}[/red]")
+    raise SystemExit(1)
+
+
+def _vehicle_or_refuse(console, bike: str | None, vehicle_id: int | None) -> dict | None:
+    """The garage bike named by --bike or --vehicle-id, or None if neither."""
+    from motodiag.cli.diagnose import _resolve_bike_slug
+    from motodiag.vehicles.registry import get_vehicle
+
+    if vehicle_id is not None:
+        vehicle = get_vehicle(vehicle_id, db_path=get_db_path())
+        if vehicle is None:
+            _refuse(console, f"No bike with id {vehicle_id} in the garage.")
+        return vehicle
+    if bike:
+        vehicle = _resolve_bike_slug(bike, get_db_path())
+        if vehicle is None:
+            _refuse(console, f"No bike matches {bike!r}. Run 'motodiag garage list'.")
+        return vehicle
+    return None
+
+
+def _run_or_refuse(console, run_id: int) -> dict:
+    run = run_repo.get_run(run_id, get_db_path())
+    if run is None:
+        _refuse(console, f"No saved run #{run_id}. Run 'motodiag workflow runs' to list them.")
+    return run
+
+
+def _walkable(row: dict) -> dict:
+    """A run's item row in the shape `_print_item` and the engine read."""
+    item = dict(row)
+    tools = item.get("tools_needed")
+    item["tools_needed"] = json.loads(tools) if tools else []
+    if item.get("instruction_text") is None:
+        item["instruction_text"] = "(This item has been removed from the template.)"
+    return item
+
+
+def _saver(run_id: int):
+    def save(item: dict, result: StepResult) -> None:
+        run_repo.record_result(
+            run_id, item["sequence_number"], result.value,
+            diagnosis=item.get("diagnosis_if_fail"), db_path=get_db_path(),
+        )
+    return save
+
+
+def _counts(rows: list[dict]) -> str:
+    results = [r["result"] for r in rows]
+    return (f"{results.count('pass')} passed, {results.count('fail')} failed, "
+            f"{results.count('skipped')} skipped, {results.count(None)} unanswered "
+            f"of {len(rows)}")
+
+
+def _walk_saved(console, run: dict, template: dict) -> None:
+    """Walk the run's unanswered items, saving each answer; then offer to
+    finish. End of input leaves the run unfinished, every answer kept."""
+    rows = run_repo.get_run_items(run["id"], get_db_path())
+    items = [_walkable(r) for r in rows if r["result"] is None]
+    try:
+        _walk(console, template, items, save=_saver(run["id"]))
+    except click.Abort:
+        console.print(
+            f"\n[yellow]Run #{run['id']} is saved unfinished.[/yellow] "
+            f"Resume it with: motodiag workflow resume {run['id']}"
+        )
+        raise SystemExit(1)
+    rows = run_repo.get_run_items(run["id"], get_db_path())
+    console.print()
+    console.print(f"[bold]Run #{run['id']}[/bold] · {_counts(rows)}")
+    for r in rows:
+        if r["result"] == "fail":
+            console.print(f"  [red]{r['sequence_number']}. {r['title']}[/red]"
+                          + (f": {r['diagnosis']}" if r["diagnosis"] else ""))
+    if click.confirm("Finish this run now?", default=True):
+        _finish(console, run["id"])
+    else:
+        console.print(f"[dim]Finish it later with: motodiag workflow finish {run['id']}[/dim]")
+
+
+def _finish(console, run_id: int) -> None:
+    try:
+        run_repo.finish_run(run_id, get_db_path())
+    except run_repo.RunRefused as e:
+        _refuse(console, str(e))
+    console.print(f"[green]Run #{run_id} finished.[/green] "
+                  f"Read it back with: motodiag workflow report {run_id}")
+
+
+@workflow.command("start")
+@click.argument("slug")
+@click.option("--bike", default=None, help="Garage bike slug, e.g. 'sportster-2001'.")
+@click.option("--vehicle-id", default=None, type=int, help="Garage bike id.")
+@click.option("--work-order", "work_order_id", default=None, type=int,
+              help="Work order id; the run is tied to it and to its bike.")
+@click.option(
+    "--powertrain",
+    type=click.Choice(POWERTRAINS, case_sensitive=False),
+    default=None,
+    help="The machine's powertrain. Asked for when not given.",
+)
+def start_cmd(slug: str, bike: str | None, vehicle_id: int | None,
+              work_order_id: int | None, powertrain: str | None) -> None:
+    """Start a saved run of a template on a bike or a work order.
+
+    Every answer is saved as it is given; a run left part-way is resumed
+    with 'workflow resume'.
+    """
+    from motodiag.shop.work_order_repo import get_work_order
+
+    console = get_console()
+    template = _template_or_refuse(console, slug)
+
+    vehicle = _vehicle_or_refuse(console, bike, vehicle_id)
+    if work_order_id is not None:
+        order = get_work_order(work_order_id, db_path=get_db_path())
+        if order is None:
+            _refuse(console, f"No work order #{work_order_id}.")
+        if order["status"] in ("completed", "cancelled"):
+            _refuse(console, f"Work order #{work_order_id} is {order['status']}; "
+                             "a run cannot be added to it.")
+        if vehicle is not None and vehicle["id"] != order["vehicle_id"]:
+            _refuse(console, f"Work order #{work_order_id} is for bike #{order['vehicle_id']}, "
+                             f"not bike #{vehicle['id']}.")
+        if vehicle is None:
+            vehicle = _vehicle_or_refuse(console, None, order["vehicle_id"])
+    if vehicle is None:
+        _refuse(console, "A saved run is tied to a bike or a work order: give --bike, "
+                         "--vehicle-id or --work-order. 'motodiag workflow run' walks a "
+                         "template without saving.")
+
+    if powertrain is None:
+        powertrain = click.prompt(
+            "Powertrain", type=click.Choice(POWERTRAINS, case_sensitive=False),
+        )
+    powertrain = powertrain.lower()
+    covers = template["applicable_powertrains"]
+    if powertrain not in covers:
+        _refuse(console, f"{slug} covers {', '.join(covers)}, not {powertrain}.")
+    stored = vehicle.get("powertrain")
+    label = f"{vehicle['year']} {vehicle['make']} {vehicle['model']}"
+    if stored and stored != powertrain:
+        remedy = bike or f"{vehicle['model']}-{vehicle['year']}".lower()
+        console.print(f"[red]Bike #{vehicle['id']} ({label}) is stored as {stored}, "
+                      f"not {powertrain}. Nothing was saved.[/red]")
+        console.print(f"If the bike is {powertrain}: motodiag garage update "
+                      f"--bike '{remedy}' --powertrain {powertrain}")
+        raise SystemExit(1)
+
+    items = get_checklist_items(template["id"], get_db_path())
+    run_id = run_repo.start_run(template, items, vehicle["id"], powertrain,
+                                work_order_id=work_order_id, db_path=get_db_path())
+    console.print()
+    console.print(f"[bold]{template['name']}[/bold]")
+    console.print(f"[dim]Run #{run_id} · {slug} · bike #{vehicle['id']} {label}"
+                  + (f" · work order #{work_order_id}" if work_order_id else "")
+                  + f" · for {powertrain} · {len(items)} items[/dim]")
+    _walk_saved(console, _run_or_refuse(console, run_id), template)
+
+
+@workflow.command("resume")
+@click.argument("run_id", type=int)
+def resume_cmd(run_id: int) -> None:
+    """Carry on with a saved run's unanswered items."""
+    console = get_console()
+    run = _run_or_refuse(console, run_id)
+    if run["status"] == "complete":
+        _refuse(console, f"Run #{run_id} is finished. Read it back with: "
+                         f"motodiag workflow report {run_id}")
+    from motodiag.workflows import get_template
+    template = get_template(run["template_id"], get_db_path())
+    console.print()
+    console.print(f"[bold]{run['template_name']}[/bold]")
+    console.print(f"[dim]Run #{run_id} · {run['template_slug']} · bike #{run['vehicle_id']} "
+                  f"{_bike_label(run)} · for {run['powertrain']}[/dim]")
+    _walk_saved(console, run, template)
+
+
+@workflow.command("record")
+@click.argument("run_id", type=int)
+@click.argument("item", type=int)
+@click.argument("result", type=click.Choice(list(_RESULT_WORDS), case_sensitive=False))
+@click.option("--notes", default=None, help="What the mechanic saw.")
+def record_cmd(run_id: int, item: int, result: str, notes: str | None) -> None:
+    """Record or correct one item's result on an unfinished run."""
+    console = get_console()
+    _run_or_refuse(console, run_id)
+    word = _RESULT_WORDS[result.lower()]
+    row = next((r for r in run_repo.get_run_items(run_id, get_db_path())
+                if r["sequence_number"] == item), None)
+    diagnosis = row.get("diagnosis_if_fail") if row else None
+    try:
+        run_repo.record_result(run_id, item, word, notes=notes, diagnosis=diagnosis,
+                               db_path=get_db_path())
+    except run_repo.RunRefused as e:
+        _refuse(console, str(e))
+    console.print(f"Run #{run_id} item {item}: {word}.")
+    if word == "fail" and diagnosis:
+        console.print(f"  [yellow]Diagnosis:[/yellow] {diagnosis}")
+
+
+@workflow.command("finish")
+@click.argument("run_id", type=int)
+def finish_cmd(run_id: int) -> None:
+    """Finish a saved run; refused while an item is unanswered."""
+    console = get_console()
+    _run_or_refuse(console, run_id)
+    _finish(console, run_id)
+
+
+@workflow.command("runs")
+@click.option("--bike", default=None, help="Only this garage bike's runs.")
+@click.option("--vehicle-id", default=None, type=int, help="Only this bike id's runs.")
+@click.option("--work-order", "work_order_id", default=None, type=int,
+              help="Only this work order's runs.")
+def runs_cmd(bike: str | None, vehicle_id: int | None, work_order_id: int | None) -> None:
+    """List saved runs, newest first."""
+    console = get_console()
+    vehicle = _vehicle_or_refuse(console, bike, vehicle_id)
+    runs = run_repo.list_runs(vehicle_id=vehicle["id"] if vehicle else None,
+                              work_order_id=work_order_id, db_path=get_db_path())
+    if not runs:
+        console.print("[yellow]No saved runs.[/yellow]")
+        return
+    for r in runs:
+        console.print(
+            f"#{r['id']} {r['template_slug']} · bike #{r['vehicle_id']} {_bike_label(r)}"
+            + (f" · work order #{r['work_order_id']}" if r["work_order_id"] else "")
+            + f" · {r['powertrain']} · {r['status']} · {r['answered']}/{r['total']} answered"
+            + f" · started {r['started_at']}"
+        )
+
+
+@workflow.command("report")
+@click.argument("run_id", type=int)
+def report_cmd(run_id: int) -> None:
+    """Read a saved run back: its bike, status and every item's result."""
+    console = get_console()
+    run = _run_or_refuse(console, run_id)
+    rows = run_repo.get_run_items(run_id, get_db_path())
+    console.print()
+    console.print(f"[bold]Run #{run_id} · {run['template_name']}[/bold]")
+    console.print(f"{run['template_slug']} · bike #{run['vehicle_id']} {_bike_label(run)}"
+                  + (f" · work order #{run['work_order_id']}" if run["work_order_id"] else "")
+                  + f" · for {run['powertrain']}")
+    console.print(f"Status: {run['status']} · started {run['started_at']}"
+                  + (f" · finished {run['finished_at']}" if run["finished_at"] else ""))
+    for r in rows:
+        flag = "" if r["required"] else " (optional)"
+        console.print(f"{r['sequence_number']}. {r['title']}{flag}: {r['result'] or 'unanswered'}")
+        if r["notes"]:
+            console.print(f"   Notes: {r['notes']}")
+        if r["diagnosis"]:
+            console.print(f"   Diagnosis: {r['diagnosis']}")
+    console.print(_counts(rows))
