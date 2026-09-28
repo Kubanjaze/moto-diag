@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 359 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 360 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -634,6 +634,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 357 | Saved workflow runs | ✅ | **CLOSED 2026-09-28.** Migration 073 adds `workflow_runs` and `workflow_run_items`: a run is tied to a bike, and to a work order when given; each item keeps its result, notes and fail diagnosis. `workflow start`, `record`, `resume`, `finish`, `runs` and `report`. The operator's pick A+: `--powertrain` or the prompt, a disagreeing bike refused, `garage update --powertrain` to correct it. F165 closed; first, F172 (apply-live compares the exact diff) and F175 (`--full` ledger class) closed; F176 filed. 48 CliRunner tests; 26 mutations red. Live at schema 73, equal to the approved diff. Regression 9772 passed / 0 failed at `9c56f28`. |
 | 358 | Process clean-up | ✅ | **CLOSED 2026-09-27.** The 2026-09-27 triage's K1–K9 became checks. `wholetree.sh` finds whole-tree tests by rule, fast or `--full`; the push guard needs a signed record or runs fast mode, failing closed on time. One pin per count; a deploy skill refusing a live apply without the committed diff; an F158 ratchet at 75; R7 for folded rows; A5 parses the command, A8 needs the refute checklist; refute rounds capped at 3; Step 0 checks a row's verbs. Every check seen red; 21 mutations. F167–F169 filed. Regression 9639 passed / 0 failed at `d93d8de`. |
 | 359 | Content clean-up: starter templates and build references | ✅ | **CLOSED 2026-09-27.** The starters `generic_ppi_v1` and `generic_winterization_v1` are retired (the operator's pick at Step 0); `workflow show` names their replacements and exits 1. `ppi_chassis_v1` gains a cited VIN step and loses F163's three steering sentences. F158's 44 build references removed from the seed; ceiling 75 → 31, all BMW model names. Migration 072, the `deploy` skill's first live use, also brings rows 31 and 4615 to their seed; its live diff equals the approved diff, timestamps aside. F159, F163, F166 closed; F170, F171 filed. Three refute rounds; 8 mutations red. Regression 9676 passed / 0 failed at `32d281a`. |
+| 360 | F174 powertrain default, and the edit guard | 🚧 | **Started 2026-09-28.** The operator's decision 5 of 2026-09-28, before Track O batch 1. F174: a bike's powertrain is never assumed; four paths store `ice` when nobody said it. The edit guard: a second `PreToolUse` hook on Bash that blocks `sed -i` and heredoc or redirect writes into `src/` and `tests/`, failing closed, with a planted positive control for each blocked form. |
 
 ---
 
