@@ -6261,6 +6261,78 @@ MIGRATIONS: list[Migration] = [
         upgrade_sql=_WORKFLOW_072_UP + _known_issue_sql_072(reverse=False),
         rollback_sql=_known_issue_sql_072(reverse=True) + _WORKFLOW_072_DOWN,
     ),
+    # Migration 073 — Phase 357: saved workflow runs (F165)
+    Migration(
+        version=73,
+        name="workflow_runs",
+        description=(
+            "Phase 357: a saved run of a workflow template's checklist, and "
+            "its per-item results. `workflow_runs` ties a run to a vehicle "
+            "(always; ON DELETE RESTRICT, as work_orders does) and "
+            "optionally a work order, with the powertrain the mechanic "
+            "gave, a status and its times. `workflow_run_items` holds one "
+            "row per checklist item, copying the item's number, title and "
+            "required flag, and the diagnosis printed at a fail, so a run "
+            "reads back as it was worked even after the template changes. "
+            "Adds two tables and three indexes; changes no existing row. "
+            "Rollback drops the indexes, then both tables."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS workflow_runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                template_id INTEGER NOT NULL,
+                vehicle_id INTEGER NOT NULL,
+                work_order_id INTEGER,
+                powertrain TEXT NOT NULL
+                    CHECK (powertrain IN ('ice', 'electric', 'hybrid')),
+                status TEXT NOT NULL DEFAULT 'in_progress'
+                    CHECK (status IN ('in_progress', 'complete')),
+                started_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                finished_at TIMESTAMP,
+                CHECK ((status = 'complete') = (finished_at IS NOT NULL)),
+                FOREIGN KEY (template_id)
+                    REFERENCES workflow_templates(id) ON DELETE RESTRICT,
+                FOREIGN KEY (vehicle_id)
+                    REFERENCES vehicles(id) ON DELETE RESTRICT,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_workflow_runs_vehicle
+                ON workflow_runs(vehicle_id, started_at);
+            CREATE INDEX IF NOT EXISTS idx_workflow_runs_work_order
+                ON workflow_runs(work_order_id);
+
+            CREATE TABLE IF NOT EXISTS workflow_run_items (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                run_id INTEGER NOT NULL,
+                checklist_item_id INTEGER,
+                sequence_number INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                required INTEGER NOT NULL,
+                result TEXT CHECK (result IN ('pass', 'fail', 'skipped')),
+                diagnosis TEXT,
+                notes TEXT,
+                answered_at TIMESTAMP,
+                UNIQUE (run_id, sequence_number),
+                CHECK ((result IS NULL) = (answered_at IS NULL)),
+                CHECK (result IS NOT 'skipped' OR required = 0),
+                CHECK (diagnosis IS NULL OR result = 'fail'),
+                FOREIGN KEY (run_id)
+                    REFERENCES workflow_runs(id) ON DELETE CASCADE,
+                FOREIGN KEY (checklist_item_id)
+                    REFERENCES checklist_items(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_workflow_run_items_item
+                ON workflow_run_items(checklist_item_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_workflow_run_items_item;
+            DROP INDEX IF EXISTS idx_workflow_runs_work_order;
+            DROP INDEX IF EXISTS idx_workflow_runs_vehicle;
+            DROP TABLE IF EXISTS workflow_run_items;
+            DROP TABLE IF EXISTS workflow_runs;
+        """,
+    ),
 ]
 
 

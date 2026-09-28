@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F174** (this file); the mobile
+At the time of writing the highest assigned is **F176** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -1880,7 +1880,7 @@ another, through one adversarial read that kills nothing, then a
 migration keyed on item 7's text. The live change of a shipped row
 would be a rule-1 stop.
 
-### F165
+### F165 — CLOSED by Phase 357 (migration 073, live 2026-09-28): a run and its per-item results are saved and read back
 
 **No workflow can be run: the workflow door only lists and shows templates, and nothing records a run or an item's result**
 
@@ -1925,6 +1925,17 @@ step engine, one item at a time, with pass, fail or skip per item and a
 printed summary. Nothing records the run or an item's result: the answers
 end with the terminal session, by the row's scope. So F165 stays open
 until row 357 saves a run and its per-item results.
+
+**Closed by Phase 357 (2026-09-28).** Migration 073 adds
+`workflow_runs` (tied to a bike always, and optionally a work order) and
+`workflow_run_items` (one row per checklist item, with its result, notes
+and the diagnosis printed at a fail). `motodiag workflow start`, `record`,
+`resume`, `finish`, `runs` and `report` save a run as it is worked and
+read it back. The proof is
+`tests/test_phase357_saved_runs.py::TestF165::test_a_run_and_its_results_are_saved_and_read_back`:
+a run started on a bike, every answer given, the rows read back with
+plain SQL and through `report`. Live at schema 73; the live diff equals
+the approved exact diff.
 
 ### F166 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
@@ -2088,7 +2099,7 @@ What it affects: `motodiag workflow show ppi_chassis_v1` and `motodiag kb
 show` for the CVT regulator row. What would close it: the two deletions,
 in the next content migration, refuted as their own diff.
 
-### F172
+### F172 — CLOSED by Phase 357 (2026-09-28): apply-live compares a fresh dry run with the approved exact diff
 
 **`deploy.py apply-live` does not compare its fresh dry run with the committed diff the operator approved; it checks only that the fresh run stays inside the scope**
 
@@ -2116,6 +2127,18 @@ run's diff equals the committed one, with timestamp columns masked as 359
 masked them, and a planted edit to a migration's row values is seen red.
 Where the fix goes (a K-list item, its own phase, or 357's Step 0) is the
 operator's call.
+
+**Closed by Phase 357, before its live apply, as the operator placed it**
+("Close F172 before this phase's live apply"). The dry-run file now ends
+with the exact diff as JSON: every field of every added and removed row,
+before and after of every changed field, and every schema object added or
+rewritten. A timestamp within a day of the run's own clock is masked as
+`<clock>`; a fixed date is compared. `apply-live` refuses when a fresh dry
+run differs in any field, and names each one. The known-bad case, a fresh
+run differing in one allowed field, is refused, and the same edit passes
+the scope check alone; the good case, differing only in its clock, applies
+(`tests/test_phase357_deploy_exact.py`). Six mutations red
+(`357_mutate.py F172`). The deploy skill's `CHANGELOG.md` has the rest.
 
 ### F173
 
@@ -2214,3 +2237,70 @@ require the powertrain at `garage add`, or ask for it when it is missing.
 The other is to store unknown (`NULL`), which the readers above already
 treat as "show everything". That second fix changes a column default,
 which needs a migration. A census of live rows would come with either.
+
+**Amended by Phase 357's Step 0 (2026-09-28): there is a fourth `ice`
+default, and the CLI cannot correct a stored value.**
+- The API's create request defaults it too:
+  `VehicleCreateRequest.powertrain: PowertrainLiteral = "ice"`
+  (`src/motodiag/api/routes/vehicles.py:83`). A bike added from the app
+  without a powertrain is stored as `ice`.
+- `garage update` takes `--mileage`, `--notes` and `--vin`, not
+  `--powertrain` (`src/motodiag/cli/main.py:607`). Only the API's update
+  (`vehicles.py:104`) can change a stored powertrain.
+
+### F175 — CLOSED by Phase 357 (2026-09-28): a test pinning a whole-tree check's ledger joins `--full` by rule
+
+**The whole-tree command's membership rule misses a test that pins a whole-tree check's ledger without enumerating anything, so `wholetree.sh` in either mode did not run `test_phase244Z_shelved_content.py`**
+
+Found by Phase 356's bug fix #1 (`0130f1a`), filed by Phase 357 at the
+operator's request on 2026-09-28. `.claude/skills/closeout/wholetree.py`
+counts a test as whole-tree when it enumerates a repo directory, or
+imports a helper that does. 244Z does neither. It pins `MODULE_ISLANDS`
+and `MODULE_ISLAND_COUNT`, imported from `tests/support/integration_gaps_allowlist.py`
+and `integration_gaps_counts.py`. Those two modules hold only data, and
+209B keeps them equal to the tree. So 244Z's verdict moves when the tree
+does. 356 wired `engine.workflows` and updated the gap tables; 244Z went
+red, and only the full regression reached it.
+
+Measured at `b0ff03a`: fast 31 files, `--full` 80. Neither holds 244Z or
+`test_phase244Y_delete_pass.py`, the two tests in `tests/` that import
+either gap-table module and are not members.
+
+What it affected: a wiring change passed both modes of rule 3's command
+and failed only at the regression of record, 23 minutes later.
+
+**Closed by Phase 357.** A new class, `ledger`, `--full` only: a test that
+imports a `tests/support` module whose body is only a docstring, imports
+and assignments, where a code-class member imports that module too. The
+data-only modules are `integration_gaps_allowlist`,
+`integration_gaps_counts` and `model_gate_fixtures`. The ledger members
+are 244Y and 244Z, found by the rule, not by name.
+- Fast mode gains nothing from the rule: 31 files before and after.
+- Control: a planted failure in 244Z turned `wholetree.sh --full` red,
+  2026-09-28 12:51–12:57: 83 files, `1 failed, 3945 passed`, the failure
+  the plant, exit 1. The plant was removed after and 244Z's diff is clean.
+- Fixed in `wholetree.py`; `357_mutate.py F175`: 4/4 red.
+- The fixture tests (`tests/test_phase357_wholetree_ledger.py`) hold the
+  exclusions too: a support module with a function is not a ledger, and
+  neither is a data module that no member imports.
+
+### F176
+
+**`motodiag garage remove` on a bike that a work order names ends in an `IntegrityError` traceback instead of a refusal**
+
+Measured by Phase 357's Step 0 on a scratch database at schema 72
+(`357_step0.md`, S0-3). `work_orders.vehicle_id` references `vehicles(id)
+ON DELETE RESTRICT` (Phase 161's migration). `garage remove`
+(`src/motodiag/cli/main.py:525`) calls `delete_vehicle`
+(`src/motodiag/vehicles/registry.py:161`), which runs the `DELETE` with no
+handling. With one work order on the bike, the delete raised
+`sqlite3.IntegrityError: FOREIGN KEY constraint failed`.
+
+What it affects: a mechanic removing a bike with shop history gets a
+traceback, not a sentence saying why. The restriction itself is right:
+the history is kept. Phase 357's `workflow_runs` references the vehicle
+the same way, so a bike with a saved run behaves the same.
+
+What would close it: `garage remove` refuses such a bike, names what
+still refers to it (work orders, saved runs), and exits 1, with a test
+for each.

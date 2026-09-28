@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 72  # Phase 359: starters retired, F158 references removed, lagging rows (migration 072)
+SCHEMA_VERSION = 73  # Phase 357: saved workflow runs and their per-item results (migration 073)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

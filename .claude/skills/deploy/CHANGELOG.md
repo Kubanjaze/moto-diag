@@ -1,5 +1,32 @@
 # deploy — changelog
 
+## 2026-09-28 — apply-live compares the fresh dry run with the approved diff (Phase 357, F172)
+
+The operator: "Make `deploy.py apply-live` refuse unless its fresh dry
+run's diff equals the committed diff field for field, with timestamps
+masked." Phase 359 made this comparison by hand.
+- **The dry-run file ends with the exact diff**, as JSON after a second
+  marker: every field of every added and removed row, before and after of
+  every changed field. The markdown report shows only three fields of an
+  added row, so it could not be the thing compared.
+- **Clock values are masked** as `<clock>`: a timestamp-shaped value
+  within one day of the run's own UTC clock. That is what 359 masked by
+  hand (the new `applied_at`, four `updated_at`). A fixed date is compared.
+- **apply-live refuses** when a fresh run differs in any field, naming
+  each by its path, and refuses a diff file written before this change.
+  After the live apply, the live diff says whether live equals the
+  approved exact diff; a difference there is a scope problem, exit 1.
+- **Schema objects are diffed and scoped** too: tables, indexes, triggers
+  and views added, removed or rewritten, with their SQL. Phase 357's
+  migration adds tables and no rows but one `schema_version` row, so a
+  rows-only diff would not have shown what the operator approves. A
+  scope names them under `"schema"`.
+- **Controls:** `tests/test_phase357_deploy_exact.py` — one field differs
+  (refused; the same edit passes the scope check alone), only the clock
+  differs (applies), a fixed date differs (refused), an old diff file
+  (refused), an unnamed new table (scope problem), a named table whose
+  SQL differs (refused). `357_mutate.py F172`: 6/6 red.
+
 ## 2026-09-27 — a scope entry's `to` (Phase 359)
 
 The operator's condition on live row 4615: "the dry-run diff shows 4615

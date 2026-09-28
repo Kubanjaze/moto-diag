@@ -1,0 +1,15 @@
+{
+ "_comment": "Phase 357, migration 073: adds two tables and three indexes and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_workflow_run_items_item",
+   "index idx_workflow_runs_vehicle",
+   "index idx_workflow_runs_work_order",
+   "table workflow_run_items",
+   "table workflow_runs"
+  ]
+ }
+}

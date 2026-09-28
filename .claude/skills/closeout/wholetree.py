@@ -15,6 +15,14 @@ Each member falls in one class, by what its enumeration reaches:
   code     `src/`, `tests/`, the ledger, git's file list (or via a helper)
   seed     only the seed JSON under `src/motodiag/knowledge/seed/`
   outside  only a library outside the repo
+  ledger   enumerates nothing, but imports a whole-tree check's ledger: a
+           `tests/support` module holding only data (assignments and
+           imports, no function or class) that a code-class member
+           imports. Its values are the tree's state as that check keeps it
+           (MODULE_ISLANDS, the gap counts), so a test pinning them changes
+           verdict when the tree does. Phase 357, F175: 244Z pinned
+           MODULE_ISLANDS, was in neither mode, and only the full
+           regression reached it (356 bug fix #1).
 
 Two modes (the operator, 2026-09-27, option 3):
 
@@ -22,7 +30,8 @@ Two modes (the operator, 2026-09-27, option 3):
                         says gate re-runs earlier gates) and the wheel build
                         (`test_phase209_packaging.py`); then finding_check
                         over completed/ and in_progress/. The push guard.
-  wholetree.sh --full   every member, then the same finding_check scopes.
+  wholetree.sh --full   every member, ledger class included, then the same
+                        finding_check scopes.
                         Required before the regression of record and before
                         a commit that changes seed data or migrations.py.
 
@@ -40,6 +49,7 @@ deliberate forger on this machine.
 """
 from __future__ import annotations
 
+import ast
 import dataclasses
 import datetime as dt
 import hashlib
@@ -93,12 +103,29 @@ def enumerating_helpers(root: pathlib.Path = ROOT) -> list[str]:
     return sorted(set(names))
 
 
+def _imports(names: list[str]) -> re.Pattern:
+    return re.compile(r"(?:import|from) +(?:support\.)?(?:%s)\b" % "|".join(map(re.escape, names)))
+
+
+def data_only_support(root: pathlib.Path = ROOT) -> list[str]:
+    """`tests/support` modules whose body is only a docstring, imports and
+    assignments, with at least one assignment."""
+    names = []
+    for p in sorted((root / "tests" / "support").glob("*.py")):
+        body = ast.parse(p.read_text(encoding="utf-8", errors="replace")).body
+        kinds = {type(n) for n in body}
+        if kinds & {ast.Assign, ast.AnnAssign} and kinds <= {
+                ast.Assign, ast.AnnAssign, ast.Expr, ast.Import, ast.ImportFrom}:
+            names.append(p.stem)
+    return names
+
+
 def census(root: pathlib.Path = ROOT) -> dict[str, list[str]]:
     """Every whole-tree test file, by class. Paths are relative to root."""
     helpers = enumerating_helpers(root)
     via = re.compile(r"(?:import|from) +(?:support\.)?(?:%s)\b|(?:%s)\.py" % (
         "|".join(map(re.escape, helpers)), "|".join(map(re.escape, helpers))))
-    out: dict[str, list[str]] = {"code": [], "seed": [], "outside": []}
+    out: dict[str, list[str]] = {"code": [], "seed": [], "outside": [], "ledger": []}
     for p in sorted((root / "tests").glob("test_*.py")):
         text = p.read_text(encoding="utf-8", errors="replace")
         lines = [ln for ln in text.splitlines() if _ENUM.search(ln)]
@@ -111,13 +138,26 @@ def census(root: pathlib.Path = ROOT) -> dict[str, list[str]]:
             out[cls].append(rel)
         elif helpers and via.search(text):
             out["code"].append(rel)
+    data = data_only_support(root)
+    if data:
+        texts = {rel: (root / rel).read_text(encoding="utf-8", errors="replace")
+                 for rel in out["code"]}
+        ledgers = [m for m in data if any(_imports([m]).search(t) for t in texts.values())]
+        members_now = set(out["code"] + out["seed"] + out["outside"])
+        if ledgers:
+            pins = _imports(ledgers)
+            for p in sorted((root / "tests").glob("test_*.py")):
+                rel = p.relative_to(root).as_posix()
+                if rel not in members_now and pins.search(
+                        p.read_text(encoding="utf-8", errors="replace")):
+                    out["ledger"].append(rel)
     return out
 
 
 def members(mode: str, root: pathlib.Path = ROOT) -> list[str]:
     c = census(root)
     if mode == "full":
-        return sorted(c["code"] + c["seed"] + c["outside"])
+        return sorted(c["code"] + c["seed"] + c["outside"] + c["ledger"])
     return [f for f in c["code"]
             if not _GATE.search(pathlib.Path(f).name) and pathlib.Path(f).name != _WHEEL_BUILD]
 

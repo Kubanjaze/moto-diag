@@ -18,7 +18,10 @@ diff the operator approved for migration 071 survived there only by luck.
    matches exactly one row before the migration, and it names the fields
    that may change. `fixtures/scope_262.json` is 262's scope in this form.
    An entry may also carry `"to": {field: value}`, the exact value the field
-   must hold afterwards (Phase 359).
+   must hold afterwards (Phase 359). Name every schema object the migration
+   adds, removes or rewrites under `"schema"`, as
+   `{"added": ["table workflow_runs", "index idx_wr_vehicle"]}`; any other
+   schema change is a scope problem (Phase 357).
 2. **`python .claude/skills/deploy/deploy.py dryrun <phase>`.** Live is
    only read. It then:
    - backs up to `~/backups/motodiag/` and keeps 5;
@@ -27,7 +30,11 @@ diff the operator approved for migration 071 survived there only by luck.
    - checks the scope and runs the F158 census on the copy;
    - writes **`docs/phases/in_progress/<phase>_dryrun_diff.md`**, headed
      with the backup's path and sha256, the scope file's sha256, the
-     census count and any scope problem.
+     census count and any scope problem. It ends with the **exact diff**
+     as JSON: every field of every added or removed row, the before and
+     after of every changed field, and the SQL of every schema object
+     added or rewritten. A timestamp within a day of the run's own clock
+     reads `<clock>`.
 3. **Commit the diff and show it to the operator.** Changing an existing
    live row is a rule-1 stop. Wait for the operator's words.
 4. **`deploy.py apply-live <phase>`.** It refuses, before touching live,
@@ -37,10 +44,14 @@ diff the operator approved for migration 071 survived there only by luck.
    - the backup still hashes as recorded, and the scope file is the one
      the diff was made with;
    - live still equals the backup;
-   - a fresh dry run on a new copy stays in scope.
+   - a fresh dry run on a new copy stays in scope;
+   - **that fresh run equals the committed exact diff, field for field**,
+     clock values masked (F172, Phase 357). A diff file written before
+     this check has no exact diff and is refused.
 
    It then migrates live, writes `<phase>_live_diff.md` and checks the
-   scope again.
+   scope and the equality again; the live diff says whether live equals
+   the approved exact diff.
 5. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 
@@ -54,3 +65,6 @@ databases. Each refusal was broken on purpose and seen red.
   quoted in the phase log.
 - **The scope is as good as the person who writes it.** A `where` clause
   that matches the wrong single row passes.
+- **The clock mask has a ceiling.** A migration edited to write a
+  different timestamp that also falls within a day of the run is not told
+  apart. A fixed date is compared (`tests/test_phase357_deploy_exact.py`).

@@ -55,7 +55,8 @@ class TestTheCensus:
     def test_full_is_every_member_and_contains_fast(self):
         c = W.census()
         full = set(W.members("full"))
-        assert full == set(c["code"]) | set(c["seed"]) | set(c["outside"])
+        # Phase 357 (F175) added the ledger class, full-only.
+        assert full == set(c["code"]) | set(c["seed"]) | set(c["outside"]) | set(c["ledger"])
         assert set(W.members("fast")) < full
 
     def test_the_split_excludes_by_its_stated_rule_and_nothing_else(self):
@@ -68,6 +69,7 @@ class TestTheCensus:
             name = pathlib.Path(f).name
             assert W._GATE.search(name) or name == W._WHEEL_BUILD, f
         assert not set(c["seed"]) & set(W.members("fast"))
+        assert not set(c["ledger"]) & set(W.members("fast"))
 
     @pytest.mark.parametrize("name,is_gate", [
         ("test_phase240_gate12.py", True), ("test_phase133_gate_5.py", True),
