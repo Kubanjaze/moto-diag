@@ -334,8 +334,15 @@ _NO_REFUTE = re.compile(r"^\s*(?:[-*]\s+)?\**no refute pass ran\b", re.I | re.M)
 
 
 def regression_line(log_txt: str) -> tuple[str, str, str] | None:
-    """(count, hash, command) from the log's regression line, or None."""
-    m = _REGRESSION.search(log_txt)
+    """(count, hash, command) from the log's regression line, or None.
+
+    The regression line is the LAST line carrying "Regression of record:".
+    A re-run supersedes the run before it (358 recorded two), so the first
+    line is the one run the close-out no longer rests on (Phase 359, bug
+    fix #1).
+    """
+    lines = [ln for ln in log_txt.splitlines() if "Regression of record:" in ln]
+    m = _REGRESSION.search(lines[-1]) if lines else None
     return m.groups() if m else None
 
 

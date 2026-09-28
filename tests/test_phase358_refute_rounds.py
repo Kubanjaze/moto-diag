@@ -80,12 +80,15 @@ class TestTheOldFormat:
         fifth column. If a new close lacks it, it is not on this list and
         fails."""
         done = ROOT / "docs" / "phases" / "completed"
-        with_block = {p.name.split("_")[0] for p in done.glob("*_phase_log.md")
+        with_block = {p.name.split("_")[0]: p.read_text(encoding="utf-8")
+                      for p in done.glob("*_phase_log.md")
                       if R.find_block(p.read_text(encoding="utf-8"))}
-        assert with_block == R.OLD_FORMAT
+        # Phase 359 bug fix #4: this compared every log with a checklist to
+        # OLD_FORMAT, so the first close written in the new format failed it.
+        failing_new_format = {phase for phase, text in with_block.items() if R.check(text)}
+        assert failing_new_format == R.OLD_FORMAT
         for phase in R.OLD_FORMAT:
-            text = (done / f"{phase}_phase_log.md").read_text(encoding="utf-8")
-            assert R.check(text, require_rounds=False) == [], phase
+            assert R.check(with_block[phase], require_rounds=False) == [], phase
 
     def test_the_cli_applies_the_exemption_by_the_log_name(self, tmp_path, monkeypatch):
         """verify_phase check 12 calls the CLI with the log's path."""

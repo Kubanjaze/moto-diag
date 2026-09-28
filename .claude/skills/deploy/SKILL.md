@@ -17,6 +17,8 @@ diff the operator approved for migration 071 survived there only by luck.
    existing row it may change. A row is found by a `where` clause that
    matches exactly one row before the migration, and it names the fields
    that may change. `fixtures/scope_262.json` is 262's scope in this form.
+   An entry may also carry `"to": {field: value}`, the exact value the field
+   must hold afterwards (Phase 359).
 2. **`python .claude/skills/deploy/deploy.py dryrun <phase>`.** Live is
    only read. It then:
    - backs up to `~/backups/motodiag/` and keeps 5;

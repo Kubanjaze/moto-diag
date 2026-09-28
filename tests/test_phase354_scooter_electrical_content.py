@@ -262,7 +262,9 @@ class TestWhatTheRefutersCorrected:
     def test_the_zuma_name_is_attributed_not_asserted(self):
         body = _row("YW125 service manual")["description"]
         assert "the name Zuma appears on none of its 338 pages" in body
-        assert "Phase 253's cover-code record" in body
+        # Phase 359 removed the build reference ("Phase 253's cover-code
+        # record"); the sentence still says the link is not the manual's.
+        assert "the link to the Zuma 125 name does not come from this manual" in body
 
     def test_symply_is_not_named(self):
         """The manual filed as the Symply 125 never names a model beyond

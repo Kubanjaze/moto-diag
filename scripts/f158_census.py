@@ -35,6 +35,13 @@ PATTERNS = {
 }
 #: Tables a mechanic walks through; they must carry no build reference.
 WORKFLOW_TABLES = ("workflow_templates", "checklist_items")
+#: Phase 359. BMW's F-series model names match the F-number pattern. An
+#: F-number hit is a model name, not a finding, when its token is one of
+#: these and its row's `make` column names BMW; any other F-number stays a
+#: reference.
+BMW_F_MODELS = frozenset({"F650", "F700", "F750", "F800", "F850", "F900"})
+#: User and operational data: reported, never rewritten by a content phase.
+OPERATIONAL_TABLES = ("shops", "customer_notifications")
 
 Hit = tuple[str, str, int, str, str]            # table, column, rowid, pattern, text
 
@@ -56,6 +63,24 @@ def census(db: str | pathlib.Path) -> list[Hit]:
     finally:
         c.close()
     return hits
+
+
+def build_references(db: str | pathlib.Path) -> list[Hit]:
+    """The census minus its two exclusions: BMW model names, and rows in
+    operational tables. What is left is a build reference in content."""
+    c = sqlite3.connect(f"file:{db}?mode=ro", uri=True)
+    try:
+        def is_bmw_model(t: str, rowid: int, token: str) -> bool:
+            if token not in BMW_F_MODELS:
+                return False
+            if "make" not in {r[1] for r in c.execute(f'pragma table_info("{t}")')}:
+                return False
+            make = c.execute(f'select make from "{t}" where rowid = ?', (rowid,)).fetchone()[0]
+            return "BMW" in (make or "")
+        return [h for h in census(db) if h[0] not in OPERATIONAL_TABLES
+                and not (h[3] == "F-number" and is_bmw_model(h[0], h[2], h[4]))]
+    finally:
+        c.close()
 
 
 def ratchet(hits: list[Hit], ceiling: int) -> list[str]:
@@ -107,3 +132,7 @@ if __name__ == "__main__":
         print("plant control:", "found exactly the planted hit" if ok else "FAILED")
         raise SystemExit(0 if ok else 1)
     print(report(census(sys.argv[1])))
+    refs = build_references(sys.argv[1])
+    print(f"build references after the exclusions (BMW model names, operational rows): {len(refs)}")
+    for h in refs:
+        print("  ", h)

@@ -579,9 +579,11 @@ class TestCliFrontDoor:
         `workflow show` needs. Every slug must print whole."""
         result = CliRunner().invoke(main_cli, ["workflow", "list"])
         assert result.exit_code == 0, result.output
-        for slug in [*TEMPLATES, "ppi_chassis_v1", "ppi_engine_v1",
-                     "generic_ppi_v1", "generic_winterization_v1"]:
+        for slug in [*TEMPLATES, "ppi_chassis_v1", "ppi_engine_v1"]:
             assert slug in result.output, f"list elided '{slug}'"
+        # Phase 359 retired the two starters: `list` no longer prints them.
+        for slug in ("generic_ppi_v1", "generic_winterization_v1"):
+            assert slug not in result.output
         assert "…" not in result.output
 
     def test_list_by_each_new_category(self, db):

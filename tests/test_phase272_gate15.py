@@ -16,7 +16,8 @@ commands print, and checks:
   Pass and a Fail line;
 - W4 no required step on P's walk has a title naming work P does not
   have (engine work on an electric, traction-battery work on an ICE);
-  the one measured exception is `generic_ppi_v1` item 3 (F166);
+  its one measured exception, `generic_ppi_v1` item 3 (F166), left with
+  the starters Phase 359 retired, so it has none;
 - every reference from one template's text to another, in each form
   Step 0 censused, resolves to an active template and an existing item;
 - every live template is reachable through `list --category` and `show`;
@@ -50,12 +51,14 @@ from motodiag.workflows import get_checklist_items, list_templates
 POWERTRAINS = ("ice", "electric", "hybrid")
 
 # Row 272's order: each stage's templates, in the order a shop works them.
+# Phase 359 retired the two starters (generic_ppi_v1 first in PPI,
+# generic_winterization_v1 first in winterization); a retired template is
+# not listed and `show` refuses it, so the walk no longer visits them.
+RETIRED = ("generic_ppi_v1", "generic_winterization_v1")
 ROW = (
-    ("PPI", ("generic_ppi_v1", "ppi_engine_v1", "ppi_chassis_v1")),
+    ("PPI", ("ppi_engine_v1", "ppi_chassis_v1")),
     ("tire service", ("tire_service_v1",)),
-    ("winterization", (
-        "generic_winterization_v1", "winterization_v1", "de_winterization_v1",
-    )),
+    ("winterization", ("winterization_v1", "de_winterization_v1")),
     ("valve adjustment", ("valve_adjustment_v1",)),
     ("brake service", ("brake_service_v1",)),
 )
@@ -72,10 +75,11 @@ TRACTION_WORK = re.compile(
 # The work each powertrain does not have. A hybrid has both.
 LACKS = {"electric": ENGINE_WORK, "ice": TRACTION_WORK, "hybrid": None}
 
-# W4's one measured exception: a required engine compression test in a
-# template that covers electric (F166). Equality, not a subset: a new
-# violation fails, and so does fixing this one without updating the gate.
-KNOWN_WRONG_POWERTRAIN_STEPS = {("electric", "generic_ppi_v1", 3)}
+# W4's measured exceptions. The one there was, a required engine
+# compression test in generic_ppi_v1, which covers electric (F166), left
+# with the starter Phase 359 retired. Equality, not a subset: any new
+# violation fails.
+KNOWN_WRONG_POWERTRAIN_STEPS: set = set()
 
 # The reference forms Step 0 censused (S0-3). A slug; an item, optionally
 # qualified by a slug ("winterization_v1, item 7"), singly or as a range.
@@ -93,12 +97,8 @@ KNOWN_LINKS = {
     ("de_winterization_v1", "tire_service_v1"),
     ("de_winterization_v1", "suspension_service_v1"),
     ("de_winterization_v1", "drivetrain_service_v1"),
-    ("generic_ppi_v1", "ppi_engine_v1"),
-    ("ppi_engine_v1", "generic_ppi_v1"),
     ("ppi_engine_v1", "ppi_chassis_v1"),
-    ("ppi_chassis_v1", "generic_ppi_v1"),
     ("ppi_chassis_v1", "ppi_engine_v1"),
-    ("generic_winterization_v1", "winterization_v1"),
     ("winterization_v1", "de_winterization_v1"),
     ("winterization_v1", "tire_service_v1"),
     ("crash_support_v1", "brake_service_v1"),
@@ -106,7 +106,10 @@ KNOWN_LINKS = {
     ("track_prep_v1", "brake_service_v1"),
 }
 # Step 0's counts, as floors: content may add references, never lose these.
-CENSUS_SLUG_REFS = 22
+# Phase 359 lowered the slug floor 22 -> 15, measured: the retired starters
+# are no longer listed, so their own links are not read, and the two links
+# to generic_ppi_v1 were deleted.
+CENSUS_SLUG_REFS = 15
 CENSUS_ITEM_REFS = 13
 
 BUILD_REFERENCES = (
@@ -420,7 +423,7 @@ class TestTheWalk:
             ("winterization_v1", 4), ("de_winterization_v1", 4),
         }
         optional_traction = {("winterization_v1", 6), ("de_winterization_v1", 3)}
-        assert optional_engine | {("generic_ppi_v1", 3), ("valve_adjustment_v1", 1)} <= engine
+        assert optional_engine | {("ppi_engine_v1", 4), ("valve_adjustment_v1", 1)} <= engine
         assert optional_traction <= traction
         for key in optional_engine | optional_traction:
             assert not titles[key]["required"], key
@@ -489,6 +492,28 @@ class TestTheLinks:
             " (SELECT id FROM workflow_templates WHERE slug = 'de_winterization_v1')",
         )
         assert ("de_winterization_v1", "brake_servce_v1") in broken_links(fresh_db)
+
+    def test_no_listed_template_names_a_retired_one(self, gate_db):
+        """Phase 359: the retired starters are listed nowhere, `show`
+        refuses them with the retirement line, and no listed template names
+        them."""
+        listed, _, slug_refs, _ = template_links(gate_db)
+        for slug in RETIRED:
+            assert slug not in listed
+            shown = _cli(gate_db, "show", slug)
+            assert shown.exit_code == 1
+            assert "Retired." in shown.output and "Pass:" not in shown.output
+        assert not [r for r in slug_refs if r[1] in RETIRED]
+
+    def test_a_link_to_a_retired_starter_is_caught(self, fresh_db):
+        """The control for the test above: plant the deleted clause back."""
+        _execute(
+            fresh_db,
+            "UPDATE workflow_templates SET description = description"
+            " || ' Companion to generic_ppi_v1 (the quick check).'"
+            " WHERE slug = 'ppi_chassis_v1'",
+        )
+        assert ("ppi_chassis_v1", "generic_ppi_v1") in broken_links(fresh_db)
 
     def test_a_link_to_an_inactive_template_is_caught(self, fresh_db):
         _execute(fresh_db, "UPDATE workflow_templates SET is_active = 0 WHERE slug = 'tire_service_v1'")

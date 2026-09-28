@@ -327,7 +327,8 @@ class TestCliFrontDoor:
         result = CliRunner().invoke(main_cli, ["workflow", "list"])
         assert result.exit_code == 0, result.output
         assert "ppi_engine_v1" in result.output
-        assert "generic_ppi_v1" in result.output
+        # Phase 359 retired the generic PPI: `list` no longer prints it.
+        assert "generic_ppi_v1" not in result.output
         # The slug column can wrap at the narrow test terminal, so the
         # winterization row is asserted by its category, not its slug.
         assert "winterization" in result.output
