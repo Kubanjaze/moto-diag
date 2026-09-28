@@ -1,0 +1,69 @@
+Do this: start Phase 357, saved workflow runs, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-28_356_closed.md, especially "What is open" and "What is next";
+- F165, F172 and F174 in docs/FOLLOWUPS.md;
+- 356's documents (docs/phases/completed/356_*);
+- the deploy skill.
+
+The operator's order (2026-09-27), verbatim: "content phase (F159/F163/F166 templates + F158's 27 rows) → 356 → 357 → Track O." 356 closed on 2026-09-28, so 357 is next.
+
+Row 357 as the ledger has it:
+> After 356. A migration adds tables for a workflow run and its per-item results, tied to a bike or a work order, with the commands to start, record and finish a run; a run can be resumed and read back. Proposed by Gate 15 (272) with 356 (F165).
+
+First commits, after row 357 goes 🚧 and before Step 0's work:
+1. Close F172 before this phase's live apply, as 356's handoff asks.
+   - Make `deploy.py apply-live` refuse unless its fresh dry run's diff equals the committed diff field for field, with timestamps masked.
+   - Known-bad fixture: a fresh dry run that differs in one field is refused. The good case applies.
+   - 359 made this comparison by hand.
+2. File F175 with the finding skill: the whole-tree command's membership rule misses 244Z-style tests. On 2026-09-28, `test_phase244Z_shelved_content.py` was in neither mode (fast 31 files, `--full` 80), so only the full regression reached it (356 bug fix #1).
+   - Fix the rule so the class of test 244Z belongs to joins by rule, not by name.
+   - Control: a planted failure in 244Z turns `wholetree.sh --full` red.
+   - If the fix changes fast mode's members or moves its time toward the guard's 285 s limit, stop and ask.
+
+Step 0, before v1.0:
+- K8: every action row 357 promises (start, record, finish, resume, read back) has a command a user runs, and a test drives it.
+- Build on 356's `workflow run` and its `stop_on_fail` mapping. Say what is reused and what changes.
+- Propose the schema: the run table, the per-item result table, keys and indexes. Say what "tied to a bike or a work order" means when both, or neither, are given.
+- The powertrain is a real fork. A bike-linked run could take the bike's `vehicles.powertrain`, but F174 means `garage add` stores `ice` when the flag is absent, so a stored value may be wrong. Give me the options with what each ships and tests. Candidates:
+  - the run's powertrain comes from `--powertrain` or the prompt, as in 356, and a bike whose stored value disagrees is refused;
+  - 357 also fixes F174's default;
+  - the bike's stored value is trusted.
+
+  Stop there for my pick.
+- Say whether the migration only adds tables and indexes. If the dry run would change or delete any existing live row, that is a rule-1 stop.
+
+The build, after my pick:
+- One migration. Its rollback peels it, with no literal pin of the schema head (F124), and its tests must survive the next migration.
+- Commands to start, record, finish, resume and read back a run. CliRunner tests cover each, plus a retired template and an unknown slug refused. Each test has a planted known-bad case its assertion must fail on.
+- F165 closes when a run and its per-item results are saved and read back. Name the test that proves it.
+- Gate 15's walk and link rules still pass.
+
+The live apply uses the deploy skill:
+- Write a scope file: the new tables and rows, and no existing row changed.
+- Run the dry run and commit its diff.
+- Then run apply-live, which with F172's fix refuses an inexact match.
+
+Adding tables alters no existing row, so rule 1 does not stop it. If any existing row would change, stop and ask. Show me the dry-run diff and the deploy outcome in the report.
+
+Carry forward:
+- `wholetree.sh` before every commit. `--full` before the regression, and before any commit touching seed data or migrations; the push guard refuses those without it.
+- Commit and push as separate commands.
+- In the phase log, only a bug fix's own register heading says "Bug fix #N" (A4).
+- Use the Edit tool for source edits, not scripts; 356 used exact-match scripts twice.
+- A script whose output ships is committed with it.
+- No test reads data/motodiag.db.
+- A log that mentions refute needs the checklist, or "No refute pass ran".
+- Write commit messages through a quoted heredoc.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report twice:
+- At Step 0: the schema, what is reused from 356, and the powertrain options. Then stop.
+- At the end:
+  - the commands, with a sample session: start, record, resume, finish, read back;
+  - the tests and their controls;
+  - F172's fix and F175;
+  - the dry-run diff and the deploy outcome;
+  - the regression line;
+  - verify_phase.sh's result;
+  - F165's status;
+  - the next step: Track O, starting at row 273.
