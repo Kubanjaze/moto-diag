@@ -1,5 +1,21 @@
 # closeout — changelog
 
+## 2026-09-28 — wholetree.sh --full gains the ledger class (Phase 357, F175)
+
+The operator: "Fix the rule so the class of test 244Z belongs to joins by
+rule, not by name." 244Z pins MODULE_ISLANDS and enumerates nothing, so it
+was in neither mode (fast 31, full 80), and only the full regression
+reached it (356 bug fix #1).
+- **The rule:** a `ledger` test imports a `tests/support` module whose
+  body is only a docstring, imports and assignments, where a code-class
+  member imports that module too. Full mode only.
+- **Members now:** 244Y and 244Z; full 82 with the rule alone. Fast mode's
+  members do not change. Phase 357's own ledger test imports `wholetree`,
+  so 358's rule puts it in fast mode (fast 32, full 83).
+- **Controls:** `tests/test_phase357_wholetree_ledger.py`, with a fixture
+  tree for the rule and both exclusions. A planted failure in 244Z turned
+  `--full` red. `357_mutate.py F175`: 4/4 red.
+
 ## 2026-09-27 — A5 judges the last regression line (Phase 359, bug fix #1)
 
 358's A5 took the first line that parsed. After a re-run, that is the

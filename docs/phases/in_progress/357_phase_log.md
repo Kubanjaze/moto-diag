@@ -47,3 +47,49 @@ deploy tests: 30 passed. `357_mutate.py F172`: 6/6 red (the refusal, no
 mask, a mask with no date window, an old file accepted, schema left out
 of the exact diff, an unnamed schema change let through). F172 closed in
 `docs/FOLLOWUPS.md`.
+
+### 2026-09-28 — F175 filed and fixed, before Step 0 (the prompt's second commit)
+
+The prompt: "File F175 with the finding skill ... Fix the rule so the class
+of test 244Z belongs to joins by rule, not by name. Control: a planted
+failure in 244Z turns `wholetree.sh --full` red. If the fix changes fast
+mode's members or moves its time toward the guard's 285 s limit, stop and
+ask."
+
+- **What 244Z's class is, measured:** of the tests that import a
+  `tests/support` module and are not members, 244Y and 244Z import the gap
+  tables (`integration_gaps_allowlist`, `integration_gaps_counts`). Those
+  modules hold only data, and 209B keeps them equal to the tree.
+  `source_guards` is imported by 13 non-members too, but it is shared
+  code, not the tree's state; the rule leaves it out, and a fixture holds
+  that exclusion.
+- **The rule, full mode only:** a test importing a data-only support
+  module that a code-class member imports. Full 80 → 82 with the rule;
+  fast unchanged.
+- **Fast mode, and why this is not the stop:** the rule adds nothing to
+  fast. This phase's new test imports `wholetree`, as 358's contract test
+  does, so 358's own rule makes it the 32nd fast file (about a second).
+  Timed back to back: 105.0 s without the change, 77.6 s with it. The
+  spread is the machine. Reported to the operator at Step 0.
+- **The control, the run of record:** a failure planted in 244Z, then
+  `wholetree.sh --full`, 12:51–12:57: 83 files, `1 failed, 3945 passed`,
+  exit 1. The plant was removed and 244Z's diff is clean.
+  - An earlier run at 10:38 gave the same result. The machine then slept
+    before anything was committed, and the operator, verbatim: "The F175
+    entry already says the planted control turned --full red, but that
+    run hadn't happened when the machine slept: run it now (plant in
+    244Z, --full red, remove, diff clean), then commit F175 and Step 0,
+    and stop for my powertrain pick." Made again as asked; the documents
+    cite the second run.
+- `357_mutate.py F175`: 4/4 red.
+- Also filed: F176 (`garage remove` on a bike a work order names ends in
+  a traceback), and an amendment to F174 (a fourth `ice` default in the
+  API; the CLI cannot correct a stored powertrain). Both measured at
+  Step 0.
+
+### 2026-09-28 — Step 0, stopped for the operator's pick
+
+`357_step0.md`. K8: five verbs, five commands. What is reused from 356
+and what changes. The schema: `workflow_runs`, `workflow_run_items`,
+three indexes; the migration only adds. The powertrain is a fork:
+A, A+ (recommended), B, C.

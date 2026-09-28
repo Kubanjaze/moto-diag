@@ -20,6 +20,9 @@ ROOT = pathlib.Path(__file__).resolve().parents[3]
 DEPLOY = ".claude/skills/deploy/deploy.py"
 DEPLOY_TESTS = ["tests/test_phase357_deploy_exact.py", "tests/test_phase358_deploy_contract.py",
                 "tests/test_phase359_deploy_to.py"]
+WHOLETREE = ".claude/skills/closeout/wholetree.py"
+WHOLETREE_TESTS = ["tests/test_phase357_wholetree_ledger.py",
+                   "tests/test_phase358_wholetree_contract.py"]
 
 MUTATIONS = [
     ("F172-M1 apply-live ignores a fresh run that differs from the approved diff", DEPLOY,
@@ -40,6 +43,17 @@ MUTATIONS = [
     ("F172-M6 an unnamed schema change is in scope", DEPLOY,
      "        if names != named:\n            probs.append(f\"schema",
      "        if False:\n            probs.append(f\"schema", DEPLOY_TESTS),
+    ("F175-M1 full mode leaves out the ledger class", WHOLETREE,
+     " + c[\"outside\"] + c[\"ledger\"])", " + c[\"outside\"])", WHOLETREE_TESTS),
+    ("F175-M2 a support module with a function counts as a ledger", WHOLETREE,
+     "        if kinds & {ast.Assign, ast.AnnAssign} and kinds <= {",
+     "        if kinds & {ast.Assign, ast.AnnAssign} or kinds <= {", WHOLETREE_TESTS),
+    ("F175-M3 a data module no member imports counts as a ledger", WHOLETREE,
+     "        ledgers = [m for m in data if any(_imports([m]).search(t) for t in texts.values())]",
+     "        ledgers = list(data)", WHOLETREE_TESTS),
+    ("F175-M4 ledger tests join fast mode", WHOLETREE,
+     "    return [f for f in c[\"code\"]\n",
+     "    return [f for f in c[\"code\"] + c[\"ledger\"]\n", WHOLETREE_TESTS),
 ]
 
 
