@@ -1,6 +1,6 @@
 # Phase 356 — In-memory workflow runner — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-28)
 **Branch:** `phase-356` (Opus session, main checkout, the only writer)
 
 ---
@@ -65,7 +65,8 @@ v1.0 and this log committed and pushed before code: `23ea56a`.
   fault.
 - **`tests/test_phase356_workflow_run.py`, 32 tests, green at the first
   run.** A first green is not evidence, so every helper has a planted
-  output it must fail on (13 tests), and the source was mutated:
+  input it must fail on (12 tests, beside one that the good output
+  passes), and the source was mutated:
 - **Mutations, `356_mutate.py` (committed with this build): 11/11 red.**
   M1 the engine default no longer stops on a fail; M2 the runner keeps the
   stop; M3 `max_steps` left at the default (the largest template has 8,
@@ -128,4 +129,21 @@ v1.0 and this log committed and pushed before code: `23ea56a`.
   stashed it is 1 failed, 24 passed. A search of `tests/` for
   `motodiag.engine.workflows` or `"workflows"` finds 244Z, 356, 82 and
   95; none of the others asserts the island. Collected: 9,710.
-- **Commit:** recorded in the close-out.
+
+**Commit.** `0130f1a`.
+
+### 2026-09-28 — The regression of record
+
+- `wholetree.sh --full` at `0130f1a`: 3866 passed, 80 files, 600.6 s
+  wall.
+- `test_cross_platform_brakes` (F173) passed in both regressions.
+
+Regression of record: 9710 passed, 0 failed, 0 skipped, 0 errors at `0130f1a` (23 min 33 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-09-28 — Close-out decisions
+
+- No refute pass ran: the phase ships code and no content row, and no
+  claim rests on a document (v1.0, D4).
+- **F165 stays open.** 356 makes a workflow runnable; nothing records a
+  run or an item's result, which is row 357. The entry says so.
+- No migration, no live change, no deploy.

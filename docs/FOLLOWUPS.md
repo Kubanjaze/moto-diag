@@ -1919,6 +1919,13 @@ engine, pass or fail per item, a printed summary, nothing saved, no
 schema change); then **row 357**, saved runs, with its own migration for
 runs and per-item results tied to a bike or work order.
 
+**Phase 356 (closed 2026-09-28) met the first half and not the second.**
+`motodiag workflow run <slug>` works a template's checklist through the
+step engine, one item at a time, with pass, fail or skip per item and a
+printed summary. Nothing records the run or an item's result: the answers
+end with the terminal session, by the row's scope. So F165 stays open
+until row 357 saves a run and its per-item results.
+
 ### F166 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
 **`generic_ppi_v1` covers electric machines but requires an engine compression test, and asks every machine for its engine oil**

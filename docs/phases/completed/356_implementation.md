@@ -1,6 +1,13 @@
 # Phase 356 — In-memory workflow runner: `motodiag workflow run <slug>`
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-28
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-28 (v1.0 the same day)
+
+**Outcome (v1.1).** Shipped as planned. `motodiag workflow run <slug>`
+works a checklist through the step engine; the powertrain comes from
+`--powertrain` or a prompt. No migration, no live change. One bug fix: a
+third pin on the engine module's shelved state. Regression of record:
+9710 passed, 0 failed at `0130f1a`. F165 stays open until 357.
+Deviations and Results are at the end.
 
 ## Goal
 
@@ -123,15 +130,52 @@ required, tools).
 
 ## Verification Checklist
 
-- [ ] F174 filed; `finding_check.py` green
-- [ ] `stop_on_fail` default keeps Phase 82's and Gate 3's tests green
-- [ ] Each of the five named cases driven through `CliRunner` with input
-- [ ] Each assertion helper red on its planted input
-- [ ] Gate 15 green
-- [ ] Mutations all red
-- [ ] 244G scanner over the new test file
-- [ ] `wholetree.sh` before each commit; `--full` before the regression
-- [ ] Regression of record by `regression.sh`
-- [ ] `COLLECTED_TEST_FLOOR` raised, the reason in the commit
-- [ ] F165's status stated
-- [ ] Handoff written
+- [x] F174 filed; `finding_check.py` green
+- [x] `stop_on_fail` default keeps Phase 82's and Gate 3's tests green
+- [x] Each of the five named cases driven through `CliRunner` with input
+- [x] Each assertion helper red on its planted input
+- [x] Gate 15 green
+- [x] Mutations all red
+- [x] 244G scanner over the new test file
+- [x] `wholetree.sh` before each commit; `--full` before the regression
+- [x] Regression of record by `regression.sh`
+- [x] `COLLECTED_TEST_FLOOR` raised, the reason in the commit
+- [x] F165's status stated
+- [x] Handoff written
+
+## Deviations from Plan
+
+- **`show` and `run` share two helpers.** v1.0 did not say how `run`
+  would print an item or refuse a slug. `show`'s item block became
+  `_print_item` and its lookup `_template_or_refuse`, so `run` refuses
+  exactly as `show` does and prints items the same way. `show`'s
+  output is unchanged; Gate 15 read it before and after.
+- **`run` prints each item's tools before its prompt**, not its
+  diagnosis: the diagnosis prints only after a fail, as the row says.
+- **Three gates tracked the engine module as shelved, not one.** 244W
+  (island table) and 209B (orphans) went red in the fast whole-tree run
+  before the build commit and were updated with it. The engine module's
+  four other public functions became listed orphans (`ORPHAN_COUNT`
+  102 → 106; `MODULE_ISLAND_COUNT` 14 → 13). 244Z, outside both
+  whole-tree modes, went red only in the first regression: bug fix #1.
+- **The floor moved twice:** 9639 → 9711 at the regression, then
+  9711 → 9710 with bug fix #1, deliberately, for the one removed case.
+- **Mutations: 11**, where v1.0 named none by number; the script,
+  `356_mutate.py`, ships with the phase.
+- **F174 was filed** at the operator's word with the pick; it was not in
+  v1.0's first draft of Planned items, and was added before v1.0 was
+  committed.
+
+## Results
+
+| | |
+|---|---|
+| Command | `motodiag workflow run <slug> [--powertrain ice\|electric\|hybrid]` |
+| Engine | `DiagnosticWorkflow.stop_on_fail`, default `True` (Phase 82 unchanged, its 26 tests green) |
+| Tests | `tests/test_phase356_workflow_run.py`, 32: engine 3; the five named cases 10 (full pass 1, fail 1, optional 2, retired 4 and its control 1, unknown 1); powertrain 4; every active template 1 (34 runs, 5 refusals); nothing saved 1; helper controls 13 (the good output passes, then 12 planted inputs each fail) |
+| Mutations | 11/11 red (`356_mutate.py`) |
+| Whole tree | `--full` at `0130f1a`: 3866 passed, 80 files |
+| Regression | 9710 passed, 0 failed, 0 skipped at `0130f1a` (23 min 33 s, `-n auto --dist load`) |
+| Floor | `COLLECTED_TEST_FLOOR` 9710 |
+| Findings | F172, F173, F174 filed; F165 open until 357 |
+| Bug fixes | #1: 244Z still pinned `engine.workflows` as an island (`0130f1a`) |

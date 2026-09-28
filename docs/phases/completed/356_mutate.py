@@ -1,7 +1,7 @@
 """Phase 356's mutations: each breaks one thing `workflow run` promises, and
 the phase's tests must go red on it.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/356_mutate.py`.
+Run from the repository root: `.venv/bin/python docs/phases/completed/356_mutate.py`.
 Each mutation replaces one exact string (which must occur once), runs the
 tests with `-B` after clearing `__pycache__` (stale bytecode can serve the
 unmutated source), and restores the file whatever happens. Prints one line
