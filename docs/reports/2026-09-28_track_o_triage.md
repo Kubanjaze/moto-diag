@@ -11,6 +11,30 @@ A keyword hit is not proof of a feature. Each batch's Step 0 re-verifies against
 
 ---
 
+## The operator's decisions, 2026-09-28 (verbatim)
+
+> 1, 2, 3, 5 as recommended.
+> 4: check row 288 — which jurisdiction does it name, and where is the first real shop? tax follows the shop. if it's MA (flat statewide), start there, not CA. either way: every rate stored with its effective date and source, and a check that fails when a rate is past its stated validity.
+>
+> add to the F174 phase: enforce the edit rule. 356 and 357 both edited source without the Edit tool — a written rule broken twice. PreToolUse hook on Bash that blocks sed -i, heredoc/redirect writes into src/ and tests/, same fail-closed pattern as the push guard, with a planted positive control per blocked form.
+>
+> note for the batch 3 prompt when you write it: first outbound calls in the app. tests use recorded fixtures, never live endpoints; the app degrades cleanly when a service is down (shown to the user, never silently empty); no live API call during the build except one smoke call per service, logged.
+
+**What decisions 1, 2, 3 and 5 settle** (the recommendations below, now decided):
+- the order is batch 1 → 2 → 3 → 4 → Gate 16;
+- the supplier rows and the OEM portal parts are paused, each with its reason;
+- the backend stays tailnet-only;
+- F174 is a small phase before batch 1, and it now also carries the edit guard.
+
+**Decision 4, the check it asked for** (measured 2026-09-28):
+- **Row 288 names no jurisdiction.** Its text is "State/county/city sales tax, automated tax calculation on invoices".
+- **No real shop exists in the data.** The live `shops` table holds one row, the "Phase 199 Smoke Shop" test fixture, with no address, city, state or ZIP.
+- **No document names a first shop or its location.** Searched: moto-diag's ROADMAP, README, CLAUDE.md and `docs/`; `moto-diag-mobile/docs`; and `workspace-docs`.
+
+So the first shop's state is the operator's to give. Batch 3 starts in that state; if it is Massachusetts, it starts there, not in California. Whichever state it is, every rate is stored with its effective date and its source, and a check fails when a rate is past its stated validity.
+
+---
+
 ## The recommendation
 
 1. **Track O mostly extends code that already exists.** The substrates are already in place:
