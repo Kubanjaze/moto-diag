@@ -111,6 +111,22 @@ _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pric
 # Orphans inside unreachable modules are implied by the module entry and are
 # not listed a second time.
 ORPHANS: dict[str, tuple[str, str]] = {
+    # --- Phase 356: engine/workflows.py left MODULE_ISLANDS ---
+    # `workflow run` reaches DiagnosticWorkflow through workflows/runner.py.
+    # The rest of Phase 82's module is still reached by nothing.
+    "engine/workflows.py::create_no_start_workflow": ("unwired-feature",
+        "Phase 82 predefined decision-tree script. With stop_on_fail left "
+        "at its default a FAIL ends it at that step. No command runs it."),
+    "engine/workflows.py::create_charging_workflow": ("unwired-feature",
+        "Phase 82 predefined script. The 2026-09-17 audit found a FAIL at "
+        "step 1 leaves 3 of 4 steps unreachable under stop_on_fail's "
+        "default. Consensus 4.3/10. No command runs it."),
+    "engine/workflows.py::create_overheating_workflow": ("unwired-feature",
+        "Phase 82 predefined decision-tree script, ended by its first FAIL "
+        "under stop_on_fail's default. No command runs it."),
+    "engine/workflows.py::generate_next_step": ("unwired-feature",
+        "Phase 82 AI next-step generator: spends through ask() when a "
+        "script's steps run out. No command calls it."),
     # --- the ones that matter ---
     "media/ffmpeg.py::validate_video": ("unwired-feature",
         "Has a test and no caller. Uploads get size, quota and metadata-"
@@ -553,8 +569,4 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
         "Phase 84 AI repair-procedure generator. REPAIR_PROMPT:106 instructs "
         "the model to invent torque specs and nothing labels them on screen; "
         "the audit's single highest risk. Consensus 4.3/10."),
-    "motodiag.engine.workflows": ("unwired-feature",
-        "Phase 82 guided-troubleshooting scripts. is_complete() ends the "
-        "charging workflow on its first FAIL, leaving 3 of 4 steps "
-        "unreachable (workflows.py:120-123). Consensus 4.3/10."),
 }

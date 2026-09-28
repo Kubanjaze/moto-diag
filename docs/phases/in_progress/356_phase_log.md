@@ -42,3 +42,54 @@ bike), C (both). Recommended A.
   bike, because no rule is scoped to electric alone; the seven
   `("ice", "hybrid")` rules are shown to it in addition. The entry says
   so.
+
+### 2026-09-28 — v1.0, then the build
+
+v1.0 and this log committed and pushed before code: `23ea56a`.
+
+- **`engine/workflows.py`:** `stop_on_fail: bool = True`; `is_complete()`'s
+  fail clause applies only when it is true.
+- **`workflows/runner.py`:** `checklist_workflow(template, items)`, one
+  step per item, `max_steps` the item count, `stop_on_fail=False`. An
+  item's `expected_pass` and `expected_fail` may be `None`
+  (`ChecklistItem` allows it) and the step's are `str`, so each is
+  given as `or ""`.
+- **`cli/workflow.py`:** `workflow run <slug> [--powertrain]`. `show`'s
+  item block became `_print_item` and its lookup `_template_or_refuse`,
+  which both commands use, so `run` refuses exactly as `show` does.
+- **A manual run** against the Step 0 database (brake_service_v1,
+  electric): the items print as `show` prints them. A typed `s` on
+  required item 5 printed `Error: 's' is not one of 'p', 'f'.` and asked
+  again, so the answers that followed shifted by one and the input ran
+  out at item 7 (`Aborted!`, exit 1). That is the refusal working, not a
+  fault.
+- **`tests/test_phase356_workflow_run.py`, 32 tests, green at the first
+  run.** A first green is not evidence, so every helper has a planted
+  output it must fail on (13 tests), and the source was mutated:
+- **Mutations, `356_mutate.py` (committed with this build): 11/11 red.**
+  M1 the engine default no longer stops on a fail; M2 the runner keeps the
+  stop; M3 `max_steps` left at the default (the largest template has 8,
+  under 10, so only the mapping test sees it); M4 no skip on an optional
+  item; M5 no diagnosis on a fail; M6 a retired template not refused; M7
+  an uncovered powertrain not refused; M8 a skip counted as a pass; M9 no
+  powertrain prompt; M10 the powertrain asked before the template is
+  checked; M11 the summary lists no failed item.
+- **Related suites** (Phases 82, 95, 114, 259–264, 272, 356): 322 passed.
+  Gate 15 is green. The 244G scanner over `tests/`: 0.
+- **`wholetree.sh` before the build commit: 2 failed, then 3.** Both
+  gates that track unreached code saw `engine.workflows` become reached:
+  - 244W: `motodiag.engine.workflows` was in `MODULE_ISLANDS` and is now
+    used, a stale entry. Removed. Its pins followed:
+    `MODULE_ISLAND_COUNT` 14 → 13, and 244W's engine-entry literal 6 → 5.
+  - 209B: with the module reached, its four other public functions
+    (`create_no_start_workflow`, `create_charging_workflow`,
+    `create_overheating_workflow`, `generate_next_step`) became live
+    orphans. Listed in `ORPHANS` as unwired-feature, the charging entry
+    keeping the audit's 4.3/10; `ORPHAN_COUNT` 102 → 106.
+
+  Not a bug-fix entry: none of this code had been committed (272's
+  precedent). The two edits to `integration_gaps_counts.py` were made
+  with an exact-string replace in a short script that asserted one
+  occurrence each, not the Edit tool; the diff was read after, and it
+  changes only the two counts and their history lines.
+  Then `wholetree.sh`: 1475 passed.

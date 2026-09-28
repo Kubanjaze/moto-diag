@@ -61,6 +61,11 @@ class DiagnosticWorkflow(BaseModel):
     eliminated_causes: list[str] = Field(default_factory=list, description="Causes ruled out by test results")
     remaining_causes: list[str] = Field(default_factory=list, description="Causes still under consideration")
     max_steps: int = Field(default=10, description="Maximum steps before forcing a conclusion")
+    stop_on_fail: bool = Field(
+        default=True,
+        description="End the workflow at the first failed step with a diagnosis. "
+                    "Phase 356: a checklist run sets False, so every item is answered.",
+    )
     started_at: Optional[datetime] = None
     completed_at: Optional[datetime] = None
 
@@ -117,7 +122,7 @@ class DiagnosticWorkflow(BaseModel):
         if self.current_step_index >= len(self.steps):
             return True
         # Complete if we have a confident working diagnosis from a failed test
-        if self.working_diagnosis and any(
+        if self.stop_on_fail and self.working_diagnosis and any(
             s.result == StepResult.FAIL for s in self.steps if s.result is not None
         ):
             return True

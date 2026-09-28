@@ -29,8 +29,9 @@ UNREACHABLE_COUNT = 34
 #: finding, converged on by four independent designs) → 13 at Phase 244Y (six
 #: superseded modules deleted) → 14 (244Y: inventory/models surfaced as a
 #: third-order island once its last live import went; substrate). Unchanged by
-#: Phase 244Z, on purpose: content fixed, reachability untouched.
-MODULE_ISLAND_COUNT = 14
+#: Phase 244Z, on purpose: content fixed, reachability untouched. → 13 at
+#: Phase 356 (`workflow run` reaches motodiag.engine.workflows).
+MODULE_ISLAND_COUNT = 13
 
 #: `len(ORPHANS)`. Asserted in test_phase244U_gate_blind_spot.py.
 #: The running count of live orphans: 46 (pre-244U) → 66 (244U opened the
@@ -43,5 +44,7 @@ MODULE_ISLAND_COUNT = 14
 #: superseded defs and the gate then surfaced Permission, a model whose only
 #: constructor had gone) → 102 (Phase 259 fix #4: wiring the workflows
 #: substrate's read side made its six write functions live orphans, listed as
-#: substrate awaiting Phase 316).
-ORPHAN_COUNT = 102
+#: substrate awaiting Phase 316) → 106 (Phase 356: wiring engine.workflows
+#: made its three predefined scripts and generate_next_step live orphans,
+#: listed as unwired-feature).
+ORPHAN_COUNT = 106
