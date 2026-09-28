@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F173** (this file); the mobile
+At the time of writing the highest assigned is **F174** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -2153,3 +2153,57 @@ reproduce it:
 
 What would close it: a reproduction and its fix, or a stated run count
 with no failure and the truncation fixed so a recurrence is not lost.
+
+### F174
+
+**`motodiag garage add` stores a bike as `ice` when `--powertrain` is not given, so an electric bike added without the flag is recorded as an engine machine**
+
+Measured by Phase 356's Step 0 (`356_step0.md`, S0-4, option B) and
+filed at the operator's request on 2026-09-28. Not fixed in 356. The
+default is set in three places, all of them `ice`:
+- `garage add`'s `--powertrain` option, `default="ice"`
+  (`src/motodiag/cli/main.py:442`);
+- `VehicleBase.powertrain`, `Field(PowertrainType.ICE, …)`
+  (`src/motodiag/core/models.py:149`);
+- the `vehicles.powertrain` column, `TEXT DEFAULT 'ice'`
+  (`src/motodiag/core/migrations.py:211`, Phase 110's migration, whose
+  description says "Existing rows get ICE/4-stroke defaults"; a
+  rollback's rebuilt `vehicles` table at `:2916` carries the same
+  default).
+
+So the stored value cannot tell "the mechanic said ice" from "nobody
+said". The readers of that value (grep of `src/motodiag` for the
+vehicle's `powertrain`):
+- **diagnose** (`cli/diagnose.py:466`, `:542`) passes it to
+  `_load_known_issues`. There, retrieval gives it to
+  `resolve_transmission` (`knowledge/transmission.py`, rung 3: an
+  electric machine with no gearbox defaults to `direct_drive`), and
+  `prompt_rows` puts electric rows first only when it reads `electric`.
+- **the predictor** (`advanced/predictor.py:243`) passes it to
+  `rows_for_machine`, as above.
+- **the priority scorer** (`shop/priority_scorer.py:321`) reads the same
+  column.
+- **the safety scoping** (`cli/diagnose.py:721` into `SafetyChecker`,
+  `engine/safety.py:398–417`). `None` shows every rule, but `ice` is not
+  `None`. Seven rules are scoped `("ice", "hybrid")`, so an electric bike
+  stored as ice gets those alerts as well. No rule is hidden by the wrong
+  value, since no rule is scoped to electric alone. The checker's
+  docstring says "a blank or wrong value must not be able to hide a
+  fuel-leak warning", and that still holds.
+
+What it affects: an electric bike added with `garage add` and no
+`--powertrain` loses rung 3's `direct_drive` default and the electric-first
+ordering, and is scored and alerted as an engine machine. Phase 357's bike
+link would inherit the value: a saved run tied to a bike would read `ice`.
+The garage's photo path (`garage_add_from_photo`) stores a vision guess
+instead and is not affected by this default.
+
+Not measured: how many live garage rows are electric machines stored as
+`ice`. That needs a read of the live database, which no phase has
+scoped.
+
+What would close it: the operator's choice between two fixes. One is to
+require the powertrain at `garage add`, or ask for it when it is missing.
+The other is to store unknown (`NULL`), which the readers above already
+treat as "show everything". That second fix changes a column default,
+which needs a migration. A census of live rows would come with either.
