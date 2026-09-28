@@ -105,3 +105,55 @@ update` gains `--powertrain`. F174 stays open.
 ### 2026-09-28 — v1.0
 
 `357_implementation.md` v1.0, committed and pushed before code.
+
+### 2026-09-28 — The build
+
+Committed `90cc2d9`, after `wholetree.sh --full` passed on its tree (83
+files, 3945 passed; a content commit, `migrations.py` changed).
+
+- **Migration 073:** `workflow_runs`, `workflow_run_items`, three indexes.
+  `SCHEMA_VERSION` 72 → 73. It changes no existing row.
+- **`workflows/run_repo.py`:** start, get, list, record, finish; a
+  `RunRefused` carries each refusal's sentence.
+- **`cli/workflow.py`:** `start`, `record`, `resume`, `finish`, `runs`,
+  `report`. The walk loop became `_walk`, shared with `run`. The line
+  that prints a fail's diagnosis keeps its exact text, so
+  `356_mutate.py` still finds it. 356's 32 tests and Gate 15 (33) pass
+  unchanged.
+- **`garage update --powertrain`** (A+).
+- **How the code was written:** the six commands were appended to
+  `cli/workflow.py` with one heredoc. It was new code at the end of the
+  file, not an exact-match edit, but the prompt asks for the Edit tool on
+  source, and this was not it. Every later change to source went through
+  Edit.
+- **Tests:** `test_phase357_saved_runs.py`, 48. The first run had 46
+  errors: the fixture inserted customer 1, which `init_db` seeds as
+  "Unassigned". Three assertions were then tightened (a heading matched
+  in the summary, `#2 ` matched "bike #2", SQLite's automatic index in
+  the rollback's name set). None was a code defect.
+- **Mutations:** `357_mutate.py RUN`, 16. The first pass left M15 green
+  because the mutant was inert: with two `title` columns in one row,
+  `sqlite3.Row` returns the first, so the copied title still won. It was
+  rewritten to select the template's title only, and went red. M16's
+  anchor text occurred twice and was made specific. Then the whole
+  script: **26/26 red** (F172 6, F175 4, RUN 16).
+
+### 2026-09-28 — A slip, caught and undone: a checkout of master's tree
+
+While counting collected tests, one command ended with `git checkout -q
+b0ff03a -- .`, which wrote master's version of every tracked file into
+the working copy and index. Nothing committed was touched: HEAD was
+`90cc2d9`, pushed. The only uncommitted change, `357_mutate.py` (not in
+`b0ff03a`), was copied to the scratchpad first. Then `git restore
+--source=HEAD --staged --worktree -- . ':!docs/phases/in_progress/357_mutate.py'`
+restored everything else. Checked after: `git diff HEAD` names only
+`357_mutate.py`; `SCHEMA_VERSION` 73, `deploy.py`'s exact diff and
+`wholetree.py`'s ledger class present; no stash left.
+
+### 2026-09-28 — The floor
+
+`COLLECTED_TEST_FLOOR` 9710 → 9772, measured with `--collect-only`.
+Collected in worktrees: `b0ff03a` 9711 (one over its floor already),
+`67be350` 9719, `5a4e821` 9724, the build 9772 (+48, all
+`test_phase357_saved_runs.py`). Step 0's "9723" was one short and is
+corrected there.

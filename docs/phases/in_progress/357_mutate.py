@@ -23,6 +23,11 @@ DEPLOY_TESTS = ["tests/test_phase357_deploy_exact.py", "tests/test_phase358_depl
 WHOLETREE = ".claude/skills/closeout/wholetree.py"
 WHOLETREE_TESTS = ["tests/test_phase357_wholetree_ledger.py",
                    "tests/test_phase358_wholetree_contract.py"]
+CLI = "src/motodiag/cli/workflow.py"
+REPO = "src/motodiag/workflows/run_repo.py"
+MIGRATIONS = "src/motodiag/core/migrations.py"
+MAIN = "src/motodiag/cli/main.py"
+RUN_TESTS = ["tests/test_phase357_saved_runs.py"]
 
 MUTATIONS = [
     ("F172-M1 apply-live ignores a fresh run that differs from the approved diff", DEPLOY,
@@ -54,6 +59,50 @@ MUTATIONS = [
     ("F175-M4 ledger tests join fast mode", WHOLETREE,
      "    return [f for f in c[\"code\"]\n",
      "    return [f for f in c[\"code\"] + c[\"ledger\"]\n", WHOLETREE_TESTS),
+    ("RUN-M1 the walk saves no answer", CLI,
+     "_walk(console, template, items, save=_saver(run[\"id\"]))",
+     "_walk(console, template, items, save=None)", RUN_TESTS),
+    ("RUN-M2 a bike stored with another powertrain is not refused", CLI,
+     "    if stored and stored != powertrain:", "    if False:", RUN_TESTS),
+    ("RUN-M3 finish allows unanswered items", REPO,
+     "        if open_items:\n", "        if False:\n", RUN_TESTS),
+    ("RUN-M4 resume asks every item again", CLI,
+     "items = [_walkable(r) for r in rows if r[\"result\"] is None]",
+     "items = [_walkable(r) for r in rows]", RUN_TESTS),
+    ("RUN-M5 a finished run accepts a new answer", REPO,
+     "        if run[\"status\"] == \"complete\":\n            raise RunRefused(f\"Run #{run_id} is finished",
+     "        if False:\n            raise RunRefused(f\"Run #{run_id} is finished", RUN_TESTS),
+    ("RUN-M6 a skip on a required item reaches the database", REPO,
+     "        if result == \"skipped\" and item[\"required\"]:", "        if False:", RUN_TESTS),
+    ("RUN-M7 a fail keeps no diagnosis", REPO,
+     "(result, notes, diagnosis if result == \"fail\" else None,",
+     "(result, notes, None,", RUN_TESTS),
+    ("RUN-M8 a work order and another bike are accepted", CLI,
+     "        if vehicle is not None and vehicle[\"id\"] != order[\"vehicle_id\"]:",
+     "        if False:", RUN_TESTS),
+    ("RUN-M9 a closed work order is accepted", CLI,
+     "        if order[\"status\"] in (\"completed\", \"cancelled\"):", "        if False:", RUN_TESTS),
+    ("RUN-M10 a run with neither bike nor work order is not refused", CLI,
+     "    if vehicle is None:\n        _refuse(console, \"A saved run",
+     "    if False:\n        _refuse(console, \"A saved run", RUN_TESTS),
+    ("RUN-M11 the schema lets a required item be skipped", MIGRATIONS,
+     "                CHECK (result IS NOT 'skipped' OR required = 0),\n", "", RUN_TESTS),
+    ("RUN-M12 the rollback leaves the run table", MIGRATIONS,
+     "            DROP TABLE IF EXISTS workflow_runs;\n        \"\"\",\n    ),\n]",
+     "        \"\"\",\n    ),\n]", RUN_TESTS),
+    ("RUN-M13 garage update ignores --powertrain", MAIN,
+     "        updates[\"powertrain\"] = powertrain", "        pass", RUN_TESTS),
+    ("RUN-M14 runs ignores the bike filter", REPO,
+     "    if vehicle_id is not None:\n        where.append", "    if False:\n        where.append",
+     RUN_TESTS),
+    ("RUN-M15 the report reads the template's current title", REPO,
+     "SELECT ri.*, ci.description,",
+     "SELECT ri.id, ri.run_id, ri.checklist_item_id, ri.sequence_number, ci.title, "
+     "ri.required, ri.result, ri.diagnosis, ri.notes, ri.answered_at, ci.description,",
+     RUN_TESTS),
+    ("RUN-M16 a run is not tied to its work order", CLI,
+     "powertrain,\n                                work_order_id=work_order_id,",
+     "powertrain,\n                                work_order_id=None,", RUN_TESTS),
 ]
 
 

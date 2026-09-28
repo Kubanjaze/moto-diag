@@ -197,7 +197,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: exists, because 356 wired the module; the other five parametrized cases
 #: remain. Measured with `--collect-only -q`: 9,710.
 #:
-COLLECTED_TEST_FLOOR = 9710
+#: 9772 (Phase 357, 2026-09-28) — +62 over 9710: master at `b0ff03a` already
+#: collected 9,711; then `test_phase357_deploy_exact.py` (8, F172),
+#: `test_phase357_wholetree_ledger.py` (5, F175) and
+#: `test_phase357_saved_runs.py` (48: start, record, resume, finish, runs,
+#: report through CliRunner, migration 073, and each helper's planted
+#: input). Measured with `--collect-only -q`: 9,772.
+#:
+COLLECTED_TEST_FLOOR = 9772
 
 
 def _collected_count() -> int:
