@@ -955,8 +955,6 @@ def _words(words: list, state: State, body: str | None, depth: int) -> None:
     elif name in ("export", "declare", "local", "typeset", "readonly"):
         for a in args:
             _assign(a, state)
-    elif name == "git":
-        return
     elif name in ("sed", "gsed"):
         if _sed_inplace(args):
             raise Blocked(f"`{name} -i` edits a file in place, and is blocked "

@@ -157,6 +157,19 @@ added, `echo planted >> tests/_planted_live_probe.py` was refused by
 `edit_guard.sh` and the file was absent after. The fresh-session proof
 follows.
 
+**The fresh-session proof.** A scratch worktree at `499b7a8` (the guard
+commit), and a headless `claude -p --model haiku --allowedTools Bash`
+started in it, loading the new settings at startup:
+- asked to run `echo planted >> tests/_fresh_probe.py`, it replied "The
+  command was blocked by the edit guard hook: 'edit guard: blocked — the
+  redirect `>>` writes into tests/_fresh_probe.py…'", and the file was
+  absent;
+- control, the same session shape: `echo planted >> docs/_fresh_probe.md`
+  succeeded, and the file held `planted`. So the guard does not simply
+  block all of Bash.
+
+The worktree was removed after.
+
 **Known limits:** in the closeout CHANGELOG's 2026-09-28 entry, and here:
 - a script file run by name is not opened (the mutation scripts);
 - `install`, `rsync`, `dd`, `truncate`, `ln`, `rm` and `git apply` are not
@@ -166,3 +179,127 @@ follows.
 - only this checkout is protected;
 - a glob or a substitution after a fixed directory is judged by that
   directory.
+
+Committed `499b7a8`, pushed.
+
+### 2026-09-28 — Part 1 built: F174, option (c) with (ii)
+
+- **Migration 074** (`_vehicles_rebuild_074`): `vehicles` is rebuilt with
+  `powertrain TEXT`, no default:
+  - every column is copied by name, in the live order;
+  - the AUTOINCREMENT sequence is carried across, because the deploy diff
+    cannot see `sqlite_sequence`;
+  - the three indexes are recreated byte for byte;
+  - `foreign_keys` is off during the rebuild (17 child tables).
+
+  The rollback rebuilds with `DEFAULT 'ice'`. `SCHEMA_VERSION` 73 → 74.
+  Before writing it: a fresh database's `vehicles` SQL and the live one's
+  are byte-identical (read only).
+- **`VehicleBase.powertrain`** is `Optional[...] = None`; both registry
+  inserts bind NULL.
+- **`garage add`** asks when no powertrain is given (`_ask_powertrain`).
+  With no answer it prints "No powertrain given: add --powertrain
+  ice|electric|hybrid. Nothing was saved." and exits 1.
+- **`garage add-from-photo`**:
+  - gains `--powertrain`, which wins over the guess;
+  - when neither gives one, it asks;
+  - the panel prints `Powertrain: unknown`;
+  - `_powertrain_guess` reads a missing, blank or unrecognised reply as
+    `None`. An unrecognised one used to raise at save time.
+- **The API** stores NULL when the field is absent.
+- **`garage list`** prints `unknown`.
+- **`workflow start` (ii):** on a bike stored as unknown, once the run is
+  saved, the stated value is stored and printed: "Bike #N had no powertrain
+  on record; stored as electric, as stated."
+- **Re-verified:** the Step 0 search for an unstated `ice` now finds only
+  history: migration 003's column (superseded by 074), 177's rollback, and
+  074's own rollback.
+
+**Tests:** `tests/test_phase360_powertrain_unknown.py`, 38, on `tmp_path`
+databases:
+- the migration: every row, the sequence after a deleted top row, a child
+  row, the indexes, `foreign_key_check`, the rollback, a raw insert, and
+  no reuse of a deleted id;
+- `garage add`: asks; refuses on no answer; a given value is not asked for;
+- the photo path, four cases;
+- the vision reply, seven cases;
+- the API: create without the field, create with it, read;
+- every reader on a bike stored as NULL:
+  - diagnose passes `None` on, and so does its retrieval, both shown by
+    spies;
+  - unknown is not resolved as electric;
+  - the predictor and the priority scorer pass `None` on (spies; the
+    scorer reads it from the table);
+  - safety shows every rule, with the electric control showing the check
+    can tell the difference;
+  - `garage list`;
+  - `workflow start` (ii): the stated value and the prompted value are
+    stored; a stored value is not rewritten; a disagreeing bike is still
+    refused; a template that does not cover the value changes nothing.
+
+Each planted known-bad fails its assertion (`360_mutate.py`, below).
+
+Existing tests that pinned the old default or added a bike without a
+powertrain were updated, 12 edits across 5 files:
+- `test_phase110`, 4: the two default tests assert unknown, and the
+  filter tests state `ice`;
+- `test_phase122`, 2;
+- 357's F174 test, which planted the default on purpose, is now a mistake
+  stated by the mechanic, with the same remedy;
+- gate 11's two `garage add` calls and gate 14's fixture gain
+  `--powertrain ice`. They are petrol bikes: a Road King, a CB500, and 50 cc
+  scooters.
+
+**Mutations, `360_mutate.py`: 36/36 red** (G1–G15 for the guard, P1–P21
+for F174). The first run found two defects in the phase's own work:
+- G15 stayed green. When the fixed-directory resolution was disabled,
+  the mention fallback still blocked, so the test could not tell the two
+  apart. `test_the_fixed_directory_of_a_python_path_is_enough_to_block`
+  now asserts the definite reason.
+- P9's text occurred twice, in the create and the update requests.
+
+Also removed: the guard's `elif name == "git": return`. It was dead code
+(S9): `git` is neither an interpreter nor a writer the guard judges, so no
+mutation could make it red.
+
+**F178 filed**, found while building. The API's powertrain literal
+(`hybrid_parallel`, `hybrid_series`) is not the enum's (`hybrid`):
+- no API request can create a hybrid bike: 422 for `hybrid`, 400 for
+  the variants;
+- a PATCH stores `hybrid_parallel` as it is, and `SafetyChecker` then
+  shows no fuel-leak alert.
+
+No live row is affected (all ten are `ice`). It is not fixed here: it
+changes the API contract and the app's types.
+
+### 2026-09-28 — Stopped: gate 11's contract snapshot (rule 1: a test it cannot make green)
+
+Running every test that mentions vehicles after the build left one
+failure, re-run up a chain of gates:
+- `test_phase205_gate11.py::TestContractSnapshot::test_shared_schemas_have_not_drifted`
+  fails with "The mobile snapshot describes schemas differently from the
+  live API … `VehicleCreateRequest.powertrain: changed`";
+- gate 12's, 13's and 14's regression tests re-run gate 11 and fail with
+  it.
+
+**The cause is the contract itself.** The mobile repo's committed
+snapshot (`moto-diag-mobile/api-schema/openapi.json`) describes the field
+as `{"type": "string", "enum": [...], "default": "ice"}`. The API now
+describes it as nullable, with no default. Any fix to the API's half of
+F174, under any of the three options, changes that description, so the
+snapshot must be refreshed and the app's types regenerated in the mobile
+repo (`npm run refresh-api-schema`, `npm run generate-api-types`).
+
+**Step 0 missed this.** It listed the API as a reader, and did not look
+for a test that pins the API's contract against the other repository.
+
+This session does not write to the mobile repo: another repository gets
+its own session. `wholetree.sh --full` holds gates 12–14, and the push
+guard needs a `--full` record for a commit to `migrations.py`, so part 1
+cannot be committed until the snapshot matches. That is the guard doing its
+job.
+
+**Saved, not committed:** part 1's diff is `360_part1_wip.patch` in this
+folder, and it stays in the working tree. Everything else is committed:
+the guard's test fix, the dead-branch removal, the mutation script and
+F178.

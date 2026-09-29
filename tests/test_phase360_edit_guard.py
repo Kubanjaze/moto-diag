@@ -162,10 +162,6 @@ SCRIPT = [
     "bash -c 'echo x > src/motodiag/_planted.py'",
     "sh -c \"cp {tmp}/a tests/\"",
     "node -e \"require('fs').writeFileSync('src/motodiag/x.js', '')\"",
-    # The fixed part of an f-string or a `/` join names the directory.
-    "python3 - <<'EOF'\ndef sub(stem):\n    p = open(f'tests/test_phase{stem}.py', 'w')\nEOF",
-    "python3 - <<'EOF'\nfrom pathlib import Path\nK = Path('src/motodiag/knowledge/seed')\n"
-    "for name in names:\n    (K / name).write_text('x')\nEOF",
     # One of two assignments of the same name points into tests/.
     "python3 - <<'EOF'\nimport pathlib\np = pathlib.Path('docs/a.md')\np.write_text('x')\n"
     "p = pathlib.Path('tests/test_x.py')\np.write_text('x')\nEOF",
@@ -219,6 +215,22 @@ def test_patch_into_src_or_tests_is_blocked(command, tmp_path):
 @pytest.mark.parametrize("command", SCRIPT, ids=range(len(SCRIPT)))
 def test_a_script_body_that_writes_there_is_blocked(command, tmp_path):
     assert_blocked(_run(_fill(command, tmp_path)))
+
+
+FIXED_DIRECTORY = [
+    ("python3 - <<'EOF'\ndef sub(stem):\n    p = open(f'tests/test_phase{stem}.py', 'w')\nEOF",
+     "writes tests/…"),
+    ("python3 - <<'EOF'\nfrom pathlib import Path\nK = Path('src/motodiag/knowledge/seed')\n"
+     "for name in names:\n    (K / name).write_text('x')\nEOF",
+     "writes src/motodiag/knowledge/seed/…"),
+]
+
+
+@pytest.mark.parametrize("command,why", FIXED_DIRECTORY, ids=range(len(FIXED_DIRECTORY)))
+def test_the_fixed_directory_of_a_python_path_is_enough_to_block(command, why):
+    """The fixed part of an f-string or a `/` join names the directory, and
+    the block says so, rather than falling back on the mention rule."""
+    assert_blocked(_run(command), why)
 
 
 def test_a_script_body_writing_an_unresolvable_path_that_names_tests_is_blocked():

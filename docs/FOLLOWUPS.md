@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F177** (this file); the mobile
+At the time of writing the highest assigned is **F178** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -2334,3 +2334,40 @@ showed ten bikes, all `four_stroke`, all petrol models.
 Not fixed in Phase 360, whose scope is the powertrain. What would close
 it: the same choice F174 was given, applied to `engine_type`, and a test
 for each reader with the value unknown.
+
+### F178
+
+**The API's powertrain values are not the enum's: no API request can create a hybrid bike, and an update stores `hybrid_parallel` as it is, which hides seven safety rules**
+
+Measured by Phase 360 on a scratch database, 2026-09-28. The API declares
+`PowertrainLiteral = Literal["ice", "electric", "hybrid_parallel",
+"hybrid_series"]` (`src/motodiag/api/routes/vehicles.py:57–59`). But
+`PowertrainType` holds `ice`, `electric` and `hybrid`
+(`src/motodiag/core/models.py:67–69`), and so do the CLI, the workflow
+templates and the safety scoping. What happens to each value:
+- `POST /v1/vehicles` with `"powertrain": "hybrid"`: **422**, refused by
+  the literal.
+- The same with `hybrid_parallel` or `hybrid_series`: **400**, from
+  `PowertrainType(req.powertrain)`.
+- `PATCH /v1/vehicles/{id}` with `hybrid_parallel`: **200**, and the row
+  stores `hybrid_parallel`. The update path passes the string to
+  `update_vehicle` with no enum conversion.
+- `SafetyChecker(powertrain="hybrid_parallel")` on "fuel leak pooling under
+  the tank" returns **no alert**. The seven rules scoped
+  `("ice", "hybrid")` (`src/motodiag/engine/safety.py:83–247`) do not match
+  the stored value, so a hybrid bike updated through the API loses the
+  fuel-leak warning. The checker's docstring says "a blank or wrong value
+  must not be able to hide a fuel-leak warning".
+
+What it affects: only a bike updated through the API with a hybrid
+variant. The live census for Phase 360 showed ten bikes, all `ice`, so no
+live row holds such a value. The app's generated types
+(`moto-diag-mobile/src/api-types.ts`) carry the same four values.
+
+Not fixed in Phase 360: fixing it changes the API contract and the app's
+generated types. What would close it:
+- the API's literal made the enum's three values, or the variants mapped to
+  `hybrid`, with the OpenAPI schema and the app's types regenerated;
+- the update path converting through the enum;
+- a test that a stored value outside the enum cannot suppress a safety
+  rule.
