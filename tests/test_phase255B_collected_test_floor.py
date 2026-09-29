@@ -212,7 +212,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: successor. Three tests renamed, net 0. Measured by collected-ID diff
 #: against master: 9,950.
 #:
-COLLECTED_TEST_FLOOR = 9950
+#: 10018 (Phase 361, 2026-09-29) — +68 over 9950:
+#: `test_phase361_safety_unknown_powertrain.py` (16: no stored powertrain
+#: hides a safety rule), `test_phase361_contract_and_engine_type.py` (51:
+#: the enums' values in the API and `update_vehicle`, migration 075, every
+#: entry point and reader on an unknown engine type), and +1 in gate 15's
+#: `test_rolling_back_peels_every_successor[74]`, since 075 is 74's
+#: successor. None removed. Measured by collected-ID diff against master:
+#: 10,018.
+#:
+COLLECTED_TEST_FLOOR = 10018
 
 
 def _collected_count() -> int:
