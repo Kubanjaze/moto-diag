@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F176** (this file); the mobile
+At the time of writing the highest assigned is **F177** (this file); the mobile
 file's highest is **F147**.
 
 ---
@@ -2304,3 +2304,33 @@ the same way, so a bike with a saved run behaves the same.
 What would close it: `garage remove` refuses such a bike, names what
 still refers to it (work orders, saved runs), and exits 1, with a test
 for each.
+
+### F177
+
+**A bike's `engine_type` is stored as `four_stroke` when nobody gave it, the same shape as F174's powertrain**
+
+Found by Phase 360's Step 0 (`360_step0.md`, S0-3). The default is set in
+four places, all `four_stroke`:
+- the `vehicles.engine_type` column, `TEXT DEFAULT 'four_stroke'`
+  (`src/motodiag/core/migrations.py:212`, Phase 110's migration; a
+  rollback's rebuilt table at `:2917` carries it too);
+- `VehicleBase.engine_type`, `Field(EngineType.FOUR_STROKE, …)`
+  (`src/motodiag/core/models.py:153`);
+- the API's `VehicleCreateRequest.engine_type: EngineTypeLiteral =
+  "four_stroke"` (`src/motodiag/api/routes/vehicles.py:84`);
+- `garage add` and `garage add-from-photo` derive `FOUR_STROKE` for
+  anything not stated as electric (`src/motodiag/cli/main.py:467`,
+  `:589`), so a two-stroke, and a bike whose powertrain is unknown, are
+  stored as four-stroke.
+
+What it affects: diagnose passes `engine_type` into the prompt as
+"Engine: four_stroke" (`src/motodiag/engine/prompts.py:46–47`, via
+`cli/diagnose.py:482`), and parts sourcing prints it
+(`src/motodiag/shop/parts_sourcing.py:226`). A two-stroke scooter added
+without the value is described to the model as a four-stroke. Not
+measured: how many live rows are affected. The live census for Phase 360
+showed ten bikes, all `four_stroke`, all petrol models.
+
+Not fixed in Phase 360, whose scope is the powertrain. What would close
+it: the same choice F174 was given, applied to `engine_type`, and a test
+for each reader with the value unknown.
