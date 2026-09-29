@@ -204,7 +204,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: report through CliRunner, migration 073, and each helper's planted
 #: input). Measured with `--collect-only -q`: 9,772.
 #:
-COLLECTED_TEST_FLOOR = 9772
+#: 9950 (Phase 360, 2026-09-29) — +178 over 9772: `test_phase360_edit_guard.py`
+#: (139: a planted positive control per blocked form, the negative controls,
+#: fail-closed cases), `test_phase360_powertrain_unknown.py` (38: migration
+#: 074, every entry point, every reader on an unknown bike), and +1 in gate
+#: 15's `test_rolling_back_peels_every_successor[73]`, since 074 is 73's
+#: successor. Three tests renamed, net 0. Measured by collected-ID diff
+#: against master: 9,950.
+#:
+COLLECTED_TEST_FLOOR = 9950
 
 
 def _collected_count() -> int:

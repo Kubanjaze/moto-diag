@@ -415,6 +415,13 @@ def start_cmd(slug: str, bike: str | None, vehicle_id: int | None,
     items = get_checklist_items(template["id"], get_db_path())
     run_id = run_repo.start_run(template, items, vehicle["id"], powertrain,
                                 work_order_id=work_order_id, db_path=get_db_path())
+    if not stored:
+        # Phase 360 (F174), the operator's (ii): the bike had no powertrain
+        # on record, and the mechanic has just stated one.
+        from motodiag.vehicles.registry import update_vehicle
+        update_vehicle(vehicle["id"], {"powertrain": powertrain}, db_path=get_db_path())
+        console.print(f"Bike #{vehicle['id']} had no powertrain on record; stored as "
+                      f"{powertrain}, as stated.")
     console.print()
     console.print(f"[bold]{template['name']}[/bold]")
     console.print(f"[dim]Run #{run_id} · {slug} · bike #{vehicle['id']} {label}"

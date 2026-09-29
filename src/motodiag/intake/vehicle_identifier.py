@@ -149,6 +149,14 @@ def _compute_cost_cents(model: str, tokens_input: int, tokens_output: int) -> in
     return max(1, math.ceil(total))
 
 
+def _powertrain_guess(value: object) -> Optional[str]:
+    """The model's powertrain, or None when it gave none or one outside the
+    three (Phase 360, F174: a missing guess is not ice, and an unrecognised
+    one used to raise in `PowertrainType(...)` at save time)."""
+    text = str(value).strip().lower() if value is not None else ""
+    return text if text in ("ice", "electric", "hybrid") else None
+
+
 def _parse_guess_json(raw: str, model_used: str, image_hash: str) -> VehicleGuess:
     """Parse a model JSON response into a VehicleGuess. Raises IntakeError on bad JSON."""
     # Strip common wrapping (some models add ```json fences despite instructions)
@@ -183,7 +191,7 @@ def _parse_guess_json(raw: str, model_used: str, image_hash: str) -> VehicleGues
         model=str(data["model"]).strip(),
         year_range=(int(data["year_low"]), int(data["year_high"])),
         engine_cc_range=engine_range,
-        powertrain_guess=str(data.get("powertrain_guess", "ice")).lower(),
+        powertrain_guess=_powertrain_guess(data.get("powertrain_guess")),
         confidence=float(data["confidence"]),
         reasoning=str(data.get("reasoning", "")).strip(),
         model_used=model_used,

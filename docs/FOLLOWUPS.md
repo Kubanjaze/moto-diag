@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F176** (this file); the mobile
-file's highest is **F147**.
+At the time of writing the highest assigned is **F179**, in the mobile file;
+this file's highest is **F178**.
 
 ---
 
@@ -2184,7 +2184,23 @@ reproduce it:
 What would close it: a reproduction and its fix, or a stated run count
 with no failure and the truncation fixed so a recurrence is not lost.
 
-### F174
+### F174 — CLOSED by Phase 360 (2026-09-29)
+
+**Closed.** No path stores a powertrain nobody stated:
+- migration 074 (live, schema 74) removed the column's `DEFAULT 'ice'`;
+- `VehicleBase.powertrain` defaults to None;
+- `garage add` and `garage add-from-photo` ask, and save nothing without
+  an answer;
+- a vision reply without the key is unknown;
+- the API stores NULL when the field is absent;
+- `workflow start` stores the stated value on a bike held as unknown.
+
+Every reader's handling of an unknown powertrain is tested
+(`tests/test_phase360_powertrain_unknown.py`); 21 mutations each turned a
+test red. The app's twin, its `ice` preselect, closed as the mobile repo's
+F179 (moto-diag-mobile `57c9e45`). The ten live bikes stay `ice`: all are
+petrol models, and no live row changed. `engine_type`'s identical default
+is F177.
 
 **`motodiag garage add` stores a bike as `ice` when `--powertrain` is not given, so an electric bike added without the flag is recorded as an engine machine**
 
@@ -2304,3 +2320,76 @@ the same way, so a bike with a saved run behaves the same.
 What would close it: `garage remove` refuses such a bike, names what
 still refers to it (work orders, saved runs), and exits 1, with a test
 for each.
+
+### F177
+
+**A bike's `engine_type` is stored as `four_stroke` when nobody gave it, the same shape as F174's powertrain**
+
+Found by Phase 360's Step 0 (`360_step0.md`, S0-3). The default is set in
+four places, all `four_stroke`:
+- the `vehicles.engine_type` column, `TEXT DEFAULT 'four_stroke'`
+  (`src/motodiag/core/migrations.py:212`, Phase 110's migration; a
+  rollback's rebuilt table at `:2917` carries it too);
+- `VehicleBase.engine_type`, `Field(EngineType.FOUR_STROKE, …)`
+  (`src/motodiag/core/models.py:153`);
+- the API's `VehicleCreateRequest.engine_type: EngineTypeLiteral =
+  "four_stroke"` (`src/motodiag/api/routes/vehicles.py:84`);
+- `garage add` and `garage add-from-photo` derive `FOUR_STROKE` for
+  anything not stated as electric (`src/motodiag/cli/main.py:467`,
+  `:589`), so a two-stroke, and a bike whose powertrain is unknown, are
+  stored as four-stroke.
+
+What it affects: diagnose passes `engine_type` into the prompt as
+"Engine: four_stroke" (`src/motodiag/engine/prompts.py:46–47`, via
+`cli/diagnose.py:482`), and parts sourcing prints it
+(`src/motodiag/shop/parts_sourcing.py:226`). A two-stroke scooter added
+without the value is described to the model as a four-stroke. Not
+measured: how many live rows are affected. The live census for Phase 360
+showed ten bikes, all `four_stroke`, all petrol models.
+
+Not fixed in Phase 360, whose scope is the powertrain. What would close
+it: the same choice F174 was given, applied to `engine_type`, and a test
+for each reader with the value unknown.
+
+**The app's side (2026-09-29):** the app's add-bike form preselects
+`engine_type` `'four_stroke'`
+(`moto-diag-mobile/src/screens/NewVehicleScreen.tsx`). The mobile repo's
+F179, which closed the form's `ice` preselect in `moto-diag-mobile`
+`57c9e45`, records this and leaves it open under F177.
+
+### F178
+
+**The API's powertrain values are not the enum's: no API request can create a hybrid bike, and an update stores `hybrid_parallel` as it is, which hides seven safety rules**
+
+Measured by Phase 360 on a scratch database, 2026-09-28. The API declares
+`PowertrainLiteral = Literal["ice", "electric", "hybrid_parallel",
+"hybrid_series"]` (`src/motodiag/api/routes/vehicles.py:57–59`). But
+`PowertrainType` holds `ice`, `electric` and `hybrid`
+(`src/motodiag/core/models.py:67–69`), and so do the CLI, the workflow
+templates and the safety scoping. What happens to each value:
+- `POST /v1/vehicles` with `"powertrain": "hybrid"`: **422**, refused by
+  the literal.
+- The same with `hybrid_parallel` or `hybrid_series`: **400**, from
+  `PowertrainType(req.powertrain)`.
+- `PATCH /v1/vehicles/{id}` with `hybrid_parallel`: **200**, and the row
+  stores `hybrid_parallel`. The update path passes the string to
+  `update_vehicle` with no enum conversion.
+- `SafetyChecker(powertrain="hybrid_parallel")` on "fuel leak pooling under
+  the tank" returns **no alert**. The seven rules scoped
+  `("ice", "hybrid")` (`src/motodiag/engine/safety.py:83–247`) do not match
+  the stored value, so a hybrid bike updated through the API loses the
+  fuel-leak warning. The checker's docstring says "a blank or wrong value
+  must not be able to hide a fuel-leak warning".
+
+What it affects: only a bike updated through the API with a hybrid
+variant. The live census for Phase 360 showed ten bikes, all `ice`, so no
+live row holds such a value. The app's generated types
+(`moto-diag-mobile/src/api-types.ts`) carry the same four values.
+
+Not fixed in Phase 360: fixing it changes the API contract and the app's
+generated types. What would close it:
+- the API's literal made the enum's three values, or the variants mapped to
+  `hybrid`, with the OpenAPI schema and the app's types regenerated;
+- the update path converting through the enum;
+- a test that a stored value outside the enum cannot suppress a safety
+  rule.

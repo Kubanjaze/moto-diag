@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 73  # Phase 357: saved workflow runs and their per-item results (migration 073)
+SCHEMA_VERSION = 74  # Phase 360: vehicles.powertrain loses its 'ice' default (migration 074, F174)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

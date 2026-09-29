@@ -217,9 +217,10 @@ class TestProtocolTypeExpansion:
 
 
 class TestVehicleBaseNewFields:
-    def test_defaults_preserve_ice_behavior(self):
+    def test_defaults_leave_the_powertrain_unknown(self):
+        # Phase 360 (F174): no longer ICE. A default stored a fact nobody stated.
         v = VehicleBase(make="Honda", model="CBR600RR", year=2007)
-        assert v.powertrain == PowertrainType.ICE
+        assert v.powertrain is None
         assert v.engine_type == EngineType.FOUR_STROKE
         assert v.battery_chemistry is None
         assert v.motor_kw is None
@@ -268,11 +269,11 @@ def fresh_db(tmp_path):
 
 
 class TestRegistryNewFields:
-    def test_add_ice_vehicle_default_fields(self, fresh_db):
+    def test_add_vehicle_default_fields(self, fresh_db):
         v = VehicleBase(make="Honda", model="CBR600RR", year=2007)
         vid = add_vehicle(v, fresh_db)
         row = get_vehicle(vid, fresh_db)
-        assert row["powertrain"] == "ice"
+        assert row["powertrain"] is None       # Phase 360 (F174): unknown, not ice
         assert row["engine_type"] == "four_stroke"
         assert row["battery_chemistry"] is None
         assert row["motor_kw"] is None
@@ -295,7 +296,8 @@ class TestRegistryNewFields:
         assert row["bms_present"] == 1
 
     def test_list_by_powertrain(self, fresh_db):
-        add_vehicle(VehicleBase(make="Honda", model="CBR600RR", year=2007), fresh_db)
+        add_vehicle(VehicleBase(make="Honda", model="CBR600RR", year=2007,
+                                powertrain=PowertrainType.ICE), fresh_db)
         add_vehicle(VehicleBase(
             make="Zero", model="SR/F", year=2022,
             powertrain=PowertrainType.ELECTRIC,
@@ -313,7 +315,8 @@ class TestRegistryNewFields:
         assert len(ice) == 1
 
     def test_count_by_powertrain(self, fresh_db):
-        add_vehicle(VehicleBase(make="Honda", model="CBR600RR", year=2007), fresh_db)
+        add_vehicle(VehicleBase(make="Honda", model="CBR600RR", year=2007,
+                                powertrain=PowertrainType.ICE), fresh_db)
         add_vehicle(VehicleBase(
             make="Zero", model="DS", year=2021,
             powertrain=PowertrainType.ELECTRIC,

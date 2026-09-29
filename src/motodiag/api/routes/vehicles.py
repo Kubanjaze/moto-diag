@@ -80,7 +80,8 @@ class VehicleCreateRequest(BaseModel):
     vin: Optional[str] = Field(None, max_length=30)
     protocol: ProtocolLiteral = "none"
     notes: Optional[str] = None
-    powertrain: PowertrainLiteral = "ice"
+    # Phase 360 (F174): absent is unknown and stored as NULL, not `ice`.
+    powertrain: Optional[PowertrainLiteral] = None
     engine_type: EngineTypeLiteral = "four_stroke"
     battery_chemistry: Optional[str] = None
     motor_kw: Optional[float] = Field(None, ge=0)
@@ -257,7 +258,7 @@ def create_vehicle_endpoint(
         engine_cc=req.engine_cc, vin=req.vin,
         protocol=ProtocolType(req.protocol),
         notes=req.notes,
-        powertrain=PowertrainType(req.powertrain),
+        powertrain=PowertrainType(req.powertrain) if req.powertrain else None,
         engine_type=EngineType(req.engine_type),
         battery_chemistry=(
             BatteryChemistry(req.battery_chemistry)

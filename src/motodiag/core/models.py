@@ -136,9 +136,12 @@ class VehicleBase(BaseModel):
     """Base vehicle information.
 
     Phase 110 (Retrofit): added optional powertrain/engine_type/battery
-    fields. Defaults (ICE, four_stroke, no battery chemistry) preserve
-    backward compatibility — existing code that doesn't set these gets
-    sensible ICE-bike behavior.
+    fields. Defaults (four_stroke, no battery chemistry) preserve
+    backward compatibility.
+
+    Phase 360 (F174): the powertrain defaults to None, meaning unknown, not
+    ICE. An `ice` default stored a fact nobody stated, and every reader
+    already treats None as unknown.
     """
     make: str = Field(..., description="Manufacturer (e.g., Harley-Davidson, Honda)")
     model: str = Field(..., description="Model name (e.g., Sportster 1200, CBR929RR)")
@@ -146,9 +149,9 @@ class VehicleBase(BaseModel):
     engine_cc: Optional[int] = Field(None, description="Engine displacement in cc (ICE only)")
     vin: Optional[str] = Field(None, description="Vehicle Identification Number")
     protocol: ProtocolType = Field(ProtocolType.NONE, description="ECU protocol type")
-    powertrain: PowertrainType = Field(
-        PowertrainType.ICE,
-        description="Powertrain classification (ICE, electric, hybrid)",
+    powertrain: Optional[PowertrainType] = Field(
+        None,
+        description="Powertrain classification (ICE, electric, hybrid); None is unknown",
     )
     engine_type: EngineType = Field(
         EngineType.FOUR_STROKE,

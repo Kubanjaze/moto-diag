@@ -192,6 +192,69 @@ def _known_issue_sql_072(reverse: bool) -> str:
     return "\n".join(statements) + "\n"
 
 
+def _vehicles_rebuild_074(powertrain_default: str, scratch: str) -> str:
+    """Rebuild `vehicles` with `powertrain_default` as the powertrain
+    column's definition, keeping every row, every other column's definition
+    and order, the three indexes' SQL byte for byte, and the table's
+    AUTOINCREMENT sequence (a plain rebuild would reset it to max(id) and
+    reuse a deleted bike's id). The deploy diff skips `sqlite_%` tables, so
+    the sequence is held by a test, not by the diff."""
+    columns = ("id, make, model, year, engine_cc, vin, protocol, notes, created_at, "
+               "updated_at, powertrain, engine_type, battery_chemistry, motor_kw, "
+               "bms_present, customer_id, mileage, owner_user_id, transmission")
+    return f"""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE {scratch} (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                year INTEGER NOT NULL,
+                engine_cc INTEGER,
+                vin TEXT,
+                protocol TEXT NOT NULL DEFAULT 'none',
+                notes TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                updated_at TIMESTAMP,
+                {powertrain_default},
+                engine_type TEXT DEFAULT 'four_stroke',
+                battery_chemistry TEXT,
+                motor_kw REAL,
+                bms_present INTEGER DEFAULT 0,
+                customer_id INTEGER DEFAULT 1,
+                mileage INTEGER,
+                owner_user_id INTEGER NOT NULL DEFAULT 1,
+                transmission TEXT
+                CHECK (transmission IS NULL OR transmission IN (
+                    'manual', 'cvt', 'dct', 'semi_auto_centrifugal',
+                    'semi_auto_actuated', 'direct_drive'
+                ))
+            );
+
+            INSERT INTO {scratch} ({columns})
+            SELECT {columns} FROM vehicles;
+
+            UPDATE sqlite_sequence
+               SET seq = (SELECT seq FROM sqlite_sequence WHERE name = 'vehicles')
+             WHERE name = '{scratch}'
+               AND EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = 'vehicles');
+            INSERT INTO sqlite_sequence (name, seq)
+            SELECT '{scratch}', seq FROM sqlite_sequence
+             WHERE name = 'vehicles'
+               AND NOT EXISTS (SELECT 1 FROM sqlite_sequence WHERE name = '{scratch}');
+
+            DROP TABLE vehicles;
+            ALTER TABLE {scratch} RENAME TO vehicles;
+
+            CREATE INDEX idx_vehicles_make_model ON vehicles(make, model);
+            CREATE INDEX idx_vehicles_year ON vehicles(year);
+            CREATE INDEX idx_vehicles_owner
+                ON vehicles(owner_user_id);
+
+            PRAGMA foreign_keys=ON;
+        """
+
+
 # --- Migration registry ---
 # Retrofit phases append entries here. Do NOT delete or reorder — migrations
 # are applied in version order, and existing DBs rely on consistent history.
@@ -6332,6 +6395,30 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS workflow_run_items;
             DROP TABLE IF EXISTS workflow_runs;
         """,
+    ),
+    # Migration 074 — Phase 360: a bike's powertrain is never assumed (F174)
+    Migration(
+        version=74,
+        name="vehicles_powertrain_no_default",
+        description=(
+            "Phase 360 (F174): `vehicles.powertrain` loses its DEFAULT 'ice'. "
+            "Phase 110 gave the column that default, so an insert that named "
+            "no powertrain stored `ice`, and the stored value could not tell "
+            "'the mechanic said ice' from 'nobody said'. Live rows 6-9 carry "
+            "a CURRENT_TIMESTAMP created_at, which neither registry insert "
+            "writes, so the default was reached in practice. With no default, "
+            "such an insert stores NULL, which every reader treats as "
+            "unknown. SQLite cannot change a column default in place, so the "
+            "table is rebuilt as migration 064 rebuilt known_issues: "
+            "foreign_keys OFF (17 tables reference vehicles, and DROP is "
+            "refused while a child row points at it), every column copied by "
+            "name, the AUTOINCREMENT sequence carried across, the three "
+            "indexes recreated with their SQL unchanged. No row changes. "
+            "Rollback rebuilds with DEFAULT 'ice'."
+        ),
+        upgrade_sql=_vehicles_rebuild_074("powertrain TEXT", "vehicles_rebuild_074"),
+        rollback_sql=_vehicles_rebuild_074("powertrain TEXT DEFAULT 'ice'",
+                                           "vehicles_rollback_074"),
     ),
 ]
 
