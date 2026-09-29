@@ -1,5 +1,82 @@
 # closeout — changelog
 
+## 2026-09-28 — the edit guard (Phase 360)
+
+The operator: "enforce the edit rule. 356 and 357 both edited source
+without the Edit tool — a written rule broken twice. PreToolUse hook on
+Bash that blocks sed -i, heredoc/redirect writes into src/ and tests/,
+same fail-closed pattern as the push guard, with a planted positive
+control per blocked form." At Step 0 the operator added: "keep perl -i,
+and also block cp, mv and patch into src/ and tests/ (git mv stays
+allowed), each with its own planted positive control."
+
+`edit_guard.sh`, a thin wrapper, runs `_edit_guard.py`. It is the second
+`Bash` `PreToolUse` hook in `.claude/settings.json`, with a 30 s timeout.
+
+**Blocked:**
+- `sed -i` and `perl -i` in every spelling, whatever the path;
+- a write redirect, `tee`, `cp` or `mv` into `src/` or `tests/`;
+- `patch` onto a file there, or with no named file inside this checkout;
+- a heredoc, here-string or `-c` script whose body writes there. Python
+  bodies are parsed; shell bodies are judged again as a command line.
+
+**Fails closed**, exit 2 with a reason, on:
+- a command it cannot lex;
+- a write target it cannot resolve;
+- any exception, and any other exit status (the wrapper turns it into 2);
+- its own 5 s clock. 358 measured that a hook killed by its timeout lets
+  the command run.
+
+`tests/test_phase360_edit_guard.py` holds a positive control for each
+blocked form and a negative control for each form a session needs. The
+negative controls include the commit-message heredoc and every other
+`git` command.
+
+**Measured by replay.** `docs/phases/…/360_replay_guard.py 8` ran the
+5,698 Bash commands in this repo's eight newest session transcripts
+(2026-09-09 to 2026-09-29 UTC, this session included) through the guard:
+- **552 blocked as real edits:**
+  - 459 Python heredoc bodies writing `src/` or `tests/`;
+  - 48 redirects;
+  - 30 `sed -i` or `perl -i`;
+  - 15 `tee`, `cp`, `mv`, `patch` or other bodies.
+
+  The rule was broken hundreds of times, not twice.
+- **68 blocked by failing closed** on a target it could not resolve
+  (`$(mktemp -d)` backups, bodies that glob over `src/` and write an
+  unresolved path): 1.2% of the commands.
+- **5 blocked as malformed.** Bash itself fails on these, or warns.
+- The slowest check took 6.3 ms.
+
+Three guard defects were found by the replay and fixed before the hook
+went on, each with a control:
+- a mobile-repo script naming its own `src/` was blocked;
+- `$'` inside double quotes was read as an ANSI-C string;
+- an unquoted heredoc's `$n` was parsed as Python.
+
+**It switched on mid-session.** Hooks edited in `settings.json` took effect
+in the running session: a planted `echo planted >> tests/…` was blocked at
+once, and the file was absent after.
+
+**Known limits:**
+- **A script file run by name is not opened.** The phases' mutation
+  scripts write into `src/` that way, by design.
+- `install`, `rsync`, `dd`, `truncate`, `ln`, `rm` and `git apply` are not
+  blocked. A redirect of `git` output into `src/` is blocked like any
+  other redirect.
+- `subprocess` calls, `eval`, `os.chdir` and values known only at run time
+  are not followed.
+- Only Python and shell bodies are parsed. A `node`, `ruby` or `perl -e`
+  body is blocked when it names a path in this checkout's `src/` or
+  `tests/` and a file write.
+- Only this checkout is protected. A path inside another repository's
+  `src/` is that repository's.
+- A glob or a value substituted after the fixed leading directory is
+  judged by that directory alone.
+
+Recovery, if it ever blocks every Bash call: edit `.claude/settings.json`
+with the Write tool, which does not pass through the `Bash` matcher.
+
 ## 2026-09-28 — wholetree.sh --full gains the ledger class (Phase 357, F175)
 
 The operator: "Fix the rule so the class of test 244Z belongs to joins by

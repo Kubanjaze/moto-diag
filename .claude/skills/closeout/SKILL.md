@@ -89,6 +89,7 @@ check.
 | `roadmap_check.py` | the ROADMAP ledger holds: R1–R7 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff, a fold into a phase that is not closed); run with every suite and on every push |
 | `wholetree.sh` / `wholetree.py` | the whole-tree command (rule 3): fast mode, or `--full`; members found by rule; a pass on a clean tree writes a signed record bound to commit, tree and script |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check and the whole-tree command on every push (a valid record, else fast mode under its own limit; fails closed), `--full` on a commit to seed data or migrations, close-out on a push to `master` |
+| `edit_guard.sh` / `_edit_guard.py` | the edit guard (Phase 360): blocks `sed -i`, `perl -i`, and redirects, `tee`, `cp`, `mv`, `patch` and heredoc or `-c` script bodies that write into `src/` or `tests/`; fails closed, under its own 5 s clock; known limits in `CHANGELOG.md` |
 | `fixtures/bad`, `fixtures/good` | hand-written control pair |
 | `fixtures/check2` | hand-written path lists for check 2 |
 | `fixtures/roadmap_bad`, `fixtures/roadmap_good` | hand-written trees: every R-rule fires on the first; the second holds what each rule must not remove |
