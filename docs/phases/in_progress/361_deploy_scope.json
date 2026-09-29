@@ -1,0 +1,11 @@
+{
+ "_comment": "Phase 361, migration 075: rebuilds vehicles with no engine_type default (F177). One schema_version row is added; the vehicles table's SQL changes; the three indexes are recreated with their SQL unchanged, so they must not show. No row in any table is added, removed or changed besides schema_version.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "changed": [
+   "table vehicles"
+  ]
+ }
+}

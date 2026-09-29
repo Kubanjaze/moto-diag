@@ -240,3 +240,40 @@ Checked here:
 - **The held work is committed from the working tree.** `361_wip.patch`,
   the backup, is removed in the same commit, since the commit now holds
   what it held.
+
+### 2026-09-29 — The floor, and the regression of record
+
+- **`COLLECTED_TEST_FLOOR` 9950 → 10018** (`83d0278`). Measured by
+  diffing the collected test IDs against a `master` worktree: +68, none
+  removed.
+  - `test_phase361_safety_unknown_powertrain.py`, 16;
+  - `test_phase361_contract_and_engine_type.py`, 51;
+  - gate 15's `test_rolling_back_peels_every_successor[74]`, since 075
+    now succeeds 74.
+- `wholetree.sh --full` on the clean tree at `83d0278`: 3945 passed. That
+  was the third `--full` since the resume. The first was red on B2 alone
+  (the log named an F-number with no entry); the second was at `a8f84ad`.
+
+Regression of record: 10018 passed, 0 failed, 0 skipped, 0 errors at `83d0278` (29 min 36 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-09-29 — The deploy: the dry run
+
+- **Before, live, read only:** schema 74; 10 bikes, all `ice` and
+  `four_stroke`; `sqlite_sequence` for `vehicles` 10.
+- **Scope** (`361_deploy_scope.json`): `schema_version` +1;
+  `"schema": {"changed": ["table vehicles"]}`; nothing else.
+- **`deploy.py dryrun 361`:**
+  - live 5844 rows, 90 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre361_20260929_174533.db`
+    (retain-5 removed `motodiag_pre264_20260926_131946.db`);
+  - applied `[75]` on the copy;
+  - scope problems: none. F158 census: 36.
+- **The diff (`361_dryrun_diff.md`):**
+  - one `schema_version` row added (75);
+  - `table vehicles` changed: its SQL is 074's with `engine_type TEXT`
+    in place of `engine_type TEXT DEFAULT 'four_stroke'`;
+  - **no existing row changed or removed** in any table;
+  - the indexes do not show, so they are unchanged.
+- **Not a rule-1 stop.** No existing row changes, the condition the
+  operator set ("A dry run that changes any existing row is still a
+  stop"). The diff is committed before apply-live.
