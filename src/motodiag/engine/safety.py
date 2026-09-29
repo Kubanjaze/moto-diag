@@ -13,6 +13,13 @@ from typing import Optional
 
 from pydantic import BaseModel, Field
 
+from motodiag.core.models import PowertrainType
+
+#: Phase 361 (F178): the only values a rule's scoping may act on. Anything
+#: else a garage row holds (`hybrid_parallel` from the old API, "", "ICE")
+#: is read as unknown, which shows every rule.
+_KNOWN_POWERTRAINS = frozenset(p.value for p in PowertrainType)
+
 
 # ---------------------------------------------------------------------------
 # Alert level enum
@@ -390,7 +397,8 @@ class SafetyChecker:
                 while a hardcoded list of electric makes misses LiveWire,
                 which is sold as a Harley-Davidson model.
 
-                `None` means unknown, and unknown shows **everything**. The
+                `None`, or any value outside `PowertrainType` (Phase 361,
+                F178), means unknown, and unknown shows **everything**. The
                 field can itself hold a vision model's guess
                 (`cli/main.py` garage_add_from_photo), so a blank or wrong
                 value must not be able to hide a fuel-leak warning.
@@ -411,7 +419,7 @@ class SafetyChecker:
         electric bike gets fewer alerts rather than different ones. That gap
         is recorded in Phase 244T rather than filled with invented content.
         """
-        if self.powertrain is None:
+        if self.powertrain not in _KNOWN_POWERTRAINS:
             return True
         allowed = rule.get("applies_to")
         return allowed is None or self.powertrain in allowed
