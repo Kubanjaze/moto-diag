@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F179**, in the mobile file;
-this file's highest is **F178**.
+At the time of writing the highest assigned is **F180**, in this file;
+the mobile file's highest is **F179**.
 
 ---
 
@@ -2393,3 +2393,33 @@ generated types. What would close it:
 - the update path converting through the enum;
 - a test that a stored value outside the enum cannot suppress a safety
   rule.
+
+### F180
+
+**The engine-type enum has no value for a rotary or a diesel engine, so such a bike can only be stored as unknown**
+
+Found by Phase 361's Step 0 (`361_step0.md`, S0-5), 2026-09-29. The API
+offered `rotary`, `diesel` and `none`, and the app labelled them "Rotary",
+"Diesel" and "N/A"; `EngineType` (`src/motodiag/core/models.py:114–118`)
+holds `four_stroke`, `two_stroke`, `electric_motor`, `hybrid` and
+`desmodromic`. Measured on a scratch database: a create with any of the
+three was refused with 400, and an update stored it as given.
+
+The operator (2026-09-29): "Keep the API's engine types aligned to the
+code's five, and file rotary and diesel as a finding for a later phase
+(until then such a bike is stored as unknown)." Phase 361 does that:
+- the API accepts the five only;
+- the CLI's `--engine-type unknown` and the app's "not listed" answer store
+  NULL.
+
+`none` needs no value: an electric bike's engine type is `electric_motor`.
+
+What it affects: a rotary or diesel motorcycle is stored as unknown, so the diagnose prompt carries no engine line for it. The live
+census on 2026-09-29 held no such bike: ten, all `four_stroke`.
+
+Also noted, not part of the fix: the enum mixes a cycle (`four_stroke`,
+`two_stroke`) with a valve train (`desmodromic`, which is four-stroke).
+
+What would close it: `rotary` and `diesel` added to `EngineType` and to
+the API's literal, the mobile snapshot and the app's options refreshed,
+and a test for each reader with the new values.
