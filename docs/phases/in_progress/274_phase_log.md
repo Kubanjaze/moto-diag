@@ -30,3 +30,44 @@ The first commit:
 - **Rows 282–286 ⏸️**, each with the reason decision 2 gives: it needs a
   dealer or B2B account with the supplier, and no public API is known.
 - `roadmap_check.py`: ok.
+
+### 2026-09-29 — Step 0, and the stop on row 290
+
+`274_step0.md`. What it found:
+- **274:** `customer_notifications` is the outbound template queue (ten
+  system events, three channels, no inbound, no free text), not a
+  communication log. The log adds free-text contacts in either direction
+  on any channel, and one timeline per customer. `transfer_ownership`
+  and a bike's owner list have no command. `shop customer bikes` and
+  `show` print `?` for every relationship: a defect on this row's
+  surface, to be fixed as a bug fix.
+- **279:** no order quantity is stored; `reorder_quantity` is added. POs
+  are local drafts per vendor; `sent` is set by the user; `receive` adds
+  stock.
+- **280:** validity by date and mileage over `warranties`; a claims table;
+  a plain-text claim packet.
+- **291:** computable from the work order's own estimate. On the way,
+  **F182** was filed with the `finding` skill: the estimate a customer is
+  sent is the hours times a hard-coded $100, parts left out (measured:
+  2.0 h and $549.91 of parts renders $200.00).
+- **290:** revenue is stored; parts purchase cost, a mechanic's labour
+  cost, overheads and bay costs are not. A part's stored cost is the price
+  the invoice bills, so a parts margin is 0 by construction.
+
+The ledger, in this commit:
+- **Row 280 rewritten** to what this batch builds: validity lookup, local
+  claim records, printable packet.
+- **Row 362 ⏸️**, "OEM warranty claim submission", split from 280: it
+  needs each maker's dealer portal. 362 was free: no ROADMAP row, phase
+  document or handoff named it.
+- The ROADMAP header reads 362 numbered.
+- `roadmap_check.py` ok; row 280 is 61 words, row 362 56.
+
+**Stopped for the operator (rule 1: a real fork).** A P&L per mechanic,
+per bay and per customer cannot be computed from stored data, the
+condition the prompt set. The options, with what each ships, are in
+`274_step0.md` ("Questions for the operator"): (A) revenue reporting and
+the P&L paused, (B) record direct costs for a gross-margin P&L with
+expenses at shop level, recommended, (C) B with expenses allocated by
+labour hours. A second question asks whether F182's fix stays in this
+batch.

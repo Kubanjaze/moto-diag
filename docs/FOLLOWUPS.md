@@ -19,8 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F181**, in the mobile file;
-this file's highest is **F180**.
+At the time of writing the highest assigned is **F182**.
 
 ---
 
@@ -2458,3 +2457,27 @@ Also noted, not part of the fix: the enum mixes a cycle (`four_stroke`,
 What would close it: `rotary` and `diesel` added to `EngineType` and to
 the API's literal, the mobile snapshot and the app's options refreshed,
 and a test for each reader with the new values.
+
+### F182
+
+**The estimate a customer is sent is the estimated hours times a hard-coded $100, with the parts left out**
+
+Found by Phase 274's Step 0 (`274_step0.md`), 2026-09-29.
+`src/motodiag/shop/notifications.py:399–406` builds the `estimate_ready`
+total as `estimated_hours * 100.0` ("rough placeholder if no invoice"),
+unless an invoice already exists, which for an estimate it normally does
+not. The shop's labour rate is not read, and the work order's
+`estimated_parts_cost_cents` is not added.
+
+Measured on a scratch database: a work order estimated at 2.0 hours with
+$549.91 of parts renders "Estimate for WO #1 (Valve check): $200.00."
+through `motodiag shop notify preview estimate_ready --wo 1`. No test
+covers the figure (no test names `estimate_total`).
+
+What it affects: every estimate queued through `shop notify trigger
+estimate_ready` or the API's notification route. Live holds no
+`estimate_ready` notification (4 notifications, all `parts_arrived`).
+
+What would close it: the estimate is the estimated hours at the shop's
+labour rate plus the estimated parts cost; when no rate is known the
+estimate is refused, never invented; a test pins the figure.
