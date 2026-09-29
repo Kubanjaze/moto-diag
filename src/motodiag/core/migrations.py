@@ -192,13 +192,18 @@ def _known_issue_sql_072(reverse: bool) -> str:
     return "\n".join(statements) + "\n"
 
 
-def _vehicles_rebuild_074(powertrain_default: str, scratch: str) -> str:
-    """Rebuild `vehicles` with `powertrain_default` as the powertrain
-    column's definition, keeping every row, every other column's definition
-    and order, the three indexes' SQL byte for byte, and the table's
-    AUTOINCREMENT sequence (a plain rebuild would reset it to max(id) and
-    reuse a deleted bike's id). The deploy diff skips `sqlite_%` tables, so
-    the sequence is held by a test, not by the diff."""
+def _vehicles_rebuild(powertrain_default: str, scratch: str,
+                      engine_type_def: str = "engine_type TEXT DEFAULT 'four_stroke'") -> str:
+    """Rebuild `vehicles` with `powertrain_default` and `engine_type_def` as
+    those columns' definitions, keeping every row, every other column's
+    definition and order, the three indexes' SQL byte for byte, and the
+    table's AUTOINCREMENT sequence (a plain rebuild would reset it to
+    max(id) and reuse a deleted bike's id). The deploy diff skips
+    `sqlite_%` tables, so the sequence is held by a test, not by the diff.
+
+    Written for migration 074; Phase 361 added `engine_type_def` for 075.
+    Its default is 074's text, so 074's SQL is unchanged (a test compares
+    its sha256)."""
     columns = ("id, make, model, year, engine_cc, vin, protocol, notes, created_at, "
                "updated_at, powertrain, engine_type, battery_chemistry, motor_kw, "
                "bms_present, customer_id, mileage, owner_user_id, transmission")
@@ -217,7 +222,7 @@ def _vehicles_rebuild_074(powertrain_default: str, scratch: str) -> str:
                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP,
                 {powertrain_default},
-                engine_type TEXT DEFAULT 'four_stroke',
+                {engine_type_def},
                 battery_chemistry TEXT,
                 motor_kw REAL,
                 bms_present INTEGER DEFAULT 0,
@@ -6416,9 +6421,29 @@ MIGRATIONS: list[Migration] = [
             "indexes recreated with their SQL unchanged. No row changes. "
             "Rollback rebuilds with DEFAULT 'ice'."
         ),
-        upgrade_sql=_vehicles_rebuild_074("powertrain TEXT", "vehicles_rebuild_074"),
-        rollback_sql=_vehicles_rebuild_074("powertrain TEXT DEFAULT 'ice'",
-                                           "vehicles_rollback_074"),
+        upgrade_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rebuild_074"),
+        rollback_sql=_vehicles_rebuild("powertrain TEXT DEFAULT 'ice'",
+                                       "vehicles_rollback_074"),
+    ),
+    # Migration 075 — Phase 361: a bike's engine type is never assumed (F177)
+    Migration(
+        version=75,
+        name="vehicles_engine_type_no_default",
+        description=(
+            "Phase 361 (F177): `vehicles.engine_type` loses its DEFAULT "
+            "'four_stroke'. Phase 110 gave the column that default and "
+            "migration 074's rebuild kept it, so an insert that named no "
+            "engine type stored four_stroke, and the stored value could not "
+            "tell 'the mechanic said four-stroke' from 'nobody said'. With "
+            "no default, such an insert stores NULL, which every reader "
+            "treats as unknown. Rebuilt as 074 rebuilt it: foreign_keys OFF, "
+            "every column copied by name, the AUTOINCREMENT sequence carried "
+            "across, the three indexes recreated with their SQL unchanged. "
+            "No row changes. Rollback rebuilds with DEFAULT 'four_stroke'."
+        ),
+        upgrade_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rebuild_075",
+                                      "engine_type TEXT"),
+        rollback_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rollback_075"),
     ),
 ]
 

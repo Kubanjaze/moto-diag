@@ -53,8 +53,8 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
 
     Phase 110: persists new powertrain/engine_type/battery_chemistry/motor_kw/
     bms_present columns. Callers using the old VehicleBase (without those
-    fields) get the model's defaults: four_stroke, and (Phase 360) a NULL
-    powertrain, which readers treat as unknown.
+    fields) get the model's defaults: a NULL powertrain (Phase 360) and a
+    NULL engine type (Phase 361), which readers treat as unknown.
     """
     with get_connection(db_path) as conn:
         cursor = conn.execute(
@@ -68,7 +68,7 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
                 vehicle.notes, datetime.now().isoformat(),
                 vehicle.powertrain.value if vehicle.powertrain else None,
-                vehicle.engine_type.value,
+                vehicle.engine_type.value if vehicle.engine_type else None,
                 vehicle.battery_chemistry.value if vehicle.battery_chemistry else None,
                 vehicle.motor_kw,
                 1 if vehicle.bms_present else 0,
@@ -145,6 +145,12 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
     for key in ("protocol", "powertrain", "engine_type", "battery_chemistry"):
         if key in filtered and hasattr(filtered[key], "value"):
             filtered[key] = filtered[key].value
+    # Phase 361 (F178): every writer is held to the enums. The API's PATCH
+    # used to store `hybrid_parallel` as given, which hid seven safety
+    # rules. None clears the field (a CLI "unknown").
+    for key, enum in (("powertrain", PowertrainType), ("engine_type", EngineType)):
+        if filtered.get(key) is not None:
+            filtered[key] = enum(filtered[key]).value
     if "bms_present" in filtered and isinstance(filtered["bms_present"], bool):
         filtered["bms_present"] = 1 if filtered["bms_present"] else 0
 
@@ -215,7 +221,7 @@ def add_vehicle_for_owner(
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
                 vehicle.notes, datetime.now().isoformat(),
                 vehicle.powertrain.value if vehicle.powertrain else None,
-                vehicle.engine_type.value,
+                vehicle.engine_type.value if vehicle.engine_type else None,
                 vehicle.battery_chemistry.value
                     if vehicle.battery_chemistry else None,
                 vehicle.motor_kw,

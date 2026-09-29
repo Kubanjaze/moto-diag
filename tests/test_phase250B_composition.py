@@ -130,6 +130,8 @@ def garage(db):
             CliRunner().invoke(real_cli, [
                 "garage", "add", "--make", make, "--model", model,
                 "--year", str(year), "--powertrain", powertrain,
+                # Phase 361 (F177): what the old default stored; electric derives its own.
+                *(["--engine-type", "four_stroke"] if powertrain == "ice" else []),
             ], catch_exceptions=False)
             with get_connection(db) as conn:
                 ids[(make, model)] = conn.execute(

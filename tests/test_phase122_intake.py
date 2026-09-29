@@ -529,6 +529,7 @@ class TestCliGarage:
             "garage", "add",
             "--make", "Honda", "--model", "CBR929RR", "--year", "2001",
             "--engine-cc", "929", "--protocol", "k_line", "--powertrain", "ice",
+            "--engine-type", "four_stroke",
         ])
         assert r.exit_code == 0, r.output
         assert "Added vehicle" in r.output

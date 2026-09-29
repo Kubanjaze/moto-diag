@@ -156,7 +156,9 @@ class TestMigration074:
         before, seq = _all_rows(db), _seq(db)
         assert seq[0][0] > max(r[0] for r in before)          # the plant took
 
-        assert apply_pending_migrations(db) == [MIGRATION]
+        # Phase 361: every migration from 074 on, not a pin of the head (F124).
+        assert apply_pending_migrations(db) == [
+            m.version for m in MIGRATIONS if m.version >= MIGRATION]
         assert _all_rows(db) == before
         assert _seq(db) == seq
         assert _schema_default(db) is None
@@ -199,7 +201,7 @@ class TestGarageAdd:
 
     def test_a_given_powertrain_is_not_asked_for(self, db):
         r = _cli(db, "garage", "add", "--make", "Honda", "--model", "CB500", "--year", "2020",
-                 "--powertrain", "ice")
+                 "--powertrain", "ice", "--engine-type", "four_stroke")
         assert r.exit_code == 0, r.output
         assert "Powertrain:" not in r.output
         assert_stored(db, [("Honda", "CB500", "ice")])

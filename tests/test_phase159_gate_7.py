@@ -204,6 +204,7 @@ class TestAdvancedEndToEnd:
                 "--vin", "1HD1KHM19FB123456",
                 "--protocol", "can",
                 "--powertrain", "ice",
+                "--engine-type", "four_stroke",
             ])
             assert r.exit_code == 0, r.output
             bike_slug = "glide-2015"

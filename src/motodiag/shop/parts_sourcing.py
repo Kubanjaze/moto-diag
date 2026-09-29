@@ -223,7 +223,9 @@ def _build_user_prompt(
             f"  model: {vehicle.get('model', '?')}\n"
             f"  year: {vehicle.get('year', '?')}\n"
             f"  mileage: {vehicle.get('mileage') or 'unknown'}\n"
-            f"  engine_type: {vehicle.get('engine_type', '?')}\n"
+            # Phase 361 (F177): the key exists holding None for an unknown
+            # engine type, so `.get(key, '?')` printed "None".
+            f"  engine_type: {vehicle.get('engine_type') or 'unknown'}\n"
         )
     else:
         vehicle_block = ""

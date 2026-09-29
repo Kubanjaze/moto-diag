@@ -54,12 +54,14 @@ ProtocolLiteral = Literal[
     "suzuki_sds", "yamaha_yds",
 ]
 
-PowertrainLiteral = Literal[
-    "ice", "electric", "hybrid_parallel", "hybrid_series",
-]
+# Phase 361 (F178, F177): the enums' own values. The old literals held
+# values the enums did not (`hybrid_parallel`, `rotary`, `none`): create
+# refused them and update stored them, and a stored `hybrid_parallel` hid
+# seven safety rules. Rotary and diesel wait on F180.
+PowertrainLiteral = Literal["ice", "electric", "hybrid"]
 
 EngineTypeLiteral = Literal[
-    "four_stroke", "two_stroke", "rotary", "diesel", "none",
+    "four_stroke", "two_stroke", "electric_motor", "hybrid", "desmodromic",
 ]
 
 # Phase 257B: the six `VehicleTransmission` values. A Literal rather than
@@ -82,7 +84,8 @@ class VehicleCreateRequest(BaseModel):
     notes: Optional[str] = None
     # Phase 360 (F174): absent is unknown and stored as NULL, not `ice`.
     powertrain: Optional[PowertrainLiteral] = None
-    engine_type: EngineTypeLiteral = "four_stroke"
+    # Phase 361 (F177): absent is unknown and stored as NULL, not four_stroke.
+    engine_type: Optional[EngineTypeLiteral] = None
     battery_chemistry: Optional[str] = None
     motor_kw: Optional[float] = Field(None, ge=0)
     bms_present: bool = False
@@ -259,7 +262,7 @@ def create_vehicle_endpoint(
         protocol=ProtocolType(req.protocol),
         notes=req.notes,
         powertrain=PowertrainType(req.powertrain) if req.powertrain else None,
-        engine_type=EngineType(req.engine_type),
+        engine_type=EngineType(req.engine_type) if req.engine_type else None,
         battery_chemistry=(
             BatteryChemistry(req.battery_chemistry)
             if req.battery_chemistry else None

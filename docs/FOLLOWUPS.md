@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F179**, in the mobile file;
-this file's highest is **F178**.
+At the time of writing the highest assigned is **F181**, in the mobile file;
+this file's highest is **F180**.
 
 ---
 
@@ -2321,7 +2321,25 @@ What would close it: `garage remove` refuses such a bike, names what
 still refers to it (work orders, saved runs), and exits 1, with a test
 for each.
 
-### F177
+### F177 — CLOSED by Phase 361 (2026-09-29)
+
+**Closed**, by the operator's (c). No path stores an engine type nobody
+stated:
+- migration 075 (live, schema 75) removed the column's
+  `DEFAULT 'four_stroke'`;
+- `VehicleBase.engine_type` defaults to None;
+- the API stores NULL when the field is absent;
+- `garage add` and `garage add-from-photo` ask unless the powertrain is
+  electric (which gives `electric_motor`), and save nothing without an
+  answer; `unknown` stores NULL;
+- `garage update --engine-type` corrects it.
+
+Every reader's handling of an unknown engine type is tested
+(`tests/test_phase361_contract_and_engine_type.py`): the diagnose prompt
+leaves the line out, the cache key tells unknown from four-stroke, parts
+sourcing prints `unknown` (it printed `None`), and the API read returns
+null. `361_mutate.py`: 19/19 red. The app's side closed in moto-diag-mobile
+`cd359e0` (its F181). Rotary and diesel are F180.
 
 **A bike's `engine_type` is stored as `four_stroke` when nobody gave it, the same shape as F174's powertrain**
 
@@ -2357,7 +2375,24 @@ for each reader with the value unknown.
 F179, which closed the form's `ice` preselect in `moto-diag-mobile`
 `57c9e45`, records this and leaves it open under F177.
 
-### F178
+### F178 — CLOSED by Phase 361 (2026-09-29)
+
+**Closed.** No stored powertrain value can hide a safety rule, and the
+API accepts only the enum's values:
+- **first, before any API change** (`663accc`): `SafetyChecker` reads any
+  value outside `PowertrainType` as unknown and shows every rule. Step 0
+  found an empty string and `ICE` also hid the seven rules;
+- the API's powertrain values are `ice`, `electric`, `hybrid`: a hybrid
+  bike can be created, and the variants are refused (422) on create and
+  update;
+- `update_vehicle` converts `powertrain` and `engine_type` through their
+  enums, so no writer stores a value outside them.
+
+Tests: `tests/test_phase361_safety_unknown_powertrain.py` (with the old
+checker restored, 10 of its 16 fail) and
+`tests/test_phase361_contract_and_engine_type.py`. The app's snapshot and
+types were refreshed in moto-diag-mobile `cd359e0`. No live row held a
+value outside the enum.
 
 **The API's powertrain values are not the enum's: no API request can create a hybrid bike, and an update stores `hybrid_parallel` as it is, which hides seven safety rules**
 
@@ -2393,3 +2428,33 @@ generated types. What would close it:
 - the update path converting through the enum;
 - a test that a stored value outside the enum cannot suppress a safety
   rule.
+
+### F180
+
+**The engine-type enum has no value for a rotary or a diesel engine, so such a bike can only be stored as unknown**
+
+Found by Phase 361's Step 0 (`361_step0.md`, S0-5), 2026-09-29. The API
+offered `rotary`, `diesel` and `none`, and the app labelled them "Rotary",
+"Diesel" and "N/A"; `EngineType` (`src/motodiag/core/models.py:114–118`)
+holds `four_stroke`, `two_stroke`, `electric_motor`, `hybrid` and
+`desmodromic`. Measured on a scratch database: a create with any of the
+three was refused with 400, and an update stored it as given.
+
+The operator (2026-09-29): "Keep the API's engine types aligned to the
+code's five, and file rotary and diesel as a finding for a later phase
+(until then such a bike is stored as unknown)." Phase 361 does that:
+- the API accepts the five only;
+- the CLI's `--engine-type unknown` and the app's "not listed" answer store
+  NULL.
+
+`none` needs no value: an electric bike's engine type is `electric_motor`.
+
+What it affects: a rotary or diesel motorcycle is stored as unknown, so the diagnose prompt carries no engine line for it. The live
+census on 2026-09-29 held no such bike: ten, all `four_stroke`.
+
+Also noted, not part of the fix: the enum mixes a cycle (`four_stroke`,
+`two_stroke`) with a valve train (`desmodromic`, which is four-stroke).
+
+What would close it: `rotary` and `diesel` added to `EngineType` and to
+the API's literal, the mobile snapshot and the app's options refreshed,
+and a test for each reader with the new values.
