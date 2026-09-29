@@ -49,3 +49,51 @@ snapshot. F178 alone breaks only gate 11's snapshot test and its three
 reruns: the planned stop. F177: (a) 120, (b) 3, (c) 93.
 
 **Stopped for the operator's pick (rule 1: a real fork).**
+
+### 2026-09-29 — The operator's pick
+
+The operator (2026-09-29), verbatim:
+
+> (c). Keep the API's engine types aligned to the code's five, and file rotary and diesel as a finding for a later phase (until then such a bike is stored as unknown). List the engine-type value change in the phase log as an API change, so the mobile session accepts it and updates the app's engine-type options.
+
+So:
+- **F177 is (c):** `garage add` and `add-from-photo` ask for the engine
+  type when it is not given and the powertrain is not `electric`, and save
+  nothing without an answer; the API stores NULL when the field is absent.
+- **The API's engine types are the enum's five.** Rotary and diesel go to
+  a finding for a later phase; until then such a bike is stored as unknown.
+
+## The API changes this phase makes (for the mobile session)
+
+The mobile session (`moto-diag-mobile/docs/prompts/2026-09-29_api_snapshot_for_backend_361.txt`)
+accepts a snapshot diff only when it changes these, and nothing else:
+
+| schema | field | before | after |
+|---|---|---|---|
+| `VehicleCreateRequest` | `powertrain` | enum `ice, electric, hybrid_parallel, hybrid_series`, or null; no default | enum `ice, electric, hybrid`, or null; no default |
+| `VehicleUpdateRequest` | `powertrain` | enum `ice, electric, hybrid_parallel, hybrid_series`, or null | enum `ice, electric, hybrid`, or null |
+| `VehicleCreateRequest` | `engine_type` | enum `four_stroke, two_stroke, rotary, diesel, none`; default `four_stroke` | enum `four_stroke, two_stroke, electric_motor, hybrid, desmodromic`, or null; **no default** |
+| `VehicleUpdateRequest` | `engine_type` | enum `four_stroke, two_stroke, rotary, diesel, none`, or null | enum `four_stroke, two_stroke, electric_motor, hybrid, desmodromic`, or null |
+| path `GET /v1/vehicles` | query `powertrain` | the old four values | `ice, electric, hybrid` |
+
+**What the app does with them:**
+- **Powertrain options:** `ice`, `electric`, `hybrid`.
+- **Engine-type options:** the five above, with labels. `rotary`, `diesel`
+  and `none` go.
+  - A bike that is rotary or diesel is left unknown (no engine type sent)
+    until the later phase's finding adds them.
+  - An electric bike's engine type is `electric_motor`, which replaces the
+    app's "N/A" (`none`).
+- **The add-bike form** asks for the engine type (the operator's (c),
+  mirrored): no `four_stroke` preselect; the picker starts unchosen. Unlike
+  F179's powertrain picker, it cannot simply be required, because a rotary
+  or diesel bike has no value to pick until the finding is closed. So the
+  form needs an answer that sends no engine type ("Not listed" or "Not
+  sure"), which the API stores as unknown. How the form words that is the
+  mobile session's call.
+- **The edit screen** sends a powertrain or engine type only when the user
+  chose one, with no `'ice'` or `'four_stroke'` fallback.
+
+`VehicleResponse` does not change: `powertrain` and `engine_type` stay
+`Optional[str]`. A bike already stored with an old value (none live) is
+read back as it is.
