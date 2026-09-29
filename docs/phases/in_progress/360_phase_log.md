@@ -342,3 +342,53 @@ session rooted in that repo, as the stop proposed (option A).
 - **Part 1 is committed from the working tree.** `360_part1_wip.patch`,
   the backup, is removed in the same commit, since the commit now holds
   what it held.
+
+`wholetree.sh --full` on the staged tree gave 3945 passed. Part 1 is
+`0254132`, pushed.
+
+### 2026-09-29 — The floor, and the regression of record
+
+- **`COLLECTED_TEST_FLOOR` 9772 → 9950** (`8a460f2`). The count was
+  measured by diffing the collected test IDs against a `master` worktree.
+  +178:
+  - the edit guard's 139 tests;
+  - F174's 38;
+  - gate 15's `test_rolling_back_peels_every_successor[73]`, since 074
+    now succeeds 73.
+
+  Three tests were renamed, net 0.
+- **An order slip, caught before it cost anything.** `regression.sh` was
+  started first, and refused: its `--full` record was for the staged tree
+  before the commit, not for HEAD. Before re-running it I saw the floor
+  still had to rise, and a test edit after the regression would be code
+  after the regression hash. So the run was stopped, the floor raised and
+  committed, and then `--full` and the regression ran on `8a460f2`.
+- `wholetree.sh --full` at `8a460f2`: 3945 passed, 83 files, 631.7 s wall.
+
+Regression of record: 9950 passed, 0 failed, 0 skipped, 0 errors at `8a460f2` (20 min 3 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-09-29 — The deploy of 074: the dry run
+
+The prompt's condition: "The dry run's diff must show no existing row's
+values changed. If any would change, that is a rule-1 stop." The
+operator, 2026-09-29: "the deploy of 074 (its diff must show no existing
+value changed)".
+
+- `360_deploy_scope.json`: `schema_version` +1; `"schema": {"changed":
+  ["table vehicles"]}`; nothing else.
+- `deploy.py dryrun 360` (`360_dryrun_diff.md`):
+  - live before, read only: 5843 rows, 90 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre360_20260929_111643.db`
+    (sha256 `887c2aff…`); retain-5 removed `motodiag_pre261_20260926_120114.db`;
+  - the diff: **one `schema_version` row added (74); one schema object
+    changed, `table vehicles`, whose powertrain column reads `powertrain
+    TEXT` with no default; no existing row changed or removed in any
+    table**. The three indexes are not in the diff, so their SQL is
+    unchanged;
+  - scope problems: none; F158 census 36.
+- **By hand, because the diff skips `sqlite_%`:** live
+  `sqlite_sequence` for `vehicles` is 10, with max(id) 10 and 10 rows,
+  all `ice`, at schema 73. This is checked again after the apply.
+
+No existing value changes, so the condition is met, and the apply follows
+once the diff is committed.
