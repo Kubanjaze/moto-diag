@@ -136,12 +136,15 @@ class VehicleBase(BaseModel):
     """Base vehicle information.
 
     Phase 110 (Retrofit): added optional powertrain/engine_type/battery
-    fields. Defaults (four_stroke, no battery chemistry) preserve
-    backward compatibility.
+    fields. Defaults (no battery chemistry) preserve backward
+    compatibility.
 
     Phase 360 (F174): the powertrain defaults to None, meaning unknown, not
     ICE. An `ice` default stored a fact nobody stated, and every reader
     already treats None as unknown.
+
+    Phase 361 (F177): the engine type defaults to None for the same reason,
+    not FOUR_STROKE.
     """
     make: str = Field(..., description="Manufacturer (e.g., Harley-Davidson, Honda)")
     model: str = Field(..., description="Model name (e.g., Sportster 1200, CBR929RR)")
@@ -153,9 +156,12 @@ class VehicleBase(BaseModel):
         None,
         description="Powertrain classification (ICE, electric, hybrid); None is unknown",
     )
-    engine_type: EngineType = Field(
-        EngineType.FOUR_STROKE,
-        description="Engine cycle/configuration (4-stroke, 2-stroke, electric motor, hybrid, desmo)",
+    engine_type: Optional[EngineType] = Field(
+        None,
+        description=(
+            "Engine cycle/configuration (4-stroke, 2-stroke, electric motor, "
+            "hybrid, desmo); None is unknown"
+        ),
     )
     battery_chemistry: Optional[BatteryChemistry] = Field(
         None,

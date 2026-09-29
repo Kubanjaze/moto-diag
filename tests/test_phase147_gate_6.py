@@ -300,6 +300,7 @@ class TestHardwareEndToEnd:
                     "--vin", "1HD1KHM19FB123456",
                     "--protocol", "can",
                     "--powertrain", "ice",
+                    "--engine-type", "four_stroke",
                 ])
                 assert r.exit_code == 0, r.output
                 assert "Added vehicle #1" in r.output

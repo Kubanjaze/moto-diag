@@ -221,7 +221,7 @@ class TestVehicleBaseNewFields:
         # Phase 360 (F174): no longer ICE. A default stored a fact nobody stated.
         v = VehicleBase(make="Honda", model="CBR600RR", year=2007)
         assert v.powertrain is None
-        assert v.engine_type == EngineType.FOUR_STROKE
+        assert v.engine_type is None           # Phase 361 (F177): unknown, not four_stroke
         assert v.battery_chemistry is None
         assert v.motor_kw is None
         assert v.bms_present is False
@@ -274,7 +274,7 @@ class TestRegistryNewFields:
         vid = add_vehicle(v, fresh_db)
         row = get_vehicle(vid, fresh_db)
         assert row["powertrain"] is None       # Phase 360 (F174): unknown, not ice
-        assert row["engine_type"] == "four_stroke"
+        assert row["engine_type"] is None      # Phase 361 (F177): unknown, not four_stroke
         assert row["battery_chemistry"] is None
         assert row["motor_kw"] is None
         assert row["bms_present"] == 0

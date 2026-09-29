@@ -441,6 +441,33 @@ def _ask_powertrain() -> str:
         raise SystemExit(1)
 
 
+#: Phase 361 (F177): the enum's five, and `unknown`, which stores NULL. A
+#: rotary or diesel bike is stored as unknown until F180 adds those values.
+ENGINE_TYPE_CHOICES = ["four_stroke", "two_stroke", "electric_motor", "hybrid",
+                       "desmodromic", "unknown"]
+
+
+def _engine_type_for(powertrain: str, given: str | None) -> str | None:
+    """Phase 361 (F177): a bike's engine type is asked for, never assumed.
+
+    A value given wins. A stated electric powertrain gives `electric_motor`,
+    which follows from it. Otherwise the mechanic is asked; with no answer
+    nothing is saved (exit 1). `unknown` is returned as None."""
+    if given is None:
+        if powertrain == "electric":
+            return "electric_motor"
+        try:
+            given = click.prompt(
+                "Engine type",
+                type=click.Choice(ENGINE_TYPE_CHOICES, case_sensitive=False),
+            ).lower()
+        except click.Abort:
+            console.print("[red]No engine type given: add --engine-type "
+                          f"{'|'.join(ENGINE_TYPE_CHOICES)}. Nothing was saved.[/red]")
+            raise SystemExit(1)
+    return None if given == "unknown" else given
+
+
 @garage.command("add")
 @click.option("--make", required=True, help="Manufacturer (e.g., Honda, Harley-Davidson).")
 @click.option("--model", "model_name", required=True, help="Model name.")
@@ -456,10 +483,15 @@ def _ask_powertrain() -> str:
 @click.option("--powertrain", default=None,
               type=click.Choice(["ice", "electric", "hybrid"]),
               help="Powertrain type. Asked for when not given.")
+@click.option("--engine-type", default=None,
+              type=click.Choice(ENGINE_TYPE_CHOICES),
+              help="Engine type; `unknown` stores none. Asked for when not given, "
+                   "unless the powertrain is electric.")
 @click.option("--notes", default=None, help="Free-text notes.")
 def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
                motor_kw: float | None, vin: str | None, protocol: str,
-               powertrain: str | None, notes: str | None) -> None:
+               powertrain: str | None, engine_type: str | None,
+               notes: str | None) -> None:
     """Add a bike to the garage manually."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
@@ -469,6 +501,7 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
 
     if powertrain is None:
         powertrain = _ask_powertrain()
+    engine_type = _engine_type_for(powertrain, engine_type)
     init_db()
     try:
         vehicle = VehicleBase(
@@ -480,10 +513,7 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
             vin=vin,
             protocol=ProtocolType(protocol),
             powertrain=PowertrainType(powertrain),
-            engine_type=(
-                EngineType.ELECTRIC_MOTOR if powertrain == "electric"
-                else EngineType.FOUR_STROKE
-            ),
+            engine_type=EngineType(engine_type) if engine_type else None,
             notes=notes,
         )
     except Exception as e:
@@ -570,8 +600,12 @@ def garage_remove(vehicle_id: int, yes: bool) -> None:
               type=click.Choice(["ice", "electric", "hybrid"]),
               help="The bike's powertrain; wins over the photo's guess. Asked for "
                    "when neither gives one.")
+@click.option("--engine-type", default=None,
+              type=click.Choice(ENGINE_TYPE_CHOICES),
+              help="Engine type; `unknown` stores none. Asked for when not given, "
+                   "unless the powertrain is electric.")
 def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
-                          powertrain: str | None) -> None:
+                          powertrain: str | None, engine_type: str | None) -> None:
     """Identify a bike from a photo and add it to the garage."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
@@ -609,10 +643,8 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
     )
     # Phase 360 (F174): a person's word, else the photo's guess, else ask.
     powertrain = powertrain or guess.powertrain_guess or _ask_powertrain()
-    engine_type = (
-        EngineType.ELECTRIC_MOTOR if powertrain == "electric"
-        else EngineType.FOUR_STROKE
-    )
+    # Phase 361 (F177): the photo gives no engine type; given, derived, or asked.
+    engine_type = _engine_type_for(powertrain, engine_type)
     vehicle = VehicleBase(
         make=guess.make,
         model=guess.model,
@@ -620,7 +652,7 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
         engine_cc=engine_cc,
         protocol=ProtocolType.NONE,
         powertrain=PowertrainType(powertrain),
-        engine_type=engine_type,
+        engine_type=EngineType(engine_type) if engine_type else None,
         notes=f"Added from photo. Confidence: {guess.confidence:.2f}. {guess.reasoning}",
     )
     vid = add_vehicle(vehicle)
@@ -657,6 +689,11 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
     ),
 )
 @click.option(
+    "--engine-type", default=None,
+    type=click.Choice(ENGINE_TYPE_CHOICES),
+    help="Correct the bike's engine type; `unknown` clears it (Phase 361).",
+)
+@click.option(
     "--yes", is_flag=True, default=False,
     help="Confirm a non-monotonic mileage change (required for decreases).",
 )
@@ -666,9 +703,10 @@ def garage_update(
     notes: str | None,
     vin: str | None,
     powertrain: str | None,
+    engine_type: str | None,
     yes: bool,
 ) -> None:
-    """Update a bike's mileage, notes, VIN or powertrain.
+    """Update a bike's mileage, notes, VIN, powertrain or engine type.
 
     Mileage is the Phase 152 source-of-truth. The monotonic guard
     refuses to write a value lower than what's already on the row
@@ -691,10 +729,11 @@ def garage_update(
     vehicle_id = int(resolved["id"])
     existing = get_vehicle(vehicle_id) or resolved
 
-    if mileage is None and notes is None and vin is None and powertrain is None:
+    if (mileage is None and notes is None and vin is None and powertrain is None
+            and engine_type is None):
         raise click.ClickException(
             "Nothing to update — pass at least one of --mileage, --notes, "
-            "--vin, --powertrain."
+            "--vin, --powertrain, --engine-type."
         )
 
     updates: dict = {}
@@ -713,6 +752,8 @@ def garage_update(
         updates["vin"] = vin
     if powertrain is not None:
         updates["powertrain"] = powertrain
+    if engine_type is not None:
+        updates["engine_type"] = None if engine_type == "unknown" else engine_type
 
     if not update_vehicle(vehicle_id, updates):
         raise click.ClickException(

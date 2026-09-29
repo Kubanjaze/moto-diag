@@ -197,3 +197,46 @@ The mobile session's prompt is
 `moto-diag-mobile/docs/prompts/2026-09-29_api_snapshot_for_backend_361.txt`.
 It serves this working tree from a scratch copy with `--skip-migrations`.
 Until it pushes, this checkout does not switch branches or commit.
+
+### 2026-09-29 — Pushing the stop's documents past a dirty tree
+
+The push of `af9bb15` was refused. The push guard needs a whole-tree
+record for the pushed commit's tree, and `wholetree.sh` writes one only
+for a clean tree, which this one was not while `src/` and `tests/` held
+the uncommitted work.
+- **A clean worktree of `af9bb15` would not do.**
+  `test_phase358_deploy_contract.py::test_the_defaults_name_the_repo_and_the_backup_folder`
+  fails from a scratch location, so fast mode gave 1 failed, 1479 passed.
+- **So the work was stashed in place** (`git stash push -u -- src tests`).
+  - Before stashing: `git diff HEAD -- src tests` hashed `60f1d758…`, and
+    the new test file `f6e0d36f…`.
+  - On the clean tree, fast mode passed (1480) and wrote the record for
+    `af9bb15`.
+  - The stash was popped, and both hashes matched.
+- The push then went through. The guard was not loosened.
+
+### 2026-09-29 — Resumed: the mobile snapshot refreshed in moto-diag-mobile cd359e0
+
+The operator (2026-09-29): "The mobile push has landed: moto-diag-mobile
+cd359e0 on origin/main (its prompt is 1d5ee0a). … The snapshot diff is
+exactly the five changes in your log's API table and nothing else;
+src/api-types.ts matches. … Gate 11 from this checkout: 21 passed. Mobile:
+jest 1194 passed in 99 suites, tsc exits 0. … The mobile session filed and
+closed F181 (the edit screen's 'ice' and 'four_stroke' fallbacks) and
+closed F177's app side."
+
+Checked here:
+- `cd359e0` is on `moto-diag-mobile` `origin/main`, and local `main` is
+  level with it;
+- this checkout was as it was left: HEAD `af9bb15`, 19 changed paths;
+- **gate 11: 21 passed.**
+
+- **FOLLOWUPS' numbering note** now reads "the highest assigned is
+  **F181**, in the mobile file; this file's highest is **F180**", as
+  `next_f_number.sh` reports. F181 is in the mobile file, so
+  `finding_check` B1 failed on the old wording. (A first draft of this
+  entry named the next free number; B2 counts any cited F-number without
+  an entry, and failed on it in the first `--full` run, 3945 passed.)
+- **The held work is committed from the working tree.** `361_wip.patch`,
+  the backup, is removed in the same commit, since the commit now holds
+  what it held.

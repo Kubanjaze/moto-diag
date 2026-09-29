@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F180**, in this file;
-the mobile file's highest is **F179**.
+At the time of writing the highest assigned is **F181**, in the mobile file;
+this file's highest is **F180**.
 
 ---
 

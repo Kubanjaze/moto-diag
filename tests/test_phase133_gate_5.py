@@ -305,6 +305,7 @@ class TestEndToEndCliWorkflow:
                 "--vin", "1HD1CZ3115K123456",
                 "--protocol", "j1850",
                 "--powertrain", "ice",
+                "--engine-type", "four_stroke",
             ])
             assert r.exit_code == 0, r.output
             assert "Added vehicle #1" in r.output

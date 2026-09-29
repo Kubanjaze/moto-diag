@@ -306,7 +306,9 @@ def garage(gate_db):
     ids = {}
     for make, model, year in GARAGE_MACHINES:
         _run(["garage", "add", "--make", make, "--model", model,
-              "--year", str(year), "--engine-cc", "50", "--powertrain", "ice"])
+              "--year", str(year), "--engine-cc", "50", "--powertrain", "ice",
+              # Phase 361 (F177): the value the old default stored, kept as it was.
+              "--engine-type", "four_stroke"])
         with get_connection(gate_db) as conn:
             ids[(make, model, year)] = conn.execute(
                 "SELECT id FROM vehicles WHERE make = ? AND model = ? AND year = ? "
