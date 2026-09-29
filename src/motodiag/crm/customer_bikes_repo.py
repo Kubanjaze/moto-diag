@@ -140,9 +140,21 @@ def transfer_ownership(
     """Transfer bike ownership: mark current owner as previous_owner, assign new owner.
 
     Atomic operation — both updates happen in one transaction via
-    get_connection's auto-commit.
+    get_connection's auto-commit. A customer who already has a
+    previous_owner link to the bike (they owned it before) keeps that one
+    link: their owner row is removed rather than renamed onto the primary
+    key it would collide with.
     """
     with get_connection(db_path) as conn:
+        conn.execute(
+            """DELETE FROM customer_bikes
+               WHERE vehicle_id = ? AND customer_id = ? AND relationship = 'owner'
+                 AND EXISTS (
+                     SELECT 1 FROM customer_bikes
+                     WHERE vehicle_id = ? AND customer_id = ?
+                       AND relationship = 'previous_owner')""",
+            (vehicle_id, from_customer_id, vehicle_id, from_customer_id),
+        )
         # Demote old owner to previous_owner
         conn.execute(
             """UPDATE customer_bikes

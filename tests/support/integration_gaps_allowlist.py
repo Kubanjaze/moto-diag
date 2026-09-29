@@ -384,10 +384,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Wrapper over list_customers_for_bike. Only crm/__init__.py names "
         "it; hidden until Phase 244X blanked parenthesised multi-line re- "
         "exports."),
-    "crm/customer_bikes_repo.py::transfer_ownership": ("unwired-feature",
-        "No route or command transfers a bike between customers. Only "
-        "crm/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
     "crm/customer_repo.py::count_customers": ("public-api",
         "Repository helper kept as library surface. Only crm/__init__.py "
         "names it; hidden until Phase 244X blanked parenthesised multi-line "

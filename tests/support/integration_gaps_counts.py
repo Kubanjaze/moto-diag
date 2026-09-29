@@ -46,5 +46,6 @@ MODULE_ISLAND_COUNT = 13
 #: substrate's read side made its six write functions live orphans, listed as
 #: substrate awaiting Phase 316) → 106 (Phase 356: wiring engine.workflows
 #: made its three predefined scripts and generate_next_step live orphans,
-#: listed as unwired-feature).
-ORPHAN_COUNT = 106
+#: listed as unwired-feature) → 105 (Phase 274: `shop customer transfer-bike`
+#: calls crm transfer_ownership).
+ORPHAN_COUNT = 105

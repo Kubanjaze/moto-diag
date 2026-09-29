@@ -776,7 +776,7 @@ def register_shop(cli_group: click.Group) -> None:
 
     @shop_group.group("customer")
     def customer_group() -> None:
-        """Manage customer records (wraps Phase 113 CRM layer)."""
+        """Manage customers: profiles, bikes, ownership and contact history."""
 
     @customer_group.command("add")
     @click.option("--name", required=True)
@@ -4704,3 +4704,10 @@ def register_shop(cli_group: click.Group) -> None:
                 str(r.fired_at),
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # Business records: CRM log and ownership
+    # -----------------------------------------------------------------
+    from motodiag.cli.shop_crm import register_crm
+
+    register_crm(customer_group)
