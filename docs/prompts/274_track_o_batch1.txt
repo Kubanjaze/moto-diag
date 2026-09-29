@@ -1,0 +1,70 @@
+Do this: start Phase 274, Track O batch 1 of 4, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-29_361_closed.md;
+- docs/reports/2026-09-28_track_o_triage.md: the operator's decisions, verbatim, and the row-by-row table of what each row already has;
+- rows 274, 279, 280, 290 and 291 in docs/ROADMAP.md;
+- row 261 and its handoff, for how a batch closes.
+
+The operator's decision (2026-09-28), verbatim: "1, 2, 3, 5 as recommended." For this batch that means:
+- the order is batch 1 → 2 → 3 → 4 → Gate 16. Batch 1 is the local shop data with no outside dependency: 274 (CRM), 279 (reorder points), 280 (warranty), 290 (financial reporting) and 291 (estimate vs actual);
+- the supplier rows 282–286 and the OEM parts of 280 and 281 are paused, each with its reason;
+- the backend stays tailnet-only.
+
+The ledger. Phase 274 carries the batch, as 261 carried Track N's first.
+- Row 274 goes 🚧 before Step 0. At close-out, rows 279, 280, 290 and 291 close ✅ "folded into 274" with no CLOSED date of their own, and row 274 closes with its CLOSED date and the regression line. implementation.md gets one history row, and the close-out writes one handoff, docs/handoffs/<date>_274_closed.md.
+- In the same first commit, rows 282–286 go ⏸️, each with its reason: it needs a dealer or B2B account with the supplier, and no public API is known (decision 2 of 2026-09-28).
+- Row 280 promises "OEM-specific submission flows", which decision 2 pauses. At Step 0, before v1.0, rewrite row 280 to what this batch builds. Give the submission its own ⏸️ row at the next free number (362, unless it is taken), saying it was split from 280 and why: it needs access to each maker's dealer portal.
+
+The measured facts, taken 2026-09-29 on master at 5e27761. Re-verify each at Step 0.
+- What already has a command:
+  - `motodiag shop customer` wraps the Phase 113 CRM: profiles, bikes, link and unlink.
+  - `motodiag shop notify` is the customer-communications command over `customer_notifications` (shop/notifications.py). Step 0 decides whether it already is 274's communication log, and if not, what a log adds.
+  - `motodiag shop analytics` has labor-accuracy, overruns, mechanic, customer-repeat and six more. `motodiag shop invoice revenue` rolls up revenue (shop/invoicing.py, over accounting/invoice_repo.py). 290 and 291 extend these.
+- What has no command: inventory/'s item_repo, vendor_repo and warranty_repo have no caller outside the package, neither a command nor a route. 279 and 280 add their first entry points.
+- Live holds smoke data only: the Phase 199 smoke shop, 6 customers, 6 work orders, 0 invoices, 0 inventory items, 0 vendors and 0 warranties.
+
+At Step 0, check every row's verbs (K8): each action a row promises has a way for a user to do it, or the row is rewritten before v1.0.
+
+The fork I expect: 290's P&L needs costs. Name which costs the data holds (parts cost, a mechanic's labour cost, overheads). If a P&L per mechanic, per bay and per customer cannot be computed from stored data, stop and give me the options, with what each would ship. Stop the same way for any other real fork. Otherwise decide, write the reason in the log, and carry on.
+
+Scope:
+- Every new capability has a `motodiag` command, exercised by a test.
+- Extend what exists. No second analytics or invoice layer.
+- 279's "automatic PO generation" is a purchase order generated locally from the reorder points. Sending it to a supplier is a supplier integration, paused with 282–286.
+- 280 is three things: the validity lookup over the per-vehicle coverage in inventory/warranty_repo.py, local claim records, and a printable claim packet.
+- No outbound network call. Batch 3 makes Track O's first.
+- No internal reference ("Phase N", "Track O", an F-number) in any text a user sees (F158).
+- If the batch touches accounting/ or scheduling/, correct the stale Track O numbers in that package's docstring (the triage report names both).
+
+The API and gate 11. Gate 11 fails on any schema the live API and moto-diag-mobile's snapshot disagree on, including a new schema the snapshot lacks. So any API addition or change needs a mobile session to refresh the snapshot. This batch's entry points are commands, and it adds no API route. If Step 0 finds a reason it must, say so, and plan the mobile refresh from the start, as 360 and 361 did.
+
+The migration, 076, goes through the deploy skill: the scope file, the dry run and its committed diff, then apply-live. If no existing row changes, that is not a rule-1 stop; if any existing row changes, it is one. If you are unsure whether the diff counts (for example, a new column on a table that has rows), treat it as a stop and show me the diff.
+
+Carry forward:
+- **The edit guard is live.**
+  - Use the Edit tool for src/ and tests/.
+  - Write scratch files and scripts to explicit paths in the session scratchpad. The guard blocks a `$(mktemp -d)` target, and a script body it cannot parse.
+  - If it blocks a legitimate command, record it in the log. Never loosen the guard.
+- **wholetree.sh:**
+  - Run it on its own, and read its exit code before committing. Never pipe it: 361's v1.0 went past a red check through `| tail`.
+  - Run `--full` before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number, and never write the next free F-number into a log. B2 caught both in 361.
+- **Before the regression:**
+  - run 244G's scanner over every new test file;
+  - wiring a listed module means updating tests/support/integration_gaps_allowlist.py and every test that pins its sizes.
+- **Commits:** commit and push as separate commands, with commit messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- To measure an older commit, use a worktree.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0,** only if there is a fork: the options, and what each would ship.
+- **At the end:**
+  - each row: what shipped, its command and its test;
+  - the ledger: 282–286 paused, row 280 rewritten, and the new row's number;
+  - the dry-run diff and the deploy outcome;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: batch 2 is phase 275, with rows 275 (booking by shop staff), 276 (iCal), 277 (QuickBooks export file) and 278 (Xero export file).
