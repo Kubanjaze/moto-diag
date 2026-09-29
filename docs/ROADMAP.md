@@ -513,7 +513,7 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
-| 274 | Customer CRM | 🔲 | Customer profiles, bike ownership history, communication log, notes |
+| 274 | Customer CRM | 🚧 | Customer profiles, bike ownership history, communication log, notes. **Carries Track O batch 1** (rows 274, 279, 280, 290, 291), opened 2026-09-29. |
 | 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
 | 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
 | 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |
@@ -521,11 +521,11 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | 279 | Parts inventory with reorder points | 🔲 | Stock levels, reorder points, automatic PO generation, distinct from per-job sourcing |
 | 280 | OEM warranty claim processing | 🔲 | Warranty validity lookup, claim documentation, OEM-specific submission flows |
 | 281 | NHTSA recall processing | 🔲 | VIN-based recall lookup, recall completion tracking, OEM reimbursement |
-| 282 | Vendor: Parts Unlimited integration | 🔲 | API integration, parts availability, wholesale pricing, dropship |
-| 283 | Vendor: NAPA integration | 🔲 | NAPA TRACS integration, parts catalog, local store inventory |
-| 284 | Vendor: Drag Specialties integration | 🔲 | Drag Specialties wholesale, Harley/V-twin parts focus |
-| 285 | Vendor: Dennis Kirk integration | 🔲 | Dennis Kirk wholesale, Japanese parts, off-road |
-| 286 | Vendor: tire distributor integrations | 🔲 | Dunlop, Michelin, Metzeler, Bridgestone — wholesale tire ordering |
+| 282 | Vendor: Parts Unlimited integration | ⏸️ | API integration, parts availability, wholesale pricing, dropship. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 283 | Vendor: NAPA integration | ⏸️ | NAPA TRACS integration, parts catalog, local store inventory. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 284 | Vendor: Drag Specialties integration | ⏸️ | Drag Specialties wholesale, Harley/V-twin parts focus. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 285 | Vendor: Dennis Kirk integration | ⏸️ | Dennis Kirk wholesale, Japanese parts, off-road. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 286 | Vendor: tire distributor integrations | ⏸️ | Dunlop, Michelin, Metzeler, Bridgestone — wholesale tire ordering. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
 | 287 | VIN decoder service | 🔲 | NHTSA VPIC integration, make-specific VIN structure decoding, model-year lookup |
 | 288 | Tax rate lookup by shop location | 🔲 | State/county/city sales tax, automated tax calculation on invoices |
 | 289 | Multi-currency support | 🔲 | USD/CAD/EUR/GBP exchange rates, multi-currency invoicing, currency conversion |
