@@ -889,7 +889,7 @@ def register_shop(cli_group: click.Group) -> None:
                 str(b.get("make", "?")),
                 str(b.get("model", "?")),
                 str(b.get("year", "?")),
-                str(b.get("relationship", "?")),
+                str(b.get("cb_relationship", "?")),
             )
         console.print(table)
 
@@ -1063,7 +1063,7 @@ def register_shop(cli_group: click.Group) -> None:
                 str(b.get("make", "?")),
                 str(b.get("model", "?")),
                 str(b.get("year", "?")),
-                str(b.get("relationship", "?")),
+                str(b.get("cb_relationship", "?")),
             )
         console.print(table)
 
