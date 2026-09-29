@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 360 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 361 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -635,6 +635,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 358 | Process clean-up | ✅ | **CLOSED 2026-09-27.** The 2026-09-27 triage's K1–K9 became checks. `wholetree.sh` finds whole-tree tests by rule, fast or `--full`; the push guard needs a signed record or runs fast mode, failing closed on time. One pin per count; a deploy skill refusing a live apply without the committed diff; an F158 ratchet at 75; R7 for folded rows; A5 parses the command, A8 needs the refute checklist; refute rounds capped at 3; Step 0 checks a row's verbs. Every check seen red; 21 mutations. F167–F169 filed. Regression 9639 passed / 0 failed at `d93d8de`. |
 | 359 | Content clean-up: starter templates and build references | ✅ | **CLOSED 2026-09-27.** The starters `generic_ppi_v1` and `generic_winterization_v1` are retired (the operator's pick at Step 0); `workflow show` names their replacements and exits 1. `ppi_chassis_v1` gains a cited VIN step and loses F163's three steering sentences. F158's 44 build references removed from the seed; ceiling 75 → 31, all BMW model names. Migration 072, the `deploy` skill's first live use, also brings rows 31 and 4615 to their seed; its live diff equals the approved diff, timestamps aside. F159, F163, F166 closed; F170, F171 filed. Three refute rounds; 8 mutations red. Regression 9676 passed / 0 failed at `32d281a`. |
 | 360 | F174 powertrain default, and the edit guard | ✅ | **CLOSED 2026-09-29.** F174: a powertrain is never assumed. Migration 074 drops `vehicles.powertrain`'s `ice` default (live, no row changed); `garage add` and the photo path ask; the API stores unknown; every reader is tested on an unknown bike. The edit guard, a second Bash hook, blocks `sed -i`, `perl -i`, and redirects, `tee`, `cp`, `mv`, `patch` and script bodies writing `src/` or `tests/`, failing closed. Replayed over 5,698 past commands, it blocked 552 real edits. Gate 11's mobile snapshot was refreshed in moto-diag-mobile `57c9e45`. 36 mutations red. F177, F178 filed. Regression 9950 passed / 0 failed at `8a460f2`. |
+| 361 | F178 hybrid values, and F177 engine type | 🚧 | **Started 2026-09-29.** The operator's decision of 2026-09-29, before Track O batch 1. F178 first, a safety defect: the safety checker reads any powertrain outside the enum as unknown, so every rule shows; then the API accepts only `ice`, `electric` and `hybrid`, on create and update. F177: a bike's engine type is never assumed `four_stroke`; migration 075 drops the column default. The API change needs the mobile snapshot refreshed, a planned stop. |
 
 ---
 
