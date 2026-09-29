@@ -2184,7 +2184,23 @@ reproduce it:
 What would close it: a reproduction and its fix, or a stated run count
 with no failure and the truncation fixed so a recurrence is not lost.
 
-### F174
+### F174 — CLOSED by Phase 360 (2026-09-29)
+
+**Closed.** No path stores a powertrain nobody stated:
+- migration 074 (live, schema 74) removed the column's `DEFAULT 'ice'`;
+- `VehicleBase.powertrain` defaults to None;
+- `garage add` and `garage add-from-photo` ask, and save nothing without
+  an answer;
+- a vision reply without the key is unknown;
+- the API stores NULL when the field is absent;
+- `workflow start` stores the stated value on a bike held as unknown.
+
+Every reader's handling of an unknown powertrain is tested
+(`tests/test_phase360_powertrain_unknown.py`); 21 mutations each turned a
+test red. The app's twin, its `ice` preselect, closed as the mobile repo's
+F179 (moto-diag-mobile `57c9e45`). The ten live bikes stay `ice`: all are
+petrol models, and no live row changed. `engine_type`'s identical default
+is F177.
 
 **`motodiag garage add` stores a bike as `ice` when `--powertrain` is not given, so an electric bike added without the flag is recorded as an engine machine**
 

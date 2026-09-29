@@ -6,7 +6,7 @@ command through `_edit_guard.check` with the cwd the session recorded, and
 prints the count per class and the slowest check. This produced the census
 in the closeout CHANGELOG's 2026-09-28 entry and the phase log.
 
-    .venv/bin/python -B docs/phases/in_progress/360_replay_guard.py [N=8]
+    .venv/bin/python -B docs/phases/completed/360_replay_guard.py [N=8]
 
 The transcripts live outside the repo and grow, so a later run over "the
 eight newest" reads a different set: the census is of the set named by its

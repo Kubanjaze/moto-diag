@@ -1,6 +1,6 @@
 # Phase 360 — F174 powertrain default, and the edit guard — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-29)
 **Branch:** `phase-360` (Opus session, main checkout, the only writer)
 
 ---
@@ -240,7 +240,8 @@ databases:
 Each planted known-bad fails its assertion (`360_mutate.py`, below).
 
 Existing tests that pinned the old default or added a bike without a
-powertrain were updated, 12 edits across 5 files:
+powertrain were updated: 10 tests or fixtures in 5 files, 13 diff hunks
+(the count "12" first written here was corrected at close-out):
 - `test_phase110`, 4: the two default tests assert unknown, and the
   filter tests state `ice`;
 - `test_phase122`, 2;
@@ -392,3 +393,53 @@ value changed)".
 
 No existing value changes, so the condition is met, and the apply follows
 once the diff is committed.
+
+Committed `427b6b7`, pushed. A first attempt ran `git commit … && git
+push` in one line, and the push guard refused the whole line, as it
+should; nothing ran. They were then run as two commands.
+
+### 2026-09-29 — The deploy of 074: the live apply
+
+`deploy.py apply-live 360`:
+- the preflight passed, including F172's check that a fresh dry run
+  equals the committed exact diff;
+- applied `[74]`;
+- live after: 5844 rows, 90 tables, integrity ok;
+- scope problems: none; **equals the approved exact diff: yes**; F158
+  census on live: 36 (`360_live_diff.md`).
+
+By hand, read only, after:
+- `sqlite_sequence` for `vehicles` is **10**, as before;
+- max(id) 10 and 10 rows, **all still `ice`**;
+- schema 74;
+- `foreign_key_check` empty; `integrity_check` ok;
+- `pragma_table_info` shows no default on `powertrain`.
+
+### 2026-09-28 — Bug fix #1: a guard test could not tell a definite block from the fallback
+
+- **Issue:** `360_mutate.py` G15 stayed green. With the fixed-directory
+  resolution of a Python path disabled, the guard tests still passed.
+- **Root cause:** the two cases for it
+  (`open(f'tests/test_phase{stem}.py', 'w')` and `(K / name).write_text`
+  with `K = Path('src/…/seed')`) sat in `SCRIPT`, whose test asserts a
+  block with no reason. Disabled, the resolution returns unknown, and the
+  mention fallback blocks the same command with another reason, so the
+  assertion held either way.
+- **Fix:** the two cases moved to `FIXED_DIRECTORY`, and
+  `test_the_fixed_directory_of_a_python_path_is_enough_to_block` asserts
+  the definite reason (`writes tests/…`, `writes src/motodiag/knowledge/seed/…`).
+- **Files:** `tests/test_phase360_edit_guard.py`, `360_mutate.py` (P9's
+  text made unique in the same pass).
+- **Verified:** 139 passed; `360_mutate.py` 36/36 red, G15 red.
+
+**Commit.** `41d78a8`.
+
+### 2026-09-29 — Close-out
+
+- No refute pass ran: the phase ships code, a migration and tooling, and
+  no content rows. No claim rests on a document.
+- F174 closed in `docs/FOLLOWUPS.md`; F177 and F178 stay open.
+- Row 360 ✅; `implementation.md` 0.13.92 with its history row; v1.1;
+  handoff `docs/handoffs/2026-09-29_360_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0, the
+  mutation and replay scripts, the scope, and both diffs.

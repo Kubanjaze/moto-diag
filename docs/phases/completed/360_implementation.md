@@ -1,6 +1,19 @@
 # Phase 360 — F174 powertrain default, and the edit guard
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-28
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-29 (v1.0 2026-09-28)
+
+**Outcome (v1.1).** Shipped as planned, with one stop in the middle:
+- **The edit guard** is live (`499b7a8`). A fresh session was blocked on
+  `tests/` and allowed on `docs/`.
+- **F174 is closed.** Migration 074 is live at schema 74, and its live
+  diff equals the approved exact diff; no existing row changed.
+- **The stop:** gate 11 pins the mobile repo's API snapshot, whose
+  `default: "ice"` the fix had to change. Step 0 missed it. The operator's
+  side cleared it in moto-diag-mobile `57c9e45`.
+
+One bug fix (the guard test that could not see G15). F177 and F178 filed.
+Regression of record: 9950 passed, 0 failed at `8a460f2`. Deviations and
+Results are at the end.
 
 ## Goal
 
@@ -241,18 +254,76 @@ protected:
 
 ## Verification Checklist
 
-- [ ] v1.0 committed and pushed before code
-- [ ] A positive control for each blocked form, seen blocked
-- [ ] Every negative control seen allowed, the commit-message heredoc included
-- [ ] Fail-closed cases seen blocked, the time limit included
-- [ ] Live proof in a fresh headless session
-- [ ] Migration 074 keeps every value; the dry run shows no existing row changed
-- [ ] No path stores `ice` that nobody stated
-- [ ] Each reader tested on a bike stored as unknown; each planted known-bad fails
-- [ ] Mutations all red
-- [ ] 244G scanner over the new tests
-- [ ] `wholetree.sh` before each commit; `--full` before the migration commit and the regression
-- [ ] Regression of record by `regression.sh`; floor raised
-- [ ] Dry-run diff committed; apply-live passes F172's exact check
-- [ ] Known limits in the CHANGELOG and the phase log
-- [ ] Handoff written; `verify_phase.sh` run after the merge
+- [x] v1.0 committed and pushed before code (`3f5d0df`)
+- [x] A positive control for each blocked form, seen blocked
+- [x] Every negative control seen allowed, the commit-message heredoc included
+- [x] Fail-closed cases seen blocked, the time limit included
+- [x] Live proof in a fresh headless session (and mid-session)
+- [x] Migration 074 keeps every value; the dry run shows no existing row changed
+- [x] No path stores `ice` that nobody stated
+- [x] Each reader tested on a bike stored as unknown; each planted known-bad fails
+- [x] Mutations all red (36/36)
+- [x] 244G scanner over `tests/`
+- [x] `wholetree.sh` before each commit; `--full` before the migration commit and the regression
+- [x] Regression of record by `regression.sh`; floor raised (9772 → 9950)
+- [x] Dry-run diff committed (`427b6b7`); apply-live passes F172's exact check
+- [x] Known limits in the CHANGELOG and the phase log
+- [x] Handoff written; `verify_phase.sh` run after the merge (its result is in the handoff)
+
+## Deviations from Plan
+
+- **A stop at gate 11, which Step 0 missed.** Gate 11 compares the mobile
+  repo's committed OpenAPI snapshot with the live API. The snapshot
+  described `VehicleCreateRequest.powertrain` with `"default": "ice"`,
+  so any fix to the API's half of F174 had to change it. The operator's
+  side refreshed the snapshot, regenerated the app's types and removed
+  the app's `ice` preselect in moto-diag-mobile `57c9e45` (the mobile
+  repo's F179). Step 0 listed the API as a reader, and did not look for a
+  test pinning its contract against the other repository.
+- **The guard grew beyond v1.0's design**, from the replay of 5,698 past
+  commands:
+  - a Python path's fixed directory decides, and every assignment of a
+    name is followed;
+  - a shell word's fixed leading directory decides too;
+  - an unquoted heredoc is expanded before it is parsed;
+  - an unterminated heredoc is read to the end of input, as bash reads
+    it, rather than refused.
+
+  Three guard defects the replay found were fixed before the hook went on.
+- **The guard's `git` branch was removed** as dead code (S9). `git` is
+  judged by nothing, so its commands pass without the branch.
+- **`add-from-photo` also reads an unrecognised vision guess as unknown**
+  (D4). It used to raise at save time.
+- **Ten existing tests or fixtures changed** (in 5 files), against the 61
+  failures Step 0 measured under (c). 52 of those were errors from one
+  gate 14 fixture, and one edit to that fixture cleared them all.
+- **Part 1 was saved as a patch while stopped** (`41d78a8`), and removed
+  when part 1 was committed (`0254132`).
+- **The regression ran twice in effect.** The first start was refused,
+  because its `--full` record was for the staged tree, not HEAD. The
+  floor was then raised before the run of record, so no code follows it.
+- **The deploy ran before the merge**, on the phase branch, as 357's did.
+  The migration applied live is the one in `8a460f2`, the commit the
+  regression tested.
+- **F178 found and filed, not fixed.** The API's hybrid values are not the
+  enum's, and a PATCH can hide seven safety rules. Fixing it changes the
+  API contract again.
+
+## Results
+
+| | |
+|---|---|
+| Edit guard | `edit_guard.sh` + `_edit_guard.py`, second Bash `PreToolUse` hook, 30 s timeout, own 5 s clock; live since `499b7a8` |
+| Guard tests | `test_phase360_edit_guard.py` 139: the positive control for each blocked form, 42 negative controls, the fail-closed cases |
+| Guard replay | 5,698 commands (2026-09-09 to 2026-09-29): 552 real edits blocked (459 Python heredoc bodies), 68 fail closed (1.2%), 5 malformed; slowest 6.3 ms (`360_replay_guard.py`) |
+| Live proofs | mid-session: planted `tests/` append refused, file absent; fresh headless session: refused on `tests/`, allowed on `docs/` |
+| Migration | 074: `vehicles` rebuilt, `powertrain TEXT` with no default; schema 73 → 74; no row changed; sequence 10 kept |
+| F174 tests | `test_phase360_powertrain_unknown.py` 38: migration, every entry point, every reader on an unknown bike |
+| Mutations | 36/36 red (`360_mutate.py`: guard 15, F174 21) |
+| Whole tree | `--full` at `8a460f2`: 83 files, 3945 passed |
+| Regression | 9950 passed, 0 failed, 0 skipped at `8a460f2` (20 min 3 s, `-n auto --dist load`) |
+| Floor | `COLLECTED_TEST_FLOOR` 9772 → 9950 |
+| Deploy | dry run committed `427b6b7`; apply-live `[74]`; live 5843 → 5844 rows, 90 tables, integrity ok; equals the approved exact diff; F158 census 36; sequence 10, all ten `ice`, no default (by hand) |
+| Mobile | snapshot and types refreshed, `ice` preselect removed: moto-diag-mobile `57c9e45` (F179) |
+| Findings | F174 closed; F177, F178 filed |
+| Bug fixes | 1 (the guard test that could not see G15) |
