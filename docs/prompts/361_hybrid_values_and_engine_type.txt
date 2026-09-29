@@ -1,0 +1,91 @@
+Do this: start Phase 361 and run it to its finish line as CLAUDE.md sets out. It has two parts: F178 first, because it is a safety defect, then F177. Read these first:
+- the newest handoff, docs/handoffs/2026-09-29_360_closed.md;
+- F177 and F178 in docs/FOLLOWUPS.md, and F179 in ../moto-diag-mobile/docs/FOLLOWUPS.md;
+- 360's documents in docs/phases/completed/: F174's fix, migration 074's rebuild, and how the gate 11 stop was resolved;
+- the deploy skill.
+
+The operator's decision (2026-09-29), verbatim: "361 with F177, write the prompts". It answered this recommendation:
+> a small Phase 361 before Track O batch 1, run the same two-session way as 360:
+> 1. Backend, safety first: the safety checks treat any powertrain value they don't recognise as unknown, which shows every warning. That closes the hole immediately and needs no change to the API.
+> 2. Backend, the contract: the API accepts only the code's own three values (petrol, electric, hybrid), and updates are checked against them too.
+> 3. Mobile session: refresh the API copy, collapse the two hybrid options into one, remove the edit screen's petrol fallback, and file that as a finding.
+> F177, the engine type always defaulting to four-stroke, has the same shape and would share the same mobile refresh.
+
+Row 361 goes 🚧 before Step 0. It is the next free number; confirm that.
+
+The measured facts. Re-verify each at Step 0.
+
+F178:
+- The API's `PowertrainLiteral` holds `hybrid_parallel` and `hybrid_series` (api/routes/vehicles.py:57–59). The enum `PowertrainType` holds `ice`, `electric` and `hybrid` (core/models.py:67–69).
+- A PATCH stores `hybrid_parallel` unconverted. `SafetyChecker(powertrain="hybrid_parallel")` then raises no alert from the seven rules scoped `("ice", "hybrid")` (engine/safety.py), and the fuel-leak warning is among them.
+- **The app can trigger it today.**
+  - `moto-diag-mobile/src/screens/VehicleDetailScreen.tsx`'s edit form offers both hybrid variants (`src/types/vehicleEnums.ts:79–87`) and PATCHes the value.
+  - The same screen fills a missing powertrain with `'ice'` (`?? 'ice'`, about line 290) and sends it on every save. That undoes F174 for any bike edited in the app. The mobile session files and fixes it.
+
+F177:
+- Four `four_stroke` defaults:
+  - the column (Phase 110's migration, and the rollback's rebuilt table);
+  - `VehicleBase.engine_type`;
+  - `VehicleCreateRequest.engine_type`;
+  - `garage add` and `add-from-photo`, which derive `FOUR_STROKE` for anything not stated as electric.
+- Readers: the diagnose prompt ("Engine: four_stroke", engine/prompts.py) and parts sourcing (shop/parts_sourcing.py).
+- The app's add-bike form preselects `four_stroke`.
+- Live, per 360's census: 10 bikes, all `ice` and `four_stroke`.
+
+**The lesson 360 paid for:** any change to an API model breaks gate 11 until the mobile snapshot is refreshed. This phase changes the API, so the mobile refresh is planned from the start.
+
+PART 1: F178, in this order.
+1. **The safety checker treats any powertrain value outside the enum as unknown,** which shows every rule.
+   - A test proves that a stored `hybrid_parallel`, or any other unrecognised value, cannot suppress a rule. A planted return to today's matching must fail it.
+   - This needs no API change, so commit it first. It restores the checker's own stated invariant, that "a blank or wrong value must not be able to hide a fuel-leak warning".
+2. **The API's powertrain literal becomes the enum's three values.**
+   - Create and update both convert through the enum, and an unknown value is refused.
+   - At Step 0, count live rows holding a value outside the enum; none is expected. If any exists, changing it is a live-row change: a rule-1 stop.
+
+PART 2: F177.
+- At Step 0:
+  - re-verify every path that stores `four_stroke` nobody stated;
+  - list every reader, and what each does with an unknown (NULL) engine type;
+  - take the live census, read-only.
+- The fix is a real fork, the same one F174 had; F174 got (c), where the CLI asks and the API stores unknown. Give me the options, with the tests each would change, and stop for my pick.
+- Migration 075 rebuilds `vehicles` without the `engine_type` default. Follow 074's pattern: foreign keys off, every value kept, the id sequence kept, the indexes recreated. The dry run's diff must show no existing value changed.
+
+The planned mobile stop:
+- When both parts are built and the only red is gate 11's contract snapshot, plus the gates that re-run it, stop and tell me. Keep what the push guard will not yet accept uncommitted, as 360 did, with a patch file as backup.
+- The mobile session's prompt is ready at ../moto-diag-mobile/docs/prompts/2026-09-29_api_snapshot_for_backend_361.txt, and I will launch it. It serves your working tree from a scratch copy with `--skip-migrations`, so do not switch branches or commit while it runs.
+- After its push, re-run gate 11, commit, and finish the phase.
+
+The live apply uses the deploy skill for 075:
+- the scope file: the `vehicles` table's SQL, and `schema_version` +1;
+- the dry run and the committed diff;
+- then apply-live, which with F172 refuses an inexact match.
+
+No existing row changing means no rule-1 stop. Any existing row changing is one. Show me the dry-run diff and the deploy outcome in the report.
+
+Carry forward:
+- **The edit guard is live.**
+  - Use the Edit tool for `src/` and `tests/`.
+  - Write scratch files to explicit paths in the session scratchpad. The guard cannot resolve a `$(mktemp -d)` target, so it blocks it.
+  - If the guard blocks a legitimate command, record it in the log; never loosen the guard.
+- `wholetree.sh` before every commit. `--full` before the regression, and before any commit touching seed data or migrations.
+- Commit and push as separate commands.
+- In the phase log, only a bug fix's own register heading says "Bug fix #N" (A4).
+- A script whose output ships is committed with it.
+- To measure an older commit, use a worktree.
+- No test reads data/motodiag.db.
+- No literal pin of the schema head (F124).
+- A log that mentions refute needs the checklist, or "No refute pass ran".
+- Write commit messages through a quoted heredoc.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report three times:
+- **At Step 0:** F177's paths, readers, census and options, and F178's live census. Then stop for my pick.
+- **At the planned mobile stop:** what is built, what is committed, and what waits on the snapshot.
+- **At the end:**
+  - F178's safety test and the contract change;
+  - F177's fix and each reader's test;
+  - the dry-run diff and the deploy outcome;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: Track O batch 1 (274, 279, 280, 290, 291).
