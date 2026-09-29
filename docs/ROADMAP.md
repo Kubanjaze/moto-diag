@@ -513,7 +513,7 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
-| 274 | Customer CRM | 🚧 | Customer profiles, bike ownership history, communication log, notes. **Carries Track O batch 1** (rows 274, 279, 280, 290, 291), opened 2026-09-29. |
+| 274 | Customer CRM | 🚧 | Customer profiles, bike ownership history, communication log, notes. **Carries Track O batch 1** (rows 274, 279, 280, 290, 291), opened 2026-09-29. Step 0 stopped on 290 (no costs stored); the operator picked B, a gross-margin P&L on recorded costs. v1.0 committed. |
 | 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
 | 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
 | 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |

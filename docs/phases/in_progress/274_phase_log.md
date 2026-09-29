@@ -71,3 +71,22 @@ the P&L paused, (B) record direct costs for a gross-margin P&L with
 expenses at shop level, recommended, (C) B with expenses allocated by
 labour hours. A second question asks whether F182's fix stays in this
 batch.
+
+### 2026-09-29 — The operator's pick, and v1.0
+
+The operator's answer arrived as pasted text in their message. Verbatim:
+
+> B. And F182's fix stays in this batch; the estimate takes its rate from the same labor_rates lookup the invoice uses, so the quote and the invoice agree.
+>
+> Two additions:
+> 1. Record each quote when estimate_ready is queued: hours, rate, parts, total and date. Quote accuracy compares the invoice with that record; a work order with no recorded quote shows "no quote recorded", never a recomputed figure.
+> 2. One attribution rule per dimension, stated in the report: a work order's revenue and all its costs count for its assigned mechanic (a work order with none counts as unassigned); across bays, a work order is split by the slot hours it spent in each; per customer, by the invoice's customer.
+>
+> Note in v1.0 that a mechanic's cost rate is pay data: nothing in this batch shows it outside the CLI, and any later API route for it is owner-only.
+
+One more verb gap was found while planning: no command writes
+`labor_rates` (only `_lookup_labor_rate_cents` reads it), and the table
+is empty live. The fixed estimate refuses without a rate, so v1.0 adds
+`shop labor-rate set/list`, reusing `pricing/labor_rates.py` (D7).
+
+v1.0 is `274_implementation.md`.
