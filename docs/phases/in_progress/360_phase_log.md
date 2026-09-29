@@ -73,3 +73,18 @@ Decisions made here, not stops:
   rooted there.
 
 **Stopped for the operator's pick on part 1** (rule 1: a real fork).
+Committed `3dc7022`, pushed.
+
+### 2026-09-28 — The operator's picks, verbatim
+
+> 1: (c). 2: (ii). 3: keep perl -i, and also block cp, mv and patch into src/ and tests/ (git mv stays allowed), each with its own planted positive control.
+
+So:
+- **Part 1 is option (c).** `garage add` and `add-from-photo` ask for the
+  powertrain when none is given. The API stores NULL when the field is
+  absent.
+- **`workflow start` is (ii).** On a bike stored as unknown, it stores the
+  stated value on the bike and says so.
+- **`perl -i` stays blocked.** `cp`, `mv` and `patch` into `src/` or
+  `tests/` are blocked too, each with its own planted positive control.
+  `git mv` stays allowed. The known limits lose those three.
