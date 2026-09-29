@@ -97,3 +97,103 @@ accepts a snapshot diff only when it changes these, and nothing else:
 `VehicleResponse` does not change: `powertrain` and `engine_type` stay
 `Optional[str]`. A bike already stored with an old value (none live) is
 read back as it is.
+
+### 2026-09-29 — v1.0, F180, and a commit made past a failed check
+
+- **v1.0** is `da5dc0f`, the phase log's API change list with it.
+- **The slip.** The command ran `wholetree.sh 2>&1 | tail -1 && git commit`.
+  The pipe's exit was `tail`'s, so the commit ran although `wholetree.sh`
+  printed FAILED: `finding_check` B2, because v1.0 cited F180 before the
+  entry existed. It was caught before any push. F180 was filed with the
+  `finding` skill (`be00cb6`), `wholetree.sh` then passed (1480), and both
+  commits were pushed together. From here, `wholetree.sh` runs alone, its
+  exit code is read, and only then is the commit made.
+- **F180:** no engine-type value for a rotary or a diesel engine; such a
+  bike is stored as unknown until a later phase adds them.
+
+### 2026-09-29 — Part 1a: the safety checker (F178)
+
+`engine/safety.py`: `_applies` shows every rule for any value outside
+`PowertrainType`, not only for `None`.
+
+- `tests/test_phase361_safety_unknown_powertrain.py`, 16 passed:
+  - eight values outside the enum;
+  - the controls (`electric` hides the fuel leak, `ice` and `hybrid` show
+    it);
+  - diagnose's safety panel on a bike stored as `hybrid_parallel`, `""`
+    or `hybrid_series` by a raw insert.
+- With the old checker restored, **10 fail**.
+- The 12 test files that use the checker: 425 passed.
+- 244G's scanner over `tests/`: clean.
+- `wholetree.sh`: 1480 passed.
+
+Committed `663accc`, pushed. **The fuel-leak hole is closed** before any
+API change.
+
+### 2026-09-29 — Part 1b and part 2 built
+
+**Part 1b, the contract (F178):**
+- `PowertrainLiteral` is `ice, electric, hybrid`;
+- `update_vehicle` converts `powertrain` and `engine_type` through their
+  enums, so every writer is refused a value outside them (`None` still
+  clears).
+
+**Part 2, F177 (c):**
+- **Migration 075 and the model:**
+  - `_vehicles_rebuild_074` is renamed `_vehicles_rebuild` and gains
+    `engine_type_def`. 074's upgrade and rollback SQL hash as they did at
+    `5fb84a8` (`b59b8ea2…`, `4f78892c…`), and a test holds both.
+  - Migration 075 is in, and `SCHEMA_VERSION` is 75.
+  - `VehicleBase.engine_type` defaults to None; both inserts bind NULL.
+- **The API:** the engine-type literal is the enum's five, and create
+  stores NULL when the field is absent.
+- **The CLI:**
+  - `garage add` and `add-from-photo` gain `--engine-type`; not given,
+    electric derives `electric_motor`, and anything else asks;
+  - no answer saves nothing; `unknown` stores NULL (D2);
+  - `garage update --engine-type` sets the value, or clears it with
+    `unknown`.
+- **Parts sourcing** prints `unknown`.
+
+**Tests:**
+- `tests/test_phase361_contract_and_engine_type.py`: 51.
+- The existing tests Step 0 predicted for (c) were updated, in 10 files:
+  - `--engine-type four_stroke` in the gate 5, 6, 7, 11 and 14 flows and
+    fixtures, 250B's fixture and 122's `garage add`: the value the old
+    default stored;
+  - `unknown` in 357's wrongly stated Energica, where the engine type is
+    beside the point;
+  - Phase 110's two default pins now pin None;
+  - 360's rebuild test expects every migration from 074 on, not a head
+    pin (F124).
+- **Measured:** the 114 vehicle files plus both 361 files gave 3710
+  passed and 4 failed. Before the updates they gave 97, exactly Step 0's
+  93 for (c) plus F178's 4.
+- **Mutations: 19/19 red** (`361_mutate.py`: safety 2, contract 3,
+  F177 14).
+- 244G's scanner over `tests/`: clean.
+
+### 2026-09-29 — The planned stop: gate 11's contract snapshot
+
+`wholetree.sh --full`: 3941 passed, **4 failed**, all gate 11:
+- gate 12's and gate 13's reruns of gate 11;
+- gate 13's rerun of gate 12;
+- gate 14's rerun of gate 13.
+
+Gate 11 itself reports exactly the four fields the API change list above
+names, and nothing else:
+`VehicleCreateRequest.engine_type`, `VehicleCreateRequest.powertrain`,
+`VehicleUpdateRequest.engine_type`, `VehicleUpdateRequest.powertrain`:
+changed.
+
+- **Not committed:** part 1b and part 2 in `src/` and `tests/` (18
+  files). The push guard needs a `--full` record for a commit to
+  `migrations.py`, and `--full` is red until the snapshot is refreshed.
+- **Backup:** `361_wip.patch` in this folder; `git apply --check` passes
+  against `663accc`.
+- **Committed:** this log, `361_mutate.py` and the patch.
+
+The mobile session's prompt is
+`moto-diag-mobile/docs/prompts/2026-09-29_api_snapshot_for_backend_361.txt`.
+It serves this working tree from a scratch copy with `--skip-migrations`.
+Until it pushes, this checkout does not switch branches or commit.

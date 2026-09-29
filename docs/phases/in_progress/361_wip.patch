@@ -1,0 +1,1040 @@
+diff --git a/src/motodiag/api/routes/vehicles.py b/src/motodiag/api/routes/vehicles.py
+index 55637a6..0dfd416 100644
+--- a/src/motodiag/api/routes/vehicles.py
++++ b/src/motodiag/api/routes/vehicles.py
+@@ -54,12 +54,14 @@ ProtocolLiteral = Literal[
+     "suzuki_sds", "yamaha_yds",
+ ]
+ 
+-PowertrainLiteral = Literal[
+-    "ice", "electric", "hybrid_parallel", "hybrid_series",
+-]
++# Phase 361 (F178, F177): the enums' own values. The old literals held
++# values the enums did not (`hybrid_parallel`, `rotary`, `none`): create
++# refused them and update stored them, and a stored `hybrid_parallel` hid
++# seven safety rules. Rotary and diesel wait on F180.
++PowertrainLiteral = Literal["ice", "electric", "hybrid"]
+ 
+ EngineTypeLiteral = Literal[
+-    "four_stroke", "two_stroke", "rotary", "diesel", "none",
++    "four_stroke", "two_stroke", "electric_motor", "hybrid", "desmodromic",
+ ]
+ 
+ # Phase 257B: the six `VehicleTransmission` values. A Literal rather than
+@@ -82,7 +84,8 @@ class VehicleCreateRequest(BaseModel):
+     notes: Optional[str] = None
+     # Phase 360 (F174): absent is unknown and stored as NULL, not `ice`.
+     powertrain: Optional[PowertrainLiteral] = None
+-    engine_type: EngineTypeLiteral = "four_stroke"
++    # Phase 361 (F177): absent is unknown and stored as NULL, not four_stroke.
++    engine_type: Optional[EngineTypeLiteral] = None
+     battery_chemistry: Optional[str] = None
+     motor_kw: Optional[float] = Field(None, ge=0)
+     bms_present: bool = False
+@@ -259,7 +262,7 @@ def create_vehicle_endpoint(
+         protocol=ProtocolType(req.protocol),
+         notes=req.notes,
+         powertrain=PowertrainType(req.powertrain) if req.powertrain else None,
+-        engine_type=EngineType(req.engine_type),
++        engine_type=EngineType(req.engine_type) if req.engine_type else None,
+         battery_chemistry=(
+             BatteryChemistry(req.battery_chemistry)
+             if req.battery_chemistry else None
+diff --git a/src/motodiag/cli/main.py b/src/motodiag/cli/main.py
+index e713eca..6ed54b6 100644
+--- a/src/motodiag/cli/main.py
++++ b/src/motodiag/cli/main.py
+@@ -441,6 +441,33 @@ def _ask_powertrain() -> str:
+         raise SystemExit(1)
+ 
+ 
++#: Phase 361 (F177): the enum's five, and `unknown`, which stores NULL. A
++#: rotary or diesel bike is stored as unknown until F180 adds those values.
++ENGINE_TYPE_CHOICES = ["four_stroke", "two_stroke", "electric_motor", "hybrid",
++                       "desmodromic", "unknown"]
++
++
++def _engine_type_for(powertrain: str, given: str | None) -> str | None:
++    """Phase 361 (F177): a bike's engine type is asked for, never assumed.
++
++    A value given wins. A stated electric powertrain gives `electric_motor`,
++    which follows from it. Otherwise the mechanic is asked; with no answer
++    nothing is saved (exit 1). `unknown` is returned as None."""
++    if given is None:
++        if powertrain == "electric":
++            return "electric_motor"
++        try:
++            given = click.prompt(
++                "Engine type",
++                type=click.Choice(ENGINE_TYPE_CHOICES, case_sensitive=False),
++            ).lower()
++        except click.Abort:
++            console.print("[red]No engine type given: add --engine-type "
++                          f"{'|'.join(ENGINE_TYPE_CHOICES)}. Nothing was saved.[/red]")
++            raise SystemExit(1)
++    return None if given == "unknown" else given
++
++
+ @garage.command("add")
+ @click.option("--make", required=True, help="Manufacturer (e.g., Honda, Harley-Davidson).")
+ @click.option("--model", "model_name", required=True, help="Model name.")
+@@ -456,10 +483,15 @@ def _ask_powertrain() -> str:
+ @click.option("--powertrain", default=None,
+               type=click.Choice(["ice", "electric", "hybrid"]),
+               help="Powertrain type. Asked for when not given.")
++@click.option("--engine-type", default=None,
++              type=click.Choice(ENGINE_TYPE_CHOICES),
++              help="Engine type; `unknown` stores none. Asked for when not given, "
++                   "unless the powertrain is electric.")
+ @click.option("--notes", default=None, help="Free-text notes.")
+ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
+                motor_kw: float | None, vin: str | None, protocol: str,
+-               powertrain: str | None, notes: str | None) -> None:
++               powertrain: str | None, engine_type: str | None,
++               notes: str | None) -> None:
+     """Add a bike to the garage manually."""
+     from motodiag.core.database import init_db
+     from motodiag.core.models import (
+@@ -469,6 +501,7 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
+ 
+     if powertrain is None:
+         powertrain = _ask_powertrain()
++    engine_type = _engine_type_for(powertrain, engine_type)
+     init_db()
+     try:
+         vehicle = VehicleBase(
+@@ -480,10 +513,7 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
+             vin=vin,
+             protocol=ProtocolType(protocol),
+             powertrain=PowertrainType(powertrain),
+-            engine_type=(
+-                EngineType.ELECTRIC_MOTOR if powertrain == "electric"
+-                else EngineType.FOUR_STROKE
+-            ),
++            engine_type=EngineType(engine_type) if engine_type else None,
+             notes=notes,
+         )
+     except Exception as e:
+@@ -570,8 +600,12 @@ def garage_remove(vehicle_id: int, yes: bool) -> None:
+               type=click.Choice(["ice", "electric", "hybrid"]),
+               help="The bike's powertrain; wins over the photo's guess. Asked for "
+                    "when neither gives one.")
++@click.option("--engine-type", default=None,
++              type=click.Choice(ENGINE_TYPE_CHOICES),
++              help="Engine type; `unknown` stores none. Asked for when not given, "
++                   "unless the powertrain is electric.")
+ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
+-                          powertrain: str | None) -> None:
++                          powertrain: str | None, engine_type: str | None) -> None:
+     """Identify a bike from a photo and add it to the garage."""
+     from motodiag.core.database import init_db
+     from motodiag.core.models import (
+@@ -609,10 +643,8 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
+     )
+     # Phase 360 (F174): a person's word, else the photo's guess, else ask.
+     powertrain = powertrain or guess.powertrain_guess or _ask_powertrain()
+-    engine_type = (
+-        EngineType.ELECTRIC_MOTOR if powertrain == "electric"
+-        else EngineType.FOUR_STROKE
+-    )
++    # Phase 361 (F177): the photo gives no engine type; given, derived, or asked.
++    engine_type = _engine_type_for(powertrain, engine_type)
+     vehicle = VehicleBase(
+         make=guess.make,
+         model=guess.model,
+@@ -620,7 +652,7 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
+         engine_cc=engine_cc,
+         protocol=ProtocolType.NONE,
+         powertrain=PowertrainType(powertrain),
+-        engine_type=engine_type,
++        engine_type=EngineType(engine_type) if engine_type else None,
+         notes=f"Added from photo. Confidence: {guess.confidence:.2f}. {guess.reasoning}",
+     )
+     vid = add_vehicle(vehicle)
+@@ -656,6 +688,11 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
+         "is refused when the garage disagrees with the mechanic."
+     ),
+ )
++@click.option(
++    "--engine-type", default=None,
++    type=click.Choice(ENGINE_TYPE_CHOICES),
++    help="Correct the bike's engine type; `unknown` clears it (Phase 361).",
++)
+ @click.option(
+     "--yes", is_flag=True, default=False,
+     help="Confirm a non-monotonic mileage change (required for decreases).",
+@@ -666,9 +703,10 @@ def garage_update(
+     notes: str | None,
+     vin: str | None,
+     powertrain: str | None,
++    engine_type: str | None,
+     yes: bool,
+ ) -> None:
+-    """Update a bike's mileage, notes, VIN or powertrain.
++    """Update a bike's mileage, notes, VIN, powertrain or engine type.
+ 
+     Mileage is the Phase 152 source-of-truth. The monotonic guard
+     refuses to write a value lower than what's already on the row
+@@ -691,10 +729,11 @@ def garage_update(
+     vehicle_id = int(resolved["id"])
+     existing = get_vehicle(vehicle_id) or resolved
+ 
+-    if mileage is None and notes is None and vin is None and powertrain is None:
++    if (mileage is None and notes is None and vin is None and powertrain is None
++            and engine_type is None):
+         raise click.ClickException(
+             "Nothing to update — pass at least one of --mileage, --notes, "
+-            "--vin, --powertrain."
++            "--vin, --powertrain, --engine-type."
+         )
+ 
+     updates: dict = {}
+@@ -713,6 +752,8 @@ def garage_update(
+         updates["vin"] = vin
+     if powertrain is not None:
+         updates["powertrain"] = powertrain
++    if engine_type is not None:
++        updates["engine_type"] = None if engine_type == "unknown" else engine_type
+ 
+     if not update_vehicle(vehicle_id, updates):
+         raise click.ClickException(
+diff --git a/src/motodiag/core/database.py b/src/motodiag/core/database.py
+index 65a1b90..e0c23bc 100644
+--- a/src/motodiag/core/database.py
++++ b/src/motodiag/core/database.py
+@@ -8,7 +8,7 @@ from typing import Generator
+ from motodiag.core.config import get_settings
+ 
+ 
+-SCHEMA_VERSION = 74  # Phase 360: vehicles.powertrain loses its 'ice' default (migration 074, F174)
++SCHEMA_VERSION = 75  # Phase 361: vehicles.engine_type loses its 'four_stroke' default (migration 075, F177)
+ BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
+ 
+ SCHEMA_SQL = """
+diff --git a/src/motodiag/core/migrations.py b/src/motodiag/core/migrations.py
+index 6551446..621c75c 100644
+--- a/src/motodiag/core/migrations.py
++++ b/src/motodiag/core/migrations.py
+@@ -192,13 +192,18 @@ def _known_issue_sql_072(reverse: bool) -> str:
+     return "\n".join(statements) + "\n"
+ 
+ 
+-def _vehicles_rebuild_074(powertrain_default: str, scratch: str) -> str:
+-    """Rebuild `vehicles` with `powertrain_default` as the powertrain
+-    column's definition, keeping every row, every other column's definition
+-    and order, the three indexes' SQL byte for byte, and the table's
+-    AUTOINCREMENT sequence (a plain rebuild would reset it to max(id) and
+-    reuse a deleted bike's id). The deploy diff skips `sqlite_%` tables, so
+-    the sequence is held by a test, not by the diff."""
++def _vehicles_rebuild(powertrain_default: str, scratch: str,
++                      engine_type_def: str = "engine_type TEXT DEFAULT 'four_stroke'") -> str:
++    """Rebuild `vehicles` with `powertrain_default` and `engine_type_def` as
++    those columns' definitions, keeping every row, every other column's
++    definition and order, the three indexes' SQL byte for byte, and the
++    table's AUTOINCREMENT sequence (a plain rebuild would reset it to
++    max(id) and reuse a deleted bike's id). The deploy diff skips
++    `sqlite_%` tables, so the sequence is held by a test, not by the diff.
++
++    Written for migration 074; Phase 361 added `engine_type_def` for 075.
++    Its default is 074's text, so 074's SQL is unchanged (a test compares
++    its sha256)."""
+     columns = ("id, make, model, year, engine_cc, vin, protocol, notes, created_at, "
+                "updated_at, powertrain, engine_type, battery_chemistry, motor_kw, "
+                "bms_present, customer_id, mileage, owner_user_id, transmission")
+@@ -217,7 +222,7 @@ def _vehicles_rebuild_074(powertrain_default: str, scratch: str) -> str:
+                 created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                 updated_at TIMESTAMP,
+                 {powertrain_default},
+-                engine_type TEXT DEFAULT 'four_stroke',
++                {engine_type_def},
+                 battery_chemistry TEXT,
+                 motor_kw REAL,
+                 bms_present INTEGER DEFAULT 0,
+@@ -6416,9 +6421,29 @@ MIGRATIONS: list[Migration] = [
+             "indexes recreated with their SQL unchanged. No row changes. "
+             "Rollback rebuilds with DEFAULT 'ice'."
+         ),
+-        upgrade_sql=_vehicles_rebuild_074("powertrain TEXT", "vehicles_rebuild_074"),
+-        rollback_sql=_vehicles_rebuild_074("powertrain TEXT DEFAULT 'ice'",
+-                                           "vehicles_rollback_074"),
++        upgrade_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rebuild_074"),
++        rollback_sql=_vehicles_rebuild("powertrain TEXT DEFAULT 'ice'",
++                                       "vehicles_rollback_074"),
++    ),
++    # Migration 075 — Phase 361: a bike's engine type is never assumed (F177)
++    Migration(
++        version=75,
++        name="vehicles_engine_type_no_default",
++        description=(
++            "Phase 361 (F177): `vehicles.engine_type` loses its DEFAULT "
++            "'four_stroke'. Phase 110 gave the column that default and "
++            "migration 074's rebuild kept it, so an insert that named no "
++            "engine type stored four_stroke, and the stored value could not "
++            "tell 'the mechanic said four-stroke' from 'nobody said'. With "
++            "no default, such an insert stores NULL, which every reader "
++            "treats as unknown. Rebuilt as 074 rebuilt it: foreign_keys OFF, "
++            "every column copied by name, the AUTOINCREMENT sequence carried "
++            "across, the three indexes recreated with their SQL unchanged. "
++            "No row changes. Rollback rebuilds with DEFAULT 'four_stroke'."
++        ),
++        upgrade_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rebuild_075",
++                                      "engine_type TEXT"),
++        rollback_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rollback_075"),
+     ),
+ ]
+ 
+diff --git a/src/motodiag/core/models.py b/src/motodiag/core/models.py
+index 2827d9d..f6b8c06 100644
+--- a/src/motodiag/core/models.py
++++ b/src/motodiag/core/models.py
+@@ -136,12 +136,15 @@ class VehicleBase(BaseModel):
+     """Base vehicle information.
+ 
+     Phase 110 (Retrofit): added optional powertrain/engine_type/battery
+-    fields. Defaults (four_stroke, no battery chemistry) preserve
+-    backward compatibility.
++    fields. Defaults (no battery chemistry) preserve backward
++    compatibility.
+ 
+     Phase 360 (F174): the powertrain defaults to None, meaning unknown, not
+     ICE. An `ice` default stored a fact nobody stated, and every reader
+     already treats None as unknown.
++
++    Phase 361 (F177): the engine type defaults to None for the same reason,
++    not FOUR_STROKE.
+     """
+     make: str = Field(..., description="Manufacturer (e.g., Harley-Davidson, Honda)")
+     model: str = Field(..., description="Model name (e.g., Sportster 1200, CBR929RR)")
+@@ -153,9 +156,12 @@ class VehicleBase(BaseModel):
+         None,
+         description="Powertrain classification (ICE, electric, hybrid); None is unknown",
+     )
+-    engine_type: EngineType = Field(
+-        EngineType.FOUR_STROKE,
+-        description="Engine cycle/configuration (4-stroke, 2-stroke, electric motor, hybrid, desmo)",
++    engine_type: Optional[EngineType] = Field(
++        None,
++        description=(
++            "Engine cycle/configuration (4-stroke, 2-stroke, electric motor, "
++            "hybrid, desmo); None is unknown"
++        ),
+     )
+     battery_chemistry: Optional[BatteryChemistry] = Field(
+         None,
+diff --git a/src/motodiag/shop/parts_sourcing.py b/src/motodiag/shop/parts_sourcing.py
+index 26f8116..71069e0 100644
+--- a/src/motodiag/shop/parts_sourcing.py
++++ b/src/motodiag/shop/parts_sourcing.py
+@@ -223,7 +223,9 @@ def _build_user_prompt(
+             f"  model: {vehicle.get('model', '?')}\n"
+             f"  year: {vehicle.get('year', '?')}\n"
+             f"  mileage: {vehicle.get('mileage') or 'unknown'}\n"
+-            f"  engine_type: {vehicle.get('engine_type', '?')}\n"
++            # Phase 361 (F177): the key exists holding None for an unknown
++            # engine type, so `.get(key, '?')` printed "None".
++            f"  engine_type: {vehicle.get('engine_type') or 'unknown'}\n"
+         )
+     else:
+         vehicle_block = ""
+diff --git a/src/motodiag/vehicles/registry.py b/src/motodiag/vehicles/registry.py
+index 11170be..4b35dee 100644
+--- a/src/motodiag/vehicles/registry.py
++++ b/src/motodiag/vehicles/registry.py
+@@ -53,8 +53,8 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
+ 
+     Phase 110: persists new powertrain/engine_type/battery_chemistry/motor_kw/
+     bms_present columns. Callers using the old VehicleBase (without those
+-    fields) get the model's defaults: four_stroke, and (Phase 360) a NULL
+-    powertrain, which readers treat as unknown.
++    fields) get the model's defaults: a NULL powertrain (Phase 360) and a
++    NULL engine type (Phase 361), which readers treat as unknown.
+     """
+     with get_connection(db_path) as conn:
+         cursor = conn.execute(
+@@ -68,7 +68,7 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
+                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
+                 vehicle.notes, datetime.now().isoformat(),
+                 vehicle.powertrain.value if vehicle.powertrain else None,
+-                vehicle.engine_type.value,
++                vehicle.engine_type.value if vehicle.engine_type else None,
+                 vehicle.battery_chemistry.value if vehicle.battery_chemistry else None,
+                 vehicle.motor_kw,
+                 1 if vehicle.bms_present else 0,
+@@ -145,6 +145,12 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
+     for key in ("protocol", "powertrain", "engine_type", "battery_chemistry"):
+         if key in filtered and hasattr(filtered[key], "value"):
+             filtered[key] = filtered[key].value
++    # Phase 361 (F178): every writer is held to the enums. The API's PATCH
++    # used to store `hybrid_parallel` as given, which hid seven safety
++    # rules. None clears the field (a CLI "unknown").
++    for key, enum in (("powertrain", PowertrainType), ("engine_type", EngineType)):
++        if filtered.get(key) is not None:
++            filtered[key] = enum(filtered[key]).value
+     if "bms_present" in filtered and isinstance(filtered["bms_present"], bool):
+         filtered["bms_present"] = 1 if filtered["bms_present"] else 0
+ 
+@@ -215,7 +221,7 @@ def add_vehicle_for_owner(
+                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
+                 vehicle.notes, datetime.now().isoformat(),
+                 vehicle.powertrain.value if vehicle.powertrain else None,
+-                vehicle.engine_type.value,
++                vehicle.engine_type.value if vehicle.engine_type else None,
+                 vehicle.battery_chemistry.value
+                     if vehicle.battery_chemistry else None,
+                 vehicle.motor_kw,
+diff --git a/tests/test_phase110_vehicle_expansion.py b/tests/test_phase110_vehicle_expansion.py
+index 49c24b9..37b1194 100644
+--- a/tests/test_phase110_vehicle_expansion.py
++++ b/tests/test_phase110_vehicle_expansion.py
+@@ -221,7 +221,7 @@ class TestVehicleBaseNewFields:
+         # Phase 360 (F174): no longer ICE. A default stored a fact nobody stated.
+         v = VehicleBase(make="Honda", model="CBR600RR", year=2007)
+         assert v.powertrain is None
+-        assert v.engine_type == EngineType.FOUR_STROKE
++        assert v.engine_type is None           # Phase 361 (F177): unknown, not four_stroke
+         assert v.battery_chemistry is None
+         assert v.motor_kw is None
+         assert v.bms_present is False
+@@ -274,7 +274,7 @@ class TestRegistryNewFields:
+         vid = add_vehicle(v, fresh_db)
+         row = get_vehicle(vid, fresh_db)
+         assert row["powertrain"] is None       # Phase 360 (F174): unknown, not ice
+-        assert row["engine_type"] == "four_stroke"
++        assert row["engine_type"] is None      # Phase 361 (F177): unknown, not four_stroke
+         assert row["battery_chemistry"] is None
+         assert row["motor_kw"] is None
+         assert row["bms_present"] == 0
+diff --git a/tests/test_phase122_intake.py b/tests/test_phase122_intake.py
+index 2f561c9..14f50f2 100644
+--- a/tests/test_phase122_intake.py
++++ b/tests/test_phase122_intake.py
+@@ -529,6 +529,7 @@ class TestCliGarage:
+             "garage", "add",
+             "--make", "Honda", "--model", "CBR929RR", "--year", "2001",
+             "--engine-cc", "929", "--protocol", "k_line", "--powertrain", "ice",
++            "--engine-type", "four_stroke",
+         ])
+         assert r.exit_code == 0, r.output
+         assert "Added vehicle" in r.output
+diff --git a/tests/test_phase133_gate_5.py b/tests/test_phase133_gate_5.py
+index dada9a2..93698d8 100644
+--- a/tests/test_phase133_gate_5.py
++++ b/tests/test_phase133_gate_5.py
+@@ -305,6 +305,7 @@ class TestEndToEndCliWorkflow:
+                 "--vin", "1HD1CZ3115K123456",
+                 "--protocol", "j1850",
+                 "--powertrain", "ice",
++                "--engine-type", "four_stroke",
+             ])
+             assert r.exit_code == 0, r.output
+             assert "Added vehicle #1" in r.output
+diff --git a/tests/test_phase147_gate_6.py b/tests/test_phase147_gate_6.py
+index c962f92..1c4d801 100644
+--- a/tests/test_phase147_gate_6.py
++++ b/tests/test_phase147_gate_6.py
+@@ -300,6 +300,7 @@ class TestHardwareEndToEnd:
+                     "--vin", "1HD1KHM19FB123456",
+                     "--protocol", "can",
+                     "--powertrain", "ice",
++                    "--engine-type", "four_stroke",
+                 ])
+                 assert r.exit_code == 0, r.output
+                 assert "Added vehicle #1" in r.output
+diff --git a/tests/test_phase159_gate_7.py b/tests/test_phase159_gate_7.py
+index 0016cdb..75bc4fc 100644
+--- a/tests/test_phase159_gate_7.py
++++ b/tests/test_phase159_gate_7.py
+@@ -204,6 +204,7 @@ class TestAdvancedEndToEnd:
+                 "--vin", "1HD1KHM19FB123456",
+                 "--protocol", "can",
+                 "--powertrain", "ice",
++                "--engine-type", "four_stroke",
+             ])
+             assert r.exit_code == 0, r.output
+             bike_slug = "glide-2015"
+diff --git a/tests/test_phase205_gate11.py b/tests/test_phase205_gate11.py
+index 7d5da88..b7dd2a6 100644
+--- a/tests/test_phase205_gate11.py
++++ b/tests/test_phase205_gate11.py
+@@ -157,6 +157,7 @@ class TestDesktopEndToEnd:
+         _run([
+             "garage", "add", "--make", "Harley-Davidson",
+             "--model", "Road King", "--year", "2012", "--powertrain", "ice",
++            "--engine-type", "four_stroke",
+         ])
+         bike_id = _last_id(cli_db, "vehicles")
+ 
+@@ -274,6 +275,7 @@ class TestCrossSurfaceAgreement:
+         _run([
+             "garage", "add", "--make", "Honda", "--model", "CB500",
+             "--year", "2020", "--powertrain", "ice",
++            "--engine-type", "four_stroke",
+         ])
+         bike_id = _last_id(cli_db, "vehicles")
+         _run([
+diff --git a/tests/test_phase250B_composition.py b/tests/test_phase250B_composition.py
+index c44fb63..4c34cdc 100644
+--- a/tests/test_phase250B_composition.py
++++ b/tests/test_phase250B_composition.py
+@@ -130,6 +130,8 @@ def garage(db):
+             CliRunner().invoke(real_cli, [
+                 "garage", "add", "--make", make, "--model", model,
+                 "--year", str(year), "--powertrain", powertrain,
++                # Phase 361 (F177): what the old default stored; electric derives its own.
++                *(["--engine-type", "four_stroke"] if powertrain == "ice" else []),
+             ], catch_exceptions=False)
+             with get_connection(db) as conn:
+                 ids[(make, model)] = conn.execute(
+diff --git a/tests/test_phase258_gate14.py b/tests/test_phase258_gate14.py
+index 58485f3..9fc3957 100644
+--- a/tests/test_phase258_gate14.py
++++ b/tests/test_phase258_gate14.py
+@@ -306,7 +306,9 @@ def garage(gate_db):
+     ids = {}
+     for make, model, year in GARAGE_MACHINES:
+         _run(["garage", "add", "--make", make, "--model", model,
+-              "--year", str(year), "--engine-cc", "50", "--powertrain", "ice"])
++              "--year", str(year), "--engine-cc", "50", "--powertrain", "ice",
++              # Phase 361 (F177): the value the old default stored, kept as it was.
++              "--engine-type", "four_stroke"])
+         with get_connection(gate_db) as conn:
+             ids[(make, model, year)] = conn.execute(
+                 "SELECT id FROM vehicles WHERE make = ? AND model = ? AND year = ? "
+diff --git a/tests/test_phase357_saved_runs.py b/tests/test_phase357_saved_runs.py
+index 2630343..1ecbb80 100644
+--- a/tests/test_phase357_saved_runs.py
++++ b/tests/test_phase357_saved_runs.py
+@@ -262,7 +262,7 @@ class TestThePowertrain:
+         the mistake is now a person's, not a default's; the run still refuses
+         it, and the command the refusal names still fixes it."""
+         added = _cli(garage, "garage", "add", "--make", "Energica", "--model", "Esse",
+-                     "--year", "2021", "--powertrain", "ice")
++                     "--year", "2021", "--powertrain", "ice", "--engine-type", "unknown")
+         assert added.exit_code == 0, added.output
+         assert _sql(garage, "SELECT powertrain FROM vehicles WHERE model = 'Esse'") == [("ice",)]
+         r = _wf(garage, "start", BRAKES, "--bike", "esse-2021", "--powertrain", "electric")
+diff --git a/tests/test_phase360_powertrain_unknown.py b/tests/test_phase360_powertrain_unknown.py
+index 1852ed0..779c5d8 100644
+--- a/tests/test_phase360_powertrain_unknown.py
++++ b/tests/test_phase360_powertrain_unknown.py
+@@ -156,7 +156,9 @@ class TestMigration074:
+         before, seq = _all_rows(db), _seq(db)
+         assert seq[0][0] > max(r[0] for r in before)          # the plant took
+ 
+-        assert apply_pending_migrations(db) == [MIGRATION]
++        # Phase 361: every migration from 074 on, not a pin of the head (F124).
++        assert apply_pending_migrations(db) == [
++            m.version for m in MIGRATIONS if m.version >= MIGRATION]
+         assert _all_rows(db) == before
+         assert _seq(db) == seq
+         assert _schema_default(db) is None
+@@ -199,7 +201,7 @@ class TestGarageAdd:
+ 
+     def test_a_given_powertrain_is_not_asked_for(self, db):
+         r = _cli(db, "garage", "add", "--make", "Honda", "--model", "CB500", "--year", "2020",
+-                 "--powertrain", "ice")
++                 "--powertrain", "ice", "--engine-type", "four_stroke")
+         assert r.exit_code == 0, r.output
+         assert "Powertrain:" not in r.output
+         assert_stored(db, [("Honda", "CB500", "ice")])
+diff --git a/tests/test_phase361_contract_and_engine_type.py b/tests/test_phase361_contract_and_engine_type.py
+new file mode 100644
+index 0000000..8f350c7
+--- /dev/null
++++ b/tests/test_phase361_contract_and_engine_type.py
+@@ -0,0 +1,495 @@
++"""Phase 361 — F178's contract, and F177: a bike's engine type is never assumed.
++
++F178, part 1b: the API accepted `hybrid_parallel` and `hybrid_series`, which
++`PowertrainType` does not hold; create refused them and PATCH stored them
++(`361_step0.md`, S0-3). The API's values are now the enum's, and
++`update_vehicle` holds every writer to the enums.
++
++F177, the operator's pick (2026-09-29): "(c). Keep the API's engine types
++aligned to the code's five, and file rotary and diesel as a finding for a
++later phase (until then such a bike is stored as unknown)."
++- migration 075 removes the column's `DEFAULT 'four_stroke'`;
++- `garage add` and `add-from-photo` ask for an engine type that is not
++  given, unless the powertrain is electric; `unknown` stores NULL;
++- the API stores NULL when the field is absent;
++- every reader is tested on a bike stored as NULL.
++
++Every database is a fresh one under `tmp_path`, never `data/motodiag.db`;
++what was stored is read with plain SQL.
++"""
++
++from __future__ import annotations
++
++import hashlib
++import sqlite3
++from types import SimpleNamespace
++
++import pytest
++from click.testing import CliRunner
++
++from motodiag.cli.main import cli as main_cli
++from motodiag.cli.theme import reset_console
++from motodiag.core.config import reset_settings
++from motodiag.core.database import SCHEMA_VERSION, get_connection, init_db
++from motodiag.core.migrations import MIGRATIONS, apply_pending_migrations, rollback_to_version
++from motodiag.core.models import EngineType, PowertrainType, VehicleBase
++from motodiag.vehicles.registry import add_vehicle, get_vehicle, update_vehicle
++
++MIGRATION = 75
++WIDE = 10000
++
++#: Migration 074's SQL as `5fb84a8` produced it, before Phase 361 gave its
++#: helper an engine-type argument. 074 is applied live; its text must not move.
++SHA256_074 = {
++    "upgrade_sql": "b59b8ea2e4f275cbcf977db66563b344f3d8301afa453afd5a7aadc8117db774",
++    "rollback_sql": "4f78892c5a5667ca45feeae6e481fa61d4ce9cafb99670ae34d41180d5814408",
++}
++
++#: The index SQL, byte for byte, as 074 left it (360's INDEX_SQL).
++INDEX_SQL = {
++    "idx_vehicles_make_model": "CREATE INDEX idx_vehicles_make_model ON vehicles(make, model)",
++    "idx_vehicles_owner": "CREATE INDEX idx_vehicles_owner\n                ON vehicles(owner_user_id)",
++    "idx_vehicles_year": "CREATE INDEX idx_vehicles_year ON vehicles(year)",
++}
++
++ENGINE_TYPES = ["four_stroke", "two_stroke", "electric_motor", "hybrid", "desmodromic"]
++
++
++@pytest.fixture
++def db(tmp_path):
++    path = str(tmp_path / "phase361.db")
++    init_db(path)
++    return path
++
++
++def _cli(db_path, *args, answers=()):
++    text = "".join(f"{a}\n" for a in answers)
++    try:
++        with pytest.MonkeyPatch.context() as mp:
++            mp.setenv("MOTODIAG_DB_PATH", db_path)
++            mp.setenv("COLUMNS", str(WIDE))
++            reset_settings()
++            reset_console()
++            return CliRunner().invoke(main_cli, list(args), input=text)
++    finally:
++        reset_settings()
++        reset_console()
++
++
++def _sql(db_path, sql, params=()):
++    conn = sqlite3.connect(db_path)
++    try:
++        rows = conn.execute(sql, params).fetchall()
++        conn.commit()
++        return rows
++    finally:
++        conn.close()
++
++
++def _stored(db_path):
++    return _sql(db_path, "SELECT model, powertrain, engine_type FROM vehicles ORDER BY id")
++
++
++def assert_stored(db_path, want: list[tuple]):
++    got = _stored(db_path)
++    assert got == want, f"stored {got}, want {want}"
++
++
++def _unknown_bike(db_path) -> int:
++    """A bike stored with no powertrain and no engine type, through the registry."""
++    return add_vehicle(VehicleBase(make="Honda", model="CHF50", year=2005), db_path=db_path)
++
++
++class TestTheHelpersFailOnPlantedInput:
++    def test_assert_stored_fails_on_an_assumed_four_stroke(self, db):
++        _sql(db, "INSERT INTO vehicles (make, model, year, powertrain, engine_type) "
++                 "VALUES ('Honda', 'CHF50', 2005, 'ice', 'four_stroke')")
++        with pytest.raises(AssertionError):
++            assert_stored(db, [("CHF50", "ice", None)])
++
++
++# --------------------------------------------------------------- F178: the enums hold
++class TestUpdateVehicleHoldsTheEnums:
++    @pytest.mark.parametrize("field,value", [
++        ("powertrain", "hybrid_parallel"), ("powertrain", "hybrid_series"),
++        ("powertrain", ""), ("engine_type", "rotary"), ("engine_type", "diesel"),
++        ("engine_type", "none"),
++    ])
++    def test_a_value_outside_the_enum_is_refused_and_nothing_changes(self, db, field, value):
++        vid = add_vehicle(VehicleBase(make="Honda", model="CHF50", year=2005,
++                                      powertrain=PowertrainType.ICE,
++                                      engine_type=EngineType.FOUR_STROKE), db_path=db)
++        with pytest.raises(ValueError):
++            update_vehicle(vid, {field: value}, db_path=db)
++        assert_stored(db, [("CHF50", "ice", "four_stroke")])
++
++    @pytest.mark.parametrize("field,value", [
++        ("powertrain", "hybrid"), ("powertrain", PowertrainType.ELECTRIC),
++        ("engine_type", "two_stroke"), ("engine_type", EngineType.ELECTRIC_MOTOR),
++    ])
++    def test_the_enums_own_values_are_stored(self, db, field, value):
++        vid = _unknown_bike(db)
++        assert update_vehicle(vid, {field: value}, db_path=db)
++        stored = _sql(db, f"SELECT {field} FROM vehicles WHERE id = ?", (vid,))[0][0]
++        assert stored == getattr(value, "value", value)
++
++    def test_none_clears_the_engine_type(self, db):
++        vid = add_vehicle(VehicleBase(make="Honda", model="CHF50", year=2005,
++                                      engine_type=EngineType.TWO_STROKE), db_path=db)
++        assert update_vehicle(vid, {"engine_type": None}, db_path=db)
++        assert _sql(db, "SELECT engine_type FROM vehicles") == [(None,)]
++
++
++@pytest.fixture
++def api_db(tmp_path, monkeypatch):
++    path = str(tmp_path / "phase361_api.db")
++    init_db(path)
++    monkeypatch.setenv("MOTODIAG_DB_PATH", path)
++    monkeypatch.setenv("MOTODIAG_DATA_DIR", str(tmp_path))
++    for tier in ("anonymous", "individual", "shop", "company"):
++        monkeypatch.setenv(f"MOTODIAG_RATE_LIMIT_{tier.upper()}_PER_MINUTE", "9999")
++    reset_settings()
++    yield path
++    reset_settings()
++
++
++def _api(db_path):
++    from fastapi.testclient import TestClient
++
++    from motodiag.api import create_app
++    from motodiag.auth.api_key_repo import create_api_key
++
++    with get_connection(db_path) as conn:
++        uid = int(conn.execute(
++            "INSERT INTO users (username, email, tier, is_active) "
++            "VALUES ('rider', 'rider@example.com', 'individual', 1)").lastrowid)
++        conn.execute("INSERT INTO subscriptions (user_id, tier, status, current_period_end) "
++                     "VALUES (?, 'shop', 'active', datetime('now', '+30 days'))", (uid,))
++    _, key = create_api_key(uid, db_path=db_path)
++    return TestClient(create_app(db_path_override=db_path)), {"X-API-Key": key}
++
++
++BIKE = {"make": "Honda", "model": "CHF50", "year": 2005}
++
++
++class TestTheApi:
++    def test_a_hybrid_bike_can_be_created(self, api_db):
++        client, headers = _api(api_db)
++        r = client.post("/v1/vehicles", json={**BIKE, "powertrain": "hybrid"}, headers=headers)
++        assert r.status_code == 201, r.text
++        assert r.json()["powertrain"] == "hybrid"
++        assert_stored(api_db, [("CHF50", "hybrid", None)])
++
++    @pytest.mark.parametrize("field,value", [
++        ("powertrain", "hybrid_parallel"), ("powertrain", "hybrid_series"),
++        ("engine_type", "rotary"), ("engine_type", "diesel"), ("engine_type", "none"),
++    ])
++    def test_an_old_value_is_refused_on_create_and_update(self, api_db, field, value):
++        client, headers = _api(api_db)
++        r = client.post("/v1/vehicles", json={**BIKE, field: value}, headers=headers)
++        assert r.status_code == 422, r.text
++        vid = client.post("/v1/vehicles", json={**BIKE, "powertrain": "ice",
++                                                "engine_type": "four_stroke"},
++                          headers=headers).json()["id"]
++        r = client.patch(f"/v1/vehicles/{vid}", json={field: value}, headers=headers)
++        assert r.status_code == 422, r.text
++        assert_stored(api_db, [("CHF50", "ice", "four_stroke")])
++
++    @pytest.mark.parametrize("value", ENGINE_TYPES)
++    def test_every_engine_type_in_the_enum_is_accepted(self, api_db, value):
++        client, headers = _api(api_db)
++        r = client.post("/v1/vehicles", json={**BIKE, "engine_type": value}, headers=headers)
++        assert r.status_code == 201, r.text
++        r = client.patch(f"/v1/vehicles/{r.json()['id']}", json={"engine_type": value},
++                         headers=headers)
++        assert r.status_code == 200, r.text
++        assert _sql(api_db, "SELECT engine_type FROM vehicles") == [(value,)]
++
++    def test_a_patch_to_hybrid_is_stored(self, api_db):
++        client, headers = _api(api_db)
++        vid = client.post("/v1/vehicles", json=BIKE, headers=headers).json()["id"]
++        r = client.patch(f"/v1/vehicles/{vid}", json={"powertrain": "hybrid"}, headers=headers)
++        assert r.status_code == 200, r.text
++        assert_stored(api_db, [("CHF50", "hybrid", None)])
++
++    def test_a_create_without_an_engine_type_stores_unknown(self, api_db):
++        client, headers = _api(api_db)
++        r = client.post("/v1/vehicles", json=BIKE, headers=headers)
++        assert r.status_code == 201, r.text
++        assert r.json()["engine_type"] is None
++        assert_stored(api_db, [("CHF50", None, None)])
++
++    def test_the_list_filter_takes_hybrid(self, api_db):
++        client, headers = _api(api_db)
++        client.post("/v1/vehicles", json={**BIKE, "powertrain": "hybrid"}, headers=headers)
++        r = client.get("/v1/vehicles", params={"powertrain": "hybrid"}, headers=headers)
++        assert r.status_code == 200, r.text
++        assert [v["powertrain"] for v in r.json()["items"]] == ["hybrid"]
++        r = client.get("/v1/vehicles", params={"powertrain": "hybrid_parallel"}, headers=headers)
++        assert r.status_code == 422
++
++    def test_the_schema_offers_the_enums_values(self):
++        from motodiag.api import create_app
++
++        schemas = create_app().openapi()["components"]["schemas"]
++
++        def enum_of(schema, field):
++            prop = schemas[schema]["properties"][field]
++            options = prop.get("anyOf", [prop])
++            return next(o["enum"] for o in options if "enum" in o)
++
++        for schema in ("VehicleCreateRequest", "VehicleUpdateRequest"):
++            assert enum_of(schema, "powertrain") == [p.value for p in PowertrainType]
++            assert enum_of(schema, "engine_type") == [e.value for e in EngineType]
++        assert "default" not in schemas["VehicleCreateRequest"]["properties"]["engine_type"]
++
++
++# --------------------------------------------------------------- migration 075
++def _engine_default(db_path) -> object:
++    rows = _sql(db_path, "PRAGMA table_info(vehicles)")
++    return next(r[4] for r in rows if r[1] == "engine_type")
++
++
++def _all_rows(db_path):
++    return _sql(db_path, "SELECT * FROM vehicles ORDER BY id")
++
++
++def _seq(db_path):
++    return _sql(db_path, "SELECT seq FROM sqlite_sequence WHERE name = 'vehicles'")
++
++
++def _index_sql(db_path):
++    return dict(_sql(db_path, "SELECT name, sql FROM sqlite_master "
++                              "WHERE type = 'index' AND tbl_name = 'vehicles'"))
++
++
++class TestMigration075:
++    def test_the_head_is_at_least_075_and_the_last_migration(self):
++        assert SCHEMA_VERSION >= MIGRATION
++        assert SCHEMA_VERSION == max(m.version for m in MIGRATIONS)
++
++    def test_migration_074s_sql_is_unchanged(self):
++        m074 = next(m for m in MIGRATIONS if m.version == 74)
++        for field, want in SHA256_074.items():
++            assert hashlib.sha256(getattr(m074, field).encode()).hexdigest() == want, field
++
++    def test_a_fresh_database_has_no_engine_type_default(self, db):
++        assert _engine_default(db) is None
++
++    def test_a_raw_insert_without_the_column_stores_unknown(self, db):
++        _sql(db, "INSERT INTO vehicles (make, model, year) VALUES ('Honda', 'CHF50', 2005)")
++        assert_stored(db, [("CHF50", None, None)])
++
++    def test_the_indexes_keep_their_sql(self, db):
++        assert _index_sql(db) == INDEX_SQL
++
++    def test_every_row_and_the_sequence_survive_the_rebuild(self, db):
++        rollback_to_version(MIGRATION - 1, db)
++        assert _engine_default(db) == "'four_stroke'"
++        _sql(db, "INSERT INTO vehicles (make, model, year, powertrain, engine_type, vin, "
++                 "motor_kw, bms_present, mileage, transmission, notes) VALUES "
++                 "('Harley-Davidson', 'Road King', 2012, 'ice', 'four_stroke', 'V1', "
++                 "NULL, 0, 41000, 'manual', 'a note'), "
++                 "('Zero', 'SR/S', 2024, 'electric', 'electric_motor', NULL, "
++                 "82.0, 1, 900, 'direct_drive', NULL), "
++                 "('Honda', 'CHF50', 2005, NULL, NULL, NULL, NULL, 0, NULL, NULL, NULL), "
++                 "('Top', 'Deleted', 2020, 'ice', 'two_stroke', NULL, NULL, 0, NULL, "
++                 "NULL, NULL)")
++        _sql(db, "DELETE FROM vehicles WHERE make = 'Top'")
++        with get_connection(db) as conn:
++            vid = conn.execute("SELECT id FROM vehicles WHERE make = 'Zero'").fetchone()[0]
++            conn.execute("INSERT INTO service_intervals (vehicle_id, item_slug, description, "
++                         "every_miles) VALUES (?, 'oil', 'oil', 3000)", (vid,))
++        before, seq = _all_rows(db), _seq(db)
++        assert seq[0][0] > max(r[0] for r in before)          # the plant took
++
++        assert apply_pending_migrations(db) == [
++            m.version for m in MIGRATIONS if m.version >= MIGRATION]
++        assert _all_rows(db) == before
++        assert _seq(db) == seq
++        assert _engine_default(db) is None
++        assert _index_sql(db) == INDEX_SQL
++        assert _sql(db, "PRAGMA foreign_key_check") == []
++        assert _sql(db, "SELECT vehicle_id FROM service_intervals") == [(vid,)]
++
++        rollback_to_version(MIGRATION - 1, db)
++        assert _all_rows(db) == before
++        assert _seq(db) == seq
++        assert _engine_default(db) == "'four_stroke'"
++        assert _index_sql(db) == INDEX_SQL
++
++    def test_the_powertrain_keeps_no_default_either_way(self, db):
++        """075's rollback restores 074's schema, not 073's: no `ice` default."""
++        rollback_to_version(MIGRATION - 1, db)
++        cols = {r[1]: r[4] for r in _sql(db, "PRAGMA table_info(vehicles)")}
++        assert cols["powertrain"] is None
++
++
++# --------------------------------------------------------------- the CLI
++class TestGarageAdd:
++    ADD = ("garage", "add", "--make", "Honda", "--model", "CHF50", "--year", "2005")
++
++    def test_no_engine_type_asks_and_stores_the_answer(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "ice", answers=["two_stroke"])
++        assert r.exit_code == 0, r.output
++        assert "Engine type" in r.output
++        assert_stored(db, [("CHF50", "ice", "two_stroke")])
++
++    def test_no_answer_saves_nothing(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "ice")
++        assert r.exit_code == 1
++        assert "No engine type given: add --engine-type" in r.output
++        assert "Nothing was saved" in r.output
++        assert_stored(db, [])
++
++    def test_unknown_stores_null(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "ice", answers=["unknown"])
++        assert r.exit_code == 0, r.output
++        assert_stored(db, [("CHF50", "ice", None)])
++
++    def test_a_given_engine_type_is_not_asked_for(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "ice", "--engine-type", "four_stroke")
++        assert r.exit_code == 0, r.output
++        assert "Engine type" not in r.output
++        assert_stored(db, [("CHF50", "ice", "four_stroke")])
++
++    def test_electric_gives_an_electric_motor_without_asking(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "electric")
++        assert r.exit_code == 0, r.output
++        assert "Engine type" not in r.output
++        assert_stored(db, [("CHF50", "electric", "electric_motor")])
++
++    def test_a_hybrid_is_asked_not_stored_four_stroke(self, db):
++        r = _cli(db, *self.ADD, "--powertrain", "hybrid")
++        assert r.exit_code == 1
++        assert_stored(db, [])
++
++
++class _FakeIdentifier:
++    guess = None
++
++    def __init__(self, *a, **k):
++        pass
++
++    def identify(self, *a, **k):
++        return _FakeIdentifier.guess
++
++
++def _photo(db, tmp_path, monkeypatch, guess_powertrain, *args, answers=()):
++    from motodiag import intake
++    from motodiag.intake.models import VehicleGuess
++
++    _FakeIdentifier.guess = VehicleGuess(
++        make="Honda", model="CHF50", year_range=(2004, 2006), engine_cc_range=None,
++        powertrain_guess=guess_powertrain, confidence=0.9, reasoning="planted")
++    monkeypatch.setattr(intake, "VehicleIdentifier", _FakeIdentifier)
++    image = tmp_path / "bike.jpg"
++    image.write_bytes(b"not really a jpeg")
++    return _cli(db, "garage", "add-from-photo", str(image), "--yes", *args, answers=answers)
++
++
++class TestAddFromPhoto:
++    def test_no_engine_type_asks(self, db, tmp_path, monkeypatch):
++        r = _photo(db, tmp_path, monkeypatch, "ice", answers=["four_stroke"])
++        assert r.exit_code == 0, r.output
++        assert "Engine type" in r.output
++        assert_stored(db, [("CHF50", "ice", "four_stroke")])
++
++    def test_no_answer_saves_nothing(self, db, tmp_path, monkeypatch):
++        r = _photo(db, tmp_path, monkeypatch, "ice")
++        assert r.exit_code == 1
++        assert "No engine type given" in r.output
++        assert_stored(db, [])
++
++    def test_a_given_engine_type_is_stored(self, db, tmp_path, monkeypatch):
++        r = _photo(db, tmp_path, monkeypatch, "ice", "--engine-type", "unknown")
++        assert r.exit_code == 0, r.output
++        assert_stored(db, [("CHF50", "ice", None)])
++
++    def test_an_electric_guess_gives_an_electric_motor(self, db, tmp_path, monkeypatch):
++        r = _photo(db, tmp_path, monkeypatch, "electric")
++        assert r.exit_code == 0, r.output
++        assert_stored(db, [("CHF50", "electric", "electric_motor")])
++
++
++class TestGarageUpdate:
++    def test_sets_and_clears_the_engine_type(self, db):
++        _unknown_bike(db)
++        r = _cli(db, "garage", "update", "--bike", "chf50-2005", "--engine-type", "two_stroke")
++        assert r.exit_code == 0, r.output
++        assert_stored(db, [("CHF50", None, "two_stroke")])
++        r = _cli(db, "garage", "update", "--bike", "chf50-2005", "--engine-type", "unknown")
++        assert r.exit_code == 0, r.output
++        assert_stored(db, [("CHF50", None, None)])
++
++    def test_an_old_value_is_not_a_choice(self, db):
++        _unknown_bike(db)
++        r = _cli(db, "garage", "update", "--bike", "chf50-2005", "--engine-type", "rotary")
++        assert r.exit_code == 2
++        assert_stored(db, [("CHF50", None, None)])
++
++
++# --------------------------------------------------------------- the readers
++class _Stop(Exception):
++    pass
++
++
++class TestReadersOnAnUnknownEngineType:
++    def test_diagnose_passes_unknown_on(self, db, monkeypatch):
++        from motodiag.cli import diagnose
++
++        vehicle = get_vehicle(_unknown_bike(db), db_path=db)
++        assert vehicle["engine_type"] is None
++        seen: dict = {}
++
++        def spy(**kwargs):
++            seen.update(kwargs)
++            raise _Stop()
++
++        monkeypatch.setattr(diagnose, "_load_known_issues", lambda *a, **k: (None, []))
++        with pytest.raises(_Stop):
++            diagnose._run_quick(vehicle, ["no start"], None, "haiku", db_path=db,
++                                diagnose_fn=spy)
++        assert "engine_type" in seen and seen["engine_type"] is None
++
++    def test_the_diagnose_prompt_leaves_the_engine_line_out(self, monkeypatch):
++        from motodiag.engine import client as engine_client
++
++        prompts: list[str] = []
++
++        def ask(self, prompt, **k):
++            prompts.append(prompt)
++            raise _Stop()
++
++        monkeypatch.setattr(engine_client.DiagnosticClient, "ask_structured", ask)
++        client = engine_client.DiagnosticClient(api_key="sk-test-not-used")
++        for engine_type in (None, "two_stroke"):
++            with pytest.raises(_Stop):
++                client.diagnose(make="Honda", model_name="CHF50", year=2005,
++                                symptoms=["no start"], engine_type=engine_type,
++                                use_cache=False)
++        unknown, stated = prompts
++        assert "Engine:" not in unknown
++        assert "four_stroke" not in unknown
++        assert "Engine: two_stroke" in stated              # control
++
++    def test_the_cache_key_tells_unknown_from_four_stroke(self):
++        from motodiag.engine.cache import _make_cache_key
++
++        keys = {_make_cache_key("diagnose", {"engine_type": v}) for v in (None, "four_stroke")}
++        assert len(keys) == 2
++
++    def test_parts_sourcing_prints_unknown(self, db):
++        from motodiag.shop import parts_sourcing
++
++        vehicle = parts_sourcing._load_vehicle(_unknown_bike(db), db_path=db)
++        prompt = parts_sourcing._build_user_prompt({"id": 1}, 1, vehicle, [], "balanced")
++        line = next(ln for ln in prompt.splitlines() if "engine_type:" in ln)
++        assert line.strip() == "engine_type: unknown"
++
++    def test_the_api_read_returns_null(self, api_db):
++        client, headers = _api(api_db)
++        vid = client.post("/v1/vehicles", json=BIKE, headers=headers).json()["id"]
++        r = client.get(f"/v1/vehicles/{vid}", headers=headers)
++        assert r.status_code == 200
++        assert r.json()["engine_type"] is None
