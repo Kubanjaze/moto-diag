@@ -1,6 +1,23 @@
 # Phase 361 — F178 hybrid values, and F177 engine type
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-29 (v1.0 2026-09-29)
+
+**Outcome (v1.1).** Shipped as planned, with the planned stop in the
+middle:
+- **F178 is closed.**
+  - The safety checker was fixed first (`663accc`): no stored powertrain
+    value can now hide a rule.
+  - The API takes only `ice`, `electric` and `hybrid`, and
+    `update_vehicle` holds every writer to the enums.
+- **F177 is closed** by the operator's (c). Migration 075 is live at
+  schema 75, and its live diff equals the approved exact diff; no existing
+  row changed.
+- **The stop:** gate 11's mobile snapshot, as planned. It was cleared by
+  moto-diag-mobile `cd359e0`, where the app's fallbacks were filed and
+  closed as its F181.
+
+No bug fixes. F180 (rotary and diesel) filed. Regression of record: 10018
+passed, 0 failed at `83d0278`. Deviations and Results are at the end.
 
 ## Goal
 
@@ -192,17 +209,65 @@ phase log.
 
 ## Verification Checklist
 
-- [ ] v1.0 committed and pushed before code
-- [ ] No stored powertrain value hides a safety rule; the planted `is None` fails the test
-- [ ] The API accepts only the enum's values, on create and update, and `update_vehicle` refuses others
-- [ ] Migration 075 keeps every value; 074's SQL unchanged; the dry run shows no existing row changed
-- [ ] No path stores `four_stroke` that nobody stated
-- [ ] Each reader tested on a bike with an unknown engine type
-- [ ] Mutations all red
-- [ ] 244G scanner over the new tests
-- [ ] `wholetree.sh` before each commit; `--full` before the migration commit and the regression
-- [ ] The mobile snapshot refreshed; gate 11 green
-- [ ] Regression of record by `regression.sh`; floor raised
-- [ ] Dry-run diff committed; apply-live passes F172's exact check
-- [ ] The rotary and diesel finding filed; F177, F178 closed
-- [ ] Handoff written; `verify_phase.sh` run after the merge
+- [x] v1.0 committed and pushed before code (`da5dc0f`)
+- [x] No stored powertrain value hides a safety rule; the planted `is None` fails the test (S1)
+- [x] The API accepts only the enum's values, on create and update, and `update_vehicle` refuses others
+- [x] Migration 075 keeps every value; 074's SQL unchanged; the dry run shows no existing row changed
+- [x] No path stores `four_stroke` that nobody stated
+- [x] Each reader tested on a bike with an unknown engine type
+- [x] Mutations all red (19/19)
+- [x] 244G scanner over the new tests
+- [x] `wholetree.sh` before each commit (once past a failure; see Deviations); `--full` before the migration commit and the regression
+- [x] The mobile snapshot refreshed (moto-diag-mobile `cd359e0`); gate 11 green (21)
+- [x] Regression of record by `regression.sh`; floor raised (9950 → 10018)
+- [x] Dry-run diff committed (`fb5c9a9`); apply-live passes F172's exact check
+- [x] The rotary and diesel finding filed (F180); F177, F178 closed
+- [x] Handoff written; `verify_phase.sh` run after the merge (its result is in the handoff)
+
+## Deviations from Plan
+
+- **Step 0 widened F178.** An empty string and a capitalised value hid the
+  seven rules too, not only the two hybrid variants. The fix (any value
+  outside the enum is unknown) was planned that way and covers them.
+- **`unknown` became a CLI choice for the engine type (D2).** v1.0
+  planned it. It is recorded here because the operator's words ("such a
+  bike is stored as unknown") are what required it: with only the five
+  values, a rotary or diesel bike could not be answered for.
+- **The app's form could not simply require an engine type**, as F179's
+  form requires a powertrain. The phase log's API list says so, and the
+  mobile session gave the form an answer that sends none.
+- **v1.0 was committed past a failed `wholetree.sh`.** A pipe through
+  `tail` hid the exit code, and `finding_check` B2 had failed on F180,
+  which was cited before it was filed. It was caught before any push, and
+  F180 was filed in the next commit.
+- **A later `--full` failed on B2 for the same reason**: the log named the
+  next free F-number. The phrase was removed and `--full` re-run.
+- **Pushing the stop's documents needed a clean tree.** The push guard
+  accepts only a record made on a clean tree, and a scratch worktree fails
+  a location-bound deploy test. So `src/` and `tests/` were stashed for
+  the record run and restored, with a fingerprint of the diff checked
+  before and after. The guard was not loosened.
+- **Four `--full` runs in all**, where the plan had two: the planned stop,
+  the B2 failure, the staged tree before the held commit, and the clean
+  tree before the regression (which `regression.sh` requires for HEAD).
+- **The deploy ran before the merge**, on the phase branch, as 357's and
+  360's did.
+
+## Results
+
+| | |
+|---|---|
+| Safety | `SafetyChecker` reads any powertrain outside `PowertrainType` as unknown (`663accc`); `test_phase361_safety_unknown_powertrain.py` 16, of which 10 fail against the old checker |
+| Contract | `PowertrainLiteral` `ice, electric, hybrid`; `EngineTypeLiteral` the enum's five; `update_vehicle` converts both through their enums |
+| Migration | 075: `vehicles` rebuilt, `engine_type TEXT` with no default; schema 74 → 75; no row changed; sequence 10 kept; 074's SQL hash-pinned |
+| F177 | `garage add` / `add-from-photo` ask unless electric, `unknown` stores NULL; `garage update --engine-type`; the API stores NULL when absent; parts sourcing prints `unknown` |
+| F177 tests | `test_phase361_contract_and_engine_type.py` 51: the API, `update_vehicle`, migration 075, every entry point, every reader on an unknown engine type |
+| Existing tests | 10 files updated, exactly Step 0's 93 for (c) |
+| Mutations | 19/19 red (`361_mutate.py`: safety 2, contract 3, F177 14) |
+| Whole tree | `--full` at `83d0278`: 83 files, 3945 passed |
+| Regression | 10018 passed, 0 failed, 0 skipped at `83d0278` (29 min 36 s, `-n auto --dist load`) |
+| Floor | `COLLECTED_TEST_FLOOR` 9950 → 10018 |
+| Deploy | dry run committed `fb5c9a9`; apply-live `[75]`; live 5844 → 5845 rows, 90 tables, integrity ok; equals the approved exact diff; F158 census 36; sequence 10, all ten `ice` and `four_stroke`, no defaults (by hand) |
+| Mobile | snapshot, types, the powertrain and engine-type options, the add form's engine type and the edit screen's fallbacks: moto-diag-mobile `cd359e0` (F181) |
+| Findings | F177, F178 closed; F180 filed |
+| Bug fixes | none |

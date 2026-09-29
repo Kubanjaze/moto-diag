@@ -2321,7 +2321,25 @@ What would close it: `garage remove` refuses such a bike, names what
 still refers to it (work orders, saved runs), and exits 1, with a test
 for each.
 
-### F177
+### F177 — CLOSED by Phase 361 (2026-09-29)
+
+**Closed**, by the operator's (c). No path stores an engine type nobody
+stated:
+- migration 075 (live, schema 75) removed the column's
+  `DEFAULT 'four_stroke'`;
+- `VehicleBase.engine_type` defaults to None;
+- the API stores NULL when the field is absent;
+- `garage add` and `garage add-from-photo` ask unless the powertrain is
+  electric (which gives `electric_motor`), and save nothing without an
+  answer; `unknown` stores NULL;
+- `garage update --engine-type` corrects it.
+
+Every reader's handling of an unknown engine type is tested
+(`tests/test_phase361_contract_and_engine_type.py`): the diagnose prompt
+leaves the line out, the cache key tells unknown from four-stroke, parts
+sourcing prints `unknown` (it printed `None`), and the API read returns
+null. `361_mutate.py`: 19/19 red. The app's side closed in moto-diag-mobile
+`cd359e0` (its F181). Rotary and diesel are F180.
 
 **A bike's `engine_type` is stored as `four_stroke` when nobody gave it, the same shape as F174's powertrain**
 
@@ -2357,7 +2375,24 @@ for each reader with the value unknown.
 F179, which closed the form's `ice` preselect in `moto-diag-mobile`
 `57c9e45`, records this and leaves it open under F177.
 
-### F178
+### F178 — CLOSED by Phase 361 (2026-09-29)
+
+**Closed.** No stored powertrain value can hide a safety rule, and the
+API accepts only the enum's values:
+- **first, before any API change** (`663accc`): `SafetyChecker` reads any
+  value outside `PowertrainType` as unknown and shows every rule. Step 0
+  found an empty string and `ICE` also hid the seven rules;
+- the API's powertrain values are `ice`, `electric`, `hybrid`: a hybrid
+  bike can be created, and the variants are refused (422) on create and
+  update;
+- `update_vehicle` converts `powertrain` and `engine_type` through their
+  enums, so no writer stores a value outside them.
+
+Tests: `tests/test_phase361_safety_unknown_powertrain.py` (with the old
+checker restored, 10 of its 16 fail) and
+`tests/test_phase361_contract_and_engine_type.py`. The app's snapshot and
+types were refreshed in moto-diag-mobile `cd359e0`. No live row held a
+value outside the enum.
 
 **The API's powertrain values are not the enum's: no API request can create a hybrid bike, and an update stores `hybrid_parallel` as it is, which hides seven safety rules**
 

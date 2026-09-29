@@ -1,6 +1,6 @@
 # Phase 361 — F178 hybrid values, and F177 engine type — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-29)
 **Branch:** `phase-361` (Opus session, main checkout, the only writer)
 
 ---
@@ -277,3 +277,40 @@ Regression of record: 10018 passed, 0 failed, 0 skipped, 0 errors at `83d0278` (
 - **Not a rule-1 stop.** No existing row changes, the condition the
   operator set ("A dry run that changes any existing row is still a
   stop"). The diff is committed before apply-live.
+
+### 2026-09-29 — The deploy: apply-live
+
+Run on the phase branch before the merge, as 357's and 360's were. The
+migration applied live is the one in `83d0278`, the commit the regression
+tested (`fb5c9a9` adds only documents).
+
+`deploy.py apply-live 361`:
+- the preflight passed (F172's exact check); applied `[75]`;
+- live after: 5845 rows, 90 tables, integrity ok;
+- scope problems none; **equals the approved exact diff: yes**
+  (`361_live_diff.md`).
+
+By hand, read only, after:
+- schema 75;
+- `sqlite_sequence` for `vehicles` is **10**, as before;
+- 10 rows, **all still `ice` and `four_stroke`**;
+- `pragma_table_info` shows no default on `powertrain` or `engine_type`;
+- `foreign_key_check` is empty, and the three indexes are present.
+
+### 2026-09-29 — Close-out
+
+- No refute pass ran: the phase ships code, a migration and tests, and no
+  content rows. No claim rests on a document.
+- No bug fixes. Two process slips are recorded above: the v1.0 commit
+  made past a failed `wholetree.sh`, and an F-number named in this log
+  before its entry existed. Neither was a defect in shipped code.
+- F177 and F178 closed in `docs/FOLLOWUPS.md`; F180 filed. The mobile
+  repo's F181 was filed and closed there.
+- Row 361 ✅; `implementation.md` 0.13.93 with its history row; v1.1;
+  handoff `docs/handoffs/2026-09-29_361_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0 and its
+  two scripts, the mutation script, the scope, and both diffs.
+- The edit guard blocked one close-out command: it carried a stray
+  no-op `sed -i` on `/dev/null`. The block was right, since the guard
+  refuses `sed -i` anywhere, and nothing in that command ran. It was
+  re-run without it.
