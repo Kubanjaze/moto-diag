@@ -155,7 +155,7 @@ class TestModels:
             engine_cc_range=(900, 930),
             confidence=0.88,
         )
-        assert g.powertrain_guess == "ice"
+        assert g.powertrain_guess is None      # Phase 360 (F174): not assumed
         assert g.model_used == "haiku"
         assert g.cached is False
         assert g.alert is None
@@ -528,7 +528,7 @@ class TestCliGarage:
         r = runner.invoke(cli, [
             "garage", "add",
             "--make", "Honda", "--model", "CBR929RR", "--year", "2001",
-            "--engine-cc", "929", "--protocol", "k_line",
+            "--engine-cc", "929", "--protocol", "k_line", "--powertrain", "ice",
         ])
         assert r.exit_code == 0, r.output
         assert "Added vehicle" in r.output

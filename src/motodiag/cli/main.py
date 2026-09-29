@@ -427,6 +427,20 @@ def garage() -> None:
     """Manage your vehicle garage — add, list, remove bikes."""
 
 
+def _ask_powertrain() -> str:
+    """Phase 360 (F174): a bike's powertrain is asked for, never assumed.
+    With no answer (end of input, no terminal) nothing is saved: exit 1."""
+    try:
+        return click.prompt(
+            "Powertrain",
+            type=click.Choice(["ice", "electric", "hybrid"], case_sensitive=False),
+        ).lower()
+    except click.Abort:
+        console.print("[red]No powertrain given: add --powertrain ice|electric|hybrid. "
+                      "Nothing was saved.[/red]")
+        raise SystemExit(1)
+
+
 @garage.command("add")
 @click.option("--make", required=True, help="Manufacturer (e.g., Honda, Harley-Davidson).")
 @click.option("--model", "model_name", required=True, help="Model name.")
@@ -439,13 +453,13 @@ def garage() -> None:
               type=click.Choice(["none", "j1850", "k_line", "can", "can_hd",
                                 "bmw_k_can", "ducati_can", "ktm_can", "j1939"]),
               help="Diagnostic protocol.")
-@click.option("--powertrain", default="ice",
+@click.option("--powertrain", default=None,
               type=click.Choice(["ice", "electric", "hybrid"]),
-              help="Powertrain type.")
+              help="Powertrain type. Asked for when not given.")
 @click.option("--notes", default=None, help="Free-text notes.")
 def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
                motor_kw: float | None, vin: str | None, protocol: str,
-               powertrain: str, notes: str | None) -> None:
+               powertrain: str | None, notes: str | None) -> None:
     """Add a bike to the garage manually."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
@@ -453,6 +467,8 @@ def garage_add(make: str, model_name: str, year: int, engine_cc: int | None,
     )
     from motodiag.vehicles.registry import add_vehicle
 
+    if powertrain is None:
+        powertrain = _ask_powertrain()
     init_db()
     try:
         vehicle = VehicleBase(
@@ -513,7 +529,8 @@ def garage_list() -> None:
         )
         table.add_row(
             str(v["id"]), str(v["year"]), v["make"], v["model"],
-            engine, v.get("powertrain", "ice") or "ice",
+            # Phase 360 (F174): NULL is "nobody said", not ice.
+            engine, v.get("powertrain") or "unknown",
             v.get("vin") or "-",
         )
     console.print(table)
@@ -549,7 +566,12 @@ def garage_remove(vehicle_id: int, yes: bool) -> None:
 @click.argument("image_path", type=click.Path(exists=True, dir_okay=False))
 @click.option("--hints", default=None, help="Optional text hints (e.g., 'sport bike, red').")
 @click.option("--yes", is_flag=True, help="Skip confirmation prompt.")
-def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None:
+@click.option("--powertrain", default=None,
+              type=click.Choice(["ice", "electric", "hybrid"]),
+              help="The bike's powertrain; wins over the photo's guess. Asked for "
+                   "when neither gives one.")
+def garage_add_from_photo(image_path: str, hints: str | None, yes: bool,
+                          powertrain: str | None) -> None:
     """Identify a bike from a photo and add it to the garage."""
     from motodiag.core.database import init_db
     from motodiag.core.models import (
@@ -585,9 +607,10 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None
         if guess.engine_cc_range
         else None
     )
-    powertrain = PowertrainType(guess.powertrain_guess)
+    # Phase 360 (F174): a person's word, else the photo's guess, else ask.
+    powertrain = powertrain or guess.powertrain_guess or _ask_powertrain()
     engine_type = (
-        EngineType.ELECTRIC_MOTOR if guess.powertrain_guess == "electric"
+        EngineType.ELECTRIC_MOTOR if powertrain == "electric"
         else EngineType.FOUR_STROKE
     )
     vehicle = VehicleBase(
@@ -596,7 +619,7 @@ def garage_add_from_photo(image_path: str, hints: str | None, yes: bool) -> None
         year=year_mid,
         engine_cc=engine_cc,
         protocol=ProtocolType.NONE,
-        powertrain=powertrain,
+        powertrain=PowertrainType(powertrain),
         engine_type=engine_type,
         notes=f"Added from photo. Confidence: {guess.confidence:.2f}. {guess.reasoning}",
     )
@@ -773,7 +796,7 @@ def _print_guess(guess) -> None:
         f"[bold]{guess.make} {guess.model}[/bold]{cached_tag}\n"
         f"Year:       {year_str}\n"
         f"Engine:     {engine_str}\n"
-        f"Powertrain: {guess.powertrain_guess}\n"
+        f"Powertrain: {guess.powertrain_guess or 'unknown'}\n"
         f"Confidence: {guess.confidence:.2f} (via {guess.model_used})\n"
         f"\n[dim]{guess.reasoning}[/dim]"
     )

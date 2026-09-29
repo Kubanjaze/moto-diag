@@ -19,8 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F178** (this file); the mobile
-file's highest is **F147**.
+At the time of writing the highest assigned is **F179**, in the mobile file;
+this file's highest is **F178**.
 
 ---
 
@@ -2334,6 +2334,12 @@ showed ten bikes, all `four_stroke`, all petrol models.
 Not fixed in Phase 360, whose scope is the powertrain. What would close
 it: the same choice F174 was given, applied to `engine_type`, and a test
 for each reader with the value unknown.
+
+**The app's side (2026-09-29):** the app's add-bike form preselects
+`engine_type` `'four_stroke'`
+(`moto-diag-mobile/src/screens/NewVehicleScreen.tsx`). The mobile repo's
+F179, which closed the form's `ice` preselect in `moto-diag-mobile`
+`57c9e45`, records this and leaves it open under F177.
 
 ### F178
 

@@ -156,7 +156,7 @@ class TestDesktopEndToEnd:
 
         _run([
             "garage", "add", "--make", "Harley-Davidson",
-            "--model", "Road King", "--year", "2012",
+            "--model", "Road King", "--year", "2012", "--powertrain", "ice",
         ])
         bike_id = _last_id(cli_db, "vehicles")
 
@@ -273,7 +273,7 @@ class TestCrossSurfaceAgreement:
         customer_id = _last_id(cli_db, "customers")
         _run([
             "garage", "add", "--make", "Honda", "--model", "CB500",
-            "--year", "2020",
+            "--year", "2020", "--powertrain", "ice",
         ])
         bike_id = _last_id(cli_db, "vehicles")
         _run([

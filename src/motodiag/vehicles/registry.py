@@ -53,7 +53,8 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
 
     Phase 110: persists new powertrain/engine_type/battery_chemistry/motor_kw/
     bms_present columns. Callers using the old VehicleBase (without those
-    fields) get the ICE/four_stroke defaults from the model.
+    fields) get the model's defaults: four_stroke, and (Phase 360) a NULL
+    powertrain, which readers treat as unknown.
     """
     with get_connection(db_path) as conn:
         cursor = conn.execute(
@@ -66,7 +67,7 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
                 vehicle.notes, datetime.now().isoformat(),
-                vehicle.powertrain.value,
+                vehicle.powertrain.value if vehicle.powertrain else None,
                 vehicle.engine_type.value,
                 vehicle.battery_chemistry.value if vehicle.battery_chemistry else None,
                 vehicle.motor_kw,
@@ -213,7 +214,7 @@ def add_vehicle_for_owner(
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
                 vehicle.notes, datetime.now().isoformat(),
-                vehicle.powertrain.value,
+                vehicle.powertrain.value if vehicle.powertrain else None,
                 vehicle.engine_type.value,
                 vehicle.battery_chemistry.value
                     if vehicle.battery_chemistry else None,

@@ -35,9 +35,10 @@ class VehicleGuess(BaseModel):
         None,
         description="Likely displacement range in cc. None for electric (no ICE cc).",
     )
-    powertrain_guess: str = Field(
-        default="ice",
-        description="Powertrain: 'ice', 'electric', or 'hybrid'",
+    powertrain_guess: Optional[str] = Field(
+        default=None,
+        description="Powertrain: 'ice', 'electric', or 'hybrid'; None when the "
+                    "model gave none (Phase 360, F174: not assumed to be ice)",
     )
     confidence: float = Field(..., ge=0.0, le=1.0)
     reasoning: str = Field(

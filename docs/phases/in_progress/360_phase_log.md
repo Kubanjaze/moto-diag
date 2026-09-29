@@ -303,3 +303,42 @@ job.
 folder, and it stays in the working tree. Everything else is committed:
 the guard's test fix, the dead-branch removal, the mutation script and
 F178.
+
+Committed `41d78a8`, then `9d4db1e`, both pushed. Row 360 stays 🚧,
+because `roadmap_check.py` R3 refuses ⏸️ while the documents are in
+`in_progress/`; the pause is written in its note.
+
+### 2026-09-29 — Resumed: the mobile snapshot refreshed in moto-diag-mobile 57c9e45
+
+The operator (2026-09-29): "The mobile side is done and checked:
+moto-diag-mobile 57c9e45 (pushed) refreshed api-schema/openapi.json (only
+VehicleCreateRequest.powertrain changed: the enum or null, no default),
+regenerated src/api-types.ts, and removed the app's ice preselect (F179,
+closed in the mobile FOLLOWUPS). Gate 11 passes against your working tree:
+21 passed."
+
+Checked here:
+- `57c9e45` is on `moto-diag-mobile` `main`, which is level with
+  `origin/main`;
+- the snapshot's `VehicleCreateRequest.powertrain` reads `anyOf [the
+  enum, null]`, with no default;
+- the 15 changes in this tree were as they were left.
+
+So the snapshot refresh is **moto-diag-mobile `57c9e45`**, made in a
+session rooted in that repo, as the stop proposed (option A).
+
+- **FOLLOWUPS' numbering note** now reads "the highest assigned is
+  **F179**, in the mobile file; this file's highest is **F178**", as
+  `next_f_number.sh` reports. A first wording named F178 as the highest
+  assigned. `finding_check` B1 reads both files, so it failed that wording
+  in the `--full` run.
+- **F177 gains its app side:** the add-bike form still preselects
+  `engine_type` `'four_stroke'` (`NewVehicleScreen.tsx:85`). The mobile
+  repo's F179 records this and leaves it under F177.
+- **The vehicle tests re-run:** the 100 files that mention `garage`,
+  `VehicleBase`, `/v1/vehicles`, `add_vehicle`, `powertrain` or `vehicles`
+  gave 3173 passed, 0 failed, gate 11 among them. 244G's scanner over
+  `tests/` is clean.
+- **Part 1 is committed from the working tree.** `360_part1_wip.patch`,
+  the backup, is removed in the same commit, since the commit now holds
+  what it held.

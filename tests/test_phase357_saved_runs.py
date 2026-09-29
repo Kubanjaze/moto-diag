@@ -257,11 +257,12 @@ class TestThePowertrain:
         assert ("motodiag garage update --bike 'sportster-2001' --powertrain electric"
                 in r.output)
 
-    def test_f174s_default_is_caught_and_the_remedy_works(self, garage):
-        """An electric bike added without --powertrain is stored as ice (F174).
-        The run refuses it; the command the refusal names fixes it."""
+    def test_a_wrongly_stated_bike_is_caught_and_the_remedy_works(self, garage):
+        """An electric bike stated as ice by mistake. Phase 360 closed F174, so
+        the mistake is now a person's, not a default's; the run still refuses
+        it, and the command the refusal names still fixes it."""
         added = _cli(garage, "garage", "add", "--make", "Energica", "--model", "Esse",
-                     "--year", "2021")
+                     "--year", "2021", "--powertrain", "ice")
         assert added.exit_code == 0, added.output
         assert _sql(garage, "SELECT powertrain FROM vehicles WHERE model = 'Esse'") == [("ice",)]
         r = _wf(garage, "start", BRAKES, "--bike", "esse-2021", "--powertrain", "electric")
