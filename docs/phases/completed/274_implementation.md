@@ -1,6 +1,19 @@
 # Phase 274 — Track O batch 1: CRM, reorder points, warranty, financial reporting, variance
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-29 (v1.0 2026-09-29)
+
+**Outcome (v1.1).** Shipped as planned, with one stop at Step 0:
+- **The stop:** row 290's P&L needed costs the data did not hold. The
+  operator picked option B and added two things: record each quote, and
+  state one attribution rule per dimension.
+- **All five rows have commands, each exercised by a test.** Rows 279,
+  280, 290 and 291 close folded into 274.
+- **Migration 076 is live** at schema 76, and its live diff equals the
+  approved exact diff; no existing row changed.
+- **F182** was filed at Step 0 and closed with its fix.
+
+One bug fix (the relationship column). Regression of record: 10109 passed,
+0 failed at `757b9f4`. Deviations and Results are at the end.
 
 ## Goal
 
@@ -265,17 +278,71 @@ the total and the date, with the notification's id.
 
 ## Verification Checklist
 
-- [ ] v1.0 committed and pushed before code
-- [ ] Migration 076: tables, column, rollback; no existing row changed
-- [ ] Every new capability reached through a `motodiag` command in a test
-- [ ] `customer bikes` / `show` print the relationship
-- [ ] PO generation skips with its reason; `receive` adds stock
-- [ ] Validity never reads an unrecorded limit as a pass
-- [ ] The estimate is hours × the invoice's rate + parts; refused without a rate; each queued estimate recorded
-- [ ] Quote accuracy reads "no quote recorded" when none is
-- [ ] The P&L states its three attribution rules; nothing unrecorded shown as zero
-- [ ] The mechanic cost rate appears in no API route
-- [ ] Mutations all red
-- [ ] 244G scanner; `wholetree.sh --full`; regression of record; floor raised
-- [ ] Dry-run diff committed; apply-live equals it
-- [ ] F182 closed; handoff; `verify_phase.sh`
+- [x] v1.0 committed and pushed before code (`fa750c8`)
+- [x] Migration 076: tables, column, rollback; no existing row changed (`test_phase274_migration.py`; the dry run)
+- [x] Every new capability reached through a `motodiag` command in a test
+- [x] `customer bikes` / `show` print the relationship (bug fix #1, `3f9afdd`)
+- [x] PO generation skips with its reason; `receive` adds stock
+- [x] Validity never reads an unrecorded limit as a pass
+- [x] The estimate is hours × the invoice's rate + parts; refused without a rate; each queued estimate recorded
+- [x] Quote accuracy reads "no quote recorded" when none is
+- [x] The P&L states its three attribution rules; nothing unrecorded shown as zero
+- [x] The mechanic cost rate appears in no API route (`test_no_api_code_reads_the_cost_rates`)
+- [x] Mutations all red (33/33)
+- [x] 244G scanner; `wholetree.sh --full`; regression of record; floor raised (10018 → 10109)
+- [x] Dry-run diff committed (`e358111`); apply-live equals it
+- [x] F182 closed; handoff; `verify_phase.sh` (its result is in the handoff)
+
+## Deviations from Plan
+
+- **`shop labor-rate` was added at v1.0, not at Step 0.** Planning the
+  F182 fix found that no command writes `labor_rates`, so a fixed estimate
+  would always refuse. The verb gap was found and closed before any code
+  (D7).
+- **`transfer_ownership` was fixed on the way.** It had no caller until
+  this batch wired it. A bike sold back to a previous owner and then sold
+  on made its UPDATE collide with the primary key. It is not in the
+  bug-fix register, since the defect was never reachable before.
+- **244W's real-tree control moved to a synthetic tree.** Wiring
+  `inventory/item_repo` ended the real case of the island scan's one seed.
+  The same shape is now built in a scratch tree, and mutation G1 removes
+  the seed and sees it go red.
+- **The API's notification route changed behaviour, not schema.** It calls
+  the same function, so an `estimate_ready` there is now refused (422)
+  without a rate or estimated hours, and records its quote. Gate 11 is
+  unaffected.
+- **The P&L's API scan made its test a whole-tree member:** `--full` ran
+  84 files, where 361's ran 83.
+- **Three slips, each caught before anything shipped:**
+  - v1.0's first commit command chained `git push` after `git commit`,
+    and the push guard refused it before either ran;
+  - one P&L expectation was wrong (the test, not the code);
+  - three test counts in the log were wrong, and `b0613fa`'s message says
+    "22 new" where it added 20. All three are corrected in the log.
+- **The deploy ran before the merge**, on the phase branch, as 357's,
+  360's and 361's did.
+- `inventory/__init__.py`'s stale Track O numbers were corrected. The
+  triage report named only `accounting/` and `scheduling/`, and this batch
+  edits neither, so their docstrings are left for batch 2.
+
+## Results
+
+| | |
+|---|---|
+| Migration | 076: eight tables, six indexes, `inventory_items.reorder_quantity`; schema 75 → 76; no row changed |
+| 274 CRM | `shop customer log-contact`, `history`, `transfer-bike`, `bike-owners`; `test_phase274_crm.py` 10 |
+| Bug fix #1 | `shop customer bikes`/`show` print the relationship; `test_phase274_relationship_column.py` 2 |
+| 279 inventory | `shop inventory` (vendors, stock, `reorder`, `po generate/list/show/mark-sent/receive/cancel`); `test_phase274_inventory.py` 16 |
+| 280 warranty | `shop warranty add/list/check`, `claim open/list/show/status/packet`; `test_phase274_warranty.py` 19 |
+| F182 and quotes | the estimate at the invoice's rate plus parts, refused without either; `work_order_quotes`; `shop labor-rate`; `test_phase274_quotes_variance.py` 17 (with 291) |
+| 291 variance | `shop analytics variance` |
+| 290 P&L | `shop member cost-rate(s)`, `shop parts-needs cost`, `shop expense`, `shop analytics pnl`; `test_phase274_pnl.py` 21 |
+| Migration tests | `test_phase274_migration.py` 10 |
+| Allowlist | MODULE_ISLANDS 13 → 9, UNREACHABLE 34 → 32, ORPHANS 106 → 112; 244X's list 52 → 51 |
+| Mutations | 33/33 red (`274_mutate.py`) |
+| Whole tree | `--full` at `757b9f4`: 84 files, 3961 passed |
+| Regression | 10109 passed, 0 failed, 0 skipped at `757b9f4` (27 min 22 s, `-n auto --dist load`) |
+| Floor | `COLLECTED_TEST_FLOOR` 10018 → 10109 |
+| Deploy | dry run committed `e358111`; apply-live `[76]`; live 5845 → 5846 rows, 90 → 98 tables, integrity ok; equals the approved exact diff; F158 census 36 |
+| Findings | F182 filed and closed |
+| Ledger | 274 ✅; 279, 280, 290, 291 ✅ folded; 282–286 ⏸️; 280 rewritten; 362 ⏸️ |

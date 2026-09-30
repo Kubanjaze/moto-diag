@@ -1,6 +1,6 @@
 # Phase 274 — Track O batch 1: CRM, reorder points, warranty, financial reporting, variance — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-29)
 **Branch:** `phase-274` (Opus session, main checkout, the only writer)
 
 ---
@@ -226,3 +226,71 @@ Regression of record: 10109 passed, 0 failed, 0 skipped, 0 errors at `757b9f4` (
 - **Not a rule-1 stop.** No existing row changes. The table that gains a
   column has no rows, so the prompt's "a new column on a table that has
   rows" does not apply. The diff is committed before apply-live.
+
+### 2026-09-29 — The deploy: apply-live
+
+Run on the phase branch before the merge, as 357's, 360's and 361's were.
+The migration applied is the one in `757b9f4`, the commit the regression
+tested (`e358111` adds only documents).
+
+`deploy.py apply-live 274`:
+- the preflight passed (F172's exact check); applied `[76]`;
+- live after: 5846 rows, 98 tables, integrity ok;
+- scope problems none; **equals the approved exact diff: yes**
+  (`274_live_diff.md`).
+
+By hand, read only, after:
+- schema 76; `inventory_items` ends in `reorder_quantity`;
+- customers 6, work orders 6, notifications 4, vehicles 10, shops 1, and
+  0 inventory items, vendors and warranties: every count as Step 0
+  measured it; the new tables are empty;
+- `foreign_key_check` is empty;
+- against live, `shop inventory reorder` prints "Nothing is at or below
+  its reorder point." and `shop analytics pnl` prints "No invoices issued
+  in this period" and "Net not computed: no expenses recorded for
+  2026-09".
+- One of those checks was first run with `MOTODIAG_DB_PATH=` set to an
+  empty string, a slip in the command. It crashed in `init_db` ("no such
+  table: vehicles") and wrote no file (`git status` and the directory
+  listing show none). It was re-run without the variable.
+
+## Bug-fix register
+
+### Bug fix #1 — 2026-09-29
+
+**Issue.** `motodiag shop customer bikes` and `shop customer show`
+printed `?` in the Relationship column for every linked bike. Found at
+Step 0 (S0-2) and reproduced on a scratch database.
+
+**Root cause.** `list_bikes_for_customer` returns the link's relationship
+as `cb_relationship` (the vehicle row has its own columns), and both
+tables read `relationship`.
+
+**Fix.** Both tables read `cb_relationship`.
+
+**Files.** `src/motodiag/cli/shop.py`,
+`tests/test_phase274_relationship_column.py`.
+
+**Verified.** The test's 2 cases fail with the fix removed and pass with
+it; mutation C5 red.
+
+**Commit.** `3f9afdd`
+
+### 2026-09-29 — Close-out
+
+- No refute pass ran: the batch ships code, a migration and tests, and no
+  content rows. No claim rests on a document.
+- F182 closed in `docs/FOLLOWUPS.md` (in `b474378`, with its fix).
+- Rows 279, 280, 290 and 291 ✅ folded into 274, with no CLOSED date of
+  their own; row 274 ✅ with its CLOSED date and the regression line
+  (92 words). Rows 282–286 and 362 stay ⏸️.
+- `implementation.md` 0.13.94 with its history row; v1.1; handoff
+  `docs/handoffs/2026-09-29_274_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0, the
+  mutation script, the scope and both diffs.
+- `wholetree.sh` before the close-out commit failed once, 1 of 1496:
+  `test_roadmap_continuity.py` pins the real ledger's folds, and this
+  close-out added four (279, 280, 290 and 291 into 274). The test now
+  names twelve, and is renamed `test_the_twelve_folds_are_seen_and_pass`.
+  The code did not change after the regression; this is a test
+  of the ledger, run again below.

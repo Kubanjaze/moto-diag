@@ -513,13 +513,13 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
-| 274 | Customer CRM | 🚧 | Customer profiles, bike ownership history, communication log, notes. **Carries Track O batch 1** (rows 274, 279, 280, 290, 291), opened 2026-09-29. Step 0 stopped on 290 (no costs stored); the operator picked B, a gross-margin P&L on recorded costs. v1.0 committed. |
+| 274 | Customer CRM | ✅ | **CLOSED 2026-09-29.** Carried Track O batch 1 (rows 274, 279, 280, 290, 291). A contact log and customer history, bike transfer and ownership history; stock, reorder points and local purchase orders; warranty validity and claims with a printable packet; the operator's option B, a gross-margin P&L on recorded costs with stated attribution rules; estimate-versus-actual variance on recorded quotes. Migration 076 live (no existing row changed). F182 filed and closed: estimates were hours times $100. Bug fix #1: `customer bikes` printed `?`. 33 mutations red. Regression 10109 passed / 0 failed at `757b9f4`. |
 | 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
 | 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
 | 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |
 | 278 | Accounting export (Xero) | 🔲 | Xero-specific export format, tax handling, multi-currency |
-| 279 | Parts inventory with reorder points | 🔲 | Stock levels, reorder points, automatic PO generation, distinct from per-job sourcing |
-| 280 | Warranty validity and claim records | 🔲 | **Row rewritten 2026-09-29** (Phase 274 Step 0): it read "OEM warranty claim processing" and promised "OEM-specific submission flows", which the operator's decision 2 of 2026-09-28 pauses. Now: the validity lookup over a bike's recorded warranty coverage (by date and mileage), local claim records with their status, and a printable claim packet. Submitting a claim to the maker is row 362 (paused). |
+| 279 | Parts inventory with reorder points | ✅ | Folded into 274 (Track O batch 1): `shop inventory` — stock, reorder points and quantities, a reorder plan naming why an item is not ordered, one draft purchase order per vendor, printable, marked sent by the user; receiving adds stock. Sending a PO to a supplier is paused with rows 282–286. See row 274. |
+| 280 | Warranty validity and claim records | ✅ | Folded into 274 (Track O batch 1). Rewritten 2026-09-29 from "OEM warranty claim processing": `shop warranty check` (valid, not valid, or cannot tell, by date and mileage), local claim records with their status, and a printable claim packet. OEM submission is row 362, paused. See row 274. |
 | 281 | NHTSA recall processing | 🔲 | VIN-based recall lookup, recall completion tracking, OEM reimbursement |
 | 282 | Vendor: Parts Unlimited integration | ⏸️ | API integration, parts availability, wholesale pricing, dropship. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
 | 283 | Vendor: NAPA integration | ⏸️ | NAPA TRACS integration, parts catalog, local store inventory. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
@@ -529,8 +529,8 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | 287 | VIN decoder service | 🔲 | NHTSA VPIC integration, make-specific VIN structure decoding, model-year lookup |
 | 288 | Tax rate lookup by shop location | 🔲 | State/county/city sales tax, automated tax calculation on invoices |
 | 289 | Multi-currency support | 🔲 | USD/CAD/EUR/GBP exchange rates, multi-currency invoicing, currency conversion |
-| 290 | Financial reporting | 🔲 | P&L per mechanic, per bay, per customer, monthly/quarterly/annual |
-| 291 | Estimate vs actual variance tracking | 🔲 | Quote accuracy, labor time variance, parts cost variance |
+| 290 | Financial reporting | ✅ | Folded into 274 (Track O batch 1): `shop analytics pnl` by mechanic, bay, customer or shop, per month, quarter or year. The operator's option B: labour cost, part purchase cost and expenses are recorded; an unrecorded cost reads "not recorded", never zero; expenses stay at shop level. See row 274. |
+| 291 | Estimate vs actual variance tracking | ✅ | Folded into 274 (Track O batch 1): `shop analytics variance` — labour hours, parts cost, and the quote recorded when the estimate was sent against the invoice ("no quote recorded" otherwise). See row 274. |
 | 292 | Gate 16 — Business infrastructure integration test | 🔲 | Customer books → intake → warranty check → repair → invoice → payment → accounting export |
 
 ## Track P — Reference Data Library (Phases 293–302)
