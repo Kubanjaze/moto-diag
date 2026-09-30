@@ -132,3 +132,181 @@ v1.0 is `281_implementation.md`.
   assertion, `L` → 2020, holds), F86's and gate 7's: 62 passed. The batch's
   held work was stashed for this commit and restored after (below).
 - **Commit:** this entry's commit.
+
+### 2026-09-30 — The battery, and a trial run stopped
+
+A trial run of the whole suite under the new network guard was stopped at
+32% when the machine read 1% battery (0 failures by then). The two drafts
+then in the scratchpad (`/private/tmp`, cleared on reboot) were copied to
+`docs/phases/in_progress/281_drafts/` and applied once on power. The
+drafts folder is removed before the close-out commit; what it held is in
+`migrations.py` and `recall_repo.py`.
+
+### 2026-09-30 — The build
+
+- **The network guard** (`tests/support/network_guard.py`, installed at
+  `tests/conftest.py` import): a connection or name lookup to anything but
+  loopback or a Unix socket raises `NetworkBlockedInTests`, naming the
+  host. `test_phase281_network_guard.py`, 7: a planted test that opens a
+  URL, run in a pytest subprocess with only the guard loaded, fails on it;
+  a planted loopback test passes. Every host the file names is reserved
+  (`.invalid`, 192.0.2.0/24), so a broken guard, as the mutation run makes
+  it, still reaches no real service.
+- **Migration 078** as v1.0 describes; `test_phase281_migration.py`, 8:
+  the tables and columns, the rollback, planted rows in eight tables
+  unchanged both ways, Massachusetts's rows, the CHECKs, and every shipped
+  URL and clause present in `281_sources.md`. `ALTER TABLE … ADD COLUMN`
+  with a column CHECK, and `DROP COLUMN` of it, were tried on a scratch
+  database first.
+- **`core/outbound.py`**: stdlib `urllib`, User-Agent
+  `motodiag/0.6.0 (+https://github.com/Kubanjaze/moto-diag)`, 20 s, one
+  request, `ServiceUnavailable` with `unreachable`, `blocked`, `error` or
+  `malformed`. A 403 is a block; any other status the caller does not
+  accept is an error; an HTML page on a success status is a block. (The
+  first version called an HTML 503 page a block; changed when its test was
+  written, before any commit.)
+- **Row 288:** `accounting/tax.py`, `cli/shop_tax.py` (`shop tax
+  jurisdiction add/list/set`, `rate set`, `rule set`, `confirm`,
+  `status`); `shop/invoicing.py` takes tax only from the record, on the
+  taxable lines, rounded half up, and records rate, source, recheck-by and
+  taxed types; `shop invoice generate` loses `--tax-rate` and gains
+  `--currency`; the invoice panel prints the rate, its source and "Rate
+  must be re-checked by D"; the API route drops `tax_rate` and a tax
+  refusal is 409 (`InvoiceTaxNotOnRecord`). `test_phase281_tax.py`, 16.
+- **Row 289:** `accounting/exchange.py`, `cli/shop_currency.py` (`shop
+  currency refresh`, `rates`, `set`, `convert`). `test_phase281_exchange.py`,
+  17.
+- **Row 281:** `advanced/nhtsa.py`; `recall_repo.py` gains
+  `refresh_recalls`, `recall_state`, `refresh_all_bikes`,
+  `fetched_coverage_sql`; the three older queries (`inventory`'s
+  `list_recalls_for_vehicle`, `list_open_for_bike`, and through them
+  `check_vin`, `lookup`, the predictor's feed) keep their own clause for
+  older rows, limited to `source IS NULL`, and match fetched campaigns only
+  through `recall_vehicles`; `cli/recall_nhtsa.py` (`advanced recall
+  refresh`); `recall check-vin --refresh`, `recall list --bike`; the recall
+  table shows "not rated by NHTSA" and the fetch date. F86's wording is
+  kept per model, so its tests are unchanged. `test_phase281_recalls.py`, 20.
+- **Row 287:** `advanced vin decode [--refresh] [--bike --save]`.
+  `test_phase281_vin.py`, 11.
+- **The tests that relied on the zero default** now state the shop's tax:
+  `tests/support/tax_on_record.py` records a test jurisdiction (`ZZ-T`,
+  labelled a fixture, valid 2000–2099 so no test reads today's date, every
+  line taxable: the old arithmetic). Twelve files, 260 tests: 169, 170,
+  174 (gate 8), 180, 182, 184 (gate 9), 202, 205 (gate 11, through the new
+  `shop tax` commands), 274 P&L and quotes, 275 export. Where a test sent
+  `tax_rate`, it now records that rate on the shop instead.
+- **The API model ignores unknown fields**, as every request model here
+  does, so a caller that still sends `tax_rate` has it ignored; the
+  response states the rate used. Tested (`tax_rate: 0.5` sent, 6.25% used).
+- **Decisions made while building:**
+  - a shop's own row wins over the regulation row per item, and a
+    Massachusetts shop's shop-supplies rule is its own (`shop_id` set), so
+    it never becomes the rule for other shops in the state;
+  - `tax status` fails on no jurisdiction, no valid rate, or a rule past
+    its validity; a line type with no rule at all is listed as not on
+    record, because a shop that never charges it is not failing (an
+    invoice carrying it is still refused);
+  - the recheck-by date of an invoice is the earliest validity among the
+    rate and the rules it used;
+  - `count_recalls(older_only=True)` replaces a second copy of the count
+    in the CLI.
+- **Gates that caught the build before any commit:**
+  - 209B/244X: `get_resolutions_for_bike` gained a caller (ORPHANS 118 →
+    117; 244X's multi-line list 51 → 50), and the new table heading
+    `"Recall"` read to the gate as a use of `inventory.models.Recall`, a
+    false caller; the heading is now "Recall id";
+  - 256's chokepoint gate refused `f"SELECT * FROM {table}"` in
+    `tax._pick`; the two tables are now literal query prefixes;
+  - 355's gate refused the guard test's subprocess pytest for stating no
+    worker mode; it now passes `-p no:xdist`.
+- 244G's scanner over `tests/`: 0 findings. F158 scan: the new
+  user-facing strings and command docstrings hold no internal reference;
+  the four new library modules' module docstrings name phases, and no user
+  sees those.
+
+### 2026-09-30 — The smoke calls
+
+One live call per service, each through the app's own command on a
+scratch database, recorded by `281_smoke.py` (a tap on
+`core.outbound._open` that calls the real transport once). The log and
+bodies are in `281_smoke/`. A local dry run with a fake transport came
+first, and found bug fix #1.
+
+| service | command | URL | time (UTC) | status | bytes |
+|---|---|---|---|---|---|
+| NHTSA recalls | `advanced recall refresh --make PIAGGIO --model "MP3 500" --year 2020` | `https://api.nhtsa.gov/recalls/recallsByVehicle?make=PIAGGIO&model=MP3%20500&modelYear=2020` | 2026-09-30T22:36:26 | 200 | 2149 |
+| NHTSA vPIC | `advanced vin decode 1HD1FRW177Y600001` | `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/1HD1FRW177Y600001?format=json&modelyear=2007` | 2026-09-30T22:36:27 | 200 | 4126 |
+| ECB | `shop currency refresh` | `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` | 2026-09-30T22:36:28 | 200 | 1547 |
+
+- **NHTSA accepted the app's honest User-Agent.** No browser User-Agent
+  is sent, and none was needed.
+- NHTSA returned 20V524000 and 22V217000 for the F103 check vehicle, the
+  two campaigns Phase 252 recorded for it.
+- The VIN is made up (a valid check digit, serial 600001), so no real
+  vehicle is named. vPIC decoded it partially (make and model blank,
+  error codes 3 and 14), and the command labelled it "Partial decode"
+  with vPIC's text.
+- The ECB feed held 29 currencies for 2026-09-30.
+- All three bodies became fixtures (`tests/fixtures/phase281/`, byte for
+  byte, sha256 checked). The others are listed there as recorded or
+  built: NHTSA's 400 zero-result body (recorded 2026-09-20), an Akamai
+  403 page (recorded at Step 0), a clean vPIC decode and a 503 page
+  (built).
+
+### 2026-09-30 — Mutations
+
+**41/41 red** (`281_mutate.py`: guard 2, migration 4, outbound 3, recalls
+12, VIN 4, tax and invoices 11, exchange 4, bug fix 1). `git diff --stat`
+was the same before and after. The tax group was run again after `_pick`
+changed: 11/11.
+
+### 2026-09-30 — A whole-suite run on the held work, and two fixes
+
+`python -m pytest -n auto --dist load` on the uncommitted work (not the
+regression of record): 10261 passed, 7 failed, 19 min 3 s.
+- **Five are the planned stop:** gate 11's snapshot test, and gates 12, 13
+  and 14 re-running it.
+- **`test_phase275_migration.py::…test_existing_rows_are_unchanged_either_way`**
+  applied every pending migration, then compared `invoices` rows whole;
+  078's ten new columns lengthened each row. The test now compares the
+  planted rows' own columns and their count. `test_phase281_migration.py`
+  had the same trap waiting for migration 079 (it pinned the columns as
+  the table's last); it now pins them where they are and the rows by
+  prefix. 9 and 8 passed; the migration mutations 4/4 red again.
+- **`test_phase78_gate2_integration.py::…test_noise_cross_make`: worker
+  gw6 crashed with no traceback.** Recorded against F183 in
+  `docs/FOLLOWUPS.md`, as the prompt directs. The file alone: 22 passed.
+  The regression of record is run in parallel after the snapshot; a
+  second loss there is a stop.
+- 244G's scanner over `tests/` again: 0 findings.
+
+### 2026-09-30 — The planned stop: gate 11's contract snapshot
+
+`wholetree.sh --full` (85 files): 3976 passed, **4 failed**, all gate 11:
+gate 12's and gate 13's reruns of gate 11, gate 13's rerun of gate 12,
+gate 14's rerun of gate 13. Gate 11 itself reports exactly the one change
+v1.0's API table names, and nothing else:
+`InvoiceGenerateRequest.tax_rate: in the snapshot, absent from the API`.
+
+- **Not committed:** everything in `src/` and `tests/` (42 paths). The
+  migration and the code that reads its tables go in together, and a
+  commit to `migrations.py` needs a `--full` record, which is red until the
+  snapshot is refreshed.
+- **Backup:** `281_wip.patch` in this folder (4596 lines, binary-safe, new
+  files included). `git apply --check` passes against `b5dbf1f` in a
+  scratch worktree, and it reverse-applies to this working tree.
+  `git diff HEAD -- src tests` hashes `a21590328d77ed5f…`.
+- **Committed:** this log, F183's note, `281_mutate.py`, `281_smoke.py`
+  with its log and bodies, and the patch.
+
+**What the mobile session accepts** (v1.0, "The API change"): the snapshot
+diff removes `InvoiceGenerateRequest.tax_rate`, and nothing else. The app
+does not call invoice generation; its generated types lose the field. The
+same session closes **F103** in the mobile repo's FOLLOWUPS: its
+requirements for a recall sync are met here (a User-Agent of the app's
+own, which NHTSA accepted; a 403 or a web page is a failure, never
+empty; NHTSA's 400 is an answer only with its zero-result body; a refresh
+of every bike first requires 20V524000 for PIAGGIO MP3 500 2020, and
+exits 1 listing any bike that failed). The operator writes that session's
+prompt. Until it pushes, this checkout does not switch branches or commit
+anything under `src/` or `tests/`.

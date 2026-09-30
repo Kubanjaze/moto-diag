@@ -2543,6 +2543,17 @@ stated number of `-n auto` runs of the migration round-trip tests that
 all pass, with the worker's exit status captured (for example,
 `faulthandler` enabled in the workers).
 
+**Seen again, 2026-09-30 (Phase 281), on a different test.** A whole-suite
+`-n auto --dist load` run on Phase 281's uncommitted work (not a
+regression of record) lost worker gw6 with no traceback: `worker 'gw6'
+crashed while running
+'tests/test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_noise_cross_make'`.
+That test does no migration round-trip, so the crash is not tied to
+`DROP COLUMN`. No crash report in `~/Library/Logs/DiagnosticReports/`.
+The file alone: 22 passed, in 4 min 40 s. Recorded here as the prompt
+directs; the regression of record is run in parallel afterwards, and a
+second loss there stops the phase.
+
 ### F184
 
 **An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
