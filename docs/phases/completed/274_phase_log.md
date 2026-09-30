@@ -294,3 +294,27 @@ it; mutation C5 red.
   names twelve, and is renamed `test_the_twelve_folds_are_seen_and_pass`.
   The code did not change after the regression; this is a test
   of the ledger, run again below.
+
+### 2026-09-29 — The regression, re-run on the close-out commit
+
+The close-out changed a test (`test_roadmap_continuity.py`'s fold pin),
+so the regression of record was run again on `3b7528f`, the commit the
+merge carries, after `wholetree.sh --full` there (84 files, 3961 passed,
+record written).
+- **First run:** 10108 passed, 1 failed at `3b7528f` (28 min 18 s). The
+  failure was not an assertion. The pytest-xdist worker `gw2` died
+  ("node down: Not properly terminated") while running
+  `test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables`.
+  There was no traceback and no crash report.
+- **The test alone:** its file 18 passed. With `test_phase274_migration.py`
+  and gate 15 under `-n auto --dist load`, five times: 64 passed each.
+- **Filed as F183** with the `finding` skill. Rule 3 says a
+  parallel-only failure is a bug to fix; this one could not be made to
+  fail again, and it is recorded rather than dismissed.
+- **Second run, same commit:**
+
+Regression of record: 10109 passed, 0 failed, 0 skipped, 0 errors at `3b7528f` (30 min 4 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+This is the regression of record for the close-out. The run at
+`757b9f4` (10109 passed) stands for the code, which did not change
+between the two.

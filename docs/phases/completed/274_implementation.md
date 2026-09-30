@@ -13,7 +13,7 @@
 - **F182** was filed at Step 0 and closed with its fix.
 
 One bug fix (the relationship column). Regression of record: 10109 passed,
-0 failed at `757b9f4`. Deviations and Results are at the end.
+0 failed at `3b7528f`, the close-out commit (and at `757b9f4` before it). Deviations and Results are at the end.
 
 ## Goal
 
@@ -319,6 +319,10 @@ the total and the date, with the notification's id.
   - one P&L expectation was wrong (the test, not the code);
   - three test counts in the log were wrong, and `b0613fa`'s message says
     "22 new" where it added 20. All three are corrected in the log.
+- **The regression of record was run again on the close-out commit**,
+  because the close-out changed a test. Its first run lost one test to a
+  pytest-xdist worker crash that did not reproduce (F183); the second run
+  passed.
 - **The deploy ran before the merge**, on the phase branch, as 357's,
   360's and 361's did.
 - `inventory/__init__.py`'s stale Track O numbers were corrected. The
@@ -341,8 +345,8 @@ the total and the date, with the notification's id.
 | Allowlist | MODULE_ISLANDS 13 → 9, UNREACHABLE 34 → 32, ORPHANS 106 → 112; 244X's list 52 → 51 |
 | Mutations | 33/33 red (`274_mutate.py`) |
 | Whole tree | `--full` at `757b9f4`: 84 files, 3961 passed |
-| Regression | 10109 passed, 0 failed, 0 skipped at `757b9f4` (27 min 22 s, `-n auto --dist load`) |
+| Regression | 10109 passed, 0 failed, 0 skipped at `757b9f4` (27 min 22 s) and at `3b7528f`, the close-out commit (30 min 4 s), `-n auto --dist load`; the first run at `3b7528f` lost one test to a worker crash (F183) |
 | Floor | `COLLECTED_TEST_FLOOR` 10018 → 10109 |
 | Deploy | dry run committed `e358111`; apply-live `[76]`; live 5845 → 5846 rows, 90 → 98 tables, integrity ok; equals the approved exact diff; F158 census 36 |
-| Findings | F182 filed and closed |
+| Findings | F182 filed and closed; F183 filed (a worker crash, not reproduced) |
 | Ledger | 274 ✅; 279, 280, 290, 291 ✅ folded; 282–286 ⏸️; 280 rewritten; 362 ⏸️ |

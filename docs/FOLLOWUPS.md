@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F182**.
+At the time of writing the highest assigned is **F183**.
 
 ---
 
@@ -2501,3 +2501,44 @@ estimate_ready` or the API's notification route. Live holds no
 What would close it: the estimate is the estimated hours at the shop's
 labour rate plus the estimated parts cost; when no rate is known the
 estimate is refused, never invented; a test pins the figure.
+
+### F183
+
+**A pytest-xdist worker died during `test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables` in one parallel regression, and the failure has not reproduced**
+
+Recorded by Phase 274 (`docs/phases/completed/274_phase_log.md`,
+"The regression, re-run on the close-out commit"), 2026-09-29.
+
+The regression of record at `3b7528f` (`regression.sh`, `-n auto --dist
+load`) reported 10108 passed and 1 failed. The failure was not an
+assertion. The log
+(`~/.cache/motodiag/regressions/3b7528f_parallel_20260929_211825.log`)
+reads `[gw2] node down: Not properly terminated`, `replacing crashed worker
+gw2`, and `worker 'gw2' crashed while running` that test. It gives no
+traceback and no signal. No crash report was written to
+`~/Library/Logs/DiagnosticReports/`.
+
+The test seeds a database, rolls it back from the schema head to 071,
+and re-applies 072. Since Phase 274, that rollback also peels migration
+076, which includes `ALTER TABLE inventory_items DROP COLUMN
+reorder_quantity`.
+
+What was measured:
+- the same test passed in the regression at `757b9f4` (10109 passed),
+  whose source differs from `3b7528f` only in documents and
+  `tests/test_roadmap_continuity.py`;
+- the file alone: 18 passed;
+- the file with `test_phase274_migration.py` and gate 15 under
+  `-n auto --dist load`, five times: 64 passed each time;
+- the regression re-run at `3b7528f`, same commit: 10109 passed, 0 failed
+  (30 min 4 s).
+
+Rule 3 says a test that fails only in parallel is a bug to fix, and this
+one could not be made to fail again. Not excluded: memory pressure or an
+external kill of the worker process, or a crash inside SQLite's
+`DROP COLUMN` under load.
+
+What would close it: the crash reproduced and its cause named, or a
+stated number of `-n auto` runs of the migration round-trip tests that
+all pass, with the worker's exit status captured (for example,
+`faulthandler` enabled in the workers).
