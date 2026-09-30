@@ -88,3 +88,27 @@ the validity windows no source states: Massachusetts's rate (12 months
 from the last check proposed) and the ECB's rates (through the 4th day
 proposed); (3) whether ECB rates may convert an invoice; (4) a note with
 a default: no app route for VIN decoding or recalls.
+
+### 2026-09-30 — The operator's pick, F185, and v1.0
+
+The operator's answer, pasted into the session as one block, verbatim:
+
+> 1: A. Also file a finding: with the field gone, a tax-exempt sale (a resale or exempt-organization certificate, for example a town's police bikes) can't be invoiced. It waits until a real shop needs it.
+> 2(a): 12 months, as proposed, and every invoice and `tax status` print the date the rate must be re-checked by.
+> 2(b): through the 5th calendar day, not the 4th. After Easter the next ECB rate comes out Tuesday at 16:00 CET, which is Tuesday morning in Massachusetts and the 5th day after Thursday's rate.
+> 3: A.
+> 4: no route, as the default.
+> The diagnostic-fee rule is the build's own reading, not a stated rule. Ship it with that said in its source, so `tax status` shows it as a reading of 64H.1.1(2)(a)1.
+
+- **2(b) corrects Step 0's arithmetic.** Thursday's rate; Good Friday
+  and Easter Monday are TARGET closing days; the next rate is Tuesday
+  16:00 CET, 10:00 in Massachusetts (EDT), day 5 after Thursday. So an
+  ECB rate is valid through `rate_date + 5 days`.
+- **F185 filed** with the `finding` skill (`next_f_number.sh`: F184 here,
+  F181 in the mobile file): a tax-exempt sale cannot be invoiced once
+  tax comes only from the record. Not fixed in this batch, as asked.
+- **The diagnostic rule** carries `basis = 'reading'` and its clause, and
+  `tax status` prints it as a reading of 64H.1.1(2)(a)1.
+- Rows 281, 287, 288 and 289 are rewritten to what the batch builds.
+
+v1.0 is `281_implementation.md`.

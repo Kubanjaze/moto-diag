@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F184**.
+At the time of writing the highest assigned is **F185**.
 
 ---
 
@@ -2576,3 +2576,28 @@ What would close it: the rate comes from a record of the shop's tax
 jurisdiction, with its source, effective date and stated validity; an
 invoice for a shop with no valid rate is refused; and each invoice records
 the rate it used and that rate's source.
+
+### F185
+
+**A tax-exempt sale cannot be invoiced once the tax comes only from the shop's record**
+
+Filed at the operator's request, 2026-09-30, with their pick of option A
+for F184 in Phase 281 (`281_step0.md`, question 1). The operator's words:
+"with the field gone, a tax-exempt sale (a resale or exempt-organization
+certificate, for example a town's police bikes) can't be invoiced. It
+waits until a real shop needs it."
+
+With option A, invoice generation takes its rate and line rules only from
+the shop's tax jurisdiction on record: the API's `tax_rate` and the CLI's
+`--tax-rate` are removed. A sale the law exempts for this buyer, such as
+one to a buyer holding a resale certificate or an exempt organization's
+certificate (the DOR's guide names Form ST-4 for resale), would be taxed
+at the shop's rate, with no way to record the exemption or its
+certificate.
+
+What it affects: no live shop today (live holds the smoke shop and 0
+invoices). It waits until a real shop needs it.
+
+What would close it: a customer (or a single invoice) can be marked
+exempt, with the certificate's kind and number and who recorded it; the
+invoice then records the exemption in place of the rate, and prints it.
