@@ -514,7 +514,7 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 |-------|-------|--------|-------|
 | 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
 | 274 | Customer CRM | ✅ | **CLOSED 2026-09-29.** Carried Track O batch 1 (rows 274, 279, 280, 290, 291). A contact log and customer history, bike transfer and ownership history; stock, reorder points and local purchase orders; warranty validity and claims with a printable packet; the operator's option B, a gross-margin P&L on recorded costs with stated attribution rules; estimate-versus-actual variance on recorded quotes. Migration 076 live (no existing row changed). F182 filed and closed: estimates were hours times $100. Bug fix #1: `customer bikes` printed `?`. 33 mutations red. Regression 10109 passed / 0 failed at `3b7528f`. |
-| 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
+| 275 | Appointment booking system | 🚧 | Online booking, time slots, mechanic assignments, confirmations. **Opened 2026-09-29**, carrying Track O batch 2 (rows 275, 276, 277, 278): booking by shop staff, iCal, and QuickBooks and Xero export files. Step 0 rewrites each row's verbs. |
 | 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
 | 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |
 | 278 | Accounting export (Xero) | 🔲 | Xero-specific export format, tax handling, multi-currency |
