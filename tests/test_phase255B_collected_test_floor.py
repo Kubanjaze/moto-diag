@@ -221,7 +221,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: successor. None removed. Measured by collected-ID diff against master:
 #: 10,018.
 #:
-COLLECTED_TEST_FLOOR = 10018
+#: 10109 (Phase 274, 2026-09-29) — +91 over 10018: seven
+#: `test_phase274_*` files (95: migration 076, the CRM log and ownership,
+#: the relationship column, inventory and POs, warranty validity and
+#: claims, F182 and the quote record with variance, the P&L), +1 in gate
+#: 15's `test_rolling_back_peels_every_successor[75]`, and the allowlist's
+#: parametrised checks moving with the lists: 209B +4 (unreachable -2,
+#: orphans +6), 244W -8 (four module islands in two checks; the real-tree
+#: collision control replaced by a synthetic one), 244X -1. Measured by
+#: collected-ID diff against master: 10,109.
+#:
+COLLECTED_TEST_FLOOR = 10109
 
 
 def _collected_count() -> int:

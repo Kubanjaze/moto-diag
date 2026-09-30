@@ -187,3 +187,14 @@ passed, record written; pushed `fa750c8..3f9afdd`.
   inventory 4, warranty 6, F182 and the quote 4, variance 3, P&L 8, the
   244W seed 1).
 - 244G's scanner over `tests/`: clean.
+
+### 2026-09-29 — The floor
+
+`COLLECTED_TEST_FLOOR` 10018 → 10109, measured by diffing the collected
+IDs against a `master` worktree (`--collect-only -q -o addopts=`; the
+project's `addopts` carries `-v`, which cancels `-q`, and a first count
+without the override listed 162 lines of tree instead of IDs). 214 IDs
+added and 123 removed; most of the removed are the allowlist checks'
+parametrised IDs, renumbered when entries left the lists. Net +91: the
+seven `test_phase274_*` files (95), gate 15's peel for 076 (+1), 209B +4,
+244W −8, 244X −1.
