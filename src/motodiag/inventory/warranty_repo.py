@@ -71,3 +71,40 @@ def delete_warranty(warranty_id: int, db_path: str | None = None) -> bool:
             "DELETE FROM warranties WHERE id = ?", (warranty_id,),
         )
         return cursor.rowcount > 0
+
+
+def coverage_status(
+    warranty: dict, on_date: str, mileage: Optional[int],
+) -> tuple[str, list[str]]:
+    """Whether one recorded coverage applies on ``on_date`` at ``mileage``.
+
+    Returns ``(verdict, reasons)``, the verdict one of ``valid``,
+    ``not valid`` or ``cannot tell``. A figure that is not recorded is never
+    read as a pass: with no start date, end date or mileage limit on record,
+    or no mileage for the bike, the lookup cannot tell, and says which. A
+    failed test outranks a missing figure: a coverage that has ended is not
+    valid, whatever else is missing.
+    """
+    failed: list[str] = []
+    unknown: list[str] = []
+    start, end = warranty.get("start_date"), warranty.get("end_date")
+    if not start:
+        unknown.append("no start date recorded")
+    elif on_date < start:
+        failed.append(f"starts {start}")
+    if not end:
+        unknown.append("no end date recorded")
+    elif on_date > end:
+        failed.append(f"ended {end}")
+    limit = warranty.get("mileage_limit")
+    if limit is None:
+        unknown.append("no mileage limit recorded")
+    elif mileage is None:
+        unknown.append(f"the bike's mileage is not known (limit {limit:,} mi)")
+    elif mileage > limit:
+        failed.append(f"{mileage:,} mi is over the {limit:,} mi limit")
+    if failed:
+        return "not valid", failed
+    if unknown:
+        return "cannot tell", unknown
+    return "valid", [f"{start} to {end}", f"{mileage:,} of {limit:,} mi"]

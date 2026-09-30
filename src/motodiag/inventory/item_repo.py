@@ -24,13 +24,13 @@ def add_item(item: InventoryItem, db_path: str | None = None) -> int:
         cursor = conn.execute(
             """INSERT INTO inventory_items
                (sku, name, description, category, make, model_applicable,
-                quantity_on_hand, reorder_point, unit_cost, unit_price,
-                vendor_id, location)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                quantity_on_hand, reorder_point, reorder_quantity,
+                unit_cost, unit_price, vendor_id, location)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 item.sku, item.name, item.description, item.category,
                 item.make, json.dumps(item.model_applicable),
-                item.quantity_on_hand, item.reorder_point,
+                item.quantity_on_hand, item.reorder_point, item.reorder_quantity,
                 item.unit_cost, item.unit_price, item.vendor_id, item.location,
             ),
         )

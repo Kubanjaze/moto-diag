@@ -90,3 +90,54 @@ is empty live. The fixed estimate refuses without a rate, so v1.0 adds
 `shop labor-rate set/list`, reusing `pricing/labor_rates.py` (D7).
 
 v1.0 is `274_implementation.md`.
+
+### 2026-09-29 — Migration 076 and row 274 (`b0613fa`)
+
+- **Migration 076** (schema 75 → 76): eight tables and
+  `inventory_items.reorder_quantity`. `test_phase274_migration.py`, 10:
+  every table and the column, the rollback, and a planted row in each
+  touched table reading back the same after upgrade and rollback. The 79
+  test files that touch the schema version: 2673 passed.
+- **Row 274:** `crm/communication_repo.py`; `shop customer log-contact`,
+  `history`, `transfer-bike`, `bike-owners` (`cli/shop_crm.py`, attached
+  from the end of `register_shop`). `test_phase274_crm.py`, 12.
+- **`transfer_ownership` fixed on the way:** a bike sold back to a
+  previous owner and on again made the UPDATE collide with the
+  `(customer, bike, previous_owner)` key. The test fails without the fix.
+  It is not a register bug fix: the function had no caller until this
+  batch wired it.
+- The allowlist: `transfer_ownership` left ORPHANS (106 → 105); 244X's
+  list of multi-line re-export orphans 52 → 51.
+- The `customer` group's help lost "wraps Phase 113 CRM layer".
+- `wholetree.sh --full` before the commit: 3943 passed.
+
+### 2026-09-29 — The relationship column (`3f9afdd`)
+
+See the register below: `test_phase274_relationship_column.py`, 2, both
+red before the fix. `wholetree.sh`: 1478 passed; the fast count fell by 2
+because two whole-tree tests are parametrised over ORPHANS, which lost an
+entry. `wholetree.sh --full` on the clean tree at `3f9afdd`: 3943
+passed, record written; pushed `fa750c8..3f9afdd`.
+
+### 2026-09-29 — Rows 279 and 280
+
+- **279:** `inventory/purchase_orders.py` (the reorder plan, one draft PO
+  per vendor, status moves, the printable PO) and `shop inventory`
+  (`vendor add/list`, `add`, `list [--low]`, `show`, `adjust`, `set`,
+  `reorder`, `po generate/list/show/mark-sent/receive/cancel`).
+  `InventoryItem` and `add_item` carry `reorder_quantity`.
+  `test_phase274_inventory.py`, 16.
+- **280:** `warranty_repo.coverage_status` (valid, not valid, or cannot
+  tell, with reasons), `inventory/warranty_claims.py` (claims, status
+  moves, the packet) and `shop warranty` (`add`, `list`, `check`, `claim
+  open/list/show/status/packet`). `test_phase274_warranty.py`, 19.
+- `inventory/__init__.py`'s stale "Track O phases 282-287" corrected.
+- **The allowlist:** inventory's `models`, `item_repo`, `vendor_repo` and
+  `warranty_repo` left MODULE_ISLANDS (13 → 9). Five repo helpers and the
+  `Recall` model became live orphans and are listed (105 → 111).
+- **244W's control moved.** `test_item_repo_is_seen_past_the_dead_collision`
+  used `inventory/item_repo` as the real-tree case of the one seed (a dead
+  module's same-named `add_item` hiding a second dead module). Wiring
+  item_repo ended that case, so the control is now a synthetic tree of
+  the same shape (`test_a_module_is_seen_past_a_dead_modules_name_collision`);
+  the mutation script removes the seed and checks it goes red.

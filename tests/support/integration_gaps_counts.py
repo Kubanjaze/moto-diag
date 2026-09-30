@@ -30,8 +30,10 @@ UNREACHABLE_COUNT = 34
 #: superseded modules deleted) → 14 (244Y: inventory/models surfaced as a
 #: third-order island once its last live import went; substrate). Unchanged by
 #: Phase 244Z, on purpose: content fixed, reachability untouched. → 13 at
-#: Phase 356 (`workflow run` reaches motodiag.engine.workflows).
-MODULE_ISLAND_COUNT = 13
+#: Phase 356 (`workflow run` reaches motodiag.engine.workflows). → 9 at Phase
+#: 274 (`shop inventory` and `shop warranty` reach inventory's models,
+#: item_repo, vendor_repo and warranty_repo).
+MODULE_ISLAND_COUNT = 9
 
 #: `len(ORPHANS)`. Asserted in test_phase244U_gate_blind_spot.py.
 #: The running count of live orphans: 46 (pre-244U) → 66 (244U opened the
@@ -47,5 +49,6 @@ MODULE_ISLAND_COUNT = 13
 #: substrate awaiting Phase 316) → 106 (Phase 356: wiring engine.workflows
 #: made its three predefined scripts and generate_next_step live orphans,
 #: listed as unwired-feature) → 105 (Phase 274: `shop customer transfer-bike`
-#: calls crm transfer_ownership).
-ORPHAN_COUNT = 105
+#: calls crm transfer_ownership) → 111 (Phase 274: wiring inventory's repos
+#: made five helpers and the Recall model live orphans).
+ORPHAN_COUNT = 111

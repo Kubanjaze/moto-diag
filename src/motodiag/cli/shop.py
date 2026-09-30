@@ -4706,8 +4706,12 @@ def register_shop(cli_group: click.Group) -> None:
         console.print(table)
 
     # -----------------------------------------------------------------
-    # Business records: CRM log and ownership
+    # Business records: CRM log and ownership, inventory, warranty
     # -----------------------------------------------------------------
     from motodiag.cli.shop_crm import register_crm
+    from motodiag.cli.shop_inventory import register_inventory
+    from motodiag.cli.shop_warranty import register_warranty
 
     register_crm(customer_group)
+    register_inventory(shop_group)
+    register_warranty(shop_group)

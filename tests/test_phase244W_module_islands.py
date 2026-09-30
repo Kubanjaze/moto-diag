@@ -91,15 +91,6 @@ class TestTheTreeMatchesTheTable:
         called that a use."""
         assert "motodiag.feedback.learning_hook" in _current()
 
-    def test_item_repo_is_seen_past_the_dead_collision(self):
-        """`pricing/repair_plan.py:125` defines its own `add_item`, and
-        `pricing` is already dead. Without the pre-seed that mention is a
-        live referrer."""
-        assert "motodiag.inventory.item_repo" in _current()
-        assert "motodiag.pricing.repair_plan" in UNREACHABLE_MODULES or any(
-            k.startswith("motodiag.pricing") for k in UNREACHABLE_MODULES
-        )
-
     def test_it_reports_only_what_the_other_checks_do_not(self):
         assert not (_current() & set(UNREACHABLE_MODULES))
 
@@ -208,6 +199,20 @@ class TestTheBlindSpotItself:
               "    def go(self):\n        return B(), B()\n")
         write("b.py", "class B:\n    pass\n")
         assert {"demo.a", "demo.b"} <= islands()
+
+    def test_a_module_is_seen_past_a_dead_modules_name_collision(self, tree):
+        """The one seed. On the real tree `pricing/repair_plan.py` (dead)
+        defines its own `add_item`, which hid `inventory/item_repo` until
+        Phase 274 wired that module; this is the same shape, kept as the
+        seed's control. Without the pre-seed the dead module's mention is a
+        live referrer."""
+        write, islands = tree
+        write("__init__.py", "from demo.store import add_item\n")
+        write("store.py", "def add_item():\n    pass\n")
+        write("pricing/__init__.py", "")
+        write("pricing/plan.py",
+              "def add_item():\n    pass\n\n\ndef build():\n    return add_item()\n")
+        assert "demo.store" in islands()
 
     def test_the_stale_direction_a_caller_revives_the_module(self, tree):
         write, islands = tree
