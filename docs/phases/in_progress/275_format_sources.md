@@ -58,6 +58,14 @@ template file", which needs a Xero login. Third-party pages reproduce
 different column sets (one lists an export's columns, not the import
 template's). No third-party list is used as the vendor's.
 
+**The column names the page itself gives** (each counted in the extracted
+text): `ContactName`, `EmailAddress`, `InvoiceNumber`, `InvoiceDate`,
+`DueDate`, `InventoryItemCode`, `UnitAmount`, `Discount`, `AccountCode`,
+`TaxType`, `TaxAmount`, `TrackingName`, `TrackingOption`, `Currency`,
+`BrandingTheme`. `POAddress` appears only as a group name. `Description`
+and `Quantity` do **not** appear on the page; the export adds them
+because a line cannot be described without them.
+
 ## QuickBooks Online: "Import multiple invoices at once" (Intuit, US)
 
 **URL:** https://quickbooks.intuit.com/learn-support/en-us/help-article/import-export-data-files/import-multiple-invoices/L7E9Xrd8l_US_en_US

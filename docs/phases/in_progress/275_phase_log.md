@@ -61,3 +61,34 @@ API, the same under a lint opt-out, or sent by the shop and recorded in
 the contact log; (3) the QuickBooks file: Online's journal-entry import,
 Online's invoice import, or Desktop's IIF. A fourth item is a note with a
 default: Xero's header row.
+
+### 2026-09-29 — The operator's pick, and v1.0
+
+The operator's answer, verbatim:
+
+> 1A, 2C, 3A, and the default for 4. For 3A, the export command says plainly when it writes the file that these are journal entries: they carry no line items and don't reach QuickBooks' sales-tax reports. The log records that neither file was tried in a real QuickBooks or Xero company.
+
+**Recorded, as asked: neither export file was tried in a real
+QuickBooks or Xero company.** Each is built to the vendor's page as read
+on 2026-09-29 (`275_format_sources.md`) and tested against that page's
+rules, not against the product.
+
+**A correction to Step 0.** Question 4 listed the columns "the page
+names" and included `Reference`, `Description` and `Quantity`. Counting
+each name in the page's extracted text: those three appear 0 times; the
+other names at least once. `POAddress` appears only as a group name, with
+no field names. So the header is:
+- the names the page gives: `ContactName`, `EmailAddress`,
+  `InvoiceNumber`, `InvoiceDate`, `DueDate`, `InventoryItemCode`,
+  `UnitAmount`, `Discount`, `AccountCode`, `TaxType`, `TaxAmount`,
+  `TrackingName`, `TrackingOption`, `Currency`, `BrandingTheme`;
+- plus `Description` and `Quantity`, which the page does not name. A line
+  cannot be described without them. They are flagged in the test and the
+  source file as not from the page;
+- no `Reference` and no address fields.
+
+This departs from the default as worded ("exactly these names"), because
+the list it was worded on was wrong. It is reported to the operator at
+the end.
+
+v1.0 is `275_implementation.md`.
