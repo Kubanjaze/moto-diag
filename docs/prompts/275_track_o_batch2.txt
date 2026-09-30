@@ -1,0 +1,75 @@
+Do this: start Phase 275, Track O batch 2 of 4, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-29_274_closed.md;
+- docs/reports/2026-09-28_track_o_triage.md: the operator's decisions, verbatim, and the row-by-row table of what each row already has;
+- rows 275, 276, 277 and 278 in docs/ROADMAP.md;
+- 274's documents in docs/phases/completed/, for how batch 1 ran and closed.
+
+The operator's decision (2026-09-28), verbatim: "1, 2, 3, 5 as recommended." For this batch that means:
+- batch 2 is booking, the calendar and accounting files: 275 (booking by shop staff), 276 (iCal), 277 (a QuickBooks export file) and 278 (a Xero export file);
+- customer self-booking and Google Calendar two-way sync are paused, each with its reason;
+- the backend stays tailnet-only: nothing a customer or an outside service has to reach.
+
+The ledger, as 274 did it:
+- Row 275 goes 🚧 before Step 0 and carries the batch. At close-out, rows 276, 277 and 278 close ✅ "folded into 275", with no CLOSED date of their own. One history row, and one handoff, docs/handoffs/<date>_275_closed.md.
+- At Step 0, before v1.0, check every row's verbs (K8). Each row promises something this batch does not build:
+  - 275, "Online booking": customers booking for themselves needs an endpoint they can reach (decision 3).
+  - 276, "Two-way sync": iCal is one-way. Two-way sync means Google Calendar, which needs the operator's Google OAuth client.
+  - 277's "payment reconciliation", and any part of 277 or 278 that needs the Intuit or Xero API rather than a file: API access needs a developer account.
+- Rewrite each row to what the batch builds. Give each paused part its own ⏸️ row at the next free number (363 onward), saying where it came from and why, as row 362 does.
+
+The measured facts, taken 2026-09-29 on master at 4e03882. Re-verify each at Step 0.
+- **Appointments have no command.** scheduling/ (Phase 118: appointment_repo and models) has no caller outside the package. The appointments table holds a customer, a bike, a user (the mechanic), a type, a status, and scheduled and actual times. Live holds 0 appointments.
+- **Two calendars could disagree.** `motodiag shop bay` (Phase 168) already schedules work orders into bays (`bay_schedule_slots`), and an appointment is linked to neither a work order nor a bay slot. Step 0 decides how the two relate, so the shop does not keep two calendars that can disagree.
+- **Accounting:** accounting/ (invoices and their line items) is what shop/invoicing.py builds on. Live holds 0 invoices.
+- **Stale docstrings:** scheduling/__init__.py and accounting/__init__.py name old Track O numbers ("288-289" and "278-281"). This batch corrects both.
+- **Notification events and the API:** a customer notification's event is limited by a DB CHECK constraint, and the API's `NotificationTriggerRequest` mirrors it (api/routes/shop_mgmt.py). So a new event, such as an appointment confirmation, changes an API schema, and gate 11 then fails until the mobile snapshot is refreshed.
+
+The forks I expect. For each, stop and give me the options, with what each would ship:
+- **iCal:** either an .ics file the user imports (a command, no route), or a feed a calendar app subscribes to. A feed is a route on the tailnet API: say how a calendar app would authenticate, and what the route does to gate 11.
+- **Confirmations:** if the only honest way to send one changes the notification event list, and so the API, say so. That brings a mobile session into the batch.
+
+Stop the same way for any other real fork. Otherwise decide, write the reason in the log, and carry on.
+
+Scope:
+- Every new capability has a `motodiag` command, exercised by a test.
+- Each export file follows its vendor's own published import format. Step 0 names which QuickBooks (Online or Desktop) and why. Record each format's source (URL and date) in the phase folder, and a test pins the columns it specifies. The files are written locally; nothing is uploaded.
+- No outbound network call from the app. Batch 3 makes Track O's first.
+- Extend what exists: scheduling/, accounting/ and shop/invoicing.py. No second invoice or calendar layer.
+- No internal reference ("Phase N", "Track O", an F-number) in any text a user sees (F158).
+
+The API and gate 11. As in batch 1, any API addition or change needs a mobile session to refresh the snapshot. This batch adds no route unless a fork above is decided that way. If it is, plan the mobile refresh from the start, as 360 and 361 did.
+
+A migration (077), if the batch needs one, goes through the deploy skill: the scope file, the dry run and its committed diff, then apply-live. If no existing row changes, that is not a rule-1 stop; if any existing row changes, it is one. If you are unsure whether the diff counts, treat it as a stop and show me the diff.
+
+Plan for two regressions. Folding rows 276–278 changes the fold pin in tests/test_roadmap_continuity.py after the regression of record, so the regression runs again on the close-out commit, as 274's did.
+
+Carry forward:
+- **The edit guard is live.**
+  - Use the Edit tool for src/ and tests/.
+  - Write scratch files and scripts to explicit paths in the session scratchpad. The guard blocks a `$(mktemp -d)` target, and a script body it cannot parse.
+  - If it blocks a legitimate command, record it in the log. Never loosen the guard.
+- **wholetree.sh:**
+  - Run it on its own, and read its exit code before committing. Never pipe it.
+  - Run `--full` before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number, and never write the next free F-number into a log.
+- **Before the regression:**
+  - run 244G's scanner over every new test file;
+  - wiring a listed module means updating tests/support/integration_gaps_allowlist.py and every test that pins its sizes.
+- **A regression worker that dies with no traceback:** record it as 274 did with F183, and re-run in parallel. A second loss is a stop.
+- **Commits:** commit and push as separate commands, with commit messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- To measure an older commit, use a worktree.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0,** only if there is a fork: the options, and what each would ship.
+- **At the end:**
+  - each row: what shipped, its command and its test;
+  - the ledger: the rewritten rows, and the new rows' numbers;
+  - the dry-run diff and the deploy outcome, if there was a migration;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: batch 3 is phase 281, with rows 281 (NHTSA recall refresh), 287 (VIN decoder), 288 (tax rates) and 289 (exchange rates). Before it starts, it needs the operator to name the first real shop's state.
