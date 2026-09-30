@@ -1,0 +1,27 @@
+{
+ "_comment": "Phase 274, migration 076: adds eight tables, their six indexes and one schema_version row, and adds reorder_quantity to inventory_items (0 live rows), which rewrites that table's SQL. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_customer_comms_customer",
+   "index idx_po_lines_item",
+   "index idx_purchase_orders_vendor",
+   "index idx_shop_expenses_month",
+   "index idx_warranty_claims_warranty",
+   "index idx_work_order_quotes_wo",
+   "table customer_communications",
+   "table mechanic_cost_rates",
+   "table purchase_order_lines",
+   "table purchase_orders",
+   "table shop_expenses",
+   "table warranty_claims",
+   "table work_order_part_costs",
+   "table work_order_quotes"
+  ],
+  "changed": [
+   "table inventory_items"
+  ]
+ }
+}

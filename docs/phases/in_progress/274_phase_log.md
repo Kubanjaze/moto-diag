@@ -198,3 +198,31 @@ added and 123 removed; most of the removed are the allowlist checks'
 parametrised IDs, renumbered when entries left the lists. Net +91: the
 seven `test_phase274_*` files (95), gate 15's peel for 076 (+1), 209B +4,
 244W −8, 244X −1.
+
+### 2026-09-29 — The regression of record
+
+`wholetree.sh --full` on the clean tree at `757b9f4`: 84 files, 3961
+passed, record written. (84, one more than 361's 83: the P&L test's scan
+of `src/motodiag/api` made it a whole-tree member.)
+
+Regression of record: 10109 passed, 0 failed, 0 skipped, 0 errors at `757b9f4` (27 min 22 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-09-29 — The deploy: the dry run
+
+- **Scope** (`274_deploy_scope.json`): `schema_version` +1; the six
+  indexes and eight tables added; `table inventory_items` changed;
+  nothing else.
+- **`deploy.py dryrun 274`:**
+  - live 5845 rows, 90 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre274_20260929_210135.db`
+    (retain-5 removed `motodiag_pre262_20260926_163221.db`);
+  - applied `[76]` on the copy; scope problems: none; F158 census 36.
+- **The diff (`274_dryrun_diff.md`):**
+  - one `schema_version` row added (76);
+  - 14 schema objects added, as the scope names them;
+  - `table inventory_items` changed: its SQL gains `reorder_quantity`.
+    Live holds 0 inventory items (Step 0), so no row carries the column;
+  - **no existing row changed or removed** in any table.
+- **Not a rule-1 stop.** No existing row changes. The table that gains a
+  column has no rows, so the prompt's "a new column on a table that has
+  rows" does not apply. The diff is committed before apply-live.
