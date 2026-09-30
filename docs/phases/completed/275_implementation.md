@@ -305,7 +305,7 @@ import page):
 | Allowlist | UNREACHABLE 32 → 29, ORPHANS 112 → 118 |
 | Mutations | 28/28 red (`275_mutate.py`) |
 | Whole tree | `--full` at `5dc9251`: 3982 passed |
-| Regression | 10179 passed, 0 failed, 0 skipped at `5dc9251` (30 min 38 s), `-n auto --dist load`; re-run on the close-out commit (the log) |
+| Regression | 10179 passed, 0 failed, 0 skipped at `5dc9251` (30 min 38 s), `-n auto --dist load`; and at `aa617c9`, the close-out commit (18 min 55 s) |
 | Floor | `COLLECTED_TEST_FLOOR` 10109 → 10179 |
 | Deploy | dry run committed `aeda0c0`; apply-live `[77]`; live 5846 → 5847 rows, 98 → 101 tables, integrity ok; equals the approved exact diff; F158 census 36 |
 | Findings | none filed |

@@ -227,3 +227,17 @@ By hand, read only, after:
   checklist still had its 14 open boxes). Both were redone, the log's
   status line with the Edit tool. The guard was right, and was not
   loosened.
+
+### 2026-09-30 — The regression, re-run on the close-out commit
+
+The close-out changed a test (the fold pin), so the regression of record
+was run again on `aa617c9`, the commit the merge carries.
+`regression.sh` first refused: its `--full` record was for the staged
+tree over `aeda0c0`, not for the commit. `wholetree.sh --full` was run on
+`aa617c9` (3982 passed, record written), then:
+
+Regression of record: 10179 passed, 0 failed, 0 skipped, 0 errors at `aa617c9` (18 min 55 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+This is the regression of record for the close-out. The run at
+`5dc9251` (10179 passed) stands for the code, which did not change
+between the two. No worker was lost in either run.
