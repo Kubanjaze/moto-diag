@@ -1,6 +1,20 @@
 # Phase 275 — Track O batch 2: staff booking, iCal, QuickBooks and Xero export files
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-29
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-09-30 (v1.0 2026-09-29)
+
+**Outcome (v1.1).** Shipped as planned, after one stop at Step 0:
+- **The stop:** three forks (iCal file or feed; how a confirmation is
+  sent; which QuickBooks file). The operator picked 1A, 2C, 3A and the
+  default for Xero's header.
+- **All four rows have commands, each exercised by a test.** Rows 276,
+  277 and 278 close folded into 275; rows 363–366 are paused.
+- **Migration 077 is live** at schema 77, and its live diff equals the
+  approved exact diff; no existing row changed.
+- **Neither export file was tried in a real QuickBooks or Xero company.**
+
+No bug fix, no finding. Regression of record: 10179 passed, 0 failed at
+`5dc9251`, re-run on the close-out commit (see Results). Deviations and
+Results are at the end.
 
 ## Goal
 
@@ -236,17 +250,63 @@ import page):
 
 ## Verification Checklist
 
-- [ ] v1.0 committed and pushed before code
-- [ ] Migration 077: columns, tables, rollback; no existing row changed
-- [ ] Every new capability reached through a `motodiag` command in a test
-- [ ] Double-booking refused; bay overlap warned; slots never assume hours
-- [ ] Confirm logs a contact and queues nothing
-- [ ] Check-in opens or links a work order, and the calendar shows both
-- [ ] The `.ics` is valid RFC 5545 (CRLF, folding, escaping, UID, DTSTAMP)
-- [ ] QuickBooks entries balance; the plain statement is printed
-- [ ] Xero tax lines sum to the invoice's tax; columns pinned
-- [ ] A missing mapping refuses; a re-export skips exported invoices
-- [ ] Mutations all red
-- [ ] 244G scanner; `wholetree.sh --full`; regression of record; floor raised
-- [ ] Dry-run diff committed; apply-live equals it
-- [ ] Handoff; `verify_phase.sh`
+- [x] v1.0 committed and pushed before code (`65bf479`)
+- [x] Migration 077: columns, tables, rollback; no existing row changed (`test_phase275_migration.py`; the dry run)
+- [x] Every new capability reached through a `motodiag` command in a test
+- [x] Double-booking refused; bay overlap warned; slots never assume hours
+- [x] Confirm logs a contact and queues nothing
+- [x] Check-in opens or links a work order, and the calendar shows both
+- [x] The `.ics` is valid RFC 5545 (CRLF, folding, escaping, UID, DTSTAMP), read back by the test's own unfolder
+- [x] QuickBooks entries balance; the plain statement is printed
+- [x] Xero tax lines sum to the invoice's tax; columns pinned against `275_format_sources.md`
+- [x] A missing mapping refuses; a re-export skips exported invoices
+- [x] Mutations all red (28/28)
+- [x] 244G scanner; `wholetree.sh --full`; regression of record; floor raised (10109 → 10179)
+- [x] Dry-run diff committed (`aeda0c0`); apply-live equals it
+- [x] Handoff; `verify_phase.sh` (its result is in the handoff)
+
+## Deviations from Plan
+
+- **Step 0's list of Xero columns was wrong in three names.** It said
+  the page names `Reference`, `Description` and `Quantity`; counted in the
+  page's text, it names none of them. The file uses the page's names plus
+  `Description` and `Quantity`, flagged in the code, the sources file and
+  the test; `Reference` and the address fields are left out. This departs
+  from the default as worded, because the list it was worded on was wrong.
+- **A confirmed appointment can be confirmed again.** v1.0's status moves
+  had scheduled → confirmed only; a second confirmation logs another
+  contact and leaves the status `confirmed`.
+- **`shop accounting exports` was added** so the export record has a
+  reader; both writers refuse to overwrite an existing file.
+- **No iCal library:** none is installed and none was added; the test
+  unfolds and parses the file itself.
+- **One test expectation was wrong on first writing** (a receivable
+  total), not the code.
+- **The regression of record was run again on the close-out commit**,
+  because the close-out changed a test (the fold pin).
+- **The deploy ran before the merge**, on the phase branch, as 274's did.
+- The collected-test floor was measured against a `master` worktree whose
+  run imports this checkout's `src` (the editable install); gate 15's
+  `[76]` case therefore appears in both lists, and is counted in the +70.
+- **The edit guard blocked one close-out command** that chained a Python
+  edit with `sed -i` on the phase log; nothing in it ran, and it was
+  redone with the Edit tool. The guard was right: `sed -i` is blocked
+  wherever it points.
+
+## Results
+
+| | |
+|---|---|
+| Migration | 077: `appointments.shop_id`, `work_order_id`, two indexes, three tables; schema 76 → 77; no row changed |
+| 275 booking | `shop appointment book/list/show/slots/reschedule/confirm/check-in/cancel/no-show/complete`; `test_phase275_booking.py` 26 |
+| 276 calendar | `shop calendar show/export`; `test_phase275_calendar.py` 13 |
+| 277, 278 files | `shop accounting map set/list`, `export`, `exports`; `test_phase275_accounting_export.py` 19 |
+| Migration tests | `test_phase275_migration.py` 9 |
+| Allowlist | UNREACHABLE 32 → 29, ORPHANS 112 → 118 |
+| Mutations | 28/28 red (`275_mutate.py`) |
+| Whole tree | `--full` at `5dc9251`: 3982 passed |
+| Regression | 10179 passed, 0 failed, 0 skipped at `5dc9251` (30 min 38 s), `-n auto --dist load`; re-run on the close-out commit (the log) |
+| Floor | `COLLECTED_TEST_FLOOR` 10109 → 10179 |
+| Deploy | dry run committed `aeda0c0`; apply-live `[77]`; live 5846 → 5847 rows, 98 → 101 tables, integrity ok; equals the approved exact diff; F158 census 36 |
+| Findings | none filed |
+| Ledger | 275 ✅; 276, 277, 278 ✅ folded; rows 275–278 rewritten; 363–366 ⏸️ |

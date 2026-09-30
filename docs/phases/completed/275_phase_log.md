@@ -1,6 +1,6 @@
 # Phase 275 — Track O batch 2: staff booking, iCal, QuickBooks and Xero export files — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-09-30)
 **Branch:** `phase-275` (Opus session, main checkout, the only writer)
 
 ---
@@ -178,3 +178,52 @@ The count equals the new floor. No worker was lost.
   - **no existing row changed or removed** in any table.
 - **Not a rule-1 stop.** No existing row changes, the condition the
   prompt set. The diff is committed before apply-live.
+
+### 2026-09-30 — The deploy: apply-live
+
+Run on the phase branch before the merge, as 274's was. The migration
+applied is the one in `5dc9251`, the commit the regression tested
+(`aeda0c0` adds only documents).
+
+`deploy.py apply-live 275`:
+- the preflight passed (F172's exact check); applied `[77]`;
+- live after: 5847 rows, 101 tables, integrity ok;
+- scope problems none; **equals the approved exact diff: yes**
+  (`275_live_diff.md`).
+
+By hand, read only, after:
+- schema 77; `appointments` ends in `shop_id`, `work_order_id`;
+- appointments 0, customers 6, work orders 6, notifications 4, vehicles
+  10, shops 1, invoices 0, contacts 0: every count as Step 0 measured
+  it; the three new tables are empty;
+- `foreign_key_check` is empty;
+- against live, `shop calendar show --shop 1` prints "Nothing booked",
+  `shop accounting map list --shop 1` "No accounts mapped yet." and
+  `shop appointment list --shop 1` "No appointments match."
+
+### 2026-09-30 — Close-out
+
+- **No refute pass ran:** the batch ships code, a migration and tests,
+  and no content rows. The two export formats rest on vendor pages; they
+  are quoted in `275_format_sources.md` and pinned by tests, not refuted.
+- No bug-fix register: no defect was found in code that existed before
+  the batch, and none in the batch's own code after it was committed.
+- **No finding filed.** Nothing found was left unfixed; every gap is on
+  a paused row.
+- Rows 276, 277 and 278 ✅ folded into 275, with no CLOSED date of their
+  own; row 275 ✅ with its CLOSED date and the regression line (91
+  words). Rows 363–366 stay ⏸️.
+- The fold pin in `test_roadmap_continuity.py` names fifteen folds (12 +
+  276, 277, 278) and is renamed `test_the_fifteen_folds_are_seen_and_pass`.
+  The code did not change after the regression; the regression is run
+  again on the close-out commit because a test changed.
+- `implementation.md` 0.13.95 with its history row; v1.1; handoff
+  `docs/handoffs/2026-09-30_275_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0, the
+  sources, the mutation script, the scope and both diffs.
+- **The edit guard blocked one command** during close-out: a Python edit
+  of `275_implementation.md` chained with `sed -i` on this log. The hook
+  stops the whole command before it runs, so neither edit happened (the
+  checklist still had its 14 open boxes). Both were redone, the log's
+  status line with the Edit tool. The guard was right, and was not
+  loosened.
