@@ -1,7 +1,10 @@
-"""Scheduling package — appointments substrate.
+"""Scheduling package — appointments, booking by shop staff, and the calendar.
 
-Phase 118 (Retrofit): schema + CRUD only. Track O phases 288-289 wire up
-iCal/Google Calendar sync and customer-facing booking.
+``appointment_repo`` is the CRUD; ``booking`` is what staff do with an
+appointment (book, move, confirm, check in, close) and the free time slots;
+``calendar`` reads appointments and bay slots together and writes iCal.
+Phase 275 wired it (rows 275 and 276). Customer self-booking and Google
+Calendar sync are paused (rows 363 and 364).
 """
 
 from motodiag.scheduling.models import (

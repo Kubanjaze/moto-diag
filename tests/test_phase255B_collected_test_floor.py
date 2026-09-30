@@ -231,7 +231,15 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: collision control replaced by a synthetic one), 244X -1. Measured by
 #: collected-ID diff against master: 10,109.
 #:
-COLLECTED_TEST_FLOOR = 10109
+#: 10179 (Phase 275, 2026-09-30) — +70 over 10109: four
+#: `test_phase275_*` files (67: migration 077, booking by staff, the
+#: calendar and its iCal file, the QuickBooks Online and Xero export
+#: files), +1 in gate 15's `test_rolling_back_peels_every_successor[76]`,
+#: and 209B +2 net (28 IDs added and 26 removed as its parametrised checks
+#: moved with the lists). Measured by collected-ID diff against a master
+#: worktree: 10,179.
+#:
+COLLECTED_TEST_FLOOR = 10179
 
 
 def _collected_count() -> int:

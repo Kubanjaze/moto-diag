@@ -1,7 +1,9 @@
-"""Accounting package — invoices + invoice line items substrate.
+"""Accounting package — invoices, their line items, and the export files.
 
-Phase 118 (Retrofit): schema + CRUD only. Track O phases 278-281 wire up
-QuickBooks/Xero export and customer-facing invoice PDFs.
+``invoice_repo`` is the CRUD that ``shop/invoicing.py`` builds on.
+``export`` writes the invoices as a QuickBooks Online journal-entry file or
+a Xero sales-invoice file (Phase 275, rows 277 and 278). Syncing with
+either through its API is paused (rows 365 and 366).
 """
 
 from motodiag.accounting.models import (

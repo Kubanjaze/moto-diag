@@ -1,0 +1,18 @@
+{
+ "_comment": "Phase 275, migration 077: adds shop_id and work_order_id to appointments (0 live rows), which rewrites that table's SQL; adds one index on appointments, three tables with one more index, and one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_accounting_export_invoices_invoice",
+   "index idx_appointments_shop_start",
+   "table accounting_accounts",
+   "table accounting_export_invoices",
+   "table accounting_exports"
+  ],
+  "changed": [
+   "table appointments"
+  ]
+ }
+}

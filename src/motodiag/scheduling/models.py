@@ -34,3 +34,5 @@ class Appointment(BaseModel):
     actual_start: Optional[str] = None
     actual_end: Optional[str] = None
     notes: Optional[str] = None
+    shop_id: Optional[int] = None
+    work_order_id: Optional[int] = None
