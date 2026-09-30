@@ -92,3 +92,61 @@ the list it was worded on was wrong. It is reported to the operator at
 the end.
 
 v1.0 is `275_implementation.md`.
+
+### 2026-09-30 — Migration 077 and the four rows (`4bbf262`)
+
+- **Migration 077** (schema 76 → 77): `appointments.shop_id` and
+  `work_order_id`, `idx_appointments_shop_start`, `accounting_accounts`,
+  `accounting_exports`, `accounting_export_invoices`.
+  `test_phase275_migration.py`, 9: the columns, index and tables, the
+  rollback, planted rows in eight tables and one appointment unchanged
+  either way, the CHECKs. SQLite 3.53.2 drops a column declared with
+  `REFERENCES` (tried on a scratch table first), so the rollback uses
+  `DROP COLUMN` as 076's does. The 81 test files that touch the schema
+  version or the migrations: 2708 passed.
+- **Row 275:** `scheduling/booking.py`; `shop appointment book, list,
+  show, slots, reschedule, confirm, check-in, cancel, no-show, complete`
+  (`cli/shop_booking.py`). `test_phase275_booking.py`, 26.
+- **Row 276:** `scheduling/calendar.py`; `shop calendar show, export`.
+  `test_phase275_calendar.py`, 13. No iCal library is installed and none
+  was added: the test unfolds and splits the file itself.
+- **Rows 277 and 278:** `accounting/export.py`; `shop accounting map
+  set/list, export, exports` (`cli/shop_accounting.py`).
+  `test_phase275_accounting_export.py`, 19. The column tests read the
+  lists from `275_format_sources.md`. One expected figure in the test was
+  wrong on first writing (the receivable total, 406.54): the test, not
+  the code.
+- **Decisions made while building:**
+  - a confirmed appointment can be confirmed again: it logs the contact
+    again, and the status stays `confirmed` (a resent confirmation is an
+    ordinary thing to record);
+  - the refusal for missing hours names the command that records them,
+    `shop profile update --set hours_json=…` (checked: `profile update`
+    takes `--set KEY=VALUE`);
+  - `shop accounting exports` lists the recorded exports, so the record
+    has a reader;
+  - both file writers refuse to overwrite an existing file.
+- The docstrings of `scheduling/__init__.py` and `accounting/__init__.py`
+  lose their stale Track O numbers.
+- **F158 scan:** the five new source files hold no "Phase", "Track X" or
+  F-number; the same pattern finds 21 in `cli/shop.py` (the control).
+- **The allowlist:** `motodiag.scheduling` and its two modules left
+  UNREACHABLE_MODULES (32 → 29); six `appointment_repo` CRUD helpers
+  became live orphans and are listed (112 → 118). The five
+  integration-gap files: 304 passed.
+- 244G's scanner over `tests/`: 0 findings.
+- `wholetree.sh --full` on the staged tree: 3982 passed, record written.
+
+### 2026-09-30 — Mutations, and the floor
+
+- **Mutations: 28/28 red** (`275_mutate.py`: migration 2, booking 10,
+  calendar 6, the export files 10). `git status` afterwards shows only
+  the new script.
+- **`COLLECTED_TEST_FLOOR` 10109 → 10179**, by diffing collected IDs
+  (`--collect-only -q -o addopts=`) against a `master` worktree: +70 = the
+  four `test_phase275_*` files (67) + gate 15's
+  `test_rolling_back_peels_every_successor[76]` + 209B's +2 net (28 added,
+  26 removed). The worktree's run imports this checkout's `src` through
+  the editable install, so gate 15's `[76]` appears in both lists; its
+  cause is `range(…, SCHEMA_VERSION)` reaching 76 once 077 exists. The
+  worktree was removed after.
