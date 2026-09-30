@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 75  # Phase 361: vehicles.engine_type loses its 'four_stroke' default (migration 075, F177)
+SCHEMA_VERSION = 76  # Phase 274: Track O batch 1 shop records (migration 076)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

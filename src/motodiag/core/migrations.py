@@ -6445,6 +6445,194 @@ MIGRATIONS: list[Migration] = [
                                       "engine_type TEXT"),
         rollback_sql=_vehicles_rebuild("powertrain TEXT", "vehicles_rollback_075"),
     ),
+    # Migration 076 — Phase 274: Track O batch 1, the local shop records
+    Migration(
+        version=76,
+        name="shop_business_records",
+        description=(
+            "Phase 274 (Track O batch 1): the records a shop keeps beyond the "
+            "work order. `customer_communications` is a dated log of each "
+            "contact with a customer, either direction, any channel. "
+            "`purchase_orders` and `purchase_order_lines` are POs generated "
+            "locally from reorder points; `inventory_items` gains "
+            "`reorder_quantity` (0 = not set). `warranty_claims` are local "
+            "claim records against `warranties`. `mechanic_cost_rates`, "
+            "`work_order_part_costs` and `shop_expenses` are the direct "
+            "costs and overheads a P&L needs, which no table held. "
+            "`work_order_quotes` records each estimate as it was queued to "
+            "the customer. Adds eight tables, their indexes and one column; "
+            "changes no existing row. Rollback drops the tables, then the "
+            "column."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS customer_communications (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                customer_id INTEGER NOT NULL,
+                shop_id INTEGER,
+                work_order_id INTEGER,
+                direction TEXT NOT NULL
+                    CHECK (direction IN ('inbound', 'outbound')),
+                channel TEXT NOT NULL
+                    CHECK (channel IN ('phone', 'in_person', 'email',
+                                       'sms', 'other')),
+                summary TEXT NOT NULL CHECK (length(trim(summary)) > 0),
+                logged_by_user_id INTEGER,
+                occurred_at TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (customer_id)
+                    REFERENCES customers(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE SET NULL,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL,
+                FOREIGN KEY (logged_by_user_id)
+                    REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_customer_comms_customer
+                ON customer_communications(customer_id, occurred_at);
+
+            ALTER TABLE inventory_items
+                ADD COLUMN reorder_quantity INTEGER NOT NULL DEFAULT 0
+                CHECK (reorder_quantity >= 0);
+
+            CREATE TABLE IF NOT EXISTS purchase_orders (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                po_number TEXT NOT NULL UNIQUE,
+                vendor_id INTEGER NOT NULL,
+                status TEXT NOT NULL DEFAULT 'draft'
+                    CHECK (status IN ('draft', 'sent', 'received',
+                                      'cancelled')),
+                notes TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                sent_at TEXT,
+                received_at TEXT,
+                cancelled_at TEXT,
+                FOREIGN KEY (vendor_id)
+                    REFERENCES vendors(id) ON DELETE RESTRICT
+            );
+            CREATE INDEX IF NOT EXISTS idx_purchase_orders_vendor
+                ON purchase_orders(vendor_id, status);
+
+            CREATE TABLE IF NOT EXISTS purchase_order_lines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                po_id INTEGER NOT NULL,
+                item_id INTEGER NOT NULL,
+                quantity INTEGER NOT NULL CHECK (quantity > 0),
+                unit_cost_cents INTEGER NOT NULL DEFAULT 0
+                    CHECK (unit_cost_cents >= 0),
+                UNIQUE (po_id, item_id),
+                FOREIGN KEY (po_id)
+                    REFERENCES purchase_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (item_id)
+                    REFERENCES inventory_items(id) ON DELETE RESTRICT
+            );
+            CREATE INDEX IF NOT EXISTS idx_po_lines_item
+                ON purchase_order_lines(item_id);
+
+            CREATE TABLE IF NOT EXISTS warranty_claims (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                warranty_id INTEGER NOT NULL,
+                work_order_id INTEGER,
+                status TEXT NOT NULL DEFAULT 'draft'
+                    CHECK (status IN ('draft', 'submitted', 'approved',
+                                      'denied', 'paid')),
+                claim_number TEXT,
+                description TEXT NOT NULL
+                    CHECK (length(trim(description)) > 0),
+                amount_claimed_cents INTEGER
+                    CHECK (amount_claimed_cents IS NULL
+                           OR amount_claimed_cents >= 0),
+                amount_approved_cents INTEGER
+                    CHECK (amount_approved_cents IS NULL
+                           OR amount_approved_cents >= 0),
+                opened_at TEXT NOT NULL,
+                submitted_at TEXT,
+                decided_at TEXT,
+                paid_at TEXT,
+                notes TEXT,
+                FOREIGN KEY (warranty_id)
+                    REFERENCES warranties(id) ON DELETE CASCADE,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_warranty_claims_warranty
+                ON warranty_claims(warranty_id);
+
+            CREATE TABLE IF NOT EXISTS mechanic_cost_rates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                user_id INTEGER NOT NULL,
+                cost_cents_per_hour INTEGER NOT NULL
+                    CHECK (cost_cents_per_hour >= 0),
+                effective_from TEXT NOT NULL,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (shop_id, user_id, effective_from),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (user_id)
+                    REFERENCES users(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS work_order_part_costs (
+                work_order_part_id INTEGER PRIMARY KEY,
+                purchase_cost_cents_each INTEGER NOT NULL
+                    CHECK (purchase_cost_cents_each >= 0),
+                recorded_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (work_order_part_id)
+                    REFERENCES work_order_parts(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS shop_expenses (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                month TEXT NOT NULL
+                    CHECK (month GLOB '[0-9][0-9][0-9][0-9]-[0-1][0-9]'),
+                category TEXT NOT NULL CHECK (length(trim(category)) > 0),
+                amount_cents INTEGER NOT NULL CHECK (amount_cents >= 0),
+                description TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_shop_expenses_month
+                ON shop_expenses(shop_id, month);
+
+            CREATE TABLE IF NOT EXISTS work_order_quotes (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                work_order_id INTEGER NOT NULL,
+                notification_id INTEGER,
+                estimated_hours REAL NOT NULL CHECK (estimated_hours > 0),
+                labor_rate_cents INTEGER NOT NULL
+                    CHECK (labor_rate_cents >= 0),
+                parts_cents INTEGER NOT NULL CHECK (parts_cents >= 0),
+                total_cents INTEGER NOT NULL CHECK (total_cents >= 0),
+                quoted_at TEXT NOT NULL,
+                FOREIGN KEY (work_order_id)
+                    REFERENCES work_orders(id) ON DELETE CASCADE,
+                FOREIGN KEY (notification_id)
+                    REFERENCES customer_notifications(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_work_order_quotes_wo
+                ON work_order_quotes(work_order_id, quoted_at);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_work_order_quotes_wo;
+            DROP TABLE IF EXISTS work_order_quotes;
+            DROP INDEX IF EXISTS idx_shop_expenses_month;
+            DROP TABLE IF EXISTS shop_expenses;
+            DROP TABLE IF EXISTS work_order_part_costs;
+            DROP TABLE IF EXISTS mechanic_cost_rates;
+            DROP INDEX IF EXISTS idx_warranty_claims_warranty;
+            DROP TABLE IF EXISTS warranty_claims;
+            DROP INDEX IF EXISTS idx_po_lines_item;
+            DROP TABLE IF EXISTS purchase_order_lines;
+            DROP INDEX IF EXISTS idx_purchase_orders_vendor;
+            DROP TABLE IF EXISTS purchase_orders;
+            ALTER TABLE inventory_items DROP COLUMN reorder_quantity;
+            DROP INDEX IF EXISTS idx_customer_comms_customer;
+            DROP TABLE IF EXISTS customer_communications;
+        """,
+    ),
 ]
 
 

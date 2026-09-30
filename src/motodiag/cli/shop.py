@@ -776,7 +776,7 @@ def register_shop(cli_group: click.Group) -> None:
 
     @shop_group.group("customer")
     def customer_group() -> None:
-        """Manage customer records (wraps Phase 113 CRM layer)."""
+        """Manage customers: profiles, bikes, ownership and contact history."""
 
     @customer_group.command("add")
     @click.option("--name", required=True)
@@ -889,7 +889,7 @@ def register_shop(cli_group: click.Group) -> None:
                 str(b.get("make", "?")),
                 str(b.get("model", "?")),
                 str(b.get("year", "?")),
-                str(b.get("relationship", "?")),
+                str(b.get("cb_relationship", "?")),
             )
         console.print(table)
 
@@ -1063,7 +1063,7 @@ def register_shop(cli_group: click.Group) -> None:
                 str(b.get("make", "?")),
                 str(b.get("model", "?")),
                 str(b.get("year", "?")),
-                str(b.get("relationship", "?")),
+                str(b.get("cb_relationship", "?")),
             )
         console.print(table)
 
@@ -4048,7 +4048,7 @@ def register_shop(cli_group: click.Group) -> None:
 
     @shop_group.group("analytics")
     def analytics_group() -> None:
-        """Read-only analytics over Track G state — no writes."""
+        """Read-only shop analytics, P&L and estimate variance — no writes."""
 
     def _resolve_shop_id(identifier) -> int:
         shop = _resolve_shop_identifier(identifier)
@@ -4704,3 +4704,16 @@ def register_shop(cli_group: click.Group) -> None:
                 str(r.fired_at),
             )
         console.print(table)
+
+    # -----------------------------------------------------------------
+    # Business records: CRM log and ownership, inventory, warranty, money
+    # -----------------------------------------------------------------
+    from motodiag.cli.shop_crm import register_crm
+    from motodiag.cli.shop_finance import register_finance
+    from motodiag.cli.shop_inventory import register_inventory
+    from motodiag.cli.shop_warranty import register_warranty
+
+    register_crm(customer_group)
+    register_inventory(shop_group)
+    register_warranty(shop_group)
+    register_finance(shop_group)

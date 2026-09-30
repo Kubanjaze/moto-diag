@@ -21,8 +21,9 @@ from __future__ import annotations
 #: `len(UNREACHABLE_MODULES)`. Asserted in test_phase209B_integration_gaps.py.
 #: 38 of 256 modules unreachable from any entry point on 2026-09-17 (Phase
 #: 209B's finding) → 37 at Phase 244Y (cli/registry deleted) → 34 at Phase
-#: 259 (motodiag.workflows wired: three modules).
-UNREACHABLE_COUNT = 34
+#: 259 (motodiag.workflows wired: three modules) → 32 at Phase 274 (`shop
+#: labor-rate` reaches motodiag.pricing and pricing.labor_rates).
+UNREACHABLE_COUNT = 32
 
 #: `len(MODULE_ISLANDS)`. Asserted in test_phase244W_module_islands.py.
 #: 19 modules / 4,270 lines invisible to the gate on 2026-09-17 (Phase 244W's
@@ -30,8 +31,10 @@ UNREACHABLE_COUNT = 34
 #: superseded modules deleted) → 14 (244Y: inventory/models surfaced as a
 #: third-order island once its last live import went; substrate). Unchanged by
 #: Phase 244Z, on purpose: content fixed, reachability untouched. → 13 at
-#: Phase 356 (`workflow run` reaches motodiag.engine.workflows).
-MODULE_ISLAND_COUNT = 13
+#: Phase 356 (`workflow run` reaches motodiag.engine.workflows). → 9 at Phase
+#: 274 (`shop inventory` and `shop warranty` reach inventory's models,
+#: item_repo, vendor_repo and warranty_repo).
+MODULE_ISLAND_COUNT = 9
 
 #: `len(ORPHANS)`. Asserted in test_phase244U_gate_blind_spot.py.
 #: The running count of live orphans: 46 (pre-244U) → 66 (244U opened the
@@ -46,5 +49,8 @@ MODULE_ISLAND_COUNT = 13
 #: substrate's read side made its six write functions live orphans, listed as
 #: substrate awaiting Phase 316) → 106 (Phase 356: wiring engine.workflows
 #: made its three predefined scripts and generate_next_step live orphans,
-#: listed as unwired-feature).
-ORPHAN_COUNT = 106
+#: listed as unwired-feature) → 105 (Phase 274: `shop customer transfer-bike`
+#: calls crm transfer_ownership) → 111 (Phase 274: wiring inventory's repos
+#: made five helpers and the Recall model live orphans) → 112 (Phase 274:
+#: `shop labor-rate` left pricing/labor_rates' file loader a live orphan).
+ORPHAN_COUNT = 112

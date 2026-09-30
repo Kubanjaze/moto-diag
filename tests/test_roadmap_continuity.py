@@ -94,11 +94,13 @@ class TestR7OnTheRealLedger:
         return {n: R.FOLDED.match(rest).group(1) for n, s, rest in R.ROW_REST.findall(roadmap)
                 if s.strip() == R.DONE and R.FOLDED.match(rest)}
 
-    def test_the_eight_folds_are_seen_and_pass(self):
+    def test_the_twelve_folds_are_seen_and_pass(self):
+        """Eight from Track N; four from Phase 274 (Track O batch 1)."""
         roadmap = (R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
         assert self._folds(roadmap) == {
             "263": "262", "265": "264", "266": "264", "267": "262",
-            "268": "264", "269": "261", "270": "261", "271": "261"}
+            "268": "264", "269": "261", "270": "261", "271": "261",
+            "279": "274", "280": "274", "290": "274", "291": "274"}
         assert not [f for f in R.check_tree() if f.startswith("R7")]
 
     def test_a_fold_into_a_reopened_carrier_is_seen(self):

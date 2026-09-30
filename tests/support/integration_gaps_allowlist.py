@@ -81,9 +81,7 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
     "motodiag.media.sim.video_frames": ("test-infra", "Part of the test-only media.sim package; see it."),
     "motodiag.media.sim.vision_analyzer_textsim": ("test-infra", "Part of the test-only media.sim package; see it."),
 
-    "motodiag.pricing": ("unwired-feature", _PRICING),
     "motodiag.pricing.estimate": ("unwired-feature", _PRICING),
-    "motodiag.pricing.labor_rates": ("unwired-feature", _PRICING),
     "motodiag.pricing.repair_plan": ("unwired-feature", _PRICING),
 
     "motodiag.reference": ("substrate",
@@ -111,6 +109,20 @@ _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pric
 # Orphans inside unreachable modules are implied by the module entry and are
 # not listed a second time.
 ORPHANS: dict[str, tuple[str, str]] = {
+    # --- Phase 274: inventory's repos left MODULE_ISLANDS ---
+    # `shop inventory` and `shop warranty` reach them; these defs are not.
+    "inventory/item_repo.py::delete_item": ("public-api", _REPO_HELPER),
+    "inventory/item_repo.py::get_item": ("public-api", _REPO_HELPER),
+    "inventory/vendor_repo.py::delete_vendor": ("public-api", _REPO_HELPER),
+    "inventory/vendor_repo.py::update_vendor": ("public-api", _REPO_HELPER),
+    "inventory/warranty_repo.py::delete_warranty": ("public-api", _REPO_HELPER),
+    "inventory/models.py::Recall": ("substrate",
+        "Phase 118 pydantic model for the recalls table, awaiting Phase 281 "
+        "(NHTSA recall processing); recall_repo returns plain rows."),
+    # `shop labor-rate` reaches pricing/labor_rates; its file loader is not.
+    "pricing/labor_rates.py::load_labor_rates_file": ("unwired-feature",
+        "Loads labour rates from a JSON file. `shop labor-rate set` records "
+        "one rate at a time; no command imports a file of them."),
     # --- Phase 356: engine/workflows.py left MODULE_ISLANDS ---
     # `workflow run` reaches DiagnosticWorkflow through workflows/runner.py.
     # The rest of Phase 82's module is still reached by nothing.
@@ -384,10 +396,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Wrapper over list_customers_for_bike. Only crm/__init__.py names "
         "it; hidden until Phase 244X blanked parenthesised multi-line re- "
         "exports."),
-    "crm/customer_bikes_repo.py::transfer_ownership": ("unwired-feature",
-        "No route or command transfers a bike between customers. Only "
-        "crm/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
     "crm/customer_repo.py::count_customers": ("public-api",
         "Repository helper kept as library surface. Only crm/__init__.py "
         "names it; hidden until Phase 244X blanked parenthesised multi-line "
@@ -519,22 +527,6 @@ MODULE_ISLANDS: dict[str, tuple[str, str]] = {
     "motodiag.media.photo_annotation_repo": ("substrate",
         "Phase 119 CRUD over photo_annotations, awaiting Phase 307. The table "
         "has no live reader or writer."),
-    "motodiag.inventory.models": ("substrate",
-        _SUBSTRATE_118 + ": the pydantic models for inventory_items, vendors, "
-        "warranties and recalls, awaiting Phases 279-286 with the three repos "
-        "below. Surfaced at Phase 244Y as a third-order island: deleting the "
-        "superseded recall CRUD removed its last live import."),
-    "motodiag.inventory.item_repo": ("substrate",
-        _SUBSTRATE_118 + ": inventory-item CRUD over inventory_items, awaiting "
-        "Phase 279 (parts inventory with reorder points). The live parts path "
-        "(shop/parts_needs, api/routes/parts) uses parts/parts_requisitions/"
-        "work_order_parts, not this table."),
-    "motodiag.inventory.vendor_repo": ("substrate",
-        _SUBSTRATE_118 + ": vendor CRUD, awaiting Phases 282-286 (vendor "
-        "integrations). vendors has no live reader or writer."),
-    "motodiag.inventory.warranty_repo": ("substrate",
-        _SUBSTRATE_118 + ": warranty CRUD, awaiting Phase 280 (OEM warranty "
-        "claims) and Gate 16. warranties has no live reader or writer."),
     "motodiag.billing.payment_repo": ("substrate",
         _SUBSTRATE_118 + ": customer-payment CRUD over payments, awaiting Phase "
         "273 (Stripe Connect / card terminals). Distinct from the live Phase 176 "

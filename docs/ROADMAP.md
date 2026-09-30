@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 361 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 362 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -513,24 +513,24 @@ Payment processing, CRM, booking, accounting, inventory, warranty/recall claims,
 | Phase | Title | Status | Notes |
 |-------|-------|--------|-------|
 | 273 | Payment processing foundation (Stripe) | 🔲 | Stripe Connect, card terminals, invoicing, subscription billing |
-| 274 | Customer CRM | 🔲 | Customer profiles, bike ownership history, communication log, notes |
+| 274 | Customer CRM | ✅ | **CLOSED 2026-09-29.** Carried Track O batch 1 (rows 274, 279, 280, 290, 291). A contact log and customer history, bike transfer and ownership history; stock, reorder points and local purchase orders; warranty validity and claims with a printable packet; the operator's option B, a gross-margin P&L on recorded costs with stated attribution rules; estimate-versus-actual variance on recorded quotes. Migration 076 live (no existing row changed). F182 filed and closed: estimates were hours times $100. Bug fix #1: `customer bikes` printed `?`. 33 mutations red. Regression 10109 passed / 0 failed at `3b7528f`. |
 | 275 | Appointment booking system | 🔲 | Online booking, time slots, mechanic assignments, confirmations |
 | 276 | Calendar sync (iCal / Google Calendar) | 🔲 | Two-way sync, appointment blocks, mechanic calendars |
 | 277 | Accounting export (QuickBooks) | 🔲 | Chart of accounts mapping, invoice export, payment reconciliation |
 | 278 | Accounting export (Xero) | 🔲 | Xero-specific export format, tax handling, multi-currency |
-| 279 | Parts inventory with reorder points | 🔲 | Stock levels, reorder points, automatic PO generation, distinct from per-job sourcing |
-| 280 | OEM warranty claim processing | 🔲 | Warranty validity lookup, claim documentation, OEM-specific submission flows |
+| 279 | Parts inventory with reorder points | ✅ | Folded into 274 (Track O batch 1): `shop inventory` — stock, reorder points and quantities, a reorder plan naming why an item is not ordered, one draft purchase order per vendor, printable, marked sent by the user; receiving adds stock. Sending a PO to a supplier is paused with rows 282–286. See row 274. |
+| 280 | Warranty validity and claim records | ✅ | Folded into 274 (Track O batch 1). Rewritten 2026-09-29 from "OEM warranty claim processing": `shop warranty check` (valid, not valid, or cannot tell, by date and mileage), local claim records with their status, and a printable claim packet. OEM submission is row 362, paused. See row 274. |
 | 281 | NHTSA recall processing | 🔲 | VIN-based recall lookup, recall completion tracking, OEM reimbursement |
-| 282 | Vendor: Parts Unlimited integration | 🔲 | API integration, parts availability, wholesale pricing, dropship |
-| 283 | Vendor: NAPA integration | 🔲 | NAPA TRACS integration, parts catalog, local store inventory |
-| 284 | Vendor: Drag Specialties integration | 🔲 | Drag Specialties wholesale, Harley/V-twin parts focus |
-| 285 | Vendor: Dennis Kirk integration | 🔲 | Dennis Kirk wholesale, Japanese parts, off-road |
-| 286 | Vendor: tire distributor integrations | 🔲 | Dunlop, Michelin, Metzeler, Bridgestone — wholesale tire ordering |
+| 282 | Vendor: Parts Unlimited integration | ⏸️ | API integration, parts availability, wholesale pricing, dropship. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 283 | Vendor: NAPA integration | ⏸️ | NAPA TRACS integration, parts catalog, local store inventory. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 284 | Vendor: Drag Specialties integration | ⏸️ | Drag Specialties wholesale, Harley/V-twin parts focus. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 285 | Vendor: Dennis Kirk integration | ⏸️ | Dennis Kirk wholesale, Japanese parts, off-road. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
+| 286 | Vendor: tire distributor integrations | ⏸️ | Dunlop, Michelin, Metzeler, Bridgestone — wholesale tire ordering. **Paused 2026-09-29** (the operator's decision 2 of 2026-09-28): it needs a dealer or B2B account with the supplier, and no public API is known. |
 | 287 | VIN decoder service | 🔲 | NHTSA VPIC integration, make-specific VIN structure decoding, model-year lookup |
 | 288 | Tax rate lookup by shop location | 🔲 | State/county/city sales tax, automated tax calculation on invoices |
 | 289 | Multi-currency support | 🔲 | USD/CAD/EUR/GBP exchange rates, multi-currency invoicing, currency conversion |
-| 290 | Financial reporting | 🔲 | P&L per mechanic, per bay, per customer, monthly/quarterly/annual |
-| 291 | Estimate vs actual variance tracking | 🔲 | Quote accuracy, labor time variance, parts cost variance |
+| 290 | Financial reporting | ✅ | Folded into 274 (Track O batch 1): `shop analytics pnl` by mechanic, bay, customer or shop, per month, quarter or year. The operator's option B: labour cost, part purchase cost and expenses are recorded; an unrecorded cost reads "not recorded", never zero; expenses stay at shop level. See row 274. |
+| 291 | Estimate vs actual variance tracking | ✅ | Folded into 274 (Track O batch 1): `shop analytics variance` — labour hours, parts cost, and the quote recorded when the estimate was sent against the invoice ("no quote recorded" otherwise). See row 274. |
 | 292 | Gate 16 — Business infrastructure integration test | 🔲 | Customer books → intake → warranty check → repair → invoice → payment → accounting export |
 
 ## Track P — Reference Data Library (Phases 293–302)
@@ -636,6 +636,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 359 | Content clean-up: starter templates and build references | ✅ | **CLOSED 2026-09-27.** The starters `generic_ppi_v1` and `generic_winterization_v1` are retired (the operator's pick at Step 0); `workflow show` names their replacements and exits 1. `ppi_chassis_v1` gains a cited VIN step and loses F163's three steering sentences. F158's 44 build references removed from the seed; ceiling 75 → 31, all BMW model names. Migration 072, the `deploy` skill's first live use, also brings rows 31 and 4615 to their seed; its live diff equals the approved diff, timestamps aside. F159, F163, F166 closed; F170, F171 filed. Three refute rounds; 8 mutations red. Regression 9676 passed / 0 failed at `32d281a`. |
 | 360 | F174 powertrain default, and the edit guard | ✅ | **CLOSED 2026-09-29.** F174: a powertrain is never assumed. Migration 074 drops `vehicles.powertrain`'s `ice` default (live, no row changed); `garage add` and the photo path ask; the API stores unknown; every reader is tested on an unknown bike. The edit guard, a second Bash hook, blocks `sed -i`, `perl -i`, and redirects, `tee`, `cp`, `mv`, `patch` and script bodies writing `src/` or `tests/`, failing closed. Replayed over 5,698 past commands, it blocked 552 real edits. Gate 11's mobile snapshot was refreshed in moto-diag-mobile `57c9e45`. 36 mutations red. F177, F178 filed. Regression 9950 passed / 0 failed at `8a460f2`. |
 | 361 | F178 hybrid values, and F177 engine type | ✅ | **CLOSED 2026-09-29.** F178: a stored powertrain outside the enum reads as unknown, so no value hides a safety rule; fixed first. The API takes `ice`, `electric`, `hybrid`, and `update_vehicle` holds every writer to the enums. F177, the operator's (c): migration 075 drops `engine_type`'s `four_stroke` default (live, no row changed); the CLI asks unless electric, `unknown` stores NULL; the API stores unknown; every reader is tested on an unknown engine type. Rotary and diesel filed as F180. Gate 11's snapshot refreshed in moto-diag-mobile `cd359e0`. 19 mutations red. Regression 10018 passed / 0 failed at `83d0278`. |
+| 362 | OEM warranty claim submission | ⏸️ | **Split from 280 on 2026-09-29** (Phase 274 Step 0). Submitting a warranty claim through each maker's own flow needs access to that maker's dealer portal, which a shop has only under a dealer agreement; the operator's decision 2 of 2026-09-28 pauses it. Row 280 builds the local claim record and the printable packet this would submit. |
 
 ---
 

@@ -1,7 +1,11 @@
 """Inventory package — parts inventory + vendors + recalls + warranties.
 
-Phase 118 (Retrofit): schema + CRUD only. Track O phases 282-287 wire up
-vendor order integrations, NHTSA recall lookups, and warranty claim tracking.
+Phase 118 (Retrofit): schema + CRUD. Phase 274 wired it: reorder points and
+local purchase orders (``purchase_orders``, row 279) and warranty validity
+and claim records (``warranty_claims``, row 280), reached through ``motodiag
+shop inventory`` and ``motodiag shop warranty``. Row 281 is NHTSA recall
+processing; rows 282-286, the supplier integrations, and row 362, claim
+submission to a maker, are paused.
 """
 
 from motodiag.inventory.models import (

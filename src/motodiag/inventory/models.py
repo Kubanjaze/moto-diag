@@ -24,6 +24,7 @@ class InventoryItem(BaseModel):
     model_applicable: list[str] = Field(default_factory=list)
     quantity_on_hand: int = 0
     reorder_point: int = 0
+    reorder_quantity: int = 0
     unit_cost: float = 0.0
     unit_price: float = 0.0
     vendor_id: Optional[int] = None

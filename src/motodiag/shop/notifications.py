@@ -306,6 +306,44 @@ def _recipient_for(
     return (customer.get("name") or f"customer#{customer['id']}").strip()
 
 
+#: Template keys an estimate computes; a caller's extra context may not
+#: replace them, or the message would disagree with the recorded quote.
+ESTIMATE_KEYS: frozenset[str] = frozenset({"estimate_total", "estimate_labor_hours"})
+
+
+def _estimate_figures(wo: Optional[dict], db_path: Optional[str] = None) -> dict:
+    """The estimate for a work order: its estimated hours at the shop's
+    labour rate, plus its estimated parts cost.
+
+    The rate comes from the lookup ``generate_invoice_for_wo`` uses, so the
+    quote and the invoice charge the same rate. With no work order, no
+    estimated hours or no rate, raises :class:`NotificationContextError`:
+    an estimate is refused, never invented.
+    """
+    from motodiag.shop.invoicing import _lookup_labor_rate_cents
+
+    if wo is None:
+        raise NotificationContextError("an estimate needs a work order")
+    hours = wo.get("estimated_hours")
+    if hours is None or float(hours) <= 0:
+        raise NotificationContextError(
+            f"work order #{wo['id']} has no estimated hours; set them before "
+            "sending an estimate"
+        )
+    rate = _lookup_labor_rate_cents(wo["shop_id"], db_path=db_path)
+    if rate is None:
+        raise NotificationContextError(
+            "no labour rate is recorded, so the estimate cannot be priced; "
+            "set one with `motodiag shop labor-rate set --hourly-cents N`"
+        )
+    parts = int(wo.get("estimated_parts_cost_cents") or 0)
+    labour = int(round(float(hours) * rate))
+    return {
+        "estimated_hours": float(hours), "labor_rate_cents": rate,
+        "parts_cents": parts, "total_cents": labour + parts,
+    }
+
+
 def _load_event_context(
     event: str,
     *,
@@ -397,13 +435,9 @@ def _load_event_context(
     if event in ("parts_arrived", "estimate_ready") and wo:
         ctx["parts_list"] = _parts_list_for_wo(wo["id"], db_path=db_path)
     if event == "estimate_ready":
-        hrs = (wo or {}).get("estimated_hours") or 0.0
-        ctx["estimate_labor_hours"] = f"{float(hrs):.1f}"
-        labor = float(hrs or 0) * 100.0  # rough placeholder if no invoice
-        if invoice and invoice.get("total"):
-            ctx["estimate_total"] = _money(invoice["total"])
-        else:
-            ctx["estimate_total"] = _money(labor)
+        est = _estimate_figures(wo, db_path=db_path)
+        ctx["estimate_labor_hours"] = f"{est['estimated_hours']:.1f}"
+        ctx["estimate_total"] = _money(est["total_cents"] / 100)
     if event == "approval_requested":
         # These come from extra_context overlay; set defaults for safety.
         ctx.setdefault("approval_finding", "(unspecified)")
@@ -442,6 +476,11 @@ def preview_notification(
         customer_id=customer_id, db_path=db_path,
     )
     if extra_context:
+        if event == "estimate_ready" and ESTIMATE_KEYS & set(extra_context):
+            raise NotificationContextError(
+                "an estimate's figures come from the work order and the labour "
+                "rate; they cannot be overridden"
+            )
         ctx.update(extra_context)
 
     tmpl = get_template(event, channel)
@@ -471,7 +510,12 @@ def trigger_notification(
     triggered_by_user_id: Optional[int] = None,
     db_path: Optional[str] = None,
 ) -> int:
-    """Render + persist a pending notification. Returns notification_id."""
+    """Render + persist a pending notification. Returns notification_id.
+
+    Queuing an ``estimate_ready`` also records the quote it carries in
+    ``work_order_quotes`` (hours, rate, parts, total, date), which the
+    estimate-versus-actual report compares with the invoice.
+    """
     preview = preview_notification(
         event,
         wo_id=wo_id, invoice_id=invoice_id, customer_id=customer_id,
@@ -484,6 +528,7 @@ def trigger_notification(
         wo_id=wo_id, invoice_id=invoice_id,
         customer_id=customer_id, db_path=db_path,
     )
+    est = _estimate_figures(wo, db_path=db_path) if event == "estimate_ready" else None
     now = datetime.now(timezone.utc).isoformat()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
@@ -501,7 +546,18 @@ def trigger_notification(
                 triggered_by_user_id, now, now,
             ),
         )
-        return int(cursor.lastrowid)
+        notification_id = int(cursor.lastrowid)
+        if est is not None:
+            conn.execute(
+                """INSERT INTO work_order_quotes
+                   (work_order_id, notification_id, estimated_hours,
+                    labor_rate_cents, parts_cents, total_cents, quoted_at)
+                   VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                (int(wo["id"]), notification_id, est["estimated_hours"],
+                 est["labor_rate_cents"], est["parts_cents"],
+                 est["total_cents"], now),
+            )
+        return notification_id
 
 
 def get_notification(

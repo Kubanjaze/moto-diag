@@ -134,7 +134,7 @@ class TestWhatTheRuleFindsNow:
     def test_the_new_entries_match_the_tree_in_both_directions(self):
         """209B's stale/new tests hold the whole list; this holds the 57."""
         new = {k for k, (_, r) in ORPHANS.items() if "Phase 244X" in r}
-        assert len(new) == 52  # f9-noqa: → 52 (244Y deleted the four recall fns and recalculate_invoice_totals);: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
+        assert len(new) == 51  # f9-noqa: → 52 (244Y deleted the four recall fns and recalculate_invoice_totals) → 51 (Phase 274 wired transfer_ownership);: ssot-pin fixture-data: Phase 244X's finding — 57 names only a multi-line re-export ever mentioned, on 2026-09-18. The stale/new tests in test_phase209B_integration_gaps.py hold the tree to the list; this literal is the record.
         assert new <= _live_orphans(), sorted(new - _live_orphans())
 
     @pytest.mark.parametrize("name,entry", sorted(
