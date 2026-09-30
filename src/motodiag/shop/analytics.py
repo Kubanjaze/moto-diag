@@ -3,7 +3,10 @@
 Read-only deterministic rollups over existing Track G state. Zero new
 tables, zero migrations, zero AI. Each rollup is a stateless pure
 function returning a Pydantic summary; :func:`dashboard_snapshot`
-composes them + the Phase 169 revenue rollup into one view.
+composes them + the Phase 169 revenue rollup into one view. Phase 274
+adds :func:`financial_report` (a gross-margin P&L on the costs
+``shop/shop_costs.py`` records, migration 076) and
+:func:`estimate_variance`; neither changes the models the API serves.
 
 Timestamp comparisons are lexicographic against SQLite TEXT columns —
 safe because Phase 160+ columns use ISO-ish format
@@ -23,6 +26,11 @@ from pydantic import BaseModel, ConfigDict, Field
 from motodiag.core.database import get_connection
 from motodiag.shop.bay_scheduler import utilization_for_day
 from motodiag.shop.invoicing import RevenueRollup, revenue_rollup
+from motodiag.shop.shop_costs import (
+    cost_rate_on,
+    list_expenses,
+    list_mechanic_cost_rates,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -641,4 +649,410 @@ def dashboard_snapshot(
         revenue=revenue_rollup(
             shop_id=shop_id, since=since_cutoff, db_path=db_path,
         ),
+    )
+
+
+# ---------------------------------------------------------------------------
+# Financial report: a gross-margin P&L on recorded costs
+# ---------------------------------------------------------------------------
+#
+# Revenue comes from the invoices. The costs come from what the shop has
+# recorded (shop/shop_costs.py): part lines' purchase costs, and each time
+# entry's hours at the cost rate of the person who logged it. A cost that was
+# not recorded is reported as not recorded, and a margin that needs it is not
+# computed: nothing unrecorded is shown as zero. The API's RevenueRollup and
+# DashboardSnapshot are not touched.
+
+PNL_DIMENSIONS: tuple[str, ...] = ("mechanic", "bay", "customer", "shop")
+PNL_PERIODS: tuple[str, ...] = ("month", "quarter", "year")
+
+ATTRIBUTION_RULES: dict[str, str] = {
+    "mechanic": (
+        "A work order's revenue and all its costs count for its assigned "
+        "mechanic; a work order with none counts as unassigned."
+    ),
+    "bay": (
+        "A work order's revenue and costs are split across bays by the slot "
+        "hours it spent in each (actual times when recorded, else scheduled); "
+        "a work order with no slot counts as no bay."
+    ),
+    "customer": "Each invoice counts for the invoice's customer.",
+    "shop": (
+        "The whole shop. Expenses are subtracted here only; they are never "
+        "split across mechanics, bays or customers."
+    ),
+}
+
+COST_RULES: tuple[str, ...] = (
+    "Revenue: invoices not cancelled, issued in the period, before tax.",
+    "Parts cost: each billed part line's recorded purchase cost times its quantity.",
+    "Labour cost: each logged time entry's hours at the cost rate, in force on "
+    "the entry's date, of the person who logged it.",
+)
+
+
+class PnlGroup(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    key: str
+    work_orders: float
+    revenue_cents: dict[str, int] = Field(default_factory=dict)
+    revenue_total_cents: int
+    parts_cost_cents: Optional[int]
+    parts_cost_missing: int
+    labour_cost_cents: Optional[int]
+    labour_cost_missing: int
+    labour_hours: float
+    gross_margin_cents: Optional[int]
+
+
+class PnlReport(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    shop_id: int
+    by: str
+    period: str
+    period_key: str
+    start: str
+    end: str
+    attribution_rule: str
+    cost_rules: list[str]
+    groups: list[PnlGroup]
+    expenses_cents: Optional[int] = None
+    expense_months_missing: list[str] = Field(default_factory=list)
+    net_cents: Optional[int] = None
+
+
+def _period_bounds(period: str, key: str) -> tuple[str, str, list[str]]:
+    """``(start, end_exclusive, months)`` for a month (YYYY-MM), a quarter
+    (YYYY-Qn) or a year (YYYY)."""
+    if period == "month":
+        m = re.fullmatch(r"(\d{4})-(0[1-9]|1[0-2])", key)
+        if not m:
+            raise ValueError("a month is YYYY-MM")
+        year, first, count = int(m.group(1)), int(m.group(2)), 1
+    elif period == "quarter":
+        m = re.fullmatch(r"(\d{4})-Q([1-4])", key, re.IGNORECASE)
+        if not m:
+            raise ValueError("a quarter is YYYY-Qn, n from 1 to 4")
+        year, first, count = int(m.group(1)), 3 * int(m.group(2)) - 2, 3
+    elif period == "year":
+        if not re.fullmatch(r"\d{4}", key):
+            raise ValueError("a year is YYYY")
+        year, first, count = int(key), 1, 12
+    else:
+        raise ValueError(f"period must be one of {', '.join(PNL_PERIODS)}")
+    months = [f"{year:04d}-{first + i:02d}" for i in range(count)]
+    last = first + count
+    end = f"{year + 1:04d}-01-01" if last > 12 else f"{year:04d}-{last:02d}-01"
+    return f"{months[0]}-01", end, months
+
+
+def _hours_between(start, end) -> float:
+    try:
+        a = datetime.fromisoformat(str(start).replace("Z", "+00:00"))
+        b = datetime.fromisoformat(str(end).replace("Z", "+00:00"))
+    except (TypeError, ValueError):
+        return 0.0
+    if (a.tzinfo is None) != (b.tzinfo is None):
+        a, b = a.replace(tzinfo=None), b.replace(tzinfo=None)
+    return max(0.0, (b - a).total_seconds() / 3600.0)
+
+
+def _bay_weights(conn, wo_id: int) -> dict[str, float]:
+    """Each bay's share of a work order, by its slot hours there."""
+    rows = conn.execute(
+        "SELECT s.bay_id, b.name, s.scheduled_start, s.scheduled_end, "
+        "s.actual_start, s.actual_end FROM bay_schedule_slots s "
+        "JOIN shop_bays b ON b.id = s.bay_id "
+        "WHERE s.work_order_id = ? AND s.status != 'cancelled'",
+        (wo_id,),
+    ).fetchall()
+    hours: dict[str, float] = {}
+    for r in rows:
+        if r["actual_start"] and r["actual_end"]:
+            h = _hours_between(r["actual_start"], r["actual_end"])
+        else:
+            h = _hours_between(r["scheduled_start"], r["scheduled_end"])
+        label = f"{r['name']} (bay {r['bay_id']})"
+        hours[label] = hours.get(label, 0.0) + h
+    total = sum(hours.values())
+    if total <= 0:
+        return {"no bay": 1.0}
+    return {k: v / total for k, v in hours.items()}
+
+
+def _wo_costs(
+    conn, wo_id: int, rates: list[dict],
+) -> tuple[Optional[int], Optional[int], float]:
+    """``(parts_cost, labour_cost, labour_hours)`` for one work order. A
+    cost is None when any part of it was not recorded; a work order with no
+    billed part lines has a parts cost of 0, and one with no logged time has
+    no labour cost to show."""
+    parts = conn.execute(
+        "SELECT wop.quantity, c.purchase_cost_cents_each FROM work_order_parts wop "
+        "LEFT JOIN work_order_part_costs c ON c.work_order_part_id = wop.id "
+        "WHERE wop.work_order_id = ? AND wop.status IN ('received', 'installed')",
+        (wo_id,),
+    ).fetchall()
+    parts_cost: Optional[int] = 0
+    for p in parts:
+        if p["purchase_cost_cents_each"] is None:
+            parts_cost = None
+            break
+        parts_cost += int(p["quantity"]) * int(p["purchase_cost_cents_each"])
+
+    entries = conn.execute(
+        "SELECT user_id, started_at, duration_seconds FROM work_order_time_entries "
+        "WHERE work_order_id = ? AND duration_seconds IS NOT NULL",
+        (wo_id,),
+    ).fetchall()
+    hours = sum(int(e["duration_seconds"]) for e in entries) / 3600.0
+    labour_cost: Optional[int] = None
+    if entries:
+        total: Optional[float] = 0.0
+        for e in entries:
+            rate = cost_rate_on(rates, int(e["user_id"]), str(e["started_at"])[:10])
+            if rate is None:
+                total = None
+                break
+            total += int(e["duration_seconds"]) / 3600.0 * rate
+        labour_cost = None if total is None else int(round(total))
+    return parts_cost, labour_cost, hours
+
+
+def financial_report(
+    shop_id: int, by: str = "shop", period: str = "month",
+    period_key: Optional[str] = None, db_path: Optional[str] = None,
+) -> PnlReport:
+    """Gross margin per mechanic, bay or customer, or the shop's P&L, for
+    one month, quarter or year. The report carries the attribution rule for
+    ``by`` and the cost rules, so what it counted is stated with it."""
+    if by not in PNL_DIMENSIONS:
+        raise ValueError(f"by must be one of {', '.join(PNL_DIMENSIONS)}")
+    if period_key is None:
+        now = datetime.now(timezone.utc)
+        period_key = {"month": now.strftime("%Y-%m"),
+                      "quarter": f"{now.year}-Q{(now.month - 1) // 3 + 1}",
+                      "year": str(now.year)}.get(period, "")
+    start, end, months = _period_bounds(period, period_key)
+    rates = list_mechanic_cost_rates(shop_id, db_path=db_path)
+
+    acc: dict[str, dict] = {}
+    with get_connection(db_path) as conn:
+        invoices = conn.execute(
+            "SELECT inv.id, inv.customer_id, inv.work_order_id, "
+            "wo.assigned_mechanic_user_id AS mech, c.name AS customer_name "
+            "FROM invoices inv JOIN work_orders wo ON wo.id = inv.work_order_id "
+            "LEFT JOIN customers c ON c.id = inv.customer_id "
+            "WHERE wo.shop_id = ? AND inv.status != 'cancelled' "
+            "AND substr(inv.issued_at, 1, 10) >= ? "
+            "AND substr(inv.issued_at, 1, 10) < ? ORDER BY inv.id",
+            (shop_id, start, end),
+        ).fetchall()
+        for inv in invoices:
+            revenue: dict[str, int] = {}
+            for ln in conn.execute(
+                "SELECT item_type, line_total FROM invoice_line_items "
+                "WHERE invoice_id = ?", (inv["id"],),
+            ).fetchall():
+                revenue[ln["item_type"]] = revenue.get(ln["item_type"], 0) + int(
+                    round(float(ln["line_total"] or 0) * 100))
+            parts_cost, labour_cost, hours = _wo_costs(conn, inv["work_order_id"], rates)
+            if by == "mechanic":
+                mech = inv["mech"]
+                weights = {str(mech) if mech is not None else "unassigned": 1.0}
+            elif by == "customer":
+                name = inv["customer_name"] or "?"
+                weights = {f"{name} (customer {inv['customer_id']})": 1.0}
+            elif by == "bay":
+                weights = _bay_weights(conn, inv["work_order_id"])
+            else:
+                weights = {"shop": 1.0}
+            for key, w in weights.items():
+                g = acc.setdefault(key, {"wos": 0.0, "revenue": {}, "parts": 0.0,
+                                         "parts_missing": 0, "labour": 0.0,
+                                         "labour_missing": 0, "hours": 0.0})
+                g["wos"] += w
+                for t, cents in revenue.items():
+                    g["revenue"][t] = g["revenue"].get(t, 0.0) + cents * w
+                if parts_cost is None:
+                    g["parts_missing"] += 1
+                else:
+                    g["parts"] += parts_cost * w
+                if labour_cost is None:
+                    g["labour_missing"] += 1
+                else:
+                    g["labour"] += labour_cost * w
+                g["hours"] += hours * w
+
+    groups: list[PnlGroup] = []
+    for key in sorted(acc, key=lambda k: (k in ("unassigned", "no bay"), k)):
+        g = acc[key]
+        revenue = {t: int(round(v)) for t, v in sorted(g["revenue"].items())}
+        rev_total = sum(revenue.values())
+        parts = None if g["parts_missing"] else int(round(g["parts"]))
+        labour = None if g["labour_missing"] else int(round(g["labour"]))
+        margin = None if parts is None or labour is None else rev_total - parts - labour
+        groups.append(PnlGroup(
+            key=key, work_orders=round(g["wos"], 2), revenue_cents=revenue,
+            revenue_total_cents=rev_total,
+            parts_cost_cents=parts, parts_cost_missing=g["parts_missing"],
+            labour_cost_cents=labour, labour_cost_missing=g["labour_missing"],
+            labour_hours=round(g["hours"], 2), gross_margin_cents=margin,
+        ))
+
+    report = PnlReport(
+        shop_id=shop_id, by=by, period=period, period_key=period_key,
+        start=start, end=end, attribution_rule=ATTRIBUTION_RULES[by],
+        cost_rules=list(COST_RULES), groups=groups,
+    )
+    if by == "shop":
+        expenses = list_expenses(shop_id, months=months, db_path=db_path)
+        seen = {e["month"] for e in expenses}
+        report.expenses_cents = sum(int(e["amount_cents"]) for e in expenses)
+        report.expense_months_missing = [m for m in months if m not in seen]
+        margin = groups[0].gross_margin_cents if groups else 0
+        if margin is not None and not report.expense_months_missing:
+            report.net_cents = margin - report.expenses_cents
+    return report
+
+
+# ---------------------------------------------------------------------------
+# Estimate vs actual variance
+# ---------------------------------------------------------------------------
+
+
+class VarianceRow(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    work_order_id: int
+    title: str
+    estimated_hours: Optional[float]
+    actual_hours: Optional[float]
+    labour_note: Optional[str]
+    labour_delta_pct: Optional[float]
+    estimated_parts_cents: Optional[int]
+    actual_parts_cents: int
+    parts_note: Optional[str]
+    parts_delta_pct: Optional[float]
+    quote_total_cents: Optional[int]
+    invoice_subtotal_cents: Optional[int]
+    quote_note: Optional[str]
+    quote_delta_pct: Optional[float]
+
+
+class VarianceReport(BaseModel):
+    model_config = ConfigDict(extra="ignore")
+    shop_id: int
+    since: str
+    rows: list[VarianceRow]
+    labour_scored: int
+    parts_scored: int
+    quotes_scored: int
+    labour_median_delta_pct: Optional[float]
+    parts_median_delta_pct: Optional[float]
+    quote_median_delta_pct: Optional[float]
+
+
+def _delta_pct(estimate: float, actual: float) -> Optional[float]:
+    if estimate <= 0:
+        return None
+    return round((actual - estimate) / estimate, 4)
+
+
+def estimate_variance(
+    shop_id: int, since: str = "30d", db_path: Optional[str] = None,
+) -> VarianceReport:
+    """Per completed work order: labour hours, parts cost and the quote
+    against what happened.
+
+    The quote is the latest one recorded when an estimate was queued to the
+    customer, at or before the invoice's issue; with none, the row says "no
+    quote recorded" and no figure is recomputed in its place.
+    """
+    cutoff = _parse_date_window(since)
+    rows: list[VarianceRow] = []
+    with get_connection(db_path) as conn:
+        wos = conn.execute(
+            "SELECT * FROM work_orders WHERE shop_id = ? AND status = 'completed' "
+            "AND completed_at >= ? ORDER BY completed_at, id",
+            (shop_id, cutoff),
+        ).fetchall()
+        for wo in wos:
+            est_h, act_h = wo["estimated_hours"], wo["actual_hours"]
+            labour_note = labour_pct = None
+            if est_h is None:
+                labour_note = "no estimate"
+            elif act_h is None:
+                labour_note = "no actual hours"
+            else:
+                labour_pct = _delta_pct(float(est_h), float(act_h))
+                if labour_pct is None:
+                    labour_note = "estimate is zero"
+
+            actual_parts = conn.execute(
+                "SELECT COALESCE(SUM(wop.quantity * COALESCE("
+                "wop.unit_cost_cents_override, p.typical_cost_cents, 0)), 0) "
+                "FROM work_order_parts wop JOIN parts p ON p.id = wop.part_id "
+                "WHERE wop.work_order_id = ? "
+                "AND wop.status IN ('received', 'installed')",
+                (wo["id"],),
+            ).fetchone()[0]
+            est_parts = wo["estimated_parts_cost_cents"]
+            parts_note = parts_pct = None
+            if est_parts is None:
+                parts_note = "no estimate"
+            else:
+                parts_pct = _delta_pct(float(est_parts), float(actual_parts))
+                if parts_pct is None:
+                    parts_note = "estimate is zero"
+
+            invoice = conn.execute(
+                "SELECT subtotal, issued_at FROM invoices WHERE work_order_id = ? "
+                "AND status != 'cancelled' ORDER BY id DESC LIMIT 1",
+                (wo["id"],),
+            ).fetchone()
+            quote_total = subtotal = quote_pct = quote_note = None
+            if invoice is None:
+                quote_note = "not invoiced"
+            else:
+                subtotal = int(round(float(invoice["subtotal"] or 0) * 100))
+                # the two stamps differ in their date-time separator
+                quote = conn.execute(
+                    "SELECT total_cents FROM work_order_quotes WHERE work_order_id = ? "
+                    "AND replace(quoted_at, 'T', ' ') <= replace(?, 'T', ' ') "
+                    "ORDER BY quoted_at DESC, id DESC LIMIT 1",
+                    (wo["id"], str(invoice["issued_at"])),
+                ).fetchone()
+                if quote is None:
+                    quote_note = "no quote recorded"
+                else:
+                    quote_total = int(quote["total_cents"])
+                    quote_pct = _delta_pct(float(quote_total), float(subtotal))
+                    if quote_pct is None:
+                        quote_note = "quote is zero"
+            rows.append(VarianceRow(
+                work_order_id=wo["id"], title=wo["title"],
+                estimated_hours=est_h, actual_hours=act_h,
+                labour_note=labour_note, labour_delta_pct=labour_pct,
+                estimated_parts_cents=est_parts,
+                actual_parts_cents=int(actual_parts),
+                parts_note=parts_note, parts_delta_pct=parts_pct,
+                quote_total_cents=quote_total, invoice_subtotal_cents=subtotal,
+                quote_note=quote_note, quote_delta_pct=quote_pct,
+            ))
+
+    def _med(values: list[Optional[float]]) -> Optional[float]:
+        known = [v for v in values if v is not None]
+        return round(median(known), 4) if known else None
+
+    labour = [r.labour_delta_pct for r in rows]
+    parts = [r.parts_delta_pct for r in rows]
+    quotes = [r.quote_delta_pct for r in rows]
+    return VarianceReport(
+        shop_id=shop_id, since=since, rows=rows,
+        labour_scored=sum(v is not None for v in labour),
+        parts_scored=sum(v is not None for v in parts),
+        quotes_scored=sum(v is not None for v in quotes),
+        labour_median_delta_pct=_med(labour),
+        parts_median_delta_pct=_med(parts),
+        quote_median_delta_pct=_med(quotes),
     )

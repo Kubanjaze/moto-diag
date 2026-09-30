@@ -81,9 +81,7 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
     "motodiag.media.sim.video_frames": ("test-infra", "Part of the test-only media.sim package; see it."),
     "motodiag.media.sim.vision_analyzer_textsim": ("test-infra", "Part of the test-only media.sim package; see it."),
 
-    "motodiag.pricing": ("unwired-feature", _PRICING),
     "motodiag.pricing.estimate": ("unwired-feature", _PRICING),
-    "motodiag.pricing.labor_rates": ("unwired-feature", _PRICING),
     "motodiag.pricing.repair_plan": ("unwired-feature", _PRICING),
 
     "motodiag.reference": ("substrate",
@@ -121,6 +119,10 @@ ORPHANS: dict[str, tuple[str, str]] = {
     "inventory/models.py::Recall": ("substrate",
         "Phase 118 pydantic model for the recalls table, awaiting Phase 281 "
         "(NHTSA recall processing); recall_repo returns plain rows."),
+    # `shop labor-rate` reaches pricing/labor_rates; its file loader is not.
+    "pricing/labor_rates.py::load_labor_rates_file": ("unwired-feature",
+        "Loads labour rates from a JSON file. `shop labor-rate set` records "
+        "one rate at a time; no command imports a file of them."),
     # --- Phase 356: engine/workflows.py left MODULE_ISLANDS ---
     # `workflow run` reaches DiagnosticWorkflow through workflows/runner.py.
     # The rest of Phase 82's module is still reached by nothing.

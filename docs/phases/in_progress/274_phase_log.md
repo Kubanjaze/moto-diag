@@ -100,7 +100,9 @@ v1.0 is `274_implementation.md`.
   test files that touch the schema version: 2673 passed.
 - **Row 274:** `crm/communication_repo.py`; `shop customer log-contact`,
   `history`, `transfer-bike`, `bike-owners` (`cli/shop_crm.py`, attached
-  from the end of `register_shop`). `test_phase274_crm.py`, 12.
+  from the end of `register_shop`). `test_phase274_crm.py`, 10 (12 before
+  the relationship tests moved to their own file; `b0613fa`'s message
+  says "22 new", where it added 20).
 - **`transfer_ownership` fixed on the way:** a bike sold back to a
   previous owner and on again made the UPDATE collide with the
   `(customer, bike, previous_owner)` key. The test fails without the fix.
@@ -141,3 +143,47 @@ passed, record written; pushed `fa750c8..3f9afdd`.
   item_repo ended that case, so the control is now a synthetic tree of
   the same shape (`test_a_module_is_seen_past_a_dead_modules_name_collision`);
   the mutation script removes the seed and checks it goes red.
+
+### 2026-09-29 — F182, the quote record, rows 291 and 290
+
+- **F182 fixed** (`shop/notifications.py`): the `estimate_ready` total is
+  the estimated hours at `_lookup_labor_rate_cents`'s rate plus the
+  estimated parts; refused with the reason when there is no work order, no
+  estimated hours or no rate; the extra context may not replace
+  `estimate_total` or `estimate_labor_hours`. The old branch that showed
+  an existing invoice's total as the estimate is gone. F182 is closed in
+  `docs/FOLLOWUPS.md`.
+- **The quote record:** `trigger_notification` writes a `work_order_quotes`
+  row for each queued `estimate_ready`, in the same transaction as the
+  notification. A preview records nothing. A resend copies the rendered
+  message and records no second quote: the quote already recorded is the
+  one it repeats.
+- **`shop labor-rate set/list`** (`cli/shop_finance.py`, over
+  `pricing/labor_rates.py`), D7.
+- **Row 291:** `analytics.estimate_variance` and `shop analytics
+  variance`. Timestamps: the quote's `quoted_at` carries a `T`, the
+  invoice's `issued_at` a space, so the comparison normalises both (a
+  quote from earlier the same day would otherwise sort after the invoice).
+- **Row 290:** `shop/shop_costs.py`; `shop member cost-rate` and
+  `cost-rates`, `shop parts-needs cost`, `shop expense add/list`;
+  `analytics.financial_report` and `shop analytics pnl`. The report
+  carries its attribution rule and the three cost rules in its own output.
+  The analytics group's help lost "Track G".
+- **An API behaviour change, not a schema change.** The API's
+  `POST /v1/shops/{id}/notifications/trigger` calls the same function, so
+  an `estimate_ready` there is now refused (422, `notification-context`)
+  without a labour rate or estimated hours, and records its quote when
+  queued. No request or response model changed; gate 11 is unaffected.
+- **The allowlist:** `motodiag.pricing` and `pricing.labor_rates` left
+  UNREACHABLE_MODULES (34 → 32); `load_labor_rates_file` became a live
+  orphan and is listed (111 → 112).
+- Tests: `test_phase274_quotes_variance.py` 17,
+  `test_phase274_pnl.py` 21 (counted by `--collect-only`). One P&L expectation was wrong on first run,
+  not the code: WO1's quarter share in Lift B is 6250 − 750 − 2000 =
+  3500, where the test had 2150.
+- The 33 related existing test files (notifications, analytics,
+  invoicing, members, parts-needs): 904 passed.
+- **Mutations: 33/33 red** (`274_mutate.py`: migration 2, CRM 5,
+  inventory 4, warranty 6, F182 and the quote 4, variance 3, P&L 8, the
+  244W seed 1).
+- 244G's scanner over `tests/`: clean.

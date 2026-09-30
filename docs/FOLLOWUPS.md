@@ -2458,7 +2458,27 @@ What would close it: `rotary` and `diesel` added to `EngineType` and to
 the API's literal, the mobile snapshot and the app's options refreshed,
 and a test for each reader with the new values.
 
-### F182
+### F182 — CLOSED by Phase 274 (2026-09-29)
+
+**Closed.** The operator (2026-09-29): "F182's fix stays in this batch;
+the estimate takes its rate from the same labor_rates lookup the invoice
+uses, so the quote and the invoice agree."
+- The estimate is the estimated hours at the rate
+  `_lookup_labor_rate_cents` returns (the lookup `generate_invoice_for_wo`
+  uses) plus the estimated parts cost. Measured: 2.0 h at $95.00 and
+  $549.91 of parts renders $739.91, where it rendered $200.00.
+- With no work order, no estimated hours or no labour rate, the
+  notification is refused with the reason; nothing is invented. A caller's
+  extra context may not replace the estimate's figures.
+- `motodiag shop labor-rate set/list` records the rate: no command wrote
+  `labor_rates` before, so the fixed estimate had no rate to find.
+- Each queued estimate is recorded in `work_order_quotes` (hours, rate,
+  parts, total, date), which `shop analytics variance` compares with the
+  invoice.
+- `tests/test_phase274_quotes_variance.py`; four mutations of the fix, each
+  red (`274_mutate.py`, Q1–Q4).
+
+The finding as filed:
 
 **The estimate a customer is sent is the estimated hours times a hard-coded $100, with the parts left out**
 
