@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 362 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 366 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -637,6 +637,10 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 360 | F174 powertrain default, and the edit guard | ✅ | **CLOSED 2026-09-29.** F174: a powertrain is never assumed. Migration 074 drops `vehicles.powertrain`'s `ice` default (live, no row changed); `garage add` and the photo path ask; the API stores unknown; every reader is tested on an unknown bike. The edit guard, a second Bash hook, blocks `sed -i`, `perl -i`, and redirects, `tee`, `cp`, `mv`, `patch` and script bodies writing `src/` or `tests/`, failing closed. Replayed over 5,698 past commands, it blocked 552 real edits. Gate 11's mobile snapshot was refreshed in moto-diag-mobile `57c9e45`. 36 mutations red. F177, F178 filed. Regression 9950 passed / 0 failed at `8a460f2`. |
 | 361 | F178 hybrid values, and F177 engine type | ✅ | **CLOSED 2026-09-29.** F178: a stored powertrain outside the enum reads as unknown, so no value hides a safety rule; fixed first. The API takes `ice`, `electric`, `hybrid`, and `update_vehicle` holds every writer to the enums. F177, the operator's (c): migration 075 drops `engine_type`'s `four_stroke` default (live, no row changed); the CLI asks unless electric, `unknown` stores NULL; the API stores unknown; every reader is tested on an unknown engine type. Rotary and diesel filed as F180. Gate 11's snapshot refreshed in moto-diag-mobile `cd359e0`. 19 mutations red. Regression 10018 passed / 0 failed at `83d0278`. |
 | 362 | OEM warranty claim submission | ⏸️ | **Split from 280 on 2026-09-29** (Phase 274 Step 0). Submitting a warranty claim through each maker's own flow needs access to that maker's dealer portal, which a shop has only under a dealer agreement; the operator's decision 2 of 2026-09-28 pauses it. Row 280 builds the local claim record and the printable packet this would submit. |
+| 363 | Customer self-booking | ⏸️ | **Split from 275 on 2026-09-29** (Phase 275 Step 0). A customer booking an appointment for themselves needs an endpoint customers can reach, and the operator's decision 3 of 2026-09-28 keeps the backend tailnet-only. Row 275 builds booking by shop staff. |
+| 364 | Google Calendar two-way sync | ⏸️ | **Split from 276 on 2026-09-29** (Phase 275 Step 0). Two-way sync means Google Calendar, which needs the operator's Google OAuth client; under tailnet-only it would poll. Row 276 builds the one-way iCal output. |
+| 365 | QuickBooks API sync and payment reconciliation | ⏸️ | **Split from 277 on 2026-09-29** (Phase 275 Step 0). Sending to QuickBooks, and reconciling payments there, needs the Intuit API and so an Intuit developer account; no invoice payment is recorded here to reconcile. Row 277 builds the export file. |
+| 366 | Xero API sync | ⏸️ | **Split from 278 on 2026-09-29** (Phase 275 Step 0). Sending invoices to Xero needs the Xero API and so a Xero developer account. Row 278 builds the export file. |
 
 ---
 
