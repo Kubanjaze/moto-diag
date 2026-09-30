@@ -150,3 +150,31 @@ v1.0 is `275_implementation.md`.
   the editable install, so gate 15's `[76]` appears in both lists; its
   cause is `range(…, SCHEMA_VERSION)` reaching 76 once 077 exists. The
   worktree was removed after.
+
+### 2026-09-30 — The regression of record
+
+`wholetree.sh --full` on the clean tree at `5dc9251`: 3982 passed,
+record written.
+
+Regression of record: 10179 passed, 0 failed, 0 skipped, 0 errors at `5dc9251` (30 min 38 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The count equals the new floor. No worker was lost.
+
+### 2026-09-30 — The deploy: the dry run
+
+- **Scope** (`275_deploy_scope.json`): `schema_version` +1; two indexes
+  and three tables added; `table appointments` changed; nothing else.
+- **`deploy.py dryrun 275`:**
+  - live 5846 rows, 98 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre275_20260930_013316.db`
+    (retain-5 removed `motodiag_pre359_20260927_172347.db`);
+  - applied `[77]` on the copy; scope problems: none; F158 census 36.
+- **The diff (`275_dryrun_diff.md`):**
+  - one `schema_version` row added (77);
+  - five schema objects added, as the scope names them;
+  - `table appointments` changed: its SQL gains `shop_id` and
+    `work_order_id`. Live holds 0 appointments (Step 0), so no row
+    carries the columns;
+  - **no existing row changed or removed** in any table.
+- **Not a rule-1 stop.** No existing row changes, the condition the
+  prompt set. The diff is committed before apply-live.
