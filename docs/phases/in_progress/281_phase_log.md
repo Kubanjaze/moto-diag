@@ -112,3 +112,23 @@ The operator's answer, pasted into the session as one block, verbatim:
 - Rows 281, 287, 288 and 289 are rewritten to what the batch builds.
 
 v1.0 is `281_implementation.md`.
+
+### 2026-09-30 — Bug fix #1: a VIN's year code decoded to a future model year
+
+- **Issue:** the offline decode (`decode_vin`, Phase 155) read year code
+  `7` as 2037, `A` as 2040, and every code from `W` to `7` as 2028–2037,
+  measured on 2026-09-30. Found by this phase's local dry run of `advanced
+  vin decode 1HD1FRW177Y600001`, which would have asked vPIC for model
+  year 2037. `recall check-vin` printed the same wrong year.
+- **Root cause:** `_disambiguate_year` picked the 30-year cycle closest to
+  today. A model year cannot run more than one year ahead of the
+  calendar, so "closest" chooses the future half the time.
+- **Fix:** the latest year of the code's cycles that is not after next
+  year (`advanced/recall_repo.py`).
+- **Files:** `src/motodiag/advanced/recall_repo.py`,
+  `tests/test_phase281_vin_year.py` (new, 11: nine codes pinned with the
+  clock at 2026, every code by today's clock, the VIN above).
+- **Verified:** the new file, `test_phase155_recall.py` (whose only year
+  assertion, `L` → 2020, holds), F86's and gate 7's: 62 passed. The batch's
+  held work was stashed for this commit and restored after (below).
+- **Commit:** this entry's commit.

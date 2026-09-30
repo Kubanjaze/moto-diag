@@ -166,27 +166,25 @@ def decode_vin(vin: str) -> dict:
 
 
 def _disambiguate_year(year_code: str) -> Optional[int]:
-    """Map a VIN position-10 char to a 4-digit year, closest to today.
+    """Map a VIN position-10 char to a 4-digit year.
 
     VIN year codes cycle every 30 years: ``L`` is both 1990 and 2020.
-    We resolve by picking the candidate year closest to the current
-    year, within ±1 tolerance (so a 2024 build stamped with a code
-    that nominally means 1994 still maps to 2024).
+    The answer is the latest year of the code's cycles that is not after
+    next year: a model year runs at most one year ahead of the calendar
+    (2027 bikes are sold in 2026), and no bike has a model year beyond that.
+
+    Phase 281, bug fix #1: this used to pick the cycle closest to today,
+    which put every code from ``W`` to ``7`` in the future in 2026 (``7``
+    read as 2037, not 2007) and ``A`` in 2040.
     """
     base = _YEAR_CODE_TO_BASE.get(year_code)
     if base is None:
         return None
-    current = datetime.now().year
-    # Two candidate years: base and base+30. Pick the one closest to
-    # current year.
-    candidates = [base, base + 30]
-    # If current year is far beyond base+30, add another cycle (rare;
-    # supports VINs stamped 2040+ during code lifetime).
-    while candidates[-1] + 15 < current:
-        candidates.append(candidates[-1] + 30)
-    # Pick the candidate minimizing |candidate - current|.
-    best = min(candidates, key=lambda y: abs(y - current))
-    return best
+    latest_possible = datetime.now().year + 1
+    year = base
+    while year + 30 <= latest_possible:
+        year += 30
+    return year
 
 
 # ---------------------------------------------------------------------------
