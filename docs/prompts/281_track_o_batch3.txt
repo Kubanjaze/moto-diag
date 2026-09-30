@@ -1,0 +1,99 @@
+Do this: start Phase 281, Track O batch 3 of 4, and run it to its finish line as CLAUDE.md sets out. Read these first:
+- the newest handoff, docs/handoffs/2026-09-30_275_closed.md;
+- docs/reports/2026-09-28_track_o_triage.md: the operator's decisions, verbatim, and the row-by-row table of what each row already has;
+- rows 281, 287, 288 and 289 in docs/ROADMAP.md;
+- 275's documents in docs/phases/completed/, for how batch 2 ran and closed.
+
+Batch 3 is the public data services: 281 (NHTSA recall refresh), 287 (VIN decoder), 288 (tax rates) and 289 (exchange rates). These are the app's first outbound calls.
+
+The operator's words, verbatim.
+- 2026-09-28, the batches: "1, 2, 3, 5 as recommended."
+- 2026-09-28, decision 4: "4: check row 288 — which jurisdiction does it name, and where is the first real shop? tax follows the shop. if it's MA (flat statewide), start there, not CA. either way: every rate stored with its effective date and source, and a check that fails when a rate is past its stated validity."
+- 2026-09-28, for this prompt: "note for the batch 3 prompt when you write it: first outbound calls in the app. tests use recorded fixtures, never live endpoints; the app degrades cleanly when a service is down (shown to the user, never silently empty); no live API call during the build except one smoke call per service, logged."
+- 2026-09-29, the first shop: "i will be in MA and i mean, i intend to be in all 50 states or wherever they can download it , idk how that would work"
+- 2026-09-30, accepting the tax plan below: "we will just wait until it reports and then go with whats recommended based on that"
+
+The tax plan the operator accepted (recommended 2026-09-29):
+- Build the tax model so it isn't tied to one state or country.
+- Ship Massachusetts verified, from the state tax department's own text.
+- Every other shop enters its own rate, with its source and effective date, and a check fails once the rate is past its stated validity.
+- Record "automatic rates for every address" as a paused row until there are paying shops outside Massachusetts.
+
+What that means in the build:
+- **Stored per jurisdiction:** a shop has a jurisdiction. Rates, and which invoice line types are taxable (labour, parts, diagnostic, shop supplies), are stored per jurisdiction. Each carries its effective date, its source and its stated validity.
+- **Massachusetts:** the rate and the taxability come from the Massachusetts Department of Revenue's own publications. Record each with its URL and date; the provenance is `regulation`.
+- **Everywhere else:** a shop enters its own rate and taxability, and the same fields and the same check apply.
+- **The check:** a rate past its stated validity fails, and an invoice for a shop with no rate on record is refused. Tax is never assumed.
+- **Invoices keep their record:** each invoice records the rate it used and that rate's source.
+
+The ledger, as 274 and 275 did it:
+- Row 281 goes 🚧 before Step 0 and carries the batch. At close-out, rows 287, 288 and 289 close ✅ "folded into 281", with no CLOSED date of their own. One history row, and one handoff, docs/handoffs/<date>_281_closed.md.
+- At Step 0, before v1.0, check every row's verbs (K8). What this batch does not build gets its own ⏸️ row at the next free number (367 onward), saying where it came from and why:
+  - 281's "OEM reimbursement" is for dealers only, which the operator's decision 2 of 2026-09-28 pauses;
+  - 288's "State/county/city sales tax" for every address needs a commercial tax service or each state's own rate files, and the operator paused it until there are paying shops outside Massachusetts.
+
+The measured facts, taken 2026-09-30 on master at 7ea43c1. Re-verify each at Step 0.
+- **Recalls:** `motodiag advanced recall` (check-vin, list, lookup, mark-resolved) runs over advanced/recall_repo.py (Phase 155), on local data only. Nothing in src/ calls NHTSA.
+- **VINs:** Phase 155's WMI decode gives the manufacturer only. Nothing calls vPIC.
+- **Tax defaults to zero everywhere:**
+  - `generate_invoice_for_wo(tax_rate=0.0)` in shop/invoicing.py;
+  - `motodiag shop invoice generate --tax-rate`, default 0.0;
+  - the API's `InvoiceGenerateRequest.tax_rate`, default 0.0 (`/v1/shop/{shop_id}/invoices/generate`, api/routes/shop_mgmt.py).
+  An invoice stores one tax amount, not the rate. The live shop is the smoke shop, with no address or state. The mobile app does not call invoice generation; only its generated types name it.
+- **Currency:** invoices carry `currency`, but `generate_invoice_for_wo` always writes "USD".
+
+**The zero default is an assumed value,** of the kind F174, F177 and F182 were. File it as a finding at Step 0 and close it in this batch. Removing the API's default changes `InvoiceGenerateRequest`, and gate 11 then fails until the mobile snapshot is refreshed. So give me the options for the API field at Step 0 (the same fork F174 and F177 had), and stop for my pick. Plan the mobile refresh from the start, as 360 and 361 did: a planned stop, the held work backed by a patch file, and I write the mobile session's prompt.
+
+The outbound calls, under the operator's note:
+- **Tests use recorded fixtures, never a live endpoint.** A guard fails any test that opens a network connection, with a planted known-bad test it must catch.
+- **During the build: one live smoke call per service, logged,** with the URL, time, status and size. Its response may be recorded as a fixture. Any other fixture is built from the service's documented format, and says so.
+- **When a service is down or answers with an error,** the command says so to the user, naming the service. It never shows an empty result as if there were none. Each service has a recorded failure fixture that proves it.
+- **Stored with date and source:** every rate the batch stores (tax or exchange) carries its effective date and its source. A conversion shows the rate and the date it used.
+- **Rate validity:** each rate's validity comes from the source's own statement where it makes one. Where it does not, Step 0 proposes a validity and stops for my approval, because that is a new threshold.
+- **Recall and VIN data:** Step 0 decides what is stored locally and when it is refreshed, and says so.
+- **Tailnet-only still holds:** outbound calls are fine, and nothing new listens for inbound ones.
+
+Stop at Step 0 for the invoice-tax fork and for any unstated validity window, and the same way for any other real fork. Otherwise decide, write the reason in the log, and carry on.
+
+Scope:
+- Every new capability has a `motodiag` command, exercised by a test.
+- Extend what exists: advanced/recall_repo.py, shop/invoicing.py and accounting/. No second recall, invoice or rate layer.
+- No internal reference ("Phase N", "Track O", an F-number) in any text a user sees (F158).
+- No API route is added. If Step 0 finds the app needs one (for example, VIN decoding), say so, and it joins the planned mobile refresh.
+
+The migration (078) goes through the deploy skill: the scope file, the dry run and its committed diff, then apply-live. If no existing row changes, that is not a rule-1 stop; if any existing row changes, it is one. If you are unsure whether the diff counts (for example, a new column on the shops table, which holds the smoke shop), treat it as a stop and show me the diff.
+
+Plan for two regressions. Folding rows 287–289 changes the fold pin in tests/test_roadmap_continuity.py after the regression of record, so the regression runs again on the close-out commit, as 274's and 275's did.
+
+Carry forward:
+- **The edit guard is live.**
+  - Use the Edit tool for src/ and tests/. It has blocked a close-out command carrying `sed -i` in both 361 and 275.
+  - Write scratch files and scripts to explicit paths in the session scratchpad. The guard blocks a `$(mktemp -d)` target, and a script body it cannot parse.
+  - If it blocks a legitimate command, record it in the log. Never loosen the guard.
+- **wholetree.sh:**
+  - Run it on its own, and read its exit code before committing. Never pipe it.
+  - Run `--full` on the committed HEAD, not a staged tree, before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number, and never write the next free F-number into a log.
+- **Before the regression:**
+  - run 244G's scanner over every new test file;
+  - wiring a listed module means updating tests/support/integration_gaps_allowlist.py and every test that pins its sizes.
+- **A regression worker that dies with no traceback:** record it against F183 and re-run in parallel. A second loss is a stop.
+- **Commits:** commit and push as separate commands, with commit messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- To measure an older commit, use a worktree.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the invoice-tax options, any validity window the sources do not state, and any other fork, each with what it would ship.
+- **At the planned mobile stop,** if there is one: what is built, what is committed, and what waits on the snapshot.
+- **At the end:**
+  - each row: what shipped, its command and its test;
+  - the smoke-call log;
+  - the ledger: the rewritten rows, and the new rows' numbers;
+  - the dry-run diff and the deploy outcome;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: batch 4 is phase 273 (payments through Stripe). It needs the operator's Stripe test-mode keys, which the operator enters; builders never type credentials.

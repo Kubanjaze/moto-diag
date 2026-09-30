@@ -33,6 +33,22 @@ A keyword hit is not proof of a feature. Each batch's Step 0 re-verifies against
 
 So the first shop's state is the operator's to give. Batch 3 starts in that state; if it is Massachusetts, it starts there, not in California. Whichever state it is, every rate is stored with its effective date and its source, and a check fails when a rate is past its stated validity.
 
+**Decision 4, answered.** The operator, 2026-09-29, verbatim:
+
+> i will be in MA and i mean, i intend to be in all 50 states or wherever they can download it , idk how that would work
+
+The recommendation that followed, the same day:
+- build the tax model so it isn't tied to one state or country;
+- ship Massachusetts verified, from the state tax department's own text;
+- every other shop enters its own rate, with its source and effective date, and a check fails once the rate is past its stated validity;
+- record "automatic rates for every address" as a paused row until there are paying shops outside Massachusetts.
+
+The operator accepted it on 2026-09-30, verbatim:
+
+> we will just wait until it reports and then go with whats recommended based on that
+
+Batch 3's prompt, `docs/prompts/281_track_o_batch3.txt`, carries both.
+
 ---
 
 ## The recommendation
