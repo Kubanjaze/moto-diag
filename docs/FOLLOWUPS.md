@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F183**.
+At the time of writing the highest assigned is **F184**.
 
 ---
 
@@ -2542,3 +2542,37 @@ What would close it: the crash reproduced and its cause named, or a
 stated number of `-n auto` runs of the migration round-trip tests that
 all pass, with the worker's exit status captured (for example,
 `faulthandler` enabled in the workers).
+
+### F184
+
+**An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
+
+Found by Phase 281's Step 0 (`281_step0.md`), 2026-09-30, measured on
+`master` at `5cde0c3`.
+- `generate_invoice_for_wo(tax_rate=0.0)` in
+  `src/motodiag/shop/invoicing.py:282` computes the tax as
+  `subtotal × tax_rate` (line 448).
+- `motodiag shop invoice generate --tax-rate` defaults to 0.0
+  (`src/motodiag/cli/shop.py:3604`).
+- The API's `InvoiceGenerateRequest.tax_rate` defaults to 0.0
+  (`src/motodiag/api/routes/shop_mgmt.py:237`), for
+  `POST /v1/shop/{shop_id}/invoices/generate`.
+- An invoice stores one `tax_amount` and not the rate, so an invoice
+  taxed at zero because nobody gave a rate looks the same as one for a
+  shop that owes no tax.
+- The shop records no location: the live `shops` table holds the smoke
+  shop, with no address or state, so nothing could supply a rate.
+
+It is an assumed value of the kind F174, F177 and F182 were. In
+Massachusetts, the first shop's state, the 6.25% sales tax applies to
+separately stated parts (830 CMR 64H.1.1(5)(a)); an invoice made with the
+default charges none.
+
+What it affects: every invoice generated without a rate. Live holds 0
+invoices. The mobile app does not call invoice generation; only its
+generated types name the request.
+
+What would close it: the rate comes from a record of the shop's tax
+jurisdiction, with its source, effective date and stated validity; an
+invoice for a shop with no valid rate is refused; and each invoice records
+the rate it used and that rate's source.
