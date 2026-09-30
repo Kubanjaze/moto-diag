@@ -6633,6 +6633,85 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS customer_communications;
         """,
     ),
+    # Migration 077 — Phase 275: appointments at a shop, accounting export files
+    Migration(
+        version=77,
+        name="appointments_and_accounting_exports",
+        description=(
+            "Phase 275 (Track O batch 2): staff booking and the accounting "
+            "export files. `appointments` gains `shop_id` (which shop the "
+            "appointment is at) and `work_order_id` (the work order its "
+            "check-in opened or linked), with an index on (shop_id, "
+            "scheduled_start). `accounting_accounts` maps each line kind to "
+            "the shop's own account per target (QuickBooks Online, Xero). "
+            "`accounting_exports` and `accounting_export_invoices` record "
+            "each file written and the invoices it carried. Adds two columns, "
+            "one index and three tables; changes no existing row. Rollback "
+            "drops the tables and the index, then the columns."
+        ),
+        upgrade_sql="""
+            ALTER TABLE appointments
+                ADD COLUMN shop_id INTEGER
+                REFERENCES shops(id) ON DELETE SET NULL;
+            ALTER TABLE appointments
+                ADD COLUMN work_order_id INTEGER
+                REFERENCES work_orders(id) ON DELETE SET NULL;
+            CREATE INDEX IF NOT EXISTS idx_appointments_shop_start
+                ON appointments(shop_id, scheduled_start);
+
+            CREATE TABLE IF NOT EXISTS accounting_accounts (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('labor', 'parts', 'diagnostic', 'misc',
+                                    'tax', 'receivable')),
+                account TEXT NOT NULL CHECK (length(trim(account)) > 0),
+                tax_type TEXT,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (shop_id, target, kind),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS accounting_exports (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                period_from TEXT NOT NULL,
+                period_to TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_sha256 TEXT NOT NULL,
+                invoice_count INTEGER NOT NULL CHECK (invoice_count > 0),
+                exported_at TEXT NOT NULL,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS accounting_export_invoices (
+                export_id INTEGER NOT NULL,
+                invoice_id INTEGER NOT NULL,
+                PRIMARY KEY (export_id, invoice_id),
+                FOREIGN KEY (export_id)
+                    REFERENCES accounting_exports(id) ON DELETE CASCADE,
+                FOREIGN KEY (invoice_id)
+                    REFERENCES invoices(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_accounting_export_invoices_invoice
+                ON accounting_export_invoices(invoice_id);
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_accounting_export_invoices_invoice;
+            DROP TABLE IF EXISTS accounting_export_invoices;
+            DROP TABLE IF EXISTS accounting_exports;
+            DROP TABLE IF EXISTS accounting_accounts;
+            DROP INDEX IF EXISTS idx_appointments_shop_start;
+            ALTER TABLE appointments DROP COLUMN work_order_id;
+            ALTER TABLE appointments DROP COLUMN shop_id;
+        """,
+    ),
 ]
 
 

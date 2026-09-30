@@ -22,8 +22,10 @@ from __future__ import annotations
 #: 38 of 256 modules unreachable from any entry point on 2026-09-17 (Phase
 #: 209B's finding) → 37 at Phase 244Y (cli/registry deleted) → 34 at Phase
 #: 259 (motodiag.workflows wired: three modules) → 32 at Phase 274 (`shop
-#: labor-rate` reaches motodiag.pricing and pricing.labor_rates).
-UNREACHABLE_COUNT = 32
+#: labor-rate` reaches motodiag.pricing and pricing.labor_rates) → 29 at Phase
+#: 275 (`shop appointment` and `shop calendar` reach motodiag.scheduling and
+#: its appointment_repo and models).
+UNREACHABLE_COUNT = 29
 
 #: `len(MODULE_ISLANDS)`. Asserted in test_phase244W_module_islands.py.
 #: 19 modules / 4,270 lines invisible to the gate on 2026-09-17 (Phase 244W's
@@ -52,5 +54,7 @@ MODULE_ISLAND_COUNT = 9
 #: listed as unwired-feature) → 105 (Phase 274: `shop customer transfer-bike`
 #: calls crm transfer_ownership) → 111 (Phase 274: wiring inventory's repos
 #: made five helpers and the Recall model live orphans) → 112 (Phase 274:
-#: `shop labor-rate` left pricing/labor_rates' file loader a live orphan).
-ORPHAN_COUNT = 112
+#: `shop labor-rate` left pricing/labor_rates' file loader a live orphan) →
+#: 118 (Phase 275: wiring scheduling made six appointment_repo CRUD helpers
+#: live orphans; booking has its own guarded status moves).
+ORPHAN_COUNT = 118

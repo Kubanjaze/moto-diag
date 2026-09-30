@@ -14,13 +14,15 @@ def create_appointment(appt: Appointment, db_path: str | None = None) -> int:
         cursor = conn.execute(
             """INSERT INTO appointments
                (customer_id, vehicle_id, user_id, appointment_type, status,
-                scheduled_start, scheduled_end, actual_start, actual_end, notes)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                scheduled_start, scheduled_end, actual_start, actual_end, notes,
+                shop_id, work_order_id)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 appt.customer_id, appt.vehicle_id, appt.user_id,
                 appt.appointment_type.value, appt.status.value,
                 appt.scheduled_start, appt.scheduled_end,
                 appt.actual_start, appt.actual_end, appt.notes,
+                appt.shop_id, appt.work_order_id,
             ),
         )
         return cursor.lastrowid

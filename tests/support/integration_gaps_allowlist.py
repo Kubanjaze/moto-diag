@@ -93,12 +93,6 @@ UNREACHABLE_MODULES: dict[str, tuple[str, str]] = {
     "motodiag.reference.photo_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
     "motodiag.reference.video_repo": ("substrate", "Part of the Phase 117 reference substrate; see motodiag.reference."),
 
-    "motodiag.scheduling": ("substrate",
-        "Phase 118 appointment substrate, awaiting Phase 275 (Appointment "
-        "booking). Phases 151 and 168 built their scheduling elsewhere "
-        "(advanced/scheduler.py, shop bay tables)."),
-    "motodiag.scheduling.appointment_repo": ("substrate", "Part of the Phase 118 scheduling substrate; see motodiag.scheduling."),
-    "motodiag.scheduling.models": ("substrate", "Part of the Phase 118 scheduling substrate; see motodiag.scheduling."),
 }
 
 _TEST_RESET = "Resets module-level state between tests; production has no reason to call it."
@@ -109,6 +103,15 @@ _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pric
 # Orphans inside unreachable modules are implied by the module entry and are
 # not listed a second time.
 ORPHANS: dict[str, tuple[str, str]] = {
+    # --- Phase 275: scheduling left UNREACHABLE_MODULES ---
+    # `shop appointment` and `shop calendar` reach it through scheduling.booking
+    # and scheduling.calendar; these CRUD helpers are not.
+    "scheduling/appointment_repo.py::cancel_appointment": ("public-api", _REPO_HELPER),
+    "scheduling/appointment_repo.py::complete_appointment": ("public-api", _REPO_HELPER),
+    "scheduling/appointment_repo.py::delete_appointment": ("public-api", _REPO_HELPER),
+    "scheduling/appointment_repo.py::list_appointments": ("public-api", _REPO_HELPER),
+    "scheduling/appointment_repo.py::list_for_user": ("public-api", _REPO_HELPER),
+    "scheduling/appointment_repo.py::list_upcoming": ("public-api", _REPO_HELPER),
     # --- Phase 274: inventory's repos left MODULE_ISLANDS ---
     # `shop inventory` and `shop warranty` reach them; these defs are not.
     "inventory/item_repo.py::delete_item": ("public-api", _REPO_HELPER),
