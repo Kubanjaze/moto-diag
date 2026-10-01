@@ -426,3 +426,59 @@ The push guard refused one command: it chained `git commit` and `git
 push`, and the guard judges a push before anything in the command runs.
 Nothing ran; the entry, the commit and the push were redone as separate
 commands. The guard was right and was not loosened.
+
+### 2026-10-01 — F183: one hour to reproduce it (09:56–10:56 EDT). Not reproduced.
+
+The operator, verbatim:
+
+> B, time-boxed to one hour.
+>
+> What the logs show:
+> - Both regression crashes, 274's at 3b7528f and yours at 4faa46b, happened about 98% through the run, in test_phase359_content_cleanup.py's round-trip test, while gate 2's tests (test_phase78_gate2_integration.py) ran on another worker. Your trial-run loss was a gate 2 test. Both files build a full seeded database per test from the seed files; they share no file path.
+> - It wasn't a memory kill: macOS's log shows no jetsam kill of a Python process between 07:04 and 07:34, and there is no crash report. pytest already turns faulthandler on, so PYTHONFAULTHANDLER=1 adds nothing. A death with no traceback is more likely a signal faulthandler can't catch, or the process exiting itself.
+>
+> So reproduce first: run those two files together under xdist, repeatedly, and also as two plain pytest processes side by side so each one's exit code or signal is recorded. If you find the cause, fix it and close F183 with the evidence. Record it as F183's fix, not as a bug fix of this build, so it doesn't count toward the three-bug stop. If an hour doesn't reproduce it, stop and tell me what you ran. After that, the regression of record, and carry on.
+
+**What was run** (`281_f183_repro.py`, committed; every run recorded in
+`281_f183_runs.jsonl` and `281_f183_hammer.jsonl`):
+
+| mode | what | runs | result |
+|---|---|---|---|
+| `xdist` | one pytest, `-n 2 --dist load`, both files | 4 (14:00–14:51 UTC) | 40 passed each; rc 0; 0 "node down", 0 crashed workers |
+| `pair` | two plain pytest processes side by side (`-p no:xdist`), one per file | 4 | every process rc 0, no signal; 359's file 18 passed, gate 2's 22 passed |
+| `hammer` | six plain processes at once, each running only `TestTheMigration::test_the_round_trip_restores_the_workflow_tables` (a rollback through 078..072 and back) | 52 rounds, 312 processes (14:10–14:42 UTC) | every process rc 0, no signal |
+
+The hammer ran alongside the alternate loop from 10:10, so both ran under
+load (gate 2's file took up to 12 min instead of 4 min 40 s). Another
+session's pytest runs (pieces-ltm-clone) were also on the machine.
+
+**Read and ruled out on the way:**
+- The two crash logs (274's at `3b7528f`, line 19921; 281's at `4faa46b`,
+  line 20315) hold no "Fatal Python error", segfault or abort text. Both
+  crashes came at the same point of the run: worker gw8 had just passed
+  gate 2's `test_honda_coverage` and started `test_yamaha_coverage`. The
+  trial-run loss came at 98–99% too. All three are in the run's last
+  ~2%, when most workers are idle.
+- Nothing in `src/` or `tests/` calls `os._exit`, `os.kill`, `killpg`,
+  `pkill`, `killall`, `setrlimit` or a signal handler; no test calls
+  `.terminate()` or `.kill()`. pytest-timeout (whose thread method ends
+  a process with `os._exit`) is not installed.
+- pieces-ltm-clone's tracked code kills nothing; its one scratchpad
+  `pkill` targets `ltm_main.py backfill`, which no pytest matches, and
+  its scratchpad has no file written in today's or the trial run's crash
+  windows (one in 274's).
+- The first version of the script's summary check required the
+  `=====` banner, which `-q` does not print, so its own records say
+  `summary=false`; the table above re-reads each run's tail (fixed in the
+  committed script).
+
+**One thing seen, not the cause:** seven hammer processes ended with a
+pytest warning, `(rm_rf) error removing
+…/pytest-of-lilquant/garbage-…/test_the_drive_gets_the_newest0`
+(`OSError: [Errno 66] Directory not empty`). That test is
+pieces-ltm-clone's (`tests/test_backups.py`): both projects' pytest runs
+share one per-user temp root, and each session prunes old numbered
+directories there. Every one of those processes still exited 0.
+
+**Stopped for the operator, as asked.** F183 stays open, with this run
+added to it. The regression of record has not been run again.

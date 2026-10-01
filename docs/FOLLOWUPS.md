@@ -2554,6 +2554,26 @@ The file alone: 22 passed, in 4 min 40 s. Recorded here as the prompt
 directs; the regression of record is run in parallel afterwards, and a
 second loss there stops the phase.
 
+**Seen a third time, and an hour spent reproducing it (Phase 281,
+2026-10-01).** The regression at `4faa46b` lost gw1 with no traceback in
+`test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables`,
+at the same point of the run as 274's crash (gw8 had just started gate
+2's `test_yamaha_coverage`); the file alone passed 18. The operator
+time-boxed a reproduction to one hour (`281_f183_repro.py`, its records
+`281_f183_runs.jsonl` and `281_f183_hammer.jsonl`, all in Phase 281's
+folder):
+- the two files together under `-n 2 --dist load`, 4 runs: no lost worker;
+- the two as plain processes side by side, 4 runs: every exit code 0, no
+  signal;
+- six plain processes at once over the round-trip test alone, 52 rounds
+  (312 processes): every exit code 0, no signal.
+
+Not reproduced. Ruled out: memory (no jetsam, per the operator), any
+process-killing call in `src/` or `tests/`, pytest-timeout (not
+installed), and the other project's one `pkill` (it matches no pytest).
+All three losses came in the last ~2% of a full parallel run, which the
+two files alone do not recreate. Phase 281's log has the details.
+
 ### F184
 
 **An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
