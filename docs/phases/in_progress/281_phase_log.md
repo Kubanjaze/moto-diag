@@ -393,3 +393,36 @@ EDT on 2026-10-01, the first day of a month.
 
 Two bugs in this build. A third would be a stop to look for the shared
 cause; these two share none (an offline year table, an intake timestamp).
+
+### 2026-10-01 — The regression at `4faa46b`: a worker lost, the second. Stopped.
+
+`wholetree.sh --full` on `4faa46b`: 3980 passed, record written. Then:
+
+Regression at `4faa46b` (not of record, a worker was lost): 10270 passed, 1 failed, 0 skipped, 0 errors (27 min 51 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+- The one failure is a lost worker, with no traceback: `[gw1] node down:
+  Not properly terminated`, `replacing crashed worker gw1`, `worker 'gw1'
+  crashed while running
+  'tests/test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables'`
+  (log `~/.cache/motodiag/regressions/4faa46b_parallel_20261001_070510.log`,
+  line 20315). It is F183's original shape: a migration round-trip under
+  load (F183 was a round-trip through `DROP COLUMN`; migration 078's
+  rollback has fourteen of them, and this test rolls back past 078).
+- No crash report in `~/Library/Logs/DiagnosticReports/` (only unrelated
+  system `.diag` files). On AC power.
+- The file alone: 18 passed (1 min 10 s).
+- Every other test passed, the five Phase 122 tests included.
+
+**This is the second worker lost in this phase** (the first: gate 2, in
+the whole-suite run on the held work, recorded on F183). The prompt:
+"A regression worker that dies with no traceback: record it against F183
+and re-run in parallel. A second loss is a stop." The operator, at the
+resume: "A second worker loss is a stop."
+
+**Stopped for the operator.** Nothing has touched live (schema 77). The
+deploy's dry run has not run.
+
+The push guard refused one command: it chained `git commit` and `git
+push`, and the guard judges a push before anything in the command runs.
+Nothing ran; the entry, the commit and the push were redone as separate
+commands. The guard was right and was not loosened.
