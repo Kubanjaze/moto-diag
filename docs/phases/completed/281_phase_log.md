@@ -1,6 +1,6 @@
 # Phase 281 — Track O batch 3: recalls, VIN decoding, tax rates and exchange rates — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-01)
 **Branch:** `phase-281` (Opus session, main checkout, the only writer)
 
 ---
@@ -131,7 +131,8 @@ v1.0 is `281_implementation.md`.
 - **Verified:** the new file, `test_phase155_recall.py` (whose only year
   assertion, `L` → 2020, holds), F86's and gate 7's: 62 passed. The batch's
   held work was stashed for this commit and restored after (below).
-- **Commit:** this entry's commit.
+
+**Commit.** `b5dbf1f`
 
 ### 2026-09-30 — The battery, and a trial run stopped
 
@@ -389,7 +390,8 @@ EDT on 2026-10-01, the first day of a month.
   does not), `281_mutate.py` (Y2), `COLLECTED_TEST_FLOOR` 10268 → 10271.
 - **Verified:** the new file and every intake test: 52 passed (the five
   Phase 122 tests included, on 2026-10-01). Y1 and Y2: 2/2 red.
-- **Commit:** this entry's commit.
+
+**Commit.** `4faa46b`
 
 Two bugs in this build. A third would be a stop to look for the shared
 cause; these two share none (an offline year table, an intake timestamp).
@@ -532,3 +534,64 @@ documents only.
     touched.
 - **Not a rule-1 stop.** No existing row changes, the condition the
   prompt set. The diff is committed before apply-live.
+
+### 2026-10-01 — The deploy: apply-live
+
+Run on the phase branch before the merge, as 274's and 275's were. The
+migration applied is the one in `45f3a54`, the commit the regression
+tested (`53dccb6` adds only documents).
+
+`deploy.py apply-live 281`:
+- the preflight passed (F172's exact check); applied `[78]`;
+- live after: 5853 rows, 109 tables, integrity ok;
+- scope problems none; **equals the approved exact diff: yes**
+  (`281_live_diff.md`).
+
+By hand, read only, after:
+- schema 78; `tax_jurisdictions` holds US-MA (USD); its rate and three
+  rules (parts taxable `stated`, labour not taxable `stated`, diagnostic
+  not taxable `reading`);
+- shops 1, vehicles 10, customers 6, work orders 6, invoices 0, recalls
+  0, appointments 0, notifications 4: every count as Step 0 measured it;
+  `shop_tax_jurisdictions`, `exchange_rates`, `recall_fetches` and
+  `vin_decodes` are empty;
+- `foreign_key_check` is empty;
+- against live, `shop tax status --shop 1` exits 1 with "FAILS: no tax
+  jurisdiction" (the smoke shop has none, so an invoice there is refused);
+  `shop currency rates` prints "No exchange rates are stored";
+  `shop tax jurisdiction list` lists US-MA.
+
+### 2026-10-01 — Close-out
+
+- **No refute pass ran:** the batch ships code, a migration and tests.
+  Its four regulator rows (Massachusetts's rate and three line rules)
+  rest on the DOR's pages, quoted with URLs and dates in
+  `281_sources.md`; `test_phase281_migration.py` checks every shipped URL
+  and clause against that file. The diagnostic rule is marked a reading,
+  as the operator asked.
+- **The mutation script re-run in full on the final code: 42/42 red**
+  (G1–G2, M1–M4, O1–O3, R1–R12, V1–V4, T1–T11, X1–X4, Y1–Y2). `git
+  status` afterwards showed only the close-out's own documents.
+- **F184 closed** in `docs/FOLLOWUPS.md`. F185 open; F183 open, with
+  this phase's two sightings and the hour's reproduction recorded; F103
+  (mobile file) closes after the merge, in a mobile session.
+- Rows 287, 288 and 289 ✅ folded into 281, with no CLOSED date of their
+  own; row 281 ✅ with its CLOSED date and the regression line (96
+  words). Rows 367 and 368 stay ⏸️.
+- The fold pin in `test_roadmap_continuity.py` names eighteen folds (15
+  + 287, 288, 289) and is renamed
+  `test_the_eighteen_folds_are_seen_and_pass`. The code did not change
+  after the regression; the regression is run again on the close-out
+  commit because a test changed.
+- `implementation.md` 0.13.96 with its history row; v1.1; handoff
+  `docs/handoffs/2026-10-01_281_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0, the
+  sources, the mutation script, the smoke script with its log and
+  bodies, the F183 reproduction script and its two records, the scope and
+  both diffs.
+- Two bug fixes, each with its register entry (#1 `b5dbf1f`, #2
+  `4faa46b`).
+- `closeout_check.py . 281` first failed A4: both register entries ended
+  "Commit: this entry's commit", a bullet A4 does not read as a Commit
+  line naming a hash. Each now reads `**Commit.**` with its hash
+  (`b5dbf1f`, `4faa46b`); the check then passed all eight.

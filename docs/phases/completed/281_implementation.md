@@ -1,6 +1,26 @@
 # Phase 281 — Track O batch 3: recalls, VIN decoding, tax rates and exchange rates
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-09-30
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-01 (v1.0 2026-09-30)
+
+**Outcome (v1.1).** Shipped as planned, after the Step 0 stop and the
+planned mobile stop:
+- **All four rows have commands, each exercised by a test.** Rows 287,
+  288 and 289 close folded into 281; rows 367 and 368 are paused.
+- **F184 is closed:** an invoice takes its tax only from the shop's
+  jurisdiction on record, is refused without it, and records the rate,
+  its source and its recheck-by date. **F185** (tax-exempt sales) is open,
+  as the operator asked.
+- **Migration 078 is live** at schema 78; its live diff equals the
+  approved exact diff; no existing row changed.
+- **The mobile snapshot** was refreshed in moto-diag-mobile `e536e60`.
+- **Two bug fixes in existing code:** a VIN's year code decoding to a
+  future year (#1), and intake usage on the 1st of a month never counted
+  (#2).
+- **F183** was seen twice more; a one-hour reproduction at the operator's
+  request did not reproduce it; the regression of record then ran clean.
+
+Regression of record: 10271 passed, 0 failed at `45f3a54`, re-run on the
+close-out commit (see Results). Deviations and Results are at the end.
 
 ## Goal
 
@@ -57,6 +77,13 @@ fields do not appear in the schema). The app does not call this route;
 its generated types lose the field. The mobile session also closes F103
 in the mobile file (S0-2).
 
+**v1.1:** refreshed in moto-diag-mobile `e536e60` (prompt `e69e5e0`):
+the snapshot diff removes exactly this field. The request model ignores
+unknown fields, as every request model here does, so a caller still
+sending `tax_rate` has it ignored; the response states the rate used
+(tested). F103 was noted there, not closed: a later mobile session
+closes it, citing 281's merge.
+
 ## Logic
 
 ### The outbound client — `core/outbound.py`
@@ -75,6 +102,10 @@ in the mobile file (S0-2).
   vPIC", "ECB reference rates") and never an internal reference.
 - The transport is one function (`_open`) so tests swap it for a
   recorded fixture.
+- **v1.1, the order of the checks:** a 403 is `blocked`; any other
+  status the caller does not accept is `error`; then a web page on an
+  accepted status is `blocked`. (As first written an HTML 503 page read
+  as `blocked`.) NHTSA accepted the honest User-Agent at the smoke call.
 
 ### The network guard (tests)
 
@@ -86,6 +117,10 @@ and `socket.getaddrinfo` refuse any address that is not loopback
 known-bad test (a `urlopen` of a public host, written to `tmp_path`) in a
 pytest subprocess with the guard loaded, and requires it to fail with the
 guard's message; and a loopback connection to pass.
+
+**v1.1:** every host the guard's own tests name is reserved (`.invalid`,
+192.0.2.0/24), so a broken guard reaches no real service; the subprocess
+passes `-p no:xdist` (355's gate). `tests/test_phase281_network_guard.py`, 7.
 
 ### Migration 078 (schema 77 → 78)
 
@@ -163,6 +198,22 @@ Rollback drops the new tables and the new columns.
 - `InvoiceSummary` gains the tax and conversion fields, so `--json` and
   the API's response carry them.
 
+**v1.1, as built:**
+- the refusal is `InvoiceTaxNotOnRecord`, a subclass of
+  `InvoiceGenerationError`, mapped to 409 in `api/errors.py`;
+- a shop's own rows carry its `shop_id` and apply to it alone, so a
+  Massachusetts shop's shop-supplies rule never becomes the state's;
+- `tax status` fails on no jurisdiction, no valid rate, or a rule past
+  its validity; a line type with no rule at all is listed as not on
+  record (an invoice carrying it is still refused);
+- an invoice's recheck-by date is the earliest validity among the rate
+  and the rules it used; tax rounds half up;
+- `_pick` names its two tables as literal query prefixes (256's
+  chokepoint gate refuses a table name in a variable);
+- `tests/support/tax_on_record.py` records a labelled test jurisdiction
+  for the twelve older test files that relied on the zero default.
+- `tests/test_phase281_tax.py`, 16.
+
 ### Row 289: exchange rates — `accounting/exchange.py`
 
 - `refresh_ecb()`: fetches `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml`,
@@ -230,6 +281,16 @@ Commands, `motodiag advanced recall`:
 - The recall table shows `unrated` as "not rated by NHTSA" and the date
   each campaign was fetched.
 
+**v1.1, as built:** `check-vin --refresh` decodes with vPIC and fetches
+the model year's recalls; without `--refresh` it uses a stored decode
+when there is one. `count_recalls(older_only=True)` tells whether rows
+stored the older way exist, the only rows that can still clear a bike.
+F86's wording is kept per model, so its tests are unchanged. The new
+resolved-recalls table's heading reads "Recall id" (the integration-gap
+gate read "Recall" as a use of `inventory.models.Recall`). Exchange
+rates: `tests/test_phase281_exchange.py`, 17; recalls:
+`tests/test_phase281_recalls.py`, 20.
+
 ### Row 287: VIN decoding
 
 - `advanced/recall_repo.py`: `decode_vin_online(vin, refresh=False)`
@@ -241,12 +302,17 @@ Commands, `motodiag advanced recall`:
   and text when it reports one (non-zero is labelled partial), and the
   date. `--save` writes the VIN to the bike only when it has none, never
   changes its make, model or year, and prints any disagreement.
+- **v1.1:** `tests/test_phase281_vin.py`, 11. The offline year decode was
+  wrong for most codes (bug fix #1, `tests/test_phase281_vin_year.py`, 11).
 
 ### Wiring and text
 
 - New modules reachable from commands; the integration-gap allowlist and
   its pinned counts move with their history lines.
 - No internal reference in any user-facing text (F158).
+- **v1.1:** `get_resolutions_for_bike` gained a caller: ORPHANS 118 →
+  117, 244X's multi-line list 51 → 50. UNREACHABLE stays 29. The F158
+  scan found none in the new user-facing strings or command docstrings.
 
 ## Decisions
 
@@ -285,6 +351,8 @@ Commands, `motodiag advanced recall`:
 
 ## Planned items
 
+All eleven done (v1.1); where each is recorded is in the phase log.
+
 1. This v1.0, and rows 281, 287, 288, 289 rewritten; committed and pushed
    before code.
 2. The network guard and its planted known-bad test.
@@ -307,3 +375,63 @@ Commands, `motodiag advanced recall`:
 11. Close-out: v1.1; rows 287–289 ✅ folded into 281; row 281 ✅; F184
     closed; the fold pin; the regression again on the close-out commit;
     the history row; the handoff; `verify_phase.sh`.
+
+## Deviations
+
+- **Two bug fixes in code that existed before the batch,** each its own
+  commit with a register entry in the log: #1 (`b5dbf1f`), the offline
+  VIN year decode read most codes as future years (found by the dry run
+  before the vPIC smoke call); #2 (`4faa46b`), intake usage written on the
+  1st of a month was never counted toward its month (found when the
+  regression at `bedfdf7` failed five Phase 122 tests on 2026-10-01; they
+  fail the same on `master`). Neither is in v1.0's plan.
+- **Two regressions before the one of record.** `bedfdf7`: 5 failed (bug
+  fix #2). `4faa46b`: a worker lost with no traceback, the second in the
+  phase, which was a stop; the operator time-boxed an F183 reproduction
+  to one hour (not reproduced: 4 xdist runs, 4 side-by-side pairs, 312
+  hammer processes, all clean), then the regression of record at
+  `45f3a54` ran clean.
+- **Older tests changed.** Twelve test files relied on the zero tax
+  default; each now records its shop's tax (`tax_on_record.py`).
+  `test_phase275_migration.py` compared whole `invoices` rows across a
+  later migration; it now compares the planted rows' own columns. Gate
+  11's desktop walk-through records its tax through `shop tax`.
+- **The smoke-call script** recorded each body and the call's URL, time,
+  status and size through a tap on `core.outbound._open`, run over the
+  real CLI; v1.0 said "logged" without the method.
+- **The scope file** first named `sqlite_sequence` +3; the dry run
+  reports no change there, and the line was removed before the dry run
+  of record.
+- **Rows 287–289 are rewritten** as v1.0 says, and row 281's title is
+  "Recall refresh from NHTSA".
+- The trial whole-suite run was stopped at 32% for a 1% battery; the
+  drafts it left in `/private/tmp` were copied into the repository and
+  applied once on power.
+
+## Results
+
+| row | commands | test |
+|---|---|---|
+| 281 recalls from NHTSA | `advanced recall refresh` (`--make/--model/--year`, `--bike`, `--vin`, `--all-bikes`), `check-vin [--refresh]`, `lookup`, `list --bike`, `mark-resolved` | `test_phase281_recalls.py` 20 |
+| 287 VIN decoding | `advanced vin decode [--refresh] [--bike --save]` | `test_phase281_vin.py` 11 |
+| 288 sales tax | `shop tax jurisdiction add/list/set`, `rate set`, `rule set`, `confirm`, `status`; `shop invoice generate` (no `--tax-rate`; `--currency`) | `test_phase281_tax.py` 16 |
+| 289 exchange rates | `shop currency refresh`, `rates`, `set`, `convert` | `test_phase281_exchange.py` 17 |
+| the tests' network guard | (tests) | `test_phase281_network_guard.py` 7 |
+| migration 078 | — | `test_phase281_migration.py` 8 |
+| bug fixes #1, #2 | — | `test_phase281_vin_year.py` 11, `test_phase281_intake_month.py` 3 |
+
+- **Smoke calls** (2026-09-30, UTC): NHTSA recalls 22:36:26, 200, 2149
+  bytes; vPIC 22:36:27, 200, 4126 bytes; ECB 22:36:28, 200, 1547 bytes.
+- **Mutations: 42/42 red** (`281_mutate.py`; 41 in the build, Y2 with
+  bug fix #2).
+- **`COLLECTED_TEST_FLOOR` 10179 → 10271.**
+- **The mobile snapshot:** moto-diag-mobile `e536e60`; gate 11 21 passed.
+- **Deploy:** migration 078 live at schema 78; 5847 → 5853 rows, 101 →
+  109 tables; live diff equals the approved exact diff; no existing row
+  changed.
+- Regression of record: 10271 passed, 0 failed, 0 skipped, 0 errors at `45f3a54` (22 min 21 s wall, `python -m pytest -n auto --dist load`, exit 0)
+- The regression is run again on the close-out commit, because the
+  close-out changes a test (the fold pin); its line is in the log.
+- **Findings:** F184 filed and closed; F185 filed, open; F183 seen twice
+  more and noted, open; F103 (mobile file) met, closed by a later mobile
+  session after the merge.

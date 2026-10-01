@@ -2574,7 +2574,31 @@ installed), and the other project's one `pkill` (it matches no pytest).
 All three losses came in the last ~2% of a full parallel run, which the
 two files alone do not recreate. Phase 281's log has the details.
 
-### F184
+### F184 — CLOSED by Phase 281 (2026-10-01)
+
+**Closed.** The operator picked option A (2026-09-30): "1: A." The
+invoice API's `tax_rate` and the CLI's `--tax-rate` are removed; an
+invoice takes its tax only from the shop's tax jurisdiction on record.
+- Rates and line rules are stored per jurisdiction, each with its
+  effective date, valid-until date, source, check date and provenance
+  (`regulation` or `shop`). Massachusetts ships from the Department of
+  Revenue's text: 6.25% on separately stated parts; labour not taxable;
+  a diagnostic fee not taxable as a reading of 830 CMR 64H.1.1(2)(a)1;
+  no rule for shop supplies.
+- An invoice for a shop with no jurisdiction, no rate valid on the
+  invoice date, or no rule for a line type it carries is refused (the
+  API answers 409); nothing is written.
+- Each invoice records the rate, the rate's id and source, its recheck-by
+  date and the taxed line types, and prints them. Tax falls on the
+  taxable lines only.
+- `shop tax status` fails once a rate or rule is past its validity.
+- `tests/test_phase281_tax.py`; mutations T1–T11 in `281_mutate.py`, each
+  red. The mobile snapshot was refreshed in moto-diag-mobile `e536e60`.
+- Live: migration 078 at schema 78; the smoke shop has no jurisdiction,
+  so an invoice there is refused until one is set.
+- A tax-exempt sale is F185, open.
+
+The finding as filed:
 
 **An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
 
