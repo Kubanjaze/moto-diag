@@ -482,3 +482,53 @@ directories there. Every one of those processes still exited 0.
 
 **Stopped for the operator, as asked.** F183 stays open, with this run
 added to it. The regression of record has not been run again.
+
+### 2026-10-01 — The regression of record
+
+The operator: "Go: run the regression of record as before, with the tree
+clean. I'll keep the pieces-ltm-clone session idle while it runs, to take
+that load out of the picture. If a worker is lost again, stop: F183 then
+gets its own phase before 281 closes. Otherwise carry on: the dry run of
+078, the deploy and close-out."
+
+`wholetree.sh --full` on the clean tree at `45f3a54`: 3980 passed, record
+written. No pieces-ltm-clone pytest was running; its long-lived
+`ltm-capture run` and `ltm_main.py serve` processes were up.
+
+Regression of record: 10271 passed, 0 failed, 0 skipped, 0 errors at `45f3a54` (22 min 21 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The count equals the floor. No worker was lost ("crashed" and "node
+down" appear 0 times in
+`~/.cache/motodiag/regressions/45f3a54_parallel_20261001_130159.log`).
+`45f3a54` holds the same code as `4faa46b`; the commits between add
+documents only.
+
+### 2026-10-01 — The deploy: the dry run
+
+- **Scope** (`281_deploy_scope.json`): `schema_version` +1;
+  `tax_jurisdictions` +1, `tax_rates` +1, `tax_line_rules` +3; fourteen
+  schema objects added (eight tables, six indexes); `table invoices` and
+  `table recalls` changed; nothing else.
+- **The first `deploy.py dryrun 281`** reported one scope problem, the
+  scope's own: it named `sqlite_sequence` +3 (the new AUTOINCREMENT
+  tables' counters), and the tool reports no change there. Live was only
+  read. The line was removed and the dry run repeated.
+- **`deploy.py dryrun 281`:**
+  - live 5847 rows, 101 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre281_20261001_132445.db`, sha256
+    `8b273289…` (retain-5 removed `motodiag_pre357_20260928_144754.db`
+    and, at the repeat, `motodiag_pre360_20260929_111643.db`; the first
+    run's `pre281_…_132433.db` is kept);
+  - applied `[78]` on the copy; scope problems: none; F158 census 36.
+- **The diff (`281_dryrun_diff.md`):**
+  - rows added: `schema_version` 1, `tax_jurisdictions` 1 (US-MA),
+    `tax_rates` 1 (6.25%, valid until 2027-09-30), `tax_line_rules` 3
+    (parts, labour, the diagnostic reading);
+  - fourteen schema objects added, as the scope names them;
+  - `table invoices` and `table recalls` changed: their SQL gains the new
+    columns. Live holds 0 invoices and 0 recalls (Step 0), so no row
+    carries them;
+  - **no existing row changed or removed** in any table. `shops` is not
+    touched.
+- **Not a rule-1 stop.** No existing row changes, the condition the
+  prompt set. The diff is committed before apply-live.
