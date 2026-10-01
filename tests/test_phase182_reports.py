@@ -110,6 +110,8 @@ def _generate_invoice(db_path, shop_id, wo_id):
     from motodiag.shop.invoicing import (
         generate_invoice_for_wo, get_invoice_with_items,
     )
+    from support.tax_on_record import record_tax
+    record_tax(db_path, shop_id)
     invoice_id = generate_invoice_for_wo(
         wo_id=wo_id, labor_hourly_rate_cents=10000,
         db_path=db_path,

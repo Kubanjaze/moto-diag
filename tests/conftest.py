@@ -28,6 +28,11 @@ if not os.environ.get("MOTODIAG_DB_PATH"):
 
 import pytest
 
+# Phase 281: no test reaches the network; see tests/support/network_guard.py.
+from support.network_guard import install as _install_network_guard
+
+_install_network_guard()
+
 from motodiag.core.config import reset_settings
 
 # Discard anything cached before the assignment above.

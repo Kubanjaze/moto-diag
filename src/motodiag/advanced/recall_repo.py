@@ -246,16 +246,23 @@ class RecallNotFoundError(LookupError):
     """Raised when a recall id does not exist. See :func:`mark_resolved`."""
 
 
-def count_recalls(db_path: Optional[str] = None) -> int:
+def count_recalls(db_path: Optional[str] = None, older_only: bool = False) -> int:
     """How many recalls are loaded.
 
     F86. Every query surface here answers an empty table the same way it
     answers a genuine all-clear — `check-vin` paints a green "Clear" panel
     either way. With no recall corpus loaded, that is a safety statement the
     product is not entitled to make. Callers use this to tell the two apart.
+
+    Phase 281: ``older_only`` counts only rows stored the older way, not
+    fetched from NHTSA. Only those can still clear a bike; a fetched model
+    answers per model (``recall_state``).
     """
+    query = "SELECT COUNT(*) FROM recalls"
+    if older_only:
+        query += " WHERE source IS NULL"
     with get_connection(db_path) as conn:
-        return int(conn.execute("SELECT COUNT(*) FROM recalls").fetchone()[0])
+        return int(conn.execute(query).fetchone()[0])
 
 
 def check_vin(vin: str, db_path: Optional[str] = None) -> list[dict]:
@@ -362,6 +369,9 @@ def list_open_for_bike(
             # LEFT JOIN lets us detect resolutions (we filter NULL).
             # Year / model filters mirror Phase 118 list_recalls_for_vehicle
             # but add the open=1 and NOT-resolved predicates.
+            # Phase 281: older rows keep their own make/model/year match;
+            # fetched campaigns match through recall_vehicles.
+            fetched_sql, fetched_params = fetched_coverage_sql("r", make, model, year)
             query = """
                 SELECT r.*
                 FROM recalls r
@@ -369,14 +379,16 @@ def list_open_for_bike(
                     ON rr.recall_id = r.id AND rr.vehicle_id = ?
                 WHERE rr.id IS NULL
                   AND r.open = 1
-                  AND LOWER(r.make) = LOWER(?)
-                  AND (r.model IS NULL OR LOWER(r.model) = LOWER(?))
-                  AND (r.year_start IS NULL OR r.year_start <= ?)
-                  AND (r.year_end IS NULL OR r.year_end >= ?)
+                  AND ((r.source IS NULL
+                        AND LOWER(r.make) = LOWER(?)
+                        AND (r.model IS NULL OR LOWER(r.model) = LOWER(?))
+                        AND (r.year_start IS NULL OR r.year_start <= ?)
+                        AND (r.year_end IS NULL OR r.year_end >= ?))
+                       OR """ + fetched_sql + """)
                 ORDER BY """ + severity_rank_sql("r.severity") + """ DESC, r.nhtsa_id
             """
             rows = conn.execute(
-                query, (vehicle_id, make, model, year, year),
+                query, (vehicle_id, make, model, year, year, *fetched_params),
             ).fetchall()
             return [dict(r) for r in rows]
     except sqlite3.OperationalError:
@@ -638,3 +650,266 @@ def load_recalls_from_json(
                 # already-loaded, skip.
                 continue
     return inserted
+
+
+# ---------------------------------------------------------------------------
+# Refresh from NHTSA, and VIN decoding by vPIC (Phase 281)
+# ---------------------------------------------------------------------------
+
+# F103's round-trip check: a campaign known to exist must come back before a
+# refresh of every bike is trusted.
+KNOWN_PRESENT = {"make": "PIAGGIO", "model": "MP3 500", "year": 2020,
+                 "campaign": "20V524000"}
+
+ALL_BIKES_PAUSE_S = 1.0
+
+
+class RecallCheckFailed(RuntimeError):
+    """The known-present campaign did not come back, so the run stopped."""
+
+
+def normalize_model(value: Optional[str]) -> str:
+    """Upper case, spaces and hyphens removed: how model names are compared."""
+    return (value or "").upper().replace(" ", "").replace("-", "")
+
+
+def _iso_report_date(value: Optional[str]) -> Optional[str]:
+    """NHTSA's ReportReceivedDate is DD/MM/YYYY ("14/09/2000" appears)."""
+    if not value:
+        return None
+    try:
+        return datetime.strptime(value.strip(), "%d/%m/%Y").date().isoformat()
+    except ValueError:
+        return None
+
+
+def _record_fetch(conn, make: str, model: str, year: int, fetched_at: str, url: str,
+                  status: Optional[int], count: Optional[int], outcome: str,
+                  error: Optional[str]) -> int:
+    return conn.execute(
+        "INSERT INTO recall_fetches (make, model, model_year, fetched_at, url, "
+        "http_status, result_count, outcome, error) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        (make, model, year, fetched_at, url, status, count, outcome, error),
+    ).lastrowid
+
+
+def _store_campaign(conn, result: dict, fetched_at: str) -> int:
+    campaign = str(result["NHTSACampaignNumber"]).strip()
+    severity = "critical" if (result.get("parkIt") or result.get("parkOutSide")) else "unrated"
+    make = str(result.get("Make") or "").strip() or "UNKNOWN"
+    description = str(result.get("Summary") or "").strip() or "(no summary given)"
+    report_date = _iso_report_date(result.get("ReportReceivedDate"))
+    row = conn.execute(
+        "SELECT id FROM recalls WHERE campaign_number = ?", (campaign,),
+    ).fetchone()
+    if row is None:
+        recall_id = conn.execute(
+            "INSERT INTO recalls (campaign_number, nhtsa_id, make, model, year_start, "
+            "year_end, description, severity, remedy, notification_date, vin_range, open, "
+            "source, fetched_at, component, consequence) "
+            "VALUES (?, ?, ?, NULL, NULL, NULL, ?, ?, ?, ?, NULL, 1, 'nhtsa', ?, ?, ?)",
+            (campaign, campaign, make, description, severity, result.get("Remedy"),
+             report_date, fetched_at, result.get("Component"), result.get("Consequence")),
+        ).lastrowid
+    else:
+        recall_id = int(row["id"])
+        conn.execute(
+            "UPDATE recalls SET nhtsa_id = ?, description = ?, severity = ?, remedy = ?, "
+            "notification_date = ?, source = 'nhtsa', fetched_at = ?, component = ?, "
+            "consequence = ? WHERE id = ?",
+            (campaign, description, severity, result.get("Remedy"), report_date,
+             fetched_at, result.get("Component"), result.get("Consequence"), recall_id),
+        )
+    year_text = str(result.get("ModelYear") or "").strip()
+    conn.execute(
+        "INSERT OR IGNORE INTO recall_vehicles (recall_id, make, model, model_year) "
+        "VALUES (?, ?, ?, ?)",
+        (recall_id, make, str(result.get("Model") or "").strip(),
+         int(year_text) if year_text.isdigit() else None),
+    )
+    return recall_id
+
+
+def refresh_recalls(make: str, model: str, year: int,
+                    db_path: Optional[str] = None) -> dict:
+    """Fetch NHTSA's recalls for a make, model and year, and store them.
+
+    A failure is recorded as a failed fetch, changes no stored recall, and is
+    raised as ServiceUnavailable. Zero results are recorded as a successful
+    fetch with no campaigns, which the lookups report as "none as named".
+    """
+    from motodiag.advanced.nhtsa import fetch_recalls, recalls_url
+    from motodiag.core.outbound import ServiceUnavailable
+
+    try:
+        answer = fetch_recalls(make, model, year)
+    except ServiceUnavailable as exc:
+        with get_connection(db_path) as conn:
+            _record_fetch(conn, make, model, year,
+                          datetime.now().astimezone().isoformat(timespec="seconds"),
+                          recalls_url(make, model, year), exc.status, None, "failed",
+                          exc.message)
+        raise
+    with get_connection(db_path) as conn:
+        recall_ids = [_store_campaign(conn, r, answer.fetched_at) for r in answer.results]
+        fetch_id = _record_fetch(conn, make, model, year, answer.fetched_at, answer.url,
+                                 answer.status, len(answer.results), "ok", None)
+        campaigns = sorted({str(r["NHTSACampaignNumber"]).strip() for r in answer.results})
+    return {"fetch_id": fetch_id, "url": answer.url, "status": answer.status,
+            "count": len(campaigns), "campaigns": campaigns,
+            "recall_ids": sorted(set(recall_ids)), "fetched_at": answer.fetched_at,
+            "size": answer.size}
+
+
+def fetched_coverage_sql(alias: str, make: str, model: Optional[str],
+                         year: Optional[int]) -> tuple[str, list]:
+    """The clause that matches fetched campaigns to a make, model and year.
+
+    A fetched campaign covers the vehicles NHTSA listed for it
+    (``recall_vehicles``). Its own model and years are NULL, and must never
+    match a whole make the way an older row's NULLs do; with no model given,
+    a fetched campaign matches nothing. Every recall query ORs this with its
+    own clause for the older rows, which it limits to ``source IS NULL``.
+    """
+    if not model:
+        return "0", []
+    sql = (
+        f"({alias}.source = 'nhtsa' AND EXISTS (SELECT 1 FROM recall_vehicles rv "
+        f"WHERE rv.recall_id = {alias}.id AND UPPER(rv.make) = UPPER(?) "
+        f"AND REPLACE(REPLACE(UPPER(rv.model), ' ', ''), '-', '') = ?"
+    )
+    params: list = [make, normalize_model(model)]
+    if year is not None:
+        sql += " AND rv.model_year = ?"
+        params.append(int(year))
+    return sql + "))", params
+
+
+def recall_state(make: str, model: str, year: int,
+                 db_path: Optional[str] = None) -> dict:
+    """What is stored for a make, model and year: the latest good fetch, a
+    failed fetch after it, and the campaigns covering it."""
+    from motodiag.inventory.recall_repo import list_recalls_for_vehicle
+
+    norm = normalize_model(model)
+    with get_connection(db_path) as conn:
+        fetches = [dict(r) for r in conn.execute(
+            "SELECT * FROM recall_fetches WHERE UPPER(make) = UPPER(?) AND model_year = ? "
+            "ORDER BY fetched_at DESC, id DESC", (make, year),
+        ).fetchall() if normalize_model(r["model"]) == norm]
+    rows = list_recalls_for_vehicle(make=make, model=model, year=year, db_path=db_path)
+    good = next((f for f in fetches if f["outcome"] == "ok"), None)
+    failure = fetches[0] if fetches and fetches[0]["outcome"] == "failed" else None
+    return {"fetch": good, "last_failure": failure, "recalls": [dict(r) for r in rows]}
+
+
+def refresh_all_bikes(db_path: Optional[str] = None, pause_s: float = ALL_BIKES_PAUSE_S,
+                      sleep=None) -> dict:
+    """Refresh every garage bike with a make, model and year, one at a time.
+
+    The known-present campaign is asked for first; if it does not come back
+    the run stops before any bike. A bike that fails keeps its stored data.
+    """
+    import time
+
+    from motodiag.core.outbound import ServiceUnavailable
+
+    sleep = sleep or time.sleep
+    known = KNOWN_PRESENT
+    try:
+        check = refresh_recalls(known["make"], known["model"], known["year"], db_path)
+    except ServiceUnavailable as exc:
+        raise RecallCheckFailed(
+            f"Stopped before any bike: the check request failed ({exc.message})") from exc
+    if known["campaign"] not in check["campaigns"]:
+        raise RecallCheckFailed(
+            f"Stopped before any bike: NHTSA did not return campaign {known['campaign']} "
+            f"for {known['year']} {known['make']} {known['model']}, which it is known to "
+            f"list, so its answers cannot be trusted now."
+        )
+    with get_connection(db_path) as conn:
+        bikes = [dict(r) for r in conn.execute(
+            "SELECT id, make, model, year FROM vehicles ORDER BY id").fetchall()]
+    refreshed, failed, skipped = [], [], []
+    for bike in bikes:
+        if not (bike["make"] and bike["model"] and bike["year"]):
+            skipped.append({"id": bike["id"], "reason": "no make, model and year"})
+            continue
+        sleep(pause_s)
+        try:
+            res = refresh_recalls(bike["make"], bike["model"], int(bike["year"]), db_path)
+        except ServiceUnavailable as exc:
+            failed.append({**bike, "error": exc.message})
+            continue
+        refreshed.append({**bike, "count": res["count"]})
+    return {"refreshed": refreshed, "failed": failed, "skipped": skipped}
+
+
+def stored_vin_decode(vin: str, db_path: Optional[str] = None) -> Optional[dict]:
+    with get_connection(db_path) as conn:
+        row = conn.execute("SELECT * FROM vin_decodes WHERE vin = ?",
+                           (vin.strip().upper(),)).fetchone()
+        return dict(row) if row else None
+
+
+def decode_is_partial(decoded: dict) -> bool:
+    return (decoded.get("error_code") or "0").strip() not in ("", "0")
+
+
+def decode_vin_online(vin: str, refresh: bool = False,
+                      db_path: Optional[str] = None) -> dict:
+    """The stored vPIC decode, or a new one fetched and stored.
+
+    Raises ValueError for a VIN that fails validation, and ServiceUnavailable
+    when vPIC cannot answer (a stored decode is left as it was).
+    """
+    from motodiag.advanced.nhtsa import decode_vin_vpic
+
+    offline = decode_vin(vin)
+    vin_upper = vin.strip().upper()
+    if not refresh:
+        stored = stored_vin_decode(vin_upper, db_path)
+        if stored is not None:
+            return stored
+    got = decode_vin_vpic(vin_upper, offline.get("year"))
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "INSERT INTO vin_decodes (vin, make, model, model_year, manufacturer, "
+            "vehicle_type, error_code, error_text, response_json, url, fetched_at) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT(vin) DO UPDATE SET "
+            "make = excluded.make, model = excluded.model, "
+            "model_year = excluded.model_year, manufacturer = excluded.manufacturer, "
+            "vehicle_type = excluded.vehicle_type, error_code = excluded.error_code, "
+            "error_text = excluded.error_text, response_json = excluded.response_json, "
+            "url = excluded.url, fetched_at = excluded.fetched_at",
+            (vin_upper, got.make, got.model, got.model_year, got.manufacturer,
+             got.vehicle_type, got.error_code, got.error_text, got.raw, got.url,
+             got.fetched_at),
+        )
+    return stored_vin_decode(vin_upper, db_path)
+
+
+def save_vin_to_bike(vehicle_id: int, decoded: dict,
+                     db_path: Optional[str] = None) -> dict:
+    """Write a decoded VIN to a bike that has none. Never changes its make,
+    model or year; reports where they disagree with the decode."""
+    with get_connection(db_path) as conn:
+        bike = conn.execute("SELECT id, make, model, year, vin FROM vehicles WHERE id = ?",
+                            (vehicle_id,)).fetchone()
+        if bike is None:
+            return {"saved": False, "reason": f"no bike with id {vehicle_id}",
+                    "disagreements": []}
+        notes = []
+        for label, mine, theirs in (("make", bike["make"], decoded.get("make")),
+                                    ("model", bike["model"], decoded.get("model")),
+                                    ("year", bike["year"], decoded.get("model_year"))):
+            if theirs and mine and str(mine).strip().upper() != str(theirs).strip().upper():
+                notes.append(f"The bike's {label} is {mine!r}; vPIC gives {theirs!r}. "
+                             f"The bike's is kept.")
+        if bike["vin"]:
+            same = bike["vin"].strip().upper() == decoded["vin"]
+            reason = ("The bike already has this VIN." if same else
+                      f"The bike already has VIN {bike['vin']}; it is not replaced.")
+            return {"saved": False, "reason": reason, "disagreements": notes}
+        conn.execute("UPDATE vehicles SET vin = ? WHERE id = ?", (decoded["vin"], vehicle_id))
+    return {"saved": True, "reason": None, "disagreements": notes}

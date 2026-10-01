@@ -43,6 +43,7 @@ from motodiag.core.migrations import (
 )
 from motodiag.crm import customer_repo
 from motodiag.crm.models import Customer
+from support.tax_on_record import record_tax
 from motodiag.shop import (
     InvoiceGenerationError,
     InvoiceNotFoundError,
@@ -136,6 +137,7 @@ def _seed_completed_wo(db_path, *, actual_hours=2.0, shop_name="s") -> tuple[int
     Returns (shop_id, wo_id, customer_id).
     """
     shop_id = create_shop(shop_name, db_path=db_path)
+    record_tax(db_path, shop_id)
     customer_id = _add_customer(db_path)
     vehicle_id = _add_vehicle(db_path)
     wo_id = create_work_order(
@@ -278,6 +280,7 @@ class TestInvoiceGeneration:
     def test_generate_falls_back_to_estimated_hours(self, db):
         """No actual_hours → uses estimated_hours (1.5 × $80 = $120)."""
         shop_id = create_shop("s", db_path=db)
+        record_tax(db, shop_id)
         c = _add_customer(db)
         v = _add_vehicle(db)
         wo_id = create_work_order(
@@ -305,6 +308,7 @@ class TestInvoiceGeneration:
         # requires WO status=='in_progress' or 'open'; 'completed' rejects.
         # So add parts to a fresh WO, then complete.
         shop2 = create_shop("s2", db_path=db)
+        record_tax(db, shop2)
         c2 = _add_customer(db, name="Bob")
         v2 = _add_vehicle(db, make="Yamaha", model="R6", year=2005)
         wo2 = create_work_order(
@@ -334,12 +338,13 @@ class TestInvoiceGeneration:
         assert summary.subtotal_cents == 15000
 
     def test_generate_stacks_tax_and_supplies(self, db):
-        _, wo_id, _ = _seed_completed_wo(db, actual_hours=1.0)
+        shop_id, wo_id, _ = _seed_completed_wo(db, actual_hours=1.0)
+        # Phase 281: the 8.25% is the shop's rate on record, every line taxable.
+        record_tax(db, shop_id, rate=0.0825)
         # $100 labor + 5% supplies = $5 → subtotal $105, tax 8.25% = $8.6625
         invoice_id = generate_invoice_for_wo(
             wo_id,
             labor_hourly_rate_cents=10000,
-            tax_rate=0.0825,
             shop_supplies_pct=0.05,
             db_path=db,
         )
@@ -486,6 +491,7 @@ class TestListAndRollup:
         # Build two shops, each with one invoice.
         shop1, wo1, _ = _seed_completed_wo(db, shop_name="s1")
         shop2 = create_shop("s2", db_path=db)
+        record_tax(db, shop2)
         c = _add_customer(db, name="Alice")
         v = _add_vehicle(db, make="Honda", model="CBR600", year=2008)
         wo2 = create_work_order(

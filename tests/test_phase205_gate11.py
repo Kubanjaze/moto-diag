@@ -218,9 +218,24 @@ class TestDesktopEndToEnd:
         ])
 
         # --- bill it ----------------------------------------------------
+        # Phase 281: the tax is the shop's rate on record, entered through
+        # the CLI. A test jurisdiction, so no real state's rate is implied.
+        _run(["shop", "tax", "jurisdiction", "add", "--code", "ZZ-T",
+              "--name", "Test jurisdiction", "--currency", "USD"])
+        _run(["shop", "tax", "jurisdiction", "set", "--shop", str(shop_id),
+              "--code", "ZZ-T"])
+        _run(["shop", "tax", "rate", "set", "--shop", str(shop_id), "--rate", "8.25",
+              "--effective", "2000-01-01", "--valid-until", "2099-12-31",
+              "--source-title", "Test fixture, not a real rate",
+              "--checked-on", "2026-09-30"])
+        for line_type in ("labor", "parts"):
+            _run(["shop", "tax", "rule", "set", "--shop", str(shop_id),
+                  "--line-type", line_type, "--taxable", "--effective", "2000-01-01",
+                  "--valid-until", "2099-12-31",
+                  "--source-title", "Test fixture, not a real rule",
+                  "--checked-on", "2026-09-30"])
         _run([
-            "shop", "invoice", "generate", str(wo_id),
-            "--tax-rate", "0.0825", "--hourly-rate", "9500",
+            "shop", "invoice", "generate", str(wo_id), "--hourly-rate", "9500",
         ])
         invoice_id = _last_id(cli_db, "invoices")
         _run(["shop", "invoice", "mark-paid", str(invoice_id)])

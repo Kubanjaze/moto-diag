@@ -310,3 +310,30 @@ of every bike first requires 20V524000 for PIAGGIO MP3 500 2020, and
 exits 1 listing any bike that failed). The operator writes that session's
 prompt. Until it pushes, this checkout does not switch branches or commit
 anything under `src/` or `tests/`.
+
+### 2026-10-01 — Resumed: the mobile snapshot refreshed in moto-diag-mobile e536e60
+
+The operator (2026-10-01): "The mobile push has landed: moto-diag-mobile
+e536e60 on origin/main (its prompt is e69e5e0). … The snapshot diff
+removes InvoiceGenerateRequest.tax_rate and nothing else; src/api-types.ts
+loses only that field. … F103 was noted, not closed: the mobile file says
+Phase 281 meets it and it closes when 281 merges. … No new finding was
+filed in the mobile repo, so the findings header needs no change."
+
+Checked here, 00:20 EDT:
+- `e536e60` is `moto-diag-mobile` `origin/main`, local `main` level with it;
+- this checkout as left: HEAD `2112cba`, 42 changed paths, `git diff HEAD
+  -- src tests` still hashes `a21590328d77ed5f…`;
+- `__pycache__` under `src/` and `tests/` cleared (the mobile session had
+  written `.pyc` files here); **gate 11: 21 passed**, run with `-B`.
+- The month-end evening window (F10) is over: it is 2026-10-01.
+
+**F103 stays open until 281 merges**; a later mobile session closes it,
+citing the merge. The handoff says so.
+
+At the operator's request, an untracked symlink
+`moto-diag-mobile/moto-diag-mobile` (to the repository itself, made
+2026-09-29) was removed; the link only, the repository is intact.
+
+The held work is committed from the working tree, and `281_wip.patch` is
+removed in the same commit, since the commit now holds what it held.

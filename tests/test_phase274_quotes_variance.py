@@ -15,6 +15,7 @@ from datetime import datetime, timedelta, timezone
 
 import pytest
 
+from support.tax_on_record import record_tax
 from support.phase274 import (
     new_db, ok, refused, seed_bike, seed_customer, seed_shop, sql,
 )
@@ -26,6 +27,7 @@ NOW = datetime.now(timezone.utc)
 def db(tmp_path):
     path = new_db(tmp_path)
     seed_shop(path, "Reyes Moto")
+    record_tax(path, 1)  # Phase 281: invoices need the shop's tax on record
     seed_customer(path, 1, "Pat Probe", email="pat@example.com")   # 2
     seed_bike(path)
     return path

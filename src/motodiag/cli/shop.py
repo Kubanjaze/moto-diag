@@ -586,6 +586,20 @@ def _render_invoice_panel(console, summary) -> None:
     lines.append(f"Subtotal:  ${summary.subtotal_cents / 100:.2f}")
     lines.append(f"Tax:       ${summary.tax_cents / 100:.2f}")
     lines.append(f"[bold]Total:     ${summary.total_cents / 100:.2f}[/bold]")
+    # Phase 281: the tax's record, and any conversion.
+    if summary.currency and summary.currency != "USD":
+        lines.append(f"Currency:  {summary.currency}")
+    if summary.tax_rate is not None:
+        taxed = (summary.taxed_line_types or "none").replace("labor", "labour") \
+            .replace("misc", "shop supplies").replace(",", ", ")
+        lines.append(f"Tax rate:  {summary.tax_rate * 100:g}% on {taxed}")
+        lines.append(f"Source:    {summary.tax_source}")
+        lines.append(f"Rate must be re-checked by {summary.tax_recheck_by}")
+    else:
+        lines.append("[dim]Tax rate:  not recorded on this invoice[/dim]")
+    if summary.fx_rate:
+        lines.append(f"Converted from {summary.fx_from_currency} at {summary.fx_rate}, "
+                     f"dated {summary.fx_rate_date}; {summary.fx_source}")
     if summary.notes:
         lines.append(f"\nNotes:     {summary.notes}")
     console.print(Panel("\n".join(lines), title="Invoice"))
@@ -3601,8 +3615,9 @@ def register_shop(cli_group: click.Group) -> None:
 
     @invoice_group.command("generate")
     @click.argument("wo_id", type=int)
-    @click.option("--tax-rate", type=float, default=0.0,
-                  help="Sales tax rate 0-1 (e.g. 0.0825 for 8.25%).")
+    @click.option("--currency", default=None,
+                  help="Invoice in another currency than the shop's, at the "
+                       "shop's own recorded rate.")
     @click.option("--supplies-pct", type=float, default=0.0,
                   help="Shop supplies percentage 0-1.")
     @click.option("--supplies-flat", "supplies_flat_cents", type=int, default=0,
@@ -3614,16 +3629,20 @@ def register_shop(cli_group: click.Group) -> None:
     @click.option("--notes", default=None, help="Invoice-level notes.")
     @click.option("--json", "as_json", is_flag=True, default=False)
     def invoice_generate_cmd(
-        wo_id, tax_rate, supplies_pct, supplies_flat_cents,
+        wo_id, currency, supplies_pct, supplies_flat_cents,
         diagnostic_fee_cents, hourly_rate_cents, notes, as_json,
     ):
-        """Generate an invoice from a completed work order."""
+        """Generate an invoice from a completed work order.
+
+        The sales tax comes from the shop's tax jurisdiction on record
+        (`motodiag shop tax status`); the invoice is refused without it.
+        """
         console = get_console()
         init_db()
         try:
             invoice_id = generate_invoice_for_wo(
                 wo_id,
-                tax_rate=tax_rate,
+                currency=currency,
                 shop_supplies_pct=supplies_pct,
                 shop_supplies_flat_cents=supplies_flat_cents,
                 diagnostic_fee_cents=diagnostic_fee_cents,
@@ -4712,8 +4731,10 @@ def register_shop(cli_group: click.Group) -> None:
     from motodiag.cli.shop_accounting import register_accounting
     from motodiag.cli.shop_booking import register_booking
     from motodiag.cli.shop_crm import register_crm
+    from motodiag.cli.shop_currency import register_currency
     from motodiag.cli.shop_finance import register_finance
     from motodiag.cli.shop_inventory import register_inventory
+    from motodiag.cli.shop_tax import register_tax
     from motodiag.cli.shop_warranty import register_warranty
 
     register_crm(customer_group)
@@ -4722,3 +4743,5 @@ def register_shop(cli_group: click.Group) -> None:
     register_finance(shop_group)
     register_booking(shop_group)
     register_accounting(shop_group)
+    register_tax(shop_group)
+    register_currency(shop_group)

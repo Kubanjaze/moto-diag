@@ -506,11 +506,13 @@ class TestActualHoursContract:
             f"/v1/shop/{shop_id}/work-orders/{wo_id}/transition",
             json={"action": "complete", "actual_hours": 2.0}, headers=h,
         )
-        # Same route and same assertion Gate 9 makes.
+        # Same route and same assertion Gate 9 makes. Phase 281: the tax
+        # is the shop's rate on record.
+        from support.tax_on_record import record_tax
+        record_tax(db, shop_id)
         r = client.post(
             f"/v1/shop/{shop_id}/invoices/generate", headers=h,
-            json={"work_order_id": wo_id, "labor_hourly_rate_cents": 10000,
-                  "tax_rate": 0.0},
+            json={"work_order_id": wo_id, "labor_hourly_rate_cents": 10000},
         )
         assert r.status_code == 201, r.text
         assert r.json()["subtotal_cents"] == 20000  # 2h × $100, not 9h

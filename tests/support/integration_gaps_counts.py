@@ -56,5 +56,6 @@ MODULE_ISLAND_COUNT = 9
 #: made five helpers and the Recall model live orphans) → 112 (Phase 274:
 #: `shop labor-rate` left pricing/labor_rates' file loader a live orphan) →
 #: 118 (Phase 275: wiring scheduling made six appointment_repo CRUD helpers
-#: live orphans; booking has its own guarded status moves).
-ORPHAN_COUNT = 118
+#: live orphans; booking has its own guarded status moves) → 117 (Phase 281:
+#: `advanced recall list --bike` calls get_resolutions_for_bike).
+ORPHAN_COUNT = 117

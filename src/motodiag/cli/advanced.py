@@ -176,24 +176,126 @@ def _recall_corpus_warning(console) -> bool:
     Nothing seeds the recalls table today, and the file that ships is
     illustrative sample data with synthetic campaign ids, so the honest answer
     is that the lookup could not be performed.
-    """
-    from motodiag.advanced.recall_repo import count_recalls
 
-    if count_recalls() > 0:
+    Phase 281: campaigns fetched from NHTSA are answered per model by
+    ``recall_nhtsa.render_none_found``; this covers a VIN whose model is
+    unknown, and counts only rows stored the older way.
+    """
+    if _legacy_recall_count() > 0:
         return False
     console.print(
         Panel(
-            f"[yellow]{ICON_WARN} No recall data is loaded — this is NOT an "
-            f"all-clear.[/yellow]\n\n"
-            "[dim]The recalls table is empty, so no campaign could match. The "
-            "sample file shipped with this project carries illustrative "
-            "campaign ids, not filed NHTSA campaigns, and nothing seeds it. "
-            "Check the manufacturer or NHTSA directly.[/dim]",
+            f"[yellow]{ICON_WARN} No recall data is loaded for this VIN's model — "
+            f"this is NOT an all-clear.[/yellow]\n\n"
+            "[dim]Its model is not known here, so no fetched campaign could "
+            "match. Run `motodiag advanced recall check-vin VIN --refresh` to "
+            "decode it with vPIC and fetch NHTSA's recalls for it. The sample "
+            "file shipped with this project carries illustrative campaign ids, "
+            "not filed NHTSA campaigns, and nothing seeds it. Or check the "
+            "manufacturer or NHTSA directly.[/dim]",
             title="Recall lookup unavailable",
             border_style="yellow",
         )
     )
     return True
+
+
+def _list_bike_recalls(console, bike: str, json_output: bool) -> None:
+    """A garage bike's open and resolved recalls (Phase 281)."""
+    from motodiag.advanced.recall_repo import (
+        get_resolutions_for_bike, list_open_for_bike, recall_state,
+    )
+    from motodiag.cli.diagnose import _resolve_bike_slug
+    from motodiag.cli.recall_nhtsa import VIN_INCLUSION_NOTE, render_none_found, render_recalls
+
+    resolved = _resolve_bike_slug(bike)
+    if resolved is None:
+        _render_bike_not_found(console, bike)
+        raise click.exceptions.Exit(1)
+    vehicle_id = int(resolved["id"])
+    open_rows = list_open_for_bike(vehicle_id)
+    done = get_resolutions_for_bike(vehicle_id)
+    if json_output:
+        click.echo(_json.dumps({"vehicle_id": vehicle_id, "open": open_rows,
+                                "resolved": done}, indent=2, default=str))
+        return
+    make, model, year = resolved.get("make"), resolved.get("model"), resolved.get("year")
+    if open_rows:
+        render_recalls(console, open_rows, f"Open recalls for bike {vehicle_id}")
+        console.print(f"[dim]{VIN_INCLUSION_NOTE}[/dim]")
+    elif make and model and year:
+        render_none_found(console, make, model, int(year), recall_state(make, model, int(year)))
+    if done:
+        table = Table(title=f"Resolved recalls for bike {vehicle_id}")
+        for col in ("Recall id", "Campaign", "Resolved", "Notes"):
+            table.add_column(col)
+        for r in done:
+            table.add_row(str(r["recall_id"]), str(r.get("nhtsa_id") or r["campaign_number"]),
+                          str(r.get("resolved_at") or "")[:10],
+                          str(r.get("resolution_notes") or ""))
+        console.print(table)
+    else:
+        console.print("[dim]No recall is recorded as resolved for this bike.[/dim]")
+
+
+def _check_vin_online(console, vin: str) -> Optional[dict]:
+    """`check-vin --refresh`: vPIC's decode (stored or fetched), then NHTSA's
+    recalls for its model year. A service that fails is named; what is stored
+    is still shown afterwards."""
+    from motodiag.advanced.recall_repo import decode_vin_online, refresh_recalls
+    from motodiag.core.outbound import ServiceUnavailable
+
+    try:
+        online = decode_vin_online(vin)
+    except ServiceUnavailable as exc:
+        console.print(f"[red]{exc.message}[/red]")
+        return None
+    if not (online.get("make") and online.get("model") and online.get("model_year")):
+        console.print(
+            f"[yellow]vPIC did not give a make, model and year for "
+            f"{online['vin']} (error {online.get('error_code')}: "
+            f"{online.get('error_text')}), so NHTSA cannot be asked.[/yellow]"
+        )
+        return None
+    try:
+        refresh_recalls(online["make"], online["model"], int(online["model_year"]))
+    except ServiceUnavailable as exc:
+        console.print(f"[red]{exc.message}[/red] Showing what is stored.")
+    return online
+
+
+def _check_vin_by_model(console, vin: str, online: dict, json_output: bool) -> None:
+    """check-vin once vPIC has given the model: NHTSA's campaigns for it."""
+    from motodiag.advanced.recall_repo import recall_state
+    from motodiag.cli.recall_nhtsa import VIN_INCLUSION_NOTE, render_none_found
+
+    make, model, year = online["make"], online["model"], int(online["model_year"])
+    state = recall_state(make, model, year)
+    rows = [r for r in state["recalls"] if r.get("open") != 0]
+    if json_output:
+        click.echo(_json.dumps({
+            "vin": online["vin"], "decoded": {k: v for k, v in online.items()
+                                              if k != "response_json"},
+            "fetched": state["fetch"], "recalls": rows,
+        }, indent=2, default=str))
+        return
+    console.print(Panel(
+        f"[bold]{online['vin']}[/bold]\n{year} {make} {model}\n"
+        f"[dim]NHTSA vPIC, decoded {str(online['fetched_at'])[:10]}.[/dim]",
+        title="VIN decoded", border_style="cyan",
+    ))
+    if rows:
+        _render_recall_table(console, rows, title="Recalls for this VIN's model year")
+        console.print(f"[dim]{VIN_INCLUSION_NOTE}[/dim]")
+        return
+    render_none_found(console, make, model, year, state)
+
+
+def _legacy_recall_count() -> int:
+    """Rows stored the older way (not fetched from NHTSA)."""
+    from motodiag.advanced.recall_repo import count_recalls
+
+    return count_recalls(older_only=True)
 
 
 def register_advanced(cli_group: click.Group) -> None:
@@ -2895,8 +2997,18 @@ def register_advanced(cli_group: click.Group) -> None:
     def recall_group() -> None:
         """NHTSA safety recall lookup, VIN decoding, and per-bike resolution."""
 
+    # Phase 281: refresh from NHTSA; VIN decoding by vPIC.
+    from motodiag.cli.recall_nhtsa import register_recall_refresh, register_vin
+
+    register_recall_refresh(recall_group)
+    register_vin(advanced_group)
+
     # --- recall list --------------------------------------------------
     @recall_group.command("list")
+    @click.option(
+        "--bike", default=None,
+        help="A garage bike's slug: its open and resolved recalls.",
+    )
     @click.option(
         "--make", default=None,
         help="Filter by manufacturer (case-insensitive).",
@@ -2921,6 +3033,7 @@ def register_advanced(cli_group: click.Group) -> None:
         help="Emit JSON instead of the Rich table.",
     )
     def recall_list_cmd(
+        bike: Optional[str],
         make: Optional[str],
         model_name: Optional[str],
         year: Optional[int],
@@ -2932,6 +3045,10 @@ def register_advanced(cli_group: click.Group) -> None:
 
         console = get_console()
         init_db()
+
+        if bike is not None:
+            _list_bike_recalls(console, bike, json_output)
+            return
 
         if make is None:
             # Broad listing — fall back to direct SQL so we can scope
@@ -2974,12 +3091,17 @@ def register_advanced(cli_group: click.Group) -> None:
     @recall_group.command("check-vin")
     @click.argument("vin")
     @click.option(
+        "--refresh", is_flag=True, default=False,
+        help="Decode the VIN with vPIC (unless stored) and fetch NHTSA's "
+             "recalls for its model year first.",
+    )
+    @click.option(
         "--json", "json_output", is_flag=True, default=False,
         help="Emit JSON instead of the Rich table.",
     )
-    def recall_check_vin_cmd(vin: str, json_output: bool) -> None:
+    def recall_check_vin_cmd(vin: str, refresh: bool, json_output: bool) -> None:
         """Decode a VIN and list applicable open NHTSA recalls."""
-        from motodiag.advanced.recall_repo import check_vin, decode_vin
+        from motodiag.advanced.recall_repo import check_vin, decode_vin, stored_vin_decode
 
         console = get_console()
         init_db()
@@ -2990,6 +3112,15 @@ def register_advanced(cli_group: click.Group) -> None:
             decoded = decode_vin(vin)
         except ValueError as exc:
             raise click.ClickException(str(exc)) from exc
+
+        # Phase 281: with vPIC's decode (stored, or fetched with --refresh)
+        # the model is known and NHTSA's fetched campaigns can match.
+        online = _check_vin_online(console, vin) if refresh else stored_vin_decode(vin)
+        if online and online.get("make") and online.get("model") and online.get("model_year"):
+            _check_vin_by_model(console, vin, online, json_output)
+            return
+        if refresh:
+            raise click.exceptions.Exit(1)
 
         rows = check_vin(vin)
 
@@ -3068,7 +3199,15 @@ def register_advanced(cli_group: click.Group) -> None:
             return
 
         if not rows:
-            if _recall_corpus_warning(console):
+            # Phase 281: after a fetch from NHTSA, or with nothing fetched for
+            # this model, zero rows is never an all-clear. Only rows stored the
+            # older way can still clear a bike.
+            from motodiag.advanced.recall_repo import recall_state
+            from motodiag.cli.recall_nhtsa import render_none_found
+
+            state = recall_state(make, model_name, year)
+            if state["fetch"] is not None or _legacy_recall_count() == 0:
+                render_none_found(console, make, model_name, year, state)
                 return
             console.print(
                 Panel(
@@ -3084,6 +3223,10 @@ def register_advanced(cli_group: click.Group) -> None:
             console, rows,
             title=f"Recalls for {year} {make} {model_name}",
         )
+        if any(r.get("source") == "nhtsa" for r in rows):
+            from motodiag.cli.recall_nhtsa import VIN_INCLUSION_NOTE
+
+            console.print(f"[dim]{VIN_INCLUSION_NOTE}[/dim]")
 
     # --- recall mark-resolved -----------------------------------------
     @recall_group.command("mark-resolved")
@@ -3874,6 +4017,7 @@ def _render_recall_table(console, rows: list[dict], title: str) -> None:
     table.add_column("Severity")
     table.add_column("Description", overflow="fold", max_width=55)
     table.add_column("Open", no_wrap=True, justify="right")
+    table.add_column("Fetched", no_wrap=True)
 
     for row in rows:
         ys = row.get("year_start")
@@ -3901,9 +4045,13 @@ def _render_recall_table(console, rows: list[dict], title: str) -> None:
             row.get("campaign_number") or "",
             make_model or "[dim]-[/dim]",
             years_cell,
-            format_severity(row.get("severity")),
+            # Phase 281: NHTSA gives no severity; a fetched campaign it does
+            # not flag "park it" or "park outside" is stored unrated.
+            "not rated by NHTSA" if row.get("severity") == "unrated"
+            else format_severity(row.get("severity")),
             row.get("description", "") or "",
             open_cell,
+            str(row.get("fetched_at") or "")[:10] or "[dim]-[/dim]",
         )
     console.print(table)
 
