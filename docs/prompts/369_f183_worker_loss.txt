@@ -1,0 +1,72 @@
+Do this: start Phase 369 and run it to its finish line as CLAUDE.md sets out. It is F183: a pytest-xdist worker dies with no traceback near the end of the full parallel regression. Find why, fix it, and prove the fix, so that Phase 281 can close. Read these first:
+- F183 as Phase 281 left it: `git show origin/phase-281:docs/FOLLOWUPS.md`. master's copy predates its last three entries.
+- 281's phase log on its branch (`docs/phases/completed/281_phase_log.md` at origin/phase-281): the losses, the hour of reproduction, and `281_f183_repro.py` with every run's record (45f3a54).
+- the regression logs in ~/.cache/motodiag/regressions/, especially `3b7528f_parallel_20260929_211825.log`, `4faa46b_parallel_20261001_070510.log` and 8ba118e's.
+
+The operator's decision (2026-10-01), verbatim: "If a worker is lost again, stop: F183 then gets its own phase before 281 closes." A worker was lost again, so this is that phase.
+
+Row 369 goes 🚧 before Step 0. It is the next free number; confirm it.
+
+The measured facts. Re-verify each at Step 0.
+- **Four losses**, each "[gwN] node down: Not properly terminated" with no traceback:
+
+  | regression | test | where |
+  |---|---|---|
+  | `3b7528f` (274) | test_phase359_content_cleanup.py's round-trip test | gw2, 98% |
+  | 281's trial whole-suite run | gate 2's `test_noise_cross_make` | |
+  | `4faa46b` (281) | the same round-trip test | gw1, 98% |
+  | `8ba118e` (281) | gate 2's `test_cross_platform_cam_chain` | gw6, 99% |
+
+  Every one is in `tests/test_phase78_gate2_integration.py` or 359's round-trip test, and every one in the last ~2% of a full run. Two came at the same moment of the run, just as gw8 began gate 2's `test_yamaha_coverage`.
+- **Ruled out:**
+  - **A memory kill:** macOS's unified log shows no jetsam kill of a Python process during 4faa46b's run (07:04–07:34 EDT). The only kill was a Spotlight helper. Query it with `/usr/bin/log`: zsh's `log` is a builtin.
+  - **A crash report:** none in ~/Library/Logs/DiagnosticReports or /Library/Logs/DiagnosticReports for these runs.
+  - **A catchable fatal signal:** pytest already enables faulthandler, so SIGSEGV, SIGBUS, SIGABRT, SIGILL or SIGFPE would most likely have left a traceback.
+  - **Code that kills processes:** none in src/, tests/, scripts/ or .claude/, except wholetree.run_bounded's killpg on the new session it starts itself.
+  - **Shell limits:** CPU time unlimited, 2666 processes, 1048576 files.
+- **The reproduction so far failed:** 320 runs of the two files, together and side by side, never lost a worker. The tail of a full run is the condition nobody has recreated.
+- **The machine:** 10 CPUs and 16 GB, so `-n auto` is 10 workers.
+- **Live:** it is at schema 78, because 281 deployed migration 078 before its merge, while master's code ends at 077. This phase runs nothing against live and adds no migration.
+
+The approach, and its finish line:
+1. **Make the death observable first.** xdist says a node went down, not why. Add the smallest test-support plugin that records, for each worker:
+   - its PID;
+   - its exit status or signal, read on the controller when the node goes down;
+   - the last test it started;
+   - any catchable signal it received (SIGTERM, SIGHUP, SIGPIPE, SIGXCPU, SIGXFSZ, SIGUSR1/2);
+   - a faulthandler dump written to a per-worker file, not stderr.
+
+   It stays after the phase, because the next loss should explain itself.
+2. **Reproduce at full scale,** with the plugin on: the canonical regression command, repeatedly, and any reconstruction of a run's tail you can justify. Three of the four losses were on 281's tree, so reproducing in a scratchpad worktree of origin/phase-281, with the plugin applied, is fair. State the number of full runs in v1.0.
+3. **When the cause shows,** fix it with a test that fails on the planted cause, and close F183 with the evidence.
+4. **If the stated runs all pass and nothing shows,** stop and report what ran and what the plugin saw. That is the finish line for "not found", and the next step is mine.
+
+The rules this phase works under:
+- **The canonical regression stays as it is:** `regression.sh`, `python -m pytest -n auto --dist load`. A fix that changes the worker count, the command or the distribution is a rule change: stop and give me the options.
+- **No reruns:** no rerun plugin, and no restart-until-green. A test that fails only in parallel is a bug to fix (CLAUDE.md rule 3).
+- **No `-n` in `addopts`.**
+- **Don't touch phase-281,** and run nothing against data/motodiag.db. If the fix changes tests or files 281 also touches, say so in the handoff: 281 then merges master and re-runs its close-out regression before it merges.
+
+Carry forward:
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression.
+- **Findings:** file with the finding skill before any document cites the number.
+- **Before the regression:** run 244G's scanner over every new test file, and update tests/support/integration_gaps_allowlist.py and its size pins for any new module.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- To measure an older commit, use a worktree.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **Avoid the month-end window:** don't record a regression between 20:00 EDT and midnight on a month's last day (F10).
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** only if there is a real fork.
+- **At the end:**
+  - the cause, with the evidence that shows it, or the "not found" record;
+  - the fix and its test, or the plugin's record of every run;
+  - F183's status;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: Phase 281's finish (merge master if needed, re-run its close-out regression, merge, verify_phase.sh, the after-merge note).
