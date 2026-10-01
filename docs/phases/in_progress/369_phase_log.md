@@ -137,3 +137,40 @@ They were redone with the Edit and Write tools and with `git stash pop`.
 
 **Full run #1** (before the fix, with both plugins) is running in a
 scratchpad worktree at `17d632d`.
+
+### 2026-10-01 — Full run #1: the unfixed guards, at full scale (14:52–15:12 EDT)
+
+A scratchpad worktree at `17d632d` (the guards unfixed), with both plugins
+written in. The canonical command, with the worktree's `src` first on
+`PYTHONPATH`. Summary in `369_full1_summary.txt`. It ran alongside this
+session's mutation runs and R2.
+
+27 failed, 10145 passed, 7 skipped, 3 errors in 19 min 24 s.
+- **The one this run was for:**
+  `test_an_error_in_the_whole_tree_gate_blocks` ERRORs in teardown, "left
+  SIGALRM armed (345 s to go)". It is the only test in the suite that
+  leaves the alarm armed, and no worker was lost (`node down` 0 times,
+  `worker-loss:` 0 lines).
+- **21 failures and 2 errors come from the worktree's location**, not the
+  code:
+  - the scratchpad has no sibling `moto-diag-mobile` (gate 11, and gates
+    12–14 re-running it; the finding contract; the ledger's mobile check);
+  - the deploy defaults refuse a `/tmp` path;
+  - the sandbox boundary tests and the packaging tests' clean venv depend
+    on the checkout's path.
+
+  Each passes in the main checkout, where the regression of record runs.
+- **5 failures are `test_phase122_intake.py`, and they are real on
+  `master` today.** `_count_this_month` compares UTC `created_at`
+  (`2026-10-01 19:13:09`) with a local ISO month start
+  (`2026-10-01T00:00:00`). As text, the space sorts before the `T`, so
+  nothing written on a month's 1st (UTC date) counts. It fails the same
+  in the main checkout (5 failed, 44 passed, 15:13 EDT).
+  - Phase 281 found and fixed this as its bug fix #2 (`4faa46b`), on
+    `phase-281` only; it reaches `master` with 281's merge.
+  - It is not F183's, and it is not F10, the month-end window.
+  - It passes once the UTC date is the 2nd: from 20:00 EDT today.
+
+**Decided: the regression of record runs after 20:00 EDT today.** It must
+be green, and taking 281's fix into this phase would ship a second fix
+under F183's row. Waiting changes nothing that ships.
