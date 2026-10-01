@@ -1,0 +1,10 @@
+G1 the push guard cancels inside its try (the code before 369): red
+G2 the edit guard cancels after its try (the code before 369): red
+C1 the teardown check never fails: red
+C2 the teardown check runs before the real teardown: red
+L1 a lost worker is not reported: red
+L2 the exit status is not read: red
+L3 no signal is registered: red
+L4 the last test is not recorded: red
+W1 the suite does not load the plugins: red
+9/9 red

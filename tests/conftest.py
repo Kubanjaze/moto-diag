@@ -41,6 +41,10 @@ from motodiag.knowledge.symptom_repo import add_symptom
 from motodiag.knowledge.issues_repo import add_known_issue
 from motodiag.core.session_repo import create_session
 
+# Phase 369 (F183): a lost xdist worker records its exit status, signal and
+# last test in the run's output; a test that leaves SIGALRM armed fails.
+pytest_plugins = ["support.worker_loss", "support.alarm_left_armed"]
+
 
 # --- Model fixtures (no DB) ---
 

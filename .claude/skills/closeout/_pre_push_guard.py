@@ -408,9 +408,10 @@ def main() -> int:
         signal.signal(signal.SIGALRM, _out_of_time)
         signal.alarm(wholetree.FAST_LIMIT_S + 60)  # far inside the hook's 600 s
         fails = wholetree_gate(command, repo)
-        signal.alarm(0)
     except Exception as e:                         # fails closed: only a push is blocked
         fails = [f"the whole-tree check could not run ({e!r}); the push is blocked"]
+    finally:
+        signal.alarm(0)    # F183: an armed alarm outlives main() and os._exit()s a later test
     if fails:
         print("whole-tree check: push blocked.\n" + "\n".join(fails), file=sys.stderr)
         return 2

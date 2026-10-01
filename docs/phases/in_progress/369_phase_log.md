@@ -77,3 +77,63 @@ commit, so it is not entered as a bug fix.
 
 v1.0 said the edit guard would be left as it is. The operator's answer
 replaces that: it gets the same `finally`.
+
+### 2026-10-01 — The build: the fix, the check, the plugin and their tests
+
+- **Row, v1.0 and the cause:** `17d632d`, pushed. `wholetree.sh` before
+  it: 1517 passed. The code was held out of the tree for that commit and
+  restored after.
+- **The fix.** Both guards' `main()` cancel the alarm in a `finally`
+  (`_pre_push_guard.py`, `_edit_guard.py`). Each still fails closed on its
+  own clock. Recorded in `.claude/skills/closeout/CHANGELOG.md`.
+- **The check**, `tests/support/alarm_left_armed.py`. **The plugin**,
+  `tests/support/worker_loss.py`. Both are loaded by `tests/conftest.py`'s
+  `pytest_plugins`.
+- **The tests**, `tests/test_phase369_worker_loss.py`, 8 tests:
+  - both guards leave no alarm armed;
+  - the check fails a planted alarm, and the next test survives;
+  - the plugin names a planted `os._exit(2)`, SIGKILL and SIGTERM, with
+    each one's last test and PID;
+  - the wiring.
+- **Mutation:** `369_mutate.py`, 9/9 red (`369_mutate.out`). It covers
+  both guards reverted to their pre-369 code, the check disabled or run
+  before the real teardown, the report, the exit status, the signal
+  registration and the last-test record each removed, and the conftest
+  wiring removed.
+- **R2, R0's command on the fixed guard:** 2 passed in 400.89 s, with no
+  lost worker and no teardown failure (`369_repro_R2_fixed.log`).
+- **244G's scanner** over `tests/`: 0 hits. The integration-gaps and
+  ledger gates (10 files): 478 passed. No allowlist entry or size pin
+  changed.
+
+**Decided on the way, with the reason:**
+- **The plugin's controller test.** It first asked whether xdist's
+  `dsession` plugin was registered. Under `-p` that runs before xdist's
+  own configure, so a nested run made no records; inside the suite the
+  order happened to work, as R1 showed. It now reads xdist's `dist`
+  option, which is set before any configure hook.
+- **Dump lines are prefixed** `worker-loss:`, so one grep of a log keeps
+  a lost worker's whole report.
+- **No fatal signal is planted in the suite.** A planted SIGBUS wrote two
+  macOS crash reports
+  (`~/Library/Logs/DiagnosticReports/Python-2026-10-01-145527.ips` and
+  `-145534.ips`; they are this phase's, not a regression's). A test doing
+  that on every run would fill the folder F183 was diagnosed from. The
+  fatal-dump path was proven once by hand instead
+  (`369_fatal_dump_once.log`: "killed by signal SIGBUS (10)", then
+  "Fatal Python error: Bus error" and the stack). That run left no
+  further report.
+- **Phase 355's gate caught a spawned pytest** whose `-n` came through
+  `*args`. `wholetree.sh` failed, 1 failed and 1524 passed. `_nested` now
+  states `-n` in the literal list. That was this phase's own new code,
+  before any commit, so it is not entered as a bug fix.
+
+**The edit guard blocked two commands, both rightly, and was not
+loosened:**
+- `sed -i` on a docs file;
+- `mv` back into `tests/support/`.
+
+They were redone with the Edit and Write tools and with `git stash pop`.
+
+**Full run #1** (before the fix, with both plugins) is running in a
+scratchpad worktree at `17d632d`.
