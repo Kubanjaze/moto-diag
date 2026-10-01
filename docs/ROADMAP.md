@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 366 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 369 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -641,6 +641,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 364 | Google Calendar two-way sync | ⏸️ | **Split from 276 on 2026-09-29** (Phase 275 Step 0). Two-way sync means Google Calendar, which needs the operator's Google OAuth client; under tailnet-only it would poll. Row 276 builds the one-way iCal output. |
 | 365 | QuickBooks API sync and payment reconciliation | ⏸️ | **Split from 277 on 2026-09-29** (Phase 275 Step 0). Sending to QuickBooks, and reconciling payments there, needs the Intuit API and so an Intuit developer account; no invoice payment is recorded here to reconcile. Row 277 builds the export file. |
 | 366 | Xero API sync | ⏸️ | **Split from 278 on 2026-09-29** (Phase 275 Step 0). Sending invoices to Xero needs the Xero API and so a Xero developer account. Row 278 builds the export file. |
+| 369 | F183: the test worker lost with no traceback | 🚧 | Opened 2026-10-01 at the operator's decision: "If a worker is lost again, stop: F183 then gets its own phase before 281 closes." A fourth worker was lost at `8ba118e`. Finds why a pytest-xdist worker dies without a traceback near the end of the full parallel regression, fixes it with a test that fails on the cause, and adds a plugin that records each lost worker's exit status, signal and last test. Numbers 367 and 368 are held by `phase-281`. |
 
 ---
 
