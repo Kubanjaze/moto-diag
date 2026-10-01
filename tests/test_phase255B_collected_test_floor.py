@@ -239,7 +239,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: moved with the lists). Measured by collected-ID diff against a master
 #: worktree: 10,179.
 #:
-COLLECTED_TEST_FLOOR = 10179
+#: 10268 (Phase 281, 2026-10-01) — +89 over 10179: seven
+#: `test_phase281_*` files (90: the network guard, migration 078, tax by
+#: jurisdiction and invoices, exchange rates, recalls, VIN decoding, and
+#: bug fix #1's year codes), +1 in gate 15's
+#: `test_rolling_back_peels_every_successor[77]`, and 209B -1 and 244X -1
+#: as their parametrised checks moved with the orphan list. Measured by
+#: collected-ID diff against a master worktree (10,180 there: its run
+#: imports this checkout's src through the editable install, so gate 15's
+#: [77] is in both lists): 10,268.
+#:
+COLLECTED_TEST_FLOOR = 10268
 
 
 def _collected_count() -> int:

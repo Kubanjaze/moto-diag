@@ -337,3 +337,15 @@ At the operator's request, an untracked symlink
 
 The held work is committed from the working tree, and `281_wip.patch` is
 removed in the same commit, since the commit now holds what it held.
+
+### 2026-10-01 — The held work committed (`07d166f`), and the floor
+
+- `wholetree.sh --full` on the staged tree: **3980 passed, 0 failed**,
+  record written. Committed as `07d166f`.
+- **`COLLECTED_TEST_FLOOR` 10179 → 10268**, by diffing collected IDs
+  (`--collect-only -q -o addopts=`) against a `master` worktree: +89 = the
+  seven `test_phase281_*` files (90) + gate 15's
+  `test_rolling_back_peels_every_successor[77]` − 209B 1 − 244X 1. The
+  worktree's run imports this checkout's `src` through the editable
+  install, so `[77]` appears in both lists (master 10,180). The worktree
+  was removed after.
