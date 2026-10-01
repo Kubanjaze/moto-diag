@@ -249,7 +249,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: imports this checkout's src through the editable install, so gate 15's
 #: [77] is in both lists): 10,268.
 #:
-COLLECTED_TEST_FLOOR = 10268
+#: 10271 (Phase 281, 2026-10-01) — +3: bug fix #2's
+#: `test_phase281_intake_month.py`.
+#:
+COLLECTED_TEST_FLOOR = 10271
 
 
 def _collected_count() -> int:

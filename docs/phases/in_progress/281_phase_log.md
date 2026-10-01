@@ -349,3 +349,47 @@ removed in the same commit, since the commit now holds what it held.
   worktree's run imports this checkout's `src` through the editable
   install, so `[77]` appears in both lists (master 10,180). The worktree
   was removed after.
+
+### 2026-10-01 — The regression at `bedfdf7`: five failures, and the cause
+
+`wholetree.sh --full` on the committed HEAD `bedfdf7`: 3980 passed, record
+written. Then `regression.sh`:
+
+Regression at `bedfdf7` (not of record, it failed): 10263 passed, 5 failed, 0 skipped, 0 errors (30 min 29 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+No worker was lost (`crashed` and `node down` appear 0 times in its log).
+The five failures are all in `test_phase122_intake.py`: the photo-intake
+quota counted 0 uses where the test had logged them. It ran 00:37–01:07
+EDT on 2026-10-01, the first day of a month.
+- **Not this batch:** a `master` worktree with its own `src`
+  (`PYTHONPATH` set, `motodiag.__file__` checked) fails the same five
+  (44 passed).
+- **Not the month-end window** (F10's memory note is for the last
+  evening of a month); this is the 1st, and the cause is different.
+- No finding names it (searched both FOLLOWUPS files for
+  `intake_usage`, `_count_this_month`, "first day").
+
+### 2026-10-01 — Bug fix #2: usage written on the 1st of a month never counted
+
+- **Issue:** `VehicleIdentifier._count_this_month` compared
+  `intake_usage_log.created_at >= month_start`. `created_at` is
+  `CURRENT_TIMESTAMP` (UTC, `2026-10-01 05:08:13`); `month_start` was local
+  `isoformat()` (`2026-10-01T00:00:00`). As text, `' '` sorts before
+  `'T'`, so a row written on the 1st is less than the month start: the
+  1st's photo identifications were never counted toward their month, on
+  any day of it. The quota did not stop them and the budget alert did not
+  see them. Five Phase 122 tests fail on any 1st (UTC date).
+- **Root cause:** two timestamp formats (and two clocks) compared as text.
+- **Fix:** the month start is UTC, written as `CURRENT_TIMESTAMP` writes
+  it (`YYYY-MM-01 00:00:00`). Where a month begins for a shop in another
+  time zone is F10's family and is not changed here.
+- **Files:** `src/motodiag/intake/vehicle_identifier.py`,
+  `tests/test_phase281_intake_month.py` (new, 3: a row at the 1st's first
+  second counts, a row the database stamps itself counts, last month's
+  does not), `281_mutate.py` (Y2), `COLLECTED_TEST_FLOOR` 10268 → 10271.
+- **Verified:** the new file and every intake test: 52 passed (the five
+  Phase 122 tests included, on 2026-10-01). Y1 and Y2: 2/2 red.
+- **Commit:** this entry's commit.
+
+Two bugs in this build. A third would be a stop to look for the shared
+cause; these two share none (an offline year table, an intake timestamp).

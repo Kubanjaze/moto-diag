@@ -1,0 +1,32 @@
+{
+ "_comment": "Phase 281, migration 078: eight new tables with six indexes; columns added to recalls (0 live rows) and invoices (0 live rows), which rewrites those tables' SQL; Massachusetts inserted into the new tax tables (one jurisdiction, one rate, three line rules), and the new AUTOINCREMENT tables' counters in sqlite_sequence; one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "tax_jurisdictions": {"added": 1},
+  "tax_rates": {"added": 1},
+  "tax_line_rules": {"added": 3},
+  "sqlite_sequence": {"added": 3}
+ },
+ "schema": {
+  "added": [
+   "index idx_exchange_rates_ecb_day",
+   "index idx_exchange_rates_pair",
+   "index idx_recall_fetches_vehicle",
+   "index idx_recall_vehicles_lookup",
+   "index idx_tax_line_rules_jurisdiction",
+   "index idx_tax_rates_jurisdiction",
+   "table exchange_rates",
+   "table recall_fetches",
+   "table recall_vehicles",
+   "table shop_tax_jurisdictions",
+   "table tax_jurisdictions",
+   "table tax_line_rules",
+   "table tax_rates",
+   "table vin_decodes"
+  ],
+  "changed": [
+   "table invoices",
+   "table recalls"
+  ]
+ }
+}

@@ -15,7 +15,7 @@ import base64
 import hashlib
 import io
 import json
-from datetime import datetime
+from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any, Optional
 
@@ -284,9 +284,15 @@ class VehicleIdentifier:
         )
 
     def _count_this_month(self, user_id: int) -> int:
-        """Count identify-kind usage rows in the current calendar month for this user."""
-        now = datetime.now()
-        month_start = datetime(now.year, now.month, 1).isoformat()
+        """Count identify-kind usage rows in the current calendar month for this user.
+
+        ``created_at`` is SQLite's ``CURRENT_TIMESTAMP``: UTC, written
+        ``YYYY-MM-DD HH:MM:SS``. The month start is written the same way.
+        Phase 281, bug fix #2: it was local ``isoformat()``, with a ``T``,
+        and ``' '`` sorts before ``'T'``, so no row written on the 1st was
+        ever counted toward its month.
+        """
+        month_start = datetime.now(timezone.utc).strftime("%Y-%m-01 00:00:00")
         with get_connection(self._db_path) as conn:
             cursor = conn.execute(
                 "SELECT COUNT(*) FROM intake_usage_log "

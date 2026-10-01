@@ -8,7 +8,7 @@ after clearing `__pycache__`, and restores the file whatever happens. Prints
 one line per mutation and exits 1 if any stayed green. An argument runs only
 the mutations whose name starts with it: `G` the network guard, `M` migration
 078, `O` the outbound client, `R` recalls (281), `V` VIN decoding (287), `T`
-tax and invoices (288), `X` exchange rates (289), `Y` bug fix #1.
+tax and invoices (288), `X` exchange rates (289), `Y` bug fixes #1 and #2.
 
 No mutation can reach a real service: the network guard's own tests name
 only reserved hosts, and every other test answers from recorded fixtures.
@@ -31,6 +31,7 @@ T_X = ["tests/test_phase281_exchange.py"]
 T_REC = ["tests/test_phase281_recalls.py"]
 T_VIN = ["tests/test_phase281_vin.py"]
 T_YEAR = ["tests/test_phase281_vin_year.py"]
+T_INTAKE = ["tests/test_phase281_intake_month.py"]
 
 GUARD = "tests/support/network_guard.py"
 MIGRATIONS = "src/motodiag/core/migrations.py"
@@ -46,6 +47,7 @@ CLI_SHOP = "src/motodiag/cli/shop.py"
 ERRORS = "src/motodiag/api/errors.py"
 EXCHANGE = "src/motodiag/accounting/exchange.py"
 CLI_CUR = "src/motodiag/cli/shop_currency.py"
+INTAKE = "src/motodiag/intake/vehicle_identifier.py"
 
 MUTATIONS = [
     # ------------------------------------------------------------ the network guard
@@ -179,6 +181,11 @@ MUTATIONS = [
     ("Y1 the year code picks the closest cycle again", RECALLS,
      "    while year + 30 <= latest_possible:", "    while year + 15 < latest_possible:",
      T_YEAR),
+    # ------------------------------------------------------------ bug fix #2
+    ("Y2 the month start is local isoformat again", INTAKE,
+     "        month_start = datetime.now(timezone.utc).strftime(\"%Y-%m-01 00:00:00\")",
+     "        month_start = datetime(datetime.now().year, datetime.now().month, 1).isoformat()",
+     T_INTAKE),
 ]
 
 
