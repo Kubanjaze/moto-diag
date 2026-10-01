@@ -595,3 +595,27 @@ By hand, read only, after:
   "Commit: this entry's commit", a bullet A4 does not read as a Commit
   line naming a hash. Each now reads `**Commit.**` with its hash
   (`b5dbf1f`, `4faa46b`); the check then passed all eight.
+
+### 2026-10-01 — The regression on the close-out commit: a worker lost. Stopped before the merge.
+
+`wholetree.sh --full` on `8ba118e`: 3980 passed, record written. Then:
+
+Regression at `8ba118e` (not of record, a worker was lost): 10270 passed, 1 failed, 0 skipped, 0 errors (20 min 8 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+- The one failure is a lost worker, with no traceback: `[gw6] node down:
+  Not properly terminated`, `replacing crashed worker gw6`, `worker 'gw6'
+  crashed while running
+  'tests/test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_cross_platform_cam_chain'`
+  (`~/.cache/motodiag/regressions/8ba118e_parallel_20261001_135114.log`,
+  line 20507), at 99%, while gw7 ran gate 2's `test_noise_cross_make`.
+- This is the fourth loss seen (274's at `3b7528f`; this phase's trial
+  run, `4faa46b` and now `8ba118e`), every one in gate 2's file or 359's
+  round-trip test, every one in the last ~2% of a full run.
+- The code is the code of the regression of record (`45f3a54`): the
+  close-out changed documents and the fold pin only.
+
+The operator, before this run: "If a worker is lost again, stop: F183
+then gets its own phase before 281 closes." **Stopped. Not merged.** The
+branch holds the close-out commit, which marks row 281 ✅; that row is not
+on `master`. Migration 078 is live (deployed before the merge, as 274 and
+275 were).
