@@ -151,7 +151,7 @@ session's mutation runs and R2.
   SIGALRM armed (345 s to go)". It is the only test in the suite that
   leaves the alarm armed, and no worker was lost (`node down` 0 times,
   `worker-loss:` 0 lines).
-- **21 failures and 2 errors come from the worktree's location**, not the
+- **22 failures and 2 errors come from the worktree's location**, not the
   code:
   - the scratchpad has no sibling `moto-diag-mobile` (gate 11, and gates
     12–14 re-running it; the finding contract; the ledger's mobile check);
@@ -174,3 +174,38 @@ session's mutation runs and R2.
 **Decided: the regression of record runs after 20:00 EDT today.** It must
 be green, and taking 281's fix into this phase would ship a second fix
 under F183's row. Waiting changes nothing that ships.
+
+### 2026-10-01 — Stopped before the regression: gate 11 is red on `master`'s API (20:01–20:10 EDT)
+
+At 20:01 EDT (00:01 UTC on the 2nd) the close-out drafts were stashed,
+leaving a clean tree at `fbf73da`. `wholetree.sh --full` on it: **4
+failed, 3986 passed** (5 min 57 s), so no `--full` record was written, and
+`regression.sh` will not start without one. The four:
+- gates 12 and 13 re-running gate 11 (`test_earlier_gate_still_passes`);
+- gate 13 re-running gate 12;
+- gate 14's `test_gate_13_still_passes`.
+
+Gate 11 run alone: 1 failed, 20 passed. `test_shared_schemas_have_not_drifted`
+reports "InvoiceGenerateRequest.tax_rate: in the API, absent from the
+snapshot".
+- moto-diag-mobile's snapshot was refreshed for Phase 281's API at
+  `e536e60` (2026-10-01 00:16 EDT): "an invoice request no longer carries
+  a tax rate …" (its finding number exists only on `phase-281`, so it is
+  not cited here).
+- `master`'s API still has `tax_rate`
+  (`src/motodiag/api/routes/shop_mgmt.py:237`).
+- So every tree based on `master` fails gate 11 until 281 merges. It is
+  not this phase's code: `wholetree.sh` (fast) does not run gate 11, and
+  passed on each commit.
+
+**This is a stop under rule 1: a test this phase cannot make green.**
+- Making it green from here means changing the mobile repo, which belongs
+  to its own session and would undo 281's refresh, or taking 281's API
+  change into this phase.
+- Merging this branch into `phase-281` does not work either. The push
+  guard's close-out check takes the one phase with documents in
+  `in_progress/`, which would be 369, so 281's push to `master` would be
+  refused.
+
+The close-out drafts (v1.1, the `implementation.md` row) are held
+uncommitted. Nothing was merged; nothing touched live or `phase-281`.
