@@ -1,0 +1,111 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0 -- /Users/lilquant/Projects/moto-diag/.venv/bin/python
+rootdir: /private/tmp/claude-501/-Users-lilquant-Projects-moto-diag/789c78ee-4048-46f3-9d6e-8122b8bbe296/scratchpad/n2
+configfile: pytest.ini
+plugins: cov-7.1.0, xdist-3.8.0, anyio-4.13.0
+created: 1/1 worker
+1 worker [1 item]
+
+scheduling tests via LoadScheduling
+
+test_planted.py::test_bus_error 
+[gw0] node down: Not properly terminated
+worker-loss: gw0 pid 34072: killed by signal SIGBUS (10)
+worker-loss: pid 34072; started test_planted.py::test_bus_error
+worker-loss: no catchable signal received (SIGTERM, SIGHUP, SIGPIPE, SIGXCPU, SIGXFSZ, SIGUSR1, SIGUSR2)
+worker-loss: faulthandler dump:
+worker-loss:   Fatal Python error: Bus error
+worker-loss:   
+worker-loss:   Thread 0x000000016e953000 (most recent call first):
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 534 in read
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 567 in from_io
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 1160 in _thread_receiver
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 341 in run
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 411 in _perform_spawn
+worker-loss:   
+worker-loss:   Current thread 0x00000001ea9cbf80 (most recent call first):
+worker-loss:     File "/private/tmp/claude-501/-Users-lilquant-Projects-moto-diag/789c78ee-4048-46f3-9d6e-8122b8bbe296/scratchpad/n2/test_planted.py", line 3 in test_bus_error
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/python.py", line 166 in pytest_pyfunc_call
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_callers.py", line 121 in _multicall
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_manager.py", line 120 in _hookexec
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_hooks.py", line 512 in __call__
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/python.py", line 1720 in runtest
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 179 in pytest_runtest_call
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_callers.py", line 121 in _multicall
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_manager.py", line 120 in _hookexec
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_hooks.py", line 512 in __call__
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 245 in <lambda>
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 353 in from_call
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 244 in call_and_report
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 137 in runtestprotocol
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/runner.py", line 118 in pytest_runtest_protocol
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_callers.py", line 121 in _multicall
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_manager.py", line 120 in _hookexec
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_hooks.py", line 512 in __call__
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/xdist/remote.py", line 227 in run_one_test
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/xdist/remote.py", line 206 in pytest_runtestloop
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_callers.py", line 121 in _multicall
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_manager.py", line 120 in _hookexec
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_hooks.py", line 512 in __call__
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/main.py", line 372 in _main
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/main.py", line 318 in wrap_session
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/_pytest/main.py", line 365 in pytest_cmdline_main
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_callers.py", line 121 in _multicall
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_manager.py", line 120 in _hookexec
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/pluggy/_hooks.py", line 512 in __call__
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/xdist/remote.py", line 427 in <module>
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 1291 in executetask
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 341 in run
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 411 in _perform_spawn
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 389 in integrate_as_primary_thread
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 1273 in serve
+worker-loss:     File "/Users/lilquant/Projects/moto-diag/.venv/lib/python3.14/site-packages/execnet/gateway_base.py", line 1806 in serve
+worker-loss:     File "<string>", line 8 in <module>
+worker-loss:     File "<string>", line 1 in <module>
+worker-loss:   
+worker-loss:   Current thread's C stack trace (most recent call first):
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _Py_DumpStack+0x44 [0x102e257bc]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at faulthandler_dump_c_stack+0x58 [0x102e37c3c]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at faulthandler_fatal_error+0x140 [0x102e37b00]
+worker-loss:     Binary file "/usr/lib/system/libsystem_platform.dylib", at _sigtramp+0x38 [0x184eac144]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at os_kill_impl+0x40 [0x102e467f0]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at PyObject_Vectorcall+0x58 [0x102c63e18]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x2704 [0x102d92568]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallDictTstate+0xc8 [0x102c62fa4]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at call_method+0xcc [0x102d04678]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_MakeTpCall+0x78 [0x102c63100]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x45c4 [0x102d94428]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallDictTstate+0xc8 [0x102c62fa4]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at call_method+0xcc [0x102d04678]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_Call+0x74 [0x102c63f44]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x3bd4 [0x102d93a38]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallDictTstate+0xc8 [0x102c62fa4]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at call_method+0xcc [0x102d04678]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_MakeTpCall+0x78 [0x102c63100]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x45c4 [0x102d94428]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallPrepend+0xac [0x102c65194]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x3bd4 [0x102d93a38]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallDictTstate+0xc8 [0x102c62fa4]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at call_method+0xcc [0x102d04678]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_MakeTpCall+0x78 [0x102c63100]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_EvalFrameDefault+0x45c4 [0x102d94428]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyEval_Vector+0x108 [0x102d8fb24]
+worker-loss:     Binary file "/opt/homebrew/Cellar/python@3.14/3.14.5/Frameworks/Python.framework/Versions/3.14/Python", at _PyObject_VectorcallDictTstate+0xc8 [0x102c62fa4]
+worker-loss:     <truncated rest of calls>
+worker-loss: files in /var/folders/hj/n035htjj6xz044487h0n635h0000gn/T/motodiag_worker_loss_ctmzorn2
+[gw0] [100%] FAILED test_planted.py::test_bus_error 
+
+replacing crashed worker gw0
+
+=================================== FAILURES ===================================
+_______________________________ test_planted.py ________________________________
+[gw0] darwin -- Python 3.14.5 /Users/lilquant/Projects/moto-diag/.venv/bin/python
+worker 'gw0' crashed while running 'test_planted.py::test_bus_error'
+=========================== short test summary info ============================
+FAILED test_planted.py::test_bus_error - worker 'gw0' crashed while running '...
+============================== 1 failed in 0.94s ===============================

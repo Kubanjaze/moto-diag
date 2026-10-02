@@ -1,0 +1,26 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0 -- /Users/lilquant/Projects/moto-diag/.venv/bin/python
+rootdir: /Users/lilquant/Projects/moto-diag
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, anyio-4.13.0
+created: 1/1 worker
+1 worker [2 items]
+
+scheduling tests via LoadScheduling
+
+tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks 
+[gw0] [ 50%] PASSED tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks 
+[gw0] [ 50%] ERROR tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks 
+::test_outlives_the_alarm 
+[gw0] [100%] PASSED ::test_outlives_the_alarm 
+
+==================================== ERRORS ====================================
+_ ERROR at teardown of TestTheWiring.test_an_error_in_the_whole_tree_gate_blocks _
+[gw0] darwin -- Python 3.14.5 /Users/lilquant/Projects/moto-diag/.venv/bin/python
+tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks left SIGALRM armed (345 s to go). It would have fired in a later test in this process; it is cancelled now. Cancel an alarm in a `finally` (F183).
+----------------------------- Captured stderr call -----------------------------
+whole-tree check: push blocked.
+the whole-tree check could not run (RuntimeError('planted')); the push is blocked
+=========================== short test summary info ============================
+ERROR tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks
+==================== 2 passed, 1 error in 400.28s (0:06:40) ====================

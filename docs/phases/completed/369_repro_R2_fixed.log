@@ -1,0 +1,16 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.5, pytest-9.0.3, pluggy-1.6.0 -- /Users/lilquant/Projects/moto-diag/.venv/bin/python
+rootdir: /Users/lilquant/Projects/moto-diag
+configfile: pyproject.toml
+plugins: cov-7.1.0, xdist-3.8.0, anyio-4.13.0
+created: 1/1 worker
+1 worker [2 items]
+
+scheduling tests via LoadScheduling
+
+tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks 
+[gw0] [ 50%] PASSED tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks 
+docs/phases/in_progress/369_repro_sleeper.py::test_outlives_the_alarm 
+[gw0] [100%] PASSED docs/phases/in_progress/369_repro_sleeper.py::test_outlives_the_alarm 
+
+======================== 2 passed in 400.89s (0:06:40) =========================

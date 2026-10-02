@@ -1,0 +1,38 @@
+# Full run #1: worktree at 17d632d (unfixed guards) + both plugins, scratchpad path
+# command: PYTHONUTF8=1 PYTHONPATH=<wt>/src caffeinate -i .venv/bin/python -m pytest -n auto --dist load -rA --junitxml=...
+# start 14:52:57 exit 1 15:12:23 
+# grep -E '^(ERROR|FAILED) tests/' ; grep -c 'node down' ; grep -o 'left SIGALRM armed (N s to go)' | uniq -c ; tail -1
+ERROR tests/test_phase257_sandbox_boundary.py::TestControlsInsideSucceed::test_reading_the_repository_is_allowed
+ERROR tests/test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks
+ERROR tests/test_phase257_sandbox_boundary.py::TestPlantedAttemptsFail::test_the_token_file_cannot_be_read
+FAILED tests/test_phase122_intake.py::TestQuota::test_usage_counted - Asserti...
+FAILED tests/test_phase122_intake.py::TestIdentifyFlow::test_cache_hit_zero_tokens
+FAILED tests/test_phase122_intake.py::TestIdentifyFlow::test_quota_exhausted_raises
+FAILED tests/test_phase122_intake.py::TestBudgetAlert::test_alert_on_crossing_threshold
+FAILED tests/test_phase122_intake.py::TestCliIntake::test_intake_quota_warns_at_threshold
+FAILED tests/test_phase209_packaging.py::TestTheInstalledCliStarts::test_version_runs_without_any_extra
+FAILED tests/test_phase209_packaging.py::TestTheInstalledCliStarts::test_help_lists_the_command_groups
+FAILED tests/test_phase209_packaging.py::TestTheInstalledCliWorks::test_db_init_actually_seeds
+FAILED tests/test_phase209_packaging.py::TestTheInstalledCliWorks::test_a_fault_code_resolves_from_the_seeded_database
+FAILED tests/test_phase209_packaging.py::TestTheInstalledCliWorks::test_the_adapter_knowledge_base_loads
+FAILED tests/test_phase209_packaging.py::TestUserDataDoesNotLiveInsideTheVirtualenv::test_db_path_is_a_user_data_directory
+FAILED tests/test_phase209_packaging.py::TestUserDataDoesNotLiveInsideTheVirtualenv::test_the_installed_copy_knows_it_is_not_a_checkout
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_snapshot_exists
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_every_live_path_is_in_the_committed_snapshot
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_the_snapshot_does_not_promise_routes_the_api_dropped
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_every_live_schema_is_in_the_committed_snapshot
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_shared_schemas_have_not_drifted
+FAILED tests/test_phase205_gate11.py::TestContractSnapshot::test_the_snapshot_does_not_describe_schemas_the_api_dropped
+FAILED tests/test_phase250_gate13.py::TestRegression::test_earlier_gate_still_passes[tests/test_phase205_gate11.py]
+FAILED tests/test_phase255D_finding_contract.py::TestAgainstTheRealRepository::test_the_repository_is_clean
+FAILED tests/test_phase255D_finding_contract.py::TestAgainstTheRealRepository::test_both_followups_files_are_read
+FAILED tests/test_phase358_deploy_contract.py::TestNoTempCopies::test_the_defaults_name_the_repo_and_the_backup_folder
+FAILED tests/test_phase240_gate12.py::TestRegression::test_earlier_gate_still_passes[tests/test_phase205_gate11.py]
+FAILED tests/test_roadmap_continuity.py::TestTheRealLedger::test_the_mobile_repo_is_beside_this_one
+FAILED tests/test_phase250_gate13.py::TestRegression::test_earlier_gate_still_passes[tests/test_phase240_gate12.py]
+FAILED tests/test_phase257_sandbox_boundary.py::TestPlantedAttemptsFail::test_a_write_outside_is_denied[repo-.git]
+FAILED tests/test_phase258_gate14.py::TestRegression::test_gate_13_still_passes
+node down: 0
+worker-loss lines: 0
+   1 left SIGALRM armed (345 s to go)
+= 27 failed, 10145 passed, 7 skipped, 17 warnings, 3 errors in 1164.63s (0:19:24) =

@@ -2502,7 +2502,7 @@ What would close it: the estimate is the estimated hours at the shop's
 labour rate plus the estimated parts cost; when no rate is known the
 estimate is refused, never invented; a test pins the figure.
 
-### F183
+### F183 — CLOSED by Phase 369 (2026-10-01)
 
 **A pytest-xdist worker died during `test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables` in one parallel regression, and the failure has not reproduced**
 
@@ -2573,6 +2573,45 @@ process-killing call in `src/` or `tests/`, pytest-timeout (not
 installed), and the other project's one `pkill` (it matches no pytest).
 All three losses came in the last ~2% of a full parallel run, which the
 two files alone do not recreate. Phase 281's log has the details.
+
+**Closed by Phase 369 (2026-10-01): the cause was a SIGALRM the push guard
+left armed.** `_pre_push_guard.main()` armed `signal.alarm(FAST_LIMIT_S +
+60)` (345 s), whose handler `_out_of_time` calls `os._exit(2)`, and
+cancelled it inside its `try`; an exception from `wholetree_gate` skipped
+the cancel. `test_phase358_wholetree_contract.py::TestTheWiring::test_an_error_in_the_whole_tree_gate_blocks`
+runs `main()` in the worker with the gate raising, so 345 s later that
+worker ended in whatever test it had reached: `os._exit` leaves no
+traceback, faulthandler sees no fatal signal, and the handler's one line
+went to pytest's captured stderr. The earlier searches for code that ends a
+process looked for kill calls in `src/` and `tests/`; the handler is in
+`.claude/skills/closeout/`.
+
+The evidence (Phase 369's folder):
+- in all three logged losses the dead worker is the one that ran that test
+  (gw2 at `3b7528f`, gw1 at `4faa46b`, gw6 at `8ba118e`);
+  `369_f183_timing.py` over all 19 parallel logs since Phase 358: the dead
+  workers had 306.0, 311.8 and 327.6 s of completed tests after it and died
+  in the next; the sixteen survivors ran out of tests at 63–343 s. 281's
+  320 reproduction runs never ran the 358 test;
+- R1, before the fix: that test and a 400 s sleeper in one worker lost the
+  worker at 345.56 s, "node down: Not properly terminated", and the new
+  plugin read its exit: "exited with status 2 (no signal)";
+- R2, after the fix, the same command: 2 passed, no worker lost.
+
+The fix: both guards cancel in a `finally`. What holds it:
+`tests/test_phase369_worker_loss.py` (369_mutate.py 9/9 red), and
+`tests/support/alarm_left_armed.py`, which fails any test that leaves
+SIGALRM armed. `tests/support/worker_loss.py` stays: a lost worker now
+writes its exit status or signal, its last test, any catchable signal and
+a faulthandler dump into the run's output.
+
+How it reached `master`: `master` failed gate 11 until 281 merged (the
+mobile snapshot follows 281's API). So Phase 281 carried the fix
+(`63fa5a8`) and merged first (`2806017`), at the operator's option 1.
+Both regressions ran without a lost worker, and the teardown check found
+no test leaving the alarm armed:
+- 281's: 10279 passed, 0 failed at `63fa5a8`;
+- 369's, of record: 10279 passed, 0 failed at `88dbbd1`.
 
 ### F184 — CLOSED by Phase 281 (2026-10-01)
 

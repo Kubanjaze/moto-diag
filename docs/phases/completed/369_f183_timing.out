@@ -1,0 +1,19 @@
+0130f1a_parallel_20260928_011241.log: gw9 ran the leak; then 68 tests, 107.2 s of test time (7 without a time); survived
+32d281a_parallel_20260927_205033.log: gw7 ran the leak; then 47 tests, 280.6 s of test time (0 without a time); survived
+3b7528f_parallel_20260929_211825.log: gw2 ran the leak; then 22 tests, 311.8 s of test time (0 without a time); DIED on tests/test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables
+3b7528f_parallel_20260929_215859.log: gw4 ran the leak; then 98 tests, 211.9 s of test time (1 without a time); survived
+3e9b93d_parallel_20260928_003825.log: gw0 ran the leak; then 282 tests, 119.0 s of test time (1 without a time); survived
+45f3a54_parallel_20261001_130159.log: gw4 ran the leak; then 48 tests, 276.7 s of test time (1 without a time); survived
+4faa46b_parallel_20261001_070510.log: gw1 ran the leak; then 22 tests, 306.0 s of test time (0 without a time); DIED on tests/test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables
+5dc9251_parallel_20260930_010223.log: gw7 ran the leak; then 47 tests, 342.7 s of test time (1 without a time); survived
+757b9f4_parallel_20260929_203356.log: gw0 ran the leak; then 47 tests, 322.0 s of test time (1 without a time); survived
+83d0278_parallel_20260929_171544.log: gw8 ran the leak; then 52 tests, 334.7 s of test time (2 without a time); survived
+8a205ee_parallel_20260927_124938.log: gw1 ran the leak; then 34 tests, 63.4 s of test time (0 without a time); survived
+8a460f2_parallel_20260929_105614.log: gw2 ran the leak; then 62 tests, 303.7 s of test time (1 without a time); survived
+8ba118e_parallel_20261001_135114.log: gw6 ran the leak; then 119 tests, 327.6 s of test time (0 without a time); DIED on tests/test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_cross_platform_cam_chain
+953c329_parallel_20260927_165737.log: gw7 ran the leak; then 59 tests, 324.0 s of test time (1 without a time); survived
+9c56f28_parallel_20260928_142726.log: gw8 ran the leak; then 56 tests, 239.2 s of test time (1 without a time); survived
+9e8e753_parallel_20260927_195620.log: gw3 ran the leak; then 57 tests, 272.0 s of test time (1 without a time); survived
+aa617c9_parallel_20260930_015729.log: gw4 ran the leak; then 66 tests, 249.5 s of test time (2 without a time); survived
+bedfdf7_parallel_20261001_003712.log: gw5 ran the leak; then 72 tests, 206.1 s of test time (1 without a time); survived
+d93d8de_parallel_20260927_133645.log: gw6 ran the leak; then 73 tests, 211.0 s of test time (0 without a time); survived
