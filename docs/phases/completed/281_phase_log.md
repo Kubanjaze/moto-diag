@@ -619,3 +619,41 @@ then gets its own phase before 281 closes." **Stopped. Not merged.** The
 branch holds the close-out commit, which marks row 281 ✅; that row is not
 on `master`. Migration 078 is live (deployed before the merge, as 274 and
 275 were).
+
+### 2026-10-01 — This branch carries Phase 369's F183 fix (`1753822`)
+
+F183 got its own phase, 369. It found the cause: the push guard's `main()`
+left a 345 s SIGALRM armed when the whole-tree gate raised. Phase 358's
+`test_an_error_in_the_whole_tree_gate_blocks` ran it inside an xdist
+worker, and 345 s later the alarm's `os._exit(2)` ended that worker's test
+with no traceback. In all three logged losses, this phase's `4faa46b` and
+`8ba118e` among them, the dead worker is the one that ran that test.
+
+**Why 281 carries it.** 369's regression could not run on `master`. The
+mobile snapshot follows this phase's API (moto-diag-mobile `e536e60`: the
+invoice request carries no tax rate), and `master`'s API still has
+`tax_rate`. So `master` fails gate 11 until 281 merges, and
+`wholetree.sh --full` on 369's branch failed 4 (gate 11 and its re-runs).
+The operator chose option 1, verbatim:
+
+> Switch to phase-281. Bring in 1753822's code — the two guards, the closeout CHANGELOG entry, tests/conftest.py, tests/support/alarm_left_armed.py, tests/support/worker_loss.py and tests/test_phase369_worker_loss.py — as a diff, not by copying files: 281's conftest.py carries its network guard, which a file copy would drop. None of the 369_* files. Record in 281's log that it carries Phase 369's F183 fix (1753822) and why: the mobile snapshot follows 281's API, so master fails gate 11 until 281 merges.
+
+**What came in.** `git diff 1753822^ 1753822` over those seven paths,
+through `git apply --3way --index`. All applied cleanly.
+`tests/conftest.py` keeps the network guard and gains `pytest_plugins`
+for the two new modules:
+- `.claude/skills/closeout/_pre_push_guard.py` and `_edit_guard.py`: the
+  alarm is cancelled in a `finally`;
+- `.claude/skills/closeout/CHANGELOG.md`: the dated entry;
+- `tests/support/alarm_left_armed.py`: a test that leaves SIGALRM armed
+  fails in teardown;
+- `tests/support/worker_loss.py`: a lost worker reports its exit status
+  or signal, PID, last test, signals and fatal dump;
+- `tests/test_phase369_worker_loss.py`: 8 tests.
+
+None of the `369_*` files came in; 369's documents, F183's closure and its
+record stay on `phase-369`. The new file with gates 355, 358 and 360 and
+the ledger tests, on this tree: 234 passed.
+
+This is F183's fix, carried, not a bug fix of this build. A regression of
+record follows on the new HEAD; a lost worker is a stop.
