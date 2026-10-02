@@ -657,3 +657,32 @@ the ledger tests, on this tree: 234 passed.
 
 This is F183's fix, carried, not a bug fix of this build. A regression of
 record follows on the new HEAD; a lost worker is a stop.
+
+### 2026-10-01 — The regression of record, with the F183 fix carried
+
+`wholetree.sh --full` on the committed HEAD `63fa5a8`: 3988 passed, record
+written. Then `regression.sh`, 22:19–22:40 EDT (00:19 UTC on the 2nd, so
+outside both date windows):
+
+Regression of record: 10279 passed, 0 failed, 0 skipped, 0 errors at `63fa5a8` (20 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- 10279 is the earlier 10271 plus the 8 tests that came with the fix.
+- **No worker was lost:** in
+  `~/.cache/motodiag/regressions/63fa5a8_parallel_20261001_221956.log`,
+  `node down`, `crashed`, `worker-loss:` and "left SIGALRM armed" each
+  appear 0 times.
+- **What this run does and does not show.** 369's timing script, run on
+  this log: gw7 ran the formerly leaking test and then had 252.4 s of its
+  own tests left. That is under the 345 s fuse, so this run alone would
+  not have lost a worker even before the fix. The fix's proof is 369's:
+  - R1 lost the worker on demand;
+  - R2, after the fix, did not;
+  - here, the teardown check found no test leaving the alarm armed,
+    across the whole suite.
+- `COLLECTED_TEST_FLOOR` stays 10271: the count rose, and a floor only
+  ever moves deliberately.
+
+The documents were brought to this line: v1.2 of `281_implementation.md`,
+the handoff, row 281 and the `implementation.md` row. These were document
+changes only, after the regression. Next: the merge, `verify_phase.sh`,
+and the handoff's after-merge note.

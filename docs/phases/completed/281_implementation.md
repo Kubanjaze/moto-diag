@@ -1,6 +1,6 @@
 # Phase 281 — Track O batch 3: recalls, VIN decoding, tax rates and exchange rates
 
-**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-01 (v1.0 2026-09-30)
+**Version:** 1.2 | **Tier:** Standard | **Date:** 2026-10-01 (v1.0 2026-09-30; v1.1 2026-10-01; v1.2 2026-10-01: carries Phase 369's F183 fix, and the regression of record is re-run on it)
 
 **Outcome (v1.1).** Shipped as planned, after the Step 0 stop and the
 planned mobile stop:
@@ -19,8 +19,8 @@ planned mobile stop:
 - **F183** was seen twice more; a one-hour reproduction at the operator's
   request did not reproduce it; the regression of record then ran clean.
 
-Regression of record: 10271 passed, 0 failed at `45f3a54`, re-run on the
-close-out commit (see Results). Deviations and Results are at the end.
+Regression of record: 10279 passed, 0 failed at `63fa5a8`, after this
+branch took Phase 369's F183 fix (see Results). Deviations and Results are at the end.
 
 ## Goal
 
@@ -378,6 +378,14 @@ All eleven done (v1.1); where each is recorded is in the phase log.
 
 ## Deviations
 
+- **v1.2: this branch carries Phase 369's F183 fix (`1753822`).** A fourth worker
+  was lost at `8ba118e`; Phase 369 found the cause (the push guard's SIGALRM left
+  armed). 369's own regression could not run on `master`, whose API fails gate 11
+  against the mobile snapshot refreshed for this phase, so at the operator's option 1
+  the fix's code paths were applied here as a diff and this phase merges first. The
+  regression of record was re-run on `63fa5a8`: 10279 passed (the 8 new tests
+  included), no worker lost.
+
 - **Two bug fixes in code that existed before the batch,** each its own
   commit with a register entry in the log: #1 (`b5dbf1f`), the offline
   VIN year decode read most codes as future years (found by the dry run
@@ -429,7 +437,8 @@ All eleven done (v1.1); where each is recorded is in the phase log.
 - **Deploy:** migration 078 live at schema 78; 5847 → 5853 rows, 101 →
   109 tables; live diff equals the approved exact diff; no existing row
   changed.
-- Regression of record: 10271 passed, 0 failed, 0 skipped, 0 errors at `45f3a54` (22 min 21 s wall, `python -m pytest -n auto --dist load`, exit 0)
+- Earlier regression of record, before the F183 fix: 10271 passed, 0 failed at `45f3a54`.
+- Regression of record: 10279 passed, 0 failed, 0 skipped, 0 errors at `63fa5a8` (20 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
 - The regression is run again on the close-out commit, because the
   close-out changes a test (the fold pin); its line is in the log.
 - **Findings:** F184 filed and closed; F185 filed, open; F183 seen twice
