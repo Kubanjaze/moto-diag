@@ -209,3 +209,18 @@ snapshot".
 
 The close-out drafts (v1.1, the `implementation.md` row) are held
 uncommitted. Nothing was merged; nothing touched live or `phase-281`.
+
+### 2026-10-01 — The operator's pick: 281 lands first, carrying the fix
+
+> Option 1, and you do 281's finish yourself, in this session:
+> 1. Commit and push 369's held drafts on phase-369 first, so the branch is clean.
+> 2. Switch to phase-281. Bring in 1753822's code — the two guards, the closeout CHANGELOG entry, tests/conftest.py, tests/support/alarm_left_armed.py, tests/support/worker_loss.py and tests/test_phase369_worker_loss.py — as a diff, not by copying files: 281's conftest.py carries its network guard, which a file copy would drop. None of the 369_* files. Record in 281's log that it carries Phase 369's F183 fix (1753822) and why: the mobile snapshot follows 281's API, so master fails gate 11 until 281 merges.
+> 3. On 281: --full on the committed HEAD, then the close-out regression. A lost worker is a stop. Then merge 281, run verify_phase.sh, and add the handoff's after-merge note. F103 waits for a mobile session.
+> 4. Versions: 281 keeps its 0.13.96; renumber 369's draft to 0.13.97.
+> 5. Back on phase-369: merge master, keeping 369's closed F183 entry; --full, the regression, close-out, merge, verify_phase.sh.
+
+Step 1: this commit holds the v1.1 draft of `369_implementation.md`. The
+draft `implementation.md` history row is not committed. Committed, it
+would read to `roadmap_check.py` R6 as a close with no handoff, and the
+push would be refused. It is kept in the session scratchpad, and comes
+back at close-out as 0.13.97.

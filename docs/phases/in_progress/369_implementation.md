@@ -1,6 +1,24 @@
 # Phase 369 — F183: the test worker lost with no traceback
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-01
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-01 (v1.0 2026-10-01)
+
+**Outcome (v1.1).** Found, fixed and proven.
+- **The cause:** the push guard's `main()` left a 345 s SIGALRM armed when
+  the whole-tree gate raised. Its handler calls `os._exit(2)`. Phase 358's
+  `test_an_error_in_the_whole_tree_gate_blocks` runs `main()` inside an
+  xdist worker, so 345 s later that worker died, with no traceback, in
+  whatever test it had reached.
+- **The evidence:**
+  - the dead worker in each logged loss is the one that ran that test;
+  - R1 reproduced the loss on demand, and the plugin read its exit:
+    "exited with status 2 (no signal)".
+- **The fix:** both guards cancel in a `finally`.
+- **What holds it:**
+  - a teardown check that fails any test leaving SIGALRM armed;
+  - eight tests, mutation 9/9 red.
+- **What stays:** a plugin that makes the next lost worker explain itself.
+
+**F183 is closed.** No bug fixes. Regression of record: see Results.
 
 ## Goal
 
@@ -88,14 +106,20 @@ worker: they never ran the 358 test.
    The edit guard's `main()` already cancels on every `Exception`, and its
    tests run it in a subprocess; at the operator's word it gets the same
    `finally`. Both are recorded in the closeout skill's `CHANGELOG.md`.
-4. **Tests** (`tests/test_phase369_worker_loss.py`):
-   - the guard, given a gate that raises, returns 2 and leaves no alarm
-     armed (fails on the unfixed guard);
+4. **Tests** (`tests/test_phase369_worker_loss.py`, 8):
+   - the push guard, given a gate that raises, returns 2 and leaves no
+     alarm armed; the edit guard, interrupted by a `KeyboardInterrupt`
+     (the one kind its `except Exception` lets through), leaves none
+     either (each fails on its pre-369 code);
    - the check fails a planted test that arms an alarm, and a later test
      in the same worker survives (fails without the check);
-   - the plugin names a planted `os._exit(2)`, SIGKILL, SIGTERM and
-     segfault, each with its last test (fails without the report);
+   - the plugin names a planted `os._exit(2)`, SIGKILL and SIGTERM, each
+     with its last test and PID (fails without the report);
    - the wiring: the suite's conftest loads both plugins.
+
+   The planted runs are nested `-n 1` / `-n 2` pytest processes in
+   `tmp_path`, with their own ini file. A fatal signal is not planted in
+   the suite: on macOS each one writes a crash report (Deviations).
 
 ## Proof, and the number of full runs
 
@@ -122,8 +146,15 @@ worker: they never ran the 358 test.
 - `.claude/skills/closeout/CHANGELOG.md`: a dated entry.
 - `tests/support/worker_loss.py`, `tests/support/alarm_left_armed.py`, `tests/conftest.py`.
 - `tests/test_phase369_worker_loss.py`.
-- `docs/phases/in_progress/369_f183_timing.py` (its output is quoted above).
 - `docs/FOLLOWUPS.md`: F183 closed.
+- The phase folder (`docs/phases/completed/`):
+  - `369_f183_timing.py` and its output `369_f183_timing.out`;
+  - `369_repro_sleeper.py`, and the three reproductions'
+    logs (`369_repro_R1_unfixed_check_off.log`,
+    `369_repro_R0_unfixed_check_on.log`, `369_repro_R2_fixed.log`);
+  - `369_fatal_dump_once.log`, `369_full1_summary.txt`;
+  - `369_mutate.py` and `369_mutate.out`.
+- `implementation.md`: 0.13.96, with its history row.
 
 ## Overlap with Phase 281
 
@@ -137,3 +168,38 @@ worker: they never ran the 358 test.
   resolved by taking `master`'s entry.
 - 281 merges `master` and re-runs its close-out regression before it
   merges.
+
+## Deviations from Plan
+
+- **The edit guard got the same `finally`.** v1.0 said it would be left
+  alone; the operator's word after the connection dropped (14:30) changed
+  that. It is in the phase log, verbatim.
+- **The check is its own module** (`support/alarm_left_armed.py`), not part
+  of `worker_loss.py`. That way a reproduction can switch it off with
+  `-p no:support.alarm_left_armed`, which R1 needed to show the loss
+  itself.
+- **The check wraps the real teardown** (`wrapper=True`). The first
+  version, a plain hook, ran before pytest's own teardown and broke the
+  next test's setup. R0's first attempt showed it.
+- **The plugin reads xdist's `dist` option** to know it is the
+  controller. Asking whether `dsession` was registered failed under `-p`,
+  because of the order of the configure hooks.
+- **No fatal signal is planted in the suite.** A planted SIGBUS wrote macOS
+  crash reports; the fatal-dump path was proven once by hand instead
+  (`369_fatal_dump_once.log`).
+- **Full run #1 had 27 failures and 3 errors, not the one expected:**
+  - **1 was expected:** the leaking test, ERROR in teardown, "left
+    SIGALRM armed (345 s to go)", with no worker lost.
+  - **22 failures and 2 errors come from the worktree's location:** no sibling
+    `moto-diag-mobile`, a `/tmp` path the deploy defaults refuse, and the
+    sandbox and packaging tests' dependence on the checkout's path.
+  - **5 are Phase 122's intake quota.** It fails on `master` whenever the
+    UTC date is a month's 1st, and Phase 281 fixed it as its bug fix #2
+    (`4faa46b`), on `phase-281` only.
+- **The regression of record waited for 20:00 EDT**, when the UTC date
+  was the 2nd. It had to be green, and taking 281's fix would have shipped
+  a second fix under F183's row.
+- **Then gate 11 stopped it.** The mobile snapshot follows 281's API, so
+  `master`'s API fails gate 11 until 281 merges. The operator chose option
+  1: 281 carries this phase's fix (`1753822`), closes and merges first,
+  and 369 closes on `master` afterwards.
