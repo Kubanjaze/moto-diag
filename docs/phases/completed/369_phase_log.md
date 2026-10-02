@@ -1,6 +1,6 @@
 # Phase 369 — F183: the test worker lost with no traceback — phase log
 
-**Status:** 🚧 In progress (2026-10-01)
+**Status:** ✅ Complete (2026-10-01)
 **Branch:** `phase-369` (Opus session, main checkout, the only writer)
 
 ---
@@ -224,3 +224,64 @@ draft `implementation.md` history row is not committed. Committed, it
 would read to `roadmap_check.py` R6 as a close with no handoff, and the
 push would be refused. It is kept in the session scratchpad, and comes
 back at close-out as 0.13.97.
+
+### 2026-10-01 — Phase 281 finished first, carrying the fix
+
+The operator's steps 2–4, as given:
+- **281 carries the fix.** It took `1753822`'s seven code paths as a diff
+  (`git apply --3way --index`), with its network guard kept in
+  `tests/conftest.py` and none of the `369_*` files: `63fa5a8`.
+- **281's regression of record:** 10279 passed, 0 failed at `63fa5a8`,
+  with no worker lost.
+- **281 merged** as `2806017`. `verify_phase.sh 281 63fa5a8 2806017` read
+  all fourteen checks, and the after-merge note is `04b2df4`.
+- **281 keeps 0.13.96**, so 369 takes 0.13.97.
+- F103 waits for a mobile session.
+
+281's log and handoff record each step.
+
+### 2026-10-01 — `master` merged into this branch; the regression of record
+
+- **The merge, `88dbbd1`.** Two conflicts, both resolved by keeping both
+  sides:
+  - `docs/FOLLOWUPS.md`: this phase's closed F183, then 281's F184 and
+    F185;
+  - `docs/ROADMAP.md`: Total Phases 369, then rows 367, 368, 369.
+
+  The F183 code came in identical from both sides. Afterwards the
+  branch's `src/`, `tests/` and `.claude/` equal `master`'s.
+- **The push guard refused the first merge commit, rightly.** The merge
+  brings 281's `migrations.py`, and the commit had no `--full` record for
+  its tree. `wholetree.sh --full` on the staged merge passed 3988, then
+  the commit went through.
+- **`wholetree.sh --full` on the committed HEAD `88dbbd1`:** 3988 passed
+  (10 min 4 s).
+
+Regression of record: 10279 passed, 0 failed, 0 skipped, 0 errors at `88dbbd1` (22 min 44 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- **No worker was lost.** In
+  `~/.cache/motodiag/regressions/88dbbd1_parallel_20261001_230743.log`,
+  `node down`, `crashed`, `worker-loss:` and "left SIGALRM armed" each
+  appear 0 times. 23:07–23:30 EDT on the 1st: neither the month-end window
+  nor a UTC 1st.
+- **What this run shows.** `369_f183_timing.py` on this log: gw6 ran the
+  formerly leaking test, then had 287.5 s of its own tests left. That is
+  under the 345 s fuse, so this run alone does not prove the fix. The
+  proof stays R1, R2 and the teardown check: no test anywhere in the
+  suite left the alarm armed.
+
+### 2026-10-01 — Close-out
+
+- No refute pass ran: the phase ships tooling and tests, and no content
+  rows. No claim rests on a document.
+- No bug fixes. Three faults in this phase's own uncommitted code were
+  fixed before any commit, and are recorded above:
+  - the check's hook order;
+  - the plugin's controller test;
+  - the `-n` in `*args`.
+- F183 closed in `docs/FOLLOWUPS.md`; no finding filed.
+- Row 369 ✅; `implementation.md` 0.13.97 with its history row; v1.1;
+  handoff `docs/handoffs/2026-10-01_369_closed.md`.
+- The documents move to `completed/`: this log, v1.1, and the timing
+  script and its output, the reproductions' logs and sleeper, the fatal
+  dump, run #1's summary, and the mutation script and its output.

@@ -1,8 +1,8 @@
 """Phase 369's mutations: each undoes one thing the phase adds, and the
 tests named beside it must go red.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/369_mutate.py`
-(moved to completed/ at close-out). 361's form: each mutation replaces one
+Run from the repository root: `.venv/bin/python docs/phases/completed/369_mutate.py`
+(moved from in_progress/ at close-out). 361's form: each mutation replaces one
 exact string (which must occur once), runs its tests with `-B` after
 clearing `__pycache__`, and restores the file whatever happens. Prints one
 line per mutation and exits 1 if any stayed green.

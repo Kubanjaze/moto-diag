@@ -2605,6 +2605,14 @@ SIGALRM armed. `tests/support/worker_loss.py` stays: a lost worker now
 writes its exit status or signal, its last test, any catchable signal and
 a faulthandler dump into the run's output.
 
+How it reached `master`: `master` failed gate 11 until 281 merged (the
+mobile snapshot follows 281's API). So Phase 281 carried the fix
+(`63fa5a8`) and merged first (`2806017`), at the operator's option 1.
+Both regressions ran without a lost worker, and the teardown check found
+no test leaving the alarm armed:
+- 281's: 10279 passed, 0 failed at `63fa5a8`;
+- 369's, of record: 10279 passed, 0 failed at `88dbbd1`.
+
 ### F184 — CLOSED by Phase 281 (2026-10-01)
 
 **Closed.** The operator picked option A (2026-09-30): "1: A." The

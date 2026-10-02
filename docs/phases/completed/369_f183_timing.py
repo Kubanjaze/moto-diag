@@ -14,7 +14,7 @@ A worker whose remaining test time reaches 345 s is still alive when it
 fires. Test time excludes setup and teardown between tests, so it is a
 lower bound on the wall time that passed.
 
-Run: python docs/phases/in_progress/369_f183_timing.py
+Run: .venv/bin/python docs/phases/completed/369_f183_timing.py
 """
 
 from __future__ import annotations

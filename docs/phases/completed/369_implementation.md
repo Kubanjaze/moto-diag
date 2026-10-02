@@ -18,7 +18,9 @@
   - eight tests, mutation 9/9 red.
 - **What stays:** a plugin that makes the next lost worker explain itself.
 
-**F183 is closed.** No bug fixes. Regression of record: see Results.
+**F183 is closed.** No bug fixes. Phase 281 carried the fix and merged
+first (operator's option 1). Regression of record: 10279 passed, 0 failed
+at `88dbbd1`, no worker lost (Results).
 
 ## Goal
 
@@ -154,20 +156,20 @@ worker: they never ran the 358 test.
     `369_repro_R0_unfixed_check_on.log`, `369_repro_R2_fixed.log`);
   - `369_fatal_dump_once.log`, `369_full1_summary.txt`;
   - `369_mutate.py` and `369_mutate.out`.
-- `implementation.md`: 0.13.96, with its history row.
+- `implementation.md`: 0.13.97, with its history row (281 holds 0.13.96).
 
 ## Overlap with Phase 281
 
-- `phase-281`'s copy of `_pre_push_guard.py` and
-  `test_phase358_wholetree_contract.py` is identical to `master`'s.
-- It also edits `tests/conftest.py`, adding its network guard after
-  `import pytest`. This phase adds `pytest_plugins` further down, so the
-  two should merge without a conflict.
-- It extends F183 in `docs/FOLLOWUPS.md`. This phase closes F183 on
-  `master` starting from 281's text, so the merge conflicts there and is
-  resolved by taking `master`'s entry.
-- 281 merges `master` and re-runs its close-out regression before it
-  merges.
+v1.0 planned that 369 merges first and 281 then merges `master`. **It went
+the other way** (Deviations):
+- 281 took `1753822`'s seven code paths as a diff, and kept its network
+  guard in `tests/conftest.py`: `63fa5a8`.
+- 281's regression of record ran on that: 10279 passed, no worker lost.
+- 281 merged as `2806017`.
+- This branch then merged `master` (`88dbbd1`). `docs/FOLLOWUPS.md` keeps
+  369's closed F183 before 281's F184 and F185, and `docs/ROADMAP.md`
+  keeps rows 367, 368 and 369. The code came in identical from both
+  sides.
 
 ## Deviations from Plan
 
@@ -203,3 +205,27 @@ worker: they never ran the 358 test.
   `master`'s API fails gate 11 until 281 merges. The operator chose option
   1: 281 carries this phase's fix (`1753822`), closes and merges first,
   and 369 closes on `master` afterwards.
+
+## Results
+
+| what | result |
+|---|---|
+| the cause | the push guard's 345 s SIGALRM, left armed by an exception, `os._exit(2)` in a later test |
+| logged losses explained | 3 of 3 (the dead worker ran the leaking test); `369_f183_timing.py` over 19 logs |
+| R1, before the fix | worker lost at 345.56 s; plugin: "exited with status 2 (no signal)" |
+| R0, check on | the leaking test ERRORs in teardown; the 400 s sleeper passes |
+| R2, after the fix | 2 passed, no loss |
+| full run #1, unfixed guards at full scale | one "left SIGALRM armed" (the leaking test), 0 lost workers; 24 location failures, and 5 from Phase 122's 1st-of-month defect (Deviations) |
+| new tests | 8 (`tests/test_phase369_worker_loss.py`) |
+| mutation | 9/9 red (`369_mutate.py`) |
+| 281's regression, carrying the fix | 10279 passed, 0 failed at `63fa5a8`; no worker lost |
+
+Regression of record: 10279 passed, 0 failed, 0 skipped, 0 errors at `88dbbd1` (22 min 44 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- **Neither full regression is the proof of the fix on its own.** In each,
+  the worker that ran the formerly leaking test had less than 345 s of
+  tests left (252.4 s at `63fa5a8`, 287.5 s at `88dbbd1`). What they do
+  show is that the teardown check found no test leaving the alarm armed
+  anywhere in the suite, and that no worker was lost.
+- **What is left open:** F183 is closed and no finding was filed. The
+  next lost worker, if there is one, prints its own `worker-loss:` block.
