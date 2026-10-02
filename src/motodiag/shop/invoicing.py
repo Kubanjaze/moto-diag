@@ -24,10 +24,13 @@ from __future__ import annotations
 
 import logging
 from datetime import datetime, timezone
+from decimal import ROUND_HALF_UP, Decimal
 from typing import Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field
 
+from motodiag.accounting import exchange
+from motodiag.accounting import tax as tax_mod
 from motodiag.accounting.invoice_repo import (
     add_line_item,
     create_invoice,
@@ -56,6 +59,12 @@ logger = logging.getLogger(__name__)
 class InvoiceGenerationError(ValueError):
     """Raised when an invoice cannot be generated (WO not completed,
     duplicate invoice exists, missing labor rate, etc.)."""
+
+
+class InvoiceTaxNotOnRecord(InvoiceGenerationError):
+    """Raised when the shop's tax is not on record for the invoice date
+    (Phase 281, F184): no jurisdiction, no valid rate, or no rule for a line
+    type the invoice carries. The API answers 409."""
 
 
 class InvoiceNotFoundError(ValueError):
@@ -108,6 +117,17 @@ class InvoiceSummary(BaseModel):
     paid_at: Optional[str]
     notes: Optional[str]
     items: list[InvoiceLineItemSummary] = Field(default_factory=list)
+    # Phase 281: what the tax came from, and any conversion (NULL on
+    # invoices made before either was recorded).
+    currency: Optional[str] = None
+    tax_rate: Optional[float] = None
+    tax_source: Optional[str] = None
+    tax_recheck_by: Optional[str] = None
+    taxed_line_types: Optional[str] = None
+    fx_from_currency: Optional[str] = None
+    fx_rate: Optional[str] = None
+    fx_rate_date: Optional[str] = None
+    fx_source: Optional[str] = None
 
 
 class RevenueRollup(BaseModel):
@@ -279,12 +299,12 @@ def _add_line_cents(
 
 def generate_invoice_for_wo(
     wo_id: int,
-    tax_rate: float = 0.0,
     shop_supplies_pct: float = 0.0,
     shop_supplies_flat_cents: int = 0,
     diagnostic_fee_cents: int = 0,
     labor_hourly_rate_cents: Optional[int] = None,
     notes: Optional[str] = None,
+    currency: Optional[str] = None,
     db_path: Optional[str] = None,
 ) -> int:
     """Build an invoice from a completed work order. Returns new invoice_id.
@@ -295,6 +315,14 @@ def generate_invoice_for_wo(
     - an invoice already exists for this WO (idempotency)
     - no actual_hours AND no estimated_hours to bill labor against
     - no labor rate available (table empty AND no kwarg)
+    - the shop's tax is not on record for today (Phase 281, F184): no
+      jurisdiction, no valid rate, or no rule for a line type it carries
+    - ``currency`` differs from the shop's and the shop has no rate of its
+      own for it (ECB reference rates never convert an invoice)
+
+    Tax comes only from the shop's jurisdiction on record, on the taxable
+    lines only, and the invoice records the rate, its source and the date it
+    must be re-checked by. Nothing is written when any check refuses.
 
     Writes to ``invoices`` + ``invoice_line_items`` via Phase 118
     ``accounting.invoice_repo``. Patches ``invoices.work_order_id`` post-insert
@@ -321,8 +349,6 @@ def generate_invoice_for_wo(
             "void or mark-paid before regenerating"
         )
 
-    if tax_rate < 0 or tax_rate > 1:
-        raise ValueError(f"tax_rate must be 0-1 (got {tax_rate})")
     if shop_supplies_pct < 0 or shop_supplies_pct > 1:
         raise ValueError(
             f"shop_supplies_pct must be 0-1 (got {shop_supplies_pct})"
@@ -354,6 +380,41 @@ def generate_invoice_for_wo(
     # Load parts
     parts_lines = _load_installed_parts(wo_id, db_path=db_path)
 
+    # Phase 281: the tax, and any conversion, are settled before anything is
+    # written, so a refusal leaves no half-built invoice.
+    line_types = {"labor"}
+    if any(int(p.get("quantity", 1) or 1) > 0 for p in parts_lines):
+        line_types.add("parts")
+    if diagnostic_fee_cents and diagnostic_fee_cents > 0:
+        line_types.add("diagnostic")
+    if shop_supplies_pct > 0 or (shop_supplies_flat_cents and shop_supplies_flat_cents > 0):
+        line_types.add("misc")
+    invoice_day = tax_mod.today()
+    try:
+        decision = tax_mod.resolve_tax(wo["shop_id"], invoice_day, line_types,
+                                       db_path=db_path)
+    except tax_mod.TaxNotOnRecord as exc:
+        raise InvoiceTaxNotOnRecord(str(exc)) from exc
+    invoice_currency = decision.currency
+    fx_rate_row: Optional[dict] = None
+    if currency and currency.strip().upper() != decision.currency:
+        invoice_currency = currency.strip().upper()
+        fx_rate_row = exchange.shop_rate(wo["shop_id"], decision.currency,
+                                         invoice_currency, invoice_day, db_path=db_path)
+        if fx_rate_row is None:
+            raise InvoiceGenerationError(
+                f"no rate of the shop's own converts {decision.currency} to "
+                f"{invoice_currency} on {invoice_day}; record one with `motodiag shop "
+                f"currency set --shop {wo['shop_id']} --from {decision.currency} --to "
+                f"{invoice_currency}`. ECB reference rates are not used on invoices."
+            )
+    fx_factor = Decimal(fx_rate_row["rate"]) if fx_rate_row else None
+
+    def in_invoice_currency(cents: int) -> int:
+        if fx_factor is None:
+            return int(cents)
+        return int((Decimal(int(cents)) * fx_factor).quantize(Decimal(1), ROUND_HALF_UP))
+
     # Create invoice header (subtotal/tax/total set after line items)
     now = datetime.now(timezone.utc)
     invoice = Invoice(
@@ -364,7 +425,7 @@ def generate_invoice_for_wo(
         ),
         status=_AccountingInvoiceStatus.SENT,
         subtotal=0.0, tax_amount=0.0, total=0.0,
-        currency="USD",
+        currency=invoice_currency,
         issued_at=now,
         due_at=None, paid_at=None,
         notes=notes,
@@ -379,17 +440,23 @@ def generate_invoice_for_wo(
         )
 
     subtotal_cents = 0
+    # Phase 281: each line's total by type, so tax falls on taxable lines only.
+    by_type: dict[str, int] = {t: 0 for t in tax_mod.LINE_TYPES}
 
     # --- Labor line ---
-    subtotal_cents += _add_line_cents(
+    rate_cents = in_invoice_currency(labor_hourly_rate_cents)
+    money_mark = "$" if invoice_currency == "USD" else f"{invoice_currency} "
+    labor_cents = _add_line_cents(
         invoice_id,
         InvoiceLineItemType.LABOR,
-        f"Labor — {hours:.2f}h × ${labor_hourly_rate_cents / 100:.2f}/h",
+        f"Labor — {hours:.2f}h × {money_mark}{rate_cents / 100:.2f}/h",
         hours,
-        labor_hourly_rate_cents,
+        rate_cents,
         sort_order=10,
         db_path=db_path,
     )
+    subtotal_cents += labor_cents
+    by_type["labor"] += labor_cents
 
     # --- Parts lines ---
     sort = 20
@@ -403,28 +470,32 @@ def generate_invoice_for_wo(
             (part.get("description") or part.get("slug") or "?").strip(),
         ]
         desc = " ".join(p for p in desc_parts if p) or "Part"
-        subtotal_cents += _add_line_cents(
+        part_cents = _add_line_cents(
             invoice_id,
             InvoiceLineItemType.PARTS,
             desc,
             float(qty),
-            unit_cents,
+            in_invoice_currency(unit_cents),
             sort_order=sort,
             db_path=db_path,
         )
+        subtotal_cents += part_cents
+        by_type["parts"] += part_cents
         sort += 1
 
     # --- Optional diagnostic line ---
     if diagnostic_fee_cents and diagnostic_fee_cents > 0:
-        subtotal_cents += _add_line_cents(
+        diag_cents = _add_line_cents(
             invoice_id,
             InvoiceLineItemType.DIAGNOSTIC,
             "Diagnostic fee",
             1.0,
-            int(diagnostic_fee_cents),
+            in_invoice_currency(int(diagnostic_fee_cents)),
             sort_order=sort,
             db_path=db_path,
         )
+        subtotal_cents += diag_cents
+        by_type["diagnostic"] += diag_cents
         sort += 1
 
     # --- Optional shop supplies line (pct applies to pre-supplies subtotal) ---
@@ -432,9 +503,9 @@ def generate_invoice_for_wo(
     if shop_supplies_pct > 0:
         supplies_cents += int(round(subtotal_cents * shop_supplies_pct))
     if shop_supplies_flat_cents and shop_supplies_flat_cents > 0:
-        supplies_cents += int(shop_supplies_flat_cents)
+        supplies_cents += in_invoice_currency(int(shop_supplies_flat_cents))
     if supplies_cents > 0:
-        subtotal_cents += _add_line_cents(
+        misc_cents = _add_line_cents(
             invoice_id,
             InvoiceLineItemType.MISC,
             "Shop supplies",
@@ -443,9 +514,13 @@ def generate_invoice_for_wo(
             sort_order=sort,
             db_path=db_path,
         )
+        subtotal_cents += misc_cents
+        by_type["misc"] += misc_cents
 
-    # --- Tax + totals ---
-    tax_cents = int(round(subtotal_cents * tax_rate))
+    # --- Tax + totals (Phase 281: the taxable lines, at the recorded rate) ---
+    taxable_cents = sum(by_type[t] for t in decision.taxable_types)
+    tax_cents = int((Decimal(taxable_cents) * Decimal(str(decision.rate.value)))
+                    .quantize(Decimal(1), ROUND_HALF_UP))
     total_cents = subtotal_cents + tax_cents
 
     _update_invoice(
@@ -453,6 +528,17 @@ def generate_invoice_for_wo(
         subtotal=_cents_to_dollars(subtotal_cents),
         tax_amount=_cents_to_dollars(tax_cents),
         total=_cents_to_dollars(total_cents),
+        tax_rate=decision.rate.value,
+        tax_rate_id=decision.rate.row_id,
+        tax_source=decision.source_text,
+        tax_recheck_by=decision.recheck_by,
+        taxed_line_types=",".join(decision.taxable_types) or "none",
+        fx_from_currency=decision.currency if fx_rate_row else None,
+        fx_rate=fx_rate_row["rate"] if fx_rate_row else None,
+        fx_rate_id=fx_rate_row["id"] if fx_rate_row else None,
+        fx_rate_date=fx_rate_row["rate_date"] if fx_rate_row else None,
+        fx_source=(f"the shop's own rate: {fx_rate_row['source_note']}"
+                   if fx_rate_row else None),
     )
     return invoice_id
 
@@ -534,6 +620,15 @@ def get_invoice_with_items(
         paid_at=row.get("paid_at"),
         notes=row.get("notes"),
         items=items,
+        currency=row.get("currency"),
+        tax_rate=row.get("tax_rate"),
+        tax_source=row.get("tax_source"),
+        tax_recheck_by=row.get("tax_recheck_by"),
+        taxed_line_types=row.get("taxed_line_types"),
+        fx_from_currency=row.get("fx_from_currency"),
+        fx_rate=row.get("fx_rate"),
+        fx_rate_date=row.get("fx_rate_date"),
+        fx_source=row.get("fx_source"),
     )
 
 

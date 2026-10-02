@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F183**.
+At the time of writing the highest assigned is **F185**.
 
 ---
 
@@ -2542,3 +2542,117 @@ What would close it: the crash reproduced and its cause named, or a
 stated number of `-n auto` runs of the migration round-trip tests that
 all pass, with the worker's exit status captured (for example,
 `faulthandler` enabled in the workers).
+
+**Seen again, 2026-09-30 (Phase 281), on a different test.** A whole-suite
+`-n auto --dist load` run on Phase 281's uncommitted work (not a
+regression of record) lost worker gw6 with no traceback: `worker 'gw6'
+crashed while running
+'tests/test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_noise_cross_make'`.
+That test does no migration round-trip, so the crash is not tied to
+`DROP COLUMN`. No crash report in `~/Library/Logs/DiagnosticReports/`.
+The file alone: 22 passed, in 4 min 40 s. Recorded here as the prompt
+directs; the regression of record is run in parallel afterwards, and a
+second loss there stops the phase.
+
+**Seen a third time, and an hour spent reproducing it (Phase 281,
+2026-10-01).** The regression at `4faa46b` lost gw1 with no traceback in
+`test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables`,
+at the same point of the run as 274's crash (gw8 had just started gate
+2's `test_yamaha_coverage`); the file alone passed 18. The operator
+time-boxed a reproduction to one hour (`281_f183_repro.py`, its records
+`281_f183_runs.jsonl` and `281_f183_hammer.jsonl`, all in Phase 281's
+folder):
+- the two files together under `-n 2 --dist load`, 4 runs: no lost worker;
+- the two as plain processes side by side, 4 runs: every exit code 0, no
+  signal;
+- six plain processes at once over the round-trip test alone, 52 rounds
+  (312 processes): every exit code 0, no signal.
+
+Not reproduced. Ruled out: memory (no jetsam, per the operator), any
+process-killing call in `src/` or `tests/`, pytest-timeout (not
+installed), and the other project's one `pkill` (it matches no pytest).
+All three losses came in the last ~2% of a full parallel run, which the
+two files alone do not recreate. Phase 281's log has the details.
+
+### F184 — CLOSED by Phase 281 (2026-10-01)
+
+**Closed.** The operator picked option A (2026-09-30): "1: A." The
+invoice API's `tax_rate` and the CLI's `--tax-rate` are removed; an
+invoice takes its tax only from the shop's tax jurisdiction on record.
+- Rates and line rules are stored per jurisdiction, each with its
+  effective date, valid-until date, source, check date and provenance
+  (`regulation` or `shop`). Massachusetts ships from the Department of
+  Revenue's text: 6.25% on separately stated parts; labour not taxable;
+  a diagnostic fee not taxable as a reading of 830 CMR 64H.1.1(2)(a)1;
+  no rule for shop supplies.
+- An invoice for a shop with no jurisdiction, no rate valid on the
+  invoice date, or no rule for a line type it carries is refused (the
+  API answers 409); nothing is written.
+- Each invoice records the rate, the rate's id and source, its recheck-by
+  date and the taxed line types, and prints them. Tax falls on the
+  taxable lines only.
+- `shop tax status` fails once a rate or rule is past its validity.
+- `tests/test_phase281_tax.py`; mutations T1–T11 in `281_mutate.py`, each
+  red. The mobile snapshot was refreshed in moto-diag-mobile `e536e60`.
+- Live: migration 078 at schema 78; the smoke shop has no jurisdiction,
+  so an invoice there is refused until one is set.
+- A tax-exempt sale is F185, open.
+
+The finding as filed:
+
+**An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
+
+Found by Phase 281's Step 0 (`281_step0.md`), 2026-09-30, measured on
+`master` at `5cde0c3`.
+- `generate_invoice_for_wo(tax_rate=0.0)` in
+  `src/motodiag/shop/invoicing.py:282` computes the tax as
+  `subtotal × tax_rate` (line 448).
+- `motodiag shop invoice generate --tax-rate` defaults to 0.0
+  (`src/motodiag/cli/shop.py:3604`).
+- The API's `InvoiceGenerateRequest.tax_rate` defaults to 0.0
+  (`src/motodiag/api/routes/shop_mgmt.py:237`), for
+  `POST /v1/shop/{shop_id}/invoices/generate`.
+- An invoice stores one `tax_amount` and not the rate, so an invoice
+  taxed at zero because nobody gave a rate looks the same as one for a
+  shop that owes no tax.
+- The shop records no location: the live `shops` table holds the smoke
+  shop, with no address or state, so nothing could supply a rate.
+
+It is an assumed value of the kind F174, F177 and F182 were. In
+Massachusetts, the first shop's state, the 6.25% sales tax applies to
+separately stated parts (830 CMR 64H.1.1(5)(a)); an invoice made with the
+default charges none.
+
+What it affects: every invoice generated without a rate. Live holds 0
+invoices. The mobile app does not call invoice generation; only its
+generated types name the request.
+
+What would close it: the rate comes from a record of the shop's tax
+jurisdiction, with its source, effective date and stated validity; an
+invoice for a shop with no valid rate is refused; and each invoice records
+the rate it used and that rate's source.
+
+### F185
+
+**A tax-exempt sale cannot be invoiced once the tax comes only from the shop's record**
+
+Filed at the operator's request, 2026-09-30, with their pick of option A
+for F184 in Phase 281 (`281_step0.md`, question 1). The operator's words:
+"with the field gone, a tax-exempt sale (a resale or exempt-organization
+certificate, for example a town's police bikes) can't be invoiced. It
+waits until a real shop needs it."
+
+With option A, invoice generation takes its rate and line rules only from
+the shop's tax jurisdiction on record: the API's `tax_rate` and the CLI's
+`--tax-rate` are removed. A sale the law exempts for this buyer, such as
+one to a buyer holding a resale certificate or an exempt organization's
+certificate (the DOR's guide names Form ST-4 for resale), would be taxed
+at the shop's rate, with no way to record the exemption or its
+certificate.
+
+What it affects: no live shop today (live holds the smoke shop and 0
+invoices). It waits until a real shop needs it.
+
+What would close it: a customer (or a single invoice) can be marked
+exempt, with the certificate's kind and number and who recorded it; the
+invoice then records the exemption in place of the rate, and prints it.

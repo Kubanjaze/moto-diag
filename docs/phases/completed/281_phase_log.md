@@ -1,0 +1,688 @@
+# Phase 281 — Track O batch 3: recalls, VIN decoding, tax rates and exchange rates — phase log
+
+**Status:** ✅ Complete (2026-10-01)
+**Branch:** `phase-281` (Opus session, main checkout, the only writer)
+
+---
+
+### 2026-09-30 — Opened: Track O batch 3
+
+The prompt is `docs/prompts/281_track_o_batch3.txt` (merged in
+`5cde0c3`). The operator's words it carries, verbatim:
+
+> 1, 2, 3, 5 as recommended.
+
+> 4: check row 288 — which jurisdiction does it name, and where is the first real shop? tax follows the shop. if it's MA (flat statewide), start there, not CA. either way: every rate stored with its effective date and source, and a check that fails when a rate is past its stated validity.
+
+> note for the batch 3 prompt when you write it: first outbound calls in the app. tests use recorded fixtures, never live endpoints; the app degrades cleanly when a service is down (shown to the user, never silently empty); no live API call during the build except one smoke call per service, logged.
+
+> i will be in MA and i mean, i intend to be in all 50 states or wherever they can download it , idk how that would work
+
+> we will just wait until it reports and then go with whats recommended based on that
+
+Batch 3 is rows 281 (NHTSA recall refresh), 287 (VIN decoder), 288 (tax
+rates) and 289 (exchange rates). The tax plan the operator accepted: a
+model not tied to one state or country; Massachusetts shipped verified
+from the Department of Revenue's own text; every other shop enters its
+own rate with its source and effective date; a check fails once a rate is
+past its stated validity; automatic rates for every address paused.
+
+Read first: the 275 handoff (`docs/handoffs/2026-09-30_275_closed.md`),
+the triage report (`docs/reports/2026-09-28_track_o_triage.md`), rows
+281, 287, 288 and 289, and 275's documents in `docs/phases/completed/`.
+
+The first commit: **row 281 🚧**, carrying the batch.
+
+### 2026-09-30 — Step 0, and the stop
+
+`281_step0.md`; the regulators' and services' pages, quoted with URLs and
+dates, in `281_sources.md`. No service API was called. What it found:
+- **Every measured fact in the prompt holds** (S0-1). Two more: no live
+  bike has a VIN, and 36 test calls rely on the zero default.
+- **F184 filed** with the `finding` skill (`next_f_number.sh`: F183 in
+  this file, F181 in the mobile file): the zero tax default.
+- **Two corrections** (S0-2): these are not the app's first outbound
+  calls (push, the AI SDKs and Stripe already call out), but the first to
+  public data services; and **F103**, filed by Phase 251 in the mobile
+  file, is a binding constraint on any recall sync. Its requirements are
+  met by the design in S0-4 and S0-5; it is closed in the mobile session.
+- **Massachusetts:** 6.25% on parts, effective 2009-08-01 (the DOR guide,
+  TIR 09-11); labour and a diagnostic fee not taxable (830 CMR
+  64H.1.1(2)(a)1, (5)(a)); **no DOR page names a shop-supplies charge**, so
+  none is shipped and a Massachusetts shop records its own rule. No page
+  states a validity for the rate.
+- **The ECB's page says its rates are "for information purposes only.
+  Using the rates for transaction purposes is strongly discouraged."**
+- **How the pages were read:** nhtsa.gov and mass.gov refuse curl (403,
+  with or without a browser User-Agent). mass.gov was read with headless
+  Chrome's `--dump-dom`; nhtsa.gov refused that too, so NHTSA's recall
+  service is described from this project's own recorded responses
+  (`~/research/motodiag/`, 2026-09-20) and F103. macOS has no `timeout`,
+  so Chrome ran under `perl -e 'alarm 60; exec @ARGV'`; no Chrome process
+  was left running.
+- **The edit guard blocked one command:** a loop writing
+  `> $n.dom.html`, a redirect to a path held in a variable. It was redone
+  with literal paths. The guard was right to refuse what it cannot
+  resolve, and was not loosened.
+
+Decided (with the reasons in `281_step0.md`): stdlib `urllib` and one
+outbound module; a network guard in `conftest.py`; recalls refreshed only
+on request and stored with their fetch; severity only from NHTSA's own
+park flags, else "not rated"; no green all-clear from zero results; VIN
+decodes stored per VIN; a shop's jurisdiction in its own table, so
+`shops` is not altered; the invoice records its rate and source.
+
+The ledger, in this commit:
+- **Rows 367 and 368 ⏸️**, split from 281 (recall reimbursement claims)
+  and 288 (automatic rates for every address), each with its reason. The
+  numbers were free: no row in either ROADMAP, no phase document and no
+  handoff names them; the same search finds row 366 in three documents.
+- The header reads 368 numbered.
+- Rows 281, 287, 288 and 289 are rewritten after the operator's answers,
+  since question 3 decides what 289 builds.
+
+**Stopped for the operator (rule 1: real forks and new thresholds).**
+Four items in `281_step0.md` ("Questions for the operator"): (1) the
+invoice API's `tax_rate`: remove, required, optional, or unchanged; (2)
+the validity windows no source states: Massachusetts's rate (12 months
+from the last check proposed) and the ECB's rates (through the 4th day
+proposed); (3) whether ECB rates may convert an invoice; (4) a note with
+a default: no app route for VIN decoding or recalls.
+
+### 2026-09-30 — The operator's pick, F185, and v1.0
+
+The operator's answer, pasted into the session as one block, verbatim:
+
+> 1: A. Also file a finding: with the field gone, a tax-exempt sale (a resale or exempt-organization certificate, for example a town's police bikes) can't be invoiced. It waits until a real shop needs it.
+> 2(a): 12 months, as proposed, and every invoice and `tax status` print the date the rate must be re-checked by.
+> 2(b): through the 5th calendar day, not the 4th. After Easter the next ECB rate comes out Tuesday at 16:00 CET, which is Tuesday morning in Massachusetts and the 5th day after Thursday's rate.
+> 3: A.
+> 4: no route, as the default.
+> The diagnostic-fee rule is the build's own reading, not a stated rule. Ship it with that said in its source, so `tax status` shows it as a reading of 64H.1.1(2)(a)1.
+
+- **2(b) corrects Step 0's arithmetic.** Thursday's rate; Good Friday
+  and Easter Monday are TARGET closing days; the next rate is Tuesday
+  16:00 CET, 10:00 in Massachusetts (EDT), day 5 after Thursday. So an
+  ECB rate is valid through `rate_date + 5 days`.
+- **F185 filed** with the `finding` skill (`next_f_number.sh`: F184 here,
+  F181 in the mobile file): a tax-exempt sale cannot be invoiced once
+  tax comes only from the record. Not fixed in this batch, as asked.
+- **The diagnostic rule** carries `basis = 'reading'` and its clause, and
+  `tax status` prints it as a reading of 64H.1.1(2)(a)1.
+- Rows 281, 287, 288 and 289 are rewritten to what the batch builds.
+
+v1.0 is `281_implementation.md`.
+
+### 2026-09-30 — Bug fix #1: a VIN's year code decoded to a future model year
+
+- **Issue:** the offline decode (`decode_vin`, Phase 155) read year code
+  `7` as 2037, `A` as 2040, and every code from `W` to `7` as 2028–2037,
+  measured on 2026-09-30. Found by this phase's local dry run of `advanced
+  vin decode 1HD1FRW177Y600001`, which would have asked vPIC for model
+  year 2037. `recall check-vin` printed the same wrong year.
+- **Root cause:** `_disambiguate_year` picked the 30-year cycle closest to
+  today. A model year cannot run more than one year ahead of the
+  calendar, so "closest" chooses the future half the time.
+- **Fix:** the latest year of the code's cycles that is not after next
+  year (`advanced/recall_repo.py`).
+- **Files:** `src/motodiag/advanced/recall_repo.py`,
+  `tests/test_phase281_vin_year.py` (new, 11: nine codes pinned with the
+  clock at 2026, every code by today's clock, the VIN above).
+- **Verified:** the new file, `test_phase155_recall.py` (whose only year
+  assertion, `L` → 2020, holds), F86's and gate 7's: 62 passed. The batch's
+  held work was stashed for this commit and restored after (below).
+
+**Commit.** `b5dbf1f`
+
+### 2026-09-30 — The battery, and a trial run stopped
+
+A trial run of the whole suite under the new network guard was stopped at
+32% when the machine read 1% battery (0 failures by then). The two drafts
+then in the scratchpad (`/private/tmp`, cleared on reboot) were copied to
+`docs/phases/in_progress/281_drafts/` and applied once on power. The
+drafts folder is removed before the close-out commit; what it held is in
+`migrations.py` and `recall_repo.py`.
+
+### 2026-09-30 — The build
+
+- **The network guard** (`tests/support/network_guard.py`, installed at
+  `tests/conftest.py` import): a connection or name lookup to anything but
+  loopback or a Unix socket raises `NetworkBlockedInTests`, naming the
+  host. `test_phase281_network_guard.py`, 7: a planted test that opens a
+  URL, run in a pytest subprocess with only the guard loaded, fails on it;
+  a planted loopback test passes. Every host the file names is reserved
+  (`.invalid`, 192.0.2.0/24), so a broken guard, as the mutation run makes
+  it, still reaches no real service.
+- **Migration 078** as v1.0 describes; `test_phase281_migration.py`, 8:
+  the tables and columns, the rollback, planted rows in eight tables
+  unchanged both ways, Massachusetts's rows, the CHECKs, and every shipped
+  URL and clause present in `281_sources.md`. `ALTER TABLE … ADD COLUMN`
+  with a column CHECK, and `DROP COLUMN` of it, were tried on a scratch
+  database first.
+- **`core/outbound.py`**: stdlib `urllib`, User-Agent
+  `motodiag/0.6.0 (+https://github.com/Kubanjaze/moto-diag)`, 20 s, one
+  request, `ServiceUnavailable` with `unreachable`, `blocked`, `error` or
+  `malformed`. A 403 is a block; any other status the caller does not
+  accept is an error; an HTML page on a success status is a block. (The
+  first version called an HTML 503 page a block; changed when its test was
+  written, before any commit.)
+- **Row 288:** `accounting/tax.py`, `cli/shop_tax.py` (`shop tax
+  jurisdiction add/list/set`, `rate set`, `rule set`, `confirm`,
+  `status`); `shop/invoicing.py` takes tax only from the record, on the
+  taxable lines, rounded half up, and records rate, source, recheck-by and
+  taxed types; `shop invoice generate` loses `--tax-rate` and gains
+  `--currency`; the invoice panel prints the rate, its source and "Rate
+  must be re-checked by D"; the API route drops `tax_rate` and a tax
+  refusal is 409 (`InvoiceTaxNotOnRecord`). `test_phase281_tax.py`, 16.
+- **Row 289:** `accounting/exchange.py`, `cli/shop_currency.py` (`shop
+  currency refresh`, `rates`, `set`, `convert`). `test_phase281_exchange.py`,
+  17.
+- **Row 281:** `advanced/nhtsa.py`; `recall_repo.py` gains
+  `refresh_recalls`, `recall_state`, `refresh_all_bikes`,
+  `fetched_coverage_sql`; the three older queries (`inventory`'s
+  `list_recalls_for_vehicle`, `list_open_for_bike`, and through them
+  `check_vin`, `lookup`, the predictor's feed) keep their own clause for
+  older rows, limited to `source IS NULL`, and match fetched campaigns only
+  through `recall_vehicles`; `cli/recall_nhtsa.py` (`advanced recall
+  refresh`); `recall check-vin --refresh`, `recall list --bike`; the recall
+  table shows "not rated by NHTSA" and the fetch date. F86's wording is
+  kept per model, so its tests are unchanged. `test_phase281_recalls.py`, 20.
+- **Row 287:** `advanced vin decode [--refresh] [--bike --save]`.
+  `test_phase281_vin.py`, 11.
+- **The tests that relied on the zero default** now state the shop's tax:
+  `tests/support/tax_on_record.py` records a test jurisdiction (`ZZ-T`,
+  labelled a fixture, valid 2000–2099 so no test reads today's date, every
+  line taxable: the old arithmetic). Twelve files, 260 tests: 169, 170,
+  174 (gate 8), 180, 182, 184 (gate 9), 202, 205 (gate 11, through the new
+  `shop tax` commands), 274 P&L and quotes, 275 export. Where a test sent
+  `tax_rate`, it now records that rate on the shop instead.
+- **The API model ignores unknown fields**, as every request model here
+  does, so a caller that still sends `tax_rate` has it ignored; the
+  response states the rate used. Tested (`tax_rate: 0.5` sent, 6.25% used).
+- **Decisions made while building:**
+  - a shop's own row wins over the regulation row per item, and a
+    Massachusetts shop's shop-supplies rule is its own (`shop_id` set), so
+    it never becomes the rule for other shops in the state;
+  - `tax status` fails on no jurisdiction, no valid rate, or a rule past
+    its validity; a line type with no rule at all is listed as not on
+    record, because a shop that never charges it is not failing (an
+    invoice carrying it is still refused);
+  - the recheck-by date of an invoice is the earliest validity among the
+    rate and the rules it used;
+  - `count_recalls(older_only=True)` replaces a second copy of the count
+    in the CLI.
+- **Gates that caught the build before any commit:**
+  - 209B/244X: `get_resolutions_for_bike` gained a caller (ORPHANS 118 →
+    117; 244X's multi-line list 51 → 50), and the new table heading
+    `"Recall"` read to the gate as a use of `inventory.models.Recall`, a
+    false caller; the heading is now "Recall id";
+  - 256's chokepoint gate refused `f"SELECT * FROM {table}"` in
+    `tax._pick`; the two tables are now literal query prefixes;
+  - 355's gate refused the guard test's subprocess pytest for stating no
+    worker mode; it now passes `-p no:xdist`.
+- 244G's scanner over `tests/`: 0 findings. F158 scan: the new
+  user-facing strings and command docstrings hold no internal reference;
+  the four new library modules' module docstrings name phases, and no user
+  sees those.
+
+### 2026-09-30 — The smoke calls
+
+One live call per service, each through the app's own command on a
+scratch database, recorded by `281_smoke.py` (a tap on
+`core.outbound._open` that calls the real transport once). The log and
+bodies are in `281_smoke/`. A local dry run with a fake transport came
+first, and found bug fix #1.
+
+| service | command | URL | time (UTC) | status | bytes |
+|---|---|---|---|---|---|
+| NHTSA recalls | `advanced recall refresh --make PIAGGIO --model "MP3 500" --year 2020` | `https://api.nhtsa.gov/recalls/recallsByVehicle?make=PIAGGIO&model=MP3%20500&modelYear=2020` | 2026-09-30T22:36:26 | 200 | 2149 |
+| NHTSA vPIC | `advanced vin decode 1HD1FRW177Y600001` | `https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/1HD1FRW177Y600001?format=json&modelyear=2007` | 2026-09-30T22:36:27 | 200 | 4126 |
+| ECB | `shop currency refresh` | `https://www.ecb.europa.eu/stats/eurofxref/eurofxref-daily.xml` | 2026-09-30T22:36:28 | 200 | 1547 |
+
+- **NHTSA accepted the app's honest User-Agent.** No browser User-Agent
+  is sent, and none was needed.
+- NHTSA returned 20V524000 and 22V217000 for the F103 check vehicle, the
+  two campaigns Phase 252 recorded for it.
+- The VIN is made up (a valid check digit, serial 600001), so no real
+  vehicle is named. vPIC decoded it partially (make and model blank,
+  error codes 3 and 14), and the command labelled it "Partial decode"
+  with vPIC's text.
+- The ECB feed held 29 currencies for 2026-09-30.
+- All three bodies became fixtures (`tests/fixtures/phase281/`, byte for
+  byte, sha256 checked). The others are listed there as recorded or
+  built: NHTSA's 400 zero-result body (recorded 2026-09-20), an Akamai
+  403 page (recorded at Step 0), a clean vPIC decode and a 503 page
+  (built).
+
+### 2026-09-30 — Mutations
+
+**41/41 red** (`281_mutate.py`: guard 2, migration 4, outbound 3, recalls
+12, VIN 4, tax and invoices 11, exchange 4, bug fix 1). `git diff --stat`
+was the same before and after. The tax group was run again after `_pick`
+changed: 11/11.
+
+### 2026-09-30 — A whole-suite run on the held work, and two fixes
+
+`python -m pytest -n auto --dist load` on the uncommitted work (not the
+regression of record): 10261 passed, 7 failed, 19 min 3 s.
+- **Five are the planned stop:** gate 11's snapshot test, and gates 12, 13
+  and 14 re-running it.
+- **`test_phase275_migration.py::…test_existing_rows_are_unchanged_either_way`**
+  applied every pending migration, then compared `invoices` rows whole;
+  078's ten new columns lengthened each row. The test now compares the
+  planted rows' own columns and their count. `test_phase281_migration.py`
+  had the same trap waiting for migration 079 (it pinned the columns as
+  the table's last); it now pins them where they are and the rows by
+  prefix. 9 and 8 passed; the migration mutations 4/4 red again.
+- **`test_phase78_gate2_integration.py::…test_noise_cross_make`: worker
+  gw6 crashed with no traceback.** Recorded against F183 in
+  `docs/FOLLOWUPS.md`, as the prompt directs. The file alone: 22 passed.
+  The regression of record is run in parallel after the snapshot; a
+  second loss there is a stop.
+- 244G's scanner over `tests/` again: 0 findings.
+
+### 2026-09-30 — The planned stop: gate 11's contract snapshot
+
+`wholetree.sh --full` (85 files): 3976 passed, **4 failed**, all gate 11:
+gate 12's and gate 13's reruns of gate 11, gate 13's rerun of gate 12,
+gate 14's rerun of gate 13. Gate 11 itself reports exactly the one change
+v1.0's API table names, and nothing else:
+`InvoiceGenerateRequest.tax_rate: in the snapshot, absent from the API`.
+
+- **Not committed:** everything in `src/` and `tests/` (42 paths). The
+  migration and the code that reads its tables go in together, and a
+  commit to `migrations.py` needs a `--full` record, which is red until the
+  snapshot is refreshed.
+- **Backup:** `281_wip.patch` in this folder (4596 lines, binary-safe, new
+  files included). `git apply --check` passes against `b5dbf1f` in a
+  scratch worktree, and it reverse-applies to this working tree.
+  `git diff HEAD -- src tests` hashes `a21590328d77ed5f…`.
+- **Committed:** this log, F183's note, `281_mutate.py`, `281_smoke.py`
+  with its log and bodies, and the patch.
+
+**What the mobile session accepts** (v1.0, "The API change"): the snapshot
+diff removes `InvoiceGenerateRequest.tax_rate`, and nothing else. The app
+does not call invoice generation; its generated types lose the field. The
+same session closes **F103** in the mobile repo's FOLLOWUPS: its
+requirements for a recall sync are met here (a User-Agent of the app's
+own, which NHTSA accepted; a 403 or a web page is a failure, never
+empty; NHTSA's 400 is an answer only with its zero-result body; a refresh
+of every bike first requires 20V524000 for PIAGGIO MP3 500 2020, and
+exits 1 listing any bike that failed). The operator writes that session's
+prompt. Until it pushes, this checkout does not switch branches or commit
+anything under `src/` or `tests/`.
+
+### 2026-10-01 — Resumed: the mobile snapshot refreshed in moto-diag-mobile e536e60
+
+The operator (2026-10-01): "The mobile push has landed: moto-diag-mobile
+e536e60 on origin/main (its prompt is e69e5e0). … The snapshot diff
+removes InvoiceGenerateRequest.tax_rate and nothing else; src/api-types.ts
+loses only that field. … F103 was noted, not closed: the mobile file says
+Phase 281 meets it and it closes when 281 merges. … No new finding was
+filed in the mobile repo, so the findings header needs no change."
+
+Checked here, 00:20 EDT:
+- `e536e60` is `moto-diag-mobile` `origin/main`, local `main` level with it;
+- this checkout as left: HEAD `2112cba`, 42 changed paths, `git diff HEAD
+  -- src tests` still hashes `a21590328d77ed5f…`;
+- `__pycache__` under `src/` and `tests/` cleared (the mobile session had
+  written `.pyc` files here); **gate 11: 21 passed**, run with `-B`.
+- The month-end evening window (F10) is over: it is 2026-10-01.
+
+**F103 stays open until 281 merges**; a later mobile session closes it,
+citing the merge. The handoff says so.
+
+At the operator's request, an untracked symlink
+`moto-diag-mobile/moto-diag-mobile` (to the repository itself, made
+2026-09-29) was removed; the link only, the repository is intact.
+
+The held work is committed from the working tree, and `281_wip.patch` is
+removed in the same commit, since the commit now holds what it held.
+
+### 2026-10-01 — The held work committed (`07d166f`), and the floor
+
+- `wholetree.sh --full` on the staged tree: **3980 passed, 0 failed**,
+  record written. Committed as `07d166f`.
+- **`COLLECTED_TEST_FLOOR` 10179 → 10268**, by diffing collected IDs
+  (`--collect-only -q -o addopts=`) against a `master` worktree: +89 = the
+  seven `test_phase281_*` files (90) + gate 15's
+  `test_rolling_back_peels_every_successor[77]` − 209B 1 − 244X 1. The
+  worktree's run imports this checkout's `src` through the editable
+  install, so `[77]` appears in both lists (master 10,180). The worktree
+  was removed after.
+
+### 2026-10-01 — The regression at `bedfdf7`: five failures, and the cause
+
+`wholetree.sh --full` on the committed HEAD `bedfdf7`: 3980 passed, record
+written. Then `regression.sh`:
+
+Regression at `bedfdf7` (not of record, it failed): 10263 passed, 5 failed, 0 skipped, 0 errors (30 min 29 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+No worker was lost (`crashed` and `node down` appear 0 times in its log).
+The five failures are all in `test_phase122_intake.py`: the photo-intake
+quota counted 0 uses where the test had logged them. It ran 00:37–01:07
+EDT on 2026-10-01, the first day of a month.
+- **Not this batch:** a `master` worktree with its own `src`
+  (`PYTHONPATH` set, `motodiag.__file__` checked) fails the same five
+  (44 passed).
+- **Not the month-end window** (F10's memory note is for the last
+  evening of a month); this is the 1st, and the cause is different.
+- No finding names it (searched both FOLLOWUPS files for
+  `intake_usage`, `_count_this_month`, "first day").
+
+### 2026-10-01 — Bug fix #2: usage written on the 1st of a month never counted
+
+- **Issue:** `VehicleIdentifier._count_this_month` compared
+  `intake_usage_log.created_at >= month_start`. `created_at` is
+  `CURRENT_TIMESTAMP` (UTC, `2026-10-01 05:08:13`); `month_start` was local
+  `isoformat()` (`2026-10-01T00:00:00`). As text, `' '` sorts before
+  `'T'`, so a row written on the 1st is less than the month start: the
+  1st's photo identifications were never counted toward their month, on
+  any day of it. The quota did not stop them and the budget alert did not
+  see them. Five Phase 122 tests fail on any 1st (UTC date).
+- **Root cause:** two timestamp formats (and two clocks) compared as text.
+- **Fix:** the month start is UTC, written as `CURRENT_TIMESTAMP` writes
+  it (`YYYY-MM-01 00:00:00`). Where a month begins for a shop in another
+  time zone is F10's family and is not changed here.
+- **Files:** `src/motodiag/intake/vehicle_identifier.py`,
+  `tests/test_phase281_intake_month.py` (new, 3: a row at the 1st's first
+  second counts, a row the database stamps itself counts, last month's
+  does not), `281_mutate.py` (Y2), `COLLECTED_TEST_FLOOR` 10268 → 10271.
+- **Verified:** the new file and every intake test: 52 passed (the five
+  Phase 122 tests included, on 2026-10-01). Y1 and Y2: 2/2 red.
+
+**Commit.** `4faa46b`
+
+Two bugs in this build. A third would be a stop to look for the shared
+cause; these two share none (an offline year table, an intake timestamp).
+
+### 2026-10-01 — The regression at `4faa46b`: a worker lost, the second. Stopped.
+
+`wholetree.sh --full` on `4faa46b`: 3980 passed, record written. Then:
+
+Regression at `4faa46b` (not of record, a worker was lost): 10270 passed, 1 failed, 0 skipped, 0 errors (27 min 51 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+- The one failure is a lost worker, with no traceback: `[gw1] node down:
+  Not properly terminated`, `replacing crashed worker gw1`, `worker 'gw1'
+  crashed while running
+  'tests/test_phase359_content_cleanup.py::TestTheMigration::test_the_round_trip_restores_the_workflow_tables'`
+  (log `~/.cache/motodiag/regressions/4faa46b_parallel_20261001_070510.log`,
+  line 20315). It is F183's original shape: a migration round-trip under
+  load (F183 was a round-trip through `DROP COLUMN`; migration 078's
+  rollback has fourteen of them, and this test rolls back past 078).
+- No crash report in `~/Library/Logs/DiagnosticReports/` (only unrelated
+  system `.diag` files). On AC power.
+- The file alone: 18 passed (1 min 10 s).
+- Every other test passed, the five Phase 122 tests included.
+
+**This is the second worker lost in this phase** (the first: gate 2, in
+the whole-suite run on the held work, recorded on F183). The prompt:
+"A regression worker that dies with no traceback: record it against F183
+and re-run in parallel. A second loss is a stop." The operator, at the
+resume: "A second worker loss is a stop."
+
+**Stopped for the operator.** Nothing has touched live (schema 77). The
+deploy's dry run has not run.
+
+The push guard refused one command: it chained `git commit` and `git
+push`, and the guard judges a push before anything in the command runs.
+Nothing ran; the entry, the commit and the push were redone as separate
+commands. The guard was right and was not loosened.
+
+### 2026-10-01 — F183: one hour to reproduce it (09:56–10:56 EDT). Not reproduced.
+
+The operator, verbatim:
+
+> B, time-boxed to one hour.
+>
+> What the logs show:
+> - Both regression crashes, 274's at 3b7528f and yours at 4faa46b, happened about 98% through the run, in test_phase359_content_cleanup.py's round-trip test, while gate 2's tests (test_phase78_gate2_integration.py) ran on another worker. Your trial-run loss was a gate 2 test. Both files build a full seeded database per test from the seed files; they share no file path.
+> - It wasn't a memory kill: macOS's log shows no jetsam kill of a Python process between 07:04 and 07:34, and there is no crash report. pytest already turns faulthandler on, so PYTHONFAULTHANDLER=1 adds nothing. A death with no traceback is more likely a signal faulthandler can't catch, or the process exiting itself.
+>
+> So reproduce first: run those two files together under xdist, repeatedly, and also as two plain pytest processes side by side so each one's exit code or signal is recorded. If you find the cause, fix it and close F183 with the evidence. Record it as F183's fix, not as a bug fix of this build, so it doesn't count toward the three-bug stop. If an hour doesn't reproduce it, stop and tell me what you ran. After that, the regression of record, and carry on.
+
+**What was run** (`281_f183_repro.py`, committed; every run recorded in
+`281_f183_runs.jsonl` and `281_f183_hammer.jsonl`):
+
+| mode | what | runs | result |
+|---|---|---|---|
+| `xdist` | one pytest, `-n 2 --dist load`, both files | 4 (14:00–14:51 UTC) | 40 passed each; rc 0; 0 "node down", 0 crashed workers |
+| `pair` | two plain pytest processes side by side (`-p no:xdist`), one per file | 4 | every process rc 0, no signal; 359's file 18 passed, gate 2's 22 passed |
+| `hammer` | six plain processes at once, each running only `TestTheMigration::test_the_round_trip_restores_the_workflow_tables` (a rollback through 078..072 and back) | 52 rounds, 312 processes (14:10–14:42 UTC) | every process rc 0, no signal |
+
+The hammer ran alongside the alternate loop from 10:10, so both ran under
+load (gate 2's file took up to 12 min instead of 4 min 40 s). Another
+session's pytest runs (pieces-ltm-clone) were also on the machine.
+
+**Read and ruled out on the way:**
+- The two crash logs (274's at `3b7528f`, line 19921; 281's at `4faa46b`,
+  line 20315) hold no "Fatal Python error", segfault or abort text. Both
+  crashes came at the same point of the run: worker gw8 had just passed
+  gate 2's `test_honda_coverage` and started `test_yamaha_coverage`. The
+  trial-run loss came at 98–99% too. All three are in the run's last
+  ~2%, when most workers are idle.
+- Nothing in `src/` or `tests/` calls `os._exit`, `os.kill`, `killpg`,
+  `pkill`, `killall`, `setrlimit` or a signal handler; no test calls
+  `.terminate()` or `.kill()`. pytest-timeout (whose thread method ends
+  a process with `os._exit`) is not installed.
+- pieces-ltm-clone's tracked code kills nothing; its one scratchpad
+  `pkill` targets `ltm_main.py backfill`, which no pytest matches, and
+  its scratchpad has no file written in today's or the trial run's crash
+  windows (one in 274's).
+- The first version of the script's summary check required the
+  `=====` banner, which `-q` does not print, so its own records say
+  `summary=false`; the table above re-reads each run's tail (fixed in the
+  committed script).
+
+**One thing seen, not the cause:** seven hammer processes ended with a
+pytest warning, `(rm_rf) error removing
+…/pytest-of-lilquant/garbage-…/test_the_drive_gets_the_newest0`
+(`OSError: [Errno 66] Directory not empty`). That test is
+pieces-ltm-clone's (`tests/test_backups.py`): both projects' pytest runs
+share one per-user temp root, and each session prunes old numbered
+directories there. Every one of those processes still exited 0.
+
+**Stopped for the operator, as asked.** F183 stays open, with this run
+added to it. The regression of record has not been run again.
+
+### 2026-10-01 — The regression of record
+
+The operator: "Go: run the regression of record as before, with the tree
+clean. I'll keep the pieces-ltm-clone session idle while it runs, to take
+that load out of the picture. If a worker is lost again, stop: F183 then
+gets its own phase before 281 closes. Otherwise carry on: the dry run of
+078, the deploy and close-out."
+
+`wholetree.sh --full` on the clean tree at `45f3a54`: 3980 passed, record
+written. No pieces-ltm-clone pytest was running; its long-lived
+`ltm-capture run` and `ltm_main.py serve` processes were up.
+
+Regression of record: 10271 passed, 0 failed, 0 skipped, 0 errors at `45f3a54` (22 min 21 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The count equals the floor. No worker was lost ("crashed" and "node
+down" appear 0 times in
+`~/.cache/motodiag/regressions/45f3a54_parallel_20261001_130159.log`).
+`45f3a54` holds the same code as `4faa46b`; the commits between add
+documents only.
+
+### 2026-10-01 — The deploy: the dry run
+
+- **Scope** (`281_deploy_scope.json`): `schema_version` +1;
+  `tax_jurisdictions` +1, `tax_rates` +1, `tax_line_rules` +3; fourteen
+  schema objects added (eight tables, six indexes); `table invoices` and
+  `table recalls` changed; nothing else.
+- **The first `deploy.py dryrun 281`** reported one scope problem, the
+  scope's own: it named `sqlite_sequence` +3 (the new AUTOINCREMENT
+  tables' counters), and the tool reports no change there. Live was only
+  read. The line was removed and the dry run repeated.
+- **`deploy.py dryrun 281`:**
+  - live 5847 rows, 101 tables, integrity ok;
+  - backup `~/backups/motodiag/motodiag_pre281_20261001_132445.db`, sha256
+    `8b273289…` (retain-5 removed `motodiag_pre357_20260928_144754.db`
+    and, at the repeat, `motodiag_pre360_20260929_111643.db`; the first
+    run's `pre281_…_132433.db` is kept);
+  - applied `[78]` on the copy; scope problems: none; F158 census 36.
+- **The diff (`281_dryrun_diff.md`):**
+  - rows added: `schema_version` 1, `tax_jurisdictions` 1 (US-MA),
+    `tax_rates` 1 (6.25%, valid until 2027-09-30), `tax_line_rules` 3
+    (parts, labour, the diagnostic reading);
+  - fourteen schema objects added, as the scope names them;
+  - `table invoices` and `table recalls` changed: their SQL gains the new
+    columns. Live holds 0 invoices and 0 recalls (Step 0), so no row
+    carries them;
+  - **no existing row changed or removed** in any table. `shops` is not
+    touched.
+- **Not a rule-1 stop.** No existing row changes, the condition the
+  prompt set. The diff is committed before apply-live.
+
+### 2026-10-01 — The deploy: apply-live
+
+Run on the phase branch before the merge, as 274's and 275's were. The
+migration applied is the one in `45f3a54`, the commit the regression
+tested (`53dccb6` adds only documents).
+
+`deploy.py apply-live 281`:
+- the preflight passed (F172's exact check); applied `[78]`;
+- live after: 5853 rows, 109 tables, integrity ok;
+- scope problems none; **equals the approved exact diff: yes**
+  (`281_live_diff.md`).
+
+By hand, read only, after:
+- schema 78; `tax_jurisdictions` holds US-MA (USD); its rate and three
+  rules (parts taxable `stated`, labour not taxable `stated`, diagnostic
+  not taxable `reading`);
+- shops 1, vehicles 10, customers 6, work orders 6, invoices 0, recalls
+  0, appointments 0, notifications 4: every count as Step 0 measured it;
+  `shop_tax_jurisdictions`, `exchange_rates`, `recall_fetches` and
+  `vin_decodes` are empty;
+- `foreign_key_check` is empty;
+- against live, `shop tax status --shop 1` exits 1 with "FAILS: no tax
+  jurisdiction" (the smoke shop has none, so an invoice there is refused);
+  `shop currency rates` prints "No exchange rates are stored";
+  `shop tax jurisdiction list` lists US-MA.
+
+### 2026-10-01 — Close-out
+
+- **No refute pass ran:** the batch ships code, a migration and tests.
+  Its four regulator rows (Massachusetts's rate and three line rules)
+  rest on the DOR's pages, quoted with URLs and dates in
+  `281_sources.md`; `test_phase281_migration.py` checks every shipped URL
+  and clause against that file. The diagnostic rule is marked a reading,
+  as the operator asked.
+- **The mutation script re-run in full on the final code: 42/42 red**
+  (G1–G2, M1–M4, O1–O3, R1–R12, V1–V4, T1–T11, X1–X4, Y1–Y2). `git
+  status` afterwards showed only the close-out's own documents.
+- **F184 closed** in `docs/FOLLOWUPS.md`. F185 open; F183 open, with
+  this phase's two sightings and the hour's reproduction recorded; F103
+  (mobile file) closes after the merge, in a mobile session.
+- Rows 287, 288 and 289 ✅ folded into 281, with no CLOSED date of their
+  own; row 281 ✅ with its CLOSED date and the regression line (96
+  words). Rows 367 and 368 stay ⏸️.
+- The fold pin in `test_roadmap_continuity.py` names eighteen folds (15
+  + 287, 288, 289) and is renamed
+  `test_the_eighteen_folds_are_seen_and_pass`. The code did not change
+  after the regression; the regression is run again on the close-out
+  commit because a test changed.
+- `implementation.md` 0.13.96 with its history row; v1.1; handoff
+  `docs/handoffs/2026-10-01_281_closed.md`.
+- The documents move to `completed/`: this log, v1.1, the Step 0, the
+  sources, the mutation script, the smoke script with its log and
+  bodies, the F183 reproduction script and its two records, the scope and
+  both diffs.
+- Two bug fixes, each with its register entry (#1 `b5dbf1f`, #2
+  `4faa46b`).
+- `closeout_check.py . 281` first failed A4: both register entries ended
+  "Commit: this entry's commit", a bullet A4 does not read as a Commit
+  line naming a hash. Each now reads `**Commit.**` with its hash
+  (`b5dbf1f`, `4faa46b`); the check then passed all eight.
+
+### 2026-10-01 — The regression on the close-out commit: a worker lost. Stopped before the merge.
+
+`wholetree.sh --full` on `8ba118e`: 3980 passed, record written. Then:
+
+Regression at `8ba118e` (not of record, a worker was lost): 10270 passed, 1 failed, 0 skipped, 0 errors (20 min 8 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+- The one failure is a lost worker, with no traceback: `[gw6] node down:
+  Not properly terminated`, `replacing crashed worker gw6`, `worker 'gw6'
+  crashed while running
+  'tests/test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_cross_platform_cam_chain'`
+  (`~/.cache/motodiag/regressions/8ba118e_parallel_20261001_135114.log`,
+  line 20507), at 99%, while gw7 ran gate 2's `test_noise_cross_make`.
+- This is the fourth loss seen (274's at `3b7528f`; this phase's trial
+  run, `4faa46b` and now `8ba118e`), every one in gate 2's file or 359's
+  round-trip test, every one in the last ~2% of a full run.
+- The code is the code of the regression of record (`45f3a54`): the
+  close-out changed documents and the fold pin only.
+
+The operator, before this run: "If a worker is lost again, stop: F183
+then gets its own phase before 281 closes." **Stopped. Not merged.** The
+branch holds the close-out commit, which marks row 281 ✅; that row is not
+on `master`. Migration 078 is live (deployed before the merge, as 274 and
+275 were).
+
+### 2026-10-01 — This branch carries Phase 369's F183 fix (`1753822`)
+
+F183 got its own phase, 369. It found the cause: the push guard's `main()`
+left a 345 s SIGALRM armed when the whole-tree gate raised. Phase 358's
+`test_an_error_in_the_whole_tree_gate_blocks` ran it inside an xdist
+worker, and 345 s later the alarm's `os._exit(2)` ended that worker's test
+with no traceback. In all three logged losses, this phase's `4faa46b` and
+`8ba118e` among them, the dead worker is the one that ran that test.
+
+**Why 281 carries it.** 369's regression could not run on `master`. The
+mobile snapshot follows this phase's API (moto-diag-mobile `e536e60`: the
+invoice request carries no tax rate), and `master`'s API still has
+`tax_rate`. So `master` fails gate 11 until 281 merges, and
+`wholetree.sh --full` on 369's branch failed 4 (gate 11 and its re-runs).
+The operator chose option 1, verbatim:
+
+> Switch to phase-281. Bring in 1753822's code — the two guards, the closeout CHANGELOG entry, tests/conftest.py, tests/support/alarm_left_armed.py, tests/support/worker_loss.py and tests/test_phase369_worker_loss.py — as a diff, not by copying files: 281's conftest.py carries its network guard, which a file copy would drop. None of the 369_* files. Record in 281's log that it carries Phase 369's F183 fix (1753822) and why: the mobile snapshot follows 281's API, so master fails gate 11 until 281 merges.
+
+**What came in.** `git diff 1753822^ 1753822` over those seven paths,
+through `git apply --3way --index`. All applied cleanly.
+`tests/conftest.py` keeps the network guard and gains `pytest_plugins`
+for the two new modules:
+- `.claude/skills/closeout/_pre_push_guard.py` and `_edit_guard.py`: the
+  alarm is cancelled in a `finally`;
+- `.claude/skills/closeout/CHANGELOG.md`: the dated entry;
+- `tests/support/alarm_left_armed.py`: a test that leaves SIGALRM armed
+  fails in teardown;
+- `tests/support/worker_loss.py`: a lost worker reports its exit status
+  or signal, PID, last test, signals and fatal dump;
+- `tests/test_phase369_worker_loss.py`: 8 tests.
+
+None of the `369_*` files came in; 369's documents, F183's closure and its
+record stay on `phase-369`. The new file with gates 355, 358 and 360 and
+the ledger tests, on this tree: 234 passed.
+
+This is F183's fix, carried, not a bug fix of this build. A regression of
+record follows on the new HEAD; a lost worker is a stop.
+
+### 2026-10-01 — The regression of record, with the F183 fix carried
+
+`wholetree.sh --full` on the committed HEAD `63fa5a8`: 3988 passed, record
+written. Then `regression.sh`, 22:19–22:40 EDT (00:19 UTC on the 2nd, so
+outside both date windows):
+
+Regression of record: 10279 passed, 0 failed, 0 skipped, 0 errors at `63fa5a8` (20 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+- 10279 is the earlier 10271 plus the 8 tests that came with the fix.
+- **No worker was lost:** in
+  `~/.cache/motodiag/regressions/63fa5a8_parallel_20261001_221956.log`,
+  `node down`, `crashed`, `worker-loss:` and "left SIGALRM armed" each
+  appear 0 times.
+- **What this run does and does not show.** 369's timing script, run on
+  this log: gw7 ran the formerly leaking test and then had 252.4 s of its
+  own tests left. That is under the 345 s fuse, so this run alone would
+  not have lost a worker even before the fix. The fix's proof is 369's:
+  - R1 lost the worker on demand;
+  - R2, after the fix, did not;
+  - here, the teardown check found no test leaving the alarm armed,
+    across the whole suite.
+- `COLLECTED_TEST_FLOOR` stays 10271: the count rose, and a floor only
+  ever moves deliberately.
+
+The documents were brought to this line: v1.2 of `281_implementation.md`,
+the handoff, row 281 and the `implementation.md` row. These were document
+changes only, after the regression. Next: the merge, `verify_phase.sh`,
+and the handoff's after-merge note.

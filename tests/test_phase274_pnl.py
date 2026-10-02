@@ -15,6 +15,7 @@ from pathlib import Path
 
 import pytest
 
+from support.tax_on_record import record_tax
 from support.phase274 import (
     new_db, ok, refused, seed_bike, seed_customer, seed_shop, seed_user, sql,
 )
@@ -93,6 +94,7 @@ def fixture_db(tmp_path):
     wo3 = _wo(db, dana, bike, None, 1.0, "Diagnosis")
     _time(db, wo3, ana, 1800)
 
+    record_tax(db, 1)  # Phase 281: invoices need the shop's tax on record
     for wo in (wo1, wo2, wo3):
         ok(db, "shop", "invoice", "generate", wo, "--hourly-rate", "10000")
     return db, {"ana": ana, "ben": ben, "line1": line1, "line2": line2}

@@ -73,7 +73,11 @@ class TestMigration077:
 
         apply_pending_migrations(db)
         for t in watched:
-            assert sql(db, f"SELECT * FROM {t} ORDER BY rowid") == before[t], t
+            # Later migrations may add columns (078 adds ten to invoices);
+            # the planted rows' own columns must read back unchanged.
+            after = sql(db, f"SELECT * FROM {t} ORDER BY rowid")
+            assert [row[:len(b)] for row, b in zip(after, before[t])] == before[t], t
+            assert len(after) == len(before[t]), t
         # the two new columns read NULL on the existing appointment, nothing else moves
         assert sql(db, "SELECT * FROM appointments ORDER BY rowid") == [
             row + (None, None) for row in appts_before]

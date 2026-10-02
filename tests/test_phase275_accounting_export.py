@@ -19,6 +19,7 @@ import pytest
 
 from motodiag.accounting import export as acct_export
 from support.phase275 import new_db, ok, refused, seed_booking_shop, sql
+from support.tax_on_record import record_tax
 
 REPO = Path(__file__).resolve().parent.parent
 
@@ -196,7 +197,9 @@ class TestQuickBooksOnline:
         sql(path, "INSERT INTO work_orders (shop_id, vehicle_id, customer_id, title, "
                   "status, actual_hours) VALUES (?, ?, ?, 'Carb clean', 'completed', 1.5)",
             (s["shop"], s["bike1"], s["dana"]))
-        ok(path, "shop", "invoice", "generate", "1", "--tax-rate", "0.0625",
+        # Phase 281: 6.25% on every line is the shop's rate on record.
+        record_tax(path, s["shop"], rate=0.0625)
+        ok(path, "shop", "invoice", "generate", "1",
            "--hourly-rate", "11000", "--diagnostic-fee", "4500", "--supplies-pct", "0.05")
         today = datetime.now(timezone.utc).date().isoformat()
         _map_qbo(path, s["shop"], kinds=("receivable", "labor", "diagnostic", "misc", "tax"))

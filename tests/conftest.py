@@ -28,6 +28,11 @@ if not os.environ.get("MOTODIAG_DB_PATH"):
 
 import pytest
 
+# Phase 281: no test reaches the network; see tests/support/network_guard.py.
+from support.network_guard import install as _install_network_guard
+
+_install_network_guard()
+
 from motodiag.core.config import reset_settings
 
 # Discard anything cached before the assignment above.
@@ -40,6 +45,10 @@ from motodiag.knowledge.dtc_repo import add_dtc
 from motodiag.knowledge.symptom_repo import add_symptom
 from motodiag.knowledge.issues_repo import add_known_issue
 from motodiag.core.session_repo import create_session
+
+# Phase 369 (F183): a lost xdist worker records its exit status, signal and
+# last test in the run's output; a test that leaves SIGALRM armed fails.
+pytest_plugins = ["support.worker_loss", "support.alarm_left_armed"]
 
 
 # --- Model fixtures (no DB) ---

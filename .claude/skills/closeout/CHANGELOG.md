@@ -1,5 +1,31 @@
 # closeout — changelog
 
+## 2026-10-01 — both guards cancel their alarm in a `finally` (Phase 369, F183)
+
+The operator: "Fix the guard so the cancel is in a finally.
+_edit_guard.main() cancels after its try/except, so it's safe today, but
+give it the same finally. Record the guard change in the closeout skill's
+CHANGELOG.md."
+
+**The defect.** `_pre_push_guard.main()` armed
+`signal.alarm(FAST_LIMIT_S + 60)` (345 s), whose handler `_out_of_time`
+calls `os._exit(2)`, and cancelled it inside the `try`. An exception from
+`wholetree_gate` skipped the cancel. In a hook process that only costs an
+early exit. But `test_phase358_wholetree_contract.py`'s
+`test_an_error_in_the_whole_tree_gate_blocks` runs `main()` inside an
+xdist worker with the gate raising. 345 s later the worker ended in
+whatever test it had reached, with no traceback. That is F183, four
+lost workers.
+
+**The change.** Both `main()`s now cancel in a `finally`. The guards'
+behaviour is unchanged: each still fails closed on its own clock.
+
+**What holds it:**
+- `tests/test_phase369_worker_loss.py`, which fails on either guard's
+  cancel moved back inside the `try`;
+- `tests/support/alarm_left_armed.py`, loaded by `tests/conftest.py`,
+  which fails any test that leaves SIGALRM armed and cancels it.
+
 ## 2026-09-28 — the edit guard (Phase 360)
 
 The operator: "enforce the edit rule. 356 and 357 both edited source

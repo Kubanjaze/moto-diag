@@ -6712,6 +6712,245 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE appointments DROP COLUMN shop_id;
         """,
     ),
+    Migration(
+        version=78,
+        name="public_data_services_and_tax",
+        description=(
+            "Phase 281 (Track O batch 3): recalls from NHTSA, VIN decodes from "
+            "vPIC, sales tax by jurisdiction, exchange rates. New tables: "
+            "`tax_jurisdictions`, `shop_tax_jurisdictions` (a shop's "
+            "jurisdiction, kept out of `shops`), `tax_rates` and "
+            "`tax_line_rules` (each with effective date, valid-until date, "
+            "source, check date and provenance), `exchange_rates`, "
+            "`recall_fetches`, `recall_vehicles` and `vin_decodes`. `recalls` "
+            "gains `source`, `fetched_at`, `component` and `consequence`; "
+            "`invoices` gains the tax rate, its source and recheck-by date, the "
+            "taxed line types, and the exchange rate an invoice in another "
+            "currency used. Inserts Massachusetts, its 6.25% rate and three line "
+            "rules from the Department of Revenue's text, checked 2026-09-30 and "
+            "valid until 2027-09-30. Changes no existing row. Rollback drops the "
+            "tables, then the columns."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS tax_jurisdictions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                code TEXT NOT NULL UNIQUE,
+                name TEXT NOT NULL CHECK (length(trim(name)) > 0),
+                currency TEXT NOT NULL CHECK (length(currency) = 3),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+            );
+
+            CREATE TABLE IF NOT EXISTS shop_tax_jurisdictions (
+                shop_id INTEGER PRIMARY KEY,
+                jurisdiction_id INTEGER NOT NULL,
+                set_by_user_id INTEGER,
+                set_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (jurisdiction_id)
+                    REFERENCES tax_jurisdictions(id) ON DELETE RESTRICT,
+                FOREIGN KEY (set_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS tax_rates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                jurisdiction_id INTEGER NOT NULL,
+                shop_id INTEGER,
+                rate REAL NOT NULL CHECK (rate >= 0 AND rate < 1),
+                effective_from TEXT NOT NULL,
+                valid_until TEXT NOT NULL CHECK (valid_until >= effective_from),
+                source_title TEXT NOT NULL CHECK (length(trim(source_title)) > 0),
+                source_url TEXT,
+                checked_on TEXT NOT NULL,
+                provenance TEXT NOT NULL CHECK (provenance IN ('regulation', 'shop')),
+                entered_by_user_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((provenance = 'regulation') = (shop_id IS NULL)),
+                FOREIGN KEY (jurisdiction_id)
+                    REFERENCES tax_jurisdictions(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (entered_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_tax_rates_jurisdiction
+                ON tax_rates(jurisdiction_id, shop_id, effective_from);
+
+            CREATE TABLE IF NOT EXISTS tax_line_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                jurisdiction_id INTEGER NOT NULL,
+                shop_id INTEGER,
+                line_type TEXT NOT NULL
+                    CHECK (line_type IN ('labor', 'parts', 'diagnostic', 'misc')),
+                taxable INTEGER NOT NULL CHECK (taxable IN (0, 1)),
+                basis TEXT NOT NULL CHECK (basis IN ('stated', 'reading')),
+                effective_from TEXT NOT NULL,
+                valid_until TEXT NOT NULL CHECK (valid_until >= effective_from),
+                source_title TEXT NOT NULL CHECK (length(trim(source_title)) > 0),
+                source_url TEXT,
+                source_clause TEXT,
+                checked_on TEXT NOT NULL,
+                provenance TEXT NOT NULL CHECK (provenance IN ('regulation', 'shop')),
+                entered_by_user_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((provenance = 'regulation') = (shop_id IS NULL)),
+                FOREIGN KEY (jurisdiction_id)
+                    REFERENCES tax_jurisdictions(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (entered_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_tax_line_rules_jurisdiction
+                ON tax_line_rules(jurisdiction_id, line_type, shop_id);
+
+            CREATE TABLE IF NOT EXISTS exchange_rates (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                base TEXT NOT NULL CHECK (length(base) = 3),
+                quote TEXT NOT NULL CHECK (length(quote) = 3 AND quote <> base),
+                rate TEXT NOT NULL CHECK (CAST(rate AS REAL) > 0),
+                rate_date TEXT NOT NULL,
+                valid_until TEXT NOT NULL CHECK (valid_until >= rate_date),
+                source TEXT NOT NULL CHECK (source IN ('ecb', 'shop')),
+                shop_id INTEGER,
+                source_url TEXT,
+                source_note TEXT,
+                entered_by_user_id INTEGER,
+                fetched_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((source = 'ecb') = (shop_id IS NULL)),
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (entered_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE UNIQUE INDEX IF NOT EXISTS idx_exchange_rates_ecb_day
+                ON exchange_rates(base, quote, rate_date) WHERE source = 'ecb';
+            CREATE INDEX IF NOT EXISTS idx_exchange_rates_pair
+                ON exchange_rates(base, quote, rate_date);
+
+            CREATE TABLE IF NOT EXISTS recall_fetches (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                model_year INTEGER NOT NULL,
+                fetched_at TEXT NOT NULL,
+                url TEXT NOT NULL,
+                http_status INTEGER,
+                result_count INTEGER,
+                outcome TEXT NOT NULL CHECK (outcome IN ('ok', 'failed')),
+                error TEXT,
+                CHECK ((outcome = 'ok') = (result_count IS NOT NULL AND error IS NULL))
+            );
+            CREATE INDEX IF NOT EXISTS idx_recall_fetches_vehicle
+                ON recall_fetches(make, model_year, fetched_at);
+
+            CREATE TABLE IF NOT EXISTS recall_vehicles (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                recall_id INTEGER NOT NULL,
+                make TEXT NOT NULL,
+                model TEXT NOT NULL,
+                model_year INTEGER,
+                UNIQUE (recall_id, make, model, model_year),
+                FOREIGN KEY (recall_id) REFERENCES recalls(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_recall_vehicles_lookup
+                ON recall_vehicles(make, model_year);
+
+            CREATE TABLE IF NOT EXISTS vin_decodes (
+                vin TEXT PRIMARY KEY,
+                make TEXT,
+                model TEXT,
+                model_year INTEGER,
+                manufacturer TEXT,
+                vehicle_type TEXT,
+                error_code TEXT,
+                error_text TEXT,
+                response_json TEXT NOT NULL,
+                url TEXT NOT NULL,
+                fetched_at TEXT NOT NULL
+            );
+
+            ALTER TABLE recalls ADD COLUMN source TEXT
+                CHECK (source IS NULL OR source = 'nhtsa');
+            ALTER TABLE recalls ADD COLUMN fetched_at TEXT;
+            ALTER TABLE recalls ADD COLUMN component TEXT;
+            ALTER TABLE recalls ADD COLUMN consequence TEXT;
+
+            ALTER TABLE invoices ADD COLUMN tax_rate REAL;
+            ALTER TABLE invoices ADD COLUMN tax_rate_id INTEGER;
+            ALTER TABLE invoices ADD COLUMN tax_source TEXT;
+            ALTER TABLE invoices ADD COLUMN tax_recheck_by TEXT;
+            ALTER TABLE invoices ADD COLUMN taxed_line_types TEXT;
+            ALTER TABLE invoices ADD COLUMN fx_from_currency TEXT;
+            ALTER TABLE invoices ADD COLUMN fx_rate TEXT;
+            ALTER TABLE invoices ADD COLUMN fx_rate_id INTEGER;
+            ALTER TABLE invoices ADD COLUMN fx_rate_date TEXT;
+            ALTER TABLE invoices ADD COLUMN fx_source TEXT;
+
+            INSERT INTO tax_jurisdictions (code, name, currency)
+                VALUES ('US-MA', 'Massachusetts', 'USD');
+            INSERT INTO tax_rates (jurisdiction_id, shop_id, rate, effective_from,
+                    valid_until, source_title, source_url, checked_on, provenance, notes)
+                SELECT id, NULL, 0.0625, '2009-08-01', '2027-09-30',
+                    'Massachusetts DOR, Sales and Use Tax guide; TIR 09-11',
+                    'https://www.mass.gov/guides/sales-and-use-tax',
+                    '2026-09-30', 'regulation',
+                    'Effective date from TIR 09-11: https://www.mass.gov/technical-information-release/tir-09-11-change-in-rate-scope-and-computation-of-salesuse-taxes'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+            INSERT INTO tax_line_rules (jurisdiction_id, shop_id, line_type, taxable,
+                    basis, effective_from, valid_until, source_title, source_url,
+                    source_clause, checked_on, provenance)
+                SELECT id, NULL, 'parts', 1, 'stated', '2009-08-01', '2027-09-30',
+                    'Massachusetts DOR, 830 CMR 64H.1.1 Services Enterprises',
+                    'https://www.mass.gov/regulations/830-CMR-64h11-service-enterprises',
+                    '830 CMR 64H.1.1(2)(b)1 and (5)(a): separately stated parts are taxable',
+                    '2026-09-30', 'regulation'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+            INSERT INTO tax_line_rules (jurisdiction_id, shop_id, line_type, taxable,
+                    basis, effective_from, valid_until, source_title, source_url,
+                    source_clause, checked_on, provenance)
+                SELECT id, NULL, 'labor', 0, 'stated', '2009-08-01', '2027-09-30',
+                    'Massachusetts DOR, 830 CMR 64H.1.1 Services Enterprises',
+                    'https://www.mass.gov/regulations/830-CMR-64h11-service-enterprises',
+                    '830 CMR 64H.1.1(2)(a)1 and (5)(a), and the DOR guide''s "Car repairs": separately stated labour is not taxable',
+                    '2026-09-30', 'regulation'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+            INSERT INTO tax_line_rules (jurisdiction_id, shop_id, line_type, taxable,
+                    basis, effective_from, valid_until, source_title, source_url,
+                    source_clause, checked_on, provenance)
+                SELECT id, NULL, 'diagnostic', 0, 'reading', '2009-08-01', '2027-09-30',
+                    'Massachusetts DOR, 830 CMR 64H.1.1 Services Enterprises',
+                    'https://www.mass.gov/regulations/830-CMR-64h11-service-enterprises',
+                    'a reading of 830 CMR 64H.1.1(2)(a)1: a service with no transfer of property; the regulation does not name a diagnostic fee',
+                    '2026-09-30', 'regulation'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+        """,
+        rollback_sql="""
+            ALTER TABLE invoices DROP COLUMN fx_source;
+            ALTER TABLE invoices DROP COLUMN fx_rate_date;
+            ALTER TABLE invoices DROP COLUMN fx_rate_id;
+            ALTER TABLE invoices DROP COLUMN fx_rate;
+            ALTER TABLE invoices DROP COLUMN fx_from_currency;
+            ALTER TABLE invoices DROP COLUMN taxed_line_types;
+            ALTER TABLE invoices DROP COLUMN tax_recheck_by;
+            ALTER TABLE invoices DROP COLUMN tax_source;
+            ALTER TABLE invoices DROP COLUMN tax_rate_id;
+            ALTER TABLE invoices DROP COLUMN tax_rate;
+            ALTER TABLE recalls DROP COLUMN consequence;
+            ALTER TABLE recalls DROP COLUMN component;
+            ALTER TABLE recalls DROP COLUMN fetched_at;
+            ALTER TABLE recalls DROP COLUMN source;
+            DROP TABLE IF EXISTS vin_decodes;
+            DROP INDEX IF EXISTS idx_recall_vehicles_lookup;
+            DROP TABLE IF EXISTS recall_vehicles;
+            DROP INDEX IF EXISTS idx_recall_fetches_vehicle;
+            DROP TABLE IF EXISTS recall_fetches;
+            DROP INDEX IF EXISTS idx_exchange_rates_pair;
+            DROP INDEX IF EXISTS idx_exchange_rates_ecb_day;
+            DROP TABLE IF EXISTS exchange_rates;
+            DROP INDEX IF EXISTS idx_tax_line_rules_jurisdiction;
+            DROP TABLE IF EXISTS tax_line_rules;
+            DROP INDEX IF EXISTS idx_tax_rates_jurisdiction;
+            DROP TABLE IF EXISTS tax_rates;
+            DROP TABLE IF EXISTS shop_tax_jurisdictions;
+            DROP TABLE IF EXISTS tax_jurisdictions;
+        """,
+    ),
 ]
 
 

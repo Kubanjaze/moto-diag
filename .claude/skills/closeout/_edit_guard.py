@@ -1034,7 +1034,8 @@ def main() -> int:
         reason = check(command, cwd)
     except Exception as e:                 # fails closed
         reason = f"the edit guard failed inside ({e!r}) and fails closed."
-    signal.alarm(0)
+    finally:
+        signal.alarm(0)                    # F183: never left armed past main()
     if reason:
         print(f"edit guard: blocked — {reason}", file=sys.stderr)
         return 2

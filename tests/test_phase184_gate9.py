@@ -273,13 +273,15 @@ class TestGate9HappyPath:
         assert r.status_code == 200
         assert r.json()["status"] == "completed"
 
-        # 19. Generate invoice.
+        # 19. Generate invoice. Phase 281: the 8.25% is the shop's rate on
+        # record (no route records one), not a field of the request.
+        from support.tax_on_record import record_tax
+        record_tax(api_db, shop_id, rate=0.0825)
         r = client.post(
             f"/v1/shop/{shop_id}/invoices/generate", headers=H,
             json={
                 "work_order_id": wo_id,
                 "labor_hourly_rate_cents": 10000,
-                "tax_rate": 0.0825,
             },
         )
         assert r.status_code == 201, r.text
@@ -476,6 +478,8 @@ class TestGate9CrossShopIsolation:
         open_work_order(wo_id, db_path=api_db)
         start_work(wo_id, db_path=api_db)
         complete_work_order(wo_id, actual_hours=2.0, db_path=api_db)
+        from support.tax_on_record import record_tax
+        record_tax(api_db, shop_id)
         inv_id = generate_invoice_for_wo(
             wo_id=wo_id, labor_hourly_rate_cents=10000,
             db_path=api_db,

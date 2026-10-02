@@ -143,7 +143,10 @@ def _seed_wo(db_path, *, actual_hours=2.0, shop_name="s"):
 
 
 def _seed_completed(db_path):
+    from support.tax_on_record import record_tax
+
     shop_id, c, wo_id = _seed_wo(db_path)
+    record_tax(db_path, shop_id)
     start_work(wo_id, db_path=db_path)
     complete_work_order(wo_id, actual_hours=2.0, db_path=db_path)
     return shop_id, c, wo_id
