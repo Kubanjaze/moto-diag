@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F183**.
+At the time of writing the highest assigned is **F185**.
 
 ---
 
@@ -2604,3 +2604,86 @@ The fix: both guards cancel in a `finally`. What holds it:
 SIGALRM armed. `tests/support/worker_loss.py` stays: a lost worker now
 writes its exit status or signal, its last test, any catchable signal and
 a faulthandler dump into the run's output.
+
+### F184 — CLOSED by Phase 281 (2026-10-01)
+
+**Closed.** The operator picked option A (2026-09-30): "1: A." The
+invoice API's `tax_rate` and the CLI's `--tax-rate` are removed; an
+invoice takes its tax only from the shop's tax jurisdiction on record.
+- Rates and line rules are stored per jurisdiction, each with its
+  effective date, valid-until date, source, check date and provenance
+  (`regulation` or `shop`). Massachusetts ships from the Department of
+  Revenue's text: 6.25% on separately stated parts; labour not taxable;
+  a diagnostic fee not taxable as a reading of 830 CMR 64H.1.1(2)(a)1;
+  no rule for shop supplies.
+- An invoice for a shop with no jurisdiction, no rate valid on the
+  invoice date, or no rule for a line type it carries is refused (the
+  API answers 409); nothing is written.
+- Each invoice records the rate, the rate's id and source, its recheck-by
+  date and the taxed line types, and prints them. Tax falls on the
+  taxable lines only.
+- `shop tax status` fails once a rate or rule is past its validity.
+- `tests/test_phase281_tax.py`; mutations T1–T11 in `281_mutate.py`, each
+  red. The mobile snapshot was refreshed in moto-diag-mobile `e536e60`.
+- Live: migration 078 at schema 78; the smoke shop has no jurisdiction,
+  so an invoice there is refused until one is set.
+- A tax-exempt sale is F185, open.
+
+The finding as filed:
+
+**An invoice's sales tax is zero unless someone types a rate, and nothing records that zero was assumed**
+
+Found by Phase 281's Step 0 (`281_step0.md`), 2026-09-30, measured on
+`master` at `5cde0c3`.
+- `generate_invoice_for_wo(tax_rate=0.0)` in
+  `src/motodiag/shop/invoicing.py:282` computes the tax as
+  `subtotal × tax_rate` (line 448).
+- `motodiag shop invoice generate --tax-rate` defaults to 0.0
+  (`src/motodiag/cli/shop.py:3604`).
+- The API's `InvoiceGenerateRequest.tax_rate` defaults to 0.0
+  (`src/motodiag/api/routes/shop_mgmt.py:237`), for
+  `POST /v1/shop/{shop_id}/invoices/generate`.
+- An invoice stores one `tax_amount` and not the rate, so an invoice
+  taxed at zero because nobody gave a rate looks the same as one for a
+  shop that owes no tax.
+- The shop records no location: the live `shops` table holds the smoke
+  shop, with no address or state, so nothing could supply a rate.
+
+It is an assumed value of the kind F174, F177 and F182 were. In
+Massachusetts, the first shop's state, the 6.25% sales tax applies to
+separately stated parts (830 CMR 64H.1.1(5)(a)); an invoice made with the
+default charges none.
+
+What it affects: every invoice generated without a rate. Live holds 0
+invoices. The mobile app does not call invoice generation; only its
+generated types name the request.
+
+What would close it: the rate comes from a record of the shop's tax
+jurisdiction, with its source, effective date and stated validity; an
+invoice for a shop with no valid rate is refused; and each invoice records
+the rate it used and that rate's source.
+
+### F185
+
+**A tax-exempt sale cannot be invoiced once the tax comes only from the shop's record**
+
+Filed at the operator's request, 2026-09-30, with their pick of option A
+for F184 in Phase 281 (`281_step0.md`, question 1). The operator's words:
+"with the field gone, a tax-exempt sale (a resale or exempt-organization
+certificate, for example a town's police bikes) can't be invoiced. It
+waits until a real shop needs it."
+
+With option A, invoice generation takes its rate and line rules only from
+the shop's tax jurisdiction on record: the API's `tax_rate` and the CLI's
+`--tax-rate` are removed. A sale the law exempts for this buyer, such as
+one to a buyer holding a resale certificate or an exempt organization's
+certificate (the DOR's guide names Form ST-4 for resale), would be taxed
+at the shop's rate, with no way to record the exemption or its
+certificate.
+
+What it affects: no live shop today (live holds the smoke shop and 0
+invoices). It waits until a real shop needs it.
+
+What would close it: a customer (or a single invoice) can be marked
+exempt, with the certificate's kind and number and who recorded it; the
+invoice then records the exemption in place of the rate, and prints it.

@@ -29,6 +29,7 @@ from motodiag.core.database import (
 )
 from motodiag.crm import customer_repo
 from motodiag.crm.models import Customer
+from support.tax_on_record import record_tax_for_wo
 from motodiag.shop import (
     add_bay, add_part_to_work_order, add_shop_member,
     complete_work_order, complete_slot, create_rule, create_shop,
@@ -219,10 +220,11 @@ class TestEndToEndHappyPath:
         mark_part_installed(wop_id, db_path=cli_db)
 
         # --- Step 12: invoice generation ---
+        # Phase 281: the 8.25% is the shop's rate on record.
+        record_tax_for_wo(cli_db, wo_id, rate=0.0825)
         invoice_id = generate_invoice_for_wo(
             wo_id,
             labor_hourly_rate_cents=10000,  # $100/hr
-            tax_rate=0.0825,
             db_path=cli_db,
         )
         invoice = get_invoice_with_items(invoice_id, db_path=cli_db)
@@ -319,6 +321,7 @@ class TestShopScopedIsolation:
             open_work_order(wo, db_path=cli_db)
             start_work(wo, db_path=cli_db)
             complete_work_order(wo, actual_hours=1.0, db_path=cli_db)
+            record_tax_for_wo(cli_db, wo)
             generate_invoice_for_wo(
                 wo, labor_hourly_rate_cents=10000, db_path=cli_db,
             )
@@ -410,6 +413,7 @@ class TestRuleFiresAcrossLifecycle:
         assert r1[0].rule_id == rule_done
 
         # Generate invoice, then fire invoice_issued event
+        record_tax_for_wo(cli_db, wo_id)
         generate_invoice_for_wo(
             wo_id, labor_hourly_rate_cents=10000, db_path=cli_db,
         )

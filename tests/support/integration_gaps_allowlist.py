@@ -313,10 +313,6 @@ ORPHANS: dict[str, tuple[str, str]] = {
         "Repository helper kept as library surface. Only "
         "advanced/__init__.py names it; hidden until Phase 244X blanked "
         "parenthesised multi-line re-exports."),
-    "advanced/recall_repo.py::get_resolutions_for_bike": ("public-api",
-        "Repository helper kept as library surface. Only "
-        "advanced/__init__.py names it; hidden until Phase 244X blanked "
-        "parenthesised multi-line re-exports."),
     "advanced/recall_repo.py::load_recalls_from_json": ("test-infra",
         "F86 pins that nothing in src/ may seed the sample recalls; its "
         "tests load them. Only advanced/__init__.py names it; hidden until "

@@ -421,6 +421,8 @@ class TestInvoices:
         open_work_order(wo_id, db_path=api_db)
         start_work(wo_id, db_path=api_db)
         complete_work_order(wo_id, actual_hours=2.0, db_path=api_db)
+        from support.tax_on_record import record_tax_for_wo
+        record_tax_for_wo(api_db, wo_id)
 
         app = create_app(db_path_override=api_db)
         client = TestClient(app, raise_server_exceptions=False)

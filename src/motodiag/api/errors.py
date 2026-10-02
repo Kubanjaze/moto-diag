@@ -56,7 +56,7 @@ def _exc_class_chain():
         SlotOverlapError,
     )
     from motodiag.shop.invoicing import (
-        InvoiceGenerationError, InvoiceNotFoundError,
+        InvoiceGenerationError, InvoiceNotFoundError, InvoiceTaxNotOnRecord,
     )
     from motodiag.shop.issue_repo import (
         InvalidIssueTransition, IssueFKError, IssueNotFoundError,
@@ -186,6 +186,8 @@ def _exc_class_chain():
          "Shop name already exists"),
         (DuplicateRuleNameError, 409, "duplicate-rule-name",
          "Rule name already used in shop"),
+        (InvoiceTaxNotOnRecord, 409, "tax-not-on-record",
+         "The shop's sales tax is not on record for this invoice"),
         # 422 — business-rule unprocessable
         (InvoiceGenerationError, 422, "invoice-generation-failed",
          "Invoice cannot be generated"),

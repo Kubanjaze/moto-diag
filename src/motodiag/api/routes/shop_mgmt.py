@@ -234,7 +234,8 @@ class IssueCreateRequest(BaseModel):
 class InvoiceGenerateRequest(BaseModel):
     model_config = ConfigDict(extra="ignore")
     work_order_id: int
-    tax_rate: float = Field(0.0, ge=0.0, le=1.0)
+    # Phase 281 (F184): no tax_rate. The tax comes from the shop's tax
+    # jurisdiction on record; without it the route answers 409.
     shop_supplies_pct: float = Field(0.0, ge=0.0, le=1.0)
     shop_supplies_flat_cents: int = Field(0, ge=0)
     diagnostic_fee_cents: int = Field(0, ge=0)
@@ -853,7 +854,6 @@ def generate_invoice_endpoint(
         )
     invoice_id = generate_invoice_for_wo(
         wo_id=req.work_order_id,
-        tax_rate=req.tax_rate,
         shop_supplies_pct=req.shop_supplies_pct,
         shop_supplies_flat_cents=req.shop_supplies_flat_cents,
         diagnostic_fee_cents=req.diagnostic_fee_cents,
