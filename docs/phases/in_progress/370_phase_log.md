@@ -117,3 +117,22 @@ The +28 is 369's 8 (369 did not raise the floor), 370's 19, and gate 15's
 `[78]` rollback case. No module was added to or removed from the
 integration-gap tables: `core/timestamps.py` is imported by
 `session_repo`, so it is reachable.
+
+### 2026-10-06 — Migration 079's dry run, and the stop
+
+`deploy.py dryrun 370`, with live only read:
+- before: 5853 rows, 109 tables, integrity ok;
+- backup `~/backups/motodiag/motodiag_pre370_20261006_110434.db`, sha256
+  `dbc4aaf9…4e0e` (retain-5 removed `motodiag_pre361_20260929_174533.db`);
+- scope problems: none; F158 census on the copy: 36.
+
+The diff is in `370_dryrun_diff.md`. Compared by script with
+`370_live_rows_preview.out`: **the 10 changed fields in sessions 1–6 and
+11 equal the preview's, each to the preview's value**. No session is added
+or removed, and no schema object changes.
+
+One thing more: **`schema_version` +1 row** (version 79, `applied_at` the
+run's clock). Every migration writes this row. It is not one of the ten
+fields, and the operator's scope reads "exactly the 10 fields ... and
+nothing else. Anything else, stop and show me." Applied literally, that is
+a stop. `apply-live` has not run; live is unchanged.
