@@ -154,3 +154,49 @@ equal to the committed exact diff), and it applied `[79]`.
   on live: 36, as on the copy.
 - Read back read-only: schema 79. Sessions 1–6 and 11 hold the preview's
   ten values; no other session field changed.
+
+### 2026-10-06 — The regression at `7ed0159`: one failure, not 370's code
+
+`wholetree.sh --full` on `7ed0159`: 3988 passed, record written. Then:
+
+Regression at `7ed0159` (not of record, one failure): 10298 passed, 1 failed, 0 skipped, 0 errors (27 min 44 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+- The failure: `test_phase176_auth_billing.py::TestRateLimitMiddleware::test_anon_over_limit_returns_429`
+  (gw5, at 24%), at line 786: `assert 404 == 429`. No worker was lost.
+- The operator's instruction, given while the run was still going, quoted
+  for its decision rule: "If it fails at line 786 (a 404 where a 429 was
+  expected) ... That is a test defect, not 370's code ... Fix it as a bug
+  fix in 370 ... Before the fix, reproduce it ... If it fails at line 784,
+  or anything else fails, stop and tell me." It failed at 786, and nothing
+  else failed.
+- Each fact in that instruction was checked before acting:
+  - the limiter keys its count on `int(now // 60) * 60`
+    (`auth/rate_limiter.py`) and defaults to `time.time`;
+  - `create_app` installs it with no clock;
+  - the middleware fetches the singleton per request
+    (`api/middleware.py:172`);
+  - line 786 is the only `== 429` assertion in `tests/`;
+  - of the 29 regression logs in `~/.cache/motodiag/regressions/`, only
+    this run's has the test failing.
+
+### 2026-10-06 — Bug fix #1: the 429 test fails when a minute starts mid-test
+
+- **Issue:** `test_anon_over_limit_returns_429` sends three requests with
+  the anonymous limit at 2 a minute and expects the third to get 429. In
+  the regression at `7ed0159` it got 404 (line 786).
+- **Root cause:** the rate limiter counts per wall-clock minute and
+  `create_app` builds it on the real clock. A minute that starts between
+  the second and third requests resets the count. It is a test defect,
+  timing-dependent, and not in 370's code.
+- **Reproduced first:** `370_bf1_repro.py` puts the limiter's default
+  clock at :59.0, :59.5, then :00.5. The unchanged test fails there at
+  line 786, `assert 404 == 429`, and passes on the real clock
+  (`370_bf1_repro.out`).
+- **Fix:** after `create_app`, the test installs the limiter on a fixed
+  clock with `reset_rate_limiter(clock=...)`, as the unit tests in the same
+  file do. The limit (2 a minute) still comes from the settings, so the
+  test still proves a third request is refused.
+- **Files:** `tests/test_phase176_auth_billing.py`,
+  `docs/phases/in_progress/370_bf1_repro.py` and `.out`.
+- **Verified:** the repro under the rollover clock: 1 passed. The whole
+  file: 58 passed.
