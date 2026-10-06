@@ -59,3 +59,27 @@ connected account, Stripe carries fees and losses, recommended; B the
 platform carries them; C one account, Connect later); question 2, the tier
 prices; question 3, CLI only now (recommended, row 372 ⏸️) or routes now
 (a planned mobile stop).
+
+### 2026-10-06 — The operator's pick, and v1.0
+
+The operator, verbatim:
+
+> 1A, 2 placeholders, 3A
+
+- **1A:** each shop a connected account (Accounts v2, `merchant`,
+  `dashboard: full`, Stripe collects fees and carries losses), direct
+  charges, Stripe-hosted onboarding, no application fee.
+- **2:** test-mode placeholder prices, marked as placeholders wherever a
+  price shows.
+- **3A:** CLI only; no route, no snapshot change, no mobile session. Row
+  372 ⏸️ takes the payment routes and the app's payment screens.
+
+v1.0 is `273_implementation.md`. Decided while writing it, with the reason:
+- **The SDK goes in a `payments` extra,** pinned `stripe==16.0.0`, and
+  `server` includes it. The same pattern as `api`: the dev venv has it,
+  and 209's no-extras packaging test holds the lazy import.
+- **No fake gateway for shop payments.** Tests run the real gateway code
+  through the SDK's own `http_client` hook with recorded or built
+  responses, so the request shapes are tested, not a stand-in's. With the
+  provider set to `fake`, the shop payment commands refuse and say Stripe
+  is not configured, rather than pretending money moved.
