@@ -1,0 +1,82 @@
+Do this: start Phase 373, warranty work on the invoice (F188), and run it to its finish line as CLAUDE.md sets out. Row 373 reads: "Decide which lines a claim covers, derive the claimed amount from the work order's labour and parts, and leave claimed lines off what the customer owes." Read these first:
+- F188 in docs/FOLLOWUPS.md, and row 373.
+- 292's Step 0 (docs/phases/completed/292_step0.md, S0-4 H2) and its handoff, docs/handoffs/2026-10-06_292_closed.md.
+- tests/test_phase292_gate16.py, section 6: Gate 16 pins today's behaviour, and this phase inverts it.
+- 274's documents (row 280: the warranty check, local claims, the claim packet) and 281's (the tax model: taxable line types, the Massachusetts rules and their provenance).
+
+Row 373 goes 🚧 before Step 0.
+
+The measured facts, taken 2026-10-06 on master at d135be9. Re-verify each at Step 0.
+- **A warranty** (`warranties`) has a coverage type (powertrain, comprehensive, extended or aftermarket), a provider, start and end dates, a mileage limit and free-text terms. It holds no deductible and no rule for which work it covers.
+- **A claim** (`warranty_claims`, inventory/warranty_claims.py):
+  - links a warranty and a work order;
+  - moves from draft to submitted, then to approved or denied, then to paid;
+  - holds `amount_claimed_cents`, typed by hand with `claim open --claimed-cents`, and `amount_approved_cents`, typed with `claim status --approved-cents`;
+  - links no invoice line.
+- **The invoice** comes from a completed work order (`generate_invoice_for_wo`, shop/invoicing.py). It has labour, parts, supplies and diagnostic-fee lines, and is issued as sent. `taxed_line_types` records which line types were taxed (281). `invoice_line_items` stores REAL dollars, read in cents through 169's conversion, whose round trip 273 proved.
+- **Neither side reads the other.** No query in shop/invoicing.py names `warranty_claims`, and none in inventory/warranty_claims.py names `invoices`.
+- **The API:**
+  - `generate_invoice_endpoint` (api/routes/shop_mgmt.py) takes `InvoiceGenerateRequest`.
+  - The app has no invoice or warranty screen: 0 files outside its generated types.
+  - So an API model change means a mobile snapshot refresh (gate 11), with no app screen to change.
+- **Live**, on a copy at 19:40: 0 warranties, 0 claims, 0 invoices, 6 work orders, 0 accounting exports.
+- **Gate 16** pins today's behaviour in `test_f188_covered_work_is_invoiced_to_the_customer_in_full`, and job A's money chain (`KNOWN`) assumes it.
+- **Paused, not in scope:** 362, OEM claim submission. Nothing here sends a claim anywhere.
+
+What to build, from F188's close condition:
+- a rule for which of a work order's lines a claim covers;
+- the claimed amount derived from those lines, in integer cents, not typed;
+- covered lines left off what the customer owes, with tax handled as the source in question 3 says;
+- the claim packet (274) listing the covered lines and the derived amount;
+- Gate 16's pinned test inverted, and its money chain updated: the customer's total, the claimed amount and the export, each in cents;
+- F188 closed.
+
+At Step 0, stop and give me the options for each of these, with what each would ship and your recommendation:
+1. **Which lines a claim covers:**
+   - staff choose the work order's lines when they open the claim;
+   - a rule per coverage type;
+   - all labour and parts by default, with exclusions.
+2. **What the customer owes, and when:**
+   - the customer is invoiced the uncovered lines now and the claim runs separately;
+   - or the invoice waits for the claim's decision.
+   Say what happens when a claim is denied, or approved for less than claimed: bill the customer for the rest, the shop absorbs it, or the shop decides each time.
+3. **Tax on covered lines in Massachusetts.**
+   - Read the regulator's own text, as 281 did, and record its provenance.
+   - If the source doesn't settle who owes tax on warranty parts, that is a rule question: stop and show me what it says.
+4. **Deductibles:** a deductible on the warranty, charged to the customer, or a new row for later.
+5. **The claim in the accounting export:**
+   - the amount the provider owes, as a receivable in the QuickBooks and Xero files;
+   - or a new row. Payment reconciliation (365) is paused either way.
+6. **API now, or the command line only** (273's 3A). An API model change brings a planned mobile stop, as in 281.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Live:
+- A migration (081), if the phase needs one, goes through the deploy skill. New tables, new columns and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is.
+- Live holds no warranties, claims or invoices today. If that has changed by your Step 0, say so.
+
+Carry forward:
+- **Money is integer cents in all new code.** Read the REAL invoice columns through the existing conversion only.
+- **A test that reads the clock gets a fixed one** (370's bug fix #1; 292's walk runs at midday, mid-month).
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file, and update tests/support/integration_gaps_allowlist.py and its size pins for any new module. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the six questions above, with options.
+- **At the end:**
+  - the rule, and how a user reaches it;
+  - one covered job in cents (the customer's total, the claimed amount, the approved amount, and the export);
+  - Gate 16's inverted test;
+  - F188 closed;
+  - the dry-run diff and the deploy outcome, if there was a migration;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: row 374, check-in with an intake (F189).
