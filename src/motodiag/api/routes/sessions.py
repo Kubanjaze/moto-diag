@@ -55,7 +55,10 @@ _WINDOW_RE = re.compile(r"^(\d+)([dhm])$", re.IGNORECASE)
 
 
 def _parse_since(since: Optional[str]) -> Optional[str]:
-    """Accept `Nd`/`Nh`/`Nm` or ISO; return ISO cutoff."""
+    """Accept `Nd`/`Nh`/`Nm` or ISO; return the cutoff as a stored session
+    time (UTC, ``YYYY-MM-DDTHH:MM:SS.mmm+00:00``, Phase 370), so it compares
+    as text with ``created_at``. An ISO value with an offset is converted;
+    one without is read as UTC."""
     if since is None:
         return None
     s = since.strip()
@@ -72,7 +75,7 @@ def _parse_since(since: Optional[str]) -> Optional[str]:
             cutoff = now - timedelta(hours=n)
         else:
             cutoff = now - timedelta(minutes=n)
-        return cutoff.isoformat()
+        return cutoff.isoformat(timespec="milliseconds")
     # Try ISO
     try:
         parsed = datetime.fromisoformat(s.replace("Z", "+00:00"))
@@ -80,7 +83,9 @@ def _parse_since(since: Optional[str]) -> Optional[str]:
         raise ValueError(
             f"since must be Nd/Nh/Nm or ISO, got {since!r}"
         ) from e
-    return parsed.isoformat()
+    if parsed.tzinfo is None:
+        parsed = parsed.replace(tzinfo=timezone.utc)
+    return parsed.astimezone(timezone.utc).isoformat(timespec="milliseconds")
 
 
 def _quota_for(tier: Optional[str]) -> tuple[Optional[int], str]:

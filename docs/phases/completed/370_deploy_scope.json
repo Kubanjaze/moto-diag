@@ -1,0 +1,27 @@
+{
+ "_comment": "Phase 370, migration 079: the operator's scope (2026-10-06, Q1 A) is exactly the 10 fields in the 7 sessions of 370_live_rows_preview.out, each to the preview's value, and nothing else. No schema change. One schema_version row is added by every migration; it is named here so the dry run reports it, and it is shown to the operator before apply-live.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "diagnostic_sessions": {
+   "changed": [
+    {"where": "id = ?", "params": [1], "fields": ["created_at"],
+     "to": {"created_at": "2026-06-13T04:04:48.958+00:00"}},
+    {"where": "id = ?", "params": [2], "fields": ["created_at"],
+     "to": {"created_at": "2026-09-02T18:49:39.104+00:00"}},
+    {"where": "id = ?", "params": [3], "fields": ["created_at"],
+     "to": {"created_at": "2026-09-02T18:56:57.713+00:00"}},
+    {"where": "id = ?", "params": [4], "fields": ["created_at"],
+     "to": {"created_at": "2026-09-07T13:09:00.130+00:00"}},
+    {"where": "id = ?", "params": [5], "fields": ["created_at"],
+     "to": {"created_at": "2026-09-07T17:27:55.000+00:00"}},
+    {"where": "id = ?", "params": [6], "fields": ["created_at", "updated_at"],
+     "to": {"created_at": "2026-09-09T23:50:41.005+00:00",
+            "updated_at": "2026-09-09T23:54:06.795+00:00"}},
+    {"where": "id = ?", "params": [11], "fields": ["created_at", "updated_at", "closed_at"],
+     "to": {"created_at": "2026-09-17T19:22:14.228+00:00",
+            "updated_at": "2026-09-17T19:22:35.263+00:00",
+            "closed_at": "2026-09-17T19:22:35.263+00:00"}}
+   ]
+  }
+ }
+}

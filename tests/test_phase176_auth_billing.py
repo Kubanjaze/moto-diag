@@ -776,6 +776,10 @@ class TestRateLimitMiddleware:
         )
         reset_settings()
         app = create_app(db_path_override=api_db)
+        # The limiter counts per wall-clock minute; on the real clock a
+        # minute starting between the requests resets the count (Phase 370
+        # bug fix #1). Fixed clock, as the unit tests above use.
+        reset_rate_limiter(clock=lambda: 1_700_000_000.0)
         client = TestClient(app, raise_server_exceptions=False)
         # Hit a non-exempt route
         for _ in range(2):

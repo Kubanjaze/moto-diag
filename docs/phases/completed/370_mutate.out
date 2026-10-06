@@ -1,0 +1,25 @@
+M1 the API's session writer returns to local time (the planted control): red
+M2 create_session returns to local time: red
+M3 update_session stamps local: red
+M4 add_symptom stamps local: red
+M5 add_fault_code stamps local: red
+M6 set_diagnosis stamps local: red
+M7 close_session stamps local: red
+M8 reopen_session stamps local: red
+M9 append_note's updated_at stamps local: red
+M10 the note's stamp loses its offset: red
+M11 the month start leaves the stored format: red
+M12 utc_now returns naive local time: red
+M13 diagnose show prints the stored UTC string: red
+M14 diagnose list's Created column prints the stored string: red
+M15 diagnose list reads a typed date as UTC: red
+M16 --until is not inclusive of the whole day: red
+M17 the report Timeline prints the stored string: red
+M18 client memory dates by the UTC day: red
+M19 the API's ISO since keeps its own offset: red
+M20 the API's Nd since leaves the stored format: red
+M21 079 reads a SQLite default as local time: red
+M22 079 has no post_apply: red
+M23 079's rollback leaves created_at in UTC: red
+M24 the plugin does not freeze the clock: red
+24/24 red

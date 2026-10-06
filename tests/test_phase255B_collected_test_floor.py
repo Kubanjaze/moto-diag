@@ -252,7 +252,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 10271 (Phase 281, 2026-10-01) — +3: bug fix #2's
 #: `test_phase281_intake_month.py`.
 #:
-COLLECTED_TEST_FLOOR = 10271
+#: 10299 (Phase 370, 2026-10-06) — +28 over 10271: 369's
+#: `test_phase369_worker_loss.py` (8), which did not raise the floor (369's
+#: regression collected 10279); 370's `test_phase370_session_utc.py` (19);
+#: and gate 15's `test_rolling_back_peels_every_successor[78]` (+1, now that
+#: migration 079 succeeds 078). Measured: 10299 collected.
+#:
+COLLECTED_TEST_FLOOR = 10299
 
 
 def _collected_count() -> int:

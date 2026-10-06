@@ -6,7 +6,7 @@
 **Started:** 2026-04-15
 **Target Fleet:** Harley-Davidson (all years), Honda, Yamaha, Kawasaki, Suzuki, BMW, Ducati, KTM, Triumph, Aprilia, MV Agusta, Electric (Zero/LiveWire/Energica/Damon), Scooters & small-displacement (all classes — sport, standard, cruiser, dual-sport, vintage, adventure, electric, scooter)
 **Target Users:** Motorcycle mechanics, shops (solo → multi-location)
-**Total Phases:** 369 numbered, plus follow-on phases with a letter (255B)
+**Total Phases:** 370 numbered, plus follow-on phases with a letter (255B)
 **Status:** ✅ closed · 🚧 in progress · ⏸️ paused · 🔲 not started. A phase's row exists before its Step 0 and is updated as it runs; `.claude/skills/closeout/roadmap_check.py` fails when this ledger and `docs/phases/` disagree.
 
 ---
@@ -644,6 +644,7 @@ Running MotoDiag as a production service: observability, support, backup, featur
 | 367 | Recall reimbursement claims to the maker | ⏸️ | **Split from 281 on 2026-09-30** (Phase 281 Step 0). Claiming reimbursement for recall work is a dealer's claim to the maker through the maker's dealer systems, and the operator's decision 2 of 2026-09-28 pauses dealer-only work. Row 281 builds the recall lookup, refresh and per-bike completion record. |
 | 368 | Automatic sales tax rates for every address | ⏸️ | **Split from 288 on 2026-09-30** (Phase 281 Step 0). Rates for any state, county and city by address need a commercial tax service or each state's own rate files, including rates with several parts; the operator paused it on 2026-09-30 until there are paying shops outside Massachusetts. Row 288 ships Massachusetts from the Department of Revenue's text, and every other shop enters its own rate. |
 | 369 | F183: the test worker lost with no traceback | ✅ | **CLOSED 2026-10-01.** The push guard's `main()` left a 345 s SIGALRM armed when the whole-tree gate raised; Phase 358's test ran it in an xdist worker, whose `os._exit(2)` handler ended a later test with no traceback. All three logged losses were that worker; reproduced on demand. Both guards cancel in a `finally`; a teardown check fails any test leaving SIGALRM armed; a plugin makes a lost worker report its exit status, signal and last test. Phase 281 carried the fix and merged first. Regression 10279 passed / 0 failed at `88dbbd1`. |
+| 370 | F10: session times stored in UTC | ✅ | **CLOSED 2026-10-06.** Session times were stamped in naive local time against a UTC month start, so on a month's last evening in a US timezone a new session counted toward neither month. Every session time is now written as `YYYY-MM-DDTHH:MM:SS.mmm+00:00`; the CLI, report Timeline and client memory show local time; notes are stamped local with offset. At 2026-10-31 21:42 EDT, gate 9's lifecycle and the 178 quota tests pass; a planted return to local time fails. Migration 079 live: the 10 approved fields. Bug fix #1. F186 filed. 24 mutations red. Regression 10299 passed / 0 failed at `a55403d`. |
 
 ---
 

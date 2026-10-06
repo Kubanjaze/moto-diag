@@ -6951,6 +6951,37 @@ MIGRATIONS: list[Migration] = [
             DROP TABLE IF EXISTS tax_jurisdictions;
         """,
     ),
+    Migration(
+        version=79,
+        name="session_times_utc",
+        description=(
+            "Phase 370 (F10): diagnostic session times move to UTC. Until "
+            "370 `session_repo` stamped `created_at`, `updated_at` and "
+            "`closed_at` with naive local `datetime.now().isoformat()` while "
+            "the monthly quota's month start was UTC, so on a month's last "
+            "evening in a US timezone a new session counted toward neither "
+            "month. The code now writes `YYYY-MM-DDTHH:MM:SS.mmm+00:00`; the "
+            "`post_apply` hook converts the rows already stored: a naive "
+            "value with a `T` was local time (this machine's zone, that "
+            "date's offset), a naive value with a space is the column's "
+            "`CURRENT_TIMESTAMP` and already UTC. No schema change. The "
+            "rollback turns every `+00:00` value back into the naive local "
+            "shape the code before 079 writes (milliseconds kept)."
+        ),
+        upgrade_sql="-- data only: see post_apply\n",
+        post_apply="motodiag.core.timestamps:convert_session_times_079",
+        rollback_sql="""
+            UPDATE diagnostic_sessions
+               SET created_at = strftime('%Y-%m-%dT%H:%M:%f', substr(created_at, 1, 23), 'localtime')
+             WHERE created_at LIKE '%+00:00';
+            UPDATE diagnostic_sessions
+               SET updated_at = strftime('%Y-%m-%dT%H:%M:%f', substr(updated_at, 1, 23), 'localtime')
+             WHERE updated_at LIKE '%+00:00';
+            UPDATE diagnostic_sessions
+               SET closed_at = strftime('%Y-%m-%dT%H:%M:%f', substr(closed_at, 1, 23), 'localtime')
+             WHERE closed_at LIKE '%+00:00';
+        """,
+    ),
 ]
 
 

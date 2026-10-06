@@ -1,0 +1,13 @@
+# before the fix (at 7ed0159's test)
+tests/test_phase176_auth_billing.py F                                    [100%]
+tests/test_phase176_auth_billing.py:786: in test_anon_over_limit_returns_429
+E   assert 404 == 429
+E    +  where 404 = <Response [404 Not Found]>.status_code
+FAILED tests/test_phase176_auth_billing.py::TestRateLimitMiddleware::test_anon_over_limit_returns_429
+========================= 1 failed, 1 warning in 0.75s =========================
+exit 1
+
+# after the fix
+tests/test_phase176_auth_billing.py .                                    [100%]
+========================= 1 passed, 1 warning in 0.78s =========================
+exit 0

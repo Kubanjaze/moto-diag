@@ -2,10 +2,11 @@
 
 import json
 import logging
-from datetime import datetime
+from datetime import datetime, timezone
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 
 log = logging.getLogger("motodiag.sessions")
 
@@ -37,7 +38,7 @@ def create_session(
                 vehicle_id, vehicle_make, vehicle_model, vehicle_year,
                 json.dumps(symptoms or []),
                 json.dumps(fault_codes or []),
-                datetime.now().isoformat(),
+                utc_now(),
                 shop_id,
             ),
         )
@@ -76,7 +77,7 @@ def update_session(session_id: int, updates: dict, db_path: str | None = None) -
         return False
 
     status = filtered.pop("status", None)
-    now = datetime.now().isoformat()
+    now = utc_now()
     changed = False
 
     if filtered:
@@ -134,7 +135,7 @@ def add_symptom_to_session(
     with get_connection(db_path) as conn:
         conn.execute(
             "UPDATE diagnostic_sessions SET symptoms = ?, updated_at = ? WHERE id = ?",
-            (json.dumps(symptoms), datetime.now().isoformat(), session_id),
+            (json.dumps(symptoms), utc_now(), session_id),
         )
     return True
 
@@ -154,7 +155,7 @@ def add_fault_code_to_session(
     with get_connection(db_path) as conn:
         conn.execute(
             "UPDATE diagnostic_sessions SET fault_codes = ?, updated_at = ? WHERE id = ?",
-            (json.dumps(codes), datetime.now().isoformat(), session_id),
+            (json.dumps(codes), utc_now(), session_id),
         )
     return True
 
@@ -169,7 +170,7 @@ def set_diagnosis(
 ) -> bool:
     """Set the diagnosis for a session, transitioning status to 'diagnosed'."""
     log.info("Session %d diagnosed: %s (confidence=%.2f)", session_id, diagnosis[:80], confidence or 0)
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """UPDATE diagnostic_sessions
@@ -195,7 +196,7 @@ def close_session(session_id: int, db_path: str | None = None) -> bool:
     not undo or fail a close.
     """
     log.info("Session %d closed", session_id)
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """UPDATE diagnostic_sessions
@@ -306,7 +307,7 @@ def reopen_session(session_id: int, db_path: str | None = None) -> bool:
     from missing-session must check status first.
     """
     log.info("Session %d reopened", session_id)
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """UPDATE diagnostic_sessions
@@ -322,7 +323,7 @@ def append_note(
 ) -> bool:
     """Append a timestamped note to the session's notes column.
 
-    Notes are append-only: each call prepends ``[YYYY-MM-DDTHH:MM] `` to
+    Notes are append-only: each call prepends ``[YYYY-MM-DDTHH:MM±HH:MM] `` to
     note_text and concatenates it to existing notes separated by a blank
     line. If the session has no notes yet, the new string becomes the
     entire value. This preserves annotation history chronologically.
@@ -337,11 +338,13 @@ def append_note(
     if session is None:
         return False
 
-    stamp = datetime.now().isoformat(timespec="minutes")
+    # Local time with its offset (Phase 370, the operator's Q2a): the note
+    # reads as the mechanic's clock and still names one instant.
+    stamp = datetime.now(timezone.utc).astimezone().isoformat(timespec="minutes")
     new_entry = f"[{stamp}] {note_text}"
     combined = new_entry if not existing else f"{existing}\n\n{new_entry}"
 
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         cursor = conn.execute(
             """UPDATE diagnostic_sessions
@@ -397,9 +400,6 @@ def _row_to_dict(row) -> dict:
 # ---------------------------------------------------------------------------
 
 
-from datetime import timezone
-
-
 class SessionOwnershipError(ValueError):
     """Raised when a caller tries to touch a session they don't own."""
 
@@ -426,36 +426,19 @@ TIER_SESSION_MONTHLY_LIMITS: dict[str, int] = {
 
 
 def _month_start_iso() -> str:
-    """First instant of the current UTC calendar month as ISO string.
+    """First instant of the current UTC calendar month, in the stored format.
 
-    Note (Phase 191B fix-cycle 2026-05-01): this function has TWO
-    pre-existing latent bugs that surface together on calendar-month
-    boundaries when the dev machine's local clock and UTC straddle the
-    boundary. Filed for follow-up rather than fixed here:
-
-    1. Format mismatch: returns isoformat() (T-separator) but the
-       table's `created_at` rows are written by `create_session` using
-       ``datetime.now().isoformat()`` (also T-separator, but NAIVE
-       LOCAL time). The lex comparison happens to work BECAUSE of (2)
-       — fixing one without the other gets a different wrong answer.
-
-    2. Naive-local vs UTC: `create_session` writes naive local-time
-       ISO strings; `_month_start_iso` returns aware-UTC ISO. On
-       boundary days (e.g., the dev machine in PT during 17:00-23:59
-       PT corresponds to UTC May 1 — local-PT-April-30 stamps don't
-       count as "this month" by UTC reckoning).
-
-    Fix requires consolidating ALL session_repo writes to UTC + matching
-    the format here. Out of scope for the Phase 191B fix-cycle which
-    only touches video_repo's identical (but only one-bug) variant.
-    Phase 178's quota tests visibly fail today (2026-05-01) until the
-    sister fix lands — track as F10 in moto-diag-mobile/docs/FOLLOWUPS.md
-    or a backend bug ticket.
+    ``2026-10-01T00:00:00.000+00:00``. Every session time is written by
+    :func:`motodiag.core.timestamps.utc_now` in the same shape and clock, so
+    ``created_at >= month_start`` compares as text correctly (Phase 370,
+    F10: sessions were stamped in naive local time until then, and on a
+    month's last evening in a US timezone a new one counted toward neither
+    month).
     """
     now = datetime.now(timezone.utc)
     return now.replace(
         day=1, hour=0, minute=0, second=0, microsecond=0,
-    ).isoformat()
+    ).isoformat(timespec="milliseconds")
 
 
 def create_session_for_owner(
@@ -491,7 +474,7 @@ def create_session_for_owner(
                 vehicle_id, vehicle_make, vehicle_model, vehicle_year,
                 json.dumps(symptoms or []),
                 json.dumps(fault_codes or []),
-                datetime.now().isoformat(),
+                utc_now(),
                 owner_user_id,
                 shop_id,
             ),
