@@ -1,0 +1,15 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's customer portal Session object (docs.stripe.com/api/customer_portal/sessions/object), read 2026-10-06."
+  },
+  "status": 200,
+  "body": {
+    "id": "bps_test_fixture273",
+    "object": "billing_portal.session",
+    "customer": "cus_test_fixture273",
+    "livemode": false,
+    "return_url": "http://localhost:3000/billing",
+    "url": "https://billing.stripe.com/p/session/test_fixture273"
+  }
+}

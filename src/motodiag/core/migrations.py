@@ -6982,6 +6982,130 @@ MIGRATIONS: list[Migration] = [
              WHERE closed_at LIKE '%+00:00';
         """,
     ),
+    Migration(
+        version=80,
+        name="stripe_payments",
+        description=(
+            "Phase 273 (Track O batch 4): payments through Stripe. New tables: "
+            "`shop_payment_accounts` (a shop's Stripe connected account, kept "
+            "out of `shops`), `invoice_payments` (a shop invoice paid by "
+            "Checkout or a Terminal reader, in integer cents, with the outcome "
+            "Stripe's verified event gave it), `terminal_locations` and "
+            "`terminal_readers`, and `subscription_payments` (a tier "
+            "subscription's Stripe invoice, paid or failed, in integer cents). "
+            "`stripe_webhook_events` gains `account` (the connected account an "
+            "event came from) and `livemode`. Changes no existing row. Rollback "
+            "drops the tables, then the columns."
+        ),
+        upgrade_sql="""
+            CREATE TABLE IF NOT EXISTS shop_payment_accounts (
+                shop_id INTEGER PRIMARY KEY,
+                stripe_account_id TEXT NOT NULL UNIQUE,
+                dashboard TEXT NOT NULL,
+                fees_collector TEXT NOT NULL,
+                losses_collector TEXT NOT NULL,
+                country TEXT NOT NULL CHECK (length(country) = 2),
+                currency TEXT NOT NULL CHECK (length(currency) = 3),
+                card_payments_status TEXT,
+                requirements_due INTEGER,
+                status_checked_at TEXT,
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1)),
+                created_by_user_id INTEGER,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE RESTRICT,
+                FOREIGN KEY (created_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+
+            CREATE TABLE IF NOT EXISTS invoice_payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                invoice_id INTEGER NOT NULL,
+                shop_id INTEGER NOT NULL,
+                stripe_account_id TEXT NOT NULL,
+                channel TEXT NOT NULL CHECK (channel IN ('checkout', 'terminal')),
+                checkout_session_id TEXT UNIQUE,
+                payment_intent_id TEXT UNIQUE,
+                terminal_reader_id TEXT,
+                amount_cents INTEGER NOT NULL CHECK (amount_cents > 0),
+                currency TEXT NOT NULL CHECK (length(currency) = 3),
+                status TEXT NOT NULL DEFAULT 'started'
+                    CHECK (status IN ('started', 'failed', 'succeeded')),
+                outcome TEXT CHECK (outcome IS NULL
+                    OR outcome IN ('paid_invoice', 'paid_twice', 'rejected')),
+                outcome_reason TEXT,
+                failure_message TEXT,
+                refunded_cents INTEGER NOT NULL DEFAULT 0 CHECK (refunded_cents >= 0),
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1)),
+                started_by_user_id INTEGER,
+                started_at TEXT NOT NULL,
+                settled_at TEXT,
+                FOREIGN KEY (invoice_id) REFERENCES invoices(id) ON DELETE RESTRICT,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE RESTRICT,
+                FOREIGN KEY (started_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_invoice_payments_invoice
+                ON invoice_payments(invoice_id);
+
+            CREATE TABLE IF NOT EXISTS terminal_locations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                stripe_account_id TEXT NOT NULL,
+                stripe_location_id TEXT NOT NULL UNIQUE,
+                display_name TEXT NOT NULL,
+                address_json TEXT NOT NULL,
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1)),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE RESTRICT
+            );
+
+            CREATE TABLE IF NOT EXISTS terminal_readers (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                location_id INTEGER NOT NULL,
+                stripe_reader_id TEXT NOT NULL UNIQUE,
+                label TEXT NOT NULL,
+                device_type TEXT,
+                simulated INTEGER NOT NULL CHECK (simulated IN (0, 1)),
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1)),
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE RESTRICT,
+                FOREIGN KEY (location_id)
+                    REFERENCES terminal_locations(id) ON DELETE RESTRICT
+            );
+
+            CREATE TABLE IF NOT EXISTS subscription_payments (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER NOT NULL,
+                subscription_id INTEGER,
+                stripe_invoice_id TEXT NOT NULL UNIQUE,
+                stripe_subscription_id TEXT NOT NULL,
+                status TEXT NOT NULL CHECK (status IN ('paid', 'failed')),
+                amount_due_cents INTEGER NOT NULL CHECK (amount_due_cents >= 0),
+                amount_paid_cents INTEGER NOT NULL CHECK (amount_paid_cents >= 0),
+                currency TEXT NOT NULL CHECK (length(currency) = 3),
+                period_start TEXT,
+                period_end TEXT,
+                livemode INTEGER NOT NULL DEFAULT 0 CHECK (livemode IN (0, 1)),
+                recorded_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE RESTRICT,
+                FOREIGN KEY (subscription_id)
+                    REFERENCES subscriptions(id) ON DELETE SET NULL
+            );
+
+            ALTER TABLE stripe_webhook_events ADD COLUMN account TEXT;
+            ALTER TABLE stripe_webhook_events ADD COLUMN livemode INTEGER;
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS subscription_payments;
+            DROP TABLE IF EXISTS terminal_readers;
+            DROP TABLE IF EXISTS terminal_locations;
+            DROP INDEX IF EXISTS idx_invoice_payments_invoice;
+            DROP TABLE IF EXISTS invoice_payments;
+            DROP TABLE IF EXISTS shop_payment_accounts;
+            ALTER TABLE stripe_webhook_events DROP COLUMN livemode;
+            ALTER TABLE stripe_webhook_events DROP COLUMN account;
+        """,
+    ),
 ]
 
 

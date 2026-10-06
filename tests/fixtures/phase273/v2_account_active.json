@@ -1,0 +1,31 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's v2 Account object (docs.stripe.com/api/v2/core/accounts/object; stripe==16.0.0 stripe/v2/core/_account.py), read 2026-10-06. The same account after onboarding: card_payments active, nothing due."
+  },
+  "status": 200,
+  "body": {
+    "id": "acct_1TestShop273",
+    "object": "v2.core.account",
+    "applied_configurations": ["merchant"],
+    "configuration": {
+      "customer": null,
+      "merchant": {
+        "applied": true,
+        "capabilities": {
+          "card_payments": {"requested": true, "status": "active", "status_details": []}
+        }
+      },
+      "recipient": null
+    },
+    "contact_email": "owner@example.com",
+    "created": "2026-10-06T12:00:00.000Z",
+    "dashboard": "full",
+    "defaults": null,
+    "display_name": "Phase 273 Test Shop",
+    "identity": null,
+    "livemode": false,
+    "metadata": {},
+    "requirements": {"collector": "stripe", "entries": [], "summary": null}
+  }
+}

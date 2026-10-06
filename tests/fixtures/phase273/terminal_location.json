@@ -1,0 +1,18 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Terminal Location object (docs.stripe.com/api/terminal/locations/object), read 2026-10-06."
+  },
+  "status": 200,
+  "body": {
+    "id": "tml_test_fixture273",
+    "object": "terminal.location",
+    "address": {
+      "city": "Boston", "country": "US", "line1": "1 Test Street",
+      "line2": null, "postal_code": "02110", "state": "MA"
+    },
+    "display_name": "Phase 273 Test Shop",
+    "livemode": false,
+    "metadata": {}
+  }
+}

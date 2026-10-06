@@ -225,6 +225,18 @@ class Settings(BaseSettings):
     checkout_success_url: str = "http://localhost:3000/billing/success"
     checkout_cancel_url: str = "http://localhost:3000/billing/cancel"
     billing_portal_return_url: str = "http://localhost:3000/billing"
+    # Phase 273: the tier prices are test-mode placeholders (the operator's
+    # pick, 2026-10-06) until real ones exist; every price shown says so.
+    stripe_prices_are_placeholders: bool = True
+    # Phase 273: where a customer lands after paying a shop invoice, and
+    # where Stripe-hosted onboarding sends a shop owner. Test mode accepts
+    # http; live mode needs https (row 371).
+    invoice_payment_return_url: str = "http://localhost:3000/payments/done"
+    connect_return_url: str = "http://localhost:3000/payments/connected"
+    connect_refresh_url: str = "http://localhost:3000/payments/connect-again"
+    # Phase 273: a file each Stripe request appends one JSON line to
+    # (time, method, path, status, bytes, request id); never a header or body.
+    stripe_call_log: str = ""
 
     # Rate limiting (Phase 176+)
     rate_limit_anonymous_per_minute: int = 30

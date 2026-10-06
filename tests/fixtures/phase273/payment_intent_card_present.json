@@ -1,0 +1,19 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Payment Intent object (docs.stripe.com/api/payment_intents/object), read 2026-10-06; a card-present intent as created for Terminal, before the reader processes it."
+  },
+  "status": 200,
+  "body": {
+    "id": "pi_test_fixtureTerminal273",
+    "object": "payment_intent",
+    "amount": 25000,
+    "amount_received": 0,
+    "capture_method": "automatic",
+    "currency": "usd",
+    "livemode": false,
+    "metadata": {"motodiag_payment_id": "1", "motodiag_invoice_id": "1"},
+    "payment_method_types": ["card_present"],
+    "status": "requires_payment_method"
+  }
+}

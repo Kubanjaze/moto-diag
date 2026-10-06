@@ -1,0 +1,30 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Subscription object at API version 2026-09-30.endive (docs.stripe.com/api/subscriptions/object), read 2026-10-06: the billing period is on each item since 2025-03-31.basil, and metadata comes from subscription_data.metadata."
+  },
+  "status": 200,
+  "body": {
+    "id": "sub_test_fixture273",
+    "object": "subscription",
+    "cancel_at_period_end": false,
+    "canceled_at": null,
+    "customer": "cus_test_fixture273",
+    "items": {
+      "object": "list",
+      "data": [
+        {
+          "id": "si_test_fixture273",
+          "object": "subscription_item",
+          "current_period_end": 1793966400,
+          "current_period_start": 1791288000,
+          "price": {"id": "price_test_shop", "object": "price"}
+        }
+      ]
+    },
+    "livemode": false,
+    "metadata": {"user_id": "1", "tier": "shop"},
+    "status": "active",
+    "trial_end": null
+  }
+}

@@ -1,0 +1,13 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's error object (docs.stripe.com/api/errors), read 2026-10-06. Stripe's invalid-key message quotes the key's last characters; the app must not print them."
+  },
+  "status": 401,
+  "body": {
+    "error": {
+      "message": "Invalid API Key provided: sk_test_****3abc",
+      "type": "invalid_request_error"
+    }
+  }
+}

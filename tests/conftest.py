@@ -33,6 +33,30 @@ from support.network_guard import install as _install_network_guard
 
 _install_network_guard()
 
+# ---------------------------------------------------------------------------
+# Phase 273 — no Stripe key or secret reaches a test.
+#
+# The operator's keys live outside the repo, but Settings also reads
+# PROJECT_ROOT/.env, and a shell may export them. Every Stripe variable is
+# removed, then each Stripe setting is set to "" in the environment, which
+# pydantic-settings reads before `.env`; the provider is the fake one.
+# Proven by tests/test_phase273_secrets.py with a planted key.
+# ---------------------------------------------------------------------------
+STRIPE_SETTINGS_BLANKED = (
+    "MOTODIAG_STRIPE_API_KEY",
+    "MOTODIAG_STRIPE_WEBHOOK_SECRET",
+    "MOTODIAG_STRIPE_PRICE_INDIVIDUAL",
+    "MOTODIAG_STRIPE_PRICE_SHOP",
+    "MOTODIAG_STRIPE_PRICE_COMPANY",
+    "MOTODIAG_STRIPE_CALL_LOG",
+)
+for _name in list(os.environ):
+    if _name.startswith(("MOTODIAG_STRIPE_", "STRIPE_")):
+        del os.environ[_name]
+for _name in STRIPE_SETTINGS_BLANKED:
+    os.environ[_name] = ""
+os.environ["MOTODIAG_BILLING_PROVIDER"] = "fake"
+
 from motodiag.core.config import reset_settings
 
 # Discard anything cached before the assignment above.

@@ -1,0 +1,20 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Checkout Session object (docs.stripe.com/api/checkout/sessions/object), read 2026-10-06; trimmed to the fields the app reads, in payment mode on a connected account."
+  },
+  "status": 200,
+  "body": {
+    "id": "cs_test_fixtureInvoice273",
+    "object": "checkout.session",
+    "amount_total": 25000,
+    "currency": "usd",
+    "livemode": false,
+    "metadata": {"motodiag_payment_id": "1", "motodiag_invoice_id": "1"},
+    "mode": "payment",
+    "payment_intent": null,
+    "payment_status": "unpaid",
+    "status": "open",
+    "url": "https://checkout.stripe.com/c/pay/cs_test_fixtureInvoice273"
+  }
+}

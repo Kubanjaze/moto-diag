@@ -21,6 +21,7 @@ from motodiag.cli.hardware import register_hardware
 from motodiag.cli.kb import register_kb
 from motodiag.cli.apikey import register_apikey
 from motodiag.cli.billing import register_subscription
+from motodiag.cli.payments import register_payments_check
 from motodiag.cli.serve import register_serve
 from motodiag.cli.shop import register_shop
 from motodiag.cli.theme import get_console, status, tier_style
@@ -891,6 +892,7 @@ register_serve(cli)
 # Must come before completion so shell-completion sees them.
 register_apikey(cli)
 register_subscription(cli)
+register_payments_check(cli)
 
 # Phase 195: register `transcripts` subgroup (voice memo admin —
 # `motodiag transcripts sweep` runs the 60-day audio retention sweep).

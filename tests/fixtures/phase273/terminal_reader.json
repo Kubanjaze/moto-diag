@@ -1,0 +1,19 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Terminal Reader object (docs.stripe.com/api/terminal/readers/object), read 2026-10-06; a simulated reader registered with code simulated-wpe."
+  },
+  "status": 200,
+  "body": {
+    "id": "tmr_test_fixture273",
+    "object": "terminal.reader",
+    "action": null,
+    "device_type": "simulated_wisepos_e",
+    "label": "Phase 273 Test Shop simulated reader",
+    "livemode": false,
+    "location": "tml_test_fixture273",
+    "metadata": {},
+    "serial_number": "fixture-serial",
+    "status": "online"
+  }
+}

@@ -83,3 +83,38 @@ v1.0 is `273_implementation.md`. Decided while writing it, with the reason:
   responses, so the request shapes are tested, not a stand-in's. With the
   provider set to `fake`, the shop payment commands refuse and say Stripe
   is not configured, rather than pretending money moved.
+
+### 2026-10-06 — Built: everything that needs no key
+
+`stripe==16.0.0` installed in `.venv` (it sends `2026-09-30.endive`).
+Migration 080 goes forward, back and forward on a scratch database. 92
+new tests in five files, plus 176's webhook tests updated; 150 pass
+together. `wholetree.sh --full`: 3988 passed, exit 0 (gate 11's snapshot
+unchanged). 244G's scanner over all of `tests/`: 0 hits.
+
+Decided while building, with the reason:
+- **`paid_at` is when Stripe recorded the payment** (the event's
+  `created`), not when the webhook ran. It is the truer time, and it needs
+  no clock: a first draft stamped the wall clock and a test comparing two
+  databases saw 15 ms apart. Caught by my own new test before any commit,
+  so not a bug-fix entry.
+- **176's handler names:** `invoice.payment_succeeded` is replaced by
+  `invoice.paid`, which Stripe also sends for an invoice paid out of band;
+  `invoice.payment_failed` stays. The old ones were no-ops.
+- **The paid transition is one guarded `UPDATE`** in the same transaction
+  as the payment row (`... WHERE status IN ('sent','overdue')`), rather
+  than 169's `mark_invoice_paid`, which opens its own connection. A
+  duplicate or concurrent event cannot pay twice or interleave.
+- **`subscription sync` uses the webhook's reading** of a Stripe
+  subscription, so the two never disagree on tier, status or period.
+- **Removed `set_http_client_for_tests`:** 209B's orphan gate found it
+  unused (tests set the attribute through `monkeypatch`). Dead code goes,
+  rather than an allowlist entry.
+- **A test reloading `stripe_api`** to prove the lazy import replaced its
+  exception classes for later tests in the session; rewritten to block
+  the module instead (the import is inside the call).
+- **The edit guard** blocked `sed -i` on a scratch probe file in the
+  session scratchpad. It blocks that form wherever it points, by design;
+  the probe was not needed again. Recorded, not loosened.
+- No new module needs an allowlist entry: each is reached from the CLI or
+  the webhook route, so the size pins do not change.

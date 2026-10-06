@@ -1,0 +1,21 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Terminal Reader object as returned by test_helpers present_payment_method (docs.stripe.com/terminal/references/testing#simulated-card-presentment), read 2026-10-06."
+  },
+  "status": 200,
+  "body": {
+    "id": "tmr_test_fixture273",
+    "object": "terminal.reader",
+    "action": {
+      "type": "process_payment_intent",
+      "status": "succeeded",
+      "failure_code": null,
+      "failure_message": null,
+      "process_payment_intent": {"payment_intent": "pi_test_fixtureTerminal273"}
+    },
+    "device_type": "simulated_wisepos_e",
+    "livemode": false,
+    "status": "online"
+  }
+}

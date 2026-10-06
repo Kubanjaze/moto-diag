@@ -19,6 +19,9 @@ from motodiag.billing.providers import (
 from motodiag.billing.subscription_repo import (
     get_active_subscription, update_subscription, upsert_from_stripe,
 )
+from motodiag.billing.webhook_handlers import (
+    SubscriptionEventError, subscription_data_from_stripe,
+)
 from motodiag.cli.theme import get_console
 from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection, init_db
@@ -105,6 +108,11 @@ def register_subscription(cli_group: click.Group) -> None:
         console.print(
             f"[dim]Session id: {result.session_id}[/dim]"
         )
+        if settings.stripe_prices_are_placeholders:
+            console.print(
+                "[yellow]Tier prices are test placeholders, not real "
+                "prices.[/yellow]"
+            )
 
     @sub_group.command("portal-url")
     @click.option("--user", "user_id", type=int, required=True)
@@ -296,13 +304,12 @@ def register_subscription(cli_group: click.Group) -> None:
             )
         except BillingProviderError as e:
             raise click.ClickException(str(e)) from e
-        # Apply relevant remote fields
-        data = {
-            "status": remote.get("status"),
-            "cancel_at_period_end": bool(
-                remote.get("cancel_at_period_end") or False,
-            ),
-        }
+        # Phase 273: the same reading of Stripe's subscription the
+        # webhook stores (tier, status, price, the items' period).
+        try:
+            data = subscription_data_from_stripe(remote, settings)
+        except SubscriptionEventError as e:
+            raise click.ClickException(str(e)) from e
         upsert_from_stripe(
             user_id=user_id,
             stripe_subscription_id=sub.stripe_subscription_id,

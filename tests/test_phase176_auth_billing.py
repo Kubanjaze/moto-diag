@@ -610,10 +610,20 @@ class TestWebhookDispatch:
             },
         }
 
+    @staticmethod
+    def _stripe(user_id, status="active", sub_id="sub_test_1", tier="shop"):
+        """Phase 273 (F187): the handler re-reads the subscription, so the
+        fake provider holds what Stripe would say."""
+        return FakeBillingProvider({sub_id: {
+            "id": sub_id, "customer": f"cus_{user_id}", "status": status,
+            "metadata": {"user_id": str(user_id), "tier": tier},
+            "items": {"data": [{"price": {"id": "price_x"}}]},
+        }})
+
     def test_subscription_created_upserts_row(self, db):
         user_id = _make_user(db)
         event = self._subscription_event(user_id=user_id)
-        result = dispatch_event(event, db_path=db)
+        result = dispatch_event(event, db_path=db, provider=self._stripe(user_id))
         assert result.processed is True
         assert result.error is None
         sub = get_active_subscription(user_id, db_path=db)
@@ -624,8 +634,9 @@ class TestWebhookDispatch:
     def test_replay_skips_handler(self, db):
         user_id = _make_user(db)
         event = self._subscription_event(user_id=user_id)
-        first = dispatch_event(event, db_path=db)
-        second = dispatch_event(event, db_path=db)
+        provider = self._stripe(user_id)
+        first = dispatch_event(event, db_path=db, provider=provider)
+        second = dispatch_event(event, db_path=db, provider=provider)
         assert first.processed is True
         assert second.processed is False  # replay skip
         # Still only one sub row
@@ -638,7 +649,7 @@ class TestWebhookDispatch:
     def test_subscription_updated_upserts_in_place(self, db):
         user_id = _make_user(db)
         event = self._subscription_event(user_id=user_id)
-        dispatch_event(event, db_path=db)
+        dispatch_event(event, db_path=db, provider=self._stripe(user_id))
         update_event = {
             "id": "evt_2",
             "type": "customer.subscription.updated",
@@ -653,7 +664,8 @@ class TestWebhookDispatch:
                 }
             },
         }
-        dispatch_event(update_event, db_path=db)
+        dispatch_event(update_event, db_path=db,
+                       provider=self._stripe(user_id, status="past_due"))
         sub = get_active_subscription(user_id, db_path=db)
         # past_due isn't in active states → should return None
         assert sub is None
@@ -662,6 +674,7 @@ class TestWebhookDispatch:
         user_id = _make_user(db)
         dispatch_event(
             self._subscription_event(user_id=user_id), db_path=db,
+            provider=self._stripe(user_id),
         )
         delete_event = {
             "id": "evt_3",
@@ -673,7 +686,8 @@ class TestWebhookDispatch:
                 }
             },
         }
-        dispatch_event(delete_event, db_path=db)
+        dispatch_event(delete_event, db_path=db,
+                       provider=self._stripe(user_id, status="canceled"))
         sub = get_active_subscription(user_id, db_path=db)
         assert sub is None
 
@@ -720,6 +734,9 @@ class TestWebhookDispatch:
         }
         payload = _json.dumps(event).encode()
         app = create_app(db_path_override=api_db)
+        from motodiag.api.routes.billing import get_provider
+        app.dependency_overrides[get_provider] = lambda: self._stripe(
+            user_id, sub_id="sub_wh_1")
         client = TestClient(app, raise_server_exceptions=False)
         r = client.post(
             "/v1/billing/webhooks/stripe",
