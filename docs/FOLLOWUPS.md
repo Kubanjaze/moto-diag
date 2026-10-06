@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F187**.
+At the time of writing the highest assigned is **F189**.
 
 ---
 
@@ -2786,3 +2786,54 @@ the subscription's state re-read from Stripe on each event rather than
 taken from the payload; a handler failure answered with a status Stripe
 retries, and not recorded as processed; each with a test, and the path run
 once end to end against test mode.
+
+### F188
+
+**A warranty claim and the invoice for the same work order do not know about each other**
+
+Found at Phase 292's Step 0 (2026-10-06), in the dry walk of Gate 16 on a
+scratch database (`docs/phases/in_progress/292_step0.md`, S0-4 H2).
+- **The claim links the work order** (`shop warranty claim open --wo`,
+  `inventory/warranty_claims.py:51`), and the invoice is built from the
+  same work order (`shop invoice generate`, `shop/invoicing.py`). Neither
+  reads the other: no query in `shop/invoicing.py` names
+  `warranty_claims`, and none in `inventory/warranty_claims.py` names
+  `invoices`.
+- **Measured:** a bike with a valid comprehensive warranty (8,000 of
+  12,000 mi, inside its dates), a draft claim open on the work order, and
+  the repair (1.5 h at 12000 cents, 2 parts at 4599) invoiced to the
+  customer in full: subtotal 27198, tax 575, total 27773 cents, paid by
+  the customer's card.
+- **The claimed amount is typed by hand** (`--claimed-cents`) and was "not
+  recorded"; nothing derives it from the work order's labour and parts.
+
+What it affects: every warranty repair. The shop can bill the customer and
+the maker for the same work, and nothing in the app shows it.
+
+What would close it (row 373): a rule for which lines a claim covers; the
+claimed amount derived from those lines; claimed lines left off what the
+customer owes; and Gate 16's pinned test of today's behaviour inverted.
+
+### F189
+
+**Check-in opens a work order with no intake, and no command can attach one afterwards**
+
+Found at Phase 292's Step 0 (2026-10-06) (`292_step0.md`, S0-4 H3).
+- `shop appointment check-in` without `--wo` creates and opens a work
+  order (`scheduling/booking.py:410`) and creates no intake.
+- `intake_visit_id` is not in `update_work_order`'s whitelist, by design
+  (`shop/work_order_repo.py:85`: "cancel the WO and recreate"). A
+  checked-in appointment cannot be checked in again, so the recreated work
+  order cannot be linked to the appointment.
+- So book → intake → work order holds only in one order: `intake create`,
+  then `work-order create --intake`, then `check-in --wo`. Gate 16 walks
+  that order.
+
+What it affects: the intake's mileage and reported problems never reach a
+work order opened by check-in. The warranty claim packet then reads the
+bike's recorded mileage instead of the mileage at intake
+(`render_claim_packet`).
+
+What would close it (row 374): check-in links or creates the intake, so
+both orders end with the work order carrying it; Gate 16's pinned test of
+the other order inverted.
