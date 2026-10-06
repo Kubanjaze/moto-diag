@@ -307,6 +307,35 @@ def spread_tax(line_cents: list[int], tax_cents: int) -> list[int]:
     return shares
 
 
+def _taxed_types(inv: dict) -> Optional[set[str]]:
+    """The line types the invoice's tax fell on, as it recorded them (Phase
+    281), or None for an invoice made before that record, whose tax fell on
+    every line."""
+    recorded = inv.get("taxed_line_types")
+    if recorded is None:
+        return None
+    return {t for t in recorded.split(",") if t and t != "none"}
+
+
+def _line_taxes(inv: dict) -> list[int]:
+    """Each line's share of the invoice's tax: only lines of a taxed type
+    share it, in proportion to their amounts."""
+    lines = inv["lines"]
+    tax = _cents(inv["tax_amount"])
+    taxed = _taxed_types(inv)
+    on = [i for i, line in enumerate(lines)
+          if taxed is None or line["item_type"] in taxed]
+    if tax and not on:
+        raise ExportError(
+            f"invoice {inv['invoice_number']} carries tax but no line of a taxed "
+            f"type ({', '.join(sorted(taxed or ())) or 'none'})"
+        )
+    shares = [0] * len(lines)
+    for i, share in zip(on, spread_tax([_cents(lines[i]["line_total"]) for i in on], tax)):
+        shares[i] = share
+    return shares
+
+
 def _quantity(value) -> str:
     q = float(value)
     return f"{q:.4f}".rstrip("0").rstrip(".")
@@ -327,9 +356,7 @@ def xero_rows(invoices: list[dict], mapping: dict[str, dict],
     for inv in invoices:
         if not inv["lines"]:
             raise ExportError(f"invoice {inv['invoice_number']} has no lines")
-        amounts = [_cents(line["line_total"]) for line in inv["lines"]]
-        taxes = spread_tax(amounts, _cents(inv["tax_amount"]))
-        for line, tax in zip(inv["lines"], taxes):
+        for line, tax in zip(inv["lines"], _line_taxes(inv)):
             account = mapping[line["item_type"]]
             row = {c: "" for c in XERO_COLUMNS}
             row.update({
