@@ -118,3 +118,33 @@ Decided while building, with the reason:
   the probe was not needed again. Recorded, not loosened.
 - No new module needs an allowlist entry: each is reached from the CLI or
   the webhook route, so the size pins do not change.
+
+### 2026-10-06 — The credential stop (rule 1: a login or a credential)
+
+Everything that needs no key is built and pushed (`915caaa`). The smoke
+and the webhook run are scripted and committed:
+`273_smoke.sh` (stages prepare, check, connect, status, setup, webhook,
+summary) and `273_smoke.py` (the stages, run through the app's own
+commands in-process).
+- **The keys** are read only from `~/.config/motodiag/stripe-test.env`
+  (mode 600, checked), into the script's own environment. A key that is
+  not `sk_test_`/`rk_test_` stops the script before any call.
+- **The webhook secret** goes from `stripe listen --print-secret` into
+  the server's environment. `stripe listen` names the secret on its
+  "Ready" line, so its output is passed through `sed -E
+  's/whsec_[A-Za-z0-9]+/whsec_[redacted]/g'` before it is written.
+- **The database** is a scratch copy of live made with the read-only
+  backup API (`~/.cache/motodiag/phase273/smoke.db`); the script refuses
+  any other path. `prepare` was run: live is still schema 79, 1 shop,
+  0 invoices.
+- **The responses** are kept under `273_smoke/responses/` with the
+  one-use onboarding URL and e-mail addresses removed, to become recorded
+  fixtures. `calls.jsonl` is the product's own call log.
+- "One logged smoke call per surface" is read as one run of each
+  surface's command: each command makes the requests it needs (Connect:
+  create the account and its link; the reader: a location and a reader),
+  and every request is a line in `calls.jsonl`.
+
+Stopped for the operator's Stripe test-mode account, its keys, the
+Connect platform setting, the placeholder prices, the customer portal
+setting, and the Stripe CLI login.
