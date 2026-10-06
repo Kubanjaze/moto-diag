@@ -13,7 +13,7 @@ is built) on a minute boundary: the first two requests at :59.0 and :59.5,
 every later call at :00.5 of the next minute. It runs the test under that
 clock and prints pytest's summary line.
 
-Run: .venv/bin/python docs/phases/in_progress/370_bf1_repro.py
+Run: .venv/bin/python docs/phases/completed/370_bf1_repro.py (moved from in_progress/)
 Before the fix it must fail; after it, pass.
 """
 

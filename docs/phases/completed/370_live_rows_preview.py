@@ -12,7 +12,9 @@ option A would apply:
   ``CURRENT_TIMESTAMP`` default: already UTC, so only its shape changes;
 - the result is ``YYYY-MM-DDTHH:MM:SS.mmm+00:00``, the format Phase 370 writes.
 
-Run: .venv/bin/python docs/phases/in_progress/370_live_rows_preview.py
+Run: .venv/bin/python docs/phases/completed/370_live_rows_preview.py
+(moved from in_progress/ at close-out; since migration 079 the live rows
+are already converted, so a run now shows no changes)
 """
 import sqlite3
 import sys

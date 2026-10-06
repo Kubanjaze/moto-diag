@@ -4,8 +4,8 @@ tests named beside it must go red.
 M1 is the planted control the prompt asks for: a return to local time in
 the API's own session writer.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/370_mutate.py`
-(it moves to completed/ at close-out). 361's form: each mutation replaces one
+Run from the repository root: `.venv/bin/python docs/phases/completed/370_mutate.py`
+(moved from in_progress/ at close-out). 361's form: each mutation replaces one
 exact string (which must occur once), runs its tests with `-B` after
 clearing `__pycache__`, and restores the file whatever happens. Prints one
 line per mutation and exits 1 if any stayed green.

@@ -1,6 +1,28 @@
 # Phase 370 — F10: session times stored in UTC
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-06
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-06 (v1.0 2026-10-06)
+
+**Outcome (v1.1).** F10 fixed, proven on the clock, and live.
+- **The fix:** every session time is written as
+  `YYYY-MM-DDTHH:MM:SS.mmm+00:00`, and the month start in the same shape.
+  A session created at 2026-10-31 21:42 EDT counts toward November.
+- **The proof:**
+  - gate 9's lifecycle and the 178 quota tests pass at that moment in a
+    spawned run (10 passed; before the fix 7 of the 10 failed);
+  - returning the API's writer to local time turns the test red (M1);
+  - mutation 24/24 red.
+- **The readers** show local time: the CLI, the report Timeline, and
+  client memory. The API's `since` compares in UTC. The app parses the
+  new format with `new Date()`. No API schema change.
+- **Live:** migration 079 changed exactly the 10 fields of the preview,
+  plus its `schema_version` row (the operator: "the schema_version row is
+  fine, apply 079 live"). The live diff equals the approved diff.
+- **Bug fix #1:** a timing defect in Phase 176's 429 test, which failed
+  the first regression.
+
+Regression of record: 10299 passed, 0 failed at `a55403d`. F10 is closed by
+a mobile session after the merge (its entry is in the mobile file). F186 is
+open, for its own phase.
 
 ## Goal
 
@@ -122,29 +144,29 @@ The reasons are in S0-4:
 
 ## Verification Checklist
 
-- [ ] `tests/test_phase370_session_utc.py`, with the clock frozen at
+- [x] `tests/test_phase370_session_utc.py`, with the clock frozen at
       2026-10-31 21:42:07 EDT (2026-11-01 01:42:07 UTC):
-  - [ ] the moment straddles (local the 31st, UTC the 1st), and a naive
+  - [x] the moment straddles (local the 31st, UTC the 1st), and a naive
         local stamp written then is not counted: the window is live
-  - [ ] a session created then counts toward November; one created at
+  - [x] a session created then counts toward November; one created at
         2026-10-31 19:30 EDT counts toward October, not November
-  - [ ] every writer stamps the format: create (both), update, symptom,
+  - [x] every writer stamps the format: create (both), update, symptom,
         fault code, diagnosis, close, reopen, note's `updated_at`
-  - [ ] the note's in-text stamp is `[2026-10-31T21:42-04:00]`
-  - [ ] gate 9's `test_full_lifecycle` and the six 178 quota tests pass at
+  - [x] the note's in-text stamp is `[2026-10-31T21:42-04:00]`
+  - [x] gate 9's `test_full_lifecycle` and the six 178 quota tests pass at
         that moment, in a spawned pytest with `tests/support/frozen_clock.py`
-  - [ ] readers: `_short_ts`, `diagnose list` and its `--since`/`--until`,
+  - [x] readers: `_short_ts`, `diagnose list` and its `--since`/`--until`,
         the report Timeline, `_date_of`, and the API's `since` with an
         offset
-  - [ ] migration 079: the three shapes are converted, `None` is untouched,
+  - [x] migration 079: the three shapes are converted, `None` is untouched,
         a second run changes nothing, and rollback returns naive local
-- [ ] `370_mutate.py`: every mutation red. The first is the planted return
+- [x] `370_mutate.py`: every mutation red. The first is the planted return
       to local time in `create_session_for_owner`.
-- [ ] 244G's scanner over the new test files
-- [ ] `wholetree.sh --full` on the committed HEAD; the regression of record
-- [ ] deploy: dryrun diff committed, operator scope met, `apply-live`, live
+- [x] 244G's scanner over the new test files
+- [x] `wholetree.sh --full` on the committed HEAD; the regression of record
+- [x] deploy: dryrun diff committed, operator scope met, `apply-live`, live
       diff
-- [ ] `verify_phase.sh`
+- `verify_phase.sh` runs on the merge; its result is in the handoff.
 
 ## Risks
 
@@ -158,6 +180,53 @@ The reasons are in S0-4:
 - **Existing tests may assert the old naive shape.** The related suites run
   before the regression, and any that change are listed in Results.
 
+## Deviations from Plan
+
+1. **The apply needed a second operator answer.** v1.0 foresaw it: the
+   dry run's exact diff matched the preview's ten fields and added
+   079's own `schema_version` row, which the operator's scope did not
+   name. Shown to the operator; their words: "the schema_version row is
+   fine, apply 079 live".
+2. **Bug fix #1, outside 370's code.** The regression at `7ed0159` failed
+   Phase 176's `test_anon_over_limit_returns_429`. The rate limiter counts
+   per wall-clock minute, and a minute started between the test's
+   requests. It was reproduced on a minute-boundary clock
+   (`370_bf1_repro.py`), and the test now runs the limiter on a fixed
+   clock. The operator gave the decision rule while the run was going (the
+   phase log quotes it).
+3. **`diagnose list --since/--until` refuses a value that is not ISO.**
+   Before, it went into the SQL comparison as typed. That follows from
+   converting the bounds; the plan did not say so.
+4. **The frozen-clock plugin's header reads the time `session_repo` sees,**
+   not the configured moment. A first draft printed the configured moment,
+   and M24 (the plugin not freezing) would have stayed green.
+5. **`COLLECTED_TEST_FLOOR` absorbed 369's 8 tests.** Phase 369 did not
+   raise it.
+
+Not deviations, recorded for the reader:
+- the predictor reads no session time;
+- no existing test asserted the old naive shape (4313 related tests
+  passed unchanged).
+
 ## Results
 
-(v1.1)
+| what | result |
+|---|---|
+| F10 reproduced before the fix | at 2026-10-31 21:42:07 EDT: 7 failed, 3 passed (gate 9 lifecycle, six 178 quota tests); real clock 10 passed |
+| the format | `YYYY-MM-DDTHH:MM:SS.mmm+00:00`; month start `YYYY-MM-01T00:00:00.000+00:00` |
+| new tests | 19 (`tests/test_phase370_session_utc.py`), plus the plugin `tests/support/frozen_clock.py` |
+| at that moment, after the fix | the same ten tests in a spawned run: 10 passed |
+| mutation | 24/24 red (`370_mutate.py`); M1 is the planted return to local time |
+| related suites | 132 files, 4313 passed |
+| 244G scanner | all of `tests/`: 0 hits |
+| `COLLECTED_TEST_FLOOR` | 10271 → 10299 |
+| migration 079 dry run | 10 fields equal the preview (compared by script), +1 `schema_version`, no schema change, scope problems none |
+| migration 079 live | applied; live diff equals the approved exact diff; 5854 rows, integrity ok; backup `motodiag_pre370_20261006_110434.db` |
+| bug fixes | 1 (`fba93fd`) |
+| findings | F186 filed (work-order times, separate phase); F10 to be closed in moto-diag-mobile |
+| `wholetree.sh --full` at `a55403d` | 3988 passed |
+
+Regression of record: 10299 passed, 0 failed, 0 skipped, 0 errors at `a55403d` (23 min 19 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The first regression, at `7ed0159`, failed one test (bug fix #1) and is
+recorded in the phase log; it is not the regression of record.

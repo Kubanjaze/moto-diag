@@ -1,6 +1,6 @@
 # Phase 370 — F10: session times stored in UTC — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-06)
 **Branch:** `phase-370` (Opus session, main checkout, the only writer)
 
 ---
@@ -204,3 +204,28 @@ Regression at `7ed0159` (not of record, one failure): 10298 passed, 1 failed, 0 
 **Commit.** `fba93fd`
 
 One bug in this build.
+
+### 2026-10-06 — The regression of record at `a55403d`
+
+`wholetree.sh --full` on `a55403d`: 3988 passed, record written. Then:
+
+Regression of record: 10299 passed, 0 failed, 0 skipped, 0 errors at `a55403d` (23 min 19 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+No worker was lost (log
+`~/.cache/motodiag/regressions/a55403d_parallel_20261006_123023.log`). The
+count equals `COLLECTED_TEST_FLOOR` (10299). It was run on 2026-10-06,
+outside the month-end evening window.
+
+### 2026-10-06 — Close-out
+
+v1.1 written. Row 370 is ✅. The documents move to `completed/`, and the
+handoff is `docs/handoffs/2026-10-06_370_closed.md`. F10 stays open in
+moto-diag-mobile's file until a mobile session closes it after the merge,
+as F103 was closed. F186 is open for its own phase.
+
+The edit guard blocked one legitimate command at close-out: a Python
+script body editing `implementation.md` (docs) that named
+`tests/support/frozen_clock.py` in its text and wrote through a path
+variable. The guard blocks a write it cannot resolve when the body names
+`src/` or `tests/`, and it failed closed. The edit was made with the Edit
+tool instead. The guard was not changed.
