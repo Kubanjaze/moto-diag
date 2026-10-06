@@ -1,7 +1,7 @@
 {
   "_fixture": {
     "kind": "recorded",
-    "source": "Stripe test mode, POST /v1/test_helpers/terminal/readers/tmr_GsIeHQrfGPn5RI/present_payment_method on the smoke shop's connected account, via 273_smoke.py, 2026-10-06",
+    "source": "Stripe test mode, POST /v1/test_helpers/terminal/readers/tmr_GsIeHQrfGPn5RI/present_payment_method, via 273_smoke.py",
     "request_id": "req_QKO5VauDGXvKYw"
   },
   "status": 200,

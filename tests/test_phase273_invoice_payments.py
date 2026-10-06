@@ -20,8 +20,8 @@ from support.phase273 import (
     answer, cli, new_db, seed_account, seed_invoice, seed_reader, sql,
 )
 from support.stripe_fixtures import (
-    FROZEN_AT, SHOP_ACCOUNT, event, freeze_webhook_clock, load, signed,
-    stripe_settings,
+    FROZEN_AT, INVOICE_SESSION, LOCATION, READER, SHOP_ACCOUNT, TERMINAL_PI, event,
+    freeze_webhook_clock, load, signed, stripe_settings,
 )
 
 CHECKOUT = ("POST", r"/v1/checkout/sessions", "checkout_session_invoice")
@@ -107,12 +107,12 @@ class TestMoney:
 class TestStartingIsNotPaying:
     def test_pay_link_prints_the_url_and_leaves_the_invoice_unpaid(self, db, monkeypatch, ready):
         http, out = _start(db, monkeypatch, ready["invoice_id"])
-        assert "https://checkout.stripe.com/c/pay/cs_test_fixtureInvoice273" in out.output
+        assert INVOICE_SESSION["url"] in out.output.splitlines()
         assert "is not paid yet" in out.output
         assert _invoice(db, ready["invoice_id"])["status"] == "sent"
         p = _payment(db)
         assert (p["status"], p["outcome"], p["channel"]) == ("started", None, "checkout")
-        assert p["checkout_session_id"] == "cs_test_fixtureInvoice273"
+        assert p["checkout_session_id"] == INVOICE_SESSION["id"]
 
     def test_the_link_survives_a_narrow_terminal(self, db, monkeypatch, ready):
         """Bug fix #1: Stripe's Checkout URLs run to ~600 characters; printed
@@ -359,9 +359,9 @@ class TestTerminal:
         assert loc.headers["Stripe-Account"] == SHOP_ACCOUNT
         assert loc.params["address[state]"] == "MA"
         assert reader.params["registration_code"] == "simulated-wpe"
-        assert reader.params["location"] == "tml_test_fixture273"
+        assert reader.params["location"] == LOCATION
         row = sql(db, "SELECT stripe_reader_id, simulated FROM terminal_readers")[0]
-        assert tuple(row) == ("tmr_test_fixture273", 1)
+        assert tuple(row) == (READER, 1)
 
     def test_setup_without_an_address_is_refused_before_stripe(self, db, monkeypatch):
         ids = seed_invoice(db, address=False)
@@ -376,9 +376,9 @@ class TestTerminal:
         seed_reader(db, ready["shop_id"])
         http = answer(monkeypatch, [
             ("POST", r"/v1/payment_intents", "payment_intent_card_present"),
-            ("POST", r"/v1/terminal/readers/tmr_test_fixture273/process_payment_intent",
+            ("POST", rf"/v1/terminal/readers/{READER}/process_payment_intent",
              "reader_processing"),
-            ("POST", r"/v1/test_helpers/terminal/readers/tmr_test_fixture273/present_payment_method",
+            ("POST", rf"/v1/test_helpers/terminal/readers/{READER}/present_payment_method",
              "reader_presented"),
         ])
         out = cli(db, "shop", "terminal", "pay", ready["invoice_id"])
@@ -389,7 +389,7 @@ class TestTerminal:
         assert pi.params["capture_method"] == "automatic"
         assert pi.params["metadata[motodiag_payment_id]"] == "1"
         assert {r.headers["Stripe-Account"] for r in http.requests} == {SHOP_ACCOUNT}
-        assert process.params["payment_intent"] == "pi_test_fixtureTerminal273"
+        assert process.params["payment_intent"] == TERMINAL_PI
         assert "is not paid yet" in out.output
         assert _invoice(db, ready["invoice_id"])["status"] == "sent"
 
@@ -402,7 +402,7 @@ class TestTerminal:
         ])
         cli(db, "shop", "terminal", "pay", ready["invoice_id"])
         dispatch_event(_succeeded(1, ready["invoice_id"],
-                                  pi_id="pi_test_fixtureTerminal273"),
+                                  pi_id=TERMINAL_PI),
                        db_path=db, settings=stripe_settings())
         assert _invoice(db, ready["invoice_id"])["status"] == "paid"
         assert _payment(db)["channel"] == "terminal"

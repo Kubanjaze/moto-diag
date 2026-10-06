@@ -312,6 +312,19 @@ class TestSync:
         assert _stored(db)["cancel_at_period_end"] == 1
 
 
+class TestThePortal:
+    def test_portal_url_for_the_stored_customer(self, db, monkeypatch, user):
+        dispatch_event(_sub_event("customer.subscription.created", "evt_1"), db_path=db,
+                       provider=FakeBillingProvider({SUB: _stripe_says(user)}),
+                       settings=stripe_settings())
+        http = answer(monkeypatch, [("POST", r"/v1/billing_portal/sessions",
+                                     "portal_session")])
+        out = cli(db, "subscription", "portal-url", "--user", user, columns=80)
+        assert out.exit_code == 0, out.output
+        assert http.requests[0].params["customer"] == "cus_test_fixture273"
+        assert body("portal_session")["url"] in out.output.splitlines()
+
+
 class TestTheFakeProvider:
     def test_an_unknown_subscription_raises_as_stripe_would(self):
         with pytest.raises(BillingProviderError):

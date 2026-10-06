@@ -1,7 +1,7 @@
 {
   "_fixture": {
     "kind": "recorded",
-    "source": "Stripe test mode, POST /v1/billing_portal/sessions, via 273_smoke.py, 2026-10-06. The session URL carries a session secret and was not kept; a placeholder stands in.",
+    "source": "Stripe test mode, POST /v1/billing_portal/sessions, via 273_smoke.py",
     "request_id": "req_jQgjjyxXbW9r2c"
   },
   "status": 200,
@@ -17,6 +17,6 @@
     "locale": null,
     "on_behalf_of": null,
     "return_url": "http://localhost:3000/billing",
-    "url": "https://billing.stripe.com/p/session/placeholder_not_kept"
+    "url": "[portal session link, not kept]"
   }
 }

@@ -1,7 +1,7 @@
 {
   "_fixture": {
     "kind": "recorded",
-    "source": "Stripe test mode, POST /v1/terminal/locations on the smoke shop's connected account, via 273_smoke.py, 2026-10-06",
+    "source": "Stripe test mode, POST /v1/terminal/locations, via 273_smoke.py",
     "request_id": "req_CWcVX6oXLz5Mm5"
   },
   "status": 200,

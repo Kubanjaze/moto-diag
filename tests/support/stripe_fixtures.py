@@ -53,6 +53,13 @@ def body(name: str) -> dict:
     return copy.deepcopy(load(name)["body"])
 
 
+# The recorded objects' ids, read from the fixtures rather than retyped.
+LOCATION = load("terminal_location")["body"]["id"]
+READER = load("terminal_reader")["body"]["id"]
+TERMINAL_PI = load("payment_intent_card_present")["body"]["id"]
+INVOICE_SESSION = load("checkout_session_invoice")["body"]
+
+
 class FixtureHTTP(stripe.HTTPClient):
     """Answers each expected request in order; anything else fails."""
 

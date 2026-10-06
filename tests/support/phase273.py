@@ -19,7 +19,9 @@ from motodiag.core.config import reset_settings
 from motodiag.core.database import get_connection, init_db
 from motodiag.payments import stripe_api
 
-from support.stripe_fixtures import SHOP_ACCOUNT, TEST_KEY, TEST_SECRET, FixtureHTTP
+from support.stripe_fixtures import (
+    LOCATION, READER, SHOP_ACCOUNT, TEST_KEY, TEST_SECRET, FixtureHTTP,
+)
 
 STRIPE_ENV = {
     "MOTODIAG_BILLING_PROVIDER": "stripe",
@@ -95,12 +97,12 @@ def seed_reader(db_path: str, shop_id: int) -> None:
         loc = conn.execute(
             "INSERT INTO terminal_locations (shop_id, stripe_account_id, "
             "stripe_location_id, display_name, address_json) VALUES (?, ?, "
-            "'tml_test_fixture273', 'Test', '{}')", (shop_id, SHOP_ACCOUNT),
+            "?, 'Test', '{}')", (shop_id, SHOP_ACCOUNT, LOCATION),
         ).lastrowid
         conn.execute(
             "INSERT INTO terminal_readers (shop_id, location_id, stripe_reader_id, "
-            "label, simulated) VALUES (?, ?, 'tmr_test_fixture273', 'sim', 1)",
-            (shop_id, loc),
+            "label, simulated) VALUES (?, ?, ?, 'sim', 1)",
+            (shop_id, loc, READER),
         )
 
 

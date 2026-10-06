@@ -287,3 +287,37 @@ and the summary (`273_smoke/summary.txt`):
   committed, and `273_smoke.py` now drops them, as it drops the
   onboarding link. A scan of every output for `sk_`, `rk_`, `whsec_`
   (unredacted), `secret=` and `_secret_` finds none.
+
+### 2026-10-06 — Recorded fixtures
+
+Seven fixtures are now Stripe's own test-mode responses from the smoke
+run, put in with the Write tool (not a script, so the edit guard's intent
+holds) and compared by script with `273_smoke/responses/`, with no
+difference but the portal URL:
+- `terminal_location`, `terminal_reader`, `reader_processing`,
+  `reader_presented`, `payment_intent_card_present`: whole;
+- `checkout_session_invoice`: trimmed to 19 fields, values unchanged;
+- `portal_session`: whole, with a placeholder for the session URL, which
+  carries a session secret.
+
+The tests read these ids from the fixtures (`LOCATION`, `READER`,
+`TERMINAL_PI`, `INVOICE_SESSION` in `tests/support/stripe_fixtures.py`)
+rather than retyping them. A new test drives 176's `portal-url` with the
+recorded portal response.
+
+**Still built, and why:**
+- `v2_account_created` and `v2_account_active`: the recorded bodies run to
+  17 KB and 4 KB. The fields the code reads
+  (`configuration.merchant.capabilities.card_payments.status`, and each
+  requirement's `minimum_deadline.status`) were proved live: `connect`
+  stored `restricted` with 15 due, and `status` stored `active` with 0.
+- `v2_account_link`: the recorded link URL was not kept.
+- `subscription_active`: the server, not the recorder, made that read.
+  The live row it produced (`shop active`, the items' period, the price)
+  is the proof.
+- The error fixtures: no error was provoked against Stripe.
+
+Phase 273's and 176's tests: 154 passed. The smoke outputs are committed
+(`calls.jsonl`, `responses/`, the redacted `listen*.log`, `server*.log`,
+`resend.json`, `summary.txt`, `ids.json`). Their e-mail addresses are all
+`owner@example.com`, and the only name is "Test Customer".

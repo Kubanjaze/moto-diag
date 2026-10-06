@@ -1,0 +1,27 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v2/core/account_links, via 273_smoke.py",
+    "request_id": "req_v2FwCIVtt83co1r5O"
+  },
+  "status": 200,
+  "body": {
+    "object": "v2.core.account_link",
+    "account": "acct_1UNeeTMI5d97rvp5",
+    "created": "2026-10-06T20:07:57.000Z",
+    "expires_at": "2026-10-06T20:12:57.000Z",
+    "url": "[one-use onboarding link, not kept]",
+    "use_case": {
+      "account_onboarding": {
+        "collection_options": {
+          "fields": "currently_due",
+          "future_requirements": "omit"
+        },
+        "refresh_url": "http://localhost:3000/payments/connect-again",
+        "return_url": "http://localhost:3000/payments/connected"
+      },
+      "type": "account_onboarding"
+    },
+    "livemode": false
+  }
+}

@@ -1,0 +1,631 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v2/core/accounts, via 273_smoke.py",
+    "request_id": "req_v2CXbfc3rg5CT0Der"
+  },
+  "status": 200,
+  "body": {
+    "id": "acct_1UNeeTMI5d97rvp5",
+    "object": "v2.core.account",
+    "applied_configurations": [
+      "merchant"
+    ],
+    "closed": false,
+    "configuration": {
+      "customer": null,
+      "merchant": {
+        "applied": true,
+        "bacs_debit_payments": null,
+        "branding": {
+          "icon": null,
+          "logo": null,
+          "primary_color": null,
+          "secondary_color": null
+        },
+        "capabilities": {
+          "ach_debit_payments": null,
+          "acss_debit_payments": null,
+          "affirm_payments": null,
+          "afterpay_clearpay_payments": null,
+          "alma_payments": null,
+          "amazon_pay_payments": null,
+          "au_becs_debit_payments": null,
+          "bacs_debit_payments": null,
+          "bancontact_payments": null,
+          "blik_payments": null,
+          "blik_recurring_payments": null,
+          "boleto_payments": null,
+          "card_payments": {
+            "status": "restricted",
+            "status_details": [
+              {
+                "code": "requirements_past_due",
+                "resolution": "provide_info"
+              }
+            ]
+          },
+          "cartes_bancaires_payments": null,
+          "cashapp_payments": null,
+          "eps_payments": null,
+          "fpx_payments": null,
+          "gb_bank_transfer_payments": null,
+          "grabpay_payments": null,
+          "ideal_payments": null,
+          "jcb_payments": null,
+          "jp_bank_transfer_payments": null,
+          "kakao_pay_payments": null,
+          "klarna_payments": null,
+          "konbini_payments": null,
+          "kr_card_payments": null,
+          "link_payments": null,
+          "mobilepay_payments": null,
+          "multibanco_payments": null,
+          "mx_bank_transfer_payments": null,
+          "naver_pay_payments": null,
+          "oxxo_payments": null,
+          "p24_payments": null,
+          "pay_by_bank_payments": null,
+          "payco_payments": null,
+          "paynow_payments": null,
+          "promptpay_payments": null,
+          "revolut_pay_payments": null,
+          "samsung_pay_payments": null,
+          "satispay_payments": null,
+          "sepa_bank_transfer_payments": null,
+          "sepa_debit_payments": null,
+          "sequra_payments": null,
+          "stripe_balance": {
+            "payouts": {
+              "status": "restricted",
+              "status_details": [
+                {
+                  "code": "requirements_past_due",
+                  "resolution": "provide_info"
+                }
+              ]
+            }
+          },
+          "sunbit_payments": null,
+          "swish_payments": null,
+          "twint_payments": null,
+          "us_bank_transfer_payments": null,
+          "zip_payments": null
+        },
+        "card_payments": {
+          "decline_on": {
+            "avs_failure": false,
+            "cvc_failure": false
+          }
+        },
+        "konbini_payments": null,
+        "mcc": null,
+        "script_statement_descriptor": {
+          "kana": {
+            "descriptor": null,
+            "prefix": null
+          },
+          "kanji": {
+            "descriptor": null,
+            "prefix": null
+          }
+        },
+        "sepa_debit_payments": {
+          "creditor_id": "DE16ZZZ00001941136"
+        },
+        "statement_descriptor": {
+          "descriptor": null,
+          "prefix": null
+        },
+        "support": {
+          "address": {
+            "city": null,
+            "country": null,
+            "line1": null,
+            "line2": null,
+            "postal_code": null,
+            "state": null,
+            "town": null
+          },
+          "email": null,
+          "phone": null,
+          "url": null
+        }
+      },
+      "recipient": null
+    },
+    "contact_email": "owner@example.com",
+    "contact_phone": null,
+    "created": "2026-10-06T20:07:55.000Z",
+    "dashboard": "full",
+    "identity": null,
+    "defaults": null,
+    "display_name": "Phase 273 Smoke Shop",
+    "future_requirements": null,
+    "metadata": {},
+    "requirements": {
+      "entries": [
+        {
+          "awaiting_action_from": "user",
+          "description": "configuration.merchant.mcc",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "configuration.merchant.statement_descriptor.descriptor",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "configuration.merchant.support.phone",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "defaults.profile.business_url",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "defaults.profile.product_description",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "external_account",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "identity.attestations.terms_of_service.account.date",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "identity.attestations.terms_of_service.account.ip",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "identity.entity_type",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.date_of_birth.day",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.date_of_birth.month",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.date_of_birth.year",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.email",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.given_name",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        },
+        {
+          "awaiting_action_from": "user",
+          "description": "representative.surname",
+          "errors": [],
+          "impact": {
+            "restricts_capabilities": [
+              {
+                "capability": "card_payments",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              },
+              {
+                "capability": "stripe_balance.payouts",
+                "configuration": "merchant",
+                "deadline": {
+                  "status": "past_due"
+                }
+              }
+            ]
+          },
+          "minimum_deadline": {
+            "status": "past_due"
+          },
+          "reference": null,
+          "requested_reasons": [
+            {
+              "code": "routine_onboarding"
+            }
+          ]
+        }
+      ],
+      "summary": {
+        "minimum_deadline": {
+          "status": "past_due",
+          "time": null
+        }
+      }
+    },
+    "livemode": false
+  }
+}

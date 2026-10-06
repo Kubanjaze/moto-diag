@@ -6,8 +6,8 @@ nothing here reads, prints or writes a key or a webhook secret.
 
 Every Stripe request is answered by Stripe's own HTTP client, wrapped so
 each response is kept under ``273_smoke/responses/`` (the one-use
-onboarding URL and e-mail addresses removed) to become a recorded
-fixture. The product's own call log (``MOTODIAG_STRIPE_CALL_LOG``) writes
+onboarding URL, portal session URLs, client secrets and e-mail addresses
+removed) to become a recorded fixture. The product's own call log (``MOTODIAG_STRIPE_CALL_LOG``) writes
 ``273_smoke/calls.jsonl``.
 
 The database is a scratch copy of live, never live:
@@ -47,6 +47,24 @@ def _guard() -> None:
         sys.exit("the key loaded is not a test-mode key; nothing was called")
 
 
+def _drop_secrets(o) -> None:
+    """The one-use onboarding link, a portal session link (it carries a
+    session secret) and any ``client_secret`` are not kept."""
+    if isinstance(o, dict):
+        if o.get("object") == "v2.core.account_link":
+            o["url"] = "[one-use onboarding link, not kept]"
+        if o.get("object") == "billing_portal.session":
+            o["url"] = "[portal session link, not kept]"
+        for k, v in o.items():
+            if k == "client_secret" and v:
+                o[k] = "[client secret, not kept]"
+            else:
+                _drop_secrets(v)
+    elif isinstance(o, list):
+        for v in o:
+            _drop_secrets(v)
+
+
 def _record_responses() -> None:
     """Keep each response body for the fixtures, with the onboarding link
     and e-mail addresses removed."""
@@ -70,8 +88,7 @@ def _record_responses() -> None:
                 data = json.loads(text)
             except ValueError:
                 data = {"_unparsed": len(text)}
-            if isinstance(data, dict) and data.get("object") == "v2.core.account_link":
-                data["url"] = "[one-use onboarding link, not kept]"
+            _drop_secrets(data)
             kept = json.loads(EMAIL.sub("owner@example.com", json.dumps(data)))
             name = f"{n:02d}_{method.lower()}{re.sub(r'[^a-z0-9]+', '_', path.lower())}.json"
             (out / name).write_text(json.dumps({
