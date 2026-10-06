@@ -136,3 +136,21 @@ run's clock). Every migration writes this row. It is not one of the ten
 fields, and the operator's scope reads "exactly the 10 fields ... and
 nothing else. Anything else, stop and show me." Applied literally, that is
 a stop. `apply-live` has not run; live is unchanged.
+
+### 2026-10-06 — The operator's answer on `schema_version`
+
+The operator's words, verbatim:
+
+> the schema_version row is fine, apply 079 live
+
+### 2026-10-06 — Migration 079 live
+
+`deploy.py apply-live 370`: the preflight passed (the diff committed and
+unchanged, the backup's hash, live equal to the backup, a fresh dry run
+equal to the committed exact diff), and it applied `[79]`.
+- after: 5854 rows (+1, the `schema_version` row), 109 tables, integrity ok;
+  scope problems none.
+- `370_live_diff.md`: **equals the approved exact diff: yes**. F158 census
+  on live: 36, as on the copy.
+- Read back read-only: schema 79. Sessions 1–6 and 11 hold the preview's
+  ten values; no other session field changed.
