@@ -1,0 +1,89 @@
+Do this: start Phase 292, Gate 16, the Track O integration test, and run it to its finish line as CLAUDE.md sets out. Row 292 reads "Customer books → intake → warranty check → repair → invoice → payment → accounting export". The last session's state is 273's handoff, docs/handoffs/2026-10-06_273_closed.md.
+
+Gate 16 is a test-only gate, the shape of Gate 15 (docs/prompts/272_gate15.txt): tests and documents only. No production code, no migration, no change to the live database, and no Stripe key. Row 292 goes 🚧 before Step 0.
+
+The measured facts, taken 2026-10-06 on master at ed003ef. Re-verify each at Step 0.
+- **A command for each step:**
+  - booking: `shop appointment book` (and slots, confirm, check-in, complete);
+  - intake: `shop intake create`;
+  - the work order: `shop work-order create --intake`, then start and complete;
+  - warranty: `shop warranty check --bike --on --mileage`, and `shop warranty claim open --wo`;
+  - invoice: `shop invoice generate`, which issues it as sent, so it can be paid; the Massachusetts tax comes from 281;
+  - payment: `shop payments connect` and `status`, `shop invoice pay-link`, `shop terminal setup` and `pay`, and `shop invoice mark-paid` for cash;
+  - export: `shop accounting map set`, then `shop accounting export --target --from --to --out`.
+- **The hand-offs, as far as reading shows:**
+  - `appointment check-in` opens a work order, or links one with `--wo`; it does not create an intake.
+  - `work-order create --intake` links an intake.
+  - A warranty claim links a work order.
+  - An invoice needs a completed work order.
+  - The export selects a shop's invoices that are not cancelled and were issued in the day range, and remembers which it has exported. It reads no payments: payment reconciliation is row 365, paused.
+- **Payments do not go through the fake provider,** whatever the triage report says. 273's invoice payments (src/motodiag/payments/) bypass the billing-provider switch. Its tests answer Stripe from recorded fixtures (tests/support/phase273.py, FixtureHTTP, tests/fixtures/phase273/). An invoice becomes paid only on a verified payment_intent.succeeded event at /v1/billing/webhooks/stripe.
+- **273's tests seed their rows straight into a scratch database:** the shop, the customer, the work order, the sent invoice and the connected account. No test walks one job through the commands. Measured: 2 test files run `appointment book`, 3 run a payment command and 1 runs `accounting export`; none runs all three. That is this gate.
+- **Paused parts the row touches:**
+  - 363, customer self-booking (so staff book for the customer);
+  - 362, OEM claim submission;
+  - 365 and 366, QuickBooks and Xero API sync, and payment reconciliation;
+  - 371, live payments and production webhooks;
+  - 372, the payment routes and the app's screens.
+- **F186 is open:** work-order times are local while windows are UTC.
+
+Build `tests/test_phase292_gate16.py`, and keep its name: the whole-tree rule finds gates by `_gate16`.
+- **The walk.** One job through the row's order, on a freshly migrated scratch database, by CliRunner through the real commands:
+  - book;
+  - intake;
+  - the work order;
+  - the warranty check, once covered and once expired or past its mileage, with a claim opened on the covered case;
+  - start and complete the repair;
+  - generate the invoice;
+  - pay it, once through pay-link and once through the simulated reader;
+  - export.
+
+  Every row the walk needs comes from a command a user can run. Anything no command can create is a finding; seed it only with its reason in the log.
+- **The money, in integer cents,** followed from the work order's labour and parts to:
+  - the invoice's subtotal, tax and total;
+  - the payment's amount;
+  - the export's invoice and tax lines.
+
+  Each link must equal the one before it.
+- **Paid only through the webhook.**
+  - Post the payment_intent.succeeded event through the API test client. Sign it at test time with a test-only secret, on a fixed clock, as 273's tests do.
+  - The command that starts a payment must not mark the invoice paid.
+  - `mark-paid` covers cash: one more job, paid that way, exported the same way.
+- **The clock.** Run the walk on a fixed clock at midday, mid-month, so no day or month edge can move it. The edge belongs to F186's own phase; this gate neither tests it nor fixes it.
+- **No key, no network.** Stripe answers from 273's fixtures, and 281's network guard holds. No test reads data/motodiag.db.
+- **The printed output** of the walk names no phase, track or F-number (F158), with its own planted control.
+
+Controls. Plant each of these, run the gate, show it fails with the failing output, remove the plant, and record each in the phase log:
+- an invoice marked paid with no event;
+- an event whose amount differs from the invoice's total;
+- an expired warranty reported as covered;
+- the export's tax line differing from the invoice's tax;
+- an invoice exported twice to the same target.
+
+The ledger:
+- **K8:** row 292's text is corrected to what the gate verifies, saying what it read before (as 240 and 272 do): staff book for the customer; the warranty step is a validity check plus a local claim; payment is test mode, through the webhook; the export carries invoices, not payments. It names the paused rows.
+- **A hand-off that doesn't exist** is a finding, filed with the finding skill. If closing it would take production code, that is a fork: stop and give me the options with what each ships (a finding and a row, or a fix inside this phase). 272 took the first.
+- Row 292 closes ✅ with the regression line. One handoff at close-out.
+
+Carry forward:
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression.
+- **Before the regression:** run 244G's scanner over the new test file. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No literal pin of the schema head (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** only if there is a fork.
+- **At the end:**
+  - the walk, step by step, with the command each step ran and the hand-off it checked;
+  - the money followed through, in cents;
+  - the five controls, each red and then removed;
+  - the corrected row 292;
+  - any findings, by number;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: Track O is complete, and what comes next is my call.
