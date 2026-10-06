@@ -1,6 +1,6 @@
 # Phase 273 — Track O batch 4: payments through Stripe — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-06)
 **Branch:** `phase-273` (Opus session, main checkout, the only writer)
 
 ---
@@ -206,6 +206,8 @@ The operator: "keys in place, onboarded". Run on the scratch copy
 - **Verified:** both narrow-terminal tests pass; phase 273's and 176's
   tests: 152 passed.
 
+**Commit.** `5b115db`
+
 ### 2026-10-06 — Bug fix #2: a tier payment arriving before its subscription is lost
 
 The operator, verbatim: "Before you go on: listen.log shows invoice.paid
@@ -263,6 +265,8 @@ recorded. Say in the log whether production relies on Stripe retrying a
   `tests/test_phase273_subscriptions.py`; `273_smoke.sh` gained the
   `resend` stage.
 - **Verified:** phase 273's and 176's tests: 153 passed.
+
+**Commit.** `ec4b360`
 
 A second bug in this build. Two bugs, two causes (rich wrapping;
 delivery order), so no shared cause to find yet; a third would stop the
@@ -363,3 +367,20 @@ over all of `tests/`: 0 hits.
 The prompt: "New tables, new columns and the migration's own
 schema_version row are not a rule-1 stop; a change to any existing row
 is." This diff has none, so the live apply follows without a stop.
+
+### 2026-10-06 — Migration 080: live
+
+`deploy.py apply-live 273`: preflight passed; applied `[80]`; after
+(live): 5855 rows, 114 tables, integrity ok; scope problems none;
+**`273_live_diff.md`: equals the approved exact diff: yes**; F158 census
+on live 36. By hand afterwards, read-only: schema 80;
+`foreign_key_check` empty; shops 1, invoices 0, payments 0,
+subscriptions 4, stripe_webhook_events 0, and the new tables empty. The
+live server's settings were not changed: no keys, no provider switch.
+
+### 2026-10-06 — Close-out
+
+v1.1 written (`273_implementation.md`); the root `implementation.md` has
+its history row and version 0.13.99; F187 marked closed; row 273 ✅;
+row 371 notes that a production endpoint should be created at endive.
+No refute pass ran.

@@ -1,13 +1,16 @@
 #!/usr/bin/env bash
 # Phase 273 — the smoke calls and the webhook run, in Stripe's test mode.
 #
-#   bash docs/phases/in_progress/273_smoke.sh prepare   # scratch copy of live
-#   bash docs/phases/in_progress/273_smoke.sh check
-#   bash docs/phases/in_progress/273_smoke.sh connect   # prints the onboarding link
-#   bash docs/phases/in_progress/273_smoke.sh status
-#   bash docs/phases/in_progress/273_smoke.sh setup     # the simulated reader
-#   bash docs/phases/in_progress/273_smoke.sh webhook   # server + stripe listen, end to end
-#   bash docs/phases/in_progress/273_smoke.sh summary
+#   bash docs/phases/completed/273_smoke.sh prepare   # scratch copy of live
+#   bash docs/phases/completed/273_smoke.sh check
+#   bash docs/phases/completed/273_smoke.sh connect   # prints the onboarding link
+#   bash docs/phases/completed/273_smoke.sh status
+#   bash docs/phases/completed/273_smoke.sh setup     # the simulated reader
+#   bash docs/phases/completed/273_smoke.sh webhook   # server + stripe listen, end to end
+#   bash docs/phases/completed/273_smoke.sh resend EVT_ID  # Stripe redelivers one event
+#   bash docs/phases/completed/273_smoke.sh summary
+# (Run from docs/phases/in_progress/ during the phase; the records it
+# wrote are in 273_smoke/.)
 #
 # The keys are loaded from ~/.config/motodiag/stripe-test.env into this
 # process's environment and never printed. The webhook secret goes from

@@ -2734,7 +2734,18 @@ booking time written in UTC, in Phase 370's format, with the analytics
 cutoff in the same format; each reader that prints these times shows local
 time; and a decision on the live rows like 370's.
 
-### F187
+### F187 — CLOSED by Phase 273 (2026-10-06)
+
+**Closed.** Each defect below is fixed and, put back, turns a test red
+(`273_mutate.py` F1–F6): checkout carries `user_id` and `tier` in
+`subscription_data.metadata`; the period is read from the items; no tier
+or status is invented (the tier from metadata, else the price id, else the
+event is recorded with the reason); every subscription event re-reads the
+subscription from Stripe; a failed read answers 503 and is not recorded.
+Proved live in test mode: a `shop` checkout paid with a test card was
+stored `shop active` with its period and price from the re-read, and its
+payment recorded (200 cents) after bug fix #2. See
+`docs/phases/completed/273_phase_log.md`.
 
 **Phase 176's subscription webhook path would not change a tier against Stripe's current API**
 
