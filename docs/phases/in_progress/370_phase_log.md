@@ -47,3 +47,20 @@ the note stamp in notes text (what a user sees), and whether F186 rides
 in 370 (a real fork).
 
 No refute pass ran.
+
+### 2026-10-06 — The operator's answers
+
+The operator's words, verbatim:
+
+> Q1: A. Apply 079 live only if the dry-run diff changes exactly the 10 fields in the 7 sessions your preview shows, each to the preview's value, and nothing else. Anything else, stop and show me.
+> Q2: (a), local time with its offset.
+> Q3: separate phase; 370 ships F10 only.
+
+So 370 ships:
+- every session time in UTC;
+- migration 079, converting the 10 live fields. It goes live only if the
+  dry run's exact diff is exactly `370_live_rows_preview.out`'s ten
+  changes; anything else is a stop;
+- the note stamp as local time with its offset (`[2026-10-06T15:42-04:00]`).
+
+F186 stays open for its own phase.
