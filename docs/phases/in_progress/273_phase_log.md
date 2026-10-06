@@ -27,3 +27,35 @@ documents in `docs/phases/completed/`.
 
 The first commit: **row 273 🚧**. Step 0 next, then a stop for the
 operator's forks (Connect, the tier prices, routes or CLI only).
+
+### 2026-10-06 — Step 0: F187 filed, row 371 paused, stop for the operator
+
+The record is `273_step0.md`; Stripe's pages are quoted in
+`273_sources.md`. Every measured fact in the prompt re-verified (S0-1),
+on code at `78c79ed` and a read-only copy of live (schema 79).
+
+- **F187 filed:** 176's subscription webhook path would not change a tier
+  against the API version the SDK pins (`2026-09-30.endive`,
+  `stripe==16.0.0`). This phase fixes it.
+- **Row 371 ⏸️:** live payments and production webhooks (decision 3).
+- **Decided, with the reason in S0-4:** the SDK pin and the API version
+  sent; the money columns (invoices' REAL columns stay, read through one
+  cents function and a round-trip test; `payments` unused); webhooks
+  idempotent and order-independent (subscriptions re-read from Stripe,
+  invoice payments one-way); an invoice paid only on the verified
+  `payment_intent.succeeded` from the shop's own account with the exact
+  amount; Terminal server-driven with automatic capture; live keys and
+  live events refused unless prod; keys outside the repo, never in
+  `.env`, and the test session proven blind to them; migration 080 new
+  tables and two columns on a 0-row table.
+- **Stripe's docs were read by this session directly** (about 30 pages,
+  fetched as Markdown; 15 of them quoted), following 281's sources
+  practice. This was reading for a judgement (the Connect options), not a
+  census or an extraction, so it was not routed through Subconscious
+  (rule 2).
+
+**Stop (rule 1, real forks):** question 1, Connect (A each shop a
+connected account, Stripe carries fees and losses, recommended; B the
+platform carries them; C one account, Connect later); question 2, the tier
+prices; question 3, CLI only now (recommended, row 372 ⏸️) or routes now
+(a planned mobile stop).

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F186**.
+At the time of writing the highest assigned is **F187**.
 
 ---
 
@@ -2733,3 +2733,45 @@ What would close it: every work-order, issue, intake, repair-plan and
 booking time written in UTC, in Phase 370's format, with the analytics
 cutoff in the same format; each reader that prints these times shows local
 time; and a decision on the live rows like 370's.
+
+### F187
+
+**Phase 176's subscription webhook path would not change a tier against Stripe's current API**
+
+Found at Phase 273's Step 0 (2026-10-06), by reading the code against
+Stripe's documentation for API version `2026-09-30.endive`, the version
+`stripe==16.0.0` pins (its `_api_version.py`). None of 176's Stripe code
+has run against Stripe: the SDK is not installed, and its tests use the
+fake provider with hand-built payloads.
+- **The user is never found.** `StripeBillingProvider.create_checkout_session`
+  puts `user_id` and `tier` in the Checkout Session's `metadata`. The
+  subscription events read `metadata` on the Subscription object
+  (`_resolve_user_id`). Stripe's metadata page: "An object's metadata
+  doesn't automatically copy to related objects"; only
+  `subscription_data.metadata` reaches the Subscription. A first
+  `customer.subscription.created` then resolves no user (no subscription
+  row holds the customer yet), is logged and skipped, and returns 200. The
+  user has paid and their tier does not change.
+- **The billing period is always empty.** `_sub_data_from_event` reads
+  `current_period_start` and `current_period_end` from the Subscription.
+  Since `2025-03-31.basil` they are on each subscription item
+  (`items.data[].current_period_*`), so both are stored as null, and
+  `GET /v1/billing/subscription` returns `current_period_end: null`.
+- **Missing values are invented.** A payload with no tier is stored as
+  `individual`, and one with no status as `active`.
+- **Order is trusted.** Stripe: "doesn't guarantee the delivery of events
+  in the order that they're generated". `upsert_from_stripe` writes each
+  event's status, so a `customer.subscription.updated` delivered after
+  `.deleted` makes a cancelled subscription active again.
+- **A failed handler is final.** `dispatch_event` records the event,
+  answers 200 when its handler raises, and skips the same event id on
+  every retry. A transient failure (the database locked, for example) is
+  never retried.
+
+What would close it: user and tier carried in `subscription_data.metadata`
+(and the session's), the tier read from the price id where metadata is
+absent and refused if neither gives one; the period read from the items;
+the subscription's state re-read from Stripe on each event rather than
+taken from the payload; a handler failure answered with a status Stripe
+retries, and not recorded as processed; each with a test, and the path run
+once end to end against test mode.
