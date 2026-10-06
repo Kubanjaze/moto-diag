@@ -82,7 +82,7 @@ JOB_A = {  # the card job: covered by its warranty, a claim opened
     "start": f"{DAY}T09:00", "minutes": "120",
     "problem": "Front brake squeals and pulls left",
     "part": ("brake pads", "honda", "honda-06455-mee-000-brake-pads"),
-    "qty": "2", "unit_cost": None, "hours": "1.5",
+    "qty": "2", "unit_cost": None, "estimate": "1.0", "hours": "1.5",
 }
 JOB_B = {  # the cash job: its warranty ended before the visit
     "customer": ("Sam Okafor", "sam@example.com"),
@@ -92,7 +92,7 @@ JOB_B = {  # the cash job: its warranty ended before the visit
     "start": f"{DAY}T13:00", "minutes": "60",
     "problem": "Front caliper sticking",
     "part": ("caliper", "yamaha", "all-balls-18-3019-brake-caliper-kit"),
-    "qty": "1", "unit_cost": "3150", "hours": "1.25",
+    "qty": "1", "unit_cost": "3150", "estimate": "1.0", "hours": "1.25",
 }
 
 # The cents, worked by hand from the jobs above and Massachusetts' rules
@@ -339,7 +339,7 @@ def _walk_job(w: Walker, rec: dict, key: str, job: dict) -> dict:
                 "--bike", bike, "--mileage", job["mileage"], "--notes", job["problem"])
     j["intake"] = intake = _printed_id(out, r"Created intake id=(\d+)")
     out = w.run("work order", "shop", "work-order", "create", "--intake", intake,
-                "--title", job["problem"], "--estimated-hours", job["hours"],
+                "--title", job["problem"], "--estimated-hours", job["estimate"],
                 "--mechanic", 1)
     j["wo"] = wo = _printed_id(out, r"Created work order id=(\d+)")
     w.run("check-in", "shop", "appointment", "check-in", appt, "--wo", wo)
@@ -485,6 +485,45 @@ def walk(tmp: Path, channel: str, plants: dict | None = None) -> dict:
     finally:
         mp.undo()
     return rec
+
+
+def _xero_tax_over_every_line(mp):
+    from motodiag.accounting import export as acct_export
+
+    mp.setattr(acct_export, "_line_taxes", lambda inv: acct_export.spread_tax(
+        [_cents(line["line_total"]) for line in inv["lines"]], _cents(inv["tax_amount"])))
+
+
+def _exports_forget_what_they_carried(mp):
+    from motodiag.accounting import export as acct_export
+
+    real = acct_export.invoices_in_range
+
+    def every_time(shop_id, from_day, to_day, key, include_exported=False, db_path=None):
+        return real(shop_id, from_day, to_day, key, True, db_path=db_path)
+
+    mp.setattr(acct_export, "invoices_in_range", every_time)
+
+
+def _every_warranty_valid(mp):
+    from motodiag.inventory import warranty_repo
+
+    mp.setattr(warranty_repo, "coverage_status", lambda w, on, miles: ("valid", ["planted"]))
+
+
+# The operator's five planted controls, and F158's. Each walk must turn the
+# named check of the gate red; the phase log records each run.
+PLANTS = {
+    "an invoice marked paid with no event": {"paid_without_event": True},
+    "an event whose amount differs from the invoice's total": {"event_amount_off": 1},
+    "an expired warranty reported as covered": {"patches": [_every_warranty_valid]},
+    "the export's tax line differing from the invoice's tax":
+        {"patches": [_xero_tax_over_every_line]},
+    "an invoice exported twice to the same target":
+        {"patches": [_exports_forget_what_they_carried]},
+    "a build reference in what the walk prints":
+        {"patches": [lambda mp: mp.setitem(JOB_A, "problem", JOB_A["problem"] + " (F188)")]},
+}
 
 
 @pytest.fixture(scope="module", params=["checkout", "terminal"])
@@ -801,3 +840,33 @@ class TestWhatTheGateFound:
         assert _one(db, "SELECT intake_visit_id FROM work_orders WHERE id = ?",
                     (wo,))["intake_visit_id"] is None
         assert "--intake" not in run("shop", "appointment", "check-in", "--help")
+
+
+# --- 7. The planted controls stay proven ---
+
+# Each plant, walked on its own database, turns the gate's own check red.
+CAUGHT_BY = {
+    "an invoice marked paid with no event": lambda r: (
+        TestPaidOnlyThroughTheWebhook().test_starting_the_payment_does_not_pay_the_invoice(r)),
+    "an event whose amount differs from the invoice's total": lambda r: (
+        TestPaidOnlyThroughTheWebhook().test_the_signed_event_pays_it(r)),
+    "an expired warranty reported as covered": lambda r: (
+        TestTheHandOffs().test_the_expired_job_is_not_valid_and_has_no_claim(r)),
+    "the export's tax line differing from the invoice's tax": lambda r: (
+        TestTheMoney().test_xero_carries_each_line_and_the_tax_on_the_taxed_lines_only(r, "A")),
+    "an invoice exported twice to the same target": lambda r: (
+        TestTheHandOffs().test_an_invoice_is_exported_once_per_target(r)),
+    "a build reference in what the walk prints": lambda r: (
+        TestNoBuildReferences().test_the_walk_prints_none(r)),
+}
+
+
+class TestThePlantsTurnTheGateRed:
+    def test_every_plant_has_its_check(self):
+        assert set(CAUGHT_BY) == set(PLANTS)
+
+    @pytest.mark.parametrize("plant", list(PLANTS))
+    def test_the_plant_is_caught(self, tmp_path, plant):
+        planted = walk(tmp_path, "checkout", PLANTS[plant])
+        with pytest.raises(AssertionError):
+            CAUGHT_BY[plant](planted)

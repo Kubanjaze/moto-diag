@@ -262,7 +262,11 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: files (101) and gate 15's `test_rolling_back_peels_every_successor[79]`
 #: (+1, now that migration 080 succeeds 079). Measured: 10401 collected.
 #:
-COLLECTED_TEST_FLOOR = 10401
+#: 10491 (Phase 292, 2026-10-06) — +90: gate 16's `test_phase292_gate16.py`
+#: (80) and bug fix #1's `test_phase292_xero_tax.py` (10). No migration.
+#: Measured: 10491 collected.
+#:
+COLLECTED_TEST_FLOOR = 10491
 
 
 def _collected_count() -> int:
