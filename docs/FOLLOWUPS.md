@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F185**.
+At the time of writing the highest assigned is **F186**.
 
 ---
 
@@ -2695,3 +2695,41 @@ invoices). It waits until a real shop needs it.
 What would close it: a customer (or a single invoice) can be marked
 exempt, with the certificate's kind and number and who recorded it; the
 invoice then records the exemption in place of the rate, and prints it.
+
+### F186
+
+**Work-order times are stamped in naive local time and compared with UTC windows**
+
+Found at Phase 370's Step 0 (2026-10-06), in the census of naive
+`datetime.now()` calls that F10's fix started from. It is F10's family on
+other tables, not a monthly counter.
+
+- **Who stamps local:** `shop/work_order_repo.py` writes `opened_at`,
+  `started_at`, `completed_at`, `closed_at` and `updated_at` with
+  `datetime.now().isoformat()` (nine calls); `issue_repo.py` (5),
+  `intake_repo.py` (4), `pricing/repair_plan.py` (5),
+  `scheduling/booking.py` (4) and ten other modules do the same. In all,
+  56 lines in `src/` call `datetime.now()` with no zone (counted by
+  `grep -rn "datetime.now()"`, less lines naming `timezone`, `.year`,
+  `strftime` or `date()`), 11 of them in `session_repo` (F10).
+  `work_orders.created_at` is the column's `CURRENT_TIMESTAMP`, UTC.
+- **Who compares them with UTC:** `shop/analytics.py`'s
+  `_parse_date_window` returns a UTC cutoff as `YYYY-MM-DD HH:MM:SS`.
+  `throughput`, `turnaround` and `labor_accuracy` compare it with
+  `completed_at`. Two errors add: the clocks differ by the UTC offset
+  (4 or 5 hours in a US Eastern shop), and on the cutoff's own date every
+  `T` value sorts after the space value whatever its hour. So a 30-day
+  window's first day is counted whole, plus up to the offset of the day
+  before.
+- **Live, 2026-10-06:** `work_orders` has 6 rows. `created_at`: 6 in the
+  space shape (UTC). `opened_at` 5, `started_at` 4, `completed_at` 3 and
+  `closed_at` 3, all naive local. `updated_at`: 5 local, 1 space.
+  `issues` and `bay_schedule_slots` have no stamped rows.
+- **Not a monthly quota.** The windows are rolling (`30d` by default), and
+  the error is at the window's first edge. No test fails at a month's end
+  because of it.
+
+What would close it: every work-order, issue, intake, repair-plan and
+booking time written in UTC, in Phase 370's format, with the analytics
+cutoff in the same format; each reader that prints these times shows local
+time; and a decision on the live rows like 370's.
