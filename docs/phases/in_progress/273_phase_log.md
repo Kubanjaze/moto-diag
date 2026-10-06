@@ -339,3 +339,27 @@ Not mutated, and why: the guarded `UPDATE … WHERE status IN ('sent',
 the read and the write, which a single-process test cannot stage. And
 `paid_at` taken from the event's `created`: the clock-reading alternative
 differs only by milliseconds, so a test of it would be flaky.
+
+### 2026-10-06 — The regression of record at `eaf520d`
+
+`wholetree.sh --full` on `eaf520d`: 3988 passed, record written. Then:
+
+Regression of record: 10401 passed, 0 failed, 0 skipped, 0 errors at `eaf520d` (24 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+`COLLECTED_TEST_FLOOR` 10299 → 10401 first (`eaf520d`). 244G's scanner
+over all of `tests/`: 0 hits.
+
+### 2026-10-06 — Migration 080: the dry run
+
+`deploy.py dryrun 273`, scope `273_deploy_scope.json`:
+- before (live, read only): 5854 rows, 109 tables, integrity ok;
+- backup `~/backups/motodiag/motodiag_pre273_20261006_173455.db` (sha256
+  `57a951fd…c991b`); retain-5 removed `motodiag_pre274_20260929_210135.db`;
+- schema: six objects added (five tables, one index), `table
+  stripe_webhook_events` changed (two columns; 0 live rows);
+- rows: `schema_version` +1 (version 80); **no existing row changed or
+  removed**; scope problems: none; F158 census 36.
+
+The prompt: "New tables, new columns and the migration's own
+schema_version row are not a rule-1 stop; a change to any existing row
+is." This diff has none, so the live apply follows without a stop.
