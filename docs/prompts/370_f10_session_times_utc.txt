@@ -1,0 +1,64 @@
+Do this: start Phase 370 and run it to its finish line as CLAUDE.md sets out. It is F10: a diagnostic session's times are stored in local time while "this month" starts in UTC. So on a month's last evening a new session counts toward neither month, and tests fail in that window. Fix it before 2026-10-31, the next time it bites. Read these first:
+- F10 in ../moto-diag-mobile/docs/FOLLOWUPS.md. It is backend code, filed in the mobile file in May; it has been open since 2026-05-01.
+- The note in `src/motodiag/core/session_repo.py` above `_month_start_iso()` (Phase 191B, 2026-05-01).
+- The same family, already fixed:
+  - 191B's fix to `core/video_repo.py`;
+  - 281's bug fix #2, where photo-intake usage written on a month's 1st never counted (docs/phases/completed/281_phase_log.md).
+
+Row 370 goes 🚧 before Step 0. It is the next free number; confirm it.
+
+The measured facts, taken 2026-10-06 on master at 9ac9bb7. Re-verify each at Step 0.
+- **The stamps:** `core/session_repo.py` stamps sessions with naive local `datetime.now().isoformat()` at lines 40, 79, 137, 157, 172, 198, 309, 344 and 494. Line 340 stamps a note to the minute. `_month_start_iso()` returns the UTC month start.
+- **What fails in the window:** seen 2026-09-30 at 21:42 EDT, when local time was still the 30th and UTC was already the 1st:
+  - gate 9's `test_full_lifecycle` at `total_this_month`, which gate 11 re-runs;
+  - per F10, the Phase 178 quota tests.
+
+  Both passed again after local midnight.
+- **The other monthly counters are fine:** video_repo, cost_repo, transcript_repo and wo_photo_repo all stamp and compare in UTC. Their only naive `datetime.now()` is in session_repo.
+- **Live:** 7 sessions. `created_at` holds two shapes:
+  - 6 naive local values like `2026-09-17T15:22:14.228127`;
+  - 1 `YYYY-MM-DD HH:MM:SS`, which is SQLite's own default and so UTC.
+
+  `updated_at` (2) and `closed_at` (1) are naive local.
+
+The fix:
+- **Every session time is written in UTC,** in one format that compares correctly with the month start. Decide the format at Step 0 and say why.
+- **Prove it on the clock:** a test sets the clock to a month's last evening in a US timezone, local still the 31st and UTC already the 1st. A new session must count toward the right month, and gate 9's lifecycle and the 178 quota tests must pass at that moment.
+- **A planted control:** a return to local time must fail the test.
+
+At Step 0, list every reader of these times: the CLI (history, session show), the API's session responses, the predictor, and the app's display. Look at the app read-only in ../moto-diag-mobile. Then stop and give me the options, with what each would ship, in either case below:
+- **If the change alters what a user sees or what the app parses** (for example, a time shown four hours off, or a string the app's date parser rejects). It may bring a mobile session.
+- **The 6 local-time live rows.** Converting them to UTC changes existing rows, a rule-1 stop: show me the dry-run diff. Leaving them as they are is the other option; say what it costs.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Scope:
+- session_repo's times and anything that reads them. If Step 0 finds another counter with the same defect, fix it here and list it.
+- No API schema change is expected: the times are strings now and stay strings. If one is needed, say so; it brings a mobile session.
+- F10 lives in the mobile repo's FOLLOWUPS. After this merges, a short mobile session closes it, as F103 was closed. The handoff says so.
+
+A migration (079), if the phase needs one, goes through the deploy skill: the scope file, the dry run and its committed diff, then apply-live. If no existing row changes, that is not a rule-1 stop; if any existing row changes, it is one.
+
+Carry forward:
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file, and update tests/support/integration_gaps_allowlist.py and its size pins for any new module.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py now records why. Read its record before anything else.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** only if there is a fork. Name the readers and the live-row options.
+- **At the end:**
+  - the fix and its clock test;
+  - each reader, and how it handles the change;
+  - what happened to the live rows;
+  - the dry-run diff and the deploy outcome, if there was a migration;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: a mobile session closes F10, then Track O batch 4 (phase 273, Stripe), which needs the operator's test-mode keys.
