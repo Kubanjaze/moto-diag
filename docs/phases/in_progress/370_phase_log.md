@@ -200,3 +200,7 @@ Regression at `7ed0159` (not of record, one failure): 10298 passed, 1 failed, 0 
   `docs/phases/in_progress/370_bf1_repro.py` and `.out`.
 - **Verified:** the repro under the rollover clock: 1 passed. The whole
   file: 58 passed.
+
+**Commit.** `fba93fd`
+
+One bug in this build.
