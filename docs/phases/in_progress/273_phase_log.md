@@ -148,3 +148,60 @@ commands in-process).
 Stopped for the operator's Stripe test-mode account, its keys, the
 Connect platform setting, the placeholder prices, the customer portal
 setting, and the Stripe CLI login.
+
+### 2026-10-06 — The smoke calls, and the webhook run (first pass)
+
+The operator: "keys in place, onboarded". Run on the scratch copy
+(`~/.cache/motodiag/phase273/smoke.db`); every request is a line in
+`273_smoke/calls.jsonl`.
+- `check`: provider stripe, API key set, test mode yes, webhook secret not
+  set (it comes from `stripe listen`), 3 of 3 prices, test placeholders.
+- Connect (`connect`, run by the operator in their own terminal so the
+  one-use link stayed out of the transcript): `POST /v2/core/accounts`
+  200, `POST /v2/core/account_links` 200. The account came back
+  `card_payments: restricted` with 15 requirements past due.
+- After onboarding, `status`: card payments active, 0 due.
+- The simulated reader (`setup`): `POST /v1/terminal/locations` 200 and
+  `POST /v1/terminal/readers` 200, both on the shop's account.
+- The webhook run (`webhook`), server on 127.0.0.1:8273 and `stripe
+  listen` forwarding both scopes:
+  - Terminal: the simulated reader paid INV-273-SMOKE-2;
+    `connect payment_intent.succeeded` → 200 → the invoice paid.
+  - Checkout: the operator paid INV-273-SMOKE-1 with 4242…;
+    `connect payment_intent.succeeded` → 200 → paid.
+  - Subscription: the operator paid the `shop` checkout. The re-read
+    stored `shop active`, the period from the items
+    (2026-10-06T20:40:16Z to 2026-11-06T20:40:16Z), and the price: F187's
+    path works against Stripe.
+  - **Stopped:** `invoice.paid` arrived before
+    `customer.subscription.created`, got 503 as designed, and `stripe
+    listen` never redelivers it, so the tier payment was not recorded and
+    the run timed out before the portal call. Bug fix #2 below.
+- **Found while relaying the links:** the commands' printed URLs were
+  broken across lines. Bug fix #1 below. The links were given to the
+  operator from Stripe's own responses.
+- **The events are `2026-08-26.dahlia`,** the account's default version,
+  even with `stripe listen --latest`; the SDK's requests are
+  `2026-09-30.endive`. The handlers read only fields both versions have,
+  and subscriptions are re-read at endive. A production endpoint should be
+  created at endive: noted for row 371.
+
+### 2026-10-06 — Bug fix #1: a printed Stripe URL breaks across lines
+
+- **Issue:** in the webhook run, `shop invoice pay-link` and
+  `subscription checkout-url` printed Stripe's Checkout URLs (about 600
+  characters) broken over seven lines; copied, the link fails.
+- **Root cause:** the URLs were printed through rich's console, which
+  wraps at the terminal width. The tests ran with `COLUMNS=10000`, which
+  hid it. 176's `checkout-url` and `portal-url` had the same defect.
+- **Reproduced first:** a new test prints a 600-character URL at 80
+  columns and requires it on one line: it failed, the URL split at the
+  80th column.
+- **Fix:** every URL (the onboarding link, `pay-link`, `checkout-url`,
+  `portal-url`) is printed with `click.echo` on its own line, unindented.
+- **Files:** `src/motodiag/cli/payments.py`, `src/motodiag/cli/billing.py`,
+  `tests/support/phase273.py` (a `columns` option),
+  `tests/test_phase273_invoice_payments.py`,
+  `tests/test_phase273_subscriptions.py`.
+- **Verified:** both narrow-terminal tests pass; phase 273's and 176's
+  tests: 152 passed.

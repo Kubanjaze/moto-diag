@@ -20,11 +20,13 @@ from support.phase273 import (
     answer, cli, new_db, seed_account, seed_invoice, seed_reader, sql,
 )
 from support.stripe_fixtures import (
-    FROZEN_AT, SHOP_ACCOUNT, event, freeze_webhook_clock, signed,
+    FROZEN_AT, SHOP_ACCOUNT, event, freeze_webhook_clock, load, signed,
     stripe_settings,
 )
 
 CHECKOUT = ("POST", r"/v1/checkout/sessions", "checkout_session_invoice")
+# As long as the Checkout URLs Stripe returned in the smoke run (~600 chars).
+LONG_URL = "https://checkout.stripe.com/c/pay/cs_test_" + "a1B2" * 20 + "#fid" + "x%2F" * 130
 
 
 @pytest.fixture
@@ -111,6 +113,16 @@ class TestStartingIsNotPaying:
         p = _payment(db)
         assert (p["status"], p["outcome"], p["channel"]) == ("started", None, "checkout")
         assert p["checkout_session_id"] == "cs_test_fixtureInvoice273"
+
+    def test_the_link_survives_a_narrow_terminal(self, db, monkeypatch, ready):
+        """Bug fix #1: Stripe's Checkout URLs run to ~600 characters; printed
+        through rich at 80 columns they wrapped, and a copied link broke."""
+        session = load("checkout_session_invoice")["body"]
+        session["url"] = LONG_URL
+        answer(monkeypatch, [("POST", r"/v1/checkout/sessions", (200, session))])
+        out = cli(db, "shop", "invoice", "pay-link", ready["invoice_id"], columns=80)
+        assert out.exit_code == 0, out.output
+        assert LONG_URL in out.output.splitlines()
 
     def test_the_session_is_created_on_the_shops_account(self, db, monkeypatch, ready):
         http, _ = _start(db, monkeypatch, ready["invoice_id"])

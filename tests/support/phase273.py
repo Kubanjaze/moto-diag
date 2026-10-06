@@ -111,11 +111,11 @@ def answer(monkeypatch, expected) -> FixtureHTTP:
     return http
 
 
-def cli(db_path: str, *args, env: Optional[dict] = None):
+def cli(db_path: str, *args, env: Optional[dict] = None, columns: int = 10000):
     try:
         with pytest.MonkeyPatch.context() as mp:
             mp.setenv("MOTODIAG_DB_PATH", db_path)
-            mp.setenv("COLUMNS", "10000")
+            mp.setenv("COLUMNS", str(columns))
             for k, v in (env if env is not None else STRIPE_ENV).items():
                 mp.setenv(k, v)
             reset_settings()

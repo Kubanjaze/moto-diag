@@ -104,7 +104,8 @@ def register_subscription(cli_group: click.Group) -> None:
             f"[green]Checkout URL for user id={user_id} "
             f"(tier={tier}):[/green]\n"
         )
-        console.print(f"    {result.checkout_url}\n")
+        # Phase 273 bug fix #1: plain, unwrapped; rich wraps a long URL.
+        click.echo(result.checkout_url)
         console.print(
             f"[dim]Session id: {result.session_id}[/dim]"
         )
@@ -138,7 +139,7 @@ def register_subscription(cli_group: click.Group) -> None:
         console.print(
             f"[green]Portal URL for user id={user_id}:[/green]\n"
         )
-        console.print(f"    {url}\n")
+        click.echo(url)  # Phase 273 bug fix #1: plain, unwrapped
 
     @sub_group.command("cancel")
     @click.option("--user", "user_id", type=int, required=True)

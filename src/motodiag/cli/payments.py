@@ -111,7 +111,7 @@ def register_shop_payments(shop_group: click.Group) -> None:
         )
         console.print("Stripe-hosted onboarding link (one use; give it only to "
                       "the shop's owner, inside the app, never by email or text):")
-        console.print(f"    {url}")
+        click.echo(url)  # never through rich: it wraps long URLs (bug fix #1)
         if expires:
             console.print(f"[dim]Expires: {expires}[/dim]")
         console.print("Then run `motodiag shop payments status --shop "
@@ -204,7 +204,7 @@ def register_shop_payments(shop_group: click.Group) -> None:
             f"Pay invoice {started.invoice_number} "
             f"({_money(started.amount_cents, started.currency)}):"
         )
-        console.print(f"    {started.checkout_url}")
+        click.echo(started.checkout_url)  # never through rich (bug fix #1)
         console.print(f"[yellow]{PAID_BY_EVENT}[/yellow]")
 
     @invoice_group.command("payments")

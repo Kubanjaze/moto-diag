@@ -90,6 +90,17 @@ class TestTheUserReachesTheSubscription:
         row = get_subscription_by_stripe_id(SUB, db_path=db)
         assert row["user_id"] == user and row["tier"] == "shop"
 
+    def test_checkout_url_survives_a_narrow_terminal(self, db, monkeypatch, user):
+        """Bug fix #1: 176's command printed the URL through rich, which
+        wrapped Stripe's ~600-character Checkout URL at 80 columns."""
+        session = body("checkout_session_subscription")
+        session["url"] = "https://checkout.stripe.com/c/pay/cs_test_" + "x" * 560
+        answer(monkeypatch, [("POST", r"/v1/checkout/sessions", (200, session))])
+        out = cli(db, "subscription", "checkout-url", "--user", user, "--tier", "shop",
+                  columns=80)
+        assert out.exit_code == 0, out.output
+        assert session["url"] in out.output.splitlines()
+
     def test_checkout_url_says_the_prices_are_placeholders(self, db, monkeypatch, user):
         answer(monkeypatch, [("POST", r"/v1/checkout/sessions",
                               "checkout_session_subscription")])
