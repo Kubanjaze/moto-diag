@@ -1,0 +1,23 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v1/terminal/locations on the smoke shop's connected account, via 273_smoke.py, 2026-10-06",
+    "request_id": "req_CWcVX6oXLz5Mm5"
+  },
+  "status": 200,
+  "body": {
+    "id": "tml_GsIeHQPp4WG5co",
+    "object": "terminal.location",
+    "address": {
+      "city": "Boston",
+      "country": "US",
+      "line1": "1 Test Street",
+      "line2": "",
+      "postal_code": "02110",
+      "state": "MA"
+    },
+    "display_name": "Phase 273 Smoke Shop",
+    "livemode": false,
+    "metadata": {}
+  }
+}

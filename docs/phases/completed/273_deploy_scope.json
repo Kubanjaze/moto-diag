@@ -1,0 +1,19 @@
+{
+ "_comment": "Phase 273, migration 080: five new tables (shop_payment_accounts, invoice_payments, terminal_locations, terminal_readers, subscription_payments) and one index; two columns added to stripe_webhook_events (0 live rows), which rewrites that table's SQL; one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_invoice_payments_invoice",
+   "table invoice_payments",
+   "table shop_payment_accounts",
+   "table subscription_payments",
+   "table terminal_locations",
+   "table terminal_readers"
+  ],
+  "changed": [
+   "table stripe_webhook_events"
+  ]
+ }
+}

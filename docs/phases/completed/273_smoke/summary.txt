@@ -1,0 +1,9 @@
+invoice INV-273-SMOKE-1: paid (paid_at 2026-10-06T20:35:05.000+00:00)
+invoice INV-273-SMOKE-2: paid (paid_at 2026-10-06T20:31:40.000+00:00)
+payment 1: terminal 5678 cents, succeeded, paid_invoice
+payment 2: checkout 1234 cents, succeeded, paid_invoice
+subscription: shop active, period ends 2026-11-06T20:40:16+00:00, price price_1UNeVBMI5dskf1ffQiAtWo2A
+subscription payment: paid 200 usd
+event customer.subscription.created: 1 received, 0 with an error, 0 from a connected account
+event invoice.paid: 1 received, 0 with an error, 0 from a connected account
+event payment_intent.succeeded: 3 received, 0 with an error, 2 from a connected account

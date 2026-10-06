@@ -4745,3 +4745,7 @@ def register_shop(cli_group: click.Group) -> None:
     register_accounting(shop_group)
     register_tax(shop_group)
     register_currency(shop_group)
+    # Phase 273: a shop's Stripe account, its reader, invoices paid by Stripe.
+    from motodiag.cli.payments import register_shop_payments
+
+    register_shop_payments(shop_group)

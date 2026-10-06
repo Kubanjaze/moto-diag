@@ -24,6 +24,7 @@ from dataclasses import dataclass
 from typing import Any, Optional
 
 from motodiag.core.config import Settings, get_settings
+from motodiag.payments import stripe_api
 
 
 logger = logging.getLogger(__name__)
@@ -122,12 +123,16 @@ class FakeBillingProvider(BillingProvider):
       ``"fake_signature_ok"``; anything else raises
       :class:`WebhookSignatureError`. Tests construct events by
       crafting the payload + setting this header.
+    - Subscriptions: what a test puts in ``subscriptions`` (id → the
+      subscription as Stripe would return it). Retrieving any other id
+      raises, as Stripe would (Phase 273, F187: the webhook re-reads).
     """
 
     FAKE_SIGNATURE = "fake_signature_ok"
 
-    def __init__(self) -> None:
+    def __init__(self, subscriptions: Optional[dict[str, dict]] = None) -> None:
         self._sub_counter = 0
+        self.subscriptions: dict[str, dict] = dict(subscriptions or {})
 
     def create_checkout_session(
         self, user_id, email, tier, success_url, cancel_url,
@@ -167,11 +172,12 @@ class FakeBillingProvider(BillingProvider):
         return event
 
     def retrieve_subscription(self, stripe_sub_id: str) -> dict:
-        return {
-            "id": stripe_sub_id,
-            "status": "active",
-            "customer": f"cus_fake_from_{stripe_sub_id}",
-        }
+        try:
+            return self.subscriptions[stripe_sub_id]
+        except KeyError:
+            raise BillingProviderError(
+                f"fake provider: no such subscription: {stripe_sub_id}"
+            ) from None
 
     def cancel_subscription(
         self, stripe_sub_id: str, *, immediate: bool = False,
@@ -204,20 +210,31 @@ class StripeBillingProvider(BillingProvider):
             raise BillingProviderError(
                 "Stripe api_key is empty; set MOTODIAG_STRIPE_API_KEY"
             )
+        self._settings = settings or get_settings()
+        # Phase 273: a live key outside prod stops here, before any call.
+        try:
+            stripe_api.refuse_live_key(api_key, self._settings.env)
+        except stripe_api.LiveKeyRefused as e:
+            raise BillingProviderError(str(e)) from e
         self._api_key = api_key
         self._webhook_secret = webhook_secret
-        self._settings = settings or get_settings()
 
     def _stripe(self):
+        """A ``StripeClient`` through Phase 273's gateway: the pinned API
+        version, the live-key refusal and the call log."""
         try:
-            import stripe  # type: ignore[import-not-found]
-        except ImportError as e:
+            return stripe_api.make_client(self._api_key, self._settings)
+        except stripe_api.StripeLibraryMissing as e:
             raise StripeLibraryMissingError(
-                "Stripe library not installed; run "
-                "`pip install stripe` to use StripeBillingProvider"
+                "Stripe library not installed; install motodiag[payments] "
+                "to use StripeBillingProvider"
             ) from e
-        stripe.api_key = self._api_key
-        return stripe
+
+    def _call(self, what: str, fn):
+        try:
+            return stripe_api.as_dict(stripe_api.call(what, fn))
+        except stripe_api.StripeUnavailable as e:
+            raise BillingProviderError(e.message) from e
 
     def _price_id_for_tier(self, tier: str) -> str:
         s = self._settings
@@ -237,70 +254,103 @@ class StripeBillingProvider(BillingProvider):
     def create_checkout_session(
         self, user_id, email, tier, success_url, cancel_url,
     ) -> CheckoutSessionResult:
-        stripe = self._stripe()
-        session = stripe.checkout.Session.create(
-            mode="subscription",
-            line_items=[{
-                "price": self._price_id_for_tier(tier),
-                "quantity": 1,
-            }],
-            customer_email=email or None,
-            client_reference_id=str(user_id),
-            success_url=success_url,
-            cancel_url=cancel_url,
-            metadata={"user_id": str(user_id), "tier": tier},
-        )
+        sc = self._stripe()
+        price = self._price_id_for_tier(tier)
+        meta = {"user_id": str(user_id), "tier": tier}
+        params: dict[str, Any] = {
+            "mode": "subscription",
+            "line_items": [{"price": price, "quantity": 1}],
+            "client_reference_id": str(user_id),
+            "success_url": success_url,
+            "cancel_url": cancel_url,
+            "metadata": meta,
+            # F187: a Checkout Session's metadata does not reach the
+            # Subscription; only `subscription_data.metadata` does.
+            "subscription_data": {"metadata": meta},
+        }
+        if email:
+            params["customer_email"] = email
+        session = self._call("create a subscription checkout",
+                             lambda: sc.v1.checkout.sessions.create(params))
         return CheckoutSessionResult(
-            checkout_url=session.url,
-            session_id=session.id,
+            checkout_url=session["url"],
+            session_id=session["id"],
             stripe_customer_id=session.get("customer"),
         )
 
     def create_portal_session(
         self, stripe_customer_id, return_url,
     ) -> str:
-        stripe = self._stripe()
-        session = stripe.billing_portal.Session.create(
-            customer=stripe_customer_id,
-            return_url=return_url,
+        sc = self._stripe()
+        session = self._call(
+            "create a customer portal session",
+            lambda: sc.v1.billing_portal.sessions.create({
+                "customer": stripe_customer_id,
+                "return_url": return_url,
+            }),
         )
-        return session.url
+        return session["url"]
 
     def verify_webhook_signature(
         self, payload: bytes, signature_header: str,
     ) -> dict:
-        stripe = self._stripe()
+        if not self._webhook_secret:
+            raise WebhookSignatureError(
+                "no webhook secret is set (MOTODIAG_STRIPE_WEBHOOK_SECRET)"
+            )
+        try:
+            import stripe  # type: ignore[import-not-found]
+        except ImportError as e:
+            raise StripeLibraryMissingError(
+                "Stripe library not installed; install motodiag[payments]"
+            ) from e
         try:
             event = stripe.Webhook.construct_event(
                 payload, signature_header, self._webhook_secret,
             )
         except Exception as e:
             raise WebhookSignatureError(
-                f"Stripe signature verification failed: {e}"
+                "Stripe signature verification failed: "
+                f"{stripe_api.scrub(str(e))}"
             ) from e
-        return event if isinstance(event, dict) else dict(event)
+        return stripe_api.as_dict(event)
 
     def retrieve_subscription(self, stripe_sub_id: str) -> dict:
-        stripe = self._stripe()
-        sub = stripe.Subscription.retrieve(stripe_sub_id)
-        return dict(sub) if not isinstance(sub, dict) else sub
+        sc = self._stripe()
+        return self._call("read the subscription",
+                          lambda: sc.v1.subscriptions.retrieve(stripe_sub_id))
 
     def cancel_subscription(
         self, stripe_sub_id: str, *, immediate: bool = False,
     ) -> dict:
-        stripe = self._stripe()
+        sc = self._stripe()
         if immediate:
-            result = stripe.Subscription.delete(stripe_sub_id)
-        else:
-            result = stripe.Subscription.modify(
-                stripe_sub_id, cancel_at_period_end=True,
-            )
-        return dict(result) if not isinstance(result, dict) else result
+            return self._call("cancel the subscription",
+                              lambda: sc.v1.subscriptions.cancel(stripe_sub_id))
+        return self._call(
+            "cancel the subscription at period end",
+            lambda: sc.v1.subscriptions.update(
+                stripe_sub_id, {"cancel_at_period_end": True}),
+        )
 
 
 # ---------------------------------------------------------------------------
 # Factory
 # ---------------------------------------------------------------------------
+
+
+def tier_for_price(price_id: Optional[str],
+                   settings: Optional[Settings] = None) -> Optional[str]:
+    """The tier whose configured price id is ``price_id``, or None."""
+    if not price_id:
+        return None
+    s = settings or get_settings()
+    for tier, configured in (("individual", s.stripe_price_individual),
+                             ("shop", s.stripe_price_shop),
+                             ("company", s.stripe_price_company)):
+        if configured and configured == price_id:
+            return tier
+    return None
 
 
 def get_billing_provider(

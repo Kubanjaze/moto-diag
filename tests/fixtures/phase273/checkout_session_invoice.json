@@ -1,0 +1,33 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v1/checkout/sessions (payment mode) on the smoke shop's connected account, via 273_smoke.py, 2026-10-06; trimmed to the fields the app reads and the ones that show the request was understood, values unchanged.",
+    "request_id": "req_xpLoOONesB9qB4"
+  },
+  "status": 200,
+  "body": {
+    "id": "cs_test_a1ZjboEITlSK1qEaWlkZurVRmK2VafWyhqSCWSUop1HAwMPxh4XWlDmZTs",
+    "object": "checkout.session",
+    "amount_subtotal": 1234,
+    "amount_total": 1234,
+    "cancel_url": "http://localhost:3000/payments/done",
+    "client_reference_id": "1",
+    "client_secret": null,
+    "created": 1791318703,
+    "currency": "usd",
+    "expires_at": 1791405102,
+    "livemode": false,
+    "metadata": {
+      "invoice_number": "INV-273-SMOKE-1",
+      "motodiag_invoice_id": "1",
+      "motodiag_payment_id": "2"
+    },
+    "mode": "payment",
+    "payment_intent": null,
+    "payment_status": "unpaid",
+    "status": "open",
+    "success_url": "http://localhost:3000/payments/done",
+    "ui_mode": "hosted_page",
+    "url": "https://checkout.stripe.com/c/pay/cs_test_a1ZjboEITlSK1qEaWlkZurVRmK2VafWyhqSCWSUop1HAwMPxh4XWlDmZTs#fidnandhYHdWcXxpYCc%2FJ2FgY2RwaXEnKSdicyc%2FNSkndnF3bHVgRGZmanBrcSc%2FJ2RmZnFaNFBLYGBRSEwwYTwyd3N1MCcpJ2R1bE5gfCc%2FJ3VuWnFgdnFaMDRQS2AyRkhMMGF2bmM0Y2NzMFJ3RmYxdk08b0pvR31STXZ3PEBWak1EfFJwY1VmY0lrMz1JSnZNM3RwTjBAMjMzYFVmTWNpMlVgNTxkV31NR19uQnBhRkM1NVVNakd9Y2ldJyknY3dqaFZgd3Ngdyc%2FcXdwYCknZ2RmbmJ3anBrYUZqaWp3Jz8nJmNjY2NjYycpJ2lkfGpwcVF8dWAnPyd2bGtiaWBabHFgaCcpJ2BrZGdpYFVpZGZgbWppYWB3dic%2FcXdwYHgl"
+  }
+}

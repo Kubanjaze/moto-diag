@@ -5,7 +5,7 @@ from __future__ import annotations
 import logging
 from typing import Optional
 
-from fastapi import APIRouter, Depends, Header, Request
+from fastapi import APIRouter, Depends, Header, HTTPException, Request
 from pydantic import BaseModel, ConfigDict
 
 from motodiag.api.deps import get_db_path, get_settings
@@ -16,7 +16,7 @@ from motodiag.billing.providers import (
     BillingProvider, get_billing_provider,
 )
 from motodiag.billing.subscription_repo import get_active_subscription
-from motodiag.billing.webhook_handlers import dispatch_event
+from motodiag.billing.webhook_handlers import LiveEventRefused, dispatch_event
 from motodiag.core.config import Settings
 
 
@@ -172,12 +172,14 @@ async def stripe_webhook(
     ),
     provider: BillingProvider = Depends(get_provider),
     db_path: str = Depends(get_db_path),
+    settings: Settings = Depends(get_settings),
 ) -> WebhookResponse:
-    """Stripe delivers events here on subscription lifecycle changes.
+    """Stripe delivers events here: subscriptions (176) and, through
+    ``stripe listen --forward-connect-to``, the shops' payments (273).
 
-    Verifies HMAC signature; dispatches to the handler registry;
-    returns 200 regardless of handler outcome (Stripe retries on 5xx
-    which we don't want for idempotent handler failures).
+    Verifies the signature, then dispatches. Answers 503 when the
+    handler could not read Stripe, so Stripe delivers the event again;
+    otherwise 200, with handler errors recorded on the event.
     """
     raw_body = await request.body()
     # Verify signature — raises WebhookSignatureError on failure
@@ -185,7 +187,14 @@ async def stripe_webhook(
     event = provider.verify_webhook_signature(
         raw_body, stripe_signature or "",
     )
-    result = dispatch_event(event, db_path=db_path)
+    try:
+        result = dispatch_event(event, db_path=db_path, provider=provider,
+                                settings=settings)
+    except LiveEventRefused as e:
+        raise HTTPException(status_code=400, detail=str(e)) from e
+    if result.retry:
+        raise HTTPException(status_code=503,
+                            detail="could not apply the event yet; retry")
     return WebhookResponse(
         received=result.received,
         processed=result.processed,

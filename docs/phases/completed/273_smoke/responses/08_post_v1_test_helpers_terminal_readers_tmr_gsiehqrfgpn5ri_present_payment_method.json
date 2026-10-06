@@ -1,0 +1,32 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v1/test_helpers/terminal/readers/tmr_GsIeHQrfGPn5RI/present_payment_method, via 273_smoke.py",
+    "request_id": "req_QKO5VauDGXvKYw"
+  },
+  "status": 200,
+  "body": {
+    "id": "tmr_GsIeHQrfGPn5RI",
+    "object": "terminal.reader",
+    "action": {
+      "api_error": null,
+      "failure_code": null,
+      "failure_message": null,
+      "process_payment_intent": {
+        "payment_intent": "pi_3UNf1SMI5d97rvp519Np7HQe"
+      },
+      "status": "succeeded",
+      "type": "process_payment_intent"
+    },
+    "device_sw_version": "",
+    "device_type": "simulated_wisepos_e",
+    "ip_address": "0.0.0.0",
+    "label": "Phase 273 Smoke Shop simulated reader",
+    "last_seen_at": 1791318700694,
+    "livemode": false,
+    "location": "tml_GsIeHQPp4WG5co",
+    "metadata": {},
+    "serial_number": "ea0347e3-fae1-4b1b-88ca-bd25ba844b2e",
+    "status": "online"
+  }
+}

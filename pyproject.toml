@@ -77,7 +77,14 @@ vision = [
 # starts, answers /healthz, and can't run a single AI feature. Point every
 # server install here instead of listing extras by hand.
 server = [
-    "motodiag[api,ai,vision,push,reports]",
+    "motodiag[api,ai,vision,push,reports,payments]",
+]
+# Phase 273: Stripe (Connect, Terminal, invoice payment, subscriptions).
+# Pinned exactly: the SDK fixes the API version it sends
+# (16.0.0 -> 2026-09-30.endive), and `payments/stripe_api.API_VERSION`
+# is tested against it. Imported lazily, so a CLI install without it works.
+payments = [
+    "stripe==16.0.0",
 ]
 # Phase 209B: the /v1/reports/.../pdf routes render with reportlab directly.
 # It used to arrive only as a dependency of xhtml2pdf, from the unrelated

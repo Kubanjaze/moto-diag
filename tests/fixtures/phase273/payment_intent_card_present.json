@@ -1,0 +1,72 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v1/payment_intents on the smoke shop's connected account, via 273_smoke.py, 2026-10-06. The client_secret was not kept.",
+    "request_id": "req_cKhQAMUSEznhMF"
+  },
+  "status": 200,
+  "body": {
+    "id": "pi_3UNf1SMI5d97rvp519Np7HQe",
+    "object": "payment_intent",
+    "allowed_payment_method_types": [
+      "card_present"
+    ],
+    "amount": 5678,
+    "amount_capturable": 0,
+    "amount_details": {
+      "tip": {}
+    },
+    "amount_received": 0,
+    "application": "ca_VOR0ijuVPtbt7kKATbGnAohtfQYRg1Gu",
+    "application_fee_amount": null,
+    "automatic_payment_methods": null,
+    "canceled_at": null,
+    "cancellation_reason": null,
+    "capture_method": "automatic",
+    "client_secret": "[client secret, not kept]",
+    "confirmation_method": "automatic",
+    "created": 1791318698,
+    "currency": "usd",
+    "customer": null,
+    "customer_account": null,
+    "description": "Invoice INV-273-SMOKE-2",
+    "excluded_payment_method_types": null,
+    "last_payment_error": null,
+    "latest_charge": null,
+    "livemode": false,
+    "managed_payments": {
+      "enabled": false
+    },
+    "metadata": {
+      "invoice_number": "INV-273-SMOKE-2",
+      "motodiag_invoice_id": "2",
+      "motodiag_payment_id": "1"
+    },
+    "next_action": null,
+    "on_behalf_of": null,
+    "payment_method": null,
+    "payment_method_configuration_details": null,
+    "payment_method_options": {
+      "card_present": {
+        "request_extended_authorization": false,
+        "request_incremental_authorization_support": false
+      }
+    },
+    "payment_method_types": [
+      "card_present"
+    ],
+    "payment_record": null,
+    "processing": null,
+    "receipt_email": null,
+    "review": null,
+    "setup_future_usage": null,
+    "shared_payment_granted_token": null,
+    "shipping": null,
+    "source": null,
+    "statement_descriptor": null,
+    "statement_descriptor_suffix": null,
+    "status": "requires_payment_method",
+    "transfer_data": null,
+    "transfer_group": null
+  }
+}

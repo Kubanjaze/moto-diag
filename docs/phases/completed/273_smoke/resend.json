@@ -1,0 +1,193 @@
+{
+  "id": "evt_1UNf9tMI5dskf1ff24sNEfls",
+  "object": "event",
+  "api_version": "2026-08-26.dahlia",
+  "created": 1791319220,
+  "data": {
+    "object": {
+      "id": "in_1UNf9oMI5dskf1ffOcB7GPLi",
+      "object": "invoice",
+      "account_country": "US",
+      "account_name": null,
+      "account_tax_ids": null,
+      "amount_due": 200,
+      "amount_overpaid": 0,
+      "amount_paid": 200,
+      "amount_remaining": 0,
+      "amount_shipping": 0,
+      "application": null,
+      "attempt_count": 0,
+      "attempted": true,
+      "auto_advance": false,
+      "automatic_tax": {
+        "disabled_reason": null,
+        "enabled": false,
+        "liability": null,
+        "provider": null,
+        "status": null
+      },
+      "automatically_finalizes_at": null,
+      "billing_reason": "subscription_create",
+      "collection_method": "charge_automatically",
+      "created": 1791319216,
+      "currency": "usd",
+      "custom_fields": null,
+      "customer": "cus_VOS3GVcTIJu7rq",
+      "customer_account": "acct_1UNf9nMI5drYuLmv",
+      "customer_address": {
+        "city": null,
+        "country": "US",
+        "line1": null,
+        "line2": null,
+        "postal_code": "02108",
+        "state": null
+      },
+      "customer_email": "owner@example.com",
+      "customer_name": "Test Customer",
+      "customer_phone": null,
+      "customer_shipping": null,
+      "customer_tax_exempt": "none",
+      "customer_tax_ids": [],
+      "default_payment_method": null,
+      "default_source": null,
+      "default_tax_rates": [],
+      "description": null,
+      "discounts": [],
+      "due_date": null,
+      "effective_at": 1791319216,
+      "ending_balance": 0,
+      "footer": null,
+      "from_invoice": null,
+      "hosted_invoice_url": "https://invoice.stripe.com/i/acct_1UNe7CMI5dskf1ff/test_YWNjdF8xVU5lN0NNSTVkc2tmMWZmLF9WT1M0V3YwN1d3M05aMDFrM01hYWJ6WkZxVThJTjZiLDE4MTg2MDAyMQ0200Iwv43v7A?s=ap",
+      "invoice_pdf": "https://pay.stripe.com/invoice/acct_1UNe7CMI5dskf1ff/test_YWNjdF8xVU5lN0NNSTVkc2tmMWZmLF9WT1M0V3YwN1d3M05aMDFrM01hYWJ6WkZxVThJTjZiLDE4MTg2MDAyMQ0200Iwv43v7A/pdf?s=ap",
+      "issuer": {
+        "type": "self"
+      },
+      "last_finalization_error": null,
+      "latest_revision": null,
+      "lines": {
+        "object": "list",
+        "data": [
+          {
+            "id": "il_1UNf9oMI5dskf1ffNh86umFq",
+            "object": "line_item",
+            "amount": 200,
+            "currency": "usd",
+            "description": "1 × MotoDiag Shop (test placeholder) (at $2.00 / month)",
+            "discount_amounts": [],
+            "discountable": true,
+            "discounts": [],
+            "invoice": "in_1UNf9oMI5dskf1ffOcB7GPLi",
+            "livemode": false,
+            "metadata": {
+              "tier": "shop",
+              "user_id": "5"
+            },
+            "parent": {
+              "invoice_item_details": null,
+              "subscription_item_details": {
+                "invoice_item": null,
+                "proration": false,
+                "proration_details": {
+                  "credited_items": null
+                },
+                "subscription": "sub_1UNf9rMI5dskf1ffa71dpSbm",
+                "subscription_item": "si_VOS3JP1rzqX5lj"
+              },
+              "type": "subscription_item_details"
+            },
+            "period": {
+              "end": 1793997616,
+              "start": 1791319216
+            },
+            "pretax_credit_amounts": [],
+            "pricing": {
+              "price_details": {
+                "price": "price_1UNeVBMI5dskf1ffQiAtWo2A",
+                "product": "prod_VORNfN3SEMmKV9"
+              },
+              "type": "price_details",
+              "unit_amount_decimal": "200"
+            },
+            "quantity": 1,
+            "quantity_decimal": "1",
+            "subtotal": 200,
+            "taxes": []
+          }
+        ],
+        "has_more": false,
+        "total_count": 1,
+        "url": "/v1/invoices/in_1UNf9oMI5dskf1ffOcB7GPLi/lines"
+      },
+      "livemode": false,
+      "metadata": {},
+      "next_payment_attempt": null,
+      "number": "EOEMEFAR-0001",
+      "on_behalf_of": null,
+      "parent": {
+        "quote_details": null,
+        "subscription_details": {
+          "metadata": {
+            "tier": "shop",
+            "user_id": "5"
+          },
+          "subscription": "sub_1UNf9rMI5dskf1ffa71dpSbm"
+        },
+        "type": "subscription_details"
+      },
+      "payment_settings": {
+        "default_mandate": null,
+        "payment_method_options": {
+          "acss_debit": null,
+          "bancontact": null,
+          "billie": null,
+          "blik": null,
+          "card": {
+            "request_three_d_secure": "automatic"
+          },
+          "customer_balance": null,
+          "konbini": null,
+          "payto": null,
+          "pix": null,
+          "sepa_debit": null,
+          "upi": null,
+          "us_bank_account": null
+        },
+        "payment_method_types": null
+      },
+      "period_end": 1791319216,
+      "period_start": 1791319216,
+      "post_payment_credit_notes_amount": 0,
+      "pre_payment_credit_notes_amount": 0,
+      "receipt_number": null,
+      "rendering": null,
+      "shipping_cost": null,
+      "shipping_details": null,
+      "starting_balance": 0,
+      "statement_descriptor": null,
+      "status": "paid",
+      "status_transitions": {
+        "finalized_at": 1791319216,
+        "marked_uncollectible_at": null,
+        "paid_at": 1791319218,
+        "voided_at": null
+      },
+      "subtotal": 200,
+      "subtotal_excluding_tax": 200,
+      "test_clock": null,
+      "total": 200,
+      "total_discount_amounts": [],
+      "total_excluding_tax": 200,
+      "total_pretax_credit_amounts": [],
+      "total_taxes": [],
+      "webhooks_delivered_at": null
+    }
+  },
+  "livemode": false,
+  "pending_webhooks": 2,
+  "request": {
+    "id": null,
+    "idempotency_key": "32c5c412-5b4f-4579-9571-c5dcb6f6fc32"
+  },
+  "type": "invoice.paid"
+}

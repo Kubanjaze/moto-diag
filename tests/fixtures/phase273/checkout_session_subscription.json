@@ -1,0 +1,17 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's Checkout Session object (docs.stripe.com/api/checkout/sessions/object), read 2026-10-06; subscription mode on the platform account."
+  },
+  "status": 200,
+  "body": {
+    "id": "cs_test_fixtureSubscription273",
+    "object": "checkout.session",
+    "customer": null,
+    "livemode": false,
+    "metadata": {"user_id": "1", "tier": "shop"},
+    "mode": "subscription",
+    "status": "open",
+    "url": "https://checkout.stripe.com/c/pay/cs_test_fixtureSubscription273"
+  }
+}

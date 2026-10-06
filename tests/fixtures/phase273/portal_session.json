@@ -1,0 +1,22 @@
+{
+  "_fixture": {
+    "kind": "recorded",
+    "source": "Stripe test mode, POST /v1/billing_portal/sessions, via 273_smoke.py, 2026-10-06. The session URL carries a session secret and was not kept; a placeholder stands in.",
+    "request_id": "req_jQgjjyxXbW9r2c"
+  },
+  "status": 200,
+  "body": {
+    "id": "bps_1UNfFMMI5dskf1ffPl99S4Qs",
+    "object": "billing_portal.session",
+    "configuration": "bpc_1UNeNYMI5dskf1ffN5hA2hsb",
+    "created": 1791319560,
+    "customer": "cus_VOS3GVcTIJu7rq",
+    "customer_account": "acct_1UNf9nMI5drYuLmv",
+    "flow": null,
+    "livemode": false,
+    "locale": null,
+    "on_behalf_of": null,
+    "return_url": "http://localhost:3000/billing",
+    "url": "https://billing.stripe.com/p/session/placeholder_not_kept"
+  }
+}

@@ -1,0 +1,23 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's v2 Account Link object (docs.stripe.com/api/v2/core/account-links/object; stripe==16.0.0 stripe/v2/core/_account_link.py), read 2026-10-06. The URL is a placeholder, not a real link."
+  },
+  "status": 200,
+  "body": {
+    "object": "v2.core.account_link",
+    "account": "acct_1TestShop273",
+    "created": "2026-10-06T12:00:00.000Z",
+    "expires_at": "2026-10-06T12:05:00.000Z",
+    "livemode": false,
+    "url": "https://connect.stripe.com/d/setup/fixture_link_not_real",
+    "use_case": {
+      "type": "account_onboarding",
+      "account_onboarding": {
+        "configurations": ["merchant"],
+        "refresh_url": "http://localhost:3000/payments/connect-again",
+        "return_url": "http://localhost:3000/payments/connected"
+      }
+    }
+  }
+}

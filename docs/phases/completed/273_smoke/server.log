@@ -1,0 +1,36 @@
+DB schema up to date at version 80 (code SCHEMA_VERSION=80)
+[WARNING] share links would be served over plain http
+    → Use https. The page names a customer, their bike and its diagnosis, and iOS App Transport Security blocks plain http to non-private hosts regardless.
+[WARNING] share links would point at http://10.0.0.147:8000 — 10.0.0.147 is a private address, reachable only from that network
+    → Point it at a publicly resolvable hostname. Verify by opening a minted link from a device on a DIFFERENT network (cellular, not the shop wifi).
+MotoDiag API starting on http://127.0.0.1:8273 (log=info, reload=False, workers=1)
+INFO:     motodiag.api - motodiag API ready — version=0.6.0, cors=['http://localhost:3000', 'http://localhost:5173'], db=/Users/lilquant/.cache/motodiag/phase273/smoke.db
+INFO:     Started server process [64316]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://127.0.0.1:8273 (Press CTRL+C to quit)
+INFO:     motodiag.api.access - GET /healthz 200 5.06ms rid=07db6de44b414208b1265dd5863a764f
+INFO:     127.0.0.1:63513 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     motodiag.api.access - GET /healthz 200 4.13ms rid=d2105a1ecba54024b22b158554bc0071
+INFO:     127.0.0.1:63516 - "GET /healthz HTTP/1.1" 200 OK
+INFO:     motodiag.api.access - GET /healthz 200 2.65ms rid=e3d39d4596874942a524ae52fb972ad8
+INFO:     127.0.0.1:63517 - "GET /healthz HTTP/1.1" 200 OK
+<claude-code-hint v="1" type="plugin" value="stripe@claude-plugins-official" />
+INFO:     motodiag.billing.webhook_handlers - stripe webhook evt_3UNf1SMI5d97rvp51KAckxjP: paid_invoice
+INFO:     motodiag.api.access - POST /v1/billing/webhooks/stripe 200 66.86ms rid=fbc599aceaf548f7937bbd49089e4891
+INFO:     127.0.0.1:63520 - "POST /v1/billing/webhooks/stripe HTTP/1.1" 200 OK
+INFO:     motodiag.billing.webhook_handlers - stripe webhook evt_3UNf4lMI5d97rvp50cqIKQJs: paid_invoice
+INFO:     motodiag.api.access - POST /v1/billing/webhooks/stripe 200 24.87ms rid=809e607334fc46fe9020ef3110786a3c
+INFO:     127.0.0.1:63566 - "POST /v1/billing/webhooks/stripe HTTP/1.1" 200 OK
+WARNING:     motodiag.billing.webhook_handlers - webhook handler must be retried: event_id=evt_1UNf9tMI5dskf1ff24sNEfls type=invoice.paid: invoice in_1UNf9oMI5dskf1ffOcB7GPLi is for subscription sub_1UNf9rMI5dskf1ffa71dpSbm, which is not stored yet; retry after its subscription event
+INFO:     motodiag.api.access - POST /v1/billing/webhooks/stripe 503 35.12ms rid=97fea37b13da4aab8ef6aaea612af05c
+INFO:     127.0.0.1:63630 - "POST /v1/billing/webhooks/stripe HTTP/1.1" 503 Service Unavailable
+INFO:     motodiag.api.access - POST /v1/billing/webhooks/stripe 200 349.61ms rid=c227f60695a645f4a34880d2d145fc08
+INFO:     127.0.0.1:63630 - "POST /v1/billing/webhooks/stripe HTTP/1.1" 200 OK
+INFO:     motodiag.billing.webhook_handlers - stripe webhook evt_3UNf9pMI5dskf1ff0z7t7tWd: ignored: not a payment this app started
+INFO:     motodiag.api.access - POST /v1/billing/webhooks/stripe 200 13.74ms rid=cfe89e657f6248e8b3100611004efce5
+INFO:     127.0.0.1:63632 - "POST /v1/billing/webhooks/stripe HTTP/1.1" 200 OK
+INFO:     Shutting down
+INFO:     Waiting for application shutdown.
+INFO:     Application shutdown complete.
+INFO:     Finished server process [64316]

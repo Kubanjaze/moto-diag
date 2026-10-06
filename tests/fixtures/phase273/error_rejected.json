@@ -1,0 +1,15 @@
+{
+  "_fixture": {
+    "kind": "built",
+    "source": "Stripe's error object (docs.stripe.com/api/errors), read 2026-10-06: an invalid request."
+  },
+  "status": 400,
+  "body": {
+    "error": {
+      "code": "parameter_invalid_integer",
+      "message": "Invalid integer: abc",
+      "param": "amount",
+      "type": "invalid_request_error"
+    }
+  }
+}

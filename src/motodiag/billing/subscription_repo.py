@@ -243,8 +243,9 @@ def upsert_from_stripe(
                VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 user_id,
-                data.get("tier", "individual"),
-                data.get("status", "active"),
+                # F187: required, never defaulted.
+                data["tier"],
+                data["status"],
                 data.get("stripe_customer_id"),
                 stripe_subscription_id,
                 data.get("stripe_price_id"),
