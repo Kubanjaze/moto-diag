@@ -47,9 +47,11 @@ export MOTODIAG_BILLING_PROVIDER=stripe
 export MOTODIAG_ENV=dev
 export MOTODIAG_STRIPE_CALL_LOG="$RUN/calls.jsonl"
 
-if [[ "$STAGE" != "webhook" ]]; then
+if [[ "$STAGE" != "webhook" && "$STAGE" != "resend" ]]; then
   exec "$PY" "$HERE/273_smoke.py" "$STAGE"
 fi
+# `resend EVT_ID`: the server and stripe listen again, then Stripe
+# redelivers that event (`stripe events resend`), then the portal call.
 
 # ---- the webhook run: stripe listen -> a server on the scratch copy -------
 command -v stripe >/dev/null || { echo "the Stripe CLI is not installed"; exit 1; }
@@ -60,20 +62,22 @@ export MOTODIAG_STRIPE_WEBHOOK_SECRET
 EVENTS="payment_intent.succeeded,payment_intent.payment_failed,charge.refunded,customer.subscription.created,customer.subscription.updated,customer.subscription.deleted,invoice.paid,invoice.payment_failed"
 URL="http://127.0.0.1:$PORT/v1/billing/webhooks/stripe"
 
-"$ROOT/.venv/bin/motodiag" serve --host 127.0.0.1 --port "$PORT" > "$RUN/server.log" 2>&1 &
+LOGTAG=""
+[[ "$STAGE" == "resend" ]] && LOGTAG="_resend"
+"$ROOT/.venv/bin/motodiag" serve --host 127.0.0.1 --port "$PORT" > "$RUN/server$LOGTAG.log" 2>&1 &
 SERVER=$!
 stripe listen --latest --events "$EVENTS" --forward-to "$URL" --forward-connect-to "$URL" 2>&1 \
-  | sed -u -E 's/whsec_[A-Za-z0-9]+/whsec_[redacted]/g' > "$RUN/listen.log" &
+  | sed -u -E 's/whsec_[A-Za-z0-9]+/whsec_[redacted]/g' > "$RUN/listen$LOGTAG.log" &
 LISTEN=$!
 cleanup() { kill "$SERVER" 2>/dev/null || true; pkill -f "stripe listen --latest --events" 2>/dev/null || true; wait 2>/dev/null || true; }
 trap cleanup EXIT
 
 for _ in $(seq 1 60); do
-  curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && grep -q "Ready" "$RUN/listen.log" && break
+  curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null 2>&1 && grep -q "Ready" "$RUN/listen$LOGTAG.log" && break
   sleep 1
 done
-curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null || { echo "the server did not start; see $RUN/server.log"; exit 1; }
-grep -q "Ready" "$RUN/listen.log" || { echo "stripe listen did not get ready; see $RUN/listen.log"; exit 1; }
+curl -fsS "http://127.0.0.1:$PORT/healthz" >/dev/null || { echo "the server did not start; see $RUN/server$LOGTAG.log"; exit 1; }
+grep -q "Ready" "$RUN/listen$LOGTAG.log" || { echo "stripe listen did not get ready; see $RUN/listen$LOGTAG.log"; exit 1; }
 echo "server on 127.0.0.1:$PORT (scratch copy), stripe listen ready"
 
 wait_for() {  # wait_for <seconds> <sql> <expected>
@@ -89,6 +93,17 @@ IDS="$RUN/ids.json"
 TERMINAL_INV="$("$PY" -c "import json;print(json.load(open('$IDS'))['terminal_invoice'])")"
 CHECKOUT_INV="$("$PY" -c "import json;print(json.load(open('$IDS'))['checkout_invoice'])")"
 USER_ID="$("$PY" -c "import json;print(json.load(open('$IDS'))['user'])")"
+
+if [[ "$STAGE" == "resend" ]]; then
+  EVT="${2:?event id}"
+  echo "Stripe redelivers $EVT"
+  stripe events resend "$EVT" > "$RUN/resend.json"
+  wait_for 120 "SELECT event_id FROM stripe_webhook_events WHERE event_id = '$EVT' AND processed_at IS NOT NULL" "$EVT"
+  echo "4. The customer portal for that subscription"
+  "$PY" "$HERE/273_smoke.py" portal
+  "$PY" "$HERE/273_smoke.py" summary
+  exit 0
+fi
 
 echo "1. Terminal: the simulated reader pays invoice $TERMINAL_INV"
 "$PY" "$HERE/273_smoke.py" terminal

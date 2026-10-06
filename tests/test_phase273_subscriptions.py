@@ -274,9 +274,28 @@ class TestTheTiersPayments:
         row = sql(db, "SELECT status, amount_paid_cents FROM subscription_payments")[0]
         assert tuple(row) == ("paid", 4900)
 
-    def test_an_invoice_before_its_subscription_is_retried(self, db, user):
+    def test_an_invoice_before_its_subscription_reads_the_subscription(self, db, user):
+        """Bug fix #2: in the smoke run `invoice.paid` came before
+        `customer.subscription.created`; the 503 waited for a redelivery
+        `stripe listen` never makes. The handler now reads the subscription
+        from Stripe itself."""
+        provider = FakeBillingProvider({SUB: _stripe_says(user)})
         res = dispatch_event(self._invoice_event("invoice.paid", "evt_paid", paid=True),
-                             db_path=db, settings=stripe_settings())
+                             db_path=db, provider=provider, settings=stripe_settings())
+        assert res.error is None and not res.retry, res.error
+        assert _stored(db)["status"] == "active"
+        rows = sql(db, "SELECT status, amount_paid_cents FROM subscription_payments")
+        assert [tuple(r) for r in rows] == [("paid", 4900)]
+        # The subscription event that follows changes nothing it should not.
+        dispatch_event(_sub_event("customer.subscription.created", "evt_sub"),
+                       db_path=db, provider=provider, settings=stripe_settings())
+        assert sql(db, "SELECT COUNT(*) FROM subscriptions WHERE stripe_subscription_id = ?",
+                   (SUB,))[0][0] == 1
+
+    def test_an_invoice_before_its_subscription_with_stripe_down_is_retried(self, db, user):
+        res = dispatch_event(self._invoice_event("invoice.paid", "evt_paid", paid=True),
+                             db_path=db, provider=FakeBillingProvider(),
+                             settings=stripe_settings())
         assert res.retry
         assert sql(db, "SELECT COUNT(*) FROM subscription_payments")[0][0] == 0
 

@@ -205,3 +205,85 @@ The operator: "keys in place, onboarded". Run on the scratch copy
   `tests/test_phase273_subscriptions.py`.
 - **Verified:** both narrow-terminal tests pass; phase 273's and 176's
   tests: 152 passed.
+
+### 2026-10-06 — Bug fix #2: a tier payment arriving before its subscription is lost
+
+The operator, verbatim: "Before you go on: listen.log shows invoice.paid
+answered 503 at 16:40:21, while customer.subscription.created and
+payment_intent.succeeded got 200 in the same second. The scratch DB has
+the new shop subscription active, but subscription_payments has 0 rows, so
+the $2.00 payment isn't recorded, and nothing has retried it since. Find
+why it got 503 (likely it arrived before the subscription row existed),
+resend that event with `stripe events resend`, and confirm the payment is
+recorded. Say in the log whether production relies on Stripe retrying a
+5xx for this ordering, and if this is a bug, register it."
+
+- **Issue:** in the webhook run, `invoice.paid`
+  (`evt_1UNf9tMI5dskf1ff24sNEfls`) reached the server at 16:40:21 and got
+  503; `customer.subscription.created` and the platform's
+  `payment_intent.succeeded` got 200 in the same second. The subscription
+  was stored `shop active`; `subscription_payments` had 0 rows, and
+  nothing redelivered the event.
+- **Root cause:** `_handle_subscription_invoice` looked the subscription
+  up in the database, found no row (its event had not yet been applied),
+  and raised `BillingProviderError` ("not stored yet; retry after its
+  subscription event"). That was classed retryable, so the event's record
+  was removed and the route answered 503, which the design left to a
+  redelivery. `stripe listen` forwards each event once and never retries.
+  Stripe does not deliver in order (S0-4, quoting its webhooks page), so
+  this ordering is normal, not rare.
+- **Does production rely on Stripe retrying a 5xx for this ordering?**
+  Before this fix, yes. Stripe's webhooks page: "Stripe attempts to
+  deliver events to your destination for up to three days with an
+  exponential back off in live mode … We retry event deliveries created
+  in a sandbox three times over the course of a few hours." So in
+  production the payment would have been recorded on a later retry, minutes
+  to hours late, and lost for good if every retry came before the
+  subscription event or the endpoint was disabled. With `stripe listen`
+  it was lost at once. **After this fix, no:** the payment is recorded on
+  first delivery whatever the order. A 503 is now left only for Stripe
+  itself being unreadable, where a retry is the right answer.
+- **Reproduced first:** a new test delivers `invoice.paid` before any
+  subscription event, with Stripe (the fake provider) holding the
+  subscription. It failed with exactly the live error ("which is not
+  stored yet; retry after its subscription event").
+- **Fix:** the subscription handler's re-read is now
+  `_store_from_stripe(sub_id, …)`. When an invoice names a subscription
+  that is not stored, the handler reads it from Stripe and stores it,
+  then records the payment. If Stripe cannot be read, that raises and the
+  event is still retried (a test keeps that).
+- **The live event:** `bash 273_smoke.sh resend
+  evt_1UNf9tMI5dskf1ff24sNEfls` restarted the server and `stripe listen`
+  and ran `stripe events resend`. `listen_resend.log`: 16:45:58
+  `--> invoice.paid`, 16:45:59 `<-- [200]`. The scratch database now
+  holds `subscription_payments`: paid, 200 cents, usd. The subscription
+  row already existed, so this redelivery proves the payment is recorded,
+  not the new read path; the new path is proved by the test above.
+- **Files:** `src/motodiag/billing/webhook_handlers.py`,
+  `tests/test_phase273_subscriptions.py`; `273_smoke.sh` gained the
+  `resend` stage.
+- **Verified:** phase 273's and 176's tests: 153 passed.
+
+A second bug in this build. Two bugs, two causes (rich wrapping;
+delivery order), so no shared cause to find yet; a third would stop the
+build for one.
+
+### 2026-10-06 — The webhook run, completed
+
+After the resend: the portal call (`POST /v1/billing_portal/sessions` 200)
+and the summary (`273_smoke/summary.txt`):
+- INV-273-SMOKE-2 paid by the simulated reader, 5678 cents, outcome
+  `paid_invoice`; INV-273-SMOKE-1 paid by Checkout, 1234 cents,
+  `paid_invoice`. Each `paid_at` is Stripe's time for the event.
+- Subscription: `shop active`, period ending 2026-11-06T20:40:16Z, price
+  recorded. Its payment: paid, 200 cents, usd.
+- Events: 3 `payment_intent.succeeded` (2 from the shop's connected
+  account; the third, the platform's subscription charge, ignored as not
+  an invoice payment), 1 `customer.subscription.created`, 1
+  `invoice.paid`; none with an error.
+- **Secrets in the outputs:** the portal session URL (it carries a
+  session secret) and a Payment Intent's `client_secret` had been kept in
+  `273_smoke/responses/`. Both were redacted before anything was
+  committed, and `273_smoke.py` now drops them, as it drops the
+  onboarding link. A scan of every output for `sk_`, `rk_`, `whsec_`
+  (unredacted), `secret=` and `_secret_` finds none.

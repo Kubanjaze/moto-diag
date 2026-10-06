@@ -190,6 +190,14 @@ def _handle_subscription(
     sub_id = obj.get("id")
     if not sub_id:
         raise SubscriptionEventError("subscription event names no subscription")
+    _store_from_stripe(sub_id, db_path, provider, settings)
+
+
+def _store_from_stripe(
+    sub_id: str, db_path: Optional[str], provider: Optional[BillingProvider],
+    settings: Settings,
+) -> None:
+    """Read the subscription from Stripe and store what it says."""
     if provider is None:
         raise BillingProviderError("no billing provider to re-read the subscription")
     sub = provider.retrieve_subscription(sub_id)
@@ -222,10 +230,12 @@ def _handle_subscription_invoice(
         return
     existing = get_subscription_by_stripe_id(sub_id, db_path=db_path)
     if existing is None:
-        raise BillingProviderError(
-            f"invoice {inv.get('id')} is for subscription {sub_id}, which is "
-            "not stored yet; retry after its subscription event"
-        )
+        # Bug fix #2: the invoice can arrive before its subscription's
+        # event, and `stripe listen` never redelivers a 503. Read the
+        # subscription now; if Stripe cannot be read, that raises and the
+        # event is retried.
+        _store_from_stripe(sub_id, db_path, provider, settings)
+        existing = get_subscription_by_stripe_id(sub_id, db_path=db_path)
     paid = event.get("type") == "invoice.paid"
     lines = ((inv.get("lines") or {}).get("data")) or [{}]
     period = lines[0].get("period") or {}
