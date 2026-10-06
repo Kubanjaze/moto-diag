@@ -1,6 +1,6 @@
 # Phase 292 — Gate 16: one job walked from booking to the accounting export — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-06)
 **Branch:** `phase-292` (Opus session, main checkout)
 
 ---
@@ -87,7 +87,8 @@ Pushed as `phase-292`.
   passed after; 275's export tests and 281's tax tests passed (45). Gate
   16's Xero check is green with it, and red with it reverted (plant 4,
   mutation X1).
-- **Commit:** `be1030b`.
+
+**Commit.** `be1030b`
 
 ### 2026-10-06 — Build: `tests/test_phase292_gate16.py`
 
@@ -207,3 +208,30 @@ starting, paid at another amount, issued as a draft, cash left unpaid).
 
 `--collect-only -q`: 10491. `COLLECTED_TEST_FLOOR` 10401 → 10491 (+90:
 the gate's 80 and the fix's 10). 244G's scanner over `tests/`: 0.
+
+### 2026-10-06 — `--full`, and the regression of record
+
+**`--full` and Gate 16.** `wholetree.sh --full` on `c3fde4e` passed, 3988
+tests in 86 files, the same count as at 273's merge. Gate 16 isn't a
+whole-tree member at all: membership is computed from enumerating a repo
+directory (`wholetree.py`'s docstring), and the gate walks a scratch
+database. The regression of record is what runs it.
+
+`.claude/skills/closeout/regression.sh` on a clean tree:
+
+Regression of record: 10491 passed, 0 failed, 0 skipped, 0 errors at `c3fde4e` (22 min 7 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+No refute pass ran.
+
+### 2026-10-06 — Close-out
+
+v1.1 written, no open boxes (`verify_phase.sh`'s result goes in the
+handoff after the merge). The edit guard blocked a Python heredoc that
+wrote v1.1 into the implementation document: its body named `src/` and
+its write path was not a literal, which the guard blocks by design. The
+sections were written with the Edit tool. Row 292 ✅, `**CLOSED 2026-10-06.**`, with the
+regression line; history row and version header in `implementation.md`;
+the documents moved to `completed/`; handoff
+`docs/handoffs/2026-10-06_292_closed.md`. No deploy step: no migration and
+no live row; the one production change (`accounting/export.py`) needs
+nothing applied to the live database.

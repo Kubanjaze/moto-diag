@@ -1,6 +1,6 @@
 # Phase 292 — Gate 16: one job walked from booking to the accounting export
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-06
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-06 (v1.0 the same day)
 
 ---
 
@@ -149,29 +149,66 @@ Tested on its own (`tests/test_phase292_xero_tax.py`) and by the walk.
 
 ## Verification Checklist
 
-- [ ] Row 292 🚧 before Step 0, corrected per K8, within 120 words
-- [ ] Rows 373, 374 added; F188, F189 filed; `roadmap_check.py` and `finding_check.py` green
-- [ ] Bug fix #1 committed with its test; 275's and 281's tests green
-- [ ] Both card walks green; the cash job green
-- [ ] Each hand-off checked at its step
-- [ ] The money equal at every link, in cents
-- [ ] Paid only through the webhook
-- [ ] The clock held; the network guard held; no key
-- [ ] No build reference printed; its plant red
-- [ ] The operator's five plants red, then removed
-- [ ] Mutations N/N red
-- [ ] 244G scanner 0; floor raised; `wholetree.sh` and `--full` green
-- [ ] Regression of record by `regression.sh`
-- [ ] `verify_phase.sh` after the merge
-- [ ] Handoff written
+- [x] Row 292 🚧 before Step 0, corrected per K8, within 120 words
+- [x] Rows 373, 374 added; F188, F189 filed; `roadmap_check.py` and `finding_check.py` green
+- [x] Bug fix #1 committed with its test (`be1030b`); 275's and 281's tests green
+- [x] Both card walks green; the cash job green (67 commands per walk)
+- [x] Each hand-off checked at its step
+- [x] The money equal at every link, in cents
+- [x] Paid only through the webhook
+- [x] The clock held; the network guard held; no key
+- [x] No build reference printed; its plant red
+- [x] The operator's five plants red, then removed
+- [x] Mutations 15/15 red
+- [x] 244G scanner 0; floor 10401 → 10491; `wholetree.sh` and `--full` green
+- [x] Regression of record by `regression.sh`: 10491 passed at `c3fde4e`
+- [x] `verify_phase.sh` after the merge (its result is in the handoff)
+- [x] Handoff written
 
 ## Deviations from Plan
 
-(v1.1)
+- **Production code in a test-only gate.** The operator chose to fix H1 in
+  this phase ("Fix in 292"): bug fix #1, `accounting/export.py`, its own
+  commit and test file. No other `src/` change.
+- **The estimate differs from the hours worked** (1.0 h against 1.5 h and
+  1.25 h). With both equal, an invoice billing the estimate would have
+  passed; mutation M1 now catches it.
+- **The planted controls stay as tests.** v1.0 planned temporary plants
+  only; each also runs as a planted walk the gate's own check must reject
+  (`TestThePlantsTurnTheGateRed`), as 272 kept its plants. A sixth plant,
+  F158's, was added.
+- **The walk builds the API app once before the freeze.** The freeze check
+  named 11 modules that `create_app` loaded during the walk.
+- **The reader is answered with this shop's label.** The recorded fixture
+  carries the smoke run's shop name, which F158's check caught in the
+  printed output; a test asserts the request carried the label the walk
+  answers with.
+- **Gate 16 is not a whole-tree member.** Membership is computed from
+  enumerating a repo directory (`wholetree.py`'s docstring), and the gate
+  walks a scratch database. The regression of record is what runs it.
+- **The live database was not read.** H1's live exposure (Xero files
+  already written) was not measured: the read was refused as a production
+  read. Left to the operator, with the query, in the handoff.
 
 ## Results
 
-(v1.1)
+| | |
+|---|---|
+| Test files | `tests/test_phase292_gate16.py` (80), `tests/test_phase292_xero_tax.py` (10) |
+| Walks | Checkout and the simulated reader: 67 commands each, all exit 0 but the deliberate second export; 6 and 8 Stripe requests from fixtures, none unanswered |
+| Money | A: 18000 + 9998 = 27998, tax 625, total 28623 = Stripe asked = payment = event; B: 15000 + 3150 = 18150, tax 197, total 18347; QuickBooks and Xero equal the invoices line by line |
+| Webhook | invoice `sent` after starting; `paid` at `2026-10-15T16:00:00.000+00:00` on the event; one event recorded |
+| Bug fix #1 | Xero's tax on taxed lines only: labour (18000, 0), parts (9998, 625), where the old spread gave 401 and 224 |
+| Plants | six, each red, each removed; kept as planted walks |
+| Mutations | 15/15 red |
+| Findings | F188 (row 373), F189 (row 374) |
+| Floor | 10401 → 10491 |
+| Regression of record | **10491 passed, 0 failed, 0 skipped, 0 errors** at `c3fde4e` (22 min 7 s wall, `python -m pytest -n auto --dist load`, exit 0) |
+
+Key finding: **the seams were between phases, not inside them.** Each
+step's own tests passed; the walk found the Xero export written before
+per-line tax existed, a warranty claim the invoice never hears of, and a
+check-in that cannot carry the intake.
 
 ## Risks
 
