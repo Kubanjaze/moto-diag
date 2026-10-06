@@ -35,6 +35,7 @@ from datetime import datetime, timezone
 from typing import Any, Literal, Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import local_display
 from motodiag.core.session_repo import (
     SessionOwnershipError, get_session_for_owner,
 )
@@ -387,9 +388,10 @@ def build_session_report_doc(
         "heading": "Timeline",
         "rows": [
             ("Status", str(row.get("status") or "open")),
-            ("Created", str(row.get("created_at") or "—")),
-            ("Updated", str(row.get("updated_at") or "—")),
-            ("Closed", str(row.get("closed_at") or "—")),
+            # Stored in UTC (Phase 370), shown in local time.
+            ("Created", str(local_display(row.get("created_at")) or "—")),
+            ("Updated", str(local_display(row.get("updated_at")) or "—")),
+            ("Closed", str(local_display(row.get("closed_at")) or "—")),
         ],
     })
 

@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import textwrap
+from datetime import datetime, timezone
 from typing import Any, Callable, Optional
 
 import click
@@ -43,6 +44,7 @@ from motodiag.cli.completion import (
     complete_session_id,
 )
 from motodiag.core.database import init_db, get_connection
+from motodiag.core.timestamps import local_display
 from motodiag.core.session_repo import (
     create_session, get_session, list_sessions, set_diagnosis,
     close_session, update_session, reopen_session, append_note, get_notes,
@@ -797,16 +799,28 @@ _TEXT_WRAP_COL = 80
 
 
 def _short_ts(ts: Any) -> str:
-    """Return the first 19 chars of an ISO timestamp, or '-' for None/empty.
+    """Return a timestamp as local 'YYYY-MM-DDTHH:MM:SS', or '-' for None/empty.
 
-    Timestamps from session_repo are ISO strings like
-    '2026-04-17T14:33:21.123456'. Truncating to 19 chars gives 'YYYY-MM-DD
-    HH:MM:SS' which is readable in all three formats.
+    Session times are stored in UTC with their offset (Phase 370) and are
+    shown in local time; a naive value (written before 370, already local)
+    is shown as written, truncated to 19 chars.
     """
     if not ts:
         return "-"
-    s = str(ts)
+    s = local_display(str(ts))
     return s[:19] if len(s) > 19 else s
+
+
+def _utc_bound(value: str, end_of_day: bool) -> str:
+    """A ``diagnose list --since/--until`` value, read as local time, as a
+    stored session time. A bare date with ``end_of_day`` means through
+    23:59:59.999 that day."""
+    parsed = datetime.fromisoformat(value.strip().replace("Z", "+00:00"))
+    if end_of_day and "T" not in value and " " not in value.strip():
+        parsed = parsed.replace(hour=23, minute=59, second=59, microsecond=999000)
+    if parsed.tzinfo is None:
+        parsed = parsed.astimezone()
+    return parsed.astimezone(timezone.utc).isoformat(timespec="milliseconds")
 
 
 def _fmt_list(items: Optional[list], empty: str = "-") -> str:
@@ -1303,9 +1317,9 @@ def register_diagnose(cli_group: click.Group) -> None:
     @click.option("--search", default=None,
                   help="Case-insensitive substring search on diagnosis text.")
     @click.option("--since", default=None,
-                  help="Include sessions created on or after this ISO date (YYYY-MM-DD).")
+                  help="Include sessions created on or after this local ISO date (YYYY-MM-DD).")
     @click.option("--until", default=None,
-                  help="Include sessions created on or before this ISO date (YYYY-MM-DD).")
+                  help="Include sessions created on or before this local ISO date (YYYY-MM-DD).")
     @click.option("--limit", default=50, type=int, show_default=True,
                   help="Cap number of rows returned (prevents terminal-spam on large histories).")
     def diagnose_list_cmd(
@@ -1327,13 +1341,16 @@ def register_diagnose(cli_group: click.Group) -> None:
         console = get_console()
         init_db()
 
-        # `--until YYYY-MM-DD` is inclusive of that whole day. Append a time
-        # suffix so the string comparison against ISO timestamps includes
-        # anything recorded on the until date (otherwise `2026-04-15` < any
-        # timestamp on 2026-04-15 and the day's sessions would be dropped).
-        until_param = until
-        if until_param and "T" not in until_param and " " not in until_param:
-            until_param = f"{until_param}T23:59:59"
+        # Session times are stored in UTC (Phase 370); a typed date or time
+        # is the user's own clock. `--until YYYY-MM-DD` is inclusive of that
+        # whole local day.
+        try:
+            since_param = _utc_bound(since, end_of_day=False) if since else None
+            until_param = _utc_bound(until, end_of_day=True) if until else None
+        except ValueError as exc:
+            raise click.BadParameter(
+                f"--since/--until must be an ISO date or time: {exc}"
+            ) from exc
 
         sessions = list_sessions(
             status=status,
@@ -1341,7 +1358,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             vehicle_model=model_,
             vehicle_id=vehicle_id,
             search=search,
-            since=since,
+            since=since_param,
             until=until_param,
             limit=limit,
         )
@@ -1380,7 +1397,7 @@ def register_diagnose(cli_group: click.Group) -> None:
             table.add_row(
                 str(s["id"]), s.get("status", "?"),
                 vehicle_str, diag, conf_str,
-                str(s.get("created_at", ""))[:19],
+                _short_ts(s.get("created_at")),
             )
         console.print(table)
 

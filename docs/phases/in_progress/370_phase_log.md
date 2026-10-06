@@ -64,3 +64,56 @@ So 370 ships:
 - the note stamp as local time with its offset (`[2026-10-06T15:42-04:00]`).
 
 F186 stays open for its own phase.
+
+### 2026-10-06 — v1.0 committed (`8be7d8b`), then the build
+
+**Code:**
+- `core/timestamps.py` (new): `utc_now()`, `to_utc()`, `local_display()`,
+  and `convert_session_times_079()`.
+- `session_repo`: the nine stamps call `utc_now()`; `_month_start_iso()`
+  returns `YYYY-MM-01T00:00:00.000+00:00`, and its 191B note is replaced; the
+  note stamp is local time with its offset.
+- `api/routes/sessions.py:_parse_since`: the cutoff is written in the stored
+  format, and any offset is converted to UTC.
+- `cli/diagnose.py`: `_short_ts` and the `list` Created column show local
+  time; `--since`/`--until` are read as local time and converted. A value
+  that is not ISO is now a usage error, where before it went to SQL as
+  typed.
+- `reporting/builders.py` Timeline and `memory/compile._date_of`: local
+  time.
+- Migration 079 `session_times_utc`, data only; `SCHEMA_VERSION` 79.
+
+**Tests:**
+- `tests/support/frozen_clock.py`: the frozen clock, as a helper and as a
+  plugin for a spawned run. Its report header prints the time
+  `session_repo` itself sees, so a freeze that did not take hold shows the
+  real clock and fails the header check. This was decided after the first
+  draft printed the configured moment, which mutation M24 would have left
+  green.
+- `tests/test_phase370_session_utc.py`: 19 tests, all at 2026-10-31
+  21:42:07 EDT. The first run had 1 failure, mine: Rich folds the Created
+  column at 80 characters. The assertion now takes the visible prefix
+  `2026-10-31T21:4`, which UTC (`2026-11-01T01:4`) does not match.
+  19 passed.
+
+**Related suites:** 132 test files touching sessions, migrations, memory,
+reports or the `diagnose` CLI, in parallel: 4313 passed, 0 failed (8 min
+43 s). No existing test asserted the old naive shape.
+
+**Mutations:** `370_mutate.py`, 24/24 red (`370_mutate.out`). M1 is the
+planted control the prompt asks for: `create_session_for_owner` stamping
+`datetime.now().isoformat()` again. The other 23:
+- the other eight writers, the note stamp's offset, the month start's
+  format and `utc_now()`;
+- each reader: show, list, `--since`/`--until`, the Timeline, memory dates,
+  and the API's two `since` forms;
+- 079's space rule, its `post_apply` and its rollback;
+- the plugin not freezing the clock.
+
+**244G's scanner** over all of `tests/` (the new files included): 0 hits.
+
+**`COLLECTED_TEST_FLOOR`** 10271 → 10299, measured by `--collect-only`.
+The +28 is 369's 8 (369 did not raise the floor), 370's 19, and gate 15's
+`[78]` rollback case. No module was added to or removed from the
+integration-gap tables: `core/timestamps.py` is imported by
+`session_repo`, so it is reachable.

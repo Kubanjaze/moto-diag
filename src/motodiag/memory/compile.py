@@ -33,6 +33,7 @@ from dataclasses import dataclass
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import local_display
 from motodiag.memory.facts import MemoryFact, insert_facts, reconcile_facts
 
 # A finding below this confidence is not compiled into memory at all. A vision
@@ -61,10 +62,13 @@ def _date_of(value: Optional[str]) -> str:
     ``2026-04-18T14:22:07.113`` implies a precision the underlying record does
     not have, and makes two facts about the same visit sort against each other
     on milliseconds.
+
+    A time stored with its offset (sessions, since Phase 370) is dated by the
+    local day, so an evening visit is not dated tomorrow.
     """
     if not value:
         return ""
-    return str(value)[:10]
+    return str(local_display(str(value)))[:10]
 
 
 def _rows(conn, sql: str, params: tuple = ()) -> list[tuple]:
