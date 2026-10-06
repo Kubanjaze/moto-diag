@@ -1,0 +1,91 @@
+Do this: start Phase 273, Track O batch 4, payments through Stripe, and run it to its finish line as CLAUDE.md sets out. Row 273 reads "Stripe Connect, card terminals, invoicing, subscription billing". It is the last batch before Gate 16 (292). Read these first:
+- docs/reports/2026-09-28_track_o_triage.md: row 273, batch 4, decision 3 and "What you would need to supply". Decision 3 keeps the backend tailnet-only, so in development Stripe's webhooks reach it through `stripe listen`.
+- Phase 176's documents (the billing provider switch) and 169's (shop invoices).
+- 281's phase log and handoff. Its rules for outbound calls hold here too: tests use recorded fixtures and never the network; when a service is down the user is shown it, never an empty result; the only live calls during the build are one logged smoke call per service.
+
+Row 273 goes 🚧 before Step 0. 273 carries this batch and folds no other row.
+
+The measured facts, taken 2026-10-06 on master at 3ff6124. Re-verify each at Step 0.
+- **What 176 built** is the app's own subscription tiers, not a shop taking its customer's money.
+  - `billing/providers.py` has `FakeBillingProvider` and `StripeBillingProvider`, switched by `MOTODIAG_BILLING_PROVIDER` (fake or stripe). The Stripe one makes checkout and portal sessions, checks webhook signatures, and retrieves and cancels subscriptions.
+  - `billing/webhook_handlers.py` handles five events: customer.subscription.created, .updated and .deleted, and invoice.payment_succeeded and .payment_failed.
+  - The routes are /v1/billing/checkout-session, /portal-session, /subscription and /webhooks/stripe.
+- **None of it has run against Stripe.**
+  - The `stripe` SDK is in neither pyproject.toml nor the venv, and the Stripe CLI is not installed.
+  - Settings has `stripe_api_key`, `stripe_webhook_secret` and three tier price ids, all empty. No Stripe variable is in .env.
+- **Shop invoices (169)** are draft, sent, paid, overdue or cancelled. `shop invoice mark-paid` is the only way to pay one; no API route marks one paid.
+- **Money is in two forms.** 169's code works in cents (`subtotal_cents`, `total_cents`), but the `invoices` table (118) stores subtotal, tax and total as REAL dollars, converted in `shop/invoicing.py`. The `payments` table (118, 176) holds subscription payments per user, with `amount REAL`.
+- **Not built:** Connect (a shop receiving its customers' money), Terminal (card-present payment), and paying a shop invoice through Stripe.
+- **The app** has no payment screen. It reads the tier (src/hooks/useTier.ts) and re-reads it when it returns to the foreground, expecting an upgrade made in Stripe's portal (RootNavigator.tsx), but no app code opens checkout or the portal.
+- **Live:** 0 payments, 0 invoices, 4 subscriptions, and 1 shop (the Phase 199 smoke shop).
+- **`.env`:** Settings reads `PROJECT_ROOT/.env` (prefix MOTODIAG_). It holds my other secrets, and the test suite does not isolate it.
+- **The backend:** no launch agent runs it, and it is not running now. With no billing setting in .env, it runs on the fake provider.
+
+What to build. Each of row 273's four verbs is reachable by a user and exercised by a test; a CLI command is enough.
+- **Invoicing:** a shop invoice is paid through Stripe. It becomes paid only when Stripe's verified event arrives through the webhook, never on the request that started the payment.
+- **Card terminals:** a card-present payment through Terminal's simulated reader, in test mode, with no hardware.
+- **Connect:** a shop receives its own customers' money. How is a Step 0 fork, below.
+- **Subscription billing:** 176's checkout, portal and webhook path, proved against test mode for the first time.
+
+The rules for the build:
+- Build and test against the fake provider and recorded fixtures. No test calls Stripe; 281's network guard holds.
+- **Money is integer cents in all new code;** Stripe takes minor units. The REAL money columns (the invoices' subtotal, tax and total, and `payments.amount`) are Step 0 nouns: decide what happens to each, and say why.
+- **A webhook event can arrive twice, or out of order.** Handling one twice changes nothing, with a test.
+- **Recorded signatures go stale:** Stripe rejects a signature more than 300 s old. Sign each fixture at test time with a test-only secret, never with mine. Any test that reads the clock gets a fixed one (370's bug fix #1).
+- **The code refuses a live key** (sk_live_ or rk_live_) unless env is prod, with a planted control.
+- **Adding the `stripe` SDK to pyproject.toml is expected.** Pin it, and record the API version it sends.
+
+At Step 0, stop and give me the options, with what each would ship:
+- **Connect:** each shop as a connected account, and which of Stripe's current account configurations; or one Stripe account for the first shop, with Connect later. Read Stripe's current docs. For each option, say who carries fees, refunds and disputes, and what onboarding a shop goes through.
+- **The tier prices** for 176's checkout are mine to set. Test-mode prices may be placeholders, marked as such.
+- **API routes now, or CLI only now.**
+  - Routes now: the app's snapshot moves. That is a planned mobile stop, like 281's.
+  - CLI only now: the routes and the app's payment screens go to a new row.
+- Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+The credential stop (rule 1):
+- Build everything that needs no key first. Then stop and tell me exactly what to do, step by step:
+  - what to create in Stripe's dashboard, in test mode;
+  - what to install (the Stripe CLI) and how I log it in;
+  - where to put each key.
+- **You never type, read, print or echo a key or a webhook secret,** in a command, a log, a test, a fixture or a commit.
+  - A check prints only "set" and "test mode: yes" or "no".
+  - Pass a secret through the environment, never to the screen: for example, `stripe listen --print-secret` straight into the server's environment.
+- **The test session never sees my keys.** Prove it with a planted key that a test must not find.
+- After I confirm the keys are in place:
+  - one logged smoke call per Stripe surface (Connect, invoice payment, the simulated reader, a subscription checkout), all in test mode;
+  - the webhook path end to end, from `stripe listen` into a server running on a scratch copy of the database, never live.
+
+Live:
+- A migration (080), if the phase needs one, goes through the deploy skill. New tables, new columns and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is.
+- The live server's settings do not change in this phase: no keys and no provider switch. If anything would change them, stop.
+- No public endpoint (decision 3). Production webhooks would need one: record them as a paused row, with the reason.
+
+Scope:
+- The app's payment screens are not in this phase. If one of row 273's verbs needs one, split it to a new ⏸️ row; 371 is the next free number.
+- **K8:** at close-out, row 273 says what was built, and anything paused is its own ⏸️ row.
+- **If the API changes:** the refreshed mobile snapshot ties master to this branch until it merges. Nothing else starts from master in between.
+
+Carry forward:
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file, and update tests/support/integration_gaps_allowlist.py and its size pins for any new module.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- A script whose output ships is committed with it.
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the forks above, with options.
+- **At the credential stop:** exactly what I do, step by step.
+- **At the end:**
+  - what was built, and how a user reaches each piece;
+  - the smoke calls and the webhook run;
+  - the dry-run diff and the deploy outcome, if there was a migration;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: Gate 16 (292).
