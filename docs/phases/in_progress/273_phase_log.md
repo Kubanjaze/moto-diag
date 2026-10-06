@@ -321,3 +321,21 @@ Phase 273's and 176's tests: 154 passed. The smoke outputs are committed
 (`calls.jsonl`, `responses/`, the redacted `listen*.log`, `server*.log`,
 `resend.json`, `summary.txt`, `ids.json`). Their e-mail addresses are all
 `owner@example.com`, and the only name is "Test Customer".
+
+### 2026-10-06 — Mutations: 41/41 red
+
+`273_mutate.py`, 281's form (one exact string each, `-B` after clearing
+`__pycache__`, restored whatever happens; green before and after). Every
+one went red: K1–K7 the gateway and live keys; S1–S3 the test session's
+blindness to keys (the planted-key test runs the real `tests/conftest.py`
+in a spawned pytest); C1–C4 Connect; P1–P10 invoice payments; W1–W4 the
+webhook; F1–F6 F187's defects, each put back; M1–M4 migration 080; Y1,
+Y1b and Y2 the two bug fixes. Two tests were added for it:
+`test_phase273_migration.py` (4) and a late, older `charge.refunded`
+that must not lower the refunded amount.
+
+Not mutated, and why: the guarded `UPDATE … WHERE status IN ('sent',
+'overdue')` only matters when another writer changes the invoice between
+the read and the write, which a single-process test cannot stage. And
+`paid_at` taken from the event's `created`: the clock-reading alternative
+differs only by milliseconds, so a test of it would be flaky.

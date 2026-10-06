@@ -238,6 +238,18 @@ class TestTheVerifiedEvent:
         assert "50.00 USD" in out.output and "paid_invoice" in out.output
 
 
+    def test_an_older_refund_event_arriving_late_does_not_lower_it(self, db, monkeypatch, ready):
+        _start(db, monkeypatch, ready["invoice_id"])
+        dispatch_event(_succeeded(1, ready["invoice_id"]), db_path=db,
+                       settings=stripe_settings())
+        for evt_id, refunded in (("evt_ref_2", 8000), ("evt_ref_1", 5000)):
+            dispatch_event(event("charge.refunded", {
+                "id": "ch_1", "object": "charge", "payment_intent": "pi_test_1",
+                "amount": 25000, "amount_refunded": refunded}, event_id=evt_id,
+                account=SHOP_ACCOUNT), db_path=db, settings=stripe_settings())
+        assert _payment(db)["refunded_cents"] == 8000
+
+
 class TestTwiceAndOutOfOrder:
     """Stripe may deliver an event twice, two events for one payment, and
     in any order. The database must end the same."""
