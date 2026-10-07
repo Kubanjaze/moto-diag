@@ -23,6 +23,7 @@ from pydantic import BaseModel, Field
 from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection
 from motodiag.core.migration_072_live_rows import LIVE_ROWS_072
+from motodiag.core.timestamps import SHOP_TIME_FIELDS_082
 
 
 class Migration(BaseModel):
@@ -7250,6 +7251,33 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE warranty_claims DROP COLUMN coverage_recorded_at;
             ALTER TABLE warranties DROP COLUMN repair_payer;
         """,
+    ),
+    Migration(
+        version=82,
+        name="shop_times_utc",
+        description=(
+            "Phase 377 (F186, F191): the shop's times move to UTC, as 079 "
+            "moved diagnostic sessions'. Until 377 the work-order, customer, "
+            "vehicle, issue, intake, repair-plan and other shop writers "
+            "stamped naive local `datetime.now().isoformat()`, and cutoffs "
+            "compared them as text with UTC in another shape. The code now "
+            "writes `YYYY-MM-DDTHH:MM:SS.mmm+00:00`; the `post_apply` hook "
+            "converts each naive `T` value of those columns (local time: this "
+            "machine's zone, that date's offset). Space-shaped values are "
+            "SQLite's `CURRENT_TIMESTAMP`, already UTC, and stay as written; "
+            "so do known_issues' stamps and appointments' clock times. No "
+            "schema change. The rollback turns every `+00:00` value in those "
+            "columns back into naive local (milliseconds kept)."
+        ),
+        upgrade_sql="-- data only: see post_apply\n",
+        post_apply="motodiag.core.timestamps:convert_shop_times_082",
+        rollback_sql="".join(
+            f"UPDATE {table} SET {column} = strftime('%Y-%m-%dT%H:%M:%f', "
+            f"substr({column}, 1, 23), 'localtime') "
+            f"WHERE {column} LIKE '%+00:00';\n"
+            for table, columns in SHOP_TIME_FIELDS_082.items()
+            for column in columns
+        ),
     ),
 ]
 

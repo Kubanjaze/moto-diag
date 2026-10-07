@@ -33,10 +33,11 @@ shops so the CLI layer can render names without a second round-trip.
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timezone
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -92,32 +93,6 @@ def _require_row(
     if row is None:
         raise ValueError(f"{label} not found: id={row_id}")
     return dict(row)
-
-
-def _since_cutoff(since: Optional[str]) -> Optional[str]:
-    """Interpret a ``since`` token as an ISO timestamp cutoff.
-
-    Accepted forms:
-    - ``None`` → no filter.
-    - ISO timestamp (``'2026-04-21T00:00:00'``) → passthrough.
-    - Relative offset (``'7d'``, ``'24h'``, ``'30m'``) → ``now - offset``.
-    """
-    if since is None:
-        return None
-    s = str(since).strip()
-    if not s:
-        return None
-    if s[-1:] in ("d", "h", "m") and s[:-1].isdigit():
-        n = int(s[:-1])
-        unit = s[-1]
-        delta = {
-            "d": timedelta(days=n),
-            "h": timedelta(hours=n),
-            "m": timedelta(minutes=n),
-        }[unit]
-        return (datetime.now() - delta).isoformat()
-    # Assume ISO; SQLite comparison works lexicographically.
-    return s
 
 
 # ---------------------------------------------------------------------------
@@ -239,7 +214,7 @@ def list_intakes(
             f"status must be one of {INTAKE_STATUSES} or None "
             f"(got {status!r})"
         )
-    cutoff = _since_cutoff(since)
+    cutoff = utc_cutoff(since)
 
     query = """
         SELECT iv.*,
@@ -268,7 +243,7 @@ def list_intakes(
         conditions.append("iv.status = ?")
         params.append(status)
     if cutoff is not None:
-        conditions.append("iv.intake_at >= ?")
+        conditions.append("datetime(iv.intake_at) >= ?")
         params.append(cutoff)
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -327,7 +302,7 @@ def update_intake(
 
     set_clauses = ", ".join(f"{k} = ?" for k in filtered.keys())
     params: list = list(filtered.values())
-    params.append(datetime.now().isoformat())
+    params.append(utc_now())
     params.append(intake_id)
 
     with get_connection(db_path) as conn:
@@ -392,7 +367,7 @@ def reopen_intake(
     Clears ``closed_at`` and ``close_reason``. No-op on already-open
     intakes (idempotent).
     """
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM intake_visits WHERE id = ?",
@@ -426,7 +401,7 @@ def count_intakes(
             f"status must be one of {INTAKE_STATUSES} or None "
             f"(got {status!r})"
         )
-    cutoff = _since_cutoff(since)
+    cutoff = utc_cutoff(since)
     query = "SELECT COUNT(*) AS n FROM intake_visits iv"
     conditions: list[str] = []
     params: list = []
@@ -437,7 +412,7 @@ def count_intakes(
         conditions.append("iv.status = ?")
         params.append(status)
     if cutoff is not None:
-        conditions.append("iv.intake_at >= ?")
+        conditions.append("datetime(iv.intake_at) >= ?")
         params.append(cutoff)
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -458,7 +433,7 @@ def _transition_out_of_open(
     db_path: Optional[str],
 ) -> bool:
     """Shared ``open -> closed|cancelled`` transition."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM intake_visits WHERE id = ?",

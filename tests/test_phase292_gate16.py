@@ -649,7 +649,8 @@ class TestTheWalk:
             inv = walked["invoices"][k]
             assert inv["issued_at"].startswith(f"{DAY}T16:00:00"), inv["issued_at"]
             assert inv["invoice_number"].endswith(DAY.replace("-", ""))
-            assert walked[k]["wo_row"]["completed_at"].startswith(f"{DAY}T12:00")
+            # Noon EDT, stored in UTC since Phase 377 (it was naive local).
+            assert walked[k]["wo_row"]["completed_at"] == f"{DAY}T16:00:00.000+00:00"
 
     def test_no_module_escaped_the_freeze(self, walked):
         assert walked["escaped"] == []

@@ -5,10 +5,10 @@ fields while preserving full backward compatibility with existing callers.
 """
 
 import json
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection, init_db
+from motodiag.core.timestamps import utc_now
 from motodiag.core.models import (
     VehicleBase, ProtocolType,
     PowertrainType, EngineType, BatteryChemistry,
@@ -66,7 +66,7 @@ def add_vehicle(vehicle: VehicleBase, db_path: str | None = None) -> int:
             (
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
-                vehicle.notes, datetime.now().isoformat(),
+                vehicle.notes, utc_now(),
                 vehicle.powertrain.value if vehicle.powertrain else None,
                 vehicle.engine_type.value if vehicle.engine_type else None,
                 vehicle.battery_chemistry.value if vehicle.battery_chemistry else None,
@@ -154,7 +154,7 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
     if "bms_present" in filtered and isinstance(filtered["bms_present"], bool):
         filtered["bms_present"] = 1 if filtered["bms_present"] else 0
 
-    filtered["updated_at"] = datetime.now().isoformat()
+    filtered["updated_at"] = utc_now()
     set_clause = ", ".join(f"{k} = ?" for k in filtered)
     values = list(filtered.values()) + [vehicle_id]
 
@@ -219,7 +219,7 @@ def add_vehicle_for_owner(
             (
                 vehicle.make, vehicle.model, vehicle.year,
                 vehicle.engine_cc, vehicle.vin, vehicle.protocol.value,
-                vehicle.notes, datetime.now().isoformat(),
+                vehicle.notes, utc_now(),
                 vehicle.powertrain.value if vehicle.powertrain else None,
                 vehicle.engine_type.value if vehicle.engine_type else None,
                 vehicle.battery_chemistry.value

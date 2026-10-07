@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F192**.
+At the time of writing the highest assigned is **F193**.
 
 ---
 
@@ -2946,4 +2946,35 @@ What would close it: a time zone on each shop (an IANA name, such as
 `America/Los_Angeles`), set when the shop is created, and every reader,
 day bucket and typed-date cutoff of a shop's times converting in that
 zone instead of the server's; appointment clock times read in it too.
+
+Also seen in Phase 377's census: a bay slot's `scheduled_start` and
+`scheduled_end` are the shop's clock time stored with `+00:00` (Phase
+275's rule, `booking.py`), while its `actual_end` is real UTC. Analytics'
+overrun window compares `COALESCE(actual_end, scheduled_end)` with a UTC
+cutoff, so a slot with no `actual_end` sits at its window's edge off by
+the shop's offset. A per-shop zone would let both be stored as one clock.
+
+### F193
+
+**Sensor-recording and drift filters compare a typed `--since` as text, in UTC**
+
+Found in Phase 377's census (2026-10-07), left out of its fix by decision
+(the phase log says why). `hardware/recorder.py`'s `list_recordings`
+(`started_at >= ?`, `<= ?`), `advanced/drift.py` (`s.captured_at >= ?`,
+`<= ?`) and `cli/advanced.py`'s drift chart (`s.captured_at >= ?`) put the
+user's `--since` and `--until` straight into a text comparison. The
+columns hold one aware shape, `YYYY-MM-DDTHH:MM:SS[.ffffff]+00:00`, so a
+date or a value with an offset compares as a prefix; but a typed date is
+read as the UTC day (a 2026-10-07 filter starts at 20:00 the evening
+before in New York), and a typed value with another offset, or with a
+space, compares wrong.
+
+What it affects: `hardware` recording lists and the drift commands'
+windows, by up to the UTC offset at the edges. Not the shop's tables.
+`sensor_samples` can be large, which is why 377 did not wrap the column
+in `datetime()` (it would stop the index being used).
+
+What would close it: convert the typed value with `utc_cutoff` (Phase
+377), then write it in the column's own shape, so the comparison stays
+on the index; with a test at a fixed clock in a zone away from UTC.
 

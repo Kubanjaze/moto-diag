@@ -54,3 +54,72 @@ to the operator before `apply-live`.
 
 `377_implementation.md` v1.0: the operator's choices and conditions, the
 format, Logic steps 1–9 and the checklist.
+
+### 2026-10-07 — The build
+
+The API connection dropped at 09:22, mid-build; the operator reported it,
+and nothing had been committed since v1.0 (`421d592`). Before carrying on,
+`git diff` was checked against the plan: 15 files under `src/`, the writers
+and the three repos' cutoffs, as planned. The only unzoned `datetime.now()`
+lines left were the two docstrings and the four pinned appointment lines.
+Every changed module imported.
+
+What was built, against v1.0's Logic steps:
+- **Step 1, `core/timestamps.py`:**
+  - `stored_instant`, `utc_cutoff`, `local_day_start` and `local_day`;
+  - `with_utc_times`;
+  - `local_display` now reads SQLite's space shape as UTC;
+  - `SHOP_TIME_FIELDS_082` and `convert_shop_times_082`;
+  - `to_utc` now calls `stored_instant`, with the same rule.
+- **Step 2:** 40 stamps call `utc_now()`.
+- **Step 3:**
+  - `_since_cutoff` is removed, and its four users take `utc_cutoff` and
+    `datetime(col)`;
+  - `_parse_date_window` returns `utc_cutoff`, and analytics' 15
+    comparisons are wrapped. The 13 Step 0 counted by line, plus the two
+    bay-slot `COALESCE` lines, which that count's pattern missed.
+- **Step 4:** the P&L window, the export window and its invoice date, and
+  throughput's days are all in the shop's day.
+- **Step 5:** both silent skips raise naming the work order:
+  - turnaround's `continue`;
+  - `mechanic_performance`'s `except (ValueError, TypeError): pass`, the
+    same pattern, found while editing.
+- **Step 6:**
+  - `cli/shop.py`: work-order show, intake show and list, issue show and
+    list;
+  - the work-order report's Intake row;
+  - the shop API's customer, intake, work-order and issue responses, and
+    `VehicleResponse`.
+- **Step 7:** migration 082, with `SCHEMA_VERSION` 81 → 82. On a scratch
+  copy of live it changed exactly 40 fields and reached schema 82.
+
+**Decisions taken during the build:**
+- **The typed-`since` sites outside the shop's tables:**
+  - sensor recordings and drift are left out (5 comparisons in
+    `hardware/recorder.py`, `advanced/drift.py` and `cli/advanced.py`).
+    Their columns hold one aware shape, a typed date compares as a prefix,
+    and `sensor_samples` can be large, so wrapping the column would stop
+    the index being used. They are filed as **F193**;
+  - `feedback/learning_hook.py` is fixed. It compared `since.isoformat()`
+    (a `T`) with a `CURRENT_TIMESTAMP` column, which is 191B's bug, and the
+    table is small.
+- **`revenue_rollup`'s cutoff:** the dashboard passed analytics' computed
+  UTC cutoff into `revenue_rollup`, and `utc_cutoff` would read that naive
+  string as local a second time. The dashboard now passes its `since`
+  token, and `invoicing.py` converts it. Every other caller (the CLI, the
+  API) passes a typed value.
+- **The dashboard's utilization days** are the shop's days (`astimezone()`).
+  Before, they were the UTC date, which on a US evening is tomorrow.
+- **F192 gained a paragraph from the census.** A bay slot's scheduled times
+  are clock times stored with `+00:00` (275's rule), so the overrun
+  window's edge is off by the offset for a slot with no `actual_end`. This
+  is pre-existing and needs a per-shop zone to fix, so it is recorded
+  there, not fixed.
+- **The census test's prose:** a first draft skipped lines starting with a
+  quote, and so dropped a real code line, `appointment_repo.py:122`. Its
+  own test went red on that, which is how it was found. The skip was
+  removed; the three prose lines (a docstring and the descriptions of 079
+  and 082) are pinned by name.
+- **Phase 171's `test_iso_input`** asserted that a naive typed time is read
+  as UTC. v1.0 reads it as the shop's time, so the test now types an
+  explicit offset. The local reading is tested in 377's `TestHelpers`.

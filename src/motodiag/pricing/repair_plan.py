@@ -1,9 +1,9 @@
 """Repair plan builder — CRUD for per-bike repair plans with line items."""
 
 import json
-from datetime import datetime
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ def create_plan(
             (
                 vehicle_id, session_id, title, labor_rate,
                 customer_name, customer_phone, notes,
-                datetime.now().isoformat(),
+                utc_now(),
             ),
         )
         return cursor.lastrowid
@@ -68,13 +68,13 @@ def update_plan(plan_id: int, updates: dict, db_path: str | None = None) -> bool
     if not filtered:
         return False
 
-    filtered["updated_at"] = datetime.now().isoformat()
+    filtered["updated_at"] = utc_now()
 
     # Handle status transitions with timestamps
     if filtered.get("status") == "approved":
-        filtered["approved_at"] = datetime.now().isoformat()
+        filtered["approved_at"] = utc_now()
     elif filtered.get("status") == "completed":
-        filtered["completed_at"] = datetime.now().isoformat()
+        filtered["completed_at"] = utc_now()
 
     set_clause = ", ".join(f"{k} = ?" for k in filtered)
     values = list(filtered.values()) + [plan_id]
@@ -452,5 +452,5 @@ def _recalculate_plan_totals(plan_id: int, db_path: str | None = None) -> None:
                    updated_at = ?
                WHERE id = ?""",
             (parts_cost, labor_hours, labor_cost, total,
-             datetime.now().isoformat(), plan_id),
+             utc_now(), plan_id),
         )

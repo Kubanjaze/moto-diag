@@ -6,10 +6,10 @@ data. Do not delete the system user — it's referenced by diagnostic_sessions,
 repair_plans, and known_issues as the fallback/default owner.
 """
 
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 from motodiag.auth.models import User
 
 
@@ -31,7 +31,7 @@ def create_user(user: User, db_path: str | None = None) -> int:
                 user.username, user.email, user.full_name,
                 user.password_hash, user.tier,
                 1 if user.is_active else 0,
-                datetime.now().isoformat(),
+                utc_now(),
             ),
         )
         return cursor.lastrowid

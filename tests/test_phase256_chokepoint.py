@@ -531,6 +531,11 @@ class TestNothingBypassesTheChokepoint:
         `diagnostic_sessions`, `video_analyses` and so on. **`known_issues`
         is not among them in any of the four.** A fifth is a new door until
         someone proves otherwise.
+
+        Phase 377 added the fifth, `core/timestamps.py`'s
+        `convert_shop_times_082` (migration 082). Its table names come only
+        from `SHOP_TIME_FIELDS_082`, a literal dict of shop tables;
+        `known_issues` is not in it, and test_phase377_shop_utc.py asserts so.
         """
         import ast
         import re
@@ -563,7 +568,8 @@ class TestNothingBypassesTheChokepoint:
                     found.append(f"{rel}:{node.lineno}")
         assert sorted(set(found)) == [
             "capture/stats.py:19",
-            "shop/intake_repo.py:90",
+            "core/timestamps.py:214",
+            "shop/intake_repo.py:91",
             "shop/issue_repo.py:173",
             "shop/work_order_repo.py:112",
         ], f"new dynamic table-name query: {sorted(set(found))}"

@@ -1,0 +1,28 @@
+M1 complete_work_order returns to local time (the planted control): red
+M2 a relative cutoff is local time in the T shape (F191's cutoff): red
+M3 list_intakes compares intake_at as text: red
+M4 count_intakes compares intake_at as text: red
+M5 list_work_orders compares created_at as text: red
+M6 list_issues compares reported_at as text: red
+M7 throughput compares completed_at as text (F186): red
+M8 completions are grouped by the UTC date: red
+M9 turnaround parses each time as written (a legacy naive one cannot subtract): red
+M10 turnaround drops a bad time in silence: red
+M11 the P&L month is the UTC month: red
+M12 the export's window is UTC days: red
+M13 the export's invoice date is the UTC date: red
+M14 local_display shows SQLite's UTC as written: red
+M15 the API passes each time on as stored: red
+M16 the shop API's list is not converted: red
+M17 the vehicle API is not converted: red
+M18 work-order show prints the stored Opened: red
+M19 intake show prints the stored time: red
+M20 issue show prints the stored Reported: red
+M21 the work-order report prints the stored intake time: red
+M22 082 converts SQLite's space-shaped UTC too: red
+M23 082's rollback leaves the times in UTC: red
+M24 a booking change stamps updated_at in local time: red
+M25 update_customer stamps local: red
+M26 a typed date is read as UTC (the old analytics rule): red
+26/26 red
+exit 0

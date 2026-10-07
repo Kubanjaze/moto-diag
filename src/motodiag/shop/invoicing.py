@@ -45,6 +45,7 @@ from motodiag.accounting.models import (
     InvoiceStatus as _AccountingInvoiceStatus,
 )
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.work_order_repo import require_work_order
 
 
@@ -919,8 +920,8 @@ def list_invoices_for_shop(
         query += " AND inv.status = ?"
         params.append(status)
     if since:
-        query += " AND inv.issued_at >= ?"
-        params.append(since)
+        query += " AND datetime(inv.issued_at) >= ?"
+        params.append(utc_cutoff(since))
     query += " ORDER BY inv.issued_at DESC, inv.id DESC"
     if limit and limit > 0:
         query += " LIMIT ?"
@@ -960,8 +961,8 @@ def revenue_rollup(
         conditions = []
         params = []
     if since:
-        conditions.append("inv.issued_at >= ?")
-        params.append(since)
+        conditions.append("datetime(inv.issued_at) >= ?")
+        params.append(utc_cutoff(since))
     where = " WHERE " + " AND ".join(conditions) if conditions else ""
     paid_conditions = conditions + ["inv.status = 'paid'"]
     paid_where = " WHERE " + " AND ".join(paid_conditions)

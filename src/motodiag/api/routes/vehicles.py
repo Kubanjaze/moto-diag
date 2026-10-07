@@ -21,6 +21,7 @@ from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
 from motodiag.auth.deps import AuthedUser, get_current_user
+from motodiag.core.timestamps import with_utc_times
 from motodiag.core.models import (
     BatteryChemistry, EngineType, PowertrainType,
     ProtocolType, VehicleBase, VehicleTransmission,
@@ -168,6 +169,7 @@ class SessionsForVehicleResponse(BaseModel):
 
 
 def _row_to_response(row: dict) -> VehicleResponse:
+    row = with_utc_times(row)  # times in the stored UTC format (Phase 377)
     return VehicleResponse(
         id=int(row["id"]),
         owner_user_id=int(row.get("owner_user_id", 0)),

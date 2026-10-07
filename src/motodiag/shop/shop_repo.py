@@ -36,10 +36,10 @@ from __future__ import annotations
 
 import json
 import sqlite3
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -263,7 +263,7 @@ def update_shop(
 
     set_clauses = ", ".join(f"{k} = ?" for k in filtered.keys())
     params: list = list(filtered.values())
-    params.append(datetime.now().isoformat())
+    params.append(utc_now())
     params.append(shop_id)
 
     with get_connection(db_path) as conn:
@@ -296,7 +296,7 @@ def deactivate_shop(shop_id: int, db_path: Optional[str] = None) -> bool:
             raise ShopNotFoundError(f"shop not found: id={shop_id}")
         cursor = conn.execute(
             "UPDATE shops SET is_active = 0, updated_at = ? WHERE id = ?",
-            (datetime.now().isoformat(), shop_id),
+            (utc_now(), shop_id),
         )
         return cursor.rowcount > 0
 
@@ -311,7 +311,7 @@ def reactivate_shop(shop_id: int, db_path: Optional[str] = None) -> bool:
             raise ShopNotFoundError(f"shop not found: id={shop_id}")
         cursor = conn.execute(
             "UPDATE shops SET is_active = 1, updated_at = ? WHERE id = ?",
-            (datetime.now().isoformat(), shop_id),
+            (utc_now(), shop_id),
         )
         return cursor.rowcount > 0
 

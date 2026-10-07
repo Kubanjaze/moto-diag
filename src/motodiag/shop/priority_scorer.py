@@ -22,6 +22,7 @@ from datetime import datetime, timezone
 from typing import Callable, Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 
 #: How many rows the scorer receives. The FETCH is no longer a number --
 #: see `retrieval.candidate_fetch_size` -- because a pre-filter cap decides
@@ -615,8 +616,8 @@ def priority_budget(
     )
     params: list = []
     if since:
-        query += " AND created_at >= ?"
-        params.append(since)
+        query += " AND datetime(created_at) >= ?"
+        params.append(utc_cutoff(since))
     with get_connection(db_path) as conn:
         row = conn.execute(query, params).fetchone()
         return {

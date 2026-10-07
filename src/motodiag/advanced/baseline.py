@@ -63,6 +63,7 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -632,7 +633,7 @@ def rebuild_baseline(
 
     # Build the INSERT rows from the buckets.
     insert_rows: list[tuple] = []
-    last_rebuilt_at = datetime.now().isoformat(timespec="seconds")
+    last_rebuilt_at = utc_now()
     for (pid_hex, state), data in buckets.items():
         values = data["values"]
         pcts = _percentiles(values)

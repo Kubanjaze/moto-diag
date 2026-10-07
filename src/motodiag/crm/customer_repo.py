@@ -5,9 +5,8 @@ migration 006. The "unassigned" customer (id=1) is seeded by the migration
 and owns all pre-retrofit vehicles. Do not delete the unassigned customer.
 """
 
-from datetime import datetime
-
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 from motodiag.crm.models import Customer
 
 
@@ -18,7 +17,7 @@ UNASSIGNED_CUSTOMER_NAME = "Unassigned"
 def create_customer(customer: Customer, db_path: str | None = None) -> int:
     """Create a new customer. Returns the new customer ID."""
     with get_connection(db_path) as conn:
-        now = datetime.now().isoformat()
+        now = utc_now()
         cursor = conn.execute(
             """INSERT INTO customers
                (owner_user_id, shop_id, name, email, phone, address, notes,
@@ -147,7 +146,7 @@ def update_customer(customer_id: int, updates: dict, db_path: str | None = None)
     if "is_active" in filtered and isinstance(filtered["is_active"], bool):
         filtered["is_active"] = 1 if filtered["is_active"] else 0
 
-    filtered["updated_at"] = datetime.now().isoformat()
+    filtered["updated_at"] = utc_now()
     set_clause = ", ".join(f"{k} = ?" for k in filtered)
     values = list(filtered.values()) + [customer_id]
 

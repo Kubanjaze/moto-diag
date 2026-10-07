@@ -230,7 +230,9 @@ class TestTheReaders:
             OWNER, since_iso=_parse_since("2026-10-31T22:00:00-04:00"), db_path=db) == []
 
     def test_local_display_leaves_a_naive_or_unparsable_value_alone(self, clock):
-        assert local_display("2026-09-07 17:27:55") == "2026-09-07 17:27:55"
+        # Phase 377: SQLite's space shape is UTC, so it is shown local (EDT).
+        assert local_display("2026-09-07 17:27:55") == "2026-09-07T13:27:55"
+        assert local_display("2026-09-07T13:27:55.123456") == "2026-09-07T13:27:55.123456"
         assert local_display("not a time") == "not a time"
         assert local_display(None) is None
 
