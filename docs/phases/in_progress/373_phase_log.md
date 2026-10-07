@@ -105,3 +105,24 @@ denied before its invoice is ignored by it.
 command, so the append did not run either (counted: 0 `### F190` before,
 1 after the re-run). `sed -i` is blocked wherever it points: its
 documented scope. The header was changed with the Edit tool.
+
+## Bug-fix register
+
+### Bug fix #1 — 2026-10-06 — 274's migration test read every later column as a change
+
+- **Issue:** with migration 081 in the tree,
+  `tests/test_phase274_migration.py::TestMigration076::test_existing_rows_are_unchanged_either_way`
+  failed: `AssertionError: warranties`, the row after the migrations
+  carrying one more value (`None`) than before.
+- **Root cause:** the test rolls back to 075, inserts rows, applies every
+  pending migration, and compares `SELECT *` before and after. Any later
+  migration that adds a column to a watched table (081 adds
+  `warranties.repair_payer`) changes the row's width without changing a
+  value 076 found. The forward-compat family: a schema assertion pinned to
+  the head as it stood.
+- **Fix:** compare the columns 076 found (`as_found`): each row cut to the
+  width it had before. A changed value in those columns still fails; the
+  rollback half still compares whole rows.
+- **Files:** `tests/test_phase274_migration.py`.
+- **Verified:** red before the fix with 081 present (the failure above);
+  green after, 10 passed in `test_phase274_migration.py`.

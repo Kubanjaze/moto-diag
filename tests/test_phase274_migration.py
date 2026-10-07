@@ -66,11 +66,18 @@ class TestMigration076:
 
         apply_pending_migrations(db)
         after = {t: sql(db, f"SELECT * FROM {t} ORDER BY rowid") for t in watched}
+
+        def as_found(t):
+            """The rows in the columns 076 found: a later migration may add a
+            column (081 adds warranties.repair_payer), never change these."""
+            width = len(before[t][0]) if before[t] else 0
+            return [row[:width] for row in after[t]]
+
         # the new column reads its default on the existing item, nothing else moves
         assert after["inventory_items"] == [row + (0,) for row in before["inventory_items"]]
         for t in watched:
             if t != "inventory_items":
-                assert after[t] == before[t], t
+                assert as_found(t) == before[t], t
         assert sql(db, "PRAGMA foreign_key_check") == []
 
         rollback_to_version(MIGRATION - 1, db)
