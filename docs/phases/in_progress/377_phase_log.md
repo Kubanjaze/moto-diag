@@ -194,3 +194,36 @@ The only uncommitted file is the mobile prompt, in the other repository.
    work-order screen's five lifecycle rows show the phone's local time.
    The snapshot did not move, so master is not tied to this branch by gate
    11. The merge still waits for the mobile session, as v1.0 says.
+
+### 2026-10-07 — The deploy: apply-live
+
+**The operator's approval, verbatim:** "Approved, mine: apply migration 082
+live. Exactly these 40 fields, each converted from New York local time to
+UTC in 370's format: customers 3-6 (created_at, updated_at); vehicles 1-5
+and 10 (created_at, updated_at); work orders 1-5 (opened_at 5, started_at
+4, completed_at 3, closed_at 3, updated_at 5). Plus 082's own
+schema_version row (82). No schema change and no other table. If the fresh
+dry run differs from the committed diff in anything, or live has changed
+since the backup, stop and show me. After the apply, confirm live equals
+the approved diff, then wait for the mobile session before merging."
+
+`deploy.py apply-live 377`:
+- **Preflight passed:** live equal to the backup, and a fresh dry run
+  equal to the committed exact diff. So neither stop condition arose.
+- **Applied:** `[82]`. After: 5860 rows, 117 tables, integrity ok, scope
+  problems none.
+- **The live diff:** `377_live_diff.md` reads "Equals the approved exact
+  diff: yes".
+
+**Checked independently**, by a script comparing backup
+`motodiag_pre377_20261007_112806.db` with live, every table by rowid:
+- 40 fields changed, equal to the approved values;
+- one row added, `schema_version` 82;
+- nothing removed;
+- `sqlite_master` unchanged;
+- integrity ok.
+
+Live is at schema 82. Work order 1's `opened_at` is
+`2026-09-02T20:29:25.409+00:00`. known_issues has no `+00:00` stamp.
+
+The merge waits for the mobile session, as the operator says.
