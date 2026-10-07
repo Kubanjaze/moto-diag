@@ -1,6 +1,6 @@
 # Phase 373 — Warranty work on the invoice (F188) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-06)
 **Branch:** `phase-373` (Opus session, main checkout)
 
 ---
@@ -147,6 +147,54 @@ printed. The test was corrected; the code was right.
 **244G's scanner** over `tests/`: 0 findings. **209B's integration gaps:**
 166 passed; no new module, so no allowlist entry.
 
+### 2026-10-06 — Mutations, the dry run, `--full` and the regression of record
+
+**Mutations:** `373_mutate.py`, 23/23 red: covering (3), the invoice (9),
+settlement (5), the export (4), the tax rule (2).
+
+**The build commit** `227915a`, after `wholetree.sh --full` on the staged
+tree: 3988 passed in 86 files (13 min 55 s). Gate 16 is not a whole-tree
+member (292's note); the regression runs it.
+
+**Migration 081's dry run** (`deploy.py dryrun 373`): live before 5855
+rows in 114 tables, integrity ok; backup
+`~/backups/motodiag/motodiag_pre373_20261006_210540.db`; on the copy,
+`schema_version` +1 and `tax_warranty_rules` +3 (the three Massachusetts
+rules), every other table 0 changed and 0 removed; no scope problem; F158
+census 36, the same as 273's and 281's. No existing row changes, so the
+apply is not a rule-1 stop: new tables, new columns, the migration's own
+`schema_version` row and new rows loaded after a backup. The diff is
+committed as `4025073`.
+
+`wholetree.sh --full` on `4025073`: 3988 passed (14 min 28 s). Then
+`.claude/skills/closeout/regression.sh` on a clean tree:
+
+Regression of record: 10556 passed, 0 failed, 0 skipped, 0 errors at `4025073` (31 min 30 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+No refute pass ran.
+
+### 2026-10-06 — Migration 081: live
+
+`deploy.py apply-live 373`, from the branch before the close-out commit,
+as 273 did: `apply-live` reads the scope and the diff from
+`in_progress/`, so they were moved to `completed/` after it. Preflight
+passed; applied `[81]`; after (live): 5859 rows, 117 tables, integrity
+ok; scope problems none; **`373_live_diff.md`: equals the approved exact
+diff: yes**; F158 census on live 36. Read afterwards on a copy made
+through SQLite's backup API from a read-only connection: schema 81;
+`foreign_key_check` empty; warranties 0, claims 0, claim lines 0,
+invoices 0, export claims 0, work orders 6; the three warranty rules
+(`maker_with_bike` 0 stated, `other` 1 reading, `shop_contract` 0
+stated).
+
+### 2026-10-06 — Close-out
+
+v1.1 written, no open boxes. F188 marked closed in `docs/FOLLOWUPS.md`.
+Row 373 ✅, `**CLOSED 2026-10-06.**`, with the regression line; the
+history row and version header in `implementation.md`; the documents and
+the deploy scope, dry-run diff and mutation file moved to `completed/`;
+handoff `docs/handoffs/2026-10-06_373_closed.md`.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-10-06 — 274's migration test read every later column as a change
@@ -167,3 +215,5 @@ printed. The test was corrected; the code was right.
 - **Files:** `tests/test_phase274_migration.py`.
 - **Verified:** red before the fix with 081 present (the failure above);
   green after, 10 passed in `test_phase274_migration.py`.
+
+**Commit.** `c5d5215`

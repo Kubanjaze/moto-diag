@@ -2787,9 +2787,19 @@ taken from the payload; a handler failure answered with a status Stripe
 retries, and not recorded as processed; each with a test, and the path run
 once end to end against test mode.
 
-### F188
+### F188 — CLOSED by Phase 373 (2026-10-06)
 
 **A warranty claim and the invoice for the same work order do not know about each other**
+
+**Closed:** `shop warranty claim cover` records the lines a claim covers;
+the invoice leaves them off what the customer owes and prices them for
+the claim, so the amount claimed is derived in integer cents
+(`--claimed-cents` is gone); the claim's tax follows who owes the repair
+(`tax_warranty_rules`); the packet lists the covered lines and the
+amount; the claim is exported as owed by its provider. Gate 16's pinned
+test is inverted (`test_f188_covered_work_is_off_the_customers_invoice_and_on_the_claim`).
+The measured case below, now: customer 6000 cents, claim 22623.
+Migration 081. Settlements in the export are F190 (row 376).
 
 Found at Phase 292's Step 0 (2026-10-06), in the dry walk of Gate 16 on a
 scratch database (`docs/phases/in_progress/292_step0.md`, S0-4 H2).
@@ -2843,7 +2853,7 @@ the other order inverted.
 **A warranty claim's settlement does not reach the accounting export**
 
 Found at Phase 373's Step 0 (2026-10-06), in the plan for the operator's
-choices 2a and 5a (`docs/phases/in_progress/373_phase_log.md`).
+choices 2a and 5a (`docs/phases/completed/373_phase_log.md`).
 - **Row 373 exports a claim as a receivable** from the warranty provider,
   at the amount claimed: in QuickBooks a journal entry debiting Accounts
   Receivable in the provider's name; in Xero a sales invoice to the

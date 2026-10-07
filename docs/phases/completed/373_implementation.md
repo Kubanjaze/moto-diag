@@ -1,6 +1,6 @@
 # Phase 373 — Warranty work on the invoice (F188)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-06
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-06 (v1.0 the same day)
 
 ---
 
@@ -69,8 +69,9 @@ changes. Through the deploy skill.
 ### Who owes the repair
 
 `shop warranty add --payer {maker_with_bike,other,shop_contract}`, and
-`shop warranty set-payer WARRANTY --payer …` for one already recorded.
-`warranty list` and the packet show it.
+`shop warranty update WARRANTY --payer … --provider …` for one already
+recorded (v1.0 planned `set-payer`; D9). `warranty list` and the packet
+show it.
 
 ### Covering lines: `shop warranty claim cover`
 
@@ -82,16 +83,16 @@ changes. Through the deploy skill.
   covered quantity across every claim on the order is at most its
   quantity. Covered labour hours across the order's claims are at most the
   order's hours (actual, else estimated), when known.
-- Covering any line needs the warranty's payer on record; refused
-  otherwise, naming `set-payer`.
+- Covering any line needs the warranty's payer and provider on record;
+  refused otherwise, naming `warranty update`.
 - `--none` records that the claim covers nothing.
 - `claim open --claimed-cents` is removed (S0-6 D2).
 
 ### The invoice: `generate_invoice_for_wo`
 
-- A claim on the order that is not denied and has no coverage recorded
-  stops the invoice, naming `claim cover`. Covered work is never invoiced
-  to the customer without anyone deciding so.
+- A claim on the order that is not denied (or is settled; D10) and has no
+  coverage recorded stops the invoice, naming `claim cover`. Covered work
+  is never invoiced to the customer without anyone deciding so.
 - The covered hours and quantities come off the customer's lines: a
   labour line for the remaining hours, a parts line for each remaining
   quantity. The invoice's notes name the claim and what it covers.
@@ -179,6 +180,10 @@ S0-6 D1–D5 in `373_step0.md`, and:
   Xero credit note, a different import file).
 - **D8. A claim denied before its invoice** is ignored by the invoice
   (its lines go to the customer) and cannot be settled.
+- **D9–D12**, taken while building, are in the phase log's build entry:
+  `warranty update` in place of `set-payer`; a settled claim keeps its
+  lines off a regenerated invoice; a part approval's shortfall carries the
+  customer's own tax; Gate 16's seventh plant.
 
 ## Non-goals
 
@@ -187,13 +192,59 @@ in the export (376); payment reconciliation (365, paused); any API route.
 
 ## Planned items
 
-- [ ] Migration 081, its rollback and a migration test
-- [ ] `warranty add --payer`, `warranty set-payer`
-- [ ] `claim cover`, and `--claimed-cents` removed
-- [ ] the invoice: coverage required, covered lines off, the claim priced and taxed
-- [ ] `tax_warranty_rules`, `shop tax warranty-rule set`, `confirm` and `status`
-- [ ] `claim settle`, the shortfall invoice, void and regenerate unchanged
-- [ ] the packet
-- [ ] the export: the claim as a receivable in both files; shortfall invoices left out
-- [ ] Gate 16 inverted; 274's claim tests moved off `--claimed-cents`
-- [ ] tests for each, a mutation file, the deploy, the regression, the close-out
+- [x] Migration 081, its rollback and a migration test
+- [x] `warranty add --payer`, `warranty update` (D9)
+- [x] `claim cover`, and `--claimed-cents` removed
+- [x] the invoice: coverage required, covered lines off, the claim priced and taxed
+- [x] `tax_warranty_rules`, `shop tax warranty-rule set`, `confirm` and `status`
+- [x] `claim settle`, the shortfall invoice, void and regenerate unchanged
+- [x] the packet
+- [x] the export: the claim as a receivable in both files; shortfall invoices left out
+- [x] Gate 16 inverted; 274's claim tests moved off `--claimed-cents`
+- [x] tests for each, a mutation file, the deploy, the regression, the close-out
+
+## Deviations from Plan
+
+- **`warranty set-payer` became `warranty update --payer --provider`**
+  (D9): the export names the provider, and no command could record one
+  on a warranty already added. `claim cover` requires both.
+- **A settled claim counts on the invoice whatever its status** (D10),
+  found while writing a mutation, before any commit: without it a voided
+  and regenerated invoice billed a settled, denied claim's lines a second
+  time.
+- **Bug fix #1**, not planned: 274's migration test compared `SELECT *`
+  rows across every later migration, so 081's new column failed it.
+- **Gate 16 gained a plant** (F188 itself), and its Xero tax plant is now
+  checked through job B (D12).
+- **The packet in Gate 16 is printed before the plan's decision**, so it
+  shows the approval as not recorded; the walk then submits, approves at
+  the claimed amount and marks the claim paid.
+- **Live was read twice, on copies:** at Step 0 through SQLite's backup
+  API from a read-only connection, and by the deploy skill's dry run.
+
+## Results
+
+| | |
+|---|---|
+| Rule | A claim covers what staff record with `shop warranty claim cover` (labour hours, part rows); the invoice leaves it off what the customer owes and prices it for the claim; the claim's tax follows who owes the repair (`warranty add/update --payer`), from `tax_warranty_rules` |
+| One covered job (Gate 16, job A), in cents | work order 18000 + 9998; customer 6000 (0.5 h), tax 0, total 6000 = Stripe asked; claim 12000 + 9998 = 21998, tax 625, claimed 22623, approved 22623, paid; QuickBooks: customer A/R 60.00, claim A/R 226.23 in the plan's name, labour 120.00, parts 99.98, tax 6.25; Xero: the plan's invoice, labour (12000, 0), parts (9998, 625) |
+| Test files | `tests/test_phase373_warranty_invoice.py` (57); `tests/test_phase292_gate16.py` 80 → 87; `tests/test_phase274_warranty.py` (2 changed); `tests/test_phase274_migration.py` (bug fix #1) |
+| Mutations | 23/23 red (`373_mutate.py`) |
+| Migration 081 | dry run: `schema_version` +1, `tax_warranty_rules` +3, 0 changed or removed elsewhere; census 36. **Live:** applied, equals the approved exact diff; 5859 rows, 117 tables, integrity ok |
+| Findings | F190 (row 376); F188 closed |
+| Rows | 375 (deductibles), 376 (settlements in the export) |
+| Floor | 10491 → 10556 |
+| Regression of record | **10556 passed, 0 failed, 0 skipped, 0 errors** at `4025073` (31 min 30 s wall, `python -m pytest -n auto --dist load`, exit 0) |
+
+## Risks
+
+- **The tax rule is a reading.** Massachusetts' sources disagree on who
+  bears the tax on parts under someone else's plan; the stored rule is
+  the operator's reading (LR 79-19, LR 85-1) and says so in its notes.
+  To be confirmed by the shop's accountant before a real warranty job.
+- **Settlements are not in the export** (F190, row 376). After a
+  settlement, the books still show the provider owing the full claim.
+- **A part approval's shortfall can differ from the customer's bill by a
+  cent** (D11): the customer's tax is computed on its own.
+- **Neither export file has been tried in a real QuickBooks or Xero
+  company** (275); the claim's rows follow the same import pages.

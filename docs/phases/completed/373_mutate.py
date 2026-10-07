@@ -1,8 +1,8 @@
 """Phase 373's mutations: each breaks one thing the phase built, and the
 tests named beside it must go red.
 
-Run from the repository root: `.venv/bin/python docs/phases/in_progress/373_mutate.py`
-(moved to completed/ at close-out; ROOT is three levels up either way).
+Run from the repository root: `.venv/bin/python docs/phases/completed/373_mutate.py`
+(written in in_progress/; ROOT is three levels up either way).
 292's form: each mutation replaces one exact string (which must occur once),
 runs its tests with `-B` after clearing `__pycache__`, and restores the file
 whatever happens. Prints one line per mutation and exits 1 if any stayed
