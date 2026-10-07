@@ -93,3 +93,96 @@ printing it there would be wrong information.
 `376_implementation.md` v1.0: the choices and additions, what each
 settlement books, migration 083, the export and the CLI, F194, the tests
 and the checklist.
+
+### 2026-10-07 — The build (`ff6d9c0`)
+
+Migration 083, `tax_settlement_rules` with `shop tax settlement-rule set`,
+`confirm` and `status`, the export's settlements in both files, the CLI,
+F194, `tests/test_phase376_settlement_export.py` (27) and `376_mutate.py`.
+373's `test_a_shortfall_invoice_is_left_out_and_said_so` became
+`test_a_shortfall_invoice_is_exported_with_its_settlement` (the intended
+inversion: the one failure the related suites showed, 474 passed beside it).
+
+**Decisions taken while building, not stops:**
+- **D6. A billed settlement whose shortfall invoice was voided is refused**,
+  naming it: booking the customer for a void invoice would be wrong, and
+  nothing in 376 decides what a void shortfall invoice means.
+- **D7. The checks that cannot fire were removed before the commit.** I
+  first wrote a whole-file journal balance check and a credit-note sum
+  check. Both hold by construction: each credit is the shortfall
+  invoice's lines plus the claim's tax inside the shortfall, defined as
+  the shortfall less those lines. So they could never go red (S2, S4).
+  The check that can fire stays: the claim's tax inside the shortfall
+  must lie between 0 and the claim's tax, which a shortfall line out of
+  step with its claim breaks. The test raises one line by 3 cents and
+  both files refuse (mutation Q4). Balance is proven by the tests'
+  ledgers: every QuickBooks journal nets to 0 and every credit note sums
+  to minus its shortfall.
+- **D8. `accounting_exports.file_name` and `file_sha256` stay**, as the
+  first file written; `accounting_export_files` holds every file
+  (addition 4). `invoice_count` now counts billed shortfall invoices too,
+  since `accounting_export_invoices` records them.
+- **D9. `accounting_export_files.row_count` allows 0.** v1.0 planned
+  `> 0`. No case I know of writes a file with no rows: an invoice with
+  nothing owed always carries a claim with an amount (373). The CHECK
+  records what was written, so it should not refuse a file already on
+  disk. Changed before the commit.
+- **D10. The F158 ratchet caught my seeded rule's notes** citing "(F195)":
+  a build reference in text a shop sees (`shop tax status` prints the
+  rule's source). The notes now describe the open point without the
+  number. The CLI line still names F195, as the operator asked.
+- **D11. The D4 control is a hash taken from the old code:** the no-
+  settlement export of 373's job, run in a `git worktree` of master
+  `23ff246` (schema 82, no settlement code: printed), gives
+  QuickBooks `81c1918f…` (892 bytes) and Xero `432cd338…` (711 bytes); the
+  branch gives the same. The test pins both.
+
+**My own mistakes, caught by the tests before any commit (not register
+entries):** the Xero "no double count" test summed `UnitAmount` without
+`Quantity` (labour is 0.5 h); and the migration test's cascade assertion
+used the test helper's raw connection, where foreign keys are off, so it
+could never see a cascade. It now deletes through `get_connection`, and
+mutation M2 (the rebuild without `PRAGMA foreign_keys=OFF`) goes red on it.
+
+**The edit guard**, a second time: a Python heredoc batching CLI help edits
+into `src/` was refused ("a Python script body writes src/…"). Rightly: the
+edits went in one at a time with the Edit tool. Not loosened.
+
+**Mutations:** 22/22 red (`376_mutate.py`, output in the session
+scratchpad and below in Results).
+
+**244G's scanner** over `tests/`: 0 hits. Its positive control, a planted
+`Path("….py").read_text()` assertion in a scratch directory, is reported
+(`test_ctl.py:5`); a `.csv` read is not raw source, by the scanner's rule.
+
+**`wholetree.sh --full`** on the staged build: first run 9 failed, all
+the F158 ratchet (D10); after the fix, exit 0, 4047 passed.
+
+No refute pass ran.
+
+### 2026-10-07 — Migration 083 live
+
+- **Scope:** `376_deploy_scope.json`.
+- **Dry run:** `376_dryrun_diff.md` (`47e922a`), backup
+  `~/backups/motodiag/motodiag_pre376_20261007_183425.db`, sha256
+  `5539d08e…`. `schema_version` +1, `tax_settlement_rules` +1, no existing
+  row changed or removed; `accounting_accounts` and `accounting_exports`
+  rewritten (0 live rows each); five objects added, none removed;
+  `accounting_export_invoices`, `accounting_export_claims` and
+  `idx_accounting_export_invoices_invoice` not in the diff. Scope problems:
+  none. F158 census 36.
+- **No stop:** the operator's third addition stops the phase only if
+  anything beyond that changes. Nothing did, and no existing row changed,
+  so CLAUDE.md rule 1 has no stop here.
+- **Applied from the branch:** "preflight passed; applying live: [83]";
+  after: 5862 rows, 120 tables, integrity ok, scope problems none;
+  `376_live_diff.md`: equals the approved exact diff, yes. Read back
+  read-only: schema 83, the rule row `absorb / stays_owed / reading /
+  2027-10-07`, `foreign_key_check` empty.
+
+### 2026-10-07 — The floor
+
+10617 → 10645, +28, by a diff of collected ids against a worktree of
+master `23ff246` (10617 there): the 27 new tests, gate 15's
+`test_rolling_back_peels_every_successor[82]` (migration 083), and 373's
+renamed test (−1 +1).

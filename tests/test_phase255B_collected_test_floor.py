@@ -282,7 +282,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: 15's test_rolling_back_peels_every_successor[81], which migration 082
 #: adds. Measured: 10617 collected.
 #:
-COLLECTED_TEST_FLOOR = 10617
+#: Phase 376 (2026-10-07): 10617 -> 10645, +28, by a diff of collected ids
+#: against master 23ff246: tests/test_phase376_settlement_export.py (27), and
+#: gate 15's test_rolling_back_peels_every_successor[82], which migration 083
+#: adds; 373's left-out test renamed for its inversion (-1 +1). Measured:
+#: 10645 collected.
+#:
+COLLECTED_TEST_FLOOR = 10645
 
 
 def _collected_count() -> int:
