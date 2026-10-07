@@ -2696,9 +2696,30 @@ What would close it: a customer (or a single invoice) can be marked
 exempt, with the certificate's kind and number and who recorded it; the
 invoice then records the exemption in place of the rate, and prints it.
 
-### F186
+### F186 — CLOSED by Phase 377 (2026-10-07)
 
 **Work-order times are stamped in naive local time and compared with UTC windows**
+
+**Closed:**
+- **Writers:** the work-order, issue, intake, repair-plan, booking
+  (`updated_at`) and other shop writers stamp UTC in Phase 370's format
+  through `utc_now()`. That is 40 lines; the four appointment clock stamps
+  keep 275's rule.
+- **Comparisons:** `shop/analytics.py`'s 15 comparisons parse both sides,
+  `datetime(col) >= ?` against `_parse_date_window`'s UTC cutoff. A typed
+  date is the shop's day.
+- **Days and months:** throughput's days, the P&L month and the accounting
+  export use the shop's day (the server's zone, F192).
+- **No silent drops:** turnaround and mechanic performance parse both times
+  by one rule and raise, naming the work order, on a value that is not a
+  time.
+- **Readers:** the CLI and the work-order report show local time; the API
+  sends 370's format, and the app formats it (moto-diag-mobile `0074eb9`).
+- **Live:** migration 082 converted the 40 shop fields in the defect shape
+  with the operator's approval; known_issues was left (2A).
+- **Proof:** on the frozen clock in New York, a 30-day window at
+  2026-10-15 12:00 EDT leaves out a 09:00 EDT completion on its first day
+  (`tests/test_phase377_shop_utc.py`). 26/26 mutations red.
 
 Found at Phase 370's Step 0 (2026-10-06), in the census of naive
 `datetime.now()` calls that F10's fix started from. It is F10's family on
@@ -2893,9 +2914,18 @@ provider to the customer or to a write-off account; in Xero a credit note
 against the provider's invoice, which Xero imports from a file of its
 own.
 
-### F191
+### F191 — CLOSED by Phase 377 (2026-10-07)
 
 **`--since` compares a local-time cutoff with UTC stamps written in another format**
+
+**Closed:** `_since_cutoff` is removed. `list_intakes`, `count_intakes`,
+`list_work_orders` and `list_issues` compare `datetime(col) >= ?` against
+`core/timestamps.utc_cutoff`, which is UTC in SQLite's canonical shape.
+`datetime()` reads every stored shape and converts offsets. On the frozen
+clock in New York, at 23:26 EDT and at 12:00 EDT, `--since 30m` includes
+an intake, work order or issue from a minute ago and leaves out one from
+three hours ago, through the repos and `shop intake list`
+(`tests/test_phase377_shop_utc.py::TestSince30m`).
 
 Found in Phase 374 (2026-10-06), reading `intake_at`'s clock.
 `shop/intake_repo.py`'s `_since_cutoff` turns `7d`, `24h` or `30m` into

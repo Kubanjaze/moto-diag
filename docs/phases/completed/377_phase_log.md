@@ -1,6 +1,6 @@
 # Phase 377 — Times stored in UTC across the shop's tables (F186, F191) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-07)
 **Branch:** `phase-377` (Opus session, main checkout)
 
 ---
@@ -227,3 +227,33 @@ Live is at schema 82. Work order 1's `opened_at` is
 `2026-09-02T20:29:25.409+00:00`. known_issues has no `+00:00` stamp.
 
 The merge waits for the mobile session, as the operator says.
+
+### 2026-10-07 — The mobile session, and the close-out
+
+**The operator, verbatim:** "The mobile session landed on moto-diag-mobile
+main: 0074eb9, the five work-order times shown through one shared
+formatter, and 40ddc4b, its prompt. Jest passed 1197 tests in 99 suites,
+tsc exits 0, the control went red then green, and no API types or snapshot
+changed. Migration 082 is live and checked: exactly the 40 approved fields
+plus schema_version 82. Carry on to the close-out and merge."
+
+Checked here, read-only:
+- `0074eb9` and `40ddc4b` are on moto-diag-mobile's `origin/main`, and its
+  tree is clean;
+- `0074eb9` changes four files: `buildWorkOrderSections.ts`, a new
+  `formatTimestamp.ts`, `SessionDetailScreen.tsx` and the builder's test;
+- `git diff 0074eb9~1 0074eb9 -- api-schema src/api-types.ts` is empty;
+- the mobile FOLLOWUPS gained no new F-number.
+
+**Close-out:**
+- v1.1 with Deviations and Results;
+- F186 and F191 marked closed;
+- row 377 ✅ (82 words);
+- the history row and version 0.13.103;
+- documents, mutation files and deploy files moved to `completed/`;
+- the handoff written.
+
+No bug fixes, so no register.
+
+No refute pass ran: the phase ships code, tests and a data-only
+migration, not content rows.

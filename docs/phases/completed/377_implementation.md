@@ -1,6 +1,25 @@
 # Phase 377 — Times stored in UTC across the shop's tables (F186, F191)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-07 (v1.0 2026-10-07)
+
+**Outcome (v1.1).** F186 and F191 fixed, proven on the clock, and live.
+- **Writers:** the 40 stamps write `YYYY-MM-DDTHH:MM:SS.mmm+00:00`;
+  appointments' clock times keep 275's rule.
+- **Comparisons:** every shop cutoff and window compares
+  `datetime(col) >= ?` against a UTC cutoff. Days and months are the shop's
+  day, which is the server's zone (F192).
+- **Turnaround and mechanic performance** raise, naming the work order, on
+  a value that is not a time; neither drops one in silence.
+- **Readers:** the CLI and the work-order report show local time. The API
+  sends 370's format, and the app formats it (moto-diag-mobile `0074eb9`).
+  No API schema change.
+- **Live:** migration 082 changed exactly the 40 approved fields, plus its
+  `schema_version` row. The live diff equals the approved diff.
+- **Proof:** 32 tests on 370's frozen clock in New York; mutations 26/26
+  red, M1 the planted return to local time.
+
+Regression of record: 10617 passed, 0 failed at `87f1fc8`. F186 and F191
+are closed; F192 and F193 are filed.
 
 ---
 
@@ -188,36 +207,36 @@ with an offset is converted.
 
 ## Verification Checklist
 
-- [ ] `tests/test_phase377_shop_utc.py`, on 370's frozen clock in
+- [x] `tests/test_phase377_shop_utc.py`, on 370's frozen clock in
       `America/New_York`:
-  - [ ] `--since 30m` includes the last minute and excludes three hours
+  - [x] `--since 30m` includes the last minute and excludes three hours
         ago, at 2026-10-06 23:26 EDT and at 2026-10-15 12:00 EDT, for
         intakes (list and count), work orders and issues, through the CLI
         and the repos
-  - [ ] a 30-day window's first day: completed at 09:00 EDT on the cutoff
+  - [x] a 30-day window's first day: completed at 09:00 EDT on the cutoff
         day is out, 13:00 EDT is in (throughput, turnaround, labour
         accuracy)
-  - [ ] completions by day, the P&L month and the export window use the
+  - [x] completions by day, the P&L month and the export window use the
         shop's day: an invoice at 21:00 EDT on 2026-10-31 is October's
-  - [ ] every writer stamps 370's format at the frozen moment
-  - [ ] turnaround counts a legacy naive `opened_at` with a new
+  - [x] every writer stamps 370's format at the frozen moment
+  - [x] turnaround counts a legacy naive `opened_at` with a new
         `completed_at`, and an unparseable value raises
-  - [ ] readers: the CLI's work-order, intake and issue output and the
+  - [x] readers: the CLI's work-order, intake and issue output and the
         report show local time; the API returns 370's format
-  - [ ] `utc_cutoff` and `local_day_start`: tokens, typed dates and
+  - [x] `utc_cutoff` and `local_day_start`: tokens, typed dates and
         offsets, and refusal of garbage
-  - [ ] migration 082: naive `T` converted, space and `None` untouched,
+  - [x] migration 082: naive `T` converted, space and `None` untouched,
         known_issues untouched, idempotent, rollback to naive local
-  - [ ] the census: no unzoned `datetime.now()` outside the pinned four;
+  - [x] the census: no unzoned `datetime.now()` outside the pinned four;
         a planted one fails it
-- [ ] `377_mutate.py`: every mutation red. M1 is the planted return to
+- [x] `377_mutate.py`: every mutation red. M1 is the planted return to
       local time in `complete_work_order`.
-- [ ] 244G's scanner over the new test files
-- [ ] `wholetree.sh --full` on the committed HEAD; the regression of record
-- [ ] deploy: dry-run diff committed, the operator's approval, `apply-live`,
+- [x] 244G's scanner over the new test files
+- [x] `wholetree.sh --full` on the committed HEAD; the regression of record
+- [x] deploy: dry-run diff committed, the operator's approval, `apply-live`,
       the live diff
-- [ ] the mobile session's outcome
-- [ ] F186 and F191 closed
+- [x] the mobile session's outcome
+- [x] F186 and F191 closed
 
 ## Risks
 
@@ -227,15 +246,69 @@ with an offset is converted.
   again. The census test pins today's wrapped sites; it cannot see a new
   file.
 - **The shop's zone is the server's** (F192).
-- **Existing tests may assert naive shapes or UTC-read typed dates.** The
-  related suites run before the regression, and any that change are
-  listed in Results.
+- **Existing tests may assert naive shapes or UTC-read typed dates.** Four
+  did, and they are listed in Results.
 - **Rollback is lossy in microseconds** (370's).
+- **F193:** the sensor-recording and drift filters still compare a typed
+  value as text (Deviation 1).
+- **Bay slots' scheduled times are clock times stored with `+00:00`**
+  (275's rule). The overrun window's edge is off by the shop's offset for a
+  slot with no `actual_end`; this is recorded in F192.
 
 ## Deviations from Plan
 
-(v1.1)
+1. **Five typed-`since` comparisons left as they are, filed as F193.**
+   v1.0 step 3 said all 15 of S0-4 take `utc_cutoff` and `datetime(col)`.
+   Ten do. Five do not:
+   - recorder 2, drift 2 and cli/advanced 1, which filter
+     `sensor_samples` and `sensor_recordings`;
+   - those columns hold one aware shape, so a typed date compares as a
+     prefix;
+   - the tables can be large, and wrapping the column would stop the index
+     being used.
+2. **Analytics had 15 comparisons, not 13.** Step 0's pattern missed the two
+   bay-slot `COALESCE(...)` lines. Both are wrapped.
+3. **`mechanic_performance` had the same silent skip as turnaround**
+   (`except (ValueError, TypeError): pass`). It was found while editing and
+   now raises through the same helper.
+4. **The dashboard passes its `since` token to `revenue_rollup`,** not the
+   computed cutoff. Otherwise `utc_cutoff` would read a UTC cutoff as local
+   a second time. Its utilization days are now the shop's days.
+5. **The export's due date keeps its own date.** `_us_date` gives an
+   instant's day in the shop's zone. A due date is a calendar date (only
+   the legacy invoice model writes it), so `_us_due_date` formats it as
+   written. 275's Xero test caught this on 377's own code, before any
+   commit.
+6. **The census pins seven lines, not four:** the four appointment clock
+   stamps, plus three prose lines (a docstring, and the descriptions of
+   migrations 079 and 082). A first draft skipped lines starting with a
+   quote and so dropped a real code line, `appointment_repo.py:122`; its
+   own test went red on that, and the skip was replaced by names.
+7. **The API connection dropped mid-build** (09:22). Nothing had been
+   committed since v1.0. `git diff` was checked against the plan before
+   the build carried on.
+
+Not deviations, recorded for the reader:
+- no bug fix was needed after a commit, so there is no register;
+- no refute pass ran, because the phase ships code, tests and a data-only
+  migration, not content rows.
 
 ## Results
 
-(v1.1)
+| what | result |
+|---|---|
+| failures reproduced before the fix | F191 evening (3h-ago intake listed), F191 midday (last minute left out), F186 first day (2 counted, 1 expected) |
+| writers | 40 stamps → `utc_now()`; 4 appointment clock stamps pinned by 275's rule |
+| comparisons parsed | intake 2, work order 1, issue 1, analytics 15, invoicing 2, parts sourcing, labour estimator 2, workflow rules, parts needs, notifications, priority scorer, feedback; P&L and export windows by the shop's day |
+| new tests | 32 (`tests/test_phase377_shop_utc.py`) |
+| older tests changed (intended) | 171 `test_iso_input` (a typed time is local), 256 chokepoint pins (line moved; 082's converter, no `known_issues`), 292 gate 16 (noon EDT stored in UTC), 370 `local_display` (SQLite's UTC shown local) |
+| mutation | 26/26 red (`377_mutate.out`); M1 the planted return to local time |
+| 244G scanner | all of `tests/`: 0 hits |
+| `wholetree.sh --full` | 4020 passed at `87f1fc8` (gate 11 included: snapshot unmoved) |
+| `COLLECTED_TEST_FLOOR` | 10584 → 10617 (+32 new, +1 gate 15's rollback case for 082) |
+| migration 082 dry run | 40 fields equal the preview (by script), +1 `schema_version`, no schema change, scope problems none |
+| migration 082 live | applied with the operator's approval; live diff equals the approved exact diff; checked again backup-to-live by script; 5860 rows, integrity ok; backup `motodiag_pre377_20261007_112806.db` |
+| the app | moto-diag-mobile `0074eb9` (prompt `40ddc4b`): the five lifecycle times through one shared formatter; jest 1197 passed in 99 suites, tsc 0, control red then green, no API types or snapshot changed |
+| findings | F186, F191 closed; F192 (per-shop zone) and F193 (sensor and drift filters) filed |
+
+Regression of record: 10617 passed, 0 failed, 0 skipped, 0 errors at `87f1fc8` (25 min 38 s wall, `python -m pytest -n auto --dist load`, exit 0)
