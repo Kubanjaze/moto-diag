@@ -7279,6 +7279,204 @@ MIGRATIONS: list[Migration] = [
             for column in columns
         ),
     ),
+    Migration(
+        version=83,
+        name="claim_settlements_in_the_export",
+        description=(
+            "Phase 376 (F190): a warranty claim's settlement reaches the "
+            "accounting export. `accounting_accounts` is rebuilt for its "
+            "CHECK to take the kind `absorbed` (a shortfall the shop "
+            "absorbs); `accounting_exports` is rebuilt so an export may carry "
+            "settlements and no invoices (`settlement_count`, and "
+            "`invoice_count + settlement_count > 0`). New tables: "
+            "`accounting_export_files` (each file an export wrote, with its "
+            "hash), `accounting_export_settlements`, and "
+            "`tax_settlement_rules` (per jurisdiction, whether the tax "
+            "charged on an absorbed claim stays owed; one Massachusetts "
+            "reading, TIR 00-3). The rebuild is migration 052's shape: the "
+            "foreign-key pragma is off while the tables are swapped, so the "
+            "children's references (`accounting_export_invoices`, "
+            "`accounting_export_claims`) are untouched and DROP TABLE does "
+            "not cascade. Changes no existing row. The rollback rebuilds both "
+            "back; it deletes `absorbed` mappings and exports with no "
+            "invoices, which the old CHECKs refuse."
+        ),
+        upgrade_sql="""
+            PRAGMA foreign_keys=OFF;
+
+            CREATE TABLE accounting_accounts_rebuild (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('labor', 'parts', 'diagnostic', 'misc',
+                                    'tax', 'receivable', 'absorbed')),
+                account TEXT NOT NULL CHECK (length(trim(account)) > 0),
+                tax_type TEXT,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (shop_id, target, kind),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            INSERT INTO accounting_accounts_rebuild
+                (id, shop_id, target, kind, account, tax_type, updated_at)
+            SELECT id, shop_id, target, kind, account, tax_type, updated_at
+            FROM accounting_accounts;
+            DROP TABLE accounting_accounts;
+            ALTER TABLE accounting_accounts_rebuild RENAME TO accounting_accounts;
+
+            CREATE TABLE accounting_exports_rebuild (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                period_from TEXT NOT NULL,
+                period_to TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_sha256 TEXT NOT NULL,
+                invoice_count INTEGER NOT NULL CHECK (invoice_count >= 0),
+                exported_at TEXT NOT NULL,
+                settlement_count INTEGER NOT NULL DEFAULT 0
+                    CHECK (settlement_count >= 0),
+                CHECK (invoice_count + settlement_count > 0),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            INSERT INTO accounting_exports_rebuild
+                (id, shop_id, target, period_from, period_to, file_name,
+                 file_sha256, invoice_count, exported_at)
+            SELECT id, shop_id, target, period_from, period_to, file_name,
+                   file_sha256, invoice_count, exported_at
+            FROM accounting_exports;
+            DROP TABLE accounting_exports;
+            ALTER TABLE accounting_exports_rebuild RENAME TO accounting_exports;
+
+            PRAGMA foreign_keys=ON;
+
+            CREATE TABLE IF NOT EXISTS accounting_export_files (
+                export_id INTEGER NOT NULL,
+                holds TEXT NOT NULL
+                    CHECK (holds IN ('journal_entries', 'invoices', 'credit_notes')),
+                file_name TEXT NOT NULL,
+                file_sha256 TEXT NOT NULL,
+                row_count INTEGER NOT NULL CHECK (row_count >= 0),
+                PRIMARY KEY (export_id, holds),
+                FOREIGN KEY (export_id)
+                    REFERENCES accounting_exports(id) ON DELETE CASCADE
+            );
+
+            CREATE TABLE IF NOT EXISTS accounting_export_settlements (
+                export_id INTEGER NOT NULL,
+                claim_id INTEGER NOT NULL,
+                PRIMARY KEY (export_id, claim_id),
+                FOREIGN KEY (export_id)
+                    REFERENCES accounting_exports(id) ON DELETE CASCADE,
+                FOREIGN KEY (claim_id)
+                    REFERENCES warranty_claims(id) ON DELETE CASCADE
+            );
+            CREATE INDEX IF NOT EXISTS idx_accounting_export_settlements_claim
+                ON accounting_export_settlements(claim_id);
+
+            CREATE TABLE IF NOT EXISTS tax_settlement_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                jurisdiction_id INTEGER NOT NULL,
+                shop_id INTEGER,
+                settlement TEXT NOT NULL CHECK (settlement IN ('absorb')),
+                absorbed_tax TEXT NOT NULL CHECK (absorbed_tax IN ('stays_owed')),
+                basis TEXT NOT NULL CHECK (basis IN ('stated', 'reading')),
+                effective_from TEXT NOT NULL,
+                valid_until TEXT NOT NULL CHECK (valid_until >= effective_from),
+                source_title TEXT NOT NULL CHECK (length(trim(source_title)) > 0),
+                source_url TEXT,
+                source_clause TEXT,
+                checked_on TEXT NOT NULL,
+                provenance TEXT NOT NULL CHECK (provenance IN ('regulation', 'shop')),
+                entered_by_user_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((provenance = 'regulation') = (shop_id IS NULL)),
+                FOREIGN KEY (jurisdiction_id)
+                    REFERENCES tax_jurisdictions(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (entered_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_tax_settlement_rules_jurisdiction
+                ON tax_settlement_rules(jurisdiction_id, settlement, effective_from);
+
+            INSERT INTO tax_settlement_rules (jurisdiction_id, shop_id, settlement,
+                    absorbed_tax, basis, effective_from, valid_until, source_title,
+                    source_url, source_clause, checked_on, provenance, notes)
+                SELECT id, NULL, 'absorb', 'stays_owed', 'reading', '1999-01-01',
+                    '2027-10-07',
+                    'Massachusetts DOR, TIR 00-3: Claiming the Bad Debt Reimbursement',
+                    'https://www.mass.gov/technical-information-release/tir-00-3-claiming-the-bad-debt-reimbursement',
+                    '"Bad debt reimbursements may not be claimed on any other return and bad debts may not be subtracted from gross receipts on a vendor''s sales or use tax return." Relief is a yearly claim on Form ST-BDR (G.L. c. 64H, s. 33) once the account is written off under IRC s. 166.',
+                    '2026-10-07', 'regulation',
+                    'A reading, to be confirmed by the shop''s accountant: the tax charged on the claim stays owed when the shop absorbs a shortfall; any ST-BDR claim is the accountant''s, not the export''s. Not settled by the sources read: whether a part approval is a bad debt or a price reduction (830 CMR 64H.1.4, not readable), and tax on the cost of parts given away under a claim that carried no tax.'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+        """,
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_tax_settlement_rules_jurisdiction;
+            DROP TABLE IF EXISTS tax_settlement_rules;
+            DROP INDEX IF EXISTS idx_accounting_export_settlements_claim;
+            DROP TABLE IF EXISTS accounting_export_settlements;
+            DROP TABLE IF EXISTS accounting_export_files;
+
+            PRAGMA foreign_keys=OFF;
+
+            DELETE FROM accounting_export_invoices WHERE export_id IN
+                (SELECT id FROM accounting_exports WHERE invoice_count = 0);
+            DELETE FROM accounting_export_claims WHERE export_id IN
+                (SELECT id FROM accounting_exports WHERE invoice_count = 0);
+            CREATE TABLE accounting_exports_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                period_from TEXT NOT NULL,
+                period_to TEXT NOT NULL,
+                file_name TEXT NOT NULL,
+                file_sha256 TEXT NOT NULL,
+                invoice_count INTEGER NOT NULL CHECK (invoice_count > 0),
+                exported_at TEXT NOT NULL,
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            INSERT INTO accounting_exports_rollback
+                (id, shop_id, target, period_from, period_to, file_name,
+                 file_sha256, invoice_count, exported_at)
+            SELECT id, shop_id, target, period_from, period_to, file_name,
+                   file_sha256, invoice_count, exported_at
+            FROM accounting_exports WHERE invoice_count > 0;
+            DROP TABLE accounting_exports;
+            ALTER TABLE accounting_exports_rollback RENAME TO accounting_exports;
+
+            CREATE TABLE accounting_accounts_rollback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                shop_id INTEGER NOT NULL,
+                target TEXT NOT NULL
+                    CHECK (target IN ('quickbooks_online', 'xero')),
+                kind TEXT NOT NULL
+                    CHECK (kind IN ('labor', 'parts', 'diagnostic', 'misc',
+                                    'tax', 'receivable')),
+                account TEXT NOT NULL CHECK (length(trim(account)) > 0),
+                tax_type TEXT,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                UNIQUE (shop_id, target, kind),
+                FOREIGN KEY (shop_id)
+                    REFERENCES shops(id) ON DELETE CASCADE
+            );
+            INSERT INTO accounting_accounts_rollback
+                (id, shop_id, target, kind, account, tax_type, updated_at)
+            SELECT id, shop_id, target, kind, account, tax_type, updated_at
+            FROM accounting_accounts WHERE kind != 'absorbed';
+            DROP TABLE accounting_accounts;
+            ALTER TABLE accounting_accounts_rollback RENAME TO accounting_accounts;
+
+            PRAGMA foreign_keys=ON;
+        """,
+    ),
 ]
 
 

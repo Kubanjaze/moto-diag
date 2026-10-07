@@ -45,7 +45,7 @@ from motodiag.accounting.models import (
     InvoiceStatus as _AccountingInvoiceStatus,
 )
 from motodiag.core.database import get_connection
-from motodiag.core.timestamps import utc_cutoff
+from motodiag.core.timestamps import local_day, utc_cutoff
 from motodiag.shop.work_order_repo import require_work_order
 
 
@@ -207,11 +207,17 @@ def _check_existing_invoice(
         return int(row["id"]) if row else None
 
 
+def _number_day(now: datetime) -> str:
+    """The shop's day of ``now`` as ``YYYYMMDD``, for an invoice's number
+    (F194: the UTC day numbered evening invoices with tomorrow's date)."""
+    return local_day(now.isoformat()).replace("-", "")
+
+
 def _format_invoice_number(
     shop_id: int, wo_id: int, now: datetime,
     db_path: Optional[str] = None,
 ) -> str:
-    base = f"INV-{shop_id}-{wo_id}-{now.strftime('%Y%m%d')}"
+    base = f"INV-{shop_id}-{wo_id}-{_number_day(now)}"
     # Count existing invoices for this WO (including cancelled); suffix
     # regeneration index so voided+regenerated WOs don't collide on
     # invoices.invoice_number UNIQUE.
@@ -761,7 +767,7 @@ def generate_shortfall_invoice(claim: dict, shortfall_cents: int,
 
     now = datetime.now(timezone.utc)
     # A claim settles once, so its number is unique without a regeneration index.
-    number = f"INV-{wo['shop_id']}-{wo['id']}-{now.strftime('%Y%m%d')}-S{claim['id']}"
+    number = f"INV-{wo['shop_id']}-{wo['id']}-{_number_day(now)}-S{claim['id']}"
     invoice_id = create_invoice(Invoice(
         customer_id=int(original["customer_id"]),
         repair_plan_id=None,

@@ -1,0 +1,20 @@
+{
+ "_comment": "Phase 376, migration 083: accounting_accounts and accounting_exports rebuilt (0 live rows each; a CHECK cannot be altered in place), which rewrites their SQL; three new tables (accounting_export_files, accounting_export_settlements, tax_settlement_rules) with two indexes; one Massachusetts settlement rule inserted; one schema_version row. The operator's condition (2026-10-07): no existing row changes, and no schema object other than the two rebuilt tables and the new ones; every index, and the foreign keys of accounting_export_invoices and accounting_export_claims, come through unchanged. Every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "tax_settlement_rules": {"added": 1}
+ },
+ "schema": {
+  "added": [
+   "index idx_accounting_export_settlements_claim",
+   "index idx_tax_settlement_rules_jurisdiction",
+   "table accounting_export_files",
+   "table accounting_export_settlements",
+   "table tax_settlement_rules"
+  ],
+  "changed": [
+   "table accounting_accounts",
+   "table accounting_exports"
+  ]
+ }
+}

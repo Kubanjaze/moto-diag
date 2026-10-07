@@ -1,0 +1,23 @@
+S1 the settlement's day is read as text, not parsed (the month-end evening): red
+S2 a settlement is exported again to the same target: red
+S3 a settlement is booked against a claim the books never held (D1): red
+S4 a range with settlements and no invoices is refused: red
+Q1 the credit leaves out the claim's tax inside the shortfall: red
+Q2 the shortfall invoice's own journal is not written: red
+Q3 an absorbed shortfall is debited to income, not the absorbed account: red
+Q4 the tax share out of step with its claim is booked anyway: red
+X1 the credit note is written tax-exclusive: red
+X2 the absorbed credit note goes to the claim's income account: red
+X3 the billed shortfall invoice is left out of the invoices file: red
+X4 an absorbed credit note gets no expected-tax line: red
+T1 an absorbed taxed claim exports with no reading on record: red
+T2 F195's line is printed for a labour-only claim: red
+T3 status does not show the settlement rule: red
+T4 confirm does not renew the settlement rule: red
+R1 the files an export wrote are not recorded: red
+R2 the billed shortfall invoice is not recorded as exported: red
+M1 the rebuilt CHECK leaves out absorbed: red
+M2 the rebuild runs with foreign keys on (DROP cascades to the children): red
+M3 an export with no invoices is still refused by the schema: red
+N1 the invoice number takes the UTC day again: red
+22/22 red

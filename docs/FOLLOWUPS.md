@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F193**.
+At the time of writing the highest assigned is **F195**.
 
 ---
 
@@ -2884,9 +2884,22 @@ What would close it (row 374): check-in links or creates the intake, so
 both orders end with the work order carrying it; Gate 16's pinned test of
 the other order inverted.
 
-### F190
+### F190 — CLOSED by Phase 376 (2026-10-07)
 
 **A warranty claim's settlement does not reach the accounting export**
+
+**Closed:** `shop accounting export` books each settlement against the
+claim's receivable, once per target, in the export whose range holds its
+settlement day (the shop's day of `settled_at`, parsed). QuickBooks: a
+`<claim number>-CR` journal crediting the provider's A/R for the
+shortfall, against the income and tax the shortfall invoice re-bills (that
+invoice's own journal follows) or the new `absorbed` account. Xero: a
+tax-inclusive credit note to the provider in `<out>_credit_notes.csv`,
+and the billed shortfall invoice in the invoices file. Revenue is not
+counted twice; tax payable moves only by D11's cent. Proven for a denial
+and a part approval, billed and absorbed, in both files
+(`tests/test_phase376_settlement_export.py`); migration 083 live. The
+text below is the finding as filed.
 
 Found at Phase 373's Step 0 (2026-10-06), in the plan for the operator's
 choices 2a and 5a (`docs/phases/completed/373_phase_log.md`).
@@ -3008,3 +3021,63 @@ What would close it: convert the typed value with `utc_cutoff` (Phase
 377), then write it in the column's own shape, so the comparison stays
 on the index; with a test at a fixed clock in a zone away from UTC.
 
+
+### F194 — CLOSED by Phase 376 (2026-10-07)
+
+**An invoice's number carries the UTC day, while its tax and the export use the shop's day**
+
+**Closed:** `shop/invoicing.py`'s `_number_day` dates both numbers by the
+shop's day of the same instant (`core/timestamps.local_day`). On the
+frozen clock at 2026-10-31 21:00 EDT an invoice is `INV-1-1-20261031` and
+a shortfall invoice `INV-1-1-20261031-S1`
+(`tests/test_phase376_settlement_export.py`; mutation N1, the UTC day
+again, goes red). The text below is the finding as filed.
+
+Found at Phase 376's Step 0 (2026-10-07), from the operator's measurement
+at `914adad`, re-verified on `phase-376` at `0897f14`.
+`_format_invoice_number` (`shop/invoicing.py:210`) writes
+`INV-<shop>-<work order>-<YYYYMMDD>` from the `now` it is given, and
+`generate_invoice_for_wo` gives it `datetime.now(timezone.utc)` (`:598`).
+The shortfall invoice's number takes its date the same way (`:764`). Tax
+rules are resolved on `tax.today()` and the accounting export dates an
+invoice by the shop's day (`_us_date`, Phase 377), both local. So after
+20:00 EDT (19:00 EST) an invoice is numbered with tomorrow's date: at
+2026-10-31 21:00 EDT the number reads `20261101` and the shop's day is
+2026-10-31 (printed on the frozen-zone check in the 376 log), so an October
+invoice can carry a November number.
+
+What it affects: every invoice and shortfall invoice issued in the evening
+hours, in the number printed to the customer and carried into QuickBooks'
+Journal No. and Xero's InvoiceNumber. No amount or date column is wrong;
+11 test files cite `INV-` numbers. Live holds 0 invoices (2026-10-07).
+
+What would close it: date the number by the shop's day of the same
+instant (`core/timestamps.local_day`), in both places, with a test on the
+frozen clock at 21:00 EDT on a month's last day.
+
+### F195
+
+**Parts given away under an absorbed claim that carried no tax may owe tax on their cost, and nothing records it**
+
+Found at Phase 376's Step 0 (2026-10-07), in its reading of the tax on an
+absorbed shortfall (`docs/phases/completed/376_sources.md`, "What the
+sources say together"). A claim whose warranty's payer is
+`maker_with_bike` or `shop_contract` carries no tax (Phase 373's rules).
+When its provider denies it or pays short and the shop absorbs the
+shortfall, the parts were transferred for nothing. Massachusetts' LR 00-10
+quotes G.L. c. 64H § 8(d): a use of property bought for resale "other than
+retention, demonstration or display" is "deemed a retail sale", with "the
+cost of the service or property to him" as the gross receipts. 830 CMR
+64H.1.4 (promotional items) would bear on it and is blocked (403). Nothing
+read in full rules on parts furnished under a denied warranty claim.
+
+What it affects: any absorbed claim with covered parts and no tax on the
+claim. The export (Phase 376) books the shortfall to the absorbed account
+and no tax; the CLI names this finding when it does. The shop's cost of a
+part is not on the invoice (`typical_cost_cents` is a price), so no tax
+could be computed from what is stored. Live holds 0 claims (2026-10-07).
+
+What would close it: the jurisdiction's own ruling on parts furnished
+free under a denied warranty claim, recorded per jurisdiction as a rule
+with its source; and, if it taxes their cost, a cost basis for the parts
+and a line in the export.

@@ -618,17 +618,20 @@ class TestTheExport:
             key = "Journal No." if target == "quickbooks-online" else "InvoiceNumber"
             assert {r[key] for r in rows} == {f"{number}-W{claim}"}
 
-    def test_a_shortfall_invoice_is_left_out_and_said_so(self, db, tmp_path):
+    def test_a_shortfall_invoice_is_exported_with_its_settlement(self, db, tmp_path):
+        """Inverted by Phase 376 (F190): until then the shortfall invoice was
+        left out and named; now it is exported after its settlement's credit."""
         _, claim, invoice = _decided(db, "denied")
         ok(db, "shop", "warranty", "claim", "settle", claim, "--bill-customer")
         _map_accounts(db)
         out, rows = _export(db, tmp_path, "quickbooks-online")
         shortfall = sql(db, "SELECT invoice_number FROM invoices WHERE shortfall_claim_id "
                             "IS NOT NULL")[0][0]
-        assert f"claim settlements are not in the export yet): {shortfall}." in " ".join(
-            out.split())
-        assert shortfall not in {r["Journal No."] for r in rows}
-        assert "Wrote 1 invoice(s)" in out
+        number = sql(db, "SELECT invoice_number FROM invoices WHERE id = ?", (invoice,))[0][0]
+        journals = list(dict.fromkeys(r["Journal No."] for r in rows))
+        assert journals == [number, f"{number}-W{claim}", f"{number}-W{claim}-CR", shortfall]
+        assert "not in the export yet" not in out
+        assert "Wrote 2 invoice(s)" in out and "1 warranty claim settlement(s)" in out
 
     def test_a_claim_with_no_provider_is_refused(self, db, tmp_path):
         _covered_job(db)
