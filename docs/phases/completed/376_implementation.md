@@ -1,6 +1,11 @@
 # Phase 376 — Warranty claim settlements in the accounting export (F190)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-07 (v1.0 the same day)
+
+**Outcome (v1.1).** F190 and F194 closed; migration 083 live. Each
+settlement is in both files against the claim's receivable, proven to
+balance to the cent for a denial and a part approval, billed and
+absorbed. Regression 10645 passed / 0 failed at `e452b99`.
 
 ---
 
@@ -42,10 +47,13 @@ Xero sales invoice of that number to the provider.
   column; each line's `UnitAmount` is the negative of its share plus its
   share of the claim's tax (spread over the lines of the types the claim's
   invoice taxed, as 373 spreads it). Xero works out the tax inside.
-- **Every entry balances to the cent,** checked in code: a QuickBooks
-  journal whose debits and credits differ is refused; a credit note's
-  lines sum to minus the shortfall; the D11 cent is the difference
-  between the credit's tax and the shortfall invoice's tax.
+- **Every entry balances to the cent.** By construction, each credit is
+  the shortfall invoice's lines plus the claim's tax inside the shortfall,
+  and that tax is defined as the shortfall less those lines. The one check
+  that can fire is in code: that tax must lie between 0 and the claim's
+  tax, else the export is refused (v1.0 planned two more checks, which
+  could never fire; Deviations 2). The D11 cent is the difference between
+  the credit's tax and the shortfall invoice's tax.
 
 ## Logic
 
@@ -181,20 +189,65 @@ The provider's payment and its reconciliation (365, paused); deductibles
 
 ## Planned items
 
-- [ ] Migration 083, its rollback, the schema comparison test
-- [ ] `tax_settlement_rules`: resolve, `settlement-rule set`, `confirm`, `status`
-- [ ] the export: settlements selected, D1, QuickBooks journals, Xero credit notes file, the record
-- [ ] the CLI's output: files, expected tax, by-hand steps, F195 line
-- [ ] F194: the number's day
-- [ ] tests; the 373 test inverted; a mutation file
-- [ ] the deploy (dry run, the operator's approval only if addition 3 fails), live from the branch
-- [ ] the regression, the close-out, F190 and F194 closed
+- [x] Migration 083, its rollback, the schema comparison test
+- [x] `tax_settlement_rules`: resolve, `settlement-rule set`, `confirm`, `status`
+- [x] the export: settlements selected, D1, QuickBooks journals, Xero credit notes file, the record
+- [x] the CLI's output: files, expected tax, by-hand steps, F195 line
+- [x] F194: the number's day
+- [x] tests; the 373 test inverted; a mutation file
+- [x] the deploy (dry run; no stop, since addition 3's condition held), live from the branch
+- [x] the regression, the close-out, F190 and F194 closed
+
+## Deviations from Plan
+
+1. **Removing the "left out" path changed one 373 test**, as intended:
+   `test_a_shortfall_invoice_is_left_out_and_said_so` is now
+   `test_a_shortfall_invoice_is_exported_with_its_settlement`.
+2. **Two planned balance checks were not shipped** (log D7): a whole-file
+   journal check and a credit-note sum check. Both hold by construction,
+   so neither could ever fail (S2, S4). The check that can fire refuses a
+   shortfall invoice out of step with its claim; a test and mutation Q4
+   cover it.
+3. **A void shortfall invoice refuses the export** (D6), which v1.0 did
+   not plan.
+4. **`accounting_export_files.row_count` allows 0** (D9), where v1.0 said
+   `> 0`.
+5. **The seeded rule's notes do not cite F195** (D10): the F158 ratchet
+   refuses build references in text a shop sees. The CLI line cites it.
+6. **`accounting_exports.invoice_count` counts billed shortfall invoices**
+   (D8), since `accounting_export_invoices` records them.
+7. **The D4 control is a hash from master's code** (D11), measured in a
+   worktree, not a comparison inside the test.
+8. **The F195 line is printed for an absorbed untaxed claim that covers
+   parts**, not a labour-only one; the reading is recorded in the log.
+
+Not deviations, recorded for the reader:
+- no bug fix was needed after a commit, so there is no register;
+- no refute pass ran: the phase ships code, tests, one rule row read from
+  its source, and a schema migration, not content rows.
+
+## Results
+
+| what | result |
+|---|---|
+| the worked example (373's case: claimed 23500) | part approval at 20000, billed: QuickBooks `-CR` Dr labour 22.34, parts 11.92, tax 0.74, Cr A/R (plan) 35.00; then the shortfall invoice, Dr A/R (customer) 35.01, Cr labour 22.34, parts 11.92, tax 0.75. Absorbed: Dr Warranty Write-offs 35.00, Cr A/R (plan) 35.00. Xero: credit note labour −22.34, parts −12.66 (tax-inclusive; expected tax 0.74); absorbed, one line −35.00 at the absorbed rate, expected tax 0.00 |
+| where it ends (whole file, with the customer's 7656 invoice) | revenue labour 20000, parts 10500 in every case; tax payable 657 billed part (D11's cent), 656 otherwise; A/R plan 20000 or 0; customer +3501 or +23500 billed; write-offs 3500 or 23500 absorbed |
+| tests | `tests/test_phase376_settlement_export.py` 27; 373's test inverted; `test_phase255B` floor |
+| mutations | 22/22 red (`376_mutate.py`) |
+| 244G scanner | all of `tests/`: 0 hits; its planted control reported |
+| D4 | no-settlement export byte-identical to master `23ff246`: QuickBooks `81c1918f…`, Xero `432cd338…` |
+| `wholetree.sh --full` | 4047 passed at `e452b99` |
+| `COLLECTED_TEST_FLOOR` | 10617 → 10645 (+27 new, +1 gate 15's rollback case for 083) |
+| migration 083 | dry run: `schema_version` +1, `tax_settlement_rules` +1, no row changed; two tables rewritten (0 live rows), five objects added, none removed; children and their index unchanged. **Live:** equals the exact diff; 5862 rows, 120 tables, integrity ok, schema 83; backup `motodiag_pre376_20261007_183425.db` |
+| findings | F190, F194 closed; F195 filed (use tax on parts given away) |
+
+Regression of record: 10645 passed, 0 failed, 0 skipped, 0 errors at `e452b99` (26 min 45 s wall, `python -m pytest -n auto --dist load`, exit 0)
 
 ## Risks
 
-- **Neither file has been tried in a real QuickBooks or Xero company**
+- **No file has been tried in a real QuickBooks or Xero company**
   (275). The credit-note format is read from Xero's page; its tax sign
-  is avoided, not known.
+  is avoided, not known. Intuit's pages were read through WebFetch.
 - **Xero's rounding of inclusive tax** can differ from the claim's tax by
   a cent; the expected-tax line makes it visible.
 - **The tax on an absorbed shortfall is a reading** (2A), and F195 is

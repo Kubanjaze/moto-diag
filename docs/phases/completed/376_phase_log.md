@@ -1,6 +1,6 @@
 # Phase 376 — Warranty claim settlements in the accounting export (F190) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-07)
 **Branch:** `phase-376` (Opus session, main checkout)
 
 ---
@@ -186,3 +186,18 @@ No refute pass ran.
 master `23ff246` (10617 there): the 27 new tests, gate 15's
 `test_rolling_back_peels_every_successor[82]` (migration 083), and 373's
 renamed test (−1 +1).
+
+### 2026-10-07 — The regression, and the close
+
+`wholetree.sh --full` on the committed HEAD `e452b99`: exit 0, 4047
+passed. The regression ran at 18:50–19:17 EDT on 2026-10-07, not a
+month's last day.
+
+Regression of record: 10645 passed, 0 failed, 0 skipped, 0 errors at `e452b99` (26 min 45 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Mutations, as `376_mutate.py` printed them (kept in `376_mutate.out`):
+22/22 red.
+
+F190 and F194 are closed in `FOLLOWUPS.md`; F195 stays open. v1.1 is
+written, the row closes, and the handoff is
+`docs/handoffs/2026-10-07_376_closed.md`.

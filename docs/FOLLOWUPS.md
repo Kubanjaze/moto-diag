@@ -2884,9 +2884,22 @@ What would close it (row 374): check-in links or creates the intake, so
 both orders end with the work order carrying it; Gate 16's pinned test of
 the other order inverted.
 
-### F190
+### F190 — CLOSED by Phase 376 (2026-10-07)
 
 **A warranty claim's settlement does not reach the accounting export**
+
+**Closed:** `shop accounting export` books each settlement against the
+claim's receivable, once per target, in the export whose range holds its
+settlement day (the shop's day of `settled_at`, parsed). QuickBooks: a
+`<claim number>-CR` journal crediting the provider's A/R for the
+shortfall, against the income and tax the shortfall invoice re-bills (that
+invoice's own journal follows) or the new `absorbed` account. Xero: a
+tax-inclusive credit note to the provider in `<out>_credit_notes.csv`,
+and the billed shortfall invoice in the invoices file. Revenue is not
+counted twice; tax payable moves only by D11's cent. Proven for a denial
+and a part approval, billed and absorbed, in both files
+(`tests/test_phase376_settlement_export.py`); migration 083 live. The
+text below is the finding as filed.
 
 Found at Phase 373's Step 0 (2026-10-06), in the plan for the operator's
 choices 2a and 5a (`docs/phases/completed/373_phase_log.md`).
@@ -3009,9 +3022,16 @@ What would close it: convert the typed value with `utc_cutoff` (Phase
 on the index; with a test at a fixed clock in a zone away from UTC.
 
 
-### F194
+### F194 — CLOSED by Phase 376 (2026-10-07)
 
 **An invoice's number carries the UTC day, while its tax and the export use the shop's day**
+
+**Closed:** `shop/invoicing.py`'s `_number_day` dates both numbers by the
+shop's day of the same instant (`core/timestamps.local_day`). On the
+frozen clock at 2026-10-31 21:00 EDT an invoice is `INV-1-1-20261031` and
+a shortfall invoice `INV-1-1-20261031-S1`
+(`tests/test_phase376_settlement_export.py`; mutation N1, the UTC day
+again, goes red). The text below is the finding as filed.
 
 Found at Phase 376's Step 0 (2026-10-07), from the operator's measurement
 at `914adad`, re-verified on `phase-376` at `0897f14`.
@@ -3040,7 +3060,7 @@ frozen clock at 21:00 EDT on a month's last day.
 **Parts given away under an absorbed claim that carried no tax may owe tax on their cost, and nothing records it**
 
 Found at Phase 376's Step 0 (2026-10-07), in its reading of the tax on an
-absorbed shortfall (`docs/phases/in_progress/376_sources.md`, "What the
+absorbed shortfall (`docs/phases/completed/376_sources.md`, "What the
 sources say together"). A claim whose warranty's payer is
 `maker_with_bike` or `shop_contract` carries no tax (Phase 373's rules).
 When its provider denies it or pays short and the shop absorbs the
