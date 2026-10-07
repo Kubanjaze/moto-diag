@@ -104,8 +104,10 @@ def register_accounting(shop_group: click.Group) -> None:
                                              out_path, include_exported)
         except acct_export.ExportError as e:
             raise click.ClickException(str(e)) from e
+        claims = (f" and {result.claim_count} warranty claim(s) owed by their providers"
+                  if result.claim_count else "")
         console.print(
-            f"[green]Wrote {result.invoice_count} invoice(s), {result.row_count} "
+            f"[green]Wrote {result.invoice_count} invoice(s){claims}, {result.row_count} "
             f"row(s), to {result.path}.[/green]"
         )
         for note in result.notes:
@@ -113,6 +115,12 @@ def register_accounting(shop_group: click.Group) -> None:
         if result.skipped:
             click.echo(
                 f"Left out, already exported: {', '.join(result.skipped)}."
+            )
+        if result.shortfalls_left_out:
+            click.echo(
+                "Left out, a warranty claim's shortfall billed to the customer (claim "
+                "settlements are not in the export yet): "
+                f"{', '.join(result.shortfalls_left_out)}."
             )
 
     @accounting_group.command("exports")

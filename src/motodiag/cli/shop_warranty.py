@@ -15,12 +15,18 @@ from typing import Optional
 import click
 from rich.table import Table
 
+from motodiag.accounting import tax as tax_mod
 from motodiag.cli.theme import get_console
 from motodiag.core.database import init_db
 from motodiag.inventory import warranty_claims, warranty_repo
 from motodiag.inventory.models import CoverageType, Warranty
 
 _DATE = click.DateTime(formats=["%Y-%m-%d"])
+
+_PAYER_HELP = ("Who owes a repair under it: maker_with_bike (a maker's warranty "
+               "included in the bike's price), other (someone else's plan or "
+               "contract), or shop_contract (a service contract this shop sold). "
+               "It decides whether the tax on covered work goes on the claim.")
 
 
 def _iso(value) -> Optional[str]:
@@ -49,8 +55,10 @@ def register_warranty(shop_group: click.Group) -> None:
     @click.option("--mileage-limit", type=click.IntRange(min=0), default=None,
                   help="Miles on the odometer at which it ends.")
     @click.option("--terms", default=None)
+    @click.option("--payer", type=click.Choice(tax_mod.PAYERS), default=None,
+                  help=_PAYER_HELP)
     def warranty_add(bike_identifier, coverage, provider, start, end,
-                     mileage_limit, terms) -> None:
+                     mileage_limit, terms, payer) -> None:
         """Record a warranty on a bike."""
         init_db()
         bike = _resolve_bike_slug_or_id(bike_identifier)
@@ -59,10 +67,32 @@ def register_warranty(shop_group: click.Group) -> None:
         warranty_id = warranty_repo.add_warranty(Warranty(
             vehicle_id=bike["id"], coverage_type=CoverageType(coverage),
             provider=provider, start_date=_iso(start), end_date=_iso(end),
-            mileage_limit=mileage_limit, terms=terms,
+            mileage_limit=mileage_limit, terms=terms, repair_payer=payer,
         ))
         get_console().print(f"[green]Recorded warranty #{warranty_id} ({coverage}) "
                             f"on bike id={bike['id']}.[/green]")
+
+    @warranty_group.command("update")
+    @click.argument("warranty_id", type=int)
+    @click.option("--payer", type=click.Choice(tax_mod.PAYERS), default=None,
+                  help=_PAYER_HELP)
+    @click.option("--provider", default=None, help="Who gives the warranty.")
+    def warranty_update(warranty_id: int, payer: Optional[str],
+                        provider: Optional[str]) -> None:
+        """Record who owes a repair under a warranty, or who gives it."""
+        init_db()
+        if payer is None and not (provider or "").strip():
+            raise click.ClickException("give --payer, --provider, or both")
+        if not warranty_repo.update_warranty(warranty_id, payer,
+                                             provider.strip() if provider else None):
+            raise click.ClickException(f"No warranty #{warranty_id}.")
+        console = get_console()
+        if payer:
+            console.print(f"[green]Warranty #{warranty_id}: a repair under it is owed "
+                          f"by {tax_mod.PAYER_LABELS[payer]}.[/green]")
+        if provider and provider.strip():
+            console.print(f"[green]Warranty #{warranty_id}: given by "
+                          f"{provider.strip()}.[/green]")
 
     @warranty_group.command("list")
     @click.option("--bike", "bike_identifier", required=True)
@@ -81,13 +111,14 @@ def register_warranty(shop_group: click.Group) -> None:
             return
         table = Table(title=f"Warranties on bike id={bike['id']}")
         for col in ("ID", "Coverage", "Provider", "Start", "End", "Mileage limit",
-                    "Claims"):
+                    "Repair owed by", "Claims"):
             table.add_column(col)
         for w in rows:
             limit = w.get("mileage_limit")
             table.add_row(str(w["id"]), w["coverage_type"], w.get("provider") or "—",
                           w.get("start_date") or "—", w.get("end_date") or "—",
                           f"{limit:,}" if limit is not None else "—",
+                          w.get("repair_payer") or "not recorded",
                           str(w["claim_count"]))
         console.print(table)
 
@@ -137,21 +168,87 @@ def register_warranty(shop_group: click.Group) -> None:
     @click.option("--wo", "work_order_id", type=int, default=None,
                   help="The work order the repair was done on.")
     @click.option("--description", required=True, help="The failure and the repair.")
-    @click.option("--claimed-cents", "amount_claimed_cents",
-                  type=click.IntRange(min=0), default=None)
-    def claim_open(warranty_id, work_order_id, description, amount_claimed_cents) -> None:
+    def claim_open(warranty_id, work_order_id, description) -> None:
         """Open a draft claim against a recorded warranty."""
         init_db()
         try:
             claim_id = warranty_claims.open_claim(
                 warranty_id, description, work_order_id=work_order_id,
-                amount_claimed_cents=amount_claimed_cents,
             )
         except warranty_claims.WarrantyClaimError as e:
             raise click.ClickException(str(e)) from e
+        follow = (f"After the work, record the lines it covers with `motodiag shop "
+                  f"warranty claim cover {claim_id}`." if work_order_id else
+                  f"Print its packet with `motodiag shop warranty claim packet "
+                  f"{claim_id}`.")
+        get_console().print(f"[green]Opened claim #{claim_id} (draft). {follow}[/green]")
+
+    @claim_group.command("cover")
+    @click.argument("claim_id", type=int)
+    @click.option("--labour-hours", type=click.FloatRange(min=0, min_open=True),
+                  default=None, help="Hours of the work order's labour the claim covers.")
+    @click.option("--part", "part_specs", multiple=True,
+                  help="A part row of the work order (see `shop parts-needs list --wo`), "
+                       "as ROW or ROW=QTY. Repeat for each.")
+    @click.option("--none", "covers_nothing", is_flag=True, default=False,
+                  help="The claim covers no line of the work order.")
+    def claim_cover(claim_id, labour_hours, part_specs, covers_nothing) -> None:
+        """Record which of the work order's lines a draft claim covers.
+
+        The invoice leaves them off what the customer owes and prices them for
+        the claim, which is how the amount claimed is set.
+        """
+        init_db()
+        parts: list[tuple[int, Optional[int]]] = []
+        for spec in part_specs:
+            row, _, qty = spec.partition("=")
+            try:
+                parts.append((int(row), int(qty) if qty else None))
+            except ValueError as e:
+                raise click.ClickException(
+                    f"a part is ROW or ROW=QTY, both whole numbers (got {spec!r})"
+                ) from e
+        try:
+            lines = warranty_claims.cover_claim(claim_id, labour_hours, parts,
+                                                covers_nothing)
+        except warranty_claims.WarrantyClaimError as e:
+            raise click.ClickException(str(e)) from e
+        console = get_console()
+        if not lines:
+            console.print(f"[green]Claim #{claim_id} covers no line of its work "
+                          f"order.[/green]")
+            return
+        console.print(f"[green]Claim #{claim_id} covers {len(lines)} line(s); the invoice "
+                      f"leaves them off what the customer owes and prices them for the "
+                      f"claim:[/green]")
+        for line in lines:
+            console.print(f"  - {line['description']}")
+
+    @claim_group.command("settle")
+    @click.argument("claim_id", type=int)
+    @click.option("--bill-customer", "settlement", flag_value="bill_customer",
+                  help="Invoice the customer for the part the warranty did not pay.")
+    @click.option("--absorb", "settlement", flag_value="absorb",
+                  help="The shop absorbs the part the warranty did not pay.")
+    def claim_settle(claim_id, settlement) -> None:
+        """Settle a claim denied, or approved or paid for less than claimed."""
+        init_db()
+        if settlement is None:
+            raise click.ClickException("choose --bill-customer or --absorb")
+        try:
+            claim = warranty_claims.settle_claim(claim_id, settlement)
+        except warranty_claims.WarrantyClaimError as e:
+            raise click.ClickException(str(e)) from e
+        cents = claim["shortfall_cents"]
+        money = f"${cents / 100:,.2f}"
+        if settlement == "absorb":
+            get_console().print(f"[green]Claim #{claim_id}: the shop absorbs the "
+                                f"shortfall of {money}.[/green]")
+            return
         get_console().print(
-            f"[green]Opened claim #{claim_id} (draft). Print its packet with "
-            f"`motodiag shop warranty claim packet {claim_id}`.[/green]"
+            f"[green]Claim #{claim_id}: the shortfall of {money} is billed to the "
+            f"customer on invoice id={claim['shortfall_invoice_id']} (the customer's "
+            f"tax is added on it).[/green]"
         )
 
     @claim_group.command("list")
@@ -195,9 +292,11 @@ def register_warranty(shop_group: click.Group) -> None:
             return
         console = get_console()
         for key in ("id", "status", "claim_number", "warranty_id", "coverage_type",
-                    "vehicle_id", "work_order_id", "description", "amount_claimed_cents",
+                    "vehicle_id", "work_order_id", "description", "invoice_id",
+                    "covered_cents", "tax_cents", "amount_claimed_cents",
                     "amount_approved_cents", "opened_at", "submitted_at",
-                    "decided_at", "paid_at"):
+                    "decided_at", "paid_at", "settlement", "shortfall_cents",
+                    "shortfall_invoice_id"):
             value = claim.get(key)
             console.print(f"{key}: {value if value is not None else '—'}")
 

@@ -106,6 +106,47 @@ command, so the append did not run either (counted: 0 `### F190` before,
 1 after the re-run). `sed -i` is blocked wherever it points: its
 documented scope. The header was changed with the Edit tool.
 
+### 2026-10-06 — The build
+
+Migration 081, the warranty's payer (`warranty add --payer`, `warranty
+update`), `claim cover`, the invoice reading its claims, the claim's tax
+from `tax_warranty_rules`, `claim settle` and the shortfall invoice, the
+packet, and the claim in both export files. 274's claim tests moved off
+`--claimed-cents` (two tests; the amount claimed now reads "not
+recorded" until an invoice derives it). Gate 16 inverted: 87 passed
+(80 before).
+
+**Decisions taken while building, not stops:**
+- **D9. `warranty set-payer` became `warranty update --payer --provider`.**
+  A claim's receivable names the provider, and no command could record a
+  provider on a warranty already added: the export's refusal would have
+  had no remedy. `claim cover` now requires both on record.
+- **D10. A settled claim keeps its lines off the order's invoice
+  whatever its status.** Found while writing mutation S2: a denied claim
+  settled by billing the customer, then the original invoice voided and
+  generated again, would have billed the covered lines a second time
+  (once on the shortfall invoice, once on the regenerated one). This was
+  the phase's own new code, before any commit, so it is not a register
+  entry; the test is
+  `test_after_a_settlement_regenerating_does_not_bill_the_covered_lines_again`.
+- **D11. A part approval's shortfall is billed with the customer's own
+  tax**, recomputed from 281's rules on the day, not the claim's tax in
+  proportion. In the test case the provider is 3500 cents short and the
+  customer pays 3501 (pre-tax 3426, tax 75): the cent is the rounding of
+  two separate tax computations. Recorded in the test's docstring.
+- **D12. Gate 16 adds a seventh plant, F188 itself** (the claim priced,
+  and the customer still invoiced for every line); the inverted test
+  catches it. The Xero tax plant is now checked through job B, because
+  job A's customer invoice carries no tax.
+
+**My own arithmetic was wrong once:** the first draft of
+`test_a_claim_past_draft_is_not_priced_differently` expected 24250 cents
+at 11000 an hour; 1.5 h × 11000 + 8000 + 500 is 25000, which the code
+printed. The test was corrected; the code was right.
+
+**244G's scanner** over `tests/`: 0 findings. **209B's integration gaps:**
+166 passed; no new module, so no allowlist entry.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-10-06 — 274's migration test read every later column as a change

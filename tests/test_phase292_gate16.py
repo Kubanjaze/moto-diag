@@ -17,7 +17,10 @@ needs comes from a command a user can run.
   moves the walk (F186's edges are not this gate's).
 
 What the gate found is in `docs/phases/*/292_step0.md`: the Xero tax
-spread (fixed here), and F188 and F189, pinned below as they are.
+spread (fixed here), and F188 and F189, pinned below as they were. Phase
+373 closed F188: job A's claim covers 1.0 h and the pads, the invoice
+leaves them off what the customer owes, and the claim's amount is derived
+and exported as owed by the plan; its test below is inverted.
 """
 
 from __future__ import annotations
@@ -78,29 +81,46 @@ JOB_A = {  # the card job: covered by its warranty, a claim opened
     "customer": ("Dana Rider", "dana@example.com"),
     "bike": ("Honda", "CBR600RR", "2005"),
     "warranty": ("extended", "Honda Protection Plan", "2024-03-01", "2027-02-28", "40000"),
+    # A maker's plan paying the repair bill: LR 79-19's own facts (Phase 373).
+    "payer": "other",
     "mileage": "31200",
     "start": f"{DAY}T09:00", "minutes": "120",
     "problem": "Front brake squeals and pulls left",
     "part": ("brake pads", "honda", "honda-06455-mee-000-brake-pads"),
     "qty": "2", "unit_cost": None, "estimate": "1.0", "hours": "1.5",
+    # The claim covers 1.0 h and both pads; 0.5 h of inspection the customer
+    # asked for stays theirs.
+    "covered_hours": "1.0",
 }
 JOB_B = {  # the cash job: its warranty ended before the visit
     "customer": ("Sam Okafor", "sam@example.com"),
     "bike": ("Yamaha", "YZF-R1", "2005"),
     "warranty": ("extended", "Yamaha Extended Service", "2021-04-01", "2026-03-31", "30000"),
+    "payer": "other",
     "mileage": "22400",
     "start": f"{DAY}T13:00", "minutes": "60",
     "problem": "Front caliper sticking",
     "part": ("caliper", "yamaha", "all-balls-18-3019-brake-caliper-kit"),
     "qty": "1", "unit_cost": "3150", "estimate": "1.0", "hours": "1.25",
+    # Its warranty has ended, so no claim is opened; were one opened (the
+    # expired-warranty plant), it would cover nothing.
+    "covered_hours": None,
 }
 
 # The cents, worked by hand from the jobs above and Massachusetts' rules
 # (parts taxable at 6.25%, labour not), at 12000 cents an hour.
+# Job A: the work order is 1.5 h (18000) and 2 pads (9998). The claim covers
+# 1.0 h (12000) and the pads (9998): 21998, with the pads' tax on the claim
+# (9998 × 6.25% = 624.875 → 625) because someone else owes the repair; it
+# claims 22623. The customer owes the other 0.5 h: 6000, no parts, no tax.
 KNOWN = {
-    "A": {"labor": 18000, "parts": 9998, "subtotal": 27998, "tax": 625, "total": 28623},
+    "A": {"labor": 6000, "subtotal": 6000, "tax": 0, "total": 6000},
     "B": {"labor": 15000, "parts": 3150, "subtotal": 18150, "tax": 197, "total": 18347},
 }
+KNOWN_WORK_ORDER = {"A": {"labor": 18000, "parts": 9998},
+                    "B": {"labor": 15000, "parts": 3150}}
+KNOWN_CLAIM = {"labor": 12000, "parts": 9998, "covered": 21998, "tax": 625,
+               "claimed": 22623}
 LABOUR_RATE_CENTS = 12000
 
 CONNECT = [("POST", r"/v2/core/accounts", "v2_account_created"),
@@ -318,7 +338,7 @@ def _walk_job(w: Walker, rec: dict, key: str, job: dict) -> dict:
     coverage, provider, start, end, limit = job["warranty"]
     out = w.run("coverage", "shop", "warranty", "add", "--bike", bike, "--coverage",
                 coverage, "--provider", provider, "--start", start, "--end", end,
-                "--mileage-limit", limit)
+                "--mileage-limit", limit, "--payer", job["payer"])
     j["warranty"] = _printed_id(out, r"Recorded warranty #(\d+)")
 
     # Customer books: staff book it for them (self-booking is row 363).
@@ -374,12 +394,31 @@ def _walk_job(w: Walker, rec: dict, key: str, job: dict) -> dict:
                                    "--json"))
     j["wo_parts"] = json.loads(w.run("parts shown", "shop", "parts-needs", "list",
                                      "--wo", wo, "--json"))
+    j["wop"] = wop
+
+    # The claim's lines, after the work and before the invoice (Phase 373).
+    if "claim" in j:
+        lines = (["--labour-hours", job["covered_hours"], "--part", wop]
+                 if job["covered_hours"] else ["--none"])
+        j["cover_output"] = w.run("cover", "shop", "warranty", "claim", "cover",
+                                  j["claim"], *lines)
 
     # Invoice.
     out = w.run("invoice", "shop", "invoice", "generate", wo)
     j["invoice"] = _printed_id(out, r"Generated invoice id=(\d+)")
     j["invoice_shown"] = json.loads(w.run("invoice shown", "shop", "invoice", "show",
                                           j["invoice"], "--json"))
+
+    # The claim goes to the plan, which approves and pays what it claims.
+    if "claim" in j and job["covered_hours"]:
+        j["packet"] = w.run("packet", "shop", "warranty", "claim", "packet", j["claim"])
+        claimed = json.loads(w.run("claim shown", "shop", "warranty", "claim", "show",
+                                   j["claim"], "--json"))["amount_claimed_cents"]
+        w.run("submitted", "shop", "warranty", "claim", "status", j["claim"], "--to",
+              "submitted", "--claim-number", "HPP-2026-1015")
+        w.run("approved", "shop", "warranty", "claim", "status", j["claim"], "--to",
+              "approved", "--approved-cents", claimed)
+        w.run("claim paid", "shop", "warranty", "claim", "status", j["claim"], "--to", "paid")
     return j
 
 
@@ -481,6 +520,11 @@ def walk(tmp: Path, channel: str, plants: dict | None = None) -> dict:
         rec["lines"] = {k: _rows(db, "SELECT * FROM invoice_line_items WHERE invoice_id = ? "
                                      "ORDER BY sort_order, id", (rec[k]["invoice"],))
                         for k in ("A", "B")}
+        rec["claim"] = _one(db, "SELECT c.*, w.provider FROM warranty_claims c JOIN "
+                                "warranties w ON w.id = c.warranty_id WHERE c.id = ?",
+                            (rec["A"]["claim"],))
+        rec["claim_lines"] = _rows(db, "SELECT * FROM warranty_claim_lines "
+                                       "WHERE claim_id = ? ORDER BY id", (rec["A"]["claim"],))
         rec["network_guarded"] = socket.getaddrinfo is network_guard._guarded_getaddrinfo
     finally:
         mp.undo()
@@ -511,6 +555,20 @@ def _every_warranty_valid(mp):
     mp.setattr(warranty_repo, "coverage_status", lambda w, on, miles: ("valid", ["planted"]))
 
 
+def _covered_work_billed_to_the_customer_too(mp):
+    """F188 as it was: the claim is priced, and the customer is still
+    invoiced for every line."""
+    from motodiag.shop import invoicing
+
+    real = invoicing._price_claims
+
+    def billed_in_full(*args, **kwargs):
+        claims, _, _ = real(*args, **kwargs)
+        return claims, 0.0, {}
+
+    mp.setattr(invoicing, "_price_claims", billed_in_full)
+
+
 # The operator's five planted controls, and F158's. Each walk must turn the
 # named check of the gate red; the phase log records each run.
 PLANTS = {
@@ -523,6 +581,9 @@ PLANTS = {
         {"patches": [_exports_forget_what_they_carried]},
     "a build reference in what the walk prints":
         {"patches": [lambda mp: mp.setitem(JOB_A, "problem", JOB_A["problem"] + " (F188)")]},
+    # Phase 373's: F188 itself.
+    "covered work invoiced to the customer as well":
+        {"patches": [_covered_work_billed_to_the_customer_too]},
 }
 
 
@@ -619,8 +680,9 @@ class TestTheHandOffs:
                      "SELECT c.*, w.vehicle_id FROM warranty_claims c "
                      "JOIN warranties w ON w.id = c.warranty_id WHERE c.id = ?",
                      (j["claim"],))
+        # Opened as a draft at the check; the plan paid it after the invoice.
         assert (claim["work_order_id"], claim["vehicle_id"], claim["status"]) == (
-            j["wo"], j["bike"], "draft")
+            j["wo"], j["bike"], "paid")
 
     def test_the_expired_job_is_not_valid_and_has_no_claim(self, walked):
         j = walked["B"]
@@ -653,12 +715,14 @@ class TestTheHandOffs:
             j["invoice"], walked["shop"], SHOP_ACCOUNT)
         assert pay["channel"] == walked["channel"]
 
-    def test_the_export_carries_exactly_the_two_invoices(self, walked):
+    def test_the_export_carries_exactly_the_two_invoices_and_the_claim(self, walked):
         ids = sorted(walked[k]["invoice"] for k in ("A", "B"))
         assert walked["exported_ids"] == {"quickbooks_online": ids, "xero": ids}
         numbers = {walked["invoices"][k]["invoice_number"] for k in ("A", "B")}
+        numbers.add(_claim_number(walked))
         for target in ("quickbooks-online", "xero"):
-            assert "Wrote 2 invoice(s)" in walked[f"export_{target}_output"]
+            assert ("Wrote 2 invoice(s) and 1 warranty claim(s)"
+                    in walked[f"export_{target}_output"])
         assert {r["Journal No."] for r in walked["export_quickbooks-online"]} == numbers
         assert {r["InvoiceNumber"] for r in walked["export_xero"]} == numbers
 
@@ -691,24 +755,59 @@ def _invoice_cents(walked, k) -> dict:
             "total": _cents(inv["total"])}
 
 
+def _claim_cents(walked, k) -> dict:
+    """What job ``k``'s claim covers, by line type, in cents (job B has none)."""
+    if k != "A":
+        return {}
+    by_type: dict = {}
+    for line in walked["claim_lines"]:
+        by_type[line["line_type"]] = by_type.get(line["line_type"], 0) + line["amount_cents"]
+    return by_type
+
+
+def _money(cents: int) -> str:
+    return f"{cents // 100}.{cents % 100:02d}"
+
+
+def _claim_number(walked) -> str:
+    return f"{walked['invoices']['A']['invoice_number']}-W{walked['A']['claim']}"
+
+
 class TestTheMoney:
     @pytest.mark.parametrize("k", ["A", "B"])
-    def test_the_work_order_gives_the_invoices_lines(self, walked, k):
+    def test_the_work_order_gives_the_invoice_and_the_claim_their_lines(self, walked, k):
         assert walked["labour_rate_cents"] == LABOUR_RATE_CENTS
-        wo, inv = _work_order_cents(walked, k), _invoice_cents(walked, k)
-        assert (inv["labor"], inv["parts"]) == (wo["labor"], wo["parts"])
-        assert (wo["labor"], wo["parts"]) == (KNOWN[k]["labor"], KNOWN[k]["parts"])
+        wo, inv, claim = (_work_order_cents(walked, k), _invoice_cents(walked, k),
+                          _claim_cents(walked, k))
+        for t in ("labor", "parts"):
+            assert inv.get(t, 0) + claim.get(t, 0) == wo[t], t
+        assert wo == KNOWN_WORK_ORDER[k]
 
     @pytest.mark.parametrize("k", ["A", "B"])
     def test_the_invoice_adds_up_and_taxes_only_what_the_rules_tax(self, walked, k):
         inv = _invoice_cents(walked, k)
         status = walked["tax_status"]
-        taxable = sum(inv[t] for t in ("labor", "parts")
+        taxable = sum(inv.get(t, 0) for t in ("labor", "parts")
                       if status["rules"][t]["value"])
-        assert inv["subtotal"] == inv["labor"] + inv["parts"]
+        assert inv["subtotal"] == inv.get("labor", 0) + inv.get("parts", 0)
         assert inv["tax"] == _half_up(Decimal(taxable) * Decimal(str(status["rate"]["value"])))
         assert inv["total"] == inv["subtotal"] + inv["tax"]
-        assert {key: inv[key] for key in KNOWN[k]} == KNOWN[k]
+        assert {key: inv.get(key) for key in KNOWN[k]} == KNOWN[k]
+        assert set(inv) == set(KNOWN[k])  # job A's invoice has no parts line
+
+    def test_the_claim_is_derived_from_the_covered_lines(self, walked):
+        claim, status = walked["claim"], walked["tax_status"]
+        by_type = _claim_cents(walked, "A")
+        rate = Decimal(str(status["rate"]["value"]))
+        taxable = sum(by_type[t] for t in by_type if status["rules"][t]["value"])
+        assert (by_type["labor"], by_type["parts"]) == (KNOWN_CLAIM["labor"],
+                                                        KNOWN_CLAIM["parts"])
+        assert claim["covered_cents"] == sum(by_type.values()) == KNOWN_CLAIM["covered"]
+        assert claim["tax_cents"] == _half_up(Decimal(taxable) * rate) == KNOWN_CLAIM["tax"]
+        assert claim["amount_claimed_cents"] == KNOWN_CLAIM["claimed"]
+        assert claim["amount_approved_cents"] == KNOWN_CLAIM["claimed"]
+        assert claim["status"] == "paid"
+        assert claim["invoice_id"] == walked["A"]["invoice"]
 
     def test_the_card_payment_is_the_invoice_total(self, walked):
         j, total = walked["A"], _invoice_cents(walked, "A")["total"]
@@ -722,12 +821,27 @@ class TestTheMoney:
         inv, number = _invoice_cents(walked, k), walked["invoices"][k]["invoice_number"]
         rows = [r for r in walked["export_quickbooks-online"] if r["Journal No."] == number]
         by_account = {r["Account Name"]: (r["Debits"], r["Credits"]) for r in rows}
-        money = lambda c: f"{c // 100}.{c % 100:02d}"  # noqa: E731
+        want = {"Accounts Receivable (A/R)": (_money(inv["total"]), "")}
+        for kind, account in (("labor", "Labor Income"), ("parts", "Parts Sales")):
+            if kind in inv:
+                want[account] = ("", _money(inv[kind]))
+        if inv["tax"]:
+            want["Sales Tax Payable"] = ("", _money(inv["tax"]))
+        assert by_account == want
+        names = {r["Name"] for r in rows if r["Debits"]}
+        assert names == {JOB_A["customer"][0] if k == "A" else JOB_B["customer"][0]}
+
+    def test_quickbooks_carries_the_claim_as_owed_by_the_plan(self, walked):
+        rows = [r for r in walked["export_quickbooks-online"]
+                if r["Journal No."] == _claim_number(walked)]
+        by_account = {r["Account Name"]: (r["Debits"], r["Credits"], r["Name"])
+                      for r in rows}
         assert by_account == {
-            "Accounts Receivable (A/R)": (money(inv["total"]), ""),
-            "Labor Income": ("", money(inv["labor"])),
-            "Parts Sales": ("", money(inv["parts"])),
-            "Sales Tax Payable": ("", money(inv["tax"])),
+            "Accounts Receivable (A/R)": (_money(KNOWN_CLAIM["claimed"]), "",
+                                          JOB_A["warranty"][1]),
+            "Labor Income": ("", _money(KNOWN_CLAIM["labor"]), ""),
+            "Parts Sales": ("", _money(KNOWN_CLAIM["parts"]), ""),
+            "Sales Tax Payable": ("", _money(KNOWN_CLAIM["tax"]), ""),
         }
 
     @pytest.mark.parametrize("k", ["A", "B"])
@@ -740,10 +854,22 @@ class TestTheMoney:
             kind = "labor" if r["AccountCode"] == "200" else "parts"
             amount = _half_up(Decimal(r["Quantity"]) * Decimal(r["UnitAmount"]) * 100)
             got[kind] = (amount, _cents(r["TaxAmount"]))
-        want_tax = {t: (inv["tax"] if status["rules"][t]["value"] else 0)
-                    for t in ("labor", "parts")}
-        assert got == {t: (inv[t], want_tax[t]) for t in ("labor", "parts")}
+        kinds = [t for t in ("labor", "parts") if t in inv]
+        want_tax = {t: (inv["tax"] if status["rules"][t]["value"] else 0) for t in kinds}
+        assert got == {t: (inv[t], want_tax[t]) for t in kinds}
         assert sum(tax for _, tax in got.values()) == inv["tax"]
+
+    def test_xero_carries_the_claim_as_an_invoice_to_the_plan(self, walked):
+        rows = [r for r in walked["export_xero"]
+                if r["InvoiceNumber"] == _claim_number(walked)]
+        got = {}
+        for r in rows:
+            kind = "labor" if r["AccountCode"] == "200" else "parts"
+            amount = _half_up(Decimal(r["Quantity"]) * Decimal(r["UnitAmount"]) * 100)
+            got[kind] = (amount, _cents(r["TaxAmount"]))
+        assert got == {"labor": (KNOWN_CLAIM["labor"], 0),
+                       "parts": (KNOWN_CLAIM["parts"], KNOWN_CLAIM["tax"])}
+        assert {r["ContactName"] for r in rows} == {JOB_A["warranty"][1]}
 
 
 # --- 4. Paid only through the webhook ---
@@ -797,19 +923,39 @@ class TestNoBuildReferences:
         assert build_references(["the BMW F800R rider's manual, below 95 °F"]) == []
 
 
-# --- 6. F188 and F189, pinned as they are today ---
+# --- 6. F188, inverted by Phase 373; F189, pinned as it is today ---
 
 
 class TestWhatTheGateFound:
-    def test_f188_covered_work_is_invoiced_to_the_customer_in_full(self, walked):
-        """Passes today, and fails the day row 373 lets a claim reach the
-        invoice: then invert it."""
-        j = walked["A"]
-        claim = _one(walked["db"], "SELECT * FROM warranty_claims WHERE id = ?",
-                     (j["claim"],))
-        assert claim["amount_claimed_cents"] is None
-        assert _invoice_cents(walked, "A")["total"] == KNOWN["A"]["total"]
-        assert walked["invoices"]["A"]["status"] == "paid"
+    def test_f188_covered_work_is_off_the_customers_invoice_and_on_the_claim(self, walked):
+        """Until Phase 373 the covered repair was invoiced to the customer in
+        full (28623 cents) and the claim's amount was typed or not recorded."""
+        j, claim = walked["A"], walked["claim"]
+        lines = walked["lines"]["A"]
+        # Off the customer's invoice: no part, and only the uncovered 0.5 h.
+        assert [(line["item_type"], line["quantity"]) for line in lines] == [("labor", 0.5)]
+        assert _invoice_cents(walked, "A")["total"] == KNOWN["A"]["total"] == 6000
+        assert f"Warranty claim #{j['claim']} covers" in walked["invoices"]["A"]["notes"]
+        # On the claim, derived from those lines: never typed.
+        assert [(line["line_type"], line["work_order_part_id"], line["quantity"])
+                for line in walked["claim_lines"]] == [
+            ("labor", None, 1.0), ("parts", j["wop"], 2.0)]
+        assert claim["amount_claimed_cents"] == KNOWN_CLAIM["claimed"] == 22623
+        # Nothing billed twice: the customer and the claim together are the work order.
+        wo = KNOWN_WORK_ORDER["A"]
+        assert (_invoice_cents(walked, "A")["subtotal"] + claim["covered_cents"]
+                == wo["labor"] + wo["parts"])
+        # The packet lists the covered lines and the amount.
+        for expected in ("Repair owed by: someone else's plan or contract",
+                         "- labour 1.00 h: $120.00", "- 2 x ", ": $99.98",
+                         "Covered work: $219.98", "Tax on the claim: $6.25",
+                         "Amount claimed: $226.23", "Amount approved: not recorded"):
+            assert expected in j["packet"], expected
+        # The export carries it to both files.
+        exported = _rows(walked["db"], "SELECT ae.target FROM accounting_export_claims c "
+                                       "JOIN accounting_exports ae ON ae.id = c.export_id "
+                                       "WHERE c.claim_id = ?", (j["claim"],))
+        assert sorted(r["target"] for r in exported) == ["quickbooks_online", "xero"]
 
     def test_f189_check_in_without_a_work_order_opens_one_with_no_intake(self, tmp_path):
         """Passes today, and fails the day row 374 gives check-in the intake."""
@@ -852,12 +998,15 @@ CAUGHT_BY = {
         TestPaidOnlyThroughTheWebhook().test_the_signed_event_pays_it(r)),
     "an expired warranty reported as covered": lambda r: (
         TestTheHandOffs().test_the_expired_job_is_not_valid_and_has_no_claim(r)),
+    # Job B: since Phase 373, job A's customer invoice carries no tax.
     "the export's tax line differing from the invoice's tax": lambda r: (
-        TestTheMoney().test_xero_carries_each_line_and_the_tax_on_the_taxed_lines_only(r, "A")),
+        TestTheMoney().test_xero_carries_each_line_and_the_tax_on_the_taxed_lines_only(r, "B")),
     "an invoice exported twice to the same target": lambda r: (
         TestTheHandOffs().test_an_invoice_is_exported_once_per_target(r)),
     "a build reference in what the walk prints": lambda r: (
         TestNoBuildReferences().test_the_walk_prints_none(r)),
+    "covered work invoiced to the customer as well": lambda r: (
+        TestWhatTheGateFound().test_f188_covered_work_is_off_the_customers_invoice_and_on_the_claim(r)),
 }
 
 

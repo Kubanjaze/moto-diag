@@ -123,8 +123,9 @@ class TestClaims:
     def test_a_claim_moves_through_its_statuses(self, db):
         self._warranty(db)
         wo = self._wo(db)
+        # Phase 373: the amount claimed is derived by the invoice, never typed.
         ok(db, "shop", "warranty", "claim", "open", "--warranty", "1", "--wo", wo,
-           "--description", "Stator failed at 8,200 mi", "--claimed-cents", "41400")
+           "--description", "Stator failed at 8,200 mi")
         assert sql(db, "SELECT claim_count FROM warranties") == [(1,)]
         ok(db, "shop", "warranty", "claim", "status", "1", "--to", "submitted",
            "--claim-number", "HN-2026-0042")
@@ -134,7 +135,7 @@ class TestClaims:
         row = sql(db, "SELECT status, claim_number, amount_claimed_cents, "
                       "amount_approved_cents, submitted_at IS NOT NULL, "
                       "decided_at IS NOT NULL, paid_at IS NOT NULL FROM warranty_claims")
-        assert row == [("paid", "HN-2026-0042", 41400, 38900, 1, 1, 1)]
+        assert row == [("paid", "HN-2026-0042", None, 38900, 1, 1, 1)]
         listed = json.loads(ok(db, "shop", "warranty", "claim", "list", "--bike", "1",
                                "--json"))
         assert [c["status"] for c in listed] == ["paid"]
@@ -164,7 +165,7 @@ class TestClaims:
         self._warranty(db)
         wo = self._wo(db)
         ok(db, "shop", "warranty", "claim", "open", "--warranty", "1", "--wo", wo,
-           "--description", "Stator failed at 8,200 mi", "--claimed-cents", "41400")
+           "--description", "Stator failed at 8,200 mi")
         path = tmp_path / "claim.txt"
         ok(db, "shop", "warranty", "claim", "packet", "1", "--out", str(path))
         text = path.read_text()
@@ -173,8 +174,8 @@ class TestClaims:
             "Bike: 2024 Honda CB500F", "VIN: MLHPC6400R5000001", "8,200 mi",
             "Coverage: powertrain (Honda)", "Term: 2024-03-01 to 2027-03-01",
             "On the repair date (2026-09-21): valid",
-            "Stator failed at 8,200 mi", "Amount claimed: $414.00",
-            "Amount approved: not recorded",
+            "Stator failed at 8,200 mi", "Covered lines:\n    not recorded yet",
+            "Amount claimed: not recorded", "Amount approved: not recorded",
             "No charge at idle [electrical, high]",
             "Resolution: Stator windings open",
             "1 x Honda Stator assembly (part no. 31120-MJW-J01) [installed]",

@@ -197,9 +197,10 @@ def _check_existing_invoice(
 ) -> Optional[int]:
     """Return existing non-cancelled invoice id for wo_id, or None."""
     with get_connection(db_path) as conn:
+        # Phase 373: a settled claim's shortfall invoice is not the order's invoice.
         row = conn.execute(
             "SELECT id FROM invoices WHERE work_order_id = ? "
-            "AND status != 'cancelled' LIMIT 1",
+            "AND status != 'cancelled' AND shortfall_claim_id IS NULL LIMIT 1",
             (wo_id,),
         ).fetchone()
         return int(row["id"]) if row else None
@@ -265,6 +266,169 @@ def _load_installed_parts(
         return out
 
 
+def _line_total_cents(quantity: float, unit_price_cents: int) -> int:
+    """A line's total in cents: the one rounding every line uses."""
+    return int(round(quantity * unit_price_cents))
+
+
+# ---------------------------------------------------------------------------
+# Phase 373: the warranty claims on a work order
+# ---------------------------------------------------------------------------
+
+
+def _claims_on_wo(wo_id: int, db_path: Optional[str] = None) -> list[dict]:
+    """The work order's claims that are not denied, each with its covered
+    lines, and its warranty's payer and provider. A settled claim counts
+    whatever its status: its shortfall was billed or absorbed on its own, so
+    its lines stay off the order's invoice when that is generated again."""
+    with get_connection(db_path) as conn:
+        claims = [dict(r) for r in conn.execute(
+            "SELECT c.*, w.repair_payer, w.provider FROM warranty_claims c "
+            "JOIN warranties w ON w.id = c.warranty_id WHERE c.work_order_id = ? "
+            "AND (c.status != 'denied' OR c.settlement IS NOT NULL) ORDER BY c.id",
+            (wo_id,),
+        ).fetchall()]
+        for claim in claims:
+            claim["lines"] = [dict(r) for r in conn.execute(
+                "SELECT * FROM warranty_claim_lines WHERE claim_id = ? ORDER BY id",
+                (claim["id"],),
+            ).fetchall()]
+    return claims
+
+
+def _hours_left(hours: float, covered: float) -> float:
+    return float(Decimal(str(hours)) - Decimal(str(covered)))
+
+
+def _price_claims(
+    wo_id: int,
+    hours: float,
+    rate_cents: int,
+    parts_lines: list[dict],
+    unit_cents_by_wop: dict[int, int],
+    decision,
+    shop_id: int,
+    invoice_day,
+    db_path: Optional[str] = None,
+) -> tuple[list[dict], float, dict[int, int]]:
+    """Price each claim on the work order, before anything is written.
+
+    Returns the priced claims, the labour hours they cover, and the parts
+    quantities they cover by work-order part row. Raises
+    :class:`InvoiceGenerationError` when a claim's coverage is not recorded
+    or covers more than the order holds, and :class:`InvoiceTaxNotOnRecord`
+    when no rule says whether its tax goes on the claim.
+    """
+    claims = _claims_on_wo(wo_id, db_path=db_path)
+    covered_hours = 0.0
+    covered_qty: dict[int, int] = {}
+    on_order = {int(p["wop_id"]): int(p.get("quantity", 1) or 1) for p in parts_lines}
+    for claim in claims:
+        if claim["coverage_recorded_at"] is None:
+            raise InvoiceGenerationError(
+                f"warranty claim #{claim['id']} on work order id={wo_id} does not say "
+                f"which lines it covers; record them with `motodiag shop warranty "
+                f"claim cover {claim['id']}` (or `--none`) before invoicing"
+            )
+        for line in claim["lines"]:
+            if line["line_type"] == "labor":
+                covered_hours = float(Decimal(str(covered_hours))
+                                      + Decimal(str(line["quantity"])))
+                continue
+            wop_id = int(line["work_order_part_id"])
+            if wop_id not in on_order:
+                raise InvoiceGenerationError(
+                    f"warranty claim #{claim['id']} covers part row {wop_id}, which "
+                    f"is not received or installed on work order id={wo_id}"
+                )
+            covered_qty[wop_id] = covered_qty.get(wop_id, 0) + int(line["quantity"])
+    if covered_hours > hours:
+        raise InvoiceGenerationError(
+            f"the claims on work order id={wo_id} cover {covered_hours:g} h of labour; "
+            f"the order bills {hours:g} h"
+        )
+    for wop_id, qty in covered_qty.items():
+        if qty > on_order[wop_id]:
+            raise InvoiceGenerationError(
+                f"the claims on work order id={wo_id} cover {qty} of part row "
+                f"{wop_id}; the order holds {on_order[wop_id]}"
+            )
+
+    rate = Decimal(str(decision.rate.value))
+    for claim in claims:
+        by_type = {"labor": 0, "parts": 0}
+        for line in claim["lines"]:
+            unit = (rate_cents if line["line_type"] == "labor"
+                    else unit_cents_by_wop[int(line["work_order_part_id"])])
+            line["amount_cents"] = _line_total_cents(float(line["quantity"]), unit)
+            by_type[line["line_type"]] += line["amount_cents"]
+        claim["covered_cents"] = by_type["labor"] + by_type["parts"]
+        claim["tax_cents"] = 0
+        claim["tax_source"] = None
+        if claim["lines"] and claim["repair_payer"] is None:
+            raise InvoiceGenerationError(
+                f"warranty claim #{claim['id']}'s warranty does not record who owes the "
+                f"repair; record it with `motodiag shop warranty update "
+                f"{claim['warranty_id']} --payer …`"
+            )
+        if claim["lines"]:
+            try:
+                rule = tax_mod.resolve_warranty_rule(shop_id, invoice_day,
+                                                     claim["repair_payer"],
+                                                     db_path=db_path)
+            except tax_mod.TaxNotOnRecord as exc:
+                raise InvoiceTaxNotOnRecord(str(exc)) from exc
+            claim["tax_source"] = rule.source_text
+            if rule.value:
+                taxable = sum(by_type[t] for t in by_type if t in decision.taxable_types)
+                claim["tax_cents"] = int((Decimal(taxable) * rate)
+                                         .quantize(Decimal(1), ROUND_HALF_UP))
+        claim["amount"] = claim["covered_cents"] + claim["tax_cents"]
+        old = claim.get("amount_claimed_cents")
+        if claim["status"] != "draft" and old is not None and old != claim["amount"]:
+            raise InvoiceGenerationError(
+                f"warranty claim #{claim['id']} is {claim['status']} at {old} cents; "
+                f"this invoice would price it at {claim['amount']} cents"
+            )
+    return claims, covered_hours, covered_qty
+
+
+def _claim_note(claim: dict) -> str:
+    parts = [line["description"] or line["line_type"] for line in claim["lines"]]
+    return f"Warranty claim #{claim['id']} covers: {'; '.join(parts)}"
+
+
+def _split_cents(total: int, weights: list[int]) -> list[int]:
+    """``total`` over ``weights`` in proportion, by largest remainder: the
+    shares sum to ``total`` exactly, and a tie goes to the earlier line."""
+    whole = sum(weights)
+    if whole == 0:
+        return [0 for _ in weights]
+    exact = [Decimal(total) * w / whole for w in weights]
+    shares = [int(x) for x in exact]
+    order = sorted(range(len(weights)), key=lambda i: (-(exact[i] - shares[i]), i))
+    for i in order[: total - sum(shares)]:
+        shares[i] += 1
+    return shares
+
+
+def _record_claim_prices(claims: list[dict], invoice_id: int,
+                         db_path: Optional[str] = None) -> None:
+    with get_connection(db_path) as conn:
+        for claim in claims:
+            for line in claim["lines"]:
+                conn.execute(
+                    "UPDATE warranty_claim_lines SET amount_cents = ? WHERE id = ?",
+                    (line["amount_cents"], line["id"]),
+                )
+            conn.execute(
+                "UPDATE warranty_claims SET invoice_id = ?, covered_cents = ?, "
+                "tax_cents = ?, tax_source = ?, amount_claimed_cents = ? WHERE id = ?",
+                (invoice_id, claim["covered_cents"], claim["tax_cents"],
+                 claim["tax_source"], claim["amount"], claim["id"]),
+            )
+
+
 def _add_line_cents(
     invoice_id: int,
     item_type: InvoiceLineItemType,
@@ -275,7 +439,7 @@ def _add_line_cents(
     db_path: Optional[str] = None,
 ) -> int:
     """Add a single line item, converting cents → dollars at the boundary."""
-    line_total_cents = int(round(quantity * unit_price_cents))
+    line_total_cents = _line_total_cents(quantity, unit_price_cents)
     add_line_item(
         InvoiceLineItem(
             invoice_id=invoice_id,
@@ -415,6 +579,20 @@ def generate_invoice_for_wo(
             return int(cents)
         return int((Decimal(int(cents)) * fx_factor).quantize(Decimal(1), ROUND_HALF_UP))
 
+    # Phase 373: the warranty claims on the order are priced, and what they
+    # cover comes off the customer's lines, before anything is written.
+    rate_cents = in_invoice_currency(labor_hourly_rate_cents)
+    unit_cents_by_wop = {int(p["wop_id"]): in_invoice_currency(
+        int(p.get("effective_unit_cents", 0) or 0)) for p in parts_lines}
+    claims, covered_hours, covered_qty = _price_claims(
+        wo_id, hours, rate_cents, parts_lines, unit_cents_by_wop, decision,
+        wo["shop_id"], invoice_day, db_path=db_path,
+    )
+    customer_hours = _hours_left(hours, covered_hours)
+    claim_notes = [_claim_note(c) for c in claims if c["lines"]]
+    if claim_notes:
+        notes = " | ".join(([notes] if notes else []) + claim_notes)
+
     # Create invoice header (subtotal/tax/total set after line items)
     now = datetime.now(timezone.utc)
     invoice = Invoice(
@@ -443,25 +621,26 @@ def generate_invoice_for_wo(
     # Phase 281: each line's total by type, so tax falls on taxable lines only.
     by_type: dict[str, int] = {t: 0 for t in tax_mod.LINE_TYPES}
 
-    # --- Labor line ---
-    rate_cents = in_invoice_currency(labor_hourly_rate_cents)
+    # --- Labor line (the hours no claim covers) ---
     money_mark = "$" if invoice_currency == "USD" else f"{invoice_currency} "
-    labor_cents = _add_line_cents(
-        invoice_id,
-        InvoiceLineItemType.LABOR,
-        f"Labor — {hours:.2f}h × {money_mark}{rate_cents / 100:.2f}/h",
-        hours,
-        rate_cents,
-        sort_order=10,
-        db_path=db_path,
-    )
-    subtotal_cents += labor_cents
-    by_type["labor"] += labor_cents
+    if customer_hours > 0:
+        labor_cents = _add_line_cents(
+            invoice_id,
+            InvoiceLineItemType.LABOR,
+            f"Labor — {customer_hours:.2f}h × {money_mark}{rate_cents / 100:.2f}/h",
+            customer_hours,
+            rate_cents,
+            sort_order=10,
+            db_path=db_path,
+        )
+        subtotal_cents += labor_cents
+        by_type["labor"] += labor_cents
 
-    # --- Parts lines ---
+    # --- Parts lines (the quantity no claim covers) ---
     sort = 20
     for part in parts_lines:
-        qty = int(part.get("quantity", 1) or 1)
+        qty = (int(part.get("quantity", 1) or 1)
+               - covered_qty.get(int(part["wop_id"]), 0))
         if qty <= 0:
             continue
         unit_cents = int(part.get("effective_unit_cents", 0) or 0)
@@ -522,6 +701,11 @@ def generate_invoice_for_wo(
     tax_cents = int((Decimal(taxable_cents) * Decimal(str(decision.rate.value)))
                     .quantize(Decimal(1), ROUND_HALF_UP))
     total_cents = subtotal_cents + tax_cents
+    _record_claim_prices(claims, invoice_id, db_path=db_path)
+    if total_cents == 0:
+        # Phase 373: every line is covered; the customer owes nothing.
+        _update_invoice(invoice_id, db_path=db_path,
+                        status=_AccountingInvoiceStatus.PAID, paid_at=now.isoformat())
 
     _update_invoice(
         invoice_id, db_path=db_path,
@@ -539,6 +723,84 @@ def generate_invoice_for_wo(
         fx_rate_date=fx_rate_row["rate_date"] if fx_rate_row else None,
         fx_source=(f"the shop's own rate: {fx_rate_row['source_note']}"
                    if fx_rate_row else None),
+    )
+    return invoice_id
+
+
+def generate_shortfall_invoice(claim: dict, shortfall_cents: int,
+                               db_path: Optional[str] = None) -> int:
+    """Bill the work order's customer for a settled claim's shortfall.
+
+    ``claim`` is the claim as stored, invoiced; ``shortfall_cents`` is the
+    amount claimed less the amount approved. The pre-tax shortfall is the
+    claim's covered amount in the same proportion, rounded half up, split
+    over its lines by amount; the customer's tax is computed on it from the
+    shop's rules on the day, as on any invoice. Returns the new invoice id.
+    """
+    claimed = int(claim["amount_claimed_cents"])
+    covered = int(claim["covered_cents"])
+    pre_tax = (covered if shortfall_cents == claimed else
+               int((Decimal(covered) * shortfall_cents / claimed)
+                   .quantize(Decimal(1), ROUND_HALF_UP)))
+    with get_connection(db_path) as conn:
+        lines = [dict(r) for r in conn.execute(
+            "SELECT * FROM warranty_claim_lines WHERE claim_id = ? ORDER BY id",
+            (claim["id"],),
+        ).fetchall()]
+        original = dict(conn.execute("SELECT * FROM invoices WHERE id = ?",
+                                     (claim["invoice_id"],)).fetchone())
+    wo = require_work_order(claim["work_order_id"], db_path=db_path)
+    shares = _split_cents(pre_tax, [int(line["amount_cents"]) for line in lines])
+    line_types = {line["line_type"] for line, share in zip(lines, shares) if share}
+    try:
+        decision = tax_mod.resolve_tax(wo["shop_id"], tax_mod.today(), line_types,
+                                       db_path=db_path)
+    except tax_mod.TaxNotOnRecord as exc:
+        raise InvoiceTaxNotOnRecord(str(exc)) from exc
+
+    now = datetime.now(timezone.utc)
+    # A claim settles once, so its number is unique without a regeneration index.
+    number = f"INV-{wo['shop_id']}-{wo['id']}-{now.strftime('%Y%m%d')}-S{claim['id']}"
+    invoice_id = create_invoice(Invoice(
+        customer_id=int(original["customer_id"]),
+        repair_plan_id=None,
+        invoice_number=number,
+        status=_AccountingInvoiceStatus.SENT,
+        subtotal=0.0, tax_amount=0.0, total=0.0,
+        currency=original.get("currency"),
+        issued_at=now, due_at=None, paid_at=None,
+        notes=f"Warranty claim #{claim['id']}: the part the warranty did not pay",
+    ), db_path=db_path)
+    with get_connection(db_path) as conn:
+        conn.execute(
+            "UPDATE invoices SET work_order_id = ?, shortfall_claim_id = ? WHERE id = ?",
+            (wo["id"], claim["id"], invoice_id),
+        )
+    by_type: dict[str, int] = {t: 0 for t in tax_mod.LINE_TYPES}
+    item_types = {"labor": InvoiceLineItemType.LABOR, "parts": InvoiceLineItemType.PARTS}
+    for sort, (line, share) in enumerate(zip(lines, shares), start=10):
+        if not share:
+            continue
+        _add_line_cents(
+            invoice_id, item_types[line["line_type"]],
+            f"Warranty claim #{claim['id']} not paid: "
+            f"{line['description'] or line['line_type']}",
+            1.0, share, sort_order=sort, db_path=db_path,
+        )
+        by_type[line["line_type"]] += share
+    taxable = sum(by_type[t] for t in decision.taxable_types)
+    tax_cents = int((Decimal(taxable) * Decimal(str(decision.rate.value)))
+                    .quantize(Decimal(1), ROUND_HALF_UP))
+    _update_invoice(
+        invoice_id, db_path=db_path,
+        subtotal=_cents_to_dollars(pre_tax),
+        tax_amount=_cents_to_dollars(tax_cents),
+        total=_cents_to_dollars(pre_tax + tax_cents),
+        tax_rate=decision.rate.value,
+        tax_rate_id=decision.rate.row_id,
+        tax_source=decision.source_text,
+        tax_recheck_by=decision.recheck_by,
+        taxed_line_types=",".join(decision.taxable_types) or "none",
     )
     return invoice_id
 

@@ -67,3 +67,6 @@ class Warranty(BaseModel):
     mileage_limit: Optional[int] = None
     terms: Optional[str] = None
     claim_count: int = 0
+    # Phase 373: who owes a repair under it (accounting.tax.PAYERS); it
+    # decides whether the tax on covered work goes on the claim.
+    repair_payer: Optional[str] = None

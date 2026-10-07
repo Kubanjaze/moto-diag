@@ -162,7 +162,9 @@ def invoices_in_range(
 
     A shop's invoice is one whose work order is at the shop. Returns the
     invoices, and the numbers of those left out because an earlier export to
-    the same target carried them (unless ``include_exported``).
+    the same target carried them (unless ``include_exported``). Each invoice
+    carries its warranty claims with an amount (Phase 373) as ``claims``. A
+    settled claim's shortfall invoice is not selected (row 376).
     """
     _check_range(from_day, to_day)
     with get_connection(db_path) as conn:
@@ -172,6 +174,7 @@ def invoices_in_range(
                  JOIN work_orders wo ON wo.id = i.work_order_id
                  JOIN customers c ON c.id = i.customer_id
                 WHERE wo.shop_id = ? AND i.status != 'cancelled'
+                  AND i.shortfall_claim_id IS NULL
                   AND i.issued_at IS NOT NULL
                   AND substr(i.issued_at, 1, 10) BETWEEN ? AND ?
                 ORDER BY i.issued_at, i.id""",
@@ -194,8 +197,59 @@ def invoices_in_range(
                 "ORDER BY sort_order, id",
                 (inv["id"],),
             ).fetchall()]
+            inv["claims"] = [dict(r) for r in conn.execute(
+                "SELECT c.*, w.provider FROM warranty_claims c "
+                "JOIN warranties w ON w.id = c.warranty_id "
+                "WHERE c.invoice_id = ? AND c.amount_claimed_cents > 0 ORDER BY c.id",
+                (inv["id"],),
+            ).fetchall()]
+            for claim in inv["claims"]:
+                claim["lines"] = [dict(r) for r in conn.execute(
+                    "SELECT * FROM warranty_claim_lines WHERE claim_id = ? ORDER BY id",
+                    (claim["id"],),
+                ).fetchall()]
             kept.append(inv)
     return kept, skipped
+
+
+def shortfall_invoices_in_range(shop_id: int, from_day: str, to_day: str,
+                                db_path: Optional[str] = None) -> list[str]:
+    """The numbers of settled claims' shortfall invoices issued in the range,
+    which the export leaves out (row 376)."""
+    _check_range(from_day, to_day)
+    with get_connection(db_path) as conn:
+        return [r[0] for r in conn.execute(
+            """SELECT i.invoice_number FROM invoices i
+                 JOIN work_orders wo ON wo.id = i.work_order_id
+                WHERE wo.shop_id = ? AND i.status != 'cancelled'
+                  AND i.shortfall_claim_id IS NOT NULL
+                  AND substr(i.issued_at, 1, 10) BETWEEN ? AND ?
+                ORDER BY i.issued_at, i.id""",
+            (shop_id, from_day, to_day),
+        ).fetchall()]
+
+
+def _claim_number(inv: dict, claim: dict) -> str:
+    return f"{inv['invoice_number']}-W{claim['id']}"
+
+
+def _require_provider(inv: dict, claim: dict) -> str:
+    provider = (claim.get("provider") or "").strip()
+    if not provider:
+        raise ExportError(
+            f"warranty claim #{claim['id']} on invoice {inv['invoice_number']} has no "
+            f"provider on record, so its receivable has no one to name; record it with "
+            f"`motodiag shop warranty update {claim['warranty_id']} --provider NAME`"
+        )
+    return provider
+
+
+def _claim_by_kind(claim: dict) -> dict[str, int]:
+    by_kind: dict[str, int] = {}
+    for line in claim["lines"]:
+        by_kind[line["line_type"]] = by_kind.get(line["line_type"], 0) + int(
+            line["amount_cents"])
+    return by_kind
 
 
 def _require_mapping(mapping: dict[str, dict], needed: list[str], key: str,
@@ -239,6 +293,10 @@ def quickbooks_journal_rows(invoices: list[dict], mapping: dict[str, dict],
         needed |= {line["item_type"] for line in inv["lines"]}
         if _cents(inv["tax_amount"]):
             needed.add("tax")
+        for claim in inv.get("claims", []):
+            needed |= {line["line_type"] for line in claim["lines"]}
+            if claim["tax_cents"]:
+                needed.add("tax")
     unknown = needed - set(KINDS)
     if unknown:
         raise ExportError(f"unknown line type(s): {', '.join(sorted(unknown))}")
@@ -246,6 +304,10 @@ def quickbooks_journal_rows(invoices: list[dict], mapping: dict[str, dict],
 
     rows: list[dict] = []
     for inv in invoices:
+        claim_rows = _quickbooks_claim_rows(inv, mapping)
+        if not inv["lines"] and _cents(inv["total"]) == 0:
+            rows += claim_rows  # Phase 373: every line covered; the customer owes nothing
+            continue
         number, when = inv["invoice_number"], _us_date(inv["issued_at"])
         total = _cents(inv["total"])
         tax = _cents(inv["tax_amount"])
@@ -283,12 +345,55 @@ def quickbooks_journal_rows(invoices: list[dict], mapping: dict[str, dict],
                 "Journal/Description": f"Invoice {number}: sales tax",
                 "Name": "",
             })
+        rows += claim_rows
     return rows
 
 
 # ---------------------------------------------------------------------------
 # Xero: sales invoices
 # ---------------------------------------------------------------------------
+
+
+def _quickbooks_claim_rows(inv: dict, mapping: dict[str, dict]) -> list[dict]:
+    """A journal entry per warranty claim on the invoice (Phase 373): debit
+    the receivable for the amount claimed, in the provider's name; credit the
+    covered work's income and the claim's tax."""
+    rows: list[dict] = []
+    when = _us_date(inv["issued_at"])
+    for claim in inv.get("claims", []):
+        number = _claim_number(inv, claim)
+        provider = _require_provider(inv, claim)
+        by_kind = _claim_by_kind(claim)
+        total, tax = int(claim["amount_claimed_cents"]), int(claim["tax_cents"])
+        if sum(by_kind.values()) + tax != total:
+            raise ExportError(
+                f"warranty claim {number} does not balance: its lines and tax come "
+                f"to {_money(sum(by_kind.values()) + tax)}, it claims {_money(total)}"
+            )
+        description = f"Warranty claim #{claim['id']} on invoice {inv['invoice_number']}"
+        rows.append({
+            "Journal No.": number, "Journal Date": when,
+            "Account Name": mapping["receivable"]["account"],
+            "Debits": _money(total), "Credits": "",
+            "Journal/Description": description, "Name": provider,
+        })
+        for kind in LINE_KINDS:
+            if kind in by_kind:
+                rows.append({
+                    "Journal No.": number, "Journal Date": when,
+                    "Account Name": mapping[kind]["account"],
+                    "Debits": "", "Credits": _money(by_kind[kind]),
+                    "Journal/Description": f"{description}: {KIND_LABELS[kind]}",
+                    "Name": "",
+                })
+        if tax:
+            rows.append({
+                "Journal No.": number, "Journal Date": when,
+                "Account Name": mapping["tax"]["account"],
+                "Debits": "", "Credits": _money(tax),
+                "Journal/Description": f"{description}: sales tax", "Name": "",
+            })
+    return rows
 
 
 def spread_tax(line_cents: list[int], tax_cents: int) -> list[int]:
@@ -345,8 +450,10 @@ def xero_rows(invoices: list[dict], mapping: dict[str, dict],
               shop_id: int) -> list[dict]:
     """One row per invoice line, tax-exclusive, with its share of the tax."""
     key = "xero"
-    needed = sorted({line["item_type"] for inv in invoices for line in inv["lines"]},
-                    key=lambda k: KINDS.index(k) if k in KINDS else 99)
+    kinds = {line["item_type"] for inv in invoices for line in inv["lines"]}
+    kinds |= {line["line_type"] for inv in invoices for claim in inv.get("claims", [])
+              for line in claim["lines"]}
+    needed = sorted(kinds, key=lambda k: KINDS.index(k) if k in KINDS else 99)
     unknown = [k for k in needed if k not in KINDS]
     if unknown:
         raise ExportError(f"unknown line type(s): {', '.join(unknown)}")
@@ -354,6 +461,10 @@ def xero_rows(invoices: list[dict], mapping: dict[str, dict],
 
     rows: list[dict] = []
     for inv in invoices:
+        claim_rows = _xero_claim_rows(inv, mapping)
+        if not inv["lines"] and _cents(inv["total"]) == 0:
+            rows += claim_rows  # Phase 373: every line covered; the customer owes nothing
+            continue
         if not inv["lines"]:
             raise ExportError(f"invoice {inv['invoice_number']} has no lines")
         for line, tax in zip(inv["lines"], _line_taxes(inv)):
@@ -374,6 +485,45 @@ def xero_rows(invoices: list[dict], mapping: dict[str, dict],
                 "Currency": inv["currency"] or "",
             })
             rows.append(row)
+        rows += claim_rows
+    return rows
+
+
+def _xero_claim_rows(inv: dict, mapping: dict[str, dict]) -> list[dict]:
+    """A sales invoice to the provider per warranty claim on the invoice
+    (Phase 373): a row per covered line, the claim's tax on the lines of the
+    types the invoice taxed."""
+    rows: list[dict] = []
+    taxed = _taxed_types(inv)
+    for claim in inv.get("claims", []):
+        provider = _require_provider(inv, claim)
+        lines, tax = claim["lines"], int(claim["tax_cents"])
+        on = [i for i, line in enumerate(lines)
+              if taxed is None or line["line_type"] in taxed]
+        if tax and not on:
+            raise ExportError(f"warranty claim {_claim_number(inv, claim)} carries tax "
+                              f"but no line of a taxed type")
+        shares = [0] * len(lines)
+        for i, share in zip(on, spread_tax([int(lines[i]["amount_cents"]) for i in on],
+                                           tax)):
+            shares[i] = share
+        for line, share in zip(lines, shares):
+            account = mapping[line["line_type"]]
+            row = {c: "" for c in XERO_COLUMNS}
+            row.update({
+                "ContactName": provider,
+                "InvoiceNumber": _claim_number(inv, claim),
+                "InvoiceDate": _us_date(inv["issued_at"]),
+                "DueDate": _us_date(inv["due_at"]),
+                "Description": f"Warranty claim #{claim['id']}: {line['description']}",
+                "Quantity": "1",
+                "UnitAmount": _money(int(line["amount_cents"])),
+                "AccountCode": account["account"],
+                "TaxType": account["tax_type"],
+                "TaxAmount": _money(share),
+                "Currency": inv["currency"] or "",
+            })
+            rows.append(row)
     return rows
 
 
@@ -391,6 +541,8 @@ class ExportResult:
     sha256: str
     skipped: list[str] = field(default_factory=list)
     notes: list[str] = field(default_factory=list)
+    claim_count: int = 0
+    shortfalls_left_out: list[str] = field(default_factory=list)
 
 
 def export_file(
@@ -410,6 +562,7 @@ def export_file(
         raise ExportError(
             f"no invoices to export for shop id={shop_id} from {from_day} to "
             f"{to_day}{why}")
+    shortfalls = shortfall_invoices_in_range(shop_id, from_day, to_day, db_path=db_path)
     mapping = _mapping(shop_id, key, db_path)
     if key == "quickbooks_online":
         columns = QBO_JOURNAL_COLUMNS
@@ -448,7 +601,14 @@ def export_file(
             "VALUES (?, ?)",
             [(export_id, inv["id"]) for inv in invoices],
         )
-    return ExportResult(path, key, len(invoices), len(rows), digest, skipped, notes)
+        claim_ids = [c["id"] for inv in invoices for c in inv.get("claims", [])]
+        conn.executemany(
+            "INSERT OR IGNORE INTO accounting_export_claims (export_id, claim_id) "
+            "VALUES (?, ?)",
+            [(export_id, claim_id) for claim_id in claim_ids],
+        )
+    return ExportResult(path, key, len(invoices), len(rows), digest, skipped, notes,
+                        len(claim_ids), shortfalls)
 
 
 def list_exports(shop_id: int, db_path: Optional[str] = None) -> list[dict]:
