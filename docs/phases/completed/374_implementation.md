@@ -1,6 +1,6 @@
 # Phase 374 — Check-in with an intake (F189)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-06
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-07 (v1.0 2026-10-06)
 
 ---
 
@@ -133,10 +133,52 @@ intakes automatically.
 
 ## Planned items
 
-- [ ] `check_in` with `--intake`, `--mileage` and `--problems`; automatic linking under the operator's condition
-- [ ] `create_intake` stamps `intake_at` from Python's clock (UTC)
-- [ ] `work-order show` prints the intake's date, mileage and problems
-- [ ] the packet: the mileage at intake, "not recorded", the reported problems
-- [ ] Gate 16 walks both orders; `test_f189_…` inverted; the F189 plant
-- [ ] `tests/test_phase374_check_in_intake.py`
-- [ ] a mutation file, the regression, the close-out; F189 closed
+- [x] `check_in` with `--intake`, `--mileage` and `--problems`; automatic linking under the operator's condition
+- [x] `create_intake` stamps `intake_at` from Python's clock (UTC)
+- [x] `work-order show` prints the intake's date, mileage and problems
+- [x] the packet: the mileage at intake, "not recorded", the reported problems
+- [x] Gate 16 walks both orders; `test_f189_…` inverted; the F189 plant
+- [x] `tests/test_phase374_check_in_intake.py`
+- [x] a mutation file, the regression, the close-out; F189 closed
+
+## Deviations from Plan
+
+- **`work-order show` reads the intake in the CLI panel.** The plan put
+  the mileage in `get_work_order`'s query. The API's work-order routes
+  return that dict as it is, so a new key would have reached the app's
+  payloads. Reading it in the panel keeps the change on the command line
+  (choice 3).
+- **Gate 16 is 87 → 89, not 88:** the inverted F189 test runs on both card
+  walks, where the old one ran once on its own database.
+- **The intake's time (D1) came from reading the code after the
+  operator's answer**, not from Step 0's own reading. It is recorded in
+  the log as a decision: no stored value changes meaning.
+- **F191 was not planned.** It was found while reading `intake_at`'s
+  clock and filed, not fixed: `--since` mixes the shop's clock and UTC,
+  and this phase does not touch `--since`.
+- **No bug fix, no migration, no deploy, no refute pass.**
+
+## Results
+
+| | |
+|---|---|
+| Check-in | `shop appointment check-in APPT [--intake ID \| --mileage N --problems TEXT \| --wo WO]`. It links the named intake, or the one open intake for the shop, customer and bike taken within a day of the appointment; with none open, it records one (mileage unknown unless given, problems from the booking's notes); otherwise it refuses and lists them. It prints the intake's id, date and mileage. |
+| Either order (Gate 16) | Job A: `book` → `check-in` (intake recorded, mileage not recorded) → `intake update --mileage 31200` → claim; packet "Mileage at intake: 31,200 mi", "Reported at intake: Front brake squeals and pulls left", the verdict at 31,200 of 40,000 mi. Job B: `intake create` → `check-in` (intake linked, 22,400 mi). Both work orders carry their intake; no `work-order create` in the walk. |
+| Unknown mileage | The packet says "Mileage at intake: not recorded" and the verdict "cannot tell", where the bike's 52,000 mi would have read as over the limit (`test_phase374`) |
+| Test files | `tests/test_phase374_check_in_intake.py` (26); `tests/test_phase292_gate16.py` 87 → 89 |
+| Mutations | 20/20 red (`374_mutate.py`) |
+| Findings | F189 closed; F191 filed |
+| Migration | none; live unchanged (0 appointments, 0 intakes, 6 work orders without an intake) |
+| Floor | 10556 → 10584 |
+| Regression of record | **10584 passed, 0 failed, 0 skipped, 0 errors** at `15d16db` (26 min 2 s wall, `python -m pytest -n auto --dist load`, exit 0) |
+
+## Risks
+
+- **The shop's clock is the machine's zone.** Check-in already uses it
+  for `actual_start`. A server in another zone from the shop would shift
+  the one-day test by the difference. The shop records no zone.
+- **An intake recorded before this phase** carries SQLite's UTC stamp, in
+  the same format, so it reads the same. Live has none.
+- **F191:** `--since` lists and counts can be off by the UTC offset.
+- **Neither the API nor the app can check in** (choice 3). A route would
+  need appointment routes and a mobile stop.

@@ -1,6 +1,6 @@
 # Phase 374 — Check-in with an intake (F189) — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-07)
 **Branch:** `phase-374` (Opus session, main checkout)
 
 ---
@@ -102,3 +102,28 @@ database at 23:26 EDT:
 
 It predates this phase, which does not touch `--since`, so it is not
 fixed here. Live holds 0 intakes.
+
+### 2026-10-06 — The floor, `--full` and the regression of record
+
+- `COLLECTED_TEST_FLOOR` 10556 → 10584 (`15d16db`), measured: 10584
+  collected = 10556 + 26 + 2.
+- `wholetree.sh --full` on `15d16db`, a clean tree: 3988 passed, exit 0
+  (9 min 17 s).
+- The regression ended at 00:06 EDT on 2026-10-07, so it started about
+  23:40; a month's last evening was not involved.
+
+Regression of record: 10584 passed, 0 failed, 0 skipped, 0 errors at `15d16db` (26 min 2 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-10-07 — Close-out
+
+- v1.1: every planned item done; Deviations, Results and Risks written.
+- Row 374 ✅. F189 closed. `implementation.md` 0.13.102, with its history
+  row. Documents and `374_mutate.py` moved to `completed/`. Handoff
+  `docs/handoffs/2026-10-07_374_closed.md`.
+- **No migration, so no deploy.** Live is unchanged; the 6 live work
+  orders keep no intake (out of scope).
+- No refute pass ran: the phase ships code and tests, and no content
+  rows. No claim rests on a document.
+- No bug fixes. The one test failure while building was in this phase's
+  own uncommitted test (a draft work order has no date for the packet's
+  verdict). It was fixed before any commit.

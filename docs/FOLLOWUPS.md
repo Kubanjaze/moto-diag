@@ -2824,9 +2824,24 @@ What would close it (row 373): a rule for which lines a claim covers; the
 claimed amount derived from those lines; claimed lines left off what the
 customer owes; and Gate 16's pinned test of today's behaviour inverted.
 
-### F189
+### F189 — CLOSED by Phase 374 (2026-10-07)
 
 **Check-in opens a work order with no intake, and no command can attach one afterwards**
+
+**Closed:** `shop appointment check-in` opens the work order from the
+visit's intake:
+- the one named with `--intake`;
+- or the one open intake for the shop, customer and bike, taken within a
+  day of the appointment;
+- or, with none open, one it records itself, with the mileage unknown
+  unless given and the booking's notes as the problems.
+
+Otherwise it refuses and lists them. It prints the intake's date and
+mileage. The claim packet prints the mileage at intake and the reported
+problems; an unknown mileage stays "not recorded", never the bike's. The
+rule that a work order's intake cannot be changed afterwards stands.
+Gate 16 walks both orders; its pinned test is inverted
+(`test_f189_the_work_order_carries_its_intake_in_either_order`).
 
 Found at Phase 292's Step 0 (2026-10-06) (`292_step0.md`, S0-4 H3).
 - `shop appointment check-in` without `--wo` creates and opens a work
