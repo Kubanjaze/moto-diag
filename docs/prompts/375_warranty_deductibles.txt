@@ -1,0 +1,63 @@
+Do this: start Phase 375, warranty deductibles, and run it to its finish line as CLAUDE.md sets out. A warranty plan may charge the customer a deductible for each covered repair, as LR 79-19's plan did ($25). Nothing records one. Today a deductible can only be handled after the fact, as a short payment settled by billing the customer (376): the claim asks the plan for the whole covered amount, and the customer pays the deductible only after the plan decides, not when they collect the bike. Read these first:
+- Row 375 in docs/ROADMAP.md (🔲; mark it 🚧 before Step 0).
+- 373's documents (docs/phases/completed/373_*): how a claim is priced and taxed, the payer rules, and 373_sources.md, which quotes LR 79-19's deductible.
+- 376's documents (docs/phases/completed/376_*): the settlement entries in both export files, the tax on an absorbed shortfall recorded per jurisdiction, and 376_sources.md.
+- 376's handoff, docs/handoffs/2026-10-07_376_closed.md.
+
+The measured facts, taken 2026-10-07 on master at 5f05e56. Re-verify each at Step 0.
+- **No deductible anywhere:** `grep -rni deductible src/` finds 0 lines. `warranties` holds coverage type, provider, dates, mileage limit, terms, claim count and `repair_payer`; 373's Step 0 recorded "no deductible".
+- **The source:** in LR 79-19 the customer "will pay a $25.00 deductible amount for any single covered repair", and the plan pays the balance, parts and labour (373_sources.md:90-92). 373 used the ruling to tax covered parts on the claim; nothing on disk rules on a deductible's tax.
+- **The payer rules live** (`tax_warranty_rules`, Massachusetts, valid until 2027-10-06): `maker_with_bike` is not taxed on the claim (LR 03-8); `other` is taxed on the claim, as a reading (LR 79-19 and 85-1); `shop_contract` is not taxed on the claim (830 CMR 64H.1.1).
+- **How a claim is priced** (shop/invoicing.py `_price_claims`, :310): the invoice leaves the covered hours and part quantities off what the customer owes, and the claim's amount is its covered lines plus the tax on the claim, derived, never typed.
+- **The export refuses a claim whose lines and tax do not equal its amount** (accounting/export.py:554), so a claim reduced by a deductible is refused until the export carries the deductible.
+- **376's shortfall invoice** (shop/invoicing.py:749) bills all of `covered_cents` on a denial, and a part approval in proportion to the amount claimed. With a deductible already on the customer's invoice, a denial would bill it twice. 376's settlement rows check their own balance (export.py:480).
+- **No API route reads warranties or claims** (src/motodiag/api/: 0 files), so no mobile session is expected. If the API's models move, stop.
+- **Live** (on a copy): 0 warranties, claims and claim lines; 3 `tax_warranty_rules` rows; 1 `tax_settlement_rules` row; schema 83. Nothing existing changes.
+
+What to build:
+- **A deductible recorded on the warranty,** set with `shop warranty add` and `update`, and shown wherever the warranty and the claim packet are.
+- **On each claim with covered lines,** the customer's invoice charges the deductible and the claim is reduced by it, both derived, never typed.
+- **The tax on a deductible** follows a reading per jurisdiction and payer, from the jurisdiction's own sources, as 373 and 376 did. With no reading on record for the shop's jurisdiction, invoicing a claim with a deductible refuses, naming the command that records one.
+- **Both export files carry the deductible** and the reduced claim, and every entry balances to the cent.
+- **A settlement on a claim with a deductible,** billed or absorbed, bills the customer only what they have not already been charged, in both files.
+- **Row 375 is closed.**
+
+Out of scope: F195 (use tax on parts given away); the provider's payment (365, paused); any API route.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation. Work each one through 373's example (labour 15000, parts 8000, the claim's tax 500) with a 2500 deductible, in cents:
+1. **Where the deductible is recorded and how much applies:** on the warranty only, or with a per-claim override; once per claim; and what happens when it is more than the covered work.
+2. **The tax on a deductible,** for each payer, read from the jurisdiction's own sources. Record it per jurisdiction as a reading for the shop's accountant to confirm, never hard-coded to Massachusetts. If the sources do not settle it, say so; do not choose an option that lowers the tax the shop remits without a source.
+3. **How it books:** the deductible's line on the customer's invoice (which income accounts, and its taxable share) and the reduced claim, in each file.
+4. **A deductible and a settlement:** a denial and a part approval, billed and absorbed, with the customer never billed the deductible twice.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on. Decide these yourself: the CLI's options and wording; how the packet shows the deductible; a regenerated invoice keeping its deductible.
+
+Live:
+- A migration (084), if the phase needs one, goes through the deploy skill. New tables, new columns, new rule rows after a backup and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is.
+- Apply live from the branch after the regression of record, and before the deploy files move to completed/: apply-live reads them only from in_progress/.
+
+Carry forward:
+- **A test that reads the clock gets a fixed one** (370's frozen clock).
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+- **Never record a regression** on a month's last day after 20:00 EDT. That is the month-end window F10 opened.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the four questions above, with options, the sources read, and the worked example.
+- **At the end:**
+  - what a deductible books in each file, with the worked example;
+  - the tax reading, its source and its validity;
+  - the tests and their control;
+  - the live outcome, if a migration ran;
+  - row 375 closed;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step, my call: F192 (a per-shop time zone), the process clean-up pass, or something else.
