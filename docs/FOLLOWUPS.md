@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F191**.
+At the time of writing the highest assigned is **F192**.
 
 ---
 
@@ -2920,3 +2920,30 @@ work order and issue lists' `--since`. Live holds 0 intakes (2026-10-06).
 What would close it: compute the cutoff in UTC in the column's own format
 (or compare parsed times), for each table whose stamp it is compared with,
 with a test at a fixed clock in a zone away from UTC.
+
+### F192
+
+**A shop has no time zone, so "the shop's day" is the server's zone**
+
+Found at Phase 377's Step 0 (2026-10-07), in the operator's answer to its
+first question. `shops` has no time-zone column (its columns: id,
+owner_user_id, name, address, city, state, zip, phone, email, tax_id,
+hours_json, is_active, created_at, updated_at, triage_weights), and no code
+in `src/` uses `zoneinfo`. Phase 377 stores every shop time in UTC and
+shows it, buckets it by day and reads a typed date in the machine's local
+zone (`astimezone()`, SQLite's `'localtime'`). Phase 275's appointment
+times are "the shop's clock time as entered" for the same reason.
+
+What it affects: one server serving shops in more than one zone. A shop in
+California on a server set to Eastern sees its times three hours ahead,
+its `--since 2026-10-07` starts at 21:00 the day before, and an invoice
+issued at 22:00 Pacific on the 31st falls in the next month's P&L and
+accounting export. Today there is one shop, in Massachusetts, on a server
+in its zone, so nothing is wrong in live. The product is meant for every
+state.
+
+What would close it: a time zone on each shop (an IANA name, such as
+`America/Los_Angeles`), set when the shop is created, and every reader,
+day bucket and typed-date cutoff of a shop's times converting in that
+zone instead of the server's; appointment clock times read in it too.
+
