@@ -1,0 +1,69 @@
+Do this: start Phase 376, warranty claim settlements in the accounting export (F190), and run it to its finish line as CLAUDE.md sets out. Row 373 exports a claim as a receivable from the warranty provider. When the claim is denied or paid short, `shop warranty claim settle` bills the customer for the shortfall or records that the shop absorbs it, and neither reaches the export, so the books still show the provider owing the full amount. Read these first:
+- F190 in docs/FOLLOWUPS.md, and row 376 in docs/ROADMAP.md (🔲; mark it 🚧 before Step 0).
+- 373's documents (docs/phases/completed/373_*): the settlement design, D6, D7 and D11, and 373_sources.md for how a tax rule is read and recorded.
+- 275's documents, above all 275_format_sources.md: each export format read from its vendor's own page, and quoted.
+- 377's handoff, docs/handoffs/2026-10-07_377_closed.md: stored times are UTC, and the export's windows and dates are the shop's day.
+
+The measured facts, taken 2026-10-07 on master at 914adad. Re-verify each at Step 0.
+- **What a settlement records** (inventory/warranty_claims.py `settle_claim`, :259): `settlement` (`bill_customer` or `absorb`), `settled_at` (UTC to the second, so compare it parsed, as 377 does), `shortfall_cents` (claimed − approved; all of it when denied) and `shortfall_invoice_id`. Billing the customer writes a shortfall invoice (shop/invoicing.py `generate_shortfall_invoice`, :731): the claim's lines in proportion, with the customer's own tax on the day, so its tax can differ from the claim's share (373's D11).
+- **What the export does now** (accounting/export.py):
+  - it selects invoices issued in the range, by the shop's day, and leaves shortfall invoices out, naming them (`shortfall_invoices_in_range`, :234; the CLI prints them, cli/shop_accounting.py:119-123);
+  - it exports each claim with its invoice: in QuickBooks one journal, debiting A/R in the provider's name and crediting income by kind and the claim's tax (`_quickbooks_claim_rows`, :376); in Xero one sales invoice to the provider (`_xero_claim_rows`, :511);
+  - it records exported claims in `accounting_export_claims`;
+  - it refuses a range with no invoices (`export_file`, :578), so a month with settlements and no new invoices exports nothing;
+  - it writes one file per run, and the Xero file holds sales invoices only.
+- **Accounts:** `accounting_accounts.kind` has a CHECK of labor, parts, diagnostic, misc, tax and receivable. Nothing maps an absorbed shortfall. 373's D6 kept the provider as a name on the A/R line, not a new kind.
+- **Formats:** 275_format_sources.md quotes Xero's "Import customer invoices" and Intuit's "Import journal entries". No page on disk covers a Xero credit note: D7 and F190 call it "a different import file", unsourced. Neither file has been tried in a real QuickBooks or Xero company.
+- **No API route reads claims or exports** (src/motodiag/api/: 0 files), so no mobile session is expected. If the API's models move, stop.
+- **Live** (on a copy): 0 warranties, claims, invoices, exports and account mappings; 1 shop; 3 `tax_warranty_rules` rows. Nothing existing changes.
+- **Invoice numbers carry the UTC day.** `_format_invoice_number` (shop/invoicing.py:214, given `datetime.now(timezone.utc)` at :598) and the shortfall invoice's number (:764) take their date from the UTC day, while tax rules (`tax.today()`) and the export's dates use the shop's day. After 20:00 EDT an invoice is numbered with tomorrow's date. Not filed: file it with the finding skill at Step 0.
+
+What to build:
+- **Each settlement in both files, against the claim's receivable,** exported once per target, in the export whose range holds its settlement day:
+  - QuickBooks: a journal moving the shortfall from the provider to the customer (billed) or to the account the shop names (absorbed);
+  - Xero: a credit note against the provider's invoice, and the billed shortfall invoice to the customer;
+  - in neither file is the covered work's revenue counted twice.
+- **Every entry balances to the cent,** D11's difference included. A test proves it for a denial and a part approval, billed and absorbed, in both files.
+- **Each format is read from its vendor's own page** and quoted in a sources file, as 275 did: Xero's credit-note import, and whether that file can allocate the credit note to the provider's invoice or the shop allocates it by hand. A page that cannot be fetched is recorded as blocked; never guess a format past it.
+- **A range with settlements and no invoices exports,** and the CLI says what each file holds. An export with no settlements writes what it writes today.
+- **F190 is closed.**
+
+Out of scope: the provider's payment and its reconciliation (365, paused); deductibles (375); any API route.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **What each settlement books,** billed and absorbed, in each file, with a worked example in cents: where revenue and tax payable end up, against the claim paid in full.
+2. **The tax on an absorbed shortfall.** Does the shop still owe the tax it charged on the claim, or does absorbing it reverse that sale, and if so is tax due on the parts given away? Read it from the jurisdiction's own sources, as 373 did. Record it per jurisdiction, never hard-coded to Massachusetts, as a reading for the shop's accountant to confirm. If the sources do not settle it, say so; do not choose an option that lowers the tax the shop remits without a source.
+3. **Where an absorbed shortfall is booked:** a new account kind (a rebuild of `accounting_accounts` for its CHECK; live has 0 rows) or another way, and what the shop must map before its first export with an absorbed claim.
+4. **The invoice-number finding:** fold it into 376, since 376 numbers new documents, or leave it filed.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on. Decide these yourself: a settlement whose claim was never exported to that target; the settlement documents' numbers; the CLI's wording.
+
+Live:
+- A migration (083), if the phase needs one, goes through the deploy skill. New tables, new columns, new rule rows after a backup and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is.
+- Apply live from the branch, before the deploy files move to completed/: apply-live reads them only from in_progress/.
+
+Carry forward:
+- **A test that reads the clock gets a fixed one** (370's frozen clock). One case settles at 21:00 EDT on a month's last day and lands in that month's export.
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+- **Never record a regression** on a month's last day after 20:00 EDT. That is the month-end window F10 opened.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the four questions above, with options, the sources read, and the finding filed.
+- **At the end:**
+  - what each settlement books in each file, with the worked example;
+  - the format sources, and what the shop must do by hand in each product;
+  - the tests and their control;
+  - the live outcome, if a migration ran;
+  - F190 closed, and the invoice-number finding's state;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: row 375, or my call.
