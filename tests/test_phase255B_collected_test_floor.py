@@ -272,7 +272,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: `test_rolling_back_peels_every_successor[80]` (+1, now that migration 081
 #: succeeds 080). Measured: 10556 collected.
 #:
-COLLECTED_TEST_FLOOR = 10556
+#: 10584 (Phase 374, 2026-10-06) — +28: `test_phase374_check_in_intake.py`
+#: (26); gate 16 inverted for F189 (+2: the inverted test runs on both card
+#: walks where the old one ran once on its own database, −1 + 2; and an
+#: eighth plant, +1). Measured: 10584 collected.
+#:
+COLLECTED_TEST_FLOOR = 10584
 
 
 def _collected_count() -> int:
