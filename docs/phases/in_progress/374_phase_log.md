@@ -57,3 +57,48 @@ intakes, and no stored value changes meaning.
 
 `374_implementation.md` v1.0: the operator's choices and conditions, the
 logic, decisions D1–D5, and the planned items.
+
+### 2026-10-06 — The build
+
+- **`check_in`** (`scheduling/booking.py`) returns a `CheckIn`: the work
+  order, whether it was opened, the intake, and whether check-in recorded
+  it. `_intake_for_check_in` applies the operator's rule. `shop
+  appointment check-in` gains `--intake`, `--mileage` and `--problems`.
+  It prints `Intake recorded:` or `Intake linked:` with the intake's id,
+  its date on the shop's clock, and its mileage or "not recorded". With
+  `--wo` it prints the work order's intake, or says it has none.
+- **`create_intake`** stamps `intake_at` from `datetime.now(timezone.utc)`
+  in `CURRENT_TIMESTAMP`'s format (D1).
+- **`work-order show`** prints the intake's label and reported problems.
+  The intake is read in the CLI panel, not added to `get_work_order`,
+  because the API's work-order routes return that dict as it is: the
+  change stays on the command line (choice 3).
+- **The packet** prints "Mileage at intake" and "Reported at intake".
+  When the work order has an intake, the verdict uses the intake's
+  mileage, unknown included.
+- **Gate 16:** job A checks in first, then `intake update --mileage`; job
+  B takes the intake first, and check-in links it. Both set the estimate
+  with `work-order update`. `test_f189_…` is inverted. An eighth plant
+  (F189 as it was: `create_work_order` called without the intake) is red
+  on `assert j["wo_row"]["intake_visit_id"] == j["intake"]`, which was
+  read from the traceback of a walk run by hand. The gate is 87 → 89
+  collected tests (master measured in a scratch worktree). The old F189
+  test ran once on its own database; the inverted one runs on both card
+  walks, which adds two, and the plant adds one. With 275's booking and
+  calendar tests, 128 passed.
+- **`tests/test_phase374_check_in_intake.py`:** 26 passed. The one-day
+  boundary is tested on both sides through UTC stamps: 24 h is linked,
+  24 h and 1 min is refused. Without the zone conversion, the "a day
+  either side" cases fail (mutation L4).
+- **Mutations:** `374_mutate.py`, 20/20 red.
+- **244G's scanner** over all of `tests/`: 0 hits.
+
+**F191 filed** (finding skill; `next_f_number.sh` gave F191, and
+`finding_check.py` exits 0). `_since_cutoff` compares a local-time
+cutoff with UTC stamps in another format. Measured on a scratch
+database at 23:26 EDT:
+- an intake three hours old is listed under `--since 30m`;
+- on a UTC clock, an intake made that minute is not.
+
+It predates this phase, which does not touch `--since`, so it is not
+fixed here. Live holds 0 intakes.

@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import json
 from datetime import date, datetime, timedelta, timezone
-from typing import Optional
+from typing import NamedTuple, Optional
 
 from motodiag.core.database import get_connection
 from motodiag.crm import communication_repo
@@ -407,10 +407,101 @@ def confirm(appt_id: int, channel: str, by_user_id: Optional[int] = None,
 # ---------------------------------------------------------------------------
 
 
+class CheckIn(NamedTuple):
+    work_order_id: int
+    created: bool
+    intake: Optional[dict]
+    intake_created: bool
+
+
+# An open intake is linked without --intake only when it was taken this
+# close to the appointment's start, either side (the operator's condition).
+INTAKE_WINDOW = timedelta(days=1)
+
+
+def intake_clock_time(value: str) -> datetime:
+    """An intake's ``intake_at``, stored in UTC, as the shop's clock time."""
+    t = datetime.fromisoformat(str(value).replace("Z", "+00:00"))
+    if t.tzinfo is None:
+        t = t.replace(tzinfo=timezone.utc)
+    return t.astimezone().replace(tzinfo=None)
+
+
+def intake_label(intake: dict) -> str:
+    """``intake #N, taken <date>, mileage <miles>``: what check-in prints."""
+    taken = intake_clock_time(intake["intake_at"]).strftime("%Y-%m-%d %H:%M")
+    miles = intake["mileage_at_intake"]
+    mileage = "not recorded" if miles is None else f"{miles:,} mi"
+    return f"intake #{intake['id']}, taken {taken}, mileage {mileage}"
+
+
+def _intake_for_check_in(appt: dict, intake_id: Optional[int], mileage: Optional[int],
+                         problems: Optional[str], user_id: int,
+                         db_path: Optional[str]) -> tuple[dict, bool]:
+    """The intake a check-in without ``--wo`` brings: the one named, the one
+    open for this visit, or a new one. Returns (intake, created)."""
+    from motodiag.shop.intake_repo import create_intake, get_intake, list_intakes
+
+    given = [flag for flag, value in (("--mileage", mileage), ("--problems", problems))
+             if value is not None]
+    if intake_id is not None:
+        if given:
+            raise BookingError(
+                f"intake #{intake_id} is recorded already; change its mileage or "
+                f"problems with: shop intake update {intake_id}")
+        intake = get_intake(intake_id, db_path=db_path)
+        if intake is None:
+            raise BookingError(f"intake not found: id={intake_id}")
+        mismatches = [
+            label for label, a, b in (
+                ("shop", intake["shop_id"], appt["shop_id"]),
+                ("customer", intake["customer_id"], appt["customer_id"]),
+                ("bike", intake["vehicle_id"], appt["vehicle_id"]),
+            ) if a != b
+        ]
+        if mismatches:
+            raise BookingError(f"intake #{intake_id} is for another {', '.join(mismatches)}")
+        if intake["status"] != "open":
+            raise BookingError(f"intake #{intake_id} is {intake['status']}")
+        return intake, False
+
+    candidates = list_intakes(
+        shop_id=appt["shop_id"], customer_id=appt["customer_id"],
+        vehicle_id=appt["vehicle_id"], status="open", limit=0, db_path=db_path)
+    if not candidates:
+        new_id = create_intake(
+            appt["shop_id"], appt["customer_id"], appt["vehicle_id"],
+            reported_problems=problems if problems is not None else appt["notes"],
+            mileage_at_intake=mileage, intake_user_id=user_id, db_path=db_path)
+        return get_intake(new_id, db_path=db_path), True
+    start = clock_time(appt["scheduled_start"])
+    if (len(candidates) == 1
+            and abs(intake_clock_time(candidates[0]["intake_at"]) - start) <= INTAKE_WINDOW):
+        intake = candidates[0]
+        if given:
+            raise BookingError(
+                f"{intake_label(intake)} is open for this visit; change its mileage "
+                f"or problems with: shop intake update {intake['id']}")
+        return intake, False
+    raise BookingError(
+        f"no single open intake for this customer and bike was taken within a day "
+        f"of appointment #{appt['id']} ({start:%Y-%m-%d %H:%M}): "
+        + "; ".join(intake_label(c) for c in candidates)
+        + ". Give --intake ID, or close any that is not this visit with: "
+        "shop intake close ID")
+
+
 def check_in(appt_id: int, work_order_id: Optional[int] = None,
-             created_by_user_id: int = 1,
-             db_path: Optional[str] = None) -> tuple[int, bool]:
-    """Open or link the appointment's work order. Returns (id, created)."""
+             intake_id: Optional[int] = None, mileage: Optional[int] = None,
+             problems: Optional[str] = None, created_by_user_id: int = 1,
+             db_path: Optional[str] = None) -> CheckIn:
+    """Open or link the appointment's work order, with its intake.
+
+    With ``work_order_id``, that work order is linked as it is, with the
+    intake it was opened with. Without it, the new work order carries the
+    intake :func:`_intake_for_check_in` finds or creates.
+    """
+    from motodiag.shop.intake_repo import get_intake
     from motodiag.shop.work_order_repo import (
         TERMINAL_STATUSES, create_work_order, open_work_order,
     )
@@ -422,8 +513,13 @@ def check_in(appt_id: int, work_order_id: Optional[int] = None,
         )
     if appt["shop_id"] is None or appt["vehicle_id"] is None:
         raise BookingError(f"appointment #{appt_id} has no shop or no bike")
-    created = False
+    created = intake_created = False
+    intake = None
     if work_order_id is not None:
+        if intake_id is not None or mileage is not None or problems is not None:
+            raise BookingError(
+                "--wo links a work order with the intake it was opened with; "
+                "--intake, --mileage and --problems do not apply")
         with get_connection(db_path) as conn:
             wo = conn.execute(
                 "SELECT * FROM work_orders WHERE id = ?", (work_order_id,)).fetchone()
@@ -443,11 +539,16 @@ def check_in(appt_id: int, work_order_id: Optional[int] = None,
         if wo["status"] in TERMINAL_STATUSES:
             raise BookingError(
                 f"work order #{work_order_id} is {wo['status']}")
+        if wo["intake_visit_id"] is not None:
+            intake = get_intake(wo["intake_visit_id"], db_path=db_path)
     else:
+        intake, intake_created = _intake_for_check_in(
+            appt, intake_id, mileage, problems, created_by_user_id, db_path)
         label = TYPE_LABELS.get(appt["appointment_type"], "Appointment")
         title = f"{label}: {appt['notes']}" if appt["notes"] else label
         work_order_id = create_work_order(
             appt["shop_id"], appt["vehicle_id"], appt["customer_id"], title,
+            intake_visit_id=intake["id"],
             assigned_mechanic_user_id=appt["user_id"],
             created_by_user_id=created_by_user_id, db_path=db_path,
         )
@@ -455,7 +556,7 @@ def check_in(appt_id: int, work_order_id: Optional[int] = None,
         created = True
     _move(appt_id, "in_progress", db_path, work_order_id=work_order_id,
           actual_start=_stored(datetime.now()))
-    return work_order_id, created
+    return CheckIn(work_order_id, created, intake, intake_created)
 
 
 # ---------------------------------------------------------------------------

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F190**.
+At the time of writing the highest assigned is **F191**.
 
 ---
 
@@ -2877,3 +2877,31 @@ claim's receivable: in QuickBooks a journal moving the shortfall from the
 provider to the customer or to a write-off account; in Xero a credit note
 against the provider's invoice, which Xero imports from a file of its
 own.
+
+### F191
+
+**`--since` compares a local-time cutoff with UTC stamps written in another format**
+
+Found in Phase 374 (2026-10-06), reading `intake_at`'s clock.
+`shop/intake_repo.py`'s `_since_cutoff` turns `7d`, `24h` or `30m` into
+`datetime.now() - offset`, which is local time, formatted
+`YYYY-MM-DDTHH:MM:SS`. It compares that cutoff, as text, with
+`intake_visits.intake_at`. `intake_at` is UTC, `YYYY-MM-DD HH:MM:SS`:
+SQLite's `CURRENT_TIMESTAMP` wrote it until 374, and Python's clock in the
+same format since. `work_order_repo.list_work_orders` (`wo.created_at`)
+and `issue_repo` reuse the same cutoff.
+
+Measured on a scratch database, 2026-10-06 23:26 EDT:
+- **In New York,** an intake stamped three hours earlier is listed by
+  `list_intakes(since="30m")` and counted by `count_intakes`, along with
+  two made that minute: 3 found, 2 expected.
+- **On a machine set to UTC,** the separator alone decides:
+  `'2026-10-07 03:26:39' >= '2026-10-07T02:56:39'` is False, so an
+  intake made that minute is left out of `--since 30m`.
+
+What it affects: `shop intake list --since`, the intake count, and the
+work order and issue lists' `--since`. Live holds 0 intakes (2026-10-06).
+
+What would close it: compute the cutoff in UTC in the column's own format
+(or compare parsed times), for each table whose stamp it is compared with,
+with a test at a fixed clock in a zone away from UTC.

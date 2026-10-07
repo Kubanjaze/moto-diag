@@ -33,7 +33,7 @@ shops so the CLI layer can render names without a second round-trip.
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime, timedelta
+from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from motodiag.core.database import get_connection
@@ -167,9 +167,11 @@ def create_intake(
             shop_id, customer_id, vehicle_id,
             mileage_at_intake, reported_problems, intake_user_id,
         ]
-        if intake_at is not None:
-            columns.append("intake_at")
-            values.append(str(intake_at))
+        # UTC, in CURRENT_TIMESTAMP's own format, but from Python's clock.
+        if intake_at is None:
+            intake_at = datetime.now(timezone.utc).strftime("%Y-%m-%d %H:%M:%S")
+        columns.append("intake_at")
+        values.append(str(intake_at))
 
         placeholders = ", ".join("?" for _ in columns)
         column_list = ", ".join(columns)
