@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F193**.
+At the time of writing the highest assigned is **F194**.
 
 ---
 
@@ -3008,3 +3008,29 @@ What would close it: convert the typed value with `utc_cutoff` (Phase
 377), then write it in the column's own shape, so the comparison stays
 on the index; with a test at a fixed clock in a zone away from UTC.
 
+
+### F194
+
+**An invoice's number carries the UTC day, while its tax and the export use the shop's day**
+
+Found at Phase 376's Step 0 (2026-10-07), from the operator's measurement
+at `914adad`, re-verified on `phase-376` at `0897f14`.
+`_format_invoice_number` (`shop/invoicing.py:210`) writes
+`INV-<shop>-<work order>-<YYYYMMDD>` from the `now` it is given, and
+`generate_invoice_for_wo` gives it `datetime.now(timezone.utc)` (`:598`).
+The shortfall invoice's number takes its date the same way (`:764`). Tax
+rules are resolved on `tax.today()` and the accounting export dates an
+invoice by the shop's day (`_us_date`, Phase 377), both local. So after
+20:00 EDT (19:00 EST) an invoice is numbered with tomorrow's date: at
+2026-10-31 21:00 EDT the number reads `20261101` and the shop's day is
+2026-10-31 (printed on the frozen-zone check in the 376 log), so an October
+invoice can carry a November number.
+
+What it affects: every invoice and shortfall invoice issued in the evening
+hours, in the number printed to the customer and carried into QuickBooks'
+Journal No. and Xero's InvoiceNumber. No amount or date column is wrong;
+11 test files cite `INV-` numbers. Live holds 0 invoices (2026-10-07).
+
+What would close it: date the number by the shop's day of the same
+instant (`core/timestamps.local_day`), in both places, with a test on the
+frozen clock at 21:00 EDT on a month's last day.
