@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F194**.
+At the time of writing the highest assigned is **F195**.
 
 ---
 
@@ -3034,3 +3034,30 @@ Journal No. and Xero's InvoiceNumber. No amount or date column is wrong;
 What would close it: date the number by the shop's day of the same
 instant (`core/timestamps.local_day`), in both places, with a test on the
 frozen clock at 21:00 EDT on a month's last day.
+
+### F195
+
+**Parts given away under an absorbed claim that carried no tax may owe tax on their cost, and nothing records it**
+
+Found at Phase 376's Step 0 (2026-10-07), in its reading of the tax on an
+absorbed shortfall (`docs/phases/in_progress/376_sources.md`, "What the
+sources say together"). A claim whose warranty's payer is
+`maker_with_bike` or `shop_contract` carries no tax (Phase 373's rules).
+When its provider denies it or pays short and the shop absorbs the
+shortfall, the parts were transferred for nothing. Massachusetts' LR 00-10
+quotes G.L. c. 64H § 8(d): a use of property bought for resale "other than
+retention, demonstration or display" is "deemed a retail sale", with "the
+cost of the service or property to him" as the gross receipts. 830 CMR
+64H.1.4 (promotional items) would bear on it and is blocked (403). Nothing
+read in full rules on parts furnished under a denied warranty claim.
+
+What it affects: any absorbed claim with covered parts and no tax on the
+claim. The export (Phase 376) books the shortfall to the absorbed account
+and no tax; the CLI names this finding when it does. The shop's cost of a
+part is not on the invoice (`typical_cost_cents` is a price), so no tax
+could be computed from what is stored. Live holds 0 claims (2026-10-07).
+
+What would close it: the jurisdiction's own ruling on parts furnished
+free under a denied warranty claim, recorded per jurisdiction as a rule
+with its source; and, if it taxes their cost, a cost basis for the parts
+and a line in the export.

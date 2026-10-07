@@ -56,3 +56,40 @@ S0-4 in `376_step0.md`: Q1 what each settlement books (1A), Q2 the tax on
 an absorbed shortfall (2A), Q3 where it is booked (3A), Q4 F194 (4A), and
 Q5, a fork the sources raised, the tax on a Xero credit note (5A). The
 operator's answers will be recorded here verbatim.
+
+**The operator's answer, verbatim:** "1A, 2A (and file the use-tax
+finding), 3A, 4A, 5A. Four additions:
+- The expected-tax line covers every credit note, absorbed ones too (0 tax
+  under 2A), so a taxable rate mapped to the absorbed account shows before
+  the shop approves the draft.
+- When the export books an absorbed claim that carried no tax, the CLI
+  says tax on the parts' cost may be due and names the use-tax finding.
+- 083's dry run changes no existing row, and no schema object beyond the
+  two rebuilt tables and the new ones: every index, and the foreign keys in
+  accounting_export_invoices and accounting_export_claims, come through
+  unchanged. If anything else changes, stop and show me.
+- The export's record keeps each file's name and hash, since a Xero export
+  can now write two.
+Carry on to v1.0 and the build."
+
+**The use-tax finding is F195**, filed with the finding skill before this
+entry cites it; `finding_check.py` exit 0.
+
+**What the third addition sets, read literally:** the phase stops and
+shows the operator if 083's dry run changes any existing row, or any
+schema object other than `accounting_accounts` and `accounting_exports`
+(rebuilt) and the new tables and their indexes. Without such a change,
+083 is new tables, two rebuilt tables holding 0 live rows, one new rule
+row and its `schema_version` row, which CLAUDE.md rule 1 does not stop
+for. No approval is inferred from this beyond that.
+
+**One reading of the second addition, recorded:** the line is printed for
+an absorbed claim with no tax that covers parts. A labour-only claim
+transfers no parts, so "tax on the parts' cost" does not apply to it, and
+printing it there would be wrong information.
+
+### 2026-10-07 — v1.0
+
+`376_implementation.md` v1.0: the choices and additions, what each
+settlement books, migration 083, the export and the CLI, F194, the tests
+and the checklist.
