@@ -20,7 +20,10 @@ What the gate found is in `docs/phases/*/292_step0.md`: the Xero tax
 spread (fixed here), and F188 and F189, pinned below as they were. Phase
 373 closed F188: job A's claim covers 1.0 h and the pads, the invoice
 leaves them off what the customer owes, and the claim's amount is derived
-and exported as owed by the plan; its test below is inverted.
+and exported as owed by the plan; its test below is inverted. Phase 374
+closed F189: check-in links the intake or records it, so job A checks in
+first and job B takes the intake first, and each work order carries its
+intake; its test is inverted too.
 """
 
 from __future__ import annotations
@@ -84,6 +87,9 @@ JOB_A = {  # the card job: covered by its warranty, a claim opened
     # A maker's plan paying the repair bill: LR 79-19's own facts (Phase 373).
     "payer": "other",
     "mileage": "31200",
+    # Checked in first: check-in records the intake, and the mileage is read
+    # into it afterwards.
+    "order": "check-in first",
     "start": f"{DAY}T09:00", "minutes": "120",
     "problem": "Front brake squeals and pulls left",
     "part": ("brake pads", "honda", "honda-06455-mee-000-brake-pads"),
@@ -98,6 +104,8 @@ JOB_B = {  # the cash job: its warranty ended before the visit
     "warranty": ("extended", "Yamaha Extended Service", "2021-04-01", "2026-03-31", "30000"),
     "payer": "other",
     "mileage": "22400",
+    # The intake first: check-in links it, taken an hour before the slot.
+    "order": "intake first",
     "start": f"{DAY}T13:00", "minutes": "60",
     "problem": "Front caliper sticking",
     "part": ("caliper", "yamaha", "all-balls-18-3019-brake-caliper-kit"),
@@ -353,16 +361,21 @@ def _walk_job(w: Walker, rec: dict, key: str, job: dict) -> dict:
     j["confirmation"] = w.run("confirm", "shop", "appointment", "confirm", appt,
                               "--channel", "phone", "--by", 1)
 
-    # Intake, then the work order from it, then check-in linking that order
-    # (the order that holds; F189).
-    out = w.run("intake", "shop", "intake", "create", "--shop", shop, "--customer", cust,
-                "--bike", bike, "--mileage", job["mileage"], "--notes", job["problem"])
-    j["intake"] = intake = _printed_id(out, r"Created intake id=(\d+)")
-    out = w.run("work order", "shop", "work-order", "create", "--intake", intake,
-                "--title", job["problem"], "--estimated-hours", job["estimate"],
-                "--mechanic", 1)
-    j["wo"] = wo = _printed_id(out, r"Created work order id=(\d+)")
-    w.run("check-in", "shop", "appointment", "check-in", appt, "--wo", wo)
+    # The intake and check-in, in the job's order (Phase 374): either way the
+    # work order check-in opens carries the intake.
+    if job["order"] == "intake first":
+        out = w.run("intake", "shop", "intake", "create", "--shop", shop, "--customer",
+                    cust, "--bike", bike, "--mileage", job["mileage"], "--notes",
+                    job["problem"])
+        j["intake"] = _printed_id(out, r"Created intake id=(\d+)")
+        j["check_in"] = w.run("check-in", "shop", "appointment", "check-in", appt)
+    else:
+        j["check_in"] = w.run("check-in", "shop", "appointment", "check-in", appt)
+        j["intake"] = _printed_id(j["check_in"], r"Intake recorded: intake #(\d+)")
+        w.run("intake", "shop", "intake", "update", j["intake"], "--mileage", job["mileage"])
+    j["wo"] = wo = _printed_id(j["check_in"], r"work order #(\d+) opened")
+    w.run("work order", "shop", "work-order", "update", wo, "--set",
+          f"estimated_hours={job['estimate']}")
 
     # Warranty check on the visit's day, at the intake's mileage.
     j["warranty_check"] = json.loads(w.run(
@@ -569,6 +582,18 @@ def _covered_work_billed_to_the_customer_too(mp):
     mp.setattr(invoicing, "_price_claims", billed_in_full)
 
 
+def _check_in_opens_the_work_order_without_its_intake(mp):
+    """F189 as it was: the work order check-in opens has no intake."""
+    from motodiag.shop import work_order_repo
+
+    real = work_order_repo.create_work_order
+
+    def no_intake(*args, **kwargs):
+        return real(*args, **{**kwargs, "intake_visit_id": None})
+
+    mp.setattr(work_order_repo, "create_work_order", no_intake)
+
+
 # The operator's five planted controls, and F158's. Each walk must turn the
 # named check of the gate red; the phase log records each run.
 PLANTS = {
@@ -584,6 +609,9 @@ PLANTS = {
     # Phase 373's: F188 itself.
     "covered work invoiced to the customer as well":
         {"patches": [_covered_work_billed_to_the_customer_too]},
+    # Phase 374's: F189 itself.
+    "a checked-in work order without its intake":
+        {"patches": [_check_in_opens_the_work_order_without_its_intake]},
 }
 
 
@@ -923,7 +951,7 @@ class TestNoBuildReferences:
         assert build_references(["the BMW F800R rider's manual, below 95 °F"]) == []
 
 
-# --- 6. F188, inverted by Phase 373; F189, pinned as it is today ---
+# --- 6. F188, inverted by Phase 373; F189, inverted by Phase 374 ---
 
 
 class TestWhatTheGateFound:
@@ -957,35 +985,35 @@ class TestWhatTheGateFound:
                                        "WHERE c.claim_id = ?", (j["claim"],))
         assert sorted(r["target"] for r in exported) == ["quickbooks_online", "xero"]
 
-    def test_f189_check_in_without_a_work_order_opens_one_with_no_intake(self, tmp_path):
-        """Passes today, and fails the day row 374 gives check-in the intake."""
-        db = str(tmp_path / "f189.db")
-        from motodiag.core.database import init_db
-        init_db(db)
-
-        def run(*args):
-            out = cli(db, *args)
-            assert out.exit_code == 0, out.output
-            return out.output
-
-        shop = _printed_id(run("shop", "profile", "init", "--name", "Check-in Shop"),
-                           r"Registered shop id=(\d+)")
-        cust = _printed_id(run("shop", "customer", "add", "--name", "Dana Rider",
-                               "--shop-id", shop), r"Added customer id=(\d+)")
-        bike = _printed_id(run("garage", "add", "--make", "Honda", "--model", "CBR600RR",
-                               "--year", "2005", "--powertrain", "ice", "--engine-type",
-                               "four_stroke"), r"Added vehicle #(\d+)")
-        run("shop", "customer", "link-bike", cust, "--bike", bike)
-        appt = _printed_id(run("shop", "appointment", "book", "--shop", shop, "--customer",
-                               cust, "--bike", bike, "--start", f"{DAY}T09:00",
-                               "--minutes", "60"), r"Booked appointment #(\d+)")
-        run("shop", "intake", "create", "--shop", shop, "--customer", cust, "--bike", bike,
-            "--mileage", "31200")
-        out = run("shop", "appointment", "check-in", appt)
-        wo = _printed_id(out, r"work order #(\d+) opened")
-        assert _one(db, "SELECT intake_visit_id FROM work_orders WHERE id = ?",
-                    (wo,))["intake_visit_id"] is None
-        assert "--intake" not in run("shop", "appointment", "check-in", "--help")
+    def test_f189_the_work_order_carries_its_intake_in_either_order(self, walked):
+        """Until Phase 374, check-in without --wo opened a work order with no
+        intake, so only intake → `work-order create --intake` → `check-in
+        --wo` held. Job A now checks in first and job B takes the intake
+        first; each work order carries its intake."""
+        labels = {k: [s["label"] for s in walked["steps"] if s["job"] == k] for k in "AB"}
+        assert labels["A"].index("check-in") < labels["A"].index("intake")
+        assert labels["B"].index("intake") < labels["B"].index("check-in")
+        assert not any(s["argv"][:3] == ["shop", "work-order", "create"]
+                       for s in walked["steps"])
+        for k, job in (("A", JOB_A), ("B", JOB_B)):
+            j = walked[k]
+            intake = _one(walked["db"], "SELECT * FROM intake_visits WHERE id = ?",
+                          (j["intake"],))
+            assert j["wo_row"]["intake_visit_id"] == j["intake"]
+            # A: the problem from the booking's notes; B: from the intake's.
+            assert (intake["mileage_at_intake"], intake["reported_problems"]) == (
+                int(job["mileage"]), job["problem"])
+        # Check-in printed the intake's date and mileage.
+        a, b = (" ".join(walked[k]["check_in"].split()) for k in "AB")
+        assert (f"Intake recorded: intake #{walked['A']['intake']}, taken {DAY} 12:00, "
+                "mileage not recorded.") in a
+        assert (f"Intake linked: intake #{walked['B']['intake']}, taken {DAY} 12:00, "
+                "mileage 22,400 mi.") in b
+        # The claim packet reads the intake's mileage and problems.
+        packet = walked["A"]["packet"]
+        assert "Mileage at intake: 31,200 mi" in packet
+        assert f"Reported at intake: {JOB_A['problem']}" in packet
+        assert "31,200 of 40,000 mi" in packet
 
 
 # --- 7. The planted controls stay proven ---
@@ -1007,6 +1035,8 @@ CAUGHT_BY = {
         TestNoBuildReferences().test_the_walk_prints_none(r)),
     "covered work invoiced to the customer as well": lambda r: (
         TestWhatTheGateFound().test_f188_covered_work_is_off_the_customers_invoice_and_on_the_claim(r)),
+    "a checked-in work order without its intake": lambda r: (
+        TestWhatTheGateFound().test_f189_the_work_order_carries_its_intake_in_either_order(r)),
 }
 
 

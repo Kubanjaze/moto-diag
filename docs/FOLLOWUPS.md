@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F190**.
+At the time of writing the highest assigned is **F191**.
 
 ---
 
@@ -2824,9 +2824,24 @@ What would close it (row 373): a rule for which lines a claim covers; the
 claimed amount derived from those lines; claimed lines left off what the
 customer owes; and Gate 16's pinned test of today's behaviour inverted.
 
-### F189
+### F189 — CLOSED by Phase 374 (2026-10-07)
 
 **Check-in opens a work order with no intake, and no command can attach one afterwards**
+
+**Closed:** `shop appointment check-in` opens the work order from the
+visit's intake:
+- the one named with `--intake`;
+- or the one open intake for the shop, customer and bike, taken within a
+  day of the appointment;
+- or, with none open, one it records itself, with the mileage unknown
+  unless given and the booking's notes as the problems.
+
+Otherwise it refuses and lists them. It prints the intake's date and
+mileage. The claim packet prints the mileage at intake and the reported
+problems; an unknown mileage stays "not recorded", never the bike's. The
+rule that a work order's intake cannot be changed afterwards stands.
+Gate 16 walks both orders; its pinned test is inverted
+(`test_f189_the_work_order_carries_its_intake_in_either_order`).
 
 Found at Phase 292's Step 0 (2026-10-06) (`292_step0.md`, S0-4 H3).
 - `shop appointment check-in` without `--wo` creates and opens a work
@@ -2877,3 +2892,31 @@ claim's receivable: in QuickBooks a journal moving the shortfall from the
 provider to the customer or to a write-off account; in Xero a credit note
 against the provider's invoice, which Xero imports from a file of its
 own.
+
+### F191
+
+**`--since` compares a local-time cutoff with UTC stamps written in another format**
+
+Found in Phase 374 (2026-10-06), reading `intake_at`'s clock.
+`shop/intake_repo.py`'s `_since_cutoff` turns `7d`, `24h` or `30m` into
+`datetime.now() - offset`, which is local time, formatted
+`YYYY-MM-DDTHH:MM:SS`. It compares that cutoff, as text, with
+`intake_visits.intake_at`. `intake_at` is UTC, `YYYY-MM-DD HH:MM:SS`:
+SQLite's `CURRENT_TIMESTAMP` wrote it until 374, and Python's clock in the
+same format since. `work_order_repo.list_work_orders` (`wo.created_at`)
+and `issue_repo` reuse the same cutoff.
+
+Measured on a scratch database, 2026-10-06 23:26 EDT:
+- **In New York,** an intake stamped three hours earlier is listed by
+  `list_intakes(since="30m")` and counted by `count_intakes`, along with
+  two made that minute: 3 found, 2 expected.
+- **On a machine set to UTC,** the separator alone decides:
+  `'2026-10-07 03:26:39' >= '2026-10-07T02:56:39'` is False, so an
+  intake made that minute is left out of `--since 30m`.
+
+What it affects: `shop intake list --since`, the intake count, and the
+work order and issue lists' `--since`. Live holds 0 intakes (2026-10-06).
+
+What would close it: compute the cutoff in UTC in the column's own format
+(or compare parsed times), for each table whose stamp it is compared with,
+with a test at a fixed clock in a zone away from UTC.

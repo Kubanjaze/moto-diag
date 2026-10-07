@@ -370,7 +370,7 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
     issues: list = []
     parts: list = []
     time_rows: list = []
-    intake_mileage = None
+    intake = None
     with get_connection(db_path) as conn:
         bike = dict(conn.execute("SELECT * FROM vehicles WHERE id = ?",
                                  (claim["vehicle_id"],)).fetchone())
@@ -400,9 +400,9 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
                 (wo["id"],),
             ).fetchall()
             if wo.get("intake_visit_id"):
-                v = conn.execute("SELECT mileage_at_intake FROM intake_visits WHERE id = ?",
-                                 (wo["intake_visit_id"],)).fetchone()
-                intake_mileage = v[0] if v else None
+                intake = conn.execute(
+                    "SELECT mileage_at_intake, reported_problems FROM intake_visits "
+                    "WHERE id = ?", (wo["intake_visit_id"],)).fetchone()
         if customer is None:
             customer = conn.execute(
                 "SELECT c.* FROM customers c JOIN customer_bikes cb "
@@ -429,6 +429,10 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
     out.append(f"Bike: {bike.get('year') or ''} {bike['make']} {bike['model']}".rstrip())
     out.append(f"VIN: {bike.get('vin') or 'not recorded'}")
     out.append("Mileage on record: " + _miles(bike.get("mileage")))
+    if intake is not None:
+        out.append("Mileage at intake: " + _miles(intake["mileage_at_intake"]))
+        if intake["reported_problems"]:
+            out.append(f"Reported at intake: {intake['reported_problems']}")
     out.append("")
     provider = warranty.get("provider")
     out.append(f"Coverage: {warranty['coverage_type']}"
@@ -445,7 +449,9 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
     if wo:
         repair_date = str(wo.get("completed_at") or wo.get("opened_at") or "")[:10] or None
     if repair_date:
-        mileage = intake_mileage if intake_mileage is not None else bike.get("mileage")
+        # An intake's unknown mileage stays unknown: never the bike's instead.
+        mileage = (intake["mileage_at_intake"] if intake is not None
+                   else bike.get("mileage"))
         verdict, reasons = coverage_status(warranty, repair_date, mileage)
         out.append(f"  On the repair date ({repair_date}): {verdict} — {'; '.join(reasons)}")
     out.append("")

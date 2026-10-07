@@ -458,7 +458,12 @@ def _render_work_order_panel(console, wo: dict) -> None:
         f"Bike:     {bike_label or '?'}  (id={wo['vehicle_id']})"
     )
     if wo.get("intake_visit_id"):
-        lines.append(f"Intake:   id={wo['intake_visit_id']}")
+        from motodiag.scheduling.booking import intake_label
+
+        intake = get_intake(wo["intake_visit_id"])
+        lines.append(f"Intake:   {intake_label(intake)}")
+        if intake.get("reported_problems"):
+            lines.append(f"Reported: {intake['reported_problems']}")
     mech = wo.get("assigned_mechanic_name") or wo.get(
         "assigned_mechanic_user_id"
     )

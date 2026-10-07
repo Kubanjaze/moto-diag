@@ -209,20 +209,52 @@ def register_booking(shop_group: click.Group) -> None:
     @appointment_group.command("check-in")
     @click.argument("appt_id", type=int)
     @click.option("--wo", "work_order_id", type=int, default=None,
-                  help="Link this work order instead of opening a new one.")
-    def appointment_check_in(appt_id: int, work_order_id: Optional[int]) -> None:
-        """The customer has arrived: open (or link) the work order."""
+                  help="Link this work order, with the intake it was opened "
+                       "with, instead of opening a new one.")
+    @click.option("--intake", "intake_id", type=int, default=None,
+                  help="Open the work order from this open intake.")
+    @click.option("--mileage", type=int, default=None,
+                  help="Mileage, when check-in records the intake.")
+    @click.option("--problems", default=None,
+                  help="Reported problems, when check-in records the intake "
+                       "(default: the appointment's notes).")
+    def appointment_check_in(appt_id: int, work_order_id: Optional[int],
+                             intake_id: Optional[int], mileage: Optional[int],
+                             problems: Optional[str]) -> None:
+        """The customer has arrived: open (or link) the work order.
+
+        Without --wo or --intake, the work order is opened from the bike's
+        one open intake taken within a day of the appointment; with none
+        open, check-in records the intake itself.
+        """
+        from motodiag.shop.intake_repo import list_open_for_bike
+
         console = get_console()
         init_db()
         try:
-            wo_id, created = booking.check_in(appt_id, work_order_id)
+            done = booking.check_in(appt_id, work_order_id, intake_id, mileage, problems)
         except (booking.BookingError, ValueError) as e:
             raise click.ClickException(str(e)) from e
-        verb = "opened" if created else "linked"
+        verb = "opened" if done.created else "linked"
         console.print(
-            f"[green]Appointment #{appt_id} checked in; work order #{wo_id} "
-            f"{verb}.[/green]"
+            f"[green]Appointment #{appt_id} checked in; work order "
+            f"#{done.work_order_id} {verb}.[/green]"
         )
+        if done.intake is None:
+            console.print(f"Work order #{done.work_order_id} has no intake.")
+            return
+        how = "recorded" if done.intake_created else "linked"
+        console.print(f"Intake {how}: {booking.intake_label(done.intake)}.")
+        if done.intake["mileage_at_intake"] is None:
+            console.print(f"Record the mileage with: shop intake update "
+                          f"{done.intake['id']} --mileage N")
+        if done.intake_created:
+            others = [r["id"] for r in list_open_for_bike(done.intake["vehicle_id"])
+                      if r["id"] != done.intake["id"]]
+            if others:
+                console.print(
+                    f"[yellow]Warning: this bike has {len(others)} other open "
+                    f"intake(s) (ids={', '.join(map(str, others))}).[/yellow]")
 
     @appointment_group.command("cancel")
     @click.argument("appt_id", type=int)
