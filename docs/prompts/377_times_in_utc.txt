@@ -1,0 +1,82 @@
+Do this: start Phase 377, times stored in UTC across the shop's tables (F186 and F191), and run it to its finish line as CLAUDE.md sets out. It is F10's family: Phase 370 fixed diagnostic sessions; the rest of the app still stamps naive local time and compares it with UTC. Read these first:
+- F186 and F191 in docs/FOLLOWUPS.md. Neither has a row yet: add row 377 (the next free number; confirm it) before Step 0, 🚧, naming both.
+- 370's documents (docs/phases/completed/370_*), its helpers in src/motodiag/core/timestamps.py (`utc_now`, `to_utc`, `local_display`, `convert_session_times_079`), its clock test (tests/test_phase370_session_utc.py, tests/support/frozen_clock.py), and its format decision ("The format").
+- 374's handoff, docs/handoffs/2026-10-07_374_closed.md, where F191 was found.
+
+The measured facts, taken 2026-10-07 on master at 0ffb6ba. Re-verify each at Step 0.
+- **Who stamps local:** 47 lines in src/ call `datetime.now()` with no zone, by F186's own rule (`grep -rn "datetime.now()"`, less lines naming timezone, `.year`, `strftime` or `date()`). Two are docstrings (core/timestamps.py, core/migrations.py), so 45 are code, in 15 files:
+  - shop/work_order_repo.py 9, shop/issue_repo.py 5, pricing/repair_plan.py 5, shop/intake_repo.py 4, scheduling/booking.py 4;
+  - vehicles/registry.py 3, shop/shop_repo.py 3;
+  - workflows/template_repo.py 2, scheduling/appointment_repo.py 2, crm/customer_repo.py 2, crm/customer_bikes_repo.py 2;
+  - knowledge/loader.py, knowledge/issues_repo.py, auth/users_repo.py and advanced/baseline.py, 1 each.
+- **Who compares:**
+  - `shop/analytics.py`'s `_parse_date_window` returns a UTC cutoff in `YYYY-MM-DD HH:MM:SS`, and throughput, turnaround and labour accuracy compare it with local `completed_at` (F186).
+  - `shop/intake_repo.py`'s `_since_cutoff` returns a local cutoff in `YYYY-MM-DDTHH:MM:SS`, compared as text with UTC `intake_at`. work_order_repo's `list_work_orders` and issue_repo reuse it (F191). On a UTC machine the separator alone decides the comparison.
+  - Census any other comparison of a stored time with a computed one at Step 0.
+- **Five shapes live together in the live database** (on a copy, 2026-10-07):
+  - naive local `…T…`, microseconds and no offset;
+  - SQLite's `CURRENT_TIMESTAMP` `… …`, which is UTC;
+  - UTC with `+00:00` and microseconds;
+  - 370's UTC with milliseconds;
+  - a `Z` form in `videos.started_at`.
+
+  Rows in the defect shape: customers (4 `created_at`, 4 `updated_at`), vehicles (6 and 6), work_orders (`opened_at` 5, `started_at` 4, `completed_at` 3, `closed_at` 3, and `updated_at`), and known_issues (`created_at` on all 1060, the seed loader's stamp).
+- **The app shows work-order times as raw strings** (moto-diag-mobile src/screens/buildWorkOrderSections.ts:242-254, through `_str`, with no parsing).
+  - "Created" is `work_orders.created_at`, SQLite's UTC default, so it already shows UTC as if it were local time.
+  - Opened, Started, Completed and Closed show naive local strings.
+  - A change of stored format therefore changes what a user sees: a planned mobile session, as in 281.
+
+What to build:
+- **Every time the app writes is UTC, in one format** that compares correctly, using 370's helpers. Decide at Step 0 whether that is 370's format everywhere, and say why.
+- **Every cutoff and window compares correctly** in zone and in format: F191's `_since_cutoff`, F186's analytics windows, and any others the census finds.
+- **Every reader shows local time:** the CLI, reports, and what the API returns for the app to display.
+- **A clock test,** on 370's frozen clock in a US timezone away from UTC, proves each comparison. It covers a `--since 30m` that includes the last minute and excludes three hours ago, and an analytics window's first day. A planted return to local time must fail it.
+- **F186 and F191 are closed.**
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **The format, and how comparisons are done:** one stored format everywhere, or parsed comparisons. Say what happens to the `CURRENT_TIMESTAMP` columns.
+2. **The live rows in the defect shape.** Converting them changes existing rows, a rule-1 stop: show me the dry-run diff, table by table.
+   - Say which tables you would convert and which you would leave, with what leaving costs. known_issues' 1060 stamps are the seed loader's time, not a shop event.
+   - A scoped approval from me will name the migration's own schema_version row too.
+3. **The app:**
+   - the app formats the times it receives, in a mobile session;
+   - or the API sends a display string beside each time, which changes the API's models and also brings a mobile session.
+   - Say which, and what "Created" shows until then.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Live:
+- A migration (082), if the phase needs one, goes through the deploy skill. New tables, new columns and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is (question 2).
+- **The planned mobile stop** (question 3):
+  - back up the held work as a patch;
+  - write the mobile prompt to moto-diag-mobile/docs/prompts/ and leave it uncommitted, for the mobile session to commit;
+  - stop, as 281 did.
+
+  If the snapshot moves, master is tied to this branch until it merges.
+
+Carry forward:
+- **A test that reads the clock gets a fixed one** (370's frozen clock; 292's walk runs at midday, mid-month).
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+- **Never record a regression** on a month's last day after 20:00 EDT. That is the month-end window F10 opened.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the three questions above, with options and the live census.
+- **At the end:**
+  - the stamps and comparisons fixed, file by file;
+  - the clock test and its control;
+  - each reader, and what a user sees;
+  - the live rows, the dry-run diff and the deploy outcome;
+  - the mobile session's outcome;
+  - F186 and F191 closed;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: rows 375 and 376, or my call.
