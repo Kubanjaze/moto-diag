@@ -123,3 +123,74 @@ What was built, against v1.0's Logic steps:
 - **Phase 171's `test_iso_input`** asserted that a naive typed time is read
   as UTC. v1.0 reads it as the shop's time, so the test now types an
   explicit offset. The local reading is tested in 377's `TestHelpers`.
+
+### 2026-10-07 — The first whole-suite run, and four older tests
+
+The whole suite ran on the work in progress before the new test file
+existed: 10579 passed, 6 failed. Each failure was read:
+- **171's `test_iso_input`** expects a naive typed time to be read as UTC
+  (changed above).
+- **275's Xero test:** a due date stored as UTC midnight came out a day
+  early, because the export's date formatter now gives an instant's day in
+  the shop's zone. A due date is a calendar date, not an instant, and only
+  the legacy invoice model writes it. The export now formats `DueDate` by
+  its own date as written (`_us_due_date`, the old rule). `InvoiceDate`
+  (`issued_at`, an instant) takes the shop's day. This is a fix to 377's
+  own new code before any commit, not a bug-fix entry.
+- **256's chokepoint pins `file:line`** of every dynamic-table query.
+  `intake_repo.py` moved from 90 to 91, and 082's converter is a fifth
+  query. Its table names come only from `SHOP_TIME_FIELDS_082`, which has
+  no `known_issues`; 377's test asserts that. The pin list and its
+  docstring were updated.
+- **Gate 16's frozen-day check** read `completed_at` as noon local. It is
+  now noon EDT stored in UTC, `2026-10-15T16:00:00.000+00:00`, the same
+  check its `issued_at` line already made.
+- **370's `local_display` test** pinned a space-shaped value as returned
+  unchanged. v1.0 Logic step 1 changes that on purpose: SQLite's shape is
+  UTC, so it is shown local. The test now pins the new reading, and a
+  naive `T` value still unchanged.
+
+The six files then: 259 passed.
+
+### 2026-10-07 — Mutations, the scanner, the dry run, the regression
+
+- **Mutations:** `377_mutate.py`, 26/26 red (`377_mutate.out`). M1, the
+  planted return to local time in `complete_work_order`, is red.
+- **244G's scanner** over all of `tests/`: 0 hits.
+- **Deploy dry run:**
+  - `377_deploy_scope.json` was generated from
+    `377_live_rows_preview.out`;
+  - `deploy.py dryrun 377` gave scope problems "none", a census of 36 and
+    backup `motodiag_pre377_20261007_112806.db`;
+  - compared by script, the exact diff equals the preview's 40 fields in
+    customers 3–6, vehicles 1–5 and 10, and work orders 1–5, plus 082's
+    `schema_version` row, with no schema change.
+  - Committed in `5ad8c3e`.
+- **`wholetree.sh --full`** on the staged build: 4020 passed, gate 11
+  included, so the snapshot did not move. Committed as `5ad8c3e`.
+- **Floor:** 10584 → 10617 (`87f1fc8`), from a diff of collected ids
+  against master: the new file's 32, and gate 15's rollback case `[81]`,
+  which 082 adds.
+- **`wholetree.sh --full`** on the committed HEAD `87f1fc8`: 4020 passed.
+- **What a user sees,** on a scratch copy of live with 082 applied:
+  `shop work-order show 3` prints `Opened: 2026-09-04T15:35:46`, the same
+  local time as before. The stored value is now
+  `2026-09-04T19:35:46.883+00:00`.
+
+Regression of record: 10617 passed, 0 failed, 0 skipped, 0 errors at `87f1fc8` (25 min 38 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-10-07 — The planned stop: the live diff, and the mobile session
+
+Two things wait for the operator. Nothing in this checkout is held: every
+change is committed and pushed at `87f1fc8`, so no patch backup is needed.
+The only uncommitted file is the mobile prompt, in the other repository.
+1. **The live apply (rule 1).** `377_dryrun_diff.md` is committed. Its
+   exact diff changes the 40 fields of the preview and adds 082's
+   `schema_version` row. `apply-live` waits for the operator's own words
+   on that diff.
+2. **The mobile session (3A).** Its prompt is
+   `moto-diag-mobile/docs/prompts/2026-10-07_work_order_times_local_377.txt`,
+   left uncommitted for that session to commit. The session makes the
+   work-order screen's five lifecycle rows show the phone's local time.
+   The snapshot did not move, so master is not tied to this branch by gate
+   11. The merge still waits for the mobile session, as v1.0 says.
