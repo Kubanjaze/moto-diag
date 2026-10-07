@@ -174,6 +174,36 @@ def register_tax(shop_group: click.Group) -> None:
                             f"{tax_mod.PAYER_LABELS[payer]} is {verdict}, valid until "
                             f"{valid_until}.[/green]")
 
+    @tax_group.group("settlement-rule")
+    def settlement_rule_group() -> None:
+        """The tax charged on a warranty claim whose shortfall the shop absorbs."""
+
+    @settlement_rule_group.command("set")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--effective", required=True)
+    @click.option("--valid-until", required=True)
+    @click.option("--source-title", required=True)
+    @click.option("--source-url", default=None)
+    @click.option("--clause", default=None, help="The section or clause relied on.")
+    @click.option("--checked-on", required=True)
+    @click.option("--reading", is_flag=True, default=False,
+                  help="The source does not state this; it is your reading of it.")
+    def settlement_rule_set(shop_id: int, effective: str, valid_until: str,
+                            source_title: str, source_url: Optional[str],
+                            clause: Optional[str], checked_on: str, reading: bool) -> None:
+        """Record that the tax charged on a claim stays owed when the shop absorbs
+        its shortfall, from your jurisdiction's source."""
+        init_db()
+        try:
+            tax_mod.set_shop_settlement_rule(shop_id, effective, valid_until, source_title,
+                                             checked_on, source_url, clause,
+                                             "reading" if reading else "stated")
+        except tax_mod.TaxRecordError as e:
+            raise click.ClickException(str(e)) from e
+        get_console().print(f"[green]Shop {shop_id}: the tax charged on a claim stays "
+                            f"owed when the shop absorbs its shortfall, valid until "
+                            f"{valid_until}.[/green]")
+
     @tax_group.command("confirm")
     @click.option("--jurisdiction", "code", required=True)
     @click.option("--checked-on", required=True, help="When the regulator's pages were read.")
@@ -187,7 +217,8 @@ def register_tax(shop_group: click.Group) -> None:
             raise click.ClickException(str(e)) from e
         get_console().print(
             f"[green]{res['code']}: rate, {res['rules']} rules and "
-            f"{res['warranty_rules']} warranty rules checked on "
+            f"{res['warranty_rules']} warranty rules and {res['settlement_rules']} "
+            f"settlement rule(s) checked on "
             f"{res['checked_on']}; must be re-checked by {res['valid_until']}.[/green]"
         )
 
@@ -208,6 +239,8 @@ def register_tax(shop_group: click.Group) -> None:
                 "failures": st.failures, "not_on_record": st.not_on_record,
                 "warranty_rules": {k: v.__dict__ for k, v in st.warranty_rules.items()},
                 "warranty_not_on_record": st.warranty_not_on_record,
+                "settlement_rule": st.settlement_rule.__dict__ if st.settlement_rule
+                else None,
             }, indent=2, default=str))
         else:
             if st.jurisdiction:
@@ -238,6 +271,15 @@ def register_tax(shop_group: click.Group) -> None:
                     console.print(f"Warranty work owed by {label}: no rule on record; an "
                                   f"invoice with such a claim is refused until one is "
                                   f"recorded.")
+            if st.settlement_rule:
+                console.print(f"A warranty shortfall the shop absorbs: the tax charged on "
+                              f"the claim stays owed, must be re-checked by "
+                              f"{st.settlement_rule.valid_until}. "
+                              f"{_describe(st.settlement_rule)}")
+            elif st.settlement_not_on_record:
+                console.print("A warranty shortfall the shop absorbs: no rule on record; "
+                              "exporting one whose claim carried tax is refused until one "
+                              "is recorded.")
             for failure in st.failures:
                 console.print(f"[red]FAILS: {failure}[/red]")
         if not st.ok:

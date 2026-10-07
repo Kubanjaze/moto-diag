@@ -33,8 +33,10 @@ def register_accounting(shop_group: click.Group) -> None:
     @click.option("--target", required=True, type=_TARGET_CHOICE)
     @click.option("--kind", required=True, type=click.Choice(acct_export.KINDS),
                   help="labor, parts, diagnostic, misc (shop supplies), tax "
-                       "(QuickBooks: the sales-tax liability account) or "
-                       "receivable (QuickBooks: accounts receivable).")
+                       "(QuickBooks: the sales-tax liability account), "
+                       "receivable (QuickBooks: accounts receivable) or absorbed "
+                       "(a warranty shortfall the shop absorbs: an expense "
+                       "account; in Xero, a tax rate with no tax).")
     @click.option("--account", required=True,
                   help="The account exactly as your accounting software names it "
                        "(Xero: its code).")
@@ -83,19 +85,23 @@ def register_accounting(shop_group: click.Group) -> None:
     @accounting_group.command("export")
     @click.option("--shop", "shop_id", type=int, required=True)
     @click.option("--target", required=True, type=_TARGET_CHOICE)
-    @click.option("--from", "from_day", required=True, help="First issue day, YYYY-MM-DD.")
-    @click.option("--to", "to_day", required=True, help="Last issue day, YYYY-MM-DD.")
+    @click.option("--from", "from_day", required=True,
+                  help="First day, YYYY-MM-DD (invoices issued, warranty claims settled).")
+    @click.option("--to", "to_day", required=True, help="Last day, YYYY-MM-DD.")
     @click.option("--out", "out_path", required=True, type=click.Path(dir_okay=False),
-                  help="The .csv file to write.")
+                  help="The .csv file to write. Xero credit notes, if any, go beside "
+                       "it, in NAME_credit_notes.csv.")
     @click.option("--include-exported", is_flag=True, default=False,
-                  help="Also write invoices an earlier export already carried.")
+                  help="Also write invoices and settlements an earlier export already "
+                       "carried.")
     def accounting_export(shop_id: int, target: str, from_day: str, to_day: str,
                           out_path: str, include_exported: bool) -> None:
-        """Write the invoices issued in a date range as an import file.
+        """Write the invoices issued, and the warranty claims settled, in a date
+        range as import files.
 
-        The file is written here; nothing is uploaded. Cancelled invoices are
-        left out, and so are invoices an earlier export to the same target
-        carried, unless --include-exported.
+        The files are written here; nothing is uploaded. Cancelled invoices are
+        left out, and so are invoices and settlements an earlier export to the
+        same target carried, unless --include-exported.
         """
         console = get_console()
         init_db()
@@ -106,21 +112,35 @@ def register_accounting(shop_group: click.Group) -> None:
             raise click.ClickException(str(e)) from e
         claims = (f" and {result.claim_count} warranty claim(s) owed by their providers"
                   if result.claim_count else "")
-        console.print(
-            f"[green]Wrote {result.invoice_count} invoice(s){claims}, {result.row_count} "
-            f"row(s), to {result.path}.[/green]"
-        )
+        if not result.settlement_count:
+            console.print(
+                f"[green]Wrote {result.invoice_count} invoice(s){claims}, "
+                f"{result.row_count} row(s), to {result.path}.[/green]"
+            )
+        else:
+            # Phase 376: settlements, and what each file holds.
+            console.print(
+                f"[green]Wrote {result.invoice_count} invoice(s){claims}, and "
+                f"{result.settlement_count} warranty claim settlement(s):[/green]"
+            )
+            for f in result.files:
+                console.print(f"  {f.path}: {acct_export.FILE_LABELS[f.holds]}, "
+                              f"{f.row_count} row(s)")
         for note in result.notes:
+            click.echo(note)
+        for cn in result.credit_notes:
+            what = ("absorbed; it should carry no tax, so map a rate with none to the "
+                    "absorbed account" if cn.absorbed else "the claim's tax on the shortfall")
+            click.echo(
+                f"Credit note {cn.number}: credits {acct_export.money(cn.credit_cents)}; "
+                f"Xero should show tax of {acct_export.money(cn.expected_tax_cents)} "
+                f"({what}). Check it before approving the draft."
+            )
+        for note in result.settlement_notes:
             click.echo(note)
         if result.skipped:
             click.echo(
                 f"Left out, already exported: {', '.join(result.skipped)}."
-            )
-        if result.shortfalls_left_out:
-            click.echo(
-                "Left out, a warranty claim's shortfall billed to the customer (claim "
-                "settlements are not in the export yet): "
-                f"{', '.join(result.shortfalls_left_out)}."
             )
 
     @accounting_group.command("exports")
@@ -134,13 +154,16 @@ def register_accounting(shop_group: click.Group) -> None:
             console.print("[dim]No exports yet.[/dim]")
             return
         table = Table(title=f"Exports, shop {shop_id}", show_lines=False)
-        for col in ("ID", "When", "Target", "From", "To", "Invoices", "File"):
+        for col in ("ID", "When", "Target", "From", "To", "Invoices", "Settlements",
+                    "Files"):
             table.add_column(col)
         for r in rows:
+            files = "\n".join(f"{f['file_name']} ({f['file_sha256'][:12]})"
+                              for f in r["files"]) or r["file_name"]
             table.add_row(
                 str(r["id"]), r["exported_at"],
                 next(k for k, v in acct_export.TARGETS.items() if v == r["target"]),
                 r["period_from"], r["period_to"], str(r["invoice_count"]),
-                r["file_name"],
+                str(r["settlement_count"]), files,
             )
         console.print(table)
