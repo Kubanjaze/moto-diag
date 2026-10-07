@@ -11,7 +11,9 @@ the shop's clock time as entered, stored without an offset. The bay
 scheduler reads a naive entry as UTC and stores ``+00:00``; :func:`clock_time`
 reads such a slot back as the clock time it was entered at. A slot with any
 other offset is converted to UTC. The calendar and the overlap checks use
-this one rule.
+this one rule. ``actual_start`` and ``actual_end`` are clock times too.
+``updated_at`` records when the row changed, so it is UTC, in
+``core/timestamps``' format (Phase 377).
 """
 
 from __future__ import annotations
@@ -21,6 +23,7 @@ from datetime import date, datetime, timedelta, timezone
 from typing import NamedTuple, Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 from motodiag.crm import communication_repo
 from motodiag.scheduling.appointment_repo import (
     create_appointment, get_appointment, update_appointment,
@@ -300,7 +303,7 @@ def reschedule(appt_id: int, start: str, end: str,
     update_appointment(
         appt_id, db_path=db_path,
         scheduled_start=_stored(t_start), scheduled_end=_stored(t_end),
-        updated_at=datetime.now().isoformat(timespec="seconds"),
+        updated_at=utc_now(),
     )
     return warnings
 
@@ -313,7 +316,7 @@ def _move(appt_id: int, to: str, db_path: Optional[str], **fields) -> dict:
         )
     update_appointment(
         appt_id, db_path=db_path, status=to,
-        updated_at=datetime.now().isoformat(timespec="seconds"), **fields,
+        updated_at=utc_now(), **fields,
     )
     return appt
 

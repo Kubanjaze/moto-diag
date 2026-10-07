@@ -8,10 +8,11 @@ adds :func:`financial_report` (a gross-margin P&L on the costs
 ``shop/shop_costs.py`` records, migration 076) and
 :func:`estimate_variance`; neither changes the models the API serves.
 
-Timestamp comparisons are lexicographic against SQLite TEXT columns —
-safe because Phase 160+ columns use ISO-ish format
-(``YYYY-MM-DD HH:MM:SS``). :func:`_parse_date_window` normalizes
-``Nd``/``Nh``/ISO inputs to the same format at the binding boundary.
+Timestamp comparisons parse both sides: ``datetime(col) >= ?`` against
+:func:`_parse_date_window`'s UTC cutoff, because the shop's columns hold
+SQLite's ``CURRENT_TIMESTAMP`` shape beside ``core/timestamps``' format
+(Phase 377, F186). Days, months and display are the shop's local time,
+which is the server's zone (F192).
 """
 
 from __future__ import annotations
@@ -24,6 +25,9 @@ from typing import Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import (
+    local_day, local_day_start, stored_instant, utc_cutoff,
+)
 from motodiag.shop.bay_scheduler import utilization_for_day
 from motodiag.shop.invoicing import RevenueRollup, revenue_rollup
 from motodiag.shop.shop_costs import (
@@ -49,41 +53,37 @@ WINDOW_PATTERN = re.compile(r"^(\d+)([dhm])$", re.IGNORECASE)
 
 
 def _parse_date_window(since: str) -> str:
-    """Convert ``Nd``/``Nh``/``Nm``/ISO to an ISO cutoff timestamp string.
+    """``Nd``/``Nh``/``Nm`` or an ISO date or time, as :func:`utc_cutoff`'s
+    UTC ``YYYY-MM-DD HH:MM:SS``, compared with ``datetime(col) >= ?``.
 
-    Returned format: ``YYYY-MM-DD HH:MM:SS`` (space separator) which
-    matches SQLite ``CURRENT_TIMESTAMP`` and lex-compares correctly.
+    A typed time with no zone is the shop's (local) time (Phase 377).
     """
     if since is None:
         raise ValueError("since cannot be None")
     since = str(since).strip()
     if not since:
         raise ValueError("since cannot be empty")
-    m = WINDOW_PATTERN.match(since)
-    if m is not None:
-        n = int(m.group(1))
-        unit = m.group(2).lower()
-        now = datetime.now(timezone.utc).replace(tzinfo=None)
-        if unit == "d":
-            cutoff = now - timedelta(days=n)
-        elif unit == "h":
-            cutoff = now - timedelta(hours=n)
-        elif unit == "m":
-            cutoff = now - timedelta(minutes=n)
-        else:
-            raise ValueError(f"unsupported unit {unit!r}")
-        return cutoff.strftime("%Y-%m-%d %H:%M:%S")
-    # Try parse as ISO
+    if WINDOW_PATTERN.match(since):
+        since = since.lower()
+    return utc_cutoff(since)
+
+
+def _open_to_complete_hours(row) -> float:
+    """Hours from a work order's ``opened_at`` to its ``completed_at``.
+
+    Both are parsed by one rule (``stored_instant``), so a value written
+    before Phase 377 subtracts from one written after. A value that is not a
+    time raises, naming the work order: it is never skipped in silence.
+    """
     try:
-        parsed = datetime.fromisoformat(since.replace("Z", "+00:00"))
+        opened = stored_instant(row["opened_at"])
+        completed = stored_instant(row["completed_at"])
     except ValueError as e:
         raise ValueError(
-            f"since must be Nd/Nh/Nm or ISO timestamp, got {since!r}"
+            f"work order {row['id']}: a lifecycle time is not a time "
+            f"(opened_at={row['opened_at']!r}, completed_at={row['completed_at']!r})"
         ) from e
-    # Strip tz for comparison against naive SQLite strings
-    if parsed.tzinfo is not None:
-        parsed = parsed.astimezone(timezone.utc).replace(tzinfo=None)
-    return parsed.strftime("%Y-%m-%d %H:%M:%S")
+    return (completed - opened).total_seconds() / 3600.0
 
 
 def _daterange(start: str, end: str) -> list[str]:
@@ -233,22 +233,24 @@ def throughput(
     with get_connection(db_path) as conn:
         by_status_rows = conn.execute(
             """SELECT status, COUNT(*) AS n FROM work_orders
-               WHERE shop_id = ? AND created_at >= ?
+               WHERE shop_id = ? AND datetime(created_at) >= ?
                GROUP BY status ORDER BY status""",
             (shop_id, cutoff),
         ).fetchall()
         comp_rows = conn.execute(
-            """SELECT DATE(completed_at) AS d, COUNT(*) AS n
-               FROM work_orders
+            """SELECT completed_at FROM work_orders
                WHERE shop_id = ? AND completed_at IS NOT NULL
-                 AND completed_at >= ?
-               GROUP BY DATE(completed_at)
-               ORDER BY d ASC""",
+                 AND datetime(completed_at) >= ?""",
             (shop_id, cutoff),
         ).fetchall()
     by_status = {r["status"]: int(r["n"]) for r in by_status_rows}
+    # Grouped by the shop's day, not the UTC date SQLite's DATE() gives.
+    per_day: dict[str, int] = {}
+    for r in comp_rows:
+        day = local_day(r["completed_at"])
+        per_day[day] = per_day.get(day, 0) + 1
     completions_by_day = [
-        DayBucket(date=r["d"], count=int(r["n"])) for r in comp_rows
+        DayBucket(date=d, count=n) for d, n in sorted(per_day.items())
     ]
     completed_total = sum(b.count for b in completions_by_day)
     return ThroughputRollup(
@@ -265,25 +267,20 @@ def turnaround(
     cutoff = _parse_date_window(since)
     with get_connection(db_path) as conn:
         rows = conn.execute(
-            """SELECT opened_at, completed_at FROM work_orders
+            """SELECT id, opened_at, completed_at FROM work_orders
                WHERE shop_id = ?
                  AND status = 'completed'
                  AND opened_at IS NOT NULL
                  AND completed_at IS NOT NULL
-                 AND completed_at >= ?""",
+                 AND datetime(completed_at) >= ?""",
             (shop_id, cutoff),
         ).fetchall()
     hours: list[float] = []
     for r in rows:
-        try:
-            o = datetime.fromisoformat(str(r["opened_at"]))
-            c = datetime.fromisoformat(str(r["completed_at"]))
-        except (ValueError, TypeError):
+        h = _open_to_complete_hours(r)
+        if h < 0:
             continue
-        delta = c - o
-        if delta.total_seconds() < 0:
-            continue
-        hours.append(delta.total_seconds() / 3600.0)
+        hours.append(h)
     n = len(hours)
     mean_h = round(mean(hours), 2) if hours else None
     median_h = round(median(hours), 2) if hours else None
@@ -337,7 +334,7 @@ def overrun_rate(
                LEFT JOIN work_orders wo ON wo.id = s.work_order_id
                WHERE b.shop_id = ?
                  AND s.status IN ('completed', 'overrun')
-                 AND COALESCE(s.actual_end, s.scheduled_end) >= ?""",
+                 AND datetime(COALESCE(s.actual_end, s.scheduled_end)) >= ?""",
             (shop_id, cutoff),
         ).fetchall()
     total = len(rows)
@@ -375,7 +372,7 @@ def labor_accuracy(
                JOIN work_orders wo ON wo.id = le.wo_id
                WHERE wo.shop_id = ?
                  AND wo.completed_at IS NOT NULL
-                 AND wo.completed_at >= ?
+                 AND datetime(wo.completed_at) >= ?
                  AND wo.actual_hours IS NOT NULL
                  AND le.adjusted_hours IS NOT NULL
                  AND le.id = (
@@ -420,7 +417,7 @@ def top_issues(
             """SELECT i.category, i.severity, COUNT(*) AS n
                FROM issues i
                JOIN work_orders wo ON wo.id = i.work_order_id
-               WHERE wo.shop_id = ? AND i.created_at >= ?
+               WHERE wo.shop_id = ? AND datetime(i.created_at) >= ?
                GROUP BY i.category, i.severity
                ORDER BY n DESC, i.category ASC, i.severity ASC
                LIMIT ?""",
@@ -451,7 +448,7 @@ def top_parts(
                FROM work_order_parts wop
                JOIN parts p ON p.id = wop.part_id
                JOIN work_orders wo ON wo.id = wop.work_order_id
-               WHERE wo.shop_id = ? AND wo.created_at >= ?
+               WHERE wo.shop_id = ? AND datetime(wo.created_at) >= ?
                  AND wop.status != 'cancelled'
                GROUP BY wop.part_id
                ORDER BY total_cost_cents DESC, wop.part_id ASC
@@ -476,12 +473,12 @@ def mechanic_performance(
     cutoff = _parse_date_window(since)
     with get_connection(db_path) as conn:
         wo_rows = conn.execute(
-            """SELECT assigned_mechanic_user_id AS mech,
+            """SELECT id, assigned_mechanic_user_id AS mech,
                       opened_at, completed_at
                FROM work_orders
                WHERE shop_id = ?
                  AND status = 'completed'
-                 AND completed_at >= ?""",
+                 AND datetime(completed_at) >= ?""",
             (shop_id, cutoff),
         ).fetchall()
         slot_rows = conn.execute(
@@ -492,7 +489,7 @@ def mechanic_performance(
                JOIN work_orders wo ON wo.id = s.work_order_id
                WHERE b.shop_id = ?
                  AND s.status IN ('completed', 'overrun')
-                 AND COALESCE(s.actual_end, s.scheduled_end) >= ?""",
+                 AND datetime(COALESCE(s.actual_end, s.scheduled_end)) >= ?""",
             (shop_id, cutoff),
         ).fetchall()
         est_rows = conn.execute(
@@ -503,7 +500,7 @@ def mechanic_performance(
                JOIN work_orders wo ON wo.id = le.wo_id
                WHERE wo.shop_id = ?
                  AND wo.completed_at IS NOT NULL
-                 AND wo.completed_at >= ?
+                 AND datetime(wo.completed_at) >= ?
                  AND wo.actual_hours IS NOT NULL
                  AND le.adjusted_hours IS NOT NULL
                  AND le.id = (
@@ -522,14 +519,10 @@ def mechanic_performance(
             "est_within": 0, "est_total": 0,
         })
         bucket["wos"] += 1
-        try:
-            o = datetime.fromisoformat(str(r["opened_at"]))
-            c = datetime.fromisoformat(str(r["completed_at"]))
-            delta = (c - o).total_seconds() / 3600.0
+        if r["opened_at"] is not None and r["completed_at"] is not None:
+            delta = _open_to_complete_hours(r)
             if delta >= 0:
                 bucket["hours"].append(delta)
-        except (ValueError, TypeError):
-            pass
     for r in slot_rows:
         key = r["mech"]
         bucket = mechs.setdefault(key, {
@@ -589,12 +582,12 @@ def customer_repeat_rate(
     with get_connection(db_path) as conn:
         total_row = conn.execute(
             """SELECT COUNT(*) AS n FROM work_orders
-               WHERE shop_id = ? AND created_at >= ?""",
+               WHERE shop_id = ? AND datetime(created_at) >= ?""",
             (shop_id, cutoff),
         ).fetchone()
         repeat_row = conn.execute(
             """SELECT COUNT(*) AS n FROM work_orders wo
-               WHERE wo.shop_id = ? AND wo.created_at >= ?
+               WHERE wo.shop_id = ? AND datetime(wo.created_at) >= ?
                  AND EXISTS (
                      SELECT 1 FROM work_orders prior
                      WHERE prior.customer_id = wo.customer_id
@@ -619,11 +612,11 @@ def dashboard_snapshot(
     db_path: Optional[str] = None,
 ) -> DashboardSnapshot:
     """Compose all rollups + Phase 169 revenue into one snapshot."""
-    since_cutoff = _parse_date_window(since)
     now = datetime.now(timezone.utc)
-    end_date = now.strftime("%Y-%m-%d")
+    today = now.astimezone()  # the shop's day (F192)
+    end_date = today.strftime("%Y-%m-%d")
     start_date = (
-        now - timedelta(days=int(utilization_window_days) - 1)
+        today - timedelta(days=int(utilization_window_days) - 1)
     ).strftime("%Y-%m-%d")
 
     return DashboardSnapshot(
@@ -647,7 +640,7 @@ def dashboard_snapshot(
             shop_id, since=since, db_path=db_path,
         ),
         revenue=revenue_rollup(
-            shop_id=shop_id, since=since_cutoff, db_path=db_path,
+            shop_id=shop_id, since=since, db_path=db_path,
         ),
     )
 
@@ -829,7 +822,7 @@ def financial_report(
     if by not in PNL_DIMENSIONS:
         raise ValueError(f"by must be one of {', '.join(PNL_DIMENSIONS)}")
     if period_key is None:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(timezone.utc).astimezone()  # the shop's month (F192)
         period_key = {"month": now.strftime("%Y-%m"),
                       "quarter": f"{now.year}-Q{(now.month - 1) // 3 + 1}",
                       "year": str(now.year)}.get(period, "")
@@ -844,9 +837,9 @@ def financial_report(
             "FROM invoices inv JOIN work_orders wo ON wo.id = inv.work_order_id "
             "LEFT JOIN customers c ON c.id = inv.customer_id "
             "WHERE wo.shop_id = ? AND inv.status != 'cancelled' "
-            "AND substr(inv.issued_at, 1, 10) >= ? "
-            "AND substr(inv.issued_at, 1, 10) < ? ORDER BY inv.id",
-            (shop_id, start, end),
+            "AND datetime(inv.issued_at) >= ? "
+            "AND datetime(inv.issued_at) < ? ORDER BY inv.id",
+            (shop_id, local_day_start(start), local_day_start(end)),
         ).fetchall()
         for inv in invoices:
             revenue: dict[str, int] = {}
@@ -973,7 +966,7 @@ def estimate_variance(
     with get_connection(db_path) as conn:
         wos = conn.execute(
             "SELECT * FROM work_orders WHERE shop_id = ? AND status = 'completed' "
-            "AND completed_at >= ? ORDER BY completed_at, id",
+            "AND datetime(completed_at) >= ? ORDER BY datetime(completed_at), id",
             (shop_id, cutoff),
         ).fetchall()
         for wo in wos:

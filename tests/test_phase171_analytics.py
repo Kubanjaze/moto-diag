@@ -156,7 +156,9 @@ class TestDateWindow:
         assert (now - parsed).total_seconds() >= 23 * 3600
 
     def test_iso_input(self):
-        out = _parse_date_window("2026-04-01T10:00:00")
+        # Phase 377: a time with no zone is the shop's local time (tested in
+        # test_phase377_shop_utc.py on a fixed zone); an offset is converted.
+        out = _parse_date_window("2026-04-01T10:00:00+00:00")
         assert out.startswith("2026-04-01 10:00")
 
     def test_bad_input_raises(self):

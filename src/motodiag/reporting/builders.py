@@ -480,7 +480,7 @@ def build_work_order_report_doc(
              str(wo.get("wo_number") or wo.get("id") or "—")),
             ("Status", str(wo.get("status") or "—")),
             ("Priority", str(wo.get("priority") or "—")),
-            ("Intake", str(wo.get("intake_at") or "—")),
+            ("Intake", str(local_display(wo.get("intake_at")) or "—")),
             ("Assigned", str(wo.get("assigned_mechanic_name") or "—")),
         ],
     })

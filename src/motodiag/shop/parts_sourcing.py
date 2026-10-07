@@ -25,6 +25,7 @@ from typing import Callable, Optional
 
 from motodiag.advanced.parts_repo import get_part as get_part_by_slug
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.ai_client import (
     AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
 )
@@ -433,8 +434,8 @@ def sourcing_budget(
     base_query = "FROM sourcing_recommendations"
     params: list = []
     if since:
-        base_query += " WHERE generated_at >= ?"
-        params.append(since)
+        base_query += " WHERE datetime(generated_at) >= ?"
+        params.append(utc_cutoff(since))
     with get_connection(db_path) as conn:
         head = conn.execute(
             f"SELECT COUNT(*) AS n, "

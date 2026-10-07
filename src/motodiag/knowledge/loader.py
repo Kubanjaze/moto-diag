@@ -1,9 +1,9 @@
 """Knowledge base loader — import DTC codes and other data from JSON files."""
 
 import json
-from datetime import datetime
 from pathlib import Path
 
+from motodiag.core.timestamps import utc_now
 from motodiag.core.models import DTCCategory, DTCCode, SymptomCategory, Severity
 from motodiag.knowledge.dtc_repo import add_dtc
 from motodiag.knowledge.symptom_repo import add_symptom
@@ -196,7 +196,7 @@ def _insert_255B_new_rows(conn) -> int:
                 item.get("estimated_hours"),
                 item.get("source", "unverified"),
                 dump_applicability(item.get("applicability")),
-                datetime.now().isoformat(),
+                utc_now(),
             ),
         )
         inserted += 1

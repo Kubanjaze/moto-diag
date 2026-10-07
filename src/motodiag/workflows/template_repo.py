@@ -6,10 +6,10 @@ add_checklist_item calls to populate PPI, tire service, winterization, etc.
 """
 
 import json
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 from motodiag.workflows.models import (
     WorkflowCategory, WorkflowTemplate, ChecklistItem,
 )
@@ -21,7 +21,7 @@ from motodiag.workflows.models import (
 def create_template(template: WorkflowTemplate, db_path: str | None = None) -> int:
     """Create a new workflow template. Returns the new template ID."""
     with get_connection(db_path) as conn:
-        now = datetime.now().isoformat()
+        now = utc_now()
         cursor = conn.execute(
             """INSERT INTO workflow_templates
                (slug, name, description, category, applicable_powertrains,
@@ -108,7 +108,7 @@ def update_template(template_id: int, updates: dict, db_path: str | None = None)
     if "is_active" in filtered and isinstance(filtered["is_active"], bool):
         filtered["is_active"] = 1 if filtered["is_active"] else 0
 
-    filtered["updated_at"] = datetime.now().isoformat()
+    filtered["updated_at"] = utc_now()
     set_clause = ", ".join(f"{k} = ?" for k in filtered)
     values = list(filtered.values()) + [template_id]
 

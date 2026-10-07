@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F191**.
+At the time of writing the highest assigned is **F193**.
 
 ---
 
@@ -2696,9 +2696,30 @@ What would close it: a customer (or a single invoice) can be marked
 exempt, with the certificate's kind and number and who recorded it; the
 invoice then records the exemption in place of the rate, and prints it.
 
-### F186
+### F186 — CLOSED by Phase 377 (2026-10-07)
 
 **Work-order times are stamped in naive local time and compared with UTC windows**
+
+**Closed:**
+- **Writers:** the work-order, issue, intake, repair-plan, booking
+  (`updated_at`) and other shop writers stamp UTC in Phase 370's format
+  through `utc_now()`. That is 40 lines; the four appointment clock stamps
+  keep 275's rule.
+- **Comparisons:** `shop/analytics.py`'s 15 comparisons parse both sides,
+  `datetime(col) >= ?` against `_parse_date_window`'s UTC cutoff. A typed
+  date is the shop's day.
+- **Days and months:** throughput's days, the P&L month and the accounting
+  export use the shop's day (the server's zone, F192).
+- **No silent drops:** turnaround and mechanic performance parse both times
+  by one rule and raise, naming the work order, on a value that is not a
+  time.
+- **Readers:** the CLI and the work-order report show local time; the API
+  sends 370's format, and the app formats it (moto-diag-mobile `0074eb9`).
+- **Live:** migration 082 converted the 40 shop fields in the defect shape
+  with the operator's approval; known_issues was left (2A).
+- **Proof:** on the frozen clock in New York, a 30-day window at
+  2026-10-15 12:00 EDT leaves out a 09:00 EDT completion on its first day
+  (`tests/test_phase377_shop_utc.py`). 26/26 mutations red.
 
 Found at Phase 370's Step 0 (2026-10-06), in the census of naive
 `datetime.now()` calls that F10's fix started from. It is F10's family on
@@ -2893,9 +2914,18 @@ provider to the customer or to a write-off account; in Xero a credit note
 against the provider's invoice, which Xero imports from a file of its
 own.
 
-### F191
+### F191 — CLOSED by Phase 377 (2026-10-07)
 
 **`--since` compares a local-time cutoff with UTC stamps written in another format**
+
+**Closed:** `_since_cutoff` is removed. `list_intakes`, `count_intakes`,
+`list_work_orders` and `list_issues` compare `datetime(col) >= ?` against
+`core/timestamps.utc_cutoff`, which is UTC in SQLite's canonical shape.
+`datetime()` reads every stored shape and converts offsets. On the frozen
+clock in New York, at 23:26 EDT and at 12:00 EDT, `--since 30m` includes
+an intake, work order or issue from a minute ago and leaves out one from
+three hours ago, through the repos and `shop intake list`
+(`tests/test_phase377_shop_utc.py::TestSince30m`).
 
 Found in Phase 374 (2026-10-06), reading `intake_at`'s clock.
 `shop/intake_repo.py`'s `_since_cutoff` turns `7d`, `24h` or `30m` into
@@ -2920,3 +2950,61 @@ work order and issue lists' `--since`. Live holds 0 intakes (2026-10-06).
 What would close it: compute the cutoff in UTC in the column's own format
 (or compare parsed times), for each table whose stamp it is compared with,
 with a test at a fixed clock in a zone away from UTC.
+
+### F192
+
+**A shop has no time zone, so "the shop's day" is the server's zone**
+
+Found at Phase 377's Step 0 (2026-10-07), in the operator's answer to its
+first question. `shops` has no time-zone column (its columns: id,
+owner_user_id, name, address, city, state, zip, phone, email, tax_id,
+hours_json, is_active, created_at, updated_at, triage_weights), and no code
+in `src/` uses `zoneinfo`. Phase 377 stores every shop time in UTC and
+shows it, buckets it by day and reads a typed date in the machine's local
+zone (`astimezone()`, SQLite's `'localtime'`). Phase 275's appointment
+times are "the shop's clock time as entered" for the same reason.
+
+What it affects: one server serving shops in more than one zone. A shop in
+California on a server set to Eastern sees its times three hours ahead,
+its `--since 2026-10-07` starts at 21:00 the day before, and an invoice
+issued at 22:00 Pacific on the 31st falls in the next month's P&L and
+accounting export. Today there is one shop, in Massachusetts, on a server
+in its zone, so nothing is wrong in live. The product is meant for every
+state.
+
+What would close it: a time zone on each shop (an IANA name, such as
+`America/Los_Angeles`), set when the shop is created, and every reader,
+day bucket and typed-date cutoff of a shop's times converting in that
+zone instead of the server's; appointment clock times read in it too.
+
+Also seen in Phase 377's census: a bay slot's `scheduled_start` and
+`scheduled_end` are the shop's clock time stored with `+00:00` (Phase
+275's rule, `booking.py`), while its `actual_end` is real UTC. Analytics'
+overrun window compares `COALESCE(actual_end, scheduled_end)` with a UTC
+cutoff, so a slot with no `actual_end` sits at its window's edge off by
+the shop's offset. A per-shop zone would let both be stored as one clock.
+
+### F193
+
+**Sensor-recording and drift filters compare a typed `--since` as text, in UTC**
+
+Found in Phase 377's census (2026-10-07), left out of its fix by decision
+(the phase log says why). `hardware/recorder.py`'s `list_recordings`
+(`started_at >= ?`, `<= ?`), `advanced/drift.py` (`s.captured_at >= ?`,
+`<= ?`) and `cli/advanced.py`'s drift chart (`s.captured_at >= ?`) put the
+user's `--since` and `--until` straight into a text comparison. The
+columns hold one aware shape, `YYYY-MM-DDTHH:MM:SS[.ffffff]+00:00`, so a
+date or a value with an offset compares as a prefix; but a typed date is
+read as the UTC day (a 2026-10-07 filter starts at 20:00 the evening
+before in New York), and a typed value with another offset, or with a
+space, compares wrong.
+
+What it affects: `hardware` recording lists and the drift commands'
+windows, by up to the UTC offset at the edges. Not the shop's tables.
+`sensor_samples` can be large, which is why 377 did not wrap the column
+in `datetime()` (it would stop the index being used).
+
+What would close it: convert the typed value with `utc_cutoff` (Phase
+377), then write it in the column's own shape, so the comparison stays
+on the index; with a test at a fixed clock in a zone away from UTC.
+

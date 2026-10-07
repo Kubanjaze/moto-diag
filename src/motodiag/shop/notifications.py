@@ -30,6 +30,7 @@ from motodiag.accounting.invoice_repo import (
     get_line_items as _get_invoice_line_items,
 )
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.notification_templates import (
     NOTIFICATION_CHANNELS,
     NOTIFICATION_EVENTS,
@@ -722,8 +723,8 @@ def list_notifications(
         query += " AND event = ?"
         params.append(event)
     if since:
-        query += " AND triggered_at >= ?"
-        params.append(since)
+        query += " AND datetime(triggered_at) >= ?"
+        params.append(utc_cutoff(since))
     query += " ORDER BY triggered_at DESC, id DESC"
     if limit and limit > 0:
         query += " LIMIT ?"

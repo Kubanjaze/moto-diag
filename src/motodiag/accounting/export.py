@@ -16,11 +16,12 @@ import csv
 import hashlib
 import io
 from dataclasses import dataclass, field
-from datetime import date, datetime, timezone
+from datetime import date, datetime, timedelta, timezone
 from pathlib import Path
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import local_day, local_day_start
 
 # The command-line name of each target, and the name stored.
 TARGETS: dict[str, str] = {"quickbooks-online": "quickbooks_online", "xero": "xero"}
@@ -140,6 +141,17 @@ def _money(cents: int) -> str:
 
 
 def _us_date(value: Optional[str]) -> str:
+    """The shop's day of a stored time, such as ``issued_at`` (a bare date
+    as written), MM/DD/YYYY."""
+    if not value:
+        return ""
+    text = str(value)
+    day = text if len(text) == 10 else local_day(text)
+    return datetime.fromisoformat(day).strftime("%m/%d/%Y")
+
+
+def _us_due_date(value: Optional[str]) -> str:
+    """A due date, MM/DD/YYYY: a calendar date, so its own date as written."""
     if not value:
         return ""
     return datetime.fromisoformat(str(value)[:10]).strftime("%m/%d/%Y")
@@ -152,6 +164,13 @@ def _check_range(from_day: str, to_day: str) -> None:
         raise ExportError("dates must be YYYY-MM-DD") from e
     if hi < lo:
         raise ExportError("the range must end on or after its first day")
+
+
+def _day_window(from_day: str, to_day: str) -> tuple[str, str]:
+    """``[start, end)`` in UTC for the shop's days ``from_day..to_day``,
+    for ``datetime(issued_at) >= ? AND datetime(issued_at) < ?``."""
+    after = date.fromisoformat(to_day) + timedelta(days=1)
+    return local_day_start(from_day), local_day_start(after)
 
 
 def invoices_in_range(
@@ -176,9 +195,9 @@ def invoices_in_range(
                 WHERE wo.shop_id = ? AND i.status != 'cancelled'
                   AND i.shortfall_claim_id IS NULL
                   AND i.issued_at IS NOT NULL
-                  AND substr(i.issued_at, 1, 10) BETWEEN ? AND ?
-                ORDER BY i.issued_at, i.id""",
-            (shop_id, from_day, to_day),
+                  AND datetime(i.issued_at) >= ? AND datetime(i.issued_at) < ?
+                ORDER BY datetime(i.issued_at), i.id""",
+            (shop_id, *_day_window(from_day, to_day)),
         ).fetchall()]
         exported = {r[0] for r in conn.execute(
             """SELECT aei.invoice_id FROM accounting_export_invoices aei
@@ -223,9 +242,9 @@ def shortfall_invoices_in_range(shop_id: int, from_day: str, to_day: str,
                  JOIN work_orders wo ON wo.id = i.work_order_id
                 WHERE wo.shop_id = ? AND i.status != 'cancelled'
                   AND i.shortfall_claim_id IS NOT NULL
-                  AND substr(i.issued_at, 1, 10) BETWEEN ? AND ?
-                ORDER BY i.issued_at, i.id""",
-            (shop_id, from_day, to_day),
+                  AND datetime(i.issued_at) >= ? AND datetime(i.issued_at) < ?
+                ORDER BY datetime(i.issued_at), i.id""",
+            (shop_id, *_day_window(from_day, to_day)),
         ).fetchall()]
 
 
@@ -475,7 +494,7 @@ def xero_rows(invoices: list[dict], mapping: dict[str, dict],
                 "EmailAddress": inv["customer_email"] or "",
                 "InvoiceNumber": inv["invoice_number"],
                 "InvoiceDate": _us_date(inv["issued_at"]),
-                "DueDate": _us_date(inv["due_at"]),
+                "DueDate": _us_due_date(inv["due_at"]),
                 "Description": line["description"],
                 "Quantity": _quantity(line["quantity"]),
                 "UnitAmount": _money(_cents(line["unit_price"])),
@@ -514,7 +533,7 @@ def _xero_claim_rows(inv: dict, mapping: dict[str, dict]) -> list[dict]:
                 "ContactName": provider,
                 "InvoiceNumber": _claim_number(inv, claim),
                 "InvoiceDate": _us_date(inv["issued_at"]),
-                "DueDate": _us_date(inv["due_at"]),
+                "DueDate": _us_due_date(inv["due_at"]),
                 "Description": f"Warranty claim #{claim['id']}: {line['description']}",
                 "Quantity": "1",
                 "UnitAmount": _money(int(line["amount_cents"])),

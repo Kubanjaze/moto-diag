@@ -1,0 +1,250 @@
+{
+ "_comment": "Phase 377, migration 082: the operator's 2A (2026-10-07) converts the 40 shop fields of 377_live_rows_preview.out (customers 3-6, vehicles 1-5 and 10, work orders 1-5), each to the preview's value, and leaves known_issues. No schema change. One schema_version row is added by every migration; it is named so the dry run reports it, and the exact diff goes to the operator before apply-live.",
+ "tables": {
+  "schema_version": {
+   "added": 1
+  },
+  "customers": {
+   "changed": [
+    {
+     "where": "id = ?",
+     "params": [
+      3
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-09-04T19:31:22.467+00:00",
+      "updated_at": "2026-09-04T19:31:22.467+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      4
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-09-04T19:31:22.580+00:00",
+      "updated_at": "2026-09-04T19:31:22.580+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      5
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-09-04T19:36:19.054+00:00",
+      "updated_at": "2026-09-04T19:36:19.054+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      6
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-09-04T19:36:19.362+00:00",
+      "updated_at": "2026-09-04T19:36:19.362+00:00"
+     }
+    }
+   ]
+  },
+  "vehicles": {
+   "changed": [
+    {
+     "where": "id = ?",
+     "params": [
+      1
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-06-13T03:31:43.509+00:00",
+      "updated_at": "2026-06-13T03:31:43.512+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      2
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-06-13T03:33:13.113+00:00",
+      "updated_at": "2026-06-13T03:33:13.116+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      3
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-06-13T03:34:47.313+00:00",
+      "updated_at": "2026-06-13T03:34:47.316+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      4
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-06-13T03:52:03.861+00:00",
+      "updated_at": "2026-06-13T03:52:03.864+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      5
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-06-13T03:53:45.730+00:00",
+      "updated_at": "2026-06-13T03:53:45.733+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      10
+     ],
+     "fields": [
+      "created_at",
+      "updated_at"
+     ],
+     "to": {
+      "created_at": "2026-09-09T23:50:26.498+00:00",
+      "updated_at": "2026-09-10T05:39:18.570+00:00"
+     }
+    }
+   ]
+  },
+  "work_orders": {
+   "changed": [
+    {
+     "where": "id = ?",
+     "params": [
+      1
+     ],
+     "fields": [
+      "opened_at",
+      "started_at",
+      "updated_at"
+     ],
+     "to": {
+      "opened_at": "2026-09-02T20:29:25.409+00:00",
+      "started_at": "2026-09-02T21:38:36.544+00:00",
+      "updated_at": "2026-09-09T17:42:09.785+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      2
+     ],
+     "fields": [
+      "opened_at",
+      "updated_at"
+     ],
+     "to": {
+      "opened_at": "2026-09-04T04:04:47.868+00:00",
+      "updated_at": "2026-09-09T23:49:06.321+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      3
+     ],
+     "fields": [
+      "opened_at",
+      "started_at",
+      "completed_at",
+      "closed_at",
+      "updated_at"
+     ],
+     "to": {
+      "opened_at": "2026-09-04T19:35:46.883+00:00",
+      "started_at": "2026-09-04T19:35:46.897+00:00",
+      "completed_at": "2026-09-04T19:35:46.912+00:00",
+      "closed_at": "2026-09-04T19:35:46.912+00:00",
+      "updated_at": "2026-09-04T19:35:46.912+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      4
+     ],
+     "fields": [
+      "opened_at",
+      "started_at",
+      "completed_at",
+      "closed_at",
+      "updated_at"
+     ],
+     "to": {
+      "opened_at": "2026-09-04T19:35:46.928+00:00",
+      "started_at": "2026-09-04T19:35:46.964+00:00",
+      "completed_at": "2026-09-04T19:35:46.979+00:00",
+      "closed_at": "2026-09-04T19:35:46.979+00:00",
+      "updated_at": "2026-09-04T19:35:46.979+00:00"
+     }
+    },
+    {
+     "where": "id = ?",
+     "params": [
+      5
+     ],
+     "fields": [
+      "opened_at",
+      "started_at",
+      "completed_at",
+      "closed_at",
+      "updated_at"
+     ],
+     "to": {
+      "opened_at": "2026-09-04T19:36:19.195+00:00",
+      "started_at": "2026-09-04T19:36:19.211+00:00",
+      "completed_at": "2026-09-04T19:36:19.227+00:00",
+      "closed_at": "2026-09-04T19:36:19.227+00:00",
+      "updated_at": "2026-09-04T19:36:19.227+00:00"
+     }
+    }
+   ]
+  }
+ }
+}

@@ -37,10 +37,10 @@ user so CLI rendering has every label without a second round-trip.
 from __future__ import annotations
 
 import sqlite3
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff, utc_now
 
 
 # ---------------------------------------------------------------------------
@@ -352,10 +352,7 @@ def list_work_orders(
             s for s in WORK_ORDER_STATUSES if s not in TERMINAL_STATUSES
         ]
 
-    cutoff: Optional[str] = None
-    if since is not None:
-        from motodiag.shop.intake_repo import _since_cutoff
-        cutoff = _since_cutoff(since)
+    cutoff = utc_cutoff(since)
 
     query = """
         SELECT wo.*,
@@ -397,7 +394,7 @@ def list_work_orders(
         conditions.append(f"wo.status IN ({placeholders})")
         params.extend(status_list)
     if cutoff is not None:
-        conditions.append("wo.created_at >= ?")
+        conditions.append("datetime(wo.created_at) >= ?")
         params.append(cutoff)
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -496,7 +493,7 @@ def update_work_order(
 
     set_clauses = ", ".join(f"{k} = ?" for k in filtered.keys())
     params: list = list(filtered.values())
-    params.append(datetime.now().isoformat())
+    params.append(utc_now())
     params.append(wo_id)
 
     with get_connection(db_path) as conn:
@@ -519,7 +516,7 @@ def assign_mechanic(
     db_path: Optional[str] = None,
 ) -> bool:
     """Assign a mechanic to a work order. Validates user exists."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id FROM work_orders WHERE id = ?", (wo_id,),
@@ -539,7 +536,7 @@ def unassign_mechanic(
     wo_id: int, db_path: Optional[str] = None,
 ) -> bool:
     """Clear the assigned mechanic."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id FROM work_orders WHERE id = ?", (wo_id,),
@@ -563,7 +560,7 @@ def open_work_order(
     wo_id: int, db_path: Optional[str] = None,
 ) -> bool:
     """Transition draft → open. Sets ``opened_at`` to now."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM work_orders WHERE id = ?", (wo_id,),
@@ -591,7 +588,7 @@ def start_work(
     recent resumption of work. ``on_hold_reason`` is cleared when
     resuming from on_hold (so the UI does not carry a stale reason).
     """
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM work_orders WHERE id = ?", (wo_id,),
@@ -617,7 +614,7 @@ def pause_work(
     db_path: Optional[str] = None,
 ) -> bool:
     """Transition in_progress → on_hold with optional reason."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM work_orders WHERE id = ?", (wo_id,),
@@ -668,7 +665,7 @@ def complete_work_order(
 
     ``actual_hours`` is optionally persisted if supplied.
     """
-    now = datetime.now().isoformat()
+    now = utc_now()
     actual_hours = _validate_hours(actual_hours, "actual_hours")
     with get_connection(db_path) as conn:
         row = conn.execute(
@@ -696,7 +693,7 @@ def cancel_work_order(
     db_path: Optional[str] = None,
 ) -> bool:
     """Transition any non-terminal status → cancelled."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM work_orders WHERE id = ?", (wo_id,),
@@ -726,7 +723,7 @@ def reopen_work_order(
     completion timestamp was a lie and should not persist — Phase 169
     invoicing reads completed_at for display, not logic.
     """
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM work_orders WHERE id = ?", (wo_id,),

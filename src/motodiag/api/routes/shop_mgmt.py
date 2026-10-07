@@ -21,6 +21,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.api.deps import get_db_path
+from motodiag.core.timestamps import with_utc_times
 from motodiag.push.events import notify_wo_assigned, notify_wo_transition
 from motodiag.shop.time_entries import (
     close_open_entries_for_wo,
@@ -113,6 +114,11 @@ def require_shop_access(
         raise PermissionDenied(
             f"user id={user.id} lacks {permission!r} at shop id={shop_id}"
         )
+
+
+def _items(rows: list[dict]) -> dict:
+    """A list response, each row's times in the stored UTC format (Phase 377)."""
+    return {"items": [with_utc_times(r) for r in rows], "total": len(rows)}
 
 
 # ---------------------------------------------------------------------------
@@ -432,7 +438,7 @@ def list_customers_endpoint(
     # Scope to the shop in the QUERY. Membership in one shop is not
     # entitlement to every customer in the database (Phase 207).
     rows = customer_repo.list_customers(shop_id=shop_id, db_path=db_path)
-    return {"items": rows, "total": len(rows)}
+    return _items(rows)
 
 
 @router.post(
@@ -454,7 +460,7 @@ def create_customer_endpoint(
         address=req.address, notes=req.notes,
     )
     cid = customer_repo.create_customer(customer, db_path=db_path)
-    return customer_repo.get_customer(cid, db_path=db_path)
+    return with_utc_times(customer_repo.get_customer(cid, db_path=db_path))
 
 
 @router.get(
@@ -478,7 +484,7 @@ def get_customer_endpoint(
         raise HTTPException(
             status_code=404, detail=f"customer id={customer_id} not found",
         )
-    return row
+    return with_utc_times(row)
 
 
 # ---------------------------------------------------------------------------
@@ -502,7 +508,7 @@ def list_intakes_endpoint(
     rows = list_intakes(
         shop_id=shop_id, status=status, limit=limit, db_path=db_path,
     )
-    return {"items": rows, "total": len(rows)}
+    return _items(rows)
 
 
 @router.post(
@@ -536,7 +542,7 @@ def create_intake_endpoint(
         intake_user_id=user.id, db_path=db_path,
     )
     from motodiag.shop import get_intake
-    return get_intake(intake_id, db_path=db_path)
+    return with_utc_times(get_intake(intake_id, db_path=db_path))
 
 
 # ---------------------------------------------------------------------------
@@ -606,7 +612,7 @@ def list_work_orders_endpoint(
                 reverse=True,
             )
         # sort == "priority" or sort is None → existing ordering.
-    return {"items": rows, "total": len(rows)}
+    return _items(rows)
 
 
 @router.post(
@@ -630,7 +636,7 @@ def create_work_order_endpoint(
         intake_visit_id=req.intake_visit_id,
         db_path=db_path,
     )
-    return get_work_order(wo_id, db_path=db_path)
+    return with_utc_times(get_work_order(wo_id, db_path=db_path))
 
 
 @router.get(
@@ -650,7 +656,7 @@ def get_work_order_endpoint(
         raise HTTPException(
             status_code=404, detail=f"work order id={wo_id} not found",
         )
-    return row
+    return with_utc_times(row)
 
 
 @router.post(
@@ -715,7 +721,7 @@ def transition_work_order(
     # Phase 199 — best-effort push to the assigned mechanic (self-
     # suppressed inside; never raises into the response path).
     notify_wo_transition(updated, action, user.id, db_path=db_path)
-    return updated
+    return with_utc_times(updated)
 
 
 @router.post(
@@ -757,7 +763,7 @@ def assign_work_order_mechanic(
     # Phase 199 — tell the newly assigned mechanic (best-effort,
     # self-suppressed inside).
     notify_wo_assigned(updated, req.mechanic_user_id, user.id, db_path=db_path)
-    return updated
+    return with_utc_times(updated)
 
 
 # ---------------------------------------------------------------------------
@@ -783,7 +789,7 @@ def list_issues_endpoint(
         shop_id=shop_id, status=status, severity=severity,
         limit=limit, db_path=db_path,
     )
-    return {"items": rows, "total": len(rows)}
+    return _items(rows)
 
 
 @router.post(
@@ -806,7 +812,7 @@ def create_issue_endpoint(
         reported_by_user_id=user.id, db_path=db_path,
     )
     from motodiag.shop import get_issue
-    return get_issue(issue_id, db_path=db_path)
+    return with_utc_times(get_issue(issue_id, db_path=db_path))
 
 
 # ---------------------------------------------------------------------------

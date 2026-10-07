@@ -24,6 +24,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.workflow_actions import (
     ACTION_TYPES, InvalidActionError,
     execute_action, validate_actions,
@@ -526,8 +527,8 @@ def list_rule_runs(
     if matched_only:
         query += " AND wrr.matched = 1"
     if since:
-        query += " AND wrr.fired_at >= ?"
-        params.append(since)
+        query += " AND datetime(wrr.fired_at) >= ?"
+        params.append(utc_cutoff(since))
     query += " ORDER BY wrr.fired_at DESC, wrr.id DESC"
     if limit and limit > 0:
         query += " LIMIT ?"

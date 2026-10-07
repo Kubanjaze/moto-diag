@@ -277,7 +277,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: walks where the old one ran once on its own database, −1 + 2; and an
 #: eighth plant, +1). Measured: 10584 collected.
 #:
-COLLECTED_TEST_FLOOR = 10584
+#: Phase 377 (2026-10-07): 10584 -> 10617, +33, by a diff of collected ids
+#: against master 4f47832: tests/test_phase377_shop_utc.py (32), and gate
+#: 15's test_rolling_back_peels_every_successor[81], which migration 082
+#: adds. Measured: 10617 collected.
+#:
+COLLECTED_TEST_FLOOR = 10617
 
 
 def _collected_count() -> int:

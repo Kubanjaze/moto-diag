@@ -2,10 +2,10 @@
 
 import json
 import sqlite3
-from datetime import datetime
 
 from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 
 
 def add_known_issue(
@@ -77,7 +77,7 @@ def add_known_issue(
                 estimated_hours,
                 source,
                 applicability_json,
-                datetime.now().isoformat(),
+                utc_now(),
             ),
         )
         # Phase 244F: keep the marque junction in step with the row. Derived

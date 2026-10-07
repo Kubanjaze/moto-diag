@@ -29,6 +29,7 @@ from typing import Literal, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.work_order_repo import (
     WorkOrderNotFoundError, require_work_order, update_work_order,
 )
@@ -824,8 +825,8 @@ def list_requisitions(
         conditions.append("shop_id = ?")
         params.append(shop_id)
     if since:
-        conditions.append("generated_at >= ?")
-        params.append(since)
+        conditions.append("datetime(generated_at) >= ?")
+        params.append(utc_cutoff(since))
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
     query += " ORDER BY generated_at DESC, id DESC"

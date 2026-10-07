@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 from typing import Callable, Literal, Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff
 from motodiag.shop.ai_client import (
     AIResponse, ShopAIClient, ShopAIClientError, extract_json_block,
 )
@@ -476,8 +477,8 @@ def list_labor_estimates(
         conditions.append("wo_id = ?")
         params.append(wo_id)
     if since:
-        conditions.append("generated_at >= ?")
-        params.append(since)
+        conditions.append("datetime(generated_at) >= ?")
+        params.append(utc_cutoff(since))
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
     query += " ORDER BY generated_at DESC, id DESC"
@@ -510,8 +511,8 @@ def labor_budget(
         conditions.append("wo.shop_id = ?")
         params.append(shop_id)
     if since:
-        conditions.append("le.generated_at >= ?")
-        params.append(since)
+        conditions.append("datetime(le.generated_at) >= ?")
+        params.append(utc_cutoff(since))
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
     with get_connection(db_path) as conn:

@@ -27,6 +27,7 @@ from rich.table import Table
 
 from motodiag.cli.theme import get_console
 from motodiag.core.database import get_connection, init_db
+from motodiag.core.timestamps import local_display
 from motodiag.crm import customer_bikes_repo, customer_repo
 from motodiag.crm.models import Customer, CustomerRelationship
 from motodiag.shop import (
@@ -479,13 +480,13 @@ def _render_work_order_panel(console, wo: dict) -> None:
     if wo.get("description"):
         lines.append(f"\nDescription:\n  {wo['description']}")
     if wo.get("opened_at"):
-        lines.append(f"\nOpened:    {wo['opened_at']}")
+        lines.append(f"\nOpened:    {local_display(wo['opened_at'])}")
     if wo.get("started_at"):
-        lines.append(f"Started:   {wo['started_at']}")
+        lines.append(f"Started:   {local_display(wo['started_at'])}")
     if wo.get("completed_at"):
-        lines.append(f"Completed: {wo['completed_at']}")
+        lines.append(f"Completed: {local_display(wo['completed_at'])}")
     if wo.get("closed_at") and status == "cancelled":
-        lines.append(f"Cancelled: {wo['closed_at']}")
+        lines.append(f"Cancelled: {local_display(wo['closed_at'])}")
     if wo.get("on_hold_reason"):
         lines.append(f"\nHold reason: {wo['on_hold_reason']}")
     if wo.get("cancellation_reason"):
@@ -522,13 +523,13 @@ def _render_intake_panel(console, intake: dict) -> None:
     lines.append(
         f"Bike:     {bike_label or '?'}  (id={intake['vehicle_id']})"
     )
-    lines.append(f"Intake at: {intake.get('intake_at', '?')}")
+    lines.append(f"Intake at: {local_display(intake.get('intake_at')) or '?'}")
     if intake.get("mileage_at_intake") is not None:
         lines.append(f"Mileage:  {intake['mileage_at_intake']}")
     if intake.get("reported_problems"):
         lines.append(f"\nReported problems:\n  {intake['reported_problems']}")
     if status != "open":
-        lines.append(f"\nClosed at: {intake.get('closed_at', '?')}")
+        lines.append(f"\nClosed at: {local_display(intake.get('closed_at')) or '?'}")
         if intake.get("close_reason"):
             lines.append(f"Reason:    {intake['close_reason']}")
     console.print(Panel("\n".join(lines), title="Intake Visit"))
@@ -1201,7 +1202,7 @@ def register_shop(cli_group: click.Group) -> None:
             )
             table.add_row(
                 str(r["id"]),
-                str(r.get("intake_at", "?")),
+                str(local_display(r.get("intake_at")) or "?"),
                 str(r.get("shop_name", "?")),
                 str(r.get("customer_name", "?")),
                 bike_label or "?",
@@ -1346,7 +1347,7 @@ def register_shop(cli_group: click.Group) -> None:
         for r in rows:
             table.add_row(
                 str(r["id"]),
-                str(r.get("intake_at", "?")),
+                str(local_display(r.get("intake_at")) or "?"),
                 str(r.get("shop_name", "?")),
                 str(r.get("customer_name", "?")),
             )
@@ -1886,9 +1887,9 @@ def register_shop(cli_group: click.Group) -> None:
             )
         if issue.get("description"):
             lines.append(f"\nDescription:\n  {issue['description']}")
-        lines.append(f"\nReported: {issue.get('reported_at', '?')}")
+        lines.append(f"\nReported: {local_display(issue.get('reported_at')) or '?'}")
         if issue.get("resolved_at"):
-            lines.append(f"Resolved: {issue['resolved_at']}")
+            lines.append(f"Resolved: {local_display(issue['resolved_at'])}")
         if issue.get("resolution_notes"):
             lines.append(f"Resolution notes:\n  {issue['resolution_notes']}")
         console.print(Panel("\n".join(lines), title="Issue"))
@@ -2000,7 +2001,7 @@ def register_shop(cli_group: click.Group) -> None:
                 str(r.get("status", "?")),
                 str(r.get("title", "?")),
                 str(r.get("work_order_id", "?")),
-                str(r.get("reported_at", "?")),
+                str(local_display(r.get("reported_at")) or "?"),
             )
         console.print(table)
 

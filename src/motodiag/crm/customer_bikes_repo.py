@@ -6,10 +6,10 @@ ownership, pre-purchase inspections). Track H phase 180 (share report with
 customer) relies on this.
 """
 
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_now
 from motodiag.crm.models import CustomerRelationship
 
 
@@ -33,7 +33,7 @@ def link_customer_bike(
             """INSERT OR IGNORE INTO customer_bikes
                (customer_id, vehicle_id, relationship, assigned_at, notes)
                VALUES (?, ?, ?, ?, ?)""",
-            (customer_id, vehicle_id, rel_val, datetime.now().isoformat(), notes),
+            (customer_id, vehicle_id, rel_val, utc_now(), notes),
         )
 
 
@@ -167,5 +167,5 @@ def transfer_ownership(
             """INSERT OR IGNORE INTO customer_bikes
                (customer_id, vehicle_id, relationship, assigned_at, notes)
                VALUES (?, ?, 'owner', ?, ?)""",
-            (to_customer_id, vehicle_id, datetime.now().isoformat(), notes),
+            (to_customer_id, vehicle_id, utc_now(), notes),
         )

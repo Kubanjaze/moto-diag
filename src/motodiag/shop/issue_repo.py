@@ -44,10 +44,10 @@ from __future__ import annotations
 
 import logging
 import sqlite3
-from datetime import datetime
 from typing import Optional
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import utc_cutoff, utc_now
 
 
 logger = logging.getLogger(__name__)
@@ -383,10 +383,7 @@ def list_issues(
     elif isinstance(severity, (list, tuple)):
         sev_list = [_validate_severity(s) for s in severity]
 
-    cutoff: Optional[str] = None
-    if since is not None:
-        from motodiag.shop.intake_repo import _since_cutoff
-        cutoff = _since_cutoff(since)
+    cutoff = utc_cutoff(since)
 
     query = """
         SELECT i.*,
@@ -432,7 +429,7 @@ def list_issues(
         conditions.append(f"i.status IN ({placeholders})")
         params.extend(status_list)
     if cutoff is not None:
-        conditions.append("i.reported_at >= ?")
+        conditions.append("datetime(i.reported_at) >= ?")
         params.append(cutoff)
     if conditions:
         query += " WHERE " + " AND ".join(conditions)
@@ -555,7 +552,7 @@ def update_issue(
 
         set_clauses = ", ".join(f"{k} = ?" for k in filtered.keys())
         params: list = list(filtered.values())
-        params.append(datetime.now().isoformat())
+        params.append(utc_now())
         params.append(issue_id)
         cursor = conn.execute(
             f"UPDATE issues SET {set_clauses}, updated_at = ? "
@@ -607,7 +604,7 @@ def resolve_issue(
     db_path: Optional[str] = None,
 ) -> bool:
     """Transition open → resolved. Sets resolved_at, persists notes."""
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM issues WHERE id = ?", (issue_id,),
@@ -639,7 +636,7 @@ def mark_duplicate_issue(
         raise ValueError(
             f"issue id={issue_id} cannot be a duplicate of itself"
         )
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM issues WHERE id = ?", (issue_id,),
@@ -687,7 +684,7 @@ def mark_wontfix_issue(
             "resolution_notes is required for mark_wontfix_issue "
             "(audit-trail requirement for deliberate non-action)"
         )
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM issues WHERE id = ?", (issue_id,),
@@ -716,7 +713,7 @@ def reopen_issue(
     Audit semantics: if resolution wasn't actually correct, the trace
     was a lie and should not persist.
     """
-    now = datetime.now().isoformat()
+    now = utc_now()
     with get_connection(db_path) as conn:
         row = conn.execute(
             "SELECT id, status FROM issues WHERE id = ?", (issue_id,),
