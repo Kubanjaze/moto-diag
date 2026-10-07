@@ -138,6 +138,42 @@ def register_tax(shop_group: click.Group) -> None:
         get_console().print(f"[green]Shop {shop_id}: {tax_mod.LINE_LABELS[line_type]} "
                             f"{verdict}, valid until {valid_until}.[/green]")
 
+    @tax_group.group("warranty-rule")
+    def warranty_rule_group() -> None:
+        """Whether the tax on covered warranty work goes on the claim, by who owes it."""
+
+    @warranty_rule_group.command("set")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--payer", required=True, type=click.Choice(tax_mod.PAYERS),
+                  help="maker_with_bike, other (someone else's plan or contract), "
+                       "or shop_contract (a contract this shop sold).")
+    @click.option("--on-claim/--not-on-claim", "taxed_on_claim", required=True,
+                  help="Whether covered work is taxed and the tax added to the claim.")
+    @click.option("--effective", required=True)
+    @click.option("--valid-until", required=True)
+    @click.option("--source-title", required=True)
+    @click.option("--source-url", default=None)
+    @click.option("--clause", default=None, help="The section or clause relied on.")
+    @click.option("--checked-on", required=True)
+    @click.option("--reading", is_flag=True, default=False,
+                  help="The source does not state this; it is your reading of it.")
+    def warranty_rule_set(shop_id: int, payer: str, taxed_on_claim: bool, effective: str,
+                          valid_until: str, source_title: str, source_url: Optional[str],
+                          clause: Optional[str], checked_on: str, reading: bool) -> None:
+        """Record whether covered warranty work's tax goes on the claim."""
+        init_db()
+        try:
+            tax_mod.set_shop_warranty_rule(shop_id, payer, taxed_on_claim, effective,
+                                           valid_until, source_title, checked_on,
+                                           source_url, clause,
+                                           "reading" if reading else "stated")
+        except tax_mod.TaxRecordError as e:
+            raise click.ClickException(str(e)) from e
+        verdict = "taxed on the claim" if taxed_on_claim else "not taxed on the claim"
+        get_console().print(f"[green]Shop {shop_id}: work owed by "
+                            f"{tax_mod.PAYER_LABELS[payer]} is {verdict}, valid until "
+                            f"{valid_until}.[/green]")
+
     @tax_group.command("confirm")
     @click.option("--jurisdiction", "code", required=True)
     @click.option("--checked-on", required=True, help="When the regulator's pages were read.")
@@ -150,7 +186,8 @@ def register_tax(shop_group: click.Group) -> None:
         except tax_mod.TaxRecordError as e:
             raise click.ClickException(str(e)) from e
         get_console().print(
-            f"[green]{res['code']}: rate and {res['rules']} rules checked on "
+            f"[green]{res['code']}: rate, {res['rules']} rules and "
+            f"{res['warranty_rules']} warranty rules checked on "
             f"{res['checked_on']}; must be re-checked by {res['valid_until']}.[/green]"
         )
 
@@ -169,6 +206,8 @@ def register_tax(shop_group: click.Group) -> None:
                 "rate": st.rate.__dict__ if st.rate else None,
                 "rules": {k: v.__dict__ for k, v in st.rules.items()},
                 "failures": st.failures, "not_on_record": st.not_on_record,
+                "warranty_rules": {k: v.__dict__ for k, v in st.warranty_rules.items()},
+                "warranty_not_on_record": st.warranty_not_on_record,
             }, indent=2, default=str))
         else:
             if st.jurisdiction:
@@ -188,6 +227,17 @@ def register_tax(shop_group: click.Group) -> None:
                 elif line_type in st.not_on_record:
                     console.print(f"{label.capitalize()}: no rule on record; an invoice "
                                   f"with a {label} line is refused until one is recorded.")
+            for payer in tax_mod.PAYERS:
+                label = tax_mod.PAYER_LABELS[payer]
+                if payer in st.warranty_rules:
+                    rule = st.warranty_rules[payer]
+                    verdict = "taxed on the claim" if rule.value else "not taxed on the claim"
+                    console.print(f"Warranty work owed by {label}: {verdict}, must be "
+                                  f"re-checked by {rule.valid_until}. {_describe(rule)}")
+                elif payer in st.warranty_not_on_record:
+                    console.print(f"Warranty work owed by {label}: no rule on record; an "
+                                  f"invoice with such a claim is refused until one is "
+                                  f"recorded.")
             for failure in st.failures:
                 console.print(f"[red]FAILS: {failure}[/red]")
         if not st.ok:

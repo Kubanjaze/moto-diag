@@ -7106,6 +7106,151 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE stripe_webhook_events DROP COLUMN account;
         """,
     ),
+    Migration(
+        version=81,
+        name="warranty_work_on_the_invoice",
+        description=(
+            "Phase 373 (F188): a warranty claim covers lines of its work "
+            "order, and the invoice leaves them off what the customer owes. "
+            "New tables: `warranty_claim_lines` (the lines a claim covers, "
+            "priced in integer cents when the invoice is generated), "
+            "`tax_warranty_rules` (per jurisdiction, whether covered work's "
+            "tax goes on the claim, keyed on who owes the repair; three "
+            "Massachusetts rows) and `accounting_export_claims`. New columns: "
+            "`warranties.repair_payer`; on `warranty_claims` the coverage, "
+            "the invoice, the derived amounts and the settlement; "
+            "`invoices.shortfall_claim_id`. The links are soft (checked in "
+            "code), so the rollback can drop the columns. Changes no "
+            "existing row. Rollback drops the tables, then the columns."
+        ),
+        upgrade_sql="""
+            ALTER TABLE warranties ADD COLUMN repair_payer TEXT
+                CHECK (repair_payer IS NULL
+                       OR repair_payer IN ('maker_with_bike', 'other', 'shop_contract'));
+
+            ALTER TABLE warranty_claims ADD COLUMN coverage_recorded_at TEXT;
+            ALTER TABLE warranty_claims ADD COLUMN invoice_id INTEGER;
+            ALTER TABLE warranty_claims ADD COLUMN covered_cents INTEGER
+                CHECK (covered_cents IS NULL OR covered_cents >= 0);
+            ALTER TABLE warranty_claims ADD COLUMN tax_cents INTEGER
+                CHECK (tax_cents IS NULL OR tax_cents >= 0);
+            ALTER TABLE warranty_claims ADD COLUMN tax_source TEXT;
+            ALTER TABLE warranty_claims ADD COLUMN settlement TEXT
+                CHECK (settlement IS NULL
+                       OR settlement IN ('bill_customer', 'absorb'));
+            ALTER TABLE warranty_claims ADD COLUMN settled_at TEXT;
+            ALTER TABLE warranty_claims ADD COLUMN shortfall_cents INTEGER
+                CHECK (shortfall_cents IS NULL OR shortfall_cents >= 0);
+            ALTER TABLE warranty_claims ADD COLUMN shortfall_invoice_id INTEGER;
+
+            ALTER TABLE invoices ADD COLUMN shortfall_claim_id INTEGER;
+
+            CREATE TABLE IF NOT EXISTS warranty_claim_lines (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                claim_id INTEGER NOT NULL,
+                line_type TEXT NOT NULL CHECK (line_type IN ('labor', 'parts')),
+                work_order_part_id INTEGER,
+                quantity REAL NOT NULL CHECK (quantity > 0),
+                amount_cents INTEGER CHECK (amount_cents IS NULL OR amount_cents >= 0),
+                description TEXT,
+                CHECK ((line_type = 'labor') = (work_order_part_id IS NULL)),
+                FOREIGN KEY (claim_id)
+                    REFERENCES warranty_claims(id) ON DELETE CASCADE,
+                FOREIGN KEY (work_order_part_id)
+                    REFERENCES work_order_parts(id) ON DELETE RESTRICT
+            );
+            CREATE INDEX IF NOT EXISTS idx_warranty_claim_lines_claim
+                ON warranty_claim_lines(claim_id);
+
+            CREATE TABLE IF NOT EXISTS tax_warranty_rules (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                jurisdiction_id INTEGER NOT NULL,
+                shop_id INTEGER,
+                payer TEXT NOT NULL
+                    CHECK (payer IN ('maker_with_bike', 'other', 'shop_contract')),
+                taxed_on_claim INTEGER NOT NULL CHECK (taxed_on_claim IN (0, 1)),
+                basis TEXT NOT NULL CHECK (basis IN ('stated', 'reading')),
+                effective_from TEXT NOT NULL,
+                valid_until TEXT NOT NULL CHECK (valid_until >= effective_from),
+                source_title TEXT NOT NULL CHECK (length(trim(source_title)) > 0),
+                source_url TEXT,
+                source_clause TEXT,
+                checked_on TEXT NOT NULL,
+                provenance TEXT NOT NULL CHECK (provenance IN ('regulation', 'shop')),
+                entered_by_user_id INTEGER,
+                notes TEXT,
+                created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                CHECK ((provenance = 'regulation') = (shop_id IS NULL)),
+                FOREIGN KEY (jurisdiction_id)
+                    REFERENCES tax_jurisdictions(id) ON DELETE CASCADE,
+                FOREIGN KEY (shop_id) REFERENCES shops(id) ON DELETE CASCADE,
+                FOREIGN KEY (entered_by_user_id) REFERENCES users(id) ON DELETE SET NULL
+            );
+            CREATE INDEX IF NOT EXISTS idx_tax_warranty_rules_jurisdiction
+                ON tax_warranty_rules(jurisdiction_id, payer, effective_from);
+
+            CREATE TABLE IF NOT EXISTS accounting_export_claims (
+                export_id INTEGER NOT NULL,
+                claim_id INTEGER NOT NULL,
+                PRIMARY KEY (export_id, claim_id),
+                FOREIGN KEY (export_id)
+                    REFERENCES accounting_exports(id) ON DELETE CASCADE,
+                FOREIGN KEY (claim_id)
+                    REFERENCES warranty_claims(id) ON DELETE CASCADE
+            );
+
+            INSERT INTO tax_warranty_rules (jurisdiction_id, shop_id, payer,
+                    taxed_on_claim, basis, effective_from, valid_until, source_title,
+                    source_url, source_clause, checked_on, provenance, notes)
+                SELECT id, NULL, 'maker_with_bike', 0, 'stated', '2009-08-01',
+                    '2027-10-06',
+                    'Massachusetts DOR, Letter Ruling 03-8',
+                    'https://www.mass.gov/letter-ruling/letter-ruling-03-8-sales-tax-consequences-of-certain-merchandise-exchanges',
+                    'quoting Sales Tax Information Letter #3: a dealer replaces a defective part under the warranty and bills the maker; "No sales tax is to be collected. The sales price of the new automobile included the warranty."',
+                    '2026-10-06', 'regulation',
+                    'A reading, to be confirmed by the shop''s accountant before a real warranty job.'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+            INSERT INTO tax_warranty_rules (jurisdiction_id, shop_id, payer,
+                    taxed_on_claim, basis, effective_from, valid_until, source_title,
+                    source_url, source_clause, checked_on, provenance, notes)
+                SELECT id, NULL, 'other', 1, 'reading', '2009-08-01', '2027-10-06',
+                    'Massachusetts DOR, Letter Rulings 79-19 and 85-1',
+                    'https://www.mass.gov/letter-ruling/letter-ruling-79-19-motor-vehicle-buyer-protection-plan',
+                    'LR 79-19: separately stated parts are taxable "whether or not the charges are partially or fully covered by the Plan"; LR 85-1: "Whether an automobile upon which work is performed is under warranty is irrelevant for sales tax purposes." The tax is added to the claim: a reading.',
+                    '2026-10-06', 'regulation',
+                    'A reading, to be confirmed by the shop''s accountant before a real warranty job. LR 85-1: https://www.mass.gov/letter-ruling/letter-ruling-85-1-vinyl-repair-service'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+            INSERT INTO tax_warranty_rules (jurisdiction_id, shop_id, payer,
+                    taxed_on_claim, basis, effective_from, valid_until, source_title,
+                    source_url, source_clause, checked_on, provenance, notes)
+                SELECT id, NULL, 'shop_contract', 0, 'stated', '2009-08-01',
+                    '2027-10-06',
+                    'Massachusetts DOR, 830 CMR 64H.1.1 Services Enterprises',
+                    'https://www.mass.gov/regulations/830-CMR-64h11-service-enterprises',
+                    '830 CMR 64H.1.1(5)(g): the service enterprise "is the consumer of parts" it uses under a service contract, pays the tax when it buys them, and "does not collect the sales tax from its customer"',
+                    '2026-10-06', 'regulation',
+                    'A reading, to be confirmed by the shop''s accountant before a real warranty job.'
+                FROM tax_jurisdictions WHERE code = 'US-MA';
+        """,
+        rollback_sql="""
+            DROP TABLE IF EXISTS accounting_export_claims;
+            DROP INDEX IF EXISTS idx_tax_warranty_rules_jurisdiction;
+            DROP TABLE IF EXISTS tax_warranty_rules;
+            DROP INDEX IF EXISTS idx_warranty_claim_lines_claim;
+            DROP TABLE IF EXISTS warranty_claim_lines;
+            ALTER TABLE invoices DROP COLUMN shortfall_claim_id;
+            ALTER TABLE warranty_claims DROP COLUMN shortfall_invoice_id;
+            ALTER TABLE warranty_claims DROP COLUMN shortfall_cents;
+            ALTER TABLE warranty_claims DROP COLUMN settled_at;
+            ALTER TABLE warranty_claims DROP COLUMN settlement;
+            ALTER TABLE warranty_claims DROP COLUMN tax_source;
+            ALTER TABLE warranty_claims DROP COLUMN tax_cents;
+            ALTER TABLE warranty_claims DROP COLUMN covered_cents;
+            ALTER TABLE warranty_claims DROP COLUMN invoice_id;
+            ALTER TABLE warranty_claims DROP COLUMN coverage_recorded_at;
+            ALTER TABLE warranties DROP COLUMN repair_payer;
+        """,
+    ),
 ]
 
 

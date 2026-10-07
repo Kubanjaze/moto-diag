@@ -266,7 +266,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: (80) and bug fix #1's `test_phase292_xero_tax.py` (10). No migration.
 #: Measured: 10491 collected.
 #:
-COLLECTED_TEST_FLOOR = 10491
+#: 10556 (Phase 373, 2026-10-06) — +65: `test_phase373_warranty_invoice.py`
+#: (57); gate 16 inverted for F188 (+7: the claim's derivation, its rows in
+#: both export files, and a seventh plant); and gate 15's
+#: `test_rolling_back_peels_every_successor[80]` (+1, now that migration 081
+#: succeeds 080). Measured: 10556 collected.
+#:
+COLLECTED_TEST_FLOOR = 10556
 
 
 def _collected_count() -> int:

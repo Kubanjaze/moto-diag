@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F189**.
+At the time of writing the highest assigned is **F190**.
 
 ---
 
@@ -2787,9 +2787,19 @@ taken from the payload; a handler failure answered with a status Stripe
 retries, and not recorded as processed; each with a test, and the path run
 once end to end against test mode.
 
-### F188
+### F188 — CLOSED by Phase 373 (2026-10-06)
 
 **A warranty claim and the invoice for the same work order do not know about each other**
+
+**Closed:** `shop warranty claim cover` records the lines a claim covers;
+the invoice leaves them off what the customer owes and prices them for
+the claim, so the amount claimed is derived in integer cents
+(`--claimed-cents` is gone); the claim's tax follows who owes the repair
+(`tax_warranty_rules`); the packet lists the covered lines and the
+amount; the claim is exported as owed by its provider. Gate 16's pinned
+test is inverted (`test_f188_covered_work_is_off_the_customers_invoice_and_on_the_claim`).
+The measured case below, now: customer 6000 cents, claim 22623.
+Migration 081. Settlements in the export are F190 (row 376).
 
 Found at Phase 292's Step 0 (2026-10-06), in the dry walk of Gate 16 on a
 scratch database (`docs/phases/in_progress/292_step0.md`, S0-4 H2).
@@ -2837,3 +2847,33 @@ bike's recorded mileage instead of the mileage at intake
 What would close it (row 374): check-in links or creates the intake, so
 both orders end with the work order carrying it; Gate 16's pinned test of
 the other order inverted.
+
+### F190
+
+**A warranty claim's settlement does not reach the accounting export**
+
+Found at Phase 373's Step 0 (2026-10-06), in the plan for the operator's
+choices 2a and 5a (`docs/phases/completed/373_phase_log.md`).
+- **Row 373 exports a claim as a receivable** from the warranty provider,
+  at the amount claimed: in QuickBooks a journal entry debiting Accounts
+  Receivable in the provider's name; in Xero a sales invoice to the
+  provider.
+- **When the claim is denied or approved for less,** `shop warranty claim
+  settle` records the shop's decision: bill the customer for the shortfall
+  (a second invoice on the work order, allowed only for this), or absorb
+  it. **Neither is exported.** The export leaves shortfall invoices out
+  and says how many; an absorbed shortfall changes no export row.
+- So after a settlement the books still show the provider owing the full
+  claimed amount, and a shortfall billed to the customer is not in them.
+  Exporting the shortfall invoice as an ordinary invoice would count the
+  covered work's revenue twice, which is why it is left out rather than
+  exported.
+
+What it affects: every claim settled for less than claimed. Live holds 0
+claims (2026-10-06).
+
+What would close it (row 376): each settlement in both files, against the
+claim's receivable: in QuickBooks a journal moving the shortfall from the
+provider to the customer or to a write-off account; in Xero a credit note
+against the provider's invoice, which Xero imports from a file of its
+own.

@@ -1,0 +1,21 @@
+{
+ "_comment": "Phase 373, migration 081: three new tables (warranty_claim_lines, tax_warranty_rules, accounting_export_claims) with two indexes; columns added to warranties (0 live rows), warranty_claims (0 live rows) and invoices (0 live rows), which rewrites those tables' SQL; three Massachusetts warranty rules inserted into tax_warranty_rules; one schema_version row. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "tax_warranty_rules": {"added": 3}
+ },
+ "schema": {
+  "added": [
+   "index idx_tax_warranty_rules_jurisdiction",
+   "index idx_warranty_claim_lines_claim",
+   "table accounting_export_claims",
+   "table tax_warranty_rules",
+   "table warranty_claim_lines"
+  ],
+  "changed": [
+   "table invoices",
+   "table warranties",
+   "table warranty_claims"
+  ]
+ }
+}
