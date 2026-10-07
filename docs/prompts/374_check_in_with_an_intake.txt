@@ -1,0 +1,66 @@
+Do this: start Phase 374, check-in with an intake (F189), and run it to its finish line as CLAUDE.md sets out. Row 374 reads: "Give check-in a way to link or create the intake, so book → intake → work order holds in either order." Read these first:
+- F189 in docs/FOLLOWUPS.md, and row 374.
+- 292's Step 0 (docs/phases/completed/292_step0.md, S0-4 H3) and Gate 16's pinned test, `test_f189_check_in_without_a_work_order_opens_one_with_no_intake` (tests/test_phase292_gate16.py).
+- 373's handoff, docs/handoffs/2026-10-06_373_closed.md. Gate 16 now carries 373's warranty changes; keep its walk green.
+
+Row 374 goes 🚧 before Step 0.
+
+The measured facts, taken 2026-10-06 on master at 5f9097b. Re-verify each at Step 0.
+- **Check-in** (`check_in`, scheduling/booking.py:410; `shop appointment check-in`, whose only option is `--wo`):
+  - with `--wo`, it links an existing work order that isn't finished;
+  - without it, it creates and opens a work order with no intake.
+  - A checked-in appointment cannot be checked in again.
+- **An intake** (`intake_visits`) records the shop, customer and bike, the mileage at intake, the reported problems, who took it, and its status (open, closed or cancelled). It is made by `shop intake create --shop --customer --bike --mileage --notes`. `shop intake open-for-bike` finds a bike's open intake.
+- **A work order's `intake_visit_id` cannot be changed, by design.** shop/work_order_repo.py, at the update whitelist, says that if a mechanic captured the wrong intake, the work order is cancelled and recreated rather than mutating cross-table state. So today the hand-off holds only in one order: `intake create`, then `work-order create --intake`, then `check-in --wo`.
+- **What the gap costs:** 373's claim packet reads the mileage at intake when the work order has an intake (inventory/warranty_claims.py:402), and otherwise the bike's recorded mileage. A work order opened by check-in never has one.
+- **The API** has intake routes (`/{shop_id}/intakes`, api/routes/shop_mgmt.py) but no appointment or check-in route. So a CLI-only change leaves the app's API snapshot alone.
+- **Live**, on a copy at 23:00: 0 appointments, 0 intakes, and 6 work orders, none with an intake. There is nothing to backfill.
+
+What to build, from F189's close condition:
+- **Check-in brings the intake,** so a booked job ends with a work order carrying its intake whichever comes first, the intake or the check-in.
+- **The intake's mileage and reported problems** reach the work order, and through it the claim packet.
+- **Gate 16's pinned test is inverted.** Gate 16 walks both orders: intake first, and check-in first.
+- **F189 is closed.**
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **How check-in brings the intake:**
+   - check-in creates it, taking the mileage and problems as options;
+   - check-in links a bike's open intake, by id or found with `open-for-bike`;
+   - both;
+   - or a narrow command that attaches an intake to an open work order. That last one relaxes the by-design rule above, so say what it would change and why that rule exists.
+2. **A check-in given no intake details:**
+   - opens the work order with no intake, as today, and says so;
+   - creates an intake with the mileage unknown;
+   - or refuses.
+3. **The command line only, or an API route for check-in too.** A route means a planned mobile stop, as in 281.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Live:
+- A migration (082), if the phase needs one, goes through the deploy skill. New tables, new columns and the migration's own schema_version row are not a rule-1 stop; a change to any existing row is.
+- The 6 live work orders keep no intake. Changing them is out of scope.
+
+Carry forward:
+- **A test that reads the clock gets a fixed one;** Gate 16's walk runs at midday, mid-month.
+- **The edit guard is live.** Use the Edit tool for src/ and tests/, and write scratch files to explicit paths in the session scratchpad. If it blocks a legitimate command, record it in the log; never loosen it.
+- **wholetree.sh:** stage first, run it on its own and read its exit code before committing. Run `--full` on the committed HEAD before the regression, and before any commit touching seed data or migrations.
+- **Findings:** file with the finding skill before any document cites the number. F-numbers are one sequence across both repos.
+- **Before the regression:** run 244G's scanner over every new test file. Raise COLLECTED_TEST_FLOOR, with the reason in the commit message.
+- **Commits:** commit and push as separate commands, with messages through a quoted heredoc.
+- **The phase log:** only a bug fix's own register heading says "Bug fix #N" (A4). A log that mentions refute needs the checklist, or "No refute pass ran".
+- No test reads data/motodiag.db, and no test pins the schema head as a literal (F124).
+- **A lost worker:** tests/support/worker_loss.py records why. Read its record before anything else.
+
+Use the canonical parallel regression, .claude/skills/closeout/regression.sh.
+
+Report:
+- **At Step 0:** the three questions above, with options.
+- **At the end:**
+  - how a user checks in with an intake, in both orders;
+  - the mileage reaching the claim packet;
+  - Gate 16's inverted test;
+  - F189 closed;
+  - the dry-run diff and the deploy outcome, if there was a migration;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step: open rows 375 (warranty deductibles) and 376 (claim settlements in the export), and what comes after them is my call.
