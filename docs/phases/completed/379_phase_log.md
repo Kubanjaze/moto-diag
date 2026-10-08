@@ -1,6 +1,6 @@
 # Phase 379 — Small fixes from the open-findings triage — phase log
 
-**Status:** 🚧 In progress (2026-10-08)
+**Status:** ✅ Complete (2026-10-08)
 **Branch:** `phase-379` (Opus session, main checkout)
 
 ---
@@ -95,3 +95,20 @@ them):
 - every test file touching retrieval, the lookup or composition (35
   files): 2198 passed, 2 failed before D3, then both passed;
 - the sensor and drift files: 1703 passed.
+
+### 2026-10-08 — The regression of record
+
+`wholetree.sh --full` on `7be2337`: 4091 passed.
+
+Regression of record: 10769 passed, 0 failed, 0 skipped, 0 errors at `7be2337` (24 min 31 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Then the nine findings were closed in `docs/FOLLOWUPS.md`, each with a
+dated line and its evidence. F173 closed on its two conditions: the
+truncation fixed, and a run count, 19 regressions of record from 359's to
+this one, each running the whole suite with
+`test_cross_platform_brakes` in it, all 0 failed.
+
+No migration, so no live apply. No bug fix after a commit, so no register.
+
+No refute pass ran: the phase ships code, tests and one lookup entry read
+from its document's rendered cover, not content rows.
