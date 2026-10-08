@@ -315,7 +315,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: rollback case for 085 (+1); 255B's F129 pin renamed as it was inverted
 #: (+1 -1). Measured: 10795 collected.
 #:
-COLLECTED_TEST_FLOOR = 10795
+#: Phase 380, bug fix #1 (2026-10-08): 10795 -> 10798, +3,
+#: tests/test_phase380_deploy_new_column.py. Measured: 10798 collected.
+#:
+COLLECTED_TEST_FLOOR = 10798
 
 
 def _collected_count() -> int:
