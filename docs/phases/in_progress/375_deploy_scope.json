@@ -1,0 +1,18 @@
+{
+ "_comment": "Phase 375, migration 084: columns added to warranties, warranty_claims and warranty_claim_lines (0 live rows each), which rewrites those tables' SQL; one new table (tax_deductible_rules) with one index; three Massachusetts deductible readings inserted; one schema_version row. New columns, a new table and new rule rows after a backup are not a rule-1 stop (the operator's prompt); any change to an existing row is. No existing row changes or is removed; every table not named here must not change at all.",
+ "tables": {
+  "schema_version": {"added": 1},
+  "tax_deductible_rules": {"added": 3}
+ },
+ "schema": {
+  "added": [
+   "index idx_tax_deductible_rules_jurisdiction",
+   "table tax_deductible_rules"
+  ],
+  "changed": [
+   "table warranties",
+   "table warranty_claim_lines",
+   "table warranty_claims"
+  ]
+ }
+}
