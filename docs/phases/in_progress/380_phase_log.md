@@ -176,3 +176,23 @@ again, as K18 requires before an apply. `wholetree.sh --full` on
 Regression of record: 10798 passed, 0 failed, 0 skipped, 0 errors at `9530473` (30 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
 
 Waiting for the operator's words on 085's diff.
+
+### 2026-10-08 — The operator's approval of 085, verbatim
+
+> Approved: apply 085 live, exactly as the committed dry-run diff shows:
+> every known_issues row gains its seed key and nothing else in those rows
+> changes; 109 known_issue_models rows leave (90 Ego under Zero, LiveWire
+> and Harley-Davidson; 17 within Piaggio and Vespa; 2 Wolf CR300i under
+> Kymco) and none are added; the row-key index replaces the title index;
+> plus 085's own schema_version row. If anything else differs, stop and
+> show me. Also file a finding: a Vespa entered as make Piaggio reaches
+> none of its own model rows (Piaggio LX50 reaches 0 of the 7 LX50 rows,
+> before and after 085).
+
+The approved diff, checked against those words before the apply:
+- Ego under Harley-Davidson, LiveWire and Zero: 30 each, 90;
+- within Piaggio and Vespa, 17: LX50 under Piaggio 9, Primavera 150 2,
+  GTS 310 2, S50 1, MP3 250 under Vespa 1, Sprint 125 1, Sprint 150 1;
+- Wolf CR300i under Kymco: 2.
+
+109 in all; 0 added.
