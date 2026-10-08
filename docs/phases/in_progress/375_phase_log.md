@@ -42,6 +42,10 @@ The prompt asks for a stop at Step 0 with four questions. Q2 is also a
 rule question in its own right: the tax on a deductible is a reading of
 sources that do not name it.
 
+Committing Step 0 found F196 (fast mode red at 20:01 EDT on a docs-only
+commit). Its fix went first, in its own commit (`83b4834`); the register
+entry is below.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-10-07
