@@ -288,7 +288,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: adds; 373's left-out test renamed for its inversion (-1 +1). Measured:
 #: 10645 collected.
 #:
-COLLECTED_TEST_FLOOR = 10645
+#: Phase 375 (2026-10-07): 10645 -> 10685, +40, by a diff of collected ids
+#: against master ca8ea1a (measured in a worktree, on its own source):
+#: tests/test_phase375_deductibles.py (39), and gate 15's
+#: test_rolling_back_peels_every_successor[83], which migration 084 adds; none
+#: removed. Measured: 10685 collected.
+#:
+COLLECTED_TEST_FLOOR = 10685
 
 
 def _collected_count() -> int:

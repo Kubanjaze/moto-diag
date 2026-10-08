@@ -12,12 +12,12 @@ import csv
 import hashlib
 import io
 import re
-from datetime import datetime, timezone
 from pathlib import Path
 
 import pytest
 
 from motodiag.accounting import export as acct_export
+from motodiag.core.timestamps import local_day
 from support.phase275 import new_db, ok, refused, seed_booking_shop, sql
 from support.tax_on_record import record_tax
 
@@ -201,7 +201,9 @@ class TestQuickBooksOnline:
         record_tax(path, s["shop"], rate=0.0625)
         ok(path, "shop", "invoice", "generate", "1",
            "--hourly-rate", "11000", "--diagnostic-fee", "4500", "--supplies-pct", "0.05")
-        today = datetime.now(timezone.utc).date().isoformat()
+        # F196: the shop's day of the invoice's own stamp, never the UTC clock's
+        # day, which is tomorrow on a US evening.
+        today = local_day(sql(path, "SELECT issued_at FROM invoices")[0][0])
         _map_qbo(path, s["shop"], kinds=("receivable", "labor", "diagnostic", "misc", "tax"))
         out = tmp_path / "gen.csv"
         _export(path, s, "quickbooks-online", out, frm=today, to=today)

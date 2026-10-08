@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 83  # Phase 376: claim settlements in the accounting export (migration 083)
+SCHEMA_VERSION = 84  # Phase 375: warranty deductibles (migration 084)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

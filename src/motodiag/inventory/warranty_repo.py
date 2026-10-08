@@ -11,22 +11,24 @@ def add_warranty(warranty: Warranty, db_path: str | None = None) -> int:
         cursor = conn.execute(
             """INSERT INTO warranties
                (vehicle_id, coverage_type, provider, start_date, end_date,
-                mileage_limit, terms, claim_count, repair_payer)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)""",
+                mileage_limit, terms, claim_count, repair_payer, deductible_cents)
+               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)""",
             (
                 warranty.vehicle_id, warranty.coverage_type.value,
                 warranty.provider, warranty.start_date, warranty.end_date,
                 warranty.mileage_limit, warranty.terms, warranty.claim_count,
-                warranty.repair_payer,
+                warranty.repair_payer, warranty.deductible_cents,
             ),
         )
         return cursor.lastrowid
 
 
 def update_warranty(warranty_id: int, repair_payer: Optional[str] = None,
-                    provider: Optional[str] = None, db_path: str | None = None) -> bool:
-    """Record who owes a repair under a warranty, and who gives it, where
-    given. False when the warranty does not exist."""
+                    provider: Optional[str] = None,
+                    deductible_cents: Optional[int] = None,
+                    db_path: str | None = None) -> bool:
+    """Record who owes a repair under a warranty, who gives it, and its
+    deductible, where given. False when the warranty does not exist."""
     with get_connection(db_path) as conn:
         if conn.execute("SELECT 1 FROM warranties WHERE id = ?",
                         (warranty_id,)).fetchone() is None:
@@ -37,6 +39,9 @@ def update_warranty(warranty_id: int, repair_payer: Optional[str] = None,
         if provider is not None:
             conn.execute("UPDATE warranties SET provider = ? WHERE id = ?",
                          (provider, warranty_id))
+        if deductible_cents is not None:
+            conn.execute("UPDATE warranties SET deductible_cents = ? WHERE id = ?",
+                         (deductible_cents, warranty_id))
         return True
 
 

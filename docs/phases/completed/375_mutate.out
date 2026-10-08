@@ -1,0 +1,21 @@
+I1 no deductible is applied: red
+I2 the deductible is not capped at the covered work: red
+I3 the claim's lines keep the deductible's share: red
+I4 the claim keeps the tax the customer paid on the deductible: red
+I5 the deductible's tax is not taken off the claim's (2C): red
+I6 a deductible is charged with no reading on record: red
+I7 the customer's invoice does not charge the deductible: red
+I8 the claim's covered work is the gross, not the claimed work: red
+I9 a deductible not on record at invoicing is read as none: red
+C1 a claim is covered with no deductible on record: red
+W1 warranty update ignores --deductible-cents: red
+W2 warranty add does not store the deductible: red
+P1 the packet does not show a line's deductible share: red
+P2 the packet does not show the warranty's deductible: red
+T1 confirm does not carry the deductible rules forward: red
+T2 confirm drops what the readings leave open: red
+T3 status does not list the deductible readings: red
+M1 a deductible treatment other than its taxable share is allowed: red
+M2 the maker's reading does not say what 03-8 leaves open: red
+M3 the rollback leaves the warranty's column: red
+20/20 red

@@ -346,7 +346,8 @@ def _walk_job(w: Walker, rec: dict, key: str, job: dict) -> dict:
     coverage, provider, start, end, limit = job["warranty"]
     out = w.run("coverage", "shop", "warranty", "add", "--bike", bike, "--coverage",
                 coverage, "--provider", provider, "--start", start, "--end", end,
-                "--mileage-limit", limit, "--payer", job["payer"])
+                "--mileage-limit", limit, "--payer", job["payer"],
+                "--deductible-cents", "0")  # Phase 375: the plan charges none
     j["warranty"] = _printed_id(out, r"Recorded warranty #(\d+)")
 
     # Customer books: staff book it for them (self-booking is row 363).

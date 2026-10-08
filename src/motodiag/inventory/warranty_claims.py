@@ -186,6 +186,13 @@ def cover_claim(
             f"has no one to be owed by; record it with `motodiag shop warranty update "
             f"{warranty['id']} --provider NAME`"
         )
+    if not covers_nothing and warranty.get("deductible_cents") is None:
+        raise WarrantyClaimError(
+            f"warranty #{warranty['id']} does not record its deductible, which the "
+            f"invoice charges the customer and takes off the claim; record it with "
+            f"`motodiag shop warranty update {warranty['id']} --deductible-cents N` "
+            f"(0 for none)"
+        )
     rows: list[tuple[str, Optional[int], float, str]] = []
     with get_connection(db_path) as conn:
         invoiced = conn.execute(
@@ -443,6 +450,9 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
     payer = warranty.get("repair_payer")
     out.append("  Repair owed by: "
                + (PAYER_LABELS[payer] if payer else "not recorded"))
+    deductible = warranty.get("deductible_cents")
+    out.append("  Deductible: " + ("not recorded" if deductible is None
+                                   else f"{_money(deductible)} per covered repair"))
     if warranty.get("terms"):
         out.append(f"  Terms: {warranty['terms']}")
     repair_date = None
@@ -466,9 +476,26 @@ def render_claim_packet(claim_id: int, db_path: Optional[str] = None) -> str:
     for line in lines:
         price = (_money(line["amount_cents"]) if line["amount_cents"] is not None
                  else "priced when the invoice is generated")
+        if line.get("deductible_cents"):
+            price += f" (the deductible's share, {_money(line['deductible_cents'])}, " \
+                     f"charged to the customer)"
         out.append(f"    - {line['description']}: {price}")
+    if lines and claim.get("covered_cents") is None:
+        out.append("  Deductible: applied when the invoice is generated")
     if claim.get("covered_cents") is not None:
-        out.append(f"  Covered work: {_money(claim['covered_cents'])}")
+        applied = claim.get("deductible_cents") or 0
+        if applied:
+            out.append(f"  Covered work: {_money(claim['covered_cents'] + applied)}")
+            charged = (f"  Deductible (charged to the customer): {_money(applied)}, tax "
+                       f"on it {_money(claim['deductible_tax_cents'])}")
+            if claim.get("deductible_tax_source"):
+                charged += f" ({claim['deductible_tax_source']})"
+            if claim["covered_cents"] == 0:
+                charged += "; it is the whole covered work, so the claim asks for nothing"
+            out.append(charged)
+            out.append(f"  Claimed work: {_money(claim['covered_cents'])}")
+        else:
+            out.append(f"  Covered work: {_money(claim['covered_cents'])}")
         tax = f"  Tax on the claim: {_money(claim['tax_cents'])}"
         if claim.get("tax_source"):
             tax += f" ({claim['tax_source']})"

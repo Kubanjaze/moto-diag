@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F195**.
+At the time of writing the highest assigned is **F196**.
 
 ---
 
@@ -3081,3 +3081,41 @@ What would close it: the jurisdiction's own ruling on parts furnished
 free under a denied warranty claim, recorded per jurisdiction as a rule
 with its source; and, if it taxes their cost, a cost basis for the parts
 and a line in the export.
+
+### F196 — CLOSED by Phase 375 (bug fixes #1 and #2)
+
+**A Phase 275 export test takes the UTC day as the export's range, so it fails every evening in a US time zone**
+
+Found at Phase 375's Step 0 (2026-10-07, 20:01 EDT), when `wholetree.sh`
+fast mode went red on a docs-only commit:
+`tests/test_phase275_accounting_export.py::TestQuickBooksOnline::test_an_invoice_made_by_the_invoice_command_exports`
+exports the range `datetime.now(timezone.utc).date()`. Since Phase 377 the
+export selects invoices by the shop's day (the server's zone, F192), so
+from 20:00 to 24:00 EDT the UTC day is tomorrow and the export refuses:
+"no invoices to export for shop id=1 from 2026-10-08 to 2026-10-08". It
+passed at 19:5x EDT the same evening (the opening commit's fast run, 1582
+passed). The product is right; the test reads the clock with no fixed one.
+
+The search: `now(timezone.utc).date()`, `utcnow().date()`,
+`utcnow().strftime` and `now(timezone.utc).strftime("%Y-%m-%d")` over
+`tests/` find 5 lines in 3 files (171 analytics ×3, 274 P&L ×1, this one).
+Run at 20:02 EDT, the three files give 1 failed, 70 passed: only this test.
+
+What would close it: the test exports the shop's day of the invoice's own
+`issued_at` (`core.timestamps.local_day`), so it never reads the clock to
+pick a range; it passes in the evening window.
+
+**Widened at the operator's word (2026-10-07), and closed.** The rule: a
+test line that reads the real clock (`date.today()`, `datetime.now(…)`,
+`datetime.utcnow()`) and turns the value into a calendar day, month or
+year (a date-only or month `strftime`, `.date()`, `.isoformat()` of a date,
+`.year`, a `[:10]` slice). On `phase-375` after bug fix #1 it finds 9
+lines in 6 files: `test_phase152_history.py:159`,
+`test_phase171_analytics.py:211, 213, 408`, `test_phase274_pnl.py:23, 24`,
+`test_phase274_quotes_variance.py:106` (the `NOW` of line 23 as a day),
+`test_phase281_intake_month.py:35`, `test_phase281_vin_year.py:41`. The
+first search's 171:233 is a timestamp, not a day; its test was run too.
+With the whole process's clock fixed by libfaketime at 2026-10-31 21:00
+EDT, only `test_phase274_pnl.py` failed (8 tests): its `MONTH` was the UTC
+month. Fixed as Phase 375's bug fix #2; the six files and 275's then pass
+(137) at that moment, an ordinary evening, New Year's Eve 21:00 and 00:30.
