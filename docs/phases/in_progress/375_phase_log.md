@@ -46,6 +46,25 @@ Committing Step 0 found F196 (fast mode red at 20:01 EDT on a docs-only
 commit). Its fix went first, in its own commit (`83b4834`); the register
 entry is below.
 
+**The operator's choices, verbatim (2026-10-07).** The decision arrived as
+pasted text; the session asked whether it was the operator's own (rule 1),
+and the operator answered "Yes, mine; apply it".
+
+> 1A, 2A, 3A, 4A. Three additions:
+> - Each tax_deductible_rules row's notes say what its sources leave open,
+>   for the accountant: 03-8's condition for the maker's warranty; for a
+>   shop contract, whether a deductible is a "separate charge" under
+>   (5)(g), and 80-17's adjustment.
+> - The handoff names what 1A and 2A leave out: a plan whose deductible is
+>   per visit, or includes tax.
+> - F196's search missed two month-based lines: test_phase274_pnl.py:23
+>   (MONTH) and test_phase281_intake_month.py:35 (the first of the month).
+>   Widen it to every test that turns the real clock into a day or month (I
+>   count 7 lines in 4 files on phase-375), and check each at 21:00 EDT on a
+>   month's last day with a fixed clock. Fix any that fails the way bug fix
+>   #1 did, or leave F196 open naming it.
+> Carry on to v1.0 and the build.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-10-07
