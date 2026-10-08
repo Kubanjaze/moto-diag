@@ -196,3 +196,32 @@ The approved diff, checked against those words before the apply:
 - Wolf CR300i under Kymco: 2.
 
 109 in all; 0 added.
+
+### 2026-10-08 — 085 live
+
+`deploy.py apply-live 380`, from the branch, after the regression at
+`9530473`: preflight passed (K18's check clear, a fresh dry run equal to
+the approved diff, seed parity included). Live is now 5758 rows (5866 −
+109 + 1), 121 tables, integrity ok.
+- `380_live_diff.md`: scope problems none; **equals the approved exact
+  diff: yes**.
+- `deploy.py verify-live 380`, exit 0:
+  - `known_issues` ~1060;
+  - `known_issue_models` −109;
+  - `schema_version` +1;
+  - the key index added, the prose index removed, the table rewritten;
+  - equals the approved diff: yes;
+  - integrity ok; foreign keys ok.
+
+Nothing outside the operator's words differs, so there was no stop.
+
+**F201 filed at the operator's word**, measured first:
+- "Piaggio LX50" resolves `unknown`, because the lookup files the LX under
+  Vespa.
+- The 7 scooter CVT rows (4604, 4606–4608, 4610–4612) are among its
+  candidates and all are withheld: 0 of 7, before and after 085, as the
+  operator said.
+- A first count reached "0 of 9" by including the two Vespa-only rows.
+- A first draft said the marque vocabulary has no family table. It has
+  one: `marque_families.SUB_MARQUES`, LiveWire → Harley-Davidson only.
+  Corrected before the commit.
