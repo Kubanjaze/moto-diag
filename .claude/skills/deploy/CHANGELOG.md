@@ -1,5 +1,34 @@
 # deploy — changelog
 
+## 2026-10-07 — apply-live after the regression of record; verify-live (Phase 378, K18, K25, K27)
+
+The operator: "approved: 378 = K18–K25." "K27: (a) now, (b) once the
+first shop's real data is in."
+
+- **K18.** `apply-live` refuses unless:
+  - the phase log in `in_progress/` carries a regression line A5 can read
+    (`closeout_check.regression_line`);
+  - no code path changed between its commit and HEAD
+    (`code_after_regression.is_code`, verify_phase's check 2 scope);
+  - no code path is uncommitted.
+
+  376 applied 083 before its regression, and nothing stopped it. The
+  known-bad logs are `fixtures/k18/`. 358's fixture repository now records
+  a regression line, so the older apply tests pass for their own reason.
+  `tests/test_phase378_deploy_order.py`.
+- **K25.** `verify-live <phase>` is new, read-only. It copies live and the
+  phase's backup, the backup opened `immutable=1`; the WAL control shows a
+  plain read-only open leaves `-shm`. It prints:
+  - the schema and row differences;
+  - whether they equal the approved exact diff (`<clock>` matched by
+    shape);
+  - integrity and foreign keys.
+
+  `tests/test_phase378_verify_live.py`.
+- **K27.** The skill records the operator's call: 5 backups now, 5 plus the
+  first of each week once the first shop's real data is in. `KEEP` is
+  unchanged.
+
 ## 2026-09-28 — apply-live compares the fresh dry run with the approved diff (Phase 357, F172)
 
 The operator: "Make `deploy.py apply-live` refuse unless its fresh dry

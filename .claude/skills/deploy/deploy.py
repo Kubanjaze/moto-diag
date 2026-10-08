@@ -15,7 +15,11 @@ and unchanged."
                                    a copy, diff every table by rowid, check the
                                    scope, run the F158 census on the copy, and
                                    write docs/phases/in_progress/<phase>_dryrun_diff.md
-    deploy.py apply-live <phase>   refuses unless: that file exists, is committed
+    deploy.py apply-live <phase>   refuses unless: the phase log carries a
+                                   regression of record with no code changed
+                                   since its commit and none uncommitted
+                                   (Phase 378, K18: one order); that file
+                                   exists, is committed
                                    and unchanged, and records no scope problem;
                                    its backup still hashes as recorded; the
                                    scope file is the one it was made with; live
@@ -25,6 +29,9 @@ and unchanged."
                                    values masked (F172, Phase 357). Then it
                                    migrates live, writes <phase>_live_diff.md
                                    and checks the scope and the equality again.
+    deploy.py verify-live <phase>  read-only (Phase 378, K25): live against the
+                                   phase's backup, the approved diff, integrity
+                                   and foreign keys.
 
 **The exact diff** (F172). The dry-run file ends with the whole diff as JSON:
 every field of every added and removed row, the before and after of every
@@ -417,8 +424,56 @@ def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKU
     return 1 if probs else 0
 
 
+def _git_lines(repo: pathlib.Path, *args: str) -> list[str]:
+    r = subprocess.run(["git", "-C", str(repo), *args], capture_output=True, text=True)
+    return [ln for ln in r.stdout.splitlines() if ln] if r.returncode == 0 else []
+
+
+def regression_problem(repo: pathlib.Path, phase: str) -> str | None:
+    """Why the phase may not apply live yet, or None (Phase 378, K18).
+
+    One order: the regression of record, then the apply from the branch, then
+    the close-out commit that moves the deploy files, then the merge. So the
+    phase log in `in_progress/` must carry a regression line A5 can parse, no
+    code path may have changed between its commit and HEAD (verify_phase's
+    check 2 scope: `.claude/` and `scripts/` are code too), and no code path may
+    be uncommitted, since the apply migrates with the working tree's `src/`.
+    """
+    sys.path.insert(0, str(HERE.parent / "closeout"))
+    import closeout_check
+    import code_after_regression
+
+    log = repo / "docs" / "phases" / "in_progress" / f"{phase}_phase_log.md"
+    rel = log.relative_to(repo)
+    if not log.is_file():
+        return f"no phase log {rel}: the regression of record comes before the live apply"
+    line = closeout_check.regression_line(log.read_text(encoding="utf-8"))
+    if line is None:
+        return (f"{rel} has no regression of record that A5 can read: run "
+                f"`.claude/skills/closeout/regression.sh` and record its line before the "
+                f"live apply")
+    commit = line[1]
+    if not _git_lines(repo, "rev-parse", "--verify", "--quiet", f"{commit}^{{commit}}"):
+        return f"the regression of record names `{commit}`, which is not a commit here"
+    after = code_after_regression.code_paths(
+        _git_lines(repo, "diff", "--name-only", f"{commit}..HEAD"))
+    if after:
+        return (f"code changed after the regression of record at `{commit}`: "
+                f"{after[:5]}. Run the regression again before the live apply")
+    pending = code_after_regression.code_paths(
+        _git_lines(repo, "diff", "--name-only", "HEAD")
+        + _git_lines(repo, "ls-files", "--others", "--exclude-standard"))
+    if pending:
+        return (f"uncommitted code in the working tree: {pending[:5]}. The apply migrates "
+                f"with the working tree's code; commit it and run the regression again")
+    return None
+
+
 def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Callable) -> dict:
     """Every refusal, before live is touched. Returns the header on success."""
+    problem = regression_problem(repo, phase)
+    if problem:
+        raise Refused(problem)
     f = diff_path(repo, phase)
     if not f.exists():
         raise Refused(f"no approved dry-run diff: {f.relative_to(repo)} does not exist. "
@@ -496,11 +551,106 @@ def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT
     return 1 if probs else 0
 
 
+# ------------------------------------------------------------ reading it back
+def _immutable_copy(src: pathlib.Path, dst: pathlib.Path) -> None:
+    """Copy a backup opened with `immutable=1`: SQLite then leaves no `-shm`
+    or `-wal` beside it, as a plain read-only open does (Phase 378, K25)."""
+    s = sqlite3.connect(f"file:{src}?mode=ro&immutable=1", uri=True)
+    d = sqlite3.connect(dst)
+    s.backup(d)
+    s.close()
+    d.close()
+
+
+def find_diff(repo: pathlib.Path, phase: str) -> pathlib.Path | None:
+    """The phase's dry-run diff, in `in_progress/` before its close-out or
+    `completed/` after."""
+    for folder in ("in_progress", "completed"):
+        p = repo / "docs" / "phases" / folder / f"{phase}_dryrun_diff.md"
+        if p.is_file():
+            return p
+    return None
+
+
+def shape_gaps(approved: dict, now: dict) -> list[str]:
+    """Where live, read now, differs from the approved exact diff. A field the
+    approved diff masked as `<clock>` matches any timestamp-shaped value: the
+    clock it was masked against is long past."""
+    a, b = _leaves(approved), _leaves(now)
+    gaps = []
+    for p in sorted(set(a) | set(b)):
+        va, vb = a.get(p, "(absent)"), b.get(p, "(absent)")
+        if va == vb or (va == CLOCK and isinstance(vb, str) and _TIMESTAMP.match(vb)):
+            continue
+        gaps.append(f"{p}: approved {va!r}, live {vb!r}")
+    return gaps
+
+
+def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT) -> int:
+    """Read-only: live against the phase's backup (Phase 378, K25).
+
+    Copies both through SQLite's backup API (the backup opened immutable),
+    and prints the schema objects added, removed and changed, each table whose
+    rows differ, whether that equals the approved exact diff, and live's
+    integrity and foreign keys. Exit 1 on an integrity or foreign-key failure
+    or a missing backup, 2 when the phase has no deploy, else 0: a difference
+    from the approved diff is printed, not failed, since later work may
+    change live.
+    """
+    f = find_diff(repo, phase)
+    if f is None:
+        print(f"verify-live {phase}: no dry-run diff in in_progress/ or completed/; "
+              "the phase has no deploy")
+        return 2
+    text = f.read_text()
+    bk = pathlib.Path(_header(text).get("Backup", ""))
+    if not bk.is_file():
+        print(f"verify-live {phase}: the backup {bk} named in {f.name} is missing")
+        return 1
+    live_copy = _scratch(repo, f"{phase}_verify_live.db")
+    bk_copy = _scratch(repo, f"{phase}_verify_backup.db")
+    try:
+        backup(db, live_copy)
+        _immutable_copy(bk, bk_copy)
+        d = diff(dump(bk_copy), dump(live_copy))
+        new_schema = schema(live_copy)
+        sch = schema_diff(schema(bk_copy), new_schema)
+        c = _ro(live_copy)
+        integrity = c.execute("pragma integrity_check").fetchone()[0]
+        fk = c.execute("pragma foreign_key_check").fetchall()
+        c.close()
+    finally:
+        _drop(live_copy)
+        _drop(bk_copy)
+    approved = _approved_exact(text)
+    gaps = (shape_gaps(approved, exact(d, sch, new_schema, dt.datetime(1970, 1, 1)))
+            if approved is not None else None)
+    print(f"verify-live {phase}: live against {bk.name} (both copied read-only; "
+          "the copies are deleted)")
+    for kind in ("added", "removed", "changed"):
+        print(f"  schema {kind}: {', '.join(sch[kind]) or 'none'}")
+    if not d:
+        print("  rows: no table differs")
+    for t, x in d.items():
+        print(f"  rows: {t} +{len(x['added'])} ~{len(x['changed'])} -{len(x['removed'])}")
+    if gaps is None:
+        print("  equals the approved exact diff: cannot tell (the diff predates F172)")
+    else:
+        print(f"  equals the approved exact diff: {'yes' if not gaps else 'no'}")
+        for g in gaps[:10]:
+            print(f"    {g}")
+    print(f"  integrity: {integrity}; foreign keys: "
+          f"{'ok' if not fk else f'{len(fk)} violation(s)'}")
+    return 1 if integrity != "ok" or fk else 0
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("mode", choices=["dryrun", "apply-live"])
+    ap.add_argument("mode", choices=["dryrun", "apply-live", "verify-live"])
     ap.add_argument("phase")
     a = ap.parse_args(argv)
+    if a.mode == "verify-live":
+        return verify_live(a.phase)
     return dryrun(a.phase) if a.mode == "dryrun" else apply_live(a.phase)
 
 

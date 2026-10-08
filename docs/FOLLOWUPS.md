@@ -19,7 +19,8 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F196**.
+At the time of writing the highest assigned is **F196** (this file). The
+next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
 

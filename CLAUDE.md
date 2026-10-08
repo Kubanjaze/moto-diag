@@ -55,10 +55,10 @@ date (R7).
 `tests/test_roadmap_continuity.py` runs it with every suite, and the push
 guard refuses any `git push` while it fails.
 
-## How a phase runs: five standing rules
+## How a phase runs: six standing rules
 
-Standing since 2026-09-24. The operator had to give each of these more than
-once.
+Standing since 2026-09-24 (rule 6 since 2026-10-07). The operator had to give
+each of these more than once.
 
 1. **A phase runs to its finish line.** It stops for the operator only for:
    - a real fork, meaning two plans that would ship different things
@@ -107,11 +107,42 @@ once.
 4. **Every close-out writes a handoff:**
    `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`, saying what shipped, what
    is open and what is next. It goes in the close-out commit, before the
-   merge; the deploy's outcome is added after it runs. `roadmap_check.py`
-   R6 refuses any push while a phase closed since 2026-09-24 has none.
+   merge, with the live outcome: a migration is applied from the branch
+   after the regression of record and before the close-out commit
+   (`deploy.py apply-live` refuses otherwise, Phase 378). The merge's outcome
+   is added after it. `roadmap_check.py` R6 refuses any push while a phase
+   closed since 2026-09-24 has none.
 5. **One writing session at a time on this checkout.** Any other session
    only reads: no commits, branch switches or edits while a builder works.
    A second writer gets its own worktree.
+6. **Standing practice** (Phase 378, K23). What every phase prompt used to
+   repeat, and no check holds:
+   - **Run the whole-tree command on its own** and read its exit code before
+     committing; never through a pipe (`wholetree.sh | tail && git commit`).
+   - **Raise `COLLECTED_TEST_FLOOR`** when a phase adds tests, by a diff of
+     collected ids, with the reason in the commit message. The floor test
+     refuses only a floor above the count.
+   - **File a finding with the `finding` skill before any document cites its
+     number.** F-numbers are one sequence across both repositories.
+   - **When a guard blocks a command, record it in the phase log and never
+     loosen the guard.** The edit guard and the push guard fail closed by
+     design.
+   - **A lost test worker:** read `tests/support/worker_loss.py`'s record
+     before anything else.
+   - **A builder may install a Homebrew core tool a test needs**, naming it
+     in the phase log and the handoff (the operator's K26, 2026-10-07).
+
+   The rest of what prompts carried is held by checks:
+   - the clock census, and `clock_check.sh` before a regression of record
+     on a month's last evening (K19);
+   - the deploy order (K18);
+   - 244G's scanner, in fast mode;
+   - the push guard (a commit and a push in one command);
+   - A4 and A8;
+   - 244H (no test reads the live database) and F124 (no schema head
+     pinned).
+
+   A prompt carries only the phase's own facts and stops.
 
 ## Procedure folders
 
@@ -170,6 +201,25 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-10-07 — rule 6, standing practice; the deploy order in rule 4 (Phase 378, K23, K26, K18)
+
+The operator, 2026-10-07: "K23: the standing lines move into checks or
+CLAUDE.md's "How a phase runs"." "K26: (a)."
+- **Rule 6 is new.** It holds the five carry-forward lines that no check
+  enforces, and K26's: a builder may install a Homebrew core tool a test
+  needs, named in the log and the handoff. Its last paragraph names the
+  checks that hold the other lines. `378_step0.md` S0-2 maps each line.
+- **Rule 4** states K18's order: the live apply comes after the regression
+  of record and before the close-out commit. `deploy.py apply-live` refuses
+  otherwise.
+- **The heading** says six rules.
+- **K27**, recorded in the deploy skill: 5 backups kept now; 5 plus the
+  first of each week once the first shop's real data is in (the operator's
+  "(a) now, (b) once the first shop's real data is in").
+
+The working-rules index covers the workspace `CLAUDE.md`, not this file,
+so it is unchanged.
 
 ### 2026-09-27 — a skill added mid-session does load (255D's clause removed)
 

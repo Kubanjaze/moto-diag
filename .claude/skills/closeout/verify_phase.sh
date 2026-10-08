@@ -64,16 +64,22 @@ echo "=== 7. findings header ==="
 grep -n -i "highest assigned" docs/FOLLOWUPS.md
 
 echo "=== 8. schema + live db ==="
+# Live opened read-only (Phase 378, K25). A phase with a deploy is read back
+# by deploy.py verify-live: live against its backup, the approved diff,
+# integrity and foreign keys.
 "$PY" -c "
-import sqlite3; c=sqlite3.connect('data/motodiag.db'); q=lambda s:c.execute(s).fetchone()[0]
+import sqlite3; c=sqlite3.connect('file:data/motodiag.db?mode=ro', uri=True); q=lambda s:c.execute(s).fetchone()[0]
 print('schema', q('select max(version) from schema_version'), '| rows', q('select count(*) from known_issues'))"
+if ls docs/phases/*/${PHASE}_dryrun_diff.md >/dev/null 2>&1; then
+  "$PY" -B "$DIR/../deploy/deploy.py" verify-live "$PHASE"
+fi
 
 echo "=== 9. backup ==="; ls -lh ~/backups/motodiag/
 
 echo "=== 10. targeted tests (parallel, as the regression runs since 355) ==="
 PYTHONUTF8=1 "$PY" -m pytest -n auto --dist load -k "$PHASE" -q 2>&1 | tail -3
 
-echo "=== 11. closeout contract (all seven artefacts) ==="
+echo "=== 11. closeout contract (all eight artefacts) ==="
 "$PY" -B "$DIR/closeout_check.py" "$REPO" "$PHASE" && echo "  closeout complete"
 
 echo "=== 12. refuter checklist, if the phase ran one ==="

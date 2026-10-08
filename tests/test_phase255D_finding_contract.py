@@ -75,9 +75,10 @@ class TestAgainstTheRealRepository:
         assertion pinned which file happened to be ahead and asked for the
         allocation's assumptions to be revisited if it flipped; 257B filed
         three app findings in the mobile file and it flipped. Revisited: the
-        script takes the max over both files and B1 compares the header with
-        that same global max, so neither cares which file leads. What must
-        hold in either direction is that the next number clears both."""
+        script takes the max over both files, and since Phase 378 (K20) B1
+        compares each header with its own file's highest, so neither cares
+        which file leads. What must hold in either direction is that the next
+        number clears both."""
         here = entries(ROOT / "docs" / "FOLLOWUPS.md")
         there = entries(ROOT / ".." / "moto-diag-mobile" / "docs" / "FOLLOWUPS.md")
         out = subprocess.run(

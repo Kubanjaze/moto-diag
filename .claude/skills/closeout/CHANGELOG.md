@@ -1,5 +1,34 @@
 # closeout — changelog
 
+## 2026-10-07 — one deploy order, the clock script, generators, eight artefacts (Phase 378, K18, K19, K22, K24, K25)
+
+The operator: "approved: 378 = K18–K25. … K24: add the line to the
+close-out skill."
+
+- **K18.** The sequence states one order for a phase with a migration:
+  - the regression of record;
+  - `deploy.py apply-live` from the branch;
+  - the close-out commit, which moves the deploy files;
+  - the merge.
+
+  The old step 8, "Merge, then deploy", contradicted `deploy.py`, which
+  reads only `in_progress/`. `apply-live` now refuses outside that order
+  (the deploy skill's changelog).
+- **K19.** `clock_check.sh` is new. It runs the files
+  `tests/support/clock_census.py` names under libfaketime, in New York, at
+  375's four moments, after checking its own control (Python's clock and
+  SQLite's `'now'` read the faked minute). Step 1 tells a regression of
+  record on a month's last evening to run it first.
+  `tests/test_phase378_test_clock_census.py` pins the census.
+- **K22.** The description and verify_phase's check 11 say eight
+  artefacts, as `closeout_check` has had since 358.
+- **K24.** Step 5: a script whose output ships in `src/`, or whose output
+  a migration loads, is committed in the phase folder with it.
+- **K25.** verify_phase's check 8 opens live read-only and calls
+  `deploy.py verify-live` for a phase with a deploy.
+- The sequence is renumbered (eleven steps).
+  `tests/test_phase378_labels.py` holds the labels.
+
 ## 2026-10-01 — both guards cancel their alarm in a `finally` (Phase 369, F183)
 
 The operator: "Fix the guard so the cancel is in a finally.

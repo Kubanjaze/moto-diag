@@ -77,6 +77,20 @@ def _git(repo, *args):
     subprocess.run(["git", "-C", str(repo), *args], check=True, capture_output=True)
 
 
+def record_regression(repo, at: str = "HEAD") -> str:
+    """Commit a phase log whose regression of record is at ``at``, as
+    regression.sh prints it (Phase 378, K18). Returns that commit."""
+    commit = subprocess.run(["git", "-C", str(repo), "rev-parse", "--short", at],
+                            check=True, capture_output=True, text=True).stdout.strip()
+    log = repo / "docs" / "phases" / "in_progress" / f"{PHASE}_phase_log.md"
+    log.write_text(f"# log\n\nRegression of record: 10 passed, 0 failed, 0 skipped, 0 errors "
+                   f"at `{commit}` (1 min 0 s wall, `python -m pytest -n auto --dist load`, "
+                   f"exit 0)\n")
+    _git(repo, "add", str(log))
+    _git(repo, "commit", "-qm", "the regression of record")
+    return commit
+
+
 @pytest.fixture
 def env(tmp_path):
     repo = tmp_path / "repo"
@@ -87,6 +101,7 @@ def env(tmp_path):
     D.scope_path(repo, PHASE).write_text(json.dumps(SCOPE, indent=1))
     _git(repo, "add", "-A")
     _git(repo, "commit", "-qm", "scope")
+    record_regression(repo)  # Phase 378, K18: the apply comes after the regression
     live = tmp_path / "live.db"
     _make_live(live)
     return {"repo": repo, "live": live, "backups": tmp_path / "backups"}

@@ -13,7 +13,8 @@ saying a thing was filed is not the filing.
 Two assertions, stable ids:
 
   B1  the header's "highest assigned is FNNN" matches the highest entry
-      actually present in the file.
+      actually present in THIS file (Phase 378, K20: not the union of both
+      repositories; the next number still comes from the union).
   B2  every F-number cited in a completed phase document resolves to an
       entry that exists.
 """
@@ -88,7 +89,8 @@ def check(repo: pathlib.Path, followups: str = "docs/FOLLOWUPS.md",
           sibling: str | None = SIBLING_FOLLOWUPS) -> list[str]:
     repo = pathlib.Path(repo)
     f = repo / followups
-    present = entries(f)
+    own = entries(f)
+    present = set(own)
     if sibling:
         present |= entries(repo / sibling)
     fails: list[str] = []
@@ -98,15 +100,19 @@ def check(repo: pathlib.Path, followups: str = "docs/FOLLOWUPS.md",
     except OSError:
         return [f"B1 cannot read {followups}"]
 
-    # B1 — the header claim matches the file's contents
+    # B1 — the header claim matches this file's own entries (Phase 378, K20).
+    # It compared the union of both files, so a finding filed in mobile above
+    # the backend's highest turned the backend red until a backend commit
+    # (360, 361), which a mobile session cannot make. Allocation still takes
+    # the union (`next_f_number.sh`), and B2 still resolves against it.
     m = _HEADER.search(txt)
     if not m:
         fails.append("B1 no 'highest assigned is **FNNN**' line in the header")
-    elif present:
-        claimed, actual = int(m.group(1)), max(present)
+    elif own:
+        claimed, actual = int(m.group(1)), max(own)
         if claimed != actual:
             fails.append(f"B1 header claims highest assigned is F{claimed}, "
-                         f"but the highest entry present is F{actual}")
+                         f"but this file's highest entry is F{actual}")
 
     # B2 — every cited F-number resolves. THIS is the F135 check.
     d = repo / phase_docs

@@ -1,0 +1,26 @@
+Phase 378 — Process clean-up 2 (K18–K25)
+
+The operator, 2026-10-07, verbatim:
+
+  approved: 378 = K18–K25. K22: fix the README line too. K23: the standing
+  lines move into checks or CLAUDE.md's "How a phase runs". K24: add the line
+  to the close-out skill. K26: (a). K27: (a) now, (b) once the first shop's
+  real data is in. K11: I'll decide by Oct 23.
+
+The items, their evidence and their fixes are in
+docs/reports/2026-10-07_process_kinks_triage.md (merged 481832c):
+K18 one deploy order, enforced; K19 a guard on tests that turn the real clock
+into a day, month, year or minute, and a libfaketime script; K20 B1 checks each
+repo's own findings header; K21 the fold pin derived, not literal; K22 stale
+"seven artefacts" labels and README lines 231–232; K23 the standing prompt
+lines move to checks or CLAUDE.md's "How a phase runs"; K24 a script whose
+output ships is committed with it (the close-out skill); K25 a read-only
+`deploy.py verify-live`.
+
+The operator's calls recorded with it: K26 (a), builders may install Homebrew
+core tools a test needs, named in the phase log and the handoff; K27 (a) keep
+5 backups now, (b) keep 5 plus the first of each week once the first shop's
+real data is in; K11 is the operator's, by Oct 23.
+
+Written into the repository by the 378 session from the operator's message,
+as CLAUDE.md's "Phase prompts live in docs/prompts/" asks.
