@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-suzuki-universal-stator-connector-melting-fire-risk",
     "title": "Suzuki universal stator connector melting — fire risk",
     "description": "The white 3-pin stator connector on virtually every Suzuki motorcycle is an engineering weak point. The connector develops resistance from corrosion, heats up under load, melts the plastic housing, and can cause an electrical fire. This affects every model from the GS to the GSX-R to the V-Strom.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-cam-chain-tensioner-cross-model-failure-pattern",
     "title": "Suzuki cam chain tensioner — cross-model failure pattern",
     "description": "The automatic CCT failure affects every Suzuki inline-4 and V-twin engine. The ratchet mechanism wears, the spring fatigues, and the chain slaps. The APE manual tensioner is the universal fix across GSX-R, SV, Bandit, V-Strom, and GSX-S platforms.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-suzuki-fuel-pump-relay-universal-15-failure",
     "title": "Suzuki fuel pump relay — universal $15 failure",
     "description": "The fuel pump relay is the single most common part failure across all EFI Suzuki models. The same relay design is used from 2001 to present across GSX-R, SV, V-Strom, Bandit, GSX-S, and Boulevard families. It's a $15 part that strands thousands of riders annually.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-suzuki-pair-system-removal-universal-procedure",
     "title": "Suzuki PAIR system removal — universal procedure",
     "description": "Suzuki's PAIR system is present on every sport, standard, and cruiser model since the mid-1990s. The block-off procedure is the same concept across all models: seal the head ports, cap the vacuum line, disconnect the solenoid. Only the bolt patterns differ.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-coolant-system-universal-flush-and-thermostat-service",
     "title": "Suzuki coolant system — universal flush and thermostat service",
     "description": "Coolant neglect is the most common maintenance failure across liquid-cooled Suzuki models. Coolant degrades, becomes acidic, and causes internal corrosion. Thermostats stick, radiator fans fail, and water pump seals leak. Every liquid-cooled Suzuki needs a 2-year coolant flush cycle.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-suzuki-valve-clearance-cross-model-service-intervals",
     "title": "Suzuki valve clearance — cross-model service intervals",
     "description": "Every Suzuki 4-stroke engine uses shim-under-bucket valves that gradually tighten. Exhaust valves tighten first from heat cycling. The service interval is 15K miles for street and 7.5K for track. Tight valves cause hard cold starting and eventual valve burning.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-suzuki-chain-and-sprocket-universal-maintenance",
     "title": "Suzuki chain and sprocket — universal maintenance",
     "description": "Chain maintenance is universal across all chain-driven Suzuki models. The countershaft sprocket wears fastest. Chain slack, lubrication frequency, and sprocket inspection intervals are the same regardless of model. Quality X-ring chain dramatically outlasts budget chains.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-suzuki-brake-fluid-contamination-all-hydraulic-brake-models",
     "title": "Suzuki brake fluid contamination — all hydraulic brake models",
     "description": "Brake fluid absorbs water from the atmosphere at a rate of 2-3% per year. By 2 years, the boiling point has dropped significantly. On sport bikes ridden hard, this means brake fade under repeated braking. Cruisers and standards suffer more from caliper corrosion.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-suzuki-fork-seal-and-oil-cross-model-service",
     "title": "Suzuki fork seal and oil — cross-model service",
     "description": "Fork seal leaks and degraded fork oil affect every Suzuki model from vintage GS to modern GSX-R. The Seal Mate tool saves full replacement 50% of the time. Fork oil should be changed every 15K miles or annually regardless of model.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-suzuki-exhaust-modifications-universal-fueling-requirements",
     "title": "Suzuki exhaust modifications — universal fueling requirements",
     "description": "Aftermarket exhaust without fueling adjustment causes lean conditions across all Suzuki models. Carbureted bikes need rejetting; EFI bikes need a fuel controller or ECU flash. PAIR removal is always paired with exhaust changes. The formula is universal: exhaust + air filter + fuel + PAIR block-off.",
     "make": "Suzuki",

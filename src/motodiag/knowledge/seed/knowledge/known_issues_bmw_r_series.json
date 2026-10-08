@@ -1,5 +1,6 @@
 [
   {
+    "key": "bmw-final-drive-crown-wheel-bearing-failure-hexhead-r1200gs-rt-r",
     "title": "Final drive crown-wheel bearing failure — hexhead R1200GS/RT/R",
     "description": "The 2005–2011 R1200 hexhead final drive uses a single large crown-wheel bearing that is widely reported to fail well before the life of the bike. Early signs are a weep of gear oil at the final-drive seal and a faint rumble on a trailing throttle; left alone it progresses to lateral play at the rear wheel and, eventually, a seized or destroyed drive. Later units and revised replacement parts appear to have improved the failure rate, but any hexhead with unknown history should be checked. The two generations in this span fail and are diagnosed differently. On the pre-2010 hexhead the crown-wheel bearing is a sealed, greased bearing sitting outside the oil section — the final-drive oil never reaches it — so oil condition and change interval have no bearing on its life and no amount of oil changing addresses it. Around 2010 BMW moved that bearing into the oil section and added a vent at the top to handle heat expansion, and only from there is oil condition part of the picture. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -30,6 +31,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-surging-at-steady-throttle-oilhead-r1100-r1150-motronic-ma2",
     "title": "Surging at steady throttle — oilhead R1100/R1150 (Motronic MA2.4)",
     "description": "The R1100 and R1150 oilheads with the Motronic MA2.4 injection are notorious for a hunting or surging sensation at light, steady throttle in the 3,000–4,000 rpm range, most obvious in town. The root cause is a lean-biased fuel map for emissions, made worse by anything that upsets the mixture: throttle bodies out of balance, throttle-position sensor drift, tight valve clearances, or a corroded coding plug. Aftermarket fuelling boosters became a common fix precisely because the underlying map cannot be changed on this generation. Written from general knowledge — verify procedure against the manual.",
     "make": "BMW",
@@ -61,6 +63,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-rear-main-gearbox-input-seal-leak-contaminating-the-dry",
     "title": "Rear main / gearbox input seal leak contaminating the dry clutch — oilhead and hexhead",
     "description": "Boxer twins run a single-plate dry clutch between the engine and gearbox. When the engine rear main seal or the gearbox input-shaft seal starts to weep, the oil has nowhere to go but onto the clutch plate. The first symptom is clutch slip under load in the higher gears, often mistaken for a worn clutch; by the time it is obvious the plate is ruined. Repair means separating the gearbox from the engine, which on these bikes is a major strip. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -92,6 +95,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-gearbox-input-shaft-spline-wear-dry-clutch-hub",
     "title": "Gearbox input-shaft spline wear — dry clutch hub",
     "description": "The clutch hub slides on the gearbox input-shaft splines, and on the boxer twins those splines run dry unless someone greases them at clutch service. Worn splines announce themselves as increasingly notchy or clunky gear engagement and, in the end, a hub that spins on the shaft with no drive at all. It is far cheaper to lubricate the splines every time the clutch is exposed than to replace a gearbox input shaft. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -121,6 +125,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-hall-effect-sensor-wiring-breakdown-oilhead-r1100-r1150",
     "title": "Hall-effect sensor wiring breakdown — oilhead R1100/R1150",
     "description": "The Hall-effect sensor that gives the Motronic its crank position lives behind the front engine cover, and its wiring insulation is a well-documented weak point: heat cycles harden and crack it until the wires short or open. The classic presentation is a bike that runs fine cold, then misfires, stalls or refuses to start once hot, and behaves again after it cools. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -150,6 +155,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-integral-abs-servo-assisted-pump-failure-20012006-oilhead",
     "title": "Integral ABS (servo-assisted) pump failure — 2001–2006 oilhead/hexhead",
     "description": "BMW's servo-assisted 'Integral ABS' of the early 2000s uses an electric pump to boost braking effort, and pump failure is widely reported. The rider gets a brake-failure warning, a loud pump whine, or the brakes drop into 'residual' mode where the lever goes long and needs far more effort. Genuine pump failure is expensive; a good proportion of warnings turn out to be low fluid, a weak battery, or an overdue flush, so rule those out first. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -181,6 +187,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-fuel-level-strip-sensor-failure-hexhead-r1200-and-f800",
     "title": "Fuel-level strip sensor failure — hexhead R1200 and F800-family (2007–2012)",
     "description": "The hexhead R1200 range and the 798cc F-series twins (F800GS, F650GS twin, F800S/ST) of the same era use a resistive strip sensor in the tank for fuel level, and the strip is prone to corrosion and erratic readings — a gauge that swings, reads empty with a full tank, or throws a fuel-sensor fault. BMW ran an extended warranty on the sensor in some markets, which tells you how common it is. It does not affect running; it just makes the gauge untrustworthy. The same part fails the same way on the F800 family — on the F800GS the tank is under the seat and the sensor is reached from the pump plate above. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -208,6 +215,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-alternator-drive-belt-wear-belt-driven-alternator-oilhead",
     "title": "Alternator drive-belt wear — belt-driven alternator (oilhead, hexhead, R nineT)",
     "description": "Unlike most motorcycles, the belt-driven boxers turn a car-style alternator from the crank by a belt — and two incompatible belts hide under that one description. Up to mid-2003 it is a conventional poly-V running on an adjuster: set by tension, and re-tensioned on a schedule. From mid-2003 the hexhead R1200, and later the R nineT, use an ELAST stretch-fit belt on a freewheeling pulley: it is fitted to a specified length between the pulley flanges and is never re-tensioned, because there is no adjuster to turn. Treating an ELAST belt as a poly-V and adjusting it is what destroys it. The two do not look meaningfully different — the part number is the discriminator, so identify the belt by number against the production month before ordering or fitting. Note also that the liquid-cooled boxers from 2013 drive the alternator internally through a gear and carry no drive belt at all, so in the later years of this span it is the R nineT that still has one. A tired belt squeals cold, slips under electrical load, and eventually strands the bike with a flat battery and a charging warning. Written from general knowledge — verify the belt type, the interval and the fitting method against the manual for the machine in hand.",
     "make": "BMW",
@@ -238,6 +246,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-water-pump-seal-weep-wethead-r1200-r1250-liquid-cooled-2013",
     "title": "Water-pump seal weep — wethead R1200/R1250 liquid-cooled (2013+)",
     "description": "The liquid-cooled 'wethead' boxer introduced a water pump driven off the engine, and its shaft seal has a tell-tale weep hole: a small amount of coolant or oil at that hole means the seal is on its way out. Owners report it across the 2013-on range at varying mileages. Caught early it is a seal job; ignored, coolant and oil can mix. Written from general knowledge — confirm the current part revision and procedure against the manual.",
     "make": "BMW",
@@ -267,6 +276,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-diode-board-failure-airhead-5-6-7-and-r-series-19701995",
     "title": "Diode board failure — airhead /5, /6, /7 and R-series (1970–1995)",
     "description": "Airhead charging runs through a diode board mounted on rubber bushes inside the front engine cover, and both the board and its mounts are classic failure points: the rubber mounts perish and the board loses its ground, or a diode fails outright. Either way the battery stops charging. It is one of the first things to check on any airhead with a charging complaint, and solid replacement mounts are a common permanent fix. Written from general knowledge — verify against the manual.",
     "make": "BMW",
@@ -297,6 +307,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-alternator-rotor-open-circuit-and-brush-wear-airhead",
     "title": "Alternator rotor open-circuit and brush wear — airhead",
     "description": "The airhead alternator's rotor winding is a known failure — the winding goes open-circuit, often after heat, and charging stops entirely — and the brushes that feed it wear to the point of losing contact. Both present the same way as a diode-board fault, so a quick rotor resistance check saves replacing the wrong part. Written from general knowledge — verify the resistance figure against the manual.",
     "make": "BMW",
@@ -326,6 +337,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-paralever-pivot-bearing-wear-oilhead-and-hexhead-swingarm",
     "title": "Paralever pivot bearing wear — oilhead and hexhead swingarm",
     "description": "The Paralever rear suspension pivots on bearings at the swingarm and at the final-drive link, and those bearings wear and dry out, giving a clunk over bumps and play that is easy to blame on the shock or the final drive. Checking and repacking them is a routine service item that gets skipped; adjustment and preload on the pivot pins matter and the manual's procedure should be followed. Written from general knowledge — verify against the manual.",
     "make": "BMW",

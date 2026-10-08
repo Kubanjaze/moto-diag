@@ -1,5 +1,6 @@
 [
   {
+    "key": "triumph-the-tiger-900-and-2022-on-tiger-1200-fire-unevenly-by-design",
     "title": "The Tiger 900 and 2022-on Tiger 1200 fire unevenly by design — a T-plane crank, not a misfire",
     "description": "Drawn from Triumph's own model pages, which state the firing order in their own words. From the 2020 Tiger 900 (888cc) Triumph replaced the even-firing 120-degree triple with a T-plane crank giving a **1-3-2 firing order** and what Triumph calls offset firing intervals. The 2022-on Tiger 1200 (1160cc) uses the same arrangement, as does the Tiger 850 Sport. The result at idle and low revs is two power pulses close together, a pause, the third cylinder, another pause — riders and press describe it as sounding like a large twin rather than a triple. A technician whose ear is set by earlier Triumph triples can read that beat as a misfire on a healthy engine. Two boundaries matter as much as the fact: it does **not** apply to the Tiger Sport 660 or the 2025 Tiger Sport 800, which are conventional 120-degree even-firing triples despite the Tiger badge, nor to the Speed Triple 1200, which shares the 1160cc architecture but not the crank. Triumph publishes the firing order and the phrase; the specific degree intervals and crank-pin angles circulate from launch briefings rather than a Triumph page, so treat those numbers as press-derived.",
     "make": "Triumph",
@@ -29,6 +30,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-900-names-two-unrelated-motorcycles-thirty-years-apart",
     "title": "\"Tiger 900\" names two unrelated motorcycles thirty years apart — the 1993 T400 and the 2020 T-plane bike share only a badge",
     "description": "Drawn from Triumph model history. The Tiger 900 built from 1993 to 1998 is an 885cc carburetted, conventional 120-degree triple on the old steel-spine platform. The Tiger 900 launched for 2020 is an 888cc fuel-injected T-plane triple with ride-by-wire and a modern electronics suite. They share a badge and nothing else — not the engine architecture, not the fuelling, not the chassis, not a single service procedure worth carrying across. A booking, a parts request or a forum answer that says only \"Tiger 900\" is therefore ambiguous by three decades, and the ambiguity is invisible because the name sounds specific. This is the same failure mode the Bonneville family has with reused names, but sharper, because here the two bikes do not even belong to the same era of the company. Key on the year and the frame number, never the badge.",
     "make": "Triumph",
@@ -59,6 +61,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-only-the-tiger-1200s-are-shaft-drive-and-the-shaft-layout",
     "title": "Only the Tiger 1200s are shaft drive, and the shaft layout changed in 2022 — two bevel boxes became one",
     "description": "Drawn from Triumph specifications and owner's handbooks. The final-drive split across the Tiger line is clean: every Tiger except the 1200s runs a chain — the 885i and 955i, the 1050 and Tiger Sport 1050, the 800, the 900, and the Tiger Sport 660 and 800. Shaft drive belongs to the three large bikes: the 1215cc Tiger Explorer (2012–2017), the same engine rebadged Tiger 1200 (2018–2021), and the 1160cc Tiger 1200 from 2022. The layout is not constant across those either. The 1215cc bikes carry **two** bevel boxes, front and rear, with separate ratios; the 2022-on 1160cc bike's handbook references only a rear bevel box. A shop that has only worked on chain Tigers will not think to check final-drive oil at all, and one that has worked on the older shaft bikes may go looking for a front bevel box that the newer machine does not have. Owner reports on the Explorer describe bevel-box bearing wear, driveline oil leaks and universal-joint complaints; those are owner-forum reports, not a campaign, and there is no Triumph recall on the Tiger driveline.",
     "make": "Triumph",
@@ -90,6 +93,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-valve-intervals-split-12-000-versus-20-000-miles-by",
     "title": "Tiger valve intervals split 12,000 versus 20,000 miles by family — and the widely repeated 18,000-mile figure for the 2024 Tiger 900 is wrong",
     "description": "Drawn from the scheduled maintenance tables in Triumph's own owner's handbooks, read column by column. The middleweight and large Tigers are on different schedules and the difference is large enough to matter. The **Tiger 800** runs a 6,000-mile base service with valve clearances checked at 12,000 and 24,000 miles — every 12,000. The **Tiger 900** is the same: 6,000-mile base, valves at 12,000 and 24,000, and that is unchanged on the 2024 facelift. The claim circulating that the 2024 Tiger 900 moved to an 18,000-mile valve interval is **false** — it appears to be a misreading of a column headed \"6,000 and 18,000 Mile Service\", and the 2024 handbook's valve row still carries its marks in the 12,000 and 24,000 columns. The **Tiger Explorer and every Tiger 1200** run a 10,000-mile base service with valves at 20,000 and 40,000 — every 20,000. The 1200s pair the valve check with a camshaft timing check at the same intervals; the Explorer's schedule has no camshaft timing row at all, and the 2024 Tiger 900 adds one at 12,000 miles only. Triumph's handbooks state the job needs special tools and training and direct owners to a dealer.",
     "make": "Triumph",
@@ -121,6 +125,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-first-service-mileages-are-not-all-the-same-500-miles",
     "title": "Tiger first-service mileages are not all the same — 500 miles on the Tiger 800 and Explorer, 600 on the Tiger 900 and 2022-on Tiger 1200",
     "description": "Drawn from the first-service columns of Triumph's owner's handbooks. It is a small difference with a real consequence, because the first service on a new machine is the one customers book by memory and shops quote by habit. The **Tiger 800** handbook heads its first-service column 500 miles (800 km) or one month, and its running-in section refers to the first 500 miles. The **Tiger Explorer** is likewise 500 miles or one month. The **Tiger 900** is 600 miles (1,000 km) or six months, and the **2022-on Tiger 1200** is 600 miles or six months. A shop that carries one figure across the range books a Tiger 800 late by a hundred miles and five months, on the service that exists precisely to catch running-in debris. The safe habit is to read the first-service column for the model in front of you rather than to remember a number for \"a Tiger\".",
     "make": "Triumph",
@@ -149,6 +154,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-1200-front-brake-pads-recalled-for-corrosion-the",
     "title": "Tiger 1200 front brake pads recalled for corrosion — the friction material can detach from the backing plate",
     "description": "Drawn from the road-safety regulator's recall record and the manufacturer's dealer notice. The 2018–2021 Tiger 1200 was recalled because the front brake pads can corrode, with the consequence that the friction material may separate from the backing plate and lengthen the distance needed to stop the motorcycle. The action was raised at the brake supplier's request and carried a stop-delivery instruction naming specific Triumph pad part numbers. This is worth carrying beyond the campaign itself for two reasons. First, corrosion-driven separation does not present like ordinary pad wear: the pad can retain thickness while the friction layer loses its bond, so a thickness check alone can pass a pad that is failing. Second, machines that sat outdoors or through salted winters are the ones most exposed, and those are the ones least likely to have been through a dealer for the campaign. Check the recall status by frame number, and inspect the pad faces and edges for separation rather than measuring depth alone.",
     "make": "Triumph",
@@ -179,6 +185,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-early-tiger-800-recalls-include-a-deceleration-stall-from",
     "title": "Early Tiger 800 recalls include a deceleration stall from engine-management software, and an injector recall it shares with the Bonnevilles",
     "description": "Drawn from road-safety regulator recall records. The Tiger 800's launch years carry the densest recall cluster in the line. An engine-management software fault on the earliest bikes produced low idle and **engine stall on deceleration** — a machine cutting out as the rider closes the throttle approaching a junction, which is a safety complaint rather than a driveability one. Separate campaigns covered an accessory centre-stand return spring that could break and drop the stand onto the road, an accessory top-box locking mechanism missing a clip, and turn-signal stems that could fracture. Later, a campaign on 2014–2015 Tiger 800s covered an engine control unit that could improperly activate the fuel injectors, risking an unexpected loss of power — **the same campaign that covers Bonneville-family machines of the same build period**, which is worth knowing because a shop looking it up under one model may not realise the other is in scope. Two of these are accessory recalls, so a bike fitted with the accessory later, or secondhand, may never have been captured.",
     "make": "Triumph",
@@ -209,6 +216,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-explorer-recalls-a-throttle-butterfly-that-can-deviate",
     "title": "Tiger Explorer recalls: a throttle butterfly that can deviate from position, and an undersized side-stand pivot bolt",
     "description": "Drawn from road-safety regulator recall records and Triumph's technical bulletins. Two campaigns on the Explorer matter to a diagnosing shop. The first covered a **throttle butterfly valve able to deviate from its intended position**, with the remedy addressing engine control unit hardware and software — a machine that stalls or behaves unpredictably at the throttle on an affected Explorer should have that campaign checked before anything is diagnosed as a sensor or a cable. The second covered an **undersized side-stand pivot bolt** fitted at assembly, which can fracture and let the stand drop. A separate certification-label campaign covered an incorrect weight rating, which matters for paperwork rather than for diagnosis. Triumph's bulletins also document a running design change to the transmission output shaft, deleting a retaining clip and its groove, with the later shaft retrofittable to earlier machines — that is a bulletin, not a recall, so there is no free remedy and no VIN list.",
     "make": "Triumph",
@@ -240,6 +248,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-the-manifold-pressure-hose-stall-recall-is-a-tiger-sport-660",
     "title": "The manifold-pressure-hose stall recall is a Tiger Sport 660 and Trident campaign — it does not apply to the Tiger 900 or Tiger 1200",
     "description": "Drawn from the road-safety regulator's recall record, and included as a negative finding because a wrong match here costs a customer a dealer trip. A recall covering an obstruction in the manifold absolute pressure sensor hose, causing incorrect readings and a stall risk, is indexed under \"Triumph Tiger\" and is easy to land on when searching a stalling complaint by make and family name. Its actual scope is the **Tiger Sport 660 and the Trident 660** — not the Tiger 900, not the Tiger 1200, not the Tiger 800. A shop that reads the model field as \"Tiger\" and stops there will tell an owner their machine is subject to a campaign it is not in, or will wait for a remedy that will never be offered. Separately and in the same spirit: the Tiger 900 has exactly one documented Triumph campaign, covering rear reflex reflectors that could detach on 2020 machines, and no Triumph-filed campaign was found for the 2022-on Tiger 1200 — the documented action there is a tyre manufacturer's recall of an original-equipment rear tyre, not a Triumph one.",
     "make": "Triumph",
@@ -269,6 +278,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-tiger-cylinder-head-bolts-must-be-oil-lubricated-on-the",
     "title": "Tiger cylinder head bolts must be oil-lubricated on the threads before fitting — a Triumph bulletin, and dry threads give a false torque",
     "description": "Drawn from Triumph's technical bulletins for the Tiger 800 family. The bulletin instructs that cylinder head bolt threads be lubricated with oil before installation. The reason it is worth carrying is that the failure is silent: a torque wrench reads the total resistance it overcomes, so a dry thread reaches the specified figure at a lower clamp load than a lubricated one. The bolt is then under-tightened while the wrench says it is correct, and nothing about the assembly looks wrong. On a cylinder head that shows up later as a gasket that will not seal or as bolts found loose at the next disturbance, and the cause is untraceable by then. The same bulletin set carries a revised windscreen support fixing torque, which is a smaller matter of the same kind. Take the lubrication instruction and the torque figure together from Triumph's documentation for the model rather than assuming a dry-thread figure from another engine.",
     "make": "Triumph",
@@ -299,6 +309,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-xr-and-xc-gt-and-rally-describe-wheels-and-suspension-not",
     "title": "XR and XC, GT and Rally describe wheels and suspension, not engines — and what the letters stand for is not documented",
     "description": "Drawn from Triumph model specifications, with one thing deliberately left unstated. Across the Tiger line the variant letters describe chassis intent rather than engine specification. **XR** is the road-biased family on cast wheels; **XC** is the off-road family on spoked wheels with longer travel. From 2020 that pair was replaced by **GT** (road, 19-inch front) and **Rally** (off-road, 21-inch spoked front). Within each family the suffixes are an equipment ladder — the base model, then a mid-spec, then a range-topper adding semi-active suspension, heated seats and grips, fog lights and a larger alternator — while **Low** or **LRH** denotes a lowered suspension and seat height rather than a trim level. **Pro** adds an electronics and comfort pack; on the Tiger 1200 only, **Explorer** adds a larger tank and additional rider aids. One caution: no Triumph source consulted states what XR and XC literally abbreviate, so the common expansions circulating online should not be repeated as fact. What the letters *do* is well documented; what they *stand for* is not.",
     "make": "Triumph",

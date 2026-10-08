@@ -308,7 +308,17 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: gate 14's three F154/F155 pins renamed as they were inverted (+3 -3).
 #: Measured: 10769 collected.
 #:
-COLLECTED_TEST_FLOOR = 10769
+#: Phase 380 (2026-10-08): 10769 -> 10795, +26, by a diff of collected ids
+#: against master c1a0c83 (in a worktree, on its own source): three new files
+#: (row keys 14, seed parity 6, junction per make 3 = 23); two ORPHANS
+#: entries, whose parametrised ids shift (+68 -66 = +2); gate 15's
+#: rollback case for 085 (+1); 255B's F129 pin renamed as it was inverted
+#: (+1 -1). Measured: 10795 collected.
+#:
+#: Phase 380, bug fix #1 (2026-10-08): 10795 -> 10798, +3,
+#: tests/test_phase380_deploy_new_column.py. Measured: 10798 collected.
+#:
+COLLECTED_TEST_FLOOR = 10798
 
 
 def _collected_count() -> int:

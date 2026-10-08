@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-thermostat-failure-stuck-closed-causing-overheating-vs-stuck",
     "title": "Thermostat failure — stuck closed causing overheating vs stuck open causing slow warmup",
     "description": "Motorcycle thermostats are wax-pellet valves that regulate coolant flow between the engine and radiator. When the wax pellet fatigues or the spring corrodes, the thermostat either sticks closed (blocking coolant flow to the radiator, causing rapid overheating) or sticks open (allowing constant coolant circulation, preventing the engine from reaching operating temperature). A stuck-closed thermostat is a roadside emergency — the engine will overheat within 5-10 minutes in traffic. A stuck-open thermostat is insidious — the engine runs cold, fuel economy drops 10-15%, oil doesn't reach temperature to boil off moisture and fuel contamination, and cold-running causes accelerated cylinder wear. This affects all liquid-cooled motorcycles: Honda CBR600RR/1000RR, Kawasaki ZX-6R/ZX-10R and Ninja 650, Suzuki GSX-R600/750/1000 and V-Strom 650/1000, Yamaha YZF-R1/R6 and MT-09, and Harley-Davidson liquid-cooled combustion models including Street 750 and Pan America. The LiveWire is deliberately excluded from this list: the word thermostat does not appear once in the 108 sections of the LiveWire owner's manual, neither the 2020 nor the 2021 service-interval table carries a thermostat row, and the manual's own cooling-system troubleshooting topic does not list one among the causes of overheating. Its coolant circuit exists to carry heat out of the motor and inverter, holds approximately 0.8 qt (0.72 L), and its only scheduled fluid event is a coolant replacement at 80,000 km (50,000 mi) by a dealer. This entry makes no claim either way about a thermostat on the Street 750 or Pan America, which were not examined. The thermostat is a $15-30 part that should be replaced every 40,000-50,000 miles or whenever the cooling system is serviced.",
     "make": "Honda",
@@ -35,6 +36,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-radiator-fan-switch-and-relay-failure-fan-not-activating-in",
     "title": "Radiator fan switch and relay failure — fan not activating in traffic",
     "description": "The radiator cooling fan on liquid-cooled motorcycles is controlled by either a thermostatic fan switch (older bikes) or the ECU via a fan relay (newer EFI bikes). When the fan switch contacts weld shut or the relay coil fails, the fan either runs constantly (draining the battery), never activates (causing overheating in stop-and-go traffic), or activates intermittently. On ECU-controlled systems, the fan relay is the weak link — relay contact pitting from inductive kickback causes intermittent fan failure that is maddening to diagnose because the fan works sometimes. This is a critical issue in urban riding where airflow through the radiator depends entirely on the fan. Affects Suzuki GSX-R600/750/1000, Kawasaki Ninja 650/ZX-6R/ZX-10R, Honda CBR/VFR series, Yamaha YZF-R1/R6 and MT series, and Harley-Davidson Street/Pan America.",
     "make": "Suzuki",
@@ -69,6 +71,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-coolant-degradation-acidic-coolant-corroding-water-pump",
     "title": "Coolant degradation — acidic coolant corroding water pump, radiator, and head gasket",
     "description": "Engine coolant (ethylene glycol with corrosion inhibitor additives) degrades over time as the inhibitor package is consumed by the electrochemical reactions it's designed to prevent. Once the inhibitors are depleted (typically at 2-3 years or 24,000-30,000 miles for conventional coolant), the coolant becomes acidic and begins actively corroding aluminum cylinder heads, water pump impellers, radiator tubes, thermostat housings, and head gasket fire rings. The corrosion produces white aluminum oxide deposits that clog radiator passages, brown sludge that coats water pump seals, and pitting on cylinder head mating surfaces that leads to head gasket failure. This is a universal problem on all liquid-cooled motorcycles but is especially damaging on modern bikes with all-aluminum engines. Affects Kawasaki Ninja 650/ZX-6R, Honda CBR/CRF series, Suzuki V-Strom 650/1000, Yamaha MT-07/MT-09, and Harley-Davidson liquid-cooled models.",
     "make": "Kawasaki",
@@ -101,6 +104,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-water-pump-seal-failure-weep-hole-diagnosis-and-bearing",
     "title": "Water pump seal failure — weep hole diagnosis and bearing inspection",
     "description": "Motorcycle water pumps use a mechanical face seal with a spring-loaded ceramic or carbon ring pressed against a polished stainless steel mating surface. Behind the mechanical seal is a secondary oil seal that keeps engine oil and coolant separated. Between the two seals is a weep hole — a small drain hole visible on the outside of the pump housing. When the primary coolant seal wears, coolant drips from the weep hole as a designed warning that the seal is failing. If ignored, the secondary oil seal eventually fails too, and coolant enters the engine oil (milky oil) or oil enters the coolant (oily residue in overflow tank). Water pump seal failure is caused by abrasive particles in degraded coolant, running the engine low on coolant (dry seal contact), and general mileage wear. This affects Honda CBR/CRF/VFR series, Suzuki GSX-R and V-Strom, Kawasaki ZX and Versys, Yamaha R-series and MT, and Harley-Davidson liquid-cooled models.",
     "make": "Honda",
@@ -132,6 +136,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-radiator-core-blockage-external-debris-and-internal",
     "title": "Radiator core blockage — external debris and internal corrosion restricting airflow and flow",
     "description": "Motorcycle radiators are compact aluminum-core heat exchangers with thin fins and narrow tube passages. External blockage occurs when road debris, insects, mud, and grass pack into the fin spaces, reducing airflow through the core. Internal blockage occurs when corrosion deposits, calcium scale from tap water, and degraded coolant sludge accumulate inside the narrow coolant tubes, reducing coolant flow. Both types of blockage reduce cooling efficiency and cause overheating, particularly at low speeds or idle where the radiator depends on fan airflow alone. Sport bikes with fairings trap heat and debris behind the fairing. Adventure and dual-sport bikes ingest mud and grass directly into exposed radiators. This affects all liquid-cooled motorcycles: Suzuki V-Strom 650/1000 and GSX-R, Kawasaki Versys 650 and KLR 650, Honda Africa Twin and CBR, Yamaha Tenere 700 and YZF-R, and Harley-Davidson Pan America.",
     "make": "Suzuki",
@@ -163,6 +168,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-air-cooled-engine-heat-management-oil-selection-oil-cooler",
     "title": "Air-cooled engine heat management — oil selection, oil cooler upgrades, and cooling modifications",
     "description": "Air-cooled motorcycle engines rely entirely on airflow over the cylinder fins and engine oil for heat dissipation. In stop-and-go traffic, at slow speeds, or in hot climates, air-cooled engines can reach dangerously high temperatures that break down oil viscosity, accelerate ring and valve guide wear, promote detonation (pinging), and in extreme cases cause piston seizure. Harley-Davidson Big Twins (Evo, Twin Cam, and to a lesser extent Milwaukee-Eight with oil cooling) are the most commonly affected because the rear cylinder is shielded from airflow by the front cylinder and the rider's legs. Classic UJM (Universal Japanese Motorcycle) air-cooled engines like the Kawasaki ZRX1200, Suzuki Bandit 1200, Yamaha XJR1300, and Honda CB1100 also suffer in hot urban conditions. Proper oil selection, oil cooler installation, and riding technique are the primary defenses.",
     "make": "Harley-Davidson",
@@ -194,6 +200,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-coolant-hose-failure-hardening-cracking-and-silicone-hose",
     "title": "Coolant hose failure — hardening, cracking, and silicone hose upgrades",
     "description": "OEM coolant hoses on motorcycles are made of EPDM (ethylene propylene diene monomer) rubber that degrades over time from heat cycling, ozone exposure, and contact with degraded coolant. The rubber hardens, loses flexibility, develops surface cracks, and eventually splits or blows off the fitting under pressure. A hose failure at operating temperature results in immediate loss of coolant, rapid overheating, and potential engine damage if the rider continues. Small cracks weep coolant slowly and are difficult to spot — the coolant evaporates on the hot engine leaving only white residue traces. Hose clamp failure (spring clamps lose tension, worm-gear clamps corrode) is equally common and causes the same outcome. This affects all liquid-cooled motorcycles: Kawasaki ZX-6R/ZX-10R and Ninja 400, Yamaha YZF-R1/R6 and MT-07, Honda CBR/CRF series, Suzuki GSX-R and SV650, and Harley-Davidson liquid-cooled models.",
     "make": "Kawasaki",
@@ -225,6 +232,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-head-gasket-failure-coolant-in-oil-diagnosis-and-combustion",
     "title": "Head gasket failure — coolant-in-oil diagnosis and combustion gas testing",
     "description": "The cylinder head gasket seals three critical boundaries: combustion gases (high pressure, 1000+ PSI), engine oil (pressurized to 40-60 PSI), and engine coolant (pressurized to 13-18 PSI). When the head gasket fails between a coolant passage and an oil passage, coolant enters the oil (milky, frothy oil) and/or oil enters the coolant (oily film in the overflow tank). When the gasket fails between a coolant passage and a combustion chamber, combustion gases pressurize the cooling system (radiator cap blows off, overflow tank overflows, air bubbles in coolant), and coolant is consumed through the combustion process (white sweet-smelling exhaust, coolant level drops with no external leak). Head gasket failure on motorcycles is caused by chronic overheating (warped head), degraded coolant corrosion attacking the gasket fire ring, cylinder head bolt stretch or improper torque, and thermal shock (cold water on a hot engine). This affects Yamaha YZF-R1/R6 and MT series, Honda CBR/VFR, Suzuki GSX-R, Kawasaki ZX and Ninja series, and Harley-Davidson liquid-cooled models.",
     "make": "Yamaha",
@@ -261,6 +269,7 @@
     "estimated_hours": 8.0
   },
   {
+    "key": "kawasaki-radiator-cap-pressure-rating-failure-boil-over-prevention",
     "title": "Radiator cap pressure rating failure — boil-over prevention and system pressure integrity",
     "description": "The radiator cap is a precision pressure relief valve that maintains the cooling system at a specific pressure (typically 1.1 bar / 16 PSI on most Japanese motorcycles, 0.9-1.1 bar on Harleys). This pressure raises the boiling point of the coolant from 100°C (212°F) at atmospheric pressure to approximately 121°C (250°F) at 1.1 bar, providing a critical safety margin against boil-over. The cap also contains a vacuum valve that opens as the engine cools, allowing coolant to flow back from the overflow tank to the radiator. When the cap's spring weakens, the seal degrades, or the cap is replaced with the wrong pressure rating, the system cannot maintain pressure. This lowers the effective boiling point, causes premature boil-over in hot conditions, and allows air to enter the system (the vacuum valve function is lost). Paradoxically, an over-rated cap (too high pressure) stresses hoses, the radiator core, and the water pump seal — it doesn't help cooling, it just moves the failure point to the weakest component. This affects Kawasaki Ninja 400/650/ZX-6R, Honda CBR250R/500R/600RR, Suzuki SV650/GSX-R, Yamaha MT-03/MT-07/R3, and Harley-Davidson Street/Pan America.",
     "make": "Kawasaki",
@@ -292,6 +301,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-track-and-racing-coolant-requirements-engine-ice-water",
     "title": "Track and racing coolant requirements — Engine Ice, Water Wetter, and track-day regulations",
     "description": "Most motorcycle racing organizations and track-day operators prohibit ethylene glycol antifreeze because it is extremely slippery when spilled on pavement, creating a dangerous surface for following riders. When a coolant hose blows or a radiator is punctured in a crash, glycol-based coolant turns the track surface into an ice rink for corners. Racing regulations (AMA, WERA, CCS, MotoAmerica, most track-day organizations) require either straight distilled water, distilled water with a non-glycol additive (Water Wetter), or a propylene glycol-based coolant (Engine Ice) that is less slippery and classified as track-safe. However, straight water provides no corrosion protection and freezes at 32°F, Water Wetter reduces surface tension but provides minimal corrosion protection, and Engine Ice provides both heat transfer and corrosion protection but costs $25-30 per bottle. Riders who run track coolant on the street risk freeze damage in winter. Riders who forget to switch from street coolant to track coolant get black-flagged at tech inspection. This affects all liquid-cooled track/race motorcycles across all makes.",
     "make": "Yamaha",

@@ -7573,6 +7573,37 @@ MIGRATIONS: list[Migration] = [
             ALTER TABLE warranties DROP COLUMN deductible_cents;
         """,
     ),
+    Migration(
+        version=85,
+        name="known_issue_row_keys",
+        description=(
+            "Phase 380 (F129, F142). A known-issue row's identity was its "
+            "prose, (make, model, title), so correcting any of the three "
+            "added a second row on the next seed load instead of updating "
+            "it. `known_issues.row_key` is now the identity: each seed entry "
+            "carries a frozen key, and the unique index "
+            "`idx_known_issues_row_key` replaces `idx_known_issues_identity`. "
+            "The post_apply keys every row from the seed by its prose "
+            "identity (one to one on the operator's database), or derives "
+            "`auto-…` for a row no seed holds, then rebuilds the model "
+            "junction so a multi-make row's model sits under its own make "
+            "where the transmission lookup places it (F142). Changes "
+            "existing rows: every row gains its key, and the junction rows "
+            "that put a model under a make not its own leave."
+        ),
+        upgrade_sql="""
+            ALTER TABLE known_issues ADD COLUMN row_key TEXT;
+            DROP INDEX IF EXISTS idx_known_issues_identity;
+            CREATE UNIQUE INDEX idx_known_issues_row_key ON known_issues(row_key);
+        """,
+        post_apply="motodiag.knowledge.loader:key_known_issues_085",
+        rollback_sql="""
+            DROP INDEX IF EXISTS idx_known_issues_row_key;
+            ALTER TABLE known_issues DROP COLUMN row_key;
+            CREATE UNIQUE INDEX idx_known_issues_identity
+                ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
+        """,
+    ),
 ]
 
 

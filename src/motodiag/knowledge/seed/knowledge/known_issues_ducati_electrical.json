@@ -1,5 +1,6 @@
 [
   {
+    "key": "ducati-ducati-proprietary-fault-codes-are-invisible-to-a-generic",
     "title": "Ducati proprietary fault codes are invisible to a generic scanner — \"no codes found\" is not \"no fault\"",
     "description": "A Ducati stores two different kinds of fault information. Emissions-related faults appear as standard OBD-II P-codes that any decent scanner can read. Everything else — the manufacturer's own fault memory covering engine management, immobiliser, ABS, electronic suspension and the rest — is in Ducati's own numbering, reachable only by the factory DDS tool or a Ducati-capable aftermarket tool. A shop that plugs in a generic reader, sees a clean list and tells the customer there are no faults has read one of the two memories. On newer bikes the problem is worse: some CAN implementations reject cheap ELM327 clones outright, so the tool reports nothing because it never established a session at all. Written from general knowledge — confirm which tool reaches which memory on the specific model before reporting a result.",
     "make": "Ducati",
@@ -31,6 +32,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-throttle-position-reset-after-throttle-body-work-is-a",
     "title": "Throttle position reset after throttle-body work is a required step, not an optional one",
     "description": "Ducati engine management learns a throttle position zero, and that learned value has to be re-established with a Ducati-capable tool after the throttle bodies are removed, cleaned, balanced or replaced. Skip it and the ECU is fuelling against a stale reference: the bike may idle badly, hunt, run rough off closed throttle, or set a throttle-position fault, and every symptom points at parts that are not the problem. This is the most common way a competent mechanical job on a Ducati produces a bike that runs worse than it did before. Written from general knowledge — confirm the exact reset procedure and which tools can perform it for the model against the manual.",
     "make": "Ducati",
@@ -61,6 +63,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-the-dda-is-a-data-logger-not-a-fault-reader-owners-and-shops",
     "title": "The DDA is a data logger, not a fault reader — owners and shops routinely confuse the two",
     "description": "Ducati's Data Analyser is a logging accessory: it records ride data such as speed, rpm, throttle and lap information for later review, and on some models it is an optional part fitted at purchase. It is not a diagnostic tool, does not read the manufacturer fault memory, and cannot perform service functions such as a throttle position reset. Owners arrive believing a bike 'has the diagnostic system fitted' because it has the logger, and shops occasionally quote against it. Establishing what is actually on the bike, and what it can do, saves an appointment. Written from general knowledge — confirm what is fitted to the specific machine and what the version installed supports.",
     "make": "Ducati",
@@ -90,6 +93,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-ducati-immobiliser-and-the-coded-key-a-no-start-that-is",
     "title": "Ducati immobiliser and the coded key — a no-start that is security, not electrical failure",
     "description": "Ducatis from the early 2000s carry an immobiliser that will not allow the engine to start unless it recognises the key. A failed handshake produces a no-start with a dashboard indication, and the bike behaves as though something electrical has broken: the starter may turn but the fuel pump will not prime and there is no spark. The usual causes are mundane — a worn or damaged transponder, a second key fob or another transponder sitting next to the ignition and interfering, a weak battery dropping voltage below what the system needs, or an aftermarket accessory near the antenna ring. Diagnosing it as a fuel or ignition fault wastes a lot of time on a system that is working exactly as designed. Written from general knowledge — confirm the immobiliser indication and any key-learning procedure for the model against the manual.",
     "make": "Ducati",
@@ -121,6 +125,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-aftermarket-exhaust-and-ecu-mapping-on-a-ducati-what-a",
     "title": "Aftermarket exhaust and ECU mapping on a Ducati — what a changed map does to later diagnosis",
     "description": "A very large share of used Ducatis have an aftermarket exhaust and a changed engine map, often the manufacturer-sanctioned combination sold as a performance kit, sometimes a third-party tune of unknown provenance. Both change what the diagnostic picture means: emissions-related monitors may not behave as the factory expected, a lambda-related code may reflect the map rather than a fault, and a bike may be running a fuelling strategy that no service documentation describes. None of that is a defect, but a mechanic who does not know the map has been changed will chase a fault that the tune created deliberately. Written from general knowledge — establish what map is loaded before interpreting fuelling or emissions symptoms.",
     "make": "Ducati",

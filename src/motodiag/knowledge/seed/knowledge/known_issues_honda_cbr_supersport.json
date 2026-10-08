@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-regulator-rectifier-failure-overcharging-or-dead-battery",
     "title": "Regulator/rectifier failure — overcharging or dead battery",
     "description": "The regulator/rectifier on CBR900RR/929RR/954RR is the most common failure point. Honda used shunt-type regulators that run extremely hot, mounted in poor airflow locations. They fail by either overcharging (boiling battery, swelling) or undercharging (dead battery). This is THE Honda sport bike problem of the era.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-cam-chain-tensioner-cct-failure-top-end-rattle",
     "title": "Cam chain tensioner (CCT) failure — top-end rattle",
     "description": "The automatic cam chain tensioner on CBR900RR/929RR/954RR models uses a spring-loaded plunger that can lose tension, allowing the cam chain to slap. You hear a rattle or ticking at startup that may quiet down as oil pressure builds. If ignored, the loose chain can skip a tooth and cause valve-to-piston contact.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-hiss-immobilizer-lockout-929rr-and-954rr",
     "title": "HISS immobilizer lockout — 929RR and 954RR",
     "description": "The Honda Ignition Security System (HISS) on 929RR and 954RR models uses a transponder chip in the key that must be recognized by the ECU. If the transponder fails, the key is damaged, or the HISS antenna ring around the ignition fails, the bike will crank but not fire. No fuel, no spark — the ECU kills everything.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-carburetor-synchronization-and-vacuum-leak-900rr-1992-1999",
     "title": "Carburetor synchronization and vacuum leak — 900RR (1992-1999)",
     "description": "The carbureted CBR900RR (1992-1999) uses four CV carburetors that must be synchronized for smooth idle and throttle response. After 20+ years, vacuum lines crack, diaphragms tear, and float valves stick, causing rough idle, hesitation, and poor fuel economy. The carbs also suffer from ethanol fuel damage if the bike has sat.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-fork-seal-leak-and-suspension-sag-age-related",
     "title": "Fork seal leak and suspension sag — age-related",
     "description": "CBR900RR/929RR/954RR forks are conventional (non-inverted on early 900RR) or inverted (929/954). After 20+ years, fork seals weep, fork oil breaks down, and springs sag. The bike dives excessively on braking, wallows in corners, and the fork oil on the lower tubes can contaminate the front brake.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "honda-starter-clutch-sprag-clutch-failure",
     "title": "Starter clutch (sprag clutch) failure",
     "description": "The starter clutch (also called sprag clutch or one-way clutch) in the CBR900RR/929RR/954RR sits behind the stator and engages the starter motor to the crankshaft. When it wears, the starter spins but the engine doesn't turn over — you hear the starter whirring freely. This is a common high-mileage failure.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-coolant-leak-at-water-pump-and-thermostat-housing",
     "title": "Coolant leak at water pump and thermostat housing",
     "description": "The water pump mechanical seal and thermostat housing O-ring develop leaks on aging CBR900RR/929RR/954RR models. Coolant weeps from the water pump weep hole (designed to alert you before a catastrophic seal failure) or drips from the thermostat housing gasket. Low coolant leads to overheating, especially in traffic.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-pgm-fi-fuel-injection-issues-929rr-and-954rr",
     "title": "PGM-FI fuel injection issues — 929RR and 954RR",
     "description": "The 929RR and 954RR were Honda's first EFI sport bikes with PGM-FI (Programmed Fuel Injection). The system is generally reliable but the fuel injectors can clog from old fuel/ethanol, the TPS (throttle position sensor) drifts, and the fuel pump fails — all causing running problems that confuse mechanics used to carbureted Hondas.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-rear-shock-linkage-bearing-wear-rising-rate-suspension",
     "title": "Rear shock linkage bearing wear — rising-rate suspension",
     "description": "The CBR900RR/929RR/954RR uses a pro-link rear suspension with a rising-rate linkage system. The linkage bearings and needle rollers wear from water intrusion and lack of maintenance (Honda says 'maintenance-free' — they're not). Worn linkage causes vague rear-end handling, clunking over bumps, and uneven tire wear.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-fairing-bolt-corrosion-and-cracked-fairings",
     "title": "Fairing bolt corrosion and cracked fairings",
     "description": "The CBR900RR/929RR/954RR fairings are mounted with a mix of bolts, clips, and grommets that corrode, strip, and break over 20+ years. Missing or loose fasteners cause wind noise, vibration cracking, and eventual fairing damage. OEM fairings are discontinued and expensive; aftermarket quality varies wildly.",
     "make": "Honda",

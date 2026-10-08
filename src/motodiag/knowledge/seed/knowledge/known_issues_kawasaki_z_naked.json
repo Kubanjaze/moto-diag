@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-z900-z1000-exposed-radiator-vulnerability-naked-bike-tax",
     "title": "Z900/Z1000 exposed radiator vulnerability — naked bike tax",
     "description": "All Kawasaki Z naked bikes have exposed radiators vulnerable to stone damage, bug accumulation, and debris impact. The Z900 and Z1000 are the most affected because they're ridden at higher speeds where debris impacts are more damaging. A punctured radiator core causes a slow coolant leak that leads to overheating.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-z1000-throttle-response-aggressive-ride-by-wire-mapping",
     "title": "Z1000 throttle response — aggressive ride-by-wire mapping",
     "description": "The Z1000 (2010+) has ride-by-wire throttle with an aggressive mapping that creates abrupt on/off throttle response at small openings. Similar to the Yamaha MT-09 complaint but on Kawasaki's inline-4. The Z1000 was tuned for maximum response in reviews, not for smooth city riding.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-z650-z400-shared-ninja-platform-issues-in-naked-chassis",
     "title": "Z650/Z400 — shared Ninja platform issues in naked chassis",
     "description": "The Z650 and Z400 share their engines and most components with the Ninja 650 and Ninja 400 respectively. They inherit the same mechanical issues but the naked chassis adds weather exposure to sensors and connectors. The Z models are often used as commuters, accumulating more miles and more weather exposure than their faired siblings.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-z750-z800-stator-and-charging-mid-displacement-kawasaki",
     "title": "Z750/Z800 stator and charging — mid-displacement Kawasaki weakness",
     "description": "The Z750 (2004-2012) and Z800 (2013-2016) use the same shunt regulator and stator connector design that fails on all Kawasaki sport bikes. These naked bikes run slightly hotter than their Ninja counterparts because the exposed engine has less directed airflow, accelerating stator degradation.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-z-h2-supercharged-naked-unique-cooling-and-boost-challenges",
     "title": "Z H2 supercharged naked — unique cooling and boost challenges",
     "description": "The Z H2 (2020+) puts the H2's supercharged engine in a naked streetfighter chassis. Without the H2's full fairing directing air to the intercooler and radiator, the Z H2 relies entirely on the exposed front area for cooling. The supercharged engine generates extreme heat that the naked chassis must manage without the aerodynamic aids of the faired H2.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-all-z-models-chain-maintenance-on-commuter-nakeds",
     "title": "All Z models — chain maintenance on commuter nakeds",
     "description": "Kawasaki Z bikes are frequently used as daily commuters, accumulating higher mileage than typical sport bikes. The chain and sprockets wear faster from commuter riding patterns: frequent stop-start acceleration, rain riding, and infrequent maintenance. Many Z owners don't maintain the chain because it's 'just a commuter bike.'",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-z900-ktrc-traction-control-naked-bike-sensor-exposure",
     "title": "Z900 KTRC traction control — naked bike sensor exposure",
     "description": "The Z900 (2017+) has KTRC traction control with wheel speed sensors that are more exposed to contamination on the naked chassis than on faired bikes. Brake dust, road spray, and mud contaminate the sensors more quickly, causing false TC activations that cut power unexpectedly.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-z1000-cct-high-revving-naked-inline-4",
     "title": "Z1000 CCT — high-revving naked inline-4",
     "description": "The Z1000 uses the same inline-4 engine as various Ninja models, with the same CCT vulnerability. The Z1000's aggressive riding character (nakeds encourage spirited riding) means the engine sees frequent high-RPM use, accelerating cam chain wear. The CCT rattles on cold start and progresses to constant noise if not addressed.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-z400-z650-beginner-friendly-issues-drops-and-maintenance",
     "title": "Z400/Z650 beginner-friendly issues — drops and maintenance education",
     "description": "The Z400 and Z650 are popular first/second bikes with the same beginner-ownership patterns as the Ninja 250/300/400. Parking lot drops, chain neglect, oil change ignorance, and missed valve service intervals are common. The naked chassis makes drop damage less expensive (no fairings) but exposes mechanical components.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-all-z-models-headlight-and-visibility-upgrades-on-naked",
     "title": "All Z models — headlight and visibility upgrades on naked bikes",
     "description": "Kawasaki Z bikes have distinctive LED headlights but riders often find the beam pattern inadequate for high-speed night riding, especially on the Z900 and Z1000 used at highway speeds. The naked bike position puts the rider's head higher, creating a different sight line than a sport bike. Auxiliary lights and headlight upgrades are common modifications.",
     "make": "Kawasaki",

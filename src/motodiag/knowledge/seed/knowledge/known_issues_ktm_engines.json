@@ -1,5 +1,6 @@
 [
   {
+    "key": "ktm-ktm-s-engine-prefixes-name-three-architectures-not-one",
     "title": "KTM's engine prefixes name three architectures, not one family — LC8, LC8c and LC4",
     "description": "General knowledge entry on the orientation a shop needs before looking anything up on a KTM. Three prefixes cover the modern range and they are not variations on a theme. **LC8** is the 75-degree V-twin, used across the big Adventure and Super Duke machines. **LC8c** is a parallel twin, used in the 790 and 890 models — one letter apart in the name and a different architecture entirely. **LC4** is the large single, used in the 690 machines and shared between a road naked and a road-legal enduro. Which prefix you are on determines the cylinder count, the layout, the service documentation and most of the parts, and none of that can be inferred from a model's displacement or from its name. The practical rule is that the prefix is the first thing to establish and the last thing anyone writes down.",
     "make": "KTM",
@@ -29,6 +30,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-within-the-lc8-the-generation-matters-as-much-as-the-family",
     "title": "Within the LC8, the generation matters as much as the family — the name spans 950 to 1290",
     "description": "General knowledge entry on the error that survives getting the architecture right. Establishing that a bike has an LC8 narrows it to a 75-degree V-twin and very little else: the name has covered displacements from the 950 machines of the early 2000s through 990, 1050, 1090, 1190 and 1290, across two decades of development. Two bikes can both correctly be described as having an LC8 and share almost nothing in the parts bin. This is the mistake that gets past the first check — a shop that has learned the LC8 versus LC8c distinction and now asks the right question about architecture can still order against the wrong generation, and because the architecture matched, the part often looks plausible. The family tells you what shape the engine is; the generation and model year tell you what fits it.",
     "make": "KTM",
@@ -58,6 +60,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-on-an-lc8-the-cylinders-are-front-and-rear-not-left-and",
     "title": "On an LC8 the cylinders are front and rear, not left and right — confirm the numbering before working on one",
     "description": "General knowledge entry on a step worth taking rather than assuming. An LC8 is a 75-degree V-twin, so its two cylinders sit fore and aft in the frame rather than side by side. A technician whose reflex is set by inline engines reaches for a left-hand or right-hand cylinder that does not exist as such, and a cylinder-specific instruction — a plug, a coil, an injector, a compression figure — has to be resolved to a physical cylinder before it means anything. Which physical cylinder carries which number is a manufacturer's choice and not something to infer from another make's vee, so read it from the service documentation for the engine in front of you rather than from a habit formed on a different bike. The cost of assuming is straightforward: work done correctly on the wrong cylinder, and a fault still present.",
     "make": "KTM",
@@ -87,6 +90,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-cam-chain-starter-clutch-and-valve-clearance-faults-on-an",
     "title": "Cam chain, starter clutch and valve clearance faults on an LC8, LC8c or LC4 are diagnosed like any engine's — what KTM changes is which family and schedule",
     "description": "General knowledge entry on where these three complaints actually get resolved. A rattle from the cam chain area, a starter that spins without turning the engine, and clearances closing up over time are not KTM phenomena — they are engine phenomena. This corpus already carries the starter procedures as cross-platform entries (relay, motor, and the sprag or one-way starter clutch), and carries cam chain tensioner and valve clearance procedures in other makes' cross-model files, where the method is generic even though the file is not. Nothing about an LC8, an LC8c or an LC4 changes how any of those are tested. What a KTM does change is the input to them: which engine family you are on decides the architecture the procedure has to be applied to — a vee, a parallel twin or a single are inspected differently even when the wear mechanism is the same — and how the machine is used decides the schedule the clearances are measured against. A competition machine and a road machine sharing an engine family are on different schedules, and the same complaint means different things on each. Diagnose the fault generically; scope it by family and by use.",
     "make": "KTM",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "ducati-desmodromic-valve-gear-is-two-rockers-and-two-shims-per",
     "title": "Desmodromic valve gear is two rockers and two shims per valve — spring-valve assumptions do not transfer",
     "description": "A desmodromic engine closes its valves mechanically instead of with springs. Each valve has an opening rocker and a closing rocker, and two shims: a small one on top of the valve stem that sets the opening clearance, and a large one wrapped around the stem, retaining the collets, that sets the closing clearance. There is no bucket and no valve spring to compress. A mechanic who is fluent in shim-under-bucket work can still get this wrong, because the closing clearance has no equivalent in the engine they know and half the measurements they need do not exist on a spring-valve head. Written from general knowledge — every clearance figure, shim size and torque must come from the manual for the specific engine.",
     "make": "Ducati",
@@ -31,6 +32,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-both-desmo-clearances-must-be-measured-the-closing-clearance",
     "title": "Both desmo clearances must be measured — the closing clearance is the one with no spring-valve analogue",
     "description": "A spring-valve service produces one number per valve. A desmodromic service produces two, and the second — the closing clearance at the closing rocker — is the one a mechanic new to the system tends to skip or mis-measure, because nothing in a shim-under-bucket engine corresponds to it. Measuring only the opening side gives a service that looks complete, passes a road test, and has not actually been done. The two clearances also do not necessarily move in the same direction as an engine accumulates miles, so one being in specification says nothing about the other. Written from general knowledge — the clearance limits, the measuring method and the engine position for each cylinder must come from the manual.",
     "make": "Ducati",
@@ -62,6 +64,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-closing-shim-collets-and-half-rings-the-step-where-a-desmo",
     "title": "Closing shim collets and half-rings — the step where a desmo service goes badly wrong",
     "description": "The closing shim on a desmodromic valve wraps the valve stem and is retained by collets, sometimes called half-rings. Getting them seated correctly is the highest-consequence step in the whole service: a collet that is not fully home can release, and a valve that drops in a running engine destroys far more than the valve. There is a manufacturer tool for the job and shops do improvise, but improvising raises the stakes on the one step that must not be got wrong. This is the part of a desmo service that justifies the labour figure, and it is the reason a cheap desmo quote should be treated with suspicion. Written from general knowledge — follow the manual's procedure and use the specified tool.",
     "make": "Ducati",
@@ -93,6 +96,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-shim-availability-not-shim-price-is-what-strands-a-ducati",
     "title": "Shim availability, not shim price, is what strands a Ducati mid-service",
     "description": "A desmo service produces two shim measurements per valve, and the sizes needed are not known until the engine is open and measured. Opening and closing shims come in many sizes, a shop cannot hold a full range of both, and the bike sits in pieces while parts are ordered. The customer experience of a desmo service is therefore dominated by lead time rather than by parts cost, and a shop that has not warned them will take the blame for a delay that was structural. Booking the job without planning for this is the most common scheduling mistake on these engines. Written from general knowledge — confirm shim ranges and availability for the specific engine with the supplier before booking.",
     "make": "Ducati",
@@ -124,6 +128,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-desmo-service-intervals-vary-by-generation-a-remembered",
     "title": "Desmo service intervals vary by generation — a remembered figure produces a wrong quote",
     "description": "Ducati desmo intervals are not one number. They differ substantially between the older air-cooled 2-valve engines, the liquid-cooled 4-valve engines, and the modern Superquadro and Desmosedici Stradale, and they have generally lengthened over the years. A shop quoting from memory or from experience with a different Ducati will over-quote a modern bike or, worse, under-service an older one that needs attention far sooner than the figure they remember. The interval also drives the customer conversation more than any other number in this service, so getting it from the manual rather than from habit is the whole job. Written from general knowledge — take the interval for the exact model and year from the manual or from Ducati's schedule, never from another Ducati.",
     "make": "Ducati",
@@ -154,6 +159,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-two-valve-and-four-valve-desmo-services-are-different-jobs",
     "title": "Two-valve and four-valve desmo services are different jobs — access and effort do not scale by cylinder count",
     "description": "An air-cooled 2-valve Desmodue and a liquid-cooled 4-valve Testastretta or Superquadro both need a desmo service, but the work is not comparable. The 2-valve engine has fewer valves and generally better access; the 4-valve engines have twice the valves, twice the shims again, and sit in tighter chassis with cooling and bodywork in the way. Estimating a 4-valve job from 2-valve experience — or the reverse — produces a quote that is wrong by a wide margin in one direction or the other, and it is a common source of jobs that overrun their booked slot. Written from general knowledge — take the labour figure for the specific engine from the manual.",
     "make": "Ducati",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "bmw-bmw-proprietary-fault-codes-are-invisible-to-a-generic",
     "title": "BMW proprietary fault codes are invisible to a generic ELM327 scanner — \"no codes found\" does not mean no fault",
     "description": "General knowledge entry on the read-access problem when diagnosing BMW motorcycles. A generic ELM327/OBD-II clone speaks only the legislated emissions diagnostic layer. That layer arrives in two stages: OBD stage I is a Euro 4 obligation for L3e motorcycles (new types from 1 January 2016, all new registrations from 1 January 2017), and OBD stage II arrives with Euro 5, roughly the 2021 model year. So on a Euro 4 BMW a generic reader can expect emission-related codes and standard engine data — an obligation on the type approval rather than a bench-verified response from any particular machine — and on a Euro 5 BMW the wider stage II set; on genuinely pre-Euro-4 BMWs with the round diagnostic connector it usually will not establish a session at all, and \"no communication\" there is expected behaviour, not evidence of a network fault. See the Euro 4 diagnostic-access entitlement entry for what the obligation does and does not cover. Nearly everything a BMW motorcycle actually reports — ZFE/central electronics, ABS and stability control, instrument cluster, immobiliser/EWS, and, depending on model and equipment, TPMS, ESA suspension and keyless ride — lives in BMW proprietary diagnostic sessions on non-legislated addresses that the clone cannot request. The clone is not broken; it is asking a different question. The failure mode is a shop plugging in a cheap scanner, seeing an empty or near-empty code list, and telling the customer nothing is wrong while a customer-visible warning triangle is lit.",
     "make": "BMW",
@@ -40,6 +41,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-zfe-central-vehicle-electronics-as-the-failed-module",
     "title": "ZFE central vehicle electronics as the failed module: splitting a ZFE-side fault from a dead load",
     "description": "General knowledge entry on the ZFE (Zentrale Fahrzeug Elektronik, central vehicle electronics) as the module you are diagnosing, rather than as the accessory-wiring concern covered by the existing F-series ZFE entries. On CAN-bus era BMW motorcycles the ZFE is the body-electrics brain: it gates and switches most non-engine loads electronically and reports its own faults only into BMW proprietary diagnostic sessions, so a generic reader sees none of them. Because it sits between the switch the rider presses and the load that should respond, a ZFE-side fault mimics a dead component almost perfectly, which is how good parts get replaced for nothing. The purpose of this entry is the split: is the request reaching the module, is the module commanding the output, and is the output reaching the load. Written from general knowledge — confirm details against the service manual for the specific model before quoting.",
     "make": "BMW",
@@ -78,6 +80,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-bmw-motorcycle-diagnostic-connectors-round-10-pin",
     "title": "BMW motorcycle diagnostic connectors: round 10-pin proprietary plug on older bikes versus 16-pin OBD-II port on later ones",
     "description": "General knowledge entry on physically getting a tool onto a BMW motorcycle. Older BMW motorcycles use a round 10-pin proprietary diagnostic connector, frequently located under the seat or a side panel, that no standard OBD-II cable will fit. BMW kept that round connector well into the CAN-bus era and moved to the 16-pin OBD-II socket only around the 2016-2017 model years with the Euro 4 on-board-diagnostics requirement, so the presence of a CAN bus does not predict which plug a bike has — check the specific model and year. On later bikes the plug is standard but the data behind it is still substantially BMW-proprietary. Knowing which connector a bike has determines which cable or adapter you need before the customer is standing in the shop, and stops a tech concluding the bike 'has no diagnostic port'.",
     "make": "BMW",

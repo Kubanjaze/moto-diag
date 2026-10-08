@@ -1,0 +1,13 @@
+Phase 380 — row identity (F129) and the junction per model's own make (F142), then the content batch
+
+The operator, 2026-10-08, verbatim:
+
+  approved: close the 11 now. 379 = the nine small fixes. then 380 = F129 +
+  F142, then the content batch. D, E and F stay as the triage says.
+
+Section C of docs/reports/2026-10-08_open_findings_triage.md: F129 first,
+because F149, F151, F152 and F153 were each left unfixed for want of it; with
+it F142; then the content edits (F152, F153, F156, F149, F164 and F171, F158),
+each a live-row change and so a stop for the operator's approval.
+
+Written into the repository by the session that received it.

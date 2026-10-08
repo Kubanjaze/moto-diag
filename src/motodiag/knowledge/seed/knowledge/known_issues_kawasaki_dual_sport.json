@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-klr650-doohickey-failure-balancer-chain-tensioner",
     "title": "KLR650 doohickey failure — balancer chain tensioner",
     "description": "The KLR650 (1987-2007) uses a spring-loaded lever (nicknamed 'doohickey') to tension the engine balancer chain. The OEM spring weakens and the lever breaks, sending metal through the engine. This is the #1 known failure on the KLR650 and preventive replacement is standard among owners.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-klr650-thermosyphon-oil-cooler-and-overheating",
     "title": "KLR650 thermosyphon oil cooler and overheating",
     "description": "The KLR650 is a single-cylinder thumper with no oil cooler from the factory. Extended highway riding and hot weather push oil temperatures past safe limits. The bike runs lean from factory and runs hotter in thin air at altitude — common since KLR owners ride remote mountain passes.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-klr650-gen-2-2008-fuel-injection-lean-surge",
     "title": "KLR650 Gen 2 (2008+) fuel injection lean surge",
     "description": "The 2008+ KLR650 switched from carburetor to fuel injection. The EFI mapping is notoriously lean at steady-state cruise (3500-4500 RPM), causing a rhythmic surge. The catalytic converter also restricts exhaust flow. This lean surge is the #1 complaint from Gen 2 KLR owners.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-klx250-300-valve-clearance-tightening",
     "title": "KLX250/300 valve clearance tightening",
     "description": "The KLX250 and KLX300 use shim-under-bucket valve trains that gradually tighten with use. Tight valves cause hard starting, especially cold, and eventual valve damage if ignored. The interval is every 15,000 miles but trail-ridden bikes should be checked more frequently.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "kawasaki-versys-650-suspension-inadequacy-stock-fork-and-shock",
     "title": "Versys 650 suspension inadequacy — stock fork and shock",
     "description": "The Versys 650 (2007+) targets adventure-touring but ships with budget suspension. The stock fork has no compression damping adjustment and the rear shock has minimal preload range. Riders exceeding 180 lbs or carrying luggage quickly overwhelm the stock setup, causing wallowing and bottoming out.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-versys-1000-throttle-by-wire-hunting-at-low-speed",
     "title": "Versys 1000 throttle-by-wire hunting at low speed",
     "description": "The Versys 1000 (2012+) uses ride-by-wire throttle that can exhibit hunting or jerky response at low-speed parking lot maneuvers. The throttle position sensor signal processing creates a dead zone that makes smooth low-speed control difficult, especially in first gear.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-klr650-subframe-and-luggage-rack-cracking",
     "title": "KLR650 subframe and luggage rack cracking",
     "description": "The KLR650 subframe is welded to the main frame and carries the seat, tail, and luggage rack. Heavy-loaded adventure touring with panniers and a top case stresses the subframe welds, causing cracks at the junction points. This is especially common on early Gen 1 models with aftermarket heavy steel racks.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-klx250-300-carburetor-jetting-factory-lean-for-emissions",
     "title": "KLX250/300 carburetor jetting — factory lean for emissions",
     "description": "The carbureted KLX250 and KLX300 ship with lean factory jetting to meet EPA emissions. Performance suffers at all throttle positions, especially at higher altitudes. The bike bogs on hard acceleration and pops on deceleration. The air box also has a restrictive snorkel.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-versys-650-chain-and-sprocket-accelerated-wear",
     "title": "Versys 650 chain and sprocket accelerated wear",
     "description": "The Versys 650 parallel twin produces its torque through a 520 chain (lighter spec than 525/530). Owners who ride aggressively or carry luggage wear through chains and sprockets faster than expected. The stock chain lacks an X-ring or O-ring seal on some model years, accelerating wear.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-klr650-stator-and-charging-system-failure",
     "title": "KLR650 stator and charging system failure",
     "description": "The KLR650 stator is a common failure point, especially on Gen 1 models (1987-2007). The stator windings overheat from age and the regulator/rectifier fails, leading to battery drain, no-charge conditions, and being stranded. The charging system barely keeps up with stock electrical loads, let alone aftermarket accessories.",
     "make": "Kawasaki",

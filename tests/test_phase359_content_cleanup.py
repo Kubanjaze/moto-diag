@@ -91,8 +91,10 @@ def db(tmp_path, monkeypatch) -> str:
 def _rows(path: str, table: str, order: str = "id") -> list[tuple]:
     c = sqlite3.connect(path)
     # Timestamps are when a row was written, which two builds never share.
+    # `row_key` arrived with migration 085 (Phase 380): a database rolled back
+    # to 071 has no such column, and 072's test is about 072's own change.
     cols = [r[1] for r in c.execute(f"pragma table_info({table})")
-            if r[1] not in ("created_at", "updated_at")]
+            if r[1] not in ("created_at", "updated_at", "row_key")]
     rows = c.execute(f"select {', '.join(cols)} from {table} order by {order}").fetchall()
     c.close()
     return rows

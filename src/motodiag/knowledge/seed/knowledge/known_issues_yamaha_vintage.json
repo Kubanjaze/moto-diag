@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-xs650-points-ignition-timing-and-condenser-failure",
     "title": "XS650 points ignition timing and condenser failure",
     "description": "The XS650 uses a mechanical points ignition system that requires regular adjustment. The contact points wear from mechanical action and the condensers fail from age, causing misfires, hard starting, and eventually no spark. Most XS650s in circulation are 40-55 years old — the original condensers are well past their service life.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-xs650-charging-system-rotor-and-stator-failure",
     "title": "XS650 charging system — rotor and stator failure",
     "description": "The XS650 uses a permanent magnet rotor and stator charging system that was marginal when new and is now failing on every surviving bike. The rotor magnets weaken with age, the stator windings develop shorts, and the voltage regulator (mechanical on early models) can't maintain proper voltage. The result is a bike that runs fine but slowly kills batteries.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "yamaha-xs650-oil-leaks-engine-case-pushrod-seals-and-gaskets",
     "title": "XS650 oil leaks — engine case, pushrod seals, and gaskets",
     "description": "Every running XS650 leaks oil somewhere. The engine cases use paper gaskets that harden and shrink with age, the pushrod tube O-rings deteriorate, and the cam chain tensioner seal weeps. This is a 40-55 year old air-cooled engine with thermal cycling and vibration — leaks are expected and manageable.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-xs650-cam-chain-and-tensioner-40-year-old-engines",
     "title": "XS650 cam chain and tensioner — 40+ year old engines",
     "description": "The XS650's cam chain stretches over time and the automatic tensioner loses spring tension. The XS650 cam chain runs on the left side of the engine and drives a single overhead cam. A loose cam chain causes timing rattle, and at extreme stretch, can jump timing and bend valves.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "yamaha-rd350-400-oil-injection-system-failure-autolube",
     "title": "RD350/400 oil injection system failure — Autolube",
     "description": "The RD350 and RD400 use Yamaha's Autolube oil injection system to deliver two-stroke oil to the engine. The system uses a pump driven by the engine that meters oil based on throttle position and RPM. When the pump, lines, or cable fail, the engine runs without lubrication and seizes — catastrophically and quickly.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-rd350-400-expansion-chamber-and-exhaust-condition",
     "title": "RD350/400 expansion chamber and exhaust condition",
     "description": "The RD's expansion chambers (tuned exhaust pipes) are critical to two-stroke performance — they use reflected pressure waves to improve cylinder charging. Dented, rusted, or incorrect expansion chambers dramatically affect power output. Original RD chambers are rare and valuable; aftermarket options vary widely in quality.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-rd350-400-reed-valve-inspection-and-replacement",
     "title": "RD350/400 reed valve inspection and replacement",
     "description": "The RD350/400 uses reed valves in the intake to improve low-RPM response and prevent fuel mixture from blowing back through the carburetor. The reed petals are thin steel or carbon fiber that flex open on intake and snap closed on crankcase pressurization. Broken or fatigued reeds cause poor idle, loss of low-end power, and fuel spitting from the carbs.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-sr400-500-kickstart-only-starting-technique-and",
     "title": "SR400/500 kickstart-only starting technique and decompression lever",
     "description": "The SR400 (and SR500) has no electric starter — it's kickstart only. This is the defining characteristic of the bike and the source of most owner frustration. The single-cylinder thumper has high compression that requires proper technique to start. The decompression lever (on the left handlebar) releases compression for positioning the piston before kicking.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-sr400-500-carburetor-and-jetting-single-mikuni-vm-bs-carb",
     "title": "SR400/500 carburetor and jetting — single Mikuni VM/BS carb",
     "description": "The SR400 uses a single Mikuni carburetor (VM type on early models, BS constant-velocity on later models). The single carb is simple but sensitive to jetting — the large single-cylinder engine needs precise fuel metering for clean running. The stock jetting is lean for emissions, causing popping on deceleration and hesitation at part throttle.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-sr400-500-valve-adjustment-screw-type-frequent-interval",
     "title": "SR400/500 valve adjustment — screw-type, frequent interval",
     "description": "The SR400/500 uses screw-type valve adjusters with a short service interval (every 4000 miles) due to the single-cylinder engine's high per-cylinder load. The air-cooled thumper's wide thermal cycling range accelerates valve seat wear and clearance tightening. Valve adjustment is the most frequent maintenance item on the SR.",
     "make": "Yamaha",

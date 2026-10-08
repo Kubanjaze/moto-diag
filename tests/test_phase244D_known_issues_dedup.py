@@ -184,11 +184,14 @@ class TestLoadingIsIdempotent:
 
 class TestTheSchemaContract:
     def test_a_fresh_database_carries_the_identity_index(self, tmp_path):
+        """Phase 380 (F129): the identity is the frozen row key; the prose
+        index on (make, model, title) is gone."""
         db = str(tmp_path / "f.db"); init_db(db)
         c = sqlite3.connect(db)
         names = {r[0] for r in c.execute("select name from sqlite_master where type='index'")}
         c.close()
-        assert "idx_known_issues_identity" in names
+        assert "idx_known_issues_row_key" in names
+        assert "idx_known_issues_identity" not in names
 
     def test_migration_053_still_declares_the_expression_index(self):
         """Phase 240C shipped a bug where an edit to this file rewrote 053's
@@ -243,11 +246,12 @@ class TestIdempotencyDidNotCostConstraintEnforcement:
         from motodiag.knowledge import issues_repo
 
         tree = ast.parse(textwrap.dedent(inspect.getsource(issues_repo.add_known_issue)))
-        sql = " ".join(
-            n.value for n in ast.walk(tree)
-            if isinstance(n, ast.Constant) and isinstance(n.value, str)
-            and "INTO known_issues" in n.value
-        )
+        # Phase 380 builds the statement from pieces (the row_key column is
+        # read, not assumed), so every string constant in the function is
+        # joined: comments are still not in the tree.
+        constants = [n.value for n in ast.walk(tree)
+                     if isinstance(n, ast.Constant) and isinstance(n.value, str)]
+        sql = " ".join(constants) if any("INTO known_issues" in c for c in constants) else ""
         assert sql, "could not find the INSERT statement"
         assert "OR IGNORE" not in sql.upper(), (
             "OR IGNORE suppresses CHECK violations too — use ON CONFLICT DO NOTHING")

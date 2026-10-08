@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-base-gasket-oil-leak-chronic-weeping",
     "title": "Base gasket oil leak — chronic weeping",
     "description": "The Evo Big Twin base gaskets between the cylinders and crankcases are a known leak point. The gaskets compress over time and thermal cycling causes them to weep oil. Worse on the rear cylinder due to heat. Every Evo will eventually leak here — it's a matter of when, not if.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 8.0
   },
   {
+    "key": "harley-davidson-starter-clutch-failure-grinding-on-start",
     "title": "Starter clutch failure — grinding on start",
     "description": "The starter clutch (also called starter drive or Bendix) wears out, causing a grinding or chattering noise when hitting the starter button. The rollers in the one-way clutch wear flat spots and can't engage properly. More common in high-mileage bikes or those with high-compression kits.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-rocker-box-oil-leak-dripping-on-jugs",
     "title": "Rocker box oil leak — dripping on jugs",
     "description": "Rocker box gaskets deteriorate from heat and age, causing oil to drip down the cylinder fins. The Evo rocker boxes use a cork/rubber composite gasket that hardens over time. Very common on high-mileage Evos.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-cam-cover-leak-oil-pooling-behind-cylinders",
     "title": "Cam cover leak — oil pooling behind cylinders",
     "description": "The cam cover gasket on the Evo sits right behind the rear cylinder in the V of the engine. It's hard to see and harder to get to. Oil pools in the V and drips down. Often noticed as oil on the transmission or dripping on the rear tire.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-cv-carburetor-slide-diaphragm-tear-hesitation-and-bog",
     "title": "CV carburetor slide diaphragm tear — hesitation and bog",
     "description": "The Keihin CV40 carburetor uses a rubber diaphragm to lift the slide. When the diaphragm tears (even a pinhole), the slide can't lift properly, causing hesitation, bog on acceleration, and poor throttle response. Extremely common on bikes that sit.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-weak-charging-old-style-stator-and-regulator",
     "title": "Weak charging — old-style stator and regulator",
     "description": "Pre-1999 Evos use a 22-amp stator that's marginal for running lights, ignition, and accessories simultaneously. Stock output barely keeps up with demand, especially with added accessories (driving lights, heated grips, phone charger). Battery slowly discharges on long rides.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-ignition-module-failure-intermittent-no-start-or-misfire",
     "title": "Ignition module failure — intermittent no-start or misfire",
     "description": "The Evo uses an electronic ignition module (often called the 'brain box') mounted under the coil. These fail with heat and age, causing intermittent no-start conditions or random misfires. The bike may run fine cold but cut out when hot. Classic heat-soak failure.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-oil-pump-check-valve-failure-wet-sumping",
     "title": "Oil pump check valve failure — wet sumping",
     "description": "The Evo oil pump check valve can fail, allowing oil to drain from the tank into the crankcase while the bike sits (wet sumping). When you start the bike, excess oil in the cases gets pumped out through the breather, causing smoking and oil blowing. First start after sitting is the worst.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-pushrod-tube-o-ring-leaks-oil-at-the-head-cylinder-junction",
     "title": "Pushrod tube O-ring leaks — oil at the head/cylinder junction",
     "description": "The pushrod tubes on the Evo use rubber O-rings where they meet the cylinder heads and crankcase. These O-rings harden and leak over time. Oil appears at the top or bottom of the pushrod tubes. Often the first leak a high-mileage Evo develops.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-voltage-regulator-overheating-melted-connector",
     "title": "Voltage regulator overheating — melted connector",
     "description": "Evo-era voltage regulators (especially 1989-1999 models) are mounted in poor airflow locations and run hot. The connector between the stator and regulator melts from heat, causing intermittent charging and eventually complete failure. This is a fire hazard if the wiring melts enough.",
     "make": "Harley-Davidson",

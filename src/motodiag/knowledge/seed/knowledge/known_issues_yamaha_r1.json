@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-exup-valve-servo-failure-all-generations",
     "title": "EXUP valve servo failure — all generations",
     "description": "The R1's Exhaust Ultimate Power Valve (EXUP) is a butterfly valve in the exhaust system that varies backpressure for optimal power across the RPM range. The servo motor that operates it fails from heat exposure, and the cable that connects servo to valve frays. When it fails, you get a CEL, reduced power in the midrange, and decel popping.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-stator-and-charging-system-failure-1998-2008-models",
     "title": "Stator and charging system failure — 1998-2008 models",
     "description": "The early R1 generations (1998-2008) have the same stator/regulator weakness as Honda sport bikes — the stator overheats from sustained high-RPM track use, and the regulator cooks from engine heat. The 2009+ crossplane R1 has an improved charging system but is not immune.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-crossplane-crank-engine-noise-2009-r1-characteristic-sound",
     "title": "Crossplane crank engine noise — 2009+ R1 characteristic sound",
     "description": "The 2009+ R1 uses a crossplane crankshaft (same firing order as MotoGP: 270-180-90-180 degrees). This produces a distinctive burbling/uneven exhaust note and mechanical sounds that differ from the screaming inline-4 of earlier R1s. New owners unfamiliar with crossplane engines think something is wrong.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-ycc-t-yamaha-chip-controlled-throttle-issues-2004",
     "title": "YCC-T (Yamaha Chip Controlled Throttle) issues — 2004+",
     "description": "The R1 introduced ride-by-wire (YCC-T) in 2004. The throttle position sensor, motor, and ECU calibration can cause off-idle hesitation, surging at constant cruise, and aggressive throttle response that's hard to manage in traffic. The 2015+ R1M has improved mapping but is still aggressive in A-mode.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-ycc-i-yamaha-chip-controlled-intake-variable-intake",
     "title": "YCC-I (Yamaha Chip Controlled Intake) variable intake malfunction — 2007-2008",
     "description": "The 2007-2008 R1 has YCC-I — a variable-length intake funnel system that optimizes intake length for the RPM range. The servo motor that moves the funnels can fail, and the linkage can bind. When it fails, the bike runs on the fixed funnel length and loses some midrange torque.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-fuel-pump-failure-and-tank-corrosion",
     "title": "Fuel pump failure and tank corrosion",
     "description": "R1 fuel pumps can fail from ethanol fuel degradation, running the tank low (pump overheats), and age. The fuel tank on older R1s can develop internal corrosion that sends debris into the pump strainer and injectors. No prime whirr on key-on = dead pump.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-cam-chain-tensioner-yamaha-version",
     "title": "Cam chain tensioner — Yamaha version",
     "description": "The R1 uses an automatic cam chain tensioner similar to Honda's — and it has the same failure mode. The tensioner loses spring tension, allowing the chain to rattle. The R1 is particularly prone because the high-revving engine (redline 14000+ RPM) puts extreme loads on the cam chain.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-fork-and-shock-degradation-track-use-accelerates-wear",
     "title": "Fork and shock degradation — track use accelerates wear",
     "description": "The R1's suspension is designed for aggressive street and track use, but it still requires regular service. Fork oil degrades from heat, shock fluid leaks, and springs sag from high-mileage track use. The 2015+ R1M has electronic suspension (Ohlins ERS) that has its own failure modes.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "yamaha-r1m-r1s-electronics-complexity-2015-specific",
     "title": "R1M/R1S electronics complexity — 2015+ specific",
     "description": "The 2015+ R1M/R1S has MotoGP-derived electronics: 6-axis IMU, lean-sensitive ABS/TC, slide control, launch control, quick shifter, and electronic suspension (R1M). This electronics suite is powerful but complex — calibration errors, sensor faults, and software issues can cause unexpected behavior.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-subframe-and-bodywork-damage-from-track-crashes",
     "title": "Subframe and bodywork damage from track crashes",
     "description": "The R1 is one of the most common track day bikes. Lowside and highside crashes damage the aluminum subframe, exhaust, rearsets, and fairings. The R1's subframe is bolted to the main frame (not welded) which makes replacement easier, but crashed R1s need careful inspection for hidden frame damage.",
     "make": "Yamaha",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-zx-9r-carburetor-issues-1998-1999-cv-carbs-on-open-class",
     "title": "ZX-9R carburetor issues (1998-1999) — CV carbs on open-class inline-4",
     "description": "The 1998-1999 ZX-9R uses 4 Keihin CV carburetors similar to the ZX-7R but sized for the 899cc engine. The same age-related carb issues apply: diaphragm pinholes, pilot jet clogging, sync drift, and float level problems. The larger engine is more forgiving of minor sync issues than the 750 but still needs regular carb maintenance.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "kawasaki-zx-9r-early-fuel-injection-2000-2003-kawasaki-s-first-gen-fi",
     "title": "ZX-9R early fuel injection (2000-2003) — Kawasaki's first-gen FI on a literbike",
     "description": "The 2000-2003 ZX-9R uses Kawasaki's first-generation fuel injection system with 4 throttle bodies and basic TPS-based fuel mapping. This early FI is simpler than modern systems — no O2 sensor feedback, no closed-loop operation. The system works well but the injectors clog from ethanol, the TPS drifts, and the fuel pump is an early design that fails from heat.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-zx-9r-charging-system-failure-universal-kawasaki-sport-bike",
     "title": "ZX-9R charging system failure — universal Kawasaki sport bike weakness",
     "description": "The ZX-9R has the same charging system weakness as all Kawasaki sport bikes of the era: shunt regulator, weak stator connector, and marginal stator output. The 900cc engine runs hot and the stator sits in the worst thermal location. Charging failure is inevitable on any ZX-9R that hasn't been upgraded.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-9r-cam-chain-tensioner-900cc-inline-4",
     "title": "ZX-9R cam chain tensioner — 900cc inline-4",
     "description": "The ZX-9R's 899cc inline-4 has the same CCT vulnerability as the ZX-7R and ZX-6R. The automatic tensioner wears, the chain stretches, and cold-start rattle develops. The ZX-9R's lower rev ceiling (11,000 RPM vs 15,000+ for the 600) puts less stress on the chain, but after 20+ years the CCT is still worn.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-9r-cooling-system-thermostat-and-fan-relay-failures",
     "title": "ZX-9R cooling system — thermostat and fan relay failures",
     "description": "The ZX-9R's cooling system is well-sized for the 900cc engine but age-related component failures cause overheating. The thermostat sticks from corrosion, the fan relay fails from decades of thermal cycling, and coolant hoses harden and crack. The ZX-9R was often used for sport-touring, accumulating more miles and thermal cycles than a pure supersport.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-9r-fuel-pump-aging-2000-2003-fi-models",
     "title": "ZX-9R fuel pump aging (2000-2003 FI models)",
     "description": "The 2000-2003 FI ZX-9R uses an in-tank fuel pump that's now 20+ years old. The pump motor weakens from age, the strainer clogs with ethanol varnish, and the fuel pump relay develops contact corrosion. A weak pump delivers less fuel under high load, causing lean stumbles at high RPM that owners mistake for ignition problems.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-9r-front-fork-seal-leaks-and-aging-suspension",
     "title": "ZX-9R front fork seal leaks and aging suspension",
     "description": "The ZX-9R's inverted forks haven't been serviced on most surviving examples. After 20+ years, the fork oil has degraded, the seals have hardened, and the damping is nearly non-existent. The ZX-9R was often used for spirited sport-touring, putting more miles on the suspension than a typical supersport.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-zx-9r-brake-system-aging-same-urgency-as-zx-7r",
     "title": "ZX-9R brake system aging — same urgency as ZX-7R",
     "description": "The ZX-9R's brakes are 20+ years old on most examples. Same issues as the ZX-7R: moisture-contaminated fluid, hardened caliper seals, seized slide pins, and degraded brake lines. The ZX-9R is heavier than the ZX-7R (460+ lbs wet), making brake condition even more safety-critical.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-zx-9r-valve-clearance-inline-4-at-20-years",
     "title": "ZX-9R valve clearance — inline-4 at 20+ years",
     "description": "The ZX-9R uses shim-under-bucket valve adjustment with a service interval that most 20+ year old examples have never seen. The 900cc engine is more forgiving than a 600 (lower RPM, more thermal mass) but valve clearance still tightens with time and mileage. Hot-start difficulty is the classic symptom.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "kawasaki-zx-9r-ground-wire-and-ignition-switch-corrosion",
     "title": "ZX-9R ground wire and ignition switch corrosion",
     "description": "The ZX-9R is prone to ignition switch and ground wire corrosion that causes intermittent no-start, random electrical cutouts while riding, and gauge flickering. The ignition switch on the ZX-9R is exposed to weather, and the ground connections at the frame and engine corrode over 20+ years.",
     "make": "Kawasaki",

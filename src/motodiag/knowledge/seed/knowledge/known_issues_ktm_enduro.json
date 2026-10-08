@@ -1,5 +1,6 @@
 [
   {
+    "key": "ktm-a-tpi-two-stroke-runs-an-oil-pump-not-premix-and-both-halves",
     "title": "A TPI two-stroke runs an oil pump, not premix — and both halves of that mistake are expensive",
     "description": "General knowledge entry on the most costly misunderstanding on a modern KTM two-stroke enduro. TPI models — transfer port injection, fitted to the fuel-injected 250 and 300 EXC — carry a separate oil tank and a pump that meters oil into the engine, exactly as a road two-stroke with oil injection does and unlike the carburetted competition bikes most riders learned on. Two opposite errors follow, and both destroy engines. Mixing oil into the fuel because that is what a two-stroke takes gives an engine oil from two sources at once, fouls plugs and loads the exhaust system. Filling the fuel and never looking at the oil tank, because the last two-stroke the rider owned had no such tank, runs the engine on whatever is left in it. Neither error announces itself on the first ride, which is why both get repeated until something seizes.",
     "make": "KTM",
@@ -32,6 +33,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-exc-is-a-two-stroke-and-exc-f-is-a-four-stroke-one-letter",
     "title": "EXC is a two-stroke and EXC-F is a four-stroke — one letter, two different engines",
     "description": "General knowledge entry on a naming distinction that decides what work a bike needs. KTM's enduro range uses **EXC** for the two-strokes — the 250 and 300 — and **EXC-F** for the four-strokes — the 250, 350, 450 and 500. The suffix is the only thing separating them in a model name, and it disappears constantly: in shorthand on a booking, in a customer's description, in a parts request, and in the way people say the bikes out loud. A request for a top end on a \"450 EXC\" is a request for a machine that does not exist, and the two engines it might mean want entirely different work, different parts and different intervals. This is not pedantry about a badge — it is the difference between a piston and rings on a competition two-stroke and a valve-train job on a four-stroke.",
     "make": "KTM",
@@ -62,6 +64,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-exc-and-exc-f-service-is-counted-in-engine-hours-not-miles-a",
     "title": "EXC and EXC-F service is counted in engine hours, not miles — a road interval is meaningless here",
     "description": "General knowledge entry on why a shop's usual intervals do not apply to these machines. An EXC or EXC-F is a competition bike with lights, and its service schedule is written in **engine hours** rather than distance, because an hour of hard enduro loads an engine in a way an hour of road riding does not and because these bikes cover very little distance for the work they do. A machine that has done a few hundred miles can be far past a service that a road bike would not see for years. The bikes carry or accept an hour meter for exactly this reason. A shop that quotes from the odometer, or from a road bike's habits, will under-service a competition engine — and the failure that follows is not a warranty conversation, it is a rebuild. The specific intervals vary by model, by year and above all by how the bike is used, so read them from the manual for the machine in front of you rather than carrying a number across from another bike.",
     "make": "KTM",
@@ -92,6 +95,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-a-top-end-on-a-250-or-300-exc-is-maintenance-not-a-failure",
     "title": "A top end on a 250 or 300 EXC is maintenance, not a failure — quoting it as a repair alarms the wrong people",
     "description": "General knowledge entry on a conversation that goes wrong for reasons of framing rather than mechanics. On a competition two-stroke, piston and ring replacement is a scheduled item that comes round in engine hours, and a rider who races expects it the way a road rider expects tyres. A four-stroke-trained shop meets the same job as evidence that something has gone badly wrong, and describes it to the owner that way: the engine needs stripping, the piston is being replaced. The owner of a road bike hearing that assumes catastrophe; the owner of an EXC hearing it assumes the shop does not know what it is looking at. Both conversations damage trust, and one of them loses a bike that was in perfectly normal condition. The mechanical work is ordinary and the interval belongs to the manual; the thing worth getting right is what it is called.",
     "make": "KTM",
@@ -121,6 +125,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-the-exhaust-power-valve-on-a-250-or-300-exc-carbons-up-and",
     "title": "The exhaust power valve on a 250 or 300 EXC carbons up and is a service item, not a running fault",
     "description": "General knowledge entry on a part four-stroke work rarely meets. A KTM 250 or 300 EXC uses a mechanical exhaust power valve to vary the port timing with revs, and combustion deposits build on it and in its bore over time. As they do, the valve becomes slow or sticky and the engine loses the crispness of its power delivery — usually in the middle of the rev range, where the valve does its work. Riders describe it as the bike going flat, or as an engine that no longer pulls the way it used to, and it is easy to chase as a fuelling or ignition complaint because that is what those symptoms mean on a four-stroke. It is a cleaning job on a schedule, and it is missed mostly because a shop that does not work on two-strokes does not think to look. Take the interval and the procedure from the manual for the model rather than from another make's.",
     "make": "KTM",
@@ -151,6 +156,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-a-690-enduro-r-is-a-road-legal-enduro-not-a-competition-bike",
     "title": "A 690 Enduro R is a road-legal enduro, not a competition bike — its service expectations sit between both",
     "description": "General knowledge entry on a machine that gets serviced as the wrong thing in both directions. The 690 Enduro R runs the LC4 large single and is built to be ridden on the road to the trail and back, which puts it between the competition EXC-F machines and KTM's road bikes. Serviced like a competition enduro it gets intervals far shorter than it needs and an owner who resents the bill. Serviced like a road naked it gets intervals set for a machine that does not take grit, water and impact, and it wears out things a road bike never does. The right basis is the manual for this model, adjusted for how the bike is actually used, and the useful question at intake is not what the bike is but what it has been doing — the same model can live entirely on tarmac or spend every weekend in mud.",
     "make": "KTM",

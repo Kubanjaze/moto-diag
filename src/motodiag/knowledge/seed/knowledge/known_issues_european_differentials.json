@@ -1,5 +1,6 @@
 [
   {
+    "key": "bmw-bmw-oilhead-charging-fault-the-first-suspect-is-the-brush",
     "title": "BMW oilhead charging fault: the first suspect is the brush and regulator module inside the alternator, not the alternator",
     "description": "Drawn from a BMW parts vendor's catalogue and owner reports. The Bosch alternator on the R1100 and R1150 carries a combined brush-pack and voltage-regulator module inside it, and that module is replaceable in situ. Worn brushes present as low charging voltage — exactly the symptom that, on a Japanese machine with a permanent-magnet generator, means a failed stator or regulator. The make-specific error is condemning the whole alternator, because on the oilhead that is not a bolt-off job: the service manual's alternator removal displaces the ABS unit and the engine control unit. So a fault that is a small serviceable module becomes a large job by applying the wrong mental model.",
     "make": "BMW",
@@ -27,6 +28,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-bmw-boxer-alternator-belts-come-in-two-incompatible-types",
     "title": "BMW boxer alternator belts come in two incompatible types, and tensioning the stretch-fit one destroys it",
     "description": "Drawn from an independent BMW technical reference that catalogues both belts by designation and part number. No Japanese motorcycle has an alternator drive belt at all, so the item has no place in a Japanese-trained routine; on the boxer it is a service item with a trap in it. The earlier machines use a conventional poly-V belt with an adjuster, set by tension and re-tensioned at a scheduled interval from the R1150 onward. From mid-2003 BMW moved to an **ELAST stretch-fit** belt — different designations, different part numbers — which is set by fixed length between the pulley flanges, runs on a freewheeling alternator pulley, and is **never** re-tensioned. Treating an ELAST belt like a poly-V and adjusting it damages it. The two are not visually obvious to tell apart under a cover, and the part numbers are the discriminator.",
     "make": "BMW",
@@ -54,6 +56,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-bmw-liquid-cooled-boxer-charging-the-alternator-is-inside",
     "title": "BMW liquid-cooled boxer charging: the alternator is inside the engine, so the two regulator plugs are the first check",
     "description": "Drawn from an independent technical document written for the liquid-cooled R-series and hosted by an owners' organisation, verified against its text. From the 2013 water-cooled boxer onward the alternator is integral to the crankcase — the stator is bolted to the rear of the case in a cast aluminium frame and driven by a gear-driven permanent-magnet rotor — so stator access means engine removal and disassembly. That changes the order of diagnosis completely. The regulator-rectifier is separate, on a plastic tray under the rider's seat on two Torx screws, and the documented first action is to drop it and verify terminal contact in the grey three-pin AC plug carrying the three yellow stator leads and the black two-pin DC plug, re-crimping as needed. The document gives the discriminating test: with the black DC plug disconnected and the grey connected, a reading below the charging band points at the stator; recovery into the band points at the regulator.",
     "make": "BMW",
@@ -82,6 +85,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-ktm-950-super-enduro-r-the-regulator-fails-by-overcharging",
     "title": "KTM 950 Super Enduro R: the regulator fails by overcharging, and the under-seat whistle is the battery boiling",
     "description": "Drawn from an enthusiast known-issues compilation for the LC8 twins, and scoped to the machine it names. The usual regulator failure is undercharging; on the 950 Super Enduro R the compilation reports the reverse — an unregulated **over**-voltage that cooks the battery. The tell is a high-pitched whistle from under the seat, and the mechanism is not electrical noise: it is the battery acid boiling off and venting as steam through the safety valve. The compilation attributes the failures to the regulator's factory location under the seat beside the rear exhaust header, and the community fix is to relocate it somewhere cooler. A mechanic measuring only for low voltage will pass a charging system that is in the process of destroying its battery.",
     "make": "KTM",
@@ -111,6 +115,7 @@
     "source": "forum"
   },
   {
+    "key": "ktm-ktm-lc8-charging-fault-with-a-metallic-noise-from-the",
     "title": "KTM LC8 charging fault with a metallic noise from the ignition cover is the freewheel bolts in the stator",
     "description": "Drawn from an enthusiast compilation that cites a KTM technical bulletin. On the 950 and 990 LC8 the bolts securing the freewheel — the starter clutch assembly — to the rotor can loosen and back out, and when they do they are inside the ignition cover with the stator. The bulletin the compilation cites mandated inspection and specified a high-strength retaining compound. The diagnostic consequence is the useful part: a charging fault accompanied by metallic noise from the ignition cover side is mechanical damage destroying the stator, not an electrical failure, and replacing the stator without addressing the bolts destroys the replacement. The campaign is described without a reference number; check applicability by frame number with a dealer.",
     "make": "KTM",
@@ -140,6 +145,7 @@
     "source": "forum"
   },
   {
+    "key": "aprilia-aprilia-v4-charging-failure-the-flywheel-is-the-first",
     "title": "Aprilia V4 charging failure: the flywheel is the first suspect, and replacing only the stator reproduces the fault",
     "description": "Drawn from aftermarket charging-component suppliers, who have a commercial interest, corroborated by owner reports. The reported root cause on the RSV4 and Tuono V4 is the flywheel rather than the stator or regulator: the original flywheel's magnets are described as too strong, driving stator output and heat high enough to burn the windings and often take the regulator with them; separately, the epoxy bonding the magnets to the rotor body is reported to degrade with heat cycles, letting magnets debond and strike the stator. Either way, fitting a new stator and regulator to the original flywheel is reported to reproduce the failure, and the fix offered is a lower-magnet-strength flywheel fitted together with the stator. This is a mechanical inspection that a conventional stator-and-regulator meter routine cannot see.",
     "make": "Aprilia",
@@ -170,6 +176,7 @@
     "source": "forum"
   },
   {
+    "key": "bmw-bmw-boxer-startup-clack-is-normal-the-opposite-call-to-the",
     "title": "BMW boxer startup clack is normal — the opposite call to the same noise on a Triumph triple",
     "description": "Drawn from owner reports on the boxer forums. A brief clatter on a cold start that fades within seconds is, on a Triumph triple, the documented sign of a sticking cam chain tensioner and a legitimate reason to investigate. On a BMW boxer the identical noise is expected behaviour: the cam chain tensioners are spring-loaded with oil-pressure assist, and the left-hand tensioner drains down when the engine stops because that cylinder points downward, so it clacks briefly until pressure returns. Applying the Triumph diagnosis to the boxer sells an unnecessary top-end job. The genuine boxer-specific tensioner fault that owners document is different in kind — the tensioner bolt and its O-ring loosening and weeping oil — and presents as a leak, not a noise.",
     "make": "BMW",
@@ -197,6 +204,7 @@
     "source": "forum"
   },
   {
+    "key": "ktm-ktm-690-lc4-valve-train-failure-is-the-roller-rocker-bearing",
     "title": "KTM 690 LC4 valve-train failure is the roller rocker bearing, and a shim-under-bucket model has no place for it",
     "description": "Drawn from owner reports and enthusiast compilations. On the single-cylinder 690 the intake rocker arm runs a needle roller bearing retained by a peened pin, and the documented failure is the pin letting go so the bearing comes apart. Rocker arms from the 2015 model year are reported as a substantial improvement and are the part the community retrofits to earlier engines. The differential point is that a mechanic trained on shim-under-bucket valve trains has no component in their mental model for this: a bucket-and-shim engine has no rocker bearing to fail, so top-end noise on a 690 is read as a clearance or cam problem when it is a bearing retention problem with a known, superseded part.",
     "make": "KTM",
@@ -225,6 +233,7 @@
     "source": "forum"
   },
   {
+    "key": "moto-guzzi-moto-guzzi-1200-8v-whether-an-engine-has-flat-or-roller",
     "title": "Moto Guzzi 1200 8V: whether an engine has flat or roller tappets is a build-date question that decides its survival",
     "description": "Drawn from owner-community documentation and consumer-law reporting. The 8V engines in the Griso 8V, Stelvio and Norge built before a mid-2012 design change use flat tappets with a hard face coating; when the coating fails, the tappet and the cam lobe destroy each other, with metal in the oil and eventual camshaft disintegration. Moto Guzzi later moved to roller tappets, which splits the 8V population into flat-tappet and roller builds that look identical from outside. The owner community has documented the build cut-offs precisely by engine number, and the manufacturer is reported to have covered the roller conversion where full dealer service history existed. Conversion cost figures in circulation are in more than one currency and are deliberately not printed here.",
     "make": "Moto Guzzi",
@@ -253,6 +262,7 @@
     "source": "forum"
   },
   {
+    "key": "triumph-triumph-955i-warm-high-idle-or-stalling-is-usually-an-air",
     "title": "Triumph 955i warm high idle or stalling is usually an air leak at the idle valve hoses, not the stepper",
     "description": "Drawn from owner reports on Triumph forums. On the Sagem-managed T595 and 955i the engine control unit sets target idle from the coolant temperature sensor in the thermostat assembly and drives the idle air control stepper closed-loop to hold it. The warm-running high idle or stall that owners report is commonly not the stepper at all: the rubber hoses from the idle valve to the intake ports perish and split, and the throttle body gasket leaks, so the stepper is chasing an air leak it cannot close. Replacing the stepper does not cure it. Some owners delete the stepper for a manual screw, which is a workaround rather than a repair. The same complaint is reported on the 1050 Speed Triple.",
     "make": "Triumph",
@@ -281,6 +291,7 @@
     "source": "forum"
   },
   {
+    "key": "bmw-bmw-can-bus-with-the-zfe-module-has-no-fuses-to-pull-and-an",
     "title": "BMW CAN-bus with the ZFE module has no fuses to pull, and an LED test throws a lamp fault",
     "description": "Drawn from owner explainers and forum documentation of BMW's single-wire CAN-bus with the central body electronics module. Many circuits on these machines have no conventional fuses: the ZFE monitors output current and disables a circuit on over-current. It also reacts to under-current — a blown tail-light bulb makes the module run the brake light at reduced brightness as a substitute and flag a dash fault. Two habits from Japanese machines break here. You cannot fault-find by pulling fuses, because there are none in those circuits. And you cannot test a lamp circuit by substituting an LED, because the low current reads as a failed bulb and throws a fault; LEDs need a load resistor, and additional brake or tail lighting must be relay-driven with the original bulbs left in place.",
     "make": "BMW",
@@ -309,6 +320,7 @@
     "source": "forum"
   },
   {
+    "key": "bmw-bmw-hexhead-final-drive-crown-bearing-sealed-and-greased",
     "title": "BMW hexhead final drive crown bearing: sealed and greased before 2010, oil-fed and vented after",
     "description": "Drawn from an owner-written guide to the hexhead and camhead final drive and shaft drive on an owners' association forum. On the pre-2010 hexhead final drive the crown-wheel bearing is a sealed, greased bearing that the final-drive oil never reaches; around 2010 BMW moved that bearing into the oil section and added a vent at the top to handle heat expansion. So on a pre-2010 machine a rumble or play at the rear is a bearing that was never oil-fed, and no amount of oil changing addresses it. The separate point with no chain-drive analogue at all is that the driveshaft and clutch splines are a lubrication service item in their own right, which a chain-drive routine has no step for.",
     "make": "BMW",
@@ -337,6 +349,7 @@
     "source": "forum"
   },
   {
+    "key": "ducati-ducati-desmoquattro-glitter-in-the-oil-means-look-at-the",
     "title": "Ducati Desmoquattro: glitter in the oil means look at the rocker faces, not the gearbox",
     "description": "Drawn from owner reports and specialist re-plating vendors. On the 16-valve Desmoquattro engines the hard chrome on the rocker contact faces delaminates, flakes appear in the oil, and the wear progresses toward camshaft damage. The community attributes it to plating quality after rocker plating was outsourced as production scaled up in the late 1990s, and the fix is re-chromed or aftermarket rockers, with accurate clearance setting said to reduce the risk. The differential point is where a mechanic looks: metal glitter in a filter sends a Japanese-trained mechanic to the gearbox and clutch, and on a Desmoquattro the answer is under the cam covers.",
     "make": "Ducati",
@@ -366,6 +379,7 @@
     "source": "forum"
   },
   {
+    "key": "ktm-ktm-lc8-water-pump-seal-is-a-scheduled-part-with-casting",
     "title": "KTM LC8 water pump seal is a scheduled part with casting sand behind its wear, and a hardened shaft exists",
     "description": "Drawn from an enthusiast known-issues compilation for the LC8 twins. The water pump shaft seal on the 950 and 990 is listed as a scheduled replacement item with a shaft inspection at the same time, which is unusual — on most machines a water pump seal is repaired when it fails rather than replaced on a schedule. The compilation implicates residual casting sand in the block in the impeller shaft wear that kills the seal, notes that the later seal is a Teflon type for higher temperature and wear resistance, and names an aftermarket hardened replacement shaft. The interval itself is not printed here because the source is a compilation rather than a KTM document; take it from the machine's own manual.",
     "make": "KTM",
@@ -395,6 +409,7 @@
     "source": "forum"
   },
   {
+    "key": "ktm-ktm-lc8-with-an-oily-front-intake-and-a-rich-front-cylinder",
     "title": "KTM LC8 with an oily front intake and a rich front cylinder is a balance shaft seal, not a fuelling fault",
     "description": "Drawn from an enthusiast known-issues compilation that cites KTM part numbers. When the balance shaft seal on the 950 and 990 fails, oil mist migrates up the crankcase ventilation line and deposits in the front cylinder's intake tract. The presentation is a wet, oily front intake and a rich-running front cylinder, which reads as a fuelling or mixture problem and is nothing of the kind. The compilation names the seal and recommends replacing the ignition cover gasket during the job. A mechanic who tunes fuelling on the front cylinder in response is treating a symptom of a seal.",
     "make": "KTM",

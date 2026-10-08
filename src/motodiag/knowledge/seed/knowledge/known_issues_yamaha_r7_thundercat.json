@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-yzf600r-thundercat-carburetor-sync-and-idle-issues",
     "title": "YZF600R Thundercat carburetor sync and idle issues",
     "description": "The Thundercat's 4-cylinder carbureted engine requires precise carburetor synchronization for smooth idle and throttle response. The 4 CV carbs drift out of sync from vibration, and the idle mixture screws are capped from the factory (EPA requirement). Out-of-sync carbs cause rough idle, poor fuel economy, and off-idle stumble.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-yzf600r-thundercat-vacuum-petcock-failure",
     "title": "YZF600R Thundercat vacuum petcock failure",
     "description": "The Thundercat uses a vacuum-operated fuel petcock that opens when the engine creates vacuum. When the diaphragm in the petcock tears, it either leaks fuel into the engine (flooding) or fails to open (fuel starvation). A torn diaphragm can flood the cylinders and wash the oil with raw fuel.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-yzf600r-thundercat-charging-system-and-regulator-failure",
     "title": "YZF600R Thundercat charging system and regulator failure",
     "description": "The Thundercat has the same shunt-type regulator/rectifier that plagues most 90s-2000s Yamaha sport bikes. The regulator overheats, the stator connector melts, and eventually the charging system fails. Symptoms progress from dim lights to dead battery to no-start.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-yzf600r-thundercat-chain-and-sprocket-wear-sport-touring",
     "title": "YZF600R Thundercat chain and sprocket wear — sport-touring mileage",
     "description": "The Thundercat is a sport-touring bike that accumulates higher mileage than a pure supersport. The chain and sprockets wear faster than expected because the Thundercat is often ridden in rain, commuted on, and loaded with luggage. The stock chain is a 530 — heavy but strong.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-yzf600r-thundercat-fork-seal-leaks-and-suspension-sag",
     "title": "YZF600R Thundercat fork seal leaks and suspension sag",
     "description": "The Thundercat's conventional (non-inverted) forks are durable but the seals weep after 15-20K miles from road grime and age. The fork springs sag from the heavier rider weight the Thundercat attracts (sport-touring position encourages two-up riding). Leaking fork seals cause poor damping and contaminate brake pads.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-r7-clutch-chatter-and-engagement-harshness-cp2-twin",
     "title": "R7 clutch chatter and engagement harshness — CP2 twin characteristic",
     "description": "The 2021+ R7 uses the CP2 689cc parallel twin from the MT-07. The wet clutch has a known characteristic: harsh engagement at low RPM and chattering at the friction zone, especially when cold. This is partly by design (the CP2 has aggressive cam timing) and partly from the stock clutch spring pressure being marginal.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-r7-suspension-inadequacy-for-track-use-budget-components",
     "title": "R7 suspension inadequacy for track use — budget components",
     "description": "The R7 is marketed as a track-capable sport bike but comes with budget KYB suspension that's underdamped for aggressive riding. The rear shock has no compression adjustment, the fork is non-adjustable (preload only on later models). Track riders find the suspension wallowing in fast corners and bottoming on hard braking.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "yamaha-r7-quick-shifter-inconsistency-and-false-neutrals",
     "title": "R7 quick shifter inconsistency and false neutrals",
     "description": "The R7's accessory quick shifter (dealer-installed option) can produce inconsistent upshifts and occasional false neutrals between 1st-2nd and 5th-6th gears. The shift rod sensor is sensitive to installation torque and rod length, and the ECU calibration is less refined than the R6/R1's.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-r7-overheating-in-slow-traffic-cp2-heat-management",
     "title": "R7 overheating in slow traffic — CP2 heat management",
     "description": "The R7's full fairing traps engine heat more than the naked MT-07 using the same CP2 engine. In slow traffic or at track paddock speeds, coolant temps climb quickly and the fan cycles constantly. The R7's radiator is smaller than the R6's despite having a higher heat output twin-cylinder engine.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-r7-ecu-fueling-lean-spot-at-3000-4500-rpm-emissions-mapping",
     "title": "R7 ECU fueling lean spot at 3000-4500 RPM — emissions mapping",
     "description": "The R7's ECU has a lean fueling calibration in the 3000-4500 RPM range to meet emissions. This causes a noticeable hesitation or stumble when rolling on the throttle in that range, especially noticeable in city riding where you live in that RPM band. The MT-07 has the same issue but it's more apparent on the R7 due to the sportier throttle mapping.",
     "make": "Yamaha",

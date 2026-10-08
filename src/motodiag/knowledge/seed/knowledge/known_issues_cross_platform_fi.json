@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-fuel-pump-failure-and-testing-all-efi-motorcycles",
     "title": "Fuel pump failure and testing \u2014 all EFI motorcycles",
     "description": "Electric fuel pumps on EFI motorcycles are intank or frame-mounted units that deliver fuel at 36-58 PSI depending on the system. The pump motor brushes wear, the impeller corrodes from ethanol-laden fuel, or the pump relay/connector fails from vibration. When the pump weakens, fuel pressure drops below the injector operating threshold and the engine starves under load or refuses to start entirely. This affects all EFI makes: Honda CBR/VFR series, Yamaha R-series and FZ models, Kawasaki ZX and Z series, Suzuki GSX-R and V-Strom, and Harley-Davidson Dyna/Softail/Touring with Delphi EFI. A failing pump often gives intermittent symptoms before total failure.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-throttle-position-sensor-tps-calibration-and-failure-erratic",
     "title": "Throttle Position Sensor (TPS) calibration and failure \u2014 erratic idle and hesitation",
     "description": "The TPS is a potentiometer mounted on the throttle body that tells the ECU the exact throttle plate angle. A worn or miscalibrated TPS sends erratic voltage signals, causing the ECU to miscalculate fuel delivery. Symptoms include erratic idle that hunts up and down, hesitation on tip-in, sudden power surges, and check engine lights. This is a universal EFI issue across Kawasaki ZX-6R/10R, Suzuki GSX-R600/750/1000, Honda CBR series, Yamaha YZF-R1/R6, and Harley-Davidson throttle-by-wire models. On older bikes with cable throttle, the TPS is adjustable; on newer throttle-by-wire bikes, it is self-calibrating but can still fail.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-intake-air-pressure-iap-map-sensor-failure-incorrect-fuel",
     "title": "Intake Air Pressure (IAP/MAP) sensor failure \u2014 incorrect fuel trim and boost reference",
     "description": "The MAP (Manifold Absolute Pressure) or IAP (Intake Air Pressure) sensor measures intake manifold vacuum and reports it to the ECU for load-based fuel calculations. When the MAP sensor fails or its vacuum line cracks, the ECU loses its primary load signal and defaults to a fixed fuel map, causing rich running at idle, lean running at high load, poor fuel economy, and a check engine light. This affects all speed-density EFI systems: Suzuki GSX-R series, Kawasaki ZX and Z models, Honda CBR/CRF, Yamaha FZ/MT/R-series, and Harley-Davidson with Delphi or later systems.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-o2-sensor-failure-and-elimination-closed-loop-fueling-issues",
     "title": "O2 sensor failure and elimination \u2014 closed-loop fueling issues",
     "description": "Oxygen sensors in EFI motorcycle exhaust systems measure residual oxygen to enable closed-loop fuel trim correction. When the O2 sensor fails, becomes contaminated, or is removed for an aftermarket exhaust, the ECU either runs in open-loop (fixed fuel map) or throws continuous fault codes. A lazy or failed O2 sensor causes rich or lean fuel trim drift, increased fuel consumption, failed emissions inspections, and persistent check engine lights. This affects Yamaha YZF-R1/R6 and FZ/MT series, Honda CBR and CRF-L models, Kawasaki Z and Versys series, Suzuki GSX-S and V-Strom, and all Harley-Davidson EFI models from 2006+.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.75
   },
   {
+    "key": "honda-engine-coolant-temperature-ect-sensor-failure-cold-start",
     "title": "Engine Coolant Temperature (ECT) sensor failure \u2014 cold start enrichment and fan control",
     "description": "The ECT sensor is a negative temperature coefficient (NTC) thermistor that reports coolant temperature to the ECU. The ECU uses this signal for cold start enrichment, idle speed control, fan activation, and fuel trim correction. A failed ECT sensor causes hard cold starts (if the ECU thinks the engine is already warm), rich running in hot weather (if the ECU thinks the engine is cold), cooling fan not activating, and a temperature gauge that reads incorrectly. This is a cross-platform issue on Honda CBR and CRF-L models, Kawasaki Ninja and Z series, Suzuki V-Strom and GSX-S, Yamaha MT and Tenere, and Harley-Davidson liquid-cooled models (Street, LiveWire, Pan America).",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.75
   },
   {
+    "key": "kawasaki-fuel-injector-clogging-and-cleaning-spray-pattern",
     "title": "Fuel injector clogging and cleaning \u2014 spray pattern degradation",
     "description": "EFI motorcycle injectors are precision components that atomize fuel into a fine spray at 36-60 PSI. Over time, fuel varnish, ethanol deposits, and carbon buildup on the injector tip degrade the spray pattern from a fine mist to a stream or uneven cone. A partially clogged injector causes lean conditions on that cylinder, misfires at load, rough idle, and eventual backfiring. This is a universal issue on all EFI motorcycles: Kawasaki ZX-10R/ZX-6R, Suzuki GSX-R series, Yamaha R1/R6 and MT series, Honda CBR/CB series, and Harley-Davidson Delphi and later systems. Multi-cylinder engines show the symptom most clearly because one clogged injector creates an imbalance.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "yamaha-idle-speed-control-isc-iacv-valve-carbon-buildup-erratic-or",
     "title": "Idle Speed Control (ISC/IACV) valve carbon buildup \u2014 erratic or high idle",
     "description": "The ISC (Idle Speed Control) or IACV (Idle Air Control Valve) is a motorized valve that bypasses the throttle plate to regulate airflow at idle. Carbon and oil vapor from crankcase ventilation coat the valve and its bore, causing it to stick open (high idle), stick closed (stalling), or hunt between positions (surging idle). This is extremely common on Yamaha FZ/MT series, Honda CB/CBR models, Suzuki SV650 and GSX-S, Kawasaki Ninja 650 and Z900, and Harley-Davidson fuel-injected Sportsters and Dyna models. The problem worsens in cold weather when the valve must open wider for cold idle.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-throttle-body-cleaning-and-synchronization-multi-cylinder",
     "title": "Throttle body cleaning and synchronization \u2014 multi-cylinder EFI balance",
     "description": "EFI throttle bodies accumulate carbon deposits on the butterfly plates, bore walls, and idle bypass passages over time. On multi-cylinder engines, uneven carbon buildup causes throttle plates to seal differently, creating vacuum imbalance between cylinders. This produces rough idle, vibration at steady cruise, uneven exhaust note, and reduced power. Throttle body sync on EFI bikes is identical in principle to carb sync but uses electronic tools. This affects all multi-cylinder EFI motorcycles: Suzuki GSX-R600/750/1000, Honda CBR600RR/1000RR, Kawasaki ZX-6R/ZX-10R, Yamaha YZF-R1/R6, and Harley-Davidson V-twin models.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-fuel-pressure-regulator-failure-fuel-rail-pressure-out-of",
     "title": "Fuel pressure regulator failure \u2014 fuel rail pressure out of specification",
     "description": "The fuel pressure regulator maintains constant fuel rail pressure by returning excess fuel to the tank (return-style systems) or by controlling pump speed (returnless systems). A failed regulator causes fuel pressure to be too high (rich running, fuel smell, black spark plugs) or too low (lean running, hesitation, stalling under load). On vacuum-referenced regulators, a ruptured diaphragm allows fuel into the vacuum line and intake manifold. This affects Honda VFR800 and CBR series, Kawasaki Concours and ZX-14R, Yamaha FJR1300 and R1, Suzuki Hayabusa and Bandit, and Harley-Davidson Touring and Softail models.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-ecu-ecm-reset-and-adaptation-relearn-post-service-idle-and",
     "title": "ECU/ECM reset and adaptation relearn \u2014 post-service idle and fueling restoration",
     "description": "The ECU (Engine Control Unit) on modern EFI motorcycles continuously adapts fuel trims, idle speed targets, and sensor offsets based on riding conditions and component wear. When the battery is disconnected, the ECU is flashed, or major service is performed (throttle body replacement, injector swap, TPS replacement), these learned adaptations are lost. The engine may idle erratically, run rich or lean, hesitate on tip-in, or throw false DTCs until the ECU relearns. This affects all EFI motorcycles but is most noticeable on Kawasaki ZX and Z series, Yamaha MT and R-series, Honda CBR and CB, Suzuki GSX-S and V-Strom, and Harley-Davidson models with adaptive fuel control.",
     "make": "Harley-Davidson",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-yamaha-self-diagnostic-mode-fi-light-blink-code-reading",
     "title": "Yamaha self-diagnostic mode — FI light blink code reading procedure",
     "description": "All fuel-injected Yamahas (2003+) have a self-diagnostic mode that blinks DTC codes through the FI warning light on the dashboard. The procedure varies slightly by model but follows the same pattern: short blinks = tens digit, long blinks = units digit. This is the first step in any FI Yamaha diagnostic and doesn't require any tools.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-universal-stator-connector-failure-every-yamaha-from-the",
     "title": "Universal stator connector failure — every Yamaha from the 1990s",
     "description": "Yamaha has used the same basic 3-pin stator connector design since the early 1990s. This connector is undersized for the current it carries, and the pins develop resistance from corrosion and heat. The connector melts, causing intermittent charging faults that progress to complete charging failure. This is the single most common electrical failure across all Yamaha models.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-mosfet-regulator-upgrade-universal-recommendation-for-all",
     "title": "MOSFET regulator upgrade — universal recommendation for all Yamahas",
     "description": "Most Yamahas from the 1980s through mid-2010s use shunt-type regulator/rectifiers that dissipate excess charging voltage as heat. This design runs hot and fails prematurely, especially on sport bikes and air-cooled models. A MOSFET regulator/rectifier runs cool, lasts longer, and is a universal upgrade for any Yamaha with a shunt regulator.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-ground-wire-corrosion-the-most-misdiagnosed-yamaha",
     "title": "Ground wire corrosion — the most misdiagnosed Yamaha electrical fault",
     "description": "Yamaha motorcycles ground their electrical systems through frame bolts and engine mounting bolts. Over time, these ground connections corrode from moisture, road salt, and galvanic corrosion between dissimilar metals. A corroded ground causes symptoms that mimic every other electrical fault: dim lights, erratic gauges, hard starting, and intermittent running issues.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-yamaha-wiring-harness-degradation-heat-and-age",
     "title": "Yamaha wiring harness degradation — heat and age",
     "description": "Yamaha wiring harnesses use PVC insulation that becomes brittle from engine heat and UV exposure over 10-20 years. Brittle insulation cracks, exposing bare wire that can short to the frame (ground) or to other wires. This causes intermittent faults, blown fuses, and in extreme cases, electrical fires. Sport bikes are worst affected because the harness routes near the engine.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-yamaha-fuse-and-relay-diagnostics-systematic-troubleshooting",
     "title": "Yamaha fuse and relay diagnostics — systematic troubleshooting",
     "description": "Blown fuses and failed relays are common on Yamahas and are often symptoms of an underlying problem, not the problem itself. A blown main fuse indicates a short circuit; a failed starter relay prevents cranking; a corroded fuel pump relay causes intermittent no-start. Systematic relay/fuse testing is the foundation of Yamaha electrical diagnosis.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-yamaha-immobilizer-system-ydis-key-chip-and-antenna",
     "title": "Yamaha immobilizer system (YDIS) — key chip and antenna diagnostics",
     "description": "Most fuel-injected Yamahas (2003+) use the Yamaha Digital Immobilizer System (YDIS) with a transponder chip in the key. When the chip or antenna fails, the bike cranks but won't fire. The dash shows a key icon or rapidly flashing FI light. This system is identical across R1, R6, FZ/MT, and other FI models.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-yamaha-led-and-lighting-upgrades-electrical-load",
     "title": "Yamaha LED and lighting upgrades — electrical load considerations",
     "description": "Yamaha owners commonly upgrade to LED headlights, tail lights, and turn signals. LED conversions change the electrical load characteristics — lower draw but different current profile. Without matching the flasher relay, LED turn signals flash too fast (hyperflash). Without matching the headlight circuit, LED headlights can trigger FI codes on some models.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-yamaha-battery-selection-agm-vs-lithium-considerations",
     "title": "Yamaha battery selection — AGM vs lithium considerations",
     "description": "Yamaha motorcycles come with conventional or AGM batteries, but lithium batteries are increasingly popular as upgrades. Lithium batteries offer weight savings (60-70% lighter) and better performance but have different requirements: no trickle chargers designed for lead-acid, temperature sensitivity below 40F, and higher cost. Wrong battery selection causes starting failures.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-woolich-racing-diagnostic-tool-the-aftermarket-yamaha",
     "title": "Woolich Racing diagnostic tool — the aftermarket Yamaha diagnostic standard",
     "description": "The Woolich Racing USB diagnostic tool ($200) is the de facto standard for aftermarket Yamaha diagnostics. It reads and clears DTCs, displays live sensor data, programs keys, and flashes custom ECU maps. For shops and serious home mechanics working on multiple Yamahas, it replaces the $3000+ dealer diagnostic system for most functions.",
     "make": "Yamaha",

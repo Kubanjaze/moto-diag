@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-2004-2005-zx-10r-headshake-and-stability-raw-first",
     "title": "2004-2005 ZX-10R headshake and stability — raw first generation",
     "description": "The 2004-2005 ZX-10R was Kawasaki's aggressive debut literbike — lightest in class with the most power. The chassis geometry was too aggressive for many riders, causing tank-slapper headshakes at high speed, especially over bumps or under hard acceleration. This was a known design issue that Kawasaki addressed in the 2006 revision.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-10r-stator-and-charging-system-literbike-heat-and-current",
     "title": "ZX-10R stator and charging system — literbike heat and current demands",
     "description": "The ZX-10R has the same stator/regulator design weakness as all Kawasaki sport bikes, but the literbike's higher heat output and greater electrical demand make failures more common and more damaging. The 200hp engine generates enormous heat that cooks the stator, and the electronics suite (especially 2016+) draws significant current.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-2016-zx-10r-imu-and-electronics-suite-ktrc-kibs-kecs",
     "title": "2016+ ZX-10R IMU and electronics suite — KTRC, KIBS, KECS diagnostics",
     "description": "The 2016+ ZX-10R has a Bosch 6-axis IMU enabling lean-angle-sensitive traction control (KTRC), cornering ABS (KIBS), and electronic suspension (KECS on SE models). These systems are powerful but complex — sensor contamination, IMU calibration drift, and software glitches cause unexpected interventions and warning lights.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-10r-cct-failure-high-output-literbike-engine",
     "title": "ZX-10R CCT failure — high-output literbike engine",
     "description": "The ZX-10R's 998cc inline-4 puts extreme stress on the cam chain system, especially during track use. The automatic CCT wears, the chain stretches, and cold-start rattle develops. Track ZX-10Rs see faster CCT wear than street bikes due to sustained high-RPM operation and aggressive engine braking.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-10r-fuel-pump-and-fuel-system-high-flow-demands",
     "title": "ZX-10R fuel pump and fuel system — high-flow demands",
     "description": "The ZX-10R's fuel pump must deliver high fuel volume at high RPM to feed 200hp. The in-tank pump weakens from ethanol degradation and heat, and the fuel pressure regulator can fail, causing lean conditions at high RPM. A weak fuel pump on a literbike is more dangerous than on a smaller bike — the lean condition occurs at maximum power where engine damage risk is highest.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-10r-valve-clearance-literbike-service-interval",
     "title": "ZX-10R valve clearance — literbike service interval",
     "description": "The ZX-10R uses shim-under-bucket valve adjustment with a 15,000-mile service interval. Track bikes need checks every 8K-10K miles. The 998cc engine's valves tighten with wear, causing hot-start difficulty and power loss. The 16-valve service is a 5-6 hour job that most shops charge $600-800 for.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 6.0
   },
   {
+    "key": "kawasaki-zx-10r-kleen-system-literbike-decel-popping",
     "title": "ZX-10R KLEEN system — literbike decel popping",
     "description": "The ZX-10R uses the KLEEN air injection system that causes decel popping, same as the ZX-6R. On the literbike, the popping is louder due to the larger exhaust volume, and it's more annoying because literbike riders use engine braking more aggressively. KLEEN removal is the universal first mod on any ZX-10R.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-10r-track-crash-damage-patterns-literbike-specific",
     "title": "ZX-10R track crash damage patterns — literbike-specific",
     "description": "The ZX-10R is one of the most common literbikes at track days and club races. Track crashes at literbike speeds cause damage patterns different from street drops: bent subframes from highsides, cracked engine cases from slides, and electronic damage from impact. Frame sliders, engine case covers, and rearset guards are considered mandatory.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-10r-quick-shifter-and-auto-blipper-shift-quality-tuning",
     "title": "ZX-10R quick shifter and auto-blipper — shift quality tuning",
     "description": "The ZX-10R (2011+) has an electronic quick shifter for clutchless upshifts, and the 2016+ added auto-blipper for clutchless downshifts. The system works well but is sensitive to shift rod length, ECU calibration, and RPM range. Poorly adjusted quick shifters cause clunky shifts and missed gears.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-zx-10r-cooling-system-high-output-engine-thermal-management",
     "title": "ZX-10R cooling system — high-output engine thermal management",
     "description": "The ZX-10R's 200hp engine generates enormous heat that stresses the cooling system. The radiator fan, thermostat, and coolant hoses must all function properly. Track use is particularly demanding — the ZX-10R can overheat on the grid or during slow parade laps if the cooling system isn't in perfect condition.",
     "make": "Kawasaki",

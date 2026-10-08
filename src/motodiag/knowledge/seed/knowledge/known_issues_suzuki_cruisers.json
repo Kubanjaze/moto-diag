@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-boulevard-intruder-800-carburetor-issues-pilot-jet-and",
     "title": "Boulevard/Intruder 800 carburetor issues — pilot jet and enrichment",
     "description": "The Intruder 800 (VS800, 1992-2004) and Boulevard S50 (2005-2009) use twin CV carburetors that clog from ethanol fuel during storage. The pilot jets are the first to clog, causing hard cold starting and rough idle. The enrichment (choke) cable stretches, reducing cold-start fuel delivery.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-boulevard-c50-m50-fuel-injection-lean-surge",
     "title": "Boulevard C50/M50 fuel injection lean surge",
     "description": "The Boulevard C50 (2005-2019) and M50 (2005-2019) use fuel injection with lean factory mapping. A rhythmic surge at steady cruise is the #1 complaint. The ECU's emissions-compliant map runs too lean at partial throttle, and the O2 sensor feedback creates hunting behavior.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-boulevard-c90-m109r-shaft-drive-service",
     "title": "Boulevard C90/M109R shaft drive service",
     "description": "The Boulevard C90 (2005-2013) and M109R (2006+) use shaft final drive. The hypoid gear oil needs changing every 6,000 miles but many cruiser owners never change it. The M109R's 1783cc V-twin puts enormous torque through the shaft drive, accelerating gear oil degradation.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-boulevard-m109r-clutch-drag-and-creep",
     "title": "Boulevard M109R clutch drag and creep",
     "description": "The M109R's 1783cc V-twin produces massive torque that stresses the wet clutch. The clutch drags at idle, causing the bike to creep forward with the clutch pulled and the transmission in gear. This makes neutral difficult to find at stops and low-speed maneuvering challenging.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-intruder-boulevard-1500-starter-clutch-failure",
     "title": "Intruder/Boulevard 1500 starter clutch failure",
     "description": "The Intruder 1500 (VL1500, 1998-2004) and Boulevard C90 use a one-way starter clutch (sprag) that wears. The starter motor spins but doesn't engage the engine, or engages intermittently. This is a labor-intensive repair requiring engine cover removal.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "suzuki-boulevard-intruder-charging-system-stator-and-reg-rec",
     "title": "Boulevard/Intruder charging system — stator and reg/rec",
     "description": "The Boulevard and Intruder cruiser V-twins share charging system weaknesses with the rest of the Suzuki family. The stator windings overheat, the reg/rec fails, and the connector corrodes. Cruisers with highway bars, aux lights, and heated grips tax the charging system.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-boulevard-intruder-air-cooled-v-twin-heat-management",
     "title": "Boulevard/Intruder air-cooled V-twin heat management",
     "description": "Most Boulevard and Intruder models use air-cooled V-twins (C50, S50, S83) that rely on airflow for cooling. In traffic, the rear cylinder runs hotter than the front, and heat radiates onto the rider. Oil temperatures climb past safe limits during extended idle.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-m109r-fuel-pump-and-fi-relay",
     "title": "M109R fuel pump and FI relay",
     "description": "The M109R fuel pump is a high-flow unit feeding the massive 1783cc V-twin. The fuel pump relay and the pump itself are failure points. The M109R's fuel consumption is significant, and the pump must deliver high volume at full throttle.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-boulevard-exhaust-modification-and-fueling-popping-and-lean",
     "title": "Boulevard exhaust modification and fueling — popping and lean conditions",
     "description": "Boulevard cruiser owners commonly install aftermarket exhaust for a deeper sound. Without fueling adjustment, the bike runs lean, causing backfiring, decel popping, and potential engine damage. Carbureted models need rejetting; EFI models need a fuel controller.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-boulevard-brake-system-rear-drum-and-front-caliper",
     "title": "Boulevard brake system — rear drum and front caliper",
     "description": "Some Boulevard models (S40, older S50) use a rear drum brake, while others use disc. The rear drum requires periodic adjustment and shoe replacement. The front disc caliper pistons corrode from neglected brake fluid. Cruiser riders often defer brake maintenance.",
     "make": "Suzuki",

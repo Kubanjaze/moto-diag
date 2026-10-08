@@ -1,0 +1,13 @@
+[
+  {
+    "key": "honda-planted-row-with-a-key",
+    "title": "A planted row with a key",
+    "description": "d", "make": "Honda", "model": null, "severity": "low",
+    "symptoms": [], "causes": [], "fix_procedure": "f", "parts_needed": []
+  },
+  {
+    "title": "A planted row whose key was never written",
+    "description": "d", "make": "Honda", "model": null, "severity": "low",
+    "symptoms": [], "causes": [], "fix_procedure": "f", "parts_needed": []
+  }
+]

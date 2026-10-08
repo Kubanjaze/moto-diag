@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-tft-instrument-cluster-freezing-and-rebooting",
     "title": "TFT instrument cluster freezing and rebooting",
     "description": "The Revolution Max bikes use a full-color TFT dash that can freeze, go black, or reboot mid-ride. Software bugs in early firmware versions cause the display to lock up, losing speedometer, tach, fuel gauge, and navigation. The bike still runs fine — you just can't see anything.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-ride-by-wire-throttle-hesitation-and-surging",
     "title": "Ride-by-wire throttle hesitation and surging",
     "description": "The Revolution Max uses ride-by-wire with no physical throttle cable. Some owners report off-idle hesitation, lurching at low speed, and throttle surging in parking lot maneuvers. The throttle mapping in standard ride mode is aggressive for slow-speed work.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-coolant-leak-at-water-pump-gasket",
     "title": "Coolant leak at water pump gasket",
     "description": "The Revolution Max water pump gasket can weep coolant, typically noticed as a small puddle under the bike after parking. The pump is on the right side of the engine behind the front cylinder. Not immediately dangerous but will worsen over time.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-oil-consumption-higher-than-expected-break-in-and-beyond",
     "title": "Oil consumption higher than expected — break-in and beyond",
     "description": "Revolution Max engines consume more oil than traditional air-cooled Harleys, especially during the first 5000 miles. Some owners report needing to add oil between 5000-mile service intervals. The engine has tighter tolerances and runs hotter than air-cooled bikes.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-side-stand-sensor-intermittent-bike-won-t-start-or-stalls",
     "title": "Side stand sensor intermittent — bike won't start or stalls",
     "description": "The side stand switch on Revolution Max bikes can cause intermittent starting failures or mid-ride stalls. The bike's ECU kills the engine if it thinks the side stand is down with a gear engaged. A flaky switch sensor tricks the ECU.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-cornering-abs-traction-control-false-intervention",
     "title": "Cornering ABS / traction control false intervention",
     "description": "The Revolution Max platform has cornering ABS and lean-sensitive traction control via an IMU (inertial measurement unit). Some riders experience false TC intervention on rough roads, painted lines, or cold tires — the system cuts power unexpectedly, which feels like a misfire.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-exhaust-heat-shield-rattle-and-discoloration",
     "title": "Exhaust heat shield rattle and discoloration",
     "description": "The Revolution Max exhaust system runs extremely hot — the catalytic converter and heat shields can discolor, and the shields develop rattles from thermal expansion/contraction cycles. The header pipe can glow orange-red at idle, which alarms new owners.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-chain-final-drive-maintenance-not-a-harley-tradition",
     "title": "Chain final drive maintenance — not a Harley tradition",
     "description": "The Sportster S and Nightster use chain final drive instead of Harley's traditional belt. Many Harley-trained mechanics and owners are unfamiliar with chain maintenance. Neglected chains stretch, wear sprockets, and can break — a catastrophic failure on the road.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-battery-drain-parasitic-draw-from-electronics",
     "title": "Battery drain — parasitic draw from electronics",
     "description": "Revolution Max bikes have extensive always-on electronics (security system, TFT dash standby, Bluetooth module) that drain the battery faster than traditional Harleys. If the bike sits for 2+ weeks without riding, the battery can drop below starting voltage.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-mid-mount-controls-ergonomic-issues-sportster-s-specific",
     "title": "Mid-mount controls ergonomic issues — Sportster S specific",
     "description": "The Sportster S uses mid-mount foot controls — a first for a Harley cruiser/sport bike. Riders transitioning from forward controls find the riding position uncomfortable for long rides. The shift linkage geometry can also cause missed shifts if not properly adjusted.",
     "make": "Harley-Davidson",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-kz1000-1100-cam-chain-tensioner-failure-manual-vs-automatic",
     "title": "KZ1000/1100 cam chain tensioner failure — manual vs automatic",
     "description": "The KZ1000 (1977-1983) and KZ1100 (1981-1983) use automatic cam chain tensioners that wear out and allow chain slap. The tensioner ratchet mechanism wears, causing the chain to go slack on deceleration. This creates a metallic rattle from the right side of the engine at idle and decel.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-kz650-750-charging-system-stator-and-regulator-rectifier",
     "title": "KZ650/750 charging system — stator and regulator/rectifier failure",
     "description": "The KZ650 (1977-1983) and KZ750 (1976-1984) suffer from chronic charging system failures. The stator windings overheat and short, the original regulator/rectifier is a primitive shunt-type that runs hot, and the wiring connectors corrode. A dead battery on a KZ is usually the charging system, not the battery.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-kz-gpz-inline-4-carburetor-synchronization-and-rebuild",
     "title": "KZ/GPz inline-4 carburetor synchronization and rebuild",
     "description": "All KZ and GPz inline-4 models use banks of 4 CV carburetors that require periodic synchronization. After decades, the rubber diaphragms crack, slide needles wear, float valves stick, and pilot jets clog from varnished fuel. A full carb rebuild and sync is the most common and most important service on any vintage Kawasaki.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 6.0
   },
   {
+    "key": "kawasaki-gpz900r-1000rx-fuel-system-petcock-and-tank-rust",
     "title": "GPz900R/1000RX fuel system — petcock and tank rust",
     "description": "The GPz900R (1984-2003) and GPz1000RX (1986-1988) suffer from fuel system issues. The vacuum petcock diaphragm fails, allowing fuel to flood the carbs and crankcase. Steel fuel tanks rust internally from ethanol fuel and condensation. Rust flakes clog carb jets and score float needles.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-kz550-650-ignition-system-points-vs-electronic-conversion",
     "title": "KZ550/650 ignition system — points vs electronic conversion",
     "description": "Early KZ550 and KZ650 models use breaker point ignition that requires periodic adjustment and replacement. The points wear, timing drifts, and condensers fail. Many owners convert to electronic ignition (Dyna or Pamco) for reliability and consistent timing.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-kz1000-1100-fork-seal-and-suspension-wear",
     "title": "KZ1000/1100 fork seal and suspension wear",
     "description": "The KZ1000 and KZ1100 use conventional (non-inverted) forks with 36-38mm stanchions. The fork seals harden and leak after decades, fork oil degrades to water consistency, and the damper rods corrode internally. These bikes are heavy (500+ lbs) and the suspension was basic even when new.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-all-kz-gpz-models-engine-oil-and-gasket-leaks",
     "title": "All KZ/GPz models — engine oil and gasket leaks",
     "description": "Vintage Kawasaki inline-4 engines develop oil leaks from multiple locations as gaskets and seals age. The cam cover gasket, head gasket, base gasket, and various O-rings all harden and shrink. The KZ engine cases are cast aluminum that slightly warps from thermal cycling over decades.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-gpz550-750-brake-system-aging-calipers-and-master-cylinder",
     "title": "GPz550/750 brake system — aging calipers and master cylinder",
     "description": "The GPz550 (1981-1985) and GPz750 (1982-1985) use single-disc or dual-disc front brakes with sliding pin calipers. The caliper pistons corrode and seize, the brake lines swell internally, and the master cylinder bore corrodes. Stopping power degrades gradually and many riders don't notice until it's dangerously poor.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-kz-gpz-electrical-wiring-brittle-harness-and-connector",
     "title": "KZ/GPz electrical wiring — brittle harness and connector corrosion",
     "description": "Vintage KZ and GPz models have 30-40+ year old wiring harnesses with cloth or early PVC insulation that becomes brittle and cracks. The bullet connectors corrode, grounds develop resistance, and the fuse box (glass fuse type) corrodes internally. Electrical gremlins on vintage KZs are almost always wiring-related.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-kz-gpz-drive-chain-and-sprocket-original-equipment-long-gone",
     "title": "KZ/GPz drive chain and sprocket — original equipment long gone",
     "description": "Vintage KZ and GPz models use 530 or 630 chains that are no longer the original equipment after decades. Many have been replaced multiple times with varying quality. Worn countershaft sprockets develop hooked teeth that accelerate chain wear. The countershaft seal often leaks when the sprocket is removed.",
     "make": "Kawasaki",

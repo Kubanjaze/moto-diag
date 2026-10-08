@@ -1,5 +1,6 @@
 [
   {
+    "key": "ducati-cam-belt-degradation-by-age-on-air-cooled-2v-desmodue",
     "title": "Cam belt degradation by age on air-cooled 2V Desmodue Monsters that sit unused",
     "description": "Drafted from general knowledge of the air/oil-cooled 2-valve Desmodue Monster family. Ducati camshafts are driven by toothed rubber belts - these engines have no cam chain and no cam-chain tensioner, so the belts and their rollers are the timing drive and the service item - and the belts are replaced on elapsed time as well as distance because the rubber and its cords harden, craze and lose tooth-root strength while the bike stands. Low-mileage M900s, and the same applies to M600/M750 and the later 620/695/800/1000/S2R Desmodue Monsters, are the classic victims: a bike showing 8,000 miles can be sitting on fifteen-year-old belts. The Desmodue is an interference engine, so a belt that strips its teeth bends valves. A rough or seized tensioner/idler roller will shred a fresh belt within a few hundred miles, so the rollers are part of the same job.",
     "make": "Ducati",
@@ -36,6 +37,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-cam-belt-age-out-and-tensioner-idler-bearing-failure-on-the",
     "title": "Cam belt age-out and tensioner/idler bearing failure on the liquid-cooled 4V Monster S4R",
     "description": "General knowledge entry for the liquid-cooled 4-valve Monster family. The Desmoquattro and Testastretta S4/S4R/S4RS drive both camshafts by toothed rubber belts - these twins have no cam chain and no cam-chain tensioner, so the belts and their rollers are the timing drive and they are the service item. Each cylinder has its own belt running over a fixed idler roller and an adjustable tensioner roller. The belts are a calendar-life item: they harden, craze and lose tooth adhesion with age and heat whether or not the bike is ridden, and low-mileage garage-kept S4Rs are the classic case of a bike with perfect compression and ten-year-old belts. Just as often the belt is killed by its roller - the tensioner or idler bearing loses grease, rumbles, then seizes and shreds the belt. The engine is an interference design with desmodromic valve gear, so a shed or jumped belt means bent valves and often piston and head damage. On the liquid-cooled bikes the horizontal (front) belt cover sits behind the radiator and oil cooler, so the job carries cooling-system disturbance that an air-cooled 2V Monster does not. Belt and roller part numbers differ between the 996 Desmoquattro (S4R 2003-2006, and the 916 S4 2001-2003) and the 998 Testastretta (S4R 2007-2008 and S4RS 2006-2008) - order by engine number and engine type, never by the S4R badge, because both engines wear the same badge.",
     "make": "Ducati",
@@ -74,6 +76,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-single-sided-swingarm-eccentric-chain-adjuster-seized-or",
     "title": "Single-sided swingarm eccentric chain adjuster seized or slipping on Monster S4R/S4RS",
     "description": "General knowledge entry for the single-sided swingarm fitted to the Monster S4R and S4RS. The earlier S4 (2001-2003) has a conventional double-sided swingarm with normal axle adjuster blocks, so this entry does not apply to it. Chain slack on the single-sided bike is not set with axle blocks and snail cams: the rear axle is carried in an eccentric hub that rotates inside the end of the swingarm, and rotating that hub swings the axle in an arc to take up slack. Two things go wrong. First, the eccentric corrodes into the swingarm bore - dissimilar metals plus winter salt and years without an adjustment - and will not turn at all, so the chain cannot be set. Second, the clamp arrangement that locks the eccentric is under-torqued or its faces are contaminated, and the eccentric creeps under drive load, so chain slack changes on its own between checks and the bike develops a clunk on drive take-up. Both are frequently misread as chain, cush drive or wheel bearing faults. Rotating the eccentric also moves the axle slightly in height, so wheelbase, ride height and the brake caliper carrier position all move with the chain slack - it is a chassis adjustment, not just a chain adjustment.",
     "make": "Ducati",
@@ -113,6 +116,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-nylon-fuel-tank-swelling-and-distortion-on-ethanol-blended",
     "title": "Nylon fuel tank swelling and distortion on ethanol-blended fuel",
     "description": "General knowledge entry for the 696-generation air-cooled Monster. The moulded polyamide (nylon) fuel tank fitted to this generation absorbs ethanol from pump fuel and grows permanently in volume, so the tank distorts: it fouls the frame rails, will not line up on its mounts, opens uneven gaps to the seat and side panels, and can dish the in-tank pump flange sealing face. The same tank was used on the contemporary Streetfighter. Ducati ran extended-warranty / tank-replacement programmes in several markets, so the VIN should always be checked with the importer before quoting the customer for a tank. This is a materials problem, not a crash or handling problem: a swollen tank cannot be reshaped, heated or clamped back into shape.",
     "make": "Ducati",
@@ -152,6 +156,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-fuel-weep-and-erratic-fuel-gauge-at-the-in-tank-pump-flange",
     "title": "Fuel weep and erratic fuel gauge at the in-tank pump flange",
     "description": "General knowledge entry for the 696-generation air-cooled Monster, whose fuel pump, filter and level sender sit on a single flange bolted into the top of the moulded plastic tank with quick-disconnect fuel couplings. Two related complaints come from this flange: a petrol smell and fuel staining on the tank top from a flattened, re-used or distorted flange seal, and an erratic, sticking or permanently low/full fuel gauge from the level sender on the same flange. On this generation the flange seat is often dished by tank swelling on ethanol fuel, so a leak that keeps returning after a new seal usually means the tank itself is distorted rather than the seal being at fault. Scope here is the mechanical seal and sender; pump pressure, relay and prime diagnostics are separate work.",
     "make": "Ducati",
@@ -191,6 +196,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-cam-belt-age-based-replacement-and-tensioner-idler-bearing",
     "title": "Cam belt age-based replacement and tensioner/idler bearing check on the air-cooled 2V",
     "description": "General knowledge entry. These engines drive both camshafts by toothed rubber belts - there is no cam chain and no cam chain tensioner on this family, so nothing here is a CCT job. The belts are replaced on a fixed interval by time as well as distance, whichever falls first, because the rubber and its cords degrade with age and heat regardless of how little the bike has been ridden; low-mileage garage-kept Monsters of this generation are the usual offenders. The tensioner and idler rollers run on bearings that are themselves a wear item and are checked, and normally renewed, with the belts. A belt or roller failure on a desmodromic engine is not a roadside inconvenience: valve and piston contact follows. Valve clearance work itself is separate from this entry.",
     "make": "Ducati",
@@ -228,6 +234,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-cam-belt-age-out-and-condition-inspection-on-the-liquid",
     "title": "Cam belt age-out and condition inspection on the liquid-cooled Testastretta 11 degree Monster 821/1200",
     "description": "General knowledge entry. The Testastretta 11-degree engine in the 2014-2021 Monster 821 and 1200 family drives its desmodromic camshafts by toothed rubber belts - there is no cam chain and no cam-chain tensioner on this family. Ducati specifies belt replacement on a TIME basis as well as a mileage basis, so a low-mileage bike that has sat for several years is due regardless of how good the belts look. Belts on this generation live under plastic covers on the right side of the engine and are reached without splitting or removing the engine, but the liquid-cooled layout means coolant hoses, the radiator/oil-cooler mounting and bodywork sit in the access path, which is what separates this job from the older air-cooled 2V Monsters. A belt that fails or jumps teeth on a desmo engine causes immediate and expensive valve-to-piston contact, so age is treated as a hard limit, not a judgement call.",
     "make": "Ducati",
@@ -267,6 +274,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-trellis-frame-bolted-to-the-cylinder-heads-fastener",
     "title": "Trellis frame bolted to the cylinder heads - fastener inspection and service planning on Monster 821/1200",
     "description": "General knowledge entry, and an awareness item as much as a fault. On the 2014-2021 Monster 821 and 1200 family the short tubular steel trellis is bolted directly to the cylinder heads instead of surrounding the engine, so the engine is a fully stressed chassis member and the head fasteners are structural. Two practical consequences follow. First, the chassis cannot be separated from the engine, or a head disturbed, without independently supporting both - a paddock stand alone is not adequate, and taking the bike's weight on the engine casings is not an option. Second, when investigating a creak, a knock over bumps or a vague feeling under load on one of these bikes, the frame-to-head fastener joint belongs on the list, particularly on a machine that has had previous engine or head work, has been down the road, or has corrosion at the steel-to-alloy interface. This arrangement is specific to the trellis generation: it does not describe the 2021-on Monster 937, which uses a cast-aluminium Front Frame.",
     "make": "Ducati",
@@ -302,6 +310,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-monster-937-crash-damage-assessment-cast-aluminium-front",
     "title": "Monster 937 crash-damage assessment - cast-aluminium Front Frame and GFRP subframe, no trellis to straighten",
     "description": "Drafted from general knowledge of the 2021+ Monster generation. The 937 broke with every Monster before it: there is no tubular steel trellis. A cast-aluminium Front Frame bolts directly to the two cylinder heads and carries the steering head, the engine is a fully stressed chassis member, and the rear subframe is moulded GFRP (glass-fibre reinforced polymer). A workshop that assesses crash damage the way it always has on a Monster - sighting down trellis tubes for a kink, or planning a tube repair - will both miss damage and propose a repair that cannot legitimately be done on this bike. Cast aluminium cracks rather than bending visibly, and neither the Front Frame nor the GFRP subframe can be welded, heat-straightened or cold-set back into shape. This entry is about the assessment and the repair decision, not about setting specifications, which are referred to the manual throughout.",
     "make": "Ducati",
@@ -340,6 +349,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-dry-slipper-clutch-plate-ear-and-basket-finger-hammering",
     "title": "Dry slipper clutch plate-ear and basket-finger hammering with worn back-torque ramps on Streetfighter 1098/S",
     "description": "Drafted from general knowledge of the Ducati dry multi-plate slipper clutch fitted to the Streetfighter 1098 and 1098 S. The stack is an exposed friction/steel plate set in an aluminium basket behind a vented cover on the right-hand side of the engine, with back-torque (slipper) ramps between the clutch hub and the pressure plate. A dry-clutch idle rattle that disappears the moment the lever is pulled is NORMAL Ducati behaviour and is not on its own a fault. What is a fault is that rattle combined with drive-take-up judder, drag at a standstill, slip under power, or the loss of back-torque limiting on downshifts, which points to hammered plate ears, notched basket fingers, warped or blued steels, and worn slipper ramps. A dragging or non-returning external slave cylinder produces the same symptoms and will also cook a brand new stack, so rule the hydraulic side out first. This entry applies ONLY to the 1099cc Streetfighter 1098/S with the DRY clutch; the Streetfighter 848 (849cc, 2012-2015) uses a WET clutch running in engine oil and neither this diagnosis nor these parts transfer to it. The repair is done through the clutch cover on the assembled engine: there is no bellhousing, no flywheel face and no engine/gearbox split involved.",
     "make": "Ducati",
@@ -383,6 +393,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-external-hydraulic-clutch-slave-cylinder-weeping-dot4-onto",
     "title": "External hydraulic clutch slave cylinder weeping DOT4 onto the sprocket-side case and chain",
     "description": "Drafted from general knowledge of the Ducati hydraulic clutch. The slave cylinder is bolted externally to the left, sprocket-side case and pushes a rod that runs through the gearbox mainshaft to the pressure plate on the opposite side of the engine. Its piston seal is a known weep point: fluid escapes past the pushrod, runs down the outside of the case and drips straight onto the front sprocket area, the chain run and the swingarm, where it is then flung along the chain. Because the leak is external and above the chain, mechanics sometimes call it a countershaft seal - the discriminator is the fluid itself. DOT4 is thin, pale amber, water-washable and strips paint, and the clutch master cylinder reservoir level falls; engine oil from a countershaft seal is dark, does not thin out with water, and leaves the clutch reservoir level unchanged. The same slave is also the usual suspect when lever effort climbs or the clutch starts to drag on a hot bike sitting in traffic. Replacement is external - the slave unbolts from the outside of the case, nothing is split.",
     "make": "Ducati",
@@ -423,6 +434,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ducati-normal-dry-clutch-idle-rattle-mistaken-for-a-fault-triage",
     "title": "Normal dry clutch idle rattle mistaken for a fault - triage before quoting a clutch job",
     "description": "Drafted from general knowledge of Ducati dry-clutch behaviour. The loud metallic rattle from the right-hand clutch cover at idle in neutral is a design characteristic of the dry multi-plate clutch, not a defect: with no oil film between the plates, the ears knock against the basket fingers as the big L-twin's torque pulses shake the stack, and an open or vented cover simply lets the noise out. Pull the lever and the rattle should quiet or change markedly as the stack is clamped and unloaded. This entry exists because the noise is routinely misdiagnosed on bikes that are mechanically fine, leading to unnecessary clutch sales; it also gives the two conditions that turn a normal rattle into a real fault. Most of the triage is done with the bike stationary and, at most, a look through the cover openings; the drag check is done with the bike upright on the ground and the slip check on the road, and both come after the hydraulic side has been confirmed dry.",
     "make": "Ducati",

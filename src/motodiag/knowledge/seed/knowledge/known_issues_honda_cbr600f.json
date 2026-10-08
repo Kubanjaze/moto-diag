@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-regulator-rectifier-failure-same-honda-disease",
     "title": "Regulator/rectifier failure — same Honda disease",
     "description": "The CBR600 F-series shares the same shunt-type regulator/rectifier failure as the CBR900/929/954. The unit overheats, fails, and either overcharges (swelling battery) or undercharges (dead battery, dim lights at idle). The F4i is slightly more reliable than the F2/F3 but still fails.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-carburetor-issues-f2-f3-f4-specific",
     "title": "Carburetor issues — F2/F3/F4 specific",
     "description": "The carbureted CBR600 models (F2 1991-1994, F3 1995-1998, F4 1999-2000) use Keihin CV carburetors that are sensitive to ethanol fuel, vacuum leaks, and idle mixture screw settings. After 25+ years, diaphragms are cracked, jets are clogged, and float valves stick — causing poor idle, hesitation, and flooding.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "honda-cam-chain-tensioner-cct-rattle-all-f-series",
     "title": "Cam chain tensioner (CCT) rattle — all F-series",
     "description": "Same Honda inline-4 CCT issue as the CBR900 series. The automatic tensioner loses spring tension, allowing the cam chain to rattle at startup and during deceleration. The CBR600 is particularly prone because the smaller engine RPMs during city riding don't build enough oil pressure to quiet the chain.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-f4i-fuel-injector-clogging-and-lean-stumble",
     "title": "F4i fuel injector clogging and lean stumble",
     "description": "The CBR600F4i (2001-2006) fuel injectors clog from ethanol fuel and old age, causing lean misfire on one or more cylinders. Symptoms: stumble at part throttle, rough idle, and occasional backfire through the intake. The F4i doesn't throw clear codes for partially clogged injectors — it just runs badly.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-ignition-coil-and-spark-plug-cap-failure",
     "title": "Ignition coil and spark plug cap failure",
     "description": "The CBR600 F-series uses stick coils (coil-on-plug) on later models and coils with plug caps on earlier models. The plug caps develop internal resistance cracks from heat cycling, causing weak spark, misfire on one cylinder, and hard starting. Plug caps are a $5 part that mimics a $200 coil failure.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-clutch-cable-fraying-and-sudden-failure-cable-clutch-models",
     "title": "Clutch cable fraying and sudden failure — cable clutch models",
     "description": "The F2/F3/F4 models use a cable clutch that frays internally at the handlebar adjuster and the engine-side pivot. You feel increasing stiffness, then partial engagement loss, then sudden snap. A broken clutch cable strands you — you can't shift without the clutch in traffic.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-radiator-fan-failure-and-overheating-in-traffic",
     "title": "Radiator fan failure and overheating in traffic",
     "description": "The CBR600 radiator fan can fail from motor burnout, relay failure, or thermoswitch/sensor fault. In traffic, the liquid-cooled engine overheats quickly without fan airflow. The temperature gauge climbs past normal, coolant can boil over, and the engine may trigger limp mode (F4i) or seize (worst case).",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-chain-and-sprocket-wear-high-mileage-commuters",
     "title": "Chain and sprocket wear — high-mileage commuters",
     "description": "CBR600 F-series bikes used as daily commuters accumulate chain and sprocket wear faster than garage queens. A stretched chain causes sloppy throttle response, snatch in low gears, and excessive noise. Worn sprockets have hooked or pointed teeth that accelerate chain wear.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-speedometer-cable-and-gear-failure-f2-f3",
     "title": "Speedometer cable and gear failure — F2/F3",
     "description": "The F2 and F3 models use a mechanical speedometer driven by a cable and worm gear at the front wheel. The cable breaks from routing stress, the worm gear strips from impact or corrosion, and the speedo reads erratically or stops completely. Also affects odometer (mileage stops accumulating).",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-exhaust-header-rust-and-collector-gasket-leak",
     "title": "Exhaust header rust and collector gasket leak",
     "description": "The CBR600 F-series 4-into-1 exhaust develops rust at the header-to-head flanges and leaks at the collector (where the 4 pipes merge into 1). Older bikes develop a characteristic exhaust tick on cold start that fades when hot. Rust-through on the collector is common on bikes ridden in wet or salted-road conditions.",
     "make": "Honda",

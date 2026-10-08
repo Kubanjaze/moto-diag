@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-regulator-rectifier-failure-shared-sport-bike-weakness",
     "title": "Regulator/rectifier failure — shared sport bike weakness",
     "description": "The CB750, CB919, CB1000R, and Hornet all use the same shunt-type regulator/rectifier from their CBR donor engines. The naked bike configuration actually makes this WORSE because the exposed engine generates more heat with less fairing-directed airflow over the regulator.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-cam-chain-tensioner-noise-inline-4-models",
     "title": "Cam chain tensioner noise — inline-4 models",
     "description": "The CB919 (CBR900F engine), CB1000R (CBR1000RR-derived engine), and Hornet 600 (CBR600F engine) all inherit the Honda inline-4 CCT weakness. The standard bike RPM profile (more time at low RPM in traffic) means less oil pressure to keep the chain tensioned.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-cb1000r-throttle-by-wire-hesitation-and-surge",
     "title": "CB1000R throttle-by-wire hesitation and surge",
     "description": "The CB1000R (2008+) uses ride-by-wire throttle that can produce off-idle hesitation, surging at constant cruise, and abrupt throttle response in Sport mode. The issue is ECU mapping — the default map is aggressive for a naked commuter bike.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-carburetor-issues-cb750-nighthawk-1991-2003",
     "title": "Carburetor issues — CB750 Nighthawk (1991-2003)",
     "description": "The CB750 Nighthawk uses four Keihin CV carburetors that are sensitive to ethanol fuel and synchronization drift. After 20+ years, every CB750 needs carb work — pilot jets are clogged, diaphragms are cracked, and vacuum lines are deteriorated. The CB750 is a popular budget bike, so many come to shops in poor running condition.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "honda-chain-and-sprocket-wear-commuter-use-pattern",
     "title": "Chain and sprocket wear — commuter use pattern",
     "description": "Standard/naked Hondas are primarily used as commuters, accumulating chain wear faster from stop-and-go city riding (frequent acceleration/deceleration loads). Many CB and Hornet owners neglect chain maintenance because the bikes don't have fairings that trap chain noise — the noise is lost in traffic.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-handlebar-vibration-engine-to-chassis-transfer",
     "title": "Handlebar vibration — engine-to-chassis transfer",
     "description": "Naked Hondas with inline-4 engines transmit more vibration to the handlebars than their faired counterparts because there's no fairing mass to dampen high-frequency vibes. Riders experience hand numbness, tingling, and fatigue on rides over 30 minutes. Particularly bad on the CB919 and older Hornets.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-fuel-tank-rust-older-cb750-and-hornet-models",
     "title": "Fuel tank rust — older CB750 and Hornet models",
     "description": "Older Honda standard bikes stored with partially empty tanks develop internal rust. Rust flakes clog the fuel petcock (carb models), fuel filter, fuel pump strainer (EFI), and carburetor jets. The rust cycle: moisture condenses in empty tank space → rust forms → rust flakes contaminate fuel system → engine runs poorly or not at all.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-headlight-aim-and-visibility-naked-bike-riding-position",
     "title": "Headlight aim and visibility — naked bike riding position",
     "description": "Standard/naked bikes position the rider more upright, which changes the headlight aim relative to the road compared to a sport bike's tucked position. If the headlight was aimed for a sport bike rider (leaned forward), the beam points too high when sitting upright. Also, naked bikes lack fairing wind protection, and bugs/stone chips damage the headlight lens faster.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-rear-shock-degradation-standard-bike-loads",
     "title": "Rear shock degradation — standard bike loads",
     "description": "Standard/naked Hondas carry riders in a more upright position, putting more weight on the rear suspension than a sport bike's forward weight distribution. The stock rear shock is often undersprung for the standard bike's weight distribution, and degradation happens faster. Commuter use with passenger or luggage accelerates the problem.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-mirror-vibration-and-blind-spots-naked-bike-aerodynamics",
     "title": "Mirror vibration and blind spots — naked bike aerodynamics",
     "description": "Naked bike mirrors vibrate more than faired bike mirrors because there's no fairing to shield them from wind turbulence. At highway speeds (60+ mph), the mirrors become useless — the image vibrates into a blur. This is a safety issue because riders can't see traffic behind them.",
     "make": "Honda",

@@ -1,5 +1,33 @@
 # deploy — changelog
 
+## 2026-10-08 — the diff sees a column a migration adds (Phase 380, bug fix #1)
+
+- **The defect.** `diff()` kept only the old table's columns. For a migration
+  adding a column, a scope `to` on it crashed (085's dry run), the exact diff
+  dropped its values, and a change in it was not a moved field.
+- **The change.** Both sides are lined up on the union of the two column
+  lists. `tests/test_phase380_deploy_new_column.py` gives 3 failed before
+  the fix and 3 passed after.
+
+## 2026-10-08 — seed parity for content migrations (Phase 380, the operator's 2A)
+
+The operator: "With 2A, each content migration's dry run shows the changed
+rows equal a fresh seed build, by key, so the seed and live can't drift."
+- `seed_parity` builds the seed at HEAD on a scratch database (`init_db` and
+  every known-issue seed file), then compares every `known_issues` row the
+  migration adds or changes, by `row_key`, every column but the id and the
+  clocks.
+- A difference, or a key no seed entry holds, is a scope problem. The dry run
+  records it, and `apply-live` refuses, both on the recorded problem and on
+  its own fresh run.
+- It runs only when the copy has `row_key` (migration 085 on).
+- The build is injectable (`parity_build`), so
+  `tests/test_phase380_seed_parity.py` never builds the real seed. It covers
+  a clean case, a drifting migration, a seed edited after the approval, and
+  a key no seed holds.
+- Its first real run read the backup's columns, which have no `row_key`, and
+  checked nothing in 0.0 s. It now reads the copy's columns.
+
 ## 2026-10-08 — verify-live fails on a mismatch (Phase 379, F197)
 
 The operator: "379 = the nine small fixes."

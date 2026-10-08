@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-carburetor-issues-rebel-250-1985-2016",
     "title": "Carburetor issues — Rebel 250 (1985-2016)",
     "description": "The Rebel 250's single CV carburetor clogs easily from ethanol fuel, especially on bikes used for riding school or that sit between weekend rides. The pilot jet is tiny and clogs first. Many Rebel 250s are first bikes bought used and left sitting for months — the first start attempt after sitting reveals the carb problem.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-regulator-rectifier-failure-rebel-250-and-300-500",
     "title": "Regulator/rectifier failure — Rebel 250 and 300/500",
     "description": "The Honda reg/rec failure extends to the Rebel family. The Rebel 250's simpler electrical system makes the failure more noticeable — the battery dies quickly because the small alternator output barely keeps up with accessories. The 300/500 have better regulators but still not immune.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-rebel-1100-dct-transmission-jerky-low-speed-behavior",
     "title": "Rebel 1100 DCT transmission jerky low-speed behavior",
     "description": "The Rebel 1100 DCT (Dual Clutch Transmission) can feel jerky at very low speeds — parking lot speeds, walking pace, and stop-and-go traffic. The automated clutch engagement is calibrated for smooth riding above 10 mph but struggles with precise low-speed control that a manual clutch provides.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-rebel-300-500-chain-tension-and-adjustment-beginner-neglect",
     "title": "Rebel 300/500 chain tension and adjustment — beginner neglect",
     "description": "The Rebel 300 and 500 use chain drive, and many first-time owners don't know chains need regular adjustment and lubrication. A loose chain causes sloppy throttle response and drivetrain snatch; a tight chain accelerates sprocket and bearing wear. Many beginner bikes come into shops with chains that haven't been touched since purchase.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-battery-drain-from-sitting-rebel-250-garage-queens",
     "title": "Battery drain from sitting — Rebel 250 garage queens",
     "description": "The Rebel 250 is frequently bought, ridden for a season, then garaged for months or years. The battery dies from sitting, and the charging system can't recover a deeply discharged battery. When the owner tries to ride again, the bike won't start and the battery is permanently sulfated.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-turn-signal-relay-and-led-conversion-issues",
     "title": "Turn signal relay and LED conversion issues",
     "description": "The Rebel 250's original turn signal relay is designed for incandescent bulbs. When owners convert to LED turn signals (common cosmetic mod), the relay doesn't draw enough current from LEDs, causing hyperflash (rapid blinking) or no flash at all. This confuses new riders who don't understand relay compatibility.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-rebel-1100-oil-cooler-and-cooling-system-africa-twin-engine",
     "title": "Rebel 1100 oil cooler and cooling system — Africa Twin engine",
     "description": "The Rebel 1100 uses a detuned version of the Africa Twin's 1084cc parallel twin. It has a liquid cooling system with an oil cooler. The cooling system can develop leaks at the oil cooler hose connections and the thermostat housing, especially after several heat cycles in stop-and-go city riding.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-rear-drum-brake-adjustment-rebel-250",
     "title": "Rear drum brake adjustment — Rebel 250",
     "description": "The Rebel 250 uses a rear drum brake (not disc) that requires periodic adjustment as the shoes wear. When out of adjustment, the rear brake has excessive lever travel, poor stopping power, and can surprise new riders who expect consistent braking. Some Rebel 250s come to shops with zero rear brake.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-headlight-bulb-burnout-and-dim-lighting-rebel-250",
     "title": "Headlight bulb burnout and dim lighting — Rebel 250",
     "description": "The Rebel 250's electrical system is minimal, and the headlight is powered by a low-output alternator. Headlight bulbs burn out frequently because voltage regulation is marginal — spikes from the regulator shorten bulb life. The headlight is also dim at idle because the alternator output is RPM-dependent.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-throttle-cable-and-throttle-body-icing-rebel-300-500-cold",
     "title": "Throttle cable and throttle body icing — Rebel 300/500 cold weather",
     "description": "The Rebel 300 and 500 use throttle-by-cable (not ride-by-wire). In cold and humid conditions, moisture in the throttle cable housing can freeze, causing a sticky or stuck throttle. The throttle body can also ice at the butterfly valve in freezing conditions, causing idle surges.",
     "make": "Honda",

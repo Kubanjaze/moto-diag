@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-suzuki-c-mode-self-diagnostic-fi-light-blink-codes",
     "title": "Suzuki C-mode self-diagnostic — FI light blink codes",
     "description": "Modern Suzuki EFI bikes (2004+) have C-mode self-diagnostic accessed by grounding the dealer mode connector. The FI light blinks DTC patterns. This is the first step in any FI-related troubleshooting — free diagnostics on every EFI Suzuki.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-suzuki-stator-and-reg-rec-universal-diagnosis-procedure",
     "title": "Suzuki stator and reg/rec — universal diagnosis procedure",
     "description": "The stator/reg-rec failure is the #1 electrical issue across ALL Suzuki models from 1977 to present. The diagnosis procedure is universal: voltage test at RPM, stator AC test, reg/rec diode check. The MOSFET reg/rec upgrade applies to every model.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-suzuki-pair-system-function-and-removal-across-models",
     "title": "Suzuki PAIR system — function and removal across models",
     "description": "Suzuki's PAIR (Pulsed Secondary Air Injection) system injects air into exhaust ports for emissions across all sport and standard models since the mid-1990s. With aftermarket exhaust, PAIR causes decel popping. Block-off plates are the universal fix.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-ground-connection-corrosion-all-models",
     "title": "Suzuki ground connection corrosion — all models",
     "description": "Suzuki motorcycles have multiple grounding points that corrode from weather exposure. A single corroded ground creates cascading electrical symptoms: dim lights, slow cranking, random FI codes, gauge flicker. This affects every Suzuki from vintage GS to modern GSX-R.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-starter-system-relay-switches-and-motor-diagnosis",
     "title": "Suzuki starter system — relay, switches, and motor diagnosis",
     "description": "Suzuki starter circuit issues follow a universal diagnostic path: battery → relay → safety switches → motor. The clutch switch, kickstand switch, and starter relay are the most common failure points across all models.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-suzuki-battery-and-parasitic-draw-modern-model-storage",
     "title": "Suzuki battery and parasitic draw — modern model storage",
     "description": "Modern Suzukis with ECUs, immobilizers, and accessory circuits drain batteries in 2-3 weeks of sitting. Measuring and managing parasitic draw is essential for bikes that sit between rides. AGM or lithium batteries handle draw better than conventional.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-s-dms-tc-abs-sensor-calibration-sport-models",
     "title": "Suzuki S-DMS / TC / ABS sensor calibration — sport models",
     "description": "Modern Suzuki sport bikes feature S-DMS power modes, traction control, and ABS. These systems rely on wheel speed sensors and throttle position. Dirty sensors, low voltage, and mismatched tires cause system faults and unexpected power cuts.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-led-conversion-and-electrical-load-management",
     "title": "Suzuki LED conversion and electrical load management",
     "description": "Suzuki owners converting to LED bulbs face hyperflash from turn signals, potential FI codes on CAN-bus models, and compatibility issues. Proper LED conversion requires flasher relay swap, not load resistors. Managing total electrical load is critical on Suzuki's marginal charging systems.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-suzuki-wiring-connector-corrosion-multi-pin-failure-points",
     "title": "Suzuki wiring connector corrosion — multi-pin failure points",
     "description": "Suzuki multi-pin connectors — main harness behind the headlight, under-seat junction, and fuel tank connector — develop corrosion that creates cascading symptoms. One bad pin in a 20-pin connector can cause issues in unrelated circuits.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-suzuki-fi-relay-and-fuse-box-common-failure-across-models",
     "title": "Suzuki FI relay and fuse box — common failure across models",
     "description": "Suzuki's main relay (FI relay) powers the fuel injection system and fuel pump. The relay contacts corrode, the fuse box connections develop resistance, and the relay socket corrodes. This is the most common single-part failure that prevents starting across all EFI Suzuki models.",
     "make": "Suzuki",

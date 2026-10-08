@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-oil-sumping-at-oil-cooler-m8-touring-models",
     "title": "Oil sumping at oil cooler — M8 Touring models",
     "description": "Milwaukee-Eight Touring models with the oil cooler can develop oil sumping in the cooler lines and cooler itself. Different from crankcase sumping — this is oil sitting in the cooler circuit. On cold start, the engine momentarily runs low on oil until the cooler circuit fills. Can trigger low oil pressure warnings.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-exhaust-header-heat-discoloration-and-warping",
     "title": "Exhaust header heat discoloration and warping",
     "description": "M8 exhaust headers run extremely hot, causing blue/purple heat discoloration and eventual warping at the head flange. The headers expand and contract with each heat cycle, loosening the header bolts and creating exhaust leaks. More aggressive on the rear cylinder.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-compensator-noise-still-present-on-early-m8",
     "title": "Compensator noise — still present on early M8",
     "description": "Early M8 models (2017-2019) still use a traditional compensator that can develop the same rattle as Twin Cam models. 2020+ models received an improved compensator design. If you hear startup clunk on a 2017-2019 M8, it's the same problem.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-infotainment-system-freezing-rebooting-boom-box-gts",
     "title": "Infotainment system freezing/rebooting — Boom Box GTS",
     "description": "Touring models with the Boom Box GTS infotainment system can experience random freezes, reboots, and touchscreen unresponsiveness. Usually a software issue, sometimes a hardware failure. HD has released multiple software updates to address stability.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-intake-runner-valve-carbon-buildup-causing-rough-idle",
     "title": "Intake runner valve — carbon buildup causing rough idle",
     "description": "The M8 uses variable intake runners controlled by a solenoid valve. Carbon buildup on the valve and runner surfaces causes rough idle, hesitation, and can trigger check engine light. More common in city riding with lots of idle time.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-primary-chain-adjuster-shoe-premature-wear-on-softail",
     "title": "Primary chain adjuster shoe — premature wear on Softail",
     "description": "M8 Softail models use a new primary drive design. The chain adjuster shoe wears faster than expected on some early production runs. Chain noise at idle that wasn't there when new.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-throttle-by-wire-calibration-cruise-control-surge",
     "title": "Throttle-by-wire calibration — cruise control surge",
     "description": "M8 models with cruise control can experience speed surging while cruise is engaged. The TBW system hunts for the set speed, causing noticeable speed oscillation. Often resolved with ECM reflash.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-rear-suspension-preload-adjustment-failure-touring",
     "title": "Rear suspension preload adjustment failure — Touring",
     "description": "Touring models with the Premium Ride rear shocks (electronically adjustable preload) can experience motor failure in the preload adjustment mechanism. The shock defaults to full stiff preload when the motor fails.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-oil-pressure-sensor-failure-false-low-oil-pressure-warning",
     "title": "Oil pressure sensor failure — false low oil pressure warning",
     "description": "M8 oil pressure sensors can fail, triggering a false low oil pressure warning on the dash. The bike goes into reduced power mode. Actual oil pressure is fine — the sensor is giving a bad reading.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-rider-passenger-floorboard-vibration-m8-touring",
     "title": "Rider/passenger floorboard vibration — M8 Touring",
     "description": "M8 Touring models transmit more vibration to the rider and passenger floorboards than Twin Cam Touring models. This is due to the M8's rubber mount design and higher compression. Not a malfunction — it's a characteristic that bothers some riders.",
     "make": "Harley-Davidson",

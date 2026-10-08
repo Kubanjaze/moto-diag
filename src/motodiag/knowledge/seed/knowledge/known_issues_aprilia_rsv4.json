@@ -1,5 +1,6 @@
 [
   {
+    "key": "aprilia-no-aprilia-v4-has-ever-displaced-1100cc-and-the-same-model",
     "title": "No Aprilia V4 has ever displaced 1100cc — and the same model was sold in two displacements at once",
     "description": "Drawn from Aprilia's own specification sheets. The \"1100\" badge is not a capacity on any of these machines. It means **1077cc** on the Tuono V4 from the mid-2010s and the 2019–20 RSV4 1100 Factory, and **1099cc** only on the RSV4 from 2021. The two steps up from the original 999.6cc engine are also different in kind, which matters for parts: the 1000-to-1077 step is **bore only**, with the stroke unchanged, while the 1077-to-1099 step is **stroke only** — so crankshafts and connecting rods differ across the later change and not the earlier one. Worse for a parts counter, Aprilia sold two displacements of the same model concurrently: for a period the 999.6cc RSV4 stood on the showroom floor beside the 1077cc RSV4 1100 Factory, and later the RSV4 was 1099cc while the Tuono V4 was still 1077cc. So neither the badge nor the model year settles the capacity, and the trim name does not either — RR, RF and Factory denote chassis specification, suspension and wheels, not engine.",
     "make": "Aprilia",
@@ -30,6 +31,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-cylinder-1-on-an-aprilia-v4-is-the-left-rear-the-banks",
     "title": "Cylinder 1 on an Aprilia V4 is the left REAR — the banks alternate, so a cylinder-1 code sends you backwards",
     "description": "Drawn from Aprilia service manuals. These are **65-degree longitudinal V4** engines, not the 90-degree layout a technician coming from a Ducati or a Honda V4 will picture, and the cylinder numbering does not run round one bank and then the other. Aprilia numbers **alternating across the banks**, with cylinder 1 the **left rear** piston — so cylinders 1 and 3 are the rear bank and 2 and 4 the front. The practical consequence is direct: a cylinder-1 injector, coil or misfire code sends a mechanic to the **rear** bank, and a technician working from the habit that cylinder 1 is at the front will strip the wrong side of the engine to reach it. On a V4 that is not a two-minute error. Two further points that follow from the same architecture. The **RSV4 runs eight injectors**, an upper and a lower per cylinder, while the Tuono V4 runs four — so injector-circuit diagnosis differs between two models that otherwise look like siblings. And the vee angle itself is worth stating to anyone quoting from experience: 65 degrees, never 90.",
     "make": "Aprilia",
@@ -60,6 +62,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-the-aprilia-v4-cam-drive-is-chain-to-intake-and-gear-to",
     "title": "The Aprilia V4 cam drive is chain-to-intake and gear-to-exhaust, and the service positions are not 180 degrees apart",
     "description": "Drawn from the RSV4 service station manual. Two things about this valve train defeat assumptions carried from other engines. The camshafts are **not** both chain-driven: a Morse chain drives the **intake** camshaft only, and a gear pair takes the drive from the intake cam across to the exhaust cam. So a cam-timing job is not the two-sprockets-and-a-chain arrangement most technicians picture, and disturbing the gear pair is a different operation from disturbing a chain. Second, the crankshaft **service positions for the two banks are not evenly spaced**: Aprilia specifies 150 degrees for the front bank and 450 degrees for the rear, measured from cylinder-1 top dead centre, using dedicated locking pins rather than by eye. A technician stepping the crank in 180-degree increments, which is the reflex from an inline four, will be at the wrong position for both banks. Valve adjustment is shim-under-bucket. Aprilia's schedule sets the clearance adjustment at 20,000 km with a further one at 40,000, halving to every 10,000 km for racing, and instructs that all intervals be halved for track, wet or dusty use — and books substantial labour for the service, so it is not a job to quote casually.",
     "make": "Aprilia",
@@ -91,6 +94,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-three-normal-aprc-behaviours-look-like-faults-a-lit-rider",
     "title": "Three normal aPRC behaviours look like faults — a lit rider-aid lamp after a dyno run is the system working",
     "description": "Drawn from Aprilia owner's and service manuals. aPRC is Aprilia Performance Ride Control, a package of rider-aid subsystems, and three of its documented normal behaviours are routinely reported as faults. First, **spinning the rear wheel with the front held stationary** — on a dyno, on a rear stand, or during a burnout — causes the system to deactivate traction control and anti-lock and light the aPRC warning lamp, which then stays lit until the ignition is cycled. A shop that dynos one of these bikes and hands it back with a warning light on has caused the light itself. Second, the **pit-lane speed limiter flashes the immobiliser lamp** while it is active, which reads as a security fault to anyone who does not know. Third, the general warning light **pulsing for about two seconds every two minutes** is Aprilia's engine-stress and track-use maintenance counter announcing itself, not a defect — and it can only be reset through the manufacturer's diagnostic tool, so it will keep doing it until the bike sees one. None of the three is a fault, and all three generate diagnostic time if the reader does not know the behaviour.",
     "make": "Aprilia",
@@ -121,6 +125,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-aprc-must-be-recalibrated-after-wheel-tyre-or-sprocket-work",
     "title": "aPRC must be recalibrated after wheel, tyre or sprocket work — and the sensor gap is checked, not assumed",
     "description": "Drawn from Aprilia owner's and service manuals. The system reads tone wheels at **both** ends, and two service actions invalidate its assumptions. After any wheel removal the manufacturer requires the **sensor gap to be re-verified** rather than trusted — the figure is specified per model and should be read from the manual for the machine in hand rather than carried across, because it is not identical across the range. And after a change of **tyre type or sprocket**, a rider-performed calibration is required: a short run in a specified gear at a specified steady speed, followed by switching off long enough for the value to store. Skip either and the rider aids work from a wheel-speed relationship that no longer holds, which produces intervention at the wrong moment rather than an obvious fault. One further dependency worth knowing: some subsystems will not operate at all unless traction control is switched on, so a rider who has turned traction control off has also turned off functions they may not realise are linked to it.",
     "make": "Aprilia",
@@ -151,6 +156,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-an-aprilia-engine-recall-is-filed-under-a-misspelled-make-a",
     "title": "An Aprilia engine recall is filed under a misspelled make — a lookup by \"Aprilia\" returns clean on an affected bike",
     "description": "Drawn from the road-safety regulator's own recall records, and included because the search itself is the hazard. A campaign on early RSV4 machines covers **connecting rods manufactured by a straightening process that introduced stresses and greatly affected strength and reliability**, with the published remedy being **replacement of the engine**, free of charge. It is as serious as a motorcycle recall gets. And in the regulator's database it is filed under the make spelled **\"APRILLA\"**, with two Ls — so a search by the correct spelling does not return it. A shop checking a bike's recall history by make gets a clean result on a machine that may be owed a new engine. Two consequences follow. Always check by frame number rather than by make and model, which sidesteps the spelling entirely. And on an early machine, establish whether the engine is the original or a replacement: an affected bike either carries a replacement engine, in which case the engine number no longer matches the original build record, or it was never done.",
     "make": "Aprilia",
@@ -181,6 +187,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-the-aprilia-front-brake-master-cylinder-is-a-repeat-offender",
     "title": "The Aprilia front brake master cylinder is a repeat offender across several campaigns and several years",
     "description": "Drawn from road-safety regulator recall records across three countries. Front braking on these machines has been the subject of more than one campaign, in more than one year, with more than one mechanism: a batch of non-conforming master cylinders capable of giving longer than normal braking distances; a master-cylinder piston that can fail; and, separately, **front brake pads whose friction material can corrode and detach from the backing plate**. That last mechanism is worth carrying beyond the campaign, because corrosion-driven separation does not present like ordinary pad wear — the pad can retain measurable thickness while the friction layer loses its bond, so a depth check passes a failing pad. Two habits follow. Check the frame number against **all** campaigns rather than stopping at the first match, since these are separate actions with separate scopes and a bike can be in one and not another. And on any braking complaint on one of these, inspect the pad faces and edges for separation rather than measuring depth alone.",
     "make": "Aprilia",
@@ -212,6 +219,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-charging-failures-on-an-aprilia-v4-are-owner-consensus-not-a",
     "title": "Charging failures on an Aprilia V4 are owner consensus, not a campaign — and there are two non-interchangeable generator families",
     "description": "Drawn from the machines' service documentation together with specialist supplier and owner reporting, and the distinction between the two is stated because it changes what a shop can promise. Stator and regulator-rectifier failure is widely discussed on these bikes, and it is **not** the subject of a recall in any regulator database consulted — so there is no campaign to quote, no free remedy and no frame-number list. What is documented is that the machines shipped with **two different generator families that are not interchangeable**, and — the part that costs time — **they cannot be told apart without removing the generator cover**. So a charging job on one of these begins with an inspection that determines which parts can even be ordered, and ordering from the model and year alone risks the wrong family. An updated stator specification is offered by specialists as the accepted improvement, but the part number comes from a vendor rather than an Aprilia document, so confirm it with a dealer before ordering. Diagnose the charging system in the ordinary way first; what is Aprilia-specific here is the parts question, not the test.",
     "make": "Aprilia",

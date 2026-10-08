@@ -1,11 +1,53 @@
 """Known issues repository — common problems, causes, fixes by make/model/year."""
 
+import hashlib
 import json
 import sqlite3
 
 from motodiag.core.severity import SEVERITY_RANK_SQL
 from motodiag.core.database import get_connection
 from motodiag.core.timestamps import utc_now
+
+
+def derived_row_key(make: str | None, model: str | None, title: str) -> str:
+    """The key of a row no seed entry names (Phase 380, F129): a hash of its
+    old prose identity, so a keyless caller keeps the old uniqueness of
+    ``(make, model, title)``. A seed entry carries its own frozen key."""
+    digest = hashlib.sha1(f"{make or ''}|{model or ''}|{title}".encode()).hexdigest()
+    return f"auto-{digest[:16]}"
+
+
+def _has_row_key(conn) -> bool:
+    """Below migration 085 there is no ``row_key``; shape is read, not assumed."""
+    return any(r[1] == "row_key" for r in conn.execute("PRAGMA table_info(known_issues)"))
+
+
+def update_known_issue_by_key(conn, key: str, fields: dict) -> int:
+    """Set ``fields`` on the row whose ``row_key`` is ``key`` (Phase 380, F129).
+
+    The way a content migration changes a row: by its frozen key, never by
+    its prose, which is the thing being changed. Returns the rows updated, 0
+    or 1. List fields are stored as JSON, as ``add_known_issue`` stores them.
+    """
+    if not fields:
+        return 0
+    allowed = {"title", "description", "make", "model", "year_start", "year_end",
+               "severity", "symptoms", "dtc_codes", "causes", "fix_procedure",
+               "parts_needed", "estimated_hours", "source", "applicability"}
+    unknown = set(fields) - allowed
+    if unknown:
+        raise ValueError(f"not a known_issues content field: {sorted(unknown)}")
+    values = []
+    for name, value in fields.items():
+        if name in ("symptoms", "dtc_codes", "causes", "parts_needed"):
+            value = json.dumps(value or [])
+        elif name == "applicability":
+            from motodiag.knowledge.applicability import dump_applicability
+            value = dump_applicability(value)
+        values.append(value)
+    sets = ", ".join(f"{name} = ?" for name in fields)
+    return conn.execute(f"UPDATE known_issues SET {sets} WHERE row_key = ?",
+                        (*values, key)).rowcount
 
 
 def add_known_issue(
@@ -25,8 +67,14 @@ def add_known_issue(
     db_path: str | None = None,
     source: str = "unverified",
     applicability: object | None = None,
+    key: str | None = None,
 ) -> int:
     """Add a known issue to the database. Returns issue ID.
+
+    `key` (Phase 380, F129) is the row's identity: a seed entry's frozen
+    key, or, for a caller with none, `derived_row_key` of its prose. Insert
+    only: a key already present leaves the row as it is (the operator's 2A),
+    so a corrected title, make or model no longer adds a second row.
 
     `source` (Phase 211) records provenance and is CHECK-constrained by
     migration 051: `unverified` · `model-generated` · `forum` ·
@@ -60,13 +108,17 @@ def add_known_issue(
     # below schema 54 there is no unique index, so the clause is inert and this
     # is a plain INSERT -- correct there too.
     with get_connection(db_path) as conn:
+        keyed = _has_row_key(conn)
+        row_key = key or derived_row_key(make, model, title)
         cursor = conn.execute(
             """INSERT INTO known_issues
                (title, description, make, model, year_start, year_end, severity,
                 symptoms, dtc_codes, causes, fix_procedure, parts_needed,
-                estimated_hours, source, applicability, created_at)
-               VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-               ON CONFLICT DO NOTHING""",
+                estimated_hours, source, applicability, created_at"""
+            + (", row_key)" if keyed else ")")
+            + " VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?"
+            + (", ?)" if keyed else ")")
+            + " ON CONFLICT DO NOTHING",
             (
                 title, description, make, model, year_start, year_end, severity,
                 json.dumps(symptoms or []),
@@ -78,6 +130,7 @@ def add_known_issue(
                 source,
                 applicability_json,
                 utc_now(),
+                *((row_key,) if keyed else ()),
             ),
         )
         # Phase 244F: keep the marque junction in step with the row. Derived
@@ -106,13 +159,18 @@ def add_known_issue(
             # Ignored as a duplicate. `lastrowid` would be stale or 0 here, so
             # resolve the id of the row that already holds this identity --
             # callers asked for the issue to exist and get the id it has.
-            existing = conn.execute(
-                """SELECT id FROM known_issues
-                   WHERE COALESCE(make, '') = COALESCE(?, '')
-                     AND COALESCE(model, '') = COALESCE(?, '')
-                     AND title = ?""",
-                (make, model, title),
-            ).fetchone()
+            if keyed:
+                existing = conn.execute(
+                    "SELECT id FROM known_issues WHERE row_key = ?", (row_key,),
+                ).fetchone()
+            else:
+                existing = conn.execute(
+                    """SELECT id FROM known_issues
+                       WHERE COALESCE(make, '') = COALESCE(?, '')
+                         AND COALESCE(model, '') = COALESCE(?, '')
+                         AND title = ?""",
+                    (make, model, title),
+                ).fetchone()
             if existing is not None:
                 return existing[0] if isinstance(existing, tuple) else existing["id"]
         return cursor.lastrowid

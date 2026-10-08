@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gsx-r1000-k5-k8-2005-2008-engine-cases-cracking-at-oil-drain",
     "title": "GSX-R1000 K5-K8 (2005-2008) engine cases cracking at oil drain",
     "description": "The GSX-R1000 K5-K8 generation has a known issue with the lower engine case cracking around the oil drain plug boss. Over-torquing the drain plug, cross-threading, or thermal cycling causes hairline cracks that weep oil. Some cases crack catastrophically during high-load track use.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-r1000-stator-and-charging-failure",
     "title": "GSX-R1000 stator and charging failure",
     "description": "The GSX-R1000 shares the GSX-R family charging system weakness. The high-output stator runs extremely hot behind the engine cover, and the reg/rec fails under load. The 1000cc engine's higher alternator demand makes this failure more frequent than on the 600/750.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-gsx-r1000-s-dms-motion-track-tcs-imu-issues-2012",
     "title": "GSX-R1000 S-DMS / Motion Track TCS / IMU issues (2012+)",
     "description": "The 2012+ GSX-R1000 features increasingly sophisticated electronics: S-DMS power modes, Motion Track TCS, and IMU-based cornering ABS (2017+). These systems rely on wheel speed sensors, IMU, and throttle position. Sensor contamination, low voltage, and IMU calibration errors cause system faults.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-r1000-cam-chain-tensioner-failure",
     "title": "GSX-R1000 cam chain tensioner failure",
     "description": "The GSX-R1000 CCT shares the same automatic ratchet design as the GSX-R600/750. The 1000's higher torque loads stress the cam chain more, and the CCT ratchet mechanism wears faster. Cold startup rattle is the first warning.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r1000-exhaust-valve-servo-set-suzuki-exhaust-tuning",
     "title": "GSX-R1000 exhaust valve servo — SET (Suzuki Exhaust Tuning) system",
     "description": "The GSX-R1000 SET system uses a servo motor to actuate an exhaust butterfly valve for improved low/mid range torque. The servo motor fails, the cable stretches, and the valve sticks. A failing SET system triggers FI codes and can cause a rough-running engine.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-r1000-fuel-pump-relay-and-priming-failure",
     "title": "GSX-R1000 fuel pump relay and priming failure",
     "description": "The GSX-R1000 fuel pump relay is a known failure point across all fuel-injected generations. The relay contacts corrode or weld, causing intermittent no-prime or stuck-on conditions. A stuck-on relay drains the battery; a failed relay prevents starting.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-gsx-r1000-valve-clearance-track-bike-accelerated-schedule",
     "title": "GSX-R1000 valve clearance — track bike accelerated schedule",
     "description": "The GSX-R1000's high-revving liter-class engine requires diligent valve clearance maintenance. Track use dramatically shortens the valve check interval. Exhaust valves tighten first, causing hard cold starting and eventual valve damage if ignored.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "suzuki-gsx-r1000-quickshifter-issues-2017",
     "title": "GSX-R1000 quickshifter issues (2017+)",
     "description": "The 2017+ GSX-R1000/R features a bidirectional quickshifter for clutchless up and down shifts. The quickshifter sensor can malfunction, causing missed shifts, false activations, or complete loss of quickshifter function. The shift rod length also affects reliability.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-r1000-cooling-system-track-overheating",
     "title": "GSX-R1000 cooling system — track overheating",
     "description": "The GSX-R1000 cooling system is adequate for street use but runs at the limit on track in hot weather. The stock thermostat opens at 176°F (80°C) but track temperatures can push coolant past 220°F. Coolant leaks from aging hoses, water pump seals, and radiator damage are common on track bikes.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-r1000-rear-wheel-bearing-failure",
     "title": "GSX-R1000 rear wheel bearing failure",
     "description": "The GSX-R1000 rear wheel bearings wear from the forces of hard acceleration, aggressive corner exits, and chain tension. Worn bearings create a humming or grinding noise that increases with speed and a wobble that's felt through the seat. Track bikes wear bearings significantly faster.",
     "make": "Suzuki",

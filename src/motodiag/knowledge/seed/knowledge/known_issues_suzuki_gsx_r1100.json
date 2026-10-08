@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gsx-r1100-oil-air-cooled-engine-overheating-in-traffic",
     "title": "GSX-R1100 oil/air cooled engine overheating in traffic",
     "description": "The GSX-R1100 (1986-1992 air/oil cooled, 1993-1998 water cooled) air/oil cooled models rely entirely on airflow for cooling. In stop-and-go traffic, oil temperatures climb past safe limits. The oil cooler is undersized for the 1127cc engine's heat output at low speeds.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r1100-carburetor-bank-4x-mikuni-bst36-40-rebuild-and",
     "title": "GSX-R1100 carburetor bank — 4x Mikuni BST36/40 rebuild and sync",
     "description": "The carbureted GSX-R1100 uses a bank of 4 Mikuni BST36 (early) or BST40 (later) CV carburetors. After 30+ years, the diaphragms crack, float needles stick, pilot jets clog, and synchronization drifts. A full carb service transforms engine response.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 6.0
   },
   {
+    "key": "suzuki-gsx-r1100-charging-system-stator-and-regulator-failure",
     "title": "GSX-R1100 charging system — stator and regulator failure",
     "description": "The GSX-R1100 charging system uses a high-output stator to power the 1127cc engine's ignition and accessories. The stator overheats, the regulator/rectifier fails, and the connectors corrode. The charging system is the same design weakness found across the entire GSX-R family.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-gsx-r1100-cam-chain-tensioner-age-related-failure",
     "title": "GSX-R1100 cam chain tensioner — age-related failure",
     "description": "The GSX-R1100 automatic CCT has the same ratchet mechanism as the rest of the GSX-R family. At 25-35 years of age, the tensioner is well past its service life. Cold startup rattle from the cam chain side is universal on high-mileage GSX-R1100s.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r1100-fork-and-suspension-period-correct-upgrades",
     "title": "GSX-R1100 fork and suspension — period-correct upgrades",
     "description": "The GSX-R1100 conventional forks (1986-1992) and early USD forks (1993-1998) use period suspension technology that's been surpassed. Fork seals leak from aged stanchions, fork oil is decades old, and the damping is inadequate for the bike's weight and power.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-gsx-r1100-ignition-system-pickup-coil-and-cdi",
     "title": "GSX-R1100 ignition system — pickup coil and CDI",
     "description": "The GSX-R1100 uses a CDI (Capacitor Discharge Ignition) system with pickup coils on the stator plate. The pickup coil wiring insulation deteriorates with age, causing intermittent misfires and dead cylinders. The CDI box itself can also fail but is less common than pickup coil issues.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r1100-fuel-petcock-and-tank-rust",
     "title": "GSX-R1100 fuel petcock and tank rust",
     "description": "The GSX-R1100 vacuum petcock fails when the diaphragm deteriorates, allowing fuel to flow continuously into the carbs and potentially flooding the engine. The steel fuel tank rusts internally from ethanol fuel and condensation, sending rust particles into the carbs.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r1100-brake-system-complete-refresh-needed",
     "title": "GSX-R1100 brake system — complete refresh needed",
     "description": "The GSX-R1100 brakes are 25-35 years old and typically need a complete refresh. The caliper pistons corrode, the master cylinder bore pits, the rubber brake lines swell internally, and the pads have hardened. The 1100's weight and power demand strong brakes.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-gsx-r1100-wiring-harness-deterioration",
     "title": "GSX-R1100 wiring harness deterioration",
     "description": "The GSX-R1100 wiring harness is 25-35 years old with original PVC insulation that cracks, connectors that corrode, and solder joints that fail from vibration. Electrical gremlins — flickering lights, intermittent starting, random gauge failures — are almost always wiring-related.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r1100-drive-chain-530-heavy-duty-requirements",
     "title": "GSX-R1100 drive chain — 530 heavy-duty requirements",
     "description": "The GSX-R1100 uses a 530 chain to handle the 1127cc engine's torque. The chain and sprockets wear from the massive power delivery. The countershaft sprocket is especially prone to hooked teeth from aggressive acceleration. Chain maintenance is critical on a bike this powerful.",
     "make": "Suzuki",
