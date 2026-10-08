@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-spark-plug-fouling-and-heat-range-selection-all-makes-and",
     "title": "Spark plug fouling and heat range selection — all makes and models",
     "description": "Spark plug fouling is the single most common ignition complaint across all motorcycle makes. Carbon fouling (dry black soot) indicates rich mixture or excessive idling. Oil fouling (wet, oily deposits) indicates worn valve seals or piston rings. A plug that's too cold for the application fouls quickly because it can't reach self-cleaning temperature (450-500C). A plug that's too hot pre-ignites and melts electrodes. Heat range selection is critical: each step in heat range changes the tip temperature by approximately 75-100C. Japanese manufacturers use opposite numbering — NGK higher numbers are colder, Denso higher numbers are hotter. Harley-Davidson twins run hotter on the rear cylinder due to reduced airflow, often requiring one step colder plug in the rear.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-ignition-coil-failure-primary-and-secondary-winding-testing",
     "title": "Ignition coil failure — primary and secondary winding testing across all platforms",
     "description": "Ignition coils transform 12V battery voltage into 15,000-40,000V to fire the spark plug. They fail from heat cycling, vibration, internal insulation breakdown, and age. Stick coils (coil-on-plug, common on 2000s+ sportbikes) fail differently than remote coils (external coils with plug wires, common on cruisers and older bikes). Primary winding failure causes a dead cylinder — no spark at all. Secondary winding failure causes weak spark — runs at idle but misfires under load when the cylinder pressure is highest and requires the most voltage to ionize the gap. Internal coil cracks allow voltage to arc to ground internally, producing intermittent misfires that are maddening to diagnose without methodical testing.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-cdi-ecu-ignition-module-failure-testing-without-an",
     "title": "CDI/ECU ignition module failure — testing without an oscilloscope",
     "description": "The CDI (Capacitor Discharge Ignition) or ECU ignition module is the brain of the ignition system. CDI units are common on pre-2000 bikes and smaller displacement machines — they store energy in a capacitor and discharge it all at once for a fast, high-voltage spark. ECU-controlled ignitions (transistor-switched or digital) are standard on modern fuel-injected bikes. Both fail from heat, vibration, moisture intrusion, and voltage spikes. Diagnosing a failed ignition module without an oscilloscope requires methodical elimination of every other component first — the module should be the LAST thing you condemn because it's the most expensive and can't be bench-tested with basic tools.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-pickup-coil-ckp-sensor-resistance-testing-and-air-gap",
     "title": "Pickup coil (CKP sensor) — resistance testing and air gap adjustment",
     "description": "The pickup coil (also called CKP sensor, pulser coil, or trigger coil) tells the ignition module when to fire. It sits near a toothed reluctor wheel on the crankshaft or camshaft and generates an AC voltage pulse as each tooth passes. If the pickup coil fails, the ignition module never receives the fire command — result is no spark on all cylinders simultaneously. Unlike a single coil failure (one dead cylinder), a pickup coil failure kills ALL cylinders at once. The air gap between the pickup coil tip and the reluctor teeth is critical: too wide and the signal is too weak, too narrow and the coil tip contacts the spinning reluctor and is destroyed.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-spark-plug-wire-and-cap-resistance-ngk-standards-and-testing",
     "title": "Spark plug wire and cap resistance — NGK standards and testing",
     "description": "Spark plug wires and caps carry 15,000-40,000 volts from the ignition coil to the spark plug. They use a carbon-core or wire-wound resistor core to suppress radio frequency interference (RFI). Over time, the carbon core breaks down and resistance increases — eventually the wire can't deliver enough voltage to fire the plug under load. Resistor caps (NGK types XB05F, XD05F, XZ05F, etc.) add 5K ohms of resistance for additional RFI suppression. A bad cap or wire is one of the most common and cheapest causes of a misfire, yet it's frequently overlooked because mechanics assume the wire is just a wire.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-points-ignition-maintenance-and-electronic-conversion",
     "title": "Points ignition maintenance and electronic conversion — vintage bikes",
     "description": "Motorcycles built before 1980 (and some into the mid-1980s) use mechanical breaker points to trigger the ignition. Points are a wear item: the rubbing block wears against the cam lobe, changing the dwell angle and timing; the contact faces pit and burn from the electrical arc each time they open; and the point gap closes as the rubbing block wears, retarding the timing and eventually preventing spark entirely. Electronic ignition conversion kits (Dynatek Dyna-S, Boyer Bransden, Pamco) replace the points and condenser with a magnetic trigger and electronic module, eliminating all points maintenance. This is the single most impactful upgrade for any points-ignition vintage motorcycle.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-ignition-timing-static-and-dynamic-verification-across-all",
     "title": "Ignition timing — static and dynamic verification across all ignition types",
     "description": "Ignition timing determines when the spark fires relative to the piston position. Correct timing is critical: too advanced causes detonation (pinging), engine damage, and overheating; too retarded causes power loss, poor fuel economy, and overheating from late combustion. On points bikes, timing drifts as points wear. On electronic bikes, timing is fixed by the CDI/ECU but can still be wrong if the pickup coil is misaligned, the woodruff key on the flywheel is sheared, or someone previously adjusted timing incorrectly. Verification requires understanding both static timing (engine not running, checking alignment of marks) and dynamic timing (engine running, using a strobe timing light).",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-kill-switch-circuit-intermittent-open-creating-random-no",
     "title": "Kill switch circuit — intermittent open creating random no-spark condition",
     "description": "The engine kill switch (run/stop switch) on the right handlebar controls is a normally-closed circuit that provides ground or power to the ignition system. When the switch corrodes internally, the contact surfaces develop oxidation that creates intermittent high-resistance connections. This causes random no-spark events: the bike runs fine, then suddenly cuts out completely (all cylinders simultaneously), then may restart immediately or after wiggling the switch. This is one of the most frustrating no-spark problems because it's intermittent, affects all cylinders simultaneously, and the kill switch is the last thing most mechanics check.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.75
   },
   {
+    "key": "kawasaki-misfires-under-load-lean-condition-versus-ignition-failure",
     "title": "Misfires under load — lean condition versus ignition failure differential diagnosis",
     "description": "A misfire that only occurs under load (highway speed, uphill, two-up, hard acceleration) is one of the most challenging diagnostic scenarios because two completely different systems produce nearly identical symptoms. A lean misfire occurs when there's insufficient fuel for the cylinder volume at high airflow — the lean mixture fires inconsistently or not at all. An ignition misfire occurs when the spark energy is insufficient to reliably ignite the mixture under the high cylinder pressures that occur at wide-open throttle. Both produce a stumble/hesitation/bucking sensation under acceleration. Correct diagnosis requires a systematic approach that isolates the fuel system from the ignition system.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-coil-on-plug-cop-system-diagnostics-modern-motorcycle",
     "title": "Coil-on-plug (COP) system diagnostics — modern motorcycle ignition troubleshooting",
     "description": "Coil-on-plug (COP) systems mount the ignition coil directly on top of the spark plug, eliminating plug wires entirely. This design is standard on sportbikes since approximately 2000 (Honda CBR, Kawasaki ZX, Suzuki GSX-R, Yamaha YZF-R) and on modern cruisers since approximately 2010. COP systems deliver higher spark energy than remote coils because there's zero energy loss in plug wires. However, they live in the worst possible environment: directly on top of the combustion chamber, exposed to extreme heat, vibration, and thermal cycling. Failure modes include cracked insulator boots, corroded electrical connectors, internal winding failure from heat stress, and driver transistor failure in smart coils (coils with integrated igniters).",
     "make": "Suzuki",

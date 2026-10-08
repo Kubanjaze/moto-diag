@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-hesd-honda-electronic-steering-damper-failure-2007",
     "title": "HESD (Honda Electronic Steering Damper) failure — 2007+",
     "description": "The CBR600RR 2007+ uses an electronic steering damper (HESD) that adjusts damping based on speed. When the HESD unit fails, the handlebars either lock up (damper stuck in high mode) or have zero damping (tank slappers at speed). The HESD error light illuminates on the dash.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-regulator-rectifier-failure-improved-but-still-happens",
     "title": "Regulator/rectifier failure — improved but still happens",
     "description": "The CBR600RR uses an improved regulator/rectifier compared to the F-series, but it still fails — especially on 2003-2006 models. Later models (2007+) use a better unit but are not immune. Same symptoms: battery dies, lights dim at idle, or battery swells from overcharging.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-c-abs-unit-failure-2009-abs-models",
     "title": "C-ABS unit failure — 2009+ ABS models",
     "description": "The CBR600RR Combined ABS (C-ABS) uses a heavy hydraulic modulator unit that can develop internal valve failures, causing ABS warning lights, loss of ABS function, or in rare cases, brake feel changes. The unit is expensive and complex.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-cam-chain-tensioner-noise-all-years",
     "title": "Cam chain tensioner noise — all years",
     "description": "The CBR600RR carries forward the Honda inline-4 CCT issue from the F-series. The automatic tensioner loses tension, particularly after cold soaks, causing a metallic rattle at startup. The 2003-2006 models are worst; later models have a slightly improved tensioner but still fail.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-fuel-pump-failure-low-fuel-overheating",
     "title": "Fuel pump failure — low-fuel overheating",
     "description": "The CBR600RR in-tank fuel pump can fail from overheating when the tank runs low. Fuel cools the pump — running the last quarter-tank repeatedly overheats the pump motor, eventually burning it out. No prime whirr on key-on = dead pump.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-valve-clearance-tightening-high-mileage-engines",
     "title": "Valve clearance tightening — high-mileage engines",
     "description": "The CBR600RR uses shim-over-bucket valve adjustment. Honda spec is check every 16,000 miles. The intake valves tend to tighten over time (seats wear, valve sinks into head), which reduces valve opening and power. If valves tighten to zero clearance, they don't fully close and the engine loses compression — hard starting, low power, potential valve burning.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "honda-instrument-cluster-lcd-fade-and-pixel-loss",
     "title": "Instrument cluster LCD fade and pixel loss",
     "description": "The CBR600RR 2003-2012 models use an LCD instrument cluster that develops faded or missing pixels over time. The display becomes unreadable in certain temperature or lighting conditions. Caused by LCD panel aging and solder joint degradation from vibration.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-fork-cartridge-degradation-and-oil-breakdown",
     "title": "Fork cartridge degradation and oil breakdown",
     "description": "The CBR600RR uses inverted cartridge forks (Showa BPF on later models) that require periodic oil changes and cartridge service. After 20K+ miles or 3+ years, fork oil breaks down, losing damping properties. The bike feels vague on turn-in, dives excessively on braking, and bottoms on bumps.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-stator-failure-on-high-rpm-track-use",
     "title": "Stator failure on high-RPM track use",
     "description": "The CBR600RR stator is more robust than the F-series but still fails under sustained high-RPM track use. The stator windings overheat when the engine spends extended time at 10K+ RPM, cooking the insulation. Street riders rarely hit this threshold but track day enthusiasts blow stators regularly.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "honda-subframe-cracking-crash-damage-and-rear-stand-use",
     "title": "Subframe cracking — crash damage and rear stand use",
     "description": "The CBR600RR aluminum subframe can develop cracks at the rear stand mounting points and at the main frame junction. Most commonly caused by using a rear paddock stand with spools — the leverage on the spool mount can stress-crack the subframe over time. Also common after lowside crashes.",
     "make": "Honda",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-cam-chain-tensioner-cct-the-honda-inline-4-universal",
     "title": "Cam chain tensioner (CCT) — the Honda inline-4 universal weakness",
     "description": "Every Honda inline-4 from the CB750 through the CBR1000RR uses an automatic cam chain tensioner that fails. The ratchet mechanism wears, the spring fatigues, and the chain goes slack. This is THE most important preventive maintenance item on any Honda inline-4. Manual CCT conversion eliminates the failure permanently.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-starter-clutch-sprag-one-way-clutch-failure-all-honda",
     "title": "Starter clutch (sprag/one-way clutch) failure — all Honda engines",
     "description": "The starter clutch sits between the starter motor and the crankshaft. When the rollers or sprags wear, the starter spins freely without engaging the engine — you hear the starter motor whirring but the engine doesn't turn. Common on high-mileage bikes and bikes with weak batteries (starter works harder).",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-coolant-hose-deterioration-and-clamp-failure-all-liquid",
     "title": "Coolant hose deterioration and clamp failure — all liquid-cooled Hondas",
     "description": "Honda coolant hoses deteriorate from the inside out — they look fine externally but the inner liner breaks down and restricts flow or fails. Factory spring clamps lose tension over decades. A hose failure at speed dumps all the coolant in seconds, leading to immediate overheating.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-valve-clearance-tightening-all-honda-4-stroke-engines",
     "title": "Valve clearance tightening — all Honda 4-stroke engines",
     "description": "Honda 4-stroke engines have valve clearances that tighten over time as the valve seats wear and the valves sink deeper into the head. Tight intake valves cause hard starting, low compression, and eventual valve burning. The clearance check interval varies by model but is typically 16K-24K miles.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-chain-and-sprocket-maintenance-the-overlooked-service",
     "title": "Chain and sprocket maintenance — the overlooked service",
     "description": "Honda chain drive bikes (most models except shaft-drive cruisers and VFR1200F) need regular chain maintenance that many owners neglect. A stretched chain accelerates sprocket wear, reduces power transfer, and can break at speed — catastrophic for the engine and rider.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-brake-fluid-degradation-universal-honda-concern",
     "title": "Brake fluid degradation — universal Honda concern",
     "description": "DOT 4 brake fluid absorbs moisture from the atmosphere — even through the reservoir cap. After 2 years, the water content raises the fluid's boiling point threshold enough to cause brake fade under hard use, and the moisture corrodes caliper pistons, master cylinder bores, and ABS modulators from the inside.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-throttle-cable-and-throttle-body-maintenance",
     "title": "Throttle cable and throttle body maintenance",
     "description": "Honda throttle cables (on non-ride-by-wire models) and throttle body butterflies accumulate carbon and varnish that causes sticky throttle, slow return, and inconsistent idle. On ride-by-wire models, the throttle body still accumulates carbon that affects idle quality.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-fork-seal-and-suspension-service-neglect",
     "title": "Fork seal and suspension service neglect",
     "description": "Honda fork seals leak from road debris damage and age. Fork oil degrades over time. Most Honda owners never service the suspension — by 15-20K miles, the fork oil is contaminated and the damping properties have degraded significantly. The bike feels vague in corners and dives excessively on braking.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-air-filter-neglect-and-airbox-service",
     "title": "Air filter neglect and airbox service",
     "description": "Honda air filters — especially on dual-sport and off-road models — clog from dust and debris. A clogged air filter causes rich running (less air = richer mixture), reduced power, increased fuel consumption, and can cause the engine to ingest debris if the filter tears. Street bikes need less frequent changes but still need checking.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "honda-tire-age-and-dry-rot-time-based-replacement",
     "title": "Tire age and dry rot — time-based replacement",
     "description": "Motorcycle tires have a usable life of 5-7 years regardless of tread depth. The rubber compound hardens and cracks from UV exposure, ozone, and heat cycling. Hard tires have reduced grip — especially in wet conditions — and can fail suddenly. The DOT date code on the sidewall tells you when the tire was manufactured.",
     "make": "Honda",

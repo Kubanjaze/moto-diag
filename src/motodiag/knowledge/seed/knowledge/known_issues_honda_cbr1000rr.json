@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-regulator-rectifier-failure-high-output-stator-variant",
     "title": "Regulator/rectifier failure — high-output stator variant",
     "description": "The CBR1000RR shares the Honda reg/rec disease but with a higher-output stator (more current) that cooks the regulator even faster than 600cc models. The 2004-2007 models are the worst; 2008+ improved but not eliminated. Overcharging can swell and explode the battery — a serious safety issue at 150+ mph.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-hstc-honda-selectable-torque-control-false-intervention",
     "title": "HSTC (Honda Selectable Torque Control) false intervention",
     "description": "2008+ CBR1000RR models with HSTC can experience false traction control intervention on rough roads, painted lines, or cold tires. The system cuts ignition timing and fuel, causing a sudden loss of power that feels like a misfire. Later models with IMU (2017+) are better calibrated but still intervene on bumpy surfaces.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-cam-chain-tensioner-liter-bike-version",
     "title": "Cam chain tensioner — liter bike version",
     "description": "The CBR1000RR has the same automatic CCT weak point as all Honda inline-4s. The higher torque output and wider powerband of the 1000cc engine puts more load on the cam chain, and the tensioner wears faster than on 600cc models. Cold start rattle is the warning sign.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-hesd-failure-same-as-cbr600rr-but-higher-forces",
     "title": "HESD failure — same as CBR600RR but higher forces",
     "description": "The CBR1000RR 2004+ uses HESD (Honda Electronic Steering Damper) like the 600RR. On the liter bike, the higher speed potential and more aggressive geometry mean HESD failure is more dangerous — tank slappers at 120+ mph are not survivable without steering damping.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-quickshifter-malfunction-2017-sp-models",
     "title": "Quickshifter malfunction — 2017+ SP models",
     "description": "The CBR1000RR SP (2017+) and RR-R (2020+) have a bidirectional quickshifter (clutchless up and down shifts). The quickshifter sensor can fail or the ECU calibration can cause missed shifts, false neutrals between gears, and harsh downshift blips. Cold operation is worse.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-exhaust-valve-servo-pair-system-failure",
     "title": "Exhaust valve servo (PAIR system) failure",
     "description": "The CBR1000RR uses an exhaust valve servo motor that controls the exhaust butterfly valve (for emissions) and the PAIR (Pulsed Secondary Air Injection) system. The servo motor fails from heat exposure, and the PAIR system reeds can stick, causing exhaust popping on deceleration and a check engine light.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-coolant-leak-at-thermostat-housing-and-water-pump-high-heat",
     "title": "Coolant leak at thermostat housing and water pump — high heat output",
     "description": "The CBR1000RR produces significantly more heat than 600cc models, and the cooling system works harder. Thermostat housing O-rings and water pump seals fail from the thermal stress, especially on bikes that spend time in traffic or are used for track days with extended high-RPM sessions.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-rear-shock-linkage-and-shock-absorber-degradation",
     "title": "Rear shock linkage and shock absorber degradation",
     "description": "The CBR1000RR Pro-Link rear suspension uses a linkage system with needle bearings that wear from water and neglect, plus a rear shock that loses damping over time. Track use accelerates both. The bike develops a vague, wallowy rear end that reduces corner confidence.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-brake-master-cylinder-and-caliper-piston-sticking",
     "title": "Brake master cylinder and caliper piston sticking",
     "description": "CBR1000RR brake calipers (especially front) develop sticking pistons from corrosion if brake fluid isn't changed regularly. The master cylinder piston can also stick, causing a dragging front brake. Symptoms: one disc hotter than the other, brake lever doesn't fully return, front wheel doesn't spin freely.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-rr-r-2020-wing-damage-and-aero-part-availability",
     "title": "RR-R (2020+) wing damage and aero part availability",
     "description": "The CBR1000RR-R Fireblade SP (2020+) has aerodynamic winglets integrated into the fairing. These wings are fragile, expensive, and easily damaged in lowsides, parking lot tips, or even from road debris. Replacement wings are expensive and sometimes backordered.",
     "make": "Honda",

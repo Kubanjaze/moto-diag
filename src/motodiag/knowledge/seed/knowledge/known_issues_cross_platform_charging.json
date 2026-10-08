@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-stator-winding-failure-insulation-breakdown-causing-shorted",
     "title": "Stator winding failure — insulation breakdown causing shorted or open windings across all makes",
     "description": "The stator is a stationary coil assembly inside the engine's alternator/magneto cover that generates AC current as the rotor spins past it. Over tens of thousands of miles, the enamel insulation on the copper windings breaks down from heat cycling, oil contamination, and vibration, causing shorted turns (reduced output) or open windings (zero output on one or more phases). This is the single most common charging failure across all motorcycle platforms: Honda CBR600RR/1000RR and VFR800, Kawasaki ZX-6R/ZX-10R and Vulcan series, Suzuki GSX-R600/750/1000 and V-Strom, Yamaha YZF-R1/R6 and FJR1300, and Harley-Davidson Sportster Evo, Twin Cam, and M8 models. Sport bikes are hit hardest because their stators are oil-bathed and run at high RPM, accelerating insulation deterioration.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "kawasaki-regulator-rectifier-failure-shunt-type-vs-mosfet-comparison",
     "title": "Regulator/rectifier failure — shunt-type vs MOSFET comparison and universal diagnosis",
     "description": "The regulator/rectifier (R/R) converts the stator's AC output to DC and regulates voltage to 14.0-14.8V for battery charging. Older shunt-type R/Rs dissipate excess energy as heat by shorting excess AC to ground, which causes extreme heat buildup and premature failure. Modern MOSFET R/Rs are far more efficient, dissipating less heat by controlling current flow electronically. R/R failure is endemic on 1990s-2000s Honda CBR and VFR models, Kawasaki ZX-6R and Ninja 650, Suzuki GSX-R and SV650, Yamaha YZF-R1/R6, and Harley-Davidson Sportster and Dyna models. The OEM shunt-type R/R on many of these bikes is a known design deficiency that has spawned an entire aftermarket upgrade industry.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-stator-connector-melting-fire-risk-and-solder-bypass",
     "title": "Stator connector melting — fire risk and solder bypass procedure for high-current connections",
     "description": "The stator output connector — the plug where the stator lead wires connect to the main harness — is an extremely common failure point on motorcycles because it carries 15-40 amps of AC current through small, pressed-fit pins that were never designed for sustained high-current flow. As the pins develop resistance from corrosion and micro-arcing, they generate heat, which melts the plastic connector housing, increases resistance further, and creates a thermal runaway loop that can culminate in a wiring harness fire. This is a documented fire risk on Honda CBR600RR/1000RR (2003-2008 especially), Suzuki GSX-R600/750/1000, Kawasaki ZX-6R/ZX-10R, Yamaha YZF-R1/R6, and Harley-Davidson Sportster and Touring models. Multiple manufacturer Technical Service Bulletins and recall campaigns have addressed this issue.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-rotor-flywheel-magnet-degradation-loss-of-charging-output",
     "title": "Rotor/flywheel magnet degradation — loss of charging output from weakened permanent magnets",
     "description": "The rotor (or flywheel on some models) contains permanent magnets that spin past the stator windings to generate electricity. Over decades of heat cycling and high-RPM operation, the magnets gradually lose their magnetic strength (demagnetization), reducing the stator's AC output. In severe cases, magnets can crack, shift position on the rotor hub, or detach entirely — a detached magnet inside the engine case can cause catastrophic mechanical damage. This is most common on high-mileage Kawasaki Vulcan and Concours touring bikes, Suzuki Boulevard and DR series, Honda Gold Wing and ST series, Yamaha V-Star and Royal Star cruisers, and Harley-Davidson Sportster and Touring models with 60,000+ miles.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-battery-selection-and-compatibility-agm-vs-lithium-vs",
     "title": "Battery selection and compatibility — AGM vs lithium vs conventional for motorcycle charging systems",
     "description": "Choosing the wrong battery type for a motorcycle's charging system causes chronic charging problems, premature battery death, and potential electrical damage. Conventional flooded-cell batteries are forgiving but require maintenance and vent acid. AGM (Absorbed Glass Mat) batteries are sealed, vibration-resistant, and the default choice for most modern motorcycles. Lithium (LiFePO4) batteries are lightweight and long-lived but require a compatible charging system and can be destroyed by overcharging or deep discharge. This decision affects every motorcycle owner across Honda CB/CBR and CRF series, Kawasaki Ninja and Z series, Suzuki GSX-R and V-Strom, Yamaha R-series and MT, and all Harley-Davidson models from Sportster to Touring.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-parasitic-draw-testing-systematic-fuse-pull-diagnosis-for",
     "title": "Parasitic draw testing — systematic fuse-pull diagnosis for mystery battery drain",
     "description": "A parasitic draw is an unwanted current drain on the battery when the ignition is off, causing the battery to go dead overnight or over a few days of sitting. Normal parasitic draw on a motorcycle is 1-5 milliamps (mA) for ECU memory, clock, and alarm modules. A draw exceeding 20-30 mA will kill a typical motorcycle battery in 1-2 weeks. Common culprits include aftermarket accessories left powered, stuck relays, corroded wiring, and faulty ECU or gauge clusters that fail to enter sleep mode. This affects every make equally: Honda CBR and CB series with aftermarket accessories, Kawasaki Z900 and Versys with USB charging ports, Suzuki GSX-S and SV650 with alarm systems, Yamaha MT and Tenere with GPS and heated grips, and Harley-Davidson Touring and Softail models with factory or aftermarket stereos and security modules.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-charging-system-voltage-test-the-universal-3-step-diagnostic",
     "title": "Charging system voltage test — the universal 3-step diagnostic procedure for any motorcycle",
     "description": "The 3-step charging system voltage test is the foundation of all motorcycle electrical diagnosis and applies identically to every make and model ever built with a battery. The three steps — static battery voltage, cranking voltage drop, and running charging voltage — tell you whether the problem is the battery, the starter circuit, or the charging system, in under 5 minutes with nothing more than a multimeter. This procedure works on Honda CBR/CB/CRF, Kawasaki ZX/Z/Vulcan, Suzuki GSX-R/V-Strom/Boulevard, Yamaha R-series/MT/V-Star, and every Harley-Davidson from Shovelhead to M8. Every motorcycle mechanic should be able to perform this test from memory.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-ground-circuit-resistance-voltage-drop-testing-for-corroded",
     "title": "Ground circuit resistance — voltage drop testing for corroded or loose ground connections",
     "description": "Every electrical circuit requires a low-resistance ground return path to the battery. Motorcycles are particularly prone to ground circuit failures because the engine, frame, and body panels are the ground path, and the connection points between these components corrode from vibration, heat cycling, and weather exposure. A high-resistance ground causes dim lights, slow cranking, erratic gauge readings, intermittent no-starts, and charging voltage that appears low at the battery even when the stator and R/R are working correctly. This is a universal issue on Kawasaki Vulcan and Z series, Honda Shadow and CBR models, Suzuki GSX-R and Hayabusa, Yamaha V-Star and FJR1300, and Harley-Davidson all models — Harleys are especially susceptible because of their exposed-engine design and the number of ground points on the engine cases.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-accessory-load-management-calculating-electrical-draw-vs",
     "title": "Accessory load management — calculating electrical draw vs charging system output capacity",
     "description": "Modern motorcycles are increasingly loaded with electrical accessories — heated grips, GPS units, phone chargers, auxiliary lights, heated gear controllers, action cameras, and communication systems — that collectively draw more current than the charging system can produce at low RPM. When total accessory draw plus base vehicle draw exceeds the stator's output, the deficit comes from the battery, which discharges while riding and eventually causes a no-start. This is an engineering problem, not a component failure, and affects every make: Suzuki V-Strom and GSX-S adventure/touring riders, Honda Gold Wing and Africa Twin, Kawasaki Versys and Concours tourers, Yamaha Tenere and FJR1300, and Harley-Davidson Touring models which already run near their charging limit with factory accessories.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-alternator-belt-harley-and-direct-drive-charging",
     "title": "Alternator belt (Harley) and direct-drive charging — understanding belt-driven vs permanent magnet charging systems",
     "description": "Motorcycles use two fundamentally different charging system architectures: direct-drive permanent magnet alternators (used by all Japanese manufacturers and most Harley models) where the rotor is mounted directly on the crankshaft, and belt-driven alternators (used on some Harley-Davidson Touring and Softail models, plus a few BMW and vintage bikes) where an external alternator is driven by the primary chain or a dedicated belt. Each architecture has different failure modes, maintenance requirements, and diagnostic procedures. Understanding which system your bike has is the first step in any charging diagnosis. Honda, Kawasaki, Suzuki, and Yamaha use direct-drive exclusively; Harley-Davidson uses both depending on the model year and platform.",
     "make": "Harley-Davidson",

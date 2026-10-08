@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-sv650-regulator-rectifier-failure-all-generations",
     "title": "SV650 regulator/rectifier failure — all generations",
     "description": "The SV650 (1999+) uses the same charging system platform as the GSX-R family. The regulator/rectifier overheats and fails, especially on first-gen (1999-2002) models. The stator connector melts from resistance. This is the #1 electrical failure on the SV650.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-sv650-carbureted-1999-2002-cv-carb-tuning-and-cold-start",
     "title": "SV650 carbureted (1999-2002) — CV carb tuning and cold start",
     "description": "The first-gen SV650 carbureted models use twin Mikuni BSR36 CV carbs. The factory jetting is lean for emissions, causing cold start difficulty and midrange hesitation. The enrichment circuit (choke) cable stretches over time, reducing cold start enrichment.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-sv650-cam-chain-tensioner-noise-both-engines",
     "title": "SV650 cam chain tensioner noise — both engines",
     "description": "The SV650 V-twin uses automatic CCTs on both cylinder banks. The front cylinder CCT is more prone to failure because it's less accessible and runs hotter. CCT rattle at cold startup is the warning sign — it's louder on the front cylinder.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-sv650-clutch-spring-and-basket-issues",
     "title": "SV650 clutch spring and basket issues",
     "description": "The SV650 wet clutch develops weak springs and basket notching from the V-twin's torque pulses. The clutch drags, making neutral hard to find at stops. Track/stunt riders burn through clutches faster. The SV1000 has heavier springs but the same basket notching issue.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-sv650-fuel-pump-failure-2003-fuel-injected",
     "title": "SV650 fuel pump failure (2003+ fuel injected)",
     "description": "The fuel-injected SV650 (2003+) fuel pump weakens over time. The in-tank pump and filter assembly loses pressure, causing stumbling under acceleration and eventual no-start. The fuel pump relay is also a common failure point.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-sv650-suspension-stock-inadequacy-and-budget-upgrades",
     "title": "SV650 suspension — stock inadequacy and budget upgrades",
     "description": "The SV650 ships with budget suspension that's adequate for casual street riding but inadequate for spirited riding, commuting with a passenger, or track use. The stock fork springs are too soft for most riders, and the rear shock has minimal adjustment.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-sv1000-fuel-injection-surging-tps-and-secondary-throttle",
     "title": "SV1000 fuel injection surging — TPS and secondary throttle",
     "description": "The SV1000 (2003-2007) uses a secondary throttle valve system (STPS) that creates jerky throttle response at small openings. The TPS calibration drifts, the secondary valve operation lags, and the ECU mapping has lean spots in the low-RPM cruise range.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-sv650-gladius-2009-2015-specific-generation-issues",
     "title": "SV650 Gladius (2009-2015) — specific generation issues",
     "description": "The SV650 Gladius generation (2009-2015, known as SFV650) has specific issues: the under-tail exhaust runs hot, the stock mirrors vibrate excessively, and the fuel injection mapping has a lean spot at cruise. The Gladius shares the V-twin engine with the standard SV650 but with different bodywork and ergonomics.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-sv650-fork-seal-and-stanchion-maintenance",
     "title": "SV650 fork seal and stanchion maintenance",
     "description": "The SV650 conventional forks (1999-2002) and USD forks (2003+) both develop seal leaks. The stanchion tubes get scored by road debris, cutting the seal lip. Fork oil degrades from heat and contamination. The SV650 is popular for track use, accelerating fork wear.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-sv650-exhaust-and-intake-modifications-fueling-requirements",
     "title": "SV650 exhaust and intake modifications — fueling requirements",
     "description": "The SV650 is one of the most commonly modified bikes. Aftermarket exhaust and intake mods require fueling adjustment. Without it, the bike runs lean, causing backfiring, hesitation, and potential engine damage from lean detonation. The V-twin responds well to mods when properly tuned.",
     "make": "Suzuki",

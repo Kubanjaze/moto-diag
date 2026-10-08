@@ -1,5 +1,6 @@
 [
   {
+    "key": "aprilia-the-shiver-and-dorsoduro-share-a-90-degree-longitudinal-v",
     "title": "The Shiver and Dorsoduro share a 90-degree longitudinal V-twin — front and rear cylinders, and the 900 is the 750 stroked",
     "description": "Drawn from Aprilia service manuals. These two models are one engine in two chassis, and the engine is a **90-degree longitudinal V-twin** — Aprilia's own manuals use the word longitudinal, meaning the vee lies fore and aft, so the cylinders are **front and rear** rather than left and right. Almost every fault code on these machines is per-cylinder, so a technician whose instinct is set by a transverse vee or an inline engine reads the codes onto the wrong physical cylinder before touching anything. The 750 came first, in the Shiver from 2007 and the Dorsoduro from 2008. The 900 that replaced it around 2017 is **the same engine stroked** — identical bore, longer stroke — which matters for parts in a specific way: components that follow the bore may carry across and components that follow the stroke do not. Both were dropped rather than re-homologated when emissions rules tightened, so the range ends rather than continuing. Note also that a Dorsoduro 1200 existed and is **not** this engine, so a search by model name alone can land on the wrong machine entirely.",
     "make": "Aprilia",
@@ -30,6 +31,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-the-shiver-s-ride-by-wire-self-learns-at-every-key-on-so-a",
     "title": "The Shiver's ride-by-wire self-learns at every key-on — so a weak battery throws a throttle fault before the bike moves",
     "description": "Drawn from Aprilia service manuals. This was an early production ride-by-wire system and its architecture is genuinely unlike a Japanese one: **two independent motorised throttle bodies**, one per cylinder, each with two position potentiometers; a separate ride-by-wire control unit alongside the engine control unit; two per-cylinder pressure sensors feeding a torque monitor; and a twist-grip sensor with **two tracks that are not a mirrored pair**, so comparing them against each other by the usual expectation gives a wrong answer. The operational consequence is the one to remember: the system runs a **self-learning routine at every key-on**, so a sticky butterfly, condensation or ice in the intake duct, or simply **a weak battery** produces a throttle fault at the moment of switching on rather than while riding. A machine that fails to start with a throttle complaint may have a battery problem. Separately, a torque-monitor safety layer can shut the engine down and store a code the dashboard never displayed, so a stall with nothing on the screen is not the same as a stall with no fault.",
     "make": "Aprilia",
@@ -61,6 +63,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-an-aprilia-throttle-body-is-a-non-serviceable-assembly-and",
     "title": "An Aprilia throttle body is a non-serviceable assembly — and the twist-grip sensor is not repairable either",
     "description": "Drawn from Aprilia service manuals, and it is a quoting fact as much as a repair one. On these ride-by-wire machines the throttle body is supplied and replaced as a **complete assembly**: the motor and both position potentiometers are not sold separately, and the manual instructs that the calibration screws are never to be disturbed. So the remedy for essentially any confirmed throttle-body fault is the whole unit, and there is no component-level repair to attempt or to offer as a cheaper option. The twist-grip position sensor is the same story — the manual states it cannot be overhauled or replaced on its own, so a sensor fault there means the complete handlebar control assembly. Two consequences for a workshop. A quote built on the assumption that a potentiometer or a motor can be replaced individually is wrong before it is sent. And because the parts are expensive, it is worth being certain the fault is the assembly rather than an input to it — battery, intake condition and the self-learn routine should all be excluded first, because they produce the same complaints.",
     "make": "Aprilia",
@@ -91,6 +94,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-the-chronic-shiver-and-dorsoduro-fuel-pump-and-charging",
     "title": "The chronic Shiver and Dorsoduro fuel-pump and charging failures are not in any recall database",
     "description": "Drawn from searches of three national road-safety recall databases, and included as a negative finding because the internet says otherwise. Claims that these machines suffer chronic fuel-pump and charging-system failure circulate widely, and **no fuel-system, throttle-body or charging recall exists for the Shiver or Dorsoduro in any of the three databases consulted**, with only a handful of owner complaints on record across all model years. What does exist is two campaigns of a different character: one covering a **gearbox output shaft machining fault that lets the front sprocket fastening loosen, with the rear wheel able to lock**, and one covering a **front brake master cylinder that can drag or apply itself with no brake light showing**. Both are serious and neither is what the folklore describes. The practical value is in what a shop tells a customer: a used-buyer's concern about chronic fuel pumps is not supported by regulator data, while two genuine safety campaigns are — and those are the ones to check the frame number against. A separate model, the Mana, does carry its own throttle-related campaign, so a search must be model-specific rather than range-wide.",
     "make": "Aprilia",
@@ -121,6 +125,7 @@
     "source": "service-manual"
   },
   {
+    "key": "aprilia-the-sr-max-is-a-scooter-not-a-motorcycle-it-shares-nothing",
     "title": "The SR Max is a scooter, not a motorcycle — it shares nothing with the Shiver and Dorsoduro",
     "description": "Drawn from Aprilia's model documentation, and stated because a roadmap row grouping it with two motorcycles invites the wrong assumption. The SR Max is a **maxi-scooter** built around a single-cylinder engine, sold in small displacements, and it shares no engine, chassis or drivetrain architecture with the V-twin Shiver and Dorsoduro. For a workshop that is a different machine class before it is a different model: continuously variable transmission rather than a gearbox and chain, scooter bodywork and access, different service items and different labour. A shop quoting from the Aprilia name and the model grouping will quote the wrong job. Nothing in the V-twin machines' documentation applies to it, and nothing in this file about the ride-by-wire system, the throttle-body assembly or the V-twin cylinder identification transfers. Where scooter work is not part of a workshop's offering, that is worth establishing at the booking rather than at the ramp.",
     "make": "Aprilia",

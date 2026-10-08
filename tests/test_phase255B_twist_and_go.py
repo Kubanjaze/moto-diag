@@ -167,13 +167,11 @@ class TestMigration065EditsByIdentity:
         rebuild_model_index_at(path)
         return path
 
-    def test_a_reseed_after_an_identity_edit_duplicates_rather_than_updates(self, tmp_path):
-        """F129, demonstrated. This is why the hook exists.
-
-        Not a guard on 255B's own code — a pin on the defect 255B works
-        around. If this starts failing, F129 has been fixed and the hook
-        can be reconsidered.
-        """
+    def test_a_reseed_after_an_identity_edit_no_longer_duplicates(self, tmp_path):
+        """F129, closed by Phase 380. This pin showed the defect 255B worked
+        around: an edited model column re-seeded as a second row. A row's
+        identity is now its frozen key, so the edited seed entry meets its
+        own row and adds nothing."""
         path = self._legacy(tmp_path)
         with sqlite3.connect(path) as conn:
             before = conn.execute("SELECT COUNT(*) FROM known_issues").fetchone()[0]
@@ -185,8 +183,8 @@ class TestMigration065EditsByIdentity:
             dupes = conn.execute(
                 "SELECT COUNT(*) FROM known_issues WHERE title LIKE ?", (T_4609 + "%",)
             ).fetchone()[0]
-        assert after == before + 1, "a re-seed after an identity edit should insert, not update"
-        assert dupes == 2, "both the old and the new row are present — that is F129"
+        assert after == before, "a re-seed after an identity edit added a row: F129 is back"
+        assert dupes == 1
 
     def test_the_hook_updates_in_place_and_keeps_the_id(self, tmp_path):
         path = self._legacy(tmp_path)

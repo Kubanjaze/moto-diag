@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-voltage-regulator-rectifier-failure-all-eras",
     "title": "Voltage regulator/rectifier failure — all eras",
     "description": "The voltage regulator/rectifier is the single most common electrical failure on Harleys across every generation. It converts AC from the stator to DC, and regulates voltage to ~14V. When it fails, the battery either overcharges (boiling acid, swelling) or undercharges (dead battery, dim lights). The part runs hot and is often mounted in a low-airflow area.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-stator-failure-burn-and-short",
     "title": "Stator failure — burn and short",
     "description": "The stator (AC generator) windings burn and short-circuit from heat, oil contamination, or insulation breakdown. Symptoms: battery goes dead, lights dim at idle, burning smell from primary/engine area. The stator is inside the primary cover on most Harleys — removing it requires draining primary fluid.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-starter-solenoid-failure-clicks-but-won-t-crank",
     "title": "Starter solenoid failure — clicks but won't crank",
     "description": "The starter solenoid (relay) is the most common 'click but no crank' culprit on Harleys. The high-current contacts inside the solenoid pit and corrode over time, eventually failing to pass enough current to spin the starter motor. You hear a strong click from the solenoid but the starter doesn't engage.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-ground-cable-corrosion-mysterious-electrical-gremlins",
     "title": "Ground cable corrosion — mysterious electrical gremlins",
     "description": "Bad ground connections cause more unexplained electrical problems on Harleys than any other single cause. Dim lights, flickering gauges, intermittent no-start, weird turn signal behavior, ABS lights — all can be traced to a single corroded ground cable or ground point on the frame.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-can-bus-communication-fault-2011-models",
     "title": "CAN bus communication fault — 2011+ models",
     "description": "2011+ Harleys use CAN bus (Controller Area Network) for communication between the ECM, BCM, TSSM, instrument cluster, ABS module, and other nodes. A CAN bus fault can cause multiple unrelated warning lights, limp mode, no-start, or total electrical shutdown. Water intrusion, connector corrosion, or a single damaged wire can take down the entire bus.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-ignition-switch-failure-intermittent-power-loss",
     "title": "Ignition switch failure — intermittent power loss",
     "description": "The ignition switch on Harleys develops internal contact wear that causes intermittent total power loss. The bike dies mid-ride, instruments go black, and may or may not restart immediately. On older models it's the mechanical switch; on newer models it's the electronic FOB/key system (TSSM).",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-turn-signal-module-tsm-tssm-malfunction",
     "title": "Turn signal module (TSM/TSSM) malfunction",
     "description": "The Turn Signal Module (TSM) or Turn Signal Security Module (TSSM) controls turn signals, hazards, auto-cancel, and (on TSSM-equipped bikes) the security system. When it fails, you get stuck turn signals, no signals at all, security lockout, or an alarm that goes off randomly.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-wiring-harness-chafing-heat-and-vibration-damage",
     "title": "Wiring harness chafing — heat and vibration damage",
     "description": "Harley wiring harnesses chafe against the frame, engine, and each other from vibration. The V-twin vibration is particularly destructive to wiring over time. Chafed insulation causes shorts, intermittent faults, and potentially fires if a hot wire contacts fuel or oil.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-battery-type-mismatch-wrong-charger-or-wrong-battery",
     "title": "Battery type mismatch — wrong charger or wrong battery",
     "description": "Harleys have used conventional lead-acid, AGM, and now lithium batteries across different eras. Using the wrong charger type or installing the wrong battery type causes premature battery death, overcharging, undercharging, or failure to start in cold weather.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-headlight-and-lighting-circuit-overload",
     "title": "Headlight and lighting circuit overload",
     "description": "Adding aftermarket lighting (LED bars, auxiliary lights, heated grips, USB chargers) without upgrading the wiring or adding relays overloads the factory lighting circuit. This blows fuses, melts connectors, dims the headlight, and on older bikes can overload the stator/regulator system.",
     "make": "Harley-Davidson",

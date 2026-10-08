@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-starter-relay-contact-corrosion-clicking-but-no-crank-across",
     "title": "Starter relay contact corrosion — clicking but no crank across all makes",
     "description": "The starter relay (also called starter solenoid on Harleys) is an electromagnetic switch that routes high-current battery power to the starter motor when the start button is pressed. The relay's internal copper contacts pit and corrode over time from the high-current arcing that occurs every time they close. Once the contacts develop enough resistance, the relay clicks audibly (the electromagnetic coil still works) but can't pass enough current to spin the starter motor. This is the single most common no-crank condition on every motorcycle brand — Honda, Yamaha, Kawasaki, Suzuki, and Harley-Davidson all use the same basic relay design. On Japanese bikes the relay is typically mounted under the seat or behind a side cover near the battery. On Harleys it's usually bolted to the frame near the battery or under the electrical cover on Sportsters. The failure mode is progressive: first the starter cranks slowly on hot days (higher resistance when warm), then it becomes intermittent (sometimes clicks, sometimes cranks), then it fails completely (click only, no crank).",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-starter-motor-brush-wear-and-commutator-degradation-slow-or",
     "title": "Starter motor brush wear and commutator degradation — slow or no crank",
     "description": "Motorcycle starter motors are brushed DC motors with carbon brushes that conduct current to the spinning armature through a segmented copper commutator. The brushes wear down over thousands of start cycles until they're too short to maintain spring pressure against the commutator. Simultaneously, the commutator segments develop carbon buildup, pitting, and glazing between the segments. A worn starter motor cranks progressively slower over weeks/months, then one day won't crank at all. This is especially common on high-mileage touring bikes (Honda Gold Wing, Harley-Davidson touring models, Kawasaki Concours) that see 50,000+ miles and thousands of start cycles. The starter motor itself almost never 'burns out' suddenly — it's always a gradual wear process that riders ignore until complete failure.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "kawasaki-starter-clutch-sprag-one-way-bearing-failure-starter-spins",
     "title": "Starter clutch (sprag/one-way bearing) failure — starter spins but engine doesn't crank",
     "description": "The starter clutch is a one-way bearing mechanism (sprag clutch or roller clutch) that transmits rotation from the starter motor to the crankshaft in one direction only — it locks when the starter drives the engine and freewheels when the engine is running faster than the starter. When the sprag rollers or sprags wear, they slip instead of locking, and the starter motor spins freely without turning the engine over. The classic symptom is the starter motor whirring at high speed with no engine cranking — it sounds like it's spinning in free air. This is a well-known failure mode on Honda (CX500, VFR800, CBR900RR, CB750 DOHC), Kawasaki (ZX-6R, ZX-10R, ZX-14R), and Suzuki (GSX-R series, Hayabusa). The failure is more common on high-compression engines because the starter clutch experiences higher torque loads during each start cycle.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-clutch-safety-switch-failure-bike-won-t-start-even-with",
     "title": "Clutch safety switch failure — bike won't start even with clutch pulled in",
     "description": "Most motorcycles manufactured after the mid-1990s include a clutch safety switch that prevents the starter from engaging unless the clutch lever is fully pulled in. The switch is mounted on the clutch lever perch and is a simple normally-open contact that closes when the lever compresses it. These switches fail from water intrusion, corrosion of the internal contacts, physical damage from a drop, or the switch body cracking from UV exposure. When the switch fails open, the ECU/starter circuit doesn't receive the 'clutch is in' signal, so it refuses to energize the starter relay — the bike appears completely dead even though battery, relay, and starter are all fine. This is one of the most frustrating no-start conditions because everything else checks out. The switch design is nearly identical across Honda, Yamaha, Kawasaki, Suzuki, and Harley-Davidson — a two-wire microswitch triggered by lever travel.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-kickstand-safety-switch-corrosion-no-start-from-weather",
     "title": "Kickstand safety switch corrosion — no-start from weather exposure",
     "description": "The side stand (kickstand) safety switch prevents the engine from starting or running when the kickstand is down and the transmission is in gear. The switch is mounted at the base of the kickstand pivot and is exposed to road spray, rain, mud, salt, and debris — the worst possible environment for an electrical switch. The switch is typically a plunger-type contact that closes when the kickstand is fully retracted. Corrosion of the switch contacts, damage to the wiring from road debris, or physical damage from the kickstand catching on obstacles are the primary failure modes. When the switch fails open, the bike either won't start at all or stalls immediately when put into gear. This is universal across all makes: Honda, Yamaha, Kawasaki, Suzuki, and Harley-Davidson all use nearly identical designs mounted in an identically hostile location.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-kill-switch-and-handlebar-control-switch-failure-no-power-to",
     "title": "Kill switch and handlebar control switch failure — no power to ignition or starter",
     "description": "The right handlebar switch housing contains the kill switch (engine stop switch) and start button, along with the headlight and throttle housing on some models. The kill switch is a simple rocker or slider that interrupts either the ignition circuit (older bikes) or sends a signal to the ECU (newer bikes). The start button is a momentary contact switch that energizes the starter relay circuit. Both switches live in a hostile environment: exposed to weather, vibration, and the rider's gloves. Internal contacts corrode, the switch detent wears allowing the kill switch to sit in a halfway position, and the start button contacts develop enough resistance that they can't pass the starter relay coil current. A failed kill switch in the OFF position prevents all ignition — no spark, no fuel pump, no start. A failed start button prevents starter engagement even though all other systems are live. These are common failures on bikes over 10 years old across all makes.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-battery-cable-voltage-drop-terminal-corrosion-causing-slow",
     "title": "Battery cable voltage drop — terminal corrosion causing slow crank or no crank",
     "description": "The battery cables are the highest-current conductors on a motorcycle, carrying 80-200+ amps during cranking. Corrosion at the battery terminals, frame ground point, starter motor connection, or any inline connector creates resistance that robs voltage from the starter motor. A starter motor that needs 10V to crank effectively will crank slowly at 9V and not at all below 8V — and 1-2V of loss across corroded connections is common on bikes over 5 years old. The insidious aspect: a voltmeter at the battery shows 12.6V with the key off, suggesting a good battery. But under cranking load, the voltage at the STARTER drops to 8-9V because 2-3V is being lost across corroded connections between the battery and the starter. This is the most commonly misdiagnosed starting problem across all makes — riders replace the battery, then the relay, then the starter motor, never realizing the $0 fix was cleaning the cable connections.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-tip-over-sensor-bank-angle-sensor-preventing-start-after-a",
     "title": "Tip-over sensor (bank angle sensor) preventing start after a drop or on uneven ground",
     "description": "Modern fuel-injected motorcycles (roughly 2000+) include a tip-over sensor (also called a bank angle sensor, lean angle sensor, or crash sensor) that kills the engine and prevents restart if the bike exceeds a preset lean angle — typically 50-65 degrees from vertical. The sensor uses either a mercury switch, a pendulum contact, or a MEMS accelerometer depending on age and manufacturer. When triggered, the sensor opens the fuel pump relay and/or ignition circuit, preventing the engine from starting. The sensor resets either automatically when the bike is returned to upright, or requires a key-cycle reset (key off → wait 5 seconds → key on). After a parking lot tip-over, a slow-speed drop, or even parking on steeply uneven ground, riders are stranded with a bike that turns on, shows normal dash lights, but absolutely refuses to crank or fire. This affects all modern makes: Honda, Yamaha, Kawasaki, Suzuki, and Harley-Davidson.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-neutral-switch-failure-false-neutral-detection-preventing-in",
     "title": "Neutral switch failure — false neutral detection preventing in-gear starting",
     "description": "The neutral switch is a simple contact switch mounted on the transmission case that grounds a wire when the transmission is in neutral, illuminating the neutral indicator light and telling the ECU that the bike is in neutral (which allows starting without pulling the clutch on some models, or modifies the starting interlock logic on others). When the neutral switch fails, it can either fail open (neutral light never comes on, ECU thinks the bike is always in gear) or fail closed (neutral light always on, ECU thinks the bike is always in neutral). A failed-open neutral switch combined with a failed or marginal clutch switch creates a double-fault condition where the bike won't start in neutral OR with the clutch pulled — a maddening diagnostic puzzle. The switch sits in an oil-filled environment and is sealed, but the internal contacts corrode over time or the external connector corrodes from its location low on the engine case where it's exposed to road spray.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-compression-release-and-high-compression-starting-issues-big",
     "title": "Compression release and high-compression starting issues — big singles and twins",
     "description": "Large-displacement single-cylinder and twin-cylinder engines (Harley-Davidson Big Twins, Honda XR650, Suzuki DR650, Kawasaki KLR650, Royal Enfield, Yamaha XT/TT series) have high compression ratios that make them extremely difficult for the starter motor to turn over. These engines use automatic compression release mechanisms — typically a centrifugal decompression lever on the camshaft that holds one exhaust valve slightly open at cranking speed, reducing compression until the engine fires and speeds up past the release threshold. When the compression release mechanism fails, the starter motor can't turn the engine over — it either stalls against compression, clicks the starter relay (because the current draw exceeds the relay's capacity), or cranks agonizingly slowly even with a fully charged battery. This is particularly common on Harley-Davidson Twin Cam and M8 engines (both cylinders fire near simultaneously, creating massive compression peaks), Honda XR/CRF650 singles, and Suzuki DR650 singles.",
     "make": "Harley-Davidson",

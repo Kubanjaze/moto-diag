@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gsx-r750-second-gear-failure-transmission-weakness",
     "title": "GSX-R750 second gear failure — transmission weakness",
     "description": "The GSX-R750 (particularly 2000-2005 K1-K5) has a known second gear engagement issue. The second gear dogs round off from hard shifting, causing the transmission to pop out of second under load. This is a track-riding and aggressive street-riding failure exacerbated by clutchless shifting.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 10.0
   },
   {
+    "key": "suzuki-gsx-r750-stator-and-charging-system-failure",
     "title": "GSX-R750 stator and charging system failure",
     "description": "The GSX-R750 shares the same charging system weakness as the GSX-R600. The stator windings overheat, the reg/rec fails, and the connector melts. The 750's higher output stator runs even hotter than the 600's, making this failure more common.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-gsx-r750-cam-chain-tensioner-rattle",
     "title": "GSX-R750 cam chain tensioner rattle",
     "description": "The GSX-R750 automatic CCT has the same ratchet mechanism weakness as the GSX-R600. The 750's higher torque output puts more stress on the cam chain system. Cold startup rattle from the timing chain side is the warning sign.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r750-fuel-pump-and-fi-relay-2004",
     "title": "GSX-R750 fuel pump and FI relay (2004+)",
     "description": "The fuel-injected GSX-R750 (2004+) uses the same fuel pump platform as the GSX-R600. The pump weakens over time, the fuel filter clogs, and the FI relay can fail. High-RPM fuel starvation is the classic symptom.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r750-srad-1996-1999-coolant-leak-water-pump-and-hoses",
     "title": "GSX-R750 SRAD (1996-1999) coolant leak — water pump and hoses",
     "description": "The SRAD (Suzuki Ram Air Direct) era GSX-R750 (1996-1999) develops coolant leaks from the water pump seal, aging coolant hoses, and the thermostat housing gasket. The SRAD fairing design traps heat, exacerbating cooling system stress in slow traffic.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r750-rear-shock-linkage-wear",
     "title": "GSX-R750 rear shock linkage wear",
     "description": "The GSX-R750 uses a rising-rate rear suspension linkage that transfers loads through bearings and bushings. The linkage bearings wear from water intrusion and lack of greasing, creating play in the rear suspension. This manifests as vague handling and clunking over bumps.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-gsx-r750-throttle-position-sensor-tps-calibration-drift",
     "title": "GSX-R750 throttle position sensor (TPS) calibration drift",
     "description": "The GSX-R750 TPS can drift out of calibration, causing poor throttle response, hunting idle, and lean/rich running at various throttle positions. The TPS is adjustable on most years but the adjustment screw corrodes and requires careful setting with a multimeter.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-r750-chain-and-sprocket-heavy-torque-wear",
     "title": "GSX-R750 chain and sprocket — heavy torque wear",
     "description": "The GSX-R750 puts significant torque through the drive chain, especially in lower gears. The 525 chain (or 530 on older models) wears faster than expected on bikes ridden hard. The countershaft sprocket is the fastest-wearing component — hooked teeth accelerate chain wear.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r750-brake-master-cylinder-spongy-lever-and-fluid",
     "title": "GSX-R750 brake master cylinder — spongy lever and fluid contamination",
     "description": "The GSX-R750 front brake master cylinder develops a spongy lever feel from water-contaminated brake fluid, internal seal wear, and air in the system. Track riders notice brake fade first; street riders notice a gradually worsening lever feel over seasons.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-r750-headstock-bearing-wear-and-head-shake",
     "title": "GSX-R750 headstock bearing wear and head shake",
     "description": "The GSX-R750 headstock (steering head) bearings wear from road impacts and lack of maintenance. Worn bearings create notchy steering, headshake at highway speed, and vague front-end feel. The stock tapered roller bearings need periodic preload adjustment and eventual replacement.",
     "make": "Suzuki",

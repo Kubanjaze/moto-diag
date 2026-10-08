@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-cam-chain-tensioner-failure-cross-model-pattern-on-all",
     "title": "Cam chain tensioner failure — cross-model pattern on all Yamaha multi-cylinders",
     "description": "CCT failure is the most common engine-related issue across all Yamaha inline-4, parallel twin, and V4 engines. The automatic tensioner loses ratchet engagement, allowing the cam chain to go slack. On high-revving sport bikes (R1, R6), this can cause valve-to-piston contact. On lower-revving models (MT-07, V-Star), it causes timing rattle and gradual performance loss.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-ethanol-fuel-damage-storage-and-fuel-system-degradation",
     "title": "Ethanol fuel damage — storage and fuel system degradation across all models",
     "description": "Ethanol-blended fuel (E10, E15) causes damage across every Yamaha model: carbureted bikes get clogged jets and corroded float bowls, fuel-injected bikes get clogged injectors and degraded fuel pump strainers, and all bikes get internal tank corrosion (steel tanks) or fuel line degradation. This is the #1 preventable maintenance issue for seasonal riders.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-valve-clearance-tightening-universal-yamaha-pattern-across",
     "title": "Valve clearance tightening — universal Yamaha pattern across all engines",
     "description": "Every Yamaha four-stroke engine tightens its valve clearance over time as the valve seats wear. This is true for shim-under-bucket (R1, R6, MT-09), shim-over-bucket (older models), and screw-type (SR400, XT250, V-Star 250) valve trains. Tight valves don't seat fully, causing hot-start difficulty, power loss, and eventually burned valves.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-exup-valve-system-cross-model-exhaust-valve-diagnostic",
     "title": "EXUP valve system — cross-model exhaust valve diagnostic",
     "description": "The EXUP (Exhaust Ultimate Power Valve) system is used on R1, R6, FZ6, FZ8, FZ1, and other Yamaha sport/standard models. It's a butterfly valve in the exhaust that varies backpressure for optimal power across the RPM range. The servo motor, cable, and valve shaft have the same failure modes across all models.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-brake-fluid-neglect-and-abs-modulator-corrosion-all-yamaha",
     "title": "Brake fluid neglect and ABS modulator corrosion — all Yamaha models",
     "description": "Brake fluid is hygroscopic — it absorbs moisture from the air over time. Moisture-contaminated brake fluid lowers the boiling point (causing brake fade) and corrodes internal components, especially the tiny valves in ABS modulators. Yamaha specifies brake fluid change every 2 years, but most owners never change it. On bikes with ABS, old fluid corrodes the modulator valves, causing expensive ABS failures.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-chain-and-sprocket-wear-patterns-sport-vs-cruiser-vs",
     "title": "Chain and sprocket wear patterns — sport vs cruiser vs adventure",
     "description": "Every chain-drive Yamaha needs chain and sprocket maintenance, but the wear rate varies dramatically by riding style. Sport bikes eat chains from high-RPM loads, adventure bikes eat chains from dirt contamination, and cruisers eat chains from neglect. Understanding the wear pattern for your riding style prevents premature failure and expensive sprocket damage.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-coolant-hose-degradation-and-clamp-loosening-all-liquid",
     "title": "Coolant hose degradation and clamp loosening — all liquid-cooled Yamahas",
     "description": "Coolant hoses on Yamaha motorcycles are silicone or EPDM rubber that degrades from heat cycling over 5-10 years. The hose material softens, swells, and eventually fails. Spring clamps lose tension, and worm-gear clamps back off from vibration. A coolant hose failure at speed causes rapid overheating and potential engine damage.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-tire-selection-and-pressure-management-riding-style-matters",
     "title": "Tire selection and pressure management — riding style matters",
     "description": "Yamaha owners frequently choose wrong tires for their riding style or neglect tire pressure, leading to poor handling, accelerated wear, and safety risks. Sport bikes need sport tires, touring bikes need touring tires, and adventure bikes need dual-purpose tires. Tire pressure drops 1-2 PSI per month from natural permeation and 1 PSI per 10F temperature drop.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-winterization-and-seasonal-storage-protecting-your-yamaha",
     "title": "Winterization and seasonal storage — protecting your Yamaha",
     "description": "Proper winterization prevents 90% of spring startup problems. Yamahas that sit for 3-6 months without preparation develop fuel system issues (carbs clog, injectors varnish), battery death, tire flat spots, and corrosion. A 30-minute winterization procedure in the fall saves hours of troubleshooting in the spring.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-aftermarket-exhaust-and-fueling-the-universal-mod-that",
     "title": "Aftermarket exhaust and fueling — the universal mod that requires a tune",
     "description": "The most common modification across all Yamaha models is an aftermarket exhaust. Without a corresponding fuel map adjustment, an aftermarket exhaust creates a lean condition that causes popping, hesitation, and potential engine damage from elevated combustion temperatures. This applies to every Yamaha from carbureted V-Stars to fuel-injected R1s.",
     "make": "Yamaha",

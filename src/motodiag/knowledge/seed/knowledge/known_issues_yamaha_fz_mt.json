@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-mt-09-fz-09-snatchy-throttle-response-ride-by-wire",
     "title": "MT-09/FZ-09 snatchy throttle response — ride-by-wire calibration",
     "description": "The MT-09 (FZ-09 pre-2018) is infamous for aggressive, on/off throttle response that makes smooth low-speed riding difficult. The ride-by-wire system maps small throttle inputs to large butterfly openings. Yamaha improved it with each model year but the 2014-2016 models are the worst. This is the #1 owner complaint across all MT-09 generations.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-mt-09-fz-09-cp3-engine-valve-clearance-tightening",
     "title": "MT-09/FZ-09 CP3 engine — valve clearance tightening",
     "description": "The MT-09's CP3 triple-cylinder engine uses shim-under-bucket valves that tighten with wear, same as the R6. Yamaha specifies 42,000 km (26,000 miles) check interval, but the CP3's high-RPM use in the lightweight naked chassis can accelerate wear. Tight valves cause hot-start difficulty and eventual power loss.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "yamaha-mt-07-fz-07-stator-connector-and-charging-cp2-platform",
     "title": "MT-07/FZ-07 stator connector and charging — CP2 platform",
     "description": "The MT-07 uses the CP2 twin engine with a charging system that's better designed than older Yamaha sport bikes — but the stator connector is still the weak point. The 3-pin connector corrodes and develops resistance, causing intermittent charging faults. The regulator/rectifier is a MOSFET type from the factory (improvement over older models).",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-fz6-fz6r-overheating-in-traffic-detuned-r6-engine-in-naked",
     "title": "FZ6/FZ6R overheating in traffic — detuned R6 engine in naked chassis",
     "description": "The FZ6 (2004-2009) and FZ6R (2009-2017) use a detuned version of the R6 engine. Without the R6's full fairing directing air to the radiator, the FZ6 overheats in slow traffic. The FZ6R's half-fairing is slightly better but still marginal. The fan cycles constantly and coolant temps can climb past safe limits in summer stop-and-go.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-mt-10-fz-10-electronics-complexity-r1-crossplane-in-a-naked",
     "title": "MT-10/FZ-10 electronics complexity — R1 crossplane in a naked",
     "description": "The MT-10 (FZ-10 pre-2018) uses the R1's crossplane-4 engine with its full electronics suite: 6-axis IMU, lean-sensitive TC, slide control, and cruise control (2022+). The naked chassis exposes the electronics to more weather and road debris than the R1's full fairing. Sensor contamination and connector corrosion are more common.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-mt-03-beginner-bike-dropped-in-parking-lot-damage-pattern",
     "title": "MT-03 — beginner bike dropped-in-parking-lot damage pattern",
     "description": "The MT-03 is Yamaha's beginner-class naked bike (321cc twin). As a first bike, it gets dropped. A lot. The most common damage pattern is: right-side tip-over in a parking lot, breaking the clutch lever, brake lever, mirror, and bar-end. The MT-03's plastics are minimal but the exposed components are vulnerable.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-fz8-throttle-bodies-and-idle-issues-fazer-engine-platform",
     "title": "FZ8 — throttle bodies and idle issues (Fazer engine platform)",
     "description": "The FZ8 (2011-2013) uses a detuned version of the FZ1/YZF-R1 (pre-crossplane) engine. The throttle bodies are derived from the R1 and can develop idle issues from carbon buildup, TPS drift, and vacuum leaks at the intake boots. The FZ8 was only produced for 3 years before being replaced by the MT-09.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-mt-09-fz-09-fuel-pump-and-fuel-system-ethanol-sensitivity",
     "title": "MT-09/FZ-09 fuel pump and fuel system — ethanol sensitivity",
     "description": "The MT-09's fuel pump and fuel system components are sensitive to ethanol fuel degradation. The bike's aggressive fueling (snatchy throttle) makes any fuel delivery inconsistency more noticeable. A partially clogged fuel filter or weak pump manifests as hesitation and stumbling that owners mistake for the throttle mapping issue.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-mt-07-fz-07-chain-and-sprocket-high-torque-twin-wears",
     "title": "MT-07/FZ-07 chain and sprocket — high-torque twin wears drivetrain faster",
     "description": "The MT-07's CP2 twin produces its torque in heavy pulses (270-degree crank) that stress the chain and sprockets more than a smooth inline-4 of similar power. Combined with the MT-07's typical use as a commuter/all-rounder with high mileage, chain and sprocket replacement comes sooner than expected.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-all-fz-mt-models-exposed-radiator-vulnerability-on-naked",
     "title": "All FZ/MT models — exposed radiator vulnerability on naked bikes",
     "description": "All FZ/MT naked bikes have exposed radiators that are vulnerable to stone damage, bug accumulation, and debris impact. A punctured radiator fin or core causes a slow coolant leak that can go unnoticed until the bike overheats. This is unique to naked bikes — faired bikes have the lower fairing protecting the radiator.",
     "make": "Yamaha",

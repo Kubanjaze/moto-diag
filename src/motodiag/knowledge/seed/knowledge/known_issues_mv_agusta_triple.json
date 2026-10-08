@@ -1,5 +1,6 @@
 [
   {
+    "key": "mv-agusta-the-mv-triple-s-crankshaft-turns-backwards-so-turn-it-in-the",
     "title": "The MV triple's crankshaft turns backwards — so \"turn it in the direction of rotation\" means the opposite of your reflex",
     "description": "Drawn from MV Agusta's own model material. The 675 and 798 triples use a **counter-rotating crankshaft**: it spins in the opposite direction to the wheels, with an additional shaft between crank and gearbox so that the rear wheel still drives forwards and the chain and sprockets remain entirely conventional. The purpose is to cancel part of the wheels' gyroscopic effect and reverse the crank's torque reaction. For a workshop the important thing is what does **not** change: cam timing, firing order, the pumps, the alternator and the starter are all designed around that direction, so there is nothing to re-clock and no correction to apply. What does change is the direction itself, and it is the direction that a mechanic's hands know without thinking. Any instruction to turn the engine \"in its direction of rotation\" — for a valve check, for timing, for finding top dead centre — points the opposite way to the reflex built on conventional engines. Turning it the wrong way risks the one-way cam-chain tensioner letting the chain go slack and back-drives the starter one-way clutch. **Which way that is in MV's own words could not be established here**, so establish it from the machine's own timing marks before turning anything, rather than from habit or from this entry.",
     "make": "MV Agusta",
@@ -30,6 +31,7 @@
     "source": "service-manual"
   },
   {
+    "key": "mv-agusta-the-mv-triple-s-starter-clutch-is-handed-for-reverse",
     "title": "The MV triple's starter clutch is handed for reverse rotation — and is reported to have been fitted backwards",
     "description": "Drawn from owner-forum reporting, and flagged as such because it is not manufacturer documentation. The starter one-way clutch on these triples is handed for the engine's reverse direction of rotation, and the most-discussed mechanical complaint on the family is that clutch failing — the starter spins or whirrs and the engine does not turn. Two things are worth a workshop's attention. Owners repeatedly name a **weak battery** as the underlying cause, which makes battery condition the first thing to check and the cheapest thing to exclude on a starter complaint. And there are reports of the unit being **reassembled the wrong way round** during repair, producing exactly the symptom it was fitted to cure — an error that is only possible because the part is handed for a direction most technicians do not expect. Because this rests on owner reports rather than a campaign or a bulletin, there is no free remedy to quote and the evidence should be described to a customer as what it is.",
     "make": "MV Agusta",
@@ -61,6 +63,7 @@
     "source": "forum"
   },
   {
+    "key": "mv-agusta-two-mv-triple-recalls-are-do-not-ride-and-one-of-them-cannot",
     "title": "Two MV triple recalls are do-not-ride, and one of them cannot be fixed by re-tensioning the spokes",
     "description": "Drawn from the road-safety regulator's own campaign records. Three campaigns touch these machines and **two carry a do-not-ride instruction**. The first covers a **fork axle carrier with damaged or undersized threads**. The second covers **rear wheel spokes that can loosen on the spoked-wheel Dragster**, and this is the one where the obvious repair is the wrong one: the root cause is **out-of-specification surface treatment of the spoke nipples**, so the specified tightening torque cannot hold and **re-tensioning the spokes does not restore them**. The published remedy is **replacement of the rear wheel**, free of charge. A shop that responds to a loose-spoke complaint by re-torquing has left a defective wheel on a machine under a do-not-ride campaign. The third campaign covers a **swingarm pin securing bolt**: a batch received incorrect heat treatment and quenching. Both halves of its history are true and the campaign record carries them: the defect was **found at assembly**, when a bolt snapped at the prescribed 70 Nm on the line, and it was recalled because the same batch can fail **in service**, allowing the swingarm to loosen while riding. All three are checked by frame number.",
     "make": "MV Agusta",
@@ -91,6 +94,7 @@
     "source": "service-manual"
   },
   {
+    "key": "mv-agusta-the-us-scope-of-the-mv-agusta-fork-recall-understates-the",
     "title": "The US scope of the MV Agusta fork recall understates the real one — the manufacturer's own bulletin names ten models",
     "description": "Drawn from the manufacturer's service bulletin as filed in the regulator's public docket, read alongside the campaign record itself. The national campaign for the fork axle carrier lists a small number of machines and a short list of model names. MV's own bulletin in the same docket gives the **global** population as several hundred machines across **ten model names** built within a narrow window — including models absent from the national list. Both documents are genuine and neither is wrong: a national campaign covers the machines supplied in that market, while the manufacturer's bulletin covers the production run. The consequence for a workshop is specific and easy to miss. A machine built in the affected window but supplied to another market — a grey import, a bike bought abroad, a model never officially sold locally — is **outside the national campaign and inside the production defect**. So a clean national recall check on such a machine is not an answer, and the build window plus the model list in the manufacturer's own bulletin is the better test.",
     "make": "MV Agusta",
@@ -121,6 +125,7 @@
     "source": "service-manual"
   },
   {
+    "key": "mv-agusta-mv-triple-service-intervals-must-come-from-the-specific",
     "title": "MV triple service intervals must come from the specific model's manual — models on one engine sit on different ladders",
     "description": "Drawn from reproductions of MV's own maintenance tables, with an explicit gap. For the Turismo Veloce and Superveloce the schedule reproduced from MV's tables gives a valve check and adjustment at a long interval, a general service annually or at a shorter mileage, and timing-chain components at a longer one again. For the F3 675 the commonly quoted valve interval could not be confirmed when this file was written. **MV's own maintenance manuals resolve it**: the 798cc triple sits on two different ladders in overlapping model years — so the instruction here is now documented rather than suspected: read the interval from the specific model's own manual, never from a sibling's. The figures are in the European intervals file. That gap is the entry's point: on this make the intervals differ enough between models that a figure carried across is a real risk, and the one figure most people quote is the one that is least well established. Take the schedule from the manual for the machine in front of you. The valve clearance specification values themselves are also not stated here, because the sources consulted disagreed and none was authoritative — measure against the manual, not against a remembered range.",
     "make": "MV Agusta",

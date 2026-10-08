@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gsx-r600-stator-and-regulator-rectifier-failure-all-years",
     "title": "GSX-R600 stator and regulator/rectifier failure (all years)",
     "description": "The GSX-R600 stator is a known weak point across all generations. The stator windings overheat behind the left engine cover, the regulator/rectifier fails (especially the OEM shunt-type), and the stator connector melts from resistance. This is the #1 electrical failure on the GSX-R600.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-gsx-r600-cam-chain-tensioner-cct-failure",
     "title": "GSX-R600 cam chain tensioner (CCT) failure",
     "description": "The GSX-R600 automatic cam chain tensioner can fail, allowing the cam chain to slap against the tensioner guide. Early models (1997-2003) had a weaker tensioner design. The ratchet mechanism strips or the spring weakens, causing a metallic rattle at startup that fades as oil pressure builds.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r600-pair-system-decel-popping-with-aftermarket-exhaust",
     "title": "GSX-R600 PAIR system — decel popping with aftermarket exhaust",
     "description": "The Suzuki PAIR (Pulsed Secondary Air Injection) system injects fresh air into exhaust ports for emissions. With aftermarket exhaust, PAIR causes loud popping and backfiring on deceleration. The system is harmless on stock exhaust but annoying with slip-ons or full systems.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-r600-fuel-pump-failure-and-fuel-filter-clogging",
     "title": "GSX-R600 fuel pump failure and fuel filter clogging",
     "description": "The GSX-R600 (2004+) fuel-injected models use an in-tank fuel pump that can fail from contaminated fuel or age. The fuel filter (integrated with the pump assembly) clogs, reducing flow. Symptoms include stumbling under load, power loss at high RPM, and eventual no-start.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gsx-r600-fork-seal-and-suspension-maintenance",
     "title": "GSX-R600 fork seal and suspension maintenance",
     "description": "The GSX-R600 inverted forks develop seal leaks from road debris scoring the stanchion tubes. The fork oil degrades from heat and moisture, reducing damping. Many GSX-R600s are ridden hard on track and street, accelerating seal and oil degradation beyond the typical service interval.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r600-valve-clearance-shim-under-bucket-inspection",
     "title": "GSX-R600 valve clearance — shim-under-bucket inspection",
     "description": "The GSX-R600 inline-4 uses shim-under-bucket valve trains. The exhaust valves tighten gradually from heat cycling and high-RPM use. Tight exhaust valves cause hard cold starting, reduced compression, and eventual valve burning. The service interval is 15,000 miles but track bikes need earlier checks.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-gsx-r600-coolant-system-thermostat-and-radiator-fan",
     "title": "GSX-R600 coolant system — thermostat and radiator fan",
     "description": "The GSX-R600 liquid cooling system can develop thermostat failures (stuck closed causes overheating, stuck open causes slow warmup) and radiator fan switch issues. Track riding in hot weather pushes the cooling system hard. Coolant neglect leads to internal corrosion and water pump seal failure.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-r600-s-dms-and-tc-system-issues-2011",
     "title": "GSX-R600 S-DMS and TC system issues (2011+)",
     "description": "The 2011+ GSX-R600 features S-DMS (Suzuki Drive Mode Selector) with 3 power modes and TC (traction control). The system relies on wheel speed sensors, throttle position, and gear position sensor. Dirty sensors or low battery voltage cause TC faults, mode switching issues, and power delivery problems.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-r600-brake-caliper-sticking-and-pad-glazing",
     "title": "GSX-R600 brake caliper sticking and pad glazing",
     "description": "The GSX-R600 uses Tokico or Brembo calipers depending on the year. Caliper pistons seize from corroded brake fluid, creating uneven braking, pad glazing, and rotor warping from heat. Sport riders who don't flush brake fluid regularly are most affected.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx-r600-clutch-drag-and-basket-notching",
     "title": "GSX-R600 clutch drag and basket notching",
     "description": "The GSX-R600 wet clutch develops basket notching from aggressive riding and track use. The friction plate tabs wear grooves into the aluminum clutch basket, preventing clean disengagement. The clutch drags, making neutral hard to find and causing clunky downshifts.",
     "make": "Suzuki",

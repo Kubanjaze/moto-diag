@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-wr250r-stator-and-charging-small-engine-high-demand",
     "title": "WR250R stator and charging — small engine, high demand",
     "description": "The WR250R has a small stator for its 250cc engine that struggles to keep up with the electrical demands of the EFI system, headlight, and any accessories. At low RPM (trail riding), the charging system can't keep the battery topped up, leading to a slow drain. This is the #1 reliability complaint on the WR250R.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-wr250r-suspension-service-high-quality-components-need",
     "title": "WR250R suspension service — high-quality components need maintenance",
     "description": "The WR250R has premium suspension for its class: fully adjustable KYB forks and shock. But off-road riding is harsh on suspension — fork seals fail from mud and debris, and the shock loses damping from heat and contamination. Most WR250R owners ride harder terrain than the typical dual-sport, accelerating wear.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-wr250r-fuel-injection-cold-start-issues-small-single",
     "title": "WR250R fuel injection cold-start issues — small single-cylinder",
     "description": "The WR250R's fuel injection can be finicky on cold starts, especially in temperatures below 40F. The single-cylinder engine doesn't generate enough heat to warm the coolant temperature sensor quickly, and the ECU's cold-start enrichment may not be sufficient. The bike cranks but won't fire, or fires and immediately stalls.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-xt250-carburetor-and-fuel-system-ethanol-and-storage-issues",
     "title": "XT250 carburetor and fuel system — ethanol and storage issues",
     "description": "The XT250 is carbureted and air-cooled — the simplest motorcycle in Yamaha's lineup. It's often a commuter or beginner trail bike that sits for weeks or months between rides. The single CV carburetor clogs from ethanol fuel, and the petcock diaphragm fails from age, just like every other Yamaha carbureted bike.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-xt250-chain-stretch-and-sprocket-wear-trail-riding",
     "title": "XT250 chain stretch and sprocket wear — trail riding accelerates wear",
     "description": "The XT250's chain and sprockets wear faster than expected because the bike is often used on dirt and in wet conditions where chain lube gets contaminated. The XT250 uses a lightweight 520 chain that's durable for street use but marginal for aggressive trail riding. Many owners skip chain maintenance because the XT250 feels like a 'simple' bike.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-xt250-valve-adjustment-screw-type-easy-and-critical",
     "title": "XT250 valve adjustment — screw-type, easy and critical",
     "description": "The XT250 uses a simple air-cooled single-cylinder engine with screw-type valve adjusters. Valve clearance needs checking every 4000 miles (same as V-Star 250). The XT250 is often owned by new riders who don't know about valve service intervals, and the air-cooled engine's thermal cycling tightens valves faster than liquid-cooled engines.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-tenere-700-wind-protection-and-ergonomic-fatigue",
     "title": "Tenere 700 wind protection and ergonomic fatigue",
     "description": "The Tenere 700 has minimal wind protection with a small stock windscreen. At highway speeds (65-80 mph), wind blast causes rider fatigue, helmet buffeting, and neck strain. This is the #1 complaint from long-distance Tenere 700 riders and the first accessory every owner buys.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-tenere-700-off-road-crash-protection-essential-guards-and",
     "title": "Tenere 700 off-road crash protection — essential guards and armor",
     "description": "The Tenere 700 is designed for off-road use, but Yamaha ships it with minimal crash protection. One off-road drop without protection can crack the engine cases, puncture the radiator, or break the headlight. Engine guards, skid plate, radiator guards, and handguards are considered mandatory equipment by the adventure riding community.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-tenere-700-cp2-engine-fueling-lean-spot-same-as-mt-07-r7",
     "title": "Tenere 700 CP2 engine fueling lean spot — same as MT-07/R7",
     "description": "The Tenere 700 uses the same CP2 engine as the MT-07 and R7, with the same emissions-driven lean fueling in the 3000-4500 RPM range. On an adventure bike ridden off-road at low RPM, this lean spot is even more noticeable than on the street-oriented MT-07 — it causes hesitation during technical trail riding where precise throttle control matters most.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-tenere-700-rear-shock-inadequacy-for-loaded-adventure-riding",
     "title": "Tenere 700 rear shock inadequacy for loaded adventure riding",
     "description": "The Tenere 700's stock KYB rear shock is adequate for light trail riding but fails under the weight of luggage, a passenger, or aggressive off-road. The shock fades from heat on long off-road sections and bottoms out when loaded with panniers and gear. This is the most common performance complaint from serious adventure riders.",
     "make": "Yamaha",

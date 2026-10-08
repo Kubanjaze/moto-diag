@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-636cc-vs-599cc-displacement-confusion-racing-class-and-parts",
     "title": "636cc vs 599cc displacement confusion — racing class and parts implications",
     "description": "Kawasaki alternated the ZX-6R between 599cc (for Supersport racing homologation) and 636cc (for better street performance) across generations. The 636 has more midrange torque but is ineligible for 600cc racing classes. Parts (pistons, cylinders, gaskets) are NOT interchangeable between 599 and 636 variants. This confuses owners and parts counter staff.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-zx-6r-stator-and-charging-system-failure-sport-bike",
     "title": "ZX-6R stator and charging system failure — sport bike universal",
     "description": "The ZX-6R has the same stator/regulator weakness as all Japanese sport bikes of the era. The stator overheats from the high-revving engine, the regulator is a shunt type on pre-2013 models, and the stator connector melts. The 636cc models run slightly hotter than 599cc due to higher combustion pressures, making charging failures slightly more common.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-6r-cam-chain-tensioner-high-revving-inline-4",
     "title": "ZX-6R cam chain tensioner — high-revving inline-4 vulnerability",
     "description": "The ZX-6R's inline-4 revs to 15,500+ RPM, putting extreme stress on the cam chain and automatic tensioner. The tensioner's ratchet mechanism wears, allowing the chain to slack and rattle. On the 636cc models, the slightly longer stroke adds a touch more stress to the chain. CCT failure is the second most common engine issue after charging system failure.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kleen-system-decel-popping-kawasaki-s-emission-air-injection",
     "title": "KLEEN system decel popping — Kawasaki's emission air injection",
     "description": "The ZX-6R (2003+) uses the KLEEN (Kawasaki Low Emission Engine) system, which injects fresh air into the exhaust ports to burn unburned hydrocarbons. This causes loud popping and backfiring on deceleration, especially with aftermarket exhaust. It's the Kawasaki equivalent of Yamaha's AIS or Honda's PAIR system.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-6r-valve-clearance-shim-under-bucket-on-high-revving-600",
     "title": "ZX-6R valve clearance — shim-under-bucket on high-revving 600",
     "description": "The ZX-6R uses shim-under-bucket valve adjustment with a 15,000-mile check interval. The high-revving engine (15,500+ RPM) accelerates valve seat wear compared to lower-revving bikes. Track bikes need checks every 8K-10K miles. Tight valves are the most common cause of hot-start difficulty on high-mileage ZX-6Rs.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "kawasaki-zx-6r-fuel-pump-failure-ethanol-and-heat-damage",
     "title": "ZX-6R fuel pump failure — ethanol and heat damage",
     "description": "The fuel-injected ZX-6R (2003+) uses an in-tank fuel pump that fails from ethanol fuel degradation, running the tank low, and heat soak from the engine. The ZX-6R's small fuel tank (4.5 gallons) means riders run it low frequently, and the sport bike's engine heat rises into the tank area.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-6r-cooling-system-radiator-fan-and-thermostat-issues",
     "title": "ZX-6R cooling system — radiator fan and thermostat issues",
     "description": "The ZX-6R runs hot in traffic due to the high-revving engine and full fairing that traps heat. The radiator fan is the only cooling when stationary, and the thermostat must function properly to manage coolant flow. Fan failure or thermostat sticking causes rapid overheating that can warp the cylinder head on the aluminum engine.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-2009-zx-6r-ktrc-traction-control-sensor-and-calibration",
     "title": "2009+ ZX-6R KTRC traction control — sensor and calibration issues",
     "description": "The 2009+ ZX-6R introduced KTRC (Kawasaki Traction Control). The system uses wheel speed sensors to detect rear wheel spin and reduces power accordingly. Sensor contamination, incorrect tire sizes, and low tire pressure cause false KTRC activation. Later models (2013+) added power modes and more refined TC settings.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-zx-6r-fork-seal-leaks-aggressive-riding-accelerates-wear",
     "title": "ZX-6R fork seal leaks — aggressive riding accelerates wear",
     "description": "The ZX-6R's inverted (USD) forks are excellent for sport riding but the seals fail from aggressive use, track days, and road debris. Fork oil leaking past the seals reduces damping, contaminates brake pads, and indicates the fork internals need service. Track ZX-6Rs need fork service every 10-15 track days.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "kawasaki-zx-6r-quick-shifter-and-shift-quality-transmission-concerns",
     "title": "ZX-6R quick shifter and shift quality — transmission concerns",
     "description": "The ZX-6R (2013+) offers an electronic quick shifter for clutchless upshifts. The shift quality on the ZX-6R is generally good, but the transmission can develop false neutrals between 1st-2nd gear and 5th-6th gear at high mileage. The quick shifter amplifies inconsistent shifts because there's no clutch slip to smooth transitions.",
     "make": "Kawasaki",

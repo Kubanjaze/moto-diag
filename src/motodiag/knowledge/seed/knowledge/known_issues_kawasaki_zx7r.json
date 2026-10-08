@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-zx-7r-carburetor-sync-and-idle-issues-4-cv-carbs-on-aging",
     "title": "ZX-7R carburetor sync and idle issues — 4 CV carbs on aging bike",
     "description": "The ZX-7R uses 4 Keihin CV carburetors that require precise synchronization for smooth idle and throttle response. On 20-30 year old bikes, the carbs drift out of sync from vibration, the diaphragms develop pinholes, and the pilot jets clog from ethanol fuel. Carb sync is the most common maintenance item on any surviving ZX-7R.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "kawasaki-zx-7r-fuel-system-aging-petcock-fuel-lines-and-tank",
     "title": "ZX-7R fuel system aging — petcock, fuel lines, and tank corrosion",
     "description": "The ZX-7R's entire fuel system is 20-30 years old. The vacuum petcock diaphragm deteriorates, fuel lines harden and crack, the in-line fuel filter clogs, and steel fuel tanks develop internal corrosion. These age-related failures are progressive and interconnected — fixing one often reveals the next.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-zx-7r-charging-system-stator-and-regulator-on-aging-sport",
     "title": "ZX-7R charging system — stator and regulator on aging sport bike",
     "description": "The ZX-7R uses the same shunt-type regulator and 3-pin stator connector that fails on every Japanese sport bike of the era. At 20-30 years old, the stator insulation has degraded significantly, the connector has corroded, and the regulator has endured decades of thermal cycling. Charging system failure is inevitable on any ZX-7R that hasn't been upgraded.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-7rr-flat-slide-fcr-carburetor-maintenance-homologation",
     "title": "ZX-7RR flat-slide FCR carburetor maintenance — homologation special",
     "description": "The ZX-7RR uses Keihin FCR (Flat slide Carburetor Racing) carbs instead of the ZX-7R's CV carbs. FCR carbs provide sharper throttle response but are more sensitive to jetting, more difficult to sync, and have no diaphragm (direct cable operation). They require more frequent maintenance and expert tuning knowledge.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "kawasaki-zx-7r-cam-chain-tensioner-750cc-inline-4-stress",
     "title": "ZX-7R cam chain tensioner — 750cc inline-4 stress",
     "description": "The ZX-7R's 749cc inline-4 uses an automatic cam chain tensioner that wears over time. The 750cc engine has more torque than a 600 but revs nearly as high, putting significant stress on the cam chain system. At 20-30 years and 20K+ miles, the CCT is often at the end of its adjustment range.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-7r-wiring-harness-and-connector-degradation-20-year-old",
     "title": "ZX-7R wiring harness and connector degradation — 20+ year old electrics",
     "description": "The ZX-7R's wiring harness is 20-30 years old. The PVC insulation becomes brittle from engine heat, connectors corrode from moisture, and solder joints fatigue from vibration. Intermittent electrical faults — random CEL (on carbureted models this means ignition), gauge glitches, and component failures — are the hallmark of aging wiring.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-7r-rubber-component-degradation-hoses-seals-and-boots",
     "title": "ZX-7R rubber component degradation — hoses, seals, and boots",
     "description": "Every rubber component on a 20-30 year old ZX-7R is past its service life: coolant hoses, intake boots, fork seals, valve cover gaskets, and O-rings. Rubber hardens, cracks, and loses elasticity with age regardless of mileage. A ZX-7R with 5K miles and 25 years of age has the same rubber degradation as one with 50K miles.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "kawasaki-zx-7r-suspension-fork-oil-and-shock-rebuild-on-aging-dampers",
     "title": "ZX-7R suspension — fork oil and shock rebuild on aging dampers",
     "description": "The ZX-7R's suspension components haven't been serviced on most surviving examples. Fork oil degrades into a thin fluid with no damping properties, and the rear shock's internal seals leak, losing nitrogen charge and damping. A ZX-7R with original suspension rides poorly and handles unpredictably — dangerous on a 750cc sport bike.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-zx-7r-brake-system-caliper-rebuild-and-fluid-flush-on-aging",
     "title": "ZX-7R brake system — caliper rebuild and fluid flush on aging brakes",
     "description": "The ZX-7R's brake calipers have been sitting with the same brake fluid for 20-30 years on many examples. The fluid has absorbed moisture, the caliper piston seals have hardened, and the caliper slides may be seized. Braking performance is severely degraded on any ZX-7R that hasn't had brake service — dangerous on a 500+ lb sport bike.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "kawasaki-zx-7r-ignition-system-coils-plug-wires-and-spark-plugs-on",
     "title": "ZX-7R ignition system — coils, plug wires, and spark plugs on aging ignition",
     "description": "The ZX-7R uses individual ignition coils with plug wires (not coil-on-plug). After 20-30 years, the coil insulation breaks down, plug wires develop internal resistance, and spark plug caps corrode. These failures cause misfires that are easily mistaken for carburetor problems.",
     "make": "Kawasaki",

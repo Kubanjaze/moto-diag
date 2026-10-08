@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-compensator-sprocket-noise-and-failure-twin-cam-and",
     "title": "Compensator sprocket noise and failure — Twin Cam and Milwaukee-Eight",
     "description": "The compensator is a spring-loaded sprocket assembly in the primary that absorbs drivetrain shock from the big V-twin's power pulses. When it wears, you get a loud clunk or rattle on decel, cold start clatter, and eventually a metallic grinding as the springs and ramps wear through. Every Twin Cam and M8 does this eventually.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-intake-manifold-seal-leak-all-v-twins-with-shared-manifold",
     "title": "Intake manifold seal leak — all V-twins with shared manifold",
     "description": "Every Harley V-twin with a single-bore intake manifold (Evo through M8) is prone to intake seal leaks. The rubber manifold seals between the manifold and each cylinder head harden from heat cycling, allowing unmetered air into one or both cylinders. Symptoms: lean condition, idle surge, backfire, and lean-related DTCs on EFI models.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-heat-soak-and-hot-restart-issues-air-cooled-v-twins",
     "title": "Heat soak and hot restart issues — air-cooled V-twins",
     "description": "Air-cooled Harleys absorb enormous heat in traffic or at long idle, particularly the rear cylinder which gets less airflow. When you shut down a hot bike and try to restart after 10-20 minutes, the heat-soaked engine is harder to turn over, fuel can vapor-lock in the throttle body/carb, and the IAC (idle air control) may not compensate correctly.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-primary-oil-fluid-leak-derby-cover-and-primary-gasket",
     "title": "Primary oil/fluid leak — derby cover and primary gasket",
     "description": "The primary cover on Big Twin Harleys develops leaks at the derby cover (inspection cover), primary gasket, and shifter shaft seal. On Sportsters with shared oil, a primary leak means engine oil is leaking too. These leaks are progressive — they start as a weep and become a drip.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-clutch-adjustment-and-clutch-pack-wear-cable-and-hydraulic",
     "title": "Clutch adjustment and clutch pack wear — cable and hydraulic",
     "description": "Harley clutches need periodic adjustment on cable models (Evo through most Twin Cams) and fluid service on hydraulic models (VRSC, late Softails, M8). A maladjusted or worn clutch causes slipping under load, dragging at stops (hard to find neutral), and notchy shifting. High-torque engines eat clutches faster than Japanese bikes.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-rear-suspension-sag-and-shock-degradation",
     "title": "Rear suspension sag and shock degradation",
     "description": "Harley rear shocks (especially on Sportsters and Dynas) are notoriously cheap from the factory. They sag under load, bottom out on bumps, and lose damping within 15K-20K miles. Two-up riding accelerates the problem. The result: poor handling, rear-end wallowing, and accelerated tire wear.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-wheel-bearing-failure-front-and-rear",
     "title": "Wheel bearing failure — front and rear",
     "description": "Harley wheel bearings (sealed ball bearings) wear from mileage, water exposure, and loads. Symptoms: humming or grinding noise that changes with speed (not RPM), lateral wheel play when grabbed at top and bottom, and ABS light on 2008+ models (the ABS tone ring is on the bearing seal).",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-exhaust-leak-at-head-pipe-flange-all-models",
     "title": "Exhaust leak at head pipe flange — all models",
     "description": "Exhaust leaks at the cylinder head flanges are universal on Harleys. The exhaust nuts loosen from thermal cycling (expand hot, contract cold), and the exhaust gaskets crush and fail. Symptoms: ticking noise on cold start that fades when hot (metal expands and seals), popping on decel, and lean codes on EFI bikes.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-tire-wear-pattern-diagnosis-cupping-feathering-flat-spotting",
     "title": "Tire wear pattern diagnosis — cupping, feathering, flat-spotting",
     "description": "Abnormal tire wear on Harleys tells you about suspension, alignment, and riding habit problems. Cupping (scalloped wear) = worn shocks. Center-only wear = overinflation or all-highway riding. Edge wear = underinflation. Flat spots = hard braking. Mechanics should read tires before replacing them.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-fuel-quality-and-ethanol-damage-carb-and-efi-eras",
     "title": "Fuel quality and ethanol damage — carb and EFI eras",
     "description": "Modern E10 (10% ethanol) fuel damages carburetors, fuel lines, and fuel system seals on older Harleys. Even on EFI bikes, ethanol attracts moisture that causes corrosion in the fuel tank, injectors, and fuel pump. Bikes that sit for >30 days are especially vulnerable.",
     "make": "Harley-Davidson",

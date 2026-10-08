@@ -1,5 +1,6 @@
 [
   {
+    "key": "ktm-which-1290-you-have-super-duke-r-super-duke-gt-super",
     "title": "Which 1290 you have — Super Duke R, Super Duke GT, Super Adventure S and R take different parts",
     "description": "General knowledge entry on variant identification across the KTM 1290 line. Every one of these bikes shares the LC8 1301cc 75-degree V-twin, which is exactly why they get treated as a single model when parts are ordered. They are not a single model. The Super Duke line has the R, a naked bike, and the GT, a sport-tourer. The Super Adventure line has the base bike, the S and the R, with a T offered in some years and markets. There has never been a Super Adventure GT — GT is a Super Duke designation — and a request for one produces either a blank look or the wrong bike's parts. The split that costs the most money is front wheel size: a Super Adventure S runs a 19-inch front and the R a 21-inch, with suspension travel and geometry to match, so wheel, tyre and related parts do not interchange between them.",
     "make": "KTM",
@@ -31,6 +32,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-msc-on-a-1290-is-a-bosch-supplier-system-not-a-ktm-in-house",
     "title": "MSC on a 1290 is a Bosch supplier system, not a KTM in-house one — what that changes in diagnosis",
     "description": "General knowledge entry on what MSC actually is. Motorcycle Stability Control on a KTM is a Bosch system: developed with Bosch and put into production by KTM ahead of the rest of the industry, with the 1190 Adventure the first production motorcycle to carry lean-sensitive ABS, and the 1290 line inheriting the package. That distinction is practical rather than trivia. The systems a shop sees far more often — Kawasaki's KTRC, Honda's HSTC, Suzuki's Motion Track — are in-house designs whose behaviour is documented per make and per model. MSC is a supplier system, so the sensor set and the conventions follow the Bosch motorcycle ABS generation fitted to the bike, hardware that also turns up on other European machines. KTM's traction function within the package is MTC. A shop that reads MSC as a KTM-only black box goes looking for KTM-specific answers to what is a Bosch ABS unit being given a lean-angle input.",
     "make": "KTM",
@@ -62,6 +64,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-abs-and-ride-mode-returning-to-default-at-every-key-cycle-on",
     "title": "ABS and ride mode returning to default at every key cycle on a 1290 is designed behaviour, not a fault",
     "description": "General knowledge entry on a support call that is not a fault. The safety-relevant rider aids in KTM's MSC package — cornering ABS and the MTC traction function — return to their default state when the ignition is cycled on the 1290. A reduced-intervention ABS setting chosen for a gravel section is not remembered; neither, on most configurations, is a mode selected to soften the throttle. The case that generates the most calls is the Super Adventure R, because the off-road ABS setting is precisely the one an owner wants to persist across the stops of a green-lane day and it is precisely the one that will not. Owners report this as the ABS turning itself back on, and shops occasionally chase it as an electrical fault. It is the manufacturer declining to leave a rider aid switched off across a start the rider may not remember making. The distinction from a real fault is clean: this behaviour accepts the selection and forgets it at the next key cycle, whereas a genuine MSC fault holds a warning light continuously, does not clear on a key cycle, and usually refuses the selection outright rather than accepting it.",
     "make": "KTM",
@@ -92,6 +95,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-offroad-abs-on-a-super-adventure-r-is-reduced-intervention",
     "title": "Offroad ABS on a Super Adventure R is reduced intervention, not ABS off",
     "description": "General knowledge entry on what KTM's off-road ABS setting actually does. It is a mode of the MSC package, not a switch that removes it. The rear is allowed to lock so the bike can be steered and slowed on the back wheel the way an off-road rider expects, while the front keeps anti-lock with the intervention threshold raised. A rider who reads the setting as ABS off finds the front still intervening on a loose descent and concludes the system is faulty; a rider who reads it as full ABS is surprised when the rear locks. Both are the setting working. The Super Adventure R is the bike built around using it — 21-inch front, long travel, off-road intent — but the setting is offered more widely across the 1290 Super Adventure variants, and the exact behaviour has varied by model year, so confirm it against the manual for the bike in front of you rather than from another year's. Selecting it also does not survive a key cycle, which produces a second complaint on its own.",
     "make": "KTM",
@@ -121,6 +125,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-after-a-drop-a-1290-can-ride-normally-while-the-lean",
     "title": "After a drop, a 1290 can ride normally while the lean-sensitive functions are inactive",
     "description": "General knowledge entry on the quiet failure after a low-speed fall or a lowside. The engine runs, the brakes work, base anti-lock works, and the bike rides out of the car park feeling fine — while cornering ABS and MTC are degraded or inactive. The lean-sensitive layer depends on a chain the impact can break without breaking anything the rider notices: the inertial measurement unit and its mounting, the wheel speed sensors and their tone rings, brake pressure sensing, and the wiring and connectors between them. None of that is exercised standing still or riding upright at walking pace. It is exercised at lean, under braking, which is the moment the rider is relying on it. Which 1290 it is changes where to look: a Super Adventure R dropped off-road most often takes the hit at the exposed 21-inch spoked front hub and its tone ring, while a Super Duke lowsided on tarmac more often takes it at the lever, the brake line and the bodywork the inertial unit is mounted behind. A post-drop check that consists of starting the bike and riding it around the yard is not a check of any of this.",
     "make": "KTM",
@@ -153,6 +158,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-wheel-speed-sensing-on-a-super-adventure-r-s-21-inch-spoked",
     "title": "Wheel-speed sensing on a Super Adventure R's 21-inch spoked front is exposed in ways a road bike's is not",
     "description": "General knowledge entry on why an adventure bike's ABS sensors need checking more often than a road bike's. The cleaning and gap-setting procedure itself is the same as on any anti-lock system and is not restated here. What differs is the exposure. Off-road use packs the sensor gap with mud, clay and grit that a road bike never encounters, and it dries there. A spoked hub and its tone ring take direct rock strikes that a cast wheel's shrouded arrangement largely avoids. The front wheel comes out far more often on these bikes, for terrain-appropriate tyres as much as for wear, and every removal is an opportunity to knock the sensor, its bracket or its lead. The reason this matters more on a 1290 than on a bike with plain anti-lock is that a marginal signal degrades the lean-sensitive functions before it sets a hard fault, so the bike does not necessarily tell the rider anything.",
     "make": "KTM",

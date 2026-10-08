@@ -375,7 +375,8 @@ def _header(text: str) -> dict[str, str]:
 
 # ------------------------------------------------------------ the two steps
 def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKUPS,
-           repo: pathlib.Path = ROOT, migrate: Callable = _default_migrate) -> int:
+           repo: pathlib.Path = ROOT, migrate: Callable = _default_migrate,
+           parity_build: Callable | None = None) -> int:
     scope_file = scope_path(repo, phase)
     scope = json.loads(scope_file.read_text())
     print("before (live, read only):", json.dumps(state(db)))
@@ -393,6 +394,7 @@ def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKU
         new_schema = schema(copy)
         sch = schema_diff(schema(bk), new_schema)
         probs = check_scope(d, scope, allowed, to, sch)
+        probs += seed_parity(repo, copy, d, parity_build or _default_fresh_seed)
         hits = census(copy)
     finally:
         _drop(copy)
@@ -469,7 +471,8 @@ def regression_problem(repo: pathlib.Path, phase: str) -> str | None:
     return None
 
 
-def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Callable) -> dict:
+def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Callable,
+              parity_build: Callable | None = None) -> dict:
     """Every refusal, before live is touched. Returns the header on success."""
     problem = regression_problem(repo, phase)
     if problem:
@@ -512,6 +515,7 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
         new_schema = schema(fresh)
         sch = schema_diff(schema(bk), new_schema)
         probs = check_scope(d, scope, allowed, to, sch)
+        probs += seed_parity(repo, fresh, d, parity_build or _default_fresh_seed)
     finally:
         _drop(fresh)
     if probs:
@@ -524,9 +528,10 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
 
 
 def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT,
-               migrate: Callable = _default_migrate) -> int:
+               migrate: Callable = _default_migrate,
+               parity_build: Callable | None = None) -> int:
     try:
-        head = preflight(phase, db=db, repo=repo, migrate=migrate)
+        head = preflight(phase, db=db, repo=repo, migrate=migrate, parity_build=parity_build)
     except Refused as e:
         print(f"REFUSED: {e}", file=sys.stderr)
         return 2
@@ -549,6 +554,71 @@ def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT
         f"- **F158 census on live:** `{census(db)}`\n\n" + report(d, sch, new_schema))
     print("after (live):", json.dumps(state(db)), "scope problems:", probs or "none")
     return 1 if probs else 0
+
+
+# ------------------------------------------------------------ seed parity
+#: Columns a seed build cannot reproduce: the row's id and its clocks.
+PARITY_SKIP = frozenset({"id", "created_at", "updated_at"})
+
+
+def _default_fresh_seed(path: pathlib.Path) -> None:
+    """A fresh build of the seed at HEAD: the schema, then every known-issue
+    seed file, as `db init` loads them."""
+    sys.path.insert(0, str(ROOT / "src"))
+    from motodiag.core.database import init_db
+    from motodiag.knowledge.loader import load_known_issues_file
+
+    init_db(str(path))
+    seed = ROOT / "src" / "motodiag" / "knowledge" / "seed" / "knowledge"
+    for f in sorted(seed.glob("known_issues_*.json")):
+        load_known_issues_file(f, str(path))
+
+
+def seed_parity(repo: pathlib.Path, copy: pathlib.Path, d: dict,
+                build: Callable = _default_fresh_seed) -> list[str]:
+    """Phase 380, the operator's 2A: every `known_issues` row the migration
+    adds or changes must equal the row with the same `row_key` in a fresh
+    seed build, every column but the id and the clocks, so the seed and live
+    cannot drift. [] when the migration touches no known-issue row, or when
+    the copy has no `row_key` yet."""
+    x = d.get("known_issues")
+    if not x:
+        return []
+    # The copy's own columns, which the touched rows follow: the diff's
+    # `cols` are the backup's, and a migration that adds `row_key` (085)
+    # would read as one that has none (Phase 380, found by its first run).
+    c = _ro(copy)
+    cols = [r[1] for r in c.execute("pragma table_info('known_issues')")]
+    c.close()
+    if "row_key" not in cols:
+        return []
+    touched = [x["b"][k] for k in x["added"] + x["changed"]]
+    if not touched:
+        return []
+    fresh = _scratch(repo, "seed_parity_fresh.db")
+    try:
+        build(fresh)
+        c = _ro(fresh)
+        fresh_cols = [r[1] for r in c.execute("pragma table_info('known_issues')")]
+        by_key = {r[fresh_cols.index("row_key")]: dict(zip(fresh_cols, r))
+                  for r in c.execute("select * from known_issues")}
+        c.close()
+    finally:
+        _drop(fresh)
+    probs = []
+    for row in touched:
+        live = dict(zip(cols, row[1:]))
+        seeded = by_key.get(live["row_key"])
+        if seeded is None:
+            probs.append(f"seed parity: row_key {live['row_key']!r} is in no seed entry")
+            continue
+        for col in cols:
+            if col in PARITY_SKIP or col not in seeded:
+                continue
+            if live[col] != seeded[col]:
+                probs.append(f"seed parity: {live['row_key']} {col}: the migration wrote "
+                             f"{str(live[col])[:60]!r}, the seed says {str(seeded[col])[:60]!r}")
+    return probs
 
 
 # ------------------------------------------------------------ reading it back

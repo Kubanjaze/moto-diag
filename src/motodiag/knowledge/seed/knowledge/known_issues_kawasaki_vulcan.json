@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-vulcan-800-900-carburetor-issues-pilot-jet-and-idle-circuit",
     "title": "Vulcan 800/900 carburetor issues — pilot jet and idle circuit",
     "description": "The carbureted Vulcan 800 (1995-2006) and early Vulcan 900 use CV carburetors that clog from ethanol fuel during seasonal storage. The pilot jet circuit is the first to clog, causing hard starting, rough idle, and stalling. The Vulcan 800 has a single carb; the 900 has twin carbs.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-vulcan-900-1700-fuel-injection-idle-surge-isc-valve-carbon",
     "title": "Vulcan 900/1700 fuel injection idle surge — ISC valve carbon",
     "description": "The EFI Vulcan 900 (2006+) and Vulcan 1700 (2009+) develop idle surge from carbon buildup on the Idle Speed Control valve. The air-cooled V-twin's blowby gases coat the ISC with carbon, causing erratic idle that surges between 800-1400 RPM. Same pattern as the Yamaha V-Star 1300.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-vulcan-1500-1600-shaft-drive-service-neglect",
     "title": "Vulcan 1500/1600 shaft drive service neglect",
     "description": "The Vulcan 1500 (1987-2008) and 1600 (2003-2008) use shaft final drive. The gear oil needs changing every 10K miles but cruiser owners frequently never change it. The hypoid gears wear when oil degrades, producing a whining noise that progresses to catastrophic gear failure.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-vulcan-750-starter-system-starter-clutch-and-relay-issues",
     "title": "Vulcan 750 starter system — starter clutch and relay issues",
     "description": "The Vulcan 750 (1986-2006) has a known starter system weakness. The starter clutch (one-way sprag) wears, the starter relay contacts corrode, and the starter motor draws excessive current through aged wiring. The symptom is a click with no crank, or a grinding sound as the starter spins without engaging.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-vulcan-2000-massive-v-twin-unique-issues",
     "title": "Vulcan 2000 — massive V-twin unique issues",
     "description": "The Vulcan 2000 (2004-2010) has the largest V-twin engine in any production cruiser — 2053cc. The massive engine creates unique issues: extreme heat in traffic, heavy clutch pull, and final drive stress from the enormous torque. The bike weighs 740 lbs wet, making tire and brake wear significant.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-vulcan-900-belt-drive-maintenance-tension-and-inspection",
     "title": "Vulcan 900 belt drive maintenance — tension and inspection",
     "description": "The Vulcan 900 uses belt final drive. The belt needs tension checking every 5K miles and visual inspection for cracks and missing teeth. Belt failure is sudden and total — no limping home. Many Vulcan 900 owners never check the belt because belt drive is 'maintenance-free.'",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-all-vulcan-models-air-cooled-v-twin-heat-soak-in-traffic",
     "title": "All Vulcan models — air-cooled V-twin heat soak in traffic",
     "description": "Most Vulcan models use air-cooled or air/oil-cooled V-twin engines that rely on airflow for cooling. In stop-and-go traffic, the engine heat builds up, radiating onto the rider and raising oil temperature. This is a characteristic of air-cooled cruisers, not a defect, but owners need to manage it.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-vulcan-1700-efi-and-abs-modern-cruiser-electronics",
     "title": "Vulcan 1700 EFI and ABS — modern cruiser electronics",
     "description": "The Vulcan 1700 (2009-2020) is Kawasaki's most modern cruiser with fuel injection, ABS, and cruise control. The FI system uses an ISC valve that clogs (same as Vulcan 900), the ABS sensors need cleaning, and the cruise control uses a vacuum-operated system that can develop leaks.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-vulcan-500-ninja-500-engine-in-cruiser-chassis",
     "title": "Vulcan 500 — Ninja 500 engine in cruiser chassis",
     "description": "The Vulcan 500 (1990-2009) uses a detuned Ninja 500 (EX500) parallel twin engine in a cruiser chassis. It shares most mechanical components with the Ninja 500, including the same charging system weakness, valve adjustment intervals, and carb design. Parts interchangeability with the Ninja 500 is excellent.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-all-vulcan-models-exhaust-and-intake-modifications-for-sound",
     "title": "All Vulcan models — exhaust and intake modifications for sound",
     "description": "Vulcan owners commonly modify exhaust and intake for a deeper, louder sound. Without proper fueling adjustment, aftermarket exhaust creates lean conditions that cause backfiring, hesitation, and potential engine damage. Carbureted models need rejetting; EFI models need a fuel controller or ECU flash.",
     "make": "Kawasaki",

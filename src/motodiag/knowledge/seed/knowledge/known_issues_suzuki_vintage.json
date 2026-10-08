@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gs1000-1100-cam-chain-tensioner-automatic-unit-failure",
     "title": "GS1000/1100 cam chain tensioner — automatic unit failure",
     "description": "The GS1000 (1978-1982) and GS1100 (1980-1984) use automatic cam chain tensioners that wear after 40+ years. The ratchet mechanism strips, allowing chain slap. Cold startup rattle is the first sign. The GS1100 shares this failure with every air-cooled Suzuki inline-4.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-gs550-750-850-charging-system-stator-and-regulator",
     "title": "GS550/750/850 charging system — stator and regulator",
     "description": "The GS550/750/850 (1977-1983) charging systems use permanent-magnet rotors and stators that fail from decades of heat cycling. The original regulator/rectifier is a primitive shunt-type that runs hot. Bullet connectors corrode, adding resistance that accelerates stator failure.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gs-katana-1100-carburetor-bank-4x-mikuni-rebuild-and-sync",
     "title": "GS/Katana 1100 carburetor bank — 4x Mikuni rebuild and sync",
     "description": "All GS and Katana inline-4 models use banks of 4 Mikuni CV carburetors. After 40+ years, diaphragms crack, float needles stick, pilot jets clog from varnished fuel, and synchronization is far off. A full carb service is the most transformative maintenance on any vintage Suzuki.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 6.0
   },
   {
+    "key": "suzuki-gs-katana-ignition-system-points-electronic-and-cdi",
     "title": "GS/Katana ignition system — points, electronic, and CDI",
     "description": "Early GS models (1977-1980) use breaker point ignition; later models use electronic ignition or CDI. Points require periodic adjustment and condenser replacement. Electronic ignition eliminates timing drift but the pickup coils deteriorate with age. CDI boxes rarely fail but are expensive to replace.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gsx1100-katana-1982-1984-fuel-system-petcock-and-tank-rust",
     "title": "GSX1100 Katana (1982-1984) fuel system — petcock and tank rust",
     "description": "The original GSX1100S Katana's steel fuel tank rusts internally from ethanol fuel and condensation. The vacuum petcock diaphragm fails, flooding carbs while parked. Rust particles clog carb jets and score float needles. The Katana's distinctive tank shape makes replacement tanks expensive.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-gs-katana-fork-and-suspension-modernization-needed",
     "title": "GS/Katana fork and suspension — modernization needed",
     "description": "Vintage GS and Katana models use conventional forks with basic damper rods and twin rear shocks. The fork seals are hardened, the oil is decades old, and the damping is inadequate for the bike's weight. The rear shocks are dead. Modern upgrades transform handling.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-gs-katana-brake-system-complete-refresh-required",
     "title": "GS/Katana brake system — complete refresh required",
     "description": "The GS and Katana brake systems are 40+ years old. Caliper pistons corrode, master cylinder bores pit, rubber brake lines swell internally, and pad material hardens. The GS1100 with its power and weight demands strong brakes — stock-condition 40-year-old brakes are dangerous.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-gs-katana-engine-oil-leaks-gasket-age",
     "title": "GS/Katana engine oil leaks — gasket age",
     "description": "Every vintage GS and Katana develops oil leaks as gaskets and seals harden and shrink. The cam cover gasket, head gasket, base gasket, and O-rings all deteriorate. The GS engines are well-built but 40-year-old gaskets need replacement.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gs-katana-wiring-harness-brittle-insulation-and-corroded",
     "title": "GS/Katana wiring harness — brittle insulation and corroded connectors",
     "description": "The GS and Katana wiring harnesses are 40+ years old with cracking insulation, corroded bullet connectors, and degraded ground connections. Electrical gremlins — flickering lights, intermittent starting, gauge failures — are wiring-related, not component failures.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-gs-katana-drive-chain-530-maintenance-and-conversion",
     "title": "GS/Katana drive chain — 530 maintenance and conversion",
     "description": "Vintage GS and Katana models use 530 (or 630 on earliest models) chains. The chain and sprockets have been replaced multiple times over 40 years with varying quality. The countershaft seal leaks when sprockets are changed. A 520 conversion saves weight.",
     "make": "Suzuki",

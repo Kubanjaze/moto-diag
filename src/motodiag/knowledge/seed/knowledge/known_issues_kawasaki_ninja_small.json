@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-ninja-250r-carburetor-issues-pilot-jets-and-choke-enrichment",
     "title": "Ninja 250R carburetor issues — pilot jets and choke enrichment (pre-2008)",
     "description": "The carbureted Ninja 250R (1988-2007) uses twin Keihin CV carburetors that are simple but sensitive to ethanol fuel. The pilot jets clog from storage, the choke plunger sticks, and the carb sync drifts from vibration. This is the most common issue on the most common beginner bike — every Ninja 250R forum has hundreds of carb threads.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-ninja-250r-300-400-dropped-bike-damage-first-bike-reality",
     "title": "Ninja 250R/300/400 dropped-bike damage — first-bike reality",
     "description": "The Ninja 250/300/400 are first bikes, and first bikes get dropped. The most common damage pattern: low-speed tip-over in a parking lot, breaking the clutch lever, brake lever, mirror, fairing, and bar-end weight. The Ninja's full fairings make cosmetic damage expensive, but the mechanical damage is usually minimal.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-ninja-250r-300-charging-system-small-stator-big-demands",
     "title": "Ninja 250R/300 charging system — small stator, big demands",
     "description": "The Ninja 250R and 300 have small stators sized for the 250-300cc parallel twin. The stock charging system is adequate for bone-stock bikes but struggles when accessories (heated grips, phone charger, aftermarket lights) are added. The stator connector on the 250R is the same weak design as other Kawasakis.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-ninja-300-400-fuel-pump-and-fi-system-efi-beginner-bike",
     "title": "Ninja 300/400 fuel pump and FI system — EFI beginner bike diagnostics",
     "description": "The Ninja 300 (2013+) and Ninja 400 (2018+) are fuel-injected with electronic throttle bodies. The fuel pump can fail from ethanol degradation and running the tank low, and the FI system throws codes that beginners don't know how to read. The Kawasaki self-diagnostic mode uses the FI light similar to Yamaha's system.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-ninja-250-300-400-chain-maintenance-neglect-new-rider",
     "title": "Ninja 250/300/400 chain maintenance neglect — new rider education gap",
     "description": "Chain maintenance is the most neglected item on beginner Ninjas. New riders don't know they need to lubricate and adjust the chain, and the chain on a small bike wears faster than expected because the small twin engine delivers torque in stronger pulses relative to the chain's capacity. A neglected chain wears sprockets, causes noise, and can break catastrophically.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-ninja-250r-300-valve-clearance-parallel-twin-needs-regular",
     "title": "Ninja 250R/300 valve clearance — parallel twin needs regular checks",
     "description": "The Ninja 250R and 300 use parallel twin engines with shim-under-bucket valve adjustment. Kawasaki specifies a 15,000-mile check interval, but many first-time owners reach this mileage without knowing valve checks exist. Tight valves cause hot-start difficulty and eventually burned valves — an expensive repair on what's supposed to be a cheap bike.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "kawasaki-ninja-400-abs-sensor-and-modulator-issues",
     "title": "Ninja 400 ABS sensor and modulator issues",
     "description": "The Ninja 400 (ABS model) uses a basic two-channel ABS system. The wheel speed sensors are exposed and vulnerable to contamination from brake dust and road debris. Contaminated sensors cause premature ABS activation, ABS warning lights, and reduced braking effectiveness. New riders often panic when ABS activates and think the brakes are broken.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-ninja-250r-coolant-system-air-cooled-vs-liquid-cooled",
     "title": "Ninja 250R coolant system — air-cooled vs liquid-cooled confusion",
     "description": "The Ninja 250R switched from air-cooled (1988-2007) to liquid-cooled (2008-2012) mid-production. Owners of air-cooled 250Rs don't have coolant system issues, but liquid-cooled 250R/300/400 owners need to maintain the coolant system. The small radiator on these bikes is vulnerable to debris and the thermostat can stick on high-mileage examples.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-ninja-400-exhaust-header-cracking-known-factory-issue",
     "title": "Ninja 400 exhaust header cracking — known factory issue",
     "description": "The Ninja 400 has a known issue with exhaust header cracking at the weld joint near the cylinder head. The crack starts small and grows, causing an exhaust leak that sounds like a ticking at idle. Kawasaki issued a technical service bulletin but no recall. The crack is caused by thermal stress at the weld joint combined with engine vibration.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-all-ninja-250-300-400-oil-change-neglect-and-first-service",
     "title": "All Ninja 250/300/400 — oil change neglect and first-service importance",
     "description": "The Ninja beginner bikes have the highest rate of missed first services (600-mile break-in oil change) and extended oil change intervals of any motorcycle class. New riders don't know the break-in service exists, and some ride 5K-10K miles on factory fill oil. The small parallel twin engines are tolerant but not immune to oil neglect — cam wear and bearing damage accumulate silently.",
     "make": "Kawasaki",

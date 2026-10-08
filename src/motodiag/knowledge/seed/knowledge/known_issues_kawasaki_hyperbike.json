@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-zx-12r-ram-air-system-pressurized-airbox-maintenance",
     "title": "ZX-12R ram air system — pressurized airbox maintenance",
     "description": "The ZX-12R uses a ram air system that pressurizes the airbox at speed, increasing power by 5-10hp above 100mph. The ram air ducts in the nose fairing must be sealed properly for the system to work. Cracked ducts, missing gaskets, or aftermarket fairings without proper sealing lose the pressurization effect and reduce high-speed power.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-12r-charging-system-same-era-same-weakness",
     "title": "ZX-12R charging system — same era, same weakness",
     "description": "The ZX-12R uses the same charging system design as other early-2000s Kawasaki sport bikes. The stator, connector, and shunt regulator all fail with the same pattern. The ZX-12R's larger engine generates more heat, and the higher electrical load from the larger bike's accessories (heated grips, GPS are common on sport-tourers) accelerates failure.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-12r-and-zx-14r-weight-related-brake-and-tire-wear",
     "title": "ZX-12R and ZX-14R weight-related brake and tire wear",
     "description": "Both hyperbikes weigh 500+ lbs wet and produce 180-210hp. This combination causes accelerated brake pad wear, tire wear, and chain/sprocket wear compared to lighter sport bikes. Owners used to 600cc maintenance intervals are surprised by how quickly consumables wear out on a hyperbike.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-zx-14r-fuel-injection-and-throttle-response-ride-by-wire",
     "title": "ZX-14R fuel injection and throttle response — ride-by-wire tuning",
     "description": "The ZX-14R uses ride-by-wire throttle that can feel abrupt at small openings, similar to the Yamaha MT-09's snatchy throttle but on a 210hp hyperbike. The ECU's emissions mapping creates a lean spot at low RPM that causes hesitation in city riding. Power mode selection helps but doesn't eliminate the issue.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-14r-abs-and-ktrc-sport-touring-electronics",
     "title": "ZX-14R ABS and KTRC — sport-touring electronics",
     "description": "The ZX-14R (2013+) added ABS and KTRC traction control. The systems are simpler than the ZX-10R's (no IMU) but effective for sport-touring use. Wheel speed sensor contamination causes false ABS/KTRC activation, and brake fluid neglect corrodes the ABS modulator on high-mileage sport-touring examples.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-14r-shaft-drive-discussion-chain-drive-maintenance",
     "title": "ZX-14R shaft drive discussion — chain-drive maintenance reality",
     "description": "Despite online rumors, the ZX-14R does NOT have shaft drive — it uses a 530 chain. This is a common misconception because the Hayabusa (its main competitor) also uses chain drive, and the ZX-14R's sport-touring positioning leads people to assume shaft drive. The chain on a ZX-14R needs frequent maintenance due to the engine's massive torque output.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-zx-12r-and-zx-14r-cct-high-torque-inline-4",
     "title": "ZX-12R and ZX-14R CCT — high-torque inline-4",
     "description": "Both hyperbikes use automatic cam chain tensioners that wear from the high-torque engine operation. The ZX-14R's 1441cc engine produces massive torque that stresses the cam chain system differently from high-revving sport bikes — the torque pulses are stronger even though the RPM is lower.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-14r-cooling-system-sport-touring-thermal-management",
     "title": "ZX-14R cooling system — sport-touring thermal management",
     "description": "The ZX-14R's 1441cc engine generates enormous heat, and the sport-touring use pattern (sustained highway speeds + traffic) stresses the cooling system differently from a track bike. The radiator is larger than the ZX-10R's but the engine produces more heat. Long highway runs followed by traffic create thermal cycling that stresses hoses and thermostats.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-zx-12r-suspension-sag-heavy-bike-needs-proper-setup",
     "title": "ZX-12R suspension sag — heavy bike needs proper setup",
     "description": "The ZX-12R weighs 500+ lbs wet and many owners add luggage for touring. The stock suspension was set up for a specific rider weight and the springs sag under heavier riders or loaded touring. The front forks dive excessively under braking and the rear shock bottoms over bumps, making the hyperbike feel unwieldy and dangerous.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-zx-14r-valve-clearance-high-mileage-sport-tourer",
     "title": "ZX-14R valve clearance — high-mileage sport-tourer",
     "description": "The ZX-14R is often ridden to high mileage (40K-80K miles) as a sport-tourer. The valve clearance tightens over these miles, and many owners skip the 15K-mile check interval because the bike 'runs fine.' The 1441cc engine is forgiving, but valves eventually tighten enough to cause hot-start difficulty and power loss.",
     "make": "Kawasaki",

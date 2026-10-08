@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-gsx-s750-1000-throttle-by-wire-jerkiness-at-low-speed",
     "title": "GSX-S750/1000 throttle-by-wire jerkiness at low speed",
     "description": "The GSX-S750 (2015+) and GSX-S1000 (2015+) use ride-by-wire throttle derived from GSX-R engines. The throttle mapping is aggressive at small openings, creating jerky low-speed response. Parking lot maneuvers and stop-and-go traffic amplify the jerkiness.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-s1000-cam-chain-tensioner-from-gsx-r-engine",
     "title": "GSX-S1000 cam chain tensioner from GSX-R engine",
     "description": "The GSX-S1000 uses a detuned GSX-R1000 K5 engine, inheriting the same CCT design. The automatic tensioner ratchet wears, causing cold startup chain rattle. The engine is detuned but the CCT is the same part subject to the same failure mode.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-katana-2019-heat-management-gsx-s-engine-in-sport-touring",
     "title": "Katana (2019+) heat management — GSX-S engine in sport-touring bodywork",
     "description": "The 2019+ Katana uses the GSX-S1000 engine in a retro-styled body with less airflow than the naked GSX-S. The engine runs hotter behind the fairing, the exhaust headers radiate heat onto the rider's legs, and the underbelly exhaust adds heat to the seating area.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-gsx-s-katana-stator-and-charging-system",
     "title": "GSX-S/Katana stator and charging system",
     "description": "The GSX-S750 and GSX-S1000/Katana inherit the charging system designs from their respective GSX-R engines. The stator and reg/rec failure pattern is the same: overheating stator, failing reg/rec, melting connector.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-gsx-s-katana-fuel-pump-relay-failure",
     "title": "GSX-S/Katana fuel pump relay failure",
     "description": "The GSX-S and Katana inherit the fuel pump relay failure from the GSX-R platform. The relay contacts corrode or weld, causing no-prime or stuck-on conditions. This is the same $15 part that causes problems across the entire Suzuki sport bike range.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-gsx-s750-chain-and-sprocket-maintenance",
     "title": "GSX-S750 chain and sprocket maintenance",
     "description": "The GSX-S750 uses a 525 chain driven by the GSX-R750-derived engine. The street-oriented riding and commuter use patterns wear chains differently than the GSX-R — more low-gear acceleration, more stop-start. The countershaft sprocket wears fastest.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-katana-stock-mirror-vibration-rider-comfort-issue",
     "title": "Katana stock mirror vibration — rider comfort issue",
     "description": "The 2019+ Katana's stock bar-end mirrors vibrate at certain RPM ranges, making rear vision unclear. The inline-4 engine's vibration frequency resonates with the mirror stalk length. This is a common complaint addressed with aftermarket mirrors or vibration dampeners.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-s-katana-valve-clearance-maintenance",
     "title": "GSX-S/Katana valve clearance maintenance",
     "description": "The GSX-S and Katana engines require valve clearance checks at the same intervals as their GSX-R donor engines. The detuned engines don't rev as high but the clearances still tighten over time. Exhaust valves tighten first.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-gsx-s1000-abs-and-tc-sensor-maintenance",
     "title": "GSX-S1000 ABS and TC sensor maintenance",
     "description": "The GSX-S1000 features ABS and traction control relying on wheel speed sensors. Brake dust, road grime, and chain lube contaminate the sensors. The TC can intervene unexpectedly when sensors give false readings, cutting power mid-acceleration.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-gsx-s-katana-fork-seal-and-oil-service",
     "title": "GSX-S/Katana fork seal and oil service",
     "description": "The GSX-S and Katana use GSX-R-derived inverted forks. The seals leak from road debris, the fork oil degrades from commuting heat cycles, and the damping deteriorates. Street use creates different wear patterns than the track use these forks were designed for.",
     "make": "Suzuki",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-coolant-system-failure-radiator-fan-relay-and-thermostat",
     "title": "Coolant system failure — radiator fan relay and thermostat",
     "description": "The V-Rod is Harley's only liquid-cooled platform (until Revolution Max). The cooling system has failure modes no air-cooled Harley mechanic expects: radiator fan relay sticking off, thermostat failing closed, and coolant hose clamps loosening from vibration. Overheating in traffic is the #1 complaint.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-hydraulic-clutch-master-cylinder-failure",
     "title": "Hydraulic clutch master cylinder failure",
     "description": "The VRSC uses a hydraulic clutch — unique among Harleys until the M8 Softail. The master cylinder on the left handlebar develops internal seal leaks, causing a spongy clutch that won't fully disengage. Clutch drags, hard to find neutral, grinds into first.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-underseat-fuel-cell-delamination",
     "title": "Underseat fuel cell delamination",
     "description": "The V-Rod's fuel tank is not the visible airbox cover on top — it's a plastic fuel cell hidden under the seat. The internal lining can delaminate over time, sending plastic flakes into the fuel system that clog the fuel filter, fuel pump strainer, and injectors.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-exhaust-header-cracking-heat-stress-on-front-cylinder",
     "title": "Exhaust header cracking — heat stress on front cylinder",
     "description": "The V-Rod's exhaust headers, particularly the front cylinder header, develop cracks at the cylinder head flange from thermal cycling. The front header runs hotter because it gets less airflow behind the radiator. Cracked headers cause exhaust leaks, ticking noise at startup, and lean codes.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-alternator-rotor-nut-backing-off-charging-failure",
     "title": "Alternator rotor nut backing off — charging failure",
     "description": "The V-Rod uses an internal alternator (not a stator like air-cooled Harleys). The alternator rotor is mounted on the crankshaft with a nut that can back off, causing intermittent or complete charging failure. The battery light comes on and voltage drops below 12V at idle.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-perimeter-frame-stress-cracks-headstock-and-swingarm-pivot",
     "title": "Perimeter frame stress cracks — headstock and swingarm pivot",
     "description": "The VRSC perimeter frame (hydroformed aluminum on early models, steel on later) can develop stress cracks at the headstock gussets and swingarm pivot area. More common on bikes that have been stunted, dragged, or ridden hard. A safety-critical issue.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-ecu-mapping-runs-rich-from-factory-o2-sensor-fouling",
     "title": "ECU mapping — runs rich from factory, O2 sensor fouling",
     "description": "Unlike air-cooled Harleys that run lean from factory, the V-Rod runs rich. The factory ECU calibration dumps extra fuel for emissions compliance. This fouls O2 sensors and spark plugs, especially on short-trip bikes that don't get up to full operating temperature.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-drive-belt-tensioner-bearing-failure",
     "title": "Drive belt tensioner bearing failure",
     "description": "The VRSC final drive belt tensioner uses a sealed bearing that wears out, causing belt noise, vibration, and eventually belt misalignment. The tensioner is spring-loaded and when the bearing seizes, it can score the belt and cause premature belt failure.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-starter-motor-and-starter-clutch-failure-high-compression",
     "title": "Starter motor and starter clutch failure — high compression",
     "description": "The Revolution engine has high compression (11.3:1) which puts extreme load on the starter motor and starter clutch (sprag clutch). The starter clutch can strip its rollers, causing the starter to spin without engaging the engine. The starter motor itself can burn out from the high current draw.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "harley-davidson-rear-shock-preload-adjuster-seizure-and-linkage-wear",
     "title": "Rear shock preload adjuster seizure and linkage wear",
     "description": "The VRSC rear suspension uses a single shock with a rising-rate linkage system (unique among Harleys). The preload adjuster on the shock seizes from corrosion, and the linkage bearings wear out causing clunking over bumps and vague rear-end handling.",
     "make": "Harley-Davidson",

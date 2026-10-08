@@ -1,5 +1,6 @@
 [
   {
+    "key": "zero-identify-the-zero-platform-before-quoting-anything-pack",
     "title": "Identify the Zero platform before quoting anything — pack, motor and charger differ by model within one year",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S (North America, English) and the 2024 Owner's Manual for the DSR/X, DSR and DS. Zero's model names do not tell you what is fitted. In the 2025 street manual the S carries a Z-Force ZF14.4 pack, a 3.0 kW onboard charger and a ZF75-7 motor; the SR a ZF15.6 pack, 3.3 kW charger and ZF75-10 motor; the SR/F and SR/S a ZF17.3 pack, 6.6 kW charger and ZF75-10 motor. In the 2024 adventure manual the DS carries ZF14.4 with a ZF75-7 and 3.0 kW; the DSR ZF15.6 with a ZF75-10X and 3.3 kW; the DSR/X ZF17.3 with a ZF75-10X and 6.6 kW. Every one of those motors is specified as a passively air-cooled interior permanent magnet AC motor, so there is no coolant circuit to service. Note also that the manuals distinguish the charger rating as built from the rating in force: some models are firmware-limited below their hardware rating and can be raised by a Cypher upgrade, so the sticker and the behaviour can differ.",
     "make": "Zero",
@@ -27,6 +28,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-cypher-ii-or-cypher-iii-decides-which-procedures-and-which",
     "title": "Cypher II or Cypher III decides which procedures and which firmware apply to a Zero",
     "description": "Drawn from a Zero Motorcycles dealer bulletin dated November 22, 2022 and from Zero's published firmware release notes page. Zero's machines split across two operating-system platforms and the split governs firmware, diagnostics and much of the service documentation. The dealer bulletin assigns the Cypher III platform to the SR/F and SR/S families with its own MBB, BMU and BMS revision set; the firmware release notes page groups bikes as 2020-on Cypher III — listing the 2020-on SR/F and SR/S, the 2022-25 SR and the 2023-on adventure machines — against the earlier Cypher II bikes, which take a different firmware lineage entirely. Zero's Cypher FAQ adds a third state: some model year 2020 to 2022 SR/F and SR/S machines carry select Cypher III+ capabilities rather than the full set. A procedure or a firmware file taken from the wrong platform does not apply.",
     "make": "Zero",
@@ -51,6 +53,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-belt-tension-is-specified-by-frequency-and-the-window",
     "title": "Zero belt tension is specified by frequency and the window differs between the street and adventure platforms",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S and the 2024 Owner's Manual for the DSR/X, DSR and DS. Both platforms run an 11 mm-pitch Gates carbon belt and both specify tension as a plucked frequency rather than a deflection — but the windows are not the same. The 2025 street manual specifies 62 Hz to 82 Hz for the S, SR, SR/F and SR/S. The 2024 adventure manual specifies 62 Hz to 84 Hz for the DS, DSR and DSR/X, with an equivalent tension-tester figure of 170 plus or minus 44 lb (77 plus or minus 20 kg), and specifies the DSR/X final drive as a Gates Carbon Drive Moto X9 belt 25 mm wide. Carrying one platform's window across to the other is the error this entry exists to prevent, and over-tensioning a carbon belt is not a harmless margin — it loads the bearings the belt runs on.",
     "make": "Zero",
@@ -79,6 +82,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-belt-care-is-a-cleaning-and-inspection-routine-not-an",
     "title": "Zero belt care is a cleaning and inspection routine, not an adjustment routine",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S. The manual's belt guidance is mostly about keeping the belt clean and inspecting it: keep dirt, grease, oil and debris off the belt and sprockets, wash the belt with mild soap and water, and inspect it for damage rather than adjusting it on a schedule. This matters because a carbon belt fails differently from a chain — it does not stretch and then warn you, and the common damage mechanism is debris drawn between belt and sprocket rather than gradual wear. A belt that has been contaminated with a solvent or a chain lubricant is not recoverable by cleaning.",
     "make": "Zero",
@@ -107,6 +111,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-s-published-service-schedule-is-short-and-front-loaded",
     "title": "Zero's published service schedule is short and front-loaded — two early services then a long interval",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S. Zero schedules an initial service at 100 mi (160 km), a second at 600 mi (1K km), and thereafter every 8K mi (13K km) or annually. That is a much shorter front end and a much longer steady-state interval than a combustion machine, and a shop quoting from combustion habits gets both halves wrong — it misses the two early services entirely and then over-services the machine afterwards. The schedule is short because there is no oil, no filter, no coolant and no valve train to service; what remains is largely inspection, the belt, brakes, tyres and bearings.",
     "make": "Zero",
@@ -134,6 +139,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-a-zero-left-standing-needs-a-charging-regime-and-a-fully",
     "title": "A Zero left standing needs a charging regime, and a fully discharged pack has a deadline",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S. The manual's storage and charging guidance is explicit and time-bound: a fully discharged pack is to be charged within 24 hours, and a pack below 30% is to be charged to at least that level before storage. This is not general battery advice — it is the manufacturer's own instruction, and a pack taken below its recoverable state is not a warranty repair. The practical consequence for a workshop is that a Zero taken in for unrelated work, or held awaiting parts, is on a clock that a combustion machine is not, and a machine delivered on a flat pack needs charging arranged before it is parked, not after.",
     "make": "Zero",
@@ -159,6 +165,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-warrants-the-motorcycle-and-the-power-pack-on-different",
     "title": "Zero warrants the motorcycle and the power pack on different terms — check which applies before quoting",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S (North America). Zero warrants the motorcycle excluding the power packs for two years from the in-service date, and warrants the power pack separately on its own longer terms. The distinction matters at the counter: a fault inside the pack and a fault in the machine around it fall under different warranties with different durations, and a machine outside the two-year motorcycle warranty may still be inside its pack warranty. The in-service date, not the build date or the sale date, is what the term runs from.",
     "make": "Zero",
@@ -182,6 +189,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-a-zero-is-not-an-obd-ii-vehicle-the-codes-are-on-the-dash",
     "title": "A Zero is not an OBD-II vehicle — the codes are on the dash and the tool is Zero's own",
     "description": "Drawn from the 2020 Zero SR/F Owner's Manual and Zero service bulletins published to dealers. The diagnostic route on a Zero is nothing like a combustion machine's. Stored error codes are read on the dash itself: on the 2020 SR/F the rider navigates Menu, Preferences, Data, Errors, and the dash holds a small number of stored codes. Zero publishes the dash fault-code vocabulary in the owner's manual as a numbered table, so the code a customer reads to you over the phone is something you can look up. Beyond that, the dealer tool is Zero's own Zero Diagnostic Unit, named in Zero's service bulletins, and Zero's bulletins give the dealer diagnostic-port locations by platform. What a generic OBD-II scan tool does on a Zero is nothing: the connector is not wired as an OBD-II port, and this is the single most common wasted hour on an electric motorcycle in a general workshop.",
     "make": "Zero",
@@ -209,6 +217,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-the-zero-app-is-the-owner-s-diagnostic-surface-and-what-it",
     "title": "The Zero app is the owner's diagnostic surface, and what it can and cannot do is published",
     "description": "Drawn from the Zero Motorcycles 2025 Owner's Manual for the SR/S, SR/F, SR and S, the 2020 SR/F Owner's Manual, and Zero's mobile-app privacy policy for North America. The free Zero app is a real part of the diagnostic route rather than a convenience. The manuals state that it lets the rider change dash appearance and settings, adjust the CUSTOM riding mode, collect and email logs to Zero support, examine precise state of charge and real-time power usage, and reach Cypher upgrades. Zero's privacy policy describes the email-diagnostic-information function as sending the machine's VIN along with its settings and logs, and describes the Cellular Connectivity Module fitted to the later platform as what lets an owner record rides and locate the motorcycle. Two consequences for a workshop: the owner can send Zero support a log you cannot otherwise extract, and app data depends on that connectivity module, so an app that has stopped reporting is not by itself evidence of a fault in the motorcycle.",
     "make": "Zero",
@@ -234,6 +243,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-firmware-is-a-service-item-with-published-release-notes",
     "title": "Zero firmware is a service item with published release notes, and updates carry real risk",
     "description": "Drawn from Zero Motorcycles' published firmware release-notes page and Zero service bulletins, including a June 22, 2020 bulletin covering a long-term storage-mode firmware update campaign for model year 2017 and newer machines. Firmware on a Zero is not background housekeeping — Zero publishes release notes tying specific MBB, BMU and BMS revisions to named resolved issues, and some updates are issued as service campaigns rather than as optional improvements. The release notes also tie dealer-level diagnostics to specific Cypher III releases. Before diagnosing a fault, establish what firmware the machine is on and whether a published release already resolves the symptom; a fault fixed in a release the machine has not taken is not a fault to chase through hardware.",
     "make": "Zero",
@@ -259,6 +269,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-s-charging-accessories-are-dealer-installed-and-change",
     "title": "Zero's charging accessories are dealer-installed and change what the machine can accept",
     "description": "Drawn from Zero Motorcycles' own accessory product pages for the 6 kW Rapid Charger and the 6 kW Charge Tank. Both are described by Zero as dealer-installed accessories that add charging capability beyond the standard onboard charger, and both change what a given machine can accept — so the charging behaviour of two apparently identical models can differ entirely on whether an accessory is fitted. A charging complaint therefore starts with establishing what is actually installed, not with the model name. The Charge Tank occupies the storage space where a combustion machine carries its tank, so its presence is visible; the Rapid Charger is less obvious.",
     "make": "Zero",
@@ -284,6 +295,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-two-zero-campaigns-are-stop-riding-campaigns-the-2012-pack",
     "title": "Two Zero campaigns are stop-riding campaigns — the 2012 pack fire and the 2026 XB rear shock linkage",
     "description": "Drawn from road-safety regulator recall records. Two Zero campaigns tell the owner to stop riding, and they are the two a workshop must check before a machine is released. The first covers all 2012 Zero S, DS and DSP (Police) machines: cell pouches in the battery pack may wear from contact with their holders, letting humidity into the pouch and causing an electrical short that increases the risk of fire. No repair remedy was recorded — the pack could not be replaced — so the recorded remedy is the owner's choice of a repurchase of the motorcycle or a financial trade-assist toward a newer Zero, with dealers collecting affected machines at no charge, and the record carries a park-it advisory telling owners to stop riding and stop charging. That campaign was filed in early April 2018 and opened April 30, 2018. The second is a Transport Canada record covering the 2026 Zero XB, in which the rear shock linkage can break, letting the rear of the machine drop suddenly and contact and stop the rear wheel, with a sudden loss of stability or control; owners are told not to ride until the repair is done, and the remedy is dealer replacement of the linkage. The month that record was filed is not stated here because the record carries two conflicting dates, and no affected-unit count is published. No corresponding United States record is listed for the XB.",
     "make": "Zero",
@@ -311,6 +323,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-zero-battery-campaigns-split-by-model-and-the-remedies-are",
     "title": "Zero battery campaigns split by model and the remedies are not the same — sealing, module return, and a BMS kit",
     "description": "Drawn from road-safety regulator recall records. Three early Zero campaigns touch the battery and its management, and each has a different population and a different remedy, so they must not be treated as one. A 2013 campaign covers the Zero FX and XU only — not the full 2013 line — where a manufacturing defect in the modular battery's internal sealing compound can let water reach the cells; the cells may corrode and release electrolyte, forming a conductive path between cells and leading to rapid temperature rise and off-gassing. The remedy is not a sealing operation: the affected battery modules are removed and returned to Zero for replacement, parts and labour free. Affected FX units were built January 28 to May 21, 2013 and affected XU units January 16 to May 20, 2013. A separate 2012 campaign covers S, DS, X and XU machines built on or before April 13, 2012, where the battery management system circuit board had insufficient weatherproofing compound on its connector pins, so in wet conditions adjacent pins could short and the machine could inadvertently lose power; the remedy is a dealer-installed recall kit at no charge. Estimated dealer labour for that kit was stated as less than two hours, and no actual elapsed remedy time is published.",
     "make": "Zero",
@@ -339,6 +352,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-the-2014-zero-motor-campaign-is-screened-per-model-the-build",
     "title": "The 2014 Zero motor campaign is screened per model — the build windows are model-specific, not one range",
     "description": "Drawn from a road-safety regulator recall record covering model year 2014 Zero S, SR, DS and FX motorcycles, in which the motor rotor may contact the stator at sustained maximum motor RPM. If the rotor contacts the stator the motor can seize and lock the rear wheel, which is a crash risk rather than a driveability complaint. The remedy is a dealer screening test of the motor, with the motor replaced at no cost where it fails the test. The build dates are the part a workshop gets wrong: the record lists them per model rather than as one range. It gives December 30, 2013 to February 20, 2014 for the SR and December 26, 2013 to February 18, 2014 for the S, and gives separate, narrower windows for the DS and FX that are not reproduced here — the value the record carries for the DS is inconsistent with the other three and reads as an error in the record itself, so no DS or FX window is stated here and neither may be inferred from the S or SR.",
     "make": "Zero",
@@ -365,6 +379,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-two-zero-brake-campaigns-and-neither-presents-the-way-a",
     "title": "Two Zero brake campaigns, and neither presents the way a mechanic would expect",
     "description": "Drawn from road-safety regulator recall records. Two Zero campaigns touch the brakes and both are easy to mis-diagnose. The first covers certain 2020 Zero SR/F and SR/S machines on which water can get into the front brake switch and cause it to fail. The record's consequence is specific: an inoperable switch will not illuminate the brake light when the front brake is applied, so following vehicles may not realise the machine is braking, and cruise control will not shut off when the front brake is applied. Both raise crash risk. The record describes no failure mode in which the brake light illuminates continuously, so a continuously-lit brake light is a different fault. The remedy is dealer replacement of the switch free of charge and the recall began November 30, 2020. The second covers model year 2022 Zero SR, SR/F and SR/S machines built between November 15 and 22, 2021 — 45 units, all presumed affected — on which rear brake pads qualified for a different, lower-GVWR Zero platform were fitted in place of the pads used to certify the machine to the federal brake standard. The record states the manufacturer cannot confirm compliance and that the rear brakes may not work as intended; it reports no measured loss of braking performance, and notes pre-delivery test riders covering more than 500 miles per machine noticed no difference. The remedy is dealer inspection and replacement with the correct pads: the incorrect pads have a silver backing, the correct ones copper.",
     "make": "Zero",
@@ -393,6 +408,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-the-zero-key-switch-wiring-campaign-is-fixed-by-firmware-not",
     "title": "The Zero key-switch wiring campaign is fixed by firmware, not by replacing the harness",
     "description": "Drawn from a September 2025 United States road-safety regulator recall record covering 2023 and 2024 Zero DSR/X and 2024 Zero DS, DSR and DSRP motorcycles, in which improperly routed key switch signal wires may break, causing a loss of drive power and an increased risk of a crash. The remedy is the part a workshop would guess wrong: the record's remedy is a firmware update performed by a dealer or delivered over the air, free of charge. The record does not describe replacement of the wiring harness. Owner notification letters were mailed September 26, 2025. A shop that reads the mechanism and quotes a harness repair is quoting work the campaign does not call for.",
     "make": "Zero",
@@ -418,6 +434,7 @@
     "dtc_codes": []
   },
   {
+    "key": "zero-the-zero-s-16-pin-socket-is-not-an-obd-ii-port-and-the",
     "title": "The Zero's 16-pin socket is not an OBD-II port, and the console behind it is an unsupported owner route",
     "description": "Drawn from owner-community reporting and reverse-engineering documentation, and flagged as such because Zero publishes none of it. Owners report that the Zero's diagnostic connector uses an OBD-II-style 16-pin J1962 socket but is not wired as an OBD-II port: community sources describe vendor-reserved pins carrying a TTL-level serial console to the main bike board rather than standard OBD-II protocols, and consistently report that a generic ELM327 scan tool will not communicate with the machine over OBD-II at all. Owners further report that this console prints event logs, error logs and diagnostic output beyond what the Zero app shows, and describe it as an unsupported enthusiast route built on community documentation, not a service procedure — the community documentation itself states that Zero does not support owner console access. No pin assignment is stated here. The reported assignments are owner-derived, differ by model year, and Zero has published no pinout for this connector; a wrong assumption means probing a live connector on a high-voltage vehicle.",
     "make": "Zero",

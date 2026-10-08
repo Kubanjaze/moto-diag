@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-chain-stretch-measurement-and-replacement-criteria-all-chain",
     "title": "Chain stretch measurement and replacement criteria — all chain-driven motorcycles",
     "description": "Roller chain stretch is the most common drivetrain wear item on chain-driven motorcycles. What riders call 'stretch' is actually elongation from pin and bushing wear inside each link — the side plates do not physically stretch. A standard 530 or 525 chain has a pitch of 15.875 mm (5/8 inch) per link. When 20 consecutive pins measure more than 319.4 mm (12.575 inches on a 530) — a 2% elongation — the chain must be replaced. Riding with a stretched chain accelerates sprocket wear exponentially because the chain no longer seats properly in the sprocket tooth valleys, loading the tooth tips instead. This affects all chain-driven bikes: Honda CBR600RR/1000RR and CB series, Kawasaki ZX-6R/ZX-10R and Z series, Suzuki GSX-R600/750/1000 and SV650, Yamaha YZF-R1/R6 and MT series, and Harley-Davidson Sportster S and Pan America (chain-driven models). Chain noise — a metallic whirring or clicking that increases with speed — is the first audible symptom of a stretched chain contacting the swingarm slider or chain guide unevenly.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "kawasaki-sprocket-wear-patterns-hooked-teeth-countershaft-vs-rear",
     "title": "Sprocket wear patterns — hooked teeth, countershaft vs rear wear rate differential",
     "description": "Sprocket wear on chain-driven motorcycles follows predictable patterns that indicate chain health, alignment, and riding style. The front (countershaft) sprocket wears 2-3 times faster than the rear sprocket because it has fewer teeth (typically 15-17 front vs 42-48 rear), meaning each tooth engages the chain more frequently per wheel revolution. A worn sprocket develops 'hooked' or 'shark fin' teeth where the drive side of each tooth is worn into a concave curve while the trailing side remains sharp. Severely hooked sprockets cause the chain to ride up on the tooth tips, producing a grinding noise under acceleration and vibration at highway speed that riders often mistake for wheel bearing failure. This affects all chain-driven motorcycles: Kawasaki ZX-6R/ZX-10R, Suzuki GSX-R and SV series, Honda CBR and CB models, Yamaha YZF-R and MT series.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-chain-lubrication-comparison-wax-wet-and-auto-oiler-systems",
     "title": "Chain lubrication comparison — wax, wet, and auto-oiler systems across all chain-driven platforms",
     "description": "Chain lubrication is the primary factor determining chain and sprocket lifespan on any chain-driven motorcycle. Modern O-ring and X-ring sealed chains retain factory grease inside the pin/bushing interface, but the external surfaces — roller-to-sprocket contact, side plate joints, and seal lips — still require lubrication to prevent accelerated wear, noise, and corrosion. The three main approaches are wet chain lube (petroleum or synthetic spray), wax-based chain lube (wax carrier that dries to a film), and automatic chain oilers (Scottoiler, Tutoro). Each has distinct advantages depending on riding style, climate, and maintenance discipline. Chain noise — a dry metallic whirring or zinging sound at speed — is the hallmark of inadequate lubrication across all makes including Honda CB650R, Kawasaki Z900, Suzuki SV650, and Yamaha MT-07.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-belt-drive-maintenance-tension-inspection-and-replacement-on",
     "title": "Belt drive maintenance — tension, inspection, and replacement on Harley-Davidson and select Japanese cruisers",
     "description": "Belt final drive uses a toothed Gates Poly Chain GT Carbon or Kevlar-reinforced rubber belt running between toothed pulleys. Belts require no lubrication, produce minimal noise compared to chains, and last 50,000-100,000 miles when maintained — but they are intolerant of debris, misalignment, and incorrect tension. A belt that is too tight causes premature bearing wear in the transmission output shaft and rear wheel hub; too loose causes belt tooth skip under hard acceleration, producing a loud bang and sudden loss of drive. Belt edge fraying or cracking from debris impact or age is a roadside failure waiting to happen. This affects all Harley-Davidson Softail (2000+), Dyna (2006+), Touring (2009+), and Sportster (1991-2021) models, plus Kawasaki Vulcan 900 (belt-drive option) and Suzuki Boulevard C50/M50 with belt final drive. Vibration at highway speed from a misaligned belt is commonly mistaken for tire balance issues.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-shaft-drive-service-hypoid-gear-oil-seal-inspection-and",
     "title": "Shaft drive service — hypoid gear oil, seal inspection, and universal joint wear",
     "description": "Shaft final drive uses a driveshaft from the transmission output to a bevel gear set (hypoid or spiral bevel) in the rear hub to transmit power. Shaft drive is maintenance-light but not maintenance-free — the rear bevel gear housing requires periodic hypoid gear oil changes, the driveshaft universal joints or CV joints wear and develop play, and the output shaft seal can leak. A neglected shaft drive develops a characteristic clunk on deceleration (U-joint play), a whining noise at highway speed (low or contaminated gear oil), and vibration at speed from worn U-joint bearings. This affects Honda GL1800 Gold Wing and VFR1200, Kawasaki Concours 1400 (GTR1400) and Versys 1000 LT (shaft option), Suzuki V-Strom 1050 (shaft model) and Boulevard C90, Yamaha FJR1300 and V-Star 1300, and BMW R-series and K-series (though BMW is outside the primary scope here).",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-clutch-drag-and-basket-notching-wet-clutch-diagnosis-across",
     "title": "Clutch drag and basket notching — wet clutch diagnosis across all makes",
     "description": "Wet clutch systems on motorcycles use alternating friction plates and steel plates inside a clutch basket (outer housing) and hub (inner housing) bathed in engine oil. Over time, the friction plates develop grooves in the basket fingers and hub slots where they engage. These notches — typically 0.5-2 mm deep grooves worn into the aluminum basket fingers — prevent the plates from sliding freely when the clutch lever is pulled, causing clutch drag. Drag manifests as the motorcycle creeping forward in gear with the clutch fully pulled in, difficulty finding neutral, gear clash when shifting at a stop, and noise from the clutch area under deceleration. This is a universal issue on all wet-clutch motorcycles: Kawasaki ZX-6R and Ninja 650, Suzuki GSX-R750 and GSX-S1000, Honda CBR1000RR and CB500F, Yamaha YZF-R1 and MT-09, and Harley-Davidson Sportster (all years with wet clutch) and Milwaukee-Eight Softail/Touring models.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-clutch-cable-adjustment-and-hydraulic-clutch-bleeding",
     "title": "Clutch cable adjustment and hydraulic clutch bleeding — engagement point and lever feel restoration",
     "description": "Clutch actuation on motorcycles uses either a cable (steel inner wire in a housing) or a hydraulic system (master cylinder, fluid line, slave cylinder). Cable clutches require periodic free play adjustment as the cable stretches and friction plates wear; hydraulic clutches require periodic fluid changes and bleeding to maintain firm lever feel. A cable clutch with insufficient free play will slip (the release mechanism holds the plates slightly apart even with the lever released), while excessive free play means the clutch doesn't fully release (drag). Hydraulic clutches develop a spongy lever feel when the fluid absorbs moisture through the reservoir diaphragm, lowering the boiling point and allowing micro-bubbles to form under heat. This affects Suzuki GSX-R600/750 (cable through 2005, hydraulic 2006+), Honda CBR600RR (hydraulic all years), Kawasaki ZX-10R (hydraulic all years), Yamaha YZF-R6 (hydraulic all years), and Harley-Davidson (cable on Sportster, hydraulic on 2014+ Touring with hydraulic clutch option).",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-transmission-shifting-issues-false-neutral-hard-shifting-and",
     "title": "Transmission shifting issues — false neutral, hard shifting, and worn gear dogs",
     "description": "Motorcycle transmissions are constant-mesh sequential gearboxes where engagement depends on dog teeth (raised lugs on the side of each gear) sliding into matching recesses on the adjacent gear. When the dog teeth wear from high mileage or aggressive shifting, they develop rounded edges that can't hold engagement under load — the gear pops out into a false neutral between gears (most commonly between 1st-2nd or 4th-5th). Hard shifting occurs when the shift drum detent or shift fork bending prevents clean engagement. These are mechanical wear issues with no electronic detection — no DTCs are set. Transmission noise under load, vibration in specific gears, and intermittent false neutrals are the progressive symptoms. This affects Honda CB500F and CBR600RR, Kawasaki ZX-10R and Z900, Yamaha YZF-R1 and FZ-09/MT-09, Suzuki GSX-S1000 and Hayabusa, and Harley-Davidson Big Twin transmissions (all years).",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 8.0
   },
   {
+    "key": "honda-countershaft-seal-replacement-the-forgotten-maintenance-item",
     "title": "Countershaft seal replacement — the forgotten maintenance item causing oil leaks and chain contamination",
     "description": "The countershaft (front sprocket shaft) seal sits where the transmission output shaft exits the engine case behind the front sprocket. This seal is subjected to the rotating shaft, exposure to chain lube and road grit, and the axial loading from the chain pulling on the sprocket. Over time, the seal lip wears a groove into the shaft surface or the seal lip itself hardens and cracks, allowing engine oil to weep past the seal. The oil then contacts the chain and front sprocket — contaminating the chain (which attracts more grit) and creating a visible oil mess on the front sprocket cover, lower frame rails, and swingarm. Because the front sprocket cover hides the seal, this leak can go unnoticed for thousands of miles. Noise from oil-contaminated chain links binding and increased chain wear are secondary symptoms. This affects Honda CBR600RR and CB650R, Kawasaki ZX-6R and Versys 650, Suzuki GSX-R750 and V-Strom 650, Yamaha YZF-R6 and MT-07, and any chain-driven motorcycle.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "yamaha-final-drive-alignment-chain-belt-and-shaft-drive-alignment",
     "title": "Final drive alignment — chain, belt, and shaft drive alignment methods and consequences of misalignment",
     "description": "Final drive alignment ensures the front output sprocket/pulley and the rear sprocket/pulley sit in the same plane, and that the rear axle is perpendicular to the bike's centerline. Misalignment accelerates wear on chains, belts, sprockets, and pulleys asymmetrically — one side of the chain or belt wears faster, sprocket teeth develop angled wear patterns, and the drivetrain produces noise and vibration at speed that riders often attribute to tires or wheel bearings. Chain misalignment also causes the chain to climb the sprocket teeth laterally, increasing the risk of the chain derailing. Belt misalignment causes the belt to track to one edge of the pulley, fraying the belt edge and eventually causing belt failure. Shaft drive misalignment is set at the factory and not adjustable, but rear wheel alignment in the swingarm is still critical. This is a universal issue across all makes: Kawasaki Versys 650, Suzuki V-Strom 650, Honda CB500X, Yamaha Tenere 700, and Harley-Davidson Sportster and Softail models.",
     "make": "Yamaha",

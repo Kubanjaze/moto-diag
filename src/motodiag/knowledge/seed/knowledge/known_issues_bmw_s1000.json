@@ -1,5 +1,6 @@
 [
   {
+    "key": "bmw-cold-start-timing-chain-rattle-on-s1000rr-k46-tensioner",
     "title": "Cold-start timing chain rattle on S1000RR (K46) - tensioner screw plug update",
     "description": "Written from general knowledge of owner reports and dealer practice — confirm against the service manual and current parts information before quoting. First- and second-generation S1000RR engines commonly develop a short, loud chain rattle in the first seconds after a cold start as the hydraulic timing chain tensioner bleeds down when parked and is slow to re-pressurise. BMW made a longer timing chain tensioner screw plug available, which preloads the tensioner further and is fitted to bikes that genuinely exhibit the rattle. Note the later timing chain tensioner technical campaign covers the K66/K67 platform, not the K46 — do not quote it against this bike.",
     "make": "BMW",
@@ -35,6 +36,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-race-abs-partly-integral-braking-on-s1000rr-k46-mistaken-for",
     "title": "Race ABS partly-integral braking on S1000RR (K46) mistaken for a rear brake fault",
     "description": "Written from general knowledge of the original Race ABS behaviour and owner reports — confirm against the rider's and service manual before quoting. On the K46 Race ABS the front lever also applies the rear brake in Rain and Sport modes (partly integral), and rear-wheel-lift detection is active in those modes; in Race and Slick the system behaves differently. Customers report the rear brake dragging, the rear pads wearing quickly, or the brakes feeling different after a mode change, and the bike is stripped for a fault that is designed behaviour. This entry is about the BMW Race ABS hydraulic unit and its mode logic, not generic pad wear or fluid service.",
     "make": "BMW",
@@ -72,6 +74,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-shiftcam-cold-start-rattle-on-2019-s1000rr-separating-normal",
     "title": "ShiftCam cold-start rattle on 2019+ S1000RR - separating normal mechanism noise from a real valve-train fault",
     "description": "Written from general knowledge of owner reports and shop experience with BMW's ShiftCam intake valve train - confirm every specification and any camshaft work against the service manual before quoting the customer. The 2019-on S1000RR engine uses ShiftCam on the intake camshaft: each intake valve pair is served by two different cam profiles machined side by side on a sliding cam piece, and an actuator engaging a shift gate slides that piece axially along the camshaft to swap between the partial-load profile (lower lift, offset timing, asymmetric lift between the two intake valves to generate charge motion) and the full-load profile at the rpm/load threshold BMW specifies. Because the cam pieces are splined and must be free to slide, they carry deliberate axial and rotational clearance, and that clearance produces an audible light metallic tick or rattle from the top of the cylinder head, loudest on cold start and quieting as oil warms. Riders coming from the pre-2019 engine frequently report this to a shop as a fault. The diagnostic job is not to silence it but to decide whether the shop is hearing the mechanism working, a cam-chain or clutch noise being mistaken for it, or a genuine defect in the cam pieces, shift gate or actuator.",
     "make": "BMW",
@@ -111,6 +114,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-shiftcam-fails-to-switch-to-the-full-load-cam-profile",
     "title": "ShiftCam fails to switch to the full-load cam profile - S1000RR 2019+ flat above the changeover point",
     "description": "Written from general knowledge of how BMW's ShiftCam intake valve train is built and how a shop would work the complaint - confirm all specifications, torque values and component procedures against the service manual before repair. On the 2019-on S1000RR the intake camshaft carries sliding cam pieces with a partial-load and a full-load lobe profile; an actuator drops a pin into a shift gate on the cam piece and the rotating groove slides it axially to select the profile at the rpm and load threshold BMW specifies. If that switch does not happen - electrical fault at the actuator, a contaminated or damaged shift gate, or a cam piece that will not slide freely - the engine keeps the low-lift, low-duration profile everywhere. The bike still starts, idles cleanly and pulls normally at low and mid rpm, then goes flat exactly where it should come alive, which is why it is often misdiagnosed as a fuelling, exhaust flap or quickshifter complaint. This entry is about the ShiftCam actuation itself, not about noise.",
     "make": "BMW",
@@ -152,6 +156,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-s1000xr-2015-2019-first-generation-high-frequency-vibration",
     "title": "S1000XR (2015-2019) first-generation high-frequency vibration through bars, pegs and mirrors",
     "description": "Written from general knowledge of owner reports and BMW service-campaign history - confirm against the service manual and current BMW technical bulletins before quoting a customer. The first-generation S1000XR (2015-2019) is widely reported to transmit a coarse, high-frequency buzz into the handlebars, footpegs and mirrors over a broad mid-range rev band, worst at sustained motorway cruising speeds. It is a real and characteristic complaint of THIS generation only, arising from how the detuned RR inline-four is mounted in the XR chassis and from the bar/peg mounting hardware, not from a single broken part. BMW addressed it in stages: revised handlebar weights and bar-end masses, revised handlebar clamp rubber mounts, revised footpeg rubbers and revised mirror stems were released as running changes and retrofit remedies during the 2015-2019 run, and the substantially revised model introduced for 2020 changed the engine mounting and chassis and is NOT subject to this complaint. Do not diagnose a 2020-on XR against this entry, and do not tell a first-generation owner the buzz can be eliminated entirely - the remedies reduce it, they do not remove it. Before attributing anything to the known characteristic, rule out ordinary causes of new or worsening vibration, because an owner who says it got worse usually has a separate fault.",
     "make": "BMW",
@@ -194,6 +199,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-ddc-dynamic-esa-rear-shock-fails-to-a-fixed-damping-state-on",
     "title": "DDC / Dynamic ESA rear shock fails to a fixed damping state on S1000XR (2015-2019)",
     "description": "On S1000XR models built with electronic damping (BMW's DDC / Dynamic ESA semi-active rear shock), the damper can fail electrically while still holding oil and gas, so it does not behave like a worn conventional shock. Written from general knowledge of owner and workshop reports - confirm against the service manual before quoting. The key diagnostic difference: a tired conventional shock fades progressively and gets soft and hot after a few miles, while a failed DDC unit usually parks its solenoid valve at one end of its range and stays there, so the bike feels either permanently plank-hard or permanently wallowy from the first mile and shows no change at all between damping settings, normally with a suspension warning on the dash. The damper is supplied as a sealed assembly, so confirming the fault is electrical before ordering is worth real money to the customer - a complete electronic shock is one of the most expensive single parts on the bike, and specialist suspension shops offer rebuild or conversion as an alternative to a BMW replacement unit.",
     "make": "BMW",

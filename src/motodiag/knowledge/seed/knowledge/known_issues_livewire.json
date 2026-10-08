@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-the-livewire-has-no-thermostat-as-a-service-item-its-one",
     "title": "The LiveWire has no thermostat as a service item — its one scheduled fluid event is a dealer coolant change",
     "description": "Drawn from the 2021 LiveWire Owner's Manual for the LiveWire ONE and the 2020 Harley-Davidson Owner's Manual for the LiveWire Model. The machine is liquid-cooled, which invites combustion habits that do not apply. The word thermostat does not appear once across all 108 sections of the owner's manual; neither the 2020 nor the 2021 service-interval table carries a thermostat row; and the manual's own cooling-system troubleshooting topic lists low or improper coolant, obstructed radiator airflow, blocked passages and a radiator cap problem as the causes of overheating, with no thermostat among them. What the circuit is: a pressurised system with a radiator, a reservoir marked with a COLD FILL line and a pressure cap, holding approximately 0.8 qt (0.72 L) of pre-diluted Genuine Harley-Davidson Extended Life Antifreeze and Coolant rated to -36.7 °C (-34.0 °F), with an instruction not to add water. That capacity is roughly an order of magnitude below a combustion cooling system, because the loop carries heat out of the motor and inverter rather than out of an engine. Note the limit of this finding: no LiveWire parts catalogue or service manual could be opened, so whether a thermostat exists as an orderable part inside the loop is not established — only that it is not a scheduled-service item and carries no replacement interval.",
     "make": "Harley-Davidson, LiveWire",
@@ -27,6 +28,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-livewire-coolant-is-replaced-once-at-50-000-mi-by-a-dealer",
     "title": "LiveWire coolant is replaced once at 50,000 mi by a dealer — everything else in the loop is inspection",
     "description": "Drawn from the Service Records sections of the 2021 LiveWire Owner's Manual for the LiveWire ONE and the 2020 Harley-Davidson Owner's Manual for the LiveWire Model. Both schedule coolant replacement exactly once, at 80,000 km (50,000 mi), and both mark it as dealer work — an authorized Harley-Davidson dealer in the 2020 manual, an authorized LiveWire dealer in the 2021 one. Around that single event, coolant-system checking and radiator cleaning are marked at every interval from 1,600 km (1,000 mi) onward. The row names differ between the two manuals without the substance differing: 2021 splits Coolant system Inspect, Coolant system freeze point Check and Radiator fins Clean into three rows, while 2020 combines the first two as one row alongside Clean radiator. A shop reading only one manual and quoting the other machine gets the same work under different labels, which is fine — but a shop that reads a 50,000 mile figure and attaches it to a component other than the coolant does not.",
     "make": "Harley-Davidson, LiveWire",
@@ -53,6 +55,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-a-livewire-service-is-inspections-and-torque-checks-there-is",
     "title": "A LiveWire service is inspections and torque checks — there is no oil, plug, filter or primary drive row",
     "description": "Drawn from the Service Records and Break-in Maintenance sections of the 2021 LiveWire Owner's Manual for the LiveWire ONE. The published schedule is a first service at 1,600 km (1,000 mi), then every 8,000 km (5,000 mi) through 80,000 km (50,000 mi), after which both manuals instruct that the schedule repeats from the 8,000 km (5,000 mi) interval. What a service consists of is inspections, fastener torque checks, fluid and lubrication items and a road test. Neither table carries an engine oil row, a spark plug row, an air filter row or a primary drive row, because none of those exist on the machine. The practical consequence is that a shop quoting from combustion habits both over-quotes the parts and under-quotes the inspection time, and an owner told the machine barely needs servicing is being told something the manufacturer's own table contradicts.",
     "make": "Harley-Davidson, LiveWire",
@@ -79,6 +82,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-single-speed-gearbox-no-clutch-and-a-belt-with-its-own",
     "title": "Single-speed gearbox, no clutch, and a belt with its own tension gauge and frequency window",
     "description": "Drawn from the Specifications, Service Records and Check Drive Belt Deflection sections of the 2021 LiveWire Owner's Manual for the LiveWire ONE, and the 2019 Harley-Davidson press release describing the Revelation powertrain. The drive is a single-speed gearbox — Table 6 gives Type: Single Speed with a gear ratio of 9.706, which the press release renders as 9.71:1 running in an oil bath — driving the rear wheel through a belt at a 3:1 ratio between output and wheel pulley. There is no clutch and no multi-speed transmission, and neither manual's service table carries a clutch row. Transmission lubricant capacity is approximately 0.34 qt (0.32 L), replaced at 1,000 mi, 20,000 mi and 40,000 mi. Belt tension is checked at every interval, to 3.2-4.8 mm (1/8-3/16 in) deflection measured at 4.54 kg (10 lb) with belt tension gauge HD-35381-A, or 78-90 Hz by harmonic measurement. The manual warns that failing to use the tension gauge may leave the belt under-tensioned, and routes an out-of-spec belt found by manual measurement to a dealer.",
     "make": "Harley-Davidson, LiveWire",
@@ -107,6 +111,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-a-livewire-one-on-a-level-2-charger-charges-at-the-level-1",
     "title": "A LiveWire ONE on a Level 2 charger charges at the Level 1 rate — the charger is the limit, not the supply",
     "description": "Drawn from LiveWire's own support and FAQ pages and the LiveWire ONE specifications page, with the limitation attributed in the owner's manual to the onboard charger: AC Level 2 can be accepted but the onboard charger's ability will only allow it to charge at a Level 1 rate. This is the most consequential thing a shop or an owner can get wrong about the machine. Plugging a LiveWire ONE into a Level 2 unit produces no time benefit at all, so an owner who reports that the bike charges no faster on a public AC charger is describing designed behaviour, not a fault — and a shop that chases it will find nothing. Real speed comes from DC fast charging over CCS Combo 1, which LiveWire states reaches 80% in 40 minutes and a full charge in one hour. Level 1 gives about 13 miles of range for each hour of charging.",
     "make": "Harley-Davidson, LiveWire",
@@ -132,6 +137,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-livewire-publishes-its-own-charging-best-practice-and-a-20",
     "title": "LiveWire publishes its own charging best practice, and a 20% state-of-health loss is expected, not a fault",
     "description": "Drawn from the Charging Motorcycle section of the 2021 LiveWire Owner's Manual for the LiveWire ONE. The manufacturer states four things a workshop should know before assessing a battery complaint. The pack charges quickly to 80% of capacity and then deliberately slows to reduce degradation, so a slower final fifth is designed behaviour. Charging below 0 °C (32 °F) or above 50 °C (122 °F) significantly increases charge time, so an ambient-driven complaint is not a fault. The suggested best practice is to alternate Level 1 and Level 3 DC fast charging in a 4:1 ratio — four Level 1 charges to every DC fast charge. And a 20% loss of state of health is expected over the life of the pack warranty. That last figure matters commercially: an owner reporting reduced range on an ageing machine may be describing exactly what the manufacturer says to expect.",
     "make": "Harley-Davidson, LiveWire",
@@ -157,6 +163,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-the-2020-livewire-onboard-charger-software-campaign-can-shut",
     "title": "The 2020 LiveWire onboard-charger software campaign can shut the powertrain down while riding",
     "description": "Drawn from road-safety regulator recall records in the United States and the United Kingdom, and from the manufacturer's dealer and owner notification letters. A safety campaign covers model year 2020 Harley-Davidson LiveWire machines with the ELW model code, built between 3/18/2019 and 8/20/2020, in which software in the onboard charging system may initiate a shutdown of the electric vehicle powertrain without reasonable indication to the rider. After the shutdown the machine may fail to restart, or may shut down again shortly after restarting. The recorded consequence is an unexpected loss of propulsion while in motion. The remedy is an onboard charger software update performed by a dealer, free of charge, with dealers also directed to update the instrument module and the electric vehicle powertrain at the same visit; owner notification began in October 2020. The United States record gives a potential 1,012 motorcycles affected and its park-it, park-outside and over-the-air flags all read false. The United Kingdom regulator records the same on-board-software recall as affecting 30 vehicles built 18/03/2019 to 20/08/2020, launched 21/10/2020, describing the defect as a vehicle shutdown sequence initiating without reasonable rider indication and the remedy as updating of the on-board software.",
     "make": "Harley-Davidson, LiveWire",
@@ -182,6 +189,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-no-regulator-record-could-be-established-for-the-livewire",
     "title": "No regulator record could be established for the LiveWire ONE — the campaigns belong to other models",
     "description": "Drawn from searches of the United States regulator's recall and complaint databases, Transport Canada's recall database, the United Kingdom regulator's all-recalls data file, and the European Union's safety alert system. This is a deliberate negative finding, recorded because its absence would otherwise read as an oversight. No road-safety regulator record covering the LiveWire ONE could be established in any of those four sources. What each does hold is a different model: the United States databases return records for the 2020 Harley-Davidson ELW and for the 2024 S2 Del Mar and Mulholland; Transport Canada holds two LiveWire vehicle recalls, neither for the ONE; the United Kingdom file holds two LiveWire rows on the same footing; and the European system's only LiveWire-brand alert covers a 2024 S2 machine. A workshop should therefore not assume a LiveWire ONE is clear because nothing was found under the brand name, nor assume an ELW or S2 campaign applies to it.",
     "make": "Harley-Davidson, LiveWire",
@@ -205,6 +213,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-the-badge-changes-at-2021-and-so-does-the-dealer-the",
     "title": "The badge changes at 2021 and so does the dealer, the warranty and the model code",
     "description": "Drawn from the 2020 Harley-Davidson Owner's Manual for the LiveWire Model and the 2021 LiveWire Owner's Manual for the LiveWire ONE. The same lineage carries two makes. Model year 2020 machines wear the Harley-Davidson badge, carry model code ELW with XA in the third VIN position, and route to Harley-Davidson dealers. Model year 2021 LiveWire ONE machines wear the LiveWire badge, carry model code LW1 with XB in the third VIN position, are warranted by LiveWire, EV LLC, and route to authorized LiveWire dealers — a route the 2022 and 2023 machines continue. The two manuals carry the same sentences with only the dealer brand changed, which is exactly why a procedure lifted from one reads correctly and sends the machine to the wrong network. The 2021 documents state a 24 month unlimited mileage motorcycle warranty and a separate 60 month unlimited mileage pack warranty; those durations are verified for 2021 only.",
     "make": "Harley-Davidson, LiveWire",
@@ -230,6 +239,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-the-livewire-diagnostic-connector-is-a-6-pin-can-link-and",
     "title": "The LiveWire diagnostic connector is a 6-pin CAN link and the tool is Harley's TechLink 3",
     "description": "Drawn from Harley-Davidson service bulletin M1490, Digital Technician II Updates and Release Notes, in its 2020-10-19 and 2022-09-21 revisions. The bulletin states that 2020 and later LiveWire machines must use TL-3, and that all 2021 and later vehicles must use TL-3 connecting to the red data link connector on the vehicle. The TechLink 3 vehicle communication interface, part number HD-48650-TL3, supports CAN-protocol vehicles on a 6-pin data link connector and J-1850 vehicles on a 4-pin one — placing the LiveWire firmly on the CAN and 6-pin side of Harley's proprietary diagnostic hardware. That is the whole answer to what reads this machine: a proprietary interface and Digital Technician software, not a generic scan tool. Service documentation itself is obtainable: LiveWire runs a Service Information Portal mirroring Harley's own, with an Independent Operator login, free limited service information and instruction-sheet search by a valid 17 character VIN without registering, and paid subscriptions purchasable by independent operators.",
     "make": "Harley-Davidson, LiveWire",
@@ -257,6 +267,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-livewire-connect-telematics-was-discontinued-in-december",
     "title": "LiveWire Connect telematics was discontinued in December 2024 — the app features are gone, the bike is not faulty",
     "description": "Drawn from LiveWire's own support and FAQ page. LiveWire states that as of Dec. 11 2024 the LiveWire Connect telematics service for the LiveWire ONE was discontinued. It had been offered free to ONE owners, so connected app features that shipped with the machine no longer function, while the manufacturer states motorcycle performance and other operational features are unaffected. A workshop will meet this as a customer complaint that the app has stopped working, and it is not a fault to diagnose. The separate LiveWire app remains in service for S2 machines, where the same page notes that software updates are rare, take anywhere from 5 to 60 minutes, and immobilise the machine while running, and that connected data needs correct VIN registration plus cellular and GPS signal.",
     "make": "Harley-Davidson, LiveWire",
@@ -280,6 +291,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-the-livewire-onboard-charger-fails-as-a-unit-and-its-failure",
     "title": "The LiveWire onboard charger fails as a unit, and its failure blocks the software recall that would have fixed it",
     "description": "Drawn from owner reporting on the LiveWire forums and from owner-submitted complaints to the United States regulator, and flagged as owner-reported because no manufacturer document describes this. Owners recurrently report the onboard charger failing in hardware across both badges — 2020 ELW and 2022 LW1 machines — typically presenting as an EVSE fault and a total loss of AC charging on both Level 1 and Level 2 while DC fast charging still works. That split is the useful diagnostic signal: a machine that fast-charges but will not take AC at all points at the onboard charger rather than the pack. Owners report the unit is not user serviceable and that dealers replace the whole onboard charger, sometimes with the AC filter alongside it. The trap that makes this worse: owners report the outstanding onboard-charger software recall cannot be performed on a machine whose charger has already failed, so the free remedy is gated behind an expensive part. Owner-quoted costs vary widely and are reported here only as an owner-observed range, never as a price.",
     "make": "Harley-Davidson, LiveWire",
@@ -307,6 +319,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-owner-reported-livewire-trouble-spots-cluster-delamination",
     "title": "Owner-reported LiveWire trouble spots: cluster delamination and the 12 volt auxiliary battery",
     "description": "Drawn from owner-submitted complaints to the United States regulator's defect database and from LiveWire forum threads, and flagged as owner-reported throughout. Two patterns recur on the original machine. The TFT touchscreen instrument cluster is reported delaminating — the display separating from its glass, fogging and dimming until speed and warning indicators become unreadable — with owners reporting the fault recurring on replacement clusters and one warranty replacement failing again at low mileage. Of the complaints logged against the 2020 machine, a clear majority describe this, and further complaints describe the same cluster failing without using the word. Separately, the 12 volt lithium auxiliary battery is a recurring failure point: owners report a first battery going flat within a month and stranding the rider, a second going flat on a dealer bench part-way through a software update, and 12V battery low warnings shading into onboard-charger no-response faults. Owners disagree among themselves about whether the main pack maintains the 12 volt battery while riding, with one reporting that manufacturer customer service advised against a tender at all — so that question is recorded as unsettled rather than answered, and no charging current is stated here.",
     "make": "Harley-Davidson, LiveWire",
@@ -334,6 +347,7 @@
     "dtc_codes": []
   },
   {
+    "key": "harley-davidson-the-livewire-shows-its-own-trouble-codes-without-a-dealer",
     "title": "The LiveWire shows its own trouble codes without a dealer tool, but the meanings are not in the manual",
     "description": "Drawn from owner reporting on the LiveWire forums, and flagged as owner-reported because the procedure appears in no manufacturer document available here. Owners report the machine will display its own diagnostic trouble codes with no dealer tool attached: hold the odometer trigger switch while turning the run button on to reach a diagnostics screen, then navigate with the trigger through each domain's codes, with the option to clear them, and a trailing letter c marking a current fault as distinct from stored historic ones. That is genuinely useful on a machine whose only other route is proprietary. The limitation is equally important: the procedure is absent from the owner's manual, and the code meanings require Digital Technician II at a dealer or the purchasable electrical diagnostic manual. So the codes can be read by anyone and interpreted by almost nobody without the documentation.",
     "make": "Harley-Davidson, LiveWire",

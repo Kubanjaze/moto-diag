@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-cv-carburetor-diaphragm-failure-all-makes-and-models",
     "title": "CV carburetor diaphragm failure — all makes and models",
     "description": "Constant Velocity (CV) carburetors on all Japanese motorcycles (Honda, Yamaha, Kawasaki, Suzuki) use rubber diaphragms that lift the slide in response to engine vacuum. These diaphragms crack, tear, or develop pinholes from age, UV exposure, and fuel vapor. A torn diaphragm makes that cylinder run lean because the slide can't fully lift. On inline-4 engines, one bad diaphragm creates a rough idle, reduced power, and an identifiable lean misfire on that cylinder. On V-twins, it's immediately noticeable as a rhythmic miss.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-pilot-jet-clogging-from-ethanol-fuel-seasonal-storage",
     "title": "Pilot jet clogging from ethanol fuel — seasonal storage failure",
     "description": "The pilot jet (also called slow jet or idle jet) is the smallest orifice in a carburetor, typically 0.4-0.7mm in diameter. Modern ethanol-blended fuel (E10/E15) leaves varnish deposits when it evaporates during storage. The pilot jet is the first to clog because of its tiny diameter. A clogged pilot jet causes hard starting, rough idle, stalling, and poor low-RPM response. This is the #1 reason carbureted motorcycles won't start after winter storage across all makes.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-float-height-maladjustment-fuel-level-too-high-or-too-low",
     "title": "Float height maladjustment — fuel level too high or too low",
     "description": "The carburetor float controls fuel level in the bowl. If the float height is wrong, the fuel level is wrong — too high causes rich running, fuel overflow, and potential engine flooding; too low causes lean running, hesitation, and high-RPM fuel starvation. Float height changes over time from float needle wear, fuel deposit buildup on the needle/seat, and physical bending of the float tang. Every carb rebuild must include a float height check.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-carburetor-synchronization-uneven-cylinder-fueling",
     "title": "Carburetor synchronization — uneven cylinder fueling",
     "description": "On multi-cylinder carbureted motorcycles, each carburetor feeds one cylinder independently. Over time, the throttle butterfly positions drift relative to each other, causing uneven idle vacuum and fueling between cylinders. An out-of-sync carb bank causes rough idle, vibration, uneven exhaust note, and reduced power. Synchronization requires a vacuum gauge set and is the final step after any carb service.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-enrichment-circuit-choke-failure-cold-start-problems",
     "title": "Enrichment circuit (choke) failure — cold start problems",
     "description": "Most Japanese motorcycle CV carbs use a cable-operated enrichment circuit (often incorrectly called a 'choke') that adds extra fuel for cold starting. The enrichment plunger sticks from fuel varnish, the cable stretches reducing plunger travel, or the plunger O-ring leaks allowing fuel to seep when the enrichment is supposed to be off. Symptoms vary: hard cold starting (enrichment not working), rich idle after warmup (enrichment stuck partially on), or fuel smell at idle (plunger O-ring leaking).",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-intake-manifold-vacuum-leaks-false-air-causing-lean",
     "title": "Intake manifold vacuum leaks — false air causing lean conditions",
     "description": "The rubber intake manifold boots that connect the carburetors to the cylinder head harden, crack, and shrink over time. A cracked boot allows unmetered air into the cylinder, causing that cylinder to run lean. The lean condition causes higher idle on that cylinder, a hotter-running exhaust header, popping on deceleration, and potential lean detonation. This affects every carbureted motorcycle regardless of make — the rubber deteriorates the same way on Honda, Yamaha, Kawasaki, and Suzuki.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-pilot-screw-adjustment-idle-mixture-fine-tuning",
     "title": "Pilot screw adjustment — idle mixture fine-tuning",
     "description": "The pilot screw (fuel screw or air screw, depending on carb design) controls the idle mixture ratio. Many Japanese motorcycles ship with EPA-capped pilot screws that prevent adjustment. Factory settings are lean for emissions. Proper pilot screw adjustment is the free tune-up that makes the biggest difference in idle quality and low-RPM response.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "honda-float-bowl-overflow-and-fuel-leak-fire-hazard",
     "title": "Float bowl overflow and fuel leak — fire hazard",
     "description": "When the float needle doesn't seat properly, fuel continuously flows into the carb bowl and overflows through the overflow tube (if present) or past the bowl gasket onto the engine. This is a fire hazard — fuel dripping onto a hot engine can ignite. Causes include a worn needle/seat, debris on the needle tip, a stuck float, or a failed vacuum petcock flooding the carbs.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-main-jet-sizing-for-aftermarket-exhaust-and-intake-rejetting",
     "title": "Main jet sizing for aftermarket exhaust and intake — rejetting",
     "description": "Installing aftermarket exhaust and/or air filter on a carbureted motorcycle changes the air/fuel ratio. More airflow without more fuel = lean condition. The main jet controls fueling from half to full throttle. An undersized main jet with free-flowing exhaust causes lean detonation at high RPM — the most dangerous operating condition for an engine. Rejetting is mandatory with any exhaust change beyond a slip-on muffler.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-carb-to-throttle-body-conversion-considerations-efi-retrofit",
     "title": "Carb-to-throttle body conversion considerations — EFI retrofit",
     "description": "Some owners of carbureted motorcycles consider converting to electronic fuel injection for better starting, altitude compensation, and reduced maintenance. While full EFI conversions exist (Ecotrons, DIY Megasquirt), they're complex and expensive. For most riders, a properly maintained carb system is more practical than a conversion. Understanding when conversion makes sense versus when carb maintenance is the better answer saves money and frustration.",
     "make": "Honda",

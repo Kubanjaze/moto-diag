@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-fuel-pump-failure-in-tank-design",
     "title": "Fuel pump failure — in-tank design",
     "description": "2004+ Sportsters use an in-tank EFI fuel pump. Same failure mode as Big Twins — running the tank low overheats the pump because fuel cools it. No prime whirr on key-on = pump or relay dead.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-engine-mount-rubber-isolator-deterioration",
     "title": "Engine mount rubber isolator deterioration",
     "description": "The rubber engine mount isolators on 2004+ Sportsters deteriorate over time, allowing more vibration to transfer to the frame. The bike shakes more at idle and low RPM than when new. Not catastrophic but degrades ride quality.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-ecm-efi-lean-stumble-decel-pop-and-off-idle-hesitation",
     "title": "ECM/EFI lean stumble — decel pop and off-idle hesitation",
     "description": "Same lean factory tune issue as Big Twins. Sportsters are particularly bad because the smaller displacement makes the lean condition more noticeable. Decel popping, off-idle hesitation, and hot running are the big complaints.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-stator-connector-melt-sportster-specific",
     "title": "Stator connector melt — Sportster specific",
     "description": "2004-2006 Sportsters are particularly prone to the stator connector melting due to the compact under-seat wiring layout. The connector gets hot, resistance increases, more heat, eventual melting and charging failure.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-intake-manifold-leak-lean-codes-and-surging",
     "title": "Intake manifold leak — lean codes and surging",
     "description": "Same intake seal issue as all Harleys, but Sportster EFI models throw specific lean codes. P0131 (front O2 low voltage) and P1010 (intake leak detected) are the telltale signs.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-rear-brake-caliper-piston-seizure",
     "title": "Rear brake caliper piston seizure",
     "description": "Sportster rear brake calipers can develop a seized piston from corrosion and brake fluid contamination. The rear brake drags, causing heat, pad wear, and reduced performance. More common in humid/wet climates or when brake fluid is not changed regularly.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-turn-signal-auto-cancel-not-working-tssm-issue",
     "title": "Turn signal auto-cancel not working — TSSM issue",
     "description": "2004+ Sportsters with the TSSM (Turn Signal/Security Module) can lose auto-cancel function for the turn signals. Signals stay on until manually cancelled. Usually a TSSM software glitch, sometimes a vehicle speed sensor issue.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-primary-chain-noise-shared-oil-makes-it-worse",
     "title": "Primary chain noise — shared oil makes it worse",
     "description": "Sportster primary chains are noisier than Big Twin primaries because the shared oil system means the primary chain runs in oil that's been through the engine and transmission. Sheared oil doesn't lubricate as well.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-handlebar-switch-housing-failure-intermittent-controls",
     "title": "Handlebar switch housing failure — intermittent controls",
     "description": "The handlebar switch housings (left for signals/horn/high-beam, right for start/kill) develop intermittent contact issues from vibration and weather exposure. Buttons work sometimes but not others.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-fork-seal-leak-oil-on-fork-tubes",
     "title": "Fork seal leak — oil on fork tubes",
     "description": "Sportster fork seals leak from road debris nicking the fork tubes (chrome or hard-chrome) and tearing the seal lip. Oil weeps down the fork tubes and collects on the lower triple clamp or front brake caliper. A safety issue if oil gets on the brake rotor.",
     "make": "Harley-Davidson",

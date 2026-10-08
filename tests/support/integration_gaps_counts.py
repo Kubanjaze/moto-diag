@@ -57,5 +57,7 @@ MODULE_ISLAND_COUNT = 9
 #: `shop labor-rate` left pricing/labor_rates' file loader a live orphan) →
 #: 118 (Phase 275: wiring scheduling made six appointment_repo CRUD helpers
 #: live orphans; booking has its own guarded status moves) → 117 (Phase 281:
-#: `advanced recall list --bike` calls get_resolutions_for_bike).
-ORPHAN_COUNT = 117
+#: `advanced recall list --bike` calls get_resolutions_for_bike) → 119 (Phase
+#: 380: update_known_issue_by_key, substrate for the content batch's
+#: migrations, and unassigned_models, test-infra for the 3A pin).
+ORPHAN_COUNT = 119

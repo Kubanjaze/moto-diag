@@ -283,6 +283,63 @@ def _marque_named_by(token: str, marque_vocab: set[str]) -> set[str]:
     }
 
 
+def _owned_names(token: str, marque: str) -> set[str]:
+    """The lower-cased names a single-marque row's token establishes for its
+    marque: the token, and the token with that marque's name off its front
+    ("Energica Ego" also owns "ego"; Phase 380, F142)."""
+    names = {token.lower()}
+    prefix = marque.lower() + " "
+    if token.lower().startswith(prefix) and len(token) > len(prefix):
+        names.add(token.lower()[len(prefix):])
+    return names
+
+
+def lookup_marques(token: str, marques: list[str]) -> set[str]:
+    """The marques among ``marques`` whose transmission-lookup entry names
+    ``token`` by an alias or its canonical name (Phase 380, F142)."""
+    from motodiag.knowledge.transmission import TRANSMISSION_LOOKUP, _alias_match
+
+    wanted = {m.lower(): m for m in marques}
+    return {wanted[e.make.lower()] for e in TRANSMISSION_LOOKUP
+            if e.make.lower() in wanted
+            and _alias_match(e.make, token, (*e.aliases, e.canonical))}
+
+
+def unassigned_models(conn) -> list[tuple[str, tuple[str, ...]]]:
+    """Models on multi-marque rows that no evidence places under one of the
+    row's marques, so the vocabulary files them under all of them (the
+    operator's 3A). Returns sorted ``(model, marques)``; pinned in a test that
+    lets the list only shrink as evidence arrives."""
+    marque_vocab = marque_vocabulary_from_conn(conn)
+    european = european_marques(vocabulary=marque_vocab)
+    owner: dict[str, set[str]] = {}
+    multi: list[tuple[list[str], list[str]]] = []
+    for make, model in conn.execute(
+            "SELECT make, model FROM known_issues WHERE model IS NOT NULL AND model != ''"):
+        if not make:
+            continue
+        tokens = _model_tokens(model)
+        marques = extract_marques(make, vocabulary=marque_vocab, european=european)
+        if not tokens or not marques:
+            continue
+        if len(marques) == 1:
+            for token in tokens:
+                for name in _owned_names(token, marques[0]):
+                    owner.setdefault(name, set()).add(marques[0])
+        else:
+            multi.append((marques, tokens))
+    out = set()
+    for marques, tokens in multi:
+        for token in tokens:
+            if token in marque_vocab:
+                continue
+            named = _marque_named_by(token, marque_vocab)
+            claim = (named | owner.get(token.lower(), set())) & set(marques)
+            if not claim and not lookup_marques(token, marques):
+                out.add((token, tuple(sorted(marques))))
+    return sorted(out)
+
+
 def vocabulary_from_conn(conn) -> dict[str, set[str]]:
     """Derive the per-marque model vocabulary from an open connection.
 
@@ -345,7 +402,8 @@ def vocabulary_from_conn(conn) -> dict[str, set[str]]:
             continue
         for token in tokens:
             vocab.setdefault(marques[0], set()).add(token)
-            owner.setdefault(token.lower(), set()).add(marques[0])
+            for name in _owned_names(token, marques[0]):
+                owner.setdefault(name, set()).add(marques[0])
 
     for marques, tokens in pairs:
         if len(marques) == 1:
@@ -353,6 +411,12 @@ def vocabulary_from_conn(conn) -> dict[str, set[str]]:
         for token in tokens:
             named = _marque_named_by(token, marque_vocab)
             claim = (named | owner.get(token.lower(), set())) & set(marques)
+            if not claim:
+                # Phase 380 (F142): a model the transmission lookup places
+                # under one of this row's marques belongs to that marque, before
+                # the fallback files it under all of them (Energica's Ego sat
+                # under Harley-Davidson, LiveWire and Zero).
+                claim = lookup_marques(token, marques)
             if claim:
                 targets = {
                     marque for marque in marques
@@ -621,6 +685,31 @@ def rebuild_model_index(conn) -> int:
         written += index_models_for_issue(conn, issue_id, make, model, vocab,
                                           marques=marques, european=european)
     return written
+
+
+def sync_model_index(conn) -> tuple[int, int]:
+    """Bring the junction to what a rebuild would write, touching only the
+    pairs that differ. Returns ``(removed, added)``.
+
+    Phase 380: a rebuild deletes and re-inserts every row, so a migration's
+    diff would show every unchanged pair as changed. This works out the
+    rebuilt set inside a savepoint, rolls the rebuild back, and then deletes
+    and inserts only the difference, so the rows that stay keep their rowids.
+    """
+    pairs = "SELECT issue_id, make, model FROM known_issue_models"
+    old = {tuple(r) for r in conn.execute(pairs).fetchall()}
+    conn.execute("SAVEPOINT model_index_sync")
+    rebuild_model_index(conn)
+    new = {tuple(r) for r in conn.execute(pairs).fetchall()}
+    conn.execute("ROLLBACK TO model_index_sync")
+    conn.execute("RELEASE model_index_sync")
+    for issue_id, make, model in sorted(old - new):
+        conn.execute("DELETE FROM known_issue_models WHERE issue_id = ? AND make = ? "
+                     "AND model = ?", (issue_id, make, model))
+    for issue_id, make, model in sorted(new - old):
+        conn.execute("INSERT INTO known_issue_models (issue_id, make, model) VALUES (?, ?, ?)",
+                     (issue_id, make, model))
+    return len(old - new), len(new - old)
 
 
 def rebuild_model_index_at(db_path: Optional[str] = None) -> int:

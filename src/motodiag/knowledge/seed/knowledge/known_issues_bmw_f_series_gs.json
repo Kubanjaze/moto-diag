@@ -1,5 +1,6 @@
 [
   {
+    "key": "bmw-dry-sump-oil-overfill-oil-in-airbox-from-wrong-level-check",
     "title": "Dry-sump oil overfill: oil in airbox from wrong level-check procedure",
     "description": "The Rotax 652 single (F650GS single 2000-2007, G650GS 2009-2016; note the model-year gap between the end of F650GS single production and the start of the G650GS) is a dry-sump engine whose oil reservoir is the frame, checked via the dipstick at the frame-tank filler (right side of the frame). Because much of the oil drains back into the engine when the bike sits, a cold check reads low and owners or inexperienced shops top up until it looks right — the engine is then overfilled, and the surplus is pumped out through the crankcase breather into the airbox. The bike comes in for 'burning oil', smoke, oil dripping from the airbox drain, or a fouled air filter, and the real fault is the check procedure. Written from general knowledge of owner reports and shop practice — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -34,6 +35,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-starter-freewheel-sprag-replacement-on-the-rotax-652-single",
     "title": "Starter freewheel (sprag) replacement on the Rotax 652 single",
     "description": "The failure mechanism of a starter one-way clutch is described in a separate entry; this entry covers only what is specific to the 652cc Rotax single (F650GS single 2000-2007, G650GS 2009-2016). On this engine the starter drives through an intermediate (idler) gear into a freewheel bolted to the back of the generator rotor on the left side of the crankshaft, so the repair is a left-cover job requiring rotor removal with the correct puller, and the idler gear and its shaft should be inspected at the same time. Written from general knowledge of owner reports and shop practice — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -70,6 +72,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-notchy-indexed-steering-head-bearings-on-the-21-inch-f800gs",
     "title": "Notchy / indexed steering-head bearings on the 21-inch F800GS",
     "description": "The F800GS (including the Adventure) is widely reported to develop indexed, notchy steering-head bearings at relatively low mileage. The long-travel forks and 21-inch front wheel put high leverage through the head bearings, off-road impacts brinell the caged ball races, and factory preload is often marginal, so a detent develops at straight-ahead. The result is a bike that wants to fall into the centre detent, feels vague at low speed and weaves on gentle bends. Tapered-roller replacement kits are the usual cure. Treat the fault as high severity where free play is also present, because a loose head can promote weave at speed. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -102,6 +105,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-rapid-rear-brake-pad-wear-and-dragging-rear-brake-on-the",
     "title": "Rapid rear brake pad wear and dragging rear brake on the F800GS",
     "description": "F800GS owners very commonly report rear pads lasting a fraction of the distance the fronts do, along with a blued rear disc and a hot, dragging rear caliper. The pattern comes from a rear master cylinder pushrod set with no free play (so the piston never fully returns and residual pressure builds as the fluid heats), dry or corroded caliper slide pins, and riders standing on the pegs off-road resting on the pedal. The small rear pad area on this bike accelerates the wear once any drag exists. Written from general knowledge of owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -137,6 +141,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-gear-shift-assist-pro-stops-working-shift-lever-sensor",
     "title": "Gear Shift Assist Pro stops working - shift-lever sensor wiring failure",
     "description": "On F750GS/F850GS fitted with the optional Gear Shift Assist Pro (clutchless up/down shifting), owners report the quickshifter going intermittent and then dead while normal clutch shifting still works fine. The shift-rod sensor's four-wire pigtail flexes with every shift where it is anchored near the sensor, and the conductors fatigue and break inside the sleeve; connector faults and a failed sensor are the other causes. The ECU logs shift-lever-sensor voltage-plausibility faults and disables the function. Loss of the function itself is a low-severity convenience issue, but the intermittent stage can produce a missed shift or false neutral under acceleration. Written from general knowledge of owner reports on public BMW owner forums - confirm against the service manual before quoting.",
     "make": "BMW",
@@ -167,6 +172,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-steering-head-clunk-over-bumps-bearing-adjuster-loose-from",
     "title": "Steering head clunk over bumps - bearing adjuster loose from new / early notchiness",
     "description": "A common complaint on F750GS and F850GS: a clunk felt through the bars over speed bumps, potholes and under braking, traced to the steering-head bearing adjuster not having been set at the run-in service so the bearings are running loose. If left, the loose stack and marginal factory grease lead to a notchy, self-centring feel in the straight-ahead position and the bearings need replacing; treat the notchy case as high severity. Written from general knowledge of owner reports on public BMW owner forums - confirm against the service manual before quoting.",
     "make": "BMW",
@@ -198,6 +204,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-accessory-spliced-into-a-zfe-switched-circuit-trips-the",
     "title": "Accessory spliced into a ZFE-switched circuit trips the electronic fuse (no fuse box to check)",
     "description": "The F800GS twin (and the same-architecture F650GS twin 2008-2012, F700GS 2012-2017 and F800GS Adventure 2013-2018) uses BMW's single-wire CAN system with a central chassis electronics module (ZFE). There is no conventional fuse box: the ZFE drives and current-monitors each output (headlight, tail/brake, indicators, socket, grips) and acts as an electronic fuse. When an owner splices aux lights, a horn, or a USB feed into one of these switched outputs, the ZFE sees out-of-range current, shuts that output down (taking the factory lamp with it), and typically lights the general warning and a bulb symbol. The output only comes back after an ignition cycle, so the fault looks intermittent, and a mechanic hunting for a blown fuse will not find one. Written from general knowledge of owner reports and BMW accessory wiring conventions — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -230,6 +237,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-heated-grips-inoperative-engine-running-lockout-zfe-low",
     "title": "Heated grips inoperative: engine-running lockout, ZFE low-voltage shedding, or retrofit not enabled",
     "description": "Factory heated grips on the F800GS twin are switched by the ZFE over the CAN bus, not by a simple switch-and-relay circuit. Three BMW-specific behaviours generate repeat 'grips don't work' complaints: the ZFE only allows the grips on with the engine running (not merely ignition on); the ZFE reduces or cuts grip heating when system voltage sags, which happens at idle with aux lights and other loads on because the permanent-magnet generator's output is rpm-dependent; and factory grips retrofitted to a bike built without them stay dead until the function is enabled in the ZFE with the BMW diagnostic system or an equivalent tool. Aftermarket grips wired into the factory grip circuit also trip the ZFE. The F650GS twin (2008-2012), F700GS and F800GS Adventure share this arrangement. Written from general knowledge of the BMW rider's manual and owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -263,6 +271,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-non-can-accessories-on-the-f750gs-f850gs-zfe-platform",
     "title": "Non-CAN accessories on the F750GS/F850GS ZFE platform: tripped outputs and BMW aux lights that need enabling",
     "description": "The F750GS/F850GS (853cc, 2018-2023) carries the same single-wire CAN architecture as the F800GS, with a ZFE that current-monitors its outputs and acts as an electronic fuse, plus TFT-integrated control of factory options. Two accessory situations recur: non-BMW aux lights or heated grips wired into ZFE-switched circuits (headlight, tail light, socket) shut the factory lamp down until the ignition is cycled; and BMW's own LED auxiliary headlight or heated-grip kits, which are CAN-controlled, stay dead after a retrofit until the vehicle is coded per the fitting instructions. The socket limit and low-voltage cut-out behave as on the F800GS. The 2024+ F900GS and 895cc F800GS are built on the same architecture but verify model-specific details before applying this. Written from general knowledge of BMW fitting instructions and owner reports — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -294,6 +303,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-f800gs-21-inch-tubed-spoked-front-wheel-spoke-loosening",
     "title": "F800GS 21-inch tubed spoked front wheel: spoke loosening, nipple seizure and rim dents after off-road use",
     "description": "The F800GS (798cc twin, 2008-2018, including the Adventure) uses a conventional tube-type 21-inch spoked front wheel with nipples at the rim. Hard off-road use, rocky trails and low tyre pressures work the spokes loose, and once a few slacken the wheel goes out of true and rim dents and pinch flats follow. Grit and corrosion also seize the nipples so they cannot be retensioned without breaking spokes. Not applicable to the 2008-2012 F650GS twin or F700GS, which have a 19-inch cast front wheel. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -328,6 +338,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-f800gs-rear-wheel-and-cush-drive-sprocket-carrier-bearing",
     "title": "F800GS rear wheel and cush-drive (sprocket carrier) bearing failure on off-road and washed bikes",
     "description": "The chain-driven F800GS twin carries its rear sprocket on a separate cush-drive carrier with its own bearing, plus two hub bearings in the wheel. On bikes used off-road, through water crossings or regularly pressure-washed, the carrier bearing and the sprocket-side hub bearing are common failures, and a failed carrier bearing lets the sprocket wobble so chain tension varies as the wheel turns and the chain and sprocket wear unevenly. The same wheel arrangement is shared by the 2008-2012 F650GS twin and F700GS. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
     "make": "BMW",
@@ -364,6 +375,7 @@
     "source": "model-generated"
   },
   {
+    "key": "bmw-f800gs-swingarm-chain-slider-wear-allowing-the-chain-to-cut",
     "title": "F800GS swingarm chain slider wear allowing the chain to cut into the aluminium swingarm",
     "description": "On the chain-driven F800GS twin the drive chain runs over a plastic slider on the top of the swingarm and through a guide near the rear sprocket. On bikes used off-road or with the chain run slack, the slider wears through faster than the service schedule anticipates, and once it is gone the chain saws into the soft aluminium swingarm beam and the lower guide, which is often not noticed until the metal is grooved. Escalate to high severity once the swingarm beam itself is grooved — that is a structural defect, not a wear item. The 2008-2012 F650GS twin and F700GS use the same basic swingarm and slider arrangement. Written from general knowledge of owner reports and workshop experience — confirm against the service manual before quoting.",
     "make": "BMW",

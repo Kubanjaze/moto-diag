@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-kawasaki-fi-self-diagnostic-mode-dealer-mode-dtc-readout",
     "title": "Kawasaki FI self-diagnostic mode — dealer mode DTC readout",
     "description": "Modern Kawasaki EFI bikes (2006+) have a built-in self-diagnostic mode accessible through a dash button sequence or jumper wire. The FI light blinks codes that correspond to specific sensor faults. This is the first step in any FI-related troubleshooting — read the codes before replacing parts.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "kawasaki-kawasaki-stator-and-regulator-rectifier-failure-all-models",
     "title": "Kawasaki stator and regulator/rectifier failure — all models",
     "description": "Kawasaki stator and regulator/rectifier failures affect all model families from the 1970s to present. The stator windings overheat and short, the reg/rec fails (often taking the stator with it), and the charging system connector melts from resistance. This is the most common electrical failure across all Kawasaki motorcycles.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "kawasaki-kleen-pair-air-injection-system-exhaust-popping-and-removal",
     "title": "KLEEN/PAIR air injection system — exhaust popping and removal",
     "description": "Kawasaki's KLEEN (Kawasaki Low Exhaust Emission) system, also called PAIR (Pulsed Secondary Air Injection), injects fresh air into the exhaust ports to burn unburned hydrocarbons. With aftermarket exhaust, the system causes loud popping and backfiring on deceleration. Many riders remove or block it off.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-immobilizer-kipass-system-issues",
     "title": "Kawasaki immobilizer (KIPASS) system issues",
     "description": "Kawasaki's KIPASS (Kawasaki Intelligent Proximity Activation Start System) on premium models (2006+ ZX-14R, Concours 14, some Versys) uses a proximity key fob. The fob battery dies, the antenna ring on the ignition switch fails, or the ECU loses key programming. Riders are stranded when KIPASS won't recognize the key.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-led-lighting-upgrades-and-compatibility-issues",
     "title": "Kawasaki LED lighting upgrades and compatibility issues",
     "description": "Many Kawasaki owners upgrade incandescent bulbs to LED for improved visibility and reduced electrical load. However, LED turn signals cause fast-flash (hyperflash) because the flasher relay detects lower current draw. LED headlight bulbs may also cause FI codes on newer CAN-bus models.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-ground-connection-corrosion-intermittent-electrical",
     "title": "Kawasaki ground connection corrosion — intermittent electrical faults",
     "description": "Kawasaki motorcycles have multiple grounding points on the frame, engine, and subframe. Corrosion at these points creates resistance that causes intermittent electrical symptoms: dim lights, slow cranking, random FI codes, gauge flickering, and unreliable starting. This affects all model years and is worse on bikes ridden in rain or coastal areas.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-starter-system-relay-motor-and-clutch-switch",
     "title": "Kawasaki starter system — relay, motor, and clutch switch",
     "description": "Kawasaki start circuit issues span all model families. The starter relay contacts weld or corrode, the clutch safety switch fails (preventing starting even with clutch pulled), and starter motors draw excessive current through aging wiring. The diagnostic path is systematic: battery → relay → switch → motor.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-kawasaki-battery-drain-parasitic-draw-on-modern-models",
     "title": "Kawasaki battery drain — parasitic draw on modern models",
     "description": "Modern Kawasakis with ECUs, clocks, immobilizers, and accessory circuits can drain a battery in 2-3 weeks of sitting. The stock parasitic draw should be under 5mA but corroded connectors, aftermarket accessories, and failing components can increase draw significantly.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-ktrc-klcm-kibs-electronic-system-sensor-calibration",
     "title": "Kawasaki KTRC/KLCM/KIBS electronic system — sensor calibration",
     "description": "Modern Kawasaki sport bikes (2011+ ZX-10R, 2017+ Z900/Z650, H2) feature KTRC (traction control), KLCM (launch control), and KIBS (cornering ABS). These systems rely on wheel speed sensors, IMU, and throttle position sensors. Dirty sensors, low battery voltage, or sensor damage triggers system faults and disables the safety systems.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-kawasaki-wiring-harness-connector-corrosion-multi-pin",
     "title": "Kawasaki wiring harness connector corrosion — multi-pin failure",
     "description": "Kawasaki's multi-pin wiring connectors — especially the main harness connector behind the headlight and the under-seat junction — develop corrosion on individual pins. A single corroded pin in a 20-pin connector can cause cascading electrical symptoms that are difficult to isolate without pin-by-pin testing.",
     "make": "Kawasaki",

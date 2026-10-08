@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-points-ignition-failure-and-conversion-pre-1980-models",
     "title": "Points ignition failure and conversion — pre-1980 models",
     "description": "Early CB550/650/750 models use breaker points ignition that require regular adjustment and replacement. Points pit, gap changes, timing drifts, and the advance mechanism sticks. Electronic ignition conversions eliminate all of these problems permanently.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-carburetor-bank-rebuild-4-carb-inline-4-service",
     "title": "Carburetor bank rebuild — 4-carb inline-4 service",
     "description": "Every vintage Honda inline-4 with 30+ year old carbs needs a full rebuild. The Keihin carbs use rubber diaphragms, float valve needles, and tiny pilot jets that all deteriorate with age and ethanol fuel. A carb bank rebuild on a CB750 is a 4-6 hour job but transforms a non-running bike into a reliable runner.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "honda-charging-system-failure-early-honda-generators-and-stators",
     "title": "Charging system failure — early Honda generators and stators",
     "description": "Vintage Hondas use two different charging systems: generators (CB750 K0-K1) and stators (CB750 K2+ and all CB550/650). Both fail from age, heat, and insulation breakdown. The voltage regulator is a separate external box that also fails. Symptom: battery dies while riding, lights dim progressively.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-cam-chain-and-tensioner-wear-high-mileage-sohc-engines",
     "title": "Cam chain and tensioner wear — high-mileage SOHC engines",
     "description": "The SOHC Honda engines (CB750, CB550, CB650) use a cam chain driven off the crankshaft with a mechanical or automatic tensioner. After 40+ years and 30K+ miles, the chain stretches, the tensioner is maxed out, and the chain slaps. Severe wear causes valve timing retardation and power loss.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "honda-fuel-petcock-vacuum-diaphragm-failure",
     "title": "Fuel petcock vacuum diaphragm failure",
     "description": "Vintage Honda fuel petcocks use a vacuum-operated diaphragm that opens fuel flow when the engine is running (engine vacuum pulls the diaphragm). When the diaphragm deteriorates, fuel either leaks continuously (floods carbs, washes cylinder walls with fuel) or doesn't flow at all (fuel starvation). A common cause of 'won't start after sitting.'",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-brake-master-cylinder-and-caliper-rebuild-aging-hydraulics",
     "title": "Brake master cylinder and caliper rebuild — aging hydraulics",
     "description": "Vintage Honda disc brakes (single disc on CB750, dual disc on later models) have 40+ year old master cylinders and calipers with degraded seals, pitted bores, and contaminated fluid. Brake feel is spongy, lever travel is excessive, and in worst cases the brakes barely stop the bike.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-exhaust-rust-through-and-header-replacement",
     "title": "Exhaust rust-through and header replacement",
     "description": "Original 4-into-4 or 4-into-1 exhaust systems on vintage Hondas are mild steel and rusted through decades ago on most survivors. Replacement options range from cheap reproduction headers to expensive stainless aftermarket systems. A rusted-through exhaust hurts performance, sounds terrible, and fails inspection in many states.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-fork-seal-leak-and-fork-tube-pitting",
     "title": "Fork seal leak and fork tube pitting",
     "description": "Vintage Honda fork tubes develop pitting from 40+ years of road debris impact and corrosion. Pitted tubes tear fork seals immediately after replacement, causing continuous oil weeping. Chrome plating deteriorates and flakes. The only real fix for pitted tubes is re-chroming or replacement.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "honda-wiring-harness-deterioration-brittle-insulation-and-corroded",
     "title": "Wiring harness deterioration — brittle insulation and corroded connectors",
     "description": "Vintage Honda wiring harnesses use cloth-over-rubber insulation that becomes brittle and crumbles with age. The connectors corrode internally. The result is intermittent shorts, opens, and grounds that cause random electrical failures — lights flickering, fuses blowing, and no-start conditions.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "honda-engine-gasket-weeping-and-oil-leak-top-end-and-covers",
     "title": "Engine gasket weeping and oil leak — top end and covers",
     "description": "Every vintage Honda engine leaks oil from somewhere after 40+ years. Valve cover gaskets, cylinder base gaskets, and side cover gaskets harden, shrink, and crack. The engine has a thin film of oil on every horizontal surface. It's not catastrophic but it's messy and attracts dirt that accelerates other wear.",
     "make": "Honda",

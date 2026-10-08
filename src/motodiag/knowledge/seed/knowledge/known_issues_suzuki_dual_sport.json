@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-dr-z400s-sm-carburetor-jetting-factory-lean-for-emissions",
     "title": "DR-Z400S/SM carburetor jetting — factory lean for emissions",
     "description": "The DR-Z400S (2000+) and DR-Z400SM (2005+) use a Mikuni BSR36 carburetor jetted lean from the factory for EPA compliance. Performance suffers at all throttle positions, the bike bogs on hard acceleration, and pops on deceleration. The air box also has a restrictive snorkel and lid.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-dr-z400-valve-clearance-tightening-kick-start-getting-harder",
     "title": "DR-Z400 valve clearance tightening — kick start getting harder",
     "description": "The DR-Z400 single-cylinder DOHC engine uses shim-under-bucket valves that gradually tighten. Tight valves make the kick starter progressively harder to operate and the electric start cranks slower. The exhaust valves tighten first and fastest. Check interval is 15,000 miles.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-dr-z400sm-supermoto-brake-and-wheel-maintenance",
     "title": "DR-Z400SM supermoto — brake and wheel maintenance",
     "description": "The DR-Z400SM supermoto version uses 17-inch wheels with larger brakes than the S model. The front 300mm disc with dual-piston caliper provides strong stopping power but the caliper pistons corrode from brake fluid neglect. Track/stunt riders wear through pads and rotors quickly.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-dr650se-carburetor-and-jetting-altitude-sensitive-thumper",
     "title": "DR650SE carburetor and jetting — altitude-sensitive thumper",
     "description": "The DR650SE (1996+) uses a Mikuni BST40 carburetor with conservative factory jetting. The 644cc thumper responds dramatically to jetting changes. Altitude affects the big single more than multi-cylinder engines — riders traveling from sea level to mountain passes notice significant power loss.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-dr650se-oil-consumption-piston-rings-and-valve-seals",
     "title": "DR650SE oil consumption — piston rings and valve seals",
     "description": "High-mileage DR650SEs develop oil consumption from worn piston rings and deteriorated valve stem seals. The big single makes significant heat that degrades valve seals over time. A puff of blue smoke on startup (valve seals) or constant light smoke (rings) indicates the issue.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-dr-z400-dr650-chain-and-sprocket-off-road-accelerated-wear",
     "title": "DR-Z400/DR650 chain and sprocket — off-road accelerated wear",
     "description": "Off-road riding dramatically accelerates chain and sprocket wear on the DR-Z400 and DR650. Mud, sand, and grit act as abrasive compound on the chain and sprockets. The 520 chain (DRZ) and 525 chain (DR650) need more frequent maintenance when used off-road.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-dr-z400-electrical-system-weak-charging-and-battery-drain",
     "title": "DR-Z400 electrical system — weak charging and battery drain",
     "description": "The DR-Z400 has a minimal charging system designed for the bike's basic electrical needs. Adding GPS, lights, or other accessories quickly exceeds the charging capacity. The battery (when equipped with electric start) is small and drains rapidly when the charging system can't keep up.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-dr650se-suspension-stock-fork-and-shock-inadequacy",
     "title": "DR650SE suspension — stock fork and shock inadequacy",
     "description": "The DR650SE ships with basic non-adjustable suspension that's adequate for light dual-sport use but overwhelmed by aggressive off-road riding or loaded adventure touring. The stock fork springs are too soft, the damping is minimal, and the rear shock has limited preload adjustment only.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-dr-z400-dr650-kick-start-mechanism-lever-and-shaft",
     "title": "DR-Z400/DR650 kick start mechanism — lever and shaft",
     "description": "Both the DR-Z400 and DR650 have kick start mechanisms that can develop issues. The kick start lever pivot bolt loosens, the return spring weakens, and the kick shaft gear can wear. On the DRZ400E (kick-start-only model), this is the primary starting method.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-dr650se-starter-system-relay-and-motor-issues",
     "title": "DR650SE starter system — relay and motor issues",
     "description": "The DR650SE electric start system uses a starter relay and motor to crank the high-compression 644cc single. The relay contacts corrode, the starter motor brushes wear, and the high compression makes cranking demanding. Cold starts draw the most current from the small battery.",
     "make": "Suzuki",

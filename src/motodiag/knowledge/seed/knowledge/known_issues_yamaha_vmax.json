@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-gen-1-v-boost-system-malfunction-butterfly-valve-and-servo",
     "title": "Gen 1 V-Boost system malfunction — butterfly valve and servo",
     "description": "The Gen 1 VMAX (1985-2007) has the legendary V-Boost system: a set of butterfly valves connecting the intake tracts of the front and rear cylinder banks. At ~6000 RPM, the servo motor opens the butterflies, effectively turning 4 individual carbs into 2 paired carbs, dramatically increasing airflow and power. When the V-Boost servo, cables, or butterflies malfunction, you lose the top-end power surge that defines the VMAX.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-gen-1-vmax-carburetor-sync-and-jetting-4-mikuni-carbs",
     "title": "Gen 1 VMAX carburetor sync and jetting — 4 Mikuni carbs",
     "description": "The Gen 1 VMAX has 4 individual Mikuni downdraft carburetors that must be precisely synchronized. The V-Boost system makes sync even more critical because mismatched carbs create uneven power delivery when the butterflies open. The stock jetting is lean from the factory (emissions), and most VMAXes benefit from a rejet.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "yamaha-gen-1-vmax-charging-system-failure-stator-and-regulator",
     "title": "Gen 1 VMAX charging system failure — stator and regulator",
     "description": "The Gen 1 VMAX uses the same problematic charging system as other Yamaha V-fours of the era. The stator overheats from the V4's heat output, the regulator is a shunt type that runs hot, and the stator connector melts. The VMAX's high-current demand (V-Boost servo, fuel pump, lights) makes charging failures more impactful.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "yamaha-gen-1-vmax-shaft-drive-and-final-drive-service",
     "title": "Gen 1 VMAX shaft drive and final drive service",
     "description": "The Gen 1 VMAX uses shaft final drive with a bevel gear set in the rear hub. The shaft drive is reliable but requires periodic gear oil changes and U-joint inspection. The VMAX's massive torque puts more stress on the shaft drive than Yamaha's cruisers, and the U-joint can develop play at high mileage.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-gen-1-vmax-fuel-system-tank-corrosion-and-petcock-issues",
     "title": "Gen 1 VMAX fuel system — tank corrosion and petcock issues",
     "description": "The Gen 1 VMAX has a steel fuel tank that corrodes internally from ethanol fuel and moisture. Rust particles clog the petcock filter, carb float valves, and pilot jets. The VMAX tank is uniquely shaped (dummy tank covers the airbox — real tank is under the seat) making internal inspection difficult.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "yamaha-gen-2-vmax-fuel-injection-and-throttle-body-issues",
     "title": "Gen 2 VMAX fuel injection and throttle body issues",
     "description": "The Gen 2 VMAX (2009-2020) uses electronic fuel injection with 4 throttle bodies and a fly-by-wire throttle. The 1679cc V4 engine's fueling is complex — 8 fuel injectors (2 per cylinder) with primary and secondary injection. Carbon buildup on the throttle bodies and injector clogging cause rough idle and hesitation.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-gen-2-vmax-cooling-system-radiator-and-coolant-management",
     "title": "Gen 2 VMAX cooling system — radiator and coolant management",
     "description": "The Gen 2 VMAX is liquid-cooled with a large radiator, but the 1679cc V4 generates enormous heat. The cooling system works hard, especially in traffic. The radiator is exposed and vulnerable to stone damage (no full fairing). Coolant hose connections can seep from thermal cycling under the high heat loads.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-gen-2-vmax-weight-related-brake-and-tire-wear",
     "title": "Gen 2 VMAX weight-related brake and tire wear",
     "description": "The Gen 2 VMAX weighs 683 lbs wet — one of the heaviest production motorcycles ever made. This weight, combined with 200hp and massive torque, causes accelerated brake pad wear, tire wear, and suspension sag. Owners coming from lighter bikes are surprised by the maintenance costs of consumables.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-gen-2-vmax-electronics-abs-tc-and-cruise-control",
     "title": "Gen 2 VMAX electronics — ABS, TC, and cruise control",
     "description": "The Gen 2 VMAX has ABS, traction control (later models), and cruise control (2015+). The electronics are simpler than the R1's (no IMU) but the bike's extreme power-to-weight ratio means the TC works hard. Wheel speed sensor contamination and ABS modulator issues are the most common electronic faults.",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-all-vmax-exhaust-system-heat-and-header-bluing",
     "title": "All VMAX — exhaust system heat and header bluing",
     "description": "Both Gen 1 and Gen 2 VMAX have 4-into-2 or 4-into-1 exhaust systems that run extremely hot due to the V4's power output. Headers blue from heat (cosmetic), heat shields warp or detach, and exhaust gaskets fail at the head-to-header connection. The VMAX's low-mounted exhaust puts heat near the rider's legs.",
     "make": "Yamaha",

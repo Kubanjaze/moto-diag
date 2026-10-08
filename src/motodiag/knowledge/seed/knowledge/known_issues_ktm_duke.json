@@ -1,5 +1,6 @@
 [
   {
+    "key": "ktm-the-lc8c-in-a-790-or-890-duke-is-a-parallel-twin-not-a-v",
     "title": "The LC8c in a 790 or 890 Duke is a parallel twin, not a V-twin — the name is the trap",
     "description": "General knowledge entry on the most expensive assumption in the Duke line. KTM's LC8 is a 75-degree V-twin, the engine in the 1290 and the big adventure bikes. The LC8c in the 790 and 890 Duke is a **parallel twin** — two cylinders side by side, an entirely different architecture that shares a family name and very little else. The name is not the only reason the mistake is convincing: the LC8c uses an offset crankpin so the two cylinders do not fire evenly, which gives it the uneven beat and the throttle feel of a V-twin. Riders describe it as a V-twin because it sounds and behaves like one, and a shop that takes them at their word starts looking up the wrong engine. Anything referenced by engine architecture — cylinder identification, cam and chain layout, cooling routing, exhaust arrangement — is different between the two.",
     "make": "KTM",
@@ -31,6 +32,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-the-125-and-390-duke-are-built-in-india-by-bajaj-what-that",
     "title": "The 125 and 390 Duke are built in India by Bajaj — what that changes is parts sourcing, not quality",
     "description": "General knowledge entry on a supply-chain fact that is routinely mistaken for a quality claim. The small Dukes are manufactured by Bajaj Auto in India under KTM's engineering, and the same platform underpins the RC models. This is worth knowing for exactly two reasons, both practical. First, parts availability and part numbering can differ by market in a way they do not for a bike built in one place for one region, so a number quoted from a forum post or a parts diagram written for another market may not be the number your supplier stocks. Second, specification varies between markets — emissions equipment, restricted variants for licence classes, and detail changes across model years — so a procedure or a torque figure sourced from a bike in a different market may not describe the bike you have. It is not evidence about how well the bike is made, and treating it that way leads a shop to diagnose from a prejudice instead of from the machine. This entry covers the platform up to 2024. The build location of the 2025-onward 390 platform could not be established from any manufacturer document — see the mid-size Adventure file — so do not carry this claim across that change.",
     "make": "KTM",
@@ -60,6 +62,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-a-390-duke-and-an-rc-390-share-an-engine-but-not-a-chassis",
     "title": "A 390 Duke and an RC 390 share an engine but not a chassis — cross-reference carefully",
     "description": "General knowledge entry on a cross-reference that is right half the time, which is the dangerous kind. The 390 Duke is the naked bike and the RC 390 the faired sportbike on the same platform, and they share the single-cylinder engine and much of its ancillary hardware. They do not share the things that follow from being a naked or a faired sportbike: bodywork obviously, but also riding position hardware, cooling airflow arrangements, and the parts that differ because one bike has a fairing and the other does not. A shop that establishes the engine parts interchange and generalises that to the whole bike orders correctly for a while and then orders wrong, which is worse than never cross-referencing at all because the earlier successes build confidence in the method.",
     "make": "KTM",
@@ -89,6 +92,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-a-690-duke-is-the-road-naked-sharing-the-lc4-big-single-with",
     "title": "A 690 Duke is the road naked sharing the LC4 big single with KTM's enduro models",
     "description": "General knowledge entry on where the 690 Duke sits, because it is easy to lose between categories. It is a Duke — a road naked — powered by the LC4, KTM's large-displacement single, which is the same engine family used in the marque's road-legal enduro models. That gives a shop two useful things and one trap. The useful things: engine-side parts and procedures cross-reference across body styles more than model names suggest, and a technician who has worked on the enduro version of this engine already knows the architecture. The trap is everything outside the engine. A road naked and an enduro have different chassis, suspension, wheels, gearing, ergonomics and service exposure, and the enduro's off-road service assumptions do not transfer to a bike that spends its life on tarmac. Cross-reference the engine; do not cross-reference the bike.",
     "make": "KTM",
@@ -118,6 +122,7 @@
     "source": "model-generated"
   },
   {
+    "key": "ktm-an-lc8c-idles-and-pulls-with-an-uneven-beat-by-design",
     "title": "An LC8c idles and pulls with an uneven beat by design — telling that from a misfire on a 790 or 890",
     "description": "General knowledge entry on a complaint that is usually the engine working correctly. The LC8c parallel twin uses an offset crankpin, so its two cylinders do not fire at even intervals. The result at idle and at low revs is a lope — an audible and felt unevenness that a technician used to an evenly firing parallel twin reads as a misfire, a fuelling fault or a dying cylinder. It is neither; it is the reason the engine has the character it was designed to have. The distinction from a real misfire is doable by ear and by hand without a scan tool: a designed firing interval is regular in its irregularity — the same pattern, cycle after cycle, present when cold and when hot, unchanged by load. A genuine misfire is intermittent, changes with load, revs or temperature, and usually gets worse rather than staying identical. Getting this wrong costs a customer a diagnostic charge and sometimes a set of plugs and coils for a healthy engine.",
     "make": "KTM",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-xr650l-carburetor-jetting-lean-from-factory",
     "title": "XR650L carburetor jetting — lean from factory",
     "description": "The XR650L comes jetted extremely lean from the factory for EPA emissions compliance. It runs hot, pops on deceleration, and hesitates off-idle. Every XR650L needs a rejetting to run properly. This is the #1 modification on the platform — it's not optional, it's necessary.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-xr650l-oil-consumption-and-valve-adjustment",
     "title": "XR650L oil consumption and valve adjustment",
     "description": "The XR650L is an air-cooled single-cylinder engine that consumes oil by design — the piston oil control ring allows some oil past for upper cylinder lubrication. Check oil every ride. Additionally, the valve clearances tighten over time (intake valves sink into the seat), requiring periodic adjustment.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-crf250l-300l-lack-of-power-designed-limitations",
     "title": "CRF250L/300L lack of power — designed limitations",
     "description": "The CRF250L and 300L are deliberately low-power bikes (around 24 HP) designed for beginners and commuting with occasional dirt. Many riders find them underpowered on the highway — they struggle above 65 mph and can't pass at speed. This is by design, not a fault, but riders seek more power.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-africa-twin-dct-off-road-behavior-same-honda-dct-issues",
     "title": "Africa Twin DCT off-road behavior — same Honda DCT issues",
     "description": "The Africa Twin CRF1000L/1100L with DCT has the same low-speed jerkiness as all Honda DCT models, but it's worse off-road where precise throttle/clutch control is needed for rock gardens, hill climbs, and technical terrain. The DCT can't slip the clutch like a manual — it either engages or disengages.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-africa-twin-coolant-system-and-radiator-protection",
     "title": "Africa Twin coolant system and radiator protection",
     "description": "The Africa Twin's radiators are exposed and vulnerable to off-road debris — rocks, branches, and mud can puncture or clog the radiator. A punctured radiator means instant overheating and a ride-ending event. Radiator guards are not optional for off-road use.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-off-road-electrical-damage-water-fording-and-mud",
     "title": "Off-road electrical damage — water fording and mud",
     "description": "Dual-sport Hondas (all models) can suffer electrical damage from water fording, deep puddles, and mud. Water enters connectors, corrodes terminals, and shorts circuits. The airbox can ingest water during deep crossings. The XR650L is more water-resistant by design, but the CRF and Africa Twin have more electronics to damage.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-chain-and-sprocket-accelerated-wear-off-road-dirt-and-mud",
     "title": "Chain and sprocket accelerated wear — off-road dirt and mud",
     "description": "Dual-sport riding exposes the chain to dirt, mud, sand, and water — all of which accelerate chain and sprocket wear compared to street-only riding. An O-ring or X-ring chain on a dual-sport bike can last as little as 5000 miles in heavy off-road use (vs 15K+ on street).",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-crf250l-300l-clutch-basket-rattle-and-chatter",
     "title": "CRF250L/300L clutch basket rattle and chatter",
     "description": "The CRF250L/300L clutch basket can develop a rattle or chatter noise at idle, particularly when the clutch is pulled in. The lightweight clutch basket has notches that develop from the friction plate tangs, causing the plates to snag momentarily during engagement. Not dangerous but annoying and can cause jerky low-speed clutch engagement.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-africa-twin-crash-protection-and-adventure-prep",
     "title": "Africa Twin crash protection and adventure prep",
     "description": "The Africa Twin is an expensive bike ($14-18K) that's designed to go off-road where crashes, drops, and tip-overs happen. Without proper crash protection, a single tip-over can crack the engine case, break the radiator, or damage the exhaust — turning a $50 incident into a $2000 repair.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-xr650l-stator-and-charging-system-weakness",
     "title": "XR650L stator and charging system weakness",
     "description": "The XR650L has a weak charging system — the alternator output is minimal (about 200W), barely enough to power the lights. Adding any accessories (GPS, heated grips, USB) can exceed the charging system output, slowly draining the battery. The stator is also prone to failure from the heat of an air-cooled engine.",
     "make": "Honda",

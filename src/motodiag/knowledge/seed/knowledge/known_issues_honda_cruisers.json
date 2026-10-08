@@ -1,5 +1,6 @@
 [
   {
+    "key": "honda-regulator-rectifier-failure-shadow-and-vtx",
     "title": "Regulator/rectifier failure — Shadow and VTX",
     "description": "Honda's cruiser V-twins share the same reg/rec failure pattern as the sport bikes. The Shadow 750 and VTX 1300/1800 are particularly prone because the regulator is mounted behind the engine in minimal airflow. Cruisers often idle in traffic longer than sport bikes, generating more heat with less airflow.",
     "make": "Honda",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-shaft-drive-final-gear-oil-leak-shaft-drive-models",
     "title": "Shaft drive final gear oil leak — shaft drive models",
     "description": "The Shadow 750 (most models), Shadow 1100, and VTX 1300/1800 use shaft drive. The final drive gear case develops oil leaks at the rear axle seal and the fill/drain plug gaskets. A neglected leak leads to low gear oil, overheating, and eventual gear damage.",
     "make": "Honda",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-carburetor-pilot-circuit-clogging-shadow-600-750-1100",
     "title": "Carburetor pilot circuit clogging — Shadow 600/750/1100",
     "description": "The carbureted Shadow models (most pre-2004) use CV carburetors that are notorious for pilot circuit clogging from ethanol fuel. The pilot jet and pilot air passage are tiny and clog first when fuel sits. Symptoms: won't idle, stumbles off-idle, hard cold start, requires choke held on longer than normal.",
     "make": "Honda",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "honda-vtx-1800-starter-motor-and-starter-clutch-failure",
     "title": "VTX 1800 starter motor and starter clutch failure",
     "description": "The VTX 1800 has a massive 1795cc V-twin with high compression. The starter motor works extremely hard, and the starter clutch (sprag) wears faster than on smaller engines. Symptoms: starter spins without engaging (whirring sound), slow cranking, or clicking with no crank.",
     "make": "Honda",
@@ -60,6 +64,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "honda-fuel-pump-failure-efi-shadow-and-vtx-models",
     "title": "Fuel pump failure — EFI Shadow and VTX models",
     "description": "The EFI Honda cruisers (Shadow 750 2004+, VTX 1300 all years) use an in-tank fuel pump that fails from ethanol fuel contamination, overheating from low fuel level, and age. No prime whirr on key-on = dead pump. The VTX 1300 is particularly prone because the fuel tank design traps heat near the pump.",
     "make": "Honda",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-hydraulic-valve-lifter-noise-vtx-1300",
     "title": "Hydraulic valve lifter noise — VTX 1300",
     "description": "The VTX 1300 uses hydraulic valve lifters (no manual adjustment needed). However, the lifters can develop a ticking noise when oil is cold or when oil pressure is low from a clogged oil passage or oil pump wear. The tick usually quiets after 30-60 seconds of running as oil pressure builds.",
     "make": "Honda",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "honda-clutch-drag-and-hard-neutral-finding",
     "title": "Clutch drag and hard neutral finding",
     "description": "Honda cruisers are notorious for difficulty finding neutral, especially when hot. The clutch doesn't fully disengage, causing the bike to creep forward at stops and grind when shifting to neutral. This is a combination of clutch plate sticking, cable adjustment, and oil viscosity.",
     "make": "Honda",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-exhaust-crossover-pipe-rust-through",
     "title": "Exhaust crossover pipe rust-through",
     "description": "Honda cruiser exhaust systems use a crossover pipe (balance tube) between the front and rear cylinder exhaust. This pipe sits low, gets splashed with road water and salt, and rusts through faster than the rest of the exhaust. A hole in the crossover causes an exhaust leak, uneven backpressure, and poor running.",
     "make": "Honda",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "honda-seat-height-and-ergonomic-issues-shorter-riders",
     "title": "Seat height and ergonomic issues — shorter riders",
     "description": "Many Honda cruisers have a higher seat than expected for the cruiser class, particularly the Shadow 750 Phantom and VTX 1300. Shorter riders can't flat-foot at stops, causing confidence issues and tip-overs at low speed. This is a diagnostic issue because shops get called after parking lot drops.",
     "make": "Honda",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "honda-speedometer-and-tachometer-cable-failure-older-shadow-models",
     "title": "Speedometer and tachometer cable failure — older Shadow models",
     "description": "Pre-2004 Shadow models with cable-driven speedometers and tachometers experience cable failure from routing stress, corrosion, and age. The speedo stops working suddenly (cable snap) or reads erratically (dry cable). On some Shadow models, the tachometer is also cable-driven.",
     "make": "Honda",

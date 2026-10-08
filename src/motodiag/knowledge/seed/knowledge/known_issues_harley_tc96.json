@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-twin-cam-96-cam-chain-tensioner-improved-but-not-eliminated",
     "title": "Twin Cam 96 cam chain tensioner — improved but not eliminated",
     "description": "HD upgraded to hydraulic tensioners with metal shoes on 2007+ TC96 models, but they still wear. The metal shoes last longer than TC88 plastic, but high-mileage bikes (50K+) still need inspection. Early 2007-2009 models may have been retrofitted with older-style plastic shoes from dealer inventory.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "harley-davidson-abs-module-failure-abs-light-on-intermittent-abs-activation",
     "title": "ABS module failure — ABS light on, intermittent ABS activation",
     "description": "2008+ Touring and some Dyna models with ABS can experience ABS module failure. The ABS light stays on, or worse, ABS activates randomly during normal braking. The module is expensive and requires programming to the bike's VIN. Common failure in harsh weather climates.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-ecm-tuning-factory-lean-condition-and-decel-popping",
     "title": "ECM tuning — factory lean condition and decel popping",
     "description": "Factory ECM calibration on TC96/103 models runs lean for emissions compliance. Causes decel popping (backfire sound on closed throttle), hot running, and surging at cruise. Every TC96+ owner eventually gets a tuner. This isn't a 'failure' — it's a factory compromise that tuning fixes.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-6-speed-transmission-hard-shift-into-5th-or-false-neutral",
     "title": "6-speed transmission — hard shift into 5th or false neutral",
     "description": "The Cruise Drive 6-speed transmission in TC96+ models can develop hard shifting into 5th gear or a 'false neutral' between 4th and 5th. The shift forks wear and the shift drum detent spring weakens over time. More common on touring models with luggage and passenger.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-stator-failure-same-harley-story-different-decade",
     "title": "Stator failure — same Harley story, different decade",
     "description": "TC96+ stators continue the Harley tradition of charging system failures. The 50-amp stator in later models is more robust but still fails from heat. CAN bus-era bikes show P0562 on the dash.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.5
   },
   {
+    "key": "harley-davidson-throttle-by-wire-tbw-throttle-body-failure-2008-models",
     "title": "Throttle-by-wire (TBW) throttle body failure — 2008+ models",
     "description": "2008+ models switched to throttle-by-wire (electronic throttle). The throttle body motor or position sensor can fail, causing limp mode, erratic idle, or no-throttle-response conditions. The bike goes into reduced power mode and limits RPM.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-compensator-noise-worse-on-103-110-cvo-models",
     "title": "Compensator noise — worse on 103/110 CVO models",
     "description": "The compensator issue continues on TC96+ models, but is worse on the 103ci and 110ci CVO engines due to higher torque. The increased torque loads wear the compensator spring pack faster.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-oil-cooler-lines-leaking-touring-models",
     "title": "Oil cooler lines leaking — Touring models",
     "description": "Touring models with oil coolers (standard on 2009+) can develop leaks at the oil cooler line fittings. The rubber hose sections deteriorate from heat and oil exposure. A slow drip becomes a steady leak if ignored.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-wheel-bearing-failure-touring-and-dyna",
     "title": "Wheel bearing failure — Touring and Dyna",
     "description": "Wheel bearings on TC96-era bikes, especially Touring models with heavy loads, wear out around 30-50K miles. Symptoms include a humming noise that changes with speed (not RPM), and play felt when rocking the wheel side-to-side with the axle installed.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-fuel-pump-failure-no-start-no-prime-sound",
     "title": "Fuel pump failure — no start, no prime sound",
     "description": "The in-tank fuel pump on EFI TC96+ models can fail, especially on bikes that run the tank low frequently (fuel cools the pump). On key-on, you should hear the pump prime for 2 seconds — if no prime sound, pump is suspect.",
     "make": "Harley-Davidson",

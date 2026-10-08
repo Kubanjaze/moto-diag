@@ -1,5 +1,6 @@
 [
   {
+    "key": "kawasaki-supercharger-system-understanding-the-centrifugal-compressor",
     "title": "Supercharger system — understanding the centrifugal compressor",
     "description": "The H2's supercharger is a centrifugal compressor driven directly by the crankshaft through a planetary gear set. It spins at up to 130,000 RPM and produces approximately 2.4 PSI of boost. The supercharger itself is maintenance-free (no oil changes, no belt), but the intake system around it must be sealed and the intercooler must function for the system to work properly.",
     "make": "Kawasaki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-h2-extreme-cooling-demands-dual-radiator-system",
     "title": "H2 extreme cooling demands — dual radiator system",
     "description": "The H2 produces 200-310hp (depending on model) with supercharged combustion that generates extreme heat. It uses a dual radiator system and an oil cooler to manage temperatures. The cooling system operates at its limits during sustained high-speed riding or track use. Any cooling component failure leads to rapid overheating that can damage the supercharger and engine.",
     "make": "Kawasaki",
@@ -30,6 +32,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-h2-electronics-suite-ktrc-kibs-klcm-kebc-complexity",
     "title": "H2 electronics suite — KTRC, KIBS, KLCM, KEBC complexity",
     "description": "The H2 has Kawasaki's most advanced electronics: KTRC (traction control), KIBS (cornering ABS), KLCM (launch control), KEBC (engine brake control), and electronic cruise control on H2 SX. The IMU-based systems require clean sensors and correct calibration. The boost-related electronics add another layer of complexity unique to the H2.",
     "make": "Kawasaki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-h2-paint-and-finish-self-healing-paint-and-mirror-chrome",
     "title": "H2 paint and finish — self-healing paint and mirror chrome",
     "description": "The H2 features a unique mirror chrome finish (Silver Mirror Paint) on the frame and bodywork that requires special care. The H2 Carbon uses a self-healing clear coat over carbon fiber. These finishes are stunning but sensitive — conventional cleaning products, automatic car washes, and improper technique can damage or dull the finish permanently.",
     "make": "Kawasaki",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-h2-chain-and-sprocket-supercharged-torque-stress",
     "title": "H2 chain and sprocket — supercharged torque stress",
     "description": "The H2 delivers its supercharged torque through a 525 chain — lighter than the ZX-14R's 530 but under more instantaneous stress from the boost-induced torque curve. The torque comes on suddenly as boost builds, creating shock loads that standard chains can't handle. Premium X-ring chain is mandatory.",
     "make": "Kawasaki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "kawasaki-h2-oil-consumption-and-quality-supercharger-lubrication",
     "title": "H2 oil consumption and quality — supercharger lubrication demands",
     "description": "The H2's supercharger planetary gear set runs in engine oil. The supercharger gear train at 130,000 RPM creates extreme shear forces that break down oil faster than a naturally aspirated engine. The H2 consumes oil at a higher rate than other Kawasaki sport bikes, and oil quality is critical for supercharger longevity.",
     "make": "Kawasaki",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-h2-fuel-system-high-flow-demands-under-boost",
     "title": "H2 fuel system — high-flow demands under boost",
     "description": "The H2's fuel injectors deliver significantly more fuel under boost than a naturally aspirated engine. The fuel pump must maintain pressure against boost pressure in the intake manifold. A weak fuel pump or clogged injectors cause lean conditions under boost — the most dangerous operating condition on a supercharged engine.",
     "make": "Kawasaki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "kawasaki-h2-sx-sport-touring-specific-luggage-wind-protection-cruise",
     "title": "H2 SX sport-touring specific — luggage, wind protection, cruise control",
     "description": "The H2 SX is the sport-touring variant with integrated panniers, taller windscreen, relaxed ergonomics, and electronic cruise control. The added weight of luggage changes the handling dynamics, and the cruise control system has unique diagnostic needs (vacuum-operated throttle hold). The H2 SX is the most practical supercharged motorcycle.",
     "make": "Kawasaki",
@@ -120,6 +128,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-h2-brake-system-stopping-500-lbs-of-supercharged-speed",
     "title": "H2 brake system — stopping 500+ lbs of supercharged speed",
     "description": "The H2 uses Brembo Stylema calipers (latest models) or Brembo M50 (earlier models) with KIBS cornering ABS. These are the best brakes available on a production motorcycle, but the H2's weight and speed demand perfect brake maintenance. Brake fade from old fluid or worn pads is unacceptable on a bike that can reach 200mph.",
     "make": "Kawasaki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "kawasaki-h2-valve-clearance-supercharged-engine-increases-service",
     "title": "H2 valve clearance — supercharged engine increases service urgency",
     "description": "The H2 uses shim-under-bucket valve adjustment like other Kawasaki inline-4s, but the supercharged combustion creates higher valve temperatures and pressures that accelerate seat wear. Kawasaki specifies a 15,000-mile interval, but the boosted combustion means valves tighten faster than on naturally aspirated engines.",
     "make": "Kawasaki",

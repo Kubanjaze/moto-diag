@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-cam-chain-tensioner-shoe-failure-tick-of-death",
     "title": "Cam chain tensioner shoe failure — tick of death",
     "description": "The Twin Cam 88 uses spring-loaded hydraulic cam chain tensioners with plastic shoes. The shoes wear through to metal, allowing the chain to contact the tensioner body directly. Known as the 'tick of death' — a rhythmic ticking from the cam chest that gets louder over time. If ignored, the chain can skip teeth and destroy the engine. Every TC88 owner should inspect tensioners as preventive maintenance.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "harley-davidson-compensator-sprocket-rattle-primary-clunk",
     "title": "Compensator sprocket rattle — primary clunk",
     "description": "The compensator sprocket sits on the crankshaft end in the primary and absorbs drivetrain shock. The internal spring pack wears, causing a loud clunk on startup and a rattle at low RPM. Often mistaken for cam chain noise. The clunk is most noticeable when blipping the throttle at idle — you'll hear a metallic 'clank' on decel-to-accel transitions.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-oil-sumping-crankcase-oil-accumulation",
     "title": "Oil sumping — crankcase oil accumulation",
     "description": "TC88 engines can accumulate excess oil in the crankcase (wet sumping). Oil migrates from the oil tank past the check valve while the bike sits. On startup, the engine blows oil out the breather, causing smoke and oil mess. Worse if bike sits for days/weeks. Some sumping is normal for Harleys, but excessive sumping indicates a failing check valve.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "harley-davidson-intake-manifold-leak-lean-surge-at-idle",
     "title": "Intake manifold leak — lean surge at idle",
     "description": "Same as the Evo — the rubber intake manifold seals harden and crack. TC88 models with EFI will throw lean codes. Carbureted models (early Softails) will surge at idle and backfire on decel. The TC88 intake runs hotter than the Evo due to higher compression, making the seals deteriorate faster.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-stator-failure-charging-system-breakdown",
     "title": "Stator failure — charging system breakdown",
     "description": "TC88 stators fail from heat, same as every Harley. The 38-amp stator is better than the Evo's 22-amp, but still fails. Symptoms: battery slowly dying, dim lights at idle, eventual no-start. TC88 stators are in the primary, requiring primary removal to access.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 3.5
   },
   {
+    "key": "harley-davidson-inner-cam-bearing-failure-catastrophic-if-ignored",
     "title": "Inner cam bearing failure — catastrophic if ignored",
     "description": "The TC88 inner cam bearing (between the two cams) can fail, especially on high-mileage engines. When the bearing seizes, it takes out the cam plate, oil pump drive, and potentially the cams themselves. Often accompanies cam chain tensioner problems — metal debris from worn tensioners accelerates bearing wear.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 0
   },
   {
+    "key": "harley-davidson-efi-tps-calibration-drift-surging-and-poor-throttle-response",
     "title": "EFI TPS calibration drift — surging and poor throttle response",
     "description": "The Delphi EFI system on TC88 models uses a throttle position sensor that can drift out of calibration over time. Symptoms include idle surge, poor throttle response off idle, and inconsistent idle speed. The TPS is adjustable on TC88 models — many mechanics miss this.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-primary-chain-tensioner-wear-chain-slap-at-idle",
     "title": "Primary chain tensioner wear — chain slap at idle",
     "description": "The primary chain connects the engine sprocket to the clutch basket. The hydraulic tensioner that keeps it tight wears over time, allowing chain slap that's audible at idle. Not as critical as the cam chain tensioner, but annoying and can cause premature wear on the primary chain and sprockets.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-exhaust-header-bolt-seizure-broken-bolt-in-head",
     "title": "Exhaust header bolt seizure — broken bolt in head",
     "description": "TC88 exhaust header bolts are steel threaded into aluminum heads. Over time, dissimilar metal corrosion and heat cycles seize the bolts. When you try to remove them, they snap off flush with the head. Extracting a broken exhaust bolt from an aluminum head is one of the worst jobs in the Harley world.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-rear-cylinder-overheating-heat-management-issues",
     "title": "Rear cylinder overheating — heat management issues",
     "description": "The rear cylinder on any air-cooled Harley V-twin runs significantly hotter than the front due to less airflow. On TC88s, the higher compression ratio (compared to Evo) makes this worse. Symptoms include detonation/pinging on the rear cylinder, heat-soak stalling in traffic, and premature exhaust valve wear on the rear head.",
     "make": "Harley-Davidson",

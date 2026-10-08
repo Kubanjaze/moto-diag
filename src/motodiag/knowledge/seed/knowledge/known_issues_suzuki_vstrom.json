@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-v-strom-650-fuel-injection-lean-surge-at-cruise",
     "title": "V-Strom 650 fuel injection lean surge at cruise",
     "description": "The V-Strom 650 (2004+) develops a rhythmic lean surge at steady cruise speed (3500-4500 RPM). The factory FI mapping is lean for emissions, and the closed-loop O2 sensor feedback hunts between rich and lean. This is the #1 V-Strom 650 complaint.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-v-strom-1000-cam-chain-tensioner-noise",
     "title": "V-Strom 1000 cam chain tensioner noise",
     "description": "The V-Strom 1000 (2002-2013, DL1000) shares the SV1000 V-twin engine with its CCT issues. The automatic tensioners on both banks wear, with the front cylinder more prone due to heat. Cold startup rattle progressing to constant chain noise indicates imminent failure.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-v-strom-650-1000-windscreen-buffeting-and-wind-noise",
     "title": "V-Strom 650/1000 windscreen buffeting and wind noise",
     "description": "The V-Strom stock windscreen creates turbulent air that causes helmet buffeting, noise, and rider fatigue on long rides. The windscreen shape channels air into a vortex that hits the rider's helmet. This is a design issue, not a defect, and is solved with aftermarket screens.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-v-strom-650-1000-suspension-sag-for-adventure-loading",
     "title": "V-Strom 650/1000 suspension sag for adventure loading",
     "description": "V-Stroms are loaded with luggage for adventure touring, but the stock suspension is set for rider-only. With panniers, top case, and a passenger, the rear sag exceeds safe limits and the front end lifts. Proper spring rates and preload adjustment are essential for loaded touring.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-v-strom-1050-2020-electronic-throttle-and-ride-mode-issues",
     "title": "V-Strom 1050 (2020+) electronic throttle and ride mode issues",
     "description": "The V-Strom 1050 (2020+) introduced electronic throttle (ride-by-wire), cruise control, and multiple ride modes. The system can exhibit jerky low-speed response, cruise control disengaging randomly, and mode switching errors from low battery voltage or sensor issues.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-v-strom-charging-system-stator-and-reg-rec",
     "title": "V-Strom charging system — stator and reg/rec",
     "description": "The V-Strom 650 and 1000 share charging system components with the SV650/1000 family. The stator overheats, the reg/rec fails, and the connector melts. V-Stroms with heated grips, GPS, and aux lights put extra demand on the already-marginal charging system.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "suzuki-v-strom-chain-and-sprocket-loaded-touring-wear",
     "title": "V-Strom chain and sprocket — loaded touring wear",
     "description": "V-Stroms loaded with luggage wear chains and sprockets faster than the same engine in an SV650. The extra weight accelerates chain stretch. The 525 chain on the 650 and 530 on the 1000 need more frequent maintenance when touring.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-v-strom-650-valve-clearance-tightening",
     "title": "V-Strom 650 valve clearance tightening",
     "description": "The V-Strom 650 V-twin uses shim-under-bucket valves that gradually tighten. The exhaust valves tighten first from heat cycling. The check interval is 15,000 miles but many V-Strom owners cover that in a single touring season.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "suzuki-v-strom-side-stand-switch-intermittent-starting-prevention",
     "title": "V-Strom side stand switch — intermittent starting prevention",
     "description": "The V-Strom side stand safety switch prevents starting when the stand is down in gear. The switch corrodes from water and mud exposure (adventure riding), causing intermittent no-start conditions. The bike cranks but won't fire because the ECU thinks the stand is down.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "suzuki-v-strom-abs-system-maintenance-sensor-and-modulator",
     "title": "V-Strom ABS system maintenance — sensor and modulator",
     "description": "V-Strom models with ABS (standard on most 2012+ models) require wheel speed sensor maintenance. Brake dust, mud, and chain lube contaminate the front and rear sensors. Contaminated sensors cause ABS activation at inappropriate times or ABS fault lights.",
     "make": "Suzuki",

@@ -1,5 +1,6 @@
 [
   {
+    "key": "triumph-a-meriden-triumph-carries-several-unrelated-british-thread",
     "title": "A Meriden Triumph carries several unrelated British thread standards at once — and the dangerous ones are the near-misses",
     "description": "Drawn from British thread-standard references and specialist supplier documentation. Meriden-era machines use more than one thread family on the same motorcycle: Whitworth and BSF share a 55-degree form and differ only in pitch; British Standard Cycle is 60-degree and 26 threads per inch at quarter-inch and above; and small electrical and carburettor screws are BA at 47.5 degrees. Unified threads began appearing on newly designed parts in the late 1960s and became widespread around 1969, but the change was never uniform, and Whitworth fasteners are documented on unit engines well after the pre-unit era ended — so the only reliable method is to gauge what is actually in the hole. Two specific hazards do real damage. Spanner sizes near-miss rather than obviously mismatch: 3/16 Whitworth measures about 11.3 mm across the flats against an 11 mm spanner, and 1/4 Whitworth about 13.3 mm against 13 mm, so the tool engages, feels almost right, and rounds the head. And quarter-inch Cycle thread at 26 tpi is close enough in pitch and identical in flank angle to M6 by 1.0 that a metric bolt will start, bind and strip the casting. British spanners are marked by **bolt diameter, not across-flats**, so one jaw may read \"1/4W — 5/16 BSF\" — a marking a metric-trained hand will misread. Crosshead screws are Pozidriv, and the JIS drivers a Japanese-vintage workshop already owns are the wrong tool.",
     "make": "Triumph",
@@ -32,6 +33,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-meriden-triumphs-are-positive-earth-through-1978-assuming",
     "title": "Meriden Triumphs are positive earth through 1978 — assuming otherwise destroys a modern regulator",
     "description": "Drawn from specialist supplier and ignition manufacturer documentation. These machines were positive earth from early production until the change to negative earth at the end of the 1970s, and a workshop whose every reflex assumes negative earth will do damage before it notices. A modern replacement regulator/rectifier is wired differently for the two systems — the supplier's instruction is explicit that connecting it for the wrong polarity can damage the unit. Coil polarity relative to system earth also matters: with it reversed the spark crosses the plug gap in the less favourable direction and needs meaningfully more voltage to do so, which the manufacturer of the electronic ignition quantifies at roughly 15 to 30 per cent. The engine will still run either way, which is exactly why this goes unnoticed. Polarity-sensitive modern accessories — electronic flasher units, LED lamps — assume negative earth and will not work correctly, and every meter reading is inverted relative to habit. The electronic ignition manufacturer adds two traps a Japanese-trained shop would not anticipate: the coils must be fed from the positive supply whichever earth the machine uses, total coil resistance must not fall below the specified minimum, and if the zener diode disconnects while the engine is running the ignition unit is destroyed.",
     "make": "Triumph",
@@ -63,6 +65,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-on-an-oil-in-frame-triumph-the-frame-is-the-oil-tank-so-a",
     "title": "On an oil-in-frame Triumph the frame is the oil tank — so a crack is a leak and a structural failure at once",
     "description": "Drawn from period road tests and marque documentation. From the 1971 model year the 650 twins adopted an all-welded frame whose large-diameter backbone serves as the oil reservoir, an arrangement that carried through into the later 750 twins. Three things follow that have no equivalent on a machine with a separate tank. The reservoir **cannot be removed and cleaned on the bench** — whatever sludge or rust it holds has to be dealt with in situ. It **rusts internally near the steering head**, at the top of the reservoir where oil does not habitually reach, so an inspection that looks only at the drain finds nothing. And it **cracks at the base and around the swingarm mounts**, where a crack is simultaneously an oil leak and a structural defect in the frame — so a weeping seam on one of these is a frame inspection, not a gasket job. Oil capacity is smaller than the earlier separate-tank machines, so the margin for a slow leak is smaller too. There is no spin-on filter: filtration at the sump is a gauze screen behind a finned alloy plate. The first-year bikes were also notably tall, which was corrected the following year — worth knowing when a rider complains of seat height on an early one.",
     "make": "Triumph",
@@ -94,6 +97,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-there-is-no-oil-filter-to-change-on-a-meriden-twin",
     "title": "There is no oil filter to change on a Meriden twin — filtration is a sludge trap inside the crankshaft",
     "description": "Drawn from specialist supplier and marque club documentation. A workshop used to changing a filter cartridge at every service will look for one on these machines and not find it. Filtration is a **centrifugal sludge trap inside the crankshaft**, which collects debris by spinning it out of the oil, and it can only be cleaned by splitting the cases. That has one large consequence for rebuild work: if the engine is opened and the trap is not cleaned out, the accumulated sludge is still there when the machine goes back into service, and it starves the big ends. Skipping it is not a shortcut, it is the reason the rebuild fails. The earlier and smaller machines have no filter at all in any form, and marque club guidance covers retrofitting an external one. Two further points a dry-sump-unfamiliar shop should hold. These engines have a remote oil reservoir, so oil drains past the pump into the crankcase while the machine stands — wet sumping — and the correct response is to know it happens rather than to diagnose a leak. And oil circulation is confirmed by watching the return flow into the tank, not by a pressure warning lamp, because there is not one to watch.",
     "make": "Triumph",
@@ -125,6 +129,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-a-360-degree-meriden-twin-runs-wasted-spark-so-a-dead",
     "title": "A 360-degree Meriden twin runs wasted spark — so a dead cylinder is never the ignition box or the trigger",
     "description": "Drawn from ignition manufacturer documentation and marque sources, and it is the most useful diagnostic shortcut on these engines. The 360-degree crank moves both pistons together and fires them on alternate revolutions, which means **both plugs fire on every revolution** — one into a cylinder on its power stroke and one into a cylinder on its exhaust stroke, the wasted spark. The consequence for diagnosis is a genuine elimination: if one cylinder has spark and the other does not, the fault cannot be the ignition unit or the trigger, because both cylinders are served by the same event. It has to be that cylinder's own plug, lead, cap or coil. That single deduction removes the most expensive parts from the list before any of them is bought. A shop used to a Japanese twin with independent per-cylinder timing will not make that inference, and will replace an ignition module that could not have caused the symptom.",
     "make": "Triumph",
@@ -155,6 +160,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-on-an-amal-carburettor-the-pilot-screw-is-an-air-screw",
     "title": "On an Amal carburettor the pilot screw is an AIR screw — screwing it in makes the mixture richer, not leaner",
     "description": "Drawn from the carburettor manufacturer's own documentation. This is the single most direct trap for a mechanic trained on Japanese carburettors, because the adjustment looks identical and works the opposite way. On an Amal the pilot screw meters **air**, so turning it in richens the mixture and turning it out leans it — inverted from the pilot fuel screw on a Japanese carburettor, where in is leaner. A technician tuning by habit therefore drives the mixture in exactly the wrong direction and concludes the carburettor is worn out. Three further differences matter. These are slide carburettors, not constant-velocity: there is no diaphragm and the mixture tracks throttle position directly, so a flat spot is a slide, needle or jet question rather than a diaphragm one. Cold starting on the older types uses a **tickler that floods the float bowl**, which is not a choke and should not be operated like one. And the manufacturer specifies that the Concentric must **not** be bolted tightly to the inlet flange — beyond a low stated torque the body distorts, which produces exactly the erratic slow running the tightening was meant to cure. Wear in the slide and the body bore is terminal rather than tunable; once it is there, adjustment cannot recover it.",
     "make": "Triumph",
@@ -187,6 +193,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-vibration-on-a-360-degree-twin-is-designed-in-and-it-is-the",
     "title": "Vibration on a 360-degree twin is designed in — and it is the root cause of the loose fasteners and broken wires you find",
     "description": "Drawn from marque and ignition-manufacturer sources. The 360-degree parallel twin has both pistons moving together, which produces a primary imbalance that cannot be cancelled — only compromised, by choosing a balance factor that moves the roughness to a different part of the rev range. So significant vibration on one of these machines is normal rather than a fault to chase, and a shop that treats it as a symptom will chase it forever. The more useful framing is as a cause. That vibration is why fasteners work loose, why stator and alternator wires fracture where they are unsupported, and why looms chafe at every point they touch the frame — which is why the electronic ignition manufacturer's own fitting instructions specify securing the stator plate wiring against exactly that. Treat routine re-torquing and loom inspection as scheduled work on these bikes rather than as a response to a complaint, and read a broken wire or a lost nut as the expected consequence of the engine layout rather than as evidence someone assembled it badly.",
     "make": "Triumph",
@@ -218,6 +225,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-on-an-early-hinckley-triumph-the-badge-is-not-the-capacity",
     "title": "On an early Hinckley Triumph the badge is not the capacity — every \"900\" is 885cc and every \"1200\" is 1180cc",
     "description": "Drawn from the manufacturer's launch material and period technical reporting. The 1991 relaunch was built on a deliberately modular engine family: **one cylinder architecture with a single bore across every variant**, combined with a choice of two crankshaft strokes and two cylinder counts. That gives exactly four capacities from one set of parts — a short-stroke triple, a long-stroke triple, a short-stroke four and a long-stroke four — with crankcases, clutch and gearbox shared across them, along with the frame, forks, tank, seat and wheels. It is an elegant piece of engineering and a trap for a parts counter, because **the model badge is not the displacement**. Every machine badged 900 in this era — Trident, Trophy, Daytona, Sprint, Tiger, Speed Triple, Thunderbird, Adventurer, Legend — is an 885, and every 1200 is an 1180. Order against the badge and the capacity is wrong before you start. The compensation is that genuine interchange across the family is unusually wide for shared components, which makes it worth checking whether a part is a family part before declaring it unobtainable.",
     "make": "Triumph",
@@ -248,6 +256,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-t595-is-a-project-code-not-a-capacity-the-t595-daytona-is-a",
     "title": "T595 is a project code, not a capacity — the T595 Daytona is a 955, and Triumph renamed it because of exactly this confusion",
     "description": "Drawn from the manufacturer's model history. Triumph's T-numbers from this era are factory project and model codes, and they are not displacements. The **T595 Daytona is a 955cc machine**, not a 595. The **T509 Speed Triple is an 885**, not a 509. The code was formed from the new injected engine series designation and the first digits of the actual capacity, which is why it reads so convincingly as a capacity to anyone who has not been told. The clinching evidence that this is a real trap rather than a pedantic one is that **Triumph itself renamed the T595 to \"Daytona 955i\" for 1999 specifically because the badge was being read as a 595cc engine**. A parts search, an insurance quote or a workshop estimate built on that misreading is wrong by a wide margin, and the machine's own badge is what caused it. Treat any T-number as an identifier to look up rather than as information you can read directly.",
     "make": "Triumph",
@@ -278,6 +287,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-carburetted-and-injected-early-hinckley-triumphs-share-model",
     "title": "Carburetted and injected early Hinckley Triumphs share model years — and some models never changed over at all",
     "description": "Drawn from the manufacturer's model history. Fuel injection arrived on two machines launched together in 1997, and it spread across the range slowly rather than at a stroke — the sports-touring model the following year, the adventure model the year after. Meanwhile several models stayed on carburettors right through to the end of their production in the early 2000s. The consequence is that **model year does not tell you how a Hinckley Triumph of this era is fuelled**: a carburetted and an injected machine can be the same year, and on some models every year is carburetted. A shop that establishes \"1999 Triumph\" and proceeds has established nothing about the fuel system. Look at the machine. The injected bikes use a French-supplied engine-management system rather than the Mikuni carburettors the rest of the range kept, so the two are not variations to be tuned similarly but different systems needing different tools and different diagnosis.",
     "make": "Triumph",
@@ -308,6 +318,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-a-mid-nineties-hinckley-speed-triple-t309-may-be-a-five",
     "title": "A mid-nineties Hinckley Speed Triple (T309) may be a five-speed, and may be a 750 — the badge settles neither",
     "description": "Drawn from the manufacturer's model history. Two identification traps sit on the same machine and both change what a job costs. The **1994–95 Speed Triple is a five-speed**, while later ones use the six-speed shared with the rest of the modular family — so a gearbox or clutch quote on an early one is not the same job as on a later one, and a shop quoting from the model name alone will be wrong about the parts and the labour. Separately, although the Speed Triple of this era is normally an 885, **a short run of 750cc machines was built using leftover European-specification engines** just before the 1997 redesign. So a mid-nineties Speed Triple identified by badge alone could be a 749, and the badge does not distinguish it. The same five-speed caution applies to the retro-styled models of the period, which also used the five-speed rather than the six. Establish the gearbox and the capacity from the machine before quoting anything in the drivetrain.",
     "make": "Triumph",
@@ -338,6 +349,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-early-hinckley-recalls-include-a-frame-headstock-weld-and-a",
     "title": "Early Hinckley recalls include a frame headstock weld and a fuel connector that fractures after being handled in service",
     "description": "Drawn from the road-safety regulator's recall records. Several campaigns on the 1997–2004 machines are worth a shop knowing, and one of them has an unusual mechanism. A 1997 campaign addressed a **frame headstock weld fracture**, remedied by replacing the aluminium frame of the machines involved — a serious enough finding that a frame inspection is warranted on an unremedied example. A 1999 campaign addressed an **oil leak between the crankcase halves**, and the remedy was to replace the lower crankcase bolts rather than to reseal the joint, which is worth knowing because a shop finding that leak would not naturally reach for bolts. A 2002 campaign covered **rear wheel needle roller bearing seizure** on the single-sided swingarm machines. And a campaign covering 1997 to 2004 machines addressed a **fuel connector at the fuel pump plate that fractures following in-service handling** — that is, the act of working on the machine is part of the failure mechanism, so it is a caution about the shop's own procedure and not only about the part. One honest gap: the regulator's records return nothing at all for the earliest years of this generation, and that absence is a coverage gap in the database rather than evidence there were no campaigns.",
     "make": "Triumph",
@@ -369,6 +381,7 @@
     "source": "service-manual"
   },
   {
+    "key": "triumph-hinckley-fasteners-are-metric-throughout-the-clean-break",
     "title": "Hinckley fasteners are metric throughout — the clean break from Meriden that makes mixing the two eras costly",
     "description": "Drawn from marque documentation. Everything Triumph built at Hinckley from 1991 uses ISO metric fasteners, which is a complete break from the Whitworth, BSF, Cycle and BA mixture used at Meriden. That is straightforwardly good news for a modern workshop, and it creates one specific hazard: **a shop that works on both eras has two incompatible toolsets and two incompatible habits, and the machines look related**. A restorer moving between a Meriden twin and an early Hinckley triple in the same week is the person most likely to try a metric socket on a Cycle thread or reach for a Whitworth spanner on a Hinckley engine. The rule that avoids it is simple: the year decides the toolset, with 1991 as the boundary, and the badge on the tank is irrelevant to it — a Hinckley-built retro styled to look like a Meriden machine is metric throughout. Keep the two toolsets separated physically if both eras come through the workshop.",
     "make": "Triumph",

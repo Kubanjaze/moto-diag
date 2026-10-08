@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-stator-failure-chronic-undercharging",
     "title": "Stator failure — chronic undercharging",
     "description": "Harley stators are a known weak point across all EFI models. The stator windings break down from heat, causing progressive charging failure. Bike may run fine but battery slowly dies. Often misdiagnosed as a bad battery.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 3.5
   },
   {
+    "key": "harley-davidson-cam-chain-tensioner-failure-twin-cam-tick-of-death",
     "title": "Cam chain tensioner failure — Twin Cam tick of death",
     "description": "Early Twin Cam 88 engines used spring-loaded hydraulic cam chain tensioners with plastic shoes that wear through. When the shoe wears to nothing, chain contacts tensioner body metal-on-metal. Known as the 'tick of death' — if ignored, chain can skip and destroy the engine. Forum consensus: every TC88 should get upgraded tensioners as preventive maintenance.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 4.0
   },
   {
+    "key": "harley-davidson-compensator-sprocket-noise-primary-clunk-on-startup",
     "title": "Compensator sprocket noise — primary clunk on startup",
     "description": "The compensator sprocket absorbs drivetrain shock between engine and transmission. When the internal spring pack wears, it produces a loud clunk/rattle on startup and at low RPM. Extremely common on Twin Cam and Milwaukee-Eight models. Often confused with cam chain noise.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "harley-davidson-intake-manifold-air-leak-lean-running-and-backfire",
     "title": "Intake manifold air leak — lean running and backfire",
     "description": "The rubber intake manifold seals between the cylinder heads and throttle body/carburetor harden and crack with heat cycles. Causes a vacuum leak that leans out the mixture, especially at idle. Extremely common across all Harley V-twins. The #1 cause of lean-related codes and backfiring on decel.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-voltage-regulator-failure-overcharging-or-no-charge",
     "title": "Voltage regulator failure — overcharging or no charge",
     "description": "Harley voltage regulators fail in two modes: undercharging (battery dies) or overcharging (boils battery, fries electronics). Overcharging is more dangerous — can destroy the battery and damage the ECM. Often fails together with the stator. Forum wisdom: always replace reg and stator together.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-sportster-primary-chain-tensioner-wear",
     "title": "Sportster primary chain tensioner wear",
     "description": "Sportster primary chain tensioner shoe wears over time, causing chain slap and noise from the primary. Worse at idle, gets quieter as RPM rises. Not as catastrophic as cam chain issues but annoying and can damage primary components if left too long.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-turn-signal-module-failure-erratic-blinkers",
     "title": "Turn signal module failure — erratic blinkers",
     "description": "The turn signal security module (TSM/TSSM) handles turn signals, security system, and starter lockout. When it fails, turn signals may blink fast, not blink, or blink on their own. Security system may also lock you out of starting. Common on 2004-2013 models.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-exhaust-header-leak-ticking-when-cold",
     "title": "Exhaust header leak — ticking when cold",
     "description": "Exhaust header pipe gaskets and flange connections develop leaks, especially on the front cylinder which gets more thermal cycling. Sounds like a tick or hiss when cold, usually goes away as the pipes expand when hot. Often confused with valve train noise.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-fuel-injector-clogging-lean-stumble-off-idle",
     "title": "Fuel injector clogging — lean stumble off idle",
     "description": "Fuel injectors get gummed up from ethanol fuel and short trips. Causes a lean stumble or hesitation when cracking the throttle off idle. More common on bikes that sit for weeks between rides. Often misdiagnosed as a TPS issue.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-rear-brake-switch-failure-brake-light-always-on-or-never-on",
     "title": "Rear brake switch failure — brake light always on or never on",
     "description": "The rear brake light switch (hydraulic pressure type) fails, causing the brake light to stay on constantly or not come on at all. A constant-on brake light drains the battery overnight. Common across all models with hydraulic rear brakes.",
     "make": "Harley-Davidson",

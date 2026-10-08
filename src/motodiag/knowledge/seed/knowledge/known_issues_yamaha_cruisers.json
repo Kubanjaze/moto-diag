@@ -1,5 +1,6 @@
 [
   {
+    "key": "yamaha-v-star-650-carburetor-issues-pilot-jet-clogging-and-idle",
     "title": "V-Star 650 carburetor issues — pilot jet clogging and idle problems",
     "description": "The V-Star 650 (XVS650) is carbureted across its entire production run (1998-2019). The twin CV carburetors are reliable but the pilot jets clog from ethanol fuel when the bike sits. The V-Star 650 is often a weekend/seasonal bike that sits for months, making carb issues the #1 maintenance item.",
     "make": "Yamaha",
@@ -15,6 +16,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "yamaha-v-star-650-1100-vacuum-petcock-failure-fuel-in-oil",
     "title": "V-Star 650/1100 vacuum petcock failure — fuel in oil",
     "description": "The V-Star 650 and 1100 use vacuum-operated fuel petcocks identical to the Thundercat's design. When the diaphragm tears, fuel passes through the carbs and into the crankcase, diluting the oil. This is especially common on bikes that sit for extended periods — the diaphragm dries out and cracks.",
     "make": "Yamaha",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-v-star-1100-stator-and-charging-system-failure",
     "title": "V-Star 1100 stator and charging system failure",
     "description": "The V-Star 1100 (XVS1100) uses the same problematic charging system as other Yamaha V-twins of the era. The stator sits behind the left engine cover and overheats from the air-cooled engine's heat. The regulator is a shunt type mounted in an area with poor airflow. Combined, they fail at 20K-30K miles.",
     "make": "Yamaha",
@@ -45,6 +48,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "yamaha-v-star-1300-950-shaft-drive-final-drive-service-neglect",
     "title": "V-Star 1300/950 shaft drive final drive service neglect",
     "description": "The V-Star 1300 and 950 use shaft final drive — a reliable system that's also the most neglected maintenance item on cruisers. The final drive gear oil needs changing every 10K miles, but most cruiser owners never do it. When the oil breaks down, the hypoid gears wear, causing a whining noise that progresses to gear failure.",
     "make": "Yamaha",
@@ -60,6 +64,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-v-star-250-beginner-bike-valve-adjustment-single-cylinder",
     "title": "V-Star 250 — beginner bike valve adjustment (single-cylinder)",
     "description": "The V-Star 250 uses a single-cylinder air-cooled engine with screw-type valve adjusters (not shims). The valves need checking every 4000 miles — a much shorter interval than larger bikes. New riders who buy the V-Star 250 as a first bike often don't know about valve service, and shops charge $200+ for a $0 parts job.",
     "make": "Yamaha",
@@ -75,6 +80,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "yamaha-bolt-r-spec-air-cooled-heat-management-in-traffic",
     "title": "Bolt/R-Spec air-cooled heat management in traffic",
     "description": "The Yamaha Bolt (XVS950) uses an air-cooled 942cc V-twin that relies entirely on airflow for cooling. In stop-and-go traffic, engine heat radiates onto the rider's legs and the oil temperature climbs. Unlike liquid-cooled bikes, there's no fan to help — when you stop moving, cooling stops.",
     "make": "Yamaha",
@@ -90,6 +96,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-v-star-650-starter-clutch-and-starting-difficulty",
     "title": "V-Star 650 starter clutch and starting difficulty",
     "description": "The V-Star 650's starter clutch (one-way sprag clutch behind the engine) wears over time, causing the starter to spin without engaging the engine. You hear the starter motor whirring but the engine doesn't crank. This is different from a dead battery — the starter is spinning, just not connecting to the crankshaft.",
     "make": "Yamaha",
@@ -105,6 +112,7 @@
     "estimated_hours": 7.0
   },
   {
+    "key": "yamaha-v-star-1300-fuel-injection-idle-surge-isc-valve",
     "title": "V-Star 1300 fuel injection idle surge — ISC valve",
     "description": "The V-Star 1300 uses electronic fuel injection with an Idle Speed Control (ISC) valve that regulates idle RPM. The ISC valve gets carbon buildup from the air-cooled engine's blowby gases, causing erratic idle — surging between 800-1500 RPM. This is the most common owner complaint on the V-Star 1300.",
     "make": "Yamaha",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "yamaha-bolt-drive-belt-tension-and-inspection-belt-drive-cruiser",
     "title": "Bolt drive belt tension and inspection — belt-drive cruiser maintenance",
     "description": "The Yamaha Bolt uses belt final drive — lower maintenance than chain but not zero maintenance. The belt needs tension checking every 5000 miles and visual inspection for cracks, fraying, and missing teeth. Belt failure leaves you stranded with no way to limp home (unlike a chain that can be temporarily repaired).",
     "make": "Yamaha",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "yamaha-v-star-650-1100-exhaust-and-intake-decel-popping-air",
     "title": "V-Star 650/1100 exhaust and intake decel popping — air injection system",
     "description": "V-Star 650 and 1100 models have an Air Injection System (AIS) that pumps fresh air into the exhaust ports to burn unburned hydrocarbons (emissions). This causes loud popping and backfiring on deceleration, especially with aftermarket exhaust. The popping is cosmetically annoying and can cause exhaust discoloration.",
     "make": "Yamaha",

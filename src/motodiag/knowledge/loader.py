@@ -311,6 +311,42 @@ def reconcile_255B_rows(conn) -> int:
     return changed
 
 
+def seed_keys() -> dict[tuple[str, str, str], str]:
+    """Each seed entry's frozen key by its prose identity, ``(make, model,
+    title)`` with absent values as ``""`` (Phase 380)."""
+    seed_dir = Path(__file__).parent / "seed" / "knowledge"
+    out: dict[tuple[str, str, str], str] = {}
+    for path in sorted(seed_dir.glob("known_issues_*.json")):
+        for item in json.loads(path.read_text(encoding="utf-8")):
+            out[(item.get("make") or "", item.get("model") or "", item["title"])] = item["key"]
+    return out
+
+
+def key_known_issues_085(conn) -> int:
+    """Migration 085's ``post_apply`` (Phase 380, F129, F142). Returns rows keyed.
+
+    Gives every row its ``row_key``: the seed entry's frozen key when a seed
+    entry has the row's ``(make, model, title)`` (on the operator's database,
+    all 1060, one to one, measured at 380's Step 0), else ``derived_row_key``
+    for a row no seed holds. Then rebuilds the model junction, so each model of
+    a multi-make row the transmission lookup places sits under its own make
+    (F142).
+    """
+    from motodiag.knowledge.issues_repo import derived_row_key
+    from motodiag.knowledge.models import sync_model_index
+
+    keys = seed_keys()
+    keyed = 0
+    for row_id, make, model, title in [tuple(r) for r in conn.execute(
+            "SELECT id, make, model, title FROM known_issues ORDER BY id").fetchall()]:
+        key = keys.get((make or "", model or "", title)) or derived_row_key(make, model, title)
+        conn.execute("UPDATE known_issues SET row_key = ? WHERE id = ?", (key, row_id))
+        keyed += 1
+    # Only the pairs that move, so every other junction row keeps its rowid.
+    sync_model_index(conn)
+    return keyed
+
+
 def backfill_dtc_categories(conn) -> int:
     """Classify already-seeded DTC rows from the seed files. Returns rows changed.
 
@@ -552,6 +588,8 @@ def load_known_issues_file(file_path: str | Path, db_path: str | None = None) ->
             # Phase 255: which machines the row's content holds for. Absent
             # in every file written before 255, which loads as unscoped.
             applicability=item.get("applicability"),
+            # Phase 380 (F129): the entry's frozen key is its identity.
+            key=item.get("key"),
         )
 
     return count_known_issues(db_path=db_path) - before

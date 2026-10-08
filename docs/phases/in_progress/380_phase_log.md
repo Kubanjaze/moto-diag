@@ -38,3 +38,71 @@ check starts true, and any later difference is drift.
 through `json.dumps(indent=2)` byte for byte. The other 69 are
 hand-formatted, with arrays on one line. So keys are inserted as one line
 before each entry's `"title"` line, never by re-serialising a file.
+
+### 2026-10-08 — The build
+
+- **The keys.** `380_add_keys.py` keyed 1060 entries in 110 files; 1060
+  distinct, none needing a suffix, longest 81 characters. A second run
+  refuses.
+  - Its first run wrote 27 files and stopped on the one compact file
+    (`known_issues_european_parts.json`, an object per line). That was the
+    phase's own new script, before any commit, so it is not a register
+    entry. The 27 were restored with `git checkout` (uncommitted, this
+    phase's own), and the script now checks every file before writing any.
+  - The check: deleting the inserted text gives back each file's original
+    bytes.
+- **085:** `row_key` keyed from the seed (all 1060 on a live copy, 0
+  `auto-`), the prose identity index replaced, and the junction synced.
+- **`add_known_issue(key=)`**, `derived_row_key` for keyless callers, and
+  `update_known_issue_by_key` for the content batch.
+- **2A's parity check** in `deploy.py`.
+- **F142:** the lookup rung and `_owned_names`.
+
+**Decisions taken while building, not stops:**
+- **D1. F142's evidence** is the lookup and a single-make row's token with
+  its own marque stripped ("Energica Ego" owns "ego").
+  - Without the stripping only 19 junction rows moved, and Energica's Ego
+    stayed under three other makes.
+  - With it, **109 leave and none are added**, and the migrated junction
+    equals a fresh seed build's, pair for pair.
+  - 3A's unassigned list is **37** (Step 0 estimated 35, with a looser
+    rule).
+  - 9 `LX50` pairs leave Piaggio, because the lookup files the LX under
+    Vespa, and the marque vocabulary does not count the two as one family.
+- **D2. `sync_model_index`:** 085 applies only the junction pairs that
+  move. A rebuild would renumber every rowid, and the dry run showed 1656
+  "changed" rows that were only renumbered.
+- **D3. The parity check read the backup's columns** on its first run and
+  checked nothing (0.0 s). It now reads the copy's: 13.9 s, 0 problems over
+  all 1060 rows on the live copy.
+- **D4. Keyless callers keep the old identity,** through a derived key of
+  `(make, model, title)`.
+- **D5. Past migrations' prose-keyed hooks stay** (`reconcile_255B_rows`,
+  `backfill_row_applicability`): they run at their own schema, before
+  `row_key` exists.
+- **D6. Five pins moved with the change:**
+  - 244D's index test, now `idx_known_issues_row_key`;
+  - 244D's "no OR IGNORE" test, which reads every string constant now that
+    the INSERT is built in pieces;
+  - 255B's F129 pin, inverted;
+  - 359's 072 test, which leaves out `row_key` (a later migration's
+    column);
+  - 209B's orphan list: `update_known_issue_by_key` (substrate for the
+    content batch) and `unassigned_models` (test-infra).
+- **The guards:** the edit guard refused heredoc writes of the fixture
+  JSON into `tests/`, so they were written with the Write tool. Not
+  changed.
+
+**Checks:**
+- the whole suite before these adjustments: 5 failed, 10786 passed, each
+  failure one of D6;
+- mutations 11/11 red (`380_mutate.out`). The first run had 9/11: P2 and
+  J4 survived, so two tests were added (a seed edited after the approval;
+  a junction whose kept rows sit at rowids a rewrite would change);
+- 244G scanner 0 hits;
+- floor 10769 → 10795.
+
+`wholetree.sh --full` on the staged build found a sixth pin: 244U's running
+orphan count, 117 → 119. The whole-suite run came before the two ORPHANS
+entries existed (D6), so the count still read 117 then. Updated with its
+reason.

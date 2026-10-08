@@ -1,5 +1,6 @@
 [
   {
+    "key": "suzuki-bandit-600-1200-air-oil-cooled-engine-overheating-in-traffic",
     "title": "Bandit 600/1200 air/oil-cooled engine overheating in traffic",
     "description": "The Bandit 600 (1995-2004) and Bandit 1200 (1996-2006) use air/oil-cooled engines. The oil cooler is undersized for stop-and-go traffic, especially the 1200cc engine. Oil temperatures climb rapidly without airflow, accelerating oil degradation and reducing engine protection.",
     "make": "Suzuki",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "suzuki-bandit-carburetor-bank-600-1200-sync-and-rebuild",
     "title": "Bandit carburetor bank (600/1200) — sync and rebuild",
     "description": "The carbureted Bandits use banks of 4 Mikuni BSR36 (600) or BSR36/38 (1200) carburetors. After decades, diaphragms crack, pilot jets clog, and synchronization drifts. The carbs are accessible but the 1200's larger throttle bodies are slightly harder to sync.",
     "make": "Suzuki",
@@ -30,6 +32,7 @@
     "estimated_hours": 5.0
   },
   {
+    "key": "suzuki-bandit-1250-2007-2012-fuel-injection-issues",
     "title": "Bandit 1250 (2007-2012) fuel injection issues",
     "description": "The liquid-cooled Bandit 1250 (GSF1250) uses fuel injection that can develop TPS drift, idle hunting, and lean cruise conditions. The secondary throttle valve system (STPS) creates non-linear throttle response similar to the SV1000.",
     "make": "Suzuki",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-bandit-charging-system-stator-and-reg-rec-failure",
     "title": "Bandit charging system — stator and reg/rec failure",
     "description": "The Bandit 600/1200/1250 shares the Suzuki inline-4 charging system weakness. The stator overheats, the reg/rec fails, and the connector melts. The Bandit's unfaired engine (naked bikes) actually has better cooling airflow to the reg/rec than faired models.",
     "make": "Suzuki",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.5
   },
   {
+    "key": "suzuki-bandit-600-cam-chain-tensioner-rattle",
     "title": "Bandit 600 cam chain tensioner rattle",
     "description": "The Bandit 600 shares the GSX-R600 engine's CCT weakness. The automatic tensioner ratchet wears, allowing cam chain slap at cold startup. The Bandit 600 engine is detuned from the GSX-R but the CCT is the same part.",
     "make": "Suzuki",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-bandit-fork-and-suspension-budget-upgrades-for-naked-bike",
     "title": "Bandit fork and suspension — budget upgrades for naked bike",
     "description": "The Bandit ships with basic suspension suitable for commuting but overwhelmed by spirited riding or passenger use. The stock fork springs are soft, the damping is basic, and the rear shock has limited adjustment. The Bandit's upright riding position loads the suspension differently than sport bikes.",
     "make": "Suzuki",
@@ -90,6 +96,7 @@
     "estimated_hours": 3.0
   },
   {
+    "key": "suzuki-bandit-fuel-petcock-vacuum-diaphragm-failure-carb-models",
     "title": "Bandit fuel petcock — vacuum diaphragm failure (carb models)",
     "description": "The carbureted Bandit 600/1200 vacuum petcock fails when the diaphragm deteriorates, allowing fuel to flow continuously. This floods the carbs and dilutes the crankcase oil with fuel. The symptom is fuel smell, rising oil level, and hard starting.",
     "make": "Suzuki",
@@ -105,6 +112,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "suzuki-bandit-brake-system-aging-calipers-and-spongy-lever",
     "title": "Bandit brake system — aging calipers and spongy lever",
     "description": "Bandit brakes are adequate when maintained but deteriorate from fluid neglect. The Tokico calipers develop sticky pistons, the master cylinder bore pits, and the stock rubber brake lines swell. Commuter Bandits suffer more from moisture-contaminated brake fluid.",
     "make": "Suzuki",
@@ -120,6 +128,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-bandit-chain-and-sprocket-commuter-wear",
     "title": "Bandit chain and sprocket — commuter wear",
     "description": "Bandits used as daily commuters accumulate chain miles rapidly. The 530 chain (1200) or 525 chain (600) wears from frequent stop-start riding, rain, and grit. The countershaft sprocket wears fastest from low-gear acceleration in traffic.",
     "make": "Suzuki",
@@ -135,6 +144,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "suzuki-bandit-wiring-and-electrical-ground-corrosion-on-naked-bikes",
     "title": "Bandit wiring and electrical — ground corrosion on naked bikes",
     "description": "The Bandit's naked-bike design exposes the wiring and connectors to weather. Ground connections corrode from rain and road spray, causing intermittent electrical issues. The headlight and gauge connectors behind the minimal instrument cluster are particularly vulnerable.",
     "make": "Suzuki",

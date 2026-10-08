@@ -1,5 +1,6 @@
 [
   {
+    "key": "harley-davidson-shared-oil-system-engine-transmission-primary-use-same-oil",
     "title": "Shared oil system — engine/transmission/primary use same oil",
     "description": "Unlike Big Twins, Sportsters use a single oil supply for the engine, transmission, AND primary chain. This means the oil takes a beating — shear from transmission gears, contamination from clutch material, and engine heat all degrade it faster. Sportster oil changes are more critical than Big Twin oil changes.",
     "make": "Harley-Davidson",
@@ -15,6 +16,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-clutch-cable-adjustment-heavy-pull-and-poor-engagement",
     "title": "Clutch cable adjustment — heavy pull and poor engagement",
     "description": "Sportster Evo clutch cables stretch over time, and the adjustment at the handlebar lever and mid-cable adjuster go out of spec. A misadjusted clutch cable causes heavy lever pull, dragging clutch (hard to find neutral), or clutch slip. The most common 'shifting problem' on a Sportster is just a cable adjustment.",
     "make": "Harley-Davidson",
@@ -30,6 +32,7 @@
     "estimated_hours": 0.25
   },
   {
+    "key": "harley-davidson-starter-motor-brushes-worn-slow-no-crank",
     "title": "Starter motor brushes worn — slow/no crank",
     "description": "Sportster Evo starter motors wear their brushes down over time. The starter cranks progressively slower, then one day won't crank at all. Often blamed on a weak battery, but if a new battery doesn't fix slow cranking, it's the starter.",
     "make": "Harley-Davidson",
@@ -45,6 +48,7 @@
     "estimated_hours": 1.5
   },
   {
+    "key": "harley-davidson-carb-enrichener-choke-circuit-plugged-hard-cold-start",
     "title": "Carb enrichener (choke) circuit plugged — hard cold start",
     "description": "The CV40 carb on Sportsters has an enrichener circuit (sometimes incorrectly called a choke) that adds extra fuel for cold starting. This circuit clogs with fuel varnish from ethanol gas and sitting. When plugged, the bike is hard to start cold but runs fine once warm.",
     "make": "Harley-Davidson",
@@ -60,6 +64,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-regulator-rectifier-failure-under-seat-heat-trap",
     "title": "Regulator/rectifier failure — under seat heat trap",
     "description": "Sportster Evo voltage regulators are mounted under the seat in a heat trap. Poor airflow + engine heat = premature regulator failure. Same symptoms as Big Twin charging issues but worse because of the mounting location.",
     "make": "Harley-Davidson",
@@ -75,6 +80,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-speedometer-drive-gear-failure-no-speedo-reading",
     "title": "Speedometer drive gear failure — no speedo reading",
     "description": "Sportsters use a mechanical speedometer drive gear in the front wheel hub. The plastic drive gear strips out, causing the speedometer to read zero or bounce erratically. EFI models (2002+) may also throw a VSS code.",
     "make": "Harley-Davidson",
@@ -90,6 +96,7 @@
     "estimated_hours": 1.0
   },
   {
+    "key": "harley-davidson-rear-axle-adjustment-chain-alignment-and-tire-wear",
     "title": "Rear axle adjustment — chain alignment and tire wear",
     "description": "Sportster Evos use a chain final drive (unlike belt-drive Big Twins). The rear axle adjusters need to be set equally on both sides or the rear wheel will be misaligned, causing uneven tire wear and chain wear. Easy to get wrong during a tire change.",
     "make": "Harley-Davidson",
@@ -105,6 +112,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-rocker-box-oil-leak-dripping-on-883-and-1200",
     "title": "Rocker box oil leak — dripping on 883 and 1200",
     "description": "Same issue as Big Twin Evos — rocker box gaskets harden and leak. On Sportsters, the rocker boxes are more exposed and the leaks are more visible. Oil drips down the cylinder fins and onto the exhaust, causing smoke and burning smell.",
     "make": "Harley-Davidson",
@@ -120,6 +128,7 @@
     "estimated_hours": 2.0
   },
   {
+    "key": "harley-davidson-kickstand-switch-bike-dies-when-put-in-gear",
     "title": "Kickstand switch — bike dies when put in gear",
     "description": "The kickstand safety switch prevents the bike from being ridden with the kickstand down. When the switch fails or the wiring corrodes, the bike thinks the kickstand is always down and kills the engine when you put it in gear. Very common failure, especially in wet climates.",
     "make": "Harley-Davidson",
@@ -135,6 +144,7 @@
     "estimated_hours": 0.5
   },
   {
+    "key": "harley-davidson-exhaust-crossover-pipe-crack-2-into-1-systems",
     "title": "Exhaust crossover pipe crack — 2-into-1 systems",
     "description": "Sportsters with 2-into-1 exhaust systems (stock on some years) can develop cracks at the crossover pipe junction. The crack starts small and grows, causing an exhaust leak that gets louder over time. The crossover sits in a high-heat zone between the cylinders.",
     "make": "Harley-Davidson",
