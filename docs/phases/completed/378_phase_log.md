@@ -1,6 +1,6 @@
 # Phase 378 — Process clean-up 2 (K18–K25) — phase log
 
-**Status:** 🚧 In progress (2026-10-07)
+**Status:** ✅ Complete (2026-10-08)
 **Branch:** `phase-378` (Opus session, main checkout)
 
 ---
@@ -92,3 +92,20 @@ Neither guard was changed.
 244G's scanner: 0 hits on `tests/`, and its planted control is reported.
 `COLLECTED_TEST_FLOOR` 10685 → 10723, by a diff of collected ids against
 `481832c`: +37 in five new files, +2 −1 in `test_roadmap_continuity.py`.
+
+### 2026-10-08 — The regression of record
+
+`wholetree.sh --full` on `bdc063d`: 4081 passed (4047 before 378; its new
+census and contract tests joined by the membership rule).
+
+Regression of record: 10723 passed, 0 failed, 0 skipped, 0 errors at `bdc063d` (27 min 31 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+It ran 23:42 EDT on 2026-10-07 to 00:09 on 2026-10-08: an evening, not
+a month's last; the clock census and `clock_check.sh` were green at the
+build.
+
+No migration, so no live apply and no deploy files. No bug fix after a
+commit, so no register.
+
+No refute pass ran: the phase ships tooling, tests and rule text, not
+content rows.

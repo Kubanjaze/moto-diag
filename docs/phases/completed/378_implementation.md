@@ -1,6 +1,9 @@
 # Phase 378 — Process clean-up 2 (K18–K25)
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-08 (v1.0 2026-10-07)
+
+**Outcome (v1.1).** K18–K25 shipped as checks, scripts and rule text. Regression
+10723 passed / 0 failed at `bdc063d`. No `src/`, no migration.
 
 ---
 
@@ -188,13 +191,75 @@ needs a mobile session if it has one.
 
 ## Planned items
 
-- [ ] K18 the order, the refusal, fixtures, tests
-- [ ] K19 the census, the pin, the script, the skill line
-- [ ] K20 B1 per file, the header, fixtures
-- [ ] K21 the derived folds
-- [ ] K22 the labels and README
-- [ ] K23 CLAUDE.md's standing practice, change log, the index
-- [ ] K24 the skill line
-- [ ] K25 verify-live, check 8
-- [ ] K26, K27 recorded
-- [ ] mutations, the floor, the regression, the close-out, the handoff
+- [x] K18 the order, the refusal, fixtures, tests
+- [x] K19 the census, the pin, the script, the skill line
+- [x] K20 B1 per file, the header, fixtures
+- [x] K21 the derived folds
+- [x] K22 the labels and README
+- [x] K23 CLAUDE.md's standing practice, change log, the index
+- [x] K24 the skill line
+- [x] K25 verify-live, check 8
+- [x] K26, K27 recorded
+- [x] mutations, the floor, the regression, the close-out, the handoff
+
+## Deviations from Plan
+
+1. **K18's scope is check 2's** (`code_after_regression`), not "src/ or
+   tests/". `.claude/` and `scripts/` are code (F137), so the apply and the
+   close-out read the same rule. It also refuses uncommitted code (D2).
+2. **K19's census is 8 lines in 6 files**, not the 7 left of 375's 9: it
+   found `test_phase281_intake_month.py:51`, a name bound to the clock and
+   read for its month, which 375's grep missed. Its file had passed under
+   libfaketime at all four moments.
+3. **The working-rules index was not changed** (D6). It indexes the
+   workspace `CLAUDE.md`, which 378 does not touch. v1.0 said it would be
+   updated.
+4. **CLAUDE.md's rule 4 changed too.** It said the deploy's outcome is
+   added after the merge, which contradicted K18's order.
+5. **Mutations: 18, not 20.** S3 was dropped as framed wrong (its check
+   was the script itself, which the mutation made pass; S1 holds `rc=1`),
+   and L2's text was corrected.
+6. **Two controls added while building:**
+   - the WAL backup case, since a "no file left" test on a database not in
+     WAL mode could not fail;
+   - a `shape_gaps` unit test, since no fixture writes a timestamp.
+7. **The edit guard refused one command** (a Python heredoc editing
+   `CLAUDE.md` whose text named `tests/`). The Edit tool was used instead,
+   and the guard was not changed.
+
+Not deviations, recorded for the reader:
+- no bug fix after a commit, so no register;
+- no migration, so no deploy;
+- no refute pass ran.
+
+## Results
+
+| item | result |
+|---|---|
+| K18 | `apply-live` refuses with no phase log, no A5-readable line, code after the regression's commit (`.claude/` included), or uncommitted code. A docs-only change after it is allowed, and a re-run clears it. 10 tests; fixtures `deploy/fixtures/k18/`; 357's, 358's and 359's 30 apply tests still pass. The close-out skill states one order |
+| K19 | `tests/support/clock_census.py`, parsed: 8 lines in 6 files pinned; each shape planted is seen, and a timestamp, the shop's day, a fixed date, a string and a comment are not. `clock_check.sh`: 137 passed at 2026-10-31 21:00, 2026-10-07 21:00, 2026-12-31 21:00 and 2026-11-01 00:30 EDT, with its own control at each |
+| K20 | B1 on its own file: a sibling at F20 over this file's F12 passes, and a stale own header fails. The backend header says "(this file)". Allocation is still the union |
+| K21 | folds derived by two independent parses, equal; the 18 closed by 2026-10-07 a floor; a planted fold needs no edit |
+| K22 | eight artefacts in the skill's description and check 11; README carries 2026-09-27's observation |
+| K23 | CLAUDE.md rule 6, "Standing practice": five lines with no check, and K26's; the rest named as held by checks |
+| K24 | the close-out skill's step 5 |
+| K25 | `deploy.py verify-live`: read-only, the backup opened immutable (the WAL control shows a plain open leaves `-shm`). On live, `verify-live 375` equals the approved diff, integrity ok, foreign keys ok. verify_phase's check 8 calls it and opens live read-only |
+| K26, K27 | rule 6; the deploy skill (5 now, 5 plus weekly once real data is in) |
+| tests | five new files (37), `test_roadmap_continuity.py` +2 −1, three existing files adjusted |
+| mutations | 18/18 red (`378_mutate.out`) |
+| 244G scanner | 0 hits on `tests/`; its planted control reported |
+| `wholetree.sh --full` | 4081 passed at `bdc063d` |
+| `COLLECTED_TEST_FLOOR` | 10685 → 10723 |
+
+Regression of record: 10723 passed, 0 failed, 0 skipped, 0 errors at `bdc063d` (27 min 31 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+## Risks
+
+- **The clock census sees test lines only.** A product's own clock (370's
+  rate limiter), a clock read through a helper in another file, or
+  `time.time()` is not seen.
+- **The frozen-clock exemption is a convention.** A file that imports the
+  helper and still reads the real clock is not caught.
+- **`clock_check.sh` needs libfaketime;** without it, it refuses (exit 2).
+- **The mobile repository has no finding check of its own** (no `.claude/`;
+  none in `scripts/` or `__tests__/`), so K20's defect had one side.
