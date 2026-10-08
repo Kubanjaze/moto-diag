@@ -8,7 +8,20 @@ Every claim below was measured on 2026-10-08 from:
 - the phase documents in `docs/phases/completed/`;
 - a backup-API copy of the live database, for F115.
 
-When the triage was written, nothing in it had been changed. Your decision goes above the triage when you give it.
+When the triage was written, nothing in it had been changed. The operator's decision follows; the triage itself is unchanged below it.
+
+---
+
+## The operator's decision, 2026-10-08 (verbatim)
+
+> approved: close the 11 now. 379 = the nine small fixes. then 380 = F129 + F142, then the content batch. D, E and F stay as the triage says.
+
+The operator sent it to the session that had closed Phases 375 and 378.
+
+What came of section A:
+- All 11 were closed on 2026-10-08, each heading marked "— CLOSED by …" and each entry given a dated line with its evidence.
+- The evidence was re-measured first, not copied from this triage. F115 was measured on a backup-API copy of live: the four machines reach row 4605. F128's rows 4609 and 4615 were read on the same copy.
+- **One correction to this triage.** F119 was not wholly closed in its own text. Its last paragraph says "`Filly LX 50` stays open separately", and no other finding carried that. It was filed as **F198** (the Filly's attribution; it needs a source, so it sits with section E), and F119 was closed citing it.
 
 ---
 
