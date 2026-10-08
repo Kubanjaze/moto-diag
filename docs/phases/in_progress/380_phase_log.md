@@ -166,3 +166,13 @@ output):
 It changes existing live rows, so this is the operator's stop (rule 1).
 Before the apply, the regression of record runs again: bug fix #1 changed
 `deploy.py` after `a119c28`, and K18's check refuses an apply until it does.
+
+### 2026-10-08 — The regression of record, again
+
+Bug fix #1 changed `deploy.py` after `a119c28`, so the regression ran
+again, as K18 requires before an apply. `wholetree.sh --full` on
+`9530473`: 4116 passed.
+
+Regression of record: 10798 passed, 0 failed, 0 skipped, 0 errors at `9530473` (30 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Waiting for the operator's words on 085's diff.
