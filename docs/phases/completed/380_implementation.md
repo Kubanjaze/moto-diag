@@ -1,6 +1,6 @@
-# Phase 380 — Row identity, the junction per make, then the content batch
+# Phase 380 — Row identity and the junction per make
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-08
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-08 (v1.0 the same day)
 
 ---
 
@@ -85,7 +85,8 @@ dry-run diff goes to the operator, and the apply waits for their words.
 
 It runs after 085 is live, on the key, one migration per finding (F152,
 F153, F156, F149, F164 and F171, F158). Each has its dry run with the
-parity check, and each is a stop. Its plan is written when 085 is live.
+parity check, and each is a stop. **Moved to Phase 381** by the operator
+(2026-10-08), in a fresh session; see Deviations.
 
 ## Tests
 
@@ -112,16 +113,47 @@ parity check, and each is a stop. Its plan is written when 085 is live.
 
 ## Non-goals
 
-The 35 unassigned models' makes (3A keeps them); F135 (what a "model"
+The 37 unassigned models' makes (3A keeps them; Step 0 estimated 35); the content batch (Phase 381); F135 (what a "model"
 is); rewriting past migrations' hooks.
 
 ## Planned items
 
-- [ ] keys in the seed, the generator, the seed-key test and fixtures
-- [ ] migration 085, `add_known_issue(key=)`, `update_known_issue_by_key`
-- [ ] the parity check in deploy.py
-- [ ] F142's rung and the pin
-- [ ] tests, mutations, the floor, the regression
-- [ ] 085's dry run, shown to the operator; the apply on their words
-- [ ] the content batch, each item a stop
-- [ ] the close-out, the handoff
+- [x] keys in the seed, the generator, the seed-key test and fixtures
+- [x] migration 085, `add_known_issue(key=)`, `update_known_issue_by_key`
+- [x] the parity check in deploy.py
+- [x] F142's rung and the pin
+- [x] tests, mutations, the floor, the regression
+- [x] 085's dry run, shown to the operator; the apply on their words
+- [x] the content batch: moved to Phase 381 by the operator, not done here
+- [x] the close-out, the handoff
+
+## Deviations
+
+- **The content batch moved to Phase 381.** The operator, 2026-10-08:
+  "Close 380 now with F129 and F142 … The content batch becomes its own
+  phase, 381, in a fresh session; don't start it here." 380 ships the
+  substrate it needs: the key, `update_known_issue_by_key`, and the parity
+  check.
+- **F142's evidence** includes a single-make row's token with its marque
+  stripped ("Energica Ego" owns "ego"); without it only 19 junction rows
+  moved. 109 leave, 0 added; 37 unassigned, not 35 (log, D1).
+- **085 syncs the junction rather than rebuilding it**
+  (`sync_model_index`), so rowids that stay are kept (D2).
+- **The scope was generated from the seed** (`380_scope.py`), with a
+  `"to"` for every row's key, which found bug fix #1 in `deploy.diff`.
+- **Six pins moved** with the change (D6 and the 244U count).
+- **F201 was filed** at the operator's word: "Piaggio LX50" reaches 0 of
+  the 7 scooter CVT rows, before and after 085.
+
+## Results
+
+- **Seed:** 1060 keys in 110 files, distinct, inserted lines only.
+- **Live (migration 085, the operator's words verbatim in the log):**
+  1060 rows keyed, 109 junction rows removed, the key index in place.
+  Equals the approved exact diff; `verify-live 380` exit 0; integrity and
+  foreign keys ok. Live 5866 → 5758 rows.
+- **Tests:** four new files (26 tests), 11/11 mutations, 244G 0 hits,
+  floor 10769 → 10798.
+- **Bug fix #1:** the deploy diff lines both sides up on the union of the
+  two column lists (`ad7aceb`).
+- **Regression of record:** 10798 passed, 0 failed at `9530473`.

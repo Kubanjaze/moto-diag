@@ -1,6 +1,6 @@
-# Phase 380 — Row identity, the junction per make, then the content batch — phase log
+# Phase 380 — Row identity and the junction per make — phase log
 
-**Status:** 🚧 Step 0, stopped for the operator (2026-10-08)
+**Status:** ✅ Complete (2026-10-08)
 **Branch:** `phase-380` (Opus session, main checkout)
 
 ---
@@ -150,6 +150,8 @@ output):
   - the new test gives 3 failed with the old `diff`, 3 passed with the fix;
   - 79 deploy tests pass (357, 358, 359, 378, 379, 380's parity).
 
+**Commit.** `ad7aceb`
+
 ### 2026-10-08 — 085's dry run, and the stop
 
 `deploy.py dryrun 380` after bug fix #1:
@@ -225,3 +227,30 @@ Nothing outside the operator's words differs, so there was no stop.
 - A first draft said the marque vocabulary has no family table. It has
   one: `marque_families.SUB_MARQUES`, LiveWire → Harley-Davidson only.
   Corrected before the commit.
+
+### 2026-10-08 — Close-out
+
+The operator: "Close 380 now with F129 and F142: the close-out, the
+handoff and the merge to master, so live's 085 and master's code match
+again. The content batch becomes its own phase, 381, in a fresh session;
+don't start it here."
+
+- F129 and F142 are closed in `docs/FOLLOWUPS.md`.
+- Row 380 is ✅. Row 381 (the content batch) is 🔲, reserved for its own
+  session.
+- The deploy scope, the dry-run and live diffs, and the phase's scripts
+  move to `completed/` with the documents.
+
+**The edit guard blocked two close-out commands,** and was not changed:
+- a Python script editing only `docs/`, because its text named `tests/`
+  (it blocks a write it cannot resolve when the body names `src/` or
+  `tests/`);
+- a `sed -i` on `docs/FOLLOWUPS.md` (`sed -i` is blocked wherever it
+  points).
+
+Both edits were made with the Edit tool.
+
+The regression of record stays `9530473`. The commits after it are the
+log, the approval record, F201 and this close-out, all documentation.
+
+No refute pass ran.

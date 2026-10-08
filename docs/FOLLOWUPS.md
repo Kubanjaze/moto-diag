@@ -661,7 +661,7 @@ these four with their reasons and fails on a fifth.
 
 ---
 
-### F129
+### F129 — CLOSED by Phase 380
 
 **A row has no identity independent of its title text, so editing a title, make or model on a seeded database duplicates the row instead of updating it.**
 
@@ -709,6 +709,16 @@ That is a corpus-wide schema and loader change, not a content phase's work.
 `knowledge/loader.py::reconcile_255B_rows` and migration 065 carry the old and
 new column values as literal pairs so the `UPDATE` can find the row. Every such
 pair is a workaround for this finding.
+
+**Closed by Phase 380 (2026-10-08).** Every seed entry carries a frozen
+`"key"` (1060, distinct; a test fails on a missing or repeated one), and
+migration 085 made `known_issues.row_key` the row's identity in place of
+the prose index, live included. `add_known_issue` inserts by key, so a
+corrected title, make or model no longer adds a row (255B's pin, inverted:
+`test_a_reseed_after_an_identity_edit_no_longer_duplicates`). A content
+edit now goes through `update_known_issue_by_key`, and `deploy.py`'s dry
+run requires each changed row to equal a fresh seed build, by key. The
+past hooks named above stay as they are: they run before `row_key` exists.
 
 ---
 
@@ -1145,7 +1155,7 @@ handed over (the quote in it, the machine named — E3/E4 pass), and a
 quote from the right file outside its excerpt; break-it seen to fail for
 each. E9 stays for any path that still saves copies.
 
-### F142
+### F142 — CLOSED by Phase 380
 
 **Multi-make rows put every model under every make in the junction**
 
@@ -1171,6 +1181,15 @@ What would close it: the junction built per (machine, its own make) —
 each model in a multi-make row assigned to the make that builds it — with
 a whole-junction count of the pairs that move, and a test that a
 multi-make row cannot produce a pair outside its models' own makes.
+
+**Closed by Phase 380 (2026-10-08).** `vocabulary_from_conn` places a
+multi-make row's model under its own make when the transmission lookup or a
+single-make row's marque-prefixed token says which. Migration 085 removed
+109 junction pairs on live and added none; the migrated junction equals a
+fresh seed build's. 37 models have no such evidence and stay under every
+make of their row, pinned in `tests/test_phase380_junction_per_make.py`
+(the operator's 3A). F201 records what this exposed for a Vespa entered
+as Piaggio.
 
 
 ### F143
