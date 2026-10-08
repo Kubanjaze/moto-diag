@@ -89,8 +89,9 @@ class TestReadingItBack:
         c.commit()
         c.close()
         code, out = _verify(env, capsys)
-        assert code == 0
+        assert code == 3  # Phase 379, F197: a mismatch fails (it was 0)
         assert "rows: known_issues +0 ~1 -0" in out
+        assert "the difference is not a later migration's" in out
         assert "equals the approved exact diff: no" in out
         assert "known_issues" in out.split("equals the approved exact diff: no", 1)[1]
 

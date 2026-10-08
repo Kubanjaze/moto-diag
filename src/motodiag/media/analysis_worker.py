@@ -302,6 +302,25 @@ def _build_vehicle_context(
         except Exception:
             transmission = None
 
+    # Phase 379 (F144): the powertrain, for retrieval's powertrain-default
+    # rung. Its own query, as 257B's transmission is; only a missing column
+    # or table is absorbed.
+    powertrain = None
+    if vehicle_id:
+        import sqlite3
+
+        from motodiag.core.database import get_connection
+
+        try:
+            with get_connection(db_path) as conn:
+                prow = conn.execute(
+                    "SELECT powertrain FROM vehicles WHERE id = ?", (vehicle_id,),
+                ).fetchone()
+            if prow is not None:
+                powertrain = prow[0]
+        except sqlite3.OperationalError:
+            powertrain = None
+
     # Phase 244C: resolve the name against the corpus vocabulary. A user typed
     # "Homda cbrf4i" and every knowledge lookup returned zero rows while the
     # corpus held entries for the Honda CBR600F4i — silently, with no way for
@@ -346,4 +365,5 @@ def _build_vehicle_context(
         notes=session.get("notes") or "",
         history=history,
         transmission=transmission,
+        powertrain=powertrain,
     )

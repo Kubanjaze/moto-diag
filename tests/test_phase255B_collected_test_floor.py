@@ -301,7 +301,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: replacing the literal pin test_the_eighteen_folds_are_seen_and_pass (+2 -1).
 #: Measured: 10723 collected.
 #:
-COLLECTED_TEST_FLOOR = 10723
+#: Phase 379 (2026-10-08): 10723 -> 10769, +46, by a diff of collected ids
+#: against master 0220fdf (in a worktree, on its own source): seven new files
+#: (ask powertrain 3, garage remove 8, lookup and relevance 20, no manual rows
+#: 2, sensor windows 5, verify-live fails 6, wholetree output 2 = 46), and
+#: gate 14's three F154/F155 pins renamed as they were inverted (+3 -3).
+#: Measured: 10769 collected.
+#:
+COLLECTED_TEST_FLOOR = 10769
 
 
 def _collected_count() -> int:

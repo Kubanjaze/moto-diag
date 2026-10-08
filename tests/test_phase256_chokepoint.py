@@ -568,7 +568,7 @@ class TestNothingBypassesTheChokepoint:
                     found.append(f"{rel}:{node.lineno}")
         assert sorted(set(found)) == [
             "capture/stats.py:19",
-            "core/timestamps.py:214",
+            "core/timestamps.py:229",  # 379 added column_cutoff above it
             "shop/intake_repo.py:91",
             "shop/issue_repo.py:173",
             "shop/work_order_repo.py:112",

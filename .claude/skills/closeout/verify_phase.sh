@@ -32,6 +32,9 @@ PY="$REPO/.venv/bin/python"; [ -x "$PY" ] || PY=python3
 cd "$REPO" || exit 1
 GIT=/Library/Developer/CommandLineTools/usr/bin/git
 [ -x "$GIT" ] || GIT=git
+# F197 (Phase 379): a check that can fail the script sets this. Only check 8
+# does today; the others print what they found, as they always have.
+FAILED=0
 
 echo "=== 1. master pushed, tree clean ==="
 $GIT fetch origin >/dev/null 2>&1
@@ -72,6 +75,13 @@ import sqlite3; c=sqlite3.connect('file:data/motodiag.db?mode=ro', uri=True); q=
 print('schema', q('select max(version) from schema_version'), '| rows', q('select count(*) from known_issues'))"
 if ls docs/phases/*/${PHASE}_dryrun_diff.md >/dev/null 2>&1; then
   "$PY" -B "$DIR/../deploy/deploy.py" verify-live "$PHASE"
+  LIVE_CODE=$?
+  # 0: live equals the approved diff; 2: no deploy. Anything else fails the
+  # check: 1 integrity or a foreign key, 3 live differs from the approved diff.
+  if [ $LIVE_CODE -ne 0 ] && [ $LIVE_CODE -ne 2 ]; then
+    echo "  CHECK 8 FAILED: verify-live exited $LIVE_CODE"
+    FAILED=1
+  fi
 fi
 
 echo "=== 9. backup ==="; ls -lh ~/backups/motodiag/
@@ -99,3 +109,5 @@ echo "=== 14. the regression line names its command ==="
 # fallback. A phase closed before 355 shows none.
 grep -n -i "regression of record" docs/phases/completed/${PHASE}_phase_log.md \
   | grep "python -m pytest" || echo "  no regression line names its command"
+
+exit $FAILED

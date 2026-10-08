@@ -1,0 +1,17 @@
+A1 verify-live exits 0 on a mismatch: red
+A2 check 8 ignores verify-live's exit: red
+A3 the later-migration cause is never named: red
+B1 garage remove deletes without asking what names the bike: red
+B2 NO ACTION tables are not counted: red
+C1 the recorder compares the typed text again: red
+C2 drift compares the typed text again: red
+C3 the bound carries a fraction, so a sample on the second is missed: red
+D1 no Fiddle 50 entry: red
+E1 plurals are not made singular: red
+E2 'ies' is not 'y': red
+F1 an entry's own canonical name is not matched: red
+H1 the whole output is not kept: red
+H2 only the last lines are printed: red
+I1 the context leaves the powertrain unset: red
+I2 /ask ignores the context's powertrain: red
+16/16 red

@@ -72,6 +72,19 @@ _CONFIDENCE_STYLES: dict[str, str] = {
 }
 
 
+def _check_window(since: Optional[str], until: Optional[str]) -> None:
+    """Refuse a window that does not parse, or ends before it starts, read
+    as the shop's time (Phase 379, F193: it compared the typed text)."""
+    from motodiag.core.timestamps import column_cutoff
+
+    try:
+        lo, hi = column_cutoff(since), column_cutoff(until)
+    except ValueError as e:
+        raise click.ClickException(str(e)) from e
+    if lo and hi and lo > hi:
+        raise click.ClickException("--since must be on or before --until.")
+
+
 def _format_confidence(conf_value: str) -> str:
     """Return a Rich markup string for a :class:`PredictionConfidence` label."""
     style = _CONFIDENCE_STYLES.get(conf_value, "dim")
@@ -763,10 +776,7 @@ def register_advanced(cli_group: click.Group) -> None:
         console = get_console()
         init_db()
 
-        if since and until and str(since) > str(until):
-            raise click.ClickException(
-                "--since must be <= --until (ISO 8601 lexical order).",
-            )
+        _check_window(since, until)
 
         from motodiag.advanced.drift import compute_trend
         from motodiag.cli.diagnose import _resolve_bike_slug
@@ -847,10 +857,7 @@ def register_advanced(cli_group: click.Group) -> None:
         console = get_console()
         init_db()
 
-        if since and until and str(since) > str(until):
-            raise click.ClickException(
-                "--since must be <= --until (ISO 8601 lexical order).",
-            )
+        _check_window(since, until)
 
         from motodiag.advanced.drift import summary_for_bike
         from motodiag.cli.diagnose import _resolve_bike_slug
@@ -1040,6 +1047,9 @@ def register_advanced(cli_group: click.Group) -> None:
 
         vehicle_id = int(resolved["id"])
         canonical_pid = _normalize_pid_hex(pid_hex)
+        # Phase 379, F193: the shop's time, in the column's own shape.
+        from motodiag.core.timestamps import column_cutoff
+        since = column_cutoff(since)
 
         with get_connection() as conn:
             rows = conn.execute(

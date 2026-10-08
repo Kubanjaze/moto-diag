@@ -1,0 +1,23 @@
+Phase 379 — small fixes from the 2026-10-08 open-findings triage (section B)
+
+The operator, 2026-10-08, verbatim:
+
+  approved: close the 11 now. 379 = the nine small fixes. then 380 = F129 +
+  F142, then the content batch. D, E and F stay as the triage says.
+
+The nine, their evidence and their fixes are section B of
+docs/reports/2026-10-08_open_findings_triage.md (merged 478ebd9):
+F197 verify-live's exit code and check 8; F176 garage remove refuses a bike
+with history; F193 sensor and drift --since/--until through utc_cutoff, in
+the column's shape; F154 "fiddle 50" in the Fiddle lookup entry; F155 plurals
+stemmed in relevance_tokens; F131 the six lookup entries' canonical names
+resolve to their own entry; F140 no row declares {manual} in a built
+database; F173 wholetree keeps pytest's whole output, then close on the run
+count; F144 video /ask passes the vehicle's powertrain (VehicleContext is an
+API model: if the snapshot moves, a mobile session).
+
+Section A (11 closed, F198 filed) was done before this phase, on master
+(0220fdf). After 379: Phase 380, F129 and F142, then the content batch.
+
+Written into the repository by the session that received it, as CLAUDE.md's
+"Phase prompts live in docs/prompts/" asks.

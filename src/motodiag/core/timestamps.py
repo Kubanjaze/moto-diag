@@ -101,6 +101,21 @@ def utc_cutoff(value: Union[str, datetime, None]) -> Optional[str]:
     return moment.astimezone(timezone.utc).strftime(SQLITE_UTC)
 
 
+def column_cutoff(value: Union[str, datetime, None]) -> Optional[str]:
+    """``utc_cutoff`` in the shape of a column stamped with
+    ``datetime.now(timezone.utc).isoformat()``: ``YYYY-MM-DDTHH:MM:SS+00:00``.
+
+    Phase 379, F193: the sensor tables are compared as text, so the column
+    keeps its index (``datetime(col)`` would not). The bound carries no
+    fraction: in text order ``+`` sorts before ``.``, so a value stamped
+    exactly on the second still meets ``>=``.
+    """
+    cutoff = utc_cutoff(value)
+    if cutoff is None:
+        return None
+    return datetime.strptime(cutoff, SQLITE_UTC).strftime("%Y-%m-%dT%H:%M:%S+00:00")
+
+
 def local_day_start(day: Union[str, date]) -> str:
     """The UTC moment the shop's day ``YYYY-MM-DD`` begins, in SQLite's shape.
 

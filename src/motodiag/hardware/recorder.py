@@ -564,10 +564,14 @@ class RecordingManager:
     ) -> list[dict[str, Any]]:
         """List recordings with optional filters.
 
-        ``since`` / ``until`` are ISO 8601 strings compared against
-        ``started_at`` lexicographically (which is correct for UTC ISO
-        8601). Results are ordered most-recent-first.
+        ``since`` / ``until`` take what ``utc_cutoff`` takes (``Nd``, a
+        date, a date-time; no zone means the shop's time) and are compared
+        with ``started_at`` in its own stored shape, so the index is kept
+        (Phase 379, F193: a typed date was read as the UTC day). Results are
+        ordered most-recent-first.
         """
+        from motodiag.core.timestamps import column_cutoff
+
         clauses: list[str] = []
         params: list[Any] = []
         if vehicle_id is not None:
@@ -575,10 +579,10 @@ class RecordingManager:
             params.append(vehicle_id)
         if since is not None:
             clauses.append("started_at >= ?")
-            params.append(since)
+            params.append(column_cutoff(since))
         if until is not None:
             clauses.append("started_at <= ?")
-            params.append(until)
+            params.append(column_cutoff(until))
 
         where = f"WHERE {' AND '.join(clauses)}" if clauses else ""
         sql = (

@@ -267,11 +267,19 @@ def run(mode: str, root: pathlib.Path = ROOT, py: str = sys.executable) -> Resul
     t0 = time.monotonic()
     proc = subprocess.run([py, "-B", "-m", "pytest", "-q", "-n", "auto", "--dist", "load", *files],
                           cwd=root, capture_output=True, text=True)
-    tail = [ln for ln in proc.stdout.splitlines() if ln.strip()][-15:]
-    summary = next((ln for ln in reversed(tail) if re.search(r"passed|failed|error", ln)), "no summary")
+    # Phase 379, F173: pytest's whole output is kept, so a failure carries its
+    # traceback. Only the last 1500 characters (later, 15 lines) were kept,
+    # and 359's first --full lost two of its four FAILED lines that way.
+    log = records_dir(root) / f"last_{mode}.log"
+    log.parent.mkdir(parents=True, exist_ok=True)
+    log.write_text(proc.stdout + ("\n" + proc.stderr if proc.stderr else ""), encoding="utf-8")
+    lines = [ln for ln in proc.stdout.splitlines() if ln.strip()]
+    summary = next((ln for ln in reversed(lines[-15:]) if re.search(r"passed|failed|error", ln)),
+                   "no summary")
     ok = proc.returncode == 0
     if not ok:
-        print("\n".join(tail))
+        print("\n".join(ln for ln in lines if ln.startswith(("FAILED", "ERROR"))))
+        print(f"wholetree {mode}: the whole pytest output, tracebacks included, is in {log}")
     sys.path.insert(0, str(root / ".claude" / "skills" / "finding"))
     import finding_check
     for scope in ("docs/phases/completed", "docs/phases/in_progress"):

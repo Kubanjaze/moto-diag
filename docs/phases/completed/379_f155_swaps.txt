@@ -1,0 +1,128 @@
+== battery not charging, lights dim at idle  [Honda CHF50]
+   OUT 441: Regulator/rectifier failure — Shadow and VTX
+   IN  93: Stator winding failure — insulation breakdown causing shorted or open windings across all makes
+== brakes squeal and the pads wear fast  [Honda CHF50]
+   OUT 153: What a scooter CVT is, in the makers' own words — and why searching for the word 'variator' fin
+   OUT 464: Stator failure diagnosis and replacement — all Honda models
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+   IN  399: Brake master cylinder and caliper piston sticking
+== won't start when cold, battery is fine  [Honda CHF50]
+   OUT 465: Starter relay and starter motor diagnosis
+   IN  432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+== leaking oil from the gaskets and seals  [Honda CHF50]
+   OUT 77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+   IN  90: Float bowl overflow and fuel leak — fire hazard
+== battery not charging, lights dim at idle  [Kymco Agility 50]
+   OUT 153: What a scooter CVT is, in the makers' own words — and why searching for the word 'variator' fin
+   IN  986: Kymco and SYM do show fault codes on the dash — under names no standard diagnostic vocabulary w
+== won't start when cold, battery is fine  [Kymco Agility 50]
+   OUT 990: Kymco's US campaigns include an engine replaced whole, two machines delivered without a require
+   IN  983: Kymco and SYM publish owner's manuals and outsource everything else — one to a third-party publ
+== battery not charging, lights dim at idle  [Piaggio Fly 50]
+   OUT 924: Servicing the MP3 roll lock: a three-step reset, four test values, and a control unit the manua
+   IN  161: No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by th
+== brakes squeal and the pads wear fast  [Piaggio Fly 50]
+   OUT 924: Servicing the MP3 roll lock: a three-step reset, four test values, and a control unit the manua
+   IN  160: Kickstart backup, and the scooter named Kick that has none
+== scooter jerks at low speed, belt squeal, won't pull away  [Vespa LX 50]
+   OUT 165: The regulator's two indexes contradict each other, and an empty recall answer is not a clean re
+   IN  733: Vespa's small carburetted scooters: Dell'Orto on the two-stroke 50s, Keihin on the LX 125-150, 
+== brakes squeal and the pads wear fast  [Honda Ruckus]
+   OUT 436: Brake fluid degradation — universal Honda concern
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+== engine stalls at idle and runs rough  [Honda Ruckus]
+   OUT 123: Fuel pump failure and testing — all EFI motorcycles
+   IN  434: Valve clearance tightening — all Honda 4-stroke engines
+== won't start when cold, battery is fine  [Honda Ruckus]
+   OUT 393: Cam chain tensioner — liter bike version
+   IN  432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+== leaking oil from the gaskets and seals  [Honda Ruckus]
+   OUT 77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+   OUT 106: Water pump seal failure — weep hole diagnosis and bearing inspection
+   IN  90: Float bowl overflow and fuel leak — fire hazard
+   IN  442: Shaft drive final gear oil leak — shaft drive models
+== brakes squeal and the pads wear fast  [Honda Ruckus]
+   OUT 432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+== engine stalls at idle and runs rough  [Honda PCX150]
+   OUT 123: Fuel pump failure and testing — all EFI motorcycles
+   IN  463: Regulator/rectifier failure — the universal Honda problem
+== brakes squeal and the pads wear fast  [Yamaha Zuma 125]
+   OUT 1009: Fuel pump failure — ethanol and low-fuel damage
+   IN  1041: Gen 2 VMAX weight-related brake and tire wear
+== leaking oil from the gaskets and seals  [Yamaha Zuma 125]
+   OUT 161: No maker publishes a fault code for a CVT — the transmission is diagnosed by symptom, not by th
+   IN  1011: Coolant leak from water pump mechanical seal
+== brakes squeal and the pads wear fast  [Honda Grom 125]
+   OUT 434: Valve clearance tightening — all Honda 4-stroke engines
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+== engine stalls at idle and runs rough  [Honda Grom 125]
+   OUT 93: Stator winding failure — insulation breakdown causing shorted or open windings across all makes
+   IN  434: Valve clearance tightening — all Honda 4-stroke engines
+== won't start when cold, battery is fine  [Honda Grom 125]
+   OUT 99: Charging system voltage test — the universal 3-step diagnostic procedure for any motorcycle
+   IN  432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+== brakes squeal and the pads wear fast  [Yamaha Vino 50]
+   OUT 155: Every maker publishes a roller wear limit — in a service manual, and two of them publish it twi
+   OUT 1009: Fuel pump failure — ethanol and low-fuel damage
+   IN  934: Brake fluid neglect and ABS modulator corrosion — all Yamaha models
+   IN  1041: Gen 2 VMAX weight-related brake and tire wear
+== leaking oil from the gaskets and seals  [Yamaha Vino 50]
+   OUT 961: Universal stator connector failure — every Yamaha from the 1990s
+   IN  1011: Coolant leak from water pump mechanical seal
+== brakes squeal and the pads wear fast  [Honda CBR1000RR]
+   OUT 432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+   OUT 435: Chain and sprocket maintenance — the overlooked service
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+   IN  431: Cam chain tensioner (CCT) — the Honda inline-4 universal weakness
+== engine stalls at idle and runs rough  [Honda CBR1000RR]
+   OUT 495: Cam chain tensioner noise — inline-4 models
+   IN  434: Valve clearance tightening — all Honda 4-stroke engines
+== won't start when cold, battery is fine  [Honda CBR1000RR]
+   OUT 127: Engine Coolant Temperature (ECT) sensor failure — cold start enrichment and fan control
+   IN  432: Starter clutch (sprag/one-way clutch) failure — all Honda engines
+== battery not charging, lights dim at idle  [Harley-Davidson Road King]
+   OUT 285: Voltage regulator failure — overcharging or no charge
+   OUT 309: Battery type mismatch — wrong charger or wrong battery
+   IN  132: ECU/ECM reset and adaptation relearn — post-service idle and fueling restoration
+   IN  867: The cooling loop's own faults and service on each make — pump and fan codes, a coolant lamp who
+== leaking oil from the gaskets and seals  [Harley-Davidson Road King]
+   OUT 300: Fuel quality and ethanol damage — carb and EFI eras
+   IN  297: Wheel bearing failure — front and rear
+== brakes squeal and the pads wear fast  [Honda CBR600RR]
+   OUT 416: Valve clearance tightening — high-mileage engines
+   IN  77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+== leaking oil from the gaskets and seals  [Honda CBR600RR]
+   OUT 77: Master cylinder failure — internal seal wear, lever feel diagnosis, and rebuild
+   IN  442: Shaft drive final gear oil leak — shaft drive models
+== brakes squeal and the pads wear fast  [Yamaha MT-07]
+   OUT 971: MT-09/FZ-09 CP3 engine — valve clearance tightening
+   OUT 1033: SR400/500 valve adjustment — screw-type, frequent interval
+   IN  934: Brake fluid neglect and ABS modulator corrosion — all Yamaha models
+   IN  1041: Gen 2 VMAX weight-related brake and tire wear
+== leaking oil from the gaskets and seals  [Yamaha MT-07]
+   OUT 934: Brake fluid neglect and ABS modulator corrosion — all Yamaha models
+   IN  1011: Coolant leak from water pump mechanical seal
+== battery not charging, lights dim at idle  [BMW R1200GS]
+   OUT 248: Five valve-train job types across the European makes, and the step each has that the others lac
+   IN  239: BMW CAN-bus with the ZFE module has no fuses to pull, and an LED test throws a lamp fault
+== brakes squeal and the pads wear fast  [BMW R1200GS]
+   OUT 43: F800GS swingarm chain slider wear allowing the chain to cut into the aluminium swingarm
+   IN  239: BMW CAN-bus with the ZFE module has no fuses to pull, and an LED test throws a lamp fault
+== leaking oil from the gaskets and seals  [BMW R1200GS]
+   OUT 30: ZFE central vehicle electronics as the failed module: splitting a ZFE-side fault from a dead lo
+   IN  63: Water-pump seal weep — wethead R1200/R1250 liquid-cooled (2013+)
+== scooter jerks at low speed, belt squeal, won't pull away  [Kawasaki Ninja 650]
+   OUT 560: H2 brake system — stopping 500+ lbs of supercharged speed
+   IN  602: Z900/Z1000 exposed radiator vulnerability — naked bike tax
+== battery not charging, lights dim at idle  [Kawasaki Ninja 650]
+   OUT 613: ZX-10R stator and charging system — literbike heat and current demands
+   OUT 623: ZX-6R stator and charging system failure — sport bike universal
+   IN  541: KLR650 stator and charging system failure
+   IN  543: Kawasaki stator and regulator/rectifier failure — all models
+== brakes squeal and the pads wear fast  [Kawasaki Ninja 650]
+   OUT 561: H2 valve clearance — supercharged engine increases service urgency
+   IN  564: ZX-12R and ZX-14R weight-related brake and tire wear
+== leaking oil from the gaskets and seals  [Kawasaki Ninja 650]
+   OUT 558: H2 fuel system — high-flow demands under boost
+   IN  540: Versys 650 chain and sprocket accelerated wear

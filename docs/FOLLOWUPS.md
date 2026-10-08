@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F198** (this file). The
+At the time of writing the highest assigned is **F200** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -752,7 +752,7 @@ it, and guards, which is a mechanism phase like 255 rather than a content phase.
 
 ---
 
-### F131
+### F131 — CLOSED by Phase 379
 
 **Six transmission-lookup entries have a canonical name that does not resolve to their own entry, and one of them is a name a rider would actually type.**
 
@@ -799,6 +799,9 @@ Kymco `Like 150i` entry's aliases are `like 150i`, `like150i`, `like`. `Like
 about the Kymco Like owner's manual's clutch-lever defect applies to the
 combined Like 50i/150i edition too, and had to be declared for the `Like 150i`
 alone rather than name a machine the lookup cannot place.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). Resolution matches each entry's own canonical name; all 122 entries resolve to themselves (the control: exactly these six did not). The Like 50i and 125 gap moved to F199.
+
 
 ---
 
@@ -1065,7 +1068,7 @@ those mentions describe the fixture and do not cite this entry or F140.
 
 **CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Its closing condition is met: `257_step0.md` S0-1 builds the census on the figures of record (605 reproduced).
 
-### F140
+### F140 — CLOSED by Phase 379
 
 **The no-`{manual}` sequencing rule is enforced on seed JSON only; nothing checks the live table**
 
@@ -1089,6 +1092,8 @@ row in a fixture database and sees the check fail. Or, if Phase 257 lifts
 the rule, retire both seed tests in the same commit that lifts it, with the
 reason — a rule enforced in one place and lifted in another is how the two
 drift.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `tests/test_phase379_no_manual_rows.py` checks the database `init_db` and the loader build, with a planted `{manual}` row as its control.
 
 ### F141 — CLOSED by the no-tools source stage and E10 (excerpt binding), 2026-09-23; E9 alone did not close it
 
@@ -1209,7 +1214,7 @@ with one, a re-source of the 57 fallback entries on Subconscious, and a
 census back under a figure the operator sets.
 
 
-### F144
+### F144 — CLOSED by Phase 379
 
 **Video `/ask` never passes a vehicle's powertrain to retrieval**
 
@@ -1228,6 +1233,8 @@ the previous behaviour. Exposure today: the live `vehicles` table holds 10
 machines, all `ice`, so zero. What would close it: a `powertrain` field on
 `VehicleContext` filled by `_build_vehicle_context`, and a test that an
 unset electric vehicle resolves `powertrain-default` through `/ask`.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `VehicleContext.powertrain`, filled from the vehicle row; `/ask` passes it. An unset electric machine the lookup does not name now resolves `powertrain-default` through `/ask` (`tests/test_phase379_ask_powertrain.py`). `VehicleContext` is not in the mobile snapshot, so no mobile session was needed.
 
 ### F148 — CLOSED by `bac634d` (close-out tooling, not a phase), 2026-09-24
 
@@ -1392,7 +1399,7 @@ that a SYM query reaches a CVT row at tier 0. Pinned by
 `tests/test_phase258_gate14.py`, whose SYM tests are written to fail
 when this closes.
 
-### F154
+### F154 — CLOSED by Phase 379
 
 **"Fiddle 50" is missing from TRANSMISSION_LOOKUP, so the machine 354 and 353 name at tier 0 resolves transmission `unknown` and loses the scoped CVT layer entirely**
 
@@ -1422,7 +1429,9 @@ entry cites (a combined "Drive belt/roller I R" maintenance row) — with a
 test that the machine resolves `model-sourced`/`cvt`. Pinned by
 `tests/test_phase258_gate14.py`, written to fail when this closes.
 
-### F155
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). A `SYM Fiddle 50` lookup entry, cited to the Fiddle 50 service manual's cover (rendered) and its "Transmission C.V.T.". Gate 14's pins inverted: the Fiddle 50 fills its prompt with the scoped CVT rows.
+
+### F155 — CLOSED by Phase 379
 
 **Symptom relevance does not stem plurals, and it can displace a machine's own tier-0 row for a tier-2 row that shares one symptom word**
 
@@ -1453,6 +1462,8 @@ about what the rider reported. What would close it: stem plurals in
 contain the singular), with the LX 50 displacement as the regression:
 a belt-shaped symptom must not cost a machine its own tier-0 row.
 Pinned by `tests/test_phase258_gate14.py`.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `relevance_tokens` makes plurals singular by a stated rule; the LX 50 keeps its carburettor row. Its wider effect (51 of 132 measured prompts, about 19 swaps better and 5 worse) is in `379_phase_log.md`, and the scorer's word-sense noise is F200.
 
 ### F156
 
@@ -2162,7 +2173,7 @@ the scope check alone; the good case, differing only in its clock, applies
 (`tests/test_phase357_deploy_exact.py`). Six mutations red
 (`357_mutate.py F172`). The deploy skill's `CHANGELOG.md` has the rest.
 
-### F173
+### F173 — CLOSED by Phase 379
 
 **`test_phase78_gate2_integration.py::TestGate2KnowledgeBaseIntegration::test_cross_platform_brakes` failed once in a parallel run and has not reproduced**
 
@@ -2205,6 +2216,8 @@ reproduce it:
 
 What would close it: a reproduction and its fix, or a stated run count
 with no failure and the truncation fixed so a recurrence is not lost.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). Two parts. `wholetree.py` keeps pytest's whole output (`.git/motodiag_wholetree/last_<mode>.log`) and prints every FAILED and ERROR line, so a recurrence carries its traceback (`tests/test_phase379_wholetree_output.py`). The run count: 19 regressions of record from 359's to 379's, each running the whole suite with this test in it, all 0 failed.
 
 ### F174 — CLOSED by Phase 360 (2026-09-29)
 
@@ -2322,7 +2335,7 @@ are 244Y and 244Z, found by the rule, not by name.
   exclusions too: a support module with a function is not a ledger, and
   neither is a data module that no member imports.
 
-### F176
+### F176 — CLOSED by Phase 379
 
 **`motodiag garage remove` on a bike that a work order names ends in an `IntegrityError` traceback instead of a refusal**
 
@@ -2342,6 +2355,8 @@ the same way, so a bike with a saved run behaves the same.
 What would close it: `garage remove` refuses such a bike, names what
 still refers to it (work orders, saved runs), and exits 1, with a test
 for each.
+
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `garage remove` refuses a bike that records still name, read from the schema (five tables: intake visits, work orders, saved runs, diagnostic sessions, repair plans), and exits 1. `tests/test_phase379_garage_remove.py`. The API's delete already answered 409.
 
 ### F177 — CLOSED by Phase 361 (2026-09-29)
 
@@ -3020,7 +3035,7 @@ overrun window compares `COALESCE(actual_end, scheduled_end)` with a UTC
 cutoff, so a slot with no `actual_end` sits at its window's edge off by
 the shop's offset. A per-shop zone would let both be stored as one clock.
 
-### F193
+### F193 — CLOSED by Phase 379
 
 **Sensor-recording and drift filters compare a typed `--since` as text, in UTC**
 
@@ -3044,6 +3059,7 @@ What would close it: convert the typed value with `utc_cutoff` (Phase
 377), then write it in the column's own shape, so the comparison stays
 on the index; with a test at a fixed clock in a zone away from UTC.
 
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `core.timestamps.column_cutoff` (`utc_cutoff` in the columns' shape) in `list_recordings`, `compute_trend` and the drift chart; the index is kept. `tests/test_phase379_sensor_windows.py`, in New York.
 
 ### F194 — CLOSED by Phase 376 (2026-10-07)
 
@@ -3143,7 +3159,7 @@ EDT, only `test_phase274_pnl.py` failed (8 tests): its `MONTH` was the UTC
 month. Fixed as Phase 375's bug fix #2; the six files and 275's then pass
 (137) at that moment, an ordinary evening, New Year's Eve 21:00 and 00:30.
 
-### F197
+### F197 — CLOSED by Phase 379
 
 **`deploy.py verify-live` exits 0 when live does not equal the approved diff, and verify_phase's check 8 does not gate on it**
 
@@ -3168,6 +3184,8 @@ schema_version above the phase's); verify_phase fails check 8 on it for
 the phase being closed. A known-bad fixture, an approved diff missing one
 live row, must turn both red.
 
+**CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `verify-live` exits 3 on a mismatch and names a later migration when live's schema is past the phase's; check 8 fails verify_phase on 1 or 3. `tests/test_phase379_verify_live_fails.py` (the known-bad case: an approved diff missing one live row). On live, `verify-live 376` now exits 3.
+
 ### F198
 
 **The Kymco Filly LX 50's transmission rests on a document whose attribution is unestablished**
@@ -3188,3 +3206,58 @@ What would close it: a Kymco document that is the Filly LX 50's own (an
 owner's manual, a parts catalogue or a spec sheet naming it on its cover),
 read for its transmission. It belongs with the triage's section E, the
 items that need sources first.
+
+### F199
+
+**Kymco's Like 50i and Like 125 resolve to no transmission**
+
+Carried out of F131 on 2026-10-08 by Phase 379, so that closing F131 drops
+nothing. F131 recorded it "here rather than as its own finding". The Kymco
+`Like 150i` lookup entry's spellings are `like 150i`, `like150i` and
+`like`, so `Like 50i` and `Like 125` resolve `unknown`, and every
+transmission-scoped row is withheld from them. 255B's row on the Like owner's
+manual's clutch-lever defect applies to the combined Like 50i/150i edition,
+but could name only the 150i.
+
+Not added in 379: the combined owner's manual
+(`research/motodiag/pdf/kymco_like_150i_50i_om.pdf`) opens on a warning
+page, not a cover. Nothing in that session rendered further pages, and
+the Like entry's own evidence is rated medium (its PDF metadata reads
+"DOWNTOWN 125i(ok)").
+
+What would close it: the Like 50i's cover read from the rendered page and
+the transmission quoted from the same book, for `like 50i`; a Like 125
+document for `like 125`. With section E of the 2026-10-08 triage, the
+items that need sources first.
+
+### F200
+
+**Symptom relevance counts shared words, so a word used in another sense ranks a row above the one the rider needs**
+
+Measured by Phase 379 when it closed F155 (plurals made singular in
+`knowledge/prompt_rows.py::relevance_tokens`). Over 22 machines and 6
+symptoms (132 prompts, `docs/phases/completed/379_f155_measure.py`, its
+before-and-after rows in `379_f155_swaps.txt`), 51 prompts changed by one
+or two rows in the slots kept for the rider's words. Read title by title,
+about 19 swaps were better, 16 neutral and 5 worse. The worse ones share a
+cause: a word the symptom shares with a row in another sense.
+- **Road King, "battery not charging, lights dim at idle":** the
+  voltage-regulator and battery-mismatch rows (scores 2) are overtaken by
+  an ECU-reset row and a cooling-loop row (scores 3), which gained "light"
+  from "warning light" and "lamp" text.
+- **CBR600RR and Ruckus, "leaking oil from the gaskets and seals":** a
+  shaft-drive final-gear leak row comes in on machines with no shaft.
+- **CBR1000RR, "won't start when cold":** the cold-start enrichment row
+  goes out.
+- **PCX150, "engine stalls at idle":** the fuel-pump row goes out for a
+  regulator row.
+
+Before F155 the same scorer missed plurals instead. `relevance_score` is a
+count of shared tokens over title, symptoms and the head of the
+description, so any ambiguous word ("light", "leak", "cold") can lift an
+unrelated row.
+
+What would close it: a ranking judged against a small labelled set (for
+each machine and symptom, the rows a technician would want), the current
+scorer measured on it, and a change kept only if it raises that measure.
+The 132 prompts above are a start for the set.

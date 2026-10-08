@@ -573,7 +573,7 @@ def garage_list() -> None:
 def garage_remove(vehicle_id: int, yes: bool) -> None:
     """Remove a vehicle by ID."""
     from motodiag.core.database import init_db
-    from motodiag.vehicles.registry import get_vehicle, delete_vehicle
+    from motodiag.vehicles.registry import VehicleInUse, delete_vehicle, get_vehicle
 
     init_db()
     v = get_vehicle(vehicle_id)
@@ -586,7 +586,16 @@ def garage_remove(vehicle_id: int, yes: bool) -> None:
         console.print("[yellow]Cancelled.[/yellow]")
         return
 
-    if delete_vehicle(vehicle_id):
+    try:
+        removed = delete_vehicle(vehicle_id)
+    except VehicleInUse as e:
+        # F176: the history is kept, so the bike stays; say what holds it.
+        named = "; ".join(f"{n} {table.replace('_', ' ')}"
+                          for table, n in e.dependents.items())
+        console.print(f"[red]Vehicle #{vehicle_id} ({label}) is still named by: {named}. "
+                      f"Its history is kept, so it cannot be removed.[/red]")
+        raise SystemExit(1) from e
+    if removed:
         console.print(f"[green]Removed #{vehicle_id}: {label}[/green]")
     else:
         console.print(f"[red]Failed to remove #{vehicle_id}.[/red]")
