@@ -139,18 +139,20 @@ BELT_SYMPTOM = "scooter jerks at low speed, belt squeal, won't pull away"
 CHARGING_SYMPTOM = "battery not charging, lights dim at idle"
 
 #: The layer census of the 12-row prompt, measured on a freshly seeded
-#: database (Step 0, S0-2) under the belt symptom. The LX 50's missing
-#: CARB is F155's displacement; the Fiddle 50's two CVT rows are the two
-#: UNSCOPED ones, because its transmission resolves unknown (F154).
+#: database (Step 0, S0-2) under the belt symptom. Phase 379 closed F154
+#: and F155 and re-measured the two rows they moved: the Fiddle 50 resolves
+#: CVT and its scoped rows reach it (2 CVT -> 7, and the prompt fills to
+#: 12); the LX 50 keeps its own carburettor row (CVT 10 -> 9, CARB 0 -> 1).
+#: No other machine's census moved.
 BELT_CENSUS = {
     ("Honda", "CHF50", 2005): {"CVT": 7, "CARB": 1, "ELEC": 1},
     ("Kymco", "Agility 50", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},
     ("Kymco", "People S 250", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},
     ("SYM", "Jet Euro 50", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},
     ("SYM", "Joyride 125", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},
-    ("SYM", "Fiddle 50", 2015): {"CVT": 2, "CARB": 1, "ELEC": 1},
+    ("SYM", "Fiddle 50", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},     # F154, 379
     ("Piaggio", "Fly 50", 2015): {"CVT": 6, "CARB": 1, "ELEC": 1},
-    ("Vespa", "LX 50", 2015): {"CVT": 10, "ELEC": 1},          # F155
+    ("Vespa", "LX 50", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},  # F155, 379
     ("Honda", "Ruckus", 2015): {"CVT": 4, "CARB": 1},
     ("Honda", "Ruckus", 2008): {"CVT": 4},                       # F132's window
     ("Honda", "PCX150", 2014): {"CVT": 7, "ELEC": 1},            # injected
@@ -448,13 +450,11 @@ class TestTheDiagnosticPath:
                              ids=[f"{m}-{mo}-{y}" for m, mo, y in GARAGE_MACHINES])
     def test_the_prompt_is_filled_to_its_cap(self, gate_db, garage,
                                              make, model, year):
-        """244S's cap is unchanged — composition, not enlargement. The one
-        machine under it is the Fiddle 50, whose transmission resolves
-        unknown and whose scoped CVT rows are withheld (F154); its 9 is
-        pinned in TestTheSymException."""
+        """244S's cap is unchanged — composition, not enlargement. Every
+        machine fills it; the Fiddle 50 reached only 9 until Phase 379 closed
+        F154 and its scoped CVT rows arrived."""
         known, _ctx = _diagnose_and_capture(garage[(make, model, year)], BELT_SYMPTOM)
-        expected_len = 9 if (make, model, year) == ("SYM", "Fiddle 50", 2015) else 12
-        assert len(known) == expected_len, (
+        assert len(known) == 12, (
             f"{make} {model} {year}: {len(known)} rows reached the prompt")
 
     @pytest.mark.parametrize("make,model,year", GARAGE_MACHINES,
@@ -472,15 +472,13 @@ class TestTheDiagnosticPath:
         assert census == Counter(BELT_CENSUS[(make, model, year)]), (
             f"{make} {model} {year}: {dict(census)}")
 
-    def test_a_belt_symptom_costs_the_vespa_its_own_carburettor_row(self, gate_db, garage):
-        """F155, pinned at the displacement Step 0 measured. `relevance_tokens`
-        does not stem plurals, so the symptom token "scooter" scores 0
-        against the tier-0 row titled "…carburetted scooters…", and tier-2
-        CVT rows sharing the word "belt" take the reserved slots instead.
-        This test FAILS the day F155 closes — that is its job."""
+    def test_a_belt_symptom_keeps_the_vespa_its_own_carburettor_row(self, gate_db, garage):
+        """F155, closed by Phase 379. `relevance_tokens` makes plurals
+        singular, so the symptom's "scooter" meets the tier-0 row titled
+        "…carburetted scooters…" and a belt-shaped symptom no longer costs
+        the LX 50 its own carburettor row (it did at 258's Step 0)."""
         known, _ctx = _diagnose_and_capture(garage[("Vespa", "LX 50", 2015)], BELT_SYMPTOM)
-        assert "CARB" not in _census(known), (
-            "the LX 50's carburettor row is back: F155 has closed, update this pin")
+        assert "CARB" in _census(known), "the LX 50 lost its own carburettor row again"
         assert "CVT" in _census(known), "the belt rows must still arrive"
 
     def test_a_charging_symptom_rescues_the_zumas_tier0_electrical_row(self, gate_db, garage):
@@ -545,36 +543,33 @@ class TestTheSymException:
             if _layer_of(r) in ("ELEC", "CARB"):
                 assert r["match_tier"] == "model", r["title"]
 
-    def test_the_fiddle_resolves_unknown_and_loses_the_scoped_cvt_layer(self, gate_db, garage):
-        """F154: `TRANSMISSION_LOOKUP`'s Fiddle entry carries `fiddle`,
-        `fiddle iii`, `fiddle 3`, `fiddle3` — but not `fiddle 50`, the
-        spelling the corpus's own electrical and carburettor rows use. The
-        machine resolves transmission `unknown`, so the applicability filter
-        withholds every `{"transmission": ["cvt"]}` row. The chokepoint
-        records the cost in `retrieval_withheld`; this FAILS when the
-        spelling is added."""
+    def test_the_fiddle_resolves_cvt_from_its_own_manual(self, gate_db, garage):
+        """F154, closed by Phase 379: `TRANSMISSION_LOOKUP` has a `Fiddle 50`
+        entry citing the SYM Fiddle 50 service manual's cover and its
+        "Transmission C.V.T.". The machine resolves `model-sourced` CVT, so
+        the chokepoint withholds nothing from it as `unknown` (until 379 it
+        withheld all 8 scoped CVT rows)."""
         from motodiag.knowledge.retrieval import withheld_report
+        from motodiag.knowledge.transmission import resolve_transmission
 
+        resolution = resolve_transmission("SYM", "Fiddle 50")
+        assert resolution.provenance == "model-sourced"
+        assert resolution.entry.canonical == "Fiddle 50"
         _diagnose_and_capture(garage[("SYM", "Fiddle 50", 2015)], BELT_SYMPTOM)
         report = withheld_report(db_path=gate_db, limit=200)
-        rows = [r for r in report if r["make"] == "SYM" and r["model"] == "Fiddle 50"]
-        assert rows, "the Fiddle 50 no longer resolves unknown: F154 has closed"
-        assert all(r["provenance"] == "unknown" for r in rows), rows
-        assert max(r["rows_withheld"] for r in rows) >= 8, rows
+        assert not [r for r in report if r["make"] == "SYM" and r["model"] == "Fiddle 50"
+                    and r["provenance"] == "unknown"]
 
-    def test_the_fiddles_prompt_holds_only_the_two_unscoped_cvt_rows(self, gate_db, garage):
-        """The two CVT rows that survive F154's withholding are the ones with
-        no applicability claim — the naming row and the recall-index row,
-        whose scope is the search term, not the machine. 254's scoped
-        roller, belt and clutch content never reaches this owner."""
+    def test_the_fiddles_prompt_holds_the_scoped_cvt_rows(self, gate_db, garage):
+        """With F154 closed, 254's scoped roller, belt and clutch content
+        reaches the Fiddle 50 owner. Measured by Phase 379: 7 CVT rows, the
+        naming row among them; the recall-index row, one of the two it had
+        before, is now outranked within the cap of 12."""
         known, _ctx = _diagnose_and_capture(garage[("SYM", "Fiddle 50", 2015)], BELT_SYMPTOM)
         cvt_titles = {r["title"] for r in known if _layer_of(r) == "CVT"}
-        assert cvt_titles == {
-            "Three unrelated components are all called a drive belt, and a "
-            "search for one returns the other two",
-            "The regulator's two indexes contradict each other, and an "
-            "empty recall answer is not a clean record",
-        }, cvt_titles
+        assert ("Three unrelated components are all called a drive belt, and a "
+                "search for one returns the other two") in cvt_titles
+        assert len(cvt_titles) == 7, cvt_titles
 
 
 # ===========================================================================

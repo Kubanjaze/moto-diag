@@ -778,6 +778,14 @@ TRANSMISSION_LOOKUP: tuple[TransmissionEntry, ...] = (
     _E("SYM", "Fiddle III", CVT, ("fiddle", "fiddle iii", "fiddle 3", "fiddle3"),
        "SYM Fiddle III owner's manual: a combined 'Drive belt/roller  I R' "
        "maintenance row. Belt and roller together are variator-specific."),
+    # Phase 379, F154: the spelling the corpus's own rows use. Its own book,
+    # whose cover (rendered, not read from the file name) reads "SYM ...
+    # Fiddle 50 ... SERVICE MANUAL".
+    _E("SYM", "Fiddle 50", CVT, ("fiddle 50", "fiddle50"),
+       "SYM Fiddle 50 service manual: forward, 'the SANGANG Fiddle 50 series "
+       "scooter'; specifications, 'Transmission C.V.T.' and 'Primary "
+       "Reduction BELT'; chapter 7, '\"V\" TYPE BELT DRIVING SYSTEM/"
+       "KICK-STARTER'."),
     _E("SYM", "Symphony ST", CVT, ("symphony", "symphony st"),
        "SYM Symphony ST owner's manual: a combined 'Drive belt/roller  "
        "I R' maintenance row."),
@@ -1002,7 +1010,10 @@ def resolve_transmission(
     for entry in TRANSMISSION_LOOKUP:
         if _norm(entry.make) != make_n:
             continue
-        if _alias_match(entry.make, model, entry.aliases):
+        # Phase 379, F131: an entry's own canonical name is a spelling too
+        # ("CT125 Hunter Cub" is Honda's name for the machine, and resolved
+        # unknown).
+        if _alias_match(entry.make, model, (*entry.aliases, entry.canonical)):
             return Resolution(frozenset({entry.transmission.value}),
                               "model-sourced", entry)
 

@@ -295,7 +295,8 @@ class TestComposition:
         """Four characters or more, minus a stop list — the shape
         predictor.py already uses for its TSB matching."""
         tokens = relevance_tokens("the pack is hot and this bike overheats")
-        assert "pack" in tokens and "overheats" in tokens
+        # Phase 379 (F155): plurals and third-person "s" are made singular.
+        assert "pack" in tokens and "overheat" in tokens
         for noise in ("the", "is", "hot", "and", "this", "bike"):
             assert noise not in tokens, noise
         assert relevance_tokens("") == set()

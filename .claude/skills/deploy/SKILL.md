@@ -62,7 +62,10 @@ diff the operator approved for migration 071 survived there only by luck.
    time after: it copies live and the phase's backup (opened immutable, so
    no `-shm` or `-wal` is left beside it) and prints the schema objects and
    tables that differ, whether that equals the approved exact diff, and
-   live's integrity and foreign keys. verify_phase's check 8 calls it.
+   live's integrity and foreign keys. It exits 3 when live does not equal
+   the approved diff, and says when live's schema is past the phase's own
+   migrations (F197, Phase 379); 1 on integrity or a foreign key; 2 with no
+   deploy. verify_phase's check 8 calls it and fails on 1 or 3.
 6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 

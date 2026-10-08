@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F199** (this file). The
+At the time of writing the highest assigned is **F200** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3211,3 +3211,35 @@ What would close it: the Like 50i's cover read from the rendered page and
 the transmission quoted from the same book, for `like 50i`; a Like 125
 document for `like 125`. With section E of the 2026-10-08 triage, the
 items that need sources first.
+
+### F200
+
+**Symptom relevance counts shared words, so a word used in another sense ranks a row above the one the rider needs**
+
+Measured by Phase 379 when it closed F155 (plurals made singular in
+`knowledge/prompt_rows.py::relevance_tokens`). Over 22 machines and 6
+symptoms (132 prompts, `docs/phases/completed/379_f155_measure.py`, its
+before-and-after rows in `379_f155_swaps.txt`), 51 prompts changed by one
+or two rows in the slots kept for the rider's words. Read title by title,
+about 19 swaps were better, 16 neutral and 5 worse. The worse ones share a
+cause: a word the symptom shares with a row in another sense.
+- **Road King, "battery not charging, lights dim at idle":** the
+  voltage-regulator and battery-mismatch rows (scores 2) are overtaken by
+  an ECU-reset row and a cooling-loop row (scores 3), which gained "light"
+  from "warning light" and "lamp" text.
+- **CBR600RR and Ruckus, "leaking oil from the gaskets and seals":** a
+  shaft-drive final-gear leak row comes in on machines with no shaft.
+- **CBR1000RR, "won't start when cold":** the cold-start enrichment row
+  goes out.
+- **PCX150, "engine stalls at idle":** the fuel-pump row goes out for a
+  regulator row.
+
+Before F155 the same scorer missed plurals instead. `relevance_score` is a
+count of shared tokens over title, symptoms and the head of the
+description, so any ambiguous word ("light", "leak", "cold") can lift an
+unrelated row.
+
+What would close it: a ranking judged against a small labelled set (for
+each machine and symptom, the rows a technician would want), the current
+scorer measured on it, and a change kept only if it raises that measure.
+The 132 prompts above are a start for the set.

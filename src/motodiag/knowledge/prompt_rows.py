@@ -74,9 +74,24 @@ _STOP = frozenset({
 })
 
 
+def _singular(token: str) -> str:
+    """A plural's singular, by a stated rule (Phase 379, F155: "scooter" did
+    not meet "scooters", so a belt symptom cost the LX 50 its own tier-0
+    carburettor row). "ies" becomes "y"; "ches", "shes", "sses" and "xes"
+    drop "es"; otherwise a final "s" goes from a word longer than four
+    letters, unless it ends "ss", "us" or "is" (pass, status, chassis)."""
+    if len(token) > 4 and token.endswith("ies"):
+        return token[:-3] + "y"
+    if token.endswith(("ches", "shes", "sses", "xes")):
+        return token[:-2]
+    if len(token) > 4 and token.endswith("s") and not token.endswith(("ss", "us", "is")):
+        return token[:-1]
+    return token
+
+
 def relevance_tokens(text: str) -> set[str]:
-    """The comparable words in a piece of text."""
-    return {t for t in _TOKEN.findall((text or "").lower()) if t not in _STOP}
+    """The comparable words in a piece of text, plurals made singular."""
+    return {_singular(t) for t in _TOKEN.findall((text or "").lower()) if t not in _STOP}
 
 
 def relevance_score(row: Mapping[str, Any], wanted: set[str]) -> int:

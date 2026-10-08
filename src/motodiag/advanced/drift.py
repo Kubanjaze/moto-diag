@@ -51,6 +51,7 @@ from typing import Any, Iterable, Optional
 from pydantic import BaseModel, ConfigDict, Field
 
 from motodiag.core.database import get_connection
+from motodiag.core.timestamps import column_cutoff
 
 
 # ---------------------------------------------------------------------------
@@ -345,8 +346,10 @@ def compute_trend(
         PID in any of ``"0C"``, ``"0x0c"``, ``"0X0C"`` — normalized
         internally to canonical ``"0x0C"`` for the SQL lookup.
     since, until:
-        Optional ISO 8601 ``captured_at`` lower / upper bounds. Both
-        default to ``None`` (all history).
+        Optional ``captured_at`` lower / upper bounds, as ``utc_cutoff``
+        takes them (a date or date-time with no zone is the shop's time),
+        compared in the column's own shape so its index is kept (Phase 379,
+        F193). Both default to ``None`` (all history).
     db_path:
         Override for the SQLite path (tests).
 
@@ -360,6 +363,7 @@ def compute_trend(
     canonical_pid = _normalize_pid_hex(pid_hex)
     if not canonical_pid:
         return None
+    since, until = column_cutoff(since), column_cutoff(until)
 
     with get_connection(db_path) as conn:
         rows = conn.execute(

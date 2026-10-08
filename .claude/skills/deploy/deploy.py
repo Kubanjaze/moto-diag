@@ -592,10 +592,13 @@ def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROO
     Copies both through SQLite's backup API (the backup opened immutable),
     and prints the schema objects added, removed and changed, each table whose
     rows differ, whether that equals the approved exact diff, and live's
-    integrity and foreign keys. Exit 1 on an integrity or foreign-key failure
-    or a missing backup, 2 when the phase has no deploy, else 0: a difference
-    from the approved diff is printed, not failed, since later work may
-    change live.
+    integrity and foreign keys.
+
+    Exit codes: 1 on an integrity or foreign-key failure or a missing backup;
+    2 when the phase has no deploy; 3 when live does not equal the approved
+    diff (F197, Phase 379: it printed "no" and exited 0), saying whether
+    live's schema is past the phase's own migrations, which then explains the
+    difference; else 0.
     """
     f = find_diff(repo, phase)
     if f is None:
@@ -618,6 +621,7 @@ def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROO
         c = _ro(live_copy)
         integrity = c.execute("pragma integrity_check").fetchone()[0]
         fk = c.execute("pragma foreign_key_check").fetchall()
+        live_head = c.execute("select max(version) from schema_version").fetchone()[0]
         c.close()
     finally:
         _drop(live_copy)
@@ -639,9 +643,21 @@ def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROO
         print(f"  equals the approved exact diff: {'yes' if not gaps else 'no'}")
         for g in gaps[:10]:
             print(f"    {g}")
+        if gaps:
+            applied = [int(v) for v in re.findall(r"\d+", _header(text).get(
+                "Migrations applied on the copy", ""))]
+            phase_head = max(applied) if applied else None
+            if phase_head is not None and live_head is not None and live_head > phase_head:
+                print(f"  live is at schema {live_head}, past this phase's {phase_head}: "
+                      "later migrations explain the difference")
+            else:
+                print(f"  live is at schema {live_head}, this phase's own head "
+                      f"({phase_head}): the difference is not a later migration's")
     print(f"  integrity: {integrity}; foreign keys: "
           f"{'ok' if not fk else f'{len(fk)} violation(s)'}")
-    return 1 if integrity != "ok" or fk else 0
+    if integrity != "ok" or fk:
+        return 1
+    return 3 if gaps else 0
 
 
 def main(argv: list[str]) -> int:

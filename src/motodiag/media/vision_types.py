@@ -308,6 +308,16 @@ class VehicleContext(BaseModel):
             "was resolved from the lookup alone."
         ),
     )
+    powertrain: Optional[str] = Field(
+        default=None,
+        description=(
+            "Phase 379 (F144): the vehicle row's powertrain (`ice`, "
+            "`electric`, `hybrid`), or None when unknown. Read by retrieval "
+            "(`rows_for_machine(powertrain=)`), so an electric machine the "
+            "lookup does not name reaches its `powertrain-default` rung "
+            "through `/ask` as it does through `diagnose`."
+        ),
+    )
 
     def to_context_string(self) -> str:
         """Format vehicle context as a text block for prompt injection."""

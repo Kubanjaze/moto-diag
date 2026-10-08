@@ -1,5 +1,19 @@
 # closeout — changelog
 
+## 2026-10-08 — check 8 fails verify_phase; the whole-tree command keeps its output (Phase 379, F197, F173)
+
+The operator: "379 = the nine small fixes."
+- **F197.** `verify_phase.sh` has `FAILED`. Check 8 sets it when
+  `deploy.py verify-live` exits anything but 0 (equal) or 2 (no deploy),
+  and the script exits with it. The other checks print, as before. The test
+  runs check 8's own shell block against a stand-in `deploy.py`.
+- **F173.** `wholetree.py` writes pytest's whole output to
+  `.git/motodiag_wholetree/last_<mode>.log`. A failing run prints every
+  FAILED and ERROR line and the log's path. It kept the last 1500
+  characters, later 15 lines, and 359's first `--full` lost two of four
+  FAILED lines and every traceback. `tests/test_phase379_wholetree_output.py`
+  plants 20 failures.
+
 ## 2026-10-07 — one deploy order, the clock script, generators, eight artefacts (Phase 378, K18, K19, K22, K24, K25)
 
 The operator: "approved: 378 = K18–K25. … K24: add the line to the

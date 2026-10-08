@@ -1,5 +1,17 @@
 # deploy — changelog
 
+## 2026-10-08 — verify-live fails on a mismatch (Phase 379, F197)
+
+The operator: "379 = the nine small fixes."
+- `verify-live` exits 3 when live does not equal the approved exact diff.
+  Before, it printed "no" and exited 0, which is how the advisor found it
+  on 376.
+- It says whether live's schema version is above the phase's own (read
+  from the dry run's "Migrations applied on the copy"), in which case a
+  later migration explains the difference.
+- `tests/test_phase379_verify_live_fails.py`: the known-bad case is an
+  approved diff missing one live row.
+
 ## 2026-10-07 — apply-live after the regression of record; verify-live (Phase 378, K18, K25, K27)
 
 The operator: "approved: 378 = K18–K25." "K27: (a) now, (b) once the

@@ -165,8 +165,47 @@ def update_vehicle(vehicle_id: int, updates: dict, db_path: str | None = None) -
         return cursor.rowcount > 0
 
 
+class VehicleInUse(ValueError):
+    """Raised when a vehicle is still named by records its deletion would
+    orphan (Phase 379, F176). ``dependents`` maps each table to its count."""
+
+    def __init__(self, vehicle_id: int, dependents: dict[str, int]):
+        self.vehicle_id = vehicle_id
+        self.dependents = dependents
+        listed = ", ".join(f"{n} in {t}" for t, n in dependents.items())
+        super().__init__(f"vehicle id={vehicle_id} is still named by {listed}")
+
+
+def vehicle_dependents(vehicle_id: int, db_path: str | None = None) -> dict[str, int]:
+    """For each table whose foreign key to ``vehicles`` blocks a delete
+    (``RESTRICT`` or ``NO ACTION``), the number of its rows naming the bike;
+    only tables with at least one. Read from the schema, so a table added
+    later joins by itself."""
+    found: dict[str, int] = {}
+    with get_connection(db_path) as conn:
+        tables = [r[0] for r in conn.execute(
+            "SELECT name FROM sqlite_master WHERE type = 'table' ORDER BY name")]
+        for table in tables:
+            for fk in conn.execute(f"PRAGMA foreign_key_list('{table}')"):
+                if fk[2] != "vehicles" or fk[6] not in ("RESTRICT", "NO ACTION"):
+                    continue
+                n = conn.execute(f"SELECT COUNT(*) FROM \"{table}\" WHERE \"{fk[3]}\" = ?",
+                                 (vehicle_id,)).fetchone()[0]
+                if n:
+                    found[table] = found.get(table, 0) + int(n)
+    return found
+
+
 def delete_vehicle(vehicle_id: int, db_path: str | None = None) -> bool:
-    """Delete a vehicle by ID. Returns True if deleted."""
+    """Delete a vehicle by ID. Returns True if deleted.
+
+    Raises :class:`VehicleInUse` when work orders, intakes, saved runs,
+    diagnostic sessions or repair plans still name it (F176): their history is
+    kept, so the bike stays.
+    """
+    dependents = vehicle_dependents(vehicle_id, db_path=db_path)
+    if dependents:
+        raise VehicleInUse(vehicle_id, dependents)
     with get_connection(db_path) as conn:
         cursor = conn.execute("DELETE FROM vehicles WHERE id = ?", (vehicle_id,))
         return cursor.rowcount > 0
