@@ -1,0 +1,19 @@
+D1 apply-live never asks for the regression: red
+D2 code after the regression is allowed: red
+D3 uncommitted code is allowed: red
+D4 only src/ and tests/ count as code: red
+C1 a strftime is never read as a day: red
+C2 every file is exempt: red
+C3 a name bound to the clock is not followed: red
+C4 the clock plus a timedelta is not followed: red
+S1 274's P&L back on the UTC day turns the script red: red
+S2 a clock that was not faked is refused, not passed: red
+F1 B1 back on the union: red
+R1 roadmap_check stops seeing three-digit folds: red
+V1 the backup is opened plainly, leaving -shm: red
+V2 a masked clock matches nothing: red
+V3 a foreign-key break passes: red
+V4 check 8 does not call verify-live: red
+L1 the description goes back to seven: red
+L2 the generator rule goes: red
+18/18 red

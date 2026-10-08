@@ -24,7 +24,9 @@ diff the operator approved for migration 071 survived there only by luck.
    schema change is a scope problem (Phase 357).
 2. **`python .claude/skills/deploy/deploy.py dryrun <phase>`.** Live is
    only read. It then:
-   - backs up to `~/backups/motodiag/` and keeps 5;
+   - backs up to `~/backups/motodiag/` and keeps 5 (the operator, K27,
+     2026-10-07: 5 now; 5 plus the first backup of each week once the
+     first shop's real data is in);
    - migrates a copy in `data/deploy_scratch/` (gitignored, deleted after
      use) and diffs every table by rowid;
    - checks the scope and runs the F158 census on the copy;
@@ -37,8 +39,12 @@ diff the operator approved for migration 071 survived there only by luck.
      reads `<clock>`.
 3. **Commit the diff and show it to the operator.** Changing an existing
    live row is a rule-1 stop. Wait for the operator's words.
-4. **`deploy.py apply-live <phase>`.** It refuses, before touching live,
-   unless:
+4. **`deploy.py apply-live <phase>`, from the branch, after the regression
+   of record** (Phase 378, K18: one order; the regression, the apply, the
+   close-out commit, the merge). It refuses, before touching live, unless:
+   - the phase log in `in_progress/` carries a regression line A5 can read,
+     no code path changed between its commit and HEAD, and no code path is
+     uncommitted (`fixtures/k18/` holds the known-bad logs);
    - the diff file exists, is committed and is unchanged;
    - the diff records no scope problem;
    - the backup still hashes as recorded, and the scope file is the one
@@ -52,7 +58,12 @@ diff the operator approved for migration 071 survived there only by luck.
    It then migrates live, writes `<phase>_live_diff.md` and checks the
    scope and the equality again; the live diff says whether live equals
    the approved exact diff.
-5. **At close-out**, the diff files move to `completed/` with the phase
+5. **`deploy.py verify-live <phase>`** (Phase 378, K25), read-only, any
+   time after: it copies live and the phase's backup (opened immutable, so
+   no `-shm` or `-wal` is left beside it) and prints the schema objects and
+   tables that differ, whether that equals the approved exact diff, and
+   live's integrity and foreign keys. verify_phase's check 8 calls it.
+6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 
 ## What it holds, and what it cannot

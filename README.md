@@ -228,8 +228,9 @@ learned by hitting them.
 
 Skills and hooks under `.claude/` are discovered **from the directory the
 session was started in, at the moment it starts.** A session opened in the
-parent directory does not see them, and a skill added part-way through a
-session is not available until the next one.
+parent directory does not see them. A skill added part-way through a session
+does load: on 2026-09-27 Phase 358's `deploy` skill appeared at once in two
+sessions already running at this root.
 
 So: **open moto-diag sessions at the repository root.** No symlinks and no
 `.claude/` at the parent — both work, and both hide where the mechanism is

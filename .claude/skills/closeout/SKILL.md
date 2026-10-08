@@ -1,6 +1,6 @@
 ---
 name: closeout
-description: Close out a moto-diag phase — the ordered sequence from "the code is green" to "merged, deployed and verifiable", and the seven artefacts that must exist when it is done. Use when a phase's build is complete, when asked to close or finish a phase, or before merging a phase branch to master.
+description: Close out a moto-diag phase — the ordered sequence from "the code is green" to "merged, deployed and verifiable", and the eight artefacts that must exist when it is done. Use when a phase's build is complete, when asked to close or finish a phase, or before merging a phase branch to master.
 ---
 
 # closeout — finishing a phase
@@ -33,6 +33,13 @@ folder exists to stop shipping.
 
 ## The sequence
 
+**One order for a phase with a migration** (Phase 378, K18): the regression
+of record, then `deploy.py apply-live` from the branch, then the close-out
+commit, then the merge. `apply-live` reads the scope and the approved diff
+only from `in_progress/`, and refuses unless the phase log carries a
+regression line A5 can read, with no code changed since its commit and none
+uncommitted.
+
 1. **Regression, with hash and count.** First `wholetree.sh --full` on the
    commit to be tested: `regression.sh` refuses to start without its
    record for HEAD. Then the full suite, in parallel:
@@ -47,26 +54,37 @@ folder exists to stop shipping.
    to bisect a failure that appears only in parallel. Phase 355 proved
    both give the same passed set. A test that fails only in parallel is a
    bug to fix, not a reason to record the serial result instead.
-2. **Deviations.** Write what the phase did that the plan did not say. If
+   **On a month's last evening** (20:00 to midnight local), run
+   `clock_check.sh` first (Phase 378, K19): it runs the tests that turn
+   the real clock into a day or month with the clock faked at 375's four
+   moments. Red is a clock-made failure to fix before the regression.
+2. **Live, if the phase has a migration**, with the `deploy` skill
+   (`.claude/skills/deploy/deploy.py`): the dry run on a copy (backup to
+   `~/backups/motodiag/`, 5 kept), the committed diff, the operator's words
+   where a row changes, then `apply-live` from the branch. Read the result
+   with `deploy.py verify-live <phase>`.
+3. **Deviations.** Write what the phase did that the plan did not say. If
    nothing deviated, say that; an empty section is a claim, not an absence.
-3. **Bug-fix register.** One dated entry per fix: Issue / Root cause / Fix /
+4. **Bug-fix register.** One dated entry per fix: Issue / Root cause / Fix /
    Files / Verified / Commit. Numbering contiguous from `#1`.
-4. **ROADMAP row.** Under 120 words by `roadmap_words.py`. The method is
+5. **Generators** (Phase 378, K24). A script whose output ships in `src/`,
+   or whose output a migration loads, is committed in the phase folder with
+   it, before the close-out commit. 359 lost `gen072.py` from `/private/tmp`.
+6. **ROADMAP row.** Under 120 words by `roadmap_words.py`. The method is
    specified in the workspace CLAUDE.md rule; the script is the only place
    it is executed.
-5. **`implementation.md`** — history row and version bump.
-6. **Move both docs to `completed/`**, set the status line.
-7. **Handoff** — `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`: what
-   shipped, what is open, what is next. Write it in the close-out commit,
-   before the merge: `roadmap_check.py` R6 refuses any push while a closed
-   row has no handoff. Add the deploy's outcome to it after step 8.
-8. **Merge, then deploy** with the `deploy` skill
-   (`.claude/skills/deploy/deploy.py`): backup to `~/backups/motodiag/`
-   with 5 kept, the dry run on a copy, the committed diff, and the apply
-   that refuses without it. `git merge` takes `-m`
-   or `-F <file>`. `-F -` exits 129 ("could not read file '-'") and
-   `master` does not move; that happened twice on 2026-09-24.
-9. **`verify_phase.sh PHASE REG_HASH TIP`** and read all fourteen checks.
+7. **`implementation.md`** — history row and version bump.
+8. **Move the phase's files to `completed/`** (the deploy files too, after
+   step 2), set the status line.
+9. **Handoff** — `docs/handoffs/YYYY-MM-DD_<phase>_closed.md`: what
+   shipped, what is open, what is next, and the live outcome. Write it in
+   the close-out commit, before the merge: `roadmap_check.py` R6 refuses
+   any push while a closed row has no handoff. Add the merge's outcome
+   after step 10.
+10. **Merge.** `git merge` takes `-m` or `-F <file>`. `-F -` exits 129
+    ("could not read file '-'") and `master` does not move; that happened
+    twice on 2026-09-24.
+11. **`verify_phase.sh PHASE REG_HASH TIP`** and read all fourteen checks.
 
 ## When a step may be skipped
 
@@ -85,7 +103,8 @@ check.
 | `roadmap_words.py` | the single implementation of the 120-word count |
 | `verify_phase.sh` | the operator's terminal check, parameterised |
 | `regression.sh` | the regression of record: `-n auto --dist load`, or `--serial`; prints the line with counts, hash, wall time and command |
-| `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137) |
+| `code_after_regression.py` | check 2's scope: every path is code unless positively documentation (F137); `deploy.py apply-live` uses it too (K18) |
+| `clock_check.sh` | the tests that turn the real clock into a day or month (`tests/support/clock_census.py`), run under libfaketime at 375's four moments, with its own control (Phase 378, K19) |
 | `roadmap_check.py` | the ROADMAP ledger holds: R1–R7 (a reused number, documents with no row, a status that disagrees with where the documents are, a number no authority range covers, the authority copies drifting, a close with no handoff, a fold into a phase that is not closed); run with every suite and on every push |
 | `wholetree.sh` / `wholetree.py` | the whole-tree command (rule 3): fast mode, or `--full`; members found by rule; a pass on a clean tree writes a signed record bound to commit, tree and script |
 | `pre_push_guard.sh` / `_pre_push_guard.py` | the push guard: the ROADMAP check and the whole-tree command on every push (a valid record, else fast mode under its own limit; fails closed), `--full` on a commit to seed data or migrations, close-out on a push to `master` |

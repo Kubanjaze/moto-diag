@@ -294,7 +294,14 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: test_rolling_back_peels_every_successor[83], which migration 084 adds; none
 #: removed. Measured: 10685 collected.
 #:
-COLLECTED_TEST_FLOOR = 10685
+#: Phase 378 (2026-10-07): 10685 -> 10723, +38, by a diff of collected ids
+#: against master 481832c (in a worktree, on its own source): five new files
+#: (deploy order 10, findings per repo 4, labels 5, clock census 9,
+#: verify-live 9 = 37), and K21's two fold tests in test_roadmap_continuity
+#: replacing the literal pin test_the_eighteen_folds_are_seen_and_pass (+2 -1).
+#: Measured: 10723 collected.
+#:
+COLLECTED_TEST_FLOOR = 10723
 
 
 def _collected_count() -> int:

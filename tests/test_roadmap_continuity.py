@@ -94,18 +94,47 @@ class TestR7OnTheRealLedger:
         return {n: R.FOLDED.match(rest).group(1) for n, s, rest in R.ROW_REST.findall(roadmap)
                 if s.strip() == R.DONE and R.FOLDED.match(rest)}
 
-    def test_the_eighteen_folds_are_seen_and_pass(self):
-        """Eight from Track N; four from Phase 274 (Track O batch 1); three
-        from Phase 275 (Track O batch 2); three from Phase 281 (Track O
-        batch 3)."""
+    @staticmethod
+    def _folds_by_columns(roadmap: str) -> dict[str, str]:
+        """A second parse that shares nothing with roadmap_check's regexes:
+        split each table line on `|`, read the status cell, and take the word
+        after "Folded into" when the notes cell opens with it."""
+        folds = {}
+        for line in roadmap.splitlines():
+            cells = [c.strip() for c in line.split("|")]
+            if len(cells) < 5 or not cells[1][:1].isdigit():
+                continue
+            words = cells[4].split()
+            if cells[3] == R.DONE and words[:2] == ["Folded", "into"] and len(words) > 2:
+                folds[cells[1]] = "".join(ch for ch in words[2] if ch.isalnum())
+        return folds
+
+    #: The eighteen folds closed by 2026-10-07: eight from Track N, four from
+    #: Phase 274, three from 275, three from 281. A number is never reused, so
+    #: these stay folds; the set may grow when a batch closes, and this test
+    #: needs no edit when it does (Phase 378, K21: 274, 275 and 281 each ran a
+    #: second regression because their close-out edited a literal pin here).
+    CLOSED_BY_378 = {
+        "263": "262", "265": "264", "266": "264", "267": "262",
+        "268": "264", "269": "261", "270": "261", "271": "261",
+        "279": "274", "280": "274", "290": "274", "291": "274",
+        "276": "275", "277": "275", "278": "275",
+        "287": "281", "288": "281", "289": "281"}
+
+    def test_the_folds_are_seen_by_two_parses_and_pass(self):
         roadmap = (R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
-        assert self._folds(roadmap) == {
-            "263": "262", "265": "264", "266": "264", "267": "262",
-            "268": "264", "269": "261", "270": "261", "271": "261",
-            "279": "274", "280": "274", "290": "274", "291": "274",
-            "276": "275", "277": "275", "278": "275",
-            "287": "281", "288": "281", "289": "281"}
+        folds = self._folds(roadmap)
+        assert folds == self._folds_by_columns(roadmap)
+        assert self.CLOSED_BY_378.items() <= folds.items()
         assert not [f for f in R.check_tree() if f.startswith("R7")]
+
+    def test_a_new_batch_close_needs_no_edit_here(self):
+        """A planted fold into a closed carrier is seen by both parses, and the
+        test above still holds on the planted ledger."""
+        roadmap = (R.ROOT / "docs" / "ROADMAP.md").read_text(encoding="utf-8")
+        planted = roadmap + "\n| 999 | A planted row | ✅ | Folded into 375 (a batch). |\n"
+        assert self._folds(planted)["999"] == self._folds_by_columns(planted)["999"] == "375"
+        assert self.CLOSED_BY_378.items() <= self._folds(planted).items()
 
     def test_a_fold_into_a_reopened_carrier_is_seen(self):
         """The real ledger, with 261's row set back to 🚧: its three folds

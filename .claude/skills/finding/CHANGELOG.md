@@ -1,5 +1,20 @@
 # finding — changelog
 
+## 2026-10-07 — B1 checks this file's own header (Phase 378, K20)
+
+The operator: "approved: 378 = K18–K25."
+
+- **The defect.** B1 compared the header with the union of both
+  repositories' entries. When mobile filed a finding above the backend's
+  highest (F179 in 360, F181 in 361), the backend went red until a backend
+  commit, which a mobile session cannot make.
+- **The change.** B1 now reads its own file. B2 and `next_f_number.sh`
+  keep the union.
+- The backend header says "(this file)", as mobile's does, and names the
+  allocation script.
+- `fixtures/k20/`: a sibling ahead must not fail B1; a stale own header
+  must. `tests/test_phase378_findings_per_repo.py`.
+
 ## 2026-09-24 — the "this repo leads" pin replaced (Phase 257B bug fix #2)
 
 `test_both_followups_files_are_read` also asserted `max(backend) >
