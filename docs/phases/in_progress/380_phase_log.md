@@ -149,3 +149,20 @@ output):
 - **Verified:**
   - the new test gives 3 failed with the old `diff`, 3 passed with the fix;
   - 79 deploy tests pass (357, 358, 359, 378, 379, 380's parity).
+
+### 2026-10-08 — 085's dry run, and the stop
+
+`deploy.py dryrun 380` after bug fix #1:
+- backup `motodiag_pre380_20261008_131256.db`;
+- scope problems none (the seed-parity check included);
+- F158 census 36;
+- `known_issues`: 1060 changed, `row_key` only, each to its seed key;
+- `known_issue_models`: 109 removed (Ego under Harley-Davidson, LiveWire
+  and Zero, 30 each; LX50 under Piaggio, 9; and 10 others), none added or
+  changed;
+- the schema: the key index added, the prose identity index removed, the
+  table rewritten for its column.
+
+It changes existing live rows, so this is the operator's stop (rule 1).
+Before the apply, the regression of record runs again: bug fix #1 changed
+`deploy.py` after `a119c28`, and K18's check refuses an apply until it does.
