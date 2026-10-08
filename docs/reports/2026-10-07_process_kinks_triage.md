@@ -9,7 +9,21 @@ Every figure below was measured on 2026-10-07 from:
 - `pmset -g custom`;
 - the advisor's running list of kinks.
 
-When the triage was written, nothing in it had been changed. Your decision goes above the triage when you give it.
+When the triage was written, nothing in it had been changed. The operator's decision follows; the triage itself is unchanged below it.
+
+---
+
+## The operator's decision, 2026-10-07 (verbatim)
+
+> approved: 378 = K18–K25. K22: fix the README line too. K23: the standing lines move into checks or CLAUDE.md's "How a phase runs". K24: add the line to the close-out skill. K26: (a). K27: (a) now, (b) once the first shop's real data is in. K11: I'll decide by Oct 23.
+
+The operator sent it to the session that had just closed Phase 375. That session opened Phase 378 from it and wrote the same words into `docs/prompts/378_process_cleanup_2.txt` (`12b21f6`).
+
+What came of it:
+- **Phase 378** built K18–K25 and merged as `9b8b155` on 2026-10-08. Its regression of record is 10723 passed at `bdc063d`.
+- **K26 and K23** are CLAUDE.md's new rule 6. K18's order is in rule 4. **K27** is in the deploy skill's text.
+- **K11** is still the operator's, by Oct 23.
+- **F197**, found by the advisor verifying 378: K25's `verify-live` reports a mismatch with the approved diff but exits 0, and check 8 does not gate on it.
 
 ---
 
