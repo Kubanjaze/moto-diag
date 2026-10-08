@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F196** (this file). The
+At the time of writing the highest assigned is **F197** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3120,3 +3120,28 @@ With the whole process's clock fixed by libfaketime at 2026-10-31 21:00
 EDT, only `test_phase274_pnl.py` failed (8 tests): its `MONTH` was the UTC
 month. Fixed as Phase 375's bug fix #2; the six files and 275's then pass
 (137) at that moment, an ordinary evening, New Year's Eve 21:00 and 00:30.
+
+### F197
+
+**`deploy.py verify-live` exits 0 when live does not equal the approved diff, and verify_phase's check 8 does not gate on it**
+
+Found by the advisor verifying Phase 378 (2026-10-08). Phase 378's K25
+command prints "equals the approved exact diff: yes" or "no", but
+`verify_live` returns 1 only when integrity is not ok or a foreign key
+fails (`.claude/skills/deploy/deploy.py:644`). Run on 376, whose backup
+predates migration 084, it printed "no", listed 084's rows as unapproved,
+and exited 0. `verify_phase.sh`'s check 8 calls it (lines 73–75) without
+reading its exit code, and verify_phase exits 0 either way. Its positive
+case holds: `verify-live 375` prints "yes", integrity ok and foreign keys
+ok, as the advisor's own comparison found the night before.
+
+What it affects: a deploy whose live state differs from its approved diff
+shows only as one printed line in check 8. Nothing fails. Right after a
+phase's own deploy that difference is a defect; on an older phase, later
+migrations make "no" expected.
+
+What would close it: verify-live exits non-zero when live does not equal
+the approved diff, and says when the cause is a later migration (live's
+schema_version above the phase's); verify_phase fails check 8 on it for
+the phase being closed. A known-bad fixture, an approved diff missing one
+live row, must turn both red.
