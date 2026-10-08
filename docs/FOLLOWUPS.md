@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F198** (this file). The
+At the time of writing the highest assigned is **F199** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3187,4 +3187,27 @@ Filly resolves to no transmission. Row 4609 no longer names it (255B, F128).
 What would close it: a Kymco document that is the Filly LX 50's own (an
 owner's manual, a parts catalogue or a spec sheet naming it on its cover),
 read for its transmission. It belongs with the triage's section E, the
+items that need sources first.
+
+### F199
+
+**Kymco's Like 50i and Like 125 resolve to no transmission**
+
+Carried out of F131 on 2026-10-08 by Phase 379, so that closing F131 drops
+nothing. F131 recorded it "here rather than as its own finding". The Kymco
+`Like 150i` lookup entry's spellings are `like 150i`, `like150i` and
+`like`, so `Like 50i` and `Like 125` resolve `unknown`, and every
+transmission-scoped row is withheld from them. 255B's row on the Like owner's
+manual's clutch-lever defect applies to the combined Like 50i/150i edition,
+but could name only the 150i.
+
+Not added in 379: the combined owner's manual
+(`research/motodiag/pdf/kymco_like_150i_50i_om.pdf`) opens on a warning
+page, not a cover. Nothing in that session rendered further pages, and
+the Like entry's own evidence is rated medium (its PDF metadata reads
+"DOWNTOWN 125i(ok)").
+
+What would close it: the Like 50i's cover read from the rendered page and
+the transmission quoted from the same book, for `like 50i`; a Like 125
+document for `like 125`. With section E of the 2026-10-08 triage, the
 items that need sources first.
