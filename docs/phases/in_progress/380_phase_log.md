@@ -106,3 +106,19 @@ before each entry's `"title"` line, never by re-serialising a file.
 orphan count, 117 → 119. The whole-suite run came before the two ORPHANS
 entries existed (D6), so the count still read 117 then. Updated with its
 reason.
+
+### 2026-10-08 — The regression of record
+
+`wholetree.sh --full` on `a119c28`: 4116 passed.
+
+Regression of record: 10795 passed, 0 failed, 0 skipped, 0 errors at `a119c28` (28 min 11 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+### 2026-10-08 — 085's dry run
+
+The scope is generated from the seed (`380_scope.py`, committed with its
+output):
+- 1060 `known_issues` rows, each found by its prose identity, may change
+  `row_key` only, and only to its seed key;
+- `known_issue_models` loses 109 and gains 0;
+- the schema adds the key index, removes the prose index, and rewrites the
+  table.
