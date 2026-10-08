@@ -1,0 +1,44 @@
+Do this: start Phase 381, the content batch on the row key (row 381, 🔲; mark it 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. Phase 380 gave every known_issues row a frozen key (`row_key`), a key-targeted update (`update_known_issue_by_key`) and 2A's seed-parity check in deploy.py. This phase uses them for the content corrections in section C of docs/reports/2026-10-08_open_findings_triage.md. Read these first:
+- Row 381 in docs/ROADMAP.md, and section C of the triage report.
+- 380's documents (docs/phases/completed/380_*) and its handoff, docs/handoffs/2026-10-08_380_closed.md: the key, the operator's 1A, 2A and 3A, and the parity check.
+- The refute skill. Content that ships is refuted: at most three rounds; after round 3, wording defects go to one finding and factual or citation defects keep the row from shipping; a fix deletes a sentence rather than rewriting it where it can.
+- Each finding's entry in docs/FOLLOWUPS.md, for what would close it.
+
+The measured facts, taken 2026-10-08 on master at 3e1a826, with live on a backup-API copy at schema 85. Re-verify each at Step 0.
+- **F152:** row 5338 (`honda-honda-s-carburetted-chf50-charges-through-a-three-phase`) says the manual "prints the model only as CHF50, and it names no end year". The manual's cover names the CHF50/P/S Metropolitan, 2002–2006. The test that pins the absence changes with it.
+- **F153:** the 11 CVT-scoped rows pair SYM only as `Jet 100`, `Jet 50`, `Joyride` and `Symply 125`. The machines' own spellings, used elsewhere in the junction, include `Jet Euro 50`, `Joyride 125` and `Fiddle 50`. Gate 14 (`tests/test_phase258_gate14.py`) pins the gap and is written to fail when it closes.
+- **F156:** "Metropolitan" is in the model column of rows 4577, 4578, 4584, 4586, 4588, 4615 and 4616, yet a 2005 Metropolitan reaches none of the CHF50 rows. A 2002–2006 Metropolitan is a CHF50; a 2018 one is not. Gate 14 pins this too.
+- **F149:** three Honda `model = All` charging rows, `source = unverified` and with no applicability, reach every Honda scooter: 263 (`honda-regulator-rectifier-failure-the-universal-honda-problem`), 264 (`honda-stator-failure-diagnosis-and-replacement-all-honda-models`) and 270 (`honda-charging-system-preventive-testing-annual-check-protocol`). Two of them prescribe a procedure the scooters' own manuals do not use.
+- **F164:** `crash_support_v1` item 7 (checklist item 86) ships without the sentence on where "insurance" appears besides the papers.
+- **F171:** "Rocking play is loose adjustment" in `ppi_chassis_v1` item 2 (checklist item 18), and "corpus-wide" in row 4615 (`yamaha-what-the-regulator-record-shows-for-scooter-cvts-one`).
+- **F158's open part:** internal wording the census's four patterns miss, on live `known_issues` (title, description, symptoms, causes, fix_procedure, parts_needed): "this project" 13 hits in 10 rows; "corpus" 30 in 23 (one is F171's); "census" 6 in 4; "refut…" 4 in 4; "this file" 2 in 2. Three data files were never checked for rendering: `advanced/data/parts.json`, `hardware/compat_data/adapters.json` and `compat_matrix.json`.
+- **Live** equals a fresh seed build (380 measured it), so the parity check starts true.
+
+What to build:
+- **Each correction made in the seed and in live by key**, through migration 086: `update_known_issue_by_key` for known_issues, and the same discipline for checklist items. The dry run's parity check passes, so a fresh seed build and live stay equal.
+- **Each corrected row refuted as its own diff** under the refute skill's rule, before it joins the migration.
+- **Every factual change carries its source**, quoted, as 373, 375 and 376 recorded theirs. A claim with no source is deleted or labelled, not reworded into another unsourced claim.
+- **The F158 census widened** to the words this phase removes, so they cannot come back.
+- **Gate 14's pins for F153 and F156 inverted** to assert the fix.
+- **F149, F152, F153, F156, F164, F171 and F158 closed,** or each one's remainder named in its entry.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **F149:** source the three rows against Honda's own manuals and scope each to the machines those manuals cover, or narrow `model` from All (to what, on what evidence). Say which Honda documents are on disk.
+2. **F156:** how a 2002–2006 Metropolitan reaches the CHF50 rows while a 2018 one does not (a dated alias, a model spelling with years, or another way), and what each does to the other Metropolitan rows.
+3. **F158's wording:** the rule for each internal word (delete the sentence, or what replaces it), shown on two real rows each; and a decision for each data file, after checking whether the product renders it.
+4. **The live changes:** one migration with one approval for every corrected row, or one per finding. Either way the dry-run diff shows every changed field.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Live: migration 086 goes through the deploy skill. Each change to an existing row is a rule-1 stop, and my scoped approval will name the migration's own schema_version row too.
+
+Report:
+- **At Step 0:** the four questions, with options, the sources found and the re-verified counts.
+- **At the end:**
+  - each correction, with its source and its refute record;
+  - the parity check;
+  - the live outcome;
+  - the findings closed or narrowed;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step, my call.
