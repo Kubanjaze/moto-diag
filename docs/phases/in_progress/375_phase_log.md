@@ -90,3 +90,28 @@ and the operator answered "Yes, mine; apply it".
   the other two files pass in the window (70 passed with this file
   before the fix, 1 failed).
 - **Commit:** this entry's own commit.
+
+### Bug fix #2 — 2026-10-07
+
+- **Issue:** F196 widened (the operator's addition 3). At 2026-10-31
+  21:00 EDT, with the whole process's clock fixed, 8 tests of
+  `tests/test_phase274_pnl.py` fail, for example
+  `TestShopNet::test_net_subtracts_the_months_expenses`: `assert {} ==
+  {'shop': (49000, 5400, 13000, 30600)}`.
+- **Root cause:** `MONTH` and `TODAY` are the UTC clock's month and day
+  (`2026-11` at that moment). Since 377 the P&L counts the shop's month,
+  which is still `2026-10`, so the report the test asks for is empty. It is
+  the same family as bug fix #1: the real clock turned into a UTC day.
+- **Fix:** `TODAY` is the shop's day of now (`core.timestamps.local_day`)
+  and `MONTH` its first seven characters. The test still runs on today's
+  date, because the fixture's invoices are generated now; it no longer
+  reads a different calendar from the report.
+- **Files:** `tests/test_phase274_pnl.py`; `docs/FOLLOWUPS.md` (F196).
+- **Verified:** the method is libfaketime 0.9.13 (Homebrew), `TZ=America/New_York
+  faketime '<moment>'`. Its control: Python's local and UTC clocks,
+  `date.today()` and SQLite's `datetime('now')` all read the faked moment.
+  The census's six files plus 275's give 8 failed, 129 passed at
+  2026-10-31 21:00 before the fix, and 137 passed after it at that moment,
+  at 2026-10-07 21:00, at 2026-12-31 21:00 (the year line) and at
+  2026-11-01 00:30.
+- **Commit:** this entry's own commit.

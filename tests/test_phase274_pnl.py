@@ -15,13 +15,16 @@ from pathlib import Path
 
 import pytest
 
+from motodiag.core.timestamps import local_day
 from support.tax_on_record import record_tax
 from support.phase274 import (
     new_db, ok, refused, seed_bike, seed_customer, seed_shop, seed_user, sql,
 )
 
-MONTH = datetime.now(timezone.utc).strftime("%Y-%m")
-TODAY = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+# F196: the shop's day and month, as the report counts them; the UTC clock's
+# are tomorrow's on a US evening, and next month's on a month's last one.
+TODAY = local_day(datetime.now(timezone.utc).isoformat())
+MONTH = TODAY[:7]
 
 
 def _wo(db, customer, bike, mech, hours, title):
