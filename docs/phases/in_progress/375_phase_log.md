@@ -115,3 +115,28 @@ and the operator answered "Yes, mine; apply it".
   at 2026-10-07 21:00, at 2026-12-31 21:00 (the year line) and at
   2026-11-01 00:30.
 - **Commit:** this entry's own commit.
+
+### Bug fix #3 — 2026-10-07
+
+- **Issue:** with migration 084 written, 376's
+  `TestMigration083::test_only_the_two_rebuilt_tables_change_and_no_row_moves`
+  fails: `warranties`, `warranty_claims` and `warranty_claim_lines` show
+  as changed by "083".
+- **Root cause:** the test rolls back to 82 and then applies every pending
+  migration, so it measures 083 and every later migration together. That
+  is the same family as 373's bug fix #1 (274's migration test), the
+  working rule "a rollback peels every successor" read the other way.
+- **Fix:** the test applies 083 alone (`apply_migration(get_migration_by_version(83))`).
+- **The third bug, and the shared cause (the working rule).**
+  - #1 and #2 share one cause, a test turning the real clock into a UTC
+    day or month. They were searched by a rule and checked under a fixed
+    clock (F196, closed).
+  - #3 is another family. Its census: 22 test files call
+    `rollback_to_version` and `apply_pending_migrations`. Run with 084 in
+    place, 784 tests pass and only this one fails, so no other migration
+    test is bound to the head.
+- **Files:** `tests/test_phase376_settlement_export.py` (the two 083
+  hunks only; the `--deductible-cents 0` hunk goes with the build).
+- **Verified:** the 083 tests give 3 passed with 084 present. Before the
+  fix, 1 failed.
+- **Commit:** this entry's own commit.

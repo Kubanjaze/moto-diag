@@ -555,7 +555,9 @@ class TestTheRecord:
 
 class TestMigration083:
     def test_only_the_two_rebuilt_tables_change_and_no_row_moves(self, tmp_path):
-        from motodiag.core.migrations import apply_pending_migrations, rollback_to_version
+        from motodiag.core.migrations import (
+            apply_migration, get_migration_by_version, rollback_to_version,
+        )
 
         path = new_db(tmp_path, "m083.db")
         rollback_to_version(82, path)
@@ -584,7 +586,8 @@ class TestMigration083:
             path, "SELECT name, sql FROM sqlite_master")}
         before = schema()
 
-        apply_pending_migrations(path)
+        # 083 alone: what a later migration adds is not 083's change (Phase 375).
+        apply_migration(get_migration_by_version(83), path)
         after = schema()
         rebuilt = {"accounting_accounts", "accounting_exports"}
         new = {"accounting_export_files", "accounting_export_settlements",
