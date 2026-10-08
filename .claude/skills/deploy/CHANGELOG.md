@@ -1,5 +1,14 @@
 # deploy — changelog
 
+## 2026-10-08 — the diff sees a column a migration adds (Phase 380, bug fix #1)
+
+- **The defect.** `diff()` kept only the old table's columns. For a migration
+  adding a column, a scope `to` on it crashed (085's dry run), the exact diff
+  dropped its values, and a change in it was not a moved field.
+- **The change.** Both sides are lined up on the union of the two column
+  lists. `tests/test_phase380_deploy_new_column.py` gives 3 failed before
+  the fix and 3 passed after.
+
 ## 2026-10-08 — seed parity for content migrations (Phase 380, the operator's 2A)
 
 The operator: "With 2A, each content migration's dry run shows the changed

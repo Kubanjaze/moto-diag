@@ -122,3 +122,30 @@ output):
 - `known_issue_models` loses 109 and gains 0;
 - the schema adds the key index, removes the prose index, and rewrites the
   table.
+
+## Bug-fix register
+
+### Bug fix #1 — 2026-10-08
+
+- **Issue:** 085's dry run crashed in `check_scope` with
+  `ValueError: list.index(x): x not in list`. The scope's `"to"` names
+  `row_key`, a column the migration adds.
+- **Root cause:** `deploy.diff` kept only the old table's column list
+  (`cols = cols or cols_b`). For a migration that adds a column:
+  - a `to` on it could not be checked;
+  - `exact()` zipped the old columns with the new rows, so the exact diff
+    dropped the new column's values;
+  - a changed row's moved fields left it out.
+
+  It had not shown since Phase 357: no migration since added a column to a
+  table that has rows. The parity check's first run (D3) was the same
+  defect, met in the phase's own new code.
+- **Fix:** `diff()` lines both sides up on the union of the two column
+  lists (the new table's order first), with None where a side lacks a
+  column (`_aligned`).
+- **Files:** `.claude/skills/deploy/deploy.py`,
+  `tests/test_phase380_deploy_new_column.py`, the deploy skill's
+  `CHANGELOG.md`.
+- **Verified:**
+  - the new test gives 3 failed with the old `diff`, 3 passed with the fix;
+  - 79 deploy tests pass (357, 358, 359, 378, 379, 380's parity).

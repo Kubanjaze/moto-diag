@@ -120,12 +120,31 @@ def dump(path: pathlib.Path) -> dict[str, tuple[list[str], dict]]:
     return out
 
 
+def _aligned(rows: dict, src: list[str], cols: list[str]) -> dict:
+    """Each row as (rowid, its values in ``cols`` order), None for a column the
+    row's own table does not have."""
+    return {k: (r[0], *(dict(zip(src, r[1:])).get(c) for c in cols)) for k, r in rows.items()}
+
+
 def diff(a: dict, b: dict) -> dict:
+    """Every table's rows that were added, removed or changed, by rowid.
+
+    Phase 380, bug fix #1: when a migration adds or drops a column, both
+    sides are lined up on the union of the two column lists (the new table's
+    order first), with None where a side has no such column. The diff kept
+    only the old table's columns, so a new column's values were cut from the
+    exact diff by `zip`, a `to` on it could not be checked, and a change in it
+    was not counted as a moved field.
+    """
     res = {}
     for t in sorted(set(a) | set(b)):
-        cols, ra = a.get(t, ([], {}))
+        cols_a, ra = a.get(t, ([], {}))
         cols_b, rb = b.get(t, ([], {}))
-        cols = cols or cols_b
+        cols = list(cols_b) + [c for c in cols_a if c not in cols_b] if cols_b else list(cols_a)
+        if cols_a and list(cols_a) != cols:
+            ra = _aligned(ra, cols_a, cols)
+        if cols_b and list(cols_b) != cols:
+            rb = _aligned(rb, cols_b, cols)
         added = sorted(set(rb) - set(ra))
         removed = sorted(set(ra) - set(rb))
         changed = sorted(k for k in set(ra) & set(rb) if ra[k] != rb[k])
