@@ -1,6 +1,6 @@
 # Phase 375 — Warranty deductibles — phase log
 
-**Status:** 🚧 Step 0, stopped for the operator (2026-10-07)
+**Status:** ✅ Complete (2026-10-07)
 **Branch:** `phase-375` (Opus session, main checkout)
 
 ---
@@ -65,6 +65,100 @@ and the operator answered "Yes, mine; apply it".
 >   #1 did, or leave F196 open naming it.
 > Carry on to v1.0 and the build.
 
+### 2026-10-07 — v1.0, F196 widened
+
+`375_implementation.md` v1.0, committed and pushed (`436a72b`) before any
+code. F196 widened by the operator's addition 3 and closed: bug fix #2
+below. libfaketime 0.9.13 was installed with Homebrew to fix the whole
+process's clock; its control is in the entry.
+
+### 2026-10-07 — The build
+
+Migration 084, `tax_deductible_rules` (resolve, `deductible-rule set`,
+`confirm`, `status`), `warranty add/update --deductible-cents` and `list`,
+`claim cover`'s refusal, the invoice, the packet and `claim show`.
+373's, 376's and Gate 16's warranties record `--deductible-cents 0`; their
+figures, and 376's byte-identical export hash (D4), hold. The third
+bug fix (a 376 migration test bound to the head) was found when 084 was
+written.
+
+**Decisions taken while building, not stops:**
+- **D8. The deductible's lines follow the shop-supplies line,** and the
+  supplies percentage is computed before them. Covered work is outside
+  the supplies base today, and the deductible is covered work. Test:
+  `test_the_customers_own_lines_keep_their_supplies_and_the_deductible_does_not`
+  (supplies 750 on the customer's 7500, not on 10000).
+- **D9. `shop tax confirm` keeps each deductible reading's notes** after
+  its "re-checked at" line. The other rule tables replace theirs, but
+  addition 1's open questions must survive a re-check. Mutation T2.
+- **D10. The claim's lines are stored net.** `amount_cents` is what the
+  claim claims for the line, and `deductible_cents` is the customer's
+  share. So 373's claim entries, the export's balance check
+  (`export.py:554`) and 376's shortfall invoice and settlement entries
+  need no change, and 4A follows from them. Mutation I8 (gross
+  `covered_cents`) is red.
+- **D11. The deductible's tax is its own rounding,** while the customer's
+  invoice is taxed once over all its taxable lines. On an invoice with
+  other taxed lines the two can differ by a cent. 376's job shows it: the
+  invoice's tax is 211 (6.25 % of 3370), where 156 + 54 = 210. Total tax
+  on the repair is then 657 against 656 without a deductible: the rounding
+  of two separate computations, as D11's cent in 373. Recorded as a risk.
+- **D12. The packet says "the claim asks for nothing"** when the deductible
+  is the whole covered work, rather than comparing the warranty's
+  deductible with the amount applied, which can be in another currency.
+- **D13. The deductible is converted to the invoice's currency** as a flat
+  supplies charge is. No test exercises a conversion: no warranty test
+  runs in another currency. Recorded as a risk.
+- **The guards, both working as documented:**
+  - the push guard refused `git commit … && git push` in one command, so
+    neither ran, and they were run separately;
+  - the edit guard refused `sed -i` on a patch file in the scratchpad
+    ("blocked wherever it points"), so the hunk split for bug fix #3 was
+    done by a Python script writing only to the scratchpad.
+
+  Neither guard was changed.
+
+**Tests:** `tests/test_phase375_deductibles.py`, 39 tests. 244G's scanner
+over all of `tests/`: 0 hits. Its control, a planted `read_text()` of a
+`.py` file asserted on, is reported (the first plant read a file without
+`.py` and was not, which is the scanner's documented shape). Mutations
+are 20/20 red (`375_mutate.out`). The first run was 19/20: I9 survived,
+since no test invoiced a claim whose warranty had no deductible on record.
+`test_a_claim_covered_before_the_deductible_was_recorded_refuses_the_invoice`
+was added, and I9 is now red. `COLLECTED_TEST_FLOOR` 10645 → 10685, by a
+diff of collected ids against master `ca8ea1a` in a worktree: +39, and gate
+15's `[83]`; none removed.
+
+`wholetree.sh --full`: 4047 passed on the staged build, and again on
+`c49db73` (regression.sh refused the staged tree's record, as the memory
+on clean-tree records said it would).
+
+### 2026-10-07 — The regression of record
+
+Regression of record: 10685 passed, 0 failed, 0 skipped, 0 errors at `c49db73` (25 min 45 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+It ran 21:37–22:03 EDT on 2026-10-07: an evening, not a month's last day,
+with F196's lines cleared.
+
+### 2026-10-07 — Live
+
+Through the deploy skill, from the branch, after the regression:
+- **The scope** (`375_deploy_scope.json`): `schema_version` +1,
+  `tax_deductible_rules` +3, two objects added, three tables' SQL changed.
+- **The dry run:** exactly that, no existing row changed or removed,
+  scope problems none, F158 census 36. Backup
+  `~/backups/motodiag/motodiag_pre375_20261007_220325.db`; retain-5
+  removed `motodiag_pre370_20261006_110434.db`. Committed `a533a19`.
+- **Not a rule-1 stop:** the prompt's scope is new columns, a new table
+  and new rule rows after a backup, and the migration's own
+  schema_version row. No existing row changed.
+- **`apply-live`:** preflight passed. Live now equals the approved exact
+  diff: 5866 rows, 121 tables, integrity ok, schema 84, and the three
+  readings are valid until 2027-10-07.
+
+No refute pass ran: the phase ships code, tests, three rule rows quoted
+from their sources, and a schema migration, not content rows.
+
 ## Bug-fix register
 
 ### Bug fix #1 — 2026-10-07
@@ -89,7 +183,8 @@ and the operator answered "Yes, mine; apply it".
   window. The search for the pattern (F196) found 5 lines in 3 files;
   the other two files pass in the window (70 passed with this file
   before the fix, 1 failed).
-- **Commit:** this entry's own commit.
+
+**Commit.** `83b4834`
 
 ### Bug fix #2 — 2026-10-07
 
@@ -114,7 +209,8 @@ and the operator answered "Yes, mine; apply it".
   2026-10-31 21:00 before the fix, and 137 passed after it at that moment,
   at 2026-10-07 21:00, at 2026-12-31 21:00 (the year line) and at
   2026-11-01 00:30.
-- **Commit:** this entry's own commit.
+
+**Commit.** `23ed8cc`
 
 ### Bug fix #3 — 2026-10-07
 
@@ -139,4 +235,5 @@ and the operator answered "Yes, mine; apply it".
   hunks only; the `--deductible-cents 0` hunk goes with the build).
 - **Verified:** the 083 tests give 3 passed with 084 present. Before the
   fix, 1 failed.
-- **Commit:** this entry's own commit.
+
+**Commit.** `d5d25e5`

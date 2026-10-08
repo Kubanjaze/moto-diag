@@ -1,6 +1,12 @@
 # Phase 375 — Warranty deductibles
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-07
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-07 (v1.0 the same day)
+
+**Outcome (v1.1).** A deductible is recorded on the warranty, charged on
+the customer's invoice by covered kind, taxed by a reading per
+jurisdiction and payer, and taken off the claim, in both export files and
+in every settlement. F196 widened and closed. Migration 084 live.
+Regression 10685 passed / 0 failed at `c49db73`.
 
 ---
 
@@ -217,23 +223,82 @@ chosen); a tax-inclusive deductible (2B, not chosen).
 
 ## Planned items
 
-- [ ] Migration 084, its rollback, a migration test
-- [ ] `warranty add/update --deductible-cents`, `list`; `claim cover` refusal
-- [ ] the invoice: split, cap, the deductible's tax, the claim net, the customer's lines
-- [ ] `tax_deductible_rules`: resolve, `deductible-rule set`, `confirm`, `status`
-- [ ] the packet and `claim show`
-- [ ] tests: both files, settlements, refusals; existing tests on `--deductible-cents 0`
-- [ ] F196 widened: the census, the month-end check, fixes or the finding left open
-- [ ] mutations, 244G scanner, the floor
-- [ ] the deploy (dry run, live from the branch), the regression, the close-out, the handoff
+- [x] Migration 084, its rollback, a migration test
+- [x] `warranty add/update --deductible-cents`, `list`; `claim cover` refusal
+- [x] the invoice: split, cap, the deductible's tax, the claim net, the customer's lines
+- [x] `tax_deductible_rules`: resolve, `deductible-rule set`, `confirm`, `status`
+- [x] the packet and `claim show`
+- [x] tests: both files, settlements, refusals; existing tests on `--deductible-cents 0`
+- [x] F196 widened: the census, the month-end check, fixes (F196 closed)
+- [x] mutations, 244G scanner, the floor
+- [x] the deploy (dry run, live from the branch), the regression, the close-out, the handoff
+
+## Deviations from Plan
+
+1. **Three bug fixes, none planned:**
+   - #1 and #2 are F196: two tests turned the real clock into a UTC day
+     or month (275's export test, and 274's P&L);
+   - #3: 376's migration-083 test applied every later migration too.
+
+   Each has its own commit and register entry. The third prompted the
+   working rule's search for a shared cause. #1 and #2 share one, already
+   searched by rule. #3 is another family, and its census of 22
+   roll-back-then-apply test files found no other.
+2. **F196's census is 9 lines in 6 files** by the stated rule, where v1.0
+   expected the operator's 7 in 4. The rule counts a year (`281_vin_year`)
+   and a day made from a module constant (`274_quotes_variance:106`). It
+   does not count 171:233, which is a timestamp, though its test was run.
+3. **libfaketime was installed** (Homebrew) to fix the whole process's
+   clock. 370's frozen-clock plugin replaces only the session modules'
+   `datetime`.
+4. **A test was added after the first mutation run.** I9 survived it: a
+   claim whose warranty lost its deductible after covering was not
+   tested.
+5. **Decisions D8–D13, taken while building** (the log): the supplies
+   percentage before the deductible lines; the readings' notes kept on a
+   re-check; the claim's lines stored net; the deductible's own rounding;
+   the packet's currency-free wording; the deductible converted like a
+   flat charge.
+6. **`regression.sh` refused the staged tree's `--full` record,** so
+   `--full` ran a second time on the committed `c49db73`.
+
+Not deviations, recorded for the reader: no export code changed (D10);
+no refute pass ran (code, tests and three quoted rule rows, not content
+rows).
+
+## Results
+
+| what | result |
+|---|---|
+| the worked example (`other`) | customer: labour 1630 + parts 870, tax 54, total 2554; claim: 13370 + 7130, tax 446, claimed 20946; together 23500 and tax 500, as without a deductible |
+| `maker_with_bike`, `shop_contract` | customer 2554 (tax 54); claim 20500, no tax |
+| QuickBooks | customer journal: Dr A/R 25.54; Cr labour 16.30, parts 8.70, tax 0.54. Claim journal: Dr A/R (plan) 209.46; Cr labour 133.70, parts 71.30, tax 4.46. Ledger equals the no-deductible case: A/R 235.00, labour 150.00, parts 80.00, tax 5.00 |
+| Xero | customer invoice: 16.30 with tax 0, 8.70 with tax 0.54; plan's invoice: 133.70 with tax 0, 71.30 with tax 4.46 |
+| settlements | denial: shortfall invoice 13370 + 7130 + tax 446 = 20946, so the customer pays 23500 in all. Part approval at 18000: 1880 + 1003 + 63 = 2946. QuickBooks `-CR`: Dr 133.70, 71.30, 4.46 / Cr 209.46, or Dr 18.80, 10.03, 0.63 / Cr 29.46; absorbed, Dr write-offs. Xero credit notes: −133.70, −75.76; −18.80, −10.66; absorbed −209.46, −29.46 |
+| the cap | a 30000 deductible on 23000 of covered work: the customer pays 23000 + 500; the claim is 0 and is not exported |
+| the readings | `tax_deductible_rules`, US-MA, three rows, basis `reading`, effective 2009-08-01, checked 2026-10-07, valid until 2027-10-07: `other` (LR 79-19, 85-8), `maker_with_bike` (LR 03-8, 85-8), `shop_contract` (830 CMR 64H.1.1(5)(g), LR 80-17, 85-8); notes per addition 1 |
+| tests | `tests/test_phase375_deductibles.py` 39; three existing helpers record `--deductible-cents 0` |
+| mutations | 20/20 red (`375_mutate.out`) |
+| 244G scanner | all of `tests/`: 0 hits; its planted control reported |
+| F196 | 9 lines in 6 files; under libfaketime at 2026-10-31 21:00 EDT, 8 failed in 274's P&L before bug fix #2, then 137 passed there and at three other moments; closed |
+| `wholetree.sh --full` | 4047 passed at `c49db73` |
+| `COLLECTED_TEST_FLOOR` | 10645 → 10685 (+39 new, +1 gate 15's rollback case for 084) |
+| migration 084 | dry run: `schema_version` +1, `tax_deductible_rules` +3, no row changed or removed. **Live:** equals the approved exact diff; 5866 rows, 121 tables, integrity ok, schema 84; backup `motodiag_pre375_20261007_220325.db` |
+| findings | F196 filed and closed |
+
+Regression of record: 10685 passed, 0 failed, 0 skipped, 0 errors at `c49db73` (25 min 45 s wall, `python -m pytest -n auto --dist load`, exit 0)
 
 ## Risks
 
 - **The tax on a deductible is a reading** of sources that do not name
   it. For the maker's warranty and a shop contract, it adds tax where
-  the sources leave the question open.
+  the sources leave the question open. For the shop's accountant to
+  confirm before a real warranty job.
 - **The deductible's tax is its own rounding, and the invoice's tax is
-  rounded once over all its taxable lines.** On an invoice with other
-  taxed lines they can differ by a cent, as D11's can.
+  rounded once over all its taxable lines** (D11). On an invoice with
+  other taxed lines they can differ by a cent.
 - **1A charges every claim once.** A plan charging once per visit, or a
-  deductible including tax, is not modelled (named in the handoff).
+  deductible that includes tax (2B), is not modelled; named in the
+  handoff.
+- **No test converts a deductible to another currency** (D13).
+- **No file has been tried in a real QuickBooks or Xero company** (275).
