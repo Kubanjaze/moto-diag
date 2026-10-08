@@ -290,7 +290,8 @@ def _claims_on_wo(wo_id: int, db_path: Optional[str] = None) -> list[dict]:
     its lines stay off the order's invoice when that is generated again."""
     with get_connection(db_path) as conn:
         claims = [dict(r) for r in conn.execute(
-            "SELECT c.*, w.repair_payer, w.provider FROM warranty_claims c "
+            "SELECT c.*, w.repair_payer, w.provider, "
+            "w.deductible_cents AS warranty_deductible_cents FROM warranty_claims c "
             "JOIN warranties w ON w.id = c.warranty_id WHERE c.work_order_id = ? "
             "AND (c.status != 'denied' OR c.settlement IS NOT NULL) ORDER BY c.id",
             (wo_id,),
@@ -316,6 +317,7 @@ def _price_claims(
     decision,
     shop_id: int,
     invoice_day,
+    in_invoice_currency,
     db_path: Optional[str] = None,
 ) -> tuple[list[dict], float, dict[int, int]]:
     """Price each claim on the work order, before anything is written.
@@ -325,6 +327,13 @@ def _price_claims(
     :class:`InvoiceGenerationError` when a claim's coverage is not recorded
     or covers more than the order holds, and :class:`InvoiceTaxNotOnRecord`
     when no rule says whether its tax goes on the claim.
+
+    Phase 375: the warranty's deductible, capped at the claim's covered
+    work, is split over its lines by amount; each line's ``amount_cents`` is
+    what the claim claims for it, the line less its share. The deductible is
+    the customer's (``deductible_by_type``), taxed on its taxable share when
+    the jurisdiction's deductible rule for the payer is on record, and the
+    claim's tax is the tax on the whole covered work less the deductible's.
     """
     claims = _claims_on_wo(wo_id, db_path=db_path)
     covered_hours = 0.0
@@ -362,6 +371,12 @@ def _price_claims(
             )
 
     rate = Decimal(str(decision.rate.value))
+
+    def taxed(cents_by_type: dict[str, int]) -> int:
+        taxable = sum(cents_by_type[t] for t in cents_by_type
+                      if t in decision.taxable_types)
+        return int((Decimal(taxable) * rate).quantize(Decimal(1), ROUND_HALF_UP))
+
     for claim in claims:
         by_type = {"labor": 0, "parts": 0}
         for line in claim["lines"]:
@@ -369,16 +384,45 @@ def _price_claims(
                     else unit_cents_by_wop[int(line["work_order_part_id"])])
             line["amount_cents"] = _line_total_cents(float(line["quantity"]), unit)
             by_type[line["line_type"]] += line["amount_cents"]
-        claim["covered_cents"] = by_type["labor"] + by_type["parts"]
         claim["tax_cents"] = 0
         claim["tax_source"] = None
+        claim["deductible_by_type"] = {"labor": 0, "parts": 0}
+        claim["deductible_cents"] = None
+        claim["deductible_tax_cents"] = None
+        claim["deductible_tax_source"] = None
+        claim["deductible_capped"] = False
         if claim["lines"] and claim["repair_payer"] is None:
             raise InvoiceGenerationError(
                 f"warranty claim #{claim['id']}'s warranty does not record who owes the "
                 f"repair; record it with `motodiag shop warranty update "
                 f"{claim['warranty_id']} --payer …`"
             )
+        if claim["lines"] and claim["warranty_deductible_cents"] is None:
+            raise InvoiceGenerationError(
+                f"warranty claim #{claim['id']}'s warranty does not record its "
+                f"deductible; record it with `motodiag shop warranty update "
+                f"{claim['warranty_id']} --deductible-cents N` (0 for none)"
+            )
         if claim["lines"]:
+            on_record = in_invoice_currency(int(claim["warranty_deductible_cents"]))
+            covered = by_type["labor"] + by_type["parts"]
+            applied = min(on_record, covered)
+            claim["deductible_capped"] = on_record > covered
+            shares = _split_cents(applied, [line["amount_cents"] for line in claim["lines"]])
+            for line, share in zip(claim["lines"], shares):
+                line["deductible_cents"] = share
+                line["amount_cents"] -= share
+                claim["deductible_by_type"][line["line_type"]] += share
+            claim["deductible_cents"] = applied
+            claim["deductible_tax_cents"] = 0
+            if applied:
+                try:
+                    deductible_rule = tax_mod.resolve_deductible_rule(
+                        shop_id, invoice_day, claim["repair_payer"], db_path=db_path)
+                except tax_mod.TaxNotOnRecord as exc:
+                    raise InvoiceTaxNotOnRecord(str(exc)) from exc
+                claim["deductible_tax_source"] = deductible_rule.source_text
+                claim["deductible_tax_cents"] = taxed(claim["deductible_by_type"])
             try:
                 rule = tax_mod.resolve_warranty_rule(shop_id, invoice_day,
                                                      claim["repair_payer"],
@@ -387,9 +431,8 @@ def _price_claims(
                 raise InvoiceTaxNotOnRecord(str(exc)) from exc
             claim["tax_source"] = rule.source_text
             if rule.value:
-                taxable = sum(by_type[t] for t in by_type if t in decision.taxable_types)
-                claim["tax_cents"] = int((Decimal(taxable) * rate)
-                                         .quantize(Decimal(1), ROUND_HALF_UP))
+                claim["tax_cents"] = taxed(by_type) - claim["deductible_tax_cents"]
+        claim["covered_cents"] = sum(line["amount_cents"] for line in claim["lines"])
         claim["amount"] = claim["covered_cents"] + claim["tax_cents"]
         old = claim.get("amount_claimed_cents")
         if claim["status"] != "draft" and old is not None and old != claim["amount"]:
@@ -402,7 +445,13 @@ def _price_claims(
 
 def _claim_note(claim: dict) -> str:
     parts = [line["description"] or line["line_type"] for line in claim["lines"]]
-    return f"Warranty claim #{claim['id']} covers: {'; '.join(parts)}"
+    note = f"Warranty claim #{claim['id']} covers: {'; '.join(parts)}"
+    if claim["deductible_cents"]:
+        note += (f"; its deductible, {claim['deductible_cents'] / 100:,.2f}, is charged "
+                 f"here")
+        if claim["deductible_capped"]:
+            note += " (capped at the covered work)"
+    return note
 
 
 def _split_cents(total: int, weights: list[int]) -> list[int]:
@@ -425,14 +474,19 @@ def _record_claim_prices(claims: list[dict], invoice_id: int,
         for claim in claims:
             for line in claim["lines"]:
                 conn.execute(
-                    "UPDATE warranty_claim_lines SET amount_cents = ? WHERE id = ?",
-                    (line["amount_cents"], line["id"]),
+                    "UPDATE warranty_claim_lines SET amount_cents = ?, "
+                    "deductible_cents = ? WHERE id = ?",
+                    (line["amount_cents"], line["deductible_cents"], line["id"]),
                 )
             conn.execute(
                 "UPDATE warranty_claims SET invoice_id = ?, covered_cents = ?, "
-                "tax_cents = ?, tax_source = ?, amount_claimed_cents = ? WHERE id = ?",
+                "tax_cents = ?, tax_source = ?, amount_claimed_cents = ?, "
+                "deductible_cents = ?, deductible_tax_cents = ?, "
+                "deductible_tax_source = ? WHERE id = ?",
                 (invoice_id, claim["covered_cents"], claim["tax_cents"],
-                 claim["tax_source"], claim["amount"], claim["id"]),
+                 claim["tax_source"], claim["amount"], claim["deductible_cents"],
+                 claim["deductible_tax_cents"], claim["deductible_tax_source"],
+                 claim["id"]),
             )
 
 
@@ -593,7 +647,7 @@ def generate_invoice_for_wo(
         int(p.get("effective_unit_cents", 0) or 0)) for p in parts_lines}
     claims, covered_hours, covered_qty = _price_claims(
         wo_id, hours, rate_cents, parts_lines, unit_cents_by_wop, decision,
-        wo["shop_id"], invoice_day, db_path=db_path,
+        wo["shop_id"], invoice_day, in_invoice_currency, db_path=db_path,
     )
     customer_hours = _hours_left(hours, covered_hours)
     claim_notes = [_claim_note(c) for c in claims if c["lines"]]
@@ -702,6 +756,22 @@ def generate_invoice_for_wo(
         )
         subtotal_cents += misc_cents
         by_type["misc"] += misc_cents
+        sort += 1
+
+    # --- Phase 375: each claim's deductible, by covered kind (after the
+    # supplies line, so the supplies percentage stays on the customer's own work)
+    for claim in claims:
+        for kind, label, item_type in (("labor", "labour", InvoiceLineItemType.LABOR),
+                                       ("parts", "parts", InvoiceLineItemType.PARTS)):
+            cents = claim["deductible_by_type"][kind]
+            if not cents:
+                continue
+            _add_line_cents(invoice_id, item_type,
+                            f"Warranty deductible, claim #{claim['id']}: {label}",
+                            1.0, cents, sort_order=sort, db_path=db_path)
+            subtotal_cents += cents
+            by_type[kind] += cents
+            sort += 1
 
     # --- Tax + totals (Phase 281: the taxable lines, at the recorded rate) ---
     taxable_cents = sum(by_type[t] for t in decision.taxable_types)

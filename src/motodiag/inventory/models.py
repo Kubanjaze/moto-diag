@@ -70,3 +70,6 @@ class Warranty(BaseModel):
     # Phase 373: who owes a repair under it (accounting.tax.PAYERS); it
     # decides whether the tax on covered work goes on the claim.
     repair_payer: Optional[str] = None
+    # Phase 375: what the customer pays on each covered repair, in cents;
+    # None is not recorded, 0 is none.
+    deductible_cents: Optional[int] = Field(default=None, ge=0)

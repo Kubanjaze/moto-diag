@@ -81,7 +81,8 @@ def _work_order(db, hours=2.0, parts=((4000, 2), (2500, 1)), bike=1) -> tuple[in
 
 def _warranty(db, payer="other", provider="Honda Protection Plan", bike=1) -> int:
     args = ["shop", "warranty", "add", "--bike", bike, "--coverage", "extended",
-            "--start", "2024-03-01", "--end", "2027-02-28", "--mileage-limit", "40000"]
+            "--start", "2024-03-01", "--end", "2027-02-28", "--mileage-limit", "40000",
+            "--deductible-cents", "0"]  # Phase 375: none, so 373's figures hold
     if provider:
         args += ["--provider", provider]
     if payer:

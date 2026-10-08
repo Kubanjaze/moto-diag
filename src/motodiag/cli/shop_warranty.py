@@ -29,6 +29,14 @@ _PAYER_HELP = ("Who owes a repair under it: maker_with_bike (a maker's warranty 
                "It decides whether the tax on covered work goes on the claim.")
 
 
+_DEDUCTIBLE_HELP = ("What the customer pays on each covered repair, in cents (0 for "
+                    "none). The invoice charges it and takes it off the claim.")
+
+
+def _deductible(cents: Optional[int]) -> str:
+    return "not recorded" if cents is None else f"${cents / 100:,.2f}"
+
+
 def _iso(value) -> Optional[str]:
     return value.date().isoformat() if value is not None else None
 
@@ -57,8 +65,10 @@ def register_warranty(shop_group: click.Group) -> None:
     @click.option("--terms", default=None)
     @click.option("--payer", type=click.Choice(tax_mod.PAYERS), default=None,
                   help=_PAYER_HELP)
+    @click.option("--deductible-cents", type=click.IntRange(min=0), default=None,
+                  help=_DEDUCTIBLE_HELP)
     def warranty_add(bike_identifier, coverage, provider, start, end,
-                     mileage_limit, terms, payer) -> None:
+                     mileage_limit, terms, payer, deductible_cents) -> None:
         """Record a warranty on a bike."""
         init_db()
         bike = _resolve_bike_slug_or_id(bike_identifier)
@@ -68,6 +78,7 @@ def register_warranty(shop_group: click.Group) -> None:
             vehicle_id=bike["id"], coverage_type=CoverageType(coverage),
             provider=provider, start_date=_iso(start), end_date=_iso(end),
             mileage_limit=mileage_limit, terms=terms, repair_payer=payer,
+            deductible_cents=deductible_cents,
         ))
         get_console().print(f"[green]Recorded warranty #{warranty_id} ({coverage}) "
                             f"on bike id={bike['id']}.[/green]")
@@ -77,14 +88,18 @@ def register_warranty(shop_group: click.Group) -> None:
     @click.option("--payer", type=click.Choice(tax_mod.PAYERS), default=None,
                   help=_PAYER_HELP)
     @click.option("--provider", default=None, help="Who gives the warranty.")
+    @click.option("--deductible-cents", type=click.IntRange(min=0), default=None,
+                  help=_DEDUCTIBLE_HELP)
     def warranty_update(warranty_id: int, payer: Optional[str],
-                        provider: Optional[str]) -> None:
-        """Record who owes a repair under a warranty, or who gives it."""
+                        provider: Optional[str], deductible_cents: Optional[int]) -> None:
+        """Record who owes a repair under a warranty, who gives it, or its deductible."""
         init_db()
-        if payer is None and not (provider or "").strip():
-            raise click.ClickException("give --payer, --provider, or both")
+        if payer is None and not (provider or "").strip() and deductible_cents is None:
+            raise click.ClickException("give --payer, --provider, --deductible-cents, "
+                                       "or more than one")
         if not warranty_repo.update_warranty(warranty_id, payer,
-                                             provider.strip() if provider else None):
+                                             provider.strip() if provider else None,
+                                             deductible_cents):
             raise click.ClickException(f"No warranty #{warranty_id}.")
         console = get_console()
         if payer:
@@ -93,6 +108,10 @@ def register_warranty(shop_group: click.Group) -> None:
         if provider and provider.strip():
             console.print(f"[green]Warranty #{warranty_id}: given by "
                           f"{provider.strip()}.[/green]")
+        if deductible_cents is not None:
+            console.print(f"[green]Warranty #{warranty_id}: the customer pays a "
+                          f"deductible of {_deductible(deductible_cents)} on each covered "
+                          f"repair.[/green]")
 
     @warranty_group.command("list")
     @click.option("--bike", "bike_identifier", required=True)
@@ -111,7 +130,7 @@ def register_warranty(shop_group: click.Group) -> None:
             return
         table = Table(title=f"Warranties on bike id={bike['id']}")
         for col in ("ID", "Coverage", "Provider", "Start", "End", "Mileage limit",
-                    "Repair owed by", "Claims"):
+                    "Repair owed by", "Deductible", "Claims"):
             table.add_column(col)
         for w in rows:
             limit = w.get("mileage_limit")
@@ -119,6 +138,7 @@ def register_warranty(shop_group: click.Group) -> None:
                           w.get("start_date") or "—", w.get("end_date") or "—",
                           f"{limit:,}" if limit is not None else "—",
                           w.get("repair_payer") or "not recorded",
+                          _deductible(w.get("deductible_cents")),
                           str(w["claim_count"]))
         console.print(table)
 
@@ -293,7 +313,8 @@ def register_warranty(shop_group: click.Group) -> None:
         console = get_console()
         for key in ("id", "status", "claim_number", "warranty_id", "coverage_type",
                     "vehicle_id", "work_order_id", "description", "invoice_id",
-                    "covered_cents", "tax_cents", "amount_claimed_cents",
+                    "covered_cents", "deductible_cents", "deductible_tax_cents",
+                    "tax_cents", "amount_claimed_cents",
                     "amount_approved_cents", "opened_at", "submitted_at",
                     "decided_at", "paid_at", "settlement", "shortfall_cents",
                     "shortfall_invoice_id"):

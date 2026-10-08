@@ -116,7 +116,8 @@ def _job(db, payer="other", labour_only=False) -> tuple[int, int]:
     wo, wops = _work_order(db)
     ok(db, "shop", "warranty", "add", "--bike", 1, "--coverage", "extended",
        "--start", "2024-03-01", "--end", "2027-02-28", "--mileage-limit", "40000",
-       "--provider", PLAN, "--payer", payer)
+       "--provider", PLAN, "--payer", payer,
+       "--deductible-cents", "0")  # Phase 375: none, so 376's figures hold
     warranty = sql(db, "SELECT MAX(id) FROM warranties")[0][0]
     ok(db, "shop", "warranty", "claim", "open", "--warranty", warranty, "--wo", wo,
        "--description", "Front brake pulls left")

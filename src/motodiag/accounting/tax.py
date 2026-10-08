@@ -49,6 +49,11 @@ PAYER_LABELS: dict[str, str] = {
 SETTLEMENT_RULE = "absorb"
 SETTLEMENT_LABEL = "a warranty shortfall the shop absorbs"
 
+# Phase 375: the tax on a warranty deductible charged to the customer, by
+# payer (``tax_deductible_rules``). The one treatment on record taxes its
+# taxable share, the lines of the types the shop's rules tax.
+DEDUCTIBLE_TAX = "taxable_share"
+
 # The operator, 2026-09-30: a regulation rate or rule is valid for 12 months
 # from the date its source was last checked.
 REGULATION_RECHECK_MONTHS = 12
@@ -374,9 +379,29 @@ def confirm_regulation(code: str, checked_on: str, source_url: str,
                  rule["effective_from"], until, rule["source_title"], rule["source_url"],
                  rule["source_clause"], checked.isoformat(), f"re-checked at {url}"),
             )
+        # Phase 375: and the deductible rules.
+        deductible_rules = conn.execute(
+            "SELECT * FROM tax_deductible_rules r WHERE jurisdiction_id = ? "
+            "AND provenance = 'regulation' AND id = (SELECT id FROM tax_deductible_rules x "
+            "WHERE x.jurisdiction_id = r.jurisdiction_id AND x.payer = r.payer "
+            "AND x.provenance = 'regulation' ORDER BY checked_on DESC, id DESC LIMIT 1)",
+            (jur["id"],),
+        ).fetchall()
+        for rule in deductible_rules:
+            conn.execute(
+                "INSERT INTO tax_deductible_rules (jurisdiction_id, shop_id, payer, "
+                "deductible_tax, basis, effective_from, valid_until, source_title, "
+                "source_url, source_clause, checked_on, provenance, notes) "
+                "VALUES (?, NULL, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'regulation', ?)",
+                (jur["id"], rule["payer"], rule["deductible_tax"], rule["basis"],
+                 rule["effective_from"], until, rule["source_title"], rule["source_url"],
+                 rule["source_clause"], checked.isoformat(),
+                 f"re-checked at {url}. {rule['notes'] or ''}".strip()),
+            )
     return {"code": jur["code"], "checked_on": checked.isoformat(), "valid_until": until,
             "rules": len(rules), "warranty_rules": len(warranty_rules),
-            "settlement_rules": len(settlement_rules)}
+            "settlement_rules": len(settlement_rules),
+            "deductible_rules": len(deductible_rules)}
 
 
 def set_shop_warranty_rule(shop_id: int, payer: str, taxed_on_claim: bool,
@@ -430,6 +455,33 @@ def set_shop_settlement_rule(shop_id: int, effective_from: str, valid_until: str
         ).lastrowid
 
 
+def set_shop_deductible_rule(shop_id: int, payer: str, effective_from: str,
+                             valid_until: str, source_title: str, checked_on: str,
+                             source_url: Optional[str] = None,
+                             source_clause: Optional[str] = None, basis: str = "stated",
+                             user_id: Optional[int] = None,
+                             db_path: Optional[str] = None) -> int:
+    """Record a shop's own reading that a warranty deductible's taxable share
+    is taxed to the customer, for a repair owed by ``payer`` (Phase 375)."""
+    if payer not in PAYERS:
+        raise TaxRecordError(f"a payer is one of {', '.join(PAYERS)}; got {payer!r}")
+    if basis not in ("stated", "reading"):
+        raise TaxRecordError(f"basis is stated or reading; got {basis!r}")
+    start, end = _check_period(effective_from, valid_until)
+    checked = parse_day(checked_on, "the date the source was checked").isoformat()
+    jur = _require_shop_jurisdiction(shop_id, db_path)
+    with get_connection(db_path) as conn:
+        return conn.execute(
+            "INSERT INTO tax_deductible_rules (jurisdiction_id, shop_id, payer, "
+            "deductible_tax, basis, effective_from, valid_until, source_title, "
+            "source_url, source_clause, checked_on, provenance, entered_by_user_id) "
+            "VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'shop', ?)",
+            (jur["id"], shop_id, payer, DEDUCTIBLE_TAX, basis, start, end,
+             _require_text(source_title, "a source"), source_url, source_clause,
+             checked, user_id),
+        ).lastrowid
+
+
 # ---------------------------------------------------------------------------
 # Resolving and checking
 # ---------------------------------------------------------------------------
@@ -454,6 +506,7 @@ _PICK_FROM = {
     "tax_line_rules": "SELECT * FROM tax_line_rules WHERE ",
     "tax_warranty_rules": "SELECT * FROM tax_warranty_rules WHERE ",
     "tax_settlement_rules": "SELECT * FROM tax_settlement_rules WHERE ",
+    "tax_deductible_rules": "SELECT * FROM tax_deductible_rules WHERE ",
 }
 
 
@@ -583,6 +636,37 @@ def _missing_settlement_rule(conn, jur: dict, shop_id: int, on: str) -> str:
             f"--shop {shop_id}`)")
 
 
+def resolve_deductible_rule(shop_id: int, on_date: date, payer: str,
+                            db_path: Optional[str] = None) -> TaxItem:
+    """The reading that a warranty deductible's taxable share is taxed to the
+    customer, for a repair owed by ``payer``, valid on ``on_date``, or
+    TaxNotOnRecord (Phase 375)."""
+    on = on_date.isoformat()
+    jur = shop_jurisdiction(shop_id, db_path=db_path)
+    if jur is None:
+        raise TaxNotOnRecord([
+            f"shop {shop_id} has no tax jurisdiction (set it with `motodiag shop tax "
+            f"jurisdiction set --shop {shop_id} --code CODE`)"
+        ])
+    with get_connection(db_path) as conn:
+        row = _pick(conn, "tax_deductible_rules", jur["id"], shop_id, on, payer=payer)
+        if row is None:
+            raise TaxNotOnRecord([_missing_deductible_rule(conn, jur, shop_id, on, payer)])
+    return _item(row, payer, 1.0)
+
+
+def _missing_deductible_rule(conn, jur: dict, shop_id: int, on: str, payer: str) -> str:
+    label = PAYER_LABELS[payer]
+    stale = _pick(conn, "tax_deductible_rules", jur["id"], shop_id, on, payer=payer,
+                  valid_only=False)
+    if stale is not None:
+        return (f"the {jur['code']} rule for the tax on a deductible under {label} was "
+                f"valid until {stale['valid_until']} and must be re-checked")
+    return (f"no {jur['code']} rule on record for the tax on a deductible under {label} "
+            f"(record the shop's reading with `motodiag shop tax deductible-rule set "
+            f"--shop {shop_id} --payer {payer}`)")
+
+
 def _missing_rate(conn, jur: dict, shop_id: int, on: str) -> str:
     stale = _pick(conn, "tax_rates", jur["id"], shop_id, on, valid_only=False)
     if stale is not None:
@@ -620,6 +704,9 @@ class TaxStatus:
     # and ``settlement_not_on_record`` when none was ever recorded.
     settlement_rule: Optional[TaxItem] = None
     settlement_not_on_record: bool = False
+    # Phase 375: the tax on a warranty deductible, by payer.
+    deductible_rules: dict[str, TaxItem] = field(default_factory=dict)
+    deductible_not_on_record: list[str] = field(default_factory=list)
 
     @property
     def ok(self) -> bool:
@@ -631,6 +718,7 @@ class TaxStatus:
         dates += [r.valid_until for r in self.rules.values()]
         dates += [r.valid_until for r in self.warranty_rules.values()]
         dates += [self.settlement_rule.valid_until] if self.settlement_rule else []
+        dates += [r.valid_until for r in self.deductible_rules.values()]
         return min(dates) if dates else None
 
 
@@ -692,5 +780,17 @@ def tax_status(shop_id: int, today: date, db_path: Optional[str] = None) -> TaxS
             failures.append(_missing_settlement_rule(conn, jur, shop_id, on))
         else:
             settlement_not_on_record = True
+        deductible_rules: dict[str, TaxItem] = {}
+        deductible_not_on_record: list[str] = []
+        for payer in PAYERS:
+            row = _pick(conn, "tax_deductible_rules", jur["id"], shop_id, on, payer=payer)
+            if row is not None:
+                deductible_rules[payer] = _item(row, payer, 1.0)
+            elif _pick(conn, "tax_deductible_rules", jur["id"], shop_id, on, payer=payer,
+                       valid_only=False) is not None:
+                failures.append(_missing_deductible_rule(conn, jur, shop_id, on, payer))
+            else:
+                deductible_not_on_record.append(payer)
     return TaxStatus(shop_id, jur, rate, rules, failures, not_on_record, warranty_rules,
-                     warranty_not_on_record, settlement_rule, settlement_not_on_record)
+                     warranty_not_on_record, settlement_rule, settlement_not_on_record,
+                     deductible_rules, deductible_not_on_record)

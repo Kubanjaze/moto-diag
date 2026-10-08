@@ -204,6 +204,39 @@ def register_tax(shop_group: click.Group) -> None:
                             f"owed when the shop absorbs its shortfall, valid until "
                             f"{valid_until}.[/green]")
 
+    @tax_group.group("deductible-rule")
+    def deductible_rule_group() -> None:
+        """The tax on a warranty deductible charged to the customer, by who owes the repair."""
+
+    @deductible_rule_group.command("set")
+    @click.option("--shop", "shop_id", type=int, required=True)
+    @click.option("--payer", required=True, type=click.Choice(tax_mod.PAYERS),
+                  help="maker_with_bike, other (someone else's plan or contract), "
+                       "or shop_contract (a contract this shop sold).")
+    @click.option("--effective", required=True)
+    @click.option("--valid-until", required=True)
+    @click.option("--source-title", required=True)
+    @click.option("--source-url", default=None)
+    @click.option("--clause", default=None, help="The section or clause relied on.")
+    @click.option("--checked-on", required=True)
+    @click.option("--reading", is_flag=True, default=False,
+                  help="The source does not state this; it is your reading of it.")
+    def deductible_rule_set(shop_id: int, payer: str, effective: str, valid_until: str,
+                            source_title: str, source_url: Optional[str],
+                            clause: Optional[str], checked_on: str, reading: bool) -> None:
+        """Record that a warranty deductible's taxable share is taxed to the
+        customer, from your jurisdiction's source."""
+        init_db()
+        try:
+            tax_mod.set_shop_deductible_rule(shop_id, payer, effective, valid_until,
+                                             source_title, checked_on, source_url, clause,
+                                             "reading" if reading else "stated")
+        except tax_mod.TaxRecordError as e:
+            raise click.ClickException(str(e)) from e
+        get_console().print(f"[green]Shop {shop_id}: a deductible under "
+                            f"{tax_mod.PAYER_LABELS[payer]} is taxed on its taxable share, "
+                            f"valid until {valid_until}.[/green]")
+
     @tax_group.command("confirm")
     @click.option("--jurisdiction", "code", required=True)
     @click.option("--checked-on", required=True, help="When the regulator's pages were read.")
@@ -217,8 +250,9 @@ def register_tax(shop_group: click.Group) -> None:
             raise click.ClickException(str(e)) from e
         get_console().print(
             f"[green]{res['code']}: rate, {res['rules']} rules and "
-            f"{res['warranty_rules']} warranty rules and {res['settlement_rules']} "
-            f"settlement rule(s) checked on "
+            f"{res['warranty_rules']} warranty rules, {res['settlement_rules']} "
+            f"settlement rule(s) and {res['deductible_rules']} deductible rule(s) "
+            f"checked on "
             f"{res['checked_on']}; must be re-checked by {res['valid_until']}.[/green]"
         )
 
@@ -241,6 +275,8 @@ def register_tax(shop_group: click.Group) -> None:
                 "warranty_not_on_record": st.warranty_not_on_record,
                 "settlement_rule": st.settlement_rule.__dict__ if st.settlement_rule
                 else None,
+                "deductible_rules": {k: v.__dict__ for k, v in st.deductible_rules.items()},
+                "deductible_not_on_record": st.deductible_not_on_record,
             }, indent=2, default=str))
         else:
             if st.jurisdiction:
@@ -280,6 +316,17 @@ def register_tax(shop_group: click.Group) -> None:
                 console.print("A warranty shortfall the shop absorbs: no rule on record; "
                               "exporting one whose claim carried tax is refused until one "
                               "is recorded.")
+            for payer in tax_mod.PAYERS:
+                label = tax_mod.PAYER_LABELS[payer]
+                if payer in st.deductible_rules:
+                    rule = st.deductible_rules[payer]
+                    console.print(f"A deductible under {label}: its taxable share is taxed "
+                                  f"to the customer, must be re-checked by "
+                                  f"{rule.valid_until}. {_describe(rule)}")
+                elif payer in st.deductible_not_on_record:
+                    console.print(f"A deductible under {label}: no rule on record; an "
+                                  f"invoice charging one is refused until one is "
+                                  f"recorded.")
             for failure in st.failures:
                 console.print(f"[red]FAILS: {failure}[/red]")
         if not st.ok:
