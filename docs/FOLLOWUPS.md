@@ -19,12 +19,12 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F197** (this file). The
+At the time of writing the highest assigned is **F198** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
 
-### F115
+### F115 — CLOSED by Phase 255B (already fixed; heading never marked)
 
 **A row is unreachable to the owners it was written for**
 
@@ -40,6 +40,8 @@ retrieved by a Harley owner.** The general half is the useful half and it is
 scoped to the marques that need it least. Not fixed in 255 — the row ships
 unscoped on the transmission axis, which is correct, but its `make` column is a
 separate defect. Splitting the general half out belongs to 255B.
+
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Re-measured on a backup-API copy of live: `Harley-Davidson Road King`, `BMW R1200GS`, `Yamaha Bolt` and `Honda PCX 150` each have row 4605 among `known_issues_for_vehicle`'s candidates and keep it through `rows_for_machine`.
 
 ### F116
 
@@ -113,7 +115,7 @@ gearbox type, which is wrong for a belt-drive Harley in the other direction.
 
 ---
 
-### F119
+### F119 — CLOSED by its own text (2026-09-21); the Filly moved to F198
 
 **~~Honda's US scooter owner's manuals name no transmission at all~~ — WRONG, and wrong in this project's signature way.**
 
@@ -212,7 +214,9 @@ the search term was wrong, not the corpus.** `Filly LX 50` stays open
 separately: its document exists and its attribution is what Phase 254 could
 not settle.
 
-### F120
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Its own text closes Beverly 250 and Vespa 946 as unobtainable; its one open part, the Filly LX 50's attribution, which this entry said "stays open separately" and no other finding carried, moves to F198, so closing this entry drops nothing.
+
+### F120 — CLOSED as a record (nothing to fix)
 
 **Piaggio uses "direct drive" to mean a CVT**
 
@@ -229,6 +233,8 @@ corroborates Phase 254's vocabulary row.
 A documentation hazard rather than a runtime one, because nothing in the code
 reads document text to classify anything. Recorded in the ADR and in the lookup
 entry itself so the next author does not resolve it the wrong way.
+
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). A documentation hazard by its own words: nothing reads document text to classify. Recorded in the ADR and the lookup entry.
 
 ### F121 — CLOSED by Phase 257B (moto-diag `70c3f23`, mobile `0e1ed53`), 2026-09-24
 
@@ -251,7 +257,7 @@ adding one is in the same request body.
 table holds 10 machines and none of them is a CVT machine, so the exposure is
 entirely future — whatever a user adds next.
 
-### F122
+### F122 — CLOSED by Phase 256 (D7)
 
 **One corrupt applicability value stops diagnosis**
 
@@ -280,7 +286,9 @@ with a logged error. Only reachable by writing to the column outside
 `add_known_issue`, which validates — a JSON column has no CHECK constraint, so
 that path exists.
 
-### F123
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). `knowledge/retrieval.py`'s `_row_applies_or_excluded`: a corrupt row is excluded, logged by id and counted, and diagnosis goes on (the option this entry asked the operator about).
+
+### F123 — CLOSED by Phase 256 (its own text)
 
 **`predict_failures` is a third retrieval door and still carries the Phase 254 over-reach.**
 
@@ -336,7 +344,9 @@ applies the filter, so a fourth door cannot leak silently". That exists now:
 the repo layer names `known_issues` in SQL, and plants a bypass against
 itself on every run.
 
-### F124
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Closed in its own text, 2026-09-21; the heading was never marked.
+
+### F124 — CLOSED by its own text (2026-09-21)
 
 **Eleven schema pins shadow `SCHEMA_VERSION`, and the lint was suppressed eleven times.**
 
@@ -442,7 +452,9 @@ the existence check reads through `code_of()`, which blanks comments and
 docstrings; and the scanner was re-run over the whole `tests/` tree — no
 offenders.
 
-### F125
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Closed in its own text; the guard is `tests/test_f124_schema_pin_discipline.py`.
+
+### F125 — CLOSED by roadmap_check R5
 
 **The ROADMAP_AUTHORITY contract drifted between its two copies, which is the drift class it exists to prevent.**
 
@@ -477,7 +489,9 @@ this went unnoticed. **Not fixed here:** it needs a decision about where the
 check runs, and a skip that is counted rather than invisible is exactly the
 close-out gate discipline this project already learned once.
 
-### F126
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). `.claude/skills/closeout/roadmap_check.py` R5, "the two copies of ROADMAP_AUTHORITY.md are identical", runs with every suite and on every push since 2026-09-24, and says when the mobile repository is absent.
+
+### F126 — CLOSED by `8e7db70` and Phase 256
 
 **The fourth retrieval door has been dead since it was written, and a bare `except` hid it.**
 
@@ -562,6 +576,8 @@ this commit exists to establish the **before** number, and changing the
 retrieval shape in the same breath would make before and after
 incomparable.
 
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). The column (`fix_procedure`) and the bare `except` were fixed in `8e7db70`: `_kb_candidates_for_vehicle` now swallows only "no such table" and re-raises anything else. The substring match went with 256's chokepoint (`rows_for_machine`).
+
 ### F127
 
 **Four real documents on disk cannot be read, and 32 more files are download debris.**
@@ -602,7 +618,7 @@ hypothetical — it is how the Beverly 250 "no document" verdict was reached**,
 over 227 readable files while 36 were silently excluded, three of them
 Beverly-related.
 
-### F128
+### F128 — CLOSED by Phase 255B
 
 **Four rows name a machine their own applicability excludes — and one is a contradiction on disk.**
 
@@ -640,6 +656,8 @@ stay as they are** — closed-unobtainable per F119.
 **Guarded permanently**, not phase-scoped:
 `tests/test_phase256_chokepoint.py::TestNoRowExcludesAMachineItNames` pins
 these four with their reasons and fails on a fifth.
+
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). 4609 no longer names the Filly and 4615 was split, as the 256 guard's comments record; Beverly 250 and Vespa 946 are closed-unobtainable under F119; `TestNoRowExcludesAMachineItNames` stays.
 
 ---
 
@@ -943,7 +961,7 @@ filed is not the filing**, which is the same class as every census error this
 week: the claim was checked against what it sat next to rather than against
 what produced it.
 
-### F136
+### F136 — CLOSED as a record (its lesson is a working rule)
 
 **"Every consumer" was enumerated over `src/` and missed a canonical pinned in a test**
 
@@ -968,6 +986,8 @@ scopes over `src/` **and** `tests/`, because a pinned literal in a test is a
 consumer — it is the one that fails the build. Cheap to do: the sixteen were
 found by AST; the seventeenth would have been found by the same pass with
 `tests/` in its roots.
+
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). The lesson, that a search's scope is part of its claim, is the working-rules index's "A negative claim is a claim about a search: state its vocabulary…, its scope and its count".
 
 ### F137 — CLOSED by Phase 255D fix #8, `b934926` (2026-09-22)
 
@@ -1016,7 +1036,7 @@ shared, moves to a project `CLAUDE.md` or a skill folder, or is archived —
 and for the change log, whether it moves to its own file. Filed as a
 follow-up by instruction; deliberately not done in 255D.
 
-### F139
+### F139 — CLOSED by Phase 257
 
 **A parallel session's manual-coverage Step 0 was directionally right and numerically loose**
 
@@ -1042,6 +1062,8 @@ the number" rule, and the reason 257's SOP forbids spelling-match counting.
 figures of record, with the method stated. Note for readers: 255D's own
 documents mention F138–F140 as the `finding` fixture's fabricated numbers;
 those mentions describe the fixture and do not cite this entry or F140.
+
+**CLOSED 2026-10-08** (the operator's approval of the 2026-10-08 open-findings triage, section A). Its closing condition is met: `257_step0.md` S0-1 builds the census on the figures of record (605 reproduced).
 
 ### F140
 
@@ -3145,3 +3167,24 @@ the approved diff, and says when the cause is a later migration (live's
 schema_version above the phase's); verify_phase fails check 8 on it for
 the phase being closed. A known-bad fixture, an approved diff missing one
 live row, must turn both red.
+
+### F198
+
+**The Kymco Filly LX 50's transmission rests on a document whose attribution is unestablished**
+
+Carried out of F119 on 2026-10-08, when F119 was closed under the
+operator's approval of the open-findings triage (section A). F119's last
+paragraph said "`Filly LX 50` stays open separately", and no other finding
+carried it.
+
+The Kymco Agility 50 service manual carries CVT data ("Type Non-stage
+transmission · Operation Automatic centrifugal type") and prints `FILLY LX
+50` as a header on 21 of its 183 pages. Phase 254 found those pages
+alternate by odd and even folio, the signature of a recycled template, with
+provenance unestablished in two chapters. So no alias was added, and the
+Filly resolves to no transmission. Row 4609 no longer names it (255B, F128).
+
+What would close it: a Kymco document that is the Filly LX 50's own (an
+owner's manual, a parts catalogue or a spec sheet naming it on its cover),
+read for its transmission. It belongs with the triage's section E, the
+items that need sources first.
