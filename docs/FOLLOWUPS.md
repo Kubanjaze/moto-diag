@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F195**.
+At the time of writing the highest assigned is **F196**.
 
 ---
 
@@ -3081,3 +3081,26 @@ What would close it: the jurisdiction's own ruling on parts furnished
 free under a denied warranty claim, recorded per jurisdiction as a rule
 with its source; and, if it taxes their cost, a cost basis for the parts
 and a line in the export.
+
+### F196
+
+**A Phase 275 export test takes the UTC day as the export's range, so it fails every evening in a US time zone**
+
+Found at Phase 375's Step 0 (2026-10-07, 20:01 EDT), when `wholetree.sh`
+fast mode went red on a docs-only commit:
+`tests/test_phase275_accounting_export.py::TestQuickBooksOnline::test_an_invoice_made_by_the_invoice_command_exports`
+exports the range `datetime.now(timezone.utc).date()`. Since Phase 377 the
+export selects invoices by the shop's day (the server's zone, F192), so
+from 20:00 to 24:00 EDT the UTC day is tomorrow and the export refuses:
+"no invoices to export for shop id=1 from 2026-10-08 to 2026-10-08". It
+passed at 19:5x EDT the same evening (the opening commit's fast run, 1582
+passed). The product is right; the test reads the clock with no fixed one.
+
+The search: `now(timezone.utc).date()`, `utcnow().date()`,
+`utcnow().strftime` and `now(timezone.utc).strftime("%Y-%m-%d")` over
+`tests/` find 5 lines in 3 files (171 analytics ×3, 274 P&L ×1, this one).
+Run at 20:02 EDT, the three files give 1 failed, 70 passed: only this test.
+
+What would close it: the test exports the shop's day of the invoice's own
+`issued_at` (`core.timestamps.local_day`), so it never reads the clock to
+pick a range; it passes in the evening window.
