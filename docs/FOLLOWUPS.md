@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F201** (this file). The
+At the time of writing the highest assigned is **F202** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3323,3 +3323,31 @@ What would close it:
   own naming.
 
 Then a test that "Piaggio LX50" resolves CVT and reaches the 7.
+
+### F202
+
+**User-visible text calls the knowledge base's sources "the research library", a name only the build uses: 40 hits across checklist items, workflow templates and known issues**
+
+Found by Phase 381's Step 0 (`381_step0.md`, S0-4), counting F158's words
+on a backup-API copy of live at schema 85. The phrase is not among F158's
+words and no census pattern matches it.
+- `checklist_items`: 22 hits in 16 rows (14, 17, 21, 24, 43, 49, 51, 55,
+  64, 66, 69, 79, 81, 86, 87, 93);
+- `workflow_templates`: 3, in templates 12, 13 and 14;
+- `known_issues`: 15 hits in 14 rows (5337–5343, 6397–6403).
+
+An example: `crash_support_v1` item 7 (checklist item 86) tells the
+mechanic "The research library holds no such standard."
+
+What it affects: a mechanic reading `motodiag workflow show` or `kb show`
+meets a library they cannot open, as the reason a template sets no
+standard or a row stops where it does. Unlike F158's words, most of these
+sentences carry the row's scope ("no document in the research library
+sets a photo documentation standard"), so deleting them would lose a
+limit the reader needs.
+
+Not fixed in 381: the operator, 2026-10-08: "file the "research library"
+finding". It is outside F158's listed words and 381's scope. What would
+close it: a wording rule for the phrase (name the documents, or say what
+MotoDiag's sources do not include), applied by migration and refuted as
+its own diff, with the F158 census widened to the phrase.

@@ -1,6 +1,6 @@
 # Phase 381 — The content batch on the row key — phase log
 
-**Status:** 🚧 Step 0, stopped for the operator (2026-10-08)
+**Status:** 🚧 In progress (2026-10-08)
 **Branch:** `phase-381` (Opus session, main checkout)
 
 ---
@@ -118,3 +118,23 @@ year, and the year filter is per row.
   outcome.
 
 Stopped for the operator's choices.
+
+**The operator's choices, verbatim (2026-10-08), in this session:**
+
+> 1A. 2A, with the alias window 2002–2007: the same manual's carburettor
+> table names the '06–'07 model (NVK00J); later years stay open. 3A, and
+> file the "research library" finding. 4A. One change: if F164's wording
+> is killed in the refute, it doesn't ship and F164 stays open with the
+> refute's reason, not closed.
+
+So:
+- F149's three rows are retired.
+- The Metropolitan alias covers 2002–2007. It cites the carburettor
+  table's "’06 – ’07 model NVK00J" beside the cover.
+- F158 follows 3A, and "research library" gets its own finding.
+- One migration, 086, with one approval.
+- F164 closes only if its sentence survives the refute.
+
+**Guard, recorded (rule 6):** the edit guard blocked a command that
+appended to this log and ran `sed -i` on its status line. Nothing ran.
+The edits were made with the Edit tool, and the guard is unchanged.
