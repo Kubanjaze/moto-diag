@@ -331,6 +331,23 @@ rollback live is not expected to run, so the guards stand. Forward, live's
 three rows carry their real keys from 380 (measured), so the delete by
 key removes them.
 
+**Build committed** as `33ef12e` and pushed, after `wholetree.sh --full`
+on the staged tree passed (4155 passed). `regression.sh` then refused,
+because it wants a `--full` record of the committed HEAD. So `--full` ran
+on `33ef12e` (4155 passed, record written) before it.
+
+**The first regression: 10836 passed, 2 failed, at `33ef12e`.** Both are
+in `tests/test_phase33_honda_electrical.py`, which is outside the
+whole-tree set:
+- the Honda electrical file's count (10 → 7);
+- its critical rows: the file's only two were F149's 263 and 264, so 0
+  remain.
+
+Both pins move, with the reason beside each. This is a pin the phase
+missed, not a defect in shipped code, so it is not entered in the
+bug-fix register. No other test reads the file. The regression of record
+is re-run on the commit that carries the fix.
+
 ## Refuter pass
 
 Rounds 1–3 of the refute skill, run by Opus subagents, each reading its sources itself (renders where layout mattered). Files A, B, C1, C2, D are round 1; r2 round 2; r3 round 3; E and E2 the compat_matrix diffs' rounds 1 and 2. Only rows that rest on a document page are here; the wording checks follow.
