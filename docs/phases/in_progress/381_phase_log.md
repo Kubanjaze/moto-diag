@@ -348,6 +348,11 @@ missed, not a defect in shipped code, so it is not entered in the
 bug-fix register. No other test reads the file. The regression of record
 is re-run on the commit that carries the fix.
 
+**Regression of record** (after `wholetree.sh --full` on `7dd69c9`, 4155
+passed, record written):
+
+Regression of record: 10838 passed, 0 failed, 0 skipped, 0 errors at `7dd69c9` (32 min 58 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
 ## Refuter pass
 
 Rounds 1–3 of the refute skill, run by Opus subagents, each reading its sources itself (renders where layout mattered). Files A, B, C1, C2, D are round 1; r2 round 2; r3 round 3; E and E2 the compat_matrix diffs' rounds 1 and 2. Only rows that rest on a document page are here; the wording checks follow.
