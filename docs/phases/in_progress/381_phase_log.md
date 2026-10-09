@@ -353,6 +353,34 @@ passed, record written):
 
 Regression of record: 10838 passed, 0 failed, 0 skipped, 0 errors at `7dd69c9` (32 min 58 s wall, `python -m pytest -n auto --dist load`, exit 0)
 
+**Dry run** (`deploy.py dryrun 381`, committed as `500497e`):
+- **Backup:** `motodiag_pre381_20261009_022024.db`.
+- **Scope problems:** none, seed parity included.
+- **Changes:**
+  - `known_issues`: 48 changed, 3 removed;
+  - `known_issue_models`: 48 added;
+  - `known_issue_makes`: 3 removed;
+  - `checklist_items`: 2 changed;
+  - `dtc_codes`: 1 changed;
+  - `schema_version`: 1 added.
+- **F158 census on the copy:** 41 hits, 0 of them build references.
+
+Stopped for the operator's approval (rule 1).
+
+**The operator's approval, verbatim (2026-10-09), in this session:**
+
+> Approved: apply 086 live exactly as the committed dry-run diff (500497e)
+> shows: the changed fields of the 48 known_issues rows; rows 263, 264 and
+> 270 removed, with their 3 known_issue_makes pairs; the 48
+> known_issue_models pairs added; checklist items 18 and 86; DTC row 1132;
+> and 086's own schema_version row. If anything else changes, stop and show
+> me.
+>
+> Separately, file a finding: Honda rows filed for all models (e.g. 231,
+> the inline-4 cam chain tensioner) still reach scooters, and with 263 and
+> 264 gone they take the prompt's critical places (Ruckus CVT rows 4 → 2,
+> Grom naming row 1 → 0).
+
 ## Refuter pass
 
 Rounds 1–3 of the refute skill, run by Opus subagents, each reading its sources itself (renders where layout mattered). Files A, B, C1, C2, D are round 1; r2 round 2; r3 round 3; E and E2 the compat_matrix diffs' rounds 1 and 2. Only rows that rest on a document page are here; the wording checks follow.
