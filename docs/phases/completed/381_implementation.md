@@ -1,6 +1,6 @@
 # Phase 381 — The content batch on the row key
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-08
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-09 (v1.0 2026-10-08)
 
 ---
 
@@ -136,21 +136,76 @@ goes in the log's `## Refuter pass`.
 
 ## Planned items
 
-- [ ] the seed and data-file edits, each refuted
-- [ ] F164's wording refuted
-- [ ] `381_gen086.py`, `migration_086_rows.py`, migration 086
-- [ ] the alias and the three doors
-- [ ] the parity check for removed rows
-- [ ] the widened census
-- [ ] tests, mutations, the floor
-- [ ] `wholetree.sh --full`, the regression of record
-- [ ] 086's dry run, shown to the operator; the apply on their words
-- [ ] the findings closed or narrowed; the close-out, the handoff
+- [x] the seed and data-file edits, each refuted
+- [x] F164's wording refuted
+- [x] `381_gen086.py`, `migration_086_rows.py`, migration 086
+- [x] the alias and the three doors
+- [x] the parity check for removed rows
+- [x] the widened census
+- [x] tests, mutations, the floor
+- [x] `wholetree.sh --full`, the regression of record
+- [x] 086's dry run, shown to the operator; the apply on their words
+- [x] the findings closed or narrowed; the close-out, the handoff
 
 ## Deviations
 
-(none yet)
+- **More text than Step 0 counted.**
+  - Five `model` columns (4548–4552) carried "corpus".
+  - `parts.json` and `adapters.json` held 22 sentences, not 13.
+  - `compat_matrix.json` held 2 build references Step 0's grep missed: it
+    required 60 characters before each match.
+  - The P0328 DTC said "this project".
+
+  All are fixed under 3A and refuted (log). "Census" stayed, as 3A said.
+- **The census** skips `row_key` (855's frozen key says "corpus") and
+  treats `guidance_interactions` (the model's logged answers) as
+  operational.
+- **The refute record is two tables.** The 33 claims that rest on a
+  document page are the `## Refuter pass`, which passes C1–C7. The 99
+  wording checks against the seed row have no page to cite, so they are a
+  second table under the same rules except C4.
+- **Round-1 kills changed some fixes** (log):
+  - the Zero platform names: Cypher II and III are Zero's, so the
+    parentheticals went;
+  - two facts restored without their provenance: the ELAST disagreement
+    and the R variants' 21-inch band;
+  - the DMV clause of F164's sentence;
+  - "not in MotoDiag" for the SX-F, which MotoDiag does carry.
+- **The rollback was written three times before the first commit.** All
+  three are one cause: a SQL rollback cannot know what its forward step
+  deleted. It now has three guards: the seed sibling, the prose identity,
+  and live's id where it is free. It restores a live copy exactly.
+- **F149's retirement moved the prompt's safety floor.** Rows 263 and 264
+  were critical. A Ruckus keeps 2 CVT rows, not 4, and a Grom loses the
+  naming row. Gate 14's unscoped-row pin moved to the chokepoint. F204 was
+  filed at the operator's word.
+- **A test outside the whole-tree set** (phase 33's Honda electrical
+  pins) failed the first regression. It was fixed in `7dd69c9`, and the
+  regression of record re-ran.
+- **F202, F203 and F204 filed.**
 
 ## Results
 
-(at v1.1)
+- **Live (migration 086, under the operator's scoped approval, verbatim in
+  the log):**
+  - `known_issues`: 48 changed, 3 removed;
+  - `known_issue_models`: 48 added;
+  - `known_issue_makes`: 3 removed;
+  - `checklist_items`: 2 changed;
+  - `dtc_codes`: 1 changed;
+  - `schema_version`: 86.
+
+  Live equals the approved exact diff, and `verify-live 381` exits 0 with
+  integrity and foreign keys ok. Live 5758 → 5801 rows; 1057 known
+  issues. Live equals a fresh seed build after the apply (0 differences).
+  Backup: `motodiag_pre381_20261009_022024.db`.
+- **The F158 census on live:** 41 hits, 0 of them build references. The
+  41 are 31 BMW model names and 10 hits in operational rows. Before the
+  phase, the same census on a copy of live found 59.
+- **Tests:**
+  - `test_phase381_content_batch.py`, 37 tests;
+  - the inverted pins in Gate 14, 354, 262, 359, 255C, 33 and 209B;
+  - 14/14 mutations red;
+  - 244G 19 passed;
+  - the floor 10798 → 10838.
+- **Regression of record:** 10838 passed, 0 failed at `7dd69c9`.

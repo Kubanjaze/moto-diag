@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F203** (this file). The
+At the time of writing the highest assigned is **F204** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -1277,7 +1277,7 @@ phase). What would close it: take "newest" by the Date column (or by the
 header's own phase), with a known-bad fixture where the newest row is not
 first.
 
-### F149
+### F149 — CLOSED by Phase 381 (migration 086, live 2026-10-09): the three rows retired
 
 **Three unverified Honda `model = All` charging rows reach every Honda scooter at tier 1, and two of them prescribe a procedure the scooters' own manuals do not use**
 
@@ -1307,6 +1307,8 @@ service manuals and scope them to the machines those manuals cover, or
 narrow their `model` from `All`, by migration, with a test that a Honda
 scooter no longer receives them at `make_wide`.
 
+
+**Closed by Phase 381 (migration 086, live 2026-10-09, under the operator's scoped approval; `381_phase_log.md`).** The operator chose 1A: the three rows are retired, from the seed and from live by key with their make pairs. No Honda motorcycle service manual is on disk to source them against, and the scooter manuals that are (PCX150 pp. 20-4, 6-6, 20-9; CHF50 p. 15-5) contradict their procedure; the refute re-read each quote. `test_phase381_content_batch.py` holds that no Honda `model = All` seed row is about the charging system, and Gate 14 that F149's titles reach no Ruckus prompt. A consequence the gate measured is F204.
 ### F150
 
 **The manual the corpus calls the SYM Symply 125 never names a model beyond "MODEL ABA"**
@@ -1357,7 +1359,7 @@ not a borrowed model) or specific to the model it names; source it or label
 it; migrate; and test that a row titled "all makes" either reaches other
 makes or no longer says so.
 
-### F152
+### F152 — CLOSED by Phase 381 (migration 086, live 2026-10-09)
 
 **Phase 354's CHF50 charging row says the manual "prints the model only as CHF50, and it names no end year"; the manual's cover prints both a name and an end year**
 
@@ -1386,7 +1388,9 @@ cover names the CHF50/P/S Metropolitan, 2002–2006; the tables reach after '07)
 change the test to pin the modelling rather than the absence, and re-load.
 Phase 353's own CHF50 row states the cover as rendered.
 
-### F153
+
+**Closed by Phase 381 (migration 086, live 2026-10-09, under the operator's scoped approval; `381_phase_log.md`).** Row 5338 now reads "The manual's cover reads 'CHF50/P/S', 'METROPOLITAN™' and '2002–2006', and its carburettor table also lists an 'After ’07 model' (p. 1-6)." (cover rendered, PDF p. 1; text p. 1-6, PDF p. 10), refuted in round 1. 354's test pins the modelling (`model` CHF50) and the quote instead of the absence.
+### F153 — CLOSED by Phase 381 (migration 086, live 2026-10-09)
 
 **The CVT rows pair SYM under spellings the track's other layers do not use, so no SYM scooter reaches a CVT row at tier 0**
 
@@ -1418,6 +1422,8 @@ that a SYM query reaches a CVT row at tier 0. Pinned by
 `tests/test_phase258_gate14.py`, whose SYM tests are written to fail
 when this closes.
 
+
+**Closed by Phase 381 (migration 086, live 2026-10-09, under the operator's scoped approval; `381_phase_log.md`).** The 8 CVT rows that pair SYM gain `SYM Jet Euro 50`, `Jet Euro 100`, `Fiddle 50`, `Joyride 125`, `150` and `200` in their model columns (sources: SYM 7326249 "JET 50/100 series and JET EURO 50/100 series", the Joyride manual 7429958, the Fiddle 50 service manual; title pages rendered in the refute). Live gained the 48 junction pairs. Gate 14's `TestTheSymException` now asserts the tier-0 path; each SYM machine holds 10 tier-0 pairs.
 ### F154 — CLOSED by Phase 379
 
 **"Fiddle 50" is missing from TRANSMISSION_LOOKUP, so the machine 354 and 353 name at tier 0 resolves transmission `unknown` and loses the scoped CVT layer entirely**
@@ -1484,7 +1490,7 @@ Pinned by `tests/test_phase258_gate14.py`.
 
 **CLOSED 2026-10-08** (Phase 379, the operator's approval of the 2026-10-08 triage, section B). `relevance_tokens` makes plurals singular by a stated rule; the LX 50 keeps its carburettor row. Its wider effect (51 of 132 measured prompts, about 19 swaps better and 5 worse) is in `379_phase_log.md`, and the scorer's word-sense noise is F200.
 
-### F156
+### F156 — CLOSED by Phase 381 (code, 2026-10-09): a dated Metropolitan alias
 
 **A 2002–2006 Metropolitan is a CHF50, but the query "Metropolitan" reaches none of the CHF50 rows — and reaches the CVT recall rows at tier 0**
 
@@ -1513,6 +1519,8 @@ that a 2005 Metropolitan reaches the CHF50 carburettor row at tier 0
 and a 2018 Metropolitan does not. Pinned by
 `tests/test_phase258_gate14.py`.
 
+
+**Closed by Phase 381, the operator's 2A with the window 2002–2007.** `vehicle_resolver.DATED_MODEL_ALIASES` holds Honda "Metropolitan" 2002–2007 → CHF50 (the CHF50/P/S METROPOLITAN™ cover, "2002–2006", and the carburettor table's "’06 – ’07 model NVK00J", p. 1-6). `known_issues_for_vehicle(…, year=)` makes a row tier 0 when the junction pairs it with either name; diagnose, the video ask route and the priority scorer pass the vehicle's year. Gate 14: a 2005 Metropolitan reaches the CHF50 carburettor and charging rows at tier 0, a 2018 one does not. No row changed. Remainder: Metropolitans after 2007, which the operator left open.
 ### F157
 
 **No adapter compatibility row exists for any scooter make; a Honda scooter's only answer is the make-level dev/test mock, while the corpus documents scooter diagnostic surfaces**
@@ -1546,7 +1554,7 @@ surfaces (Piaggio/Vespa, Kymco, SYM), with the gate's honest-gap tests
 failing the day they land. Pinned by `tests/test_phase258_gate14.py`, the
 same shape as Gate 13's F99 for electric makes.
 
-### F158 — fixed set CLOSED by migration 072 (Phase 359, live 2026-09-27); open for the wording its patterns do not match
+### F158 — CLOSED: the fixed set by migration 072 (Phase 359, live 2026-09-27), the open wording by migration 086 (Phase 381, live 2026-10-09); remainder in F202 and F203
 
 **Text the product shows users carries internal build references: 34 "Phase N" / "Track N" mentions in 25 rendered rows, 23 of them known issues**
 
@@ -1677,6 +1685,37 @@ What would close the rest: a wording pass over those rows and a decision
 on each data file. Each is refuted as its own diff, with the census
 widened to the words it removes.
 
+
+**The open wording, closed 2026-10-09 by Phase 381's migration 086,** under
+the operator's 3A and their scoped approval (`381_phase_log.md`).
+- **The rule per word:**
+  - "this project", "this file", "refut…" and "research pass" are build
+    provenance: the sentence that narrates goes, or only the clause when
+    the sentence carries a fact;
+  - "corpus" that states a scope the reader needs becomes "MotoDiag", and
+    "corpus" that narrates goes;
+  - "census" stays, because every hit used it in its ordinary sense.
+- **Where it was applied:**
+  - 48 `known_issues` rows, the five `model` columns of 4548–4552
+    included;
+  - the P0328 DTC;
+  - the three data files, all rendered: `parts.json` (18 sentences),
+    `adapters.json` (4) and `compat_matrix.json` (2, which 358's count
+    had put at 1).
+
+  Each was refuted as its own diff.
+- **What a re-measure finds:**
+  - live's `known_issues` over the six columns: 0 for all five words
+    except "census", 6 kept;
+  - the census on live after 086: 41 hits, 0 of them build references.
+- **The guard.** `scripts/f158_census.py` gains the five removed words as
+  patterns, skips `row_key`, and counts `guidance_interactions` (logged
+  model answers) as operational. `test_phase381_content_batch.py` plants
+  each word and reads the three data files.
+- **Remainder:**
+  - F202: "the research library", 40 hits;
+  - F203: build wording outside these five words, among it two CLI
+    messages that say "this project" and `"verified_by": "phase-144"`.
 ### F159 — CLOSED by migration 072 (Phase 359, live 2026-09-27), as retired
 
 **`generic_ppi_v1`'s starter "Brake and tire condition" item carries uncited figures the library's documents contradict or do not support**
@@ -1905,7 +1944,7 @@ operator's scoped approval.**
 The refute's remaining wording defect in that item, "Rocking play is loose
 adjustment", is F171.
 
-### F164
+### F164 — CLOSED by Phase 381 (migration 086, live 2026-10-09)
 
 **`crash_support_v1` item 7 ships without the sentence on where "insurance" appears besides the papers: it was still unresolved after the operator's last refute round, and was dropped**
 
@@ -1932,6 +1971,8 @@ another, through one adversarial read that kills nothing, then a
 migration keyed on item 7's text. The live change of a shipped row
 would be a rule-1 stop.
 
+
+**Closed by Phase 381 (migration 086, live 2026-10-09, under the operator's scoped approval; `381_phase_log.md`).** 262's last proposed wording went through Phase 381's refute. Round 1 kept every KTM and EPA claim (pages rendered) and killed the DMV clause as wording (the DMV pages describe a total-loss settlement, not lost cover); the clause was deleted and round 2 kept the rest. Item 7 now ships it; 262's guard pins the KTM and EPA quotes and that "warning" and "DMV" stay absent.
 ### F165 — CLOSED by Phase 357 (migration 073, live 2026-09-28): a run and its per-item results are saved and read back
 
 **No workflow can be run: the workflow door only lists and shows templates, and nothing records a run or an item's result**
@@ -2124,7 +2165,7 @@ the Street Triple 675's engine management, and then either narrowing row
 902's model and wording to the machines the owner reports cover, or
 sourcing the claim for the 675.
 
-### F171
+### F171 — CLOSED by Phase 381 (migration 086, live 2026-10-09)
 
 **Two wording defects left open by Phase 359's refute: "Rocking play is loose adjustment" (ppi_chassis_v1 item 2), and "a corpus-wide sweep" (known issue 4615)**
 
@@ -2151,6 +2192,8 @@ What it affects: `motodiag workflow show ppi_chassis_v1` and `motodiag kb
 show` for the CVT regulator row. What would close it: the two deletions,
 in the next content migration, refuted as their own diff.
 
+
+**Closed by Phase 381 (migration 086, live 2026-10-09, under the operator's scoped approval; `381_phase_log.md`).** Item 18's "Rocking play is loose adjustment; " and 4615's "corpus-wide " are deleted, in the seed and live; each refuted as its own diff (kept).
 ### F172 — CLOSED by Phase 357 (2026-09-28): apply-live compares a fresh dry run with the approved exact diff
 
 **`deploy.py apply-live` does not compare its fresh dry run with the committed diff the operator approved; it checks only that the fresh run stays inside the scope**
@@ -3392,3 +3435,49 @@ What it affects: `kb show`, `hardware compat check` and two CLI messages
 show build history a mechanic cannot follow. What would close it: a
 wording rule for each (the operator's), applied by migration and refuted
 as its own diff, with the F158 census widened to the words removed.
+
+### F204
+
+**Honda rows written for other machines take a scooter prompt's critical places: with F149's 263 and 264 retired, the safety floor fills with row 231 (`model = All`, the inline-4 cam chain tensioner) and other models' critical rows, displacing the scooter's CVT rows**
+
+Filed at the operator's word (2026-10-09, Phase 381): "Honda rows filed
+for all models (e.g. 231, the inline-4 cam chain tensioner) still reach
+scooters, and with 263 and 264 gone they take the prompt's critical places
+(Ruckus CVT rows 4 → 2, Grom naming row 1 → 0)."
+
+Measured in Phase 381 on a fresh seed build and on live after migration
+086, through `cli/diagnose._load_known_issues` under Gate 14's belt
+symptom:
+- **The mechanism.** `prompt_rows._hold_the_safety_floor` keeps three
+  `critical` rows in the 12, swapped in over the lowest-ranked rows
+  already chosen. Rows 263 and 264 (critical, `model = All`, retired by
+  086) used to hold two of those places in every Honda prompt. Now the
+  floor takes the machine's next critical rows from anywhere in its
+  candidate pool.
+- **What takes them:**
+  - row 231, "Cam chain tensioner (CCT) — the Honda inline-4 universal"
+    (`model = All`, `unverified`), at `make_wide`;
+  - three other models' critical rows at `make_other_model`: 1 (CBR1000RR
+    brake fluid contamination), 18 (CBR600F4i float bowl overflow) and 51
+    (CBR600RR fuel pump failure), all `unverified`.
+- **What they displace:** tier-2 CVT rows.
+  - A 2015 Ruckus keeps 2 CVT rows, not 4; its prompt carries 231, 1 and 18.
+  - A 2023 Grom loses 4605, the drive-belt naming row (1 → 0); it carries
+    231, 1 and 51.
+
+  Gate 14 pins both (`BELT_CENSUS`).
+- **Scale.** 17 Honda rows carry `model = All`, and 231 is the only
+  critical one. The floor is not limited to them: any critical row in the
+  pool qualifies, at any tier.
+
+What it affects: a scooter owner's prompt spends a quarter of its places
+on an inline-four's tensioner and on sport bikes' fuel and brake faults,
+labelled as another model's or all models' rows, while the scooter's own
+belt content is cut.
+
+What would close it: a decision on what the safety floor may pull (only
+rows at the machine's own tier or `make_wide`, only rows the machine's
+powertrain or transmission admits, or another rule). It also needs a
+decision on row 231's scope, sourced or narrowed as F149's rows were,
+with Gate 14's censuses re-measured, and a test that a Ruckus or a Grom
+prompt keeps its CVT rows.

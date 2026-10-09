@@ -1,6 +1,6 @@
 # Phase 381 — The content batch on the row key — phase log
 
-**Status:** 🚧 In progress (2026-10-08)
+**Status:** ✅ Complete (2026-10-09)
 **Branch:** `phase-381` (Opus session, main checkout)
 
 ---
@@ -380,6 +380,36 @@ Stopped for the operator's approval (rule 1).
 > the inline-4 cam chain tensioner) still reach scooters, and with 263 and
 > 264 gone they take the prompt's critical places (Ruckus CVT rows 4 → 2,
 > Grom naming row 1 → 0).
+
+**Live, 2026-10-09** (`deploy.py apply-live 381` from the branch at
+`063b58f`, after the regression of record; only docs since):
+- **The apply:** preflight passed, scope problems none.
+- **Rows:** live 5758 → 5801, integrity ok.
+- **`381_live_diff.md`:** equals the approved exact diff, yes.
+- **`verify-live 381`:** exit 0, every table as approved; integrity and
+  foreign keys ok.
+- **Live now:** schema 86, 1057 known issues, none of F149's keys.
+- **Seed parity on live:** a copy of live after the apply against a fresh
+  seed build, by key, finds 0 differences.
+- **The F158 words on live,** over the six columns: "this project",
+  "corpus", "refut…" and "this file" 0; "census" 6, kept.
+
+**F204** is filed at the operator's word. The measurement corrected its
+example: of 17 Honda `model = All` rows, only 231 is critical. The other
+rows taking the critical places are other models' critical rows at tier 2:
+1, 18 and 51.
+
+**Findings closed:** F149, F152, F153, F156, F164 and F171. F158 is
+closed, with its remainder in F202 and F203. Filed: F202, F203, F204.
+
+**Bug fixes:** none committed. The three rollback defects were in
+uncommitted code (above), and phase 33's pins were pins, not code.
+
+**Rule 3, recorded:** three docs-only commits after the regression of
+record ran `wholetree.sh` in fast mode, not `--full` as a content phase
+asks: `a86ae30` (the regression line), `500497e` (the dry-run diff) and
+`063b58f` (the operator's approval). Every commit that touched code, seed
+or tests ran `--full`, and so does the close-out commit.
 
 ## Refuter pass
 
