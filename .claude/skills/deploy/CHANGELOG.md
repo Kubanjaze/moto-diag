@@ -1,5 +1,17 @@
 # deploy — changelog
 
+## 2026-10-08 — seed parity covers removed rows (Phase 381)
+
+- **The gap.** `seed_parity` compared only added and changed rows. A
+  migration that removes a row whose key is still a seed entry passed, and
+  the next fresh build would bring the row back. Phase 381's migration 086
+  removes three (F149).
+- **The change.** A removed row's `row_key` that a fresh seed build still
+  holds is a scope problem: "seed parity: removed row_key … is still a seed
+  entry". `tests/test_phase381_content_batch.py::TestParityForRemovedRows`
+  holds it, and the mutation that drops the check goes red (`381_mutate.py`
+  P1).
+
 ## 2026-10-08 — the diff sees a column a migration adds (Phase 380, bug fix #1)
 
 - **The defect.** `diff()` kept only the old table's columns. For a migration

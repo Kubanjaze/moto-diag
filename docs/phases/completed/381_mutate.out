@@ -1,0 +1,15 @@
+A1 the window ends at the cover's 2006: red
+A2 the alias ignores the year: red
+A3 the tier SQL drops the alias: red
+A4 the video door drops the year: red
+A5 diagnose drops the year: red
+M1 086 overwrites a row edited since: red
+M2 the seed keeps F152's old sentence: red
+M3 086 keeps F149's rows: red
+M4 the rollback restores rows a database never held: red
+P1 parity ignores removed rows: red
+C1 the census forgets corpus: red
+C2 the census reads row keys: red
+C3 logged answers count as content: red
+G1 Gate 14 without the alias: red
+14/14 red

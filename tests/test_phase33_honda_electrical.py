@@ -21,15 +21,19 @@ def db_path(tmp_path):
 
 class TestHondaElectricalData:
     def test_loads(self, db_path):
-        assert count_known_issues(db_path=db_path) == 10
+        # 10 -> 7: Phase 381 retired F149's three unverified model=All
+        # charging rows (migration 086).
+        assert count_known_issues(db_path=db_path) == 7
 
     def test_cross_era(self, db_path):
         results = search_known_issues(year=2010, make="Honda", db_path=db_path)
         assert len(results) >= 7
 
     def test_critical_severity(self, db_path):
+        # The file's two critical rows were F149's regulator/rectifier and
+        # stator rows, retired by Phase 381; none of the seven left is critical.
         results = search_known_issues(severity="critical", db_path=db_path)
-        assert len(results) >= 2
+        assert len(results) == 0
 
     def test_wont_start(self, db_path):
         results = find_issues_by_symptom("won't start", db_path)

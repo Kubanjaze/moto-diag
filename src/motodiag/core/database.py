@@ -8,7 +8,7 @@ from typing import Generator
 from motodiag.core.config import get_settings
 
 
-SCHEMA_VERSION = 85  # Phase 380: known-issue row keys, the junction per make (migration 085)
+SCHEMA_VERSION = 86  # Phase 381: the content batch on the row key (migration 086)
 BASELINE_SCHEMA_VERSION = 2  # What SCHEMA_SQL alone produces; migrations bring DB to SCHEMA_VERSION
 
 SCHEMA_SQL = """

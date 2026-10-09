@@ -23,6 +23,8 @@ from pydantic import BaseModel, Field
 from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection
 from motodiag.core.migration_072_live_rows import LIVE_ROWS_072
+from motodiag.core.migration_086_rows import (
+    CHANGED_ROWS_086, RETIRED_PAIRS_086, RETIRED_ROWS_086)
 from motodiag.core.timestamps import SHOP_TIME_FIELDS_082
 
 
@@ -191,6 +193,117 @@ def _known_issue_sql_072(reverse: bool) -> str:
             f" AND title = {_sql_text(title)} AND {field} = {_sql_text(before)};"
         )
     return "\n".join(statements) + "\n"
+
+
+#: Migration 086's edits outside `known_issues` (Phase 381), each guarded on
+#: its old text: (template slug, sequence number, field, old, new).
+_CHECKLIST_086: tuple[tuple[str, int, str, str, str], ...] = (
+    # F171: the cited page gives the remedy, not the cause.
+    ("ppi_chassis_v1", 2, "diagnosis_if_fail",
+     "Rocking play is loose adjustment; the KTM manual notes",
+     "The KTM manual notes"),
+    # F164: 262's last proposed wording, refuted in 381 (its DMV clause
+    # deleted in round 1).
+    ("crash_support_v1", 7, "diagnosis_if_fail",
+     'they mostly say where to keep the insurance papers.',
+     'they mostly say where to keep the insurance papers; elsewhere it appears'
+     ' where cover can be lost — among them the KTM 2019 690 Duke owner\'s manual'
+     ' (PDF p. 54) and the KTM 2019 1090 Adventure R owner\'s manual (PDF p. 183),'
+     ' in a note on switching the ABS off completely headed "Voiding of the'
+     ' government approval for road use and the insurance coverage", and EPA\'s'
+     ' fact sheet, under "WARRANTY ISSUES": "Tampering can void manufacturer'
+     ' warranties and insurance agreements" (PDF p. 2).'),
+)
+#: (code, make, field, old, new); the DTC seed carries the new text.
+_DTC_086: tuple[tuple[str, str, str, str, str], ...] = (
+    ("P0328", "MV Agusta", "common_causes",
+     "MV Agusta publishes no fault-code list this project could open.",
+     "MV Agusta publishes no fault-code list MotoDiag could open."),
+)
+#: F153: the SYM spellings the CVT rows' model column gains; the post_apply's
+#: junction sync adds their pairs, and the rollback takes them out.
+_SYM_SPELLINGS_086 = ("Jet Euro 50", "Jet Euro 100", "Fiddle 50",
+                      "Joyride 125", "Joyride 150", "Joyride 200")
+#: A row of F149's seed file that stays: where it is held, the file was
+#: loaded, and so were the three rows 086 retires.
+_RETIRED_SIBLING_086 = "honda-pgm-fi-self-diagnostic-blink-codes-reading-without-a-dealer"
+
+
+def _sql_086(reverse: bool) -> str:
+    """Migration 086's SQL. Forward: F149's three rows retire with their
+    junction pairs, and the checklist and DTC edits. Reverse: those undone,
+    the known-issue fields set back by key, the retired rows and their pairs
+    restored, and the SYM pairs F153 added removed."""
+    out = []
+    for slug, seq, field, old, new in _CHECKLIST_086:
+        before, after = (new, old) if reverse else (old, new)
+        out.append(
+            f"UPDATE checklist_items SET {field} = replace({field}, {_sql_text(before)},"
+            f" {_sql_text(after)}) WHERE sequence_number = {seq} AND template_id ="
+            f" (SELECT id FROM workflow_templates WHERE slug = {_sql_text(slug)})"
+            f" AND instr({field}, {_sql_text(before)}) > 0;")
+    for code, make, field, old, new in _DTC_086:
+        before, after = (new, old) if reverse else (old, new)
+        out.append(
+            f"UPDATE dtc_codes SET {field} = replace({field}, {_sql_text(before)},"
+            f" {_sql_text(after)}) WHERE code = {_sql_text(code)} AND make IS"
+            f" {_sql_text(make)} AND instr({field}, {_sql_text(before)}) > 0;")
+    keys = ", ".join(_sql_text(r["row_key"]) for r in RETIRED_ROWS_086)
+    if not reverse:
+        out += [
+            "UPDATE repair_plan_items SET source_issue_id = NULL WHERE source_issue_id IN"
+            f" (SELECT id FROM known_issues WHERE row_key IN ({keys}));",
+            "DELETE FROM known_issue_makes WHERE issue_id IN"
+            f" (SELECT id FROM known_issues WHERE row_key IN ({keys}));",
+            "DELETE FROM known_issue_models WHERE issue_id IN"
+            f" (SELECT id FROM known_issues WHERE row_key IN ({keys}));",
+            f"DELETE FROM known_issues WHERE row_key IN ({keys});",
+        ]
+        return "\n".join(out) + "\n"
+    for key, field, old, new in CHANGED_ROWS_086:
+        out.append(f"UPDATE known_issues SET {field} = {_sql_text(old)}"
+                   f" WHERE row_key = {_sql_text(key)} AND {field} IS {_sql_text(new)};")
+    cvt_keys = ", ".join(sorted({_sql_text(key) for key, field, _old, new in CHANGED_ROWS_086
+                                 if field == "model" and "SYM Jet Euro 50" in new}))
+    out.append(
+        "DELETE FROM known_issue_models WHERE make = 'SYM' AND model IN ("
+        + ", ".join(_sql_text(m) for m in _SYM_SPELLINGS_086) + ")"
+        f" AND issue_id IN (SELECT id FROM known_issues WHERE row_key IN ({cvt_keys}));")
+    # The retired rows come back only where the database held their seed
+    # file before 086: a sibling from the same file is the evidence. A
+    # database seeded empty, or never seeded, never had them.
+    # A row comes back under live's id where that id is free, else under a new
+    # one (a fresh build numbers its rows its own way), and its pairs are
+    # found by its key. Nor does it come back where it is still there under a
+    # derived key (a database replayed from below 085 keys rows the seed no
+    # longer holds `auto-`): its prose identity, 085's old unique index, must
+    # stay unique; that same guard keeps the second insert from doubling the
+    # first.
+    for row in RETIRED_ROWS_086:
+        guard = (f" WHERE EXISTS (SELECT 1 FROM known_issues WHERE row_key ="
+                 f" {_sql_text(_RETIRED_SIBLING_086)})"
+                 f" AND NOT EXISTS (SELECT 1 FROM known_issues WHERE make IS"
+                 f" {_sql_text(row['make'])} AND model IS {_sql_text(row['model'])}"
+                 f" AND title = {_sql_text(row['title'])})")
+        for content, extra in (
+                (row, f" AND NOT EXISTS (SELECT 1 FROM known_issues WHERE id = {row['id']})"),
+                ({k: v for k, v in row.items() if k != "id"}, "")):
+            cols = ", ".join(content)
+            vals = ", ".join(_sql_text(v) if isinstance(v, str) or v is None else repr(v)
+                             for v in content.values())
+            out.append(f"INSERT OR IGNORE INTO known_issues ({cols}) SELECT {vals}"
+                       f"{guard}{extra};")
+    by_id = {r["id"]: r["row_key"] for r in RETIRED_ROWS_086}
+    for table, issue_id, make, model in RETIRED_PAIRS_086:
+        key = _sql_text(by_id[issue_id])
+        if table == "known_issue_makes":
+            out.append("INSERT OR IGNORE INTO known_issue_makes (issue_id, make)"
+                       f" SELECT id, {_sql_text(make)} FROM known_issues WHERE row_key = {key};")
+        else:
+            out.append("INSERT OR IGNORE INTO known_issue_models (issue_id, make, model)"
+                       f" SELECT id, {_sql_text(make)}, {_sql_text(model)} FROM known_issues"
+                       f" WHERE row_key = {key};")
+    return "\n".join(out) + "\n"
 
 
 def _vehicles_rebuild(powertrain_default: str, scratch: str,
@@ -7603,6 +7716,24 @@ MIGRATIONS: list[Migration] = [
             CREATE UNIQUE INDEX idx_known_issues_identity
                 ON known_issues(COALESCE(make, ''), COALESCE(model, ''), title);
         """,
+    ),
+    Migration(
+        version=86,
+        name="content_batch_on_the_row_key",
+        description=(
+            "Phase 381, the content batch on the row key. Sets the known-issue "
+            "fields in migration_086_rows.py to the seed's text by row_key "
+            "(F152's CHF50 cover, F153's SYM spellings, F171's 4615, F158's "
+            "internal wording), each only where the old text is still held; "
+            "retires F149's three unverified Honda model=All charging rows "
+            "with their junction pairs; deletes F171's 'is loose adjustment' "
+            "clause from ppi_chassis_v1 item 2 and F158's 'this project' from "
+            "the MV Agusta P0328 DTC; then syncs the model junction. Changes "
+            "and removes existing rows."
+        ),
+        upgrade_sql=_sql_086(reverse=False),
+        post_apply="motodiag.knowledge.loader:content_086",
+        rollback_sql=_sql_086(reverse=True),
     ),
 ]
 

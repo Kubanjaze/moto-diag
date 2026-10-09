@@ -92,7 +92,7 @@
   {
     "key": "ktm-cam-chain-starter-clutch-and-valve-clearance-faults-on-an",
     "title": "Cam chain, starter clutch and valve clearance faults on an LC8, LC8c or LC4 are diagnosed like any engine's — what KTM changes is which family and schedule",
-    "description": "General knowledge entry on where these three complaints actually get resolved. A rattle from the cam chain area, a starter that spins without turning the engine, and clearances closing up over time are not KTM phenomena — they are engine phenomena. This corpus already carries the starter procedures as cross-platform entries (relay, motor, and the sprag or one-way starter clutch), and carries cam chain tensioner and valve clearance procedures in other makes' cross-model files, where the method is generic even though the file is not. Nothing about an LC8, an LC8c or an LC4 changes how any of those are tested. What a KTM does change is the input to them: which engine family you are on decides the architecture the procedure has to be applied to — a vee, a parallel twin or a single are inspected differently even when the wear mechanism is the same — and how the machine is used decides the schedule the clearances are measured against. A competition machine and a road machine sharing an engine family are on different schedules, and the same complaint means different things on each. Diagnose the fault generically; scope it by family and by use.",
+    "description": "General knowledge entry on where these three complaints actually get resolved. A rattle from the cam chain area, a starter that spins without turning the engine, and clearances closing up over time are not KTM phenomena — they are engine phenomena. MotoDiag already carries the starter procedures as cross-platform entries (relay, motor, and the sprag or one-way starter clutch), and carries cam chain tensioner and valve clearance procedures in other makes' cross-model files, where the method is generic even though the file is not. Nothing about an LC8, an LC8c or an LC4 changes how any of those are tested. What a KTM does change is the input to them: which engine family you are on decides the architecture the procedure has to be applied to — a vee, a parallel twin or a single are inspected differently even when the wear mechanism is the same — and how the machine is used decides the schedule the clearances are measured against. A competition machine and a road machine sharing an engine family are on different schedules, and the same complaint means different things on each. Diagnose the fault generically; scope it by family and by use.",
     "make": "KTM",
     "model": "KTM LC8, LC8c and LC4 engines",
     "year_start": 2003,
@@ -107,7 +107,7 @@
     "dtc_codes": [],
     "causes": [
       "Wear mechanisms that are common to engines rather than particular to a make",
-      "Diagnostic procedures for all three already existing in this corpus — starter work as cross-platform entries, cam chain tensioner and valve clearance in other makes' cross-model files",
+      "Diagnostic procedures for all three already existing in MotoDiag — starter work as cross-platform entries, cam chain tensioner and valve clearance in other makes' cross-model files",
       "Engine family determining the architecture a generic procedure has to be applied to",
       "Use determining the schedule, so the same reading means different things on a competition and a road machine"
     ],

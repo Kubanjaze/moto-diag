@@ -12,12 +12,12 @@ from a manual Grom, and the chokepoint (256) sits under every door.
 
 What the gate adds, and pins:
 
-* **The SYM exception (F153).** The CVT rows pair SYM in the junction under
-  `Jet 50` / `Joyride` / `Symply 125`, while 353 and 354 pair the same
-  machines under `Jet Euro 50` / `Joyride 125` / `Fiddle 50`. No SYM
-  scooter reaches a CVT row at tier 0; the CVT content that reaches the
-  prompt arrives labelled `make_other_model`. The tests in
-  `TestTheSymException` fail the day F153 closes.
+* **The SYM exception (F153), closed by Phase 381.** The CVT rows paired
+  SYM only as `Jet 50` / `Joyride` / `Symply 125`, while 353 and 354 pair
+  the same machines under `Jet Euro 50` / `Joyride 125` / `Fiddle 50`, so
+  no SYM scooter reached a CVT row at tier 0. Migration 086 gave the CVT
+  rows the machines' own spellings; `TestTheSymException` now asserts the
+  tier-0 path.
 * **The Fiddle 50 (F154).** `TRANSMISSION_LOOKUP` has no `fiddle 50`
   spelling, so a machine 354's own tests name at tier 0 resolves
   transmission `unknown` and the applicability filter withholds all 8
@@ -28,11 +28,12 @@ What the gate adds, and pins:
   "belt" takes the reserved slot.
 * **The gaps the 353 handoff told the gate to state rather than find:**
   an injected scooter gets no carburettor row and should get none; a
-  carburetted Ruckus has no scooter-electrical row of its own and F149's
-  three unverified `model = All` rows are its only charging content; the
-  Ruckus carburettor row carries a 2012–2025 window (F132), so a 2008
-  query gets nothing; a 2002–2006 Metropolitan is a CHF50 that reaches no
-  CHF50 row under its own name (F156); no adapter is known for any scooter
+  carburetted Ruckus has no scooter-electrical row of its own, and since
+  Phase 381 retired F149's three unverified `model = All` rows it has no
+  make-wide charging row either; the Ruckus carburettor row carries a
+  2012–2025 window (F132), so a 2008 query gets nothing; a 2002–2007
+  Metropolitan is a CHF50 and, since Phase 381's dated alias (F156),
+  reaches the CHF50 rows at tier 0, while a 2018 one does not; no adapter is known for any scooter
   make (F157); no Track M make has a DTC file and no scooter row carries a
   DTC code.
 
@@ -130,6 +131,7 @@ GARAGE_MACHINES = [
     ("Honda", "PCX150", 2014),
     ("Yamaha", "Zuma 125", 2018),
     ("Honda", "Metropolitan", 2005),
+    ("Honda", "Metropolitan", 2018),   # Phase 381: the alias's other side
     ("Honda", "Grom 125", 2023),
     ("Yamaha", "Vino 50", 2015),
     ("Honda", "CBR1000RR", 2020),
@@ -144,35 +146,43 @@ CHARGING_SYMPTOM = "battery not charging, lights dim at idle"
 #: CVT and its scoped rows reach it (2 CVT -> 7, and the prompt fills to
 #: 12); the LX 50 keeps its own carburettor row (CVT 10 -> 9, CARB 0 -> 1).
 #: No other machine's census moved.
+#: Phase 381 re-measured six rows: F153's spellings bring the SYM machines'
+#: CVT rows to tier 0 (7 -> 8); F156's alias brings a 2005 Metropolitan its
+#: CHF50 carburettor and charging rows; and F149's retirement took two
+#: critical rows out of every Honda prompt, so the safety floor (three
+#: critical rows) now takes the Ruckus's and the Grom's next critical
+#: make-wide rows, which displace tier-2 CVT rows (Ruckus 4 -> 2, Grom 1 -> 0).
 BELT_CENSUS = {
     ("Honda", "CHF50", 2005): {"CVT": 7, "CARB": 1, "ELEC": 1},
     ("Kymco", "Agility 50", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},
     ("Kymco", "People S 250", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},
-    ("SYM", "Jet Euro 50", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},
-    ("SYM", "Joyride 125", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},
-    ("SYM", "Fiddle 50", 2015): {"CVT": 7, "CARB": 1, "ELEC": 1},     # F154, 379
+    ("SYM", "Jet Euro 50", 2015): {"CVT": 8, "CARB": 1, "ELEC": 1},   # F153, 381
+    ("SYM", "Joyride 125", 2015): {"CVT": 8, "CARB": 1, "ELEC": 1},   # F153, 381
+    ("SYM", "Fiddle 50", 2015): {"CVT": 8, "CARB": 1, "ELEC": 1},     # F154, 379; F153, 381
     ("Piaggio", "Fly 50", 2015): {"CVT": 6, "CARB": 1, "ELEC": 1},
     ("Vespa", "LX 50", 2015): {"CVT": 9, "CARB": 1, "ELEC": 1},  # F155, 379
-    ("Honda", "Ruckus", 2015): {"CVT": 4, "CARB": 1},
-    ("Honda", "Ruckus", 2008): {"CVT": 4},                       # F132's window
+    ("Honda", "Ruckus", 2015): {"CVT": 2, "CARB": 1},            # F149, 381
+    ("Honda", "Ruckus", 2008): {"CVT": 2},                       # F132's window; F149, 381
     ("Honda", "PCX150", 2014): {"CVT": 7, "ELEC": 1},            # injected
     ("Yamaha", "Zuma 125", 2018): {"CVT": 8},                    # injected
-    ("Honda", "Metropolitan", 2005): {"CVT": 6},                 # F156
-    ("Honda", "Grom 125", 2023): {"CVT": 1},                     # the naming row
+    ("Honda", "Metropolitan", 2005): {"CVT": 6, "CARB": 1, "ELEC": 1},  # F156, 381
+    ("Honda", "Metropolitan", 2018): {"CVT": 4},                 # the injected NCW50, 381
+    ("Honda", "Grom 125", 2023): {},                             # F149, 381: the safety floor
     ("Yamaha", "Vino 50", 2015): {"CVT": 5, "CARB": 1},
     ("Honda", "CBR1000RR", 2020): {"CVT": 1},                     # the naming row
 }
 
 #: Tier-0 junction pairs per gate machine, measured in Step 0. The SYM
-#: machines hold exactly their electrical + carburettor rows (F153); the
-#: Kymco control holds nine CVT rows beside them.
+#: machines held exactly their electrical + carburettor rows (F153) until
+#: Phase 381; the Kymco control holds nine CVT rows beside them.
 TIER0_PAIRS = {
     ("Honda", "CHF50"): 11,
     ("Kymco", "Agility 50"): 11,
     ("Kymco", "People S 250"): 11,
-    ("SYM", "Jet Euro 50"): 2,
-    ("SYM", "Joyride 125"): 2,
-    ("SYM", "Fiddle 50"): 2,
+    # Phase 381 (F153): 2 -> 10, the 8 CVT rows that now carry the spelling.
+    ("SYM", "Jet Euro 50"): 10,
+    ("SYM", "Joyride 125"): 10,
+    ("SYM", "Fiddle 50"): 10,
     ("Piaggio", "Fly 50"): 4,
     ("Vespa", "LX 50"): 11,
     ("Honda", "Ruckus"): 5,
@@ -464,9 +474,10 @@ class TestTheDiagnosticPath:
         """The full pin, per machine. Every count is Step 0's, taken on a
         freshly seeded database through the same chain; a change here means
         retrieval changed, and the census is the record of what changed.
-        The LX 50's missing CARB is F155; the SYM machines' CVT counts are
-        tier-2 rows reaching the cap (F153); the Grom's and the CBR's 1 is
-        the unscoped naming row, by design."""
+        The LX 50's missing CARB was F155; the SYM machines' CVT counts were
+        tier-2 rows reaching the cap until Phase 381 closed F153; the CBR's
+        1 is the unscoped naming row, by design, and the Grom's lost it to
+        the safety floor when 381 retired F149's critical rows."""
         known, _ctx = _diagnose_and_capture(garage[(make, model, year)], BELT_SYMPTOM)
         census = _census(known)
         assert census == Counter(BELT_CENSUS[(make, model, year)]), (
@@ -503,19 +514,20 @@ class TestTheDiagnosticPath:
 
 
 # ===========================================================================
-# 4. The SYM exception — F153 and F154, pinned
+# 4. The SYM exception — F153 and F154, both closed
 #
 # The 353 handoff left one question open on purpose: whether the SYM overlap
 # machines also reach a CVT row at tier 0. Step 0 answered it: no. The CVT
-# rows pair SYM in the junction under `Jet 50` / `Joyride` / `Symply 125`,
+# rows paired SYM in the junction under `Jet 50` / `Joyride` / `Symply 125`,
 # spellings no query for Jet Euro 50 / Joyride 125 / Fiddle 50 resolves to.
-# These tests fail the day F153 closes; the Fiddle's fail the day F154 does.
+# Phase 379 closed F154 and Phase 381 closed F153; these tests assert both.
 # ===========================================================================
 class TestTheSymException:
     def test_the_tier0_pair_counts_are_step0s_measurement(self, gate_db):
-        """The junction, measured directly: the SYM machines hold exactly
-        their electrical + carburettor pairs, the Kymco control holds nine
-        CVT rows beside them. Fails when F153's migration lands."""
+        """The junction, measured directly: each SYM machine holds its
+        electrical and carburettor pairs and, since Phase 381 (F153), the 8
+        CVT rows that carry its spelling; the Kymco control holds nine CVT
+        rows beside its own two."""
         with get_connection(gate_db) as conn:
             for (make, model), count in TIER0_PAIRS.items():
                 got = conn.execute(
@@ -526,19 +538,15 @@ class TestTheSymException:
     @pytest.mark.parametrize("make,model,year", [
         ("SYM", "Jet Euro 50", 2015), ("SYM", "Joyride 125", 2015)],
         ids=["jet-euro-50", "joyride-125"])
-    def test_the_cvt_rows_reach_sym_only_as_another_models(self, gate_db, garage,
-                                                            make, model, year):
-        """F153: the CVT content reaches the SYM prompt — the cap admits
-        tier-2 rows — but every CVT row arrives labelled `make_other_model`,
-        while the machine's electrical and carburettor rows arrive at
-        `model`. The day the spellings are fixed this fails: the CVT rows
-        move to tier 0 and their tier label changes."""
+    def test_the_cvt_rows_reach_sym_at_tier_0(self, gate_db, garage, make, model, year):
+        """F153, closed by Phase 381: the CVT rows carry the SYM machines'
+        own spellings, so the CVT content reaches the SYM prompt labelled
+        `model`, beside the machine's electrical and carburettor rows. Until
+        381 every CVT row arrived as `make_other_model`."""
         known, _ctx = _diagnose_and_capture(garage[(make, model, year)], BELT_SYMPTOM)
         cvt = [r for r in known if _layer_of(r) == "CVT"]
         assert cvt, "no CVT content reached the SYM prompt at all"
-        assert all(r["match_tier"] == "make_other_model" for r in cvt), (
-            "a CVT row reached tier 0 for an SYM machine: F153 has closed, "
-            "update this pin")
+        assert any(r["match_tier"] == "model" for r in cvt), [r["match_tier"] for r in cvt]
         for r in known:
             if _layer_of(r) in ("ELEC", "CARB"):
                 assert r["match_tier"] == "model", r["title"]
@@ -564,12 +572,13 @@ class TestTheSymException:
         """With F154 closed, 254's scoped roller, belt and clutch content
         reaches the Fiddle 50 owner. Measured by Phase 379: 7 CVT rows, the
         naming row among them; the recall-index row, one of the two it had
-        before, is now outranked within the cap of 12."""
+        before, is now outranked within the cap of 12. Phase 381 (F153) moved
+        8 of them to tier 0, and the prompt holds 8."""
         known, _ctx = _diagnose_and_capture(garage[("SYM", "Fiddle 50", 2015)], BELT_SYMPTOM)
         cvt_titles = {r["title"] for r in known if _layer_of(r) == "CVT"}
         assert ("Three unrelated components are all called a drive belt, and a "
                 "search for one returns the other two") in cvt_titles
-        assert len(cvt_titles) == 7, cvt_titles
+        assert len(cvt_titles) == 8, cvt_titles
 
 
 # ===========================================================================
@@ -598,18 +607,16 @@ class TestTheGapsTheHandoffPredicted:
         assert "CARB" not in _census(known), _census(known)
 
     def test_a_carburetted_ruckus_has_no_scooter_electrical_row_of_its_own(self, gate_db, garage):
-        """The handoff's stated gap: the Ruckus is carburetted, 354 wrote no
-        Ruckus row, and the only charging content its prompt carries is
-        F149's three unverified `model = All` rows — which outrank nothing
-        here because there is nothing else. Pinned as today's truth; this
-        FAILS when F149 closes."""
+        """The handoff's stated gap: the Ruckus is carburetted and 354 wrote
+        no Ruckus row. Its only charging content was F149's three unverified
+        `model = All` rows, until Phase 381 retired them (the operator's
+        1A): their procedure is not the one Honda's scooter manuals use. The
+        gap stays a gap, now an honest one."""
         known, _ctx = _diagnose_and_capture(garage[("Honda", "Ruckus", 2015)], CHARGING_SYMPTOM)
         assert "CARB" in _census(known), "the Ruckus's carburettor row is missing"
         assert "ELEC" not in _census(known), "354 wrote no Ruckus row — re-measure"
         titles = {r["title"] for r in known}
-        assert set(F149_TITLES) <= titles, (
-            "F149's rows no longer reach a Ruckus prompt: F149 has closed, "
-            "update this pin")
+        assert not set(F149_TITLES) & titles, set(F149_TITLES) & titles
 
     def test_the_carburettor_row_reaches_inside_its_year_window_only(self, gate_db, garage):
         """F132's rule, at the row 353 actually shipped: the Ruckus
@@ -645,32 +652,52 @@ class TestTheGapsTheHandoffPredicted:
             if _layer_of(r) is not None:
                 assert r["match_tier"] == "make_other_model", (r["title"], r["match_tier"])
 
-    def test_a_2005_metropolitan_reaches_no_chf50_row(self, gate_db, garage):
-        """F156: the 2002–2006 Metropolitan IS a CHF50 (252's finding,
-        F152's cover), but the CHF50 carburettor and charging rows are
-        modelled `CHF50` only and the junction holds no `(Honda,
-        Metropolitan)` pair on them. What the owner gets instead: the CVT
-        recall rows (which do list "Honda Metropolitan") at tier 0 and
-        F149's unverified rows at tier 1. FAILS when F156's bridge lands."""
+    def test_a_2005_metropolitan_reaches_the_chf50_rows(self, gate_db, garage):
+        """F156, closed by Phase 381: a 2002–2007 Metropolitan is a CHF50
+        (the CHF50/P/S METROPOLITAN™ manual's cover, "2002–2006", and its
+        carburettor table's "’06 – ’07 model NVK00J"). The dated alias in
+        the resolver gives it the CHF50 carburettor and charging rows at
+        tier 0, beside the recall rows that name the Metropolitan."""
         known, _ctx = _diagnose_and_capture(garage[("Honda", "Metropolitan", 2005)], BELT_SYMPTOM)
         census = _census(known)
-        assert "CARB" not in census and "ELEC" not in census, dict(census)
         assert "CVT" in census, "the recall rows that do name the Metropolitan must arrive"
-        at_model = [r["title"] for r in known if r["match_tier"] == "model"]
-        for title in at_model:
-            assert "CHF50" not in title, "a CHF50 row reached the Metropolitan: F156 has closed"
+        chf50 = [r for r in known if "CHF50" in r["title"]]
+        assert chf50 and all(r["match_tier"] == "model" for r in chf50), (
+            [(r["title"][:40], r["match_tier"]) for r in chf50])
+        assert "CARB" in census and "ELEC" in census, dict(census)
+
+    def test_a_2018_metropolitan_reaches_no_chf50_row(self, gate_db, garage):
+        """The alias's other side: a 2018 Metropolitan is the injected NCW50
+        of its own owner's manual, outside the 2002–2007 window, and gets no
+        CHF50 row at tier 0."""
+        known, _ctx = _diagnose_and_capture(garage[("Honda", "Metropolitan", 2018)], BELT_SYMPTOM)
+        assert not [r["title"] for r in known
+                    if "CHF50" in r["title"] and r["match_tier"] == "model"]
 
     def test_the_two_unscoped_cvt_rows_reach_manual_bikes_by_design(self, gate_db, garage):
         """254 left two rows unscoped deliberately — the naming row (its
         subject is the search term "drive belt") and the recall-index row.
-        They reach a manual Grom and a CBR at tier 2 under a belt-shaped
-        symptom. Pinned so that the day someone scopes them, this fails
-        and the scoping is a decision, not an accident."""
-        for machine in (("Honda", "Grom 125", 2023), ("Honda", "CBR1000RR", 2020)):
-            known, _ctx = _diagnose_and_capture(garage[machine], BELT_SYMPTOM)
-            cvt = [r["title"] for r in known if _layer_of(r) == "CVT"]
-            assert cvt == ["Three unrelated components are all called a drive "
-                           "belt, and a search for one returns the other two"], cvt
+        They reach a manual Grom and a CBR at tier 2. Pinned so that the day
+        someone scopes them, this fails and the scoping is a decision, not
+        an accident.
+
+        Phase 381 moved this from the prompt to the chokepoint. With F149's
+        two critical rows retired, the prompt's safety floor (three
+        critical rows) takes the Grom's next critical rows, and they
+        displace the tier-2 naming row from the twelve. That is composition,
+        not scoping. So this asserts what scoping would change: both rows
+        survive `rows_for_machine` for a manual machine."""
+        from motodiag.knowledge.retrieval import candidate_fetch_size, rows_for_machine
+        from motodiag.knowledge.vehicle_resolver import known_issues_for_vehicle
+
+        unscoped = {e["title"] for e in _entries(LAYER_FILES["CVT"]) if not e.get("applicability")}
+        assert len(unscoped) == 2, unscoped
+        for make, model in (("Honda", "Grom 125"), ("Honda", "CBR1000RR")):
+            _identity, rows = known_issues_for_vehicle(
+                make, model, db_path=gate_db, limit=candidate_fetch_size(gate_db))
+            kept = rows_for_machine(rows, make=make, model=model, purpose="prompt",
+                                    db_path=gate_db, record=False).rows
+            assert unscoped <= {r["title"] for r in kept}, (make, model)
 
 
 # ===========================================================================
@@ -860,9 +887,10 @@ class TestTrackMCorpusInvariants:
     def test_the_documented_count_matches_the_live_seed(self, gate_db):
         """The corpus the seed builds is the corpus the live database holds:
         1,060 rows, the figure the 353 handoff recorded for the live
-        database after the 353 deploy."""
+        database after the 353 deploy, then 1,057 when Phase 381 retired
+        F149's three unverified Honda rows (migration 086)."""
         live = sum(len(_entries(f.name)) for f in K.glob("known_issues_*.json"))
-        assert live == 1060, live
+        assert live == 1057, live
         readme = (REPO_ROOT / "README.md").read_text(encoding="utf-8")
         import re
         m = re.search(r"(\d{3,4}) curated known issues", readme)

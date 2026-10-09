@@ -33,8 +33,9 @@ diff the operator approved for migration 071 survived there only by luck.
    - **seed parity** (Phase 380, the operator's 2A): every `known_issues` row
      the migration adds or changes must equal the row with the same
      `row_key` in a fresh seed build at HEAD, every column but the id and
-     the clocks. A difference is a scope problem, so the seed and live
-     cannot drift. `apply-live`'s own fresh run checks it again;
+     the clocks, and a row it removes must be gone from that build (Phase
+     381). A difference is a scope problem, so the seed and live cannot
+     drift. `apply-live`'s own fresh run checks it again;
    - writes **`docs/phases/in_progress/<phase>_dryrun_diff.md`**, headed
      with the backup's path and sha256, the scope file's sha256, the
      census count and any scope problem. It ends with the **exact diff**

@@ -32,38 +32,6 @@
     "estimated_hours": 0.5
   },
   {
-    "key": "honda-regulator-rectifier-failure-the-universal-honda-problem",
-    "title": "Regulator/rectifier failure — the universal Honda problem",
-    "description": "This is the definitive cross-model Honda reg/rec reference. Every Honda motorcycle from 1985-2020 with a shunt-type regulator is at risk. The shunt design converts excess AC to heat — it's literally designed to overheat. MOSFET replacement is the permanent fix across all Honda models.",
-    "make": "Honda",
-    "model": "All",
-    "year_start": 1985,
-    "year_end": 2025,
-    "severity": "critical",
-    "symptoms": ["battery not charging", "battery drains overnight", "overheating", "burning smell"],
-    "dtc_codes": [],
-    "causes": ["Shunt regulator designed to dissipate excess energy as heat", "Poor OEM mounting in low-airflow areas", "Stator connector melt from high current", "Track/spirited riding increasing thermal load"],
-    "fix_procedure": "1. TEST: engine at 5000 RPM, multimeter across battery — 13.5-14.5V. Below 13V = undercharging. Above 15V = overcharging (DANGEROUS — stop riding). 2. TEST STATOR: disconnect 3-pin yellow connector. AC voltage across each pair of leads at 5000 RPM — all 3 readings should be within 10% of each other. Each lead to ground = infinite (if not, stator is shorted to ground). 3. If stator is good and regulator output is wrong: REPLACE REGULATOR with MOSFET type. 4. ALWAYS hard-wire the stator connector — the plastic plug melts and is the #2 failure point. 5. Recommended MOSFET regulators by model: Rick's Motorsport (universal), Shindengen FH012AA (sport bikes), Electrosport ESR438 (VFR specific). 6. Forum tip: this is THE Honda reliability issue. If you work on Hondas, you will replace dozens of reg/recs per year. Stock the Rick's MOSFET universal regulator — it fits 90% of Hondas with minor connector adaptation. The stator connector hard-wire kit is $5 in parts (ring terminals, heat-shrink, solder) and prevents the #2 failure mode. Also, teach every Honda owner: if the headlight dims noticeably at idle, the charging system is on its way out — test it before it leaves them stranded.",
-    "parts_needed": ["MOSFET regulator/rectifier (Rick's, Shindengen, or Electrosport)", "Stator connector hard-wire kit (ring terminals, solder, heat-shrink)", "Battery (if damaged by over/undercharge)"],
-    "estimated_hours": 1.0
-  },
-  {
-    "key": "honda-stator-failure-diagnosis-and-replacement-all-honda-models",
-    "title": "Stator failure diagnosis and replacement — all Honda models",
-    "description": "The Honda stator is the AC generator behind the engine cover. It fails from insulation breakdown caused by heat, oil contamination, and age. Always replace the regulator when replacing the stator — a failed regulator killed the stator, and will kill the new one too.",
-    "make": "Honda",
-    "model": "All",
-    "year_start": 1985,
-    "year_end": 2025,
-    "severity": "critical",
-    "symptoms": ["battery not charging", "burning smell"],
-    "dtc_codes": [],
-    "causes": ["Winding insulation breakdown from heat cycling", "Oil contamination (some stators run in oil)", "Regulator failure causing stator overwork", "Stator connector melt creating resistance and heat"],
-    "fix_procedure": "1. RESISTANCE TEST: disconnect stator 3-pin connector. Ohms across each pair of leads — should be 0.1-0.5 ohms (varies by model). Infinite = open winding. 2. GROUND TEST: each lead to engine ground — should be infinite. Any resistance = shorted to ground (stator is toast). 3. AC OUTPUT TEST: engine at 5000 RPM, AC volts across each pair. All 3 should be within 10%. If one is significantly lower, that winding is failing. 4. Replace stator: requires removing the left engine cover (most models). Drain any oil first. 5. ALWAYS replace stator AND regulator as a set. 6. Hard-wire the stator connector. 7. Forum tip: when you pull the engine cover to replace a stator, inspect the stator lead wires where they exit the engine case — the grommets deteriorate and the wires chafe on the case edge. Apply a new grommet or silicone sealant. Also, the stator bolts on some models (VFR, CBR) are Loctited from the factory — use a 6-point socket and controlled force. If a bolt strips, you're extracting it from the crankcase.",
-    "parts_needed": ["Stator (Rick's or Electrosport, model-specific)", "MOSFET regulator (always replace together)", "Engine cover gasket", "Stator lead grommet"],
-    "estimated_hours": 2.0
-  },
-  {
     "key": "honda-starter-relay-and-starter-motor-diagnosis",
     "title": "Starter relay and starter motor diagnosis",
     "description": "Honda starter circuits follow a consistent pattern across all models: battery → main fuse → ignition switch → kill switch → clutch/neutral safety switch → starter relay → starter motor. Understanding this chain helps diagnose any no-crank condition without guessing.",
@@ -142,21 +110,5 @@
     "fix_procedure": "1. Locate fuse box (under seat or behind side cover). 2. Remove each fuse and inspect: look for corrosion on the fuse blade AND the fuse holder contacts. 3. Clean fuse holder contacts with fine sandpaper or a fuse contact cleaner tool. 4. Replace any blown fuses with correct amperage. 5. Apply dielectric grease to fuse contacts (prevents corrosion, doesn't block contact). 6. On older bikes with glass tube fuses: upgrade to a blade fuse box for more reliable connections. 7. Forum tip: the #1 diagnostic mistake with fuses is testing them in the holder with a test light. A corroded fuse holder can pass enough current for a test light but not enough for the actual load (headlight, fuel pump, etc.). Pull the fuse out, inspect the contacts visually, and clean both the fuse and the holder. Also, keep spare fuses in the toolbox under the seat — most Hondas have a spare fuse slot in the fuse box. A blown fuse is a SYMPTOM, not a cause — if a fuse keeps blowing, find the short before replacing the fuse again.",
     "parts_needed": ["Fuse assortment (blade type, matching amperages)", "Fuse contact cleaner", "Dielectric grease", "Blade fuse box upgrade (for glass-tube bikes)"],
     "estimated_hours": 0.5
-  },
-  {
-    "key": "honda-charging-system-preventive-testing-annual-check-protocol",
-    "title": "Charging system preventive testing — annual check protocol",
-    "description": "Honda charging systems should be tested annually as preventive maintenance. A failing system gives weeks of warning before total failure — dim headlight at idle, slow cranking, battery needing frequent charging. Catching it early prevents being stranded.",
-    "make": "Honda",
-    "model": "All",
-    "year_start": 1985,
-    "year_end": 2025,
-    "severity": "low",
-    "symptoms": ["battery not charging"],
-    "dtc_codes": [],
-    "causes": ["Regulator degradation (gradual)", "Stator winding resistance increasing with age", "Battery internal resistance increasing", "Connection corrosion accumulating"],
-    "fix_procedure": "1. BATTERY TEST (engine off): fully charged = 12.6-12.8V. Below 12.4V = not fully charged. Below 12.0V = sulfated/dead. 2. CHARGING TEST: engine at 5000 RPM, voltmeter across battery. Should read 13.5-14.5V. 3. LOAD TEST: headlight on high beam at 5000 RPM. Voltage should stay above 13.0V. If it drops below 13V with load, charging system is marginal. 4. STATOR AC OUTPUT: disconnect stator connector, measure AC voltage between each pair of leads at 5000 RPM. All 3 pairs should be within 10% of each other. 5. Log the readings annually — a gradual decline predicts failure. 6. Forum tip: the 5-minute annual charging test catches 90% of charging failures before they strand you. I do this on every Honda that comes through the shop for any reason — oil change, tire, whatever. Write the readings on a sticker inside the seat. If voltage at 5000 RPM dropped from 14.2V last year to 13.8V this year, the system is declining — plan the MOSFET upgrade now rather than waiting for a dead-battery tow. This is the highest-value preventive test on any Honda motorcycle.",
-    "parts_needed": ["Multimeter", "Sticker and marker (for recording readings)", "MOSFET regulator (if preemptive replacement indicated)"],
-    "estimated_hours": 0.25
   }
 ]

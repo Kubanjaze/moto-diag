@@ -308,6 +308,7 @@ def _kb_candidates_for_vehicle(
         _identity, candidates = known_issues_for_vehicle(
             str(row["make"]), str(row["model"]), db_path=db_path,
             limit=candidate_fetch_size(db_path),
+            year=row["year"] if "year" in keys else None,
         )
     except sqlite3.OperationalError as exc:
         # The one condition the original fallback was written for.

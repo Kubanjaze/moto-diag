@@ -466,7 +466,7 @@
     "year_min": 1996,
     "year_max": 2025,
     "status": "full",
-    "notes": "Simulator harness — not a real adapter. Phase 144 scenarios exercise compat flow via this slug.",
+    "notes": "Simulator harness — not a real adapter.",
     "verified_by": "phase-144"
   },
   {
@@ -1286,7 +1286,7 @@
     "year_min": 2008,
     "year_max": 2025,
     "status": "incompatible",
-    "notes": "EXC TPI/TBI two-strokes (Continental/Vitesco) and EXC-F four-strokes are not on TuneECU's list; only the 250/350 SX-F motocross models are, and those are not in this corpus.",
+    "notes": "EXC TPI/TBI two-strokes (Continental/Vitesco) and EXC-F four-strokes are not on TuneECU's list; only the 250/350 SX-F motocross models are.",
     "verified_by": "https://tuneecu.net/TuneECU_Android/Bikes_list_compatibility.pdf (official bikes list; footnote: unlisted bikes are not compatible)"
   },
   {

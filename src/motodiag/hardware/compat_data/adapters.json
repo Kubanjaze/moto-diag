@@ -266,8 +266,8 @@
     "supports_bidirectional": true,
     "supports_mode22": true,
     "reliability_1to5": 5,
-    "known_issues": "Simulator / test only — not a real adapter. Phase 144 scenario engine exposes this entry so tests can wire a compat row to the simulated bike fleet.",
-    "notes": "Reserved slug for the Phase 144 MockAdapter / SimulatedAdapter bridge. Do not purchase — this is the motodiag in-memory test harness, not a shippable product."
+    "known_issues": "Simulator / test only — not a real adapter.",
+    "notes": "Reserved slug for the MockAdapter / SimulatedAdapter bridge. Do not purchase — this is the motodiag in-memory test harness, not a shippable product."
   },
   {
     "slug": "scantool-obdlink-cx",
@@ -417,7 +417,7 @@
     "supports_mode22": false,
     "reliability_1to5": 4,
     "known_issues": "Third-party product despite the name — this is NOT Triumph's own dealer software, which is the separately distributed Triumph Diagnostic Tool available only through Triumph's dealer portal. Windows only, and requires the vendor's own modified interface cable. Service reset is explicitly not supported on a published exclusion list that includes the Trident, the 660 models generally, the Tiger Sport 800 and several recent models — check the current list before promising that function. Throttle balance without gauges is unavailable on the Sagem-managed and four-cylinder Keihin machines. Bikes from approximately 2023 need a 6-pin-to-16-pin adapter. Prices are the vendor's own in GBP; the figure here is converted at time of writing and is indicative. The vendor site is client-rendered, so a plain fetch of any path returns a shell — the coverage and function statements are on its FAQ and purchase pages.",
-    "notes": "Covers fuel-injected Triumphs broadly, from the earliest Sagem-managed machines through the current Keihin ones, with fault codes and descriptions, code clearing, live sensor values, dealer-level diagnostic tests and a throttle balance performed without vacuum gauges. The strongest single diagnostic answer for the injected air-cooled Bonneville family, which had no adapter coverage in this catalog before Phase 230. Not a tuning product — map flashing is not among its functions."
+    "notes": "Covers fuel-injected Triumphs broadly, from the earliest Sagem-managed machines through the current Keihin ones, with fault codes and descriptions, code clearing, live sensor values, dealer-level diagnostic tests and a throttle balance performed without vacuum gauges. The strongest single diagnostic answer for the injected air-cooled Bonneville family. Not a tuning product — map flashing is not among its functions."
   },
   {
     "slug": "pads-aprilia",
@@ -446,7 +446,7 @@
     "supports_bidirectional": true,
     "supports_mode22": true,
     "reliability_1to5": 5,
-    "known_issues": "TEXA publishes no price, so the figure here is zero rather than an invented one; cost is an interface plus a recurring software subscription rather than a one-off purchase. Coverage is claimed at make level and this project could not verify that three-cylinder and four-cylinder MV families are covered equally — confirm the exact model before purchase.",
+    "known_issues": "TEXA publishes no price, so the figure here is zero rather than an invented one; cost is an interface plus a recurring software subscription rather than a one-off purchase. Coverage is claimed at make level and MotoDiag could not verify that three-cylinder and four-cylinder MV families are covered equally — confirm the exact model before purchase.",
     "notes": "MV Agusta's OFFICIAL dealer tool, not merely an aftermarket option: a 2012 MV press release states all authorised service centres worldwide would adopt the TXB, and TEXA's own release notes list MV AGUSTA among makes that chose IDC5 as their official tool. Uniquely among exotic makes, MV's dealer tool and the best independent tool are the same product."
   },
   {

@@ -49,8 +49,9 @@ def seed_key_problems(seed_dir: pathlib.Path) -> list[str]:
 class TestTheSeedKeys:
     def test_every_entry_has_a_unique_well_formed_key(self):
         assert seed_key_problems(SEED) == []
+        # 1057 since Phase 381 retired F149's three rows.
         assert sum(len(json.loads(p.read_text())) for p in SEED.glob("known_issues_*.json")) \
-            >= 1060
+            >= 1057
 
     def test_a_missing_key_fails(self):
         assert seed_key_problems(FIXTURES / "missing_key") == [

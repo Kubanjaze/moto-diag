@@ -68,7 +68,12 @@ def _seeded(path: pathlib.Path) -> str:
 
 @pytest.fixture(scope="module")
 def seeded(tmp_path_factory) -> str:
-    return _seeded(tmp_path_factory.mktemp("s359") / "seeded.db")
+    """The seed as 072 knew it. Phase 381's migration 086 changed several of
+    these rows after 072 (4615's "corpus-wide", F158's wording), so the head
+    build is rolled back past 086, whose rollback restores their old text."""
+    path = _seeded(tmp_path_factory.mktemp("s359") / "seeded.db")
+    rollback_to_version(85, path)
+    return path
 
 
 @pytest.fixture
@@ -174,7 +179,9 @@ class TestChassis:
         # and its warning as worded on the page.
         assert "38 N·m initial tightening torque and 14 N·m final (PDF p. 94)." in item["instruction_text"]
         diagnosis = item["diagnosis_if_fail"]
-        assert ("Rocking play is loose adjustment; the KTM manual notes that running with play can"
+        # Phase 381 (F171) deleted "Rocking play is loose adjustment;": the
+        # cited page gives the remedy, not the cause.
+        assert ("The KTM manual notes that running with play can"
                 " damage the bearings and the bearing seats in the frame over time (PDF p. 76)") in diagnosis
         assert ("For a detent position the same manual says to adjust the steering head bearing play,"
                 " then check the bearing and change it if necessary (PDF p. 76).") in diagnosis
@@ -302,6 +309,8 @@ class TestTheMigration:
 
     def test_the_round_trip_restores_the_workflow_tables(self, tmp_path):
         head = _seeded(tmp_path / "head.db")
+        # Past 086 first (Phase 381 changed two checklist items after 072).
+        rollback_to_version(85, head)
         tables = ("workflow_templates", "checklist_items")
         at_head = {t: _rows(head, t) for t in tables}
         rollback_to_version(M072.version - 1, head)
