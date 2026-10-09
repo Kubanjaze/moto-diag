@@ -535,7 +535,7 @@ def ask_about_video(
     context = _build_vehicle_context(dict(row), db_path=db_path)
     _identity, issues = known_issues_for_vehicle(
         context.make, context.model, db_path=db_path,
-        limit=candidate_fetch_size(db_path),
+        limit=candidate_fetch_size(db_path), year=context.year,
     )
     # Phase 255: this endpoint hands the rows straight to a vision model as
     # context about one specific machine, which is the same shape as the

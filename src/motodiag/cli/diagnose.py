@@ -286,7 +286,7 @@ def _load_known_issues(
     try:
         identity, rows = known_issues_for_vehicle(
             make, model_name, db_path=db_path,
-            limit=candidate_fetch_size(db_path),
+            limit=candidate_fetch_size(db_path), year=year,
         )
     except Exception:
         return None, []

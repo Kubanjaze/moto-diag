@@ -176,7 +176,8 @@ PINS = {
     ("emissions_v1", 4, "diagnosis_if_fail"): ['"shall not be liable for malfunctions'],
     ("emissions_v1", 7, "diagnosis_if_fail"): ["What a missing receipt costs depends on the machine's own warranty statement", "(PDF p. 17)"],
     ("crash_support_v1", 7, "description"): ["requires a written estimate in accordance with the Automotive Repair Act", "(PDF pp. 27, 32)"],
-    ("crash_support_v1", 7, "diagnosis_if_fail"): ["they mostly say where to keep the insurance papers.", "type-approval and recall paperwork"],
+    # Phase 381 (F164): the papers clause now continues with the KTM and EPA pages.
+    ("crash_support_v1", 7, "diagnosis_if_fail"): ["they mostly say where to keep the insurance papers;", "type-approval and recall paperwork"],
     ("track_prep_v1", 4, "description"): ["(PDF p. 107)", '"There is a possibility of the motorcycle flipping over backwards" (PDF p. 133)', '"is intended for track use on closed circuit race tracks only" (PDF p. 23)'],
     ("track_prep_v1", 5, "description"): ["(PDF p. 175)", '"If motorcycle is used for competition 7500 km service should be carried out after every race" (PDF p. 30)', '"Every 10 operating hours when used for motorsports" (PDF pp. 52–53)', "(PDF pp. 53–54)"],
     ("track_prep_v1", 5, "instruction_text"): ["the manual gives no figure", "brake_service_v1"],
@@ -539,12 +540,17 @@ class TestContentPins:
         for field in FIELDS:
             assert not re.search(r"\d\s*mm\b", item[field] or ""), field
 
-    def test_the_unresolved_insurance_sentence_is_not_shipped(self, db):
-        """Refute round 5, the operator's last: the sentence calling KTM's
-        ABS notes and EPA's line "warnings" was killed and dropped (F164)."""
+    def test_the_insurance_sentence_ships_without_its_killed_words(self, db):
+        """Refute round 5, the operator's last, killed calling KTM's ABS notes
+        and EPA's line "warnings", and the sentence was dropped (F164). Phase
+        381's refute shipped its last wording through migration 086, with
+        the DMV clause its round 1 killed deleted; neither killed word
+        returns."""
         text = _item(db, "crash_support_v1", 7)["diagnosis_if_fail"]
-        for gone in ("warning", "690 Duke", "1090 Adventure R", "EPA", "DMV"):
-            assert gone not in text, gone
+        assert "690 Duke owner's manual (PDF p. 54)" in text
+        assert '"Tampering can void manufacturer warranties and insurance agreements" (PDF p. 2)' in text
+        assert "warning" not in text.lower()
+        assert "DMV" not in text
 
     def test_no_race_rule_is_invented(self, db):
         """N10-N12: the event-rules item names no torque, no coolant and no

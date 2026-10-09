@@ -8,7 +8,8 @@ proposed was never written. This is the one census; the ratchet in
 `tests/test_phase358_f158_ratchet.py` uses it.
 
 Every text column of every table, four patterns. Taken from Phase 262's
-`f158.py` (kept verbatim in `358_step0.md`, sha256 2e034109…).
+`f158.py` (kept verbatim in `358_step0.md`, sha256 2e034109…). Phase 381
+added five more, the words its wording pass removed, and skips `row_key`.
 
     python scripts/f158_census.py DB           the count, by table and pattern
     python scripts/f158_census.py DB --plant   the control: a copy of DB with
@@ -32,7 +33,18 @@ PATTERNS = {
     "Track X": re.compile(r"\bTrack [A-Z]\b"),
     "F-number": re.compile(r"\bF\d{2,3}\b"),
     "this phase": re.compile(r"this phase", re.I),
+    # Phase 381: the words its wording pass removed (F158's open part, the
+    # operator's 3A). "census" is not among them: every hit used it in its
+    # ordinary sense, a complete count.
+    "this project": re.compile(r"this project", re.I),
+    "this file": re.compile(r"this file", re.I),
+    "refut": re.compile(r"\brefut", re.I),
+    "corpus": re.compile(r"\bcorpus", re.I),
+    "research pass": re.compile(r"research pass", re.I),
 }
+#: Phase 381: a row's frozen key is its identity, never shown and never
+#: edited (F129). Row 855's carries "corpus" from its old title.
+SKIP_COLUMNS = frozenset({"row_key"})
 #: Tables a mechanic walks through; they must carry no build reference.
 WORKFLOW_TABLES = ("workflow_templates", "checklist_items")
 #: Phase 359. BMW's F-series model names match the F-number pattern. An
@@ -41,7 +53,9 @@ WORKFLOW_TABLES = ("workflow_templates", "checklist_items")
 #: reference.
 BMW_F_MODELS = frozenset({"F650", "F700", "F750", "F800", "F850", "F900"})
 #: User and operational data: reported, never rewritten by a content phase.
-OPERATIONAL_TABLES = ("shops", "customer_notifications")
+#: Phase 381: `guidance_interactions` holds the model's logged answers, whose
+#: JSON says "corpus" (5 hits in 2 rows on live, 2026-09-16).
+OPERATIONAL_TABLES = ("shops", "customer_notifications", "guidance_interactions")
 
 Hit = tuple[str, str, int, str, str]            # table, column, rowid, pattern, text
 
@@ -54,7 +68,8 @@ def census(db: str | pathlib.Path) -> list[Hit]:
             "select name from sqlite_master where type='table' and name not like 'sqlite_%'")]
         for t in tables:
             cols = [r[1] for r in c.execute(f'pragma table_info("{t}")')
-                    if (r[2] or "").upper() in ("TEXT", "") or "CHAR" in (r[2] or "").upper()]
+                    if ((r[2] or "").upper() in ("TEXT", "") or "CHAR" in (r[2] or "").upper())
+                    and r[1] not in SKIP_COLUMNS]
             for col in cols:
                 for rowid, v in c.execute(f'select rowid, "{col}" from "{t}" where "{col}" is not null'):
                     if isinstance(v, str):

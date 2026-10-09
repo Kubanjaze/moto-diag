@@ -103,7 +103,7 @@
     ],
     "dtc_codes": [],
     "causes": [
-      "Expecting car-style one-pedal driving that no motorcycle maker in this corpus offers"
+      "Expecting car-style one-pedal driving"
     ],
     "fix_procedure": "1. Tell the rider plainly: none of the three makes documents a one-pedal stop; regen slows the motorcycle and the friction brakes stop it. 2. On a LiveWire S2, roll-forward regen adds regen on demand but the manual still says regen is not a replacement for the friction brakes. 3. A motorcycle that does come to rest on regen alone has no documented behaviour to compare against; do not describe it as a feature.",
     "parts_needed": [],

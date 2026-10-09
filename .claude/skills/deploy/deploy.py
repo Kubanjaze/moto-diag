@@ -612,7 +612,10 @@ def seed_parity(repo: pathlib.Path, copy: pathlib.Path, d: dict,
     if "row_key" not in cols:
         return []
     touched = [x["b"][k] for k in x["added"] + x["changed"]]
-    if not touched:
+    # Phase 381: a row the migration removes must be gone from the seed too,
+    # or the next fresh build brings it back.
+    removed = [dict(zip(x["cols"], x["a"][k][1:])).get("row_key") for k in x["removed"]]
+    if not touched and not removed:
         return []
     fresh = _scratch(repo, "seed_parity_fresh.db")
     try:
@@ -624,7 +627,8 @@ def seed_parity(repo: pathlib.Path, copy: pathlib.Path, d: dict,
         c.close()
     finally:
         _drop(fresh)
-    probs = []
+    probs = [f"seed parity: removed row_key {key!r} is still a seed entry"
+             for key in removed if key in by_key]
     for row in touched:
         live = dict(zip(cols, row[1:]))
         seeded = by_key.get(live["row_key"])

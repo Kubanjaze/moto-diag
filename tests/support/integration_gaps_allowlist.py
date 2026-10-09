@@ -104,10 +104,6 @@ _PRICING_MODEL = "Pydantic/enum model used only by the unreachable motodiag.pric
 # not listed a second time.
 ORPHANS: dict[str, tuple[str, str]] = {
     # --- Phase 380: row keys (F129) and the junction per make (F142) ---
-    "knowledge/issues_repo.py::update_known_issue_by_key": ("substrate",
-        "Phase 380's content batch: a content migration changes a known-issue "
-        "row by its frozen key (F129). The batch's migrations are its callers; "
-        "this entry goes stale the day the first one lands."),
     "knowledge/models.py::unassigned_models": ("test-infra",
         "Phase 380, F142: the operator's 3A list of multi-make models with no "
         "evidence of their own make, pinned by test_phase380_junction_per_make.py."),

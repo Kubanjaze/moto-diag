@@ -347,6 +347,37 @@ def key_known_issues_085(conn) -> int:
     return keyed
 
 
+#: Columns `update_known_issue_by_key` stores as JSON lists; the generated
+#: data holds them as stored, so they are parsed before it re-encodes them.
+_JSON_LIST_FIELDS = frozenset({"symptoms", "dtc_codes", "causes", "parts_needed"})
+
+
+def content_086(conn) -> int:
+    """Migration 086's ``post_apply`` (Phase 381). Returns fields changed.
+
+    Sets each field of ``CHANGED_ROWS_086`` to the seed's text by the row's
+    key, through ``update_known_issue_by_key``, only where the row still holds
+    the old text: a row edited since generation is left alone and the dry
+    run shows it unchanged. On a fresh database there are no rows yet and
+    the seed, loaded after, carries the new text. Then syncs the model
+    junction, which F153's model columns move.
+    """
+    from motodiag.core.migration_086_rows import CHANGED_ROWS_086
+    from motodiag.knowledge.issues_repo import update_known_issue_by_key
+    from motodiag.knowledge.models import sync_model_index
+
+    changed = 0
+    for key, field, old, new in CHANGED_ROWS_086:
+        held = conn.execute(f"SELECT {field} FROM known_issues WHERE row_key = ?",
+                            (key,)).fetchone()
+        if held is None or held[0] != old:
+            continue
+        value = json.loads(new) if field in _JSON_LIST_FIELDS else new
+        changed += update_known_issue_by_key(conn, key, {field: value})
+    sync_model_index(conn)
+    return changed
+
+
 def backfill_dtc_categories(conn) -> int:
     """Classify already-seeded DTC rows from the seed files. Returns rows changed.
 

@@ -318,7 +318,16 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Phase 380, bug fix #1 (2026-10-08): 10795 -> 10798, +3,
 #: tests/test_phase380_deploy_new_column.py. Measured: 10798 collected.
 #:
-COLLECTED_TEST_FLOOR = 10798
+#: Phase 381 (2026-10-08): 10798 -> 10839, by a diff of collected ids
+#: against 10d074e (in a worktree, 10799 collected there): +46 -6 = +40.
+#: The new tests/test_phase381_content_batch.py (37); Gate 14's inverted
+#: F153 and F156 pins and its 2018 Metropolitan (+6 -3); 262's and 354's
+#: inverted pins, renamed (+3 -3). Measured: 10839 collected. Then -1,
+#: deliberately: 209B's orphan allowlist lost update_known_issue_by_key,
+#: which migration 086 now calls, and its parametrised id went with it
+#: (the 67 after it only renumber). Measured: 10838 collected.
+#:
+COLLECTED_TEST_FLOOR = 10838
 
 
 def _collected_count() -> int:

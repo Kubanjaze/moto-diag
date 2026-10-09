@@ -73,7 +73,8 @@ class TestTheRatchet:
     def test_the_database_is_the_whole_seed(self, built):
         """The ratchet is only as good as the build: every seed row loaded."""
         c = sqlite3.connect(built)
-        assert c.execute("select count(*) from known_issues").fetchone()[0] >= 1060
+        # 1057 since Phase 381 retired F149's three rows.
+        assert c.execute("select count(*) from known_issues").fetchone()[0] >= 1057
         assert c.execute("select count(*) from checklist_items").fetchone()[0] >= 100
         c.close()
 

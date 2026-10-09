@@ -234,14 +234,19 @@ class TestWhatTheRefutersCorrected:
         assert "charging tree has no stator step" in row["description"]
         assert "starter chart (p. 6-6)" in row["fix_procedure"]
 
-    def test_the_chf50_is_not_called_the_metropolitan(self):
-        """The CHF50 manual prints 'Metropolitan' 0 times in 319 pages; the
-        name may appear only where the row speaks of the NCW50's manuals."""
+    def test_the_chf50_row_is_modelled_chf50_and_quotes_its_cover(self):
+        """F152, Phase 381: the 0-in-319 count was the text layer's; the
+        cover has none. Rendered, it reads 'CHF50/P/S', 'METROPOLITAN™' and
+        '2002–2006'. The row stays modelled CHF50, and the name appears only
+        in the cover's quote or beside the NCW50's manuals."""
         row = _row("carburetted CHF50")
-        assert "Metropolitan" not in row["title"]
+        assert row["model"] == "CHF50"
+        assert "metropolitan" not in row["title"].lower()
+        assert "'CHF50/P/S', 'METROPOLITAN™' and '2002–2006'" in row["description"]
+        assert "names no end year" not in row["description"]
         for sentence in _sentences(row):
-            if "Metropolitan" in sentence:
-                assert "NCW50" in sentence, sentence[:100]
+            if "metropolitan" in sentence.lower():
+                assert "NCW50" in sentence or "'METROPOLITAN™'" in sentence, sentence[:100]
 
     def test_the_agility_ac_test_carries_its_own_page_limit(self):
         fix = _row("Two Kymco service manuals")["fix_procedure"]
@@ -368,16 +373,18 @@ class TestReachable:
                                 db_path=db, record=False).rows
         assert any(fragment.lower() in r["title"].lower() for r in kept), (make, model)
 
-    def test_the_pcx_row_outranks_the_make_wide_honda_charging_rows(self, db):
-        """S0-5: three unverified Honda model=All rows reach every Honda
-        scooter at tier 1. The PCX's own row must come first."""
+    def test_no_make_wide_honda_charging_row_reaches_the_pcx(self, db):
+        """S0-5 measured three unverified Honda model=All charging rows
+        reaching every Honda scooter at tier 1. Phase 381 retired them
+        (F149, the operator's 1A). The PCX keeps its own row at tier 0, and
+        other make-wide Honda rows still reach it."""
         _, rows = known_issues_for_vehicle("Honda", "PCX150", db_path=db, limit=2000)
-        titles = [r["title"] for r in rows]
-        mine = next(i for i, t in enumerate(titles) if "PCX150 the alternator" in t)
-        wide = [i for i, r in enumerate(rows) if r["match_tier"] == "make_wide"
-                and re.search(r"stator|regulator/rectifier|charging", r["title"], re.I)]
-        assert wide, "positive control: the make-wide charging rows must still be there"
-        assert mine < min(wide)
+        mine = [r for r in rows if "PCX150 the alternator" in r["title"]]
+        assert mine and mine[0]["match_tier"] == "model"
+        wide = [r for r in rows if r["match_tier"] == "make_wide"]
+        assert wide, "positive control: other make-wide Honda rows still reach the PCX"
+        assert not [r["title"] for r in wide
+                    if re.search(r"stator|regulator/rectifier|charging", r["title"], re.I)]
 
     def test_a_gold_wing_does_not_get_them_above_tier_2(self, db):
         _, rows = known_issues_for_vehicle("Honda", "Gold Wing", db_path=db, limit=2000)

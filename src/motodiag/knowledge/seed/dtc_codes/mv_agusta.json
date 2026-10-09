@@ -7,7 +7,7 @@
     "severity": "medium",
     "make": "MV Agusta",
     "common_causes": [
-      "PROVENANCE: MV Agusta publishes no fault-code list this project could open. This row is drawn from a third-party ECU tuning vendor's published tables for the Eldor control unit, cross-checked between the separate F3 and F4 lists, and is not a manufacturer document",
+      "PROVENANCE: MV Agusta publishes no fault-code list MotoDiag could open. This row is drawn from a third-party ECU tuning vendor's published tables for the Eldor control unit, cross-checked between the separate F3 and F4 lists, and is not a manufacturer document",
       "The cylinder-4 knock coherence channel exists only on the four-cylinder machines. The published three-cylinder table runs P0325, P0326 and P0327 for cylinders 1 to 3 and stops; the four-cylinder table adds P0328",
       "A knock sensor, its wiring or its mounting torque, since a sensor that is loose reads incoherently rather than not at all",
       "Genuine detonation on that cylinder after a fuel, mapping or exhaust change"

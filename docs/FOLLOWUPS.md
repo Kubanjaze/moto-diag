@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F202** (this file). The
+At the time of writing the highest assigned is **F203** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3351,3 +3351,44 @@ finding". It is outside F158's listed words and 381's scope. What would
 close it: a wording rule for the phrase (name the documents, or say what
 MotoDiag's sources do not include), applied by migration and refuted as
 its own diff, with the F158 census widened to the phrase.
+
+### F203
+
+**Wording Phase 381's refute left open, and build wording outside the five words 3A removed**
+
+Phase 381's refute ran its three rounds (`381_phase_log.md`, Refuter pass).
+Under the operator's rule (Phase 358, K9), a wording defect left after round
+3 goes to one finding, and this is that finding. It also records the build
+wording the refuters found in rows they read, which is outside the five
+words the operator's 3A named ("this project", "this file", "refut…",
+"research pass", "corpus").
+
+- **Left open after round 3:** known issue
+  `honda-what-honda-s-own-documents-say-about-modifying-a-grom-four`. Its
+  first sentence was deleted, so the description now opens on "What Honda
+  does publish…", which leans on the deleted clause "almost nothing about
+  it is documented by Honda". Wording only; "What is absent matters as
+  much" later in the row carries the absence.
+- **Build wording outside 3A's words, found by the refuters:**
+  - `aprilia-the-sr-max-…`: "a roadmap row grouping it with two
+    motorcycles";
+  - `aprilia-nineteen-…`: "this figure was verified directly against the
+    manual, because the sentence is line-wrapped in the source";
+  - `honda-honda-s-current-owner-s-manuals-…`: "the counts were validated
+    by running positive controls";
+  - pointers to seed files a user cannot open: "the European differentials
+    file", "the European intervals file", "other makes' cross-model files";
+  - `known_issues_vespa_piaggio.json`: "which this knowledge base has not
+    carried before";
+  - `mv-agusta-mv-triple-service-intervals-…`: "That gap is the entry's
+    point" now reads against "MV's own maintenance manuals resolve it";
+  - `compat_matrix.json`, both `motodiag-mock` rows: `"verified_by":
+    "phase-144"`, printed as "Verified by: phase-144" by `hardware compat
+    check`;
+  - two CLI messages: `cli/advanced.py:206` and `cli/recall_nhtsa.py:46`
+    say "this project".
+
+What it affects: `kb show`, `hardware compat check` and two CLI messages
+show build history a mechanic cannot follow. What would close it: a
+wording rule for each (the operator's), applied by migration and refuted
+as its own diff, with the F158 census widened to the words removed.

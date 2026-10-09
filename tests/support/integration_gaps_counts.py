@@ -59,5 +59,6 @@ MODULE_ISLAND_COUNT = 9
 #: live orphans; booking has its own guarded status moves) → 117 (Phase 281:
 #: `advanced recall list --bike` calls get_resolutions_for_bike) → 119 (Phase
 #: 380: update_known_issue_by_key, substrate for the content batch's
-#: migrations, and unassigned_models, test-infra for the 3A pin).
-ORPHAN_COUNT = 119
+#: migrations, and unassigned_models, test-infra for the 3A pin) → 118 (Phase
+#: 381: migration 086's content_086 calls update_known_issue_by_key).
+ORPHAN_COUNT = 118

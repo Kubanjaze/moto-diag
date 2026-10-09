@@ -51,6 +51,34 @@ MIN_FUZZY_LEN = 4
 #: silently widen a specific question into a make-wide one.
 WILDCARD_MODEL = "All"
 
+#: Phase 381 (F156): a name that was one model code for a span of years.
+#: The corpus cannot hold this, because a row's years bound the row, not the
+#: name, and the CHF50 rows run on past the span. So it is written here, each
+#: entry with its document: (make, name, first year, last year, model code).
+#: A 2002–2007 Metropolitan is a CHF50 — the CHF50/P/S service manual's cover
+#: reads "CHF50/P/S", "METROPOLITAN™" and "2002–2006", and its carburettor
+#: table names the "’06 – ’07 model NVK00J" (p. 1-6). Later years stay open
+#: (the operator, 2026-10-08); a 2018 Metropolitan is the injected NCW50 of
+#: its own owner's manual.
+DATED_MODEL_ALIASES: tuple[tuple[str, str, int, int, str], ...] = (
+    ("Honda", "Metropolitan", 2002, 2007, "CHF50"),
+)
+
+
+def dated_alias(make: Optional[str], model: Optional[str],
+                year: Optional[int]) -> Optional[str]:
+    """The model code a dated name stood for in ``year``, or None.
+
+    No year, no alias: a Metropolitan of unknown year may be a CHF50 or an
+    NCW50, and guessing would hand one machine the other's rows."""
+    if year is None:
+        return None
+    for alias_make, name, first, last, code in DATED_MODEL_ALIASES:
+        if (_norm(make) == _norm(alias_make) and _norm(model) == _norm(name)
+                and first <= year <= last):
+            return code
+    return None
+
 
 def _norm(s: Optional[str]) -> str:
     """Lowercase and strip everything that is not alphanumeric.
@@ -305,12 +333,17 @@ def known_issues_for_vehicle(
     model: Optional[str] = None,
     db_path: Optional[str] = None,
     limit: int = 25,
+    year: Optional[int] = None,
 ) -> tuple[VehicleIdentity, list[dict]]:
     """Resolve the identity, then fetch corpus rows for it — deduplicated.
 
     The one obvious way to get knowledge for a free-text vehicle. Returns the
     identity alongside the rows so a caller can report *why* a result is empty
     rather than only that it is.
+
+    ``year`` (Phase 381, F156) lets a dated name reach its model code's rows
+    at tier 0 as well as its own: a 2005 Metropolitan is a CHF50
+    (``DATED_MODEL_ALIASES``). Without a year nothing changes.
 
     **Deduplicated on the way out** because the corpus currently carries every
     entry ten times over (no UNIQUE constraint, non-idempotent loader — flagged
@@ -325,6 +358,7 @@ def known_issues_for_vehicle(
         return identity, []
 
     resolved_model = identity.resolved_model() if identity.model.applied else None
+    also_model = dated_alias(resolved_make, resolved_model or model, year)
 
     # Phase 244E: tier, do not filter. The previous version narrowed to
     # `model = X OR model = 'All'` whenever the model resolved, which inverted
@@ -354,7 +388,7 @@ def known_issues_for_vehicle(
                 SELECT 1 FROM known_issue_models
                 WHERE known_issue_models.issue_id = known_issues.id
                   AND known_issue_models.make = ?
-                  AND known_issue_models.model = ?
+                  AND known_issue_models.model IN (?, ?)
             ) THEN 0
             WHEN model = ? THEN 1
             ELSE 2
@@ -382,8 +416,10 @@ def known_issues_for_vehicle(
         f"ORDER BY _match_tier ASC, {SEVERITY_RANK_SQL} DESC, title ASC"
     )
     # Phase 255C: the tier CASE now binds (model IS NOT NULL, make, model)
-    # before the tier-1 model comparison.
-    params: list = [resolved_model, resolved_make, resolved_model,
+    # before the tier-1 model comparison. Phase 381: and the dated alias's
+    # model code beside the model, the model itself again when there is none.
+    params: list = [resolved_model or also_model, resolved_make, resolved_model,
+                    also_model or resolved_model,
                     WILDCARD_MODEL, resolved_make, WILDCARD_MAKE]
 
     # A database below schema 55 has no junction. Joining against a table that
