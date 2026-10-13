@@ -89,6 +89,8 @@ def _check_8(tmp_path: pathlib.Path, live_code: int, with_diff: bool = True) -> 
     (skills / "closeout").mkdir(parents=True)
     (skills / "deploy").mkdir(parents=True)
     (skills / "deploy" / "deploy.py").write_text(f"import sys; sys.exit({live_code})\n")
+    # Phase 382: check 8 asks live.py where live is.
+    (skills / "deploy" / "live.py").write_text(f"print({str(repo / 'data' / 'motodiag.db')!r})\n")
     run = subprocess.run(
         ["sh", "-c", f'FAILED=0\n{block}\nexit $FAILED'], cwd=repo, capture_output=True,
         text=True, env={"PATH": "/usr/bin:/bin", "PHASE": "999", "PY": "python3",

@@ -187,3 +187,50 @@ change (rule 1). M2 reads the values on the Mac.
   (conftest stashed), 2 passed after, serial and `-n 2`. The new test:
   1 passed with the pin, 1 failed with the pin stashed.
 - **Commit:** the one that carries this entry.
+
+### 2026-10-12 — The build: where live is, the server's files, the tests
+
+- **`live.py`** (deploy skill): `where()` reads `~/.config/motodiag/live.json`
+  (or `MOTODIAG_LIVE_CONFIG`) and refuses, exit 4, on a missing file, a null
+  path ("live is on desktop-76s9bqv") or a path that does not exist;
+  `unsynced()` refuses a backup folder on a Windows drive (`/mnt/<x>/`) or
+  under a sync root (OneDrive, iCloud's Mobile Documents, CloudStorage,
+  Dropbox, Google Drive).
+- **The five tools:**
+  - `deploy.py`: `LIVE` is gone; each mode resolves live at the call and
+    `main` exits 4 on a refusal; `backup [label]` is new (backup API, 5
+    kept, sha256 printed); `dryrun` and `backup` refuse a synced folder.
+  - `verify_phase.sh` check 8 reads `live.py`'s path and fails on a refusal.
+  - `census.py` (`live_db()`, and exit 4 from its command line unless a
+    copy is named); `acquire.machine_names`; `orchestrate` refuses before
+    any clone, since every batch snapshots live.
+- **Decided: the test suite's 244H tripwire learns live's new path.**
+  The tripwire and the redirect guarded only the checkout's
+  `data/motodiag.db`, which is not live after the move. `conftest` now
+  reads `live.json`: an explicit `MOTODIAG_DB_PATH` naming live is
+  dropped and redirected, and the tripwire refuses it. On the Mac the
+  file names no path, and nothing changes there.
+- **`ops/desktop/`:** `motodiag-api.service` (127.0.0.1:8000,
+  `--skip-migrations`, `User=lilcu`, `Restart=always`), `install_unit.sh`
+  (the operator runs it with sudo), `wslconfig` (both idle timeouts off),
+  `motodiag-wsl-boot.xml` (at boot, S4U, `wsl.exe -d Ubuntu-26.04 --exec
+  /bin/sleep infinity`).
+- **The edit guard blocked one command**: a Python script writing
+  `tests/test_phase382_live_location.py`. The three edits were redone with
+  the Edit tool. The guard is unchanged. (The `.claude/` scripts were
+  edited by exact-string replacement, each asserted to occur once, and the
+  diff was read back whole.)
+- **Tests:** `test_phase382_live_location.py` 29 passed. The first run had
+  2 failures, both mine: `live.py`'s docstring named the old path (the
+  scan caught it; reworded), and the probe's conftest shim did not load the
+  suite's conftest (now loaded with `-p conftest`).
+- **Mutations: 19/19 red** (`382_mutate.py`, output in `382_mutate.out`).
+- **Floor:** 10838 → 10868, +30 by a diff of collected ids against master
+  `77755a4` (+30, -0).
+- **Whole-tree caught two older fixtures** written against the old
+  contract: `test_phase257_source_stage.py::…::test_the_flag_reaches_batch`
+  (`orchestrate.main` now refuses without `live.json`; KeyError on the
+  unreached batch) and `test_phase379_verify_live_fails.py::test_check_8_passes_when_equal_or_with_no_deploy`
+  (check 8's fake skills folder had no `live.py`). Each fixture gains the
+  piece the new contract asks for (a `live.json` naming a temp file; a
+  `live.py` printing the fixture's path); no assertion changed. 91 passed.

@@ -255,8 +255,9 @@ class TestTheScopeFixtures:
 
 class TestNoTempCopies:
     def test_the_defaults_name_the_repo_and_the_backup_folder(self):
-        for p in (D.LIVE, D.BACKUPS):
-            assert "/tmp" not in str(p) and "/private/" not in str(p), p
+        # Phase 382: live is no longer a constant; live.py resolves it per machine.
+        assert not hasattr(D, "LIVE")
+        assert "/tmp" not in str(D.BACKUPS) and "/private/" not in str(D.BACKUPS)
         assert D.BACKUPS == pathlib.Path.home() / "backups" / "motodiag"
         assert D.KEEP == 5
 

@@ -22,6 +22,25 @@ from pathlib import Path
 # ---------------------------------------------------------------------------
 PRODUCTION_DB = str((Path(__file__).parent.parent / "data" / "motodiag.db").resolve())
 
+
+# Phase 382: live may sit outside the repository, where this machine's
+# live.json says (the home desktop). The redirect and the tripwire know that
+# path too; an explicit MOTODIAG_DB_PATH naming it is not honoured.
+def _live_on_this_machine():
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent.parent / ".claude" / "skills" / "deploy"))
+    import live
+    try:
+        return str(live.where().resolve())
+    except live.LiveElsewhere:
+        return None
+
+
+LIVE_DB = _live_on_this_machine()
+if LIVE_DB and os.environ.get("MOTODIAG_DB_PATH") and \
+        str(Path(os.environ["MOTODIAG_DB_PATH"]).resolve()) == LIVE_DB:
+    del os.environ["MOTODIAG_DB_PATH"]
+
 if not os.environ.get("MOTODIAG_DB_PATH"):
     _TEST_DB_DIR = tempfile.mkdtemp(prefix="motodiag_test_default_")
     os.environ["MOTODIAG_DB_PATH"] = str(Path(_TEST_DB_DIR) / "default.db")
@@ -246,7 +265,7 @@ def _never_the_production_database():
     from motodiag.core.database import get_db_path
 
     resolved = str(Path(get_db_path()).resolve())
-    assert resolved != PRODUCTION_DB, (
+    assert resolved not in (PRODUCTION_DB, LIVE_DB), (
         "A test resolved the bare database path to the PRODUCTION database "
         f"({PRODUCTION_DB}).\n"
         "`get_connection(db_path=None)` falls through to `get_settings().db_path`, "

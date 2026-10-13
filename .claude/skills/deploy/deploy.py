@@ -32,6 +32,13 @@ and unchanged."
     deploy.py verify-live <phase>  read-only (Phase 378, K25): live against the
                                    phase's backup, the approved diff, integrity
                                    and foreign keys.
+    deploy.py backup [label]       a backup-API copy of live to the backup
+                                   folder, 5 kept, its sha256 printed (Phase 382).
+
+**Where live is** (Phase 382): `live.py` reads this machine's
+`~/.config/motodiag/live.json`. Every mode exits 4 before reading anything
+when live is not on this machine, and the backup folder is refused if a
+cloud service could sync it.
 
 **The exact diff** (F172). The dry-run file ends with the whole diff as JSON:
 every field of every added and removed row, the before and after of every
@@ -85,7 +92,9 @@ from collections.abc import Callable
 
 HERE = pathlib.Path(__file__).resolve().parent
 ROOT = HERE.parents[2]
-LIVE = ROOT / "data" / "motodiag.db"
+sys.path.insert(0, str(HERE))
+import live as L  # noqa: E402
+
 BACKUPS = pathlib.Path.home() / "backups" / "motodiag"
 KEEP = 5
 MARK = "<!-- dry-run diff below; everything above is its header -->"
@@ -393,9 +402,11 @@ def _header(text: str) -> dict[str, str]:
 
 
 # ------------------------------------------------------------ the two steps
-def dryrun(phase: str, *, db: pathlib.Path = LIVE, backups: pathlib.Path = BACKUPS,
+def dryrun(phase: str, *, db: pathlib.Path | None = None, backups: pathlib.Path = BACKUPS,
            repo: pathlib.Path = ROOT, migrate: Callable = _default_migrate,
            parity_build: Callable | None = None) -> int:
+    db = db or L.where()
+    L.unsynced(backups)
     scope_file = scope_path(repo, phase)
     scope = json.loads(scope_file.read_text())
     print("before (live, read only):", json.dumps(state(db)))
@@ -546,9 +557,10 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
     return head
 
 
-def apply_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT,
+def apply_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path = ROOT,
                migrate: Callable = _default_migrate,
                parity_build: Callable | None = None) -> int:
+    db = db or L.where()
     try:
         head = preflight(phase, db=db, repo=repo, migrate=migrate, parity_build=parity_build)
     except Refused as e:
@@ -679,7 +691,7 @@ def shape_gaps(approved: dict, now: dict) -> list[str]:
     return gaps
 
 
-def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROOT) -> int:
+def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path = ROOT) -> int:
     """Read-only: live against the phase's backup (Phase 378, K25).
 
     Copies both through SQLite's backup API (the backup opened immutable),
@@ -693,6 +705,7 @@ def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROO
     live's schema is past the phase's own migrations, which then explains the
     difference; else 0.
     """
+    db = db or L.where()
     f = find_diff(repo, phase)
     if f is None:
         print(f"verify-live {phase}: no dry-run diff in in_progress/ or completed/; "
@@ -753,14 +766,36 @@ def verify_live(phase: str, *, db: pathlib.Path = LIVE, repo: pathlib.Path = ROO
     return 3 if gaps else 0
 
 
+def backup_live(label: str, *, db: pathlib.Path | None = None,
+                backups: pathlib.Path = BACKUPS) -> int:
+    """A backup-API copy of live, 5 kept, its sha256 printed (Phase 382)."""
+    db = db or L.where()
+    L.unsynced(backups)
+    backups.mkdir(parents=True, exist_ok=True)
+    bk = backups / f"motodiag_{label}_{dt.datetime.now():%Y%m%d_%H%M%S}.db"
+    backup(db, bk)
+    print("live:", db)
+    print("backup:", bk, "removed by retain-5:", retain(backups))
+    print("sha256:", sha256(bk))
+    return 0
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n\n")[0])
-    ap.add_argument("mode", choices=["dryrun", "apply-live", "verify-live"])
-    ap.add_argument("phase")
+    ap.add_argument("mode", choices=["dryrun", "apply-live", "verify-live", "backup"])
+    ap.add_argument("phase", nargs="?", help="the phase; for backup, a label (default: manual)")
     a = ap.parse_args(argv)
-    if a.mode == "verify-live":
-        return verify_live(a.phase)
-    return dryrun(a.phase) if a.mode == "dryrun" else apply_live(a.phase)
+    if a.mode != "backup" and not a.phase:
+        ap.error(f"{a.mode} needs a phase")
+    try:
+        if a.mode == "backup":
+            return backup_live(a.phase or "manual")
+        if a.mode == "verify-live":
+            return verify_live(a.phase)
+        return dryrun(a.phase) if a.mode == "dryrun" else apply_live(a.phase)
+    except L.LiveElsewhere as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return L.REFUSED
 
 
 if __name__ == "__main__":

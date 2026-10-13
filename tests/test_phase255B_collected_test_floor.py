@@ -327,7 +327,12 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: which migration 086 now calls, and its parametrised id went with it
 #: (the 67 after it only renumber). Measured: 10838 collected.
 #:
-COLLECTED_TEST_FLOOR = 10838
+#: Phase 382 (2026-10-12): 10838 -> 10868, +30, by a diff of collected ids
+#: against master 77755a4 (in a worktree, 10838 there): +30 -0. The new
+#: tests/test_phase382_live_location.py (29) and
+#: tests/test_phase382_suite_width.py (1, bug fix #1). Measured: 10868.
+#:
+COLLECTED_TEST_FLOOR = 10868
 
 
 def _collected_count() -> int:

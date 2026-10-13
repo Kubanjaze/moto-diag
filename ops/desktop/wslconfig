@@ -1,0 +1,7 @@
+# Phase 382: copied to C:\Users\lilcu\.wslconfig. WSL must not stop the
+# distribution or its VM when no console is attached: the API lives in it.
+[general]
+instanceIdleTimeout=-1
+
+[wsl2]
+vmIdleTimeout=-1

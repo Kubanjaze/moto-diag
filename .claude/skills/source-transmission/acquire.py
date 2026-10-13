@@ -612,7 +612,8 @@ ROUTES = {
 }
 
 
-def machine_names(make: str, db: pathlib.Path = C.REPO / "data" / "motodiag.db") -> list[str]:
+def machine_names(make: str, db: pathlib.Path | None = None) -> list[str]:
+    db = db or C.live_db()
     return [e["model"] for e in C.census(db, make).get(make, []) if not C.not_a_machine(make, e["model"])]
 
 

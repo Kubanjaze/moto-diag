@@ -1,0 +1,28 @@
+# moto-diag's live API on the home desktop (Phase 382). Installed by
+# install_unit.sh as /etc/systemd/system/motodiag-api.service.
+#
+# - Loopback only. The tailnet reaches it through the Windows Tailscale's
+#   `tailscale serve`; never the LAN, never Funnel.
+# - --skip-migrations: without it, every start applies pending migrations to
+#   live (cli/serve.py, Phase 191B), around the deploy skill's dry run,
+#   approved diff and backup. Migrations reach live only by deploy.py.
+# - Code from its own clone of master (~/motodiag/server); live and its
+#   uploads in ~/motodiag/live. Keys the operator adds go in server.env (600).
+[Unit]
+Description=moto-diag API (live), 127.0.0.1:8000
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=lilcu
+WorkingDirectory=/home/lilcu/motodiag/server
+Environment=MOTODIAG_DB_PATH=/home/lilcu/motodiag/live/motodiag.db
+Environment=MOTODIAG_DATA_DIR=/home/lilcu/motodiag/live
+EnvironmentFile=-/home/lilcu/.config/motodiag/server.env
+ExecStart=/home/lilcu/motodiag/server/.venv/bin/motodiag serve --host 127.0.0.1 --port 8000 --skip-migrations
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

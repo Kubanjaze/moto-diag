@@ -39,6 +39,14 @@ sys.path.insert(0, str(REPO / "src"))
 
 from motodiag.knowledge.transmission import resolve_transmission  # noqa: E402
 
+sys.path.insert(0, str(REPO / ".claude" / "skills" / "deploy"))
+import live as L  # noqa: E402
+
+
+def live_db() -> pathlib.Path:
+    """Live, where this machine's live.json says (Phase 382); refuses elsewhere."""
+    return L.where()
+
 
 # Marques by the names a junction spelling would start with. The junction's
 # own makes plus the marques that leak into it through shared rows.
@@ -188,8 +196,13 @@ def census(db: pathlib.Path, make: str | None = None) -> dict[str, list[dict]]:
 
 
 def main(argv: list[str]) -> int:
-    db = pathlib.Path(next((a for a in argv if not a.startswith("--") and
-                            argv[argv.index(a) - 1] != "--make"), REPO / "data" / "motodiag.db"))
+    named = next((a for a in argv if not a.startswith("--") and
+                  argv[argv.index(a) - 1] != "--make"), None)
+    try:
+        db = pathlib.Path(named) if named else live_db()
+    except L.LiveElsewhere as e:
+        print(f"REFUSED: {e} Or name a copy of live: census.py <db>", file=sys.stderr)
+        return L.REFUSED
     make = argv[argv.index("--make") + 1] if "--make" in argv else None
     result = census(db, make)
     if "--json" in argv:
