@@ -103,3 +103,24 @@ must ask at boot.
 
 What M1 (read-only, in `382_step0.md`) gives, before the plan: the Mac's
 freeze, schema and row counts, backups, and that nothing serves.
+
+### 2026-10-12 — The push guard blocked the Step 0 push (recorded; the guard unchanged)
+
+- **Git identity:** this machine had none. Set for this repository only
+  (`git config user.name/user.email`), matching the history's author,
+  `Kerwyn <kubanjaze@gmail.com>`. Step 0 committed as `b7ecbf9`.
+- **The block:** `git push -u origin phase-382` was refused by
+  `pre_push_guard.sh`: fast mode 2 failed, 1672 passed. Both failures
+  assert on Rich-rendered CLI text that wrapped at about 38 columns:
+  `test_phase244T_safety_wiring.py::…::test_a_warning_diagnosis_shows_its_alert`
+  and `test_f86_recall_honesty.py::…::test_a_real_duplicate_is_still_idempotent`.
+  The same command passed twice in this session, run from a shell
+  with no `COLUMNS`.
+- **Reproduced:** the two tests with `COLUMNS=38`: 2 failed; with 60, 79
+  or unset: 2 passed. A 38-column pty without `COLUMNS` passes, so it is
+  the variable, which the hook's environment carries from the operator's
+  terminal. The suite's result depends on the width of the terminal it
+  was started from.
+- **Decided:** a defect in the test harness, to be fixed as bug fix #1
+  after v1.0 (the conftest pins the width the suite already passes at).
+  The guard is not loosened. Step 0 stays local until then.
