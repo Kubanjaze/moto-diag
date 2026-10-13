@@ -26,6 +26,12 @@ if not os.environ.get("MOTODIAG_DB_PATH"):
     _TEST_DB_DIR = tempfile.mkdtemp(prefix="motodiag_test_default_")
     os.environ["MOTODIAG_DB_PATH"] = str(Path(_TEST_DB_DIR) / "default.db")
 
+# Phase 382, bug fix #1: Rich sizes CLI output from COLUMNS, and the push
+# guard's hook inherits the operator's terminal width. At 38 columns two CLI
+# tests failed on wrapped text. 80 is the width Rich uses when stdout is not a
+# terminal, which every run without COLUMNS already passes at.
+os.environ["COLUMNS"] = "80"
+
 import pytest
 
 # Phase 281: no test reaches the network; see tests/support/network_guard.py.

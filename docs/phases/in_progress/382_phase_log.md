@@ -168,3 +168,22 @@ under `settings.data_dir` (`videos/`, `photos/`, `audio/`), and
 stored paths are absolute Mac paths, moving only the database leaves 6
 rows pointing at files that are not here, and rewriting them is a live-row
 change (rule 1). M2 reads the values on the Mac.
+
+### Bug fix #1 — 2026-10-12 — the suite read the operator's terminal width
+
+- **Issue:** the push guard refused the Step 0 push: fast mode 2 failed,
+  `test_phase244T_safety_wiring.py::…::test_a_warning_diagnosis_shows_its_alert`
+  and `test_f86_recall_honesty.py::…::test_a_real_duplicate_is_still_idempotent`,
+  each asserting a phrase that Rich had wrapped at about 38 columns.
+- **Root cause:** Rich sizes a console from `COLUMNS` before anything else.
+  The hook's environment carries the operator's terminal width; a run from a
+  shell without `COLUMNS` gets 80, because stdout is not a terminal. The
+  suite's result depended on the terminal it was started from.
+- **Fix:** `tests/conftest.py` sets `COLUMNS=80` at import, the width every
+  run without it already passes at. The guard is unchanged.
+- **Files:** `tests/conftest.py`; `tests/test_phase382_suite_width.py` (new,
+  spawns pytest on the f86 test with `COLUMNS=38`).
+- **Verified:** with `COLUMNS=38`, the two tests: 2 failed before the fix
+  (conftest stashed), 2 passed after, serial and `-n 2`. The new test:
+  1 passed with the pin, 1 failed with the pin stashed.
+- **Commit:** the one that carries this entry.
