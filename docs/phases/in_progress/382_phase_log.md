@@ -271,3 +271,15 @@ M2, run on the Mac by the operator (output pasted into the session):
 So moving only the database leaves 6 rows naming files that are not on
 the desktop. Rewriting them changes live rows: a rule-1 stop, put to the
 operator with the cut-over's before-state.
+
+### 2026-10-12 — The unit installed and the boot task registered (the operator)
+
+Observed from here after the operator ran steps 1 and 2:
+- `systemctl is-enabled motodiag-api.service`: `enabled`; status
+  `inactive (dead)`: live is not there, so `ConditionPathExists` holds it.
+- Task `\motodiag\wsl-boot`: State `Running`, LogonType **S4U**, UserId
+  `lilcu`, LastRunTime 23:49:19, LastTaskResult 267009 (0x41301, "the task
+  is currently running"). Its `/bin/sleep infinity` is PID 25092, started
+  23:49:18, parent WSL's `/init`, not this session. **WSL starts under
+  S4U: no password stored.** Whether it does so with nobody signed in is
+  the restart proof.
