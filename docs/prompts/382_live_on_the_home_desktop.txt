@@ -1,0 +1,62 @@
+Do this: start Phase 382, live and the backend on the home desktop (row 382, new: add it to docs/ROADMAP.md as 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. You are at moto-diag's root on my home desktop, which part 1 set up (docs/prompts/382_desktop_setup.txt). Read these first:
+- **Part 1's report, `~/382_part1_report.md`,** with my pick in it. It goes into the phase folder verbatim, with Step 0.
+- **docs/reports/2026-10-12_plan_of_record.md,** which puts this phase first in Wave 1, and says why.
+- **The deploy skill** (.claude/skills/deploy/), and 381's handoff, docs/handoffs/2026-10-09_381_closed.md.
+
+Why this phase: a shop's server has to be always on. The Mac sleeps; it hibernated mid-phase on 2026-10-08. Offsite backups (345), crash reporting (343), live payments (371, 372) and onboarding (330) attach to wherever the server runs. So the server moves first, and only once.
+
+The measured facts, taken 2026-10-12 on the Mac, on master at `60bb480`. Re-verify what you can from here; the rest needs the Mac.
+- **What moves:** the live database, the Mac's `data/motodiag.db` (schema 86, 1057 known issues after 381), and an always-on `motodiag serve`. Development and builders stay on the Mac.
+- **Nothing serves the API today.** The Mac has no listener and no launchd job. Its Tailscale is stopped, with no serve config. So nothing exposed has to move: this phase makes the first always-on server.
+- **The API stays on loopback.** `api_host` defaults to 127.0.0.1 (src/motodiag/core/config.py). It is reached over the tailnet through `tailscale serve`. Never the LAN, never Funnel, without asking me.
+- **Five tools read live by its path.** Run on the Mac after the move, each reads a stale copy:
+  - deploy.py (`LIVE = ROOT / "data" / "motodiag.db"`, line 88). Its apply-live would migrate the Mac's copy.
+  - verify_phase.sh's live check (line 74);
+  - the source-transmission skill's census.py, acquire.py and orchestrate.py.
+- **K18's order stands:** regression of record, apply from the branch, close-out commit, merge. Today all four run on one machine.
+- **The app's server address** comes from Settings → Server.
+  - That address wins over the build-time `API_BASE_URL`, and is checked against the server's `/healthz` before it is saved.
+  - A Release build needs an https `API_BASE_URL` (moto-diag-mobile's README).
+  - Any change in that repository is a session rooted there.
+- **The interpreter of record** is the Mac's `.venv`, Python 3.14.5. master collects 10838 tests.
+- **Two checkouts now push to one master.** The multi-workstation sync rules apply (`pull --ff-only`). No Mac builder runs while this phase does.
+- **371 (live Stripe) will need an endpoint Stripe can reach;** its row says why it waits. That is 371's decision, not this phase's. Nothing here goes beyond the tailnet.
+
+What to build. Prove each item by a check seen failing once:
+- **The API comes back by itself after a restart with nobody signed in,** the case a Windows Update restart creates. If my pick cannot do that, say so at Step 0.
+- **It answers over the tailnet from the Mac,** through `tailscale serve`. **It does not answer from my home network:** an attempt from the Mac at this machine's LAN address must fail.
+- **Backups of live land on this machine.**
+  - 5 kept, under the deploy skill's discipline.
+  - Outside any folder a cloud service syncs.
+  - K27's weekly copy waits for a shop's real data.
+- **Every tool that reads live by its path knows where live is.** On the Mac, the deploy skill's modes refuse. A test proves it here, and it is run once on the Mac after the merge.
+- **Live here equals the Mac's copy it was taken from:** the same sha256, before the API first opens it.
+- **The app reaches the new address** over the tailnet.
+
+Steps on the Mac are run by me, or by my advisor's session there, from commands you give. They are the before-state, the copy, starting the Mac's Tailscale, and the checks from the Mac. Their output comes back to you.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **The cross-machine flow.** This changes the deploy skill's rules. Cover:
+   - where the regression of record, the dry run, the apply and verify-live run;
+   - how the live diff reaches the branch;
+   - how the Mac's tools learn where live is;
+   - what the Mac's `data/motodiag.db` becomes.
+2. **How the API starts at boot,** if my pick leaves more than one way.
+3. **How live's copy travels from the Mac to here.** Never through git: both repositories are public. Never through a cloud folder without asking me.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+The cut-over is a rule-1 stop.
+- Before it, print the before-state: the Mac's live schema, its row counts, and the sha256 of a backup-API copy.
+- The Mac stops being live and this machine starts, on my word. No rows change, but production moves.
+- The Mac's `data/motodiag.db` is kept, never deleted.
+
+Report:
+- **At Step 0:** the three questions, with options; part 1's measurements that bear on them; and what you re-verified.
+- **At the end:**
+  - each proof, with its output;
+  - the cut-over's before and after;
+  - the deploy skill's change;
+  - the regression line, and where it ran;
+  - verify_phase.sh's result;
+  - the next step, my call.
