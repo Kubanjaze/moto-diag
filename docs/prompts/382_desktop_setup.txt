@@ -1,0 +1,62 @@
+Do this: get this Windows desktop ready to hold moto-diag's live server. This is part 1 of Phase 382; part 2 does the move, in a new session started at the repository root. You are Claude Code on my home desktop.
+- moto-diag is my motorcycle-diagnostics backend (https://github.com/Kubanjaze/moto-diag). Its app is https://github.com/Kubanjaze/moto-diag-mobile. Both repositories are public.
+- Development stays on my Mac. This machine will hold the live database and run the API around the clock.
+
+This session is not started at the repository root, so the repository's rules and guards are not loaded. These hold here:
+- **Credentials are mine.** Never type, read or print a password, token or key.
+  - For a sign-in (GitHub, Tailscale, Claude, a Windows admin prompt), tell me exactly what to run or click, then check the result.
+  - A check says "signed in: yes" or "no", never what the token is.
+- **No commits and no pushes** from this session. Cloning and reading are fine.
+- **Nothing reachable from my home network.** Never bind beyond loopback, and never use Tailscale Funnel, without asking me.
+- **Ask before changing Windows:** installs, power, updates, the firewall, scheduled tasks. Measuring changes nothing and needs no ask.
+
+1. **Measure, read-only.** Report each figure with the command it came from:
+   - **The machine:** Windows edition, version and build; CPU, cores, RAM and free disk; whether virtualization is on in firmware.
+   - **WSL:** installed or not, its version and distributions (`wsl --status`, `wsl -l -v`). Docker Desktop: installed or not.
+   - **Tools:** git, Python, Tailscale and the GitHub CLI, installed or not, with versions. Whether Tailscale is signed in, and whether it runs unattended (stays connected with nobody signed in to Windows).
+   - **Power and updates, on AC power:**
+     - the sleep and hibernate timeouts;
+     - Windows Update's active hours and restart behaviour;
+     - whether Windows signs a user in automatically.
+   - **Network:** anything already listening on an address other than loopback (`Get-NetTCPConnection -State Listen`), and the firewall profile of the active network.
+
+2. **Stop and give me the fork, with your recommendation.** I pick:
+   - **A. Linux inside Windows: WSL2 with Ubuntu.** My advisor leans this way.
+     - Every guard, check and deploy script in the repository is bash, so a session at the repository root works as it does on the Mac.
+     - The open question: starting the API at boot, and after a Windows Update restart, with nobody signed in.
+   - **B. Native Windows: Python on Windows, with the API as a Windows service.**
+     - It starts at boot cleanly.
+     - The bash tooling would need Git Bash at best and porting at worst: the edit and push guards, `wholetree.sh`, `regression.sh`, `verify_phase.sh`, and `clock_check.sh` with libfaketime.
+   - **C. Docker Desktop.** It runs on WSL2 underneath, starts at sign-in, and publishes ports on every interface by default.
+   For each, say from your measurements:
+   - what starts the API at boot with nobody signed in;
+   - where the repositories and the live database would live;
+   - how a Claude Code session runs at the repository root with its hooks;
+   - what I do by hand.
+   Where a claim can only be measured after setup, say so; part 2 has to prove it.
+
+3. **After my pick, set the machine up with me, checking each step:**
+   - **The environment, with Python 3.14.** The Mac's `.venv` runs 3.14.5, the interpreter of record.
+   - **Git with LF line endings.** A CRLF checkout breaks every bash script. Under WSL, clone into the Linux filesystem (for example `~/Projects/`), never under `/mnt/c`.
+   - **Three repositories side by side in one folder,** as on the Mac:
+     - moto-diag;
+     - moto-diag-mobile. `roadmap_check.py`, `finding_check.py`, `next_f_number.sh`, gate 11 and the docs test all read `../moto-diag-mobile`.
+     - workspace-docs (https://github.com/Kubanjaze/workspace-docs, private: clone it after I sign in to GitHub). moto-diag's CLAUDE.md imports `../workspace-docs/claude/working-rules.md`. The first session at moto-diag's root asks once to approve that import; I approve it.
+   - **`.venv` in moto-diag,** installed as its README says (`pip install -e ".[dev]"`).
+   - **Tailscale on this machine, signed in (I sign in), serving nothing yet.** Whether `tailscale serve` runs on Windows or inside Linux is part 2's design.
+   - **Sleep off on AC power.**
+   - **Claude Code where part 2 will run** (for A, the CLI inside Ubuntu). I sign in.
+   - **Push access to GitHub for part 2.** I sign in.
+   Then prove the checkout:
+   - Run `.claude/skills/closeout/wholetree.sh` at moto-diag's root.
+   - Report its exit code and counts.
+   - A failure there is about this machine, not the code, until the Mac reproduces it.
+
+4. **Write your report to `~/382_part1_report.md`,** in the home folder of the environment part 2 will run in, outside both repositories. It holds:
+   - the measurements;
+   - my pick, in my words;
+   - every change made to this machine;
+   - the wholetree result.
+   Then give me the exact command, for the chosen environment, that starts part 2 at moto-diag's root with `docs/prompts/382_live_on_the_home_desktop.txt`.
+
+Stop there. Part 2 does the move.
