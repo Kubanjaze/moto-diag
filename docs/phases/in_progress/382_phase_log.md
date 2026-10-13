@@ -124,3 +124,47 @@ freeze, schema and row counts, backups, and that nothing serves.
 - **Decided:** a defect in the test harness, to be fixed as bug fix #1
   after v1.0 (the conftest pins the width the suite already passes at).
   The guard is not loosened. Step 0 stays local until then.
+
+### 2026-10-12 — The operator's picks, M1 from the Mac, the venv rebuilt
+
+**The operator's words:** "1A(i), 2A + 2-i, 3A. HTTPS certificates are on."
+
+**M1, run on the Mac by the operator** (output pasted into the session):
+- `master...origin/master`, `77755a4`; Python 3.14.5; `fastapi 0.136.3`,
+  `starlette 1.3.1`; `pip freeze` 92 lines (91 pins and the editable line).
+- Live: schema 86 (`schema_version` holds 85 rows); `known_issues` 1057,
+  `known_issue_makes` 1291, `known_issue_models` 2772, `api_keys` 26,
+  `users` 4, `shops` 1, `customers` 6, `work_orders` 6, `videos` 6,
+  `video_analyses` 5, `diagnostic_sessions` 7; 113 tables in all.
+- `data/motodiag.db` 32301056 bytes, modified Oct 9 09:52; `-wal` 0 bytes.
+- `launchctl list | grep -i moto` and `lsof … LISTEN | grep -i python`:
+  nothing. Nothing serves on the Mac, as the prompt said.
+- **Two gaps in M1:** `ls -lt ~/backups/motodiag/ | head -7` was cut at 7
+  lines, so it shows 2 backups (pre381, pre380) and is not a count; and
+  `zsh: command not found: tailscale` (the Mac app's CLI is not on PATH).
+  M2 covers both.
+
+**The venv rebuilt from the Mac's freeze.** Diffing the freeze against this
+`.venv` showed wide drift, not only F77's pair: `anthropic` 1.13.0 here
+against 0.109.1, `openai` 3.29.0 against 2.41.1, `reportlab` 5.0.1 against
+4.5.1, and 13 packages the Mac does not have. The part-1 venv is kept as
+`.venv_part1`; `.venv` is new (uv, CPython 3.14.5), installed from the
+Mac's 91 pins and `pip install --no-deps -e .`. `pip check`: no broken
+requirements; the freeze, less pip, equals the Mac's 91 lines (`diff`
+empty). Under 1A this is now the interpreter of record.
+
+**Decided, without a stop:**
+- **sudo needs the operator's password here** (`sudo -n true`:
+  "interactive authentication is required"; `Linger=no`). The API runs as
+  a system unit with `User=lilcu`; installing it is one command block the
+  operator runs.
+- **Taildrop's landing folder is `C:\motodiag-inbox`**, outside the user
+  profile (OneDrive is `C:\Users\lilcu\OneDrive`), and the file is copied
+  from there into Ubuntu.
+
+**A question M2 must answer first: live's media.** Uploads are stored
+under `settings.data_dir` (`videos/`, `photos/`, `audio/`), and
+`videos.file_path` stores the path. Live has 6 `videos` rows. If the
+stored paths are absolute Mac paths, moving only the database leaves 6
+rows pointing at files that are not here, and rewriting them is a live-row
+change (rule 1). M2 reads the values on the Mac.
