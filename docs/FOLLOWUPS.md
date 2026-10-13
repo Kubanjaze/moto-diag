@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F204** (this file). The
+At the time of writing the highest assigned is **F205** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3481,3 +3481,24 @@ powertrain or transmission admits, or another rule). It also needs a
 decision on row 231's scope, sourced or narrowed as F149's rows were,
 with Gate 14's censuses re-measured, and a test that a Ruckus or a Grom
 prompt keeps its CVT rows.
+
+### F205
+
+**Uploaded media rows store the absolute path of the machine that received them, so moving live to another machine strands every media row**
+
+Filed in Phase 382 (2026-10-12), when live moved from the Mac to the home
+desktop. The upload routes write `str(storage_dir / name)` into the row,
+where `storage_dir` is under `settings.data_dir`:
+- `videos.file_path` (`api/routes/videos.py`, `_update_file_path`);
+- the photo rows' `file_path` (`api/routes/photos.py`);
+- `voice_transcripts.audio_path` (`api/routes/transcripts.py`).
+
+Measured on the Mac's live (M2): all 6 `videos` rows held
+`/Users/lilquant/Projects/moto-diag/data/videos/…`, the only cells in live
+naming the Mac (every text column searched for `/Users/`). Photos and
+transcripts had 0 rows. Phase 382 moved the files and rewrote the 6 paths
+through the deploy skill, at the operator's V-A.
+
+To close: store the path relative to `data_dir` and resolve it on read,
+with a migration that rewrites the existing rows, and a test that a row
+written under one `data_dir` reads back under another.

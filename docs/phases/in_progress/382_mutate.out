@@ -16,6 +16,7 @@ T2 the suite reads the terminal width: red
 O1 the unit migrates at start: red
 O2 the unit binds every interface: red
 O5 the unit starts with no live database: red
+O6 sudo opens every systemctl verb: red
 O3 the task waits for a sign-in: red
 O4 WSL idles the VM out: red
-20/20 red
+21/21 red

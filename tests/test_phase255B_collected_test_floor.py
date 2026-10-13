@@ -331,8 +331,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: against master 77755a4 (in a worktree, 10838 there): +30 -0. The new
 #: tests/test_phase382_live_location.py (29) and
 #: tests/test_phase382_suite_width.py (1, bug fix #1). Measured: 10868.
+#: Then +1: the sudoers rule's test in test_phase382_live_location.py.
+#: Measured: 10869 collected.
 #:
-COLLECTED_TEST_FLOOR = 10868
+COLLECTED_TEST_FLOOR = 10869
 
 
 def _collected_count() -> int:

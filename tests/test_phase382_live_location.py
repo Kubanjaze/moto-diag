@@ -225,6 +225,16 @@ class TestTheServerFiles:
         assert "Ubuntu-26.04" in doc.getElementsByTagName("Arguments")[0].firstChild.data
         assert doc.getElementsByTagName("ExecutionTimeLimit")[0].firstChild.data == "PT0S"
 
+    def test_sudo_without_a_password_covers_only_the_units_three_verbs(self):
+        text = (OPS / "install_sudoers.sh").read_text()
+        rule = text.split("<<'RULES'\n", 1)[1].split("\nRULES", 1)[0]
+        user, rest = rule.split(" NOPASSWD: ")
+        assert user == "lilcu ALL=(root)"
+        assert [c.strip() for c in rest.split(",")] == [
+            f"/usr/bin/systemctl {verb} motodiag-api.service"
+            for verb in ("start", "stop", "restart")]
+        assert "visudo -cf" in text
+
     def test_wsl_never_idles_the_distribution_out(self):
         text = (OPS / "wslconfig").read_text()
         assert "instanceIdleTimeout=-1" in text and "vmIdleTimeout=-1" in text

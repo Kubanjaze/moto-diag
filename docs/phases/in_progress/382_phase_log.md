@@ -135,7 +135,8 @@ freeze, schema and row counts, backups, and that nothing serves.
 - Live: schema 86 (`schema_version` holds 85 rows); `known_issues` 1057,
   `known_issue_makes` 1291, `known_issue_models` 2772, `api_keys` 26,
   `users` 4, `shops` 1, `customers` 6, `work_orders` 6, `videos` 6,
-  `video_analyses` 5, `diagnostic_sessions` 7; 113 tables in all.
+  `video_analyses` 5, `diagnostic_sessions` 7. (This line first said "113
+  tables in all", a figure not counted; M3 counts 121.)
 - `data/motodiag.db` 32301056 bytes, modified Oct 9 09:52; `-wal` 0 bytes.
 - `launchctl list | grep -i moto` and `lsof … LISTEN | grep -i python`:
   nothing. Nothing serves on the Mac, as the prompt said.
@@ -283,3 +284,38 @@ Observed from here after the operator ran steps 1 and 2:
   23:49:18, parent WSL's `/init`, not this session. **WSL starts under
   S4U: no password stored.** Whether it does so with nobody signed in is
   the restart proof.
+
+### 2026-10-13 — V-A, M3's before-state, and the stop for the cut-over
+
+**The operator's words:** "V-A." (with M3's output).
+
+**M3, run on the Mac at 2026-10-13 00:05 EDT** (output pasted):
+- The Mac's Tailscale started: the tailnet lists the Mac, the desktop and
+  the phone; `tailscale ping desktop-76s9bqv`: pong via DERP(nyc), 681 ms,
+  "direct connection not established".
+- The backup-API copy `~/382_cutover/motodiag_before.db`: schema 86,
+  integrity ok, 0 foreign-key violations, **121 tables, 5801 rows**
+  (`known_issues` 1057, `known_issue_models` 2772, `known_issue_makes` 1291,
+  `api_keys` 26, `users` 4, `shops` 1, `customers` 6, `work_orders` 6,
+  `videos` 6, `schema_version` 85, …; the non-empty tables are listed in
+  the output).
+- Each of the 6 video files' sha256 equals its row's `sha256`: True ×6.
+- The copy: 32301056 bytes, **sha256
+  `7c302011e3cff0a8acbd95ecb61d96f2e438f2a69d879daa6fe81c0390b12eed`**.
+- `videos.tar`: 6 mp4, **sha256
+  `665f8528e9bc89e4fb091cf31945911b6b9beec7e7f9deb2d619e4f7133db6f4`**.
+
+**Filed F205** (media rows store the receiving machine's absolute path),
+before any document cites it.
+
+**Decided:** `ops/desktop/install_sudoers.sh` lets `lilcu` start, stop and
+restart `motodiag-api.service`, and nothing else, without a password, so
+the deploy skill's restart after a merge needs no password at the
+keyboard. `visudo -cf` checks the rule before it is installed. A test pins
+the three commands; mutation O6 (a wildcard verb) is red; the harness is
+21/21 red. The floor 10868 → 10869 (that test).
+
+**The tailnet name** is `desktop-76s9bqv.taila45995.ts.net` (MagicDNS on);
+the Windows Tailscale has no serve config yet.
+
+M4 (the cut-over, in `382_mac_steps.md`) waits for the operator's word.
