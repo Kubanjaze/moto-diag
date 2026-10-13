@@ -234,3 +234,20 @@ change (rule 1). M2 reads the values on the Mac.
   (check 8's fake skills folder had no `live.py`). Each fixture gains the
   piece the new contract asks for (a `live.json` naming a temp file; a
   `live.py` printing the fixture's path); no assertion changed. 91 passed.
+
+### 2026-10-12 — The server's side, before live
+
+- **Decided: the unit waits for live** (`ConditionPathExists`). With no
+  database at its path, `serve` creates a fresh one. Enabled before the
+  cut-over, a WSL restart would have made an empty live where the Mac's
+  copy must land, before its sha256 check. Test and mutation O5 (red);
+  the harness re-run: **20/20 red**.
+- **`~/motodiag/server/`**: a clone of `master` at `77755a4`; `.venv`
+  CPython 3.14.5 from the Mac's freeze plus `-e .`; `pip check` clean;
+  freeze equal to the Mac's; `motodiag v0.6.0`. The phase adds no product
+  code, so master's code is what serves.
+- **`~/motodiag/live/`**: created empty, mode 700.
+- **This machine's `live.json`** names `~/motodiag/live/motodiag.db`;
+  `live.py` refuses (exit 4, "does not exist") until the copy lands.
+- **`C:\Users\lilcu\.wslconfig`** written from `ops/desktop/wslconfig`
+  (there was none). It takes effect at WSL's next start.

@@ -12,6 +12,9 @@
 Description=moto-diag API (live), 127.0.0.1:8000
 After=network-online.target
 Wants=network-online.target
+# With no database at its path, serve creates a fresh one. Live arrives by
+# copy, sha256 checked before the first open; until then the unit never starts.
+ConditionPathExists=/home/lilcu/motodiag/live/motodiag.db
 
 [Service]
 Type=simple

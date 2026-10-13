@@ -213,6 +213,8 @@ class TestTheServerFiles:
         assert "Restart=always" in unit and "User=lilcu" in unit
         assert "Environment=MOTODIAG_DB_PATH=/home/lilcu/motodiag/live/motodiag.db" in unit
         assert "WantedBy=multi-user.target" in unit
+        # serve would create a fresh database where the Mac's copy must land.
+        assert "ConditionPathExists=/home/lilcu/motodiag/live/motodiag.db" in unit
 
     def test_the_boot_task_runs_at_startup_without_a_sign_in(self):
         doc = xml.dom.minidom.parse(str(OPS / "motodiag-wsl-boot.xml"))

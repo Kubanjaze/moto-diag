@@ -79,6 +79,8 @@ MUTATIONS = [
      " --skip-migrations\n", "\n")], MINE),
     ("O2 the unit binds every interface", [(UNIT,
      "--host 127.0.0.1", "--host 0.0.0.0")], MINE),
+    ("O5 the unit starts with no live database", [(UNIT,
+     "ConditionPathExists=/home/lilcu/motodiag/live/motodiag.db\n", "")], MINE),
     ("O3 the task waits for a sign-in", [(TASK,
      "<LogonType>S4U</LogonType>", "<LogonType>InteractiveToken</LogonType>")], MINE),
     ("O4 WSL idles the VM out", [(WSLCONFIG,
