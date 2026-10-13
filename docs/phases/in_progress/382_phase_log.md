@@ -251,3 +251,23 @@ change (rule 1). M2 reads the values on the Mac.
   `live.py` refuses (exit 4, "does not exist") until the copy lands.
 - **`C:\Users\lilcu\.wslconfig`** written from `ops/desktop/wslconfig`
   (there was none). It takes effect at WSL's next start.
+
+### 2026-10-12 — M2 from the Mac: live's videos hold absolute Mac paths
+
+M2, run on the Mac by the operator (output pasted into the session):
+- **Backups: 5** (`ls … *.db | wc -l`): pre375, pre376, pre380 (two), pre381.
+  M1's two was its `head -7`.
+- **The Mac's Tailscale CLI** is `/Applications/Tailscale.app/Contents/MacOS/Tailscale`,
+  1.102.3.
+- **`data/`** holds `videos/` (42M) and `serve.log`, besides the seed folders,
+  `deploy_scratch/`, `library/` and eight `.fuse_hidden000000140000000N`
+  files (not read; they are not live's).
+- **All 6 `videos` rows store absolute Mac paths**, each file present:
+  `/Users/lilquant/Projects/moto-diag/data/videos/shop_1/session_{1,4,4,1,6,6}/{1..6}.mp4`.
+- **The census of absolute paths:** every text column of every table,
+  `like '%/Users/%'`: **6 cells, all `videos.file_path`**. Nothing else in
+  live names the Mac.
+
+So moving only the database leaves 6 rows naming files that are not on
+the desktop. Rewriting them changes live rows: a rule-1 stop, put to the
+operator with the cut-over's before-state.
