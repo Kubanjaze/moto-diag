@@ -400,3 +400,48 @@ macOS firewall" note above was wrong for that window. Stopped the poller.
 A direct pull at 00:09 then failed: the database reset after 19 s with 0
 bytes, `videos.tar` and `/` timed out connecting, while `tailscale ping`
 (direct, 5 ms) and the Mac's peer API (200) answered. Inbox still empty.
+
+## 2026-10-15 ~00:15 EDT — the operator rolled the cut-over back; paused until a USB transfer
+
+The operator, in their own words (pasted): "Rolled back for tonight. Live is
+back on the Mac as data/motodiag.db (mode 644, sha256 7c302011...
+unchanged), live.json is removed, http server stopped. Nothing was running
+on the Mac before tonight, so nothing was restarted." "Transfer status:
+NOTHING verified on Windows." The HTTP route saw "14 GETs for videos.tar and
+2 for motodiag_before.db, almost all cut off mid-transfer about 15s in —
+looks like a client-side timeout on the Windows fetch. Any partial files …
+should be deleted, not trusted." The payload stays in `~/382_cutover` on the
+Mac (`motodiag_before.db` and `motodiag_at_cutover.db` identical,
+`7c3020…`; `videos.tar` `665f85…`, built with `COPYFILE_DISABLE=1`). "Next
+session: cut over by USB (3B). Separately: figure out why Taildrop 502s on
+the Windows peer and why the Windows fetch has a ~15s cutoff before trying
+the network route again."
+
+**Live is on the Mac again from ~00:15; the outage ran from 23:57.** No row
+changed on either machine.
+
+Checked here: no partial file anywhere: `C:\motodiag-inbox` holds only the
+boot task's XML; nothing named `motodiag_before*` or `videos.tar*` under
+`C:\Users\lilcu` (depth 3, Downloads included); `~/motodiag/live/` is empty;
+`motodiag-api.service` inactive (enabled, held by its
+`ConditionPathExists`). My poller wrote to `NUL`, and the curl pulls
+wrote nothing (exit 56 and 28).
+
+**On the ~15 s cutoff, what my side ran:** the poller used `-m 5`, and the
+direct pull used `--connect-timeout 15`, which limits only the connect, not
+the transfer. Neither explains a cut at ~15 s on a transfer that had
+started, and some of the 16 GETs were not mine. That is open, with the
+Taildrop 502, for the next session to measure before the network route is
+tried again.
+
+**Decided:** the row stays 🚧, with "Paused 2026-10-15" and the reason in
+its text. `roadmap_check.py` R3 refuses ⏸️ while the phase's documents
+are in `in_progress/` (⏸️ is for an archived record), and the phase resumes
+from here. The check is unchanged.
+
+**For the next session (3B, USB):** the Mac has no `live.json` and still
+runs master, which does not read one, so nothing refuses there until this
+branch merges. The cut-over is repeated in full (a fresh M3-style
+before-state and sha256, since live has been live again since ~00:15),
+and the operator's word is asked again: tonight's "cut over" was for
+tonight's attempt.
