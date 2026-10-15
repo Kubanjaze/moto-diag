@@ -77,3 +77,19 @@ The Mac stops being live. Nothing is deleted; no row changes.
 
 If "unchanged since M3" prints False, stop and send the output: the
 desktop does not take a copy that differs from the before-state.
+
+## M4's result, and M4b: the transfer again
+
+M4 ran 2026-10-14 23:57 EDT: "unchanged since M3: True"; live renamed to
+`data/motodiag_mac_retired_382.db` (with `-shm`/`-wal`); the Mac's
+`live.json` written. **The Taildrop failed:** "desktop-76s9bqv is not
+replying", `502 Bad Gateway`, 0 bytes sent. M4's `echo "sent"` ran whatever
+`file cp` returned; that line was wrong, and M4b chains it.
+
+M4b sends only what M4 already made; the Mac's data is not touched again:
+
+    TS=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+    $TS ping -c 3 desktop-76s9bqv
+    echo probe > ~/382_cutover/probe.txt
+    $TS file cp ~/382_cutover/probe.txt desktop-76s9bqv: && echo "probe sent"
+    $TS file cp ~/382_cutover/motodiag_before.db ~/382_cutover/videos.tar desktop-76s9bqv: && echo "both sent"

@@ -332,3 +332,20 @@ the committed diff.
 **Guard block (2026-10-14 23:50 EDT):** the push guard refused a command
 that ran `git commit` and `git push` together ("it would push a commit it
 never saw"). Run as separate commands; the guard is unchanged.
+
+## 2026-10-14 23:57 EDT — M4: the Mac stopped being live; the Taildrop failed
+
+M4's output (pasted): "unchanged since M3: True" (both copies
+`7c3020…2eed`); live renamed to `data/motodiag_mac_retired_382.db` with
+`-shm`/`-wal`; the Mac's `live.json` written. The transfer: "warning:
+desktop-76s9bqv is not replying; trying anyway", `502 Bad Gateway`, 0 bytes;
+"sent" printed only because M4's `echo` was not chained to `file cp` (my
+error in M4; M4b chains it). **From 23:57 neither machine is live: the API
+is down until the desktop starts.**
+
+Looked at here, 2026-10-15 00:0x: Windows Tailscale up (`WantRunning`,
+`ForceDaemon` true, `ShieldsUp` false); its peer API listens on
+100.75.113.50:41476 and the v6 address; the firewall's Tailscale rules
+allow inbound; `file cp --targets` lists the Mac; `tailscale ping` to the
+Mac answers **directly** (10.0.0.147:41641, 103 ms), where M3's went
+through DERP. Not reproduced; M4b retries with a probe file first.
