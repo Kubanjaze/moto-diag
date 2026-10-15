@@ -349,3 +349,54 @@ Looked at here, 2026-10-15 00:0x: Windows Tailscale up (`WantRunning`,
 allow inbound; `file cp --targets` lists the Mac; `tailscale ping` to the
 Mac answers **directly** (10.0.0.147:41641, 103 ms), where M3's went
 through DERP. Not reproduced; M4b retries with a probe file first.
+
+## 2026-10-15 00:01–00:06 EDT — M4b failed the same way; the desktop pulls instead
+
+M4b (pasted): `tailscale ping` direct over 10.0.0.55:41641 in 3 ms, then
+"not replying" and `502 Bad Gateway`, 0 bytes. Measured here: the
+desktop's peer API answers itself at 100.75.113.50:41476 (GET 200, a PUT of
+`selftest.txt` 200; no file from it reached the inbox); the firewall has no
+inbound block rule, and its Tailscale rules allow any port; a Taildrop **from
+the desktop to the Mac** (`probe-out.txt`) exits 0. So the Mac cannot open a
+connection into the desktop's peer API, while the desktop's outbound
+connections work. The cause is not found; the Mac's own `curl` of the peer API
+(M4c's first line) will say whether any inbound TCP gets through.
+
+**Decided:** the transfer no longer waits on Taildrop. M4c serves the two
+files on the Mac's tailnet address only (100.80.109.103:8382, `http.server`
+bound to that address; WireGuard-encrypted, not the LAN, not Funnel, not a
+cloud folder, not git), and the desktop pulls them with `curl.exe` through
+Windows' tailnet route. The receiving check (`382_receive.py`) is unchanged:
+nothing is placed unless both sha256 values equal M3's.
+
+**Note for the API proof:** the API goes through `tailscale serve`, which
+tailscaled answers itself, not through a Windows listener. Whether that is
+also blocked inbound is measured, not assumed, before and after it is turned on.
+
+**The operator, 2026-10-15 ~00:07 EDT, in their own words:** "Switch the
+transfer: I'm serving ~/382_cutover from the Mac with python3 -m http.server
+8382 --bind 100.80.109.103, bound to the tailnet address only. Pull
+motodiag_before.db and videos.tar … into C:\motodiag-inbox, run your
+receiving check (sha256 against M3's), and tell me when to stop the server.
+Log the change of transfer method." (The operator serves `~/382_cutover`
+itself, not M4c's `send/` folder; the pull takes only the two names.)
+
+First pull, 00:08: `http://100.80.109.103:8382/` timed out from Windows
+(8 s, 0 bytes); ICMP to 100.80.109.103 timed out; the Mac's peer API
+(tailscaled's own listener, :38579) answered 200. So the tunnel works, and
+what the Mac's OS answers itself does not: the macOS application firewall
+is the likely block (python3 not yet allowed). Asked the operator to allow
+it, or to front the server with the Mac's `tailscale serve` (tailnet-only).
+
+**Guard block again (00:10 EDT):** the same push-guard refusal as at 23:50
+(commit and push in one command), my repeat; run separately, guard unchanged.
+
+**Correction, 00:10 EDT.** The operator's server log (00:05–00:07: six GETs
+of `videos.tar`, five broken pipes, no request for the database) shows the
+pull **did** reach the Mac. The repeated GETs were my poller: it asked for
+byte 0 of `videos.tar` with a 5 s limit, `http.server` ignores ranges and
+sends the whole file, so each poll was cut off and repeated. The "likely
+macOS firewall" note above was wrong for that window. Stopped the poller.
+A direct pull at 00:09 then failed: the database reset after 19 s with 0
+bytes, `videos.tar` and `/` timed out connecting, while `tailscale ping`
+(direct, 5 ms) and the Mac's peer API (200) answered. Inbox still empty.

@@ -93,3 +93,24 @@ M4b sends only what M4 already made; the Mac's data is not touched again:
     echo probe > ~/382_cutover/probe.txt
     $TS file cp ~/382_cutover/probe.txt desktop-76s9bqv: && echo "probe sent"
     $TS file cp ~/382_cutover/motodiag_before.db ~/382_cutover/videos.tar desktop-76s9bqv: && echo "both sent"
+
+## M4b's result, and M4c: the desktop pulls over the tailnet
+
+M4b, 2026-10-15 00:01 EDT: `tailscale ping` direct (10.0.0.55:41641,
+3 ms), then the same "not replying" and `502 Bad Gateway`, 0 bytes.
+On the desktop: its peer API answers itself (a GET and a PUT, 200), and a
+Taildrop from the desktop to the Mac exits 0. So the Mac's connection into
+the desktop's peer API fails, while the desktop's connections out work.
+
+M4c serves only the two files, on the Mac's **tailnet address only**
+(100.80.109.103; not the LAN, not Funnel); the desktop is already polling
+for it and pulls both. The first `curl` is a diagnostic for the log:
+
+    curl -s -m 5 -o /dev/null -w 'desktop peer API from the Mac: %{http_code}\n' http://100.75.113.50:41476/ || echo "desktop peer API from the Mac: no connection"
+    mkdir -p ~/382_cutover/send && chmod 700 ~/382_cutover/send
+    ln -f ~/382_cutover/motodiag_before.db ~/382_cutover/videos.tar ~/382_cutover/send/
+    cd ~/382_cutover/send && /usr/bin/python3 -m http.server 8382 --bind 100.80.109.103
+
+If macOS asks whether python may accept incoming connections, allow it.
+Leave it running until the desktop's session says both files arrived and
+match, then Ctrl-C it.
