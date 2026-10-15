@@ -319,3 +319,16 @@ the three commands; mutation O6 (a wildcard verb) is red; the harness is
 the Windows Tailscale has no serve config yet.
 
 M4 (the cut-over, in `382_mac_steps.md`) waits for the operator's word.
+
+## 2026-10-14 23:43 EDT — the operator's word on the cut-over
+
+The operator, in their own words: **"cut over"**. This grants rule 1's
+stop for the cut-over as the prompt scoped it: the Mac stops being live and
+this machine starts; no rows change; the Mac's `data/motodiag.db` is kept
+(M4 renames it to `data/motodiag_mac_retired_382.db`). The video-path
+rewrite (V-A) is a separate row change and still needs its own approval of
+the committed diff.
+
+**Guard block (2026-10-14 23:50 EDT):** the push guard refused a command
+that ran `git commit` and `git push` together ("it would push a commit it
+never saw"). Run as separate commands; the guard is unchanged.
