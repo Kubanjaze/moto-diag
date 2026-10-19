@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F207** (this file). The
+At the time of writing the highest assigned is **F208** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3544,3 +3544,25 @@ endpoint with the API key (the player needs the header, or a short-lived
 URL), with a Jest test that a backend-only video reaches the player and a
 device check against a real backend. Mobile repo work, in a session rooted
 there.
+
+### F208
+
+**verify-live's exact diff cannot hold on an always-on server: the API writes `api_keys.last_used_at` on every request, so any use after an apply fails verify_phase check 8**
+
+Filed in Phase 382 (2026-10-19), from `verify_phase.sh 382 74e3599
+c68e750`. `deploy.py verify-live 382` passed straight after V-A's apply
+(`videos +0 ~6 -0`, equal). Five hours later, after M6's phone requests
+through `tailscale serve`, the same command reported `api_keys +0 ~1 -0`
+as well: id 2's `last_used_at`, 2026-09-16T15:30:24Z → 2026-10-19T22:27:00Z,
+written by `auth/api_key_repo.py` ("best-effort update of `last_used_at`").
+"equals the approved exact diff: no", exit 3; check 8 FAILED. Nothing else
+differs (a table-by-table comparison, 382's log). On the Mac, live was
+rarely served between an apply and its verify; from 382 on it is always
+served, so every later phase's check 8 fails once anyone uses the app.
+
+To close (the operator's call: it changes a check's definition): one of
+- verify-live ignores a named list of columns the running API writes
+  (`api_keys.last_used_at` first), each with a control that a change to
+  any other column of that table still fails;
+- or check 8 compares against a backup taken at the apply and verifies
+  only that no row outside the approved scope changed besides that list.
