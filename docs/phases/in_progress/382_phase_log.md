@@ -703,3 +703,25 @@ environment and checks it. No other inherited variable is known to matter;
 precondition), before this log cites it. **Guard block (16:4x EDT):** the
 edit guard refused a `sed -i` on `docs/FOLLOWUPS.md` (it blocks `sed -i`
 wherever it points); redone with the Edit tool; guard unchanged.
+
+## The regression of record (on the Mac, the operator's A)
+
+The operator chose A, 2026-10-19: "A: regression of record on the Mac."
+The Mac (`kerwyns-macbook-air`), at `74e3599`, after `git pull --ff-only`:
+
+- `wholetree.sh --full`: PASSED, 4185 passed, 551.0 s wall; record
+  `c38f8c5919add293a689fd508af1ceda5f1fa39f_full.json` for `74e3599a22d3`;
+  exit 0.
+- `regression.sh`: log
+  `/Users/lilquant/.cache/motodiag/regressions/74e3599_parallel_20261019_172110.log`;
+  the one skip is 244H's "no production database on this machine", expected
+  now that the Mac's live is retired.
+
+Regression of record: 10870 passed, 0 failed, 1 skipped, 0 errors at `74e3599` (27 min 21 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+Where it ran: the Mac, not the desktop, which holds live (the desktop lacks
+`osacompile`, `ffmpeg` and a Subconscious profile; see above). 10870 + 1 = 10871
+collected, the floor. The operator's notes: the first attempt exited 2
+because `data/motodiag_mac_retired_382.db` showed as untracked (the clean-tree
+check); the operator added `data/motodiag_mac_retired_382.db*` to the Mac's
+`.git/info/exclude` (local, nothing tracked or committed) and reran.
