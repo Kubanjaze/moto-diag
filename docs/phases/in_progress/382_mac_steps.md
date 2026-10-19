@@ -138,3 +138,30 @@ and that its curl works on the LAN (the router).
     done
     $TS ping -c 1 desktop-76s9bqv
     curl -s -m 5 -o /dev/null -w ' control, router 10.0.0.1: %{http_code}\n' http://10.0.0.1/; echo " router exit $?"
+
+## M6: the phone (the app over the tailnet, not the LAN)
+
+Tailscale on the phone, signed in to the tailnet.
+1. Failing case first: Settings → Server → `http://10.0.0.55:8000`, save,
+   then pull to refresh any list. It must fail (no connection).
+2. Settings → Server → `https://desktop-76s9bqv.taila45995.ts.net`, save.
+   The lists load. Open one of the six videos (shop 1, sessions 1, 4 or
+   6): it plays, served from `~/motodiag/live/videos`.
+3. Note the app's error for 1 and what loaded for 2.
+
+## M7: a restart with nobody signed in (ends the desktop session)
+
+Windows Tailscale is in unattended mode (`ForceDaemon: true`, checked
+2026-10-19), and serve's config is kept (`/ proxy http://127.0.0.1:8000`).
+In an elevated PowerShell on the desktop:
+
+1. Failing case: `schtasks /Change /TN "\motodiag\wsl-boot" /DISABLE`, then
+   `shutdown /r /t 0`. At the sign-in screen, do not sign in. From the Mac,
+   after 3 minutes: `date; curl -sS -m 15 -w ' tailnet: %{http_code}\n'
+   https://desktop-76s9bqv.taila45995.ts.net/healthz; echo " exit $?"`.
+   It must fail (serve answers 502, or no connection).
+2. Sign in, then `schtasks /Change /TN "\motodiag\wsl-boot" /ENABLE` and
+   `shutdown /r /t 0`. Do not sign in. After 3 minutes, the same Mac
+   curl must print 200 and the body.
+3. Sign in, `wsl -d Ubuntu-26.04`, `cd ~/Projects/moto-diag && claude
+   --continue`, and paste both Mac outputs.
