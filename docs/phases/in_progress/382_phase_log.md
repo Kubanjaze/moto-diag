@@ -749,3 +749,35 @@ to the files under ~/motodiag/live/videos"), at `974dbbf`:
 no whole-tree record for its tree. My `wholetree.sh` ran before that commit,
 and its rerun wrote no record because `382_live_diff.md` was untracked.
 Committed it and reran on the clean tree; guard unchanged.
+
+## M6: the phone over the tailnet (proof 7), and the videos
+
+The operator, 2026-10-19: "M6: http://10.0.0.55:8000 failed (no connection).
+The tailnet address https://desktop-76s9bqv.taila45995.ts.net connected and
+the lists loaded. All 6 videos show “Video not cached locally”: the app
+(VideoPlaybackScreen.tsx) can’t stream backend-only videos yet, so playback
+can’t be proved from the phone. … The app is left on the tailnet address."
+
+- **Proof 7 passes:** the LAN address refused, the tailnet address served.
+  The API's journal shows the phone's requests from `100.70.3.60` (a tailnet
+  address) through serve, 18:26–18:27 EDT: `GET /v1/sessions`,
+  `/v1/sessions/3`, `/v1/sessions/4` and their `/videos`, all 200.
+- **Playback** was my addition to M6, not one of the phase's proofs. The
+  app's gap is filed as **F207**. The backend half is proved instead by
+  `382_video_serve.py`: the real `/file` route, in-process, on read-only
+  copies, with each video's owner standing in for a key (no key made, live
+  not written). On live, videos 2–6 gave 200, each body's sha256 equal to its
+  file under `~/motodiag/live/videos`. Video 1 gave 404 on both copies: it
+  is soft-deleted (`deleted_at` 2026-06-13). On the pre-382 backup (the Mac's
+  paths), 2–6 gave 404 "file missing on disk", the failing case. PASSED, exit 0.
+  The probe failed three times before that, on its own mistakes: a missing
+  `api_key_prefix` (400 everywhere), expecting 200 from the soft-deleted
+  video, and the detail cut at 120 characters.
+- **Live's sha256 moved** after the apply, `756418c9…` → `1cbdd28f…`, before
+  the probe ran (the probe left it unchanged). A table-by-table comparison
+  with the backup: only `videos` (the six paths) and `api_keys` id 2's
+  `last_used_at` (2026-09-16 → 2026-10-19T22:27:00Z), which the API's
+  authentication writes on every request (`api_key_repo.py`, "best-effort
+  update of `last_used_at`"). Expected from the phone's use; not a change by
+  this phase. It does mean live's file sha256 is not a fixed point once the
+  API serves; the backup and verify-live compare rows, not the file.

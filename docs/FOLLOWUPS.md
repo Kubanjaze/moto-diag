@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F206** (this file). The
+At the time of writing the highest assigned is **F207** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3522,3 +3522,25 @@ To close: the line parses only with "0 failed", "0 errors" and "exit 0"
 (or `regression.sh` prints a different prefix on failure), with a
 known-bad fixture of a failing line that A5 and `regression_problem` must
 both refuse.
+
+### F207
+
+**The app cannot play a video that lives only on the backend: VideoPlaybackScreen stops at "Video not cached locally" when `fileUri` is null, though the backend streams it**
+
+Filed in Phase 382 (2026-10-19), from the operator's M6 on the phone
+against the desktop's live over the tailnet: all of the account's videos
+showed "Video not cached locally". `moto-diag-mobile`
+`src/screens/VideoPlaybackScreen.tsx` (around line 175) shows that pane
+whenever `video.fileUri` is null. Its comment names the fallback, the
+`/file` stream endpoint, and its copy says streaming "lands in a future
+update"; no ROADMAP row or finding held that update until now. The backend
+side works: `GET /v1/sessions/{id}/videos/{video_id}/file` served all five
+of live's videos that are not soft-deleted, each body's sha256 equal to its
+file (382's `382_video_serve.py`). So a video recorded on another device, or
+on this one before a reinstall, cannot be watched in the app.
+
+To close: when `fileUri` is null, VideoPlaybackScreen plays from the `/file`
+endpoint with the API key (the player needs the header, or a short-lived
+URL), with a Jest test that a backend-only video reaches the player and a
+device check against a real backend. Mobile repo work, in a session rooted
+there.
