@@ -552,3 +552,30 @@ the same script.
 "Could not connect to server" (port 443); `http://10.0.0.55:8000/healthz`
 refused; `http://127.0.0.1:8000/healthz` ok (the relay). M5a, from the Mac,
 is the proof's failing run.
+
+## 2026-10-19 15:13 EDT — M5a (the failing run), and the operator approves V-A
+
+M5a from the Mac, before serve (pasted): tailnet
+`https://desktop-76s9bqv.taila45995.ts.net/healthz` **timed out** (curl 28,
+15 s; the name resolved); the 4 LAN URLs (`http://10.0.0.55:8000`,
+`https://10.0.0.55`, `https://10.0.0.55:8000`, `http://10.0.0.55`) each
+timed out (curl 28, 5 s); controls: `tailscale ping` pong, direct, over
+**IPv6** `[2601:195:c883:9620:…]:41641` in 3 ms; router `http://10.0.0.1/`
+200. The ping's path this time is not the IPv4 LAN address; M4b's ping (Oct
+15) went via `10.0.0.55:41641`, which shows the Mac reaches that address.
+
+**The operator, in their own words:** "I approve the V-A diff: only the 6
+videos.file_path values change, to the files under ~/motodiag/live/videos."
+Scope applied literally: the committed `382_dryrun_diff.md` (`ef189b1`),
+applied by `382_video_paths.py apply-live` after the regression of record
+(K18), and only while live still equals its backup.
+
+**Serve on, 15:2x EDT:** `tailscale.exe serve --bg http://127.0.0.1:8000`
+exit 0; `serve status`: "https://desktop-76s9bqv.taila45995.ts.net (tailnet
+only) |-- / proxy http://127.0.0.1:8000". Listeners: tailscaled on 443 at
+100.75.113.50 and the v6 tailnet address only; `wslrelay` on
+127.0.0.1:8000; nothing on 10.0.0.55. From Windows: the tailnet URL
+returns 200 `{"status":"ok","schema_version":86,…}` (29.6 s the first time:
+the certificate was issued then); `https://10.0.0.55/` cannot connect.
+Note: on Windows, serve's 443 is an OS listener like the peer API that the
+Mac could not reach on Oct 15; M5b measures it.
