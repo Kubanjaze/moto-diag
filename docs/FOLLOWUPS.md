@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F208** (this file). The
+At the time of writing the highest assigned is **F209** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3566,3 +3566,28 @@ To close (the operator's call: it changes a check's definition): one of
   any other column of that table still fails;
 - or check 8 compares against a backup taken at the apply and verifies
   only that no row outside the approved scope changed besides that list.
+
+### F209
+
+**A worker died by SIGSEGV after a SIGPIPE in `send()`: the fault handler segfaulted dumping an AnyIO thread whose state was already freed**
+
+Filed 2026-10-19, after Phase 382's merge, from `wholetree.sh` (fast) on
+`4be89fb` (a docs-only commit) on the desktop (WSL2, Python 3.14.5, 32
+cores). The worker-loss record (`tests/support/worker_loss.py`):
+"gw24 pid 13189: killed by signal SIGSEGV (11)", running
+`test_phase244J_guidance_surface.py::TestTheGates::test_an_empty_or_trivial_question_is_rejected[]`.
+`gw24.SIGPIPE`: "SIGPIPE received: Thread … [AnyIO worker th] … <freed
+thread state>"; `gw24.faulthandler`: "Fatal Python error: Segmentation
+fault", the C stack through libc `send` into the signal handler and
+`_PyObject_IsFreed`. Extension modules: `yaml._yaml`, `PIL._imaging`,
+`_pillow_heif`. The test class passed 3 of 3 on its own straight after.
+
+Not verified, the first thing to test: `worker_loss.py` registers
+`faulthandler` for SIGPIPE with `all_threads=True`. Python ignores SIGPIPE
+by default, so without the plugin `send()` would return EPIPE and nothing
+would die; with it, the handler walks every thread, one of them mid-teardown.
+If so, the plugin built to explain lost workers (369, F183) can cause one.
+
+To close: reproduce or rule out (a send to a closed socket from a thread
+while it exits, with the plugin on and off), then either keep SIGPIPE off
+the registered list or show that the crash has another cause.
