@@ -725,3 +725,20 @@ collected, the floor. The operator's notes: the first attempt exited 2
 because `data/motodiag_mac_retired_382.db` showed as untracked (the clean-tree
 check); the operator added `data/motodiag_mac_retired_382.db*` to the Mac's
 `.git/info/exclude` (local, nothing tracked or committed) and reran.
+
+## V-A applied from the branch (after the regression of record)
+
+Under the operator's approval ("only the 6 videos.file_path values change,
+to the files under ~/motodiag/live/videos"), at `974dbbf`:
+
+- before: live sha256 `7c302011…2eed` (the M3 file); the backup
+  `motodiag_pre382_20261019_145601.db`, sha256 `07e8fcc7…19db`, unchanged
+  after the apply.
+- `382_video_paths.py apply-live`: exit 0; "preflight passed; applying live:
+  []"; after: 5801 rows, 121 tables, integrity ok, scope problems none.
+- `deploy.py verify-live 382`: schema added/removed/changed none; rows
+  `videos +0 ~6 -0`; "equals the approved exact diff: yes"; integrity ok,
+  foreign keys ok; exit 0.
+- after: live sha256 `756418c9…f20e`; all six `videos.file_path` values are
+  under `/home/lilcu/motodiag/live/videos/` and each file exists. The API
+  stayed active throughout.
