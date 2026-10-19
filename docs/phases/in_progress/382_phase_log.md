@@ -638,3 +638,68 @@ reported.
 - **Commit:** this commit.
 - Two bugs in this build, both mine and both on the terminal width; a third
   stops the build to find their shared cause.
+
+## 2026-10-19 16:08 EDT — the regression on this machine: 5 failed
+
+`wholetree.sh --full` at `ac4cc3e`: PASSED, 4152 passed, 33 skipped (436 s).
+Then `regression.sh` here (not of record, it failed). Its line, with the
+prefix "Regression of record:" removed, because A5's parser and
+`apply-live`'s precondition would accept it (F206):
+
+    10832 passed, 5 failed, 33 skipped, 0 errors at `ac4cc3e` (9 min 16 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+Log `~/.cache/motodiag/regressions/ac4cc3e_parallel_20261019_160853.log`.
+The five:
+1. `test_phase244H_test_db_isolation.py::…::test_the_probe_landed_somewhere_else`:
+   `assert 842 == (840 + 1)`. A real defect: bug fix #3 below.
+2. `test_phase257_orchestrator_guards.py::…::test_the_real_subc_profile_points_at_subconscious`:
+   "control missing: /home/lilcu/.subconscious/profiles/default.env (run
+   `subc login`)". Subconscious was never set up on this machine.
+3–4. `test_phase257_orchestrator_guards.py::TestTheStopAlertCompiles` ×2:
+   "osacompile missing: this check needs macOS". By design it fails, not
+   skips, off macOS.
+5. `test_phase204_gate10.py::…::test_installed_ffmpeg_accepts_the_flag_we_pass`:
+   `TypeError … NoneType`: `ffmpeg` is not installed here (`which ffmpeg`:
+   nothing).
+
+2–5 are this machine, not the code: on the Mac each control exists. Making
+them green here needs a credential (`subc login`), a package (`ffmpeg`, by
+sudo) and a change to 257's definition (osacompile cannot exist on Linux).
+Each is the operator's (rule 1); asked.
+
+### Bug fix #3 (2026-10-19): every xdist worker shared one default test database
+
+- **Issue:** failure 1 above, in parallel only (32 workers here).
+- **Root cause:** the conftest makes the default database at import, in
+  the controller too; xdist workers inherit its `MOTODIAG_DB_PATH`, and the
+  `if not os.environ.get(...)` then keeps it. Measured: a probe under
+  `-n 4` wrote the same `/tmp/motodiag_test_default_rzmch2sw/default.db`
+  from gw0–gw3. 244H's count raced another worker's write. Older than this
+  phase (244H, 355); 32 workers made it show.
+- **Fix:** the default is marked (`MOTODIAG_TEST_DEFAULT_DB`); a worker
+  whose `MOTODIAG_DB_PATH` is the marked default makes its own. An explicit
+  path still wins (the control: `MOTODIAG_DB_PATH=…/explicit.db` under
+  `-n 2`, both workers kept it).
+- **Files:** `tests/conftest.py`; `tests/test_phase382_suite_width.py`
+  (`test_each_worker_has_its_own_default_database`: 3 workers, 3 paths);
+  `382_mutate.py` (T4 restores the sharing: red; T1's text pinned to its
+  `LIVE_DB` line, since the `del` now occurs twice); the floor 10870 → 10871
+  (a diff of collected ids against ac4cc3e: +1 -0).
+- **Verified:** the probe under `-n 4`: 4 workers, 4 paths. The 382 width,
+  355 and 244H files: 30 passed, 1 skipped. `382_mutate.py`: **23/23 red**.
+- **Commit:** this commit.
+
+**The third bug in one build: the shared cause.** All three are the suite
+inheriting its environment rather than setting it: #1 the operator's
+`COLUMNS`, #2 my fix for it fixing a width at import, #3 the controller's
+database path in every worker. Each held on the Mac by circumstance (a
+wide terminal; fewer workers) and showed on the first full parallel run on
+a second machine. The remedy is the one the three fixes share: the conftest
+removes or replaces what it inherits, and a test spawns pytest with a stated
+environment and checks it. No other inherited variable is known to matter;
+2–5 above are missing tools, not inheritance.
+
+**Filed F206** (a failing regression line passes A5 and `apply-live`'s
+precondition), before this log cites it. **Guard block (16:4x EDT):** the
+edit guard refused a `sed -i` on `docs/FOLLOWUPS.md` (it blocks `sed -i`
+wherever it points); redone with the Edit tool; guard unchanged.

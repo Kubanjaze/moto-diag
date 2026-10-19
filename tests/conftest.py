@@ -41,9 +41,19 @@ if LIVE_DB and os.environ.get("MOTODIAG_DB_PATH") and \
         str(Path(os.environ["MOTODIAG_DB_PATH"]).resolve()) == LIVE_DB:
     del os.environ["MOTODIAG_DB_PATH"]
 
+# Phase 382, bug fix #3: an xdist worker inherits the controller's default,
+# so every worker shared one default.db and a count in one raced a write in
+# another (244H's probe, 32 workers). The default is marked; a worker that
+# inherits the marked default makes its own.
+_DEFAULT_MARK = "MOTODIAG_TEST_DEFAULT_DB"
+if os.environ.get("PYTEST_XDIST_WORKER") and \
+        os.environ.get(_DEFAULT_MARK) == os.environ.get("MOTODIAG_DB_PATH"):
+    del os.environ["MOTODIAG_DB_PATH"]
+
 if not os.environ.get("MOTODIAG_DB_PATH"):
     _TEST_DB_DIR = tempfile.mkdtemp(prefix="motodiag_test_default_")
     os.environ["MOTODIAG_DB_PATH"] = str(Path(_TEST_DB_DIR) / "default.db")
+    os.environ[_DEFAULT_MARK] = os.environ["MOTODIAG_DB_PATH"]
 
 # Phase 382, bug fixes #1 and #2: Rich sizes CLI output from COLUMNS, and the
 # push guard's hook inherits the operator's terminal width; at 38 columns two

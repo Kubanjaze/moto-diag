@@ -28,6 +28,31 @@ def test_a_narrow_terminal_does_not_change_the_result():
     assert run.returncode == 0, run.stdout[-2000:]
 
 
+def test_each_worker_has_its_own_default_database(tmp_path):
+    """Bug fix #3: the workers shared the controller's default.db."""
+    seen = tmp_path / "seen.txt"
+    probe = tmp_path / "test_probe.py"
+    probe.write_text(
+        "import os, pytest\n"
+        "@pytest.mark.parametrize('i', range(9))\n"
+        "def test_probe(i):\n"
+        f"    with open({str(seen)!r}, 'a') as f:\n"
+        "        f.write(os.environ['PYTEST_XDIST_WORKER'] + ' ' + os.environ['MOTODIAG_DB_PATH'] + '\\n')\n")
+    env = {k: v for k, v in os.environ.items()
+           if k not in ("MOTODIAG_DB_PATH", "MOTODIAG_TEST_DEFAULT_DB", "PYTEST_XDIST_WORKER")}
+    env["PYTHONPATH"] = str(REPO / "tests")
+    run = subprocess.run(
+        [sys.executable, "-m", "pytest", "-q", "-n", "3", "-p", "no:cacheprovider",
+         "-p", "conftest", str(probe)],
+        cwd=tmp_path, env=env, capture_output=True, text=True, timeout=300,
+    )
+    assert run.returncode == 0, run.stdout[-2000:]
+    pairs = set(seen.read_text().split("\n")) - {""}
+    workers = {p.split()[0] for p in pairs}
+    paths = {p.split()[1] for p in pairs}
+    assert len(workers) == 3 and len(paths) == 3, pairs
+
+
 def test_a_console_built_at_import_follows_a_width_set_later(tmp_path):
     probe = tmp_path / "test_probe.py"
     probe.write_text(

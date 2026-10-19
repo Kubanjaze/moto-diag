@@ -335,8 +335,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Measured: 10869 collected.
 #: Then +1 (2026-10-19), by a diff of collected ids against 7a95cf3 (+1 -0):
 #: bug fix #2's test in test_phase382_suite_width.py. Measured: 10870.
+#: Then +1, by a diff of collected ids against ac4cc3e (+1 -0): bug fix #3's
+#: test (each xdist worker has its own default database). Measured: 10871.
 #:
-COLLECTED_TEST_FLOOR = 10870
+COLLECTED_TEST_FLOOR = 10871
 
 
 def _collected_count() -> int:

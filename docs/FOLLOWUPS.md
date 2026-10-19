@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F205** (this file). The
+At the time of writing the highest assigned is **F206** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3502,3 +3502,23 @@ through the deploy skill, at the operator's V-A.
 To close: store the path relative to `data_dir` and resolve it on read,
 with a migration that rewrites the existing rows, and a test that a row
 written under one `data_dir` reads back under another.
+
+### F206
+
+**A failing regression line passes A5 and `apply-live`'s precondition: the parser reads the count, hash and command, never the failures or the exit code**
+
+Filed in Phase 382 (2026-10-19). `closeout_check.regression_line` matches
+`Regression of record:\s*(\d[\d,]*) passed\b.*?\bat `<hash>`.*?`<pytest command>``
+on the log's last such line. It does not read "N failed", "N errors" or
+"exit N". `regression.sh` prints the same prefix on a failing run, so a log
+recording a failed run, verbatim, satisfies A5 at close-out and
+`deploy.regression_problem` (K18) before a live apply. Measured: 382's run
+on the desktop printed "Regression of record: 10832 passed, 5 failed, 33
+skipped, 0 errors at `ac4cc3e` (…, `python -m pytest -n auto --dist load`,
+exit 1)", which the pattern matches. 382's log carries it with the prefix
+removed, so nothing rests on it.
+
+To close: the line parses only with "0 failed", "0 errors" and "exit 0"
+(or `regression.sh` prints a different prefix on failure), with a
+known-bad fixture of a failing line that A5 and `regression_problem` must
+both refuse.
