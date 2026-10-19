@@ -9,6 +9,13 @@ The operator's words:
 - 2026-10-08, on the home desktop: "i previously said thats where my server would live. I think it's time . we can roll that into the plan"
 - 2026-10-12: "give me the prompt to give my claude code on my windows server desktop"
 
+## Changes to the order
+
+- **2026-10-19: 383 goes before 345.** Phase 382 closed on 2026-10-19 and filed F205, F206 and F208. Phase 383 takes them in this order: F206, F208, then F205.
+  - **F206 and F208 are the gates every later live apply rests on.** Under F206, a failing regression line passes A5 and K18. Under F208, a live the API is writing blocks apply-live and fails check 8.
+  - **F205's relative media paths** are what a restore from 345's offsite backups needs.
+  - **The prompt** is `docs/prompts/383_follow_ups_from_382.txt`, written at the operator's "write 383".
+
 ## Where the ledger stands
 
 On `master` at `60bb480`, rows numbered 100 and up, counted by their status cell (`grep -c -E '^\| *[0-9]{3}[A-Z]? .*\| *<status> *\|' docs/ROADMAP.md`):

@@ -1,0 +1,69 @@
+Do this: start Phase 383, 382's follow-ups (row 383, new: add it to docs/ROADMAP.md as 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. It closes three findings Phase 382 filed, in this order: F206, F208, then F205.
+- F206 and F208 are the gates every later live apply rests on.
+- F205's migration then goes through them.
+This runs on the Mac. Its deploy runs on the desktop.
+
+Read these first:
+- **The three entries in docs/FOLLOWUPS.md,** for what would close each.
+- **382's handoff** (docs/handoffs/2026-10-19_382_closed.md) and its documents (docs/phases/completed/382_*).
+- **The deploy skill,** "Where live is (Phase 382)" first. Live is on the home desktop, and a deploy runs there, from its own checkout.
+
+The measured facts, taken 2026-10-19 on master at `05f9e5c`. Re-verify each at Step 0.
+- **F206: the parser reads too little.**
+  - closeout_check.py's `_REGRESSION` (line 313) and `regression_line` (line 336) read the count, the hash and the pytest command. They never read "failed", "errors" or the exit code.
+  - deploy.py's `regression_problem` (line 464) imports the same parser, so A5 and K18 share the hole.
+  - regression.sh (line 66) prints the same prefix whatever the outcome.
+  - By the parser's own rule (the last line containing the phrase), 33 closed logs carry a regression line. 28 show 0 failed, 0 errors and exit 0. The other five (258, 259, 260, 353, 354) are all in `A5_COMMAND_EXEMPT`.
+  - 382's regression of record carries "1 skipped": 244H's "no production database on this machine", expected on the Mac now.
+- **F208: live is written between steps.** The API writes `api_keys.last_used_at` on every request (auth/api_key_repo.py).
+  - apply-live refuses when live "differs from the backup … it changed since the dry run" (deploy.py line 531).
+  - verify-live compares live with the backup plus the approved diff.
+  - So one request from the app between the dry run and the apply blocks the apply. One after it fails verify_phase check 8, as it did for 382 on the desktop.
+  - On the Mac, check 8 refuses by design (exit 4), so verify_phase.sh cannot pass there either.
+- **F205: media rows store absolute paths.**
+  - The upload routes write the receiving machine's absolute path (videos.py, photos.py, transcripts.py).
+  - The readers are the video, photo and transcript repositories and the media pipeline.
+  - No API model exposes `file_path` or `audio_path`, and the app's OpenAPI snapshot names neither.
+  - On live, the 6 `videos` rows have held `/home/lilcu/motodiag/live/videos/…` since 382's V-A. Photos and transcripts had 0 rows at 382's M2.
+  - The service runs with `MOTODIAG_DATA_DIR=/home/lilcu/motodiag/live` and `WorkingDirectory=/home/lilcu/motodiag/server` (ops/desktop/motodiag-api.service). So today's code would resolve a relative path under the server's checkout, not the data folder.
+- **The deploy:**
+  - The next migration is 087.
+  - The dry run, the apply and verify-live run on the desktop. The regression of record runs on the Mac.
+  - The server's checkout follows master, and the API restarts only after the merge. The service starts with `--skip-migrations`, so a migration never reaches live through a restart.
+  - On the Mac, all four deploy modes exit 4 (checked 2026-10-19).
+
+What to build:
+- **F206:** A5 and K18 accept only a passing run. A known-bad fixture of a failing line must be refused by both, and seen red.
+- **F208:** apply-live, verify-live and check 8 hold on a live the API is writing, by the rule I pick at Step 0. A control shows that a change outside that rule still fails.
+- **F205:**
+  - Media paths are stored relative to the data folder and resolved on read.
+  - Migration 087 rewrites the existing rows.
+  - A test shows that a row written under one data folder reads back under another.
+- **F205, F206 and F208 closed,** or each one's remainder named in its entry.
+
+Not in this phase: F207 (mobile) and F209.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **F206's rule:** what a regression line must show to pass, and what the rule does with skips. Show the closed logs it would refuse, against `A5_COMMAND_EXEMPT`.
+2. **F208's rule:**
+   - the two ways its entry names, or another, each shown on 382's `api_keys` row;
+   - whether apply-live's "changed since the dry run" follows the same rule;
+   - what check 8 does on a machine without live.
+3. **F205's window.** K18's order applies 087 before the merge, and the API restarts only after it.
+   - Say what the running server does with a rewritten row in between.
+   - Say how the phase keeps media working through that window. One way is a reader that accepts both forms, shipped and restarted first. Another is the API stopped from the apply to the restart.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+Live: migration 087 goes through the deploy skill, on the desktop.
+- Each change to an existing row is a rule-1 stop. My scoped approval will name the migration's own schema_version row too.
+- Steps on the desktop are run by me, or by a session there, from commands you give. Their output comes back to you.
+
+Report:
+- **At Step 0:** the three questions, with options, and the facts you re-verified.
+- **At the end:**
+  - each finding's fix, with its known-bad control;
+  - the live outcome;
+  - the regression line;
+  - verify_phase.sh's result, from the machine that can run check 8;
+  - the next step, my call.
