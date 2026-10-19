@@ -1,6 +1,6 @@
 # Phase 382 — Live and the backend on the home desktop
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-12
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-19 (v1.0 2026-10-12)
 
 ## Goal
 
@@ -11,7 +11,12 @@ its first always-on server. The operator's picks, 2026-10-12: "1A(i), 2A +
 - the Mac's copy is frozen, renamed and kept (i);
 - a scheduled task starts WSL at boot, systemd starts the API, and the
   Windows Tailscale serves it to the tailnet (2A, 2-i);
-- live's copy travels by Taildrop, sha256 checked (3A).
+- live's copy travels by Taildrop, sha256 checked (3A). It did not: Taildrop
+  failed, and the copy came by USB, the operator's 3B (Deviations).
+
+v1.1: all of it shipped. Live has been on the desktop since 2026-10-19,
+served from loopback to the tailnet, with the six video paths rewritten
+(V-A) and every proof seen failing, then passing.
 
 ## Logic
 
@@ -87,6 +92,14 @@ The backup folder is refused if it resolves under a Windows drive
    API first opens it**; then the unit starts.
 5. Media: as M2 shows (see the log).
 
+As built (v1.1): steps 3–4 by USB into `C:\motodiag-inbox`, the operator's
+3B, after Taildrop and a tailnet pull both failed and the operator rolled
+back once. `382_receive.py` checks both files against M3's sha256 (with a
+one-byte-flipped control), each video against its row, and places live at
+mode 600 before the unit first opens it. The six `videos.file_path` values
+then named the Mac's folder; they were rewritten by a dry run, an approved
+diff and `apply-live` (V-A, `382_video_paths.py`, `382_deploy_scope.json`).
+
 ## Proofs, each seen failing once
 
 | claim | the check | seen failing by |
@@ -113,6 +126,10 @@ The backup folder is refused if it resolves under a Windows drive
 
 Plus bug fix #1 (the suite's width): see the log.
 
+v1.1: `tests/test_phase382_suite_width.py` holds bug fixes #1–#3 (a narrow
+terminal; a width set after import; three workers, three default
+databases). `382_mutate.py` breaks 23 things, each seen red.
+
 ## Non-goals
 
 - Anything beyond the tailnet: Stripe's endpoint is 371's.
@@ -122,12 +139,64 @@ Plus bug fix #1 (the suite's width): see the log.
 
 ## Planned items
 
-- [ ] `live.py` and the five tools
-- [ ] `deploy.py backup`, the sync-root refusal
-- [ ] the unit, the task, `.wslconfig`, `tailscale serve`
-- [ ] the deploy skill, its changelog, CLAUDE.md's dated line
-- [ ] tests, mutations, the floor
-- [ ] the move and the cut-over (rule 1)
-- [ ] the proofs
-- [ ] regression of record here, verify_phase, close-out, handoff, merge
-- [ ] once on the Mac after the merge: the refusals
+- [x] `live.py` and the five tools
+- [x] `deploy.py backup`, the sync-root refusal
+- [x] the unit, the task, `.wslconfig`, `tailscale serve`
+- [x] the deploy skill, its changelog, CLAUDE.md's dated line
+- [x] tests, mutations, the floor
+- [x] the move and the cut-over (rule 1)
+- [x] the proofs
+- [x] regression of record (on the Mac, not here: Deviations), V-A applied,
+  close-out, handoff; the merge and verify_phase follow this commit
+- [x] once on the Mac after the merge: the refusals, handed to the operator
+  with the merge (its result goes in the handoff)
+
+## Deviations
+
+- **The transfer.** 3A's Taildrop failed twice with a 502 into the
+  Windows peer, and a tailnet `http.server` pull cut off at ~15 s; the
+  operator rolled live back on the Mac (2026-10-15) and cut over by USB
+  (3B, 2026-10-19). Neither failure is explained (handoff).
+- **V-A, a live row change the plan did not list.** The six
+  `videos.file_path` values held the Mac's absolute paths. Rewritten under
+  the operator's words, "only the 6 videos.file_path values change", by the
+  deploy skill with no migration (`dryrun`/`apply_live` gained a `migrate`
+  callable). verify-live: `videos +0 ~6 -0`, the approved diff exactly.
+- **The regression of record ran on the Mac**, the operator's A. The
+  desktop has no `osacompile`, no `ffmpeg` and no Subconscious profile, so
+  4 tests cannot pass here. Live's deploys run here; a full regression here
+  needs those three first.
+- **Three bug fixes in the test suite**, one shared cause: the suite
+  inherited its environment (the terminal width; a width fixed at import;
+  the controller's database path in every worker). Each held on the Mac by
+  circumstance.
+- **F206 and F207 filed.** A failing regression line would satisfy A5 and
+  `apply-live`'s precondition (F206). The app cannot play a backend-only
+  video (F207), so M6 proved the app's address and the backend's `/file`
+  route separately (`382_video_serve.py`).
+- **`MOTODIAG_PUBLIC_BASE_URL` left unset**: the tailnet name is the only
+  address that reaches the server, and the Host fallback gives it.
+- **Live's file sha256 moves under use**: the API writes
+  `api_keys.last_used_at` on each request. The backup and verify-live
+  compare rows, so nothing depends on the file hash after the receive.
+
+## Results
+
+- **Live:** `~/motodiag/live/motodiag.db` on DESKTOP-76S9BQV, schema 86,
+  sha256 `7c302011…2eed` on arrival, equal to the Mac's M3 copy. The Mac's
+  is retired as `data/motodiag_mac_retired_382.db`, kept.
+- **V-A:** backup `motodiag_pre382_20261019_145601.db` (`07e8fcc7…`);
+  after, 5801 rows, 121 tables, integrity and foreign keys ok; all six
+  files exist; videos 2–6 served by `/file` with matching sha256 (1 is
+  soft-deleted).
+- **The server:** `motodiag-api.service` on `127.0.0.1:8000`,
+  `--skip-migrations`; `tailscale serve` at
+  `https://desktop-76s9bqv.taila45995.ts.net`, tailnet only; the boot task
+  in S4U; Tailscale unattended.
+- **Proofs:** all seven seen failing, then passing (the log's table).
+- **Tests:** `test_phase382_live_location.py`,
+  `test_phase382_suite_width.py`; mutations **23/23 red**; the floor
+  10871.
+- **Regression of record:** 10870 passed, 0 failed, 1 skipped at
+  `74e3599`, on the Mac (27 min 21 s, `python -m pytest -n auto --dist
+  load`, exit 0).

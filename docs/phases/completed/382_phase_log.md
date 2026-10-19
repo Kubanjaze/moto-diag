@@ -1,6 +1,6 @@
 # Phase 382 — Live and the backend on the home desktop — phase log
 
-**Status:** 🚧 Step 0, stopped for the operator (2026-10-12)
+**Status:** ✅ Complete (2026-10-19)
 **Branch:** `phase-382` (Opus session on DESKTOP-76S9BQV, WSL2 Ubuntu-26.04; the only writer)
 
 ---
@@ -187,7 +187,9 @@ change (rule 1). M2 reads the values on the Mac.
 - **Verified:** with `COLUMNS=38`, the two tests: 2 failed before the fix
   (conftest stashed), 2 passed after, serial and `-n 2`. The new test:
   1 passed with the pin, 1 failed with the pin stashed.
-- **Commit:** the one that carries this entry.
+
+
+**Commit.** `26c31c9`
 
 ### 2026-10-12 — The build: where live is, the server's files, the tests
 
@@ -635,7 +637,10 @@ reported.
   which 3 was not captured (the run printed its last line only), and the
   runs at 80/120/200 were stopped once T3 showed the mechanism. That those
   3 pass on the branch is recorded, not explained.
-- **Commit:** this commit.
+
+
+**Commit.** `ac4cc3e`
+
 - Two bugs in this build, both mine and both on the terminal width; a third
   stops the build to find their shared cause.
 
@@ -687,7 +692,9 @@ Each is the operator's (rule 1); asked.
   (a diff of collected ids against ac4cc3e: +1 -0).
 - **Verified:** the probe under `-n 4`: 4 workers, 4 paths. The 382 width,
   355 and 244H files: 30 passed, 1 skipped. `382_mutate.py`: **23/23 red**.
-- **Commit:** this commit.
+
+
+**Commit.** `74e3599`
 
 **The third bug in one build: the shared cause.** All three are the suite
 inheriting its environment rather than setting it: #1 the operator's
@@ -781,3 +788,62 @@ can’t be proved from the phone. … The app is left on the tailnet address."
   update of `last_used_at`"). Expected from the phone's use; not a change by
   this phase. It does mean live's file sha256 is not a fixed point once the
   API serves; the backup and verify-live compare rows, not the file.
+
+## M7: back by itself after a restart, nobody signed in (proof 1)
+
+The operator's output, 2026-10-19, verbatim in substance:
+
+- **Restart A, the failing case** (task `\motodiag\wsl-boot` disabled,
+  nobody signed in), from the Mac: 18:38:06 `tailnet: 502`; 18:39:46
+  `curl: (28) Connection timed out after 15002 milliseconds`, `000`;
+  18:40:07 `502`. "Three samples over 2 minutes, none 200 — server did not
+  come back." The 502 is serve answering with no backend behind it:
+  Tailscale came up unattended, WSL did not.
+- **Restart B** (task enabled, nobody signed in): 18:45:10
+  `{"status":"ok","schema_version":86,"detail":null} tailnet: 200`, exit 0.
+
+Here, after the operator signed in: WSL's boot `2026-10-19 18:42:36`, the
+unit active since `18:42:39 EDT`, `NRestarts=0`; the task `Running`, logon
+mode "Interactive/Background" (S4U); `/healthz` on loopback 200, schema 86.
+So the API was up three seconds after WSL booted, two and a half minutes
+before the Mac's 200, with nobody signed in. **Proof 1 passes.**
+
+All seven proofs have now been seen failing and then passing:
+
+| proof | failing | passing |
+|---|---|---|
+| 1 restart, nobody signed in | M7 A: 502/000 ×3, task off | M7 B: 200, schema 86 |
+| 2 the tailnet, from the Mac | M5a, before serve | M5b: 200, schema 86 |
+| 3 not the LAN | the router's 200 is the control | M5a/M5b: all 4 LAN URLs refused |
+| 4 backups here, 5 kept, unsynced | tests and mutations (sync roots, `/mnt/c`) | `motodiag_proof382_…`, `07e8fcc7…` |
+| 5 every tool knows where live is | W/D/S mutations; on the Mac after the merge | the tests; the Mac's exit 4 after the merge |
+| 6 live equals the Mac's copy | `382_receive.py`'s one-byte control | `7c302011…2eed` on both sides |
+| 7 the app, over the tailnet | M6: `http://10.0.0.55:8000` refused | M6: lists loaded via serve |
+
+Proof 5's Mac half is the operator's after the merge.
+
+## Decisions at close-out
+
+- **`MOTODIAG_PUBLIC_BASE_URL` stays unset.** Behind serve the Host header
+  is the tailnet name, which is the only address that reaches this server;
+  setting it would bake that same name into share links. A customer can
+  reach neither until the server goes beyond the tailnet, which this phase
+  does not do (Non-goals); the phase that does sets it.
+- **The Taildrop 502 and the ~15 s cutoff stay open**, uninvestigated:
+  the USB route (3B) replaced both, and nothing in this phase depends on
+  them. They are in the handoff.
+- **A lapse of mine (rule 3):** I committed `9708723` before running
+  `wholetree.sh`; the run straight after, on that clean commit, passed and
+  wrote its record, and the push went through on it. The order was wrong.
+- **Mutations at close-out:** `382_mutate.py`, rerun on the closing tree:
+  **23/23 red** (`382_mutate.out`, which had held the earlier 21/21).
+
+No refute pass ran: the phase ships no content rows and cites no source
+document.
+
+## Close-out
+
+Regression of record (the Mac, above), then V-A applied from the branch,
+then this close-out commit, then the merge (K18). After the merge: the
+server's `git -C ~/motodiag/server pull --ff-only` and a restart, and the
+operator's check on the Mac that each deploy mode refuses with exit 4.
