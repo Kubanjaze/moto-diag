@@ -742,3 +742,10 @@ to the files under ~/motodiag/live/videos"), at `974dbbf`:
 - after: live sha256 `756418c9…f20e`; all six `videos.file_path` values are
   under `/home/lilcu/motodiag/live/videos/` and each file exists. The API
   stayed active throughout.
+- `apply-live` wrote `382_live_diff.md` (the six before/after paths; F158
+  census 41), committed with this note.
+
+**Guard block (2026-10-19, ~18:0x EDT):** the push guard refused `2a0c08d`:
+no whole-tree record for its tree. My `wholetree.sh` ran before that commit,
+and its rerun wrote no record because `382_live_diff.md` was untracked.
+Committed it and reran on the clean tree; guard unchanged.
