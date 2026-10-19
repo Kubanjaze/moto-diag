@@ -445,3 +445,62 @@ branch merges. The cut-over is repeated in full (a fresh M3-style
 before-state and sha256, since live has been live again since ~00:15),
 and the operator's word is asked again: tonight's "cut over" was for
 tonight's attempt.
+
+## 2026-10-19 — the cut-over by USB (3B), on the operator's word
+
+The operator, in their own words: "Cut over by USB (3B). This is my word
+for the cut-over. Both files are in C:\motodiag-inbox and their sha256
+values match M3's exactly. The Mac's live is retired and no server runs
+there. Run 382_receive.py, place live and start the API. Don't rewrite the
+6 video paths yet, and don't start the Mac/phone proofs until I say so."
+
+Scope, applied literally: receive, place, start. Not the V-A rewrite, not
+`tailscale serve`, not any proof from the Mac or the phone.
+
+In the inbox (Oct 19 09:01): `motodiag_before.db` 32301056 bytes,
+`videos.tar` 44091392 bytes. The sudoers rule is installed (`sudo -n -l`
+lists exactly the unit's start, stop and restart).
+
+`382_receive.py` (exit 0), verbatim:
+
+    1. sha256 against M3
+     control, one byte flipped (must be !=):
+      motodiag_before.db: 5f9a2ce683f0ede7e1f9d1ab37ab0f2e80ec0fa5114ff5195e9cb4286b6d1eae != M3
+     the received files:
+      motodiag_before.db: 7c302011e3cff0a8acbd95ecb61d96f2e438f2a69d879daa6fe81c0390b12eed == M3
+      videos.tar: 665f8528e9bc89e4fb091cf31945911b6b9beec7e7f9deb2d619e4f7133db6f4 == M3
+    2. each video against its row (scratch copy of the database)
+      video 1 1.mp4: equals its row: True
+      video 4 4.mp4: equals its row: True
+      video 2 2.mp4: equals its row: True
+      video 3 3.mp4: equals its row: True
+      video 5 5.mp4: equals its row: True
+      video 6 6.mp4: equals its row: True
+    3. into live
+      motodiag.db: 7c302011e3cff0a8acbd95ecb61d96f2e438f2a69d879daa6fe81c0390b12eed == M3
+      /home/lilcu/motodiag/live/motodiag.db: mode 0o600, 32301056 bytes
+      videos: 6 mp4 in /home/lilcu/motodiag/live/videos
+
+The videos sit at `~/motodiag/live/videos/shop_1/session_{1,4,6}/`.
+
+**Started 14:35:04 EDT** with `sudo -n systemctl start motodiag-api.service`
+(the new rule; no password). The journal: "Skipping migration apply
+(--skip-migrations); DB schema_version=86, code SCHEMA_VERSION=86";
+"motodiag API ready — version=0.6.0 … db=/home/lilcu/motodiag/live/motodiag.db".
+`GET /healthz` on 127.0.0.1:8000: `{"status":"ok","schema_version":86,"detail":null}`.
+`ss`: one listener, `127.0.0.1:8000`. `tailscale serve status`: "No serve
+config". **Live is on the desktop from 14:35:04 EDT, 2026-10-19.**
+
+Seen in the journal: on 2026-10-15 20:25:52 systemd skipped the unit at a
+boot, "unmet condition check ConditionPathExists=…/motodiag.db". So a boot
+with nobody signed in did reach systemd and the unit, and the guard against
+an empty live held. It is not the restart proof: that needs the API to
+answer from the Mac afterwards.
+
+Open, not acted on: the server warns that `MOTODIAG_PUBLIC_BASE_URL` is
+unset, so share links take the request's Host header. Behind `tailscale
+serve` that Host is the tailnet name; whether to set it in
+`~/.config/motodiag/server.env` is decided with the proofs.
+
+Waiting, per the operator: the V-A rewrite of the 6 video paths, and every
+Mac and phone proof (`tailscale serve` included).
