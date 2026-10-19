@@ -1,6 +1,6 @@
 ---
 name: deploy
-description: Apply a migration to the live moto-diag database — the dry run on a copy, the diff the operator approves (written into the phase folder and committed), and the live apply that refuses without it. Use when a phase's migration must reach data/motodiag.db, or when asked to deploy, dry-run or back up the live database.
+description: Apply a migration to the live moto-diag database — the dry run on a copy, the diff the operator approves (written into the phase folder and committed), and the live apply that refuses without it. Use when a phase's migration must reach the live database (on the home desktop since Phase 382; live.json says where), or when asked to deploy, dry-run or back up the live database.
 ---
 
 # deploy — one script from backup to live
@@ -8,6 +8,33 @@ description: Apply a migration to the live moto-diag database — the dry run on
 Built in Phase 358 (K3) from Phase 262's `deploy262.py`. Seven data phases
 had each rewritten this step in a scratchpad under `/private/tmp`, and the
 diff the operator approved for migration 071 survived there only by luck.
+
+## Where live is (Phase 382)
+
+Live is on the home desktop (WSL2), at `~/motodiag/live/motodiag.db`, served
+by `motodiag-api.service` on 127.0.0.1:8000 and reached over the tailnet
+through `tailscale serve`, never the LAN. Each machine says where live is in
+`~/.config/motodiag/live.json` (`MOTODIAG_LIVE_CONFIG` overrides it):
+
+- the desktop: `{"live": "/home/lilcu/motodiag/live/motodiag.db"}`;
+- the Mac: `{"live": null, "host": "desktop-76s9bqv"}`, or no file.
+
+`live.py` reads it. Every mode refuses with **exit 4**, before touching
+anything, when the file is missing, says `null`, or names a path that does
+not exist; so on the Mac each mode refuses and names the host. Backups must
+be outside a Windows drive (`/mnt/<letter>/`) and any cloud-synced folder
+(OneDrive, iCloud, Dropbox, Google Drive), or every mode refuses.
+
+**A deploy runs on the desktop, from its own checkout** (the operator's 1A):
+the phase branch is pulled there (`git pull --ff-only`), and the modes run
+there. After the merge, the server's checkout follows master and the API
+restarts:
+
+    git -C ~/motodiag/server pull --ff-only
+    sudo -n systemctl restart motodiag-api.service    # no password: ops/desktop/install_sudoers.sh
+
+The unit starts with `--skip-migrations`: the migration reaches live only
+through `apply-live`, never through a restart.
 
 ## The sequence
 
@@ -74,6 +101,20 @@ diff the operator approved for migration 071 survived there only by luck.
    deploy. verify_phase's check 8 calls it and fails on 1 or 3.
 6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
+
+## Backups, and a change with no migration
+
+- **`deploy.py backup [label]`** (Phase 382) takes a backup-API copy of live
+  into `~/backups/motodiag/motodiag_<label>_<time>.db`, keeps 5 and prints
+  its sha256. The label defaults to `manual`.
+- **A row change with no schema migration** (382's V-A rewrote 6 video
+  paths) passes its own `migrate` callable to `deploy.dryrun` and
+  `deploy.apply_live` from a phase script (`382_video_paths.py`); every
+  refusal above still runs. The command line would apply no migration, so
+  its fresh run would not equal the approved diff, and it refuses.
+- **Exit codes:** 0 done or equal; 1 a scope problem, an integrity or a
+  foreign-key failure; 2 refused (no approved diff, no deploy); 3 live does
+  not equal the approved diff; 4 live is not on this machine.
 
 ## What it holds, and what it cannot
 

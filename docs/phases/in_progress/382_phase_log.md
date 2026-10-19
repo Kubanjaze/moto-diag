@@ -579,3 +579,62 @@ returns 200 `{"status":"ok","schema_version":86,…}` (29.6 s the first time:
 the certificate was issued then); `https://10.0.0.55/` cannot connect.
 Note: on Windows, serve's 443 is an OS listener like the peer API that the
 Mac could not reach on Oct 15; M5b measures it.
+
+## 2026-10-19 15:23 EDT — M5b: the tailnet answers from the Mac, the LAN does not (proofs 2 and 3)
+
+M5b from the Mac, serve on (pasted): `https://desktop-76s9bqv.taila45995.ts.net/healthz`
+→ `{"status":"ok","schema_version":86,"detail":null}` **200**, exit 0. The
+4 LAN URLs: each **timed out** (curl 28, 5 s), as in M5a. Controls: ping
+pong direct over IPv6 in 3 ms; router 200. Against M5a (15:13, the same
+block, serve off: tailnet timed out), the tailnet line is the one that
+changed. **Proof 2 (tailnet) and proof 3 (not the LAN) pass.**
+
+**Proof 4 (backups land here), 15:24 EDT:** `deploy.py backup proof382`
+→ "live: /home/lilcu/motodiag/live/motodiag.db", backup
+`~/backups/motodiag/motodiag_proof382_20261019_152421.db`, "removed by
+retain-5: []", sha256 `07e8fcc7…19db`, equal to the dry run's backup, so
+live has not changed since the dry run. `~/backups` is on WSL's ext4 (not
+`/mnt/c`, not a synced folder; mode 700). The failing side: a OneDrive and
+a `/mnt/c` folder are refused (`TestUnsynced`, `TestBackup`; mutations U1,
+U2, D3 red) and retain-5 removes the oldest (`TestBackup`; D4 red). Two
+backups exist, so retain-5 has nothing to remove on live yet. K27's weekly
+copy waits for a shop's real data.
+
+**Docs:** the deploy skill's SKILL.md (its description; "Where live is";
+"Backups, and a change with no migration"; the exit codes) and CHANGELOG;
+a dated CLAUDE.md change-log entry (a fact, no rule changed). The Mac's
+retired file name is not stated: the Oct 19 retirement's name was not
+reported.
+
+### Bug fix #2 (2026-10-19): pinning COLUMNS=80 broke 44 gate tests
+
+- **Issue:** `wholetree.sh --full`, before the regression of record:
+  "44 failed, 4123 passed, 18 skipped" (416.5 s): 21 in
+  `test_phase250_gate13.py`, 20 in `test_phase258_gate14.py`, 3 in
+  `test_phase251_vespa_piaggio_content.py`, all on Rich tables wrapped or
+  cut ("the label travels with the row"). Fast mode had passed throughout:
+  none of these files is in its set.
+- **Root cause:** my bug fix #1 (`26c31c9`). A Rich `Console` reads
+  `COLUMNS` when it is built and keeps that width. The conftest set
+  `COLUMNS=80` at import, before the CLI's module-level consoles were
+  built, so they kept 80 and ignored the 240 (220 in 251) that these tests
+  set later. With no `COLUMNS` at build time, Rich takes the width at each
+  print. Bug fix #1's comment claimed every run without COLUMNS passes at
+  80; it was measured on fast mode only.
+- **Fix:** `os.environ.pop("COLUMNS", None)` instead of the pin. The
+  operator's terminal width still never reaches the suite (#1's purpose).
+- **Files:** `tests/conftest.py`; `tests/test_phase382_suite_width.py` (a
+  second test, spawned with the suite's conftest at COLUMNS=38: a console
+  built at import follows a later `COLUMNS=240`); `382_mutate.py` (T2's
+  text; T3 puts the 80 pin back); the floor 10869 → 10870 (a diff of
+  collected ids against 7a95cf3: +1 -0, that test).
+- **Verified:** the three files, the fix in place: **298 passed** (493 s).
+  Mutations T1–T3: 3/3 red (T3 turns the new test red). The width test at
+  COLUMNS=38: passed. For comparison, master 77755a4 in a worktree, the same
+  three files with COLUMNS unset, here: "3 failed, 295 passed" (501.8 s);
+  which 3 was not captured (the run printed its last line only), and the
+  runs at 80/120/200 were stopped once T3 showed the mechanism. That those
+  3 pass on the branch is recorded, not explained.
+- **Commit:** this commit.
+- Two bugs in this build, both mine and both on the terminal width; a third
+  stops the build to find their shared cause.

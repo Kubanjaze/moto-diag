@@ -333,8 +333,10 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: tests/test_phase382_suite_width.py (1, bug fix #1). Measured: 10868.
 #: Then +1: the sudoers rule's test in test_phase382_live_location.py.
 #: Measured: 10869 collected.
+#: Then +1 (2026-10-19), by a diff of collected ids against 7a95cf3 (+1 -0):
+#: bug fix #2's test in test_phase382_suite_width.py. Measured: 10870.
 #:
-COLLECTED_TEST_FLOOR = 10869
+COLLECTED_TEST_FLOOR = 10870
 
 
 def _collected_count() -> int:

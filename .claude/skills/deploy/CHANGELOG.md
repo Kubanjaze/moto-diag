@@ -1,5 +1,23 @@
 # deploy — changelog
 
+## 2026-10-19 — live moved to the home desktop; live.json, `backup`, exit 4 (Phase 382)
+
+- **Where live is.** The `LIVE` constant (`data/motodiag.db` in the
+  checkout) is gone. `live.py` reads `~/.config/motodiag/live.json` on each
+  machine; `dryrun`, `apply-live`, `verify-live` and `backup` take live from
+  it, and refuse with exit 4 before touching anything when it is missing,
+  `null` (the Mac) or names no file. `verify_phase.sh` check 8 and the
+  source-transmission tools read it too.
+- **Backups** refuse a Windows drive or a cloud-synced folder.
+- **`backup [label]`** is a new mode: a backup-API copy, retain-5, its sha256.
+- **The deploy runs on the desktop** (the operator's 1A); after the merge,
+  the server's checkout pulls master and the unit restarts. SKILL.md has the
+  commands.
+- **A change with no migration** passes its own `migrate` to `dryrun` and
+  `apply_live` from a phase script (382's 6 video paths).
+- Held by `tests/test_phase382_live_location.py` (30 tests, 21/21 mutations
+  red in `382_mutate.py`); every mode exiting 4 on the Mac's file is among them.
+
 ## 2026-10-08 — seed parity covers removed rows (Phase 381)
 
 - **The gap.** `seed_parity` compared only added and changed rows. A

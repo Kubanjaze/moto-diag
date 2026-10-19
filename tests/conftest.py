@@ -45,11 +45,13 @@ if not os.environ.get("MOTODIAG_DB_PATH"):
     _TEST_DB_DIR = tempfile.mkdtemp(prefix="motodiag_test_default_")
     os.environ["MOTODIAG_DB_PATH"] = str(Path(_TEST_DB_DIR) / "default.db")
 
-# Phase 382, bug fix #1: Rich sizes CLI output from COLUMNS, and the push
-# guard's hook inherits the operator's terminal width. At 38 columns two CLI
-# tests failed on wrapped text. 80 is the width Rich uses when stdout is not a
-# terminal, which every run without COLUMNS already passes at.
-os.environ["COLUMNS"] = "80"
+# Phase 382, bug fixes #1 and #2: Rich sizes CLI output from COLUMNS, and the
+# push guard's hook inherits the operator's terminal width; at 38 columns two
+# CLI tests failed on wrapped text. A Console reads COLUMNS when it is built,
+# so a value set here fixes the width of every module-level console and
+# overrides the 240 the gate tests set later (pinning 80 broke 44 of them).
+# Removing it leaves the suite as a run with no COLUMNS.
+os.environ.pop("COLUMNS", None)
 
 import pytest
 
