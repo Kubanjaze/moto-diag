@@ -114,3 +114,27 @@ for it and pulls both. The first `curl` is a diagnostic for the log:
 If macOS asks whether python may accept incoming connections, allow it.
 Leave it running until the desktop's session says both files arrived and
 match, then Ctrl-C it.
+
+## The cut-over, done by USB (3B), 2026-10-19
+
+The operator carried a fresh backup-API copy taken 09:01 EDT (sha256
+`7c3020…2eed`, equal to M3's) and `videos.tar` on a USB drive. Live is on
+the desktop from 14:35:04 EDT (the phase log has the receiving check).
+
+## M5: the tailnet and the LAN, from the Mac (read only)
+
+The same block runs twice: **M5a before** the desktop turns on `tailscale
+serve` (the tailnet line must fail), and **M5b after** it (the tailnet line
+must print 200 and the body). The LAN lines must fail both times. The two
+controls show the Mac does reach the desktop's LAN address (the ping's path)
+and that its curl works on the LAN (the router).
+
+    TS=/Applications/Tailscale.app/Contents/MacOS/Tailscale
+    date
+    U=https://desktop-76s9bqv.taila45995.ts.net/healthz
+    curl -sS -m 15 -w ' tailnet: %{http_code}\n' "$U"; echo " tailnet exit $?"
+    for u in http://10.0.0.55:8000/healthz https://10.0.0.55/healthz https://10.0.0.55:8000/healthz http://10.0.0.55/healthz; do
+      curl -sS -k -m 5 -o /dev/null -w " $u: %{http_code}\n" "$u"; echo " LAN exit $?"
+    done
+    $TS ping -c 1 desktop-76s9bqv
+    curl -s -m 5 -o /dev/null -w ' control, router 10.0.0.1: %{http_code}\n' http://10.0.0.1/; echo " router exit $?"

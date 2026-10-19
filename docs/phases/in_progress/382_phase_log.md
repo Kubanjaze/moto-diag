@@ -504,3 +504,51 @@ serve` that Host is the tailnet name; whether to set it in
 
 Waiting, per the operator: the V-A rewrite of the 6 video paths, and every
 Mac and phone proof (`tailscale serve` included).
+
+## 2026-10-19 — the operator: no Mac check needed; serve, the proofs, and V-A's dry run
+
+The operator, in their own words: "No Mac check needed: the USB copy was a
+fresh backup-API copy of the Mac's live, taken 2026-10-19 09:01 EDT right
+before I retired it, and it hashed 7c302011…2eed, identical to M3. So
+nothing was written after Oct 13. Go ahead: set up tailscale serve and start
+the proofs. Give me the Mac commands and phone steps when you need them.
+Also go ahead with the V-A dry run and show me the diff; I'll approve it
+separately."
+
+**V-A's dry run, 14:56 EDT.** Live and the code are both at schema 86, so
+`deploy.py dryrun` (which applies the code's pending migrations) would
+change nothing. **Decided:** `382_video_paths.py` passes the rewrite to
+`deploy.dryrun`/`deploy.apply_live` as their `migrate` step (both take
+one), so every refusal of the deploy skill runs against
+`382_deploy_scope.json`: 6 `videos` rows, each found by `id` **and** its old
+`file_path`, with `file_path` the only field allowed to change and its `to`
+value named. The rewrite refuses unless exactly 6 rows carry the Mac's
+prefix and each new path is a file on this machine. The apply goes through
+the same script.
+- Census first, on a backup-API copy of live: every text cell of every
+  table matched against `%/Users/%`: **6**, all `videos.file_path`, the 6
+  known (the control: the search finds them). Each maps to a file under
+  `~/motodiag/live/videos/shop_1/`. New uploads land at
+  `{data_dir}/videos/shop_N/session_N/` (`routes/videos.py`
+  `_resolve_storage_dir`), and the unit sets `data_dir` to
+  `~/motodiag/live`, so the new values match where new files go.
+- `dryrun`: before (live, read only) 5801 rows, 121 tables, integrity ok;
+  backup `~/backups/motodiag/motodiag_pre382_20261019_145601.db`, sha256
+  `07e8fcc7…19db`; scope problems none; F158 census 41; the diff:
+  `videos` 6 changed, 0 added, 0 removed, `file_path` only, no schema change.
+  Committed as `382_dryrun_diff.md` for the operator's approval.
+- The backup's bytes differ from M3's `7c3020…` while live's file still
+  hashes `7c3020…`: the backup API rewrites pages. `iterdump` of the
+  received copy and of the backup: equal, 6158 statements each.
+- **Decided:** `~/backups` and `~/backups/motodiag` set to mode 700 (they
+  were 755, and a backup is a whole copy of live, API key hashes
+  included); `backup()` writing files 644 under this machine's umask is
+  unchanged.
+- **Note for the apply:** `apply-live` refuses if live differs from this
+  backup, so a write to live before the apply (a phone sign-in during the
+  proofs may write a row) means a new dry run and a new approval.
+
+**Before serve, from Windows:** `https://desktop-76s9bqv.taila45995.ts.net/healthz`
+"Could not connect to server" (port 443); `http://10.0.0.55:8000/healthz`
+refused; `http://127.0.0.1:8000/healthz` ok (the relay). M5a, from the Mac,
+is the proof's failing run.
