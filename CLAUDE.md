@@ -202,6 +202,17 @@ reads its prompt from there.
 
 ## Change log
 
+### 2026-10-19 — live is on the home desktop (Phase 382)
+
+Live moved from the Mac's `data/motodiag.db` to the home desktop (WSL2,
+`~/motodiag/live/motodiag.db`), served always-on by `motodiag-api.service`
+on loopback and reached over the tailnet through `tailscale serve`, never the
+LAN. Each machine's `~/.config/motodiag/live.json` says where live is, and
+every tool that reads live refuses (exit 4) on a machine that does not hold
+it, so a deploy runs on the desktop. The Mac's copy is kept, retired, never
+deleted. No rule changed: the deploy skill's
+SKILL.md and CHANGELOG carry the commands.
+
 ### 2026-10-07 — rule 6, standing practice; the deploy order in rule 4 (Phase 378, K23, K26, K18)
 
 The operator, 2026-10-07: "K23: the standing lines move into checks or

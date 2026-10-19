@@ -209,7 +209,8 @@ def make_run(root: pathlib.Path, make: str) -> dict:
     clone, tmp = run / "clone", run / "tmp"
     tmp.mkdir(parents=True)
     subprocess.run(["git", "clone", "-q", "--no-hardlinks", str(REPO), str(clone)], check=True)
-    src = sqlite3.connect(f"file:{REPO / 'data' / 'motodiag.db'}?mode=ro", uri=True)
+    import census as C
+    src = sqlite3.connect(f"file:{C.live_db()}?mode=ro", uri=True)
     dst = sqlite3.connect(tmp / "snapshot.db")
     src.backup(dst)
     src.close(); dst.close()
@@ -635,9 +636,14 @@ def main(argv: list[str]) -> int:
     if "--source-route" in argv:
         i = argv.index("--source-route"); source_route = argv[i + 1]; argv = argv[:i] + argv[i + 2:]
     make, spellings = argv[1], argv[2:]
+    import census as C
+    try:
+        C.live_db()  # every batch snapshots live (make_run): refuse before any clone
+    except C.L.LiveElsewhere as e:
+        print(f"REFUSED: {e}", file=sys.stderr)
+        return C.L.REFUSED
     if not spellings:
-        import census as C
-        spellings = [e["model"] for e in C.census(REPO / "data" / "motodiag.db", make).get(make, [])]
+        spellings = [e["model"] for e in C.census(C.live_db(), make).get(make, [])]
     s = batch(make, spellings, hints, source_route)
     print(f"source route: {s['source_route']['route']} ({s['source_route']['label']})")
     print(json.dumps({k: s[k] for k in ("make", "run", "stops")}, indent=1))

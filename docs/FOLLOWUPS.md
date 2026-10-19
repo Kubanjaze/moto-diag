@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F204** (this file). The
+At the time of writing the highest assigned is **F207** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3481,3 +3481,66 @@ powertrain or transmission admits, or another rule). It also needs a
 decision on row 231's scope, sourced or narrowed as F149's rows were,
 with Gate 14's censuses re-measured, and a test that a Ruckus or a Grom
 prompt keeps its CVT rows.
+
+### F205
+
+**Uploaded media rows store the absolute path of the machine that received them, so moving live to another machine strands every media row**
+
+Filed in Phase 382 (2026-10-12), when live moved from the Mac to the home
+desktop. The upload routes write `str(storage_dir / name)` into the row,
+where `storage_dir` is under `settings.data_dir`:
+- `videos.file_path` (`api/routes/videos.py`, `_update_file_path`);
+- the photo rows' `file_path` (`api/routes/photos.py`);
+- `voice_transcripts.audio_path` (`api/routes/transcripts.py`).
+
+Measured on the Mac's live (M2): all 6 `videos` rows held
+`/Users/lilquant/Projects/moto-diag/data/videos/…`, the only cells in live
+naming the Mac (every text column searched for `/Users/`). Photos and
+transcripts had 0 rows. Phase 382 moved the files and rewrote the 6 paths
+through the deploy skill, at the operator's V-A.
+
+To close: store the path relative to `data_dir` and resolve it on read,
+with a migration that rewrites the existing rows, and a test that a row
+written under one `data_dir` reads back under another.
+
+### F206
+
+**A failing regression line passes A5 and `apply-live`'s precondition: the parser reads the count, hash and command, never the failures or the exit code**
+
+Filed in Phase 382 (2026-10-19). `closeout_check.regression_line` matches
+`Regression of record:\s*(\d[\d,]*) passed\b.*?\bat `<hash>`.*?`<pytest command>``
+on the log's last such line. It does not read "N failed", "N errors" or
+"exit N". `regression.sh` prints the same prefix on a failing run, so a log
+recording a failed run, verbatim, satisfies A5 at close-out and
+`deploy.regression_problem` (K18) before a live apply. Measured: 382's run
+on the desktop printed "Regression of record: 10832 passed, 5 failed, 33
+skipped, 0 errors at `ac4cc3e` (…, `python -m pytest -n auto --dist load`,
+exit 1)", which the pattern matches. 382's log carries it with the prefix
+removed, so nothing rests on it.
+
+To close: the line parses only with "0 failed", "0 errors" and "exit 0"
+(or `regression.sh` prints a different prefix on failure), with a
+known-bad fixture of a failing line that A5 and `regression_problem` must
+both refuse.
+
+### F207
+
+**The app cannot play a video that lives only on the backend: VideoPlaybackScreen stops at "Video not cached locally" when `fileUri` is null, though the backend streams it**
+
+Filed in Phase 382 (2026-10-19), from the operator's M6 on the phone
+against the desktop's live over the tailnet: all of the account's videos
+showed "Video not cached locally". `moto-diag-mobile`
+`src/screens/VideoPlaybackScreen.tsx` (around line 175) shows that pane
+whenever `video.fileUri` is null. Its comment names the fallback, the
+`/file` stream endpoint, and its copy says streaming "lands in a future
+update"; no ROADMAP row or finding held that update until now. The backend
+side works: `GET /v1/sessions/{id}/videos/{video_id}/file` served all five
+of live's videos that are not soft-deleted, each body's sha256 equal to its
+file (382's `382_video_serve.py`). So a video recorded on another device, or
+on this one before a reinstall, cannot be watched in the app.
+
+To close: when `fileUri` is null, VideoPlaybackScreen plays from the `/file`
+endpoint with the API key (the player needs the header, or a short-lived
+URL), with a Jest test that a backend-only video reaches the player and a
+device check against a real backend. Mobile repo work, in a session rooted
+there.

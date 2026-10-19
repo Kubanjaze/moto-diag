@@ -327,7 +327,18 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: which migration 086 now calls, and its parametrised id went with it
 #: (the 67 after it only renumber). Measured: 10838 collected.
 #:
-COLLECTED_TEST_FLOOR = 10838
+#: Phase 382 (2026-10-12): 10838 -> 10868, +30, by a diff of collected ids
+#: against master 77755a4 (in a worktree, 10838 there): +30 -0. The new
+#: tests/test_phase382_live_location.py (29) and
+#: tests/test_phase382_suite_width.py (1, bug fix #1). Measured: 10868.
+#: Then +1: the sudoers rule's test in test_phase382_live_location.py.
+#: Measured: 10869 collected.
+#: Then +1 (2026-10-19), by a diff of collected ids against 7a95cf3 (+1 -0):
+#: bug fix #2's test in test_phase382_suite_width.py. Measured: 10870.
+#: Then +1, by a diff of collected ids against ac4cc3e (+1 -0): bug fix #3's
+#: test (each xdist worker has its own default database). Measured: 10871.
+#:
+COLLECTED_TEST_FLOOR = 10871
 
 
 def _collected_count() -> int:

@@ -1,0 +1,24 @@
+W1 a null live is not refused: red
+W2 a missing file is not refused: red
+W3 a missing path is not refused: red
+U1 a Windows drive passes: red
+U2 OneDrive passes: red
+D1 dryrun falls back to the checkout's copy: red
+D2 a refusal escapes main as a traceback: red
+D3 backup ignores a synced folder: red
+D4 backup keeps everything: red
+D5 verify_phase check 8 passes a refusal: red
+S1 census reads the checkout's copy: red
+S2 acquire reads the checkout's copy: red
+S3 orchestrate does not refuse up front: red
+T1 the suite honours a DB path naming live: red
+T2 the suite reads the terminal width: red
+T3 the suite pins a width at import (bug fix #2): red
+T4 the workers share one default database (bug fix #3): red
+O1 the unit migrates at start: red
+O2 the unit binds every interface: red
+O5 the unit starts with no live database: red
+O6 sudo opens every systemctl verb: red
+O3 the task waits for a sign-in: red
+O4 WSL idles the VM out: red
+23/23 red

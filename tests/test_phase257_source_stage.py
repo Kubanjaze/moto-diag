@@ -590,7 +590,11 @@ class TestTheSourceRouteFallback:
             O.check_route("anthropic-opus-medium", {"CLAUDE_CODE_OAUTH_TOKEN": "sk-ant-oat01-x",
                                                     "ANTHROPIC_BASE_URL": "https://api.subconscious.dev"})
 
-    def test_the_flag_reaches_batch(self, monkeypatch):
+    def test_the_flag_reaches_batch(self, monkeypatch, tmp_path):
+        # Phase 382: main refuses unless this machine holds live (live.json).
+        (tmp_path / "live.db").write_bytes(b"")
+        (tmp_path / "live.json").write_text(json.dumps({"live": str(tmp_path / "live.db")}))
+        monkeypatch.setenv("MOTODIAG_LIVE_CONFIG", str(tmp_path / "live.json"))
         seen = {}
         monkeypatch.setattr(O, "batch", lambda make, sp, hints, route: seen.update(route=route) or
                             {"make": make, "run": "r", "stops": [], "tokens": {"total": 0, "ceiling": 1},
