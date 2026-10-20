@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F209** (this file). The
+At the time of writing the highest assigned is **F210** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3591,3 +3591,29 @@ If so, the plugin built to explain lost workers (369, F183) can cause one.
 To close: reproduce or rule out (a send to a closed socket from a thread
 while it exits, with the plugin on and off), then either keep SIGPIPE off
 the registered list or show that the crash has another cause.
+
+### F210
+
+**The deploy gates' list of columns the API writes cannot hold once a shop's traffic reaches live: any ordinary write refuses the apply or fails check 8**
+
+Filed in Phase 383 (2026-10-19), at the operator's word with the Step 0
+pick 2A: "file a finding now that the column list cannot hold once a
+shop's traffic reaches live (a new work order between the dry run and the
+apply refuses the apply; any use after it fails check 8), to be settled
+before onboarding (330)." Phase 383 makes apply-live's drift check, its
+after-apply comparison and verify-live ignore a change confined to a
+named column the running API writes (`api_keys.last_used_at`, the only
+one measured on 382's live). Every other difference still fails. Today
+only the operator's phone uses live, and it writes nothing else (382's
+table-by-table comparison). Once a shop uses the app, a work order, a
+session, a photo or an invoice written between the dry run and the apply
+makes apply-live refuse ("it changed since the dry run"), and any written
+after the apply makes verify-live exit 3, so verify_phase check 8 fails
+for every phase with a deploy.
+
+To close, before row 330 (onboarding) ships: a rule that tells the API's
+own writes from a migration's, for example 383's Step 0 option 2C (the
+approved diff must still hold; differences outside it are reported and
+fail only where they touch what the approved diff names), or the API
+stopped from the dry run to the apply, with a control that a write outside
+the approved scope by anything but the API still fails.
