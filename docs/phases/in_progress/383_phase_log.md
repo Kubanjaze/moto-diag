@@ -99,3 +99,22 @@ operator's "by its test file and its reason"). Second run: **35/35 red**.
 **The floor:** 10871 → 10923, by a diff of collected ids against master
 `e4a691f` in a scratchpad worktree (10872 there): +51 −0, all in the three
 new files.
+
+### 2026-10-19 — 087's scope; the desktop's steps
+
+**A guard blocked a command:** a `git commit … && git push` in one command
+was refused by the push guard ("it would push a commit it never saw").
+Run as two commands; the guard is unchanged.
+
+`383_deploy_scope.json`: the six `videos` rows by id and their current
+desktop path (382's after-values), `file_path` only, each with its `to`
+value; `schema_version` +1. Photos and transcripts are not named: any row
+there is a scope problem, and a stop.
+
+Rehearsed with the script's own code (`deploy.dryrun`) on a synthetic
+database at schema 86 holding those six paths, in a scratchpad repo:
+`scope problems: none`, `Migrations applied on the copy: [87]`, 6 `videos`
+rows, exit 0.
+
+`383_desktop_steps.md` holds the commands for the desktop (D1 the dry run,
+D2 the apply with the API stopped, D3 the server and verify_phase).
