@@ -53,8 +53,10 @@ class TestK6TheRegressionLineParses:
 
     def test_the_exemption_is_exactly_what_the_old_rule_let_through(self):
         """The control: closed logs that pass the old A5 and fail the new one."""
+        # Phase 383: each log judged as its own phase, since F206's skip
+        # exemption is per phase.
         measured = {p for p, t in _logs().items()
-                    if C.legacy_regression_line(t) and not C.regression_line(t)}
+                    if C.legacy_regression_line(t) and not C.regression_line(t, p)}
         assert measured == C.A5_COMMAND_EXEMPT
         assert len(C.A5_COMMAND_EXEMPT) == 10
 

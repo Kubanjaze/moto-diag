@@ -19,7 +19,7 @@ and each is a file fact rather than a claim:
 | A2 | The phase log's status line reads Complete |
 | A3 | The implementation doc has a **Deviations** section |
 | A4 | Bug fixes are a contiguous dated register from `#1`, each naming a commit that **resolves** (`git cat-file -e`) |
-| A5 | A regression line that parses as `regression.sh` prints it: count, commit hash **and** the pytest command (since 358; ten earlier closes are a pinned exemption and keep the hash-and-count rule) |
+| A5 | A regression line that parses as `regression.sh` prints it: count, commit hash **and** the pytest command (since 358; ten earlier closes are a pinned exemption and keep the hash-and-count rule), recording 0 failed, 0 errors, exit 0 and only the skips `EXPECTED_SKIPS` pins (since 383, F206; 382 is a pinned exemption for its unnamed skip) |
 | A6 | A ROADMAP row whose **body cell** is within 120 words |
 | A7 | An `implementation.md` history row, and a version header naming the phase |
 | A8 | A log that mentions refute carries the `## Refuter pass` checklist (which must pass `refute_check`), or one line reading "No refute pass ran" (since 358; forty earlier closes are a pinned exemption) |
@@ -46,9 +46,14 @@ uncommitted.
    `.claude/skills/closeout/regression.sh` runs
    `python -m pytest -n auto --dist load` on a clean tree and prints the
    line to record. The line carries the counts, the hash, the wall time
-   and the command. Copy it into the phase log as printed. A5 checks for
+   and the command. Copy it into the phase log as printed, with the
+   `Skipped in the regression of record:` lines right below it. A5 checks for
    the hash and the count together, because a count without a commit
-   does not say *which tree* was green.
+   does not say *which tree* was green. Since Phase 383 (F206, the
+   operator's 1C) it also requires 0 failed, 0 errors and exit 0, and every
+   skip named, by file and reason, in `EXPECTED_SKIPS` (adding to it is the
+   operator's call). A failing run prints `Regression run FAILED (not of
+   record):` instead.
    **Fallback:** `regression.sh --serial` runs the same suite in one
    process (`-p no:xdist`). Use it on a machine without pytest-xdist, or
    to bisect a failure that appears only in parallel. Phase 355 proved

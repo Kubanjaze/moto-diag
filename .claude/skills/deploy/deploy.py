@@ -479,10 +479,10 @@ def regression_problem(repo: pathlib.Path, phase: str) -> str | None:
     rel = log.relative_to(repo)
     if not log.is_file():
         return f"no phase log {rel}: the regression of record comes before the live apply"
-    line = closeout_check.regression_line(log.read_text(encoding="utf-8"))
+    line, why = closeout_check.regression_record(log.read_text(encoding="utf-8"), phase)
     if line is None:
-        return (f"{rel} has no regression of record that A5 can read: run "
-                f"`.claude/skills/closeout/regression.sh` and record its line before the "
+        return (f"{rel} has no regression of record that A5 can read as passing ({why}): run "
+                f"`.claude/skills/closeout/regression.sh` and record its lines before the "
                 f"live apply")
     commit = line[1]
     if not _git_lines(repo, "rev-parse", "--verify", "--quiet", f"{commit}^{{commit}}"):

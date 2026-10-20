@@ -75,7 +75,9 @@ through `apply-live`, never through a restart.
 4. **`deploy.py apply-live <phase>`, from the branch, after the regression
    of record** (Phase 378, K18: one order; the regression, the apply, the
    close-out commit, the merge). It refuses, before touching live, unless:
-   - the phase log in `in_progress/` carries a regression line A5 can read,
+   - the phase log in `in_progress/` carries a regression line A5 can read
+     as passing (0 failed, 0 errors, exit 0, only the pinned skips: F206,
+     Phase 383),
      no code path changed between its commit and HEAD, and no code path is
      uncommitted (`fixtures/k18/` holds the known-bad logs);
    - the diff file exists, is committed and is unchanged;
