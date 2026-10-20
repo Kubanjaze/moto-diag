@@ -59,6 +59,7 @@ from motodiag.auth.deps import (
     AuthedUser, get_current_user, require_tier,
 )
 from motodiag.core.config import Settings
+from motodiag.media.paths import resolve_media_path, stored_media_path
 from motodiag.media.photo_pipeline import normalize_photo
 from motodiag.shop import get_work_order
 from motodiag.shop.wo_photo_repo import (
@@ -370,7 +371,8 @@ async def upload_wo_photo(
     storage_dir = _resolve_storage_dir(settings, shop_id, wo_id)
     file_path = storage_dir / f"{photo_id}.jpg"
     file_path.write_bytes(normalized.jpeg_bytes)
-    _update_file_path(photo_id, str(file_path), db_path=db_path)
+    _update_file_path(photo_id, stored_media_path(file_path, settings.data_dir),
+                      db_path=db_path)
 
     # If pair_id was specified, mirror the pairing on the partner so
     # both sides reference each other (symmetric pair). Roles are
@@ -522,6 +524,7 @@ def get_wo_photo_file(
     photo_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
+    settings: Settings = Depends(get_api_settings),
 ) -> FileResponse:
     require_shop_access(shop_id, user, db_path)
     _verify_wo_in_shop(shop_id, wo_id, db_path)
@@ -530,7 +533,7 @@ def get_wo_photo_file(
         raise WorkOrderPhotoOwnershipError(
             f"photo id={photo_id} not found"
         )
-    file_path = Path(row["file_path"])
+    file_path = resolve_media_path(row["file_path"], settings.data_dir)
     if not file_path.exists():
         raise WorkOrderPhotoOwnershipError(
             f"photo id={photo_id} file missing on disk"

@@ -53,6 +53,7 @@ from motodiag.capture import record_guidance_interaction
 from motodiag.core import video_repo
 from motodiag.core.config import Settings
 from motodiag.core.models import VideoBase, VideoResponse
+from motodiag.media.paths import resolve_media_path, stored_media_path
 from motodiag.media.vision_types import GuidanceResponse
 from pydantic import BaseModel, Field
 
@@ -324,7 +325,7 @@ async def upload_video(
     file_path = storage_dir / f"{new_video_id}.mp4"
     file_path.write_bytes(body)
     video_repo._update_file_path(
-        new_video_id, str(file_path), db_path=db_path,
+        new_video_id, stored_media_path(file_path, settings.data_dir), db_path=db_path,
     )
 
     # 6. Queue background analysis (BackgroundTasks is always non-None
@@ -332,7 +333,7 @@ async def upload_video(
     if background_tasks is not None:
         from motodiag.media.analysis_worker import run_analysis_pipeline
         background_tasks.add_task(
-            run_analysis_pipeline, new_video_id, db_path,
+            run_analysis_pipeline, new_video_id, db_path, settings.data_dir,
         )
 
     # 7. Return the freshly-written row as a VideoResponse
@@ -416,6 +417,7 @@ def get_video_file(
     video_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
+    settings: Settings = Depends(get_api_settings),
 ) -> FileResponse:
     row = video_repo.get_video_for_owner(
         user_id=user.id, video_id=video_id, db_path=db_path,
@@ -424,7 +426,7 @@ def get_video_file(
         raise video_repo.VideoOwnershipError(
             f"video id={video_id} not found"
         )
-    file_path = Path(row["file_path"])
+    file_path = resolve_media_path(row["file_path"], settings.data_dir)
     if not file_path.exists():
         raise video_repo.VideoOwnershipError(
             f"video id={video_id} file missing on disk"
@@ -473,6 +475,7 @@ def ask_about_video(
     video_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(require_tier("shop")),
     db_path: str = Depends(get_db_path),
+    settings: Settings = Depends(get_api_settings),
 ) -> GuidanceResponse:
     """Answer a technician's question using a recorded video as evidence.
 
@@ -502,7 +505,7 @@ def ask_about_video(
     if row is None or int(row["session_id"]) != session_id:
         raise video_repo.VideoOwnershipError(f"video id={video_id} not found")
 
-    file_path = _Path(row["file_path"])
+    file_path = resolve_media_path(row["file_path"], settings.data_dir)
     if not file_path.exists():
         raise video_repo.VideoOwnershipError(
             f"video id={video_id} file missing on disk"

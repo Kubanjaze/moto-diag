@@ -7735,6 +7735,35 @@ MIGRATIONS: list[Migration] = [
         post_apply="motodiag.knowledge.loader:content_086",
         rollback_sql=_sql_086(reverse=True),
     ),
+    Migration(
+        version=87,
+        name="media_paths_relative",
+        description=(
+            "Phase 383 (F205). The upload routes stored the receiving "
+            "machine's absolute path, so moving live (Phase 382) stranded "
+            "every media row. A path is now stored relative to the data "
+            "folder and resolved on read (media/paths.py). This rewrites "
+            "each absolute `videos.file_path`, `work_order_photos.file_path` "
+            "and `voice_transcripts.audio_path` that carries the routes' "
+            "layout to its suffix from `videos/shop_`, `photos/shop_` or "
+            "`audio/shop_`, so it needs no machine's data folder; anything "
+            "else is left, and no other column moves. Changes existing rows. "
+            "The rollback is a no-op: restoring the absolute form needs the "
+            "machine's data folder, and the reader takes both forms."
+        ),
+        upgrade_sql="""
+            UPDATE videos
+               SET file_path = substr(file_path, instr(file_path, '/videos/shop_') + 1)
+             WHERE substr(file_path, 1, 1) = '/' AND instr(file_path, '/videos/shop_') > 0;
+            UPDATE work_order_photos
+               SET file_path = substr(file_path, instr(file_path, '/photos/shop_') + 1)
+             WHERE substr(file_path, 1, 1) = '/' AND instr(file_path, '/photos/shop_') > 0;
+            UPDATE voice_transcripts
+               SET audio_path = substr(audio_path, instr(audio_path, '/audio/shop_') + 1)
+             WHERE substr(audio_path, 1, 1) = '/' AND instr(audio_path, '/audio/shop_') > 0;
+        """,
+        rollback_sql="SELECT 1;",
+    ),
 ]
 
 

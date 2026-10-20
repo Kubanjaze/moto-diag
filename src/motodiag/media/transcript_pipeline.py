@@ -38,6 +38,8 @@ import json
 import logging
 from typing import Optional
 
+from motodiag.core.config import get_settings
+from motodiag.media.paths import resolve_media_path
 from motodiag.media.transcript_extraction import (
     categories,
     extract_symptoms_from_transcript,
@@ -63,6 +65,7 @@ def run_extraction_pipeline(
     transcript_id: int,
     shop_id: Optional[int] = None,
     db_path: Optional[str] = None,
+    data_dir: Optional[str] = None,
 ) -> None:
     """Run the full async extraction pipeline for one transcript.
 
@@ -72,7 +75,7 @@ def run_extraction_pipeline(
     failure) so a row can never hang.
     """
     try:
-        _run(transcript_id, shop_id, db_path)
+        _run(transcript_id, shop_id, db_path, data_dir)
     except Exception as exc:  # noqa: BLE001 — last-resort safety net
         # A BackgroundTask exception is swallowed by the framework +
         # would strand the transcript in 'extracting'. Finalize
@@ -96,6 +99,7 @@ def _run(
     transcript_id: int,
     shop_id: Optional[int],
     db_path: Optional[str],
+    data_dir: Optional[str] = None,
 ) -> None:
     row = get_voice_transcript(transcript_id, db_path=db_path)
     if row is None:
@@ -106,7 +110,10 @@ def _run(
         )
         return
 
-    audio_path = row.get("audio_path") or ""
+    # F205 (Phase 383): a stored path is relative to the data folder.
+    stored = row.get("audio_path") or ""
+    audio_path = (str(resolve_media_path(stored, data_dir or get_settings().data_dir))
+                  if stored else "")
     preview_text = row.get("preview_text")
     language = row.get("language") or "en-US"
     duration_ms = int(row.get("duration_ms") or 0)
