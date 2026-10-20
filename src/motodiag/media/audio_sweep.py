@@ -28,10 +28,11 @@ from __future__ import annotations
 import logging
 from dataclasses import dataclass
 from datetime import datetime, timedelta, timezone
-from pathlib import Path
 from typing import Optional
 
+from motodiag.core.config import get_settings
 from motodiag.core.database import get_connection
+from motodiag.media.paths import resolve_media_path
 
 
 _log = logging.getLogger(__name__)
@@ -55,6 +56,7 @@ def prune_old_audio(
     *,
     retention_days: int = DEFAULT_RETENTION_DAYS,
     db_path: Optional[str] = None,
+    data_dir: Optional[str] = None,
 ) -> SweepResult:
     """Prune audio bytes older than ``retention_days``.
 
@@ -65,6 +67,8 @@ def prune_old_audio(
     Returns a ``SweepResult`` with counts + any per-row errors so the
     caller can log / surface / fail-loud.
     """
+    # F205 (Phase 383): a stored path is relative to the data folder.
+    data_dir = data_dir or get_settings().data_dir
     cutoff = now - timedelta(days=retention_days)
     cutoff_iso = cutoff.strftime("%Y-%m-%d %H:%M:%S")
 
@@ -89,7 +93,7 @@ def prune_old_audio(
         audio_path = str(row[1])
         size_bytes = int(row[2])
         try:
-            path = Path(audio_path)
+            path = resolve_media_path(audio_path, data_dir)
             if path.exists():
                 path.unlink()
             else:

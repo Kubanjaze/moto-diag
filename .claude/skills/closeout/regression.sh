@@ -57,12 +57,11 @@ PYTHONUTF8=1 $KEEP_AWAKE "$PY" -m pytest $ARGS -rA --junitxml="$STEM.xml" > "$ST
 RC=$?
 WALL=$(( $(date +%s) - T0 ))
 
-SUMMARY=$(grep -E '^=+ .*(passed|failed|error|no tests ran).* =+$' "$STEM.log" | tail -1)
-count() { echo "$SUMMARY" | grep -oE "[0-9]+ $1" | grep -oE '^[0-9]+' || echo 0; }
-P=$(count passed); F=$(count failed); E=$(count 'errors?'); S=$(count skipped)
-
 tail -n 25 "$STEM.log"
 echo
-echo "Regression of record: $P passed, $F failed, $S skipped, $E errors at \`$HASH\`" \
-     "($((WALL / 60)) min $((WALL % 60)) s wall, \`$CMD\`, exit $RC)"
+# F206 (Phase 383): the line's writer sits beside A5's reader, in one file.
+# A failing run prints "Regression run FAILED (not of record):"; each skip
+# follows on its own line, with its file and reason.
+"$PY" -B "$DIR/closeout_check.py" --format-regression "$STEM.log" "$HASH" "$WALL" "$CMD" "$RC" \
+  || exit 2
 exit $RC

@@ -65,7 +65,7 @@ def patch_worker(monkeypatch):
     """Replace the analysis worker with a no-op so tests don't hit ffmpeg."""
     import motodiag.media.analysis_worker as worker_mod
 
-    def _noop(video_id, db_path=None):
+    def _noop(video_id, db_path=None, data_dir=None):
         return None
 
     monkeypatch.setattr(worker_mod, "run_analysis_pipeline", _noop)
@@ -222,8 +222,10 @@ class TestUploadEndpoint:
         """Verify add_task is invoked with the right args."""
         called: list[tuple] = []
 
-        def fake_run(video_id, db_path=None):
-            called.append((video_id, db_path))
+        # Phase 383 (F205): the route passes its data folder too, so the
+        # worker resolves the row's relative path where it was written.
+        def fake_run(video_id, db_path=None, data_dir=None):
+            called.append((video_id, db_path, data_dir))
 
         import motodiag.media.analysis_worker as worker_mod
         monkeypatch.setattr(worker_mod, "run_analysis_pipeline", fake_run)
@@ -241,6 +243,8 @@ class TestUploadEndpoint:
         # TestClient runs BackgroundTasks synchronously after the response
         assert len(called) == 1
         assert called[0][0] == r.json()["id"]
+        from motodiag.core.config import get_settings
+        assert called[0][2] == get_settings().data_dir
 
     def test_upload_without_api_key_returns_401_with_problem_detail(
         self, api_db, patch_worker,

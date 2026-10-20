@@ -30,8 +30,10 @@ from pathlib import Path
 from typing import Optional
 
 from motodiag.core import video_repo
+from motodiag.core.config import get_settings
 from motodiag.core.models import VideoAnalysisState
 from motodiag.media import ffmpeg as ffmpeg_module
+from motodiag.media.paths import resolve_media_path
 import json
 
 from motodiag.media.vision_types import VehicleContext
@@ -43,7 +45,8 @@ from motodiag.media.vision_analysis_pipeline import (
 _log = logging.getLogger(__name__)
 
 
-def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
+def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None,
+                          data_dir: Optional[str] = None) -> None:
     """Orchestrate the full Vision analysis pipeline for one video.
 
     Steps:
@@ -60,6 +63,8 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
     Args:
         video_id: ID of the video row to analyze.
         db_path: Optional DB path override (test injection point).
+        data_dir: The data folder the row's relative file path resolves
+            under (F205, Phase 383); the settings' when omitted.
 
     Returns:
         None. State is observed via subsequent DB reads.
@@ -98,7 +103,8 @@ def run_analysis_pipeline(video_id: int, db_path: Optional[str] = None) -> None:
         # 1. Extract frames
         try:
             frames = ffmpeg_module.extract_frames(
-                video_path=Path(video["file_path"]),
+                video_path=resolve_media_path(
+                    video["file_path"], data_dir or get_settings().data_dir),
                 output_dir=output_dir,
             )
         except ffmpeg_module.FFmpegMissing:

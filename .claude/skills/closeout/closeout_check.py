@@ -258,10 +258,11 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
     if phase in A5_COMMAND_EXEMPT:
         if not legacy_regression_line(log_txt):
             fails.append("A5 no regression line carrying both a commit hash and a "
-                         "passed-test count")
-    elif not regression_line(log_txt):
-        fails.append("A5 no regression line that parses as regression.sh prints it: "
-                     "'Regression of record: N passed … at `HASH` (…, `… pytest …`, …)'")
+                         "passed-test count, and no failure")
+    else:
+        _, problem = regression_record(log_txt, phase)
+        if problem:
+            fails.append(f"A5 {problem}")
 
     # A6 — a ROADMAP row exists and its body cell is within the cap
     roadmap = repo / "docs" / "ROADMAP.md"
@@ -309,9 +310,30 @@ def check(repo: pathlib.Path, phase: str) -> list[str]:
 #: K6. `regression.sh` prints: "Regression of record: 9507 passed, 0 failed,
 #: 0 skipped, 0 errors at `5750985` (11 min 15 s wall, `python -m pytest -n
 #: auto --dist load`, exit 0)". A5 requires that shape: the count, the hash
-#: in backticks, and a backticked command that runs pytest.
-_REGRESSION = re.compile(r"Regression of record:\s*(\d[\d,]*) passed\b.*?\bat `([0-9a-f]{7,40})`"
-                         r".*?`([^`]*\bpytest\b[^`]*)`")
+#: in backticks, and a backticked command that runs pytest. F206 (Phase 383):
+#: the whole shape, so the failures, errors and exit code are read too.
+PREFIX = "Regression of record:"
+FAILED_PREFIX = "Regression run FAILED (not of record):"
+SKIP_PREFIX = "Skipped in the regression of record:"
+_REGRESSION = re.compile(r"Regression of record:\s*(\d[\d,]*) passed, (\d+) failed, (\d+) skipped, "
+                         r"(\d+) errors? at `([0-9a-f]{7,40})` \(.*?`([^`]*\bpytest\b[^`]*)`, "
+                         r"exit (\d+)\)")
+_SKIP = re.compile(r"Skipped in the regression of record: \[(\d+)\] ([^\s:]+):\d+: (.+?)\s*$")
+#: pytest's -rA summary line for a skip, grouped: "SKIPPED [1] tests/x.py:79: reason".
+_PYTEST_SKIP = re.compile(r"^SKIPPED \[(\d+)\] ([^\s:]+:\d+): (.*)$", re.M)
+_SUMMARY = re.compile(r"^=+ .*(passed|failed|error|no tests ran).* =+$", re.M)
+
+#: F206, the operator's 1C: a skip in the regression of record is allowed only
+#: when its test file and its reason are pinned here. Adding to it is the
+#: operator's call; `test_phase383_regression_outcome.py` holds it to equality.
+EXPECTED_SKIPS = frozenset({
+    ("tests/test_phase244H_test_db_isolation.py", "no production database on this machine"),
+})
+
+#: The closed logs whose regression line records a skip with no line naming
+#: it, measured 2026-10-19 over every completed log: 382, before 1C. Pinned,
+#: with the same equality control as A5_COMMAND_EXEMPT.
+A5_UNNAMED_SKIP_EXEMPT = frozenset({"382"})
 
 #: The phases whose close-out passed the old A5 (a hash and a count on a line
 #: saying "regression") with no command on it, measured 2026-09-27 over all
@@ -333,23 +355,84 @@ _MENTION = re.compile(r"refut", re.I)
 _NO_REFUTE = re.compile(r"^\s*(?:[-*]\s+)?\**no refute pass ran\b", re.I | re.M)
 
 
-def regression_line(log_txt: str) -> tuple[str, str, str] | None:
-    """(count, hash, command) from the log's regression line, or None.
+def regression_record(log_txt: str, phase: str | None = None
+                      ) -> tuple[tuple[str, str, str] | None, str | None]:
+    """((count, hash, command), None) for a passing regression of record, or
+    (None, why not).
 
     The regression line is the LAST line carrying "Regression of record:".
     A re-run supersedes the run before it (358 recorded two), so the first
     line is the one run the close-out no longer rests on (Phase 359, bug
-    fix #1).
+    fix #1). F206 (Phase 383, the operator's 1C): it must record 0 failed,
+    0 errors and exit 0, and the lines right below it must name every skip
+    by its file and reason, each one in EXPECTED_SKIPS.
     """
-    lines = [ln for ln in log_txt.splitlines() if "Regression of record:" in ln]
-    m = _REGRESSION.search(lines[-1]) if lines else None
-    return m.groups() if m else None
+    lines = log_txt.splitlines()
+    at = [i for i, ln in enumerate(lines) if PREFIX in ln]
+    m = _REGRESSION.search(lines[at[-1]]) if at else None
+    if m is None:
+        return None, ("no regression line that parses as regression.sh prints it: "
+                      "'Regression of record: N passed, F failed, S skipped, E errors at "
+                      "`HASH` (…, `… pytest …`, exit RC)'")
+    count, failed, skipped, errors, commit, command, rc = m.groups()
+    if (failed, errors, rc) != ("0", "0", "0"):
+        return None, (f"the regression of record did not pass: {failed} failed, "
+                      f"{errors} errors, exit {rc}")
+    named, problems = 0, []
+    for ln in lines[at[-1] + 1:]:
+        if SKIP_PREFIX not in ln:
+            break
+        s = _SKIP.search(ln)
+        if s is None:
+            problems.append(f"a skip line that does not parse: {ln.strip()[:120]!r}")
+            continue
+        named += int(s.group(1))
+        if (s.group(2), s.group(3)) not in EXPECTED_SKIPS:
+            problems.append(f"an unexpected skip: {s.group(2)}: {s.group(3)!r}")
+    unnamed_ok = named == 0 and phase in A5_UNNAMED_SKIP_EXEMPT
+    if named != int(skipped) and not unnamed_ok:
+        problems.append(f"the line records {skipped} skipped and the lines below it name "
+                        f"{named}")
+    if problems:
+        return None, "; ".join(problems)
+    return (count, commit, command), None
+
+
+def regression_line(log_txt: str, phase: str | None = None) -> tuple[str, str, str] | None:
+    """(count, hash, command) from a passing regression of record, or None."""
+    return regression_record(log_txt, phase)[0]
+
+
+def format_regression(log_text: str, commit: str, wall_s: int, command: str, rc: int) -> str:
+    """The lines `regression.sh` prints, from the pytest log of its run.
+
+    One writer beside its reader, so the two cannot drift (F206, Phase 383).
+    The prefix "Regression of record:" is printed only for a run that exits
+    0 with 0 failed and 0 errors. Each skip in pytest's -rA summary follows
+    on its own line, with its count, file and reason.
+    """
+    summaries = [m.group(0) for m in _SUMMARY.finditer(log_text)]
+    summary = summaries[-1] if summaries else ""
+
+    def n(word: str) -> int:
+        hit = re.search(rf"(\d+) {word}\b", summary)
+        return int(hit.group(1)) if hit else 0
+
+    p, f, s, e = n("passed"), n("failed"), n("skipped"), n("errors?")
+    prefix = PREFIX if (rc, f, e) == (0, 0, 0) else FAILED_PREFIX
+    out = [f"{prefix} {p} passed, {f} failed, {s} skipped, {e} errors at `{commit}` "
+           f"({wall_s // 60} min {wall_s % 60} s wall, `{command}`, exit {rc})"]
+    out += [f"{SKIP_PREFIX} [{k}] {where}: {why}"
+            for k, where, why in _PYTEST_SKIP.findall(log_text)]
+    return "\n".join(out)
 
 
 def legacy_regression_line(log_txt: str) -> bool:
-    """The pre-358 A5: a line saying "regression" with a hash and a count."""
-    return any(_HASH.search(ln) and _COUNT.search(ln) for ln in log_txt.splitlines()
-               if re.search(r"regression", ln, re.I))
+    """The pre-358 A5: a line saying "regression" with a hash and a count,
+    and (F206) recording no failure or error."""
+    return any(_HASH.search(ln) and _COUNT.search(ln)
+               and not re.search(r"\b[1-9][\d,]* (?:failed|errors?)\b", ln)
+               for ln in log_txt.splitlines() if re.search(r"regression", ln, re.I))
 
 
 def refute_record(log_txt: str, phase: str | None = None) -> list[str]:
@@ -379,8 +462,14 @@ ASSERTION_IDS = ("A1", "A2", "A3", "A4", "A5", "A6", "A7", "A8")
 
 
 def main() -> int:
+    if len(sys.argv) == 7 and sys.argv[1] == "--format-regression":
+        _, _, log, commit, wall, command, rc = sys.argv
+        print(format_regression(_read(pathlib.Path(log)), commit, int(wall), command, int(rc)))
+        return 0
     if len(sys.argv) < 3:
-        print("usage: closeout_check.py <repo> <phase>", file=sys.stderr)
+        print("usage: closeout_check.py <repo> <phase>\n"
+              "       closeout_check.py --format-regression <pytest log> <commit> "
+              "<wall s> <command> <rc>", file=sys.stderr)
         return 2
     fails = check(pathlib.Path(sys.argv[1]), sys.argv[2])
     for f in fails:

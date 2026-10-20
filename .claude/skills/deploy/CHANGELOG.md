@@ -1,5 +1,19 @@
 # deploy — changelog
 
+## 2026-10-19 — the gates on a live the API writes; a passing regression (Phase 383, F208, F206)
+
+The operator: "2A with apply-live following it, check 8 unchanged".
+- **`SERVER_WRITES`** = `{"api_keys": {"last_used_at"}}`, the one column
+  the running API writes by itself. apply-live's "changed since the dry
+  run", its after-apply comparison and verify-live set aside a change
+  confined to it, print each, and the live diff names them. Anything else
+  still refuses or exits 3; a field the approved diff names is compared
+  exactly; the dry runs are not masked.
+  `tests/test_phase383_server_writes.py`. F210: the list cannot hold once
+  a shop's traffic reaches live.
+- **K18** refuses a regression line that records a failure, an error, a
+  nonzero exit or an unpinned skip (F206), with the reason.
+
 ## 2026-10-19 — live moved to the home desktop; live.json, `backup`, exit 4 (Phase 382)
 
 - **Where live is.** The `LIVE` constant (`data/motodiag.db` in the

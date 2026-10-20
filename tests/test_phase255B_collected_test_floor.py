@@ -338,7 +338,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: Then +1, by a diff of collected ids against ac4cc3e (+1 -0): bug fix #3's
 #: test (each xdist worker has its own default database). Measured: 10871.
 #:
-COLLECTED_TEST_FLOOR = 10871
+#: Phase 383 (2026-10-19): 10871 -> 10923, by a diff of collected ids
+#: against master e4a691f (in a worktree, 10872 there: the floor sat one
+#: under the count): +51 -0. tests/test_phase383_regression_outcome.py (24,
+#: F206), tests/test_phase383_server_writes.py (11, F208),
+#: tests/test_phase383_media_paths.py (16, F205). Measured: 10923.
+#:
+COLLECTED_TEST_FLOOR = 10923
 
 
 def _collected_count() -> int:

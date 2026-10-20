@@ -75,14 +75,21 @@ through `apply-live`, never through a restart.
 4. **`deploy.py apply-live <phase>`, from the branch, after the regression
    of record** (Phase 378, K18: one order; the regression, the apply, the
    close-out commit, the merge). It refuses, before touching live, unless:
-   - the phase log in `in_progress/` carries a regression line A5 can read,
+   - the phase log in `in_progress/` carries a regression line A5 can read
+     as passing (0 failed, 0 errors, exit 0, only the pinned skips: F206,
+     Phase 383),
      no code path changed between its commit and HEAD, and no code path is
      uncommitted (`fixtures/k18/` holds the known-bad logs);
    - the diff file exists, is committed and is unchanged;
    - the diff records no scope problem;
    - the backup still hashes as recorded, and the scope file is the one
      the diff was made with;
-   - live still equals the backup;
+   - live still equals the backup, but for the columns the running API
+     writes by itself (`SERVER_WRITES`: `api_keys.last_used_at`; F208, the
+     operator's 2A, Phase 383). Each one set aside is printed and named in
+     the live diff; any other change refuses. A field the approved diff
+     names is never set aside. F210 records where the list stops holding,
+     before onboarding (330);
    - a fresh dry run on a new copy stays in scope;
    - **that fresh run equals the committed exact diff, field for field**,
      clock values masked (F172, Phase 357). A diff file written before
@@ -98,7 +105,11 @@ through `apply-live`, never through a restart.
    live's integrity and foreign keys. It exits 3 when live does not equal
    the approved diff, and says when live's schema is past the phase's own
    migrations (F197, Phase 379); 1 on integrity or a foreign key; 2 with no
-   deploy. verify_phase's check 8 calls it and fails on 1 or 3.
+   deploy. verify_phase's check 8 calls it and fails on 1 or 3. It sets
+   aside the `SERVER_WRITES` columns as apply-live does, and prints each
+   one (F208). Check 8 still fails where live is not (exit 4): the
+   close-out's `verify_phase.sh` runs on the desktop (the operator,
+   Phase 383: "check 8 unchanged").
 6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 

@@ -1,5 +1,23 @@
 # closeout — changelog
 
+## 2026-10-19 — only a passing run is of record (Phase 383, F206)
+
+The operator: "1C: pin each expected skip by its test file and its reason,
+not the reason alone. EXPECTED_SKIPS is held by an equality test as
+A5_COMMAND_EXEMPT is, and adding to it is my call."
+- **A5 and K18** (one parser, `regression_record`) require the whole
+  shape: 0 failed, 0 errors, exit 0. 382's failing desktop line passed the
+  old rule verbatim; it is now `fixtures/k6_k7/a5_bad_failing_run.md`.
+- **Skips:** the lines below the regression line name each skip,
+  `[N] file:line: reason`; they must add up to the count, and each
+  `(file, reason)` must be in `EXPECTED_SKIPS` (244H's, today).
+  `A5_UNNAMED_SKIP_EXEMPT = {382}`, recomputed and held to equality.
+- **`regression.sh`** prints through `closeout_check.py
+  --format-regression`, the writer beside its reader; a failing run prints
+  `Regression run FAILED (not of record):`.
+- The legacy rule for the ten exempt closes refuses a line recording a
+  failure too. `tests/test_phase383_regression_outcome.py`.
+
 ## 2026-10-08 — check 8 fails verify_phase; the whole-tree command keeps its output (Phase 379, F197, F173)
 
 The operator: "379 = the nine small fixes."

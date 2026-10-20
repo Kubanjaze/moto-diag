@@ -61,6 +61,7 @@ from motodiag.auth.deps import (
 )
 from motodiag.core.config import Settings
 from motodiag.media.audio_pipeline import inspect_audio
+from motodiag.media.paths import resolve_media_path, stored_media_path
 from motodiag.media.transcript_pipeline import run_extraction_pipeline
 from motodiag.shop import get_work_order
 from motodiag.shop.extracted_symptom_repo import (
@@ -415,7 +416,8 @@ async def upload_voice_transcript(
     storage_dir = _resolve_storage_dir(settings, shop_id, wo_id)
     audio_path = storage_dir / f"{transcript_id}.{inspected.audio_format}"
     audio_path.write_bytes(raw_bytes)
-    _update_audio_path(transcript_id, str(audio_path), db_path=db_path)
+    _update_audio_path(transcript_id, stored_media_path(audio_path, settings.data_dir),
+                       db_path=db_path)
 
     # Phase 195B: hand extraction to the async pipeline. Flip to
     # 'extracting' (the honest "pipeline running" state — the mobile
@@ -427,7 +429,7 @@ async def upload_voice_transcript(
     # analysis_worker BackgroundTask pattern.
     update_extraction_state(transcript_id, "extracting", db_path=db_path)
     background_tasks.add_task(
-        run_extraction_pipeline, transcript_id, shop_id, db_path,
+        run_extraction_pipeline, transcript_id, shop_id, db_path, settings.data_dir,
     )
 
     row = get_voice_transcript(transcript_id, db_path=db_path)
@@ -589,6 +591,7 @@ def stream_voice_transcript_audio(
     transcript_id: int = PathParam(..., gt=0),
     user: AuthedUser = Depends(get_current_user),
     db_path: str = Depends(get_db_path),
+    settings: Settings = Depends(get_api_settings),
 ) -> FileResponse:
     require_shop_access(shop_id, user, db_path)
     _verify_wo_in_shop(shop_id, wo_id, db_path)
@@ -606,7 +609,7 @@ def stream_voice_transcript_audio(
                 f"{row['audio_deleted_at']}"
             ),
         )
-    audio_path = Path(row["audio_path"])
+    audio_path = resolve_media_path(row["audio_path"], settings.data_dir)
     if not audio_path.exists():
         # File was somehow gone but audio_deleted_at wasn't stamped.
         # Treat as 410 — same UX outcome.
