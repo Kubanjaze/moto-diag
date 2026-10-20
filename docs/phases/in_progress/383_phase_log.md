@@ -118,3 +118,28 @@ rows, exit 0.
 
 `383_desktop_steps.md` holds the commands for the desktop (D1 the dry run,
 D2 the apply with the API stopped, D3 the server and verify_phase).
+
+### 2026-10-19 — 087's dry run on the desktop; the regression of record; the approval
+
+**The dry run** (D1, the operator on the desktop, at `5603ff3`), committed
+there as `7f75896` and pulled here with `--ff-only`: live 5801 rows, 121
+tables, integrity ok; backup
+`/home/lilcu/backups/motodiag/motodiag_pre383_20261019_212534.db`, sha256
+`a18a2f9378c934d8dd1ffc94fc7d9f1af3cb241720e9142eb77db487d3a8c577`;
+scope sha256 `de7f0eb5…f5a5`, equal to the rehearsal's (the same scope
+file); `[87]`; F158 census 41; scope problems none; exit 0. The diff:
+`videos` 6 changed (`file_path` only, rows 1–6, each to its relative
+path), `schema_version` +1 (version 87); no other table, no schema object.
+
+**The regression of record**, on the Mac, after `wholetree.sh --full` at
+`5603ff3` (PASSED, record written):
+
+Regression of record: 10922 passed, 0 failed, 1 skipped, 0 errors at `5603ff3` (30 min 16 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+
+10922 + 1 = 10923 collected, the floor. Log
+`~/.cache/motodiag/regressions/5603ff3_parallel_20261019_210638.log`.
+
+**The operator's approval**, verbatim:
+
+> Approved: once the regression of record passes, apply 087 live with the API stopped from just before the apply until the merge and restart (3A), exactly as the committed dry-run diff (7f75896) shows: file_path on videos rows 1–6, each to its relative path, and 087's own schema_version row. If anything else differs, stop and show me.
