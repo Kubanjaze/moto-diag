@@ -163,6 +163,45 @@ def diff(a: dict, b: dict) -> dict:
     return res
 
 
+#: F208 (Phase 383, the operator's 2A): the columns the running API writes by
+#: itself, `api_keys.last_used_at` on every authenticated request
+#: (`auth/api_key_repo.py`). Set aside only where LIVE is compared with a
+#: backup; the dry runs diff copies no server writes. F210 records where a
+#: list stops holding: a shop's own traffic.
+SERVER_WRITES: dict[str, frozenset[str]] = {"api_keys": frozenset({"last_used_at"})}
+
+
+def server_masked(d: dict, approved: dict | None) -> tuple[dict, list[str]]:
+    """The diff without the changes confined to SERVER_WRITES, and each one
+    set aside, as `table rowid column`.
+
+    A row whose other fields changed stays, without the listed field. A field
+    the approved exact diff names is never set aside: that change is the
+    migration's, and must equal what was approved.
+    """
+    named = (approved or {}).get("rows", {})
+    out, aside = {}, []
+    for t, x in d.items():
+        listed = SERVER_WRITES.get(t, frozenset())
+        if not listed or not x["changed"]:
+            out[t] = x
+            continue
+        cols, b, changed = x["cols"], dict(x["b"]), []
+        for k in x["changed"]:
+            keep = set(named.get(t, {}).get("changed", {}).get(str(k), {}))
+            row = list(b[k])
+            for i, c in enumerate(cols, start=1):
+                if c in listed and c not in keep and row[i] != x["a"][k][i]:
+                    row[i] = x["a"][k][i]
+                    aside.append(f"{t} {k} {c}")
+            b[k] = tuple(row)
+            if b[k] != x["a"][k]:
+                changed.append(k)
+        if changed or x["added"] or x["removed"]:
+            out[t] = {**x, "b": b, "changed": changed}
+    return out, aside
+
+
 def schema(path: pathlib.Path) -> dict[str, str]:
     """{"table t": its SQL, "index i": …} for every object SQLite did not make."""
     c = _ro(path)
@@ -526,11 +565,14 @@ def preflight(phase: str, *, db: pathlib.Path, repo: pathlib.Path, migrate: Call
         raise Refused(f"the backup {bk} is missing or no longer hashes as recorded")
     if sha256(scope_path(repo, phase)) != head.get("Scope sha256"):
         raise Refused("the scope file changed since the dry run")
-    drift = diff(dump(bk), dump(db))
+    approved = _approved_exact(f.read_text())
+    drift, aside = server_masked(diff(dump(bk), dump(db)), approved)
+    if aside:
+        print(f"set aside since the dry run: {len(aside)} change(s) the running API "
+              f"writes: {aside[:5]}")
     if drift:
         raise Refused(f"live differs from the backup in {sorted(drift)}: it changed since "
                       "the dry run. Stop and ask.")
-    approved = _approved_exact(f.read_text())
     if approved is None:
         raise Refused(f"{rel} has no exact diff: it was written before F172's fix. "
                       "Run `deploy.py dryrun` again and commit its diff.")
@@ -571,17 +613,19 @@ def apply_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Path
     allowed, to = resolve(scope, bk), expected(scope, bk)
     clock = _utc_now()
     print("preflight passed; applying live:", migrate(db))
-    d = diff(dump(bk), dump(db))
+    approved = _approved_exact(diff_path(repo, phase).read_text())
+    d, aside = server_masked(diff(dump(bk), dump(db)), approved)
     new_schema = schema(db)
     sch = schema_diff(schema(bk), new_schema)
     probs = check_scope(d, scope, allowed, to, sch)
-    gaps = exact_gaps(_approved_exact(diff_path(repo, phase).read_text()),
-                      exact(d, sch, new_schema, clock))
+    gaps = exact_gaps(approved, exact(d, sch, new_schema, clock))
     probs += [f"live differs from the approved diff: {g}" for g in gaps]
     diff_path(repo, phase, "live").write_text(
         f"# Phase {phase}: live after the apply, against the backup\n\n"
         f"- **Scope problems:** `{'; '.join(probs) or 'none'}`\n"
         f"- **Equals the approved exact diff:** `{'no' if gaps else 'yes'}`\n"
+        f"- **Set aside, written by the running API:** `{len(aside)}` "
+        f"(`{', '.join(aside[:10]) or 'none'}`)\n"
         f"- **F158 census on live:** `{census(db)}`\n\n" + report(d, sch, new_schema))
     print("after (live):", json.dumps(state(db)), "scope problems:", probs or "none")
     return 1 if probs else 0
@@ -721,7 +765,7 @@ def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Pat
     try:
         backup(db, live_copy)
         _immutable_copy(bk, bk_copy)
-        d = diff(dump(bk_copy), dump(live_copy))
+        d, aside = server_masked(diff(dump(bk_copy), dump(live_copy)), _approved_exact(text))
         new_schema = schema(live_copy)
         sch = schema_diff(schema(bk_copy), new_schema)
         c = _ro(live_copy)
@@ -739,6 +783,9 @@ def verify_live(phase: str, *, db: pathlib.Path | None = None, repo: pathlib.Pat
           "the copies are deleted)")
     for kind in ("added", "removed", "changed"):
         print(f"  schema {kind}: {', '.join(sch[kind]) or 'none'}")
+    if aside:
+        print(f"  set aside: {len(aside)} change(s) the running API writes "
+              f"(F208): {', '.join(aside[:10])}")
     if not d:
         print("  rows: no table differs")
     for t, x in d.items():
