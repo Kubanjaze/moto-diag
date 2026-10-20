@@ -24,6 +24,7 @@ from fastapi.testclient import TestClient
 import test_phase191b_videos_api as V
 import test_phase194_commit0_photo_upload as P
 import test_phase195_commit0_voice_transcripts as T
+import test_phase244J_guidance_surface as J
 from motodiag.api import create_app
 from motodiag.auth.api_key_repo import create_api_key
 from motodiag.core.config import reset_settings
@@ -43,6 +44,10 @@ def _use(monkeypatch, db: str, data_dir: Path) -> TestClient:
     return TestClient(create_app(db_path_override=db), raise_server_exceptions=False)
 
 
+#: The arguments each transcript upload queued its extraction with.
+QUEUED: list[tuple] = []
+
+
 @pytest.fixture
 def folders(tmp_path, monkeypatch):
     db = str(tmp_path / "phase383.db")
@@ -51,8 +56,9 @@ def folders(tmp_path, monkeypatch):
     monkeypatch.setattr(worker_mod, "run_analysis_pipeline",
                         lambda video_id, db_path=None, data_dir=None: None)
     import motodiag.api.routes.transcripts as transcripts_mod
+    QUEUED.clear()
     monkeypatch.setattr(transcripts_mod, "run_extraction_pipeline",
-                        lambda *a, **k: None)
+                        lambda *a, **k: QUEUED.append(a))
     yield db, tmp_path / "a", tmp_path / "b"
     reset_settings()
 
@@ -146,6 +152,43 @@ class TestARowReadsBackUnderAnotherFolder:
             headers={"X-API-Key": key})
         assert got.status_code == 200, got.text
         assert got.content == raw
+
+    def test_the_transcript_route_queues_its_data_folder(self, folders, monkeypatch):
+        db, a, _ = folders
+        client = _use(monkeypatch, db, a)
+        key, shop_id, wo_id = _shop(db)
+        tid = T._post_transcript(client, key, shop_id, wo_id).json()["id"]
+        assert QUEUED == [(tid, shop_id, db, str(a))]
+
+    def test_the_ask_route_reads_the_video_under_b(self, folders, monkeypatch):
+        db, a, b = folders
+        client = _use(monkeypatch, db, a)
+        _, key, sid = V._shop_user_with_session(db)
+        vid = client.post(f"/v1/sessions/{sid}/videos",
+                          files={"file": ("t.mp4", b"\x05" * 64, "video/mp4")},
+                          data={"metadata": V._good_metadata(file_size_bytes=64)},
+                          headers={"X-API-Key": key}).json()["id"]
+        stored = _cell(db, "select file_path from videos where id = ?", vid)
+        _move(a, b)
+        import motodiag.media.ffmpeg as ff
+        from motodiag.media.vision_analysis_pipeline import VisionAnalyzer
+        seen = []
+
+        def frames(video_path, output_dir, max_frames=60):
+            seen.append(video_path)
+            p = Path(output_dir) / "frame_001.jpg"
+            p.parent.mkdir(parents=True, exist_ok=True)
+            p.write_bytes(b"jpg")
+            return [p]
+
+        monkeypatch.setattr(ff, "extract_frames", frames)
+        monkeypatch.setattr(VisionAnalyzer, "answer_question_about_frames",
+                            lambda self, *a, **k: J.FAKE_ANSWER)
+        r = _use(monkeypatch, db, b).post(f"/v1/sessions/{sid}/videos/{vid}/ask",
+                                          json={"question": "Where is the leak coming from?"},
+                                          headers={"X-API-Key": key})
+        assert r.status_code == 200, r.text
+        assert seen == [b / stored]
 
     def test_an_absolute_value_still_reads(self, folders, monkeypatch, tmp_path):
         """A row the old code wrote (or one written in 3A's window)."""

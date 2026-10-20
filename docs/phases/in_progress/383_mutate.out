@@ -1,0 +1,36 @@
+R1 the failures are not read: red
+R2 the errors are not read: red
+R3 the exit code is not read: red
+R4 any named skip passes: red
+R5 a skip is pinned by its reason alone: red
+R6 the skip count is not compared: red
+R7 the unnamed-skip exemption grows: red
+R8 the writer prints a failing run as of record: red
+R9 the writer drops the skip lines: red
+R10 regression.sh prints its own line: red
+R11 the legacy rule passes a failure: red
+R12 K18 reads the line without its outcome: red
+S1 the drift check masks nothing: red
+S2 the after-apply comparison masks nothing: red
+S3 verify-live masks nothing: red
+S4 every column of the table is masked: red
+S5 the column is masked in every table: red
+S6 a field the approved diff names is masked: red
+S7 an added row is dropped with the masked ones: red
+S8 verify-live does not say what it set aside: red
+M1 the video route stores the absolute path: red
+M2 the photo route stores the absolute path: red
+M3 the transcript route stores the absolute path: red
+M4 the video file route reads the stored path as is: red
+M5 the video ask route reads the stored path as is: red
+M6 the photo route reads the stored path as is: red
+M7 the transcript route reads the stored path as is: red
+M8 the sweep ignores its data folder: red
+M9 the transcript pipeline ignores its data folder: red
+M10 the analysis worker ignores its data folder: red
+M11 the video route does not pass its data folder: red
+M12 the transcript route does not pass its data folder: red
+M13 087 keeps the leading slash: red
+M14 087 leaves the photos: red
+M15 087 leaves the transcripts: red
+35/35 red

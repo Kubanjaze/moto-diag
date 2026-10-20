@@ -52,3 +52,50 @@ v1.0 written. Decided without a stop:
   and A5 sums them.
 - The line's writer moves into `closeout_check.py` beside its reader, so a
   test can feed one to the other; `regression.sh` calls it.
+
+### 2026-10-19 — The build: F206, F208, F205
+
+Committed in the prompt's order:
+- **F206** `12008ba`: `regression_record` (A5 and K18), `format_regression`
+  beside it, `regression.sh` printing through it, eight known-bad fixtures
+  (382's failing desktop line verbatim among them) and one good.
+  `test_phase358_closeout_k6_k7.py`'s exemption control now judges each
+  log as its own phase (the skip exemption is per phase); without that,
+  382 joined the command exemption's measured set.
+- **F208** `d45f3e0`: `SERVER_WRITES`, `server_masked`, applied to the
+  drift check, the after-apply comparison and verify-live, each printing
+  what it set aside. Check 8 unchanged.
+- **F205** `4fc1ca1`: `media/paths.py`; the three writers; the readers
+  (the three file routes, the ask route, `analysis_worker`, `audio_sweep`,
+  `transcript_pipeline`), the routes passing their `data_dir` to the
+  background workers so a worker resolves under the folder the row was
+  written under; migration 087; `SCHEMA_VERSION` 87.
+  `wholetree.sh --full` before it: PASSED, 4207 passed (gate 11 among them:
+  the OpenAPI snapshot is unchanged, as S0-1 required).
+
+Decided without a stop:
+- **The 191b worker fakes take the new argument.** `patch_worker`'s no-op
+  had the old signature; the upload's background task then raised inside
+  `TestClient(raise_server_exceptions=False)` and the tests passed while
+  it threw. `test_upload_queues_background_analysis_task` now also checks
+  that the worker receives the app's data folder. Not a bug fix: the
+  signature change is this phase's own.
+- **087's `WHERE` is not load-bearing.** With `instr` = 0 the `substr`
+  returns the whole value, so dropping either condition rewrites nothing
+  differently; it only limits which rows are written. No mutation targets
+  it; M13–M15 break the rewrite itself.
+
+**Mutations** (`383_mutate.py`, `383_mutate.out`): the first run left two
+green, each a gap in the tests, not the code:
+- R1 (the failures not read): every failing fixture also exited nonzero.
+  Added `a5_bad_failed_exit_zero.md`.
+- S7 (an added row dropped with the masked ones): the added-row control had
+  no masked change in the same table, so it never reached that branch. It
+  now carries a request beside the insert.
+Also added before the run: the ask route's round trip (M5), the transcript
+route's queued folder (M12), and `a5_bad_skip_other_file.md` (R5, the
+operator's "by its test file and its reason"). Second run: **35/35 red**.
+
+**The floor:** 10871 → 10923, by a diff of collected ids against master
+`e4a691f` in a scratchpad worktree (10872 there): +51 −0, all in the three
+new files.

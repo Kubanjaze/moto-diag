@@ -95,7 +95,9 @@ class TestTheControlsStillFail:
         assert "changed since the dry run" in _refusal(env, capsys)
 
     def test_an_added_api_keys_row_before_the_apply(self, env, capsys):
+        """Beside a request, so the masked change and the added row share a table."""
         _ready(env)
+        _request(env)
         _sql(env["live"], "insert into api_keys values (3, 1, 'new', null, 1)")
         assert "changed since the dry run" in _refusal(env, capsys)
 

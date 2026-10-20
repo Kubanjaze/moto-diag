@@ -36,7 +36,8 @@ DONE = ROOT / "docs" / "phases" / "completed"
 CMD = "python -m pytest -n auto --dist load"
 
 BAD = ["a5_bad_failing_run.md", "a5_bad_exit_nonzero.md", "a5_bad_errors.md",
-       "a5_bad_unnamed_skip.md", "a5_bad_unexpected_skip.md", "a5_bad_miscounted_skip.md"]
+       "a5_bad_unnamed_skip.md", "a5_bad_unexpected_skip.md", "a5_bad_miscounted_skip.md",
+       "a5_bad_skip_other_file.md", "a5_bad_failed_exit_zero.md"]
 
 #: A pytest -rA tail as regression.sh's run writes it.
 PASSING_LOG = (
