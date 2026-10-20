@@ -1,6 +1,6 @@
 # Phase 383 — 382's follow-ups: the live gates, then media paths — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-19)
 **Branch:** `phase-383` (Opus session on the Mac, the only writer; the deploy
 runs on the desktop, from commands given here)
 
@@ -143,3 +143,35 @@ Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.
 **The operator's approval**, verbatim:
 
 > Approved: once the regression of record passes, apply 087 live with the API stopped from just before the apply until the merge and restart (3A), exactly as the committed dry-run diff (7f75896) shows: file_path on videos rows 1–6, each to its relative path, and 087's own schema_version row. If anything else differs, stop and show me.
+
+### 2026-10-19 — 087 live (D2, the operator on the desktop)
+
+At `2a98f5b`, with `motodiag-api.service` stopped just before the apply
+(3A). The operator's report: `apply-live 383` exit 0, `verify-live 383`
+exit 0, live at schema_version 87, 5802 rows, integrity ok; the
+API left stopped until D3. The live diff, committed there as `8a85e8f` and
+pulled here with `--ff-only`:
+- scope problems `none`; **equals the approved exact diff: `yes`**;
+- set aside, written by the running API: `0` (the API was stopped, so
+  F208's list had nothing to set aside);
+- F158 census on live 41, as in the dry run;
+- `videos` 6 changed, `file_path` only, rows 1–6, each from
+  `/home/lilcu/motodiag/live/videos/shop_1/session_N/I.mp4` to
+  `videos/shop_1/session_N/I.mp4`; `schema_version` +1 (87); nothing else.
+
+That is the approval's scope exactly; nothing else differs, so no stop.
+
+### 2026-10-19 — Close-out
+
+- **F206, F208, F205 closed** in `docs/FOLLOWUPS.md`, each naming its
+  known-bad control. F210 stays open (before row 330).
+- **No bug fixes** in this phase: nothing broke that the phase had built
+  and committed; the two mutation survivors were test gaps, fixed before the
+  run of record (above). No register, so A4 has nothing to read.
+- No refute pass ran.
+- `implementation.md` v1.1; the root `implementation.md` 0.13.110 →
+  0.13.111 with 383's history row; row 383 ✅; the files to `completed/`;
+  the handoff `docs/handoffs/2026-10-19_383_closed.md`.
+- Still to come, from the desktop (D3): the server's pull and start after
+  the merge, and `verify_phase.sh 383 5603ff3 <merge>`, which runs check 8
+  where live is.

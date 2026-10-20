@@ -3482,7 +3482,7 @@ decision on row 231's scope, sourced or narrowed as F149's rows were,
 with Gate 14's censuses re-measured, and a test that a Ruckus or a Grom
 prompt keeps its CVT rows.
 
-### F205
+### F205 — CLOSED by Phase 383
 
 **Uploaded media rows store the absolute path of the machine that received them, so moving live to another machine strands every media row**
 
@@ -3503,7 +3503,18 @@ To close: store the path relative to `data_dir` and resolve it on read,
 with a migration that rewrites the existing rows, and a test that a row
 written under one `data_dir` reads back under another.
 
-### F206
+**Closed by Phase 383 (2026-10-19).** `motodiag/media/paths.py`: the three
+upload routes store the path relative to `data_dir`; every reader (the three
+file routes, the video ask route, the analysis worker, the audio sweep, the
+transcript pipeline) resolves it under the reading settings' `data_dir`,
+and an absolute value still reads. Migration 087 rewrote live's six
+`videos.file_path` rows to `videos/shop_1/session_N/I.mp4`, through the
+deploy skill on the desktop with the API stopped, equal to the approved
+diff (`383_live_diff.md`). The control: `test_phase383_media_paths.py`
+writes a row under one `data_dir` and reads it back under another, for
+each route; mutations M1–M15 red.
+
+### F206 — CLOSED by Phase 383
 
 **A failing regression line passes A5 and `apply-live`'s precondition: the parser reads the count, hash and command, never the failures or the exit code**
 
@@ -3522,6 +3533,17 @@ To close: the line parses only with "0 failed", "0 errors" and "exit 0"
 (or `regression.sh` prints a different prefix on failure), with a
 known-bad fixture of a failing line that A5 and `regression_problem` must
 both refuse.
+
+**Closed by Phase 383 (2026-10-19), the operator's 1C.** A5 and K18 read
+`closeout_check.regression_record`: a line is of record only with 0 failed,
+0 errors and exit 0, and every skip named below it by test file and reason
+in `EXPECTED_SKIPS` (244H's one; adding to it is the operator's call).
+`regression.sh` prints through `format_regression`, and a failing run
+prints `Regression run FAILED (not of record):`. The known-bad control:
+382's desktop line verbatim (`fixtures/k6_k7/a5_bad_failing_run.md`, and
+`deploy/fixtures/k18/failing_regression_line.md`), refused by A5, by
+`check()` and by `apply-live`, with the old pattern shown to match it;
+seven more bad fixtures; mutations R1–R12 red.
 
 ### F207
 
@@ -3545,7 +3567,7 @@ URL), with a Jest test that a backend-only video reaches the player and a
 device check against a real backend. Mobile repo work, in a session rooted
 there.
 
-### F208
+### F208 — CLOSED by Phase 383
 
 **verify-live's exact diff cannot hold on an always-on server: the API writes `api_keys.last_used_at` on every request, so any use after an apply fails verify_phase check 8**
 
@@ -3566,6 +3588,17 @@ To close (the operator's call: it changes a check's definition): one of
   any other column of that table still fails;
 - or check 8 compares against a backup taken at the apply and verifies
   only that no row outside the approved scope changed besides that list.
+
+**Closed by Phase 383 (2026-10-19), the operator's 2A with apply-live
+following it; check 8 unchanged.** `deploy.SERVER_WRITES = {"api_keys":
+{"last_used_at"}}`: apply-live's drift check, its after-apply comparison and
+verify-live set aside a change confined to a listed column of an existing
+row, and print what they set aside. A field the approved diff names is
+compared exactly; the dry runs are not masked. The controls
+(`test_phase383_server_writes.py`): another column of that row, an added
+row in that table, and the same column in another table, before and after
+the apply, each still refuses or exits 3; mutations S1–S8 red. Its limit
+under a shop's traffic is F210, open.
 
 ### F209
 

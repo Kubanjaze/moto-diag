@@ -1,6 +1,6 @@
 # Phase 383 — 382's follow-ups: the live gates, then media paths
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-19
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-19 (v1.0 the same day)
 
 ---
 
@@ -85,6 +85,10 @@ the operator's call; F210 filed for the column list's limit before row 330.
 - **The deploy, 3A:** on the desktop, the dry run and the approved diff;
   then `systemctl stop` just before `apply-live`; verify-live; the
   close-out commit; the merge; the server's pull; `systemctl start`.
+  As built: the routes pass their settings' `data_dir` to the background
+  workers (`run_analysis_pipeline`, `run_extraction_pipeline`), so a worker
+  resolves under the folder the row was written under; `get_settings()`
+  is only the default for a caller that passes none.
 
 ## Tests
 
@@ -110,6 +114,13 @@ the operator's call; F210 filed for the column list's limit before row 330.
 - Mutations in `383_mutate.py`; the floor raised by the diff of collected
   ids.
 
+As built: `test_phase383_regression_outcome.py` (24),
+`test_phase383_server_writes.py` (11), `test_phase383_media_paths.py`
+(16); the known-bad fixtures `a5_bad_*.md` (8) and `a5_good_expected_skip.md`
+in `closeout/fixtures/k6_k7/`, `failing_regression_line.md` in
+`deploy/fixtures/k18/`; 191b's worker fakes and 358's exemption control
+updated (Deviations).
+
 ## Non-goals
 
 - F207 (mobile), F209;
@@ -118,11 +129,66 @@ the operator's call; F210 filed for the column list's limit before row 330.
 
 ## Planned items
 
-- [ ] F206: writer, parser, regression.sh, fixtures, tests
-- [ ] F208: the list, the three comparisons, tests
-- [ ] F205: paths module, writers, readers, migration 087, tests
-- [ ] mutations, the floor
-- [ ] `wholetree.sh --full`, the regression of record (Mac)
-- [ ] 087's dry run on the desktop, shown to the operator; the apply on
+- [x] F206: writer, parser, regression.sh, fixtures, tests
+- [x] F208: the list, the three comparisons, tests
+- [x] F205: paths module, writers, readers, migration 087, tests
+- [x] mutations, the floor
+- [x] `wholetree.sh --full`, the regression of record (Mac)
+- [x] 087's dry run on the desktop, shown to the operator; the apply on
       their words, with the API stopped (3A)
-- [ ] F205, F206, F208 closed or narrowed; the close-out, the handoff
+- [x] F205, F206, F208 closed or narrowed; the close-out, the handoff
+
+## Deviations
+
+- **The background workers take the data folder from the route.** The plan
+  had readers outside the routes resolve with `get_settings().data_dir`.
+  Built: the upload routes pass their own settings' `data_dir` to
+  `run_analysis_pipeline` and `run_extraction_pipeline`, with
+  `get_settings()` only as the default, so a worker cannot resolve under a
+  different folder from the one the row was written under.
+- **Two existing tests changed.** `test_phase191b_videos_api.py`'s worker
+  fakes take the new argument; its no-op had the old signature and threw
+  inside `TestClient(raise_server_exceptions=False)`, unseen, so the upload
+  test now also checks the folder the worker receives.
+  `test_phase358_closeout_k6_k7.py`'s exemption control judges each log as
+  its own phase, since the skip exemption is per phase.
+- **One more known-bad fixture than planned, and one more case.**
+  `a5_bad_failed_exit_zero.md` (a failure recorded with exit 0) and
+  `a5_bad_skip_other_file.md` (the right reason in another file, the
+  operator's "by its test file and its reason") came from the mutation run:
+  R1 and S7 survived the first run, each a gap in the tests.
+- **087's live rows were videos only.** Photos and transcripts held no
+  rows on live (382's M2); the scope names none, so any would have been a
+  stop.
+- **The live apply set aside nothing.** With the API stopped (3A), F208's
+  list was not exercised on live; its proof is the fixture tests.
+- No bug fixes; no refute pass.
+
+## Results
+
+- **F206:** A5 and K18 read `regression_record`; a line is of record only
+  with 0 failed, 0 errors, exit 0 and every skip named by file and reason
+  in `EXPECTED_SKIPS` (244H's one, pinned by equality). 382's failing
+  desktop line verbatim (`a5_bad_failing_run.md`) is refused by A5, by
+  `check()` and by `apply-live`, and the old pattern is shown to match it.
+  `regression.sh` prints through `format_regression`; a failing run prints
+  `Regression run FAILED (not of record):`.
+- **F208:** `SERVER_WRITES = {"api_keys": {"last_used_at"}}`, set aside in
+  apply-live's drift check, its after-apply comparison and verify-live,
+  each naming what it set aside. Controls: another column of that row, an
+  added row in that table, the same column in another table, before and
+  after the apply, each still refuses or exits 3; a field the approved diff
+  names is compared exactly. Check 8 unchanged.
+- **F205:** `media/paths.py`; the three writers store relative paths; a row
+  written under one `data_dir` reads back under another through each route;
+  an absolute path still reads. Migration 087; `SCHEMA_VERSION` 87.
+- **Live:** dry run `7f75896` (backup `motodiag_pre383_20261019_212534.db`,
+  sha256 `a18a2f93…c577`); approved by the operator; applied at `2a98f5b`
+  with the API stopped; live diff `8a85e8f`: equal to the approved exact
+  diff, `videos` 6 changed (`file_path`), `schema_version` +1, 0 set aside;
+  verify-live exit 0; schema 87, 5802 rows, integrity ok.
+- **Mutations:** 35/35 red. **Floor:** 10871 → 10923 (+51 −0, a diff of
+  collected ids).
+- **Regression of record:** 10922 passed, 0 failed, 1 skipped (244H's,
+  expected), 0 errors at `5603ff3` (30 min 16 s, `python -m pytest -n auto
+  --dist load`, exit 0), on the Mac.
