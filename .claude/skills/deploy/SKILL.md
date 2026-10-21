@@ -67,7 +67,7 @@ tailnet, through `remote.py`:
   A deploy now needs both machines up; the operator accepted that.
 - **Not reachable through the list:** a phase script's own `migrate`
   callable (below, "A row change with no schema migration"). Such a phase
-  needs an operation added to the list first, by a phase.
+  needs an operation added to the list first, by a phase (F211).
 
 After the merge, the server's checkout follows master and the API restarts
 (`server-pull`, then `api-restart`). Run by hand on the desktop, the same is:

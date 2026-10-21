@@ -277,3 +277,28 @@ one use of the app.
 **A harness slip, not a result:** the first attempt at 6–7 put the command
 in a zsh variable, which zsh ran as one file name (exit 127); nothing
 reached the desktop. Rerun written out.
+
+### 2026-10-20 — After a restart with nobody signed in (the operator's added proof)
+
+The operator restarted the PC from Start and left it at the sign-in screen
+without signing in (their word, "restarted", through the advisor). The
+advisor, from the Mac at 23:23:31 EDT, without using the door: both
+`desktop-76s9bqv` and `motodiag-ops` online; `/healthz` 200, schema 87;
+port 22 on 100.117.187.83 answering.
+
+Through the door, from here, at 23:23:50 EDT: `remote.py status` exit 0;
+live schema 87, integrity ok; both checkouts clean; the service active;
+`/healthz` schema 87; the device's address unchanged (100.117.187.83); 5
+backups. Still closed after the boot: no answer on port 22 at the home IPv4
+or IPv6 or the device's tailnet IPv6; `bash` refused (exit 64); a login
+without the key, "Permission denied (publickey)".
+
+**What this proof rests on:** that the PC was restarted and nobody signed
+in is the operator's word; the fixed list has no operation that reads the
+boot time or the Windows sessions, so the door cannot show it itself. That
+the way in came back by itself is what the door shows: Tailscale in Ubuntu
+and the SSH socket both started at boot, with nobody signed in.
+
+**F211 filed:** the fixed list cannot run a phase's own deploy script (382's
+V-A shape), so a row change with no schema migration has no way to live from
+the Mac yet. The deploy skill cites it.

@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F210** (this file). The
+At the time of writing the highest assigned is **F211** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3650,3 +3650,27 @@ approved diff must still hold; differences outside it are reported and
 fail only where they touch what the approved diff names), or the API
 stopped from the dry run to the apply, with a control that a write outside
 the approved scope by anything but the API still fails.
+
+### F211
+
+**The Mac's fixed list on the desktop cannot run a phase's own deploy script, so a row change with no schema migration has no way to live from the Mac**
+
+Filed in Phase 384 (2026-10-20). Since 384 the Mac reaches live only
+through a fixed list of named operations on the desktop
+(`ops/desktop/motodiag_remote.py`, installed root-owned as
+`/usr/local/libexec/motodiag-remote`). Its `dryrun` and `apply-live` run
+`deploy.py <mode> <phase>`, which applies the code's migrations. A row
+change with no schema migration (382's V-A, six video paths) passed its own
+`migrate` callable to `deploy.dryrun` and `deploy.apply_live` from a phase
+script (`382_video_paths.py`); no operation on the list runs such a script,
+by design: the list runs no file a branch names. Today no phase needs it;
+the first that does stops at its dry run. The deploy skill states the limit
+("Not reachable through the list").
+
+To close: an operation that runs a phase's deploy script from a fixed,
+named place with the same commit pinning and outbox as `dryrun`
+(for example `deploy.py dryrun <phase> --migrate <phase script>` with the
+script's path held to `docs/phases/in_progress/<phase>_*.py`), added by a
+phase, with a control that a script outside that place is refused, and the
+installer run again on the desktop.
+
