@@ -15,6 +15,11 @@ The operator's words:
   - **F206 and F208 are the gates every later live apply rests on.** Under F206, a failing regression line passes A5 and K18. Under F208, a live the API is writing blocks apply-live and fails check 8.
   - **F205's relative media paths** are what a restore from 345's offsite backups needs.
   - **The prompt** is `docs/prompts/383_follow_ups_from_382.txt`, written at the operator's "write 383".
+- **2026-10-20: 384 goes before 345.** In 384, a builder on the Mac does the PC's steps itself over the tailnet, and the operator only approves.
+  - **The reason:** since 382, every deploy step runs on the PC by hand, and in 383 the operator carried each one between the two computers.
+  - **The operator's words:** first "this workflow is only getting more intricate and complicated", then "cant everything i do on the mac just automatically get done on the pc?" Offered two ways, they answered "way 1".
+  - **A plan to move whole phases to the PC was written first and set aside, unpublished, at the operator's word.**
+  - **The prompt** is `docs/prompts/384_the_mac_runs_the_pcs_steps.txt`.
 
 ## Where the ledger stands
 
