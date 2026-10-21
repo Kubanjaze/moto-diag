@@ -129,6 +129,13 @@ each of these more than once.
      design.
    - **A lost test worker:** read `tests/support/worker_loss.py`'s record
      before anything else.
+   - **Talk to the operator in plain English** (the operator, 2026-10-20:
+     "i need it laid out layman terms, like someone who has no idea whats
+     going on is implementing the instructiions to follow"). Every step
+     handed to the operator says which computer and which window, gives one
+     paste block, and the block ends by printing ALL GOOD or SOMETHING IS
+     OFF. What the operator is asked to do carries no internal labels: no
+     step codes, check numbers or finding numbers.
    - **A builder may install a Homebrew core tool a test needs**, naming it
      in the phase log and the handoff (the operator's K26, 2026-10-07).
 
@@ -201,6 +208,16 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-10-20 — rule 6: plain English to the operator (Phase 384)
+
+The operator, in 384's prompt: "How you talk to me, in this phase and from
+now on: plain English. In my words: "i need it laid out layman terms, like
+someone who has no idea whats going on is implementing the instructiions to
+follow"" and "Add this to CLAUDE.md's rule 6, with my words and the date."
+Rule 6 gained one bullet: which computer and which window, one paste block
+ending in ALL GOOD or SOMETHING IS OFF, no internal labels. Text only; no
+check holds it.
 
 ### 2026-10-19 — live is on the home desktop (Phase 382)
 
