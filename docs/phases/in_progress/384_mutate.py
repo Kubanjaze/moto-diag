@@ -116,6 +116,10 @@ MUTATIONS = [
      "DISPATCHER=$REPO/ops/desktop/motodiag_remote.py")], T_INST),
     ("I12 what listens is not checked", [(INST,
      '[ "$LISTEN" = "$TS4:22" ] ||', "true ||")], T_INST),
+    ("I13 a key broken across lines passes", [(INST,
+     '[ "$(printf \'%s\' "$KEY" | wc -l)" -eq 0 ] ||', "true ||")], T_INST),
+    ("I14 the key file's lines are not counted", [(INST,
+     '[ "$(wc -l < "$AK")" -eq 2 ] ||', "true ||")], T_INST),
 ]
 
 

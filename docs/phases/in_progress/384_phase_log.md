@@ -147,3 +147,61 @@ the script still asks.
 **A guard blocked a command:** `git commit` and `git push` in one command
 were refused by the push guard (it judges the push before the commit
 exists). Run as two commands; the guard is unchanged.
+
+### 2026-10-20 — The PC's setup, the first use, and the doors that must fail
+
+**The PC's setup, ALL GOOD** (the operator, through the advisor session):
+`install_remote.sh` at `85f197c`; `motodiag-ops` is 100.117.187.83,
+listening on 100.117.187.83:22 only, for the Mac 100.80.109.103 only; the
+device approved in the browser. The operator ran the advisor's copy of the
+block with the key on one line and a check that `authorized_keys` held
+exactly 2 lines: my block, as the window showed it, wrapped the key onto a
+second line, and a line break inside the quotes passed the script's word
+count (two words) and would have written a broken key file under ALL GOOD.
+**Fixed:** the installer refuses a key with a line break and checks the key
+file holds the mark and one key line; `test_a_key_broken_across_lines_is_refused`
+runs the script's own checks on both cases; mutations I13, I14 red. The
+floor 10999 → 11001 (2 tests). The installed key was not affected.
+
+**The Mac's live.json** now names the way in (`"remote": {"ssh":
+"lilcu@motodiag-ops", "key": "~/.ssh/motodiag_ops"}`; the earlier file is
+kept in the session's scratchpad).
+
+**The first use, `remote.py status`, exit 0:** host DESKTOP-76S9BQV, user
+lilcu; live at schema 87, integrity ok; the server's checkout on master at
+`8c33b51`, clean; the service active; `/healthz` schema 87; this device
+100.117.187.83; 3 backups (pre382, pre383, proof382). The host key was
+pinned on this first use. The development checkout reported NOT CLEAN:
+`verify-live 383` refused, exit 64, naming one untracked file,
+`"witch phase-384 &&"`, most likely left by an earlier paste that split a
+line. The list has no operation that deletes a file; the operator removes
+it.
+
+**Doors that must fail, from the Mac** (the control first and last:
+`status` with the Mac's key, exit 0):
+
+| attempt | result |
+|---|---|
+| port 22 on the PC's home IPv4, 10.0.0.55 | no answer |
+| port 22 on the PC's home IPv6, 2601:195:c883:9620:b0ad:7b63:6b26:f591 | no answer |
+| port 22 on motodiag-ops' tailnet IPv6, fd7a:115c:a1e0::f331:bb54 | no answer |
+| ports 80, 443, 2222, 8000 on motodiag-ops | no answer |
+| the Mac off the tailnet (`tailscale down`), port 22 on motodiag-ops | no answer; `remote.py status` exit 255; after `tailscale up`, status passes |
+| a password login | "Permission denied (publickey)" |
+| a key that is not the Mac's (made for this, in the scratchpad) | "Permission denied (publickey)" |
+| root, with the Mac's key | "Permission denied (publickey)" |
+| an interactive login | "PTY allocation request failed", exit 255 |
+| `sftp`, `scp` | "Connection closed", exit 255 |
+| a forwarded port to the API (`-L 18000:127.0.0.1:8000`) | "administratively prohibited"; nothing came back |
+| `bash`, `id`, `cat /etc/passwd`, `status; id` | REFUSED, exit 64, no output |
+| `dryrun 384 $(id)`, `fetch ../../.ssh/authorized_keys dryrun`, `backup ../../x`, `api-stop now` | REFUSED, exit 64: not a commit, not a phase, not a label, takes no argument |
+
+**A harness slip, not a result:** the first run of these attempts was under
+zsh, which does not split `$O` into options, so ssh refused its own command
+line (exit 255, "keyword batchmode extra arguments") and nothing reached the
+desktop; only the password and other-key attempts connected. The second run,
+under bash, had the loop's ssh read the rest of the script as input, so the
+last attempts never ran. They ran from a script file, each with
+`</dev/null`. Only that run is the result above.
+
+**Mutations:** 42/42 red (`384_mutate.out`), the two new ones included.

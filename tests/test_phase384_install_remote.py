@@ -52,6 +52,28 @@ def test_the_key_line_carries_its_three_restrictions():
     assert '"ssh-ed25519 "*) ;;' in INSTALL
 
 
+def _key_checks(key: str, tmp_path: pathlib.Path) -> int:
+    """The installer's own checks on the pasted key, run on `key`."""
+    start = INSTALL.index('case "$KEY" in "ssh-ed25519 "*)')
+    block = INSTALL[start:INSTALL.index("install -d -o", start)]
+    return subprocess.run(["sh", "-c", 'KEY=$1\n' + block, "_", key],
+                          capture_output=True, text=True, cwd=tmp_path).returncode
+
+
+def test_a_key_broken_across_lines_is_refused(tmp_path):
+    """The advisor's case: a wrapped window put a line break inside the quoted
+    key; it is two words, so the word count alone passed it."""
+    assert _key_checks("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHas", tmp_path) == 0
+    assert _key_checks("ssh-ed25519 AAAAC3NzaC1lZDI1NTE5\nAAAAIHas", tmp_path) == 1
+    assert _key_checks("ssh-rsa AAAAB3", tmp_path) == 1
+    assert _key_checks("ssh-ed25519 A one two three", tmp_path) == 1
+
+
+def test_the_key_file_must_hold_the_mark_and_one_key_line():
+    assert ('[ "$(wc -l < "$AK")" -eq 2 ] || { echo "$AK is not the mark and one key line";'
+            ' exit 1; }') in INSTALL
+
+
 def test_an_existing_key_file_is_never_replaced():
     assert 'if [ -s "$AK" ] && ! grep -qF "$MARK" "$AK"; then' in INSTALL
 

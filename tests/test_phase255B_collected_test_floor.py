@@ -344,7 +344,7 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: F206), tests/test_phase383_server_writes.py (11, F208),
 #: tests/test_phase383_media_paths.py (16, F205). Measured: 10923.
 #:
-COLLECTED_TEST_FLOOR = 10999
+COLLECTED_TEST_FLOOR = 11001
 
 
 def _collected_count() -> int:

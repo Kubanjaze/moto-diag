@@ -38,4 +38,6 @@ I9 Tailscale's own SSH on: red
 I10 an existing key file replaced: red
 I11 the dispatcher run from the checkout: red
 I12 what listens is not checked: red
-40/40 red
+I13 a key broken across lines passes: red
+I14 the key file's lines are not counted: red
+42/42 red

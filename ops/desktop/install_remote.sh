@@ -82,10 +82,14 @@ if [ -z "$KEY" ]; then
 fi
 case "$KEY" in "ssh-ed25519 "*) ;; *) echo "not an ssh-ed25519 public key"; exit 1 ;; esac
 [ "$(printf '%s\n' "$KEY" | wc -w)" -le 3 ] || { echo "more than one key line"; exit 1; }
+# A key copied from a wrapped window can carry a line break inside the quotes:
+# two words, so the word count passes, and a broken key file (the advisor, 384).
+[ "$(printf '%s' "$KEY" | wc -l)" -eq 0 ] || { echo "the key is broken across lines"; exit 1; }
 install -d -o "$USER_NAME" -g "$USER_NAME" -m 700 "$HOME_DIR/.ssh"
 printf '%s\nrestrict,from="%s",command="%s" %s\n' "$MARK" "$MAC_IP" "$DISPATCHER" "$KEY" > "$AK"
 chown "$USER_NAME:$USER_NAME" "$AK"
 chmod 600 "$AK"
+[ "$(wc -l < "$AK")" -eq 2 ] || { echo "$AK is not the mark and one key line"; exit 1; }
 
 echo "--- 6. start it, and show what listens on port 22"
 systemctl daemon-reload
