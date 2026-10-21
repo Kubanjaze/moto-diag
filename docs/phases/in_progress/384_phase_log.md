@@ -115,3 +115,35 @@ Mac's client (8), the video check (3), verify_phase.sh's checks 8 and 9
 test made a soft-deleted video that still serves fail, so M2 would have
 survived; `test_a_soft_deleted_video_that_still_serves_fails` was added
 before the run. The floor 10998 → 10999 for it.
+
+### 2026-10-20 — The operator's setup: the Mac's part, the tailnet's rules
+
+**The Mac's part, ALL GOOD** (the operator, and the advisor session's
+report). The operator's first copy of the rules took the whole web page, so
+the advisor saved them from inside the editor to
+`~/motodiag_tailnet_rules_before.txt` (the default policy: allow-all grants,
+the default Tailscale SSH check rule); the block's first line was not run.
+The operator made `~/.ssh/motodiag_ops`, typing the passphrase; it is in
+the keychain (`ssh-add -l`: "motodiag-ops, the Mac"; SHA256
+`szamQPJVmUH7UPyQ6mZYjXT95Ly+gdiLYG1l2Fkj4ok`).
+
+**The tailnet's rules** (`384_tailnet_rules.hujson`, written from the saved
+copy): the allow-all grant became "each of the operator's devices reaches
+the operator's other devices" (`autogroup:member` → `autogroup:self`) plus
+the Mac alone to `tag:motodiag-ops` on `tcp:22`; `tagOwners` and a `hosts`
+entry for the Mac added; the Tailscale SSH rule unchanged; four rule tests
+(the Mac accepted on the tag's port 22; the PC's Windows node and the iPhone
+denied; the operator's devices still reach the PC's 443). The operator saved
+them in Access controls > JSON editor (`console.tailscale.com/admin/acls/file`;
+the console has moved, per the advisor), with no error, so Tailscale's own
+check of the four tests passed. `/healthz` over the tailnet answered at
+schema 87 afterwards, from the advisor at 22:04 and from here.
+
+**Decided:** the installer takes the Mac's public key as a second argument,
+so the PC's step is one paste block and nothing the install runs (apt,
+Tailscale's installer) can read the key from the terminal first. Without it,
+the script still asks.
+
+**A guard blocked a command:** `git commit` and `git push` in one command
+were refused by the push guard (it judges the push before the commit
+exists). Run as two commands; the guard is unchanged.

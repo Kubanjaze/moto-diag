@@ -2,7 +2,10 @@
 # Phase 384 (the operator's 1A): the Mac's way in to this desktop's deploy
 # steps. Run once, from the development checkout, in the Ubuntu window:
 #
-#     sudo sh ops/desktop/install_remote.sh <the Mac's tailnet address>
+#     sudo sh ops/desktop/install_remote.sh <the Mac's tailnet address> ['<the Mac's public key>']
+#
+# The key may be given as the second argument, so nothing the install runs
+# can read it from the terminal first; without it, the script asks.
 #
 # 1. Tailscale inside Ubuntu, a second device, motodiag-ops, tagged (its key
 #    does not expire), leaving Ubuntu's name lookups alone and Tailscale's
@@ -72,8 +75,11 @@ AK="$HOME_DIR/.ssh/authorized_keys"
 if [ -s "$AK" ] && ! grep -qF "$MARK" "$AK"; then
   echo "$AK already holds keys this script did not write; nothing changed"; exit 1
 fi
-printf "Paste the Mac's public key (one line starting ssh-ed25519), then press Enter: "
-read -r KEY
+KEY=${2:-}
+if [ -z "$KEY" ]; then
+  printf "Paste the Mac's public key (one line starting ssh-ed25519), then press Enter: "
+  read -r KEY
+fi
 case "$KEY" in "ssh-ed25519 "*) ;; *) echo "not an ssh-ed25519 public key"; exit 1 ;; esac
 [ "$(printf '%s\n' "$KEY" | wc -w)" -le 3 ] || { echo "more than one key line"; exit 1; }
 install -d -o "$USER_NAME" -g "$USER_NAME" -m 700 "$HOME_DIR/.ssh"
