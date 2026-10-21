@@ -182,7 +182,11 @@ class TestNoToolReadsTheOldPath:
         text = (ROOT / ".claude" / "skills" / "closeout" / "verify_phase.sh").read_text()
         check8 = text.split("=== 8.", 1)[1].split("=== 9.", 1)[0]
         assert "live.py" in check8
-        assert re.search(r"else\s+echo \"  CHECK 8 FAILED: live is not on this machine.*\"\s+FAILED=1",
+        # Phase 384 (the operator's (i)): a refusal asks the way in, and fails
+        # when that fails (test_phase384_install_remote runs it).
+        assert re.search(r"else\s+\"\$PY\" -B \"\$DIR/../deploy/remote.py\" live-check \"\$PHASE\"",
+                         check8)
+        assert re.search(r"echo \"  CHECK 8 FAILED: live is not on this machine.*\"\s+FAILED=1",
                          check8)
 
 
