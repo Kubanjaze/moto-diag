@@ -1,6 +1,6 @@
 # Phase 384 — The Mac runs the PC's steps — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-21)
 **Branch:** `phase-384` (Opus session on the Mac, the only writer)
 
 ---
@@ -302,3 +302,45 @@ and the SSH socket both started at boot, with nobody signed in.
 **F211 filed:** the fixed list cannot run a phase's own deploy script (382's
 V-A shape), so a row change with no schema migration has no way to live from
 the Mac yet. The deploy skill cites it.
+
+### 2026-10-21 — The regression of record
+
+On the Mac, after `wholetree.sh --full` at `f0d8fce` (4265 passed, exit 0,
+record written):
+
+Regression of record: 11000 passed, 0 failed, 1 skipped, 0 errors at `f0d8fce` (27 min 52 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+
+11000 + 1 = 11001 collected, the floor. No migration, so no apply-live:
+384's dry run (an empty scope, an empty diff) is the deploy skill's step it
+proves; nothing reached live but the API's own writes, set aside.
+
+### Bug fix #1 — 2026-10-20 — a key broken across lines passed the installer
+
+- **Issue:** the advisor session found that the PC's setup block, as my
+  window showed it, wrapped the Mac's public key onto a second line. Copied
+  from there, the line break sits inside the quoted key.
+- **Root cause:** `install_remote.sh` checked the key's first word and its
+  word count (≤ 3). A key split in two is two words, so it passed, and the
+  script would have written a broken `authorized_keys` and still finished.
+- **Fix:** the installer refuses a key with a line break, and checks the
+  key file holds the mark and one key line. The installed key was not
+  affected: the operator ran the advisor's one-line copy, and its own check
+  found exactly 2 lines.
+- **Files:** `ops/desktop/install_remote.sh`,
+  `tests/test_phase384_install_remote.py`, `384_mutate.py` (I13, I14).
+- **Verified:** `test_a_key_broken_across_lines_is_refused` runs the
+  script's own checks: a one-line key passes, a split key, an RSA key and
+  extra words are refused; I13 and I14 red.
+
+**Commit.** `d29df3f`
+
+No refute pass ran.
+
+### 2026-10-21 — Close-out
+
+The phase's files moved to `completed/` with the deploy files (scope,
+dry-run diff), the tailnet rules and the mutation run. The handoff is
+`docs/handoffs/2026-10-21_384_closed.md`. The desktop's development
+checkout stays detached at `148ab1f`, clean; the next operation that runs
+code checks out its own commit.

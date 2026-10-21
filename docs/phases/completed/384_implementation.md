@@ -1,6 +1,6 @@
 # Phase 384 — The Mac runs the PC's steps
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-20
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-21 (v1.0 2026-10-20)
 
 ---
 
@@ -200,13 +200,72 @@ stop, apply, verify, fetch; server-pull and start.
 
 ## Planned items
 
-- [ ] the installer, the socket and sshd settings, the tailnet rules text
-- [ ] the dispatcher and its tests
-- [ ] `remote.py` and its tests; the Mac's live.json
-- [ ] verify_phase.sh checks 8 and 9 through the remote
-- [ ] `media_check.py` and its test
-- [ ] the deploy skill and its CHANGELOG
-- [ ] the mutation run
-- [ ] the operator's one sitting
-- [ ] proofs 1 to 4
-- [ ] the regression of record, verify_phase.sh, close-out
+- [x] the installer, the socket and sshd settings, the tailnet rules text
+- [x] the dispatcher and its tests
+- [x] `remote.py` and its tests; the Mac's live.json
+- [x] verify_phase.sh checks 8 and 9 through the remote
+- [x] `media_check.py` and its test
+- [x] the deploy skill and its CHANGELOG
+- [x] the mutation run
+- [x] the operator's one sitting
+- [x] proofs 1 to 4
+- [x] the regression of record, verify_phase.sh, close-out
+
+## Deviations
+
+- **The video check compares each body with the sha256 its row recorded at
+  upload,** not with the file on disk. 382's script compared the body with
+  the file the route had just read, so a changed file passed.
+- **382's check-8 text test changed** to pin the operator's (i): live
+  elsewhere asks the way in and fails when that fails.
+- **The installer takes the Mac's public key as an argument,** so the PC's
+  step was one paste block; and, after the advisor's catch, it refuses a key
+  with a line break and checks the key file's two lines (bug fix #1,
+  `d29df3f`).
+- **The operator's setup ran in three hand steps, not one sitting:** the
+  Mac's (the key; the rules saved by the advisor from inside the editor),
+  the rules pasted in the admin console (Access controls > JSON editor; the
+  console has moved), then the PC's. A fourth hand step removed a stray
+  file from the PC's checkout (`"witch phase-384 &&"`, `less`'s help
+  screen saved by a block that fell into git's pager) and made the Windows
+  side's attempt; the fixed list has no operation that deletes a file.
+- **verify-live was run around the app use on 384's own dry run,** not only
+  383's: 383's already held a write from the app's earlier use, so it could
+  not show a fresh one set aside. 384's dry run took the "before" backup.
+- **The restart proof rests on the operator's word** that the PC restarted
+  and nobody signed in: the list has no operation that reads the boot time
+  or the Windows sessions.
+- **F211 filed:** the list cannot run a phase's own deploy script.
+- **`apply-live` through the way in is proved with stand-ins only,** as
+  planned: no migration.
+- No refute pass.
+
+## Results
+
+- **The way in:** `motodiag-ops` (100.117.187.83, tag:motodiag-ops), Tailscale
+  inside Ubuntu; OpenSSH on that address only, keys only, from the Mac's
+  tailnet address only, the dispatcher forced; the tailnet's rules let only
+  the Mac reach its port 22, held by four rule tests Tailscale ran on save.
+- **Doors that must fail, all failed:** port 22 at the PC's home IPv4 and
+  IPv6 and the device's tailnet IPv6; the Mac off the tailnet; the PC's
+  Windows side (`Test-NetConnection` False, its control True); a password,
+  another key, root; a terminal, `sftp`, `scp`, a forwarded port; every
+  request outside the list, exit 64. The same after the restart.
+- **The steps the Mac drives** (`remote.py`): `status`, `dryrun`,
+  `apply-live`, `verify-live`, `live-check`, `media-check`, `backup`,
+  `backups`, `fetch`, `api-stop`, `api-start`, `api-restart`,
+  `server-pull`; each code-running one at the Mac's pushed commit.
+- **End to end, from the Mac:** 384's dry run on the desktop, its diff
+  fetched with equal sha256 and committed here (`148ab1f`); verify-live 384
+  before the app use "no table differs", after it "set aside: api_keys 2
+  last_used_at", nothing else; verify-live 383 equal to its approved diff;
+  six videos through the file route, five equal to their uploads' sha256,
+  the soft-deleted one 404; backup `proof384` (sha256 `43ac29ca…7c8`); the
+  server's checkout pulled to `a4d94ce` and the API restarted, `/healthz`
+  schema 87. After a restart with nobody signed in, `status` through the
+  door.
+- **Mutations:** 42/42 red. **Floor:** 10923 → 11001 (+78 −0, by diffs of
+  collected ids).
+- **Regression of record:** 11000 passed, 0 failed, 1 skipped (244H's,
+  expected), 0 errors at `f0d8fce` (27 min 52 s, `python -m pytest -n auto
+  --dist load`, exit 0), on the Mac.
