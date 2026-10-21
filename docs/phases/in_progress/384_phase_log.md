@@ -237,3 +237,43 @@ before the operator's app use, and its backup is the "before": verify-live
 empty, so only a fresh write by the API can appear, and it must be set
 aside. Backups go to 4, then 5 with the proof's backup; retain-5 keeps
 pre383.
+
+### 2026-10-20 — The end-to-end proof, from the Mac
+
+Every step through `remote.py`, from the Mac; the operator's only step was
+one use of the app.
+
+1. **384's dry run on the desktop** (`dryrun 384` at `d875bfc`), exit 0:
+   live read only (5802 rows, 121 tables, integrity ok); backup
+   `motodiag_pre384_20261020_225529.db`, sha256 `7858302e…a355f`; no
+   migration applied (`[]`); scope problems none; F158 census 41. The diff
+   went to the desktop's outbox (sha256 `87f21a59…9b8`); `fetch 384 dryrun`
+   wrote it here with both sha256 equal; committed under the Mac's guards
+   as `148ab1f` (`wholetree.sh` exit 0 first). Its exact diff is empty.
+2. **verify-live 384 before the app use**, exit 0: "rows: no table
+   differs", equal to the approved (empty) diff.
+3. **The operator's one use of the app** (their words, through the
+   advisor: "done"; opened the app on the iPhone, looked at a screen or
+   two, changed nothing).
+4. **verify-live 384 after it**, exit 0: "set aside: 1 change(s) the running
+   API writes: api_keys 2 last_used_at"; "rows: no table differs"; equal;
+   integrity and foreign keys ok. **The API's own write, made between the
+   two readings, is set aside on live, and nothing else changed** (383
+   proved this with fixtures only). **verify-live 383 after it**, exit 0:
+   the same one change set aside; `schema_version +1`, `videos ~6`, equal
+   to 383's approved diff.
+5. **media-check** at `148ab1f`, exit 0, on a read-only copy, served from
+   `/home/lilcu/motodiag/live`: 6 videos; video 1 soft-deleted, 404; videos
+   2–6 each 200 with a body equal to the sha256 its row recorded at upload
+   (11401, 11113592, 6875611, 20929283 and 4646182 bytes). PASSED.
+6. **backup proof384**, exit 0:
+   `motodiag_proof384_20261020_230253.db`, sha256 `43ac29ca…7c8`; retain-5
+   removed nothing (5 now).
+7. **server-pull**, exit 0: the server's checkout on master at `a4d94ce`.
+   **api-restart**, exit 0, the unit active; `/healthz` over the tailnet
+   schema 87. `status` afterwards: live schema 87, integrity ok; both
+   checkouts clean.
+
+**A harness slip, not a result:** the first attempt at 6–7 put the command
+in a zsh variable, which zsh ran as one file name (exit 127); nothing
+reached the desktop. Rerun written out.
