@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F211** (this file). The
+At the time of writing the highest assigned is **F212** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3673,4 +3673,35 @@ named place with the same commit pinning and outbox as `dryrun`
 script's path held to `docs/phases/in_progress/<phase>_*.py`), added by a
 phase, with a control that a script outside that place is refused, and the
 installer run again on the desktop.
+
+### F212
+
+**The API writes a second column by itself, `device_tokens.last_seen_at`, which `SERVER_WRITES` does not name, so verify-live and check 8 fail on a live nothing deployed to**
+
+Found in Phase 384 (2026-10-21), by `verify_phase.sh 384 f0d8fce a4db2b4`
+run on the Mac, its check 8 through the way in: `verify-live 384` exit 3.
+Live against `motodiag_pre384_20261020_225529.db` differed in
+`api_keys 2 last_used_at` (set aside, as 383 built) and in
+`device_tokens` row 31, `last_seen_at` only, from
+`2026-09-16T05:01:29.304580+00:00` to `2026-10-21T03:16:55.666804+00:00`,
+which is not set aside. Nothing deployed to live in 384 (its dry run is
+empty). The write is the app's push registration:
+`motodiag/push/registry.py` `register_token`, an upsert that refreshes
+`last_seen_at` on every registration (`api/routes/push.py`). A
+verify-live of 384 run after the operator's one use of the app, at about
+23:00 EDT, did not show it; the registration came later. 383's list,
+`deploy.SERVER_WRITES = {"api_keys": {"last_used_at"}}`, was measured
+from 382's live, where the app had not registered since 2026-09-16.
+
+What it affects: every phase with a deploy fails check 8 once the app
+re-registers after its dry run, and apply-live refuses ("changed since the
+dry run") when it happens between the dry run and the apply. F210 is the
+general case (a shop's ordinary writes); this is the second column the API
+writes with no user action.
+
+To close: the operator's call, since the list is a gate's definition:
+either `device_tokens.last_seen_at` joins `SERVER_WRITES`, with 383's
+controls (another column of that row, an added token, the same column in
+another table each still fail), or the rule F210 asks for replaces the
+list.
 

@@ -344,3 +344,13 @@ dry-run diff), the tailnet rules and the mutation run. The handoff is
 `docs/handoffs/2026-10-21_384_closed.md`. The desktop's development
 checkout stays detached at `148ab1f`, clean; the next operation that runs
 code checks out its own commit.
+
+### 2026-10-21 — After the merge: verify_phase on the Mac, check 8 fails, F212
+
+Merged as `a4db2b4`, pushed. `verify_phase.sh 384 f0d8fce a4db2b4` on the
+Mac: 13 of 14 checks pass. Check 8 ran through the door (the operator's
+(i)) and failed: `verify-live 384` exit 3, `device_tokens` row 31
+`last_seen_at` changed (2026-09-16 → 2026-10-21T03:16:55Z), the app's push
+registration, which `SERVER_WRITES` does not name; `api_keys 2
+last_used_at` set aside as before. **F212 filed.** Not changed here: the
+list is a gate's definition (rule 1), the operator's call.
