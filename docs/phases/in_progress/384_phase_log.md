@@ -205,3 +205,35 @@ last attempts never ran. They ran from a script file, each with
 `</dev/null`. Only that run is the result above.
 
 **Mutations:** 42/42 red (`384_mutate.out`), the two new ones included.
+
+### 2026-10-20 — The stray file, the Windows side's attempt, verify-live 383
+
+**The PC block, ALL GOOD** (the operator, through the advisor): "stray file
+was the less help screen, moved to /tmp, project folder clean. Windows to
+the door: False, Windows to the app: True. ALL GOOD." The advisor's copy put
+each command on one line (my window wrapped both `powershell.exe` commands
+mid-string) and moved the file to `/tmp` instead of deleting it. The
+advisor's reading of the cause: an earlier pasted block landed in git's
+pager, where `s` saves to a file, so "git switch phase-384 &&" became `s`
+and the file name "witch phase-384 &&". **Decided:** blocks for the operator
+keep each command on a short line and never page (`git --no-pager`).
+
+**Only the Mac reaches the door** (the operator's added proof): from the
+PC's Windows side, the tailnet device the rules do not name,
+`Test-NetConnection 100.117.187.83 -Port 22` → `False`; its control, the
+app's address on 443 → `True`.
+
+**verify-live 383 through the way in, before the app use**, exit 0, at
+`d29df3f`: live against `motodiag_pre383_20261019_212534.db`; schema
+unchanged; `schema_version +1`, `videos ~6`; "equals the approved exact
+diff: yes"; integrity and foreign keys ok; "set aside: 1 change(s) the
+running API writes: api_keys 2 last_used_at", a write from the app's use
+since 383's restart.
+
+**Decided:** that shows a write already there, not one made and then set
+aside. So 384's own dry run (empty scope, `384_deploy_scope.json`) runs
+before the operator's app use, and its backup is the "before": verify-live
+384 afterwards compares live with that backup, whose approved diff is
+empty, so only a fresh write by the API can appear, and it must be set
+aside. Backups go to 4, then 5 with the proof's backup; retain-5 keeps
+pre383.
