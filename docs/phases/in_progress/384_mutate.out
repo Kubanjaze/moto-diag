@@ -1,0 +1,41 @@
+D1 a shell joins the list: red
+D2 any phase id: red
+D3 a short or upper-case commit: red
+D4 any label: red
+D5 extra arguments pass: red
+D6 an empty request is not refused: red
+D7 a dirty checkout runs: red
+D8 the head is not compared: red
+D9 a tracked diff is deleted: red
+D10 the diff stays in the checkout: red
+D11 sudo may prompt: red
+D12 the server pulls on any branch: red
+D13 live-check never verifies: red
+D14 a request is not logged: red
+C1 SSH may prompt: red
+C2 SSH offers every key: red
+C3 a missing key is accepted: red
+C4 a dirty tree is sent: red
+C5 an unpushed head is sent: red
+C6 the commit is not added: red
+C7 the sha256 is not compared: red
+C8 the file's name is not compared: red
+M1 the upload's sha256 is not compared: red
+M2 a soft-deleted video may serve: red
+M3 no videos passes: red
+V1 a failure through the way in passes: red
+V2 no way in passes: red
+V3 check 9 lists the Mac's own folder: red
+I1 sshd listens everywhere: red
+I2 any user from anywhere: red
+I3 passwords allowed: red
+I4 forwarding allowed: red
+I5 no forced command: red
+I6 the socket on every address: red
+I7 the socket fails at boot: red
+I8 the key unrestricted: red
+I9 Tailscale's own SSH on: red
+I10 an existing key file replaced: red
+I11 the dispatcher run from the checkout: red
+I12 what listens is not checked: red
+40/40 red

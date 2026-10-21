@@ -97,6 +97,14 @@ def test_a_soft_deleted_video_passes_only_when_refused(uploaded, capsys):
     assert "(soft-deleted): 404" in capsys.readouterr().out
 
 
+def test_a_soft_deleted_video_that_still_serves_fails(uploaded, monkeypatch, capsys):
+    db, data, _ = uploaded
+    monkeypatch.setattr(M, "serve_all", lambda db, data_dir: [
+        (1, True, 200, "120 bytes, sha256 0, equals the upload's (videos/x.mp4)")])
+    assert M.check(db, data) == 1
+    assert "<- FAILS" in capsys.readouterr().out
+
+
 def test_no_videos_fails(tmp_path):
     db = tmp_path / "empty.db"
     init_db(str(db))

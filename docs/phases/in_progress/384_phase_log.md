@@ -105,3 +105,13 @@ blocks and code lines, and the mutation run is their check.
 **A guard blocked a command:** a `sed -i` on a scratch file (the scanner's
 planted case) was refused by the edit guard, which blocks `sed -i`
 wherever it points. Rewritten with the Write tool; the guard is unchanged.
+
+### 2026-10-20 — Mutations 40/40 red
+
+`384_mutate.py` (383's harness): 40 mutations over the dispatcher (14), the
+Mac's client (8), the video check (3), verify_phase.sh's checks 8 and 9
+(3) and the installer (12); each turned its test file red
+(`384_mutate.out`, `40/40 red`). Writing the plan found one gap first: no
+test made a soft-deleted video that still serves fail, so M2 would have
+survived; `test_a_soft_deleted_video_that_still_serves_fails` was added
+before the run. The floor 10998 → 10999 for it.
