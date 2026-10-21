@@ -20,6 +20,11 @@ The operator's words:
   - **The operator's words:** first "this workflow is only getting more intricate and complicated", then "cant everything i do on the mac just automatically get done on the pc?" Offered two ways, they answered "way 1".
   - **A plan to move whole phases to the PC was written first and set aside, unpublished, at the operator's word.**
   - **The prompt** is `docs/prompts/384_the_mac_runs_the_pcs_steps.txt`.
+- **2026-10-21: 385 goes before 345.** It is F212, the second column the API writes by itself, `device_tokens.last_seen_at`.
+  - **Why first:** every deploy's live check fails once the app re-registers for notifications, so this comes before the next phase with a deploy.
+  - **The operator's words:** "add device_tokens.last_seen_at to the list as its own phase".
+  - **What stays open:** F210's general rule is still needed before onboarding (330).
+  - **The prompt** is `docs/prompts/385_the_push_tokens_own_write.txt`.
 
 ## Where the ledger stands
 

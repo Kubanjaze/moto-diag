@@ -1,0 +1,35 @@
+Do this: start Phase 385, the push token's own write joins the set-aside list (row 385, new: add it to docs/ROADMAP.md as 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. You are at ~/Projects/moto-diag on my Mac.
+
+My decision on F212, 2026-10-21: "add device_tokens.last_seen_at to the list as its own phase". That is my approval of this change to the list's definition, scoped to that one column.
+
+Read these first:
+- **F212 and F210** in docs/FOLLOWUPS.md.
+- **383's documents on the list** (docs/phases/completed/383_*).
+- **384's handoff** (docs/handoffs/2026-10-21_384_closed.md).
+
+The measured facts, taken 2026-10-21 on master at `d9bed58`. Re-verify each at Step 0.
+- **The list today:** deploy.py, line 171: `SERVER_WRITES = {"api_keys": frozenset({"last_used_at"})}`.
+- **What writes the column:** the app's push registration, `motodiag/push/registry.py` `register_token` (called from `api/routes/push.py`). It is an upsert that refreshes `device_tokens.last_seen_at` on every registration.
+- **The failure:** `verify_phase.sh 384 f0d8fce d9bed58`, run on the Mac at 00:15 EDT on 2026-10-21, failed only its live check, which ran through the way in.
+  - device_tokens row 31 changed in `last_seen_at` only, from 2026-09-16T05:01:29Z to 2026-10-21T03:16:55Z, after my phone used the app.
+  - `api_keys`' `last_used_at` was set aside, as 383 built.
+- **Where the live check runs:** from the Mac, through the way in (384).
+
+What to build:
+- **`device_tokens.last_seen_at` joins `SERVER_WRITES`,** with 383's controls, each seen failing once. Each of these must still fail:
+  - a change to another column of that row;
+  - an added token row;
+  - a change to the same column name in another table.
+- **The live check passes again:** `verify_phase.sh 384`, run from the Mac.
+- **F212 is closed.** F210's entry names what the list still cannot cover:
+  - a new token row, when the phone's push token changes;
+  - a shop's ordinary writes.
+
+No migration and no change to live are expected. If one turns out to be needed, it is a rule-1 stop. If you find any other column the running API writes, that is a stop for me, not an addition.
+
+Report, at the end:
+- the change and its failing controls;
+- the live check from the Mac;
+- the regression line;
+- verify_phase.sh's result;
+- the next step, my call.
