@@ -1,0 +1,74 @@
+Do this: start Phase 384, the Mac runs the PC's steps (row 384, new: add it to docs/ROADMAP.md as 🚧 before Step 0), and run it to its finish line as CLAUDE.md sets out. You are at ~/Projects/moto-diag on my Mac.
+
+Why this phase: since 382, live is on my Windows PC, and every deploy step runs there by hand. In 383 I carried each step between the two computers myself: the dry run, the apply and the restart.
+- **My words, 2026-10-20:** "cant everything i do on the mac just automatically get done on the pc?"
+- **My pick:** a builder on the Mac does the PC's steps itself, over the tailnet, and I only approve.
+- **This is 382's option 1C.** 382's log turned it down because "it opens SSH on this machine and makes every deploy depend on two machines being up". I accept both now.
+
+How you talk to me, in this phase and from now on: plain English. In my words: "i need it laid out layman terms, like someone who has no idea whats going on is implementing the instructiions to follow".
+- Every step you hand me says which computer and which window.
+- It gives one paste block, and the block ends by printing ALL GOOD or SOMETHING IS OFF.
+- What I am asked to do carries no internal labels: no step codes, check numbers or finding numbers.
+- Add this to CLAUDE.md's rule 6, with my words and the date.
+
+Read these first:
+- **The deploy skill,** "Where live is (Phase 382)".
+- **382's options 1A to 1C** (docs/phases/completed/382_phase_log.md).
+- **383's desktop steps** (docs/phases/completed/383_desktop_steps.md), the hand steps this phase replaces.
+- **383's handoff** (docs/handoffs/2026-10-19_383_closed.md).
+
+The measured facts, from 382's and 383's records and from the Mac on 2026-10-20. Re-verify each at Step 0.
+- **The PC:** Windows, with WSL2 Ubuntu-26.04 and the Tailscale node desktop-76s9bqv.
+  - Live is at ~/motodiag/live/motodiag.db. Deploys run from the development checkout, ~/Projects/moto-diag. The server's checkout is ~/motodiag/server, and backups go to ~/backups/motodiag.
+  - The API is motodiag-api.service on 127.0.0.1:8000, reached over the tailnet through `tailscale serve`.
+  - A no-password rule lets the PC's user start, stop and restart that one service, and nothing else.
+- **Tailscale runs on Windows.** The tailnet lists one node for the PC, a Windows one; Ubuntu has none of its own.
+- **Nothing on the PC accepts a remote login today.** From the Mac, ports 22 and 2222 gave no answer over the tailnet or on the PC's home address. Web ports gave no answer on its home address or its public IPv6 address (2026-10-19).
+- **Every deploy mode refuses with exit 4** on a machine that does not hold live (live.json). So the Mac can reach live only through what this phase builds.
+- **The guards are Claude Code hooks on a builder's own commands.** A commit or push run on the PC through a remote command is outside them, unless this phase makes it otherwise.
+- **383's hand steps, in order:**
+  1. Pull the phase branch on the PC.
+  2. Run the dry run, then commit and push its diff.
+  3. After my approval, stop the API, apply, verify, then commit and push the live diff.
+  4. After the merge, pull the server's checkout and start the API.
+- **My standing rules:**
+  - Tailnet only: never the LAN, never Funnel, without asking me.
+  - No credential is typed, read or printed by a builder; keys and sign-ins are mine.
+
+What to build:
+- **A way in from the Mac to the PC that only my own devices on the tailnet can use.** Prove it by attempts that must fail: from the home network (IPv4 and IPv6), and from a device that is not on the tailnet.
+- **The deploy skill drives the PC's steps from the Mac:** the dry run, the apply with the API stopped, verify-live, the backup, and the server's pull and restart. Each change to live still waits for my scoped approval, as now.
+- **The way in allows only what I pick at Step 0.** A control shows that something outside it is refused.
+- **The files the PC's steps write** (the dry-run and live diffs) reach the branch under the Mac's guards.
+- **The proof, from the Mac, with no step by me:**
+  - a dry run on the PC;
+  - verify-live of 383's apply;
+  - a backup;
+  - the server's pull and restart.
+
+At Step 0, stop and give me the options, with what each would ship and your recommendation:
+1. **The way in:**
+   - Tailscale's own SSH, if it can serve from Ubuntu on this PC, or an SSH server in Ubuntu reached only over the tailnet;
+   - how the Mac proves who it is;
+   - what I do at the PC to set it up, once.
+2. **What it lets the Mac do:**
+   - a fixed list of named operations, or a full shell;
+   - whether verify_phase.sh's live check, run on the Mac, goes through it. 383 left that check failing anywhere but the PC.
+3. **How the PC's diff files reach the branch** under the Mac's guards.
+4. **Everything that needs my password or a sign-in,** as one list, so I do them in one sitting.
+
+Any other real fork, the same. Otherwise decide, write the reason in the log, and carry on.
+
+No migration and no change to live are expected. If one turns out to be needed, it is a rule-1 stop.
+
+Not in this phase: moving builders or the regression of record to the PC.
+
+Report:
+- **At Step 0:** the four questions, with options, and what you re-verified.
+- **At the end:**
+  - the way in and its failing controls;
+  - the steps the Mac now drives;
+  - the end-to-end proof;
+  - the regression line;
+  - verify_phase.sh's result;
+  - the next step, my call.
