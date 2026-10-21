@@ -70,3 +70,38 @@ Decided at v1.0, without a stop:
   cannot remove its backup first.
 - **The host key is pinned on first use** (`accept-new`): the first
   connection already runs inside the tailnet, whose keys prove the peer.
+
+### 2026-10-20 — The build: the dispatcher, the Mac's client, the video check, check 8
+
+Written: `ops/desktop/motodiag_remote.py` (the fixed list),
+`ops/desktop/install_remote.sh`, `.claude/skills/deploy/remote.py`,
+`.claude/skills/deploy/media_check.py`; `verify_phase.sh` checks 8 and 9;
+the deploy skill and its CHANGELOG. Tests: `test_phase384_remote_dispatcher.py`
+(45), `test_phase384_remote_client.py` (13), `test_phase384_install_remote.py`
+(9), `test_phase384_media_check.py` (8): 75 added, 0 removed, by a diff of
+collected ids against v1.0 (10923 → 10998); the floor raised to 10998.
+
+Decided, without a stop:
+- **The video check compares each served body with the sha256 its row
+  recorded at upload**, not with the file on disk. 382's script compared the
+  body with the file the route had just read, so a changed or swapped file
+  passed. `test_a_changed_file_fails` holds it.
+- **382's check-8 text test** (`test_phase382_live_location.py`) pinned
+  "live not here, the check fails". The operator's (i) changes that rule on
+  purpose: live elsewhere asks the way in and fails when that fails. The
+  test now pins the new rule; the behaviour is run by
+  `test_phase384_install_remote.py` (0 and 2 pass; 1, 3, 4, 255 fail; live
+  here never uses the way in).
+- **A phase script's own `migrate`** (382's V-A shape) is not reachable
+  through the fixed list. The skill says so; such a phase adds an operation
+  first.
+
+**244G's scanner** over `tests/`: 0 hits. Its scope is assertions on Python
+source (a `read_text` naming `.py`); a planted case of that shape was found,
+so the 0 is a real one. `test_phase384_install_remote.py` reads a shell
+script, outside the scanner's scope; its assertions are on the heredoc
+blocks and code lines, and the mutation run is their check.
+
+**A guard blocked a command:** a `sed -i` on a scratch file (the scanner's
+planted case) was refused by the edit guard, which blocks `sed -i`
+wherever it points. Rewritten with the Write tool; the guard is unchanged.

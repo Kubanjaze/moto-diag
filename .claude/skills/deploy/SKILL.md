@@ -25,10 +25,52 @@ not exist; so on the Mac each mode refuses and names the host. Backups must
 be outside a Windows drive (`/mnt/<letter>/`) and any cloud-synced folder
 (OneDrive, iCloud, Dropbox, Google Drive), or every mode refuses.
 
-**A deploy runs on the desktop, from its own checkout** (the operator's 1A):
-the phase branch is pulled there (`git pull --ff-only`), and the modes run
-there. After the merge, the server's checkout follows master and the API
-restarts:
+**A deploy runs on the desktop, from its own checkout** (the operator's 1A,
+Phase 382), **driven from the Mac** (Phase 384, the operator's 1A, 2A (i),
+3A). The Mac reaches a fixed list of operations on the desktop over the
+tailnet, through `remote.py`:
+
+    python .claude/skills/deploy/remote.py status            # read only: live, checkouts, service, backups
+    python .claude/skills/deploy/remote.py dryrun <phase>    # at HEAD, which must be clean and pushed
+    python .claude/skills/deploy/remote.py fetch <phase> dryrun
+    python .claude/skills/deploy/remote.py api-stop
+    python .claude/skills/deploy/remote.py apply-live <phase>
+    python .claude/skills/deploy/remote.py verify-live <phase>
+    python .claude/skills/deploy/remote.py fetch <phase> live
+    python .claude/skills/deploy/remote.py backup <label>
+    python .claude/skills/deploy/remote.py server-pull       # after the merge; master only
+    python .claude/skills/deploy/remote.py api-start         # or api-restart
+    python .claude/skills/deploy/remote.py media-check       # every video through the file route, on a copy
+
+- **The way in:** an SSH server inside Ubuntu, listening only on the
+  tailnet address of `motodiag-ops`, a second Tailscale device in Ubuntu;
+  keys only, from the Mac's tailnet address only, and the tailnet's rules
+  let only the Mac reach its port 22. Installed once by the operator,
+  `ops/desktop/install_remote.sh`.
+- **The fixed list:** the key runs `ops/desktop/motodiag_remote.py`,
+  installed root-owned as `/usr/local/libexec/motodiag-remote`, and nothing
+  else: no shell, no file transfer, no forwarding. Each operation that runs
+  repository code names the exact commit the Mac pushed; the desktop's
+  checkout must be clean and is checked out detached at it. Each request is
+  logged in the desktop's `~/motodiag/remote.log`. A change to the list
+  reaches the desktop only by running the installer again.
+- **The files the desktop writes** (the dry-run and live diffs) go to its
+  outbox, `~/motodiag/outbox/`, never into its checkout; `fetch` brings
+  each to the Mac's `in_progress/`, written only when its sha256 equals the
+  desktop's. The Mac commits it, under its own guards. The desktop never
+  commits.
+- **The Mac's live.json names the way in:** `"remote": {"ssh":
+  "lilcu@motodiag-ops", "key": "~/.ssh/motodiag_ops"}`. With no remote or
+  no key, `remote.py` refuses with exit 4, as live.py does.
+- **Each change to live still waits for the operator's scoped approval**
+  in the phase log, and `apply-live` still refuses on its own terms below.
+  A deploy now needs both machines up; the operator accepted that.
+- **Not reachable through the list:** a phase script's own `migrate`
+  callable (below, "A row change with no schema migration"). Such a phase
+  needs an operation added to the list first, by a phase.
+
+After the merge, the server's checkout follows master and the API restarts
+(`server-pull`, then `api-restart`). Run by hand on the desktop, the same is:
 
     git -C ~/motodiag/server pull --ff-only
     sudo -n systemctl restart motodiag-api.service    # no password: ops/desktop/install_sudoers.sh
@@ -107,9 +149,9 @@ through `apply-live`, never through a restart.
    migrations (F197, Phase 379); 1 on integrity or a foreign key; 2 with no
    deploy. verify_phase's check 8 calls it and fails on 1 or 3. It sets
    aside the `SERVER_WRITES` columns as apply-live does, and prints each
-   one (F208). Check 8 still fails where live is not (exit 4): the
-   close-out's `verify_phase.sh` runs on the desktop (the operator,
-   Phase 383: "check 8 unchanged").
+   one (F208). Where live is not, check 8 runs through the way in
+   (`remote.py live-check`, the operator's (i), Phase 384) and fails on its
+   failure, or with no way in.
 6. **At close-out**, the diff files move to `completed/` with the phase
    documents, and so does the scope file.
 

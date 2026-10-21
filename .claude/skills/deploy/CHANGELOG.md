@@ -1,5 +1,23 @@
 # deploy — changelog
 
+## 2026-10-20 — the Mac drives the desktop's steps (Phase 384)
+
+The operator: "1A, 2A (i), 3A".
+- **`remote.py`** on the Mac sends one operation from a fixed list to the
+  desktop, over SSH to `motodiag-ops` on the tailnet, with the operator's
+  key; exit 4 with no way in. An operation that runs code names HEAD, clean
+  and pushed.
+- **`ops/desktop/motodiag_remote.py`**, the key's forced command, runs only
+  the list, each argument held by a pattern, every request logged; the
+  checkout detached at the Mac's commit; written diffs to the outbox.
+- **`fetch`**: the Mac writes a desktop file only on an equal sha256, and
+  commits it under its own guards; the desktop never commits.
+- **`media_check.py`**: every video through the file route on a read-only
+  copy of live, each body equal to the sha256 its row recorded at upload.
+- **verify_phase.sh** checks 8 and 9 go through the way in where live is
+  elsewhere.
+- `tests/test_phase384_*.py`.
+
 ## 2026-10-19 — the gates on a live the API writes; a passing regression (Phase 383, F208, F206)
 
 The operator: "2A with apply-live following it, check 8 unchanged".

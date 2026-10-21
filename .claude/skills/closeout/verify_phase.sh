@@ -71,15 +71,23 @@ echo "=== 8. schema + live db ==="
 # by deploy.py verify-live: live against its backup, the approved diff,
 # integrity and foreign keys. Live's path comes from live.py (Phase 382): on
 # a machine that is not live's, the check fails instead of reading a stale copy.
+# Phase 384 (the operator's (i)): where live is elsewhere and live.json names
+# the way in, the same check runs there through remote.py's live-check.
+LIVE_HERE=0
 if LIVE_DB=$("$PY" -B "$DIR/../deploy/live.py"); then
+  LIVE_HERE=1
   LIVE_DB="$LIVE_DB" "$PY" -c "
 import os, sqlite3; c=sqlite3.connect('file:'+os.environ['LIVE_DB']+'?mode=ro', uri=True); q=lambda s:c.execute(s).fetchone()[0]
 print('live', os.environ['LIVE_DB'], '| schema', q('select max(version) from schema_version'), '| rows', q('select count(*) from known_issues'))"
 else
-  echo "  CHECK 8 FAILED: live is not on this machine (live.py exit 4)"
-  FAILED=1
+  "$PY" -B "$DIR/../deploy/remote.py" live-check "$PHASE"
+  REMOTE_CODE=$?
+  if [ $REMOTE_CODE -ne 0 ] && [ $REMOTE_CODE -ne 2 ]; then
+    echo "  CHECK 8 FAILED: live is not on this machine, and live-check through the way in exited $REMOTE_CODE"
+    FAILED=1
+  fi
 fi
-if ls docs/phases/*/${PHASE}_dryrun_diff.md >/dev/null 2>&1; then
+if [ $LIVE_HERE -eq 1 ] && ls docs/phases/*/${PHASE}_dryrun_diff.md >/dev/null 2>&1; then
   "$PY" -B "$DIR/../deploy/deploy.py" verify-live "$PHASE"
   LIVE_CODE=$?
   # 0: live equals the approved diff; 2: no deploy. Anything else fails the
@@ -90,7 +98,9 @@ if ls docs/phases/*/${PHASE}_dryrun_diff.md >/dev/null 2>&1; then
   fi
 fi
 
-echo "=== 9. backup ==="; ls -lh ~/backups/motodiag/
+echo "=== 9. backup ==="
+if [ $LIVE_HERE -eq 1 ]; then ls -lh ~/backups/motodiag/
+else "$PY" -B "$DIR/../deploy/remote.py" backups; fi
 
 echo "=== 10. targeted tests (parallel, as the regression runs since 355) ==="
 PYTHONUTF8=1 "$PY" -m pytest -n auto --dist load -k "$PHASE" -q 2>&1 | tail -3
