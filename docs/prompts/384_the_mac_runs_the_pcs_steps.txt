@@ -40,9 +40,10 @@ What to build:
 - **The deploy skill drives the PC's steps from the Mac:** the dry run, the apply with the API stopped, verify-live, the backup, and the server's pull and restart. Each change to live still waits for my scoped approval, as now.
 - **The way in allows only what I pick at Step 0.** A control shows that something outside it is refused.
 - **The files the PC's steps write** (the dry-run and live diffs) reach the branch under the Mac's guards.
-- **The proof, from the Mac, with no step by me:**
+- **The proof, from the Mac, with no step by me except one use of the app:**
   - a dry run on the PC;
-  - verify-live of 383's apply;
+  - **verify-live of 383's apply, after I have looked at a page or two in the app and changed nothing.** The API's own write to `api_keys.last_used_at` is then set aside on live, not only in tests: 383 proved it with fixtures only.
+  - **the six videos fetched through the API's file route,** on a read-only copy of live, each equal to its file, as docs/phases/completed/382_video_serve.py did. Nobody has fetched them since 383 made their paths relative.
   - a backup;
   - the server's pull and restart.
 
