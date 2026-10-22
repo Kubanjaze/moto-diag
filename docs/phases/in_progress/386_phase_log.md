@@ -41,3 +41,38 @@ token. The repo is public with no protection on master.
 
 Waiting for the operator: the desktop paste block's output, the `/usage`
 figures, and K11.
+
+**A second guard block.** Committing and pushing Step 0 in one command
+(`git commit … && git push`) was refused by the push guard. They ran as two
+commands; `3e030d6` pushed. The guard is unchanged.
+
+### 2026-10-22 — The operator's answers to Step 0
+
+- **The desktop:** the operator ran the checks in the Ubuntu window on the
+  home PC in their own block and pasted the output; ALL GOOD. It is
+  verbatim in `386_step0.md` S0-5: systemd `running`; the API and
+  `tailscaled` up 1 day 7 h 45 min; `unshare -Ur true` works and `bwrap`
+  is installed; `gh` installed and logged in as Kubanjaze.
+- **Usage:** "current session 7% (resets 5pm); current week all models 6%,
+  current week Fable 10% (both reset Oct 28, 12pm, America/New_York)." The
+  operator: "Record that as a baseline only; it includes today's
+  interactive use. The number that decides fleet throughput is measured
+  around one Engineer build in a later phase, not here." In S0-6.
+- **K11:** "Subconscious: nothing to do until it cancels tomorrow. I'll
+  give you the K11 line on 10/23." Not yet confirmed; nothing done to the
+  account.
+- **GitHub accounts and master protection:** "leave both for a later
+  phase, your default is right. File one follow-up finding carrying two
+  facts so that phase doesn't rediscover them: rulesets are free on a
+  public repo and moto-diag is public today, so if the repo ever goes
+  private, master protection becomes a GitHub Pro purchase, not a click;
+  and the fleet's own GitHub identity (an App, or a machine user with
+  write) is created in the phase where a rank first pushes," The pasted
+  text ends at that comma; the finding carries the two facts as given.
+
+**Decision: the close-out waits for the K11 line.** The prompt asks for
+K11 in this phase's log when the operator confirms it, and the operator
+gives it on 2026-10-23. The build runs now; the regression of record and
+the close-out follow the K11 line, so it lands in this log and not the next
+phase's. Waiting on the operator's own word is not a rule-1 stop; the row
+says so while it waits.
