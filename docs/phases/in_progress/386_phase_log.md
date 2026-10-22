@@ -170,3 +170,8 @@ Decisions:
 **A guard blocked a command.** Committing item 5 and pushing in one
 command (`git commit … ; git push`) was refused by the push guard, a
 second time this phase. Run as two commands; the guard is unchanged.
+
+### 2026-10-22 — Item 7: Results
+
+Step 0's items 2, 3 and 6 are in `386_implementation.md` Results, with
+the build's commits. Items 1–7 are ticked; K11 and the close-out remain.

@@ -144,14 +144,14 @@ Results at v1.1.
 
 ## Planned items
 
-- [ ] 1. Root `phase_log.md` catch-up, 255 → 384
-- [ ] 2. `implementation.md` lines 6 and 7
-- [ ] 3. `docs/contributing.md` suite command and time
-- [ ] 4a. Finding: B2's scope
-- [ ] 4b. Finding: GitHub's two facts
-- [ ] 5. `docs/decisions.md`, K32 on
-- [ ] 6. The setup-token and Haiku billing procedure
-- [ ] 7. Results: Step 0 items 2, 3, 6
+- [x] 1. Root `phase_log.md` catch-up, 255 → 384
+- [x] 2. `implementation.md` lines 6 and 7
+- [x] 3. `docs/contributing.md` suite command and time
+- [x] 4a. Finding: B2's scope
+- [x] 4b. Finding: GitHub's two facts
+- [x] 5. `docs/decisions.md`, K32 on
+- [x] 6. The setup-token and Haiku billing procedure
+- [x] 7. Results: Step 0 items 2, 3, 6
 - [ ] K11 in the phase log, in the operator's words (10/23)
 - [ ] Close-out: `wholetree.sh --full`, `regression.sh`, the handoff,
       `verify_phase.sh`, row 386 to ✅
@@ -162,4 +162,62 @@ None yet (v1.0).
 
 ## Results
 
-Written at v1.1.
+### Step 0 item 2: what 353 and 354 cost
+
+From the Claude Code session logs (`2f039c7d`, `0f4f7aed`, each with its
+four subagents). One call is one unique `message.id`; `<synthetic>`
+entries are skipped. Both ran on `claude-opus-5-5` only.
+
+| | 353 | 354 |
+|---|---|---|
+| calls (main + subagents) | 148 + 121 = 269 | 225 + 104 = 329 |
+| input | 548 | 668 |
+| cache read | 44,463,199 | 61,479,550 |
+| cache write, 1 hour | 363,961 | 406,316 |
+| cache write, 5 minutes | 466,540 | 327,760 |
+| output | 186,652 | 273,663 |
+| **list price** | **$17.87** | **$22.66** |
+
+At $/M tokens of 4 input, 0.20 cache read, 5 for a 5-minute write, 8 for
+a 1-hour write and 20 output:
+- 353: 0.0022 + 8.8926 + 2.3327 + 2.9117 + 3.7330 = $17.87
+- 354: 0.0027 + 12.2959 + 1.6388 + 3.2505 + 5.4733 = $22.66
+
+Cache reads are about half of each bill. The proposal's "$40–60 for a
+354-sized build" is about twice the measurement.
+
+### Step 0 item 3: how this Mac is logged in
+
+- Claude Code: claude.ai login, Max subscription (`claude auth status`,
+  2.1.308).
+- `ANTHROPIC_API_KEY`: unset in the shell, the two shell profiles that
+  exist, `launchctl`, 6 user LaunchAgents (none in the system folders),
+  and Claude Code's three settings files.
+- `~/.config/motodiag/anthropic.env`: `CLAUDE_CODE_OAUTH_TOKEN` only, an
+  OAuth token, mode 600.
+- `orchestrate.py`: two model stages (source, refute). On the
+  `anthropic` routes each call's environment is built from nothing and
+  carries exactly that token; `check_route` refuses `ANTHROPIC_API_KEY`.
+  On `subconscious`, Subconscious's own key, and any Anthropic variable is
+  refused. No stage reads an API key.
+
+### Step 0 item 6: the usage baseline, 2026-10-22
+
+The operator's reading of `/usage`: "current session 7% (resets 5pm);
+current week all models 6%, current week Fable 10% (both reset Oct 28,
+12pm, America/New_York)." A baseline only, in the operator's words: "it
+includes today's interactive use. The number that decides fleet
+throughput is measured around one Engineer build in a later phase, not
+here."
+
+### The build
+
+| item | commit |
+|---|---|
+| 1. Root `phase_log.md`: 41 pointer entries, 255 to 384 | `5ab9616` |
+| 2. `implementation.md` lines 6 and 7 | `eb2c44a` |
+| 3. `docs/contributing.md` | `ccd04de` |
+| 4a. F213, B2's scope | `61291d0` |
+| 4b. F214, GitHub's two facts | `2a3b631` |
+| 5. `docs/decisions.md`, K32–K39 | `86a5cc9` |
+| 6. The setup-token and Haiku billing procedure | `55f696a` |
