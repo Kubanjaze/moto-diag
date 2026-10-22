@@ -133,3 +133,14 @@ F214 carries the operator's two GitHub facts, in their words, with Step
 Allocated by `next_f_number.sh` (F213 backend, F181 mobile, next F214).
 The operator's pricing statement is recorded as theirs, not measured, and
 the entry says their message ended mid-sentence.
+
+### 2026-10-22 — Item 5: `docs/decisions.md`, K32–K39
+
+Eight lines, one per quotation of the operator in the plan of record
+(`grep -n '"' docs/reports/2026-10-12_plan_of_record.md`: lines 8, 9, 10,
+17, 20 (two quotations and "way 1") and 25). K-ids continue the one
+sequence: K1–K17 are in the 2026-09-27 triage, K18–K31 in the 2026-10-07
+one, and K31 is the highest in use. Three lines name a test (K33, K37,
+K38 via K37); four became a document and say "No check"; K39 is 385, not
+built. Decision: the file says plainly that nothing yet checks a cited
+K-id resolves, rather than leaving it implied.
