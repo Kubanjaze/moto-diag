@@ -3,8 +3,8 @@
 **Version:** 0.13.112 | **Date:** 2026-10-21 (Phase 384 — the Mac runs the PC's steps: a fixed list of deploy operations on the desktop, reached over the tailnet by the Mac alone; see `docs/phases/completed/384_implementation.md`)
 **Doc/package version split:** This `implementation.md` Version tracks track-completion milestones. `pyproject.toml` `version = "0.6.0"` tracks package releases — bumped at Phase 191B (Track I major-feature, 0.1.0→0.2.0), Phase 191C (F9 architectural intervention tooling, 0.2.0→0.3.0), Phase 191D (F9 SSOT-constants lint generalization, 0.3.0→0.3.1 patch), Phase 192 (Diagnostic report viewer substrate, 0.3.1→0.3.2 minor patch), Phase 192B Commit 1 (composer-side preset filter + POST /pdf route, 0.3.2→0.3.3), Phase 192B Commit 1.5 (F34 deterministic PDF rendering opt-in fix, 0.3.3→0.3.4), Phase 193 Commit 0 (sort param on work-orders endpoint, 0.3.4→0.3.5), Phase 193 Commit 0.5 (POST /assign endpoint, 0.3.5→0.3.6), Phase 194 Commit 0 (work-order photo upload substrate, 0.3.6→0.4.0), Phase 195 Commit 0 (voice-symptom transcripts substrate, 0.4.0→0.5.0), and Phase 195B Commit 0 (cloud Whisper transcription + cost ledger, 0.5.0→0.6.0). Phases 196-200 added backend surface (`push/` in 199, `reporting` share links in 200) WITHOUT a package bump, because those phases are Track I mobile-led and the backend halves shipped as substrate; the next backend-led release should bump and say so here.
 **Repo:** https://github.com/Kubanjaze/moto-diag
-**Local:** `C:\Users\Kerwyn\PycharmProjects\moto-diag\`
-**Roadmap:** `docs/ROADMAP.md` | 352 phases across 21 tracks (A-T)
+**Local:** `~/Projects/moto-diag`
+**Roadmap:** `docs/ROADMAP.md`, the ledger and the count: 21 tracks (A–T and C2); 403 rows, 365 numbered phases and 38 letter follow-ons, on 2026-10-22
 
 ---
 

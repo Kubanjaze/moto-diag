@@ -99,3 +99,11 @@ scratch file with `sed -i '' …` was refused by the edit guard ("`sed -i`
 edits a file in place, and is blocked wherever it points"), although the
 file was in the scratchpad. Done in Python instead; the guard is
 unchanged.
+
+### 2026-10-22 — Item 2: `implementation.md` lines 6 and 7
+
+Line 6 now reads `~/Projects/moto-diag`, as `CLAUDE.md` has it. Line 7's
+"352 phases across 21 tracks (A-T)" names the ROADMAP as the count and
+gives today's: 403 rows (`grep -cE '^\| *[0-9]{2,3}[A-Z]? *\|'
+docs/ROADMAP.md`), 365 of them numbered without a letter, 38 letter
+follow-ons; 21 `## Track` headings.
