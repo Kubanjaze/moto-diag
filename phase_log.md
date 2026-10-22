@@ -3623,3 +3623,222 @@ and the filter, not in content. No successor content phase is scheduled.
 Full log with dated entries:
 [`docs/phases/completed/255B_phase_log.md`](docs/phases/completed/255B_phase_log.md).
 Write-up: [`255B_implementation.md`](docs/phases/completed/255B_implementation.md).
+
+---
+
+## 2026-10-22 — Catch-up: 41 closed phases this log did not name (Phase 386)
+
+This log stopped at 255B. `ROADMAP_AUTHORITY.md` names it an authoritative
+surface for 205+, so the phases closed since are added here as pointers, in
+close order: the title and date from each phase's ROADMAP row, and the
+links to its own log and write-up. The row and the phase's log carry the
+account; nothing is summarised a second time here. 255 and 256 closed on
+2026-09-21, before 255B, and were missing too.
+
+Not backfilled: 205–240 (Tracks J and K, less 210), an older gap. Phase
+386's log and handoff record it.
+
+## Phase 255 — The transmission axis (mechanism; content deferred to 255B) — CLOSED 2026-09-21
+
+Log: [`docs/phases/completed/255_phase_log.md`](docs/phases/completed/255_phase_log.md).
+Write-up: [`255_implementation.md`](docs/phases/completed/255_implementation.md).
+
+## Phase 256 — The retrieval chokepoint — CLOSED 2026-09-21
+
+Log: [`docs/phases/completed/256_phase_log.md`](docs/phases/completed/256_phase_log.md).
+Write-up: [`256_implementation.md`](docs/phases/completed/256_implementation.md).
+
+## Phase 255C — The junction stores names the tier query cannot match — CLOSED 2026-09-22
+
+Log: [`docs/phases/completed/255C_phase_log.md`](docs/phases/completed/255C_phase_log.md).
+Write-up: [`255C_implementation.md`](docs/phases/completed/255C_implementation.md).
+
+## Phase 255D — Procedures as folders — closeout, finding, refute — CLOSED 2026-09-22
+
+Log: [`docs/phases/completed/255D_phase_log.md`](docs/phases/completed/255D_phase_log.md).
+Write-up: [`255D_implementation.md`](docs/phases/completed/255D_implementation.md).
+
+## Phase 257 — The orchestrator and `/source-transmission` — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/257_phase_log.md`](docs/phases/completed/257_phase_log.md).
+Write-up: [`257_implementation.md`](docs/phases/completed/257_implementation.md).
+
+## Phase 257B — The per-vehicle transmission field — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/257B_phase_log.md`](docs/phases/completed/257B_phase_log.md).
+Write-up: [`257B_implementation.md`](docs/phases/completed/257B_implementation.md).
+
+## Phase 258 — Gate 14 — Scooter / small displacement integration test — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/258_phase_log.md`](docs/phases/completed/258_phase_log.md).
+Write-up: [`258_implementation.md`](docs/phases/completed/258_implementation.md).
+
+## Phase 259 — Pre-purchase inspection (PPI) — engine — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/259_phase_log.md`](docs/phases/completed/259_phase_log.md).
+Write-up: [`259_implementation.md`](docs/phases/completed/259_implementation.md).
+
+## Phase 353 — Small-engine carb service (single/twin-barrel) — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/353_phase_log.md`](docs/phases/completed/353_phase_log.md).
+Write-up: [`353_implementation.md`](docs/phases/completed/353_implementation.md).
+
+## Phase 354 — Scooter electrical (12V minimal) — CLOSED 2026-09-24
+
+Log: [`docs/phases/completed/354_phase_log.md`](docs/phases/completed/354_phase_log.md).
+Write-up: [`354_implementation.md`](docs/phases/completed/354_implementation.md).
+
+## Phase 260 — Pre-purchase inspection — chassis — CLOSED 2026-09-25
+
+Log: [`docs/phases/completed/260_phase_log.md`](docs/phases/completed/260_phase_log.md).
+Write-up: [`260_implementation.md`](docs/phases/completed/260_implementation.md).
+
+## Phase 261 — Tire service workflow — CLOSED 2026-09-25
+
+Log: [`docs/phases/completed/261_phase_log.md`](docs/phases/completed/261_phase_log.md).
+Write-up: [`261_implementation.md`](docs/phases/completed/261_implementation.md).
+
+## Phase 355 — Parallel test suite (pytest-xdist) — CLOSED 2026-09-25
+
+Log: [`docs/phases/completed/355_phase_log.md`](docs/phases/completed/355_phase_log.md).
+Write-up: [`355_implementation.md`](docs/phases/completed/355_implementation.md).
+
+## Phase 262 — Crash / insurance claim support — CLOSED 2026-09-26
+
+Log: [`docs/phases/completed/262_phase_log.md`](docs/phases/completed/262_phase_log.md).
+Write-up: [`262_implementation.md`](docs/phases/completed/262_implementation.md).
+
+## Phase 264 — Winterization protocol — CLOSED 2026-09-26
+
+Log: [`docs/phases/completed/264_phase_log.md`](docs/phases/completed/264_phase_log.md).
+Write-up: [`264_implementation.md`](docs/phases/completed/264_implementation.md).
+
+## Phase 272 — Gate 15 — Specialized workflows integration test — CLOSED 2026-09-27
+
+Log: [`docs/phases/completed/272_phase_log.md`](docs/phases/completed/272_phase_log.md).
+Write-up: [`272_implementation.md`](docs/phases/completed/272_implementation.md).
+
+## Phase 358 — Process clean-up — CLOSED 2026-09-27
+
+Log: [`docs/phases/completed/358_phase_log.md`](docs/phases/completed/358_phase_log.md).
+Write-up: [`358_implementation.md`](docs/phases/completed/358_implementation.md).
+
+## Phase 359 — Content clean-up: starter templates and build references — CLOSED 2026-09-27
+
+Log: [`docs/phases/completed/359_phase_log.md`](docs/phases/completed/359_phase_log.md).
+Write-up: [`359_implementation.md`](docs/phases/completed/359_implementation.md).
+
+## Phase 356 — In-memory workflow runner — CLOSED 2026-09-28
+
+Log: [`docs/phases/completed/356_phase_log.md`](docs/phases/completed/356_phase_log.md).
+Write-up: [`356_implementation.md`](docs/phases/completed/356_implementation.md).
+
+## Phase 357 — Saved workflow runs — CLOSED 2026-09-28
+
+Log: [`docs/phases/completed/357_phase_log.md`](docs/phases/completed/357_phase_log.md).
+Write-up: [`357_implementation.md`](docs/phases/completed/357_implementation.md).
+
+## Phase 274 — Customer CRM — CLOSED 2026-09-29
+
+Log: [`docs/phases/completed/274_phase_log.md`](docs/phases/completed/274_phase_log.md).
+Write-up: [`274_implementation.md`](docs/phases/completed/274_implementation.md).
+
+## Phase 360 — F174 powertrain default, and the edit guard — CLOSED 2026-09-29
+
+Log: [`docs/phases/completed/360_phase_log.md`](docs/phases/completed/360_phase_log.md).
+Write-up: [`360_implementation.md`](docs/phases/completed/360_implementation.md).
+
+## Phase 361 — F178 hybrid values, and F177 engine type — CLOSED 2026-09-29
+
+Log: [`docs/phases/completed/361_phase_log.md`](docs/phases/completed/361_phase_log.md).
+Write-up: [`361_implementation.md`](docs/phases/completed/361_implementation.md).
+
+## Phase 275 — Appointment booking by shop staff — CLOSED 2026-09-30
+
+Log: [`docs/phases/completed/275_phase_log.md`](docs/phases/completed/275_phase_log.md).
+Write-up: [`275_implementation.md`](docs/phases/completed/275_implementation.md).
+
+## Phase 281 — Recall refresh from NHTSA — CLOSED 2026-10-01
+
+Log: [`docs/phases/completed/281_phase_log.md`](docs/phases/completed/281_phase_log.md).
+Write-up: [`281_implementation.md`](docs/phases/completed/281_implementation.md).
+
+## Phase 369 — F183: the test worker lost with no traceback — CLOSED 2026-10-01
+
+Log: [`docs/phases/completed/369_phase_log.md`](docs/phases/completed/369_phase_log.md).
+Write-up: [`369_implementation.md`](docs/phases/completed/369_implementation.md).
+
+## Phase 273 — Payment processing foundation (Stripe) — CLOSED 2026-10-06
+
+Log: [`docs/phases/completed/273_phase_log.md`](docs/phases/completed/273_phase_log.md).
+Write-up: [`273_implementation.md`](docs/phases/completed/273_implementation.md).
+
+## Phase 292 — Gate 16 — Business infrastructure integration test — CLOSED 2026-10-06
+
+Log: [`docs/phases/completed/292_phase_log.md`](docs/phases/completed/292_phase_log.md).
+Write-up: [`292_implementation.md`](docs/phases/completed/292_implementation.md).
+
+## Phase 370 — F10: session times stored in UTC — CLOSED 2026-10-06
+
+Log: [`docs/phases/completed/370_phase_log.md`](docs/phases/completed/370_phase_log.md).
+Write-up: [`370_implementation.md`](docs/phases/completed/370_implementation.md).
+
+## Phase 373 — Warranty work on the invoice — CLOSED 2026-10-06
+
+Log: [`docs/phases/completed/373_phase_log.md`](docs/phases/completed/373_phase_log.md).
+Write-up: [`373_implementation.md`](docs/phases/completed/373_implementation.md).
+
+## Phase 374 — Check-in with an intake — CLOSED 2026-10-07
+
+Log: [`docs/phases/completed/374_phase_log.md`](docs/phases/completed/374_phase_log.md).
+Write-up: [`374_implementation.md`](docs/phases/completed/374_implementation.md).
+
+## Phase 375 — Warranty deductibles — CLOSED 2026-10-07
+
+Log: [`docs/phases/completed/375_phase_log.md`](docs/phases/completed/375_phase_log.md).
+Write-up: [`375_implementation.md`](docs/phases/completed/375_implementation.md).
+
+## Phase 376 — Warranty claim settlements in the accounting export — CLOSED 2026-10-07
+
+Log: [`docs/phases/completed/376_phase_log.md`](docs/phases/completed/376_phase_log.md).
+Write-up: [`376_implementation.md`](docs/phases/completed/376_implementation.md).
+
+## Phase 377 — Times stored in UTC across the shop's tables — CLOSED 2026-10-07
+
+Log: [`docs/phases/completed/377_phase_log.md`](docs/phases/completed/377_phase_log.md).
+Write-up: [`377_implementation.md`](docs/phases/completed/377_implementation.md).
+
+## Phase 378 — Process clean-up 2 (K18–K25) — CLOSED 2026-10-08
+
+Log: [`docs/phases/completed/378_phase_log.md`](docs/phases/completed/378_phase_log.md).
+Write-up: [`378_implementation.md`](docs/phases/completed/378_implementation.md).
+
+## Phase 379 — Small fixes from the open-findings triage — CLOSED 2026-10-08
+
+Log: [`docs/phases/completed/379_phase_log.md`](docs/phases/completed/379_phase_log.md).
+Write-up: [`379_implementation.md`](docs/phases/completed/379_implementation.md).
+
+## Phase 380 — Row identity and the junction per make — CLOSED 2026-10-08
+
+Log: [`docs/phases/completed/380_phase_log.md`](docs/phases/completed/380_phase_log.md).
+Write-up: [`380_implementation.md`](docs/phases/completed/380_implementation.md).
+
+## Phase 381 — The content batch on the row key — CLOSED 2026-10-09
+
+Log: [`docs/phases/completed/381_phase_log.md`](docs/phases/completed/381_phase_log.md).
+Write-up: [`381_implementation.md`](docs/phases/completed/381_implementation.md).
+
+## Phase 382 — Live and the backend on the home desktop — CLOSED 2026-10-19
+
+Log: [`docs/phases/completed/382_phase_log.md`](docs/phases/completed/382_phase_log.md).
+Write-up: [`382_implementation.md`](docs/phases/completed/382_implementation.md).
+
+## Phase 383 — 382's follow-ups: the live gates, then media paths — CLOSED 2026-10-19
+
+Log: [`docs/phases/completed/383_phase_log.md`](docs/phases/completed/383_phase_log.md).
+Write-up: [`383_implementation.md`](docs/phases/completed/383_implementation.md).
+
+## Phase 384 — The Mac runs the PC's steps — CLOSED 2026-10-21
+
+Log: [`docs/phases/completed/384_phase_log.md`](docs/phases/completed/384_phase_log.md).
+Write-up: [`384_implementation.md`](docs/phases/completed/384_implementation.md).

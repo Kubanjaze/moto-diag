@@ -15,10 +15,16 @@ motodiag db init
 ## Tests
 
 ```bash
-pytest -q                       # full suite (~9 minutes)
+.claude/skills/closeout/regression.sh        # full suite, in parallel (28 minutes at Phase 384)
+pytest -q                                    # full suite, one process
 pytest tests/test_phase207_security.py -q   # one file
 pytest -q -k "customer or push"             # by keyword
 ```
+
+`regression.sh` runs `python -m pytest -n auto --dist load` and prints
+the line a phase records. It needs `.claude/skills/closeout/wholetree.sh
+--full` on the same commit first. The time is from Phase 384's
+regression of record: 11000 passed, 27 min 52 s wall, on the Mac.
 
 The suite is organised by phase — `tests/test_phase<NN>_<topic>.py` —
 and runs against temporary databases, never your working one.

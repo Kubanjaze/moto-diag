@@ -1,0 +1,20 @@
+new phase: the fleet records phase. Take the next free ROADMAP number after 385 (385 keeps its own prompt) and add its row as 🚧 before anything else. Branch: phase-<N>-fleet-records. This prompt goes to docs/prompts/<N>_fleet_records.txt and is committed with the row.
+
+What this phase is: step 1 of the rollout in docs/reports/2026-10-22_fleet_proposal.md, which I have saved into the repo uncommitted. Commit it byte for byte as the first commit on the branch, before any other change. It is a records phase: documentation, measurements and the fleet's accounts. No change under src/ or tests/. The dispatcher, plan_check.py, the Linux fence and every later rollout step are their own phases later, each with its own row; do not start them here.
+
+Step 0, measure don't assume, report to me before v1.0. Every count shows the query that produced it.
+
+1. The debt table in the proposal, item by item, confirmed or refuted from the files: root phase_log.md's last entry; implementation.md line 6 and the 0.13.x vs pyproject 0.6.0 split; contributing.md's suite time against regression.sh's last recorded wall time; README.md's mid-session skill clause against the 2026-09-27 change-log entry; F132, F133, F134 in docs/FOLLOWUPS.md and whether finding_check.py B2 fires on them (planted positive control); Phase 359 / migration 072's status from the live schema_version history through the 384 door's status operation, read-only.
+2. The token split for Phases 353 and 354 from their Claude Code session logs (sessions 2f039c7d and 0f4f7aed per the GLM report): input, cache read, cache write, output, call count. Then the list-price API cost of each. Show the arithmetic.
+3. Auth as it stands on this Mac: what claude is logged in with; whether ANTHROPIC_API_KEY is set in any shell profile, launchd plist, ~/.config/motodiag/anthropic.env or ~/.subconscious profile; which orchestrate.py stages read a key and which would run on the login. Print only whether each variable is set, never its value.
+4. GitHub: the repo's visibility, whether any ruleset or branch protection exists on master, and which account gh is authenticated as. Read-only queries only.
+5. The desktop, for the three checks the proposal names (systemctl is-system-running, what process holds the WSL VM open, unshare -Ur true, and whether gh is installed there): write them as one paste block for me in plain English, which computer and which window, ending in ALL GOOD or SOMETHING IS OFF. I will run it and paste the output back. Do not try to run them through the door; it has no operation for them.
+6. The usage baseline: the current weekly and 5-hour percentages from /usage, so one phase's share can be measured later.
+
+Then v1.0, all sections, plan commit pushed before any change. Scope of the build:
+- the documentation fixes the Step 0 confirms, each its own commit;
+- docs/decisions.md seeded as K-ids from the operator's quoted words in docs/reports/2026-10-12_plan_of_record.md, one line each: id, date, words verbatim, the check it became;
+- a procedure in the deploy or closeout skill's CHANGELOG, not in code, for logging a dispatcher in with claude setup-token and no API key in its environment, and the Haiku billing check (one claude -p call on Haiku, then the operator confirms claude.ai Settings > Usage moved and Console billing did not);
+- the measured numbers from Step 0 items 2, 3, 6 recorded in the phase's implementation.md Results.
+
+Stops per CLAUDE.md rule 1 only. K11 is mine: I'm letting Subconscious lapse on 10/23; record that in the phase log when I confirm it, don't act on the account. Close out the normal way: wholetree, regression of record, handoff, verify_phase.sh, and the ROADMAP row to ✅ with the regression line.

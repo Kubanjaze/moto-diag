@@ -1,0 +1,220 @@
+# Phase 386 — Fleet records — phase log
+
+**Status:** ✅ Complete (2026-10-22)
+**Branch:** `phase-386-fleet-records` (Opus session on the Mac, the only writer)
+
+---
+
+### 2026-10-22 — Opened, and Step 0
+
+The prompt is `docs/prompts/386_fleet_records.txt`, saved verbatim. 385
+has a merged prompt and no row; the operator: "Take the next free ROADMAP
+number after 385 (385 keeps its own prompt)", so this phase is 386.
+
+- `ee300a4`: `docs/reports/2026-10-22_fleet_proposal.md` committed byte for
+  byte as the branch's first commit (sha256 `473e7e4c…58342` before and
+  after).
+- `51a8f52`: row 386 as 🚧 (67 words by `roadmap_words.py`;
+  `roadmap_check.py` ok) and the prompt. Pushed.
+- `wholetree.sh` before each: exit 0, 1794 passed, both times.
+
+**A guard blocked a command.** Adding the row with a short Python script
+was refused by the edit guard: "a Python script body writes to a path the
+edit guard cannot resolve, and the body names src/ or tests/". The row's
+text names `src/` and `tests/`. The row went in with the Edit tool instead;
+the guard is unchanged.
+
+Read first: `docs/handoffs/2026-10-21_384_closed.md` (the newest, by
+`git log -1 --name-only --format= -- docs/handoffs/`); rows 380–384;
+`ROADMAP_AUTHORITY.md`; the 385 prompt. No open finding touches a
+documents-only phase except through the debt table.
+
+Step 0 is `386_step0.md`. In short: of the debt table, four items are
+confirmed (root `phase_log.md`, `implementation.md` line 6,
+`contributing.md`, the `CLAUDE.md` import) and four refuted (the version
+split is documented on purpose; `README.md` was fixed in 378; F132–F134
+all resolve; 072 was applied live 2026-09-27 23:38:26). B2 catches a lost
+F132 but cannot see F133 or F134, which no completed phase document cites.
+353 and 354 cost $17.87 and $22.66 at list price. No API key is set on the
+Mac, and `orchestrate.py`'s Anthropic stages already run on the OAuth
+token. The repo is public with no protection on master.
+
+Waiting for the operator: the desktop paste block's output, the `/usage`
+figures, and K11.
+
+**A second guard block.** Committing and pushing Step 0 in one command
+(`git commit … && git push`) was refused by the push guard. They ran as two
+commands; `3e030d6` pushed. The guard is unchanged.
+
+### 2026-10-22 — The operator's answers to Step 0
+
+- **The desktop:** the operator ran the checks in the Ubuntu window on the
+  home PC in their own block and pasted the output; ALL GOOD. It is
+  verbatim in `386_step0.md` S0-5: systemd `running`; the API and
+  `tailscaled` up 1 day 7 h 45 min; `unshare -Ur true` works and `bwrap`
+  is installed; `gh` installed and logged in as Kubanjaze.
+- **Usage:** "current session 7% (resets 5pm); current week all models 6%,
+  current week Fable 10% (both reset Oct 28, 12pm, America/New_York)." The
+  operator: "Record that as a baseline only; it includes today's
+  interactive use. The number that decides fleet throughput is measured
+  around one Engineer build in a later phase, not here." In S0-6.
+- **K11:** "Subconscious: nothing to do until it cancels tomorrow. I'll
+  give you the K11 line on 10/23." Not yet confirmed; nothing done to the
+  account.
+- **GitHub accounts and master protection:** "leave both for a later
+  phase, your default is right. File one follow-up finding carrying two
+  facts so that phase doesn't rediscover them: rulesets are free on a
+  public repo and moto-diag is public today, so if the repo ever goes
+  private, master protection becomes a GitHub Pro purchase, not a click;
+  and the fleet's own GitHub identity (an App, or a machine user with
+  write) is created in the phase where a rank first pushes," The pasted
+  text ends at that comma; the finding carries the two facts as given.
+
+**Decision: the close-out waits for the K11 line.** The prompt asks for
+K11 in this phase's log when the operator confirms it, and the operator
+gives it on 2026-10-23. The build runs now; the regression of record and
+the close-out follow the K11 line, so it lands in this log and not the next
+phase's. Waiting on the operator's own word is not a rule-1 stop; the row
+says so while it waits.
+
+### 2026-10-22 — v1.0
+
+`386_implementation.md` v1.0, and the row says so. The first
+`wholetree.sh` failed (exit 1): the plan named the next F-number before
+its entry existed, and B2 refused it, once directly and once through
+`test_phase379_wholetree_output.py`, which runs the full mode. The
+number was taken out of the plan; the re-run passed, exit 0, 1794 passed.
+
+### 2026-10-22 — Item 1: the root `phase_log.md` catch-up
+
+41 pointer entries, 255 to 384, in close order, generated from the ROADMAP
+rows by a script that stops on a phase with no CLOSED date or no
+documents (it stopped on none). Measured before: 41 phases from 255 on
+with documents in `completed/` and no root-log heading naming them; after,
+the same search finds 0. Recorded, not backfilled: 205–240 (Tracks J and
+K, less 210, plus 225B and 235B) are missing from the root log as well.
+
+**A guard blocked a command.** Trimming a trailing blank line from the
+scratch file with `sed -i '' …` was refused by the edit guard ("`sed -i`
+edits a file in place, and is blocked wherever it points"), although the
+file was in the scratchpad. Done in Python instead; the guard is
+unchanged.
+
+### 2026-10-22 — Item 2: `implementation.md` lines 6 and 7
+
+Line 6 now reads `~/Projects/moto-diag`, as `CLAUDE.md` has it. Line 7's
+"352 phases across 21 tracks (A-T)" names the ROADMAP as the count and
+gives today's: 403 rows (`grep -cE '^\| *[0-9]{2,3}[A-Z]? *\|'
+docs/ROADMAP.md`), 365 of them numbered without a letter, 38 letter
+follow-ons; 21 `## Track` headings.
+
+### 2026-10-22 — Item 3: `docs/contributing.md`
+
+"full suite (~9 minutes)" is replaced by the command of record,
+`regression.sh`, with 384's measured time (27 min 52 s, 11000 passed) and
+the `--full` record it needs first. `pytest -q` stays as the one-process
+way, with no time claimed for it.
+
+### 2026-10-22 — Item 4a: F213 filed
+
+F213: B2 reads only phase documents, so a lost entry cited only by the
+ROADMAP, a handoff or a report passes. Allocated by `next_f_number.sh`
+(backend F212, mobile F181, next F213); the header now says F213.
+Measured with it: four F-numbers are cited in handoffs, reports or the
+ROADMAP and by no completed phase document (F120, F125, F133, F134); all
+four have entries. Step 0 said B2 reads `completed/` only; it reads one
+folder per call, and `wholetree.py` calls it for `completed/` and
+`in_progress/`. The check is not changed here.
+
+### 2026-10-22 — Item 4b: F214 filed
+
+F214 carries the operator's two GitHub facts, in their words, with Step
+0's read-only queries as the evidence that master is unprotected today.
+Allocated by `next_f_number.sh` (F213 backend, F181 mobile, next F214).
+The operator's pricing statement is recorded as theirs, not measured, and
+the entry says their message ended mid-sentence.
+
+### 2026-10-22 — Item 5: `docs/decisions.md`, K32–K39
+
+Eight lines, one per quotation of the operator in the plan of record
+(`grep -n '"' docs/reports/2026-10-12_plan_of_record.md`: lines 8, 9, 10,
+17, 20 (two quotations and "way 1") and 25). K-ids continue the one
+sequence: K1–K17 are in the 2026-09-27 triage, K18–K31 in the 2026-10-07
+one, and K31 is the highest in use. Three lines name a test (K33, K37,
+K38 via K37); four became a document and say "No check"; K39 is 385, not
+built. Decision: the file says plainly that nothing yet checks a cited
+K-id resolves, rather than leaving it implied.
+
+### 2026-10-22 — Item 6: the setup-token and Haiku billing procedure
+
+A dated entry in `.claude/skills/deploy/CHANGELOG.md`, text only: proving
+no API key (set or unset, never a value), the operator's `claude
+setup-token` login into a mode-600 `anthropic.env`, the token's class
+checked by `grep -c` without printing it, an environment built from
+nothing per call, and the Haiku check (one `claude -p` on
+`claude-haiku-5-5` with `--tools ""`, the served model read from its
+JSON, then the operator's two readings). The flags were taken from this
+machine's `claude --help` and `claude setup-token --help` (2.1.308).
+Nothing was run: the login is the operator's and the dispatcher's machine
+is set up in its own phase.
+
+Decisions:
+- **The deploy skill, not closeout:** the dispatcher will run on the
+  desktop, which the deploy skill already reaches.
+- **No claim about which credential wins when both are set:** not
+  measured, so the procedure makes it impossible instead.
+- **"No movement is not a pass":** a one-word Haiku call may not move a
+  whole-percent figure, so silence is not read as the subscription
+  being billed.
+
+**A guard blocked a command.** Committing item 5 and pushing in one
+command (`git commit … ; git push`) was refused by the push guard, a
+second time this phase. Run as two commands; the guard is unchanged.
+
+### 2026-10-22 — Item 7: Results
+
+Step 0's items 2, 3 and 6 are in `386_implementation.md` Results, with
+the build's commits. Items 1–7 are ticked; K11 and the close-out remain.
+
+### 2026-10-22 — The regression of record, and F214 completed
+
+Regression of record: 11000 passed, 0 failed, 1 skipped, 0 errors at `6352f2e` (36 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+
+Before it, `wholetree.sh --full` on `6352f2e`: exit 0, 4265 passed,
+12 min 48 s, record written.
+
+The operator finished the cut-off GitHub paragraph: "Update F214 to
+carry all of that, nothing else changes." F214 now quotes it in full
+(created where a rank first pushes, not before; both items hands-only
+queue entries; the desktop's `gh` is the operator's own Kubanjaze login,
+not the fleet's), and the line saying the message was cut off is gone.
+Documents only, after the regression.
+
+### 2026-10-22 — Waiting for K11
+
+Built and regressed, waiting for the operator's K11 line on 2026-10-23;
+the close-out follows it. Setting the row to ⏸️ was refused by
+`roadmap_check.py` R3 ("phase 386 has documents in in_progress/ but its
+row … is '⏸️', not 🚧"): a phase with documents in progress is 🚧. So the
+row stays 🚧 and its text says it waits for K11. The check is unchanged.
+
+### 2026-10-22 — K11, and the close-out
+
+The operator changed the plan: "don't hold the close-out for it. Record in
+the phase log, dated today". Recorded as given:
+
+K11: Subconscious is set to cancel on 2026-10-23; the operator will confirm the lapse and the next phase logs it.
+
+Nothing was done to the account. Then the close-out, the operator's
+"close out 386 now: wholetree, verify_phase.sh, handoff, merge, row 386 to
+✅ with the regression line. Docs only after the regression hash".
+
+Everything after `6352f2e` is documents: F214's completed paragraph, this
+log, the row, the handoff, `implementation.md`'s history row and version,
+and the move to `completed/`.
+
+No refute pass ran: this phase wrote no content rows; "refuted" here means
+a debt-table claim that Step 0 measured as untrue.
+
+No bug fixes, so no register.

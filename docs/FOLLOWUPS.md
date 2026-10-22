@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F212** (this file). The
+At the time of writing the highest assigned is **F214** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3705,3 +3705,67 @@ controls (another column of that row, an added token, the same column in
 another table each still fail), or the rule F210 asks for replaces the
 list.
 
+### F213
+
+**B2 reads only phase documents, so a lost entry cited only by the ROADMAP, a handoff or a report passes**
+
+Found in Phase 386 (2026-10-22), Step 0's planted control
+(`386_step0.md`, item 1f′). On a scratch copy with the entry headings of
+F132, F133 and F134 renamed, `finding_check.py` reported F132 only (cited
+by `255B_implementation.md` and `255B_phase_log.md`). F133 and F134 are
+cited by no completed phase document: F133 only in `FOLLOWUPS.md` and the
+fleet proposal, F134 also in `docs/ROADMAP.md`. B2 globs `*.md` in one
+phase-documents folder (`finding_check.py`, the B2 block; `wholetree.py`
+runs it over `completed/` and `in_progress/`), and nothing else.
+
+What it affects, measured 2026-10-22: of the F-numbers cited in
+`docs/handoffs/`, `docs/reports/` and `docs/ROADMAP.md`, four are cited
+by no completed phase document (F120, F125, F133, F134; `comm -23` of the
+two `grep -rhoE '\bF[0-9]{2,3}\b'` sets). All four have entries today;
+losing any of them would pass every check. The proposal's claim that they
+were "MISSING" was of this kind, and nothing in the repository could have
+confirmed or refuted it.
+
+To close: B2 also reads the ROADMAP, `docs/handoffs/` and `docs/reports/`,
+with the same `NOT_FINDINGS` exclusions (the BMW F-models appear in rows),
+and a planted control that F133 renamed fails it. A change to the check's
+definition, so the operator's call (rule 1).
+
+### F214
+
+**Master has no protection, and the fleet has no GitHub identity of its own: two facts for the phase that adds them**
+
+Found in Phase 386 (2026-10-22). Step 0's read-only queries
+(`386_step0.md`, S0-4): the repository is **public**; `gh api
+repos/Kubanjaze/moto-diag/rulesets` returns `[]`,
+`.../rules/branches/master` returns `[]`,
+`.../branches/master/protection` returns 404 "Branch not protected", and
+`.../branches/master` says `protected: false`. Every push and merge today
+is made as the operator's own account, Kubanjaze, which has admin rights;
+the push guard is a hook and holds only inside a Claude Code session.
+
+The operator left both for a later phase ("leave both for a later phase,
+your default is right") and asked for one finding carrying two facts, in
+their words: "rulesets are free on a public repo and moto-diag is public
+today, so if the repo ever goes private, master protection becomes a
+GitHub Pro purchase, not a click; and the fleet's own GitHub identity (an
+App, or a machine user with write) is created in the phase where a rank
+first pushes". The pricing is the operator's statement, not measured
+here.
+
+The operator completed that sentence the same day: "the fleet's own
+GitHub identity (an App, or a machine user with write access) is created
+in the phase where a rank first pushes, not before — a credential with no
+consumer is just a credential lying around. Both items are hands-only
+queue entries when their time comes. Also: gh on the desktop is logged in
+as my own account (Kubanjaze); that is not the fleet's identity."
+
+So `gh` on the desktop (`/home/lilcu/.local/bin/gh`, logged in as
+Kubanjaze, `386_step0.md` S0-5) is the operator's own login and is not to
+be used as the fleet's.
+
+To close: in the phase where a rank first pushes, and not before, the
+fleet's own identity is created and a ruleset on `master` with no bypass
+is set, each as a hands-only queue entry for the operator, and the same
+read-only queries show it. If the repository has gone private by then,
+the protection is a purchase, the operator's decision.
