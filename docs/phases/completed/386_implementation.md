@@ -1,6 +1,6 @@
 # Phase 386 — Fleet records: the debts, the measurements, the accounts
 
-**Version:** 1.0 | **Tier:** Standard | **Date:** 2026-10-22
+**Version:** 1.1 | **Tier:** Standard | **Date:** 2026-10-22 (v1.0 the same day)
 
 ---
 
@@ -152,13 +152,27 @@ Results at v1.1.
 - [x] 5. `docs/decisions.md`, K32 on
 - [x] 6. The setup-token and Haiku billing procedure
 - [x] 7. Results: Step 0 items 2, 3, 6
-- [ ] K11 in the phase log, in the operator's words (10/23)
-- [ ] Close-out: `wholetree.sh --full`, `regression.sh`, the handoff,
+- [x] K11 in the phase log, in the operator's words (changed: see Deviations)
+- [x] Close-out: `wholetree.sh --full`, `regression.sh`, the handoff,
       `verify_phase.sh`, row 386 to ✅
 
 ## Deviations
 
-None yet (v1.0).
+- **K11 did not wait for the lapse.** The plan held the close-out for the
+  operator's K11 line on 2026-10-23. The operator changed that: "don't
+  hold the close-out for it", and gave the line to record today: "K11:
+  Subconscious is set to cancel on 2026-10-23; the operator will confirm
+  the lapse and the next phase logs it."
+- **The row stayed 🚧 while waiting.** Setting it to ⏸️ was refused by
+  `roadmap_check.py` R3, since a phase with documents in progress is 🚧;
+  the wait went in the row's text.
+- **F214 changed after the regression.** The operator completed the
+  paragraph their first message cut off; documents only.
+- **Step 0's wording on B2:** it said B2 reads `completed/` only. B2
+  reads one folder per call, and `wholetree.py` calls it for both
+  `completed/` and `in_progress/`. F213 has it right; the gap stands.
+- **Three guard blocks** (the edit guard once, the push guard twice), each
+  in the log; no guard was changed.
 
 ## Results
 
@@ -221,3 +235,11 @@ here."
 | 4b. F214, GitHub's two facts | `2a3b631` |
 | 5. `docs/decisions.md`, K32–K39 | `86a5cc9` |
 | 6. The setup-token and Haiku billing procedure | `55f696a` |
+
+### The regression of record
+
+Regression of record: 11000 passed, 0 failed, 1 skipped, 0 errors at `6352f2e` (36 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0)
+
+The one skip is the expected one: `test_phase244H_test_db_isolation.py:79`,
+no production database on this machine. `wholetree.sh --full` on the same
+commit: 4265 passed. No tests added; `COLLECTED_TEST_FLOOR` unchanged.

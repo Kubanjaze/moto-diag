@@ -1,6 +1,6 @@
 # Phase 386 — Fleet records — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-22)
 **Branch:** `phase-386-fleet-records` (Opus session on the Mac, the only writer)
 
 ---
@@ -198,3 +198,23 @@ the close-out follows it. Setting the row to ⏸️ was refused by
 `roadmap_check.py` R3 ("phase 386 has documents in in_progress/ but its
 row … is '⏸️', not 🚧"): a phase with documents in progress is 🚧. So the
 row stays 🚧 and its text says it waits for K11. The check is unchanged.
+
+### 2026-10-22 — K11, and the close-out
+
+The operator changed the plan: "don't hold the close-out for it. Record in
+the phase log, dated today". Recorded as given:
+
+K11: Subconscious is set to cancel on 2026-10-23; the operator will confirm the lapse and the next phase logs it.
+
+Nothing was done to the account. Then the close-out, the operator's
+"close out 386 now: wholetree, verify_phase.sh, handoff, merge, row 386 to
+✅ with the regression line. Docs only after the regression hash".
+
+Everything after `6352f2e` is documents: F214's completed paragraph, this
+log, the row, the handoff, `implementation.md`'s history row and version,
+and the move to `completed/`.
+
+No refute pass ran: this phase wrote no content rows; "refuted" here means
+a debt-table claim that Step 0 measured as untrue.
+
+No bug fixes, so no register.
