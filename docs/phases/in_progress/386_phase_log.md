@@ -114,3 +114,14 @@ follow-ons; 21 `## Track` headings.
 `regression.sh`, with 384's measured time (27 min 52 s, 11000 passed) and
 the `--full` record it needs first. `pytest -q` stays as the one-process
 way, with no time claimed for it.
+
+### 2026-10-22 — Item 4a: F213 filed
+
+F213: B2 reads only phase documents, so a lost entry cited only by the
+ROADMAP, a handoff or a report passes. Allocated by `next_f_number.sh`
+(backend F212, mobile F181, next F213); the header now says F213.
+Measured with it: four F-numbers are cited in handoffs, reports or the
+ROADMAP and by no completed phase document (F120, F125, F133, F134); all
+four have entries. Step 0 said B2 reads `completed/` only; it reads one
+folder per call, and `wholetree.py` calls it for `completed/` and
+`in_progress/`. The check is not changed here.

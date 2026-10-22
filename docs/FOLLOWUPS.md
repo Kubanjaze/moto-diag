@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F212** (this file). The
+At the time of writing the highest assigned is **F213** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3705,3 +3705,28 @@ controls (another column of that row, an added token, the same column in
 another table each still fail), or the rule F210 asks for replaces the
 list.
 
+### F213
+
+**B2 reads only phase documents, so a lost entry cited only by the ROADMAP, a handoff or a report passes**
+
+Found in Phase 386 (2026-10-22), Step 0's planted control
+(`386_step0.md`, item 1f′). On a scratch copy with the entry headings of
+F132, F133 and F134 renamed, `finding_check.py` reported F132 only (cited
+by `255B_implementation.md` and `255B_phase_log.md`). F133 and F134 are
+cited by no completed phase document: F133 only in `FOLLOWUPS.md` and the
+fleet proposal, F134 also in `docs/ROADMAP.md`. B2 globs `*.md` in one
+phase-documents folder (`finding_check.py`, the B2 block; `wholetree.py`
+runs it over `completed/` and `in_progress/`), and nothing else.
+
+What it affects, measured 2026-10-22: of the F-numbers cited in
+`docs/handoffs/`, `docs/reports/` and `docs/ROADMAP.md`, four are cited
+by no completed phase document (F120, F125, F133, F134; `comm -23` of the
+two `grep -rhoE '\bF[0-9]{2,3}\b'` sets). All four have entries today;
+losing any of them would pass every check. The proposal's claim that they
+were "MISSING" was of this kind, and nothing in the repository could have
+confirmed or refuted it.
+
+To close: B2 also reads the ROADMAP, `docs/handoffs/` and `docs/reports/`,
+with the same `NOT_FINDINGS` exclusions (the BMW F-models appear in rows),
+and a planted control that F133 renamed fails it. A change to the check's
+definition, so the operator's call (rule 1).
