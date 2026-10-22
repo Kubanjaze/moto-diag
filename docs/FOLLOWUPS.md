@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F213** (this file). The
+At the time of writing the highest assigned is **F214** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3730,3 +3730,31 @@ To close: B2 also reads the ROADMAP, `docs/handoffs/` and `docs/reports/`,
 with the same `NOT_FINDINGS` exclusions (the BMW F-models appear in rows),
 and a planted control that F133 renamed fails it. A change to the check's
 definition, so the operator's call (rule 1).
+
+### F214
+
+**Master has no protection, and the fleet has no GitHub identity of its own: two facts for the phase that adds them**
+
+Found in Phase 386 (2026-10-22). Step 0's read-only queries
+(`386_step0.md`, S0-4): the repository is **public**; `gh api
+repos/Kubanjaze/moto-diag/rulesets` returns `[]`,
+`.../rules/branches/master` returns `[]`,
+`.../branches/master/protection` returns 404 "Branch not protected", and
+`.../branches/master` says `protected: false`. Every push and merge today
+is made as the operator's own account, Kubanjaze, which has admin rights;
+the push guard is a hook and holds only inside a Claude Code session.
+
+The operator left both for a later phase ("leave both for a later phase,
+your default is right") and asked for one finding carrying two facts, in
+their words: "rulesets are free on a public repo and moto-diag is public
+today, so if the repo ever goes private, master protection becomes a
+GitHub Pro purchase, not a click; and the fleet's own GitHub identity (an
+App, or a machine user with write) is created in the phase where a rank
+first pushes". The pricing is the operator's statement, not measured
+here. Their message ended at that comma; anything after it did not reach
+the record.
+
+To close: in the phase where a rank first pushes, the fleet's own
+identity is created and a ruleset on `master` with no bypass is set, and
+the same read-only queries show it. If the repository has gone private by
+then, the protection is a purchase, the operator's decision.

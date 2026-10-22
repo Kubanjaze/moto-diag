@@ -125,3 +125,11 @@ ROADMAP and by no completed phase document (F120, F125, F133, F134); all
 four have entries. Step 0 said B2 reads `completed/` only; it reads one
 folder per call, and `wholetree.py` calls it for `completed/` and
 `in_progress/`. The check is not changed here.
+
+### 2026-10-22 — Item 4b: F214 filed
+
+F214 carries the operator's two GitHub facts, in their words, with Step
+0's read-only queries as the evidence that master is unprotected today.
+Allocated by `next_f_number.sh` (F213 backend, F181 mobile, next F214).
+The operator's pricing statement is recorded as theirs, not measured, and
+the entry says their message ended mid-sentence.
