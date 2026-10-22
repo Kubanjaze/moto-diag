@@ -12,8 +12,11 @@ seeded in Phase 386 (2026-10-22) from the operator's quoted words in
 quotation's date is the one the plan of record gives it, or the date of
 the change it is quoted under.
 
-Nothing checks yet that a cited K-id resolves here; the fleet proposal
-plans that for the step that adds the Yeoman.
+Since Phase 387, rows are added with
+`.claude/skills/fleet/yeoman.py decide`, which takes the next K-id and
+refuses a row citing a K-id that does not resolve (in the two triage
+reports or in this file). Nothing yet checks K-ids cited elsewhere, in
+phase documents or handoffs, the way `finding_check` B2 checks F-numbers.
 
 | K-id | Date | The operator's words | The check it became |
 |---|---|---|---|
@@ -25,3 +28,5 @@ plans that for the step that adds the Yeoman.
 | K37 | 2026-10-20 | "cant everything i do on the mac just automatically get done on the pc?" | Phase 384: the Mac runs the desktop's deploy steps through a fixed list over the tailnet: `tests/test_phase384_remote_dispatcher.py`, `tests/test_phase384_remote_client.py`, `tests/test_phase384_install_remote.py`. |
 | K38 | 2026-10-20 | "way 1" | The same as K37: 384's way 1, a builder on the Mac doing the desktop's steps, the operator only approving. |
 | K39 | 2026-10-21 | "add device_tokens.last_seen_at to the list as its own phase" | None yet: Phase 385, prompt `docs/prompts/385_the_push_tokens_own_write.txt`, not built. |
+| K40 | 2026-10-22 | "The labels on GitHub, created with gh from this Mac under my login, since no rank pushes code yet" | The eleven labels made by `.claude/skills/fleet/labels.py` under the operator's own gh login, a stand-in until the identity phase (F214); `tests/test_phase387_fleet_contract.py` holds the names and that an existing label is never overwritten. |
+| K41 | 2026-10-22 | "Pin them (Recommended)" | `.claude/skills/fleet/plan_check.py`'s WRITTEN_BEFORE: 384 and 386's v1.0 are not held to the classification, change-log and stop items they predate; `tests/test_phase387_fleet_contract.py` holds the pin to equality. |

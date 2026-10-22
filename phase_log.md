@@ -3842,3 +3842,13 @@ Write-up: [`383_implementation.md`](docs/phases/completed/383_implementation.md)
 
 Log: [`docs/phases/completed/384_phase_log.md`](docs/phases/completed/384_phase_log.md).
 Write-up: [`384_implementation.md`](docs/phases/completed/384_implementation.md).
+
+## Phase 386 — Fleet records: the debts, the measurements, the accounts — CLOSED 2026-10-22
+
+Log: [`docs/phases/completed/386_phase_log.md`](docs/phases/completed/386_phase_log.md).
+Write-up: [`386_implementation.md`](docs/phases/completed/386_implementation.md).
+
+## Phase 387 — The XO and the Yeoman — CLOSED 2026-10-22
+
+Log: [`docs/phases/completed/387_phase_log.md`](docs/phases/completed/387_phase_log.md).
+Write-up: [`387_implementation.md`](docs/phases/completed/387_implementation.md).
