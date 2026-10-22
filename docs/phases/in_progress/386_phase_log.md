@@ -76,3 +76,11 @@ gives it on 2026-10-23. The build runs now; the regression of record and
 the close-out follow the K11 line, so it lands in this log and not the next
 phase's. Waiting on the operator's own word is not a rule-1 stop; the row
 says so while it waits.
+
+### 2026-10-22 — v1.0
+
+`386_implementation.md` v1.0, and the row says so. The first
+`wholetree.sh` failed (exit 1): the plan named the next F-number before
+its entry existed, and B2 refused it, once directly and once through
+`test_phase379_wholetree_output.py`, which runs the full mode. The
+number was taken out of the plan; the re-run passed, exit 0, 1794 passed.
