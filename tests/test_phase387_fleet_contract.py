@@ -160,6 +160,7 @@ class TestTheCountRule:
     @pytest.mark.parametrize("text", [
         "Read literally, it fails 384 on three items.",   # a phase, then a preposition
         "Step 8 says so.", "Built in 2026 releases.", "pre-tax 23000 × 3500 parts",
+        "It moved in phase 386 entries ago.",            # a number that names a phase
     ])
     def test_what_names_rather_than_counts_is_not_a_count(self, text):
         assert not plan_check.counts_in(text), text

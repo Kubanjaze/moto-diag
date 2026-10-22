@@ -1,0 +1,51 @@
+P1 a row that is not in progress passes: red
+P2 a missing step-0 report passes: red
+P3 a count with no query passes: red
+P3 a number naming a phase is a count: red
+P3 a table's lead is not read: red
+P4 reshape passes: red
+P4 no classification passes: red
+P5 a data/ path passes: red
+P5 the knowledge path passes: red
+P5 seed data passes: red
+P5 a split passes: red
+P5 an eval protocol passes: red
+P5 the Non-goals are read: red
+P6 an empty section passes: red
+P6 a stub passes: red
+P6 Goal and Logic not required: red
+P7 a cited path need not exist: red
+P7 'no check' accepted for any entry: red
+P7 only two entries cited: red
+P7 the oldest entries taken: red
+P8 no stop section passes: red
+P8 any stop is a kind: red
+P9 --no-pin ignored: red
+P9 387 pinned too: red
+P9 cannot read is exit 1: red
+X1 approve sets the wrong label: red
+X2 three rounds: red
+X3 rounds not counted: red
+X4 a failed checklist still calls the model: red
+X5 back-to-captain with no items: red
+X6 the old plan label stays: red
+X7 Bash not disallowed: red
+X8 Bash among the tools: red
+X9 no usage is not a stop: red
+X10 the wrong model accepted: red
+X11 no structured output accepted: red
+X12 a failed claude accepted: red
+X13 the call goes unrecorded: red
+Y1 any --kid accepted: red
+Y2 unresolved K-ids accepted: red
+Y3 the triage bullets not read: red
+Y4 a missing path accepted: red
+Y5 a pipe not escaped: red
+Y6 a two-day window: red
+Y7 closed findings counted open: red
+Y8 every issue shown: red
+Y9 an empty summary written: red
+Y10 the digest on Opus: red
+L1 labels forced: red
+L2 an existing label made again: red
+50/50 red
