@@ -212,6 +212,22 @@ class TestTheDigestFile:
         assert run.cmd[run.cmd.index("--model") + 1] == rank_call.HAIKU
         assert run.cmd[run.cmd.index("--tools") + 1] == "Read,Grep,Glob"
 
+    def test_a_summary_naming_what_the_facts_do_not_hold_is_set_aside(self, history):
+        """Bug fix #2: the first real digest said 2022 where the facts said 2026."""
+        run = self.stand(summary="Phase 902 started on 2022-10-22; F3 was filed; K9 applies.")
+        assert yeoman.digest(DAY, root=history, run=run, out=lambda s: None) == 0
+        page = (history / yeoman.DIGESTS / "2026-10-22.md").read_text()
+        head = page.split("\n---\n")[0]
+        assert "set aside: it named 2022-10-22, K9" in head
+        assert "Phase 902 started" not in head
+        assert "**902** 🚧 (new)" in page
+
+    def test_a_summary_from_the_facts_is_kept(self, history):
+        run = self.stand(summary="Phase 902 started; 901 closed; F3 was filed on October 22, "
+                                 "2026-10-22.")
+        yeoman.digest(DAY, root=history, run=run, out=lambda s: None)
+        assert "Phase 902 started" in (history / yeoman.DIGESTS / "2026-10-22.md").read_text()
+
     @pytest.mark.parametrize("kw", [{"usage": False}, {"model": rank_call.OPUS}, {"summary": " "}],
                              ids=["no-usage", "wrong-model", "empty"])
     def test_a_stop_writes_no_file(self, history, kw):

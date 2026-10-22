@@ -230,6 +230,19 @@ about rather than only its number. If nothing waits on the operator, say so.
 """
 
 
+#: What a summary may only repeat, never invent: a date, an F- or K-id, any
+#: number of two digits or more. Bug fix #2: the first real digest said
+#: "Phase 386 closed on 2022-10-22"; the facts said 2026.
+_CHECKED = re.compile(r"\b\d{4}-\d{2}-\d{2}\b|\b[FK]\d+\b|\b\d{2,}[A-Z]?\b")
+
+
+def unsupported(summary: str, facts_text: str) -> list[str]:
+    """The tokens in the summary that the facts do not contain. A bare number
+    may be any run of digits in the facts: "October 23" restates 2026-10-23."""
+    have = set(_CHECKED.findall(facts_text)) | set(re.findall(r"\d+", facts_text))
+    return sorted({t for t in _CHECKED.findall(summary) if t not in have})
+
+
 def digest(day: dt.date, *, root: pathlib.Path = ROOT, run: Runner = subprocess.run,
            out=print) -> int:
     body = facts(root, day, run)
@@ -244,8 +257,14 @@ def digest(day: dt.date, *, root: pathlib.Path = ROOT, run: Runner = subprocess.
         out("STOP: the summary is empty. No digest written.")
         return 3
     words = len(summary.split())
+    invented = unsupported(summary, body)
+    if invented:
+        out(f"the summary named {', '.join(invented)}, which the facts do not hold: set aside")
+        summary = (f"(The model's summary was set aside: it named {', '.join(invented)}, which "
+                   "the facts below do not hold. Read the facts.)")
     page = (f"# Digest, {day.isoformat()}\n\n## In plain English (written by {HAIKU})\n\n"
-            f"{summary}\n" + ("" if words <= 120 else f"\n({words} words, over the 120 asked for.)\n")
+            f"{summary}\n" + ("" if words <= 120 or invented
+                              else f"\n({words} words, over the 120 asked for.)\n")
             + f"\n---\n\nThe facts below are the script's, not the model's.\n\n{body}\n---\n\n"
             f"{call.line()}\n")
     path = root / DIGESTS / f"{day.isoformat()}.md"

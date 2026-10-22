@@ -47,6 +47,7 @@ Y7 closed findings counted open: red
 Y8 every issue shown: red
 Y9 an empty summary written: red
 Y10 the digest on Opus: red
+Y11 an invented date kept (bug fix #2): red
 L1 labels forced: red
 L2 an existing label made again: red
-51/51 red
+52/52 red

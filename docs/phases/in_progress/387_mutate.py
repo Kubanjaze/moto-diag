@@ -133,6 +133,8 @@ MUTATIONS = [
                                "            if True:")], T_YE),
     ("Y9 an empty summary written", [(YE, "    if not summary:", "    if False:")], T_YE),
     ("Y10 the digest on Opus", [(YE, '{body}", HAIKU,', '{body}", rank_call.OPUS,')], T_YE),
+    ("Y11 an invented date kept (bug fix #2)", [(YE,
+     "    invented = unsupported(summary, body)\n", "    invented = []\n")], T_YE),
 
     ("L1 labels forced", [(LA, '"--description", desc], run=run)',
                            '"--description", desc, "--force"], run=run)')], T_PC),
