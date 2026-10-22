@@ -175,3 +175,18 @@ second time this phase. Run as two commands; the guard is unchanged.
 
 Step 0's items 2, 3 and 6 are in `386_implementation.md` Results, with
 the build's commits. Items 1–7 are ticked; K11 and the close-out remain.
+
+### 2026-10-22 — The regression of record, and F214 completed
+
+Regression of record: 11000 passed, 0 failed, 1 skipped, 0 errors at `6352f2e` (36 min 15 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+
+Before it, `wholetree.sh --full` on `6352f2e`: exit 0, 4265 passed,
+12 min 48 s, record written.
+
+The operator finished the cut-off GitHub paragraph: "Update F214 to
+carry all of that, nothing else changes." F214 now quotes it in full
+(created where a rank first pushes, not before; both items hands-only
+queue entries; the desktop's `gh` is the operator's own Kubanjaze login,
+not the fleet's), and the line saying the message was cut off is gone.
+Documents only, after the regression.

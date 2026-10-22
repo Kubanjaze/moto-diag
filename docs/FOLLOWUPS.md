@@ -3751,10 +3751,21 @@ today, so if the repo ever goes private, master protection becomes a
 GitHub Pro purchase, not a click; and the fleet's own GitHub identity (an
 App, or a machine user with write) is created in the phase where a rank
 first pushes". The pricing is the operator's statement, not measured
-here. Their message ended at that comma; anything after it did not reach
-the record.
+here.
 
-To close: in the phase where a rank first pushes, the fleet's own
-identity is created and a ruleset on `master` with no bypass is set, and
-the same read-only queries show it. If the repository has gone private by
-then, the protection is a purchase, the operator's decision.
+The operator completed that sentence the same day: "the fleet's own
+GitHub identity (an App, or a machine user with write access) is created
+in the phase where a rank first pushes, not before — a credential with no
+consumer is just a credential lying around. Both items are hands-only
+queue entries when their time comes. Also: gh on the desktop is logged in
+as my own account (Kubanjaze); that is not the fleet's identity."
+
+So `gh` on the desktop (`/home/lilcu/.local/bin/gh`, logged in as
+Kubanjaze, `386_step0.md` S0-5) is the operator's own login and is not to
+be used as the fleet's.
+
+To close: in the phase where a rank first pushes, and not before, the
+fleet's own identity is created and a ruleset on `master` with no bypass
+is set, each as a hands-only queue entry for the operator, and the same
+read-only queries show it. If the repository has gone private by then,
+the protection is a purchase, the operator's decision.
