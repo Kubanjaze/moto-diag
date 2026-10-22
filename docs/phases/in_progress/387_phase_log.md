@@ -39,3 +39,25 @@ login and none of the eleven labels exists. One XO call on 386's v1.0
 read about 148K tokens and wrote 7,347, $1.22 at list price, and returned
 its verdict through `--json-schema`. The checklist as written fails both
 plans the prompt names as known-good: a real fork, put to the operator.
+
+### 2026-10-22 — The operator's answer, and v1.0
+
+The fork in `387_step0.md` was put to the operator in plain words: the
+checker asks three things 384 and 386 never did (a classification line;
+the three newest change-log entries and their checks; the stops it
+expects), so how should it treat those two plans? The options were "Pin
+them (Recommended)" and "No pin, they fail". The operator's answer,
+verbatim: **"Pin them (Recommended)"**.
+
+So `plan_check.py` carries a pinned list of the two plans written before
+it, with the items each predates (384: classification, change log, stops;
+386: change log, stops), held to equality by a test. Every plan from 387
+on faces every item.
+
+Decided without asking, each in v1.0 with its reason:
+- `decide` uses no model: the words are the operator's, verbatim.
+- `digest` reads this repository's `FOLLOWUPS.md` only (mobile's headings
+  do not mark closure; S0-7).
+- A failed checklist is a back-to-captain round, with no model call.
+- The XO's rounds are counted from its own comments on the mission issue,
+  so the state lives on GitHub, where the label is.
