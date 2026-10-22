@@ -163,6 +163,7 @@ and a hand-written known-bad fixture its assertion must fail on.
 | `finding` | filing an F-number; every cited number must resolve |
 | `refute` | an adversarial pass, and the checklist it must emit |
 | `deploy` | a migration to the live database: the dry run, the approved diff committed in the phase folder, the apply that refuses without it |
+| `fleet` | the plan checker, the XO and the Yeoman; read-only ranks, no pushes |
 
 The enforcement is a test, never the skill's own text: a skill is a prompt
 and can be talked out of; `tests/test_phase255D_*_contract.py` cannot.
@@ -208,6 +209,18 @@ reads its prompt from there.
 ---
 
 ## Change log
+
+### 2026-10-22 — `fleet` joins the procedure folders (after Phase 387)
+
+The operator, 2026-10-22: "add fleet to the procedure folders; the XO and
+Yeoman are live as of 387". The "Procedure folders" table gained one row,
+`fleet`: the plan checker (`plan_check.py`), the XO (`xo.py`) and the
+Yeoman (`yeoman.py`), read-only ranks that push no code. What holds the
+folder is its own tests (`tests/test_phase387_fleet_contract.py`,
+`tests/test_phase387_xo.py`, `tests/test_phase387_yeoman.py`); this row
+is text only, and no check reads the table.
+
+An operator request made after Phase 387 closed; not a phase.
 
 ### 2026-10-20 — rule 6: plain English to the operator (Phase 384)
 
