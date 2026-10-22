@@ -1,5 +1,63 @@
 # deploy — changelog
 
+## 2026-10-22 — a dispatcher logs in on the subscription, and the Haiku billing check (Phase 386)
+
+A procedure, not code. It is here because the fleet's dispatcher will run
+on the desktop, which this skill already reaches; the phase that builds
+the dispatcher runs it. The operator's decision of 2026-10-22: the fleet
+runs on the Max subscription, not on an API key (the fleet proposal,
+"Decisions taken"). Phase 386's Step 0 found this Mac already that way:
+no `ANTHROPIC_API_KEY` anywhere, and `orchestrate.py`'s Anthropic stages
+carry only `CLAUDE_CODE_OAUTH_TOKEN`.
+
+**Logging the dispatcher in.** On the machine, as the user the dispatcher
+runs as:
+1. **No API key in its environment.** Print only whether each is set,
+   never a value: the shell (`printenv ANTHROPIC_API_KEY >/dev/null &&
+   echo SET || echo unset`); the shell profiles and `/etc/environment`
+   (`grep -l ANTHROPIC_API_KEY …`); the service manager
+   (`systemctl --user show-environment`, and the dispatcher unit's
+   `Environment=` and `EnvironmentFile=`); Claude Code's `settings.json`
+   files (`env`, `apiKeyHelper`). Every one says unset or names nothing.
+2. **The login is the operator's** (rule 1). In that user's terminal the
+   operator runs `claude setup-token` (its help: "Set up a long-lived
+   authentication token (requires Claude subscription)"), signs in with
+   the Max account, and puts the token it prints into
+   `~/.config/motodiag/anthropic.env` as one line,
+   `CLAUDE_CODE_OAUTH_TOKEN=…`, then `chmod 600` the file. The token is
+   never pasted into a chat, a commit, a log or a prompt.
+3. **The token's class, without printing it:**
+   `grep -c '^CLAUDE_CODE_OAUTH_TOKEN=sk-ant-oat' ~/.config/motodiag/anthropic.env`
+   prints 1 and `grep -c 'sk-ant-api' ~/.config/motodiag/anthropic.env`
+   prints 0 (an OAuth token, not a Console key).
+4. **Every call gets an environment built from nothing** carrying that one
+   variable, as `orchestrate.py`'s `run_stage` does, and refuses if any
+   other credential is present, as its `check_route` does. Which
+   credential Claude Code would prefer if a key were also present is not
+   relied on: the environment cannot hold one.
+
+**The Haiku billing check,** the dispatcher's first unattended stage:
+1. **Before:** the operator notes claude.ai Settings > Usage (the session
+   and weekly figures) and the Console's billing page for the
+   organisation.
+2. **One call**, nothing else running on the account:
+   ```
+   TOKEN=$(sed -n 's/^CLAUDE_CODE_OAUTH_TOKEN=//p' ~/.config/motodiag/anthropic.env)
+   env -i HOME="$HOME" PATH="$PATH" TERM=dumb CLAUDE_CODE_OAUTH_TOKEN="$TOKEN" \
+     claude -p "Reply with the single word OK." --model claude-haiku-5-5 \
+     --tools "" --output-format json --no-session-persistence \
+     | python3 -c 'import json,sys; d=json.load(sys.stdin); print(sorted(d.get("modelUsage") or {}), d.get("is_error"), d.get("result"))'
+   ```
+   It passes when `modelUsage` names only the Haiku model asked for,
+   `is_error` is false and the reply is OK.
+3. **After:** the operator confirms claude.ai Settings > Usage moved and
+   the Console's billing did not. One short call may not move a figure
+   shown in whole percent; no movement is not a pass. Then the check is
+   repeated after a known larger use, never concluded from silence.
+4. **If the Console moved,** the dispatcher is billing a key: nothing
+   unattended runs until the key is found and removed, and step 1 of the
+   login is done again.
+
 ## 2026-10-20 — the Mac drives the desktop's steps (Phase 384)
 
 The operator: "1A, 2A (i), 3A".

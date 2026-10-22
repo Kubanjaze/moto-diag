@@ -144,3 +144,29 @@ one, and K31 is the highest in use. Three lines name a test (K33, K37,
 K38 via K37); four became a document and say "No check"; K39 is 385, not
 built. Decision: the file says plainly that nothing yet checks a cited
 K-id resolves, rather than leaving it implied.
+
+### 2026-10-22 — Item 6: the setup-token and Haiku billing procedure
+
+A dated entry in `.claude/skills/deploy/CHANGELOG.md`, text only: proving
+no API key (set or unset, never a value), the operator's `claude
+setup-token` login into a mode-600 `anthropic.env`, the token's class
+checked by `grep -c` without printing it, an environment built from
+nothing per call, and the Haiku check (one `claude -p` on
+`claude-haiku-5-5` with `--tools ""`, the served model read from its
+JSON, then the operator's two readings). The flags were taken from this
+machine's `claude --help` and `claude setup-token --help` (2.1.308).
+Nothing was run: the login is the operator's and the dispatcher's machine
+is set up in its own phase.
+
+Decisions:
+- **The deploy skill, not closeout:** the dispatcher will run on the
+  desktop, which the deploy skill already reaches.
+- **No claim about which credential wins when both are set:** not
+  measured, so the procedure makes it impossible instead.
+- **"No movement is not a pass":** a one-word Haiku call may not move a
+  whole-percent figure, so silence is not read as the subscription
+  being billed.
+
+**A guard blocked a command.** Committing item 5 and pushing in one
+command (`git commit … ; git push`) was refused by the push guard, a
+second time this phase. Run as two commands; the guard is unchanged.
