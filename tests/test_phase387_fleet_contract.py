@@ -119,6 +119,37 @@ class TestReusedNotCopied:
         assert plan_check.CONTENT_PATHS is wholetree.CONTENT_PATHS
 
 
+class TestTheLabels:
+    """The prompt's eleven, in its words; an existing label reused, never
+    overwritten (pre-approval (b))."""
+
+    PROMPT = ("mission, step0:done, plan:needs-review, plan:approved, build:open, review:open, "
+              "review:clear, merge:needs-review, needs-admiral, needs-hands, merged")
+
+    def test_the_names_are_the_prompts(self):
+        import labels
+        assert [n for n, _, _ in labels.LABELS] == self.PROMPT.split(", ")
+
+    def test_existing_reused_missing_made_and_never_forced(self):
+        import json as _json
+
+        import labels
+        have = ["bug", "mission"]
+        calls: list[list[str]] = []
+
+        def run(cmd, **kw):
+            calls.append(cmd)
+            if cmd[1:3] == ["label", "list"]:
+                return subprocess.CompletedProcess(cmd, 0, _json.dumps([{"name": n} for n in have]), "")
+            have.append(cmd[3])
+            return subprocess.CompletedProcess(cmd, 0, "", "")
+
+        assert labels.ensure(run, out=lambda s: None) == 0
+        made = [c[3] for c in calls if c[1:3] == ["label", "create"]]
+        assert "mission" not in made and len(made) == 10
+        assert not any("--force" in c or "-f" in c for c in calls)
+
+
 class TestTheCountRule:
     def test_a_planted_bare_count_is_caught(self):
         assert plan_check.unshown_counts("The corpus holds 412 manuals on disk.")
