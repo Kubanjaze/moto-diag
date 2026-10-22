@@ -190,3 +190,11 @@ carry all of that, nothing else changes." F214 now quotes it in full
 queue entries; the desktop's `gh` is the operator's own Kubanjaze login,
 not the fleet's), and the line saying the message was cut off is gone.
 Documents only, after the regression.
+
+### 2026-10-22 — Waiting for K11
+
+Built and regressed, waiting for the operator's K11 line on 2026-10-23;
+the close-out follows it. Setting the row to ⏸️ was refused by
+`roadmap_check.py` R3 ("phase 386 has documents in in_progress/ but its
+row … is '⏸️', not 🚧"): a phase with documents in progress is 🚧. So the
+row stays 🚧 and its text says it waits for K11. The check is unchanged.
