@@ -19,7 +19,7 @@ the binding contract — not in any one agent's memory.
 assigning. A number is never reused and never renumbered when a finding moves
 repos.
 
-At the time of writing the highest assigned is **F214** (this file). The
+At the time of writing the highest assigned is **F215** (this file). The
 next number comes from both files: `.claude/skills/finding/next_f_number.sh`.
 
 ---
@@ -3769,3 +3769,36 @@ fleet's own identity is created and a ruleset on `master` with no bypass
 is set, each as a hands-only queue entry for the operator, and the same
 read-only queries show it. If the repository has gone private by then,
 the protection is a purchase, the operator's decision.
+
+### F215
+
+**The read-only ranks can read any file outside a short list of credential homes, and what they write lands in a public repository**
+
+Found in Phase 387 (2026-10-22), by the Executive Officer itself: its
+first real verdict, on 387's v1.0, ended "the XO and the Haiku digest have
+Read on the whole filesystem, and their text lands in a public repository
+(issue comments, docs/fleet/digests/); the fence proves no writes, not
+read scope".
+
+Measured (`387_phase_log.md`, bug fix #1): Read, Grep and Glob need no
+permission, so `--permission-mode dontAsk` never sees them, and dropping
+them from `--allowedTools` changes nothing. A canary file outside the
+repository was read and quoted under the shipped flags and without the
+allow rule alike. Path-scoped deny rules do hold: with
+`Read(~/.config/**)`, `Grep(…)` and `Glob(…)` in `--disallowedTools`, a
+canary under `~/.config` was denied to all three tools and never reached
+the session, while a repository file was still read.
+
+Bug fix #1 denies the credential homes on this Mac
+(`rank_call.SECRET_HOMES`: `~/.config`, `~/.ssh`, `~/.claude`,
+`~/.subconscious`, `~/Library` and others), which covers the login token
+in `~/.config/motodiag/anthropic.env`. It is a denylist: a file under a
+path not on it (the scratchpad canary in the same run) is still readable.
+The ranks run on the operator's own account (K40), so anything that
+account can read and the list misses could reach an issue comment.
+
+To close: the fence phase (the proposal's step 5) confines the read-only
+ranks' reads to their clone the way it confines writes, a read of a
+planted canary outside the clone refused as one of its cases; or, before
+then, a read allowlist if Claude Code gains one. Until then a new
+credential location on this Mac is added to `SECRET_HOMES`.

@@ -36,6 +36,7 @@ X10 the wrong model accepted: red
 X11 no structured output accepted: red
 X12 a failed claude accepted: red
 X13 the call goes unrecorded: red
+X14 the credential homes readable (bug fix #1): red
 Y1 any --kid accepted: red
 Y2 unresolved K-ids accepted: red
 Y3 the triage bullets not read: red
@@ -48,4 +49,4 @@ Y9 an empty summary written: red
 Y10 the digest on Opus: red
 L1 labels forced: red
 L2 an existing label made again: red
-50/50 red
+51/51 red

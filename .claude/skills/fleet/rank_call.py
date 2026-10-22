@@ -35,10 +35,22 @@ ROOT = HERE.parents[2]
 #: silently. Measured served on this login at Step 0 (S0-1).
 FABLE, OPUS, HAIKU = "claude-fable-5-1", "claude-opus-5-5", "claude-haiku-5-5"
 
+#: Where credentials live on this Mac. Reading needs no permission, so
+#: without these a rank could Read the login token in
+#: ~/.config/motodiag/anthropic.env and quote it into a public issue comment
+#: (the XO's own observation on 387's v1.0; Bug fix #1). Denied to Read,
+#: Grep and Glob alike, measured with a canary under ~/.config. A denylist,
+#: not a confinement: a path not named here can still be read (F215).
+SECRET_HOMES = ("~/.config/**", "~/.ssh/**", "~/.claude/**", "~/.claude.json",
+                "~/.subconscious/**", "~/.aws/**", "~/.gnupg/**", "~/.docker/**", "~/.netrc",
+                "~/.npmrc", "~/.pypirc", "~/Library/**", "~/.zsh_history", "~/.bash_history")
+DENIED = ",".join(["Bash"] + [f"{tool}({path})" for tool in ("Read", "Grep", "Glob")
+                              for path in SECRET_HOMES])
+
 #: The read-only fence. `--tools` decides which tools exist; the rest are a
 #: second lock if it is ever dropped (S0-2's "second lock alone" case).
 FENCE = ("--tools", "Read,Grep,Glob", "--allowedTools", "Read,Grep,Glob",
-         "--disallowedTools", "Bash", "--permission-mode", "dontAsk", "--strict-mcp-config")
+         "--disallowedTools", DENIED, "--permission-mode", "dontAsk", "--strict-mcp-config")
 
 LEDGER = pathlib.Path.home() / ".local" / "state" / "motodiag" / "fleet" / "calls.jsonl"
 

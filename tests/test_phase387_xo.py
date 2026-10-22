@@ -183,7 +183,11 @@ class TestTheCallIsReadOnly:
         (cmd,) = s.claude_calls()
         assert cmd[cmd.index("--tools") + 1] == "Read,Grep,Glob"
         assert cmd[cmd.index("--allowedTools") + 1] == "Read,Grep,Glob"
-        assert cmd[cmd.index("--disallowedTools") + 1] == "Bash"
+        denied = cmd[cmd.index("--disallowedTools") + 1].split(",")
+        assert denied[0] == "Bash"
+        for path in ("~/.config/**", "~/.ssh/**", "~/.claude/**", "~/Library/**"):
+            for tool in ("Read", "Grep", "Glob"):
+                assert f"{tool}({path})" in denied, (tool, path)
         assert cmd[cmd.index("--permission-mode") + 1] == "dontAsk"
         assert "--strict-mcp-config" in cmd and cmd[cmd.index("--model") + 1] == rank_call.FABLE
         assert json.loads(cmd[cmd.index("--json-schema") + 1]) == xo.SCHEMA

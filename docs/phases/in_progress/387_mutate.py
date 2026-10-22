@@ -100,7 +100,7 @@ MUTATIONS = [
      '    if v["verdict"] == BACK and not items:', "    if False:")], T_XO),
     ("X6 the old plan label stays", [(XO,
      "        if old != label and old in have:", "        if False:")], T_XO),
-    ("X7 Bash not disallowed", [(RC, '"--disallowedTools", "Bash", ', "")], T_XO),
+    ("X7 Bash not disallowed", [(RC, 'DENIED = ",".join(["Bash"] + ', 'DENIED = ",".join([] + ')], T_XO),
     ("X8 Bash among the tools", [(RC, 'FENCE = ("--tools", "Read,Grep,Glob",',
                                   'FENCE = ("--tools", "Read,Grep,Glob,Bash",')], T_XO),
     ("X9 no usage is not a stop", [(RC, "or sum(counts) == 0:", "or False:")], T_XO),
@@ -112,6 +112,8 @@ MUTATIONS = [
      "    if r.returncode != 0:\n        raise Stop(f\"claude exited",
      "    if False:\n        raise Stop(f\"claude exited")], T_XO),
     ("X13 the call goes unrecorded", [(RC, "    record(c, ledger)\n", "")], T_XO),
+    ("X14 the credential homes readable (bug fix #1)", [(RC,
+     'for tool in ("Read", "Grep", "Glob")\n', "for tool in ()\n")], T_XO),
 
     ("Y1 any --kid accepted", [(YE, '    if kid is not None and kid != f"K{nxt}":', "    if False:")], T_YE),
     ("Y2 unresolved K-ids accepted", [(YE,
