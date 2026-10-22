@@ -1,6 +1,6 @@
 # Phase 387 — The XO and the Yeoman — phase log
 
-**Status:** 🚧 In progress
+**Status:** ✅ Complete (2026-10-22)
 **Branch:** `phase-387-xo-yeoman` (Opus session on the Mac, the only writer)
 
 ---
@@ -203,3 +203,26 @@ was checked (what it may read, what it may say). A third would have
 stopped the build for a shared cause.
 
 No refute pass ran.
+
+### 2026-10-22 — The regression of record, and close-out
+
+`wholetree.sh --full` on `c64e055`: exit 0, 4318 passed, 104 files.
+
+Regression of record: 11092 passed, 0 failed, 1 skipped, 0 errors at `c64e055` (20 min 44 s wall, `python -m pytest -n auto --dist load`, exit 0)
+Skipped in the regression of record: [1] tests/test_phase244H_test_db_isolation.py:79: no production database on this machine
+
+The collected count, 11093, equals the floor. Everything after `c64e055`
+is documents: v1.1, the handoff, row 387, `implementation.md`'s history
+row, and the root `phase_log.md`'s pointers for 386 (which its own
+close-out did not add) and 387.
+
+**A guard blocked a command.** Filling the regression line into the two
+drafts with a short Python script was refused by the edit guard: "a Python
+script body writes to a path the edit guard cannot resolve, and the body
+names src/ or tests/". The line names a test file. The drafts were edited
+with the Edit tool; the guard is unchanged.
+
+K11: the operator has not confirmed the Subconscious lapse to this phase,
+so it is not logged as done; carried in the handoff.
+
+No migration: nothing goes live.
