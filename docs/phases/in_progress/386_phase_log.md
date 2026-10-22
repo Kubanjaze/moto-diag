@@ -107,3 +107,10 @@ Line 6 now reads `~/Projects/moto-diag`, as `CLAUDE.md` has it. Line 7's
 gives today's: 403 rows (`grep -cE '^\| *[0-9]{2,3}[A-Z]? *\|'
 docs/ROADMAP.md`), 365 of them numbered without a letter, 38 letter
 follow-ons; 21 `## Track` headings.
+
+### 2026-10-22 — Item 3: `docs/contributing.md`
+
+"full suite (~9 minutes)" is replaced by the command of record,
+`regression.sh`, with 384's measured time (27 min 52 s, 11000 passed) and
+the `--full` record it needs first. `pytest -q` stays as the one-process
+way, with no time claimed for it.
