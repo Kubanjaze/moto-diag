@@ -328,6 +328,10 @@ _SUMMARY = re.compile(r"^=+ .*(passed|failed|error|no tests ran).* =+$", re.M)
 #: operator's call; `test_phase383_regression_outcome.py` holds it to equality.
 EXPECTED_SKIPS = frozenset({
     ("tests/test_phase244H_test_db_isolation.py", "no production database on this machine"),
+    # Phase 388, the operator: "Mac runs it (Recommended)". The Linux fence's
+    # boundary test, on the Mac, where 257's sandbox test is its twin.
+    ("tests/test_phase388_fence_boundary.py",
+     "macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py"),
 })
 
 #: The closed logs whose regression line records a skip with no line naming

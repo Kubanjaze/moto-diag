@@ -437,3 +437,67 @@ caught by the operator: the next would be the third, the stop to look for
 a shared cause. Already visible: each block was written from a record
 (386's procedure, 382's comment) and not checked against how it actually
 ran.
+
+### 2026-10-22 — The service installed; close-out begins
+
+The operator, verbatim: "Step 2: ALL GOOD. Step 3: ALL GOOD. Confirmed
+from outside: motodiag-fleet.service active/running, enabled, User=lilcu,
+NRestarts=0; scheduled tasks \motodiag\fleet-boot and \motodiag\wsl-boot
+both Running, S4U, Limited; the live API still answers 200, schema 87. Go
+ahead with the regression, the handoff and the merge. I'll do Step 4 (the
+restart test) tomorrow, and the Console recheck once its data passes 03:07
+UTC."
+
+Read here, after the install: `systemctl show motodiag-fleet.service`:
+`ActiveState=active`, `SubState=running`, `UnitFileState=enabled`,
+`User=lilcu`, `NRestarts=0`, `ActiveEnterTimestamp=Thu 2026-10-22 23:16:27
+EDT`; the journal: started 23:16:17, stopped and started again at 23:16:27
+(step 2's restart). **The unit active after a service restart: shown.**
+
+`wholetree.sh --full` at `74012fc`: exit 0, 106 test files, 4392 passed,
+20 skipped, 6 min 58 s, record written.
+
+### 2026-10-22 — The desktop's regression failed, and the operator's pick
+
+`regression.sh` at `74012fc`, on the desktop:
+
+Regression run FAILED (not of record): 11189 passed, 4 failed, 33 skipped, 0 errors at `74012fc` (9 min 26 s wall, `python -m pytest -n auto --dist load`, exit 1)
+
+The four failures, each run alone: 204's ffmpeg test (no ffmpeg here: a
+`TypeError` on `None`); 257's Subconscious profile test ("control missing:
+/home/lilcu/.subconscious/profiles/default.env (run `subc login`)");
+257's stop-alert test, twice ("osacompile missing: this check needs
+macOS"). None is this phase's code; all are this machine's. And 33 skips,
+none pinned in `EXPECTED_SKIPS` (257's `sandbox-exec` tests and its tests
+needing the manuals library, which is on the Mac). Since 383 every
+regression of record ran on the Mac. And on the Mac this phase's fence test
+skips, unpinned. So no machine could produce a regression of record for
+this phase without a change to `EXPECTED_SKIPS`, which is the operator's
+call (F206): a rule-1 stop, put as a question with two plans.
+
+**The operator's pick, verbatim: "Mac runs it (Recommended)"**: pin the
+fence test's Mac skip, the Mac runs the regression of record, and a
+finding for the desktop.
+
+Done:
+- `closeout_check.EXPECTED_SKIPS` gains `("tests/test_phase388_fence_boundary.py",
+  "macOS: the fence there is sandbox-exec, proven by
+  test_phase257_sandbox_boundary.py")`, with the operator's words beside
+  it; `test_phase383_regression_outcome.py`'s equality literal gains the
+  same, so the list still changes only with that test.
+- The fence test skips through a module-scoped autouse fixture calling
+  `pytest.skip("<reason>")` instead of a `skipif` marker: 383's second pin
+  test requires that literal in the file. On a simulated Mac (a pytest
+  plugin in the scratchpad setting `sys.platform = "darwin"` after
+  collection; setting it before Python's own startup broke `sysconfig`):
+  39 skipped, 27 skip groups, every one `(file, reason)` in
+  `EXPECTED_SKIPS`. On the desktop: 39 passed.
+- **F216** filed (`next_f_number.sh`: F215 here, F181 in mobile, next
+  F216): the desktop cannot produce a regression of record, the four
+  failures and the 33 skips, and what would close it.
+
+**A guard blocked a command.** Updating `FOLLOWUPS.md`'s "highest
+assigned" header with `sed -i` was refused by the edit guard ("`sed -i`
+edits a file in place, and is blocked wherever it points"). My slip: the
+working rules forbid it. Done with the Edit tool; the guard ran before
+`sed`, so nothing was written. The guard is unchanged.

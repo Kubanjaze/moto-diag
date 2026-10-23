@@ -37,9 +37,13 @@ sys.path.insert(0, str(FLEET))
 
 from fence_net import allowed  # noqa: E402
 
-pytestmark = pytest.mark.skipif(
-    sys.platform == "darwin",
-    reason="macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py")
+@pytest.fixture(scope="module", autouse=True)
+def linux_only():
+    """Skipped on the Mac, in the form EXPECTED_SKIPS pins (the operator's
+    "Mac runs it (Recommended)", Phase 388): the Mac's fence is 257's."""
+    if sys.platform == "darwin":
+        pytest.skip("macOS: the fence there is sandbox-exec, proven by test_phase257_sandbox_boundary.py")
+
 
 HOME = pathlib.Path.home()
 PLANT = "PLANTED_388_TEST"
