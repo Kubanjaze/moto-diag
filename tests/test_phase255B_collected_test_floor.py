@@ -349,7 +349,13 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 #: tests/test_phase387_fleet_contract.py (53), tests/test_phase387_xo.py
 #: (18), tests/test_phase387_yeoman.py (21). Measured: 11093.
 #:
-COLLECTED_TEST_FLOOR = 11093
+#: Phase 388 (2026-10-22): 11093 -> 11212, by a diff of collected ids
+#: against master 5909b78 (in a worktree, 11093 there): +119 -0.
+#: tests/test_phase388_dispatcher.py (57),
+#: tests/test_phase388_fence_boundary.py (39),
+#: tests/test_phase388_service_contract.py (23). Measured: 11212.
+#:
+COLLECTED_TEST_FLOOR = 11212
 
 
 def _collected_count() -> int:

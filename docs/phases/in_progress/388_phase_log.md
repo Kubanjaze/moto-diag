@@ -117,3 +117,28 @@ expected `/home/PLANTED_388` to be read-only; it is absent, so that case
 became the `mkdir`.
 
 119 tests in the three new files: 39, 57 and 23.
+
+### 2026-10-22 — The floor, and the stop for the token
+
+The desktop app restarted mid-session while the floor was being measured.
+After it: the branch `phase-388-fleet-host`, clean, level with
+`origin` at `58bc372`; no `index.lock`; one worktree (the comparison's
+temporary worktree had already been removed). Nothing was lost; the
+operator asked for the state and said to go on.
+
+**`COLLECTED_TEST_FLOOR` 11093 → 11212**, by a diff of collected ids
+against `master` `5909b78` in a temporary worktree: 11093 there, 11212
+here, +119 −0, all in the three new files (57, 39, 23). Two first attempts
+compared nothing: the project's `addopts` turns `--collect-only -q` into a
+tree with no `::` ids, so both sides counted 172 and then 0. With `-o
+addopts=` the ids print. `tests/test_phase255B_collected_test_floor.py`: 2
+passed.
+
+**Stopped for rule 1: a login.** Everything that needs no model call is
+built and proven. What waits for the fleet's token
+(`~/.config/motodiag/anthropic.env`, step 1 of `388_operator_steps.md`):
+the billing check on Haiku, the `workspace-docs` import loading inside the
+fence, one dispatcher cycle on a planted `plan:needs-review` issue, one
+sweep comment, then the operator's service install, restart and the
+restart test. The row stays 🚧 (R3: a phase with documents in progress is
+🚧, never ⏸️; 386's log).
