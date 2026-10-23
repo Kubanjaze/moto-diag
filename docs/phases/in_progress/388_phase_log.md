@@ -196,3 +196,30 @@ keeps its prefix check. It is a dated record of what that phase wrote; the
 handoff names it for whoever next uses it.
 
 **Commit.** The commit that carries this entry.
+
+### 2026-10-22 — The billing check, the first call on the fleet's token
+
+386's procedure (`.claude/skills/deploy/CHANGELOG.md`, "The Haiku billing
+check"), run through the fence rather than bare, since that is how every
+fleet call will go.
+
+**Before**, the operator, verbatim: "claude.ai Usage session 2%, this week
+9% (Fable 15%), usage credits $0. Console billing: $Z (or: I have no
+Console/API account)." The Console figure came back as the template's
+placeholder; asked which applies, answer pending.
+
+**The call**, at 22:57:32 EDT: `env -i PATH=… CLAUDE_CODE_OAUTH_TOKEN=<read
+from the file inside the command, never printed> fence.sh --clone <fresh
+clone from GitHub> --run … --workspace-docs … -- claude -p "Reply with the
+single word OK." --model claude-haiku-5-5 --tools "" --strict-mcp-config
+--output-format json --no-session-persistence`. Exit 0; served
+`["claude-haiku-5-5"]` only; `is_error` False; result `OK`; input 2,
+cache write 15,496, cache read 0, output 4; $0.0031 at list price (Claude
+Code's estimate, not a bill); session `fe57421b-2164-470b-9bad-8b917aab4184`.
+The gate's log: 3 lines, all `ALLOW CONNECT api.anthropic.com:443`. The
+token's prefix occurs 0 times in the output, the error stream or the gate's
+log (`grep -c`).
+
+**After:** waiting for the operator's two readings. Per the procedure, one
+short call may not move a whole percent, so an unmoved Usage is not a pass
+by itself; a moved Console bill is a stop.
