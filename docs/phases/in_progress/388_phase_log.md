@@ -223,3 +223,151 @@ log (`grep -c`).
 **After:** waiting for the operator's two readings. Per the procedure, one
 short call may not move a whole percent, so an unmoved Usage is not a pass
 by itself; a moved Console bill is a stop.
+
+**The operator's answer**, verbatim: "After: the usage-credits switch is
+now off (2026-10-22 22:59 ET). Console baseline for the billing check,
+from platform.claude.com/cost, month to date as of Oct 23 01:56 UTC: total
+cost $0.00, total token cost $0.00, no daily data; the org holds a $220.42
+prepaid balance, untouched. Record that as the before; after the
+dispatcher's first Haiku stage and again after its first full cycle, I'll
+check that this page is still $0.00 and that claude.ai usage moved
+instead."
+
+Recorded as the Console's before. On the times: 01:56 UTC is 21:56 EDT,
+an hour before the test call (22:57:32 EDT, 02:57 UTC), so the baseline
+precedes it too, and the operator's next $0.00 covers the test call and
+the dispatcher's stages together. The usage-credits switch went off at
+22:59, after the test call; the credits read $0 before it, so none could
+have been drawn. Still open: claude.ai Usage after the test call (not yet
+reported), and the operator's two later Console readings.
+
+**The operator's after-reading**, verbatim, received while the first
+dispatcher cycle ran: "After: the usage-credits switch is now off
+(2026-10-22 22:59 ET). Console, platform.claude.com/cost: before, month to
+date as of 01:56 UTC Oct 23: $0.00 total cost, no daily data, prepaid
+balance $220.42. After the 22:57 EDT test message, as of (time): still
+$0.00, balance still $220.42. claude.ai Usage after: session X%, this week
+Y%. Record the 01:56 UTC reading as the before. I'll check this page again
+after the dispatcher's first Haiku stage and after its first full cycle:
+it must stay $0.00, and claude.ai usage should move instead."
+
+Recorded: **before**, 01:56 UTC, $0.00, balance $220.42; **after the test
+call**, Console still $0.00, balance still $220.42. Three fields came back
+as the template's placeholders and are not filled in here: the time of the
+after-reading ("(time)") and claude.ai Usage after ("X%", "Y%"). Asked
+for; the Console half of the check holds on what was given, and the
+Usage half waits.
+
+**The operator's readings at 23:03**, in two messages. The first,
+verbatim: "After-readings at 23:03 ET. claude.ai Usage: session 3%, this
+week 10%, Fable 15%. Console, month to date: still $0.00 on every line,
+balance still $220.42, data as of Oct 23 01:56 UTC. The usage moved on
+claude.ai and not on the Console: the billing check passes. Carry on." I
+answered that the Console's "data as of" (01:56 UTC, 21:56 EDT) is before
+the test call (02:57 UTC), so its $0.00 does not yet cover it. The second,
+verbatim, which stands: "After-readings at 23:03 ET. claude.ai Usage:
+session 3% (was 2%), this week 10% (was 9%), Fable 15%. Console, month to
+date: still $0.00 on every line, balance still $220.42, but its data is
+only as of Oct 23 01:56 UTC, before the 02:57 UTC test call, so the
+Console half isn't conclusive yet. Usage moved on claude.ai as expected.
+Carry on, and I'll recheck the Console once its "data as of" time is after
+02:57 UTC, and again after the first full dispatcher cycle."
+
+So: **the claude.ai half passes** (session 2% → 3%, week 9% → 10%, Fable
+15% unchanged, consistent with a Haiku call). **The Console half is open**
+until a reading whose "data as of" is after 02:57 UTC shows $0.00. The
+"(time)" and "X%, Y%" placeholders of the earlier message are superseded
+by these readings.
+
+### 2026-10-22 — The ninth case: the workspace rules inside the fence
+
+Two Haiku calls with `--tools ""`, each in its own fresh clone from GitHub,
+asked to quote the first bullet under "Evidence" or answer NOT LOADED (the
+2026-09-23 proof's question):
+
+| run | fence | the approval in the fence's `.claude.json` | answer | session |
+|---|---|---|---|---|
+| 23:01:41 | `fence.sh` | `True` | quoted verbatim: "**Print the count before acting on a search; a truncated result is not a census.** A test subset is a sample, not an inventory. → §[Evidence discipline (searching)]" | `e38112e5-6c12-4145-99fb-d151235a1c33` |
+| 23:01:44 | a scratch copy, one line changed (`diff`: `hasClaudeMdExternalIncludesApproved=False`) | `False` | `NOT LOADED` | `773fb9b2-fad2-46d7-9d28-be5bcb669689` |
+
+Both served `claude-haiku-5-5` only, exit 0. **The import resolves inside
+the fence, and the seeded approval is what makes it resolve**: the same
+fence, the same `workspace-docs` binding, without it, runs with no
+workspace rules.
+
+**A guard blocked a command.** The first attempt looped over both runs and
+wrote each with `> $d/out.json`. The edit guard refused it: "the edit guard
+cannot tell where the redirect `>` `$d/out.json` writes (a variable,
+substitution, glob or unknown directory), and blocks what it cannot
+resolve. Use a literal path." Rerun as separate commands with literal
+paths; the guard is unchanged.
+
+### 2026-10-22 — One dispatcher cycle end to end, on a planted issue
+
+`plan_check 388`: PASS at the branch head. Issue
+[#10](https://github.com/Kubanjaze/moto-diag/issues/10), "Phase 388: the
+fleet's host and its fence", opened under the operator's login (as 387
+opened #9) with `mission` and `plan:needs-review`, its body naming the
+branch `phase-388-fleet-host`. Then `/usr/bin/python3
+.claude/skills/fleet/dispatcher.py once` from the dispatcher's own clone
+(`~/motodiag/fleet/code` at `6417d86`), the way the unit will run it:
+23:02:15 to 23:06:29 EDT, exit 0. Its log:
+
+- the mirror updated; the sweep at 24 hours posted nothing;
+- `issue 10: the Executive Officer on phase 388`, in the stage clone
+  `runs/20261022_230221_xo_388/clone` of the phase branch;
+- the verdict **approve**, comment at 03:06:14Z opening `<!-- xo-verdict:
+  approve round=0 applied=approve phase=388 -->`; `label set:
+  plan:approved on issue 10`. GitHub's events for #10:
+  `plan:needs-review` removed and `plan:approved` added at 03:06:16Z;
+  labels now `mission`, `plan:approved`;
+- the call: `claude-fable-5-1`, session
+  `371d328c-761c-4337-a537-6f387a3161cd`, input 130, cache write 62,042,
+  cache read 172,928, output 14,328, 27 turns, 231 s, $2.00 at list price;
+- then **the digest** for 2026-10-21 in the stage clone
+  `runs/20261022_230617_digest/clone`, kept at
+  `~/.local/state/motodiag/fleet/digests/2026-10-21.md` (2,420 bytes; its
+  summary names 384's close and 31 open findings); `claude-haiku-5-5`,
+  session `c17c1c9a-cd52-45fc-9d11-37907787cef3`, input 2, cache write
+  19,001, output 1,992, 2 turns, 9 s.
+- Both stages' gate logs: 3 lines each, all `ALLOW CONNECT
+  api.anthropic.com:443`. Both calls are in `calls.jsonl`.
+
+This was the dispatcher's first Haiku stage and its first full cycle: the
+operator's two Console rechecks fall on the same moment.
+
+**The XO's note, and the measurement it asked for.** The verdict carried
+one note, "not a defect": the due rule "rests on GitHub recording no new
+`labeled` event when `gh issue edit --add-label` names a label the issue
+already carries … only the planted-issue proof after the token can show
+GitHub behaves this way; the phase log should record that it did." It was
+right that the tests could not show it: they use stand-ins. Measured on
+#10 with `mission`, which triggers nothing:
+- `gh issue edit 10 --add-label mission` at 03:06:53Z, the label already
+  on: **no new event**, in both `issues/10/events` and
+  `issues/10/timeline`.
+- The control, `--remove-label mission` then `--add-label mission`:
+  `unlabeled mission 03:07:04Z`, `labeled mission 03:07:06Z`, at once. So
+  the empty result was not lag.
+
+So on GitHub, a back-to-captain verdict (which re-adds a present
+`plan:needs-review`) makes no event and is not re-reviewed, and the
+Captain's re-application (remove, then add) makes one and is.
+
+### 2026-10-22 — One sweep comment
+
+`dispatcher.py once --sweep-hours 1` at 23:07:20 (the log line: "the sweep
+at 1.0 hours, not 24.0: a proof run"). One hour rather than 24 so that a
+proof runs tonight, and so one run shows both sides: issue #9's
+`plan:approved` (applied 2026-10-22T22:33:15Z, 4 h 34 min) and #10's
+(about a minute). Result: `issue 9: swept plan:approved, 5 h`; the comment
+at 03:07:23Z, "`<!-- fleet-sweep: label=plan:approved
+applied=2026-10-22T22:33:15Z -->` **Fleet dispatcher: `plan:approved` has
+sat on this issue for 5 hours** (applied 2026-10-22T22:33:15Z). Nothing has
+moved it. Next to move it: the Chief Engineer." Nothing on #10; `mission`
+on either was not swept. A second run at 23:07:32 posted nothing: #9
+holds 1 sweep comment (`gh issue view 9 --json comments`, counted). Neither
+run called a model (no issue waiting for review; the day's digest done).
+
+#9 is still open with `plan:approved` though 387 closed; the comment says
+so truthfully. Closing it is the operator's.
