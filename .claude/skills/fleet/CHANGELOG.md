@@ -1,5 +1,32 @@
 # fleet — changelog
 
+## 2026-10-22 — the fence on Linux and the dispatcher (Phase 388)
+
+Steps 4 and 5 of `docs/reports/2026-10-22_fleet_proposal.md`, built on the
+home desktop, the fleet's host from now on. The prompt is
+`docs/prompts/388_fleet_host.txt`; Step 0 is `388_step0.md`.
+
+- **`fence.sh`** and **`fence_net.py`**: one stage under bubblewrap, the
+  clone and run directory writable, no `/home`, the rest read-only, the
+  environment from nothing, the network the model API only. The
+  `workspace-docs` import resolves inside: bound at the clone's sibling
+  path, and the approval seeded for the fence's clone path (measured: a
+  fresh clone at a new path runs with no workspace rules even with the
+  sibling present). Closes F215's read confinement on this machine.
+- **`dispatcher.py`**: the Executive Officer on `plan:needs-review`, the
+  daily digest, the 24-hour sweep, the rate-limit pause and `--resume`, the
+  70% Opus ceiling, one process by `flock`. 387's scripts are called as they
+  are, with a `run=` that sends `claude` through the fence.
+- **Fixtures**: `fixtures/dispatcher/` (the measured `/usage` text and
+  hand-written known-bad ones; `README.md` says which is which);
+  `fixtures/service/cases.json` (ten known-bad units, one rule each).
+- **The service**: `ops/desktop/motodiag-fleet.service`,
+  `install_fleet_unit.sh`, `motodiag-fleet-boot.xml`, installed by the
+  operator.
+
+Measured at Step 0: `claude -p "/usage"` prints the 5-hour and weekly
+figures in print mode at no cost, so no ceiling file is needed.
+
 ## 2026-10-22 — created (Phase 387)
 
 Steps 2 and 3 of `docs/reports/2026-10-22_fleet_proposal.md`: the
