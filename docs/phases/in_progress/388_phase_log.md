@@ -422,6 +422,16 @@ record and outside this phase; the handoff names it.
 
 **Commit.** The commit that carries this entry.
 
+**Held for close-out, outside this phase:** the operator sent proof 5's
+Mac half for 382 ("Please record it when you next touch master"): on the
+Mac, 2026-10-22, on `master`, `dryrun`, `apply-live`, `verify-live` and
+`backup` each printed "REFUSED: live is on desktop-76s9bqv, not here
+(/Users/lilquant/.config/motodiag/live.json). Run this there." and exited
+4; a first attempt exited 2 for every mode (zsh passed "dryrun 382" as one
+argument and argparse rejected it before anything ran). It goes into
+`docs/handoffs/2026-10-19_382_closed.md` (lines 122–123, "Still to come")
+in the close-out, verbatim.
+
 Two bug fixes in this build, both in the operator's paste blocks and both
 caught by the operator: the next would be the third, the stop to look for
 a shared cause. Already visible: each block was written from a record
