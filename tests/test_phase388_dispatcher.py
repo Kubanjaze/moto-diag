@@ -265,6 +265,10 @@ class TestTheRateLimitIsRead:
         r = subprocess.CompletedProcess([], 1, LIMITED, "")
         assert D.rate_limit(r) == ("sess-limited-1", json.loads(LIMITED)["result"])
 
+    def test_the_limit_in_the_result_with_exit_zero(self):
+        r = subprocess.CompletedProcess([], 0, LIMITED, "")
+        assert D.rate_limit(r) == ("sess-limited-1", json.loads(LIMITED)["result"])
+
     def test_a_limit_on_stderr_with_a_nonzero_exit(self):
         assert D.rate_limit(subprocess.CompletedProcess([], 1, "", "API Error: rate limit exceeded"))
 

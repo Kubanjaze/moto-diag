@@ -92,6 +92,14 @@ class TestPlantedAttemptsFail:
         assert r.returncode != 0 and not leaked, f"the fence let a write through to {target}"
         assert "No such file or directory" in r.stderr or "Read-only file system" in r.stderr, r.stderr
 
+    @pytest.mark.parametrize("argv", [("/usr/bin/touch", "/PLANTED_388"),
+                                      ("/usr/bin/touch", "/fleet/PLANTED_388"),
+                                      ("/usr/bin/mkdir", "-p", "/home/lilcu")],
+                             ids=["/", "/fleet", "a /home made inside"])
+    def test_the_fences_own_root_is_read_only(self, box, argv):
+        r = fenced(box, *argv)
+        assert r.returncode != 0 and "Read-only file system" in r.stderr, r.stderr
+
     def test_a_python_write_outside_is_refused(self, box):
         r = fenced(box, "/usr/bin/python3", "-c", f"open({str(HOME / PLANT)!r}, 'w').write('x')")
         leaked = (HOME / PLANT).exists()

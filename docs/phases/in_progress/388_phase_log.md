@@ -54,3 +54,66 @@ the fenced part and the rank's script is not; the fence seeds the import
 approval for its own clone path; the sweep reads the ten state labels, not
 `mission`; the digest is kept, not committed or posted; a second Windows
 task holds the VM like 382's.
+
+### 2026-10-22 — The build
+
+Each commit after `wholetree.sh` run on its own, exit 0:
+
+- `310af40`: `fence.sh`, `fence_net.py`, `tests/test_phase388_fence_boundary.py`.
+- `317e529`: `dispatcher.py`, `fixtures/dispatcher/`, `tests/test_phase388_dispatcher.py`.
+- `30e6650`: the unit, `install_fleet_unit.sh`, `motodiag-fleet-boot.xml`,
+  `fleet_boot_check.py`, `fixtures/service/cases.json`,
+  `tests/test_phase388_service_contract.py`, `SKILL.md`, `CHANGELOG.md`,
+  `388_operator_steps.md`. Pushed.
+
+Decisions made while building:
+- **The token never rides on a command line.** `bwrap --setenv` would put it
+  in `bwrap`'s argv, which any process on the machine can read in
+  `/proc/<pid>/cmdline`. `fence.sh` unsets every other variable with shell
+  builtins in a subshell and `bwrap` inherits the token; a test holds that
+  `--setenv CLAUDE_CODE_OAUTH_TOKEN` never appears.
+- **`gh` runs with `GH_REPO`.** A stage clone's `origin` is the mirror's
+  path, from which `gh` cannot tell the repository.
+- **A refusal is not retried by systemd** (`RestartPreventExitStatus=4`):
+  no token, an API key in the environment or a second dispatcher is a
+  setup problem, and restarting every 30 seconds would bury it.
+- **The restart check is a script**, `ops/desktop/fleet_boot_check.py`,
+  not an inline heredoc: 382's relay lost heredocs and `<`. It reads the
+  Windows sign-in time with `quser.exe` through interop (measured working:
+  "LOGON TIME 10/21/2026 07:48 AM", Ubuntu up at 07:49:12).
+- **`dispatcher.py`'s `main` reads `TOKEN_FILE` at call time**, so its
+  refusal can be tested; the first draft bound it at definition.
+- **A safety check refused one of my commands**: an `rm -rf` of a variable
+  path in the scratchpad (Claude Code's built-in check, not the repo's
+  guards). Rewritten to use fresh literal directories; nothing removed.
+
+Read against the real GitHub, with no token (no model call): the mirror
+cloned; `branch_for("388", "")` → `phase-388-fleet-host`; issue #9's label
+events (3 `labeled`); `due(9)` → False (its `plan:needs-review` was
+removed); a sweep that posted nothing (its `plan:approved` is under 24
+hours old). `dispatcher.py once` with no token file: "REFUSED: no token
+file at /home/lilcu/.config/motodiag/anthropic.env", exit 4.
+`systemd-analyze verify` on the unit: no output, clean.
+`fleet_boot_check.py` now: "SOMETHING IS OFF: the fleet dispatcher is not
+running" (not installed yet), the right verdict.
+
+The dispatcher's own code clone, `~/motodiag/fleet/code`, made from GitHub
+on `phase-388-fleet-host` (no sudo, mine to make); it moves to `master`
+after the merge.
+
+### 2026-10-22 — Mutations
+
+`388_mutate.py`, 41 mutations across the fence, the gate, the dispatcher
+and the service, none making a model call or reaching GitHub. First run
+**40/41**: D5 ("a usage limit not recognised") survived. The stand-in
+exited 1 on every error result, so the second branch (a non-zero exit
+naming a limit) caught what the first branch is for, a limit reported in
+the result with exit 0. A test of that case was added; rerun **41/41 red**
+(`388_mutate.out`). Also added before the run: a test that the fence's own
+`/` and `/fleet` are read-only (`touch /`, `touch /fleet`, `mkdir -p
+/home/lilcu`), which the plan claims and nothing tested: every planted
+target failed as absent before read-only mattered. Its first draft
+expected `/home/PLANTED_388` to be read-only; it is absent, so that case
+became the `mkdir`.
+
+119 tests in the three new files: 39, 57 and 23.

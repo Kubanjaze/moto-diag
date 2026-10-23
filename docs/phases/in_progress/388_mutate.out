@@ -1,0 +1,42 @@
+F1 the home mounted read-only: red
+F2 the home mounted writable: red
+F3 the root left writable: red
+F4 the network shared: red
+F5 the caller's environment crosses: red
+F6 the token on the command line: red
+F7 workspace-docs writable: red
+F8 a fence without working-rules.md runs: red
+F9 the import approval not seeded: red
+F10 the operator's checkout accepted as the clone: red
+F11 workspace-docs not bound: red
+N1 the gate allows every host: red
+N2 the gate ignores the port: red
+N3 the gate logs nothing: red
+D1 the ceiling at more than 70: red
+D2 unreadable usage lets Opus through: red
+D3 the Opus gate skipped: red
+D4 a resumed stage not resumed: red
+D5 a usage limit not recognised: red
+D6 a pause that does not hold: red
+D7 an unknown reset does not wait: red
+D8 the due rule ignores the rank's comments: red
+D9 the fence gets the whole environment: red
+D10 workspace-docs not passed to the fence: red
+D11 gh without GH_REPO: red
+D12 a model call outside the clone allowed: red
+D13 mission swept: red
+D14 the sweep under 24 hours: red
+D15 the sweep twice for one application: red
+D16 the digest before seven: red
+D17 the digest not recorded: red
+D18 an API key allowed: red
+D19 a token of any class: red
+D20 no lock: red
+D21 an issue with no branch run anyway: red
+D22 the paused run pruned: red
+S1 the unit runs as root: red
+S2 the unit retries a refusal: red
+S3 the task does not hold the VM: red
+S4 the install script starts the service: red
+S5 the restart check passes after sign-in: red
+41/41 red
